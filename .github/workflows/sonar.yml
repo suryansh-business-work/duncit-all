@@ -42,6 +42,48 @@ jobs:
             fi
             echo "::warning::SonarQube server unreachable (HTTP $code) — skipping scan."
           fi
+      # Coverage has to be PRODUCED before the scan: the scanner never runs the
+      # tests, it only reads the lcov each runner writes
+      # (sonar.javascript.lcov.reportPaths). Without this the gate sees 0%
+      # coverage and fails `new_coverage` no matter how good the suites are.
+      - name: Setup pnpm
+        if: steps.sonar.outputs.up == 'true'
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+
+      - name: Setup Node.js
+        if: steps.sonar.outputs.up == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.sonar.outputs.up == 'true'
+        run: pnpm install --frozen-lockfile
+
+      # A workspace whose own coverage threshold is unmet (challenge-portal
+      # relies on Cypress e2e coverage being merged in) must NOT block the scan:
+      # the lcov is still written either way, and the gate is what judges us.
+      - name: Coverage — workspaces (server, mWeb, portals, websites)
+        if: steps.sonar.outputs.up == 'true'
+        continue-on-error: true
+        run: pnpm -r --if-present --no-bail test:coverage
+
+      # The mobile app is standalone (npm, outside the pnpm workspace).
+      - name: Coverage — mobile app
+        if: steps.sonar.outputs.up == 'true'
+        continue-on-error: true
+        working-directory: app/mobile-app
+        run: |
+          npm ci
+          npm run test:coverage
+
+      - name: Report which lcov files reached the scanner
+        if: steps.sonar.outputs.up == 'true'
+        run: |
+          echo "lcov reports found:"
+          find . -name 'lcov.info' -not -path '*/node_modules/*' | sort | sed 's/^/  /'
+
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
         if: steps.sonar.outputs.up == 'true'
         env:

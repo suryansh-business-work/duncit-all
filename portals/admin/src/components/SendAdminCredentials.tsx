@@ -29,7 +29,10 @@ const SEND_CREDENTIALS = gql`
 // Ambiguous characters dropped so the captcha stays easy to read.
 const CAPTCHA_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const genCaptcha = () =>
-  Array.from({ length: 5 }, () => CAPTCHA_ALPHABET[Math.floor(Math.random() * CAPTCHA_ALPHABET.length)]).join('');
+  Array.from(
+    globalThis.crypto.getRandomValues(new Uint8Array(5)),
+    (byte) => CAPTCHA_ALPHABET[byte % CAPTCHA_ALPHABET.length]
+  ).join('');
 
 /**
  * First-time setup helper: emails the seeded super-admin credentials.

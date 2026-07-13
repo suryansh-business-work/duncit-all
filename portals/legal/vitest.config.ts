@@ -18,7 +18,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       all: true,
-      reporter: ['text', 'text-summary', 'html', 'json-summary'],
+      reporter: ['text', 'text-summary', 'html', 'json-summary', 'lcov'],
       reportsDirectory: path.resolve(projectRoot, 'cypress-artifacts/coverage'),
       include: ['src/**/*.{ts,tsx}'],
       exclude: [

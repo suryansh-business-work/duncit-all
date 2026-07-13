@@ -29,10 +29,23 @@ export const blankForm: CreateForm = {
   zone: '',
 };
 
+/**
+ * A generated password becomes a real user's credential, so it must come from a
+ * CSPRNG — Math.random() is seeded predictably and must never mint secrets
+ * (Sonar S2245). Rejection sampling keeps every character equally likely: the
+ * naive `% chars.length` is biased toward the start of the alphabet whenever
+ * 256 is not a multiple of it.
+ */
 export function genPassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  const limit = 256 - (256 % chars.length);
   let out = '';
-  for (let i = 0; i < 12; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  while (out.length < 12) {
+    const bytes = globalThis.crypto.getRandomValues(new Uint8Array(12));
+    for (const byte of bytes) {
+      if (byte < limit && out.length < 12) out += chars[byte % chars.length];
+    }
+  }
   return out;
 }
 

@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodModel, type PodMode, type PodType } from './pod.model';
@@ -111,6 +112,15 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
 export const mapPodToPublic = (doc: any, clubSlugById?: Map<string, string>) =>
   toPub(doc, clubSlugById);
 export const loadPodClubSlugMap = (podDocs: any[]) => loadClubSlugMap(podDocs);
+
+const MEET_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
+
+/** `length` lowercase letters from a CSPRNG (used for placeholder meeting codes). */
+function randomAlpha(length: number): string {
+  let out = '';
+  for (let i = 0; i < length; i += 1) out += MEET_ALPHABET[randomInt(MEET_ALPHABET.length)];
+  return out;
+}
 
 function notFound(): never {
   throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -1256,21 +1266,21 @@ export const podService = {
     if (platform === 'ZOOM') {
       if (!zoomConfigured) return requiresOauth();
       // TODO: real Zoom API call using server-to-server OAuth + meetings.create.
-      // For now we return a deterministic placeholder so the dialog flow works.
+      // Until then this is a placeholder link — but a guessable meeting id is a
+      // way in, so even the stand-in is drawn from a CSPRNG (S2245).
       return {
         ok: true,
-        url: `https://zoom.us/j/${Math.floor(1e9 + Math.random() * 9e9)}`,
+        url: `https://zoom.us/j/${randomInt(1e9, 1e10)}`,
         message: 'Generated (Zoom)',
         requires_oauth: false,
       };
     }
     if (platform === 'GOOGLE_MEET') {
       if (!googleConfigured) return requiresOauth();
+      const meetCode = [0, 1, 2].map(() => randomAlpha(4)).join('-');
       return {
         ok: true,
-        url: `https://meet.google.com/${Math.random().toString(36).slice(2, 6)}-${Math.random()
-          .toString(36)
-          .slice(2, 6)}-${Math.random().toString(36).slice(2, 6)}`,
+        url: `https://meet.google.com/${meetCode}`,
         message: 'Generated (Google Meet)',
         requires_oauth: false,
       };

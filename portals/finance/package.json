@@ -15,7 +15,8 @@
     "coverage:report": "nyc report --reporter=text --reporter=html --reporter=text-summary",
     "coverage:check": "nyc check-coverage",
     "test:e2e:coverage": "playwright test && nyc report --reporter=text-summary && nyc check-coverage",
-    "coverage:all": "playwright test && vitest run --coverage && node scripts/merge-coverage.mjs && nyc report --reporter=text --reporter=text-summary && nyc check-coverage"
+    "coverage:all": "playwright test && vitest run --coverage && node scripts/merge-coverage.mjs && nyc report --reporter=text --reporter=text-summary && nyc check-coverage",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",

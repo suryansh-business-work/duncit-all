@@ -10,7 +10,7 @@ export default defineConfig({
       // istanbul output (json) is merged with the Playwright E2E coverage by nyc
       // so component-level defensive branches the E2E flows can't reach still count.
       provider: 'istanbul',
-      reporter: ['json'],
+      reporter: ['json', 'lcov'],
       reportsDirectory: './coverage/vitest',
       include: ['src/**/*.{ts,tsx}'],
       exclude: [

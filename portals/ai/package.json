@@ -13,7 +13,8 @@
     "test:e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts",
     "test:e2e:open": "cypress open --config-file __tests__/e2e/cypress.config.ts",
     "test:forms": "vitest run",
-    "test:forms:watch": "vitest"
+    "test:forms:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",

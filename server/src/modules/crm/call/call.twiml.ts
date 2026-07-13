@@ -3,11 +3,11 @@ import type { CommsLogEntity } from '@modules/crm/communicationLog/communication
 /** XML-escape a value before embedding it in TwiML. */
 export const escapeXml = (value: string) =>
   String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&apos;');
 
 /**
  * Map a Twilio call/dial status to our CommunicationLog status enum.

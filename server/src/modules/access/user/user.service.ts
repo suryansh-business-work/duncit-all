@@ -227,11 +227,11 @@ const contactActionToPublic = (doc: any) => ({
 
 const escapeTwiml = (value: string) =>
   value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&apos;');
 
 async function startTwilioRecordedBridge(actionId: string, target: string) {
   const [accountSid, authToken, fromNumber, agentNumber, webhookBaseUrl, recordingEnabled] =

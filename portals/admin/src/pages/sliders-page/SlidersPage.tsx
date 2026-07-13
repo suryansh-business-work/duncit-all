@@ -58,7 +58,7 @@ export default function SlidersPage() {
       description: s.description ?? '',
       media_url: s.media_url,
       media_type: s.media_type,
-      link_type: s.link_type ?? (s.link_url ? 'EXTERNAL' : 'EXTERNAL'),
+      link_type: s.link_type ?? 'EXTERNAL',
       link_target_kind: s.link_target_kind ?? '',
       link_target_id: s.link_target_id ?? '',
       link_url: s.link_url ?? '',

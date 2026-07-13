@@ -51,16 +51,16 @@ function toPub(doc: IMarketingCampaign) {
 }
 
 function stripText(value?: string | null, max = 220) {
-  const text = String(value || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const text = String(value || '').replaceAll(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
 function escapeXml(value?: string | null) {
   return String(value || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;');
 }
 
 async function mwebUrl(pathname: string) {

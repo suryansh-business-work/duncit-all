@@ -240,7 +240,7 @@ export const sliderService = {
         extensions: { code: 'CONFLICT' },
       });
 
-    const linkType = input.link_type ?? (input.link_url ? 'EXTERNAL' : 'EXTERNAL');
+    const linkType = input.link_type ?? 'EXTERNAL';
     const doc = await SliderModel.create({
       slider_id,
       title: input.title,

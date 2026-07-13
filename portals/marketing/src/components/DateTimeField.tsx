@@ -32,7 +32,7 @@ export default function DateTimeField({
 }: Readonly<Props>) {
   const { dateFormat, timeFormat } = useDateFormat();
   const dateValue = value ? new Date(value) : null;
-  const valid = dateValue && !isNaN(dateValue.getTime()) ? dateValue : null;
+  const valid = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue : null;
 
   return (
     <DateTimePicker

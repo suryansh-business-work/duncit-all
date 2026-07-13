@@ -90,7 +90,7 @@ export const interviewService = {
     }));
 
     for (const s of slots) {
-      if (isNaN(+s.start) || isNaN(+s.end) || s.end <= s.start)
+      if (Number.isNaN(+s.start) || Number.isNaN(+s.end) || s.end <= s.start)
         throw new GraphQLError('Invalid slot range', { extensions: { code: 'BAD_USER_INPUT' } });
     }
 

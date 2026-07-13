@@ -65,7 +65,9 @@ export function AccountScreen() {
             <AccountInfoRow
               icon="phone"
               label="Phone"
-              value={me.phone_number ? `${me.phone_extension || ''} ${me.phone_number}`.trim() : '—'}
+              value={
+                me.phone_number ? `${me.phone_extension || ''} ${me.phone_number}`.trim() : '—'
+              }
             />
             <AccountInfoRow
               icon="location-city"

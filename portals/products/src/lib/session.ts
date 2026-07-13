@@ -1,4 +1,4 @@
-import { createSession } from '@duncit/shell';
+import { createSession, SUPER_ROLE } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 
 /**

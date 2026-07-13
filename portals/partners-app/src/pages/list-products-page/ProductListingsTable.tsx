@@ -26,6 +26,13 @@ import {
 import { parseApiError } from '../../utils/parseApiError';
 import ProductListingsToolbar from './ProductListingsToolbar';
 
+/** Chip colour for a listing's review status. */
+const statusChipColor = (status: string): 'success' | 'error' | 'warning' => {
+  if (status === 'APPROVED') return 'success';
+  if (status === 'DENIED') return 'error';
+  return 'warning';
+};
+
 const PRODUCT_FIELDS = `
   id
   product_name
@@ -164,7 +171,7 @@ export default function ProductListingsTable({ brandId, refreshKey = 0, canManag
                         <Button size="small" disabled={!canManageProducts || quantityState.loading} onClick={() => saveQuantity(product)}>Update</Button>
                       </Stack>
                     </TableCell>
-                    <TableCell><Chip size="small" label={product.listing_review_status} color={product.listing_review_status === 'APPROVED' ? 'success' : product.listing_review_status === 'DENIED' ? 'error' : 'warning'} /></TableCell>
+                    <TableCell><Chip size="small" label={product.listing_review_status} color={statusColor} /></TableCell>
                     <TableCell align="right"><Button size="small" disabled={!canManageProducts} onClick={() => onEdit(product)}>Edit</Button><Button size="small" color="error" disabled={!canManageProducts} onClick={() => setDeleteTarget(product)}>Delete</Button></TableCell>
                   </TableRow>
                 );

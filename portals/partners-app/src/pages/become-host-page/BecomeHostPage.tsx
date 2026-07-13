@@ -32,12 +32,12 @@ export default function BecomeHostPage() {
   useEffect(() => {
     const host = data?.myHost;
     if (!host) {
-      set1((current) => ({ ...current, full_name: current.full_name || accountName, email: accountEmail }));
+      setS1((current) => ({ ...current, full_name: current.full_name || accountName, email: accountEmail }));
       return;
     }
-    set1({ full_name: host.full_name || accountName, email: accountEmail || host.email || '', phone: host.phone || '', dob: host.dob ? host.dob.slice(0, 10) : '' });
-    set2({ aadhar_number: host.aadhar_number || '', pan_number: host.pan_number || '', passport_photo_url: host.passport_photo_url || '' });
-    set3({ police_verification_url: host.police_verification_url || '', full_address: host.full_address || '' });
+    setS1({ full_name: host.full_name || accountName, email: accountEmail || host.email || '', phone: host.phone || '', dob: host.dob ? host.dob.slice(0, 10) : '' });
+    setS2({ aadhar_number: host.aadhar_number || '', pan_number: host.pan_number || '', passport_photo_url: host.passport_photo_url || '' });
+    setS3({ police_verification_url: host.police_verification_url || '', full_address: host.full_address || '' });
     setStep(Math.min(host.step_completed || 0, 3));
   }, [data?.myHost, accountEmail, accountName]);
 
@@ -100,7 +100,7 @@ export default function BecomeHostPage() {
           </Stepper>
           <Card variant="outlined">
             <CardContent>
-              <HostStepContent step={step} s1={s1} s2={s2} s3={s3} set1={set1} set2={set2} set3={set3} openPicker={setPicker} />
+              <HostStepContent step={step} s1={s1} s2={s2} s3={s3} set1={setS1} set2={setS2} set3={setS3} openPicker={setPicker} />
               {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
               <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">
                 <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
@@ -112,8 +112,8 @@ export default function BecomeHostPage() {
       )}
       <PartnerPodsSection />
       <MediaPickerDialog open={picker !== null} onClose={() => setPicker(null)} onPicked={(url) => {
-        if (picker === 'photo') set2({ ...s2, passport_photo_url: url });
-        if (picker === 'police') set3({ ...s3, police_verification_url: url });
+        if (picker === 'photo') setS2({ ...s2, passport_photo_url: url });
+        if (picker === 'police') setS3({ ...s3, police_verification_url: url });
         setPicker(null);
       }} folder={picker === 'photo' ? '/hosts/photo' : '/hosts/docs'} title="Upload document" accept={picker === 'photo' ? 'image/*' : 'image/*,application/pdf'} />
     </Stack>

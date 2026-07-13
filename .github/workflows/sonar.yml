@@ -89,3 +89,9 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          # The runner has ~16 GB. Give the scanner JVM room to hold the index,
+          # and sonar.javascript.node.maxspace (see sonar-project.properties)
+          # gives the Node bridge server room for the type graph. Without both,
+          # the JS/TS sensor OOMs on this monorepo and the analysis never
+          # publishes.
+          SONAR_SCANNER_JAVA_OPTS: -Xmx4096m

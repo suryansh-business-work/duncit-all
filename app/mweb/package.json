@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.1.20",
+  "version": "1.1.21",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
     "@duncit/auth-tokens": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@emotion/react": "^11.11.4",

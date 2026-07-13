@@ -108,7 +108,6 @@ export default defineConfig({
         'src/components/MediaPickerDialog.tsx',
         'src/components/MediaPickerField.tsx',
         'src/components/MediaListField.tsx',
-        'src/components/media-picker-dialog/**',
         'src/components/media-list-field/**',
         // Survey-builder: the Apollo container (queries + mutations) and its
         // MUI-Select-driven QuestionCard editor — same class of form UI as the

@@ -1,1 +1,1 @@
-export { default } from './media-picker-dialog/MediaPickerDialog';
+export { default } from '@duncit/media-picker';

@@ -42,6 +42,8 @@ COPY packages/location/package.json ./packages/location/
 COPY packages/portal-pod-form/package.json ./packages/portal-pod-form/
 COPY packages/pod-form/package.json ./packages/pod-form/
 COPY packages/club-form/package.json ./packages/club-form/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/media-picker/package.json ./packages/media-picker/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

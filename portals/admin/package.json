@@ -17,6 +17,7 @@
     "@duncit/club-form": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/pod-form": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",
     "@duncit/shell": "workspace:*",

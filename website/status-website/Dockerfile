@@ -32,6 +32,8 @@ COPY packages/shell/package.json ./packages/shell/
 COPY packages/theme/package.json ./packages/theme/
 
 COPY packages/logs/package.json ./packages/logs/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/media-picker/package.json ./packages/media-picker/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

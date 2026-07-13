@@ -38,6 +38,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
@@ -310,6 +313,45 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  packages/media-picker:
+    devDependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      '@vitest/coverage-v8':
+        specifier: ^2.1.9
+        version: 2.1.9(vitest@2.1.9(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      jsdom:
+        specifier: ^25.0.1
+        version: 25.0.1
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+
   packages/pod-form:
     devDependencies:
       '@apollo/client':
@@ -520,6 +562,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/pod-form':
         specifier: workspace:*
         version: link:../../packages/pod-form
@@ -1649,6 +1694,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -1764,6 +1812,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -1885,6 +1936,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/pod-form':
         specifier: workspace:*
         version: link:../../packages/pod-form
@@ -2006,6 +2060,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/media-picker':
+        specifier: workspace:*
+        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell

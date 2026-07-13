@@ -1,4 +1,4 @@
-import { Controller } from 'react-hook-form';
+import { Controller, type Control } from 'react-hook-form';
 import { format } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -11,7 +11,12 @@ import { SlotPicker } from '../SlotPicker';
 import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
 import { parseDateTimeText } from '../create-pod.form';
-import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
+import type {
+  CreatePodForm,
+  CreatePodFormValues,
+  CreatePodSlot,
+  CreatePodVenue,
+} from '../create-pod.types';
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 
@@ -34,6 +39,161 @@ const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
   }
   return [{ label: 'Whole venue', capacity: venue.capacity ?? 0, slotSpaceLabel: '' }];
 };
+
+/** Only the picked space's slots — and only once a space is chosen (so no price
+ * shows before a capacity is selected). */
+const spaceSlots = (slots: CreatePodSlot[], space: VenueSpace | null): CreatePodSlot[] => {
+  if (!space) return [];
+  return slots.filter((slot) => (slot.space_label ?? '') === space.slotSpaceLabel);
+};
+
+/** The venue address the map pins, as one line. */
+const venueMapQuery = (venue: CreatePodVenue | null): string => {
+  if (!venue) return '';
+  return [
+    venue.venue_name,
+    venue.address_line1,
+    venue.locality,
+    venue.city,
+    venue.state,
+    venue.postal_code,
+    venue.country,
+  ]
+    .filter(Boolean)
+    .join(', ');
+};
+
+/** Meeting details + schedule for a virtual pod — the venue/slot twin. */
+function VirtualMeetingFields({
+  control,
+  duration,
+}: Readonly<{ control: Control<CreatePodFormValues>; duration: string | null }>) {
+  return (
+    <YStack gap={14}>
+      <FormTextField control={control} name="meeting_platform" label="Meeting platform" />
+      <FormTextField control={control} name="meeting_url" label="Meeting link" />
+      <FormTextField control={control} name="meeting_notes" label="Meeting notes" multiline />
+      <Controller
+        control={control}
+        name="pod_date_time_text"
+        render={({ field, fieldState }) => (
+          <DateTimeField
+            label="Start date & time"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            testID="pod_date_time_text"
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="pod_end_date_time_text"
+        render={({ field, fieldState }) => (
+          <DateTimeField
+            label="End date & time (optional)"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            testID="pod_end_date_time_text"
+          />
+        )}
+      />
+      {duration ? (
+        <Text testID="pod-duration" fontSize={12.5} fontWeight="800" color="$muted">
+          Total duration: {duration}
+        </Text>
+      ) : null}
+    </YStack>
+  );
+}
+
+/** One bookable space — its capacity is the pod's No. of spots. */
+function SpaceChip({
+  space,
+  selected,
+  onPick,
+}: Readonly<{ space: VenueSpace; selected: boolean; onPick: (space: VenueSpace) => void }>) {
+  return (
+    <XStack
+      testID={`create-pod-space-${space.label}`}
+      role="button"
+      aria-label={`${space.label} ${space.capacity} spots`}
+      aria-pressed={selected}
+      onPress={() => onPick(space)}
+      paddingHorizontal={12}
+      paddingVertical={7}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor={selected ? '$primary' : '$borderColor'}
+      backgroundColor={selected ? '$primary' : 'transparent'}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <Text fontSize={12.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
+        {space.label} · {space.capacity} spots
+      </Text>
+    </XStack>
+  );
+}
+
+/** The picked venue's total capacity + its bookable spaces (slots follow). */
+function VenueSpaceCard({
+  venue,
+  spaces,
+  spaceLabel,
+  spaceError,
+  onPick,
+}: Readonly<{
+  venue: CreatePodVenue;
+  spaces: VenueSpace[];
+  spaceLabel: string;
+  spaceError?: string;
+  onPick: (space: VenueSpace) => void;
+}>) {
+  return (
+    <YStack
+      gap={8}
+      padding={12}
+      borderRadius={12}
+      backgroundColor="$surface"
+      borderWidth={1}
+      borderColor="$borderColor"
+    >
+      <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="800" color="$color">
+        {venue.venue_type ? `${venue.venue_type} · ` : ''}Total capacity: {venue.capacity ?? 0}
+      </Text>
+      <YStack gap={6}>
+        <Text fontSize={14} fontWeight="500" color="$color">
+          Space &amp; capacity *
+        </Text>
+        <XStack gap={6} flexWrap="wrap">
+          {spaces.map((space) => (
+            <SpaceChip
+              key={space.label}
+              space={space}
+              selected={spaceLabel === space.label}
+              onPick={onPick}
+            />
+          ))}
+        </XStack>
+        <Text fontSize={12} color={spaceError ? '$danger' : '$muted'}>
+          {spaceError ?? 'Pick a space — its capacity sets No. of spots. Slots show after this.'}
+        </Text>
+      </YStack>
+    </YStack>
+  );
+}
+
+/** Own venues book instantly; every other venue approves the slot first. */
+function SlotApprovalNote({ ownVenue }: Readonly<{ ownVenue: boolean }>) {
+  return (
+    <Text testID="create-pod-approval-note" fontSize={12.5} fontWeight="700" color="$muted">
+      {ownVenue
+        ? 'This is your venue — the slot books instantly and the pod goes live on publish.'
+        : 'The pod goes live only after the venue approves this slot. The venue contact below is shared for follow-up.'}
+    </Text>
+  );
+}
 
 interface Props {
   form: CreatePodForm;
@@ -69,11 +229,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
   const spaceLabel = watch('venue_space_label');
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
   const { slots, isLoading } = useVenueSlots(mode === 'PHYSICAL' ? venueId : '');
-  // Only the picked space's slots — and only once a space is chosen (so no price
-  // shows before a capacity is selected).
-  const slotsForSpace = selectedSpace
-    ? slots.filter((slot) => (slot.space_label ?? '') === selectedSpace.slotSpaceLabel)
-    : [];
+  const slotsForSpace = spaceSlots(slots, selectedSpace);
 
   // Each chip carries its own space, so picking one fills spots with no lookup.
   const pickSpace = (space: VenueSpace) => {
@@ -104,59 +260,10 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
   };
 
   if (mode !== 'PHYSICAL') {
-    return (
-      <YStack gap={14}>
-        <FormTextField control={control} name="meeting_platform" label="Meeting platform" />
-        <FormTextField control={control} name="meeting_url" label="Meeting link" />
-        <FormTextField control={control} name="meeting_notes" label="Meeting notes" multiline />
-        <Controller
-          control={control}
-          name="pod_date_time_text"
-          render={({ field, fieldState }) => (
-            <DateTimeField
-              label="Start date & time"
-              value={field.value}
-              onChange={field.onChange}
-              error={fieldState.error?.message}
-              testID="pod_date_time_text"
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="pod_end_date_time_text"
-          render={({ field, fieldState }) => (
-            <DateTimeField
-              label="End date & time (optional)"
-              value={field.value}
-              onChange={field.onChange}
-              error={fieldState.error?.message}
-              testID="pod_end_date_time_text"
-            />
-          )}
-        />
-        {duration ? (
-          <Text testID="pod-duration" fontSize={12.5} fontWeight="800" color="$muted">
-            Total duration: {duration}
-          </Text>
-        ) : null}
-      </YStack>
-    );
+    return <VirtualMeetingFields control={control} duration={duration} />;
   }
 
-  const mapQuery = selectedVenue
-    ? [
-        selectedVenue.venue_name,
-        selectedVenue.address_line1,
-        selectedVenue.locality,
-        selectedVenue.city,
-        selectedVenue.state,
-        selectedVenue.postal_code,
-        selectedVenue.country,
-      ]
-        .filter(Boolean)
-        .join(', ')
-    : '';
+  const mapQuery = venueMapQuery(selectedVenue);
 
   return (
     <YStack gap={14}>
@@ -178,58 +285,13 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
         )}
       />
       {selectedVenue ? (
-        <YStack
-          gap={8}
-          padding={12}
-          borderRadius={12}
-          backgroundColor="$surface"
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="800" color="$color">
-            {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}Total capacity:{' '}
-            {selectedVenue.capacity ?? 0}
-          </Text>
-          <YStack gap={6}>
-            <Text fontSize={14} fontWeight="500" color="$color">
-              Space &amp; capacity *
-            </Text>
-            <XStack gap={6} flexWrap="wrap">
-              {spaces.map((space) => {
-                const selected = spaceLabel === space.label;
-                return (
-                  <XStack
-                    key={space.label}
-                    testID={`create-pod-space-${space.label}`}
-                    role="button"
-                    aria-label={`${space.label} ${space.capacity} spots`}
-                    aria-pressed={selected}
-                    onPress={() => pickSpace(space)}
-                    paddingHorizontal={12}
-                    paddingVertical={7}
-                    borderRadius={999}
-                    borderWidth={1}
-                    borderColor={selected ? '$primary' : '$borderColor'}
-                    backgroundColor={selected ? '$primary' : 'transparent'}
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    <Text
-                      fontSize={12.5}
-                      fontWeight="800"
-                      color={selected ? '$onPrimary' : '$color'}
-                    >
-                      {space.label} · {space.capacity} spots
-                    </Text>
-                  </XStack>
-                );
-              })}
-            </XStack>
-            <Text fontSize={12} color={spaceError ? '$danger' : '$muted'}>
-              {spaceError ??
-                'Pick a space — its capacity sets No. of spots. Slots show after this.'}
-            </Text>
-          </YStack>
-        </YStack>
+        <VenueSpaceCard
+          venue={selectedVenue}
+          spaces={spaces}
+          spaceLabel={spaceLabel}
+          spaceError={spaceError}
+          onPick={pickSpace}
+        />
       ) : null}
       {selectedVenue && selectedSpace ? (
         <Controller
@@ -246,13 +308,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
           )}
         />
       ) : null}
-      {selectedVenue && slotId ? (
-        <Text testID="create-pod-approval-note" fontSize={12.5} fontWeight="700" color="$muted">
-          {ownVenue
-            ? 'This is your venue — the slot books instantly and the pod goes live on publish.'
-            : 'The pod goes live only after the venue approves this slot. The venue contact below is shared for follow-up.'}
-        </Text>
-      ) : null}
+      {selectedVenue && slotId ? <SlotApprovalNote ownVenue={ownVenue} /> : null}
       {selectedVenue ? <VenueContactCard venue={selectedVenue} /> : null}
       {mapQuery ? <MapEmbed query={mapQuery} height={200} /> : null}
       {duration ? (

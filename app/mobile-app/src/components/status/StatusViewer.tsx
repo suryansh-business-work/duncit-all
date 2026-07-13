@@ -49,6 +49,97 @@ const TICK_MS = 100;
 /* istanbul ignore next -- placeholder ref value, replaced on the first render */
 const NOOP = () => undefined;
 
+/** Author line: the name plus the optional sub-label (followed club/pod/user) and
+ * the countdown until the status is auto-removed. */
+function StatusHeaderText({
+  name,
+  subLabel,
+  remaining,
+}: Readonly<{ name: string; subLabel?: string | null; remaining: string | null }>) {
+  return (
+    <YStack flex={1}>
+      <Text color="#ffffff" fontSize={16} fontWeight="900" numberOfLines={1}>
+        {name}
+      </Text>
+      {subLabel ? (
+        <Text
+          testID="status-sublabel"
+          color="rgba(255,255,255,0.75)"
+          fontSize={11.5}
+          fontWeight="700"
+          numberOfLines={1}
+        >
+          {subLabel}
+        </Text>
+      ) : null}
+      {remaining ? (
+        <Text
+          testID="status-remaining"
+          color="rgba(255,255,255,0.75)"
+          fontSize={11.5}
+          fontWeight="700"
+        >
+          {remaining}
+        </Text>
+      ) : null}
+    </YStack>
+  );
+}
+
+/** The slide media — a video plays to its end (or the 15s cap), an image just
+ * fills the frame. Renders nothing while a slide carries no media. */
+function StatusMedia({
+  isVideo,
+  uri,
+  onEnded,
+}: Readonly<{ isVideo: boolean; uri?: string | null; onEnded: () => void }>) {
+  return (
+    <>
+      {isVideo && uri ? <StatusVideo uri={uri} onEnded={onEnded} /> : null}
+      {!isVideo && uri ? (
+        <AppImage
+          testID="status-viewer-image"
+          source={{ uri }}
+          style={{ flex: 1, width: '100%' }}
+          resizeMode="cover"
+        />
+      ) : null}
+    </>
+  );
+}
+
+/** Followers' stories only — the heart with its running like count (Bug 5). */
+function StatusLikeButton({
+  liked,
+  likeCount,
+  onPress,
+}: Readonly<{ liked: boolean; likeCount: number; onPress: () => void }>) {
+  return (
+    <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
+      <XStack
+        testID="status-like"
+        role="button"
+        aria-label={liked ? 'Unlike story' : 'Like story'}
+        onPress={onPress}
+        alignItems="center"
+        gap={6}
+        pressStyle={{ opacity: 0.7 }}
+      >
+        <MaterialIcons
+          name={liked ? 'favorite' : 'favorite-border'}
+          size={26}
+          color={liked ? '#ff4f73' : '#ffffff'}
+        />
+        {likeCount > 0 ? (
+          <Text testID="status-like-count" fontSize={14} fontWeight="800" color="#ffffff">
+            {likeCount}
+          </Text>
+        ) : null}
+      </XStack>
+    </XStack>
+  );
+}
+
 /** Full-screen story viewer — multi-slide, auto-advancing (15s per image, video
  * to its end), with tap zones for manual prev/next and a close button. */
 export function StatusViewer({
@@ -172,32 +263,11 @@ export function StatusViewer({
               })}
             </XStack>
             <XStack alignItems="center" justifyContent="space-between" padding={16}>
-              <YStack flex={1}>
-                <Text color="#ffffff" fontSize={16} fontWeight="900" numberOfLines={1}>
-                  {status?.name ?? ''}
-                </Text>
-                {status?.subLabel ? (
-                  <Text
-                    testID="status-sublabel"
-                    color="rgba(255,255,255,0.75)"
-                    fontSize={11.5}
-                    fontWeight="700"
-                    numberOfLines={1}
-                  >
-                    {status.subLabel}
-                  </Text>
-                ) : null}
-                {remaining ? (
-                  <Text
-                    testID="status-remaining"
-                    color="rgba(255,255,255,0.75)"
-                    fontSize={11.5}
-                    fontWeight="700"
-                  >
-                    {remaining}
-                  </Text>
-                ) : null}
-              </YStack>
+              <StatusHeaderText
+                name={status?.name ?? ''}
+                subLabel={status?.subLabel}
+                remaining={remaining}
+              />
               {onDelete && current ? (
                 <XStack
                   testID="status-viewer-kebab"
@@ -273,17 +343,11 @@ export function StatusViewer({
               }}
               onResponderRelease={(event) => onSwipeRelease(event.nativeEvent.pageX)}
             >
-              {isVideo && current?.imageUrl ? (
-                <StatusVideo uri={current.imageUrl} onEnded={() => advanceRef.current()} />
-              ) : null}
-              {!isVideo && current?.imageUrl ? (
-                <AppImage
-                  testID="status-viewer-image"
-                  source={{ uri: current.imageUrl }}
-                  style={{ flex: 1, width: '100%' }}
-                  resizeMode="cover"
-                />
-              ) : null}
+              <StatusMedia
+                isVideo={isVideo}
+                uri={current?.imageUrl}
+                onEnded={() => advanceRef.current()}
+              />
               <XStack position="absolute" top={0} bottom={0} left={0} right={0}>
                 <YStack testID="status-prev" width="30%" onPress={goPrev} />
                 <YStack flex={1} testID="status-next" onPress={() => advanceRef.current()} />
@@ -295,28 +359,7 @@ export function StatusViewer({
               </Text>
             ) : null}
             {onToggleLike && current ? (
-              <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
-                <XStack
-                  testID="status-like"
-                  role="button"
-                  aria-label={liked ? 'Unlike story' : 'Like story'}
-                  onPress={toggleLike}
-                  alignItems="center"
-                  gap={6}
-                  pressStyle={{ opacity: 0.7 }}
-                >
-                  <MaterialIcons
-                    name={liked ? 'favorite' : 'favorite-border'}
-                    size={26}
-                    color={liked ? '#ff4f73' : '#ffffff'}
-                  />
-                  {likeCount > 0 ? (
-                    <Text testID="status-like-count" fontSize={14} fontWeight="800" color="#ffffff">
-                      {likeCount}
-                    </Text>
-                  ) : null}
-                </XStack>
-              </XStack>
+              <StatusLikeButton liked={liked} likeCount={likeCount} onPress={toggleLike} />
             ) : null}
             {onViewers && current ? (
               <XStack paddingHorizontal={16} paddingTop={8}>

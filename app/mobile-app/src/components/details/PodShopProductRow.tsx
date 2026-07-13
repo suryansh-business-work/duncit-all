@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -44,6 +46,118 @@ export function StepButton({
   );
 }
 
+/** The row shell — a checkbox that toggles the pick, inert when read-only. */
+function ProductRowShell({
+  testID,
+  productName,
+  selected,
+  readOnly,
+  onToggle,
+  children,
+}: Readonly<{
+  testID: string;
+  productName: Product['product_name'];
+  selected: boolean;
+  readOnly?: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}>) {
+  return (
+    <XStack
+      testID={testID}
+      role={readOnly ? undefined : 'checkbox'}
+      aria-label={readOnly ? undefined : `Select ${productName}`}
+      aria-checked={readOnly ? undefined : selected}
+      onPress={readOnly ? undefined : onToggle}
+      gap={10}
+      alignItems="center"
+      padding={10}
+      borderRadius={14}
+      borderWidth={1}
+      borderColor={selected ? '$primary' : '$borderColor'}
+      backgroundColor="$surface"
+      pressStyle={readOnly ? undefined : { opacity: 0.85 }}
+    >
+      {children}
+    </XStack>
+  );
+}
+
+/** The include-in-order tick; hidden altogether on read-only rows. */
+function SelectCheckbox({
+  selected,
+  primary,
+}: Readonly<{
+  selected: boolean;
+  primary: string;
+}>) {
+  return (
+    <MaterialIcons
+      name={selected ? 'check-box' : 'check-box-outline-blank'}
+      size={22}
+      color={selected ? primary : MUTED_ICON}
+    />
+  );
+}
+
+/** Product thumbnail; falls back to a bag icon when the product has no image. */
+function ProductThumb({ image }: Readonly<{ image: string }>) {
+  return (
+    <YStack
+      width={48}
+      height={48}
+      borderRadius={10}
+      overflow="hidden"
+      backgroundColor="rgba(255,139,95,0.18)"
+      alignItems="center"
+      justifyContent="center"
+    >
+      {image ? (
+        <AppImage source={{ uri: image }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+      ) : (
+        <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
+      )}
+    </YStack>
+  );
+}
+
+/** +/- steppers for a picked product; the + stops at the available stock. */
+function QuantityStepper({
+  productId,
+  quantity,
+  maxQuantity,
+  primary,
+  onUpdate,
+}: Readonly<{
+  productId: string;
+  quantity: number;
+  maxQuantity: number;
+  primary: string;
+  onUpdate: (productId: string, quantity: number) => void;
+}>) {
+  const atMax = quantity >= maxQuantity;
+  return (
+    <XStack alignItems="center" gap={12} marginTop={6}>
+      <StepButton
+        testID={`pod-shop-dec-${productId}`}
+        icon="remove"
+        color={primary}
+        onPress={() => onUpdate(productId, quantity - 1)}
+      />
+      <Text testID={`pod-shop-qty-${productId}`} fontSize={14} fontWeight="900" color="$color">
+        {quantity}
+      </Text>
+      <StepButton
+        testID={`pod-shop-inc-${productId}`}
+        icon="add"
+        color={atMax ? MUTED_ICON : primary}
+        disabled={atMax}
+        onPress={() => onUpdate(productId, Math.min(maxQuantity, quantity + 1))}
+      />
+    </XStack>
+  );
+}
+
 /** A selectable product row — checkbox to include, +/- steppers when picked,
  * quantity clamped to the available stock. */
 export function PodShopProductRow({
@@ -65,46 +179,17 @@ export function PodShopProductRow({
   const maxQuantity = Number(product.available_count ?? product.quantity ?? 0);
   // Members can only view products — never select them (avoids a re-charge).
   const selected = !readOnly && quantity > 0;
-  const atMax = quantity >= maxQuantity;
   const lineTotal = Number(product.unit_cost ?? 0) * Math.max(quantity, 1);
   return (
-    <XStack
+    <ProductRowShell
       testID={`pod-shop-row-${product.product_id}`}
-      role={readOnly ? undefined : 'checkbox'}
-      aria-label={readOnly ? undefined : `Select ${product.product_name}`}
-      aria-checked={readOnly ? undefined : selected}
-      onPress={readOnly ? undefined : () => onUpdate(product.product_id, selected ? 0 : 1)}
-      gap={10}
-      alignItems="center"
-      padding={10}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor={selected ? '$primary' : '$borderColor'}
-      backgroundColor="$surface"
-      pressStyle={readOnly ? undefined : { opacity: 0.85 }}
+      productName={product.product_name}
+      selected={selected}
+      readOnly={readOnly}
+      onToggle={() => onUpdate(product.product_id, selected ? 0 : 1)}
     >
-      {readOnly ? null : (
-        <MaterialIcons
-          name={selected ? 'check-box' : 'check-box-outline-blank'}
-          size={22}
-          color={selected ? primary : MUTED_ICON}
-        />
-      )}
-      <YStack
-        width={48}
-        height={48}
-        borderRadius={10}
-        overflow="hidden"
-        backgroundColor="rgba(255,139,95,0.18)"
-        alignItems="center"
-        justifyContent="center"
-      >
-        {image ? (
-          <AppImage source={{ uri: image }} style={{ width: 48, height: 48 }} resizeMode="cover" />
-        ) : (
-          <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
-        )}
-      </YStack>
+      {readOnly ? null : <SelectCheckbox selected={selected} primary={primary} />}
+      <ProductThumb image={image} />
       <YStack flex={1} gap={2}>
         <Text fontSize={14} fontWeight="800" color="$color">
           {product.product_name}
@@ -113,29 +198,13 @@ export function PodShopProductRow({
           Available {maxQuantity}
         </Text>
         {selected ? (
-          <XStack alignItems="center" gap={12} marginTop={6}>
-            <StepButton
-              testID={`pod-shop-dec-${product.product_id}`}
-              icon="remove"
-              color={primary}
-              onPress={() => onUpdate(product.product_id, quantity - 1)}
-            />
-            <Text
-              testID={`pod-shop-qty-${product.product_id}`}
-              fontSize={14}
-              fontWeight="900"
-              color="$color"
-            >
-              {quantity}
-            </Text>
-            <StepButton
-              testID={`pod-shop-inc-${product.product_id}`}
-              icon="add"
-              color={atMax ? MUTED_ICON : primary}
-              disabled={atMax}
-              onPress={() => onUpdate(product.product_id, Math.min(maxQuantity, quantity + 1))}
-            />
-          </XStack>
+          <QuantityStepper
+            productId={product.product_id}
+            quantity={quantity}
+            maxQuantity={maxQuantity}
+            primary={primary}
+            onUpdate={onUpdate}
+          />
         ) : null}
       </YStack>
       <XStack
@@ -155,6 +224,6 @@ export function PodShopProductRow({
       <Text fontSize={14} fontWeight="900" color="$color">
         +₹{lineTotal}
       </Text>
-    </XStack>
+    </ProductRowShell>
   );
 }

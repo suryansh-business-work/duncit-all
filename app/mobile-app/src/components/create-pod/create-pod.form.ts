@@ -36,6 +36,98 @@ const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 export const hasImageLine = (mediaText: string) =>
   splitMediaLines(mediaText).some((url) => !VIDEO_URL_RE.test(url));
 
+/** Physical pods must book a venue, a space (capacity) and one of its slots. */
+function refineVenue(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
+    ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
+  } else if (values.pod_mode === 'PHYSICAL' && !values.venue_space_label) {
+    // A space (capacity) is chosen after the venue and gates the slot list.
+    ctx.addIssue({
+      code: 'custom',
+      path: ['venue_space_label'],
+      message: 'Pick a space / capacity',
+    });
+  }
+  if (values.pod_mode === 'PHYSICAL' && !values.venue_slot_id) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['venue_slot_id'],
+      message: 'Pick an available slot from the venue calendar',
+    });
+  }
+}
+
+/** Virtual pods must carry a valid meeting link. */
+function refineMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_mode === 'VIRTUAL') {
+    if (!values.meeting_url) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['meeting_url'],
+        message: 'Meeting link is required',
+      });
+    } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['meeting_url'],
+        message: 'Meeting link must be valid',
+      });
+    }
+  }
+}
+
+/** The pod window: a future start and (when set) an end after it. */
+function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  const start = parseDateTimeText(values.pod_date_time_text);
+  if (start && start.getTime() <= Date.now()) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_date_time_text'],
+      message: 'Start must be in the future',
+    });
+  }
+  const end = parseDateTimeText(values.pod_end_date_time_text);
+  if (start && end && end <= start) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_end_date_time_text'],
+      message: 'End must be after start',
+    });
+  }
+}
+
+/** Pricing, products, media and the Organizer Terms gate on the publish step. */
+function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_type.includes('FREE') && Number(values.pod_amount_text) !== 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['pod_amount_text'],
+      message: 'Free pods must have amount 0',
+    });
+  }
+  if (values.products_enabled && values.product_requests.length === 0) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['product_requests'],
+      message: 'Add at least one product',
+    });
+  }
+  if (!hasImageLine(values.media_text)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['media_text'],
+      message: 'Add at least one image URL',
+    });
+  }
+  if (!values.agreed_to_terms) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['agreed_to_terms'],
+      message: 'Accept the Organizer Terms to publish',
+    });
+  }
+}
+
 /** Zod schema for the host Create Pod stepper — same rules as mWeb's form. */
 export const createPodSchema = z
   .object({
@@ -91,82 +183,10 @@ export const createPodSchema = z
     agreed_to_terms: z.boolean(),
   })
   .superRefine((values, ctx) => {
-    if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
-      ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
-    } else if (values.pod_mode === 'PHYSICAL' && !values.venue_space_label) {
-      // A space (capacity) is chosen after the venue and gates the slot list.
-      ctx.addIssue({
-        code: 'custom',
-        path: ['venue_space_label'],
-        message: 'Pick a space / capacity',
-      });
-    }
-    if (values.pod_mode === 'PHYSICAL' && !values.venue_slot_id) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['venue_slot_id'],
-        message: 'Pick an available slot from the venue calendar',
-      });
-    }
-    if (values.pod_mode === 'VIRTUAL') {
-      if (!values.meeting_url) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['meeting_url'],
-          message: 'Meeting link is required',
-        });
-      } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['meeting_url'],
-          message: 'Meeting link must be valid',
-        });
-      }
-    }
-    const start = parseDateTimeText(values.pod_date_time_text);
-    if (start && start.getTime() <= Date.now()) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pod_date_time_text'],
-        message: 'Start must be in the future',
-      });
-    }
-    const end = parseDateTimeText(values.pod_end_date_time_text);
-    if (start && end && end <= start) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pod_end_date_time_text'],
-        message: 'End must be after start',
-      });
-    }
-    if (values.pod_type.includes('FREE') && Number(values.pod_amount_text) !== 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pod_amount_text'],
-        message: 'Free pods must have amount 0',
-      });
-    }
-    if (values.products_enabled && values.product_requests.length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['product_requests'],
-        message: 'Add at least one product',
-      });
-    }
-    if (!hasImageLine(values.media_text)) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['media_text'],
-        message: 'Add at least one image URL',
-      });
-    }
-    if (!values.agreed_to_terms) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['agreed_to_terms'],
-        message: 'Accept the Organizer Terms to publish',
-      });
-    }
+    refineVenue(values, ctx);
+    refineMeeting(values, ctx);
+    refineSchedule(values, ctx);
+    refinePublish(values, ctx);
   });
 
 /** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */

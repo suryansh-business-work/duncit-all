@@ -29,6 +29,64 @@ const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> 
   RESOLVED: 'success',
 };
 
+type SosAlertContactsProps = {
+  alert: SosAlert;
+};
+
+function SosAlertContacts({ alert }: Readonly<SosAlertContactsProps>) {
+  return (
+    <Stack direction="row" spacing={2} flexWrap="wrap">
+      {alert.contact_phone && (
+        <Link href={`tel:${alert.contact_phone}`} variant="body2">
+          📞 {alert.contact_phone}
+        </Link>
+      )}
+      {alert.location && (
+        <Link
+          href={`https://www.google.com/maps?q=${alert.location.lat},${alert.location.lng}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="body2"
+          sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+        >
+          <LocationOnIcon fontSize="inherit" /> Open in Maps
+        </Link>
+      )}
+      {alert.host && (
+        <Typography variant="body2" color="text.secondary">
+          Host: {alert.host.name}
+          {alert.host.phone ? ` (${alert.host.phone})` : ''}
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
+type SosAlertActionsProps = {
+  status: SosAlert['status'];
+  busy: boolean;
+  onAck: () => void;
+  onResolve: () => void;
+};
+
+function SosAlertActions({ status, busy, onAck, onResolve }: Readonly<SosAlertActionsProps>) {
+  if (status === 'RESOLVED') {
+    return null;
+  }
+  return (
+    <Stack direction="row" spacing={1}>
+      {status === 'ACTIVE' && (
+        <Button variant="contained" color="warning" disabled={busy} onClick={onAck}>
+          Acknowledge
+        </Button>
+      )}
+      <Button variant="contained" color="success" disabled={busy} onClick={onResolve}>
+        Mark resolved
+      </Button>
+    </Stack>
+  );
+}
+
 type SosAlertCardProps = {
   alert: SosAlert;
   busy: boolean;
@@ -66,43 +124,14 @@ function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardPr
             </Typography>
           )}
 
-          <Stack direction="row" spacing={2} flexWrap="wrap">
-            {alert.contact_phone && (
-              <Link href={`tel:${alert.contact_phone}`} variant="body2">
-                📞 {alert.contact_phone}
-              </Link>
-            )}
-            {alert.location && (
-              <Link
-                href={`https://www.google.com/maps?q=${alert.location.lat},${alert.location.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                variant="body2"
-                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-              >
-                <LocationOnIcon fontSize="inherit" /> Open in Maps
-              </Link>
-            )}
-            {alert.host && (
-              <Typography variant="body2" color="text.secondary">
-                Host: {alert.host.name}
-                {alert.host.phone ? ` (${alert.host.phone})` : ''}
-              </Typography>
-            )}
-          </Stack>
+          <SosAlertContacts alert={alert} />
 
-          {alert.status !== 'RESOLVED' && (
-            <Stack direction="row" spacing={1}>
-              {alert.status === 'ACTIVE' && (
-                <Button variant="contained" color="warning" disabled={busy} onClick={onAck}>
-                  Acknowledge
-                </Button>
-              )}
-              <Button variant="contained" color="success" disabled={busy} onClick={onResolve}>
-                Mark resolved
-              </Button>
-            </Stack>
-          )}
+          <SosAlertActions
+            status={alert.status}
+            busy={busy}
+            onAck={onAck}
+            onResolve={onResolve}
+          />
         </Stack>
       </CardContent>
     </Card>

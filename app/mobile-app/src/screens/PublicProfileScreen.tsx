@@ -15,6 +15,76 @@ import { usePublicProfile } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 
+/** Follow/unfollow pill shown on someone else's profile (B4-12) — inert while busy. */
+function FollowButton({
+  following,
+  followBusy,
+  onPrimary,
+  ink,
+  onToggle,
+}: Readonly<{
+  following: boolean;
+  followBusy: boolean;
+  onPrimary: string;
+  ink: string;
+  onToggle: () => Promise<void>;
+}>) {
+  return (
+    <XStack
+      testID="public-profile-follow"
+      role="button"
+      aria-label={following ? 'Unfollow user' : 'Follow user'}
+      aria-disabled={followBusy}
+      onPress={followBusy ? undefined : () => void onToggle()}
+      alignSelf="center"
+      alignItems="center"
+      gap={8}
+      paddingHorizontal={20}
+      paddingVertical={10}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor={following ? '$primary' : '$borderColor'}
+      backgroundColor={following ? '$primary' : 'transparent'}
+      opacity={followBusy ? 0.7 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <MaterialIcons
+        name={following ? 'how-to-reg' : 'person-add-alt'}
+        size={18}
+        color={following ? onPrimary : ink}
+      />
+      <Text fontSize={14} fontWeight="900" color={following ? '$onPrimary' : '$color'}>
+        {following ? 'Following' : 'Follow'}
+      </Text>
+    </XStack>
+  );
+}
+
+/** Owner-only shortcut into the account editor. */
+function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
+  return (
+    <XStack
+      testID="public-profile-edit"
+      role="button"
+      aria-label="Edit my profile"
+      onPress={onPress}
+      alignSelf="center"
+      alignItems="center"
+      gap={6}
+      paddingHorizontal={18}
+      paddingVertical={10}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor="$borderColor"
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <Text fontSize={14} fontWeight="800" color="$color">
+        Edit my profile
+      </Text>
+    </XStack>
+  );
+}
+
 /** A user's public profile — header, owner actions (when it's you) and badges.
  * RN twin of mWeb's PublicProfilePage. */
 export function PublicProfileScreen() {
@@ -54,55 +124,15 @@ export function PublicProfileScreen() {
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16 }}>
         <PublicProfileHeader user={user} />
         {isOwner ? null : (
-          <XStack
-            testID="public-profile-follow"
-            role="button"
-            aria-label={following ? 'Unfollow user' : 'Follow user'}
-            aria-disabled={followBusy}
-            onPress={followBusy ? undefined : () => void toggleFollow()}
-            alignSelf="center"
-            alignItems="center"
-            gap={8}
-            paddingHorizontal={20}
-            paddingVertical={10}
-            borderRadius={999}
-            borderWidth={1}
-            borderColor={following ? '$primary' : '$borderColor'}
-            backgroundColor={following ? '$primary' : 'transparent'}
-            opacity={followBusy ? 0.7 : 1}
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <MaterialIcons
-              name={following ? 'how-to-reg' : 'person-add-alt'}
-              size={18}
-              color={following ? onPrimary : ink}
-            />
-            <Text fontSize={14} fontWeight="900" color={following ? '$onPrimary' : '$color'}>
-              {following ? 'Following' : 'Follow'}
-            </Text>
-          </XStack>
+          <FollowButton
+            following={following}
+            followBusy={followBusy}
+            onPrimary={onPrimary}
+            ink={ink}
+            onToggle={toggleFollow}
+          />
         )}
-        {isOwner ? (
-          <XStack
-            testID="public-profile-edit"
-            role="button"
-            aria-label="Edit my profile"
-            onPress={() => navigation.navigate('Account')}
-            alignSelf="center"
-            alignItems="center"
-            gap={6}
-            paddingHorizontal={18}
-            paddingVertical={10}
-            borderRadius={999}
-            borderWidth={1}
-            borderColor="$borderColor"
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <Text fontSize={14} fontWeight="800" color="$color">
-              Edit my profile
-            </Text>
-          </XStack>
-        ) : null}
+        {isOwner ? <EditProfileButton onPress={() => navigation.navigate('Account')} /> : null}
         <PublicProfileBadges badges={badges} />
         <PublicProfilePosts posts={posts} stories={stories} canView={canView} />
       </ScrollView>

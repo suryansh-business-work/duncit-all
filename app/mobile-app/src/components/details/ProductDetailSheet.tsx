@@ -13,7 +13,7 @@ import { ProductQuantityBar } from '@/components/details/ProductQuantityBar';
 import { PublicInventoryProductDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { formatRupees, productSpecs } from '@/utils/product-specs';
+import { formatRupees, productSpecs, type ProductSpec } from '@/utils/product-specs';
 import { toErrorMessage } from '@/utils/errors';
 
 type Product = NonNullable<
@@ -31,6 +31,184 @@ interface Props {
   onUpdateQuantity?: (quantity: number) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   readOnly?: boolean;
+}
+
+interface BodyProps {
+  product: Product | null;
+  images: string[];
+  price: number;
+  mrp: number;
+  hasMrp: boolean;
+  brandId: string | null;
+  quantity: number;
+  maxQuantity: number;
+  primary: string;
+  readOnly?: boolean;
+  onUpdateQuantity?: (quantity: number) => void;
+  onZoom: (index: number) => void;
+  onOpenBrand: (brandId: string) => void;
+}
+
+/** The gallery: the product's image list, falling back to its single cover
+ * image. Shared by the sheet and the pinch-zoom viewer, so it lives in the parent. */
+function productImages(product: Product | null): string[] {
+  if (!product) return [];
+  const gallery = product.images;
+  return gallery.length > 0 ? gallery : [product.image_url].filter(Boolean);
+}
+
+/** Horizontal image strip — tapping a thumbnail opens the pinch-zoom viewer. */
+function ImageStrip({
+  images,
+  onZoom,
+}: Readonly<{ images: string[]; onZoom: (index: number) => void }>) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <XStack gap={10}>
+        {images.map((url, imageIndex) => (
+          <YStack
+            key={url}
+            testID={`product-detail-image-${imageIndex}`}
+            role="button"
+            aria-label="Zoom image"
+            onPress={() => onZoom(imageIndex)}
+          >
+            <AppImage
+              source={{ uri: url }}
+              style={{ width: 180, height: 180, borderRadius: 12 }}
+              resizeMode="cover"
+            />
+          </YStack>
+        ))}
+      </XStack>
+    </ScrollView>
+  );
+}
+
+/** Brand attribution — tappable (opens the brand sheet) only when the product
+ * carries a brand link. */
+function BrandRow({
+  brandId,
+  brandName,
+  primary,
+  onOpenBrand,
+}: Readonly<{
+  brandId: string | null;
+  brandName: string;
+  primary: string;
+  onOpenBrand: (brandId: string) => void;
+}>) {
+  return (
+    <XStack
+      testID="product-detail-brand"
+      role={brandId ? 'button' : undefined}
+      aria-label={brandId ? `View ${brandName}` : undefined}
+      onPress={brandId ? () => onOpenBrand(brandId) : undefined}
+      gap={5}
+      alignItems="center"
+      pressStyle={brandId ? { opacity: 0.6 } : undefined}
+    >
+      <MaterialIcons name="storefront" size={15} color="#9aa0a6" />
+      <Text fontSize={13} fontWeight="800" color={brandId ? '$primary' : '$muted'}>
+        by {brandName}
+      </Text>
+      {brandId ? <MaterialIcons name="chevron-right" size={16} color={primary} /> : null}
+    </XStack>
+  );
+}
+
+/** Physical spec rows (size, colour, weight, dimensions) from the Product portal. */
+function SpecGrid({ specs }: Readonly<{ specs: ProductSpec[] }>) {
+  return (
+    <YStack
+      testID="product-detail-specs"
+      gap={0}
+      borderWidth={1}
+      borderColor="$borderColor"
+      borderRadius={12}
+      overflow="hidden"
+    >
+      {specs.map((spec, specIndex) => (
+        <XStack
+          key={spec.label}
+          justifyContent="space-between"
+          paddingHorizontal={12}
+          paddingVertical={10}
+          borderTopWidth={specIndex === 0 ? 0 : 1}
+          borderColor="$borderColor"
+        >
+          <Text fontSize={13} color="$muted" fontWeight="700">
+            {spec.label}
+          </Text>
+          <Text fontSize={13} color="$color" fontWeight="800">
+            {spec.value}
+          </Text>
+        </XStack>
+      ))}
+    </YStack>
+  );
+}
+
+/** The loaded product: gallery, name, price, brand, description, specs and the
+ * quantity bar. Renders nothing until the product has arrived. */
+function ProductBody({
+  product,
+  images,
+  price,
+  mrp,
+  hasMrp,
+  brandId,
+  quantity,
+  maxQuantity,
+  primary,
+  readOnly,
+  onUpdateQuantity,
+  onZoom,
+  onOpenBrand,
+}: Readonly<BodyProps>) {
+  if (!product) return null;
+  const description = product.description || product.short_description;
+  const specs = productSpecs(product);
+
+  return (
+    <ScrollView paddingHorizontal={16}>
+      <YStack gap={12} paddingBottom={12}>
+        {images.length > 0 ? <ImageStrip images={images} onZoom={onZoom} /> : null}
+        <Text testID="product-detail-name" fontSize={18} fontWeight="900" color="$color">
+          {product.product_name}
+        </Text>
+        <XStack alignItems="baseline" gap={8}>
+          <Text testID="product-detail-price" fontSize={20} fontWeight="900" color="$primary">
+            {formatRupees(price)}
+          </Text>
+          {hasMrp ? (
+            <Text fontSize={13} color="$muted" textDecorationLine="line-through">
+              {formatRupees(mrp)}
+            </Text>
+          ) : null}
+        </XStack>
+        {product.brand_name ? (
+          <BrandRow
+            brandId={brandId}
+            brandName={product.brand_name}
+            primary={primary}
+            onOpenBrand={onOpenBrand}
+          />
+        ) : null}
+        <Text fontSize={13.5} color="$muted" lineHeight={20}>
+          {description || 'No description provided.'}
+        </Text>
+        {specs.length > 0 ? <SpecGrid specs={specs} /> : null}
+        <ProductQuantityBar
+          quantity={quantity}
+          maxQuantity={maxQuantity}
+          primary={primary}
+          readOnly={readOnly}
+          onUpdate={onUpdateQuantity}
+        />
+      </YStack>
+    </ScrollView>
+  );
 }
 
 /** Product-detail bottom sheet opened from the Pod Shop info icon — image
@@ -66,11 +244,7 @@ export function ProductDetailSheet({
     };
   }, [productId]);
 
-  const galleryImages = product ? product.images : [];
-  const fallbackImages = product ? [product.image_url].filter(Boolean) : [];
-  const images = galleryImages.length > 0 ? galleryImages : fallbackImages;
-  const description = product ? product.description || product.short_description : '';
-  const specs = product ? productSpecs(product) : [];
+  const images = productImages(product);
   const price = product?.unit_cost ?? 0;
   const mrp = product?.selling_price ?? 0;
   const hasMrp = mrp > price;
@@ -79,107 +253,26 @@ export function ProductDetailSheet({
 
   // Body variants hoisted to consts so the render tree keeps flat (non-nested)
   // ternaries — identical branches, same scope.
-  const productBody = product ? (
-    <ScrollView paddingHorizontal={16}>
-      <YStack gap={12} paddingBottom={12}>
-        {images.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <XStack gap={10}>
-              {images.map((url, imageIndex) => (
-                <YStack
-                  key={url}
-                  testID={`product-detail-image-${imageIndex}`}
-                  role="button"
-                  aria-label="Zoom image"
-                  onPress={() => setZoomIndex(imageIndex)}
-                >
-                  <AppImage
-                    source={{ uri: url }}
-                    style={{ width: 180, height: 180, borderRadius: 12 }}
-                    resizeMode="cover"
-                  />
-                </YStack>
-              ))}
-            </XStack>
-          </ScrollView>
-        ) : null}
-        <Text testID="product-detail-name" fontSize={18} fontWeight="900" color="$color">
-          {product.product_name}
-        </Text>
-        <XStack alignItems="baseline" gap={8}>
-          <Text testID="product-detail-price" fontSize={20} fontWeight="900" color="$primary">
-            {formatRupees(price)}
-          </Text>
-          {hasMrp ? (
-            <Text fontSize={13} color="$muted" textDecorationLine="line-through">
-              {formatRupees(mrp)}
-            </Text>
-          ) : null}
-        </XStack>
-        {product.brand_name ? (
-          <XStack
-            testID="product-detail-brand"
-            role={brandId ? 'button' : undefined}
-            aria-label={brandId ? `View ${product.brand_name}` : undefined}
-            onPress={brandId ? () => setBrandOpen(brandId) : undefined}
-            gap={5}
-            alignItems="center"
-            pressStyle={brandId ? { opacity: 0.6 } : undefined}
-          >
-            <MaterialIcons name="storefront" size={15} color="#9aa0a6" />
-            <Text fontSize={13} fontWeight="800" color={brandId ? '$primary' : '$muted'}>
-              by {product.brand_name}
-            </Text>
-            {brandId ? <MaterialIcons name="chevron-right" size={16} color={primary} /> : null}
-          </XStack>
-        ) : null}
-        <Text fontSize={13.5} color="$muted" lineHeight={20}>
-          {description || 'No description provided.'}
-        </Text>
-        {specs.length > 0 ? (
-          <YStack
-            testID="product-detail-specs"
-            gap={0}
-            borderWidth={1}
-            borderColor="$borderColor"
-            borderRadius={12}
-            overflow="hidden"
-          >
-            {specs.map((spec, specIndex) => (
-              <XStack
-                key={spec.label}
-                justifyContent="space-between"
-                paddingHorizontal={12}
-                paddingVertical={10}
-                borderTopWidth={specIndex === 0 ? 0 : 1}
-                borderColor="$borderColor"
-              >
-                <Text fontSize={13} color="$muted" fontWeight="700">
-                  {spec.label}
-                </Text>
-                <Text fontSize={13} color="$color" fontWeight="800">
-                  {spec.value}
-                </Text>
-              </XStack>
-            ))}
-          </YStack>
-        ) : null}
-        <ProductQuantityBar
-          quantity={quantity}
-          maxQuantity={maxQuantity}
-          primary={primary}
-          readOnly={readOnly}
-          onUpdate={onUpdateQuantity}
-        />
-      </YStack>
-    </ScrollView>
-  ) : null;
   const loadedBody = error ? (
     <Text testID="product-detail-error" padding={24} color="$danger">
       {error}
     </Text>
   ) : (
-    productBody
+    <ProductBody
+      product={product}
+      images={images}
+      price={price}
+      mrp={mrp}
+      hasMrp={hasMrp}
+      brandId={brandId}
+      quantity={quantity}
+      maxQuantity={maxQuantity}
+      primary={primary}
+      readOnly={readOnly}
+      onUpdateQuantity={onUpdateQuantity}
+      onZoom={setZoomIndex}
+      onOpenBrand={setBrandOpen}
+    />
   );
 
   return (

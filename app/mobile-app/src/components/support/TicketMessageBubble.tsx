@@ -22,33 +22,42 @@ interface Props {
   agentLastReadAt?: string | null;
 }
 
+/** A SYSTEM event (status change, assignment…) — a centered timeline line rather
+ * than a bubble (B7). */
+function SystemLine({ id, text }: Readonly<{ id: string; text: string }>) {
+  return (
+    <XStack justifyContent="center" testID={`ticket-msg-${id}`}>
+      <Text
+        fontSize={11.5}
+        fontWeight="800"
+        color="$muted"
+        textAlign="center"
+        borderWidth={1}
+        borderColor="$borderColor"
+        borderRadius={999}
+        paddingHorizontal={10}
+        paddingVertical={4}
+      >
+        {text}
+      </Text>
+    </XStack>
+  );
+}
+
 /** One ticket message — USER/AGENT bubbles, or a centered SYSTEM timeline line (B7).
  * The user's own messages carry a Sent (✓) / Seen (✓✓) tick like the live chat (B12). */
 export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Readonly<Props>) {
-  const time = formatTime(message.created_at, timeZone);
-
   if (message.author_role === 'SYSTEM') {
-    return (
-      <XStack justifyContent="center" testID={`ticket-msg-${message.id}`}>
-        <Text
-          fontSize={11.5}
-          fontWeight="800"
-          color="$muted"
-          textAlign="center"
-          borderWidth={1}
-          borderColor="$borderColor"
-          borderRadius={999}
-          paddingHorizontal={10}
-          paddingVertical={4}
-        >
-          {message.body_text}
-        </Text>
-      </XStack>
-    );
+    return <SystemLine id={message.id} text={message.body_text} />;
   }
 
+  const time = formatTime(message.created_at, timeZone);
   const mine = message.author_role === 'USER';
   const seen = mine && tickState(message, agentLastReadAt) === 'seen';
+  // Every `mine`-derived value is resolved once here, so the JSX below stays flat.
+  const ink = mine ? '$onPrimary' : '$color';
+  const subtleInk = mine ? '$onPrimary' : '$muted';
+
   return (
     <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} testID={`ticket-msg-${message.id}`}>
       <YStack
@@ -60,18 +69,18 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
         borderColor="$borderColor"
         gap={3}
       >
-        <Text fontSize={11} fontWeight="800" color={mine ? '$onPrimary' : '$muted'}>
+        <Text fontSize={11} fontWeight="800" color={subtleInk}>
           {message.author_name}
         </Text>
         <AttachmentView urls={message.attachments} size={120} />
         {message.body_text ? (
-          <Text fontSize={13.5} color={mine ? '$onPrimary' : '$color'}>
+          <Text fontSize={13.5} color={ink}>
             {message.body_text}
           </Text>
         ) : null}
         <XStack alignSelf="flex-end" alignItems="center" gap={4}>
           {time ? (
-            <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'} opacity={0.7}>
+            <Text fontSize={10} color={subtleInk} opacity={0.7}>
               {time}
             </Text>
           ) : null}

@@ -70,6 +70,7 @@ export default function AdjustHealthDialog({
   // In edit mode the current score already includes the old delta — project the swap.
   const baseline = editing ? currentScore - editing.delta : currentScore;
   const projected = Math.max(0, Math.min(100, baseline + delta));
+  const deltaLabel = delta > 0 ? `+${delta}` : String(delta);
 
   const submit = async () => {
     setError(null);
@@ -126,7 +127,7 @@ export default function AdjustHealthDialog({
             size="small"
             value={magnitude}
             onChange={(e) => setMagnitude(Number(e.target.value) || 0)}
-            helperText={`Applied as ${delta > 0 ? `+${delta}` : delta}. Projected score: ${projected}/100.`}
+            helperText={`Applied as ${deltaLabel}. Projected score: ${projected}/100.`}
           />
 
           <TextField

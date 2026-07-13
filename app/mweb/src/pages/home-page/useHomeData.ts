@@ -14,6 +14,80 @@ interface UseHomeDataParams {
   sortBy: SortBy;
 }
 
+type IsDescendantOf = (childId: string | null | undefined, ancestorId: string) => boolean;
+
+interface DateBounds {
+  today0: Date;
+  tomorrow0: Date;
+  dayAfter0: Date;
+  weekEnd: Date;
+  monthEnd: Date;
+}
+
+function computeDateBounds(): DateBounds {
+  const today0 = new Date();
+  today0.setHours(0, 0, 0, 0);
+  const tomorrow0 = new Date(today0);
+  tomorrow0.setDate(today0.getDate() + 1);
+  const dayAfter0 = new Date(today0);
+  dayAfter0.setDate(today0.getDate() + 2);
+  const weekEnd = new Date(today0);
+  weekEnd.setDate(today0.getDate() + 7);
+  const monthEnd = new Date(today0);
+  monthEnd.setMonth(today0.getMonth() + 1);
+  return { today0, tomorrow0, dayAfter0, weekEnd, monthEnd };
+}
+
+function matchesSuperCategory(
+  club: any,
+  selectedSuperId: string | null,
+  catSuperMap: Map<string, string | null>,
+  superCategorySlug: string
+): boolean {
+  if (!selectedSuperId) return true;
+  if (club.super_category_id) return club.super_category_id === selectedSuperId;
+  return catSuperMap.get(club.category_id) === superCategorySlug;
+}
+
+function matchesCategory(club: any, categoryId: string, isDescendantOf: IsDescendantOf): boolean {
+  if (!categoryId) return true;
+  if (!club.category_id) return false;
+  if (club.category_id === categoryId) return true;
+  return (
+    isDescendantOf(club.category_id, categoryId) || isDescendantOf(categoryId, club.category_id)
+  );
+}
+
+function matchesPrice(pod: any, priceFilter: PriceFilter): boolean {
+  if (priceFilter === 'ALL') return true;
+  const t = pod.pod_type as string;
+  if (priceFilter === 'FREE') return !!t?.includes('FREE');
+  if (priceFilter === 'PAID') return t === 'NATIVE_PAID' || t === 'NON_NATIVE_PAID';
+  if (priceFilter === 'PREMIUM') return t === 'NATIVE_PAID_PREMIUM';
+  return true;
+}
+
+function matchesDate(pod: any, dateFilter: DateFilter, b: DateBounds): boolean {
+  if (dateFilter === 'ALL') return true;
+  if (!pod.pod_date_time) return false;
+  const dt = new Date(pod.pod_date_time);
+  if (dateFilter === 'TODAY') return dt >= b.today0 && dt < b.tomorrow0;
+  if (dateFilter === 'TOMORROW') return dt >= b.tomorrow0 && dt < b.dayAfter0;
+  if (dateFilter === 'WEEK') return dt >= b.today0 && dt < b.weekEnd;
+  if (dateFilter === 'MONTH') return dt >= b.today0 && dt < b.monthEnd;
+  return true;
+}
+
+/** True when a chip (or any of its descendants) has at least one pod in context. */
+function makeChipHasPods(podCategoryIds: Set<string>, isDescendantOf: IsDescendantOf) {
+  return (chipId: string) => {
+    for (const cid of podCategoryIds) {
+      if (cid === chipId || isDescendantOf(cid, chipId)) return true;
+    }
+    return false;
+  };
+}
+
 export function useHomeData({
   superCategorySlug,
   locationId,
@@ -110,59 +184,15 @@ export function useHomeData({
     const clubsById = new Map<string, any>();
     (data?.clubs ?? []).forEach((c: any) => clubsById.set(c.id, c));
 
-    const now = new Date();
-    const startOfDay = (d: Date) => {
-      const x = new Date(d);
-      x.setHours(0, 0, 0, 0);
-      return x;
-    };
-    const today0 = startOfDay(now);
-    const tomorrow0 = new Date(today0);
-    tomorrow0.setDate(today0.getDate() + 1);
-    const dayAfter0 = new Date(today0);
-    dayAfter0.setDate(today0.getDate() + 2);
-    const weekEnd = new Date(today0);
-    weekEnd.setDate(today0.getDate() + 7);
-    const monthEnd = new Date(today0);
-    monthEnd.setMonth(today0.getMonth() + 1);
+    const bounds = computeDateBounds();
 
     return all.filter((p: any) => {
       const club = clubsById.get(p.club_id);
       if (!club) return false;
-
-      if (selectedSuperId) {
-        const ok = club.super_category_id
-          ? club.super_category_id === selectedSuperId
-          : catSuperMap.get(club.category_id) === superCategorySlug;
-        if (!ok) return false;
-      }
-
-      if (categoryId) {
-        if (!club.category_id) return false;
-        const same = club.category_id === categoryId;
-        const chipIsAncestorOfClub = isDescendantOf(club.category_id, categoryId);
-        const chipIsDescendantOfClub = isDescendantOf(categoryId, club.category_id);
-        if (!same && !chipIsAncestorOfClub && !chipIsDescendantOfClub) return false;
-      }
-
-      if (priceFilter !== 'ALL') {
-        const t = p.pod_type as string;
-        if (priceFilter === 'FREE' && !t?.includes('FREE')) return false;
-        if (priceFilter === 'PAID' && !(t === 'NATIVE_PAID' || t === 'NON_NATIVE_PAID'))
-          return false;
-        if (priceFilter === 'PREMIUM' && t !== 'NATIVE_PAID_PREMIUM') return false;
-      }
-
-      if (dateFilter !== 'ALL') {
-        if (!p.pod_date_time) return false;
-        const dt = new Date(p.pod_date_time);
-        if (dateFilter === 'TODAY' && !(dt >= today0 && dt < tomorrow0)) return false;
-        if (dateFilter === 'TOMORROW' && !(dt >= tomorrow0 && dt < dayAfter0)) return false;
-        if (dateFilter === 'WEEK' && !(dt >= today0 && dt < weekEnd)) return false;
-        if (dateFilter === 'MONTH' && !(dt >= today0 && dt < monthEnd)) return false;
-      }
-
-      return true;
+      if (!matchesSuperCategory(club, selectedSuperId, catSuperMap, superCategorySlug)) return false;
+      if (!matchesCategory(club, categoryId, isDescendantOf)) return false;
+      if (!matchesPrice(p, priceFilter)) return false;
+      return matchesDate(p, dateFilter, bounds);
     });
   }, [
     data,
@@ -216,7 +246,9 @@ export function useHomeData({
           return (Number(b.pod_amount) || 0) - (Number(a.pod_amount) || 0);
       }
     };
-    map.forEach((arr) => arr.sort(cmp));
+    map.forEach((arr) => {
+      arr.sort(cmp);
+    });
     return map;
   }, [activePods, sortBy]);
 
@@ -272,12 +304,7 @@ export function useHomeData({
 
   const categoryChips = useMemo(() => {
     const cats = data?.categories ?? [];
-    const chipHasPods = (chipId: string) => {
-      for (const cid of podCategoryIds) {
-        if (cid === chipId || isDescendantOf(cid, chipId)) return true;
-      }
-      return false;
-    };
+    const chipHasPods = makeChipHasPods(podCategoryIds, isDescendantOf);
     if (!selectedSuperId) {
       return cats
         .filter((c: any) => (c.level === 'CATEGORY' || c.level === 'SUB') && chipHasPods(c.id))
@@ -299,7 +326,9 @@ export function useHomeData({
         arr.push(s);
         subsByParent.set(s.parent_id, arr);
       });
-    subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+    subsByParent.forEach((arr) => {
+      arr.sort((a, b) => a.name.localeCompare(b.name));
+    });
     const ordered: any[] = [];
     categories.forEach((c: any) => {
       ordered.push(c);
@@ -315,12 +344,7 @@ export function useHomeData({
   // Only categories/subs that actually have pods in the current context appear.
   const vibeCategories = useMemo(() => {
     const cats = data?.categories ?? [];
-    const chipHasPods = (chipId: string) => {
-      for (const cid of podCategoryIds) {
-        if (cid === chipId || isDescendantOf(cid, chipId)) return true;
-      }
-      return false;
-    };
+    const chipHasPods = makeChipHasPods(podCategoryIds, isDescendantOf);
     const inScope = (c: any) => !selectedSuperId || isDescendantOf(c.id, selectedSuperId);
     const categories = cats
       .filter((c: any) => c.level === 'CATEGORY' && inScope(c) && chipHasPods(c.id))
@@ -333,7 +357,9 @@ export function useHomeData({
         arr.push(s);
         subsByParent.set(s.parent_id, arr);
       });
-    subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+    subsByParent.forEach((arr) => {
+      arr.sort((a, b) => a.name.localeCompare(b.name));
+    });
     return categories.map((c: any) => ({
       id: c.id,
       name: c.name,

@@ -69,7 +69,7 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
           resizeMode="contain"
         />
       ) : null}
-      {!splashUrl ? <AuthLogo size={logoSize} /> : null}
+      {splashUrl ? null : <AuthLogo size={logoSize} />}
     </View>
   );
 }

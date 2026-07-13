@@ -57,7 +57,7 @@ export default function FeatureFlagsPage() {
   const toggle = async (f: any) => {
     try {
       await setFlag({ variables: { flag_id: f.id, enabled: !f.enabled } });
-      setToast(`${f.name} ${!f.enabled ? 'enabled' : 'disabled'}`);
+      setToast(`${f.name} ${f.enabled ? 'disabled' : 'enabled'}`);
       await refetch();
     } catch (e: any) {
       setToast(e.message);

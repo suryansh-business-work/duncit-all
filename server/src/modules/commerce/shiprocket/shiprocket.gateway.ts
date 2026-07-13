@@ -40,7 +40,7 @@ async function getCreds(): Promise<Creds> {
     });
   }
   const hours = Number(ttlHours) > 0 ? Number(ttlHours) : 240;
-  return { email, password, ttlMs: hours * 3600_000 };
+  return { email, password, ttlMs: hours * 3_600_000 };
 }
 
 async function login({ email, password }: Creds): Promise<string> {
@@ -76,14 +76,14 @@ async function srRequest<T = any>(path: string, init: RequestInit = {}, retry = 
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
-      ...(init.headers ?? {}),
+      ...init.headers,
     },
   });
   if (res.status === 401 && retry) {
     await getToken(true);
     return srRequest<T>(path, init, false);
   }
-  const data = (await res.json().catch(() => ({}))) as any;
+  const data: any = await res.json().catch(() => ({}));
   if (!res.ok) {
     const msg = data?.message ?? data?.errors ?? `ShipRocket ${res.status}`;
     throw new GraphQLError(`ShipRocket error: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`, {

@@ -39,8 +39,8 @@ const toPub = (d: any) => {
     meetup_venues_id: d.meetup_venues_id ?? [],
     location_id: d.location_id ? String(d.location_id) : null,
     locality: d.locality ?? '',
-    host_ids: (d.host_ids ?? []).map((x: any) => String(x)),
-    admin_user_ids: (d.admin_user_ids ?? []).map((x: any) => String(x)),
+    host_ids: (d.host_ids ?? []).map(String),
+    admin_user_ids: (d.admin_user_ids ?? []).map(String),
     category_id: d.category_id ? String(d.category_id) : null,
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
     is_verified: !!d.is_verified,
@@ -196,7 +196,7 @@ export const clubService = {
         .select('pod_hosts_id')
         .lean();
       ids = Array.from(
-        new Set(pods.flatMap((p: any) => (p.pod_hosts_id ?? []).map((x: any) => String(x))))
+        new Set(pods.flatMap((p: any) => (p.pod_hosts_id ?? []).map(String)))
       );
     }
     if (ids.length === 0) return [];

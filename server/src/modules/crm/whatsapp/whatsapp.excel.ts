@@ -5,6 +5,9 @@ export interface ImportRow {
   name: string;
 }
 
+/** A parsed sheet cell — xlsx yields primitives (or a Date with cellDates). */
+type CellValue = string | number | boolean | Date | null | undefined;
+
 /** Parse an uploaded .xlsx/.csv (base64) into lead rows. Accepts common header
  * spellings (Phone/Number/Mobile, Name) and ignores blank/headerless cells. */
 export function parseLeadsWorkbook(base64: string): ImportRow[] {
@@ -12,8 +15,8 @@ export function parseLeadsWorkbook(base64: string): ImportRow[] {
   const sheetName = wb.SheetNames[0];
   if (!sheetName) return [];
   const sheet = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
-  const pick = (row: Record<string, unknown>, keys: string[]) => {
+  const rows = XLSX.utils.sheet_to_json<Record<string, CellValue>>(sheet, { defval: '' });
+  const pick = (row: Record<string, CellValue>, keys: string[]) => {
     for (const k of Object.keys(row)) {
       if (keys.includes(k.trim().toLowerCase())) return String(row[k] ?? '').trim();
     }

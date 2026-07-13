@@ -53,7 +53,7 @@ export default function HomeStatusRail({
     [myViewer, entries],
   );
   const offset = myViewer ? 1 : 0;
-  const activeItem = activeIndex != null ? viewerItems[activeIndex] ?? null : null;
+  const activeItem = activeIndex == null ? null : viewerItems[activeIndex] ?? null;
   const activeKind = activeItem?.kind;
 
   // Walk to the next/previous follower's story (bug 2); past the end, close.

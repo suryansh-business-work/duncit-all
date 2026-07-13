@@ -70,7 +70,7 @@ export function PodShopProductRow({
   return (
     <XStack
       testID={`pod-shop-row-${product.product_id}`}
-      role={readOnly ? undefined : 'button'}
+      role={readOnly ? undefined : 'checkbox'}
       aria-label={readOnly ? undefined : `Select ${product.product_name}`}
       aria-checked={readOnly ? undefined : selected}
       onPress={readOnly ? undefined : () => onUpdate(product.product_id, selected ? 0 : 1)}

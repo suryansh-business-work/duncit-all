@@ -94,6 +94,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
 
   const providerType: 'SMTP' | 'TWILIO_CALL' = mode === 'email' ? 'SMTP' : 'TWILIO_CALL';
   const disabled = loading || !target.trim() || (mode === 'email' && !emailPayload.valid);
+  const submitLabel = mode === 'email' ? 'Send email' : 'Start call';
 
   return (
     <ComposeWindow
@@ -105,7 +106,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, variabl
         <>
           <Button onClick={onClose} disabled={loading}>Cancel</Button>
           <Button variant="contained" onClick={submit} disabled={disabled}>
-            {loading ? 'Sending…' : mode === 'email' ? 'Send email' : 'Start call'}
+            {loading ? 'Sending…' : submitLabel}
           </Button>
         </>
       }

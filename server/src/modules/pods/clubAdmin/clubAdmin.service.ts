@@ -12,7 +12,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 
 type Actor = { id: string; roles?: string[] };
 
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 function forbidden(): never {
   throw new GraphQLError('You do not administer this club', {
@@ -42,6 +42,68 @@ function monthSequence(from: Date, to: Date) {
     guard += 1;
   }
   return seq;
+}
+
+type ClubTally = { upcoming: number; completed: number; total: number; revenue: number };
+type DashboardRange = { from: Date; to: Date; now: number };
+
+/** Fold one pod into its club's row (no-op when the pod's club is out of scope). */
+function bumpClubRow(row: ClubTally | undefined, isUpcoming: boolean, isCompleted: boolean) {
+  if (!row) return;
+  row.total += 1;
+  if (isUpcoming) row.upcoming += 1;
+  if (isCompleted) row.completed += 1;
+}
+
+/** Per-club + overall pod tallies, computed in-memory (pod_date_time may be a
+ * Date or an ISO string, so we normalise via `new Date` rather than aggregate). */
+function tallyPods(pods: any[], byClub: Map<string, ClubTally>, range: DashboardRange) {
+  let upcoming_pods = 0;
+  let completed_pods = 0;
+  let total_spots = 0;
+  let total_attendees = 0;
+  const hostSet = new Set<string>();
+  const podsSeries = new Map<string, number>();
+  for (const p of pods) {
+    const t = +new Date(p.pod_date_time);
+    const isUpcoming = p.is_active && t >= range.now;
+    const isCompleted = t < range.now;
+    if (isUpcoming) upcoming_pods += 1;
+    if (isCompleted) completed_pods += 1;
+    total_spots += p.no_of_spots ?? 0;
+    total_attendees += (p.pod_attendees ?? []).length;
+    (p.pod_hosts_id ?? []).forEach((h: any) => hostSet.add(String(h)));
+    bumpClubRow(byClub.get(String(p.club_id)), isUpcoming, isCompleted);
+    const d = new Date(p.pod_date_time);
+    if (d >= range.from && d <= range.to) {
+      podsSeries.set(monthKey(d), (podsSeries.get(monthKey(d)) ?? 0) + 1);
+    }
+  }
+  return { upcoming_pods, completed_pods, total_spots, total_attendees, hostSet, podsSeries };
+}
+
+/** Revenue (overall + monthly), summed in-memory from the SUCCESS payments joined
+ * back to their pod's club (per-club revenue lands on the `byClub` rows). */
+function tallyRevenue(
+  payments: any[],
+  podToClub: Map<string, string>,
+  byClub: Map<string, ClubTally>,
+  range: DashboardRange
+) {
+  let total_revenue = 0;
+  const revenueSeries = new Map<string, number>();
+  for (const pay of payments) {
+    const amount = pay.total ?? 0;
+    total_revenue += amount;
+    const clubId = podToClub.get(String(pay.pod_id));
+    const row = clubId ? byClub.get(clubId) : undefined;
+    if (row) row.revenue += amount;
+    const d = new Date(pay.created_at);
+    if (d >= range.from && d <= range.to) {
+      revenueSeries.set(monthKey(d), (revenueSeries.get(monthKey(d)) ?? 0) + amount);
+    }
+  }
+  return { total_revenue, revenueSeries };
 }
 
 const EMPTY_KPIS = {
@@ -211,39 +273,13 @@ export const clubAdminService = {
       pods.map((p: any) => [String(p._id), String(p.club_id)])
     );
 
-    // Per-club + overall pod tallies, computed in-memory (pod_date_time may be a
-    // Date or an ISO string, so we normalise via `new Date` rather than aggregate).
-    type ClubTally = { upcoming: number; completed: number; total: number; revenue: number };
     const byClub = new Map<string, ClubTally>();
     clubDocs.forEach((c: any) =>
       byClub.set(String(c._id), { upcoming: 0, completed: 0, total: 0, revenue: 0 })
     );
-    let upcoming_pods = 0;
-    let completed_pods = 0;
-    let total_spots = 0;
-    let total_attendees = 0;
-    const hostSet = new Set<string>();
-    const podsSeries = new Map<string, number>();
-    for (const p of pods as any[]) {
-      const t = +new Date(p.pod_date_time);
-      const isUpcoming = p.is_active && t >= now;
-      const isCompleted = t < now;
-      if (isUpcoming) upcoming_pods += 1;
-      if (isCompleted) completed_pods += 1;
-      total_spots += p.no_of_spots ?? 0;
-      total_attendees += (p.pod_attendees ?? []).length;
-      (p.pod_hosts_id ?? []).forEach((h: any) => hostSet.add(String(h)));
-      const row = byClub.get(String(p.club_id));
-      if (row) {
-        row.total += 1;
-        if (isUpcoming) row.upcoming += 1;
-        if (isCompleted) row.completed += 1;
-      }
-      const d = new Date(p.pod_date_time);
-      if (d >= fromDate && d <= toDate) {
-        podsSeries.set(monthKey(d), (podsSeries.get(monthKey(d)) ?? 0) + 1);
-      }
-    }
+    const range: DashboardRange = { from: fromDate, to: toDate, now };
+    const { upcoming_pods, completed_pods, total_spots, total_attendees, hostSet, podsSeries } =
+      tallyPods(pods as any[], byClub, range);
 
     const [bookings, backed_out, followers, new_followers, ratingAgg, payments, followerRows, bookingRows, followerClubRows, ratingClubRows] =
       await Promise.all([
@@ -279,22 +315,13 @@ export const clubAdminService = {
         ]),
       ]);
 
-    // Revenue (overall + per-club + monthly), summed in-memory from the SUCCESS
-    // payments joined back to their pod's club.
-    let total_revenue = 0;
     const currency_symbol = (payments[0] as any)?.currency_symbol || '₹';
-    const revenueSeries = new Map<string, number>();
-    for (const pay of payments as any[]) {
-      const amount = pay.total ?? 0;
-      total_revenue += amount;
-      const clubId = podToClub.get(String(pay.pod_id));
-      const row = clubId ? byClub.get(clubId) : undefined;
-      if (row) row.revenue += amount;
-      const d = new Date(pay.created_at);
-      if (d >= fromDate && d <= toDate) {
-        revenueSeries.set(monthKey(d), (revenueSeries.get(monthKey(d)) ?? 0) + amount);
-      }
-    }
+    const { total_revenue, revenueSeries } = tallyRevenue(
+      payments as any[],
+      podToClub,
+      byClub,
+      range
+    );
 
     const followerSeries = new Map<string, number>(
       (followerRows as any[]).map((r) => [r._id, r.count])

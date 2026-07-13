@@ -15,7 +15,7 @@ export default function PartnerPodsSection() {
   const [createPod, createState] = useMutation(CREATE_PARTNER_POD);
   const [hostUpdatePod, updateState] = useMutation(HOST_UPDATE_POD);
   const [open, setOpen] = useState(false);
-  const [editPod, setEditPod] = useState<any | null>(null);
+  const [editPod, setEditPod] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);

@@ -117,7 +117,7 @@ export const legalDocumentService = {
     if (!doc) fail('NOT_FOUND', 'Document not found');
     const who = await actorName(userId);
     // Snapshot the current state into history before applying the edit.
-    snapshot(doc!, userId, who);
+    snapshot(doc, userId, who);
     if (input.name !== undefined) doc!.name = input.name.trim();
     if (input.document_type !== undefined) doc!.document_type = input.document_type.trim();
     if (input.description !== undefined) doc!.description = input.description.trim();
@@ -125,7 +125,7 @@ export const legalDocumentService = {
     doc!.updated_by = new Types.ObjectId(userId);
     doc!.updated_by_name = who;
     await doc!.save();
-    return toPub(doc!);
+    return toPub(doc);
   },
 
   async remove(id: string) {

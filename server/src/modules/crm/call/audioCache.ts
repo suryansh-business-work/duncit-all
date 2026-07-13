@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 /**
  * Tiny in-memory store for Servam-synthesized call audio. The AI-call webhook

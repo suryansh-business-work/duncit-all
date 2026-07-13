@@ -23,7 +23,7 @@ export function loadWebFonts(): void {
   const stylesheet = document.createElement('link');
   stylesheet.rel = 'stylesheet';
   stylesheet.href = FONT_STYLESHEET_HREF;
-  stylesheet.setAttribute('data-duncit-font', 'quicksand');
+  stylesheet.dataset.duncitFont = 'quicksand';
 
   document.head.append(preconnectApi, preconnectStatic, stylesheet);
 }

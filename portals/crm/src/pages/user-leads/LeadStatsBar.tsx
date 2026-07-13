@@ -20,7 +20,7 @@ export default function LeadStatsBar({ reloadKey }: Readonly<{ reloadKey: number
     fetchPolicy: 'cache-and-network',
   });
   useEffect(() => {
-    void refetch();
+    refetch().catch(() => undefined);
   }, [reloadKey, refetch]);
   const stats = data?.waLeadStats;
 

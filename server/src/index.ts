@@ -5,7 +5,7 @@ import { buildStatusProbeRouter } from './observability/statusProbe';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
-import http from 'http';
+import http from 'node:http';
 import cors from 'cors';
 import express from 'express';
 import { ApolloServer } from '@apollo/server';
@@ -17,7 +17,6 @@ import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
 import { rbacService } from '@modules/access/rbac/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
-import { portalModeService } from '@modules/platform/portalMode/portalMode.service';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
@@ -248,7 +247,7 @@ async function bootstrap() {
       let unread_count = payload.unread_count;
       if (unread_count < 0) {
         try {
-          unread_count = await notificationService.unreadCountForUser(userId!);
+          unread_count = await notificationService.unreadCountForUser(userId);
         } catch {
           unread_count = 0;
         }

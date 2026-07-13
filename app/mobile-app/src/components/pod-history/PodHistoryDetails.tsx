@@ -35,7 +35,7 @@ export interface PodHistoryDetailsProps {
 }
 
 function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warning' | 'muted' }>) {
-  const bg = tone === 'success' ? '$primary' : tone === 'warning' ? '$surface' : '$surface';
+  const bg = tone === 'success' ? '$primary' : '$surface';
   return (
     <XStack
       borderRadius={999}

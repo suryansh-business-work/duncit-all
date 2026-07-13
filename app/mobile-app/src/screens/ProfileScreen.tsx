@@ -31,6 +31,30 @@ export function ProfileScreen() {
     await refetch();
   };
 
+  const body = me ? (
+    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
+      <ProfileHeader me={me} onChanged={() => void refetch()} />
+      <ProfilePanels
+        me={me}
+        onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}
+        onOpenVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
+      />
+      <ProfilePostsGrid
+        posts={posts}
+        meId={me.user_id}
+        onChanged={() => void refetch()}
+        onAddPost={() => void addPost()}
+        uploading={uploading}
+      />
+    </ScrollView>
+  ) : (
+    <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
+      <Text testID="profile-error" color="$muted">
+        Could not load your profile.
+      </Text>
+    </YStack>
+  );
+
   return (
     <YStack flex={1} testID="profile-screen">
       <AppBackground />
@@ -69,31 +93,7 @@ export function ProfileScreen() {
           </XStack>
         </XStack>
 
-        {isLoading && !me ? (
-          <DetailSkeleton testID="profile-loading" />
-        ) : !me ? (
-          <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-            <Text testID="profile-error" color="$muted">
-              Could not load your profile.
-            </Text>
-          </YStack>
-        ) : (
-          <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
-            <ProfileHeader me={me} onChanged={() => void refetch()} />
-            <ProfilePanels
-              me={me}
-              onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}
-              onOpenVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
-            />
-            <ProfilePostsGrid
-              posts={posts}
-              meId={me.user_id}
-              onChanged={() => void refetch()}
-              onAddPost={() => void addPost()}
-              uploading={uploading}
-            />
-          </ScrollView>
-        )}
+        {isLoading && !me ? <DetailSkeleton testID="profile-loading" /> : body}
       </SafeAreaView>
     </YStack>
   );

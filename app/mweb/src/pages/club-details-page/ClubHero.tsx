@@ -77,6 +77,7 @@ export default function ClubHero({
   onShare,
 }: Readonly<Props>) {
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
   const overlay = (
     <Stack
       direction="row"
@@ -124,7 +125,7 @@ export default function ClubHero({
           disabled={saveLoading}
           sx={overlayBtn}
         >
-          {saveLoading ? <CircularProgress size={18} color="inherit" /> : saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+          {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
         </IconButton>
         <IconButton size="small" aria-label="Share" onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />
@@ -182,13 +183,13 @@ export default function ClubHero({
         {media.map((m, i) =>
           m.type === 'VIDEO' ? (
             <VideoMedia
-              key={i}
+              key={m.url}
               src={m.url}
               height={{ xs: 280, md: 460 }}
             />
           ) : (
             <Box
-              key={i}
+              key={m.url}
               component="img"
               src={m.url}
               alt={title}

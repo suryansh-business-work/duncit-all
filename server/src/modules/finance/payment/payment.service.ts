@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { PaymentModel, type IPayment } from './payment.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -41,7 +41,7 @@ const toPub = (p: IPayment) => ({
   user_email: p.user_email,
   user_phone: p.user_phone,
   billing_address: p.billing_address ?? '',
-  billing: { ...emptyBilling(), ...((p.billing as any)?.toObject?.() ?? p.billing ?? {}) },
+  billing: { ...emptyBilling(), ...((p.billing as any)?.toObject?.() ?? p.billing) },
   checkout_url: p.checkout_url ?? '',
   target_type: p.target_type,
   pod_id: p.pod_id ? String(p.pod_id) : null,
@@ -313,7 +313,7 @@ function billingAddressLines(b?: IPayment['billing']): string[] {
  * line (= subtotal) when there are no products.
  */
 function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: number; unit_price: number; amount: number }> {
-  const meta = (doc.metadata ?? {}) as Record<string, any>;
+  const meta: Record<string, any> = doc.metadata ?? {};
   const productLines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
   const ticketGross = round2(Number(meta.ticket_amount ?? 0));
   const productGross = round2(productLines.reduce((sum, l) => sum + Number(l.gross || 0), 0));
@@ -425,7 +425,7 @@ export const paymentService = {
     if (filter?.user_id) q.user_id = new Types.ObjectId(filter.user_id);
     if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ payment_id: r }, { invoice_no: r }, { user_name: r }, { user_email: r }];
     }
     const docs = await PaymentModel.find(q).sort({ created_at: -1 }).limit(limit);
@@ -645,7 +645,7 @@ export const paymentService = {
     }
     doc.status = 'REFUNDED';
     (doc as any).metadata = {
-      ...((doc as any).metadata || {}),
+      ...(doc as any).metadata,
       refund_reason: reason || null,
       refunded_at: new Date().toISOString(),
     };

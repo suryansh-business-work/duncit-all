@@ -38,11 +38,13 @@ export async function buildContext({
     }
   }
   const rawDuid = req.headers['x-duid'];
+  const duidFromArray =
+    Array.isArray(rawDuid) && rawDuid[0]
+      ? String(rawDuid[0]).trim().slice(0, 100)
+      : null;
   const device_id =
     typeof rawDuid === 'string' && rawDuid.trim()
       ? rawDuid.trim().slice(0, 100)
-      : Array.isArray(rawDuid) && rawDuid[0]
-        ? String(rawDuid[0]).trim().slice(0, 100)
-        : null;
+      : duidFromArray;
   return { req, res, user, device_id };
 }

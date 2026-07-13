@@ -8,6 +8,22 @@ interface MessageBubbleProps {
 
 export default function MessageBubble({ message, mine, onOpenReact }: Readonly<MessageBubbleProps>) {
   const m = message;
+  const messageContent =
+    m.type === 'IMAGE' ? (
+      <Box
+        component="img"
+        src={m.image_url}
+        alt=""
+        sx={{ maxWidth: 240, maxHeight: 240, borderRadius: 1, display: 'block' }}
+      />
+    ) : (
+      <Typography
+        variant="body2"
+        sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
+      >
+        {m.text}
+      </Typography>
+    );
   return (
     <Stack
       direction="row"
@@ -46,20 +62,8 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           <Typography variant="body2" sx={{ fontStyle: 'italic', opacity: 0.7 }}>
             deleted
           </Typography>
-        ) : m.type === 'IMAGE' ? (
-          <Box
-            component="img"
-            src={m.image_url}
-            alt=""
-            sx={{ maxWidth: 240, maxHeight: 240, borderRadius: 1, display: 'block' }}
-          />
         ) : (
-          <Typography
-            variant="body2"
-            sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}
-          >
-            {m.text}
-          </Typography>
+          messageContent
         )}
         <Typography variant="caption" sx={{ opacity: 0.58, display: 'block', mt: 0.5, fontWeight: 700 }}>
           {new Date(m.createdAt).toLocaleTimeString([], {

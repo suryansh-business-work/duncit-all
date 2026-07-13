@@ -100,7 +100,8 @@ export default function VenueLeadsPage() {
       const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
       if (!payload) throw new Error('Empty response');
       downloadBase64Xlsx(payload.filename, payload.content_base64);
-      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} venue lead${leads.length === 1 ? '' : 's'}`);
+      const plural = leads.length === 1 ? '' : 's';
+      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} venue lead${plural}`);
     } catch (err) {
       setError(parseApiError(err));
     }

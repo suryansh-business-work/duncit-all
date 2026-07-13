@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 /**
  * Process-local event bus used to push real-time notification deltas to

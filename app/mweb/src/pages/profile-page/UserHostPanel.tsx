@@ -51,8 +51,59 @@ const HOST_PODS = gql`
   }
 `;
 
-export default function UserHostPanel() {
+interface HostPodsSectionProps {
+  pods: any[];
+  loading: boolean;
+}
+
+/** Pods hosted by the approved host — list, empty state and loader. */
+function HostPodsSection({ pods, loading }: Readonly<HostPodsSectionProps>) {
   const navigate = useNavigate();
+  const emptyOrList =
+    pods.length === 0 ? (
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        No pods yet.
+      </Typography>
+    ) : (
+      <List dense disablePadding sx={{ mt: 0.5 }}>
+        {pods.map((p: any) => {
+          const cover =
+            (p.pod_images_and_videos ?? []).find((m: any) => m?.type !== 'VIDEO')?.url ||
+            p.pod_images_and_videos?.[0]?.url;
+          return (
+            <ListItemButton
+              key={p.id}
+              onClick={() =>
+                p.club_slug && p.pod_id ? navigate(`/club/${p.club_slug}/pod/${p.pod_id}`) : null
+              }
+            >
+              <ListItemAvatar>
+                <Avatar src={cover || undefined} variant="rounded">
+                  <EventIcon fontSize="small" />
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemText
+                primary={p.pod_title}
+                secondary={p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : undefined}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
+    );
+
+  return (
+    <Box>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
+        <Typography variant="subtitle2">Your Pods</Typography>
+        <Chip size="small" label={pods.length} />
+      </Stack>
+      {loading ? <CircularProgress size={20} sx={{ mt: 1 }} /> : emptyOrList}
+    </Box>
+  );
+}
+
+export default function UserHostPanel() {
   const { data, loading, error } = useQuery(MY_HOST, { fetchPolicy: 'cache-and-network' });
   const host = data?.myHost;
   const myUserId: string | undefined = data?.me?.user_id || host?.user_id;
@@ -129,49 +180,7 @@ export default function UserHostPanel() {
       </Button>
 
       {isApproved && (
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
-            <Typography variant="subtitle2">Your Pods</Typography>
-            <Chip size="small" label={pods.length} />
-          </Stack>
-          {podsQuery.loading && !podsQuery.data ? (
-            <CircularProgress size={20} sx={{ mt: 1 }} />
-          ) : pods.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              No pods yet.
-            </Typography>
-          ) : (
-            <List dense disablePadding sx={{ mt: 0.5 }}>
-              {pods.map((p: any) => {
-                const cover =
-                  (p.pod_images_and_videos ?? []).find((m: any) => m?.type !== 'VIDEO')?.url ||
-                  p.pod_images_and_videos?.[0]?.url;
-                return (
-                  <ListItemButton
-                    key={p.id}
-                    onClick={() =>
-                      p.club_slug && p.pod_id
-                        ? navigate(`/club/${p.club_slug}/pod/${p.pod_id}`)
-                        : null
-                    }
-                  >
-                    <ListItemAvatar>
-                      <Avatar src={cover || undefined} variant="rounded">
-                        <EventIcon fontSize="small" />
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={p.pod_title}
-                      secondary={
-                        p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : undefined
-                      }
-                    />
-                  </ListItemButton>
-                );
-              })}
-            </List>
-          )}
-        </Box>
+        <HostPodsSection pods={pods} loading={podsQuery.loading && !podsQuery.data} />
       )}
     </Stack>
   );

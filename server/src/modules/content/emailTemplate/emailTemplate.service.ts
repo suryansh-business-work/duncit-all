@@ -1,6 +1,6 @@
-import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
 import { EmailTemplateModel } from './emailTemplate.model';
@@ -14,7 +14,7 @@ const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
 /** Walk the MJML source and extract every {{ var }} reference. */
 export function detectVariables(mjml: string): string[] {
   const set = new Set<string>();
-  const re = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
+  const re = /{{\s*(\w+)\s*}}/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(mjml))) set.add(m[1]);
   return [...set];
@@ -23,7 +23,7 @@ export function detectVariables(mjml: string): string[] {
 export function applyVars(source: string, vars: Record<string, string>): string {
   let out = source;
   for (const [k, v] of Object.entries(vars)) {
-    out = out.replace(new RegExp(`{{\\s*${k}\\s*}}`, 'g'), v ?? '');
+    out = out.replace(new RegExp(String.raw`{{\s*${k}\s*}}`, 'g'), v ?? '');
   }
   return out;
 }

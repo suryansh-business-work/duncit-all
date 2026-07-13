@@ -19,7 +19,7 @@ export function getUsersColumns({ formatDate, formatDateTime }: DateFormatters):
       flex: 1.35,
       minWidth: 260,
       renderCell: (p) => {
-        const user = p.row as any;
+        const user = p.row;
         return (
           <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }}>
             <Avatar
@@ -49,7 +49,7 @@ export function getUsersColumns({ formatDate, formatDateTime }: DateFormatters):
       flex: 0.9,
       minWidth: 180,
       renderCell: (p) => {
-        const user = p.row as any;
+        const user = p.row;
         return (
           <Stack spacing={0.35} sx={{ minWidth: 0 }}>
             <Stack direction="row" spacing={0.75} alignItems="center">
@@ -119,13 +119,11 @@ export function getUsersColumns({ formatDate, formatDateTime }: DateFormatters):
       field: 'status',
       headerName: 'Status',
       width: 110,
-      renderCell: (p) => (
-        <Chip
-          label={p.value || 'ACTIVE'}
-          size="small"
-          color={p.value === 'ACTIVE' ? 'success' : p.value === 'SUSPENDED' ? 'error' : 'default'}
-        />
-      ),
+      renderCell: (p) => {
+        const suspendedColor = p.value === 'SUSPENDED' ? 'error' : 'default';
+        const statusColor = p.value === 'ACTIVE' ? 'success' : suspendedColor;
+        return <Chip label={p.value || 'ACTIVE'} size="small" color={statusColor} />;
+      },
     },
     {
       field: 'created_at',

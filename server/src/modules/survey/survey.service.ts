@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { SurveyModel, SurveyResponseModel, type SurveyKind } from './survey.model';

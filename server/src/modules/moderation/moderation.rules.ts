@@ -28,8 +28,8 @@ const URL_RE =
 // to a 10–15 digit phone number.
 const PHONE_CANDIDATE_RE = /\+?\d[\d\s().-]{7,}\d/g;
 
-const escapeRe = (word: string) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-const wordListRe = (words: string[]) => new RegExp(`\\b(?:${words.map(escapeRe).join('|')})\\b`, 'i');
+const escapeRe = (word: string) => word.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+const wordListRe = (words: string[]) => new RegExp(String.raw`\b(?:${words.map(escapeRe).join('|')})\b`, 'i');
 
 // Collecting payments outside the platform.
 const PAYMENT_RE = wordListRe([

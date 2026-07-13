@@ -67,7 +67,7 @@ export default function PodsPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [quickPod, setQuickPod] = useState<any | null>(null);
+  const [quickPod, setQuickPod] = useState<any>(null);
   const [quickBusy, setQuickBusy] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerResolve = useRef<((url: string | null) => void) | null>(null);

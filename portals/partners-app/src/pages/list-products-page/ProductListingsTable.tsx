@@ -26,6 +26,13 @@ import {
 import { parseApiError } from '../../utils/parseApiError';
 import ProductListingsToolbar from './ProductListingsToolbar';
 
+/** Chip colour for a listing's review status. */
+const statusChipColor = (status: string): 'success' | 'error' | 'warning' => {
+  if (status === 'APPROVED') return 'success';
+  if (status === 'DENIED') return 'error';
+  return 'warning';
+};
+
 const PRODUCT_FIELDS = `
   id
   product_name
@@ -75,7 +82,7 @@ export default function ProductListingsTable({ brandId, refreshKey = 0, canManag
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
   const [deleteListing, deleteState] = useMutation(DELETE_LISTING);
   const [quantities, setQuantities] = useState<Record<string, string>>({});
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('ALL');
@@ -84,9 +91,17 @@ export default function ProductListingsTable({ brandId, refreshKey = 0, canManag
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const products = data?.myProductListings ?? [];
-  const statusOptions = Array.from(new Set(products.map((product: any) => product.listing_review_status).filter(Boolean))).sort() as string[];
+  const statusOptions = (Array.from(new Set(products.map((product: any) => product.listing_review_status).filter(Boolean))) as string[]).sort((a, b) => a.localeCompare(b));
   const filteredProducts = sortProducts(products.filter((product: any) => matchesProduct(product, search, status, target)), sort);
   const visibleProducts = filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  let listState: 'loading' | 'empty' | 'no-match' | 'table' = 'table';
+  if (loading && !data) {
+    listState = 'loading';
+  } else if (products.length === 0) {
+    listState = 'empty';
+  } else if (filteredProducts.length === 0) {
+    listState = 'no-match';
+  }
 
   useEffect(() => { refetch(); }, [refreshKey, refetch]);
   useEffect(() => { setPage(0); }, [search, status, target, sort, products.length]);
@@ -127,13 +142,17 @@ export default function ProductListingsTable({ brandId, refreshKey = 0, canManag
           {message && <Alert severity={message.includes('deleted') || message.includes('updated') ? 'success' : 'error'}>{message}</Alert>}
           {error && <Alert severity="error">{error.message}</Alert>}
         </Stack>
-        {loading && !data ? <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack> : products.length === 0 ? <Alert severity="info" sx={{ m: 2 }}>No product listings yet.</Alert> : filteredProducts.length === 0 ? <Alert severity="info" sx={{ m: 2 }}>No product listings match your filters.</Alert> : (
+        {listState === 'loading' && <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>}
+        {listState === 'empty' && <Alert severity="info" sx={{ m: 2 }}>No product listings yet.</Alert>}
+        {listState === 'no-match' && <Alert severity="info" sx={{ m: 2 }}>No product listings match your filters.</Alert>}
+        {listState === 'table' && (
           <TableContainer>
           <Table size="small">
             <TableHead><TableRow><TableCell>Product</TableCell><TableCell>Price</TableCell><TableCell>Quantity</TableCell><TableCell>Status</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
             <TableBody>
               {visibleProducts.map((product: any) => {
                 const image = product.image_url || product.images?.[0];
+                const statusColor = statusChipColor(product.listing_review_status);
                 return (
                   <TableRow key={product.id} hover>
                     <TableCell>
@@ -152,7 +171,7 @@ export default function ProductListingsTable({ brandId, refreshKey = 0, canManag
                         <Button size="small" disabled={!canManageProducts || quantityState.loading} onClick={() => saveQuantity(product)}>Update</Button>
                       </Stack>
                     </TableCell>
-                    <TableCell><Chip size="small" label={product.listing_review_status} color={product.listing_review_status === 'APPROVED' ? 'success' : product.listing_review_status === 'DENIED' ? 'error' : 'warning'} /></TableCell>
+                    <TableCell><Chip size="small" label={product.listing_review_status} color={statusColor} /></TableCell>
                     <TableCell align="right"><Button size="small" disabled={!canManageProducts} onClick={() => onEdit(product)}>Edit</Button><Button size="small" color="error" disabled={!canManageProducts} onClick={() => setDeleteTarget(product)}>Delete</Button></TableCell>
                   </TableRow>
                 );

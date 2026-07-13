@@ -24,7 +24,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!location.search.includes('verifyEmail')) return;
-    window.requestAnimationFrame(() => {
+    globalThis.requestAnimationFrame(() => {
       document.getElementById('email-verification')?.scrollIntoView({ block: 'start' });
     });
   }, [location.search, me?.is_email_verified]);

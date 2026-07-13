@@ -73,18 +73,7 @@ export default function UserHeader({
             Deactivate
           </Button>
         )}
-        {status !== 'SUSPENDED' ? (
-          <Button
-            size="small"
-            variant="outlined"
-            color="error"
-            startIcon={<BlockIcon />}
-            disabled={busy}
-            onClick={() => setStatus('SUSPENDED')}
-          >
-            Block
-          </Button>
-        ) : (
+        {status === 'SUSPENDED' ? (
           <Button
             size="small"
             variant="outlined"
@@ -94,6 +83,17 @@ export default function UserHeader({
             onClick={() => setStatus('ACTIVE')}
           >
             Unblock
+          </Button>
+        ) : (
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
+            startIcon={<BlockIcon />}
+            disabled={busy}
+            onClick={() => setStatus('SUSPENDED')}
+          >
+            Block
           </Button>
         )}
         <Button

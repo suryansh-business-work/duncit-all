@@ -71,9 +71,12 @@ async function main() {
   const keySecret = (active.config?.key_secret || '').trim();
   const rawId = active.config?.key_id || '';
   const rawSecret = active.config?.key_secret || '';
+  const idWhitespace = rawId === keyId ? '' : '⚠️ has surrounding whitespace';
+  const secretWhitespace = rawSecret === keySecret ? '' : '⚠️ has surrounding whitespace';
+  const secretState = keySecret ? `set (${keySecret.length} chars)` : '(missing)';
   console.log(`\nActive default entry "${active.name}":`);
-  console.log(`  key_id    : ${mask(keyId)}  ${rawId !== keyId ? '⚠️ has surrounding whitespace' : ''}`);
-  console.log(`  key_secret: ${keySecret ? `set (${keySecret.length} chars)` : '(missing)'}  ${rawSecret !== keySecret ? '⚠️ has surrounding whitespace' : ''}`);
+  console.log(`  key_id    : ${mask(keyId)}  ${idWhitespace}`);
+  console.log(`  key_secret: ${secretState}  ${secretWhitespace}`);
   let mode;
   if (keyId.startsWith('rzp_test_')) mode = 'TEST';
   else if (keyId.startsWith('rzp_live_')) mode = 'LIVE';

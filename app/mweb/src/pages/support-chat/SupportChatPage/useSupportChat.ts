@@ -74,15 +74,15 @@ export function useSupportChat() {
   const deliver = useCallback(async (tempId: string, text: string, attachments: string[]) => {
     if (session?.ai_active !== false && !session?.agent_id) setAiThinking(true);
     try {
-      if (!sessionId) {
+      if (sessionId) {
+        const r = await sendMessage({ variables: { session_id: sessionId, text: text || null, attachments } });
+        setMessages((prev) => mergeReal(prev, tempId, r.data.sendSupportChatMessage));
+      } else {
         const r = await startChat({});
         const sid = r.data?.startSupportChat?.id;
         if (!sid) throw new Error('no session');
         await sendMessage({ variables: { session_id: sid, text: text || null, attachments } });
         await sessionQuery.refetch();
-      } else {
-        const r = await sendMessage({ variables: { session_id: sessionId, text: text || null, attachments } });
-        setMessages((prev) => mergeReal(prev, tempId, r.data.sendSupportChatMessage));
       }
     } catch {
       setAiThinking(false);

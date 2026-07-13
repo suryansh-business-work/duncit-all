@@ -16,7 +16,7 @@ interface BasicInfoSectionProps {
 }
 
 export default function BasicInfoSection({ categories }: Readonly<BasicInfoSectionProps>) {
-  const { control, setValue } = useFormContext<InventoryProductFormValues>();
+  const { control } = useFormContext<InventoryProductFormValues>();
   const shortDescription = useWatch({ control, name: 'short_description' });
   const description = useWatch({ control, name: 'description' });
 

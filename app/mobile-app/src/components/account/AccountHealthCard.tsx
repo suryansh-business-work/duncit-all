@@ -27,6 +27,8 @@ export function AccountHealthCard({
 }>) {
   const bandColor = BAND_COLOR[health.band] ?? semantic.info;
   const remarks = health.adjustments.length;
+  const deltaText = health.delta_sum > 0 ? `+${health.delta_sum}` : `${health.delta_sum}`;
+  const adjustment = health.delta_sum === 0 ? '' : ` · Admin adjustment: ${deltaText}`;
 
   return (
     <YStack
@@ -64,9 +66,7 @@ export function AccountHealthCard({
           </Text>
           <Text fontSize={13} color="$muted">
             Base score: {health.base_score}
-            {health.delta_sum !== 0
-              ? ` · Admin adjustment: ${health.delta_sum > 0 ? `+${health.delta_sum}` : health.delta_sum}`
-              : ''}
+            {adjustment}
           </Text>
           {remarks > 0 ? (
             <Text fontSize={12} color="$muted">

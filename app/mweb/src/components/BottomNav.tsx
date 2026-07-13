@@ -28,7 +28,7 @@ export default function BottomNav() {
 
   useEffect(() => {
     const node = paperRef.current;
-    if (!node || typeof window === 'undefined') return undefined;
+    if (!node || typeof globalThis.window === 'undefined') return undefined;
     const root = document.documentElement;
     const updateOffset = () => {
       const height = Math.ceil(node.getBoundingClientRect().height);

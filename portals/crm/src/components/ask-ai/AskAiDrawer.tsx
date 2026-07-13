@@ -28,7 +28,10 @@ const CRM_LEAD_AI_CHAT = gql`
 
 export const ASK_AI_WIDTH = 420;
 
-interface ChatMsg { role: 'user' | 'assistant'; content: string }
+interface ChatMsg { id: string; role: 'user' | 'assistant'; content: string }
+
+/** The local `id` is a stable render key only — it is never sent to the API. */
+const toPayload = (list: ChatMsg[]) => list.map(({ role, content }) => ({ role, content }));
 
 interface Props {
   open: boolean;
@@ -47,6 +50,12 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
   const [error, setError] = useState<string | null>(null);
   const [chat, { loading }] = useMutation<{ crmLeadAiChat: string }>(CRM_LEAD_AI_CHAT);
   const endRef = useRef<HTMLDivElement | null>(null);
+  const msgIdRef = useRef(0);
+
+  const newMsg = (role: ChatMsg['role'], content: string): ChatMsg => {
+    msgIdRef.current += 1;
+    return { id: `msg-${msgIdRef.current}`, role, content };
+  };
 
   // Auto-scroll to the newest message (and while the assistant is thinking).
   useEffect(() => {
@@ -57,12 +66,12 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
     const content = text.trim();
     if (!content || loading) return;
     setError(null);
-    const next: ChatMsg[] = [...messages, { role: 'user', content }];
+    const next: ChatMsg[] = [...messages, newMsg('user', content)];
     setMessages(next);
     setInput('');
     try {
-      const res = await chat({ variables: { entity, lead_id: leadId, messages: next } });
-      setMessages([...next, { role: 'assistant', content: res.data?.crmLeadAiChat ?? '' }]);
+      const res = await chat({ variables: { entity, lead_id: leadId, messages: toPayload(next) } });
+      setMessages([...next, newMsg('assistant', res.data?.crmLeadAiChat ?? '')]);
     } catch (e) {
       setError(parseApiError(e));
     }
@@ -95,10 +104,10 @@ export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }:
             ))}
           </Stack>
         )}
-        {messages.map((m, i) => {
+        {messages.map((m) => {
           const isUser = m.role === 'user';
           return (
-            <Stack key={i} direction={isUser ? 'row-reverse' : 'row'} spacing={1} alignItems="flex-start">
+            <Stack key={m.id} direction={isUser ? 'row-reverse' : 'row'} spacing={1} alignItems="flex-start">
               <Avatar sx={{ width: 26, height: 26, bgcolor: isUser ? 'primary.main' : 'secondary.main' }}>
                 {isUser ? <PersonIcon sx={{ fontSize: 16 }} /> : <SmartToyIcon sx={{ fontSize: 16 }} />}
               </Avatar>

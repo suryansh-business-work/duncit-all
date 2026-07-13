@@ -9,8 +9,8 @@
  *   SLACK_BOT_TOKEN   Bot token with files:write + chat:write scopes.
  *   SLACK_CHANNEL_ID  Target channel id.
  */
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const { WebClient } = require('@slack/web-api');
 
 function parseArgs(argv) {

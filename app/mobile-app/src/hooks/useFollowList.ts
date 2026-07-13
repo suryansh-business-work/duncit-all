@@ -35,7 +35,7 @@ export function useFollowList(userId: string, tab: FollowTab) {
   }, [userId, tab]);
 
   useEffect(() => {
-    void load();
+    load();
   }, [load]);
 
   const toggle = useCallback(async (target: FollowListPerson) => {

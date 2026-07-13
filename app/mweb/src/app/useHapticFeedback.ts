@@ -10,7 +10,7 @@ const ACTION_SELECTOR = [
 
 export function useHapticFeedback(enabled: boolean) {
   useEffect(() => {
-    if (!enabled || typeof window === 'undefined' || !('vibrate' in navigator)) return undefined;
+    if (!enabled || typeof globalThis.window === 'undefined' || !('vibrate' in navigator)) return undefined;
     let lastVibrateAt = 0;
     const onClick = (event: MouseEvent) => {
       const target = event.target as Element | null;

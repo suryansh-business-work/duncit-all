@@ -24,7 +24,9 @@ function ActionButton({
 }>) {
   const { onPrimary, color, danger, primary } = useThemeColors();
   const contained = variant === 'contained';
-  const tint = variant === 'danger' ? danger : contained ? onPrimary : color;
+  const labelTint = contained ? onPrimary : color;
+  const iconTint = contained ? onPrimary : primary;
+  const tint = variant === 'danger' ? danger : labelTint;
 
   return (
     <XStack
@@ -47,11 +49,7 @@ function ActionButton({
       opacity={disabled ? 0.5 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
-      <MaterialIcons
-        name={icon}
-        size={16}
-        color={variant === 'danger' ? danger : contained ? onPrimary : primary}
-      />
+      <MaterialIcons name={icon} size={16} color={variant === 'danger' ? danger : iconTint} />
       <Text fontSize={13} fontWeight="800" color={tint}>
         {label}
       </Text>
@@ -94,7 +92,7 @@ export function PodHistoryActions({
   const showRejoin = canRejoin(item);
   return (
     <XStack flexWrap="wrap" gap={8}>
-      {!isDeleted ? (
+      {isDeleted ? null : (
         <>
           <ActionButton
             testID="ph-pod-details"
@@ -137,7 +135,7 @@ export function PodHistoryActions({
             onPress={onTicket}
           />
         </>
-      ) : null}
+      )}
       <ActionButton
         testID="ph-invoice"
         icon="receipt-long"

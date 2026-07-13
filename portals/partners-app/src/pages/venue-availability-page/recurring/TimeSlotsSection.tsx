@@ -31,7 +31,7 @@ export default function TimeSlotsSection({ timeSlots, onChange, openHours, buffe
         {timeSlots.map((row, index) => (
           <Stack key={row.id} direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
             <TimePicker
-              label={`Start${timeSlots.length > 1 ? ` #${index + 1}` : ''}`}
+              label={timeSlots.length > 1 ? `Start #${index + 1}` : 'Start'}
               value={row.start}
               onChange={(t) => setRow(row.id, { start: t })}
               slotProps={{ textField: { size: 'small', fullWidth: true } }}

@@ -20,8 +20,8 @@ export function useEntityLifecycle(
   const [setActive, { loading: toggling }] = useMutation(setActiveMutation);
   const [runDelete, { loading: deleting }] = useMutation(deleteMutation);
 
-  const [toggleTarget, setToggleTarget] = useState<any | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const confirmToggle = async () => {

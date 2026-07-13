@@ -141,6 +141,7 @@ describe('TicketDetailsScreen — states + thread', () => {
         layoutMeasurement: { height: 300 },
       },
     });
+    expect(screen.getByTestId('ticket-jump-bottom')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('ticket-jump-bottom'));
   });
 });

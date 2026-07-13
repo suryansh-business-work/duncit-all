@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -35,6 +36,75 @@ export default function UserLeadDetailPage() {
   const { data, loading, error } = useQuery(WA_USER_LEAD, { variables: { id } });
   const lead = data?.waUserLead;
 
+  let body: ReactNode;
+  if (loading && !lead) {
+    body = (
+      <Stack alignItems="center" sx={{ py: 6 }}>
+        <CircularProgress />
+      </Stack>
+    );
+  } else if (error) {
+    body = <Alert severity="error">{error.message}</Alert>;
+  } else if (lead) {
+    body = (
+      <Stack spacing={2}>
+        <Card variant="outlined" sx={{ borderRadius: 3 }}>
+          <CardContent>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <WhatsAppIcon sx={{ color: '#25D366' }} />
+              <Box>
+                <Typography variant="h6" fontWeight={800}>
+                  {lead.name || `+${lead.phone}`}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  +{lead.phone}
+                </Typography>
+              </Box>
+            </Stack>
+            <Divider sx={{ my: 2 }} />
+            <Stack spacing={1.5}>
+              <Field label="Source WhatsApp account" value={lead.source_account ? `+${lead.source_account}` : null} />
+              <Field
+                label="Imported"
+                value={lead.imported_at ? new Date(lead.imported_at).toLocaleString() : null}
+              />
+              <Field label="Contact JID" value={lead.contact_jid} />
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined" sx={{ borderRadius: 3 }}>
+          <CardContent>
+            <Typography fontWeight={800} sx={{ mb: 1 }}>
+              Communities ({lead.source_communities?.length ?? 0})
+            </Typography>
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {(lead.source_communities ?? []).map((c: any) => (
+                <Chip key={c.jid} label={c.name || c.jid} color="primary" variant="outlined" />
+              ))}
+              {(lead.source_communities ?? []).length === 0 && (
+                <Typography variant="body2" color="text.secondary">None</Typography>
+              )}
+            </Stack>
+            <Typography fontWeight={800} sx={{ mt: 2, mb: 1 }}>
+              Groups ({lead.source_groups?.length ?? 0})
+            </Typography>
+            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+              {(lead.source_groups ?? []).map((g: any) => (
+                <Chip key={g.jid} label={g.name || g.jid} />
+              ))}
+              {(lead.source_groups ?? []).length === 0 && (
+                <Typography variant="body2" color="text.secondary">None</Typography>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+      </Stack>
+    );
+  } else {
+    body = <Alert severity="warning">Lead not found.</Alert>;
+  }
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
@@ -46,69 +116,7 @@ export default function UserLeadDetailPage() {
         </Typography>
       </Stack>
 
-      {loading && !lead ? (
-        <Stack alignItems="center" sx={{ py: 6 }}>
-          <CircularProgress />
-        </Stack>
-      ) : error ? (
-        <Alert severity="error">{error.message}</Alert>
-      ) : !lead ? (
-        <Alert severity="warning">Lead not found.</Alert>
-      ) : (
-        <Stack spacing={2}>
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <WhatsAppIcon sx={{ color: '#25D366' }} />
-                <Box>
-                  <Typography variant="h6" fontWeight={800}>
-                    {lead.name || `+${lead.phone}`}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    +{lead.phone}
-                  </Typography>
-                </Box>
-              </Stack>
-              <Divider sx={{ my: 2 }} />
-              <Stack spacing={1.5}>
-                <Field label="Source WhatsApp account" value={lead.source_account ? `+${lead.source_account}` : null} />
-                <Field
-                  label="Imported"
-                  value={lead.imported_at ? new Date(lead.imported_at).toLocaleString() : null}
-                />
-                <Field label="Contact JID" value={lead.contact_jid} />
-              </Stack>
-            </CardContent>
-          </Card>
-
-          <Card variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Typography fontWeight={800} sx={{ mb: 1 }}>
-                Communities ({lead.source_communities?.length ?? 0})
-              </Typography>
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                {(lead.source_communities ?? []).map((c: any) => (
-                  <Chip key={c.jid} label={c.name || c.jid} color="primary" variant="outlined" />
-                ))}
-                {(lead.source_communities ?? []).length === 0 && (
-                  <Typography variant="body2" color="text.secondary">None</Typography>
-                )}
-              </Stack>
-              <Typography fontWeight={800} sx={{ mt: 2, mb: 1 }}>
-                Groups ({lead.source_groups?.length ?? 0})
-              </Typography>
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                {(lead.source_groups ?? []).map((g: any) => (
-                  <Chip key={g.jid} label={g.name || g.jid} />
-                ))}
-                {(lead.source_groups ?? []).length === 0 && (
-                  <Typography variant="body2" color="text.secondary">None</Typography>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Stack>
-      )}
+      {body}
     </Box>
   );
 }

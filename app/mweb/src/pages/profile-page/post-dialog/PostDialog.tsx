@@ -101,6 +101,57 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
     }
   };
 
+  const postBody = post ? (
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      sx={{ minHeight: { md: 520 }, bgcolor: 'background.paper' }}
+    >
+      <PostMediaPane
+        imageUrl={post.image_url}
+        caption={post.caption}
+        onDoubleTapLike={likeOnDoubleTap}
+      />
+
+      <Stack
+        sx={{
+          flex: 1,
+          minWidth: { md: 320 },
+          maxWidth: { md: 420 },
+          borderLeft: { md: 1 },
+          borderColor: { md: 'divider' },
+        }}
+      >
+        <PostDialogHeader
+          post={post}
+          canDelete={canDelete}
+          onClose={onClose}
+          onRequestDelete={() => setConfirmPostOpen(true)}
+        />
+
+        <PostCommentList
+          post={post}
+          sortedComments={sortedComments}
+          meId={meId}
+          canDeletePost={canDelete}
+          onDeleteComment={onDeleteComment}
+        />
+
+        <PostActions
+          post={post}
+          comment={comment}
+          setComment={setComment}
+          onLike={onLike}
+          onSend={onSend}
+          submitting={submitting}
+        />
+      </Stack>
+    </Stack>
+  ) : (
+    <Box sx={{ p: 4 }}>
+      <Alert severity="warning">Post not found.</Alert>
+    </Box>
+  );
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
       <DialogContent sx={{ p: 0 }}>
@@ -108,55 +159,8 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
           <Stack alignItems="center" sx={{ p: 6 }}>
             <CircularProgress />
           </Stack>
-        ) : !post ? (
-          <Box sx={{ p: 4 }}>
-            <Alert severity="warning">Post not found.</Alert>
-          </Box>
         ) : (
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            sx={{ minHeight: { md: 520 }, bgcolor: 'background.paper' }}
-          >
-            <PostMediaPane
-              imageUrl={post.image_url}
-              caption={post.caption}
-              onDoubleTapLike={likeOnDoubleTap}
-            />
-
-            <Stack
-              sx={{
-                flex: 1,
-                minWidth: { md: 320 },
-                maxWidth: { md: 420 },
-                borderLeft: { md: 1 },
-                borderColor: { md: 'divider' },
-              }}
-            >
-              <PostDialogHeader
-                post={post}
-                canDelete={canDelete}
-                onClose={onClose}
-                onRequestDelete={() => setConfirmPostOpen(true)}
-              />
-
-              <PostCommentList
-                post={post}
-                sortedComments={sortedComments}
-                meId={meId}
-                canDeletePost={canDelete}
-                onDeleteComment={onDeleteComment}
-              />
-
-              <PostActions
-                post={post}
-                comment={comment}
-                setComment={setComment}
-                onLike={onLike}
-                onSend={onSend}
-                submitting={submitting}
-              />
-            </Stack>
-          </Stack>
+          postBody
         )}
       </DialogContent>
       <ConfirmDialog

@@ -74,7 +74,7 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
         />
       ) : null}
 
-      {deleteId !== null ? (
+      {deleteId === null ? null : (
         <ConfirmDialog
           open
           title="Delete story?"
@@ -86,7 +86,7 @@ export function ProfileAvatar({ photo, initial, size, onChanged }: Readonly<Prop
           onCancel={() => a.setDeleteId(null)}
           testID="delete-story-confirm"
         />
-      ) : null}
+      )}
     </>
   );
 }

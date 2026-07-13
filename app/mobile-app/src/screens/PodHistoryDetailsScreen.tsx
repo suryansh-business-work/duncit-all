@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Linking } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -90,57 +90,66 @@ export function PodHistoryDetailsScreen() {
     }
   };
 
+  let body: ReactNode;
+  if (isLoading && items.length === 0) {
+    body = (
+      <YStack flex={1} alignItems="center" justifyContent="center">
+        <Spinner testID="pod-history-details-loading" color="$primary" />
+      </YStack>
+    );
+  } else if (error) {
+    body = (
+      <Text testID="pod-history-details-error" padding={24} color="$danger">
+        {toErrorMessage(error)}
+      </Text>
+    );
+  } else if (selected) {
+    body = (
+      <ScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+        <PodHistoryDetails
+          item={selected}
+          backingOut={backingOut}
+          rejoining={rejoining}
+          invoiceBusy={invoiceBusy}
+          ticketBusy={ticketBusy}
+          notice={notice}
+          deductionPct={deductionPct}
+          productOrders={productOrders}
+          ordersLoading={ordersLoading}
+          onPodDetails={() =>
+            selected.pod?.id &&
+            navigation.navigate('PodDetails', {
+              podId: selected.pod.id,
+              title: selected.pod.pod_title,
+            })
+          }
+          onBackout={() => setBackoutOpen(true)}
+          onRejoin={() => setRejoinOpen(true)}
+          onRefundStatus={() => setNotice(`Refund status: ${refundLabel(selected.refund_status)}`)}
+          onInvoice={downloadInvoice}
+          onTicket={downloadTicket}
+          onSupport={() =>
+            navigation.navigate('SupportTickets', {
+              podId: selected.pod?.id,
+              podTitle: selected.pod?.pod_title,
+            })
+          }
+          onBackoutTerms={() => navigation.navigate('Policy', { slug: 'backout-terms' })}
+          onGeneralTerms={() => Linking.openURL(GENERAL_TERMS_URL)}
+        />
+      </ScrollView>
+    );
+  } else {
+    body = (
+      <Text testID="pod-history-details-missing" padding={24} color="$muted">
+        Pod history record not found.
+      </Text>
+    );
+  }
+
   return (
     <StackScreen title={title} testID="pod-history-details-screen">
-      {isLoading && items.length === 0 ? (
-        <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner testID="pod-history-details-loading" color="$primary" />
-        </YStack>
-      ) : error ? (
-        <Text testID="pod-history-details-error" padding={24} color="$danger">
-          {toErrorMessage(error)}
-        </Text>
-      ) : !selected ? (
-        <Text testID="pod-history-details-missing" padding={24} color="$muted">
-          Pod history record not found.
-        </Text>
-      ) : (
-        <ScrollView flex={1} contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-          <PodHistoryDetails
-            item={selected}
-            backingOut={backingOut}
-            rejoining={rejoining}
-            invoiceBusy={invoiceBusy}
-            ticketBusy={ticketBusy}
-            notice={notice}
-            deductionPct={deductionPct}
-            productOrders={productOrders}
-            ordersLoading={ordersLoading}
-            onPodDetails={() =>
-              selected.pod?.id &&
-              navigation.navigate('PodDetails', {
-                podId: selected.pod.id,
-                title: selected.pod.pod_title,
-              })
-            }
-            onBackout={() => setBackoutOpen(true)}
-            onRejoin={() => setRejoinOpen(true)}
-            onRefundStatus={() =>
-              setNotice(`Refund status: ${refundLabel(selected.refund_status)}`)
-            }
-            onInvoice={downloadInvoice}
-            onTicket={downloadTicket}
-            onSupport={() =>
-              navigation.navigate('SupportTickets', {
-                podId: selected.pod?.id,
-                podTitle: selected.pod?.pod_title,
-              })
-            }
-            onBackoutTerms={() => navigation.navigate('Policy', { slug: 'backout-terms' })}
-            onGeneralTerms={() => void Linking.openURL(GENERAL_TERMS_URL)}
-          />
-        </ScrollView>
-      )}
+      {body}
 
       <BackoutConfirmDialog
         open={backoutOpen}

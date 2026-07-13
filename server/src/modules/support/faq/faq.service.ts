@@ -45,7 +45,7 @@ export const faqService = {
     if (filter?.partner_topic) q.partner_topic = filter.partner_topic;
     if (typeof filter?.is_active === 'boolean') q.is_active = filter.is_active;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       and.push({ $or: [{ question: r }, { answer: r }] });
     }
     if (and.length) q.$and = and;
@@ -102,12 +102,11 @@ export const faqService = {
     const bySuper = new Map<string, IFaq[]>();
     const generic: IFaq[] = [];
     for (const f of faqs) {
-      if (!f.super_category_id) generic.push(f);
-      else {
+      if (f.super_category_id) {
         const k = String(f.super_category_id);
         if (!bySuper.has(k)) bySuper.set(k, []);
         bySuper.get(k)!.push(f);
-      }
+      } else generic.push(f);
     }
     const groups: { super_category: any; faqs: any[] }[] = [];
     for (const sc of supers) {

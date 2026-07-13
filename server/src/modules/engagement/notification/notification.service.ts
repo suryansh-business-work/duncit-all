@@ -43,6 +43,45 @@ const toUserNotifPub = (un: IUserNotification & { notification_id: any }) => ({
   created_at: un.created_at.toISOString(),
 });
 
+interface ExpoMessage {
+  to: string;
+  sound: string;
+  title: string;
+  body: string;
+  data: { id: string; link: string };
+}
+
+/** POST one chunk (≤100) of Expo messages and tally its receipts. */
+async function sendExpoChunk(chunk: ExpoMessage[]): Promise<{ delivered: number; failed: number }> {
+  let delivered = 0;
+  let failed = 0;
+  try {
+    const res = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify(chunk),
+    });
+    const json: any = await res.json().catch(() => ({}));
+    const receipts: any[] = Array.isArray(json?.data) ? json.data : [];
+    for (const [idx, receipt] of receipts.entries()) {
+      if (receipt?.status === 'ok') {
+        delivered++;
+      } else {
+        failed++;
+        // Drop tokens Expo reports as no longer registered.
+        if (receipt?.details?.error === 'DeviceNotRegistered' && chunk[idx]?.to) {
+          ExpoPushTokenModel.deleteOne({ token: chunk[idx].to }).catch(() => undefined);
+        }
+      }
+    }
+  } catch (err) {
+    failed += chunk.length;
+    // eslint-disable-next-line no-console
+    console.error('[notification] expo push failed:', err);
+  }
+  return { delivered, failed };
+}
+
 export const notificationService = {
   async ensureVapid() {
     if (vapidReady) return;
@@ -151,31 +190,9 @@ export const notificationService = {
     }));
 
     for (let i = 0; i < messages.length; i += 100) {
-      const chunk = messages.slice(i, i + 100);
-      try {
-        const res = await fetch('https://exp.host/--/api/v2/push/send', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', accept: 'application/json' },
-          body: JSON.stringify(chunk),
-        });
-        const json: any = await res.json().catch(() => ({}));
-        const receipts: any[] = Array.isArray(json?.data) ? json.data : [];
-        for (const [idx, receipt] of receipts.entries()) {
-          if (receipt?.status === 'ok') {
-            delivered++;
-          } else {
-            failed++;
-            // Drop tokens Expo reports as no longer registered.
-            if (receipt?.details?.error === 'DeviceNotRegistered' && chunk[idx]?.to) {
-              ExpoPushTokenModel.deleteOne({ token: chunk[idx].to }).catch(() => undefined);
-            }
-          }
-        }
-      } catch (err) {
-        failed += chunk.length;
-        // eslint-disable-next-line no-console
-        console.error('[notification] expo push failed:', err);
-      }
+      const res = await sendExpoChunk(messages.slice(i, i + 100));
+      delivered += res.delivered;
+      failed += res.failed;
     }
     return { delivered, failed };
   },

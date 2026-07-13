@@ -115,6 +115,52 @@ async function buildLineItem(line: any) {
   };
 }
 
+/** Bucket the snapshot lines by their effective fulfilment method (per-line
+ * override, else the checkout-level one). */
+function groupLinesByMethod(lines: any[], topMethod: FulfilmentMethod) {
+  const groups = new Map<FulfilmentMethod, any[]>();
+  for (const line of lines) {
+    const method = asMethod(line.fulfilment_method ?? topMethod);
+    const arr = groups.get(method) ?? [];
+    arr.push(line);
+    groups.set(method, arr);
+  }
+  return groups;
+}
+
+/** Persist the order doc for one fulfilment-method group. */
+async function createOrderForGroup(
+  payment: IPayment,
+  method: FulfilmentMethod,
+  groupLines: any[],
+  shippingAddress: any,
+  pickupVenueId: any
+) {
+  const line_items = await Promise.all(groupLines.map(buildLineItem));
+  const items_total = round2(line_items.reduce((s, l) => s + l.gross, 0));
+  const isShip = method === 'SHIP';
+  return ProductOrderModel.create({
+    order_no: newOrderNo(),
+    buyer_id: payment.user_id,
+    buyer_name: payment.user_name,
+    buyer_email: payment.user_email,
+    buyer_phone: payment.user_phone,
+    pod_id: payment.pod_id,
+    payment_id: payment._id,
+    payment_ref: payment.payment_id,
+    line_items,
+    currency_symbol: payment.currency_symbol,
+    items_total,
+    shipping_charge: 0,
+    total: items_total,
+    fulfilment_method: method,
+    fulfilment_status: isShip ? 'AWAITING_SHIPMENT' : 'PENDING',
+    shipping_address: isShip ? shippingAddress : null,
+    pickup_venue_id: isShip ? null : pickupVenueId,
+    pickup_ref: isShip ? '' : newPickupRef(),
+  });
+}
+
 export const productOrderService = {
   toPub,
 
@@ -125,20 +171,15 @@ export const productOrderService = {
    * throws are swallowed by the caller so a paid checkout is never failed.
    */
   async createFromPayment(payment: IPayment) {
-    const meta = (payment.metadata ?? {}) as Record<string, any>;
+    const meta = payment.metadata ?? {};
     const lines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
     if (lines.length === 0) return [];
 
-    const topMethod = asMethod(meta.fulfilment_method ?? 'PICKUP');
-    const groups = new Map<FulfilmentMethod, any[]>();
-    for (const line of lines) {
-      const method = asMethod(line.fulfilment_method ?? topMethod);
-      const arr = groups.get(method) ?? [];
-      arr.push(line);
-      groups.set(method, arr);
-    }
+    const groups = groupLinesByMethod(lines, asMethod(meta.fulfilment_method ?? 'PICKUP'));
 
     const pod = payment.pod_id ? await PodModel.findById(payment.pod_id) : null;
+    const shippingAddress = meta.shipping_address ?? null;
+    const pickupVenueId = (pod as any)?.venue_id ?? null;
     const created: IProductOrder[] = [];
 
     for (const [method, groupLines] of groups) {
@@ -150,31 +191,9 @@ export const productOrderService = {
         created.push(existing);
         continue;
       }
-      const line_items = await Promise.all(groupLines.map(buildLineItem));
-      const items_total = round2(line_items.reduce((s, l) => s + l.gross, 0));
-      const isShip = method === 'SHIP';
-      const doc = await ProductOrderModel.create({
-        order_no: newOrderNo(),
-        buyer_id: payment.user_id,
-        buyer_name: payment.user_name,
-        buyer_email: payment.user_email,
-        buyer_phone: payment.user_phone,
-        pod_id: payment.pod_id,
-        payment_id: payment._id,
-        payment_ref: payment.payment_id,
-        line_items,
-        currency_symbol: payment.currency_symbol,
-        items_total,
-        shipping_charge: 0,
-        total: items_total,
-        fulfilment_method: method,
-        fulfilment_status: isShip ? 'AWAITING_SHIPMENT' : 'PENDING',
-        shipping_address: isShip ? meta.shipping_address ?? null : null,
-        pickup_venue_id: isShip ? null : (pod as any)?.venue_id ?? null,
-        pickup_ref: isShip ? '' : newPickupRef(),
-      });
+      const doc = await createOrderForGroup(payment, method, groupLines, shippingAddress, pickupVenueId);
       created.push(doc);
-      if (isShip) await this.tryCreateShipment(doc);
+      if (method === 'SHIP') await this.tryCreateShipment(doc);
     }
     return created.map(toPub);
   },
@@ -203,7 +222,7 @@ export const productOrderService = {
     if (filter?.fulfilment_method) q.fulfilment_method = filter.fulfilment_method;
     if (filter?.fulfilment_status) q.fulfilment_status = filter.fulfilment_status;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ order_no: r }, { buyer_name: r }, { buyer_email: r }, { 'shiprocket.awb': r }];
     }
     const docs = await ProductOrderModel.find(q).sort({ created_at: -1 }).limit(limit);

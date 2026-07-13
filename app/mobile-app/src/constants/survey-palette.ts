@@ -44,8 +44,8 @@ export const MIN_PICKS = 3;
 export function withAlpha(hex: string, alpha: number): string {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!m) return hex;
-  const r = parseInt(m[1] as string, 16);
-  const g = parseInt(m[2] as string, 16);
-  const b = parseInt(m[3] as string, 16);
+  const r = Number.parseInt(m[1] as string, 16);
+  const g = Number.parseInt(m[2] as string, 16);
+  const b = Number.parseInt(m[3] as string, 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

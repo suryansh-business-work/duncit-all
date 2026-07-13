@@ -126,7 +126,16 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          {!placed ? (
+          {placed ? (
+            <CallStage
+              fromNumber={fromNumber}
+              toNumber={lead?.to ?? ''}
+              statusLabel={callStatusView(status ?? 'INITIATED').label}
+              tone={callStatusView(status ?? 'INITIATED').tone}
+              active={!ended}
+              ai
+            />
+          ) : (
             <>
               <Typography variant="body2" color="text.secondary">
                 The AI agent will call the customer and converse using the selected Static Content.
@@ -164,15 +173,6 @@ export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
                 ))}
               </TextField>
             </>
-          ) : (
-            <CallStage
-              fromNumber={fromNumber}
-              toNumber={lead?.to ?? ''}
-              statusLabel={callStatusView(status ?? 'INITIATED').label}
-              tone={callStatusView(status ?? 'INITIATED').tone}
-              active={!ended}
-              ai
-            />
           )}
         </Stack>
       </DialogContent>

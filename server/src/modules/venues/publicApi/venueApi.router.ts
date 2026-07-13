@@ -110,7 +110,7 @@ export function buildVenueApiRouter(): Router {
     try {
       const valid = Types.ObjectId.isValid(req.params.id);
       const venue = valid ? await venueService.getById(req.params.id) : null;
-      if (!venue || venue.status !== 'APPROVED' || venue.is_active === false) {
+      if (venue?.status !== 'APPROVED' || venue?.is_active === false) {
         return res.status(404).json({ error: 'venue_not_found' });
       }
       return res.json({ venue: toApiVenue(venue) });

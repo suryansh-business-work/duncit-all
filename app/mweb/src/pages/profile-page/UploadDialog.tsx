@@ -67,18 +67,7 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
       </Stack>
       <Divider />
       <DialogContent>
-        {!imageUrl ? (
-          <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
-            <AddPhotoAlternateIcon sx={{ fontSize: 72, color: 'text.secondary' }} />
-            <Typography variant="body1">Pick an image to share.</Typography>
-            <Button variant="contained" onClick={() => setPickerOpen(true)}>
-              Choose image
-            </Button>
-            <Typography variant="caption" color="text.secondary">
-              Upload from device or pick from Pexels — both go through ImageKit.
-            </Typography>
-          </Stack>
-        ) : (
+        {imageUrl ? (
           <Stack spacing={2}>
             <Box
               component="img"
@@ -110,6 +99,17 @@ export default function UploadDialog({ open, onClose, onSuccess, onError }: Read
                 {busy ? <CircularProgress size={20} /> : 'Share'}
               </Button>
             </Stack>
+          </Stack>
+        ) : (
+          <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
+            <AddPhotoAlternateIcon sx={{ fontSize: 72, color: 'text.secondary' }} />
+            <Typography variant="body1">Pick an image to share.</Typography>
+            <Button variant="contained" onClick={() => setPickerOpen(true)}>
+              Choose image
+            </Button>
+            <Typography variant="caption" color="text.secondary">
+              Upload from device or pick from Pexels — both go through ImageKit.
+            </Typography>
           </Stack>
         )}
       </DialogContent>

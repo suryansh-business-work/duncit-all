@@ -73,9 +73,9 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
                   </TableCell>
                   <TableCell sx={{ maxWidth: 320 }}>
                     <Stack direction="row" sx={{ gap: 0.5 }} flexWrap="wrap">
-                      {loc.location_zones.map((z: any, i: number) => (
+                      {loc.location_zones.map((z: any) => (
                         <Chip
-                          key={i}
+                          key={`${loc.id}-${z.zone_name}-${z.pincode}`}
                           size="small"
                           label={z.pincode ? `${z.zone_name} · ${z.pincode}` : z.zone_name}
                         />

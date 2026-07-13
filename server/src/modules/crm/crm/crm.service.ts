@@ -58,11 +58,11 @@ function pub(doc: any) {
     ...o,
     id: String(o._id),
     super_category_id: o.super_category_id ? String(o.super_category_id) : null,
-    category_ids: (o.category_ids ?? []).map((id: any) => String(id)),
-    sub_category_ids: (o.sub_category_ids ?? []).map((id: any) => String(id)),
+    category_ids: (o.category_ids ?? []).map(String),
+    sub_category_ids: (o.sub_category_ids ?? []).map(String),
     contacts: (o.contacts ?? []).map(toContact),
     services_offered: (o.services_offered ?? []).map(toServiceOffered),
-    linked_host_ids: (o.linked_host_ids ?? []).map((id: any) => String(id)),
+    linked_host_ids: (o.linked_host_ids ?? []).map(String),
     tags: o.tags ?? [],
     // GraphQL clients receive the dynamic field map as a JSON string so we
     // don't have to introduce a custom scalar. Empty object when unset.
@@ -150,7 +150,7 @@ function buildQuery(filter: any, nameField: string) {
     if (oid) q.super_category_id = oid;
   }
   if (filter?.search) {
-    const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     q.$or = [{ [nameField]: rx }, { city: rx }, { 'contacts.mobile_number': rx }, { 'contacts.email': rx }];
   }
   return q;
@@ -242,11 +242,8 @@ async function logAndAttachActivity(opts: {
   by?: string | null;
   contact_name?: string;
 }) {
-  const status = opts.result.ok
-    ? opts.type === 'EMAIL'
-      ? 'SENT'
-      : 'INITIATED'
-    : 'FAILED';
+  const okStatus = opts.type === 'EMAIL' ? 'SENT' : 'INITIATED';
+  const status = opts.result.ok ? okStatus : 'FAILED';
   await communicationLogService.create({
     type: opts.type,
     entity_type: opts.entity_type,
@@ -274,9 +271,9 @@ async function logAndAttachActivity(opts: {
 }
 
 type ServiceKind = 'VENUE' | 'HOST' | 'ECOMM';
-const SERVICE_KINDS: readonly ServiceKind[] = ['VENUE', 'HOST', 'ECOMM'];
+const SERVICE_KINDS = new Set<ServiceKind>(['VENUE', 'HOST', 'ECOMM']);
 const asServiceKind = (v: any, fallback: ServiceKind = 'VENUE'): ServiceKind =>
-  SERVICE_KINDS.includes(v) ? v : fallback;
+  SERVICE_KINDS.has(v) ? v : fallback;
 
 async function loadServiceNames(kind: ServiceKind): Promise<string[]> {
   // Active catalogue names, sort-ordered, with the "Other" sentinel always
@@ -353,7 +350,7 @@ export const crmService = {
       name,
       kind,
       sort_order: input.sort_order ?? 0,
-      is_active: input.is_active === false ? false : true,
+      is_active: input.is_active !== false,
     });
     return pubService(doc);
   },

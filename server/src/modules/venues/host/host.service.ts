@@ -20,11 +20,11 @@ async function normalizeHostCategoryInput(input: any): Promise<Omit<IHostCategor
     fail('BAD_USER_INPUT', 'Host category selection is invalid');
   }
   const [superCat, category, subCat] = await Promise.all(ids.map((id) => CategoryModel.findById(id)));
-  if (!superCat || superCat.level !== 'SUPER') fail('BAD_USER_INPUT', 'Select a valid super category');
-  if (!category || category.level !== 'CATEGORY' || String(category.parent_id) !== String(superCat!._id)) {
+  if (superCat?.level !== 'SUPER') fail('BAD_USER_INPUT', 'Select a valid super category');
+  if (category?.level !== 'CATEGORY' || String(category.parent_id) !== String(superCat!._id)) {
     fail('BAD_USER_INPUT', 'Select a valid category under the chosen super category');
   }
-  if (!subCat || subCat.level !== 'SUB' || String(subCat.parent_id) !== String(category!._id)) {
+  if (subCat?.level !== 'SUB' || String(subCat.parent_id) !== String(category!._id)) {
     fail('BAD_USER_INPUT', 'Select a valid sub category under the chosen category');
   }
   return {
@@ -73,7 +73,7 @@ function shiftYears(date: Date, years: number) {
 
 function parseHostDob(value: unknown) {
   if (!value) return null;
-  const date = new Date(String(value));
+  const date = new Date(String(value as string));
   if (Number.isNaN(date.getTime())) {
     throw new GraphQLError('Enter a valid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
   }
@@ -364,7 +364,7 @@ export const hostService = {
   /** Un-approve a user's host when their HOST role is revoked from Access. */
   async revokeApprovalForUser(userId: string) {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
-    if (h && h.status === 'APPROVED') {
+    if (h?.status === 'APPROVED') {
       h.status = 'REJECTED';
       h.rejected_at = new Date();
       h.reviewer_notes = 'Approval revoked — host access was removed.';

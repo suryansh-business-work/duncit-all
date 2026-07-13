@@ -162,7 +162,7 @@ function normalizePodMode(mode?: string | null): PodMode {
 
 function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
   if (mode !== 'VIRTUAL') return;
-  const meetingUrl = input.meeting_url !== undefined ? input.meeting_url : current?.meeting_url;
+  const meetingUrl = input.meeting_url === undefined ? current?.meeting_url : input.meeting_url;
   const trimmed = typeof meetingUrl === 'string' ? meetingUrl.trim() : '';
   if (!trimmed) {
     throw new GraphQLError('Meeting link is required for virtual pods', {
@@ -324,7 +324,7 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
   }
 }
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 const requestMap = (items: any[] = []) => {
   const map = new Map<string, number>();
@@ -334,6 +334,26 @@ const requestMap = (items: any[] = []) => {
   }
   return map;
 };
+
+// Slot bookings go to any venue partner's availability calendar, so the
+// club↔venue match only constrains the manual (no-slot) path. Venues now
+// auto-match a club by location + category (single source of truth in
+// venueService); a club with no location yet imposes no constraint.
+async function assertVenueAllowedForClub(input: any, venue: any) {
+  const club = !input.venue_slot_id && input.club_id ? await ClubModel.findById(input.club_id) : null;
+  if (!club?.location_id) return;
+  const matched = await venueService.findMatchingForClub({
+    location_id: String(club.location_id),
+    locality: club.locality ?? null,
+    super_category_id: club.super_category_id ? String(club.super_category_id) : null,
+    category_id: club.category_id ? String(club.category_id) : null,
+  });
+  if (!matched.some((v: { id: string }) => String(v.id) === String(venue._id))) {
+    throw new GraphQLError('Selected venue is not available for this club', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
 
 async function resolveVenueLocation(input: any) {
   const venueId = input.venue_id || null;
@@ -347,24 +367,7 @@ async function resolveVenueLocation(input: any) {
 
   const venue = await VenueModel.findById(venueId);
   if (!venue) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
-  // Slot bookings go to any venue partner's availability calendar, so the
-  // club↔venue match only constrains the manual (no-slot) path. Venues now
-  // auto-match a club by location + category (single source of truth in
-  // venueService); a club with no location yet imposes no constraint.
-  const club = !input.venue_slot_id && input.club_id ? await ClubModel.findById(input.club_id) : null;
-  if (club?.location_id) {
-    const matched = await venueService.findMatchingForClub({
-      location_id: String(club.location_id),
-      locality: club.locality ?? null,
-      super_category_id: club.super_category_id ? String(club.super_category_id) : null,
-      category_id: club.category_id ? String(club.category_id) : null,
-    });
-    if (!matched.some((v: { id: string }) => String(v.id) === String(venue._id))) {
-      throw new GraphQLError('Selected venue is not available for this club', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-  }
+  await assertVenueAllowedForClub(input, venue);
   if (!locationId && (venue as any).location_id) {
     locationId = String((venue as any).location_id);
   }
@@ -376,34 +379,40 @@ async function resolveVenueLocation(input: any) {
   return { venue_id: venueId, location_id: locationId, zone_name: null };
 }
 
+/** The `$or` branches that match a venue against one location (optionally
+ * narrowed to a single zone: its locality or pincode). */
+function locationVenueOr(location: any, zone?: string): any[] {
+  const city = location.city || location.location_name;
+  const locationFields: any = {};
+  if (city) locationFields.city = new RegExp(`^${escapeRegex(city)}$`, 'i');
+  if (location.state) locationFields.state = new RegExp(`^${escapeRegex(location.state)}$`, 'i');
+  if (location.country_code) locationFields.country_code = location.country_code;
+  const hasLocationFields = Object.keys(locationFields).length > 0;
+
+  if (zone) {
+    const matchingZone = (location.location_zones ?? []).find((item: any) => item.zone_name === zone);
+    const locality = new RegExp(`^${escapeRegex(zone)}$`, 'i');
+    const zoned: any[] = [{ location_id: location._id, locality }];
+    if (matchingZone?.pincode) zoned.push({ location_id: location._id, postal_code: matchingZone.pincode });
+    if (hasLocationFields) {
+      zoned.push({ ...locationFields, locality });
+      if (matchingZone?.pincode) zoned.push({ ...locationFields, postal_code: matchingZone.pincode });
+    }
+    return zoned;
+  }
+
+  const all: any[] = [{ location_id: location._id }];
+  if (hasLocationFields) all.push(locationFields);
+  return all;
+}
+
 async function venueIdsForLocationFilter(locationId?: string, zoneName?: string) {
   const or: any[] = [];
   const zone = zoneName?.trim();
   if (locationId) {
     const location = await LocationModel.findById(locationId).lean();
     if (!location) return [];
-    const city = location.city || location.location_name;
-    const matchingZone = zone
-      ? (location.location_zones ?? []).find((item: any) => item.zone_name === zone)
-      : null;
-
-    const locationFields: any = {};
-    if (city) locationFields.city = new RegExp(`^${escapeRegex(city)}$`, 'i');
-    if (location.state) locationFields.state = new RegExp(`^${escapeRegex(location.state)}$`, 'i');
-    if (location.country_code) locationFields.country_code = location.country_code;
-
-    if (zone) {
-      const locality = new RegExp(`^${escapeRegex(zone)}$`, 'i');
-      or.push({ location_id: location._id, locality });
-      if (matchingZone?.pincode) or.push({ location_id: location._id, postal_code: matchingZone.pincode });
-      if (Object.keys(locationFields).length > 0) {
-        or.push({ ...locationFields, locality });
-        if (matchingZone?.pincode) or.push({ ...locationFields, postal_code: matchingZone.pincode });
-      }
-    } else {
-      or.push({ location_id: location._id });
-      if (Object.keys(locationFields).length > 0) or.push(locationFields);
-    }
+    or.push(...locationVenueOr(location, zone));
   } else if (zone) {
     or.push({ locality: new RegExp(`^${escapeRegex(zone)}$`, 'i') });
   }
@@ -451,7 +460,7 @@ async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
   const next = [];
   for (const item of compact) {
     const product = await InventoryProductModel.findById(item.productId);
-    if (!product || !product.is_active) {
+    if (!product?.is_active) {
       throw new GraphQLError('Selected product is not available', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     next.push({
@@ -483,6 +492,24 @@ async function applyProductDeltas(oldItems: any[], nextItems: any[]) {
     }
     product.requested_count = Math.max(0, product.requested_count + delta);
     await product.save();
+  }
+}
+
+/** Slot bookings may target ANY approved venue partner (the venue approves the
+ * request before the pod goes live); the manual no-slot path is still restricted
+ * to the host's own approved venues. */
+async function assertPartnerVenue(input: any, userObjectId: Types.ObjectId) {
+  const venueMatch = input.venue_slot_id
+    ? { _id: input.venue_id, status: 'APPROVED', is_active: true }
+    : { _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true };
+  const venue = input.venue_id
+    ? await VenueModel.findOne(venueMatch).select('_id')
+    : null;
+  if (!venue) {
+    throw new GraphQLError(
+      input.venue_slot_id ? 'Select an approved venue' : 'Select one of your approved venues',
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
   }
 }
 
@@ -713,7 +740,7 @@ export const podService = {
     // A deactivated host may not create pods even if they still hold the cached
     // HOST role. Role-only hosts (no Host doc) are unaffected.
     const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
-    if (hostDoc && hostDoc.is_active === false) {
+    if (hostDoc?.is_active === false) {
       throw new GraphQLError('Your host account has been deactivated', { extensions: { code: 'FORBIDDEN' } });
     }
     const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
@@ -731,22 +758,7 @@ export const podService = {
     });
     const podMode = normalizePodMode(input.pod_mode);
     if (podMode === 'PHYSICAL') {
-      // Slot bookings may target ANY approved venue partner (the venue approves
-      // the request before the pod goes live); the manual no-slot path is still
-      // restricted to the host's own approved venues.
-      const venue = input.venue_id
-        ? await VenueModel.findOne(
-            input.venue_slot_id
-              ? { _id: input.venue_id, status: 'APPROVED', is_active: true }
-              : { _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true }
-          ).select('_id')
-        : null;
-      if (!venue) {
-        throw new GraphQLError(
-          input.venue_slot_id ? 'Select an approved venue' : 'Select one of your approved venues',
-          { extensions: { code: 'BAD_USER_INPUT' } }
-        );
-      }
+      await assertPartnerVenue(input, userObjectId);
     }
     return this.create({ ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] });
   },

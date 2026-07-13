@@ -45,14 +45,15 @@ export default function SlidersTable({
     if (s.scope === 'LOCATION') label = `${meta?.label} · ${locName(s.location_id)}`;
     if (s.scope === 'ZONE')
       label = `${meta?.label} · ${locName(s.location_id)} / ${s.zone_name}`;
+    let color: 'primary' | 'info' | 'secondary' = 'secondary';
+    if (s.scope === 'GLOBAL') color = 'primary';
+    else if (s.scope === 'LOCATION') color = 'info';
     return (
       <Chip
         size="small"
         icon={meta?.icon}
         label={label}
-        color={
-          s.scope === 'GLOBAL' ? 'primary' : s.scope === 'LOCATION' ? 'info' : 'secondary'
-        }
+        color={color}
         variant="outlined"
       />
     );

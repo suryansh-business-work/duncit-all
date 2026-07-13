@@ -29,8 +29,10 @@ export function useAccountHealth() {
   );
 
   useEffect(() => {
-    void load();
-    const unsubscribe = navigation.addListener('focus', () => void load());
+    load();
+    const unsubscribe = navigation.addListener('focus', () => {
+      load();
+    });
     return unsubscribe;
   }, [navigation, load]);
 
@@ -57,8 +59,10 @@ export function useVenueHealth(venueId: string) {
   }, [venueId]);
 
   useEffect(() => {
-    void load();
-    const unsubscribe = navigation.addListener('focus', () => void load());
+    load();
+    const unsubscribe = navigation.addListener('focus', () => {
+      load();
+    });
     return unsubscribe;
   }, [navigation, load]);
 

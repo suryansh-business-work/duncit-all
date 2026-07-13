@@ -257,6 +257,20 @@ const legacyVirtuals: Record<string, string> = {
   updated_at: 'metadata.updated_at',
 };
 
+function setNestedPath(target: any, nested: string, value: unknown) {
+  const parts = nested.split('.');
+  let cursor: any = target;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const key = parts[i];
+    cursor[key] ??= {};
+    cursor = cursor[key];
+  }
+  const leaf = parts.at(-1);
+  if (leaf !== undefined) {
+    cursor[leaf] = value;
+  }
+}
+
 for (const [legacy, nested] of Object.entries(legacyVirtuals)) {
   userSchema
     .virtual(legacy)
@@ -264,14 +278,7 @@ for (const [legacy, nested] of Object.entries(legacyVirtuals)) {
       return nested.split('.').reduce((acc, key) => (acc ? acc[key] : undefined), this);
     })
     .set(function (this: any, value: unknown) {
-      const parts = nested.split('.');
-      let cursor: any = this;
-      for (let i = 0; i < parts.length - 1; i += 1) {
-        const key = parts[i];
-        if (cursor[key] == null) cursor[key] = {};
-        cursor = cursor[key];
-      }
-      cursor[parts[parts.length - 1]] = value;
+      setNestedPath(this, nested, value);
     });
 }
 

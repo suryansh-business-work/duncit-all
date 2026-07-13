@@ -45,6 +45,10 @@ const formatTs = (iso?: string | null) => {
   });
 };
 
+/** Stable key for a NOTE row — activities carry no id, so we hash the content. */
+const logKey = (a: CrmActivity) =>
+  `${a.created_at ?? ''}|${a.created_by ?? ''}|${a.summary ?? ''}|${a.body_text ?? ''}`;
+
 const startOfWindow = (g: Granularity): Date | null => {
   const now = new Date();
   if (g === 'today') {
@@ -272,8 +276,8 @@ export default function ManualLogsTab({ entityType, entityId, activities }: Read
                   {heading} · {entries.length} {entries.length === 1 ? 'log' : 'logs'}
                 </Typography>
                 <Stack spacing={1.25} sx={{ mt: 1 }}>
-                  {entries.map((a, idx) => (
-                    <Card key={idx} variant="outlined" sx={{ p: 1.5 }}>
+                  {entries.map((a) => (
+                    <Card key={logKey(a)} variant="outlined" sx={{ p: 1.5 }}>
                       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.75 }}>
                         {a.summary && (
                           <Typography variant="subtitle2" fontWeight={700}>

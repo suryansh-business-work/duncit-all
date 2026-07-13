@@ -5,7 +5,6 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  IconButton,
   Stack,
   Table,
   TableBody,
@@ -59,6 +58,32 @@ function PodCover({ pod }: Readonly<{ pod: any }>) {
   );
 }
 
+interface PodPlaceProps {
+  pod: any;
+  venueName: (id: string) => string;
+  locName: (id: string) => string;
+}
+
+function PodPlace({ pod, venueName, locName }: Readonly<PodPlaceProps>) {
+  if (pod.pod_mode === 'VIRTUAL') {
+    return <>{pod.meeting_platform || 'Virtual'}</>;
+  }
+  if (pod.venue_id) {
+    return <>{venueName(pod.venue_id)}</>;
+  }
+  return <>{locName(pod.location_id)}</>;
+}
+
+function PodStatusChip({ pod }: Readonly<{ pod: any }>) {
+  if (pod.completed_at) {
+    return <Chip size="small" label="Completed" color="info" />;
+  }
+  if (pod.is_active) {
+    return <Chip size="small" label="Active" color="success" />;
+  }
+  return <Chip size="small" label="Draft" color="default" />;
+}
+
 export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onView }: Readonly<Props>) {
   const showProducts = useFeatureFlag('is_product_visible');
   return (
@@ -107,11 +132,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                   </TableCell>
                   <TableCell>{clubName(p.club_id)}</TableCell>
                   <TableCell>
-                    {p.pod_mode === 'VIRTUAL'
-                      ? p.meeting_platform || 'Virtual'
-                      : p.venue_id
-                        ? venueName(p.venue_id)
-                        : locName(p.location_id)}
+                    <PodPlace pod={p} venueName={venueName} locName={locName} />
                   </TableCell>
                   <TableCell>
                     <Typography variant="caption">
@@ -156,11 +177,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                     </Stack>
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      size="small"
-                      label={p.completed_at ? 'Completed' : p.is_active ? 'Active' : 'Draft'}
-                      color={p.completed_at ? 'info' : p.is_active ? 'success' : 'default'}
-                    />
+                    <PodStatusChip pod={p} />
                   </TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <PodActionButtons pod={p} onEdit={onEdit} onQuickEdit={onQuickEdit} onDelete={onDelete} onComplete={onComplete} />

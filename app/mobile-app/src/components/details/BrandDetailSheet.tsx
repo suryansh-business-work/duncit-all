@@ -36,6 +36,69 @@ export function BrandDetailSheet({
 
   const location = brand ? [brand.city, brand.state].filter(Boolean).join(', ') : '';
 
+  // Loaded body hoisted to a const so the render tree keeps a flat (non-nested)
+  // ternary — identical branches, same scope.
+  const brandBody = brand ? (
+    <ScrollView paddingHorizontal={16}>
+      <YStack gap={12} paddingBottom={16}>
+        {brand.cover_image_url ? (
+          <AppImage
+            source={{ uri: brand.cover_image_url }}
+            style={{ width: '100%', height: 128, borderRadius: 14 }}
+            resizeMode="cover"
+          />
+        ) : null}
+        <XStack gap={12} alignItems="center">
+          <YStack
+            width={54}
+            height={54}
+            borderRadius={14}
+            overflow="hidden"
+            backgroundColor="$surface"
+            alignItems="center"
+            justifyContent="center"
+          >
+            {brand.logo_url ? (
+              <AppImage
+                source={{ uri: brand.logo_url }}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            ) : (
+              <MaterialIcons name="storefront" size={24} color={primary} />
+            )}
+          </YStack>
+          <YStack flex={1}>
+            <Text testID="brand-detail-name" fontSize={18} fontWeight="900" color="$color">
+              {brand.brand_name}
+            </Text>
+            {brand.tagline ? (
+              <Text fontSize={13} color="$muted" fontWeight="700">
+                {brand.tagline}
+              </Text>
+            ) : null}
+          </YStack>
+        </XStack>
+        {brand.description ? (
+          <Text fontSize={13.5} color="$muted" lineHeight={20}>
+            {brand.description}
+          </Text>
+        ) : null}
+        <XStack flexWrap="wrap" gap={8}>
+          {location ? <BrandStat icon="place" label={location} /> : null}
+          {brand.established_year ? (
+            <BrandStat icon="event" label={`Since ${brand.established_year}`} />
+          ) : null}
+          <BrandStat icon="inventory-2" label={`${brand.approved_product_count} products`} />
+        </XStack>
+      </YStack>
+    </ScrollView>
+  ) : (
+    <Text testID="brand-detail-empty" padding={24} color="$muted">
+      Brand details are unavailable.
+    </Text>
+  );
+
   return (
     <Modal visible={!!brandId} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -82,73 +145,8 @@ export function BrandDetailSheet({
                 <YStack padding={32} alignItems="center">
                   <Spinner testID="brand-detail-loading" color="$primary" />
                 </YStack>
-              ) : brand ? (
-                <ScrollView paddingHorizontal={16}>
-                  <YStack gap={12} paddingBottom={16}>
-                    {brand.cover_image_url ? (
-                      <AppImage
-                        source={{ uri: brand.cover_image_url }}
-                        style={{ width: '100%', height: 128, borderRadius: 14 }}
-                        resizeMode="cover"
-                      />
-                    ) : null}
-                    <XStack gap={12} alignItems="center">
-                      <YStack
-                        width={54}
-                        height={54}
-                        borderRadius={14}
-                        overflow="hidden"
-                        backgroundColor="$surface"
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        {brand.logo_url ? (
-                          <AppImage
-                            source={{ uri: brand.logo_url }}
-                            style={{ width: '100%', height: '100%' }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <MaterialIcons name="storefront" size={24} color={primary} />
-                        )}
-                      </YStack>
-                      <YStack flex={1}>
-                        <Text
-                          testID="brand-detail-name"
-                          fontSize={18}
-                          fontWeight="900"
-                          color="$color"
-                        >
-                          {brand.brand_name}
-                        </Text>
-                        {brand.tagline ? (
-                          <Text fontSize={13} color="$muted" fontWeight="700">
-                            {brand.tagline}
-                          </Text>
-                        ) : null}
-                      </YStack>
-                    </XStack>
-                    {brand.description ? (
-                      <Text fontSize={13.5} color="$muted" lineHeight={20}>
-                        {brand.description}
-                      </Text>
-                    ) : null}
-                    <XStack flexWrap="wrap" gap={8}>
-                      {location ? <BrandStat icon="place" label={location} /> : null}
-                      {brand.established_year ? (
-                        <BrandStat icon="event" label={`Since ${brand.established_year}`} />
-                      ) : null}
-                      <BrandStat
-                        icon="inventory-2"
-                        label={`${brand.approved_product_count} products`}
-                      />
-                    </XStack>
-                  </YStack>
-                </ScrollView>
               ) : (
-                <Text testID="brand-detail-empty" padding={24} color="$muted">
-                  Brand details are unavailable.
-                </Text>
+                brandBody
               )}
             </SafeAreaView>
           </YStack>

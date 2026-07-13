@@ -14,7 +14,7 @@ import {
 import type { FormState } from './helpers';
 
 interface Props {
-  editing: any | null;
+  editing: any;
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
   saving: boolean;

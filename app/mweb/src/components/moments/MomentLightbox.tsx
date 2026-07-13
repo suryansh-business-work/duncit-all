@@ -27,7 +27,7 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
 
   useEffect(() => {
     if (index === null || pushedHistory.current) return;
-    window.history.pushState({ ...(window.history.state || {}), duncitLightbox: true }, '');
+    window.history.pushState({ ...window.history.state, duncitLightbox: true }, '');
     pushedHistory.current = true;
   }, [index]);
 

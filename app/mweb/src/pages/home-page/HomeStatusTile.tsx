@@ -24,6 +24,13 @@ export default function HomeStatusTile({
   // shift to the end of the rail).
   const showRing = !add && active;
   const ring = 'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)';
+  const imageOrAvatar = imageUrl ? (
+    <Box component="img" src={imageUrl} alt={label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+  ) : (
+    <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'primary.main', fontWeight: 900 }}>
+      {initials || label.slice(0, 1).toUpperCase()}
+    </Avatar>
+  );
 
   return (
     <Stack
@@ -74,12 +81,8 @@ export default function HomeStatusTile({
         >
           {videoUrl ? (
             <Box component="video" src={videoUrl} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : imageUrl ? (
-            <Box component="img" src={imageUrl} alt={label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'primary.main', fontWeight: 900 }}>
-              {initials || label.slice(0, 1).toUpperCase()}
-            </Avatar>
+            imageOrAvatar
           )}
         </Box>
         {add && (

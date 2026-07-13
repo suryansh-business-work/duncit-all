@@ -11,12 +11,12 @@ export default function TypingWelcome() {
   useEffect(() => {
     let index = 0;
     setText('');
-    const timer = window.setInterval(() => {
+    const timer = globalThis.setInterval(() => {
       index += 1;
       setText(target.slice(0, index));
-      if (index >= target.length) window.clearInterval(timer);
+      if (index >= target.length) globalThis.clearInterval(timer);
     }, 65);
-    return () => window.clearInterval(timer);
+    return () => globalThis.clearInterval(timer);
   }, [target]);
 
   return (

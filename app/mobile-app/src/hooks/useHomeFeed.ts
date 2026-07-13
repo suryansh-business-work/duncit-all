@@ -68,7 +68,9 @@ function deriveVibeCategories(
       arr.push(s);
       subsByParent.set(key, arr);
     });
-  subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+  subsByParent.forEach((arr) => {
+    arr.sort((a, b) => a.name.localeCompare(b.name));
+  });
   return categories.map((c) => ({
     id: c.id,
     name: c.name,

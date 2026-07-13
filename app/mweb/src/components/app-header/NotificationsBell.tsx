@@ -23,6 +23,7 @@ export default function NotificationsBell({
   onMarkAll,
 }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
+  const unreadSuffix = unreadCount ? ` (${unreadCount} unread)` : '';
 
   return (
     <>
@@ -30,7 +31,7 @@ export default function NotificationsBell({
         <IconButton
           size="small"
           onClick={() => setOpen(true)}
-          aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
+          aria-label={`Notifications${unreadSuffix}`}
           sx={{ minWidth: 44, minHeight: 44 }}
         >
           <Badge badgeContent={unreadCount} color="error">

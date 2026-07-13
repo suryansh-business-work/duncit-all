@@ -34,6 +34,8 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
     setPicked(null);
   };
 
+  const removeDate = (date: string) => setDates((prev) => prev.filter((item) => item !== date));
+
   const persist = async () => {
     if (!venueId) return;
     setFeedback(null);
@@ -93,7 +95,7 @@ export default function LeavesSection({ venueId, holidays, disabled = false, onS
               color="error"
               variant="outlined"
               disabled={disabled}
-              onDelete={disabled ? undefined : () => setDates((prev) => prev.filter((item) => item !== date))}
+              onDelete={disabled ? undefined : () => removeDate(date)}
             />
           ))}
         </Stack>

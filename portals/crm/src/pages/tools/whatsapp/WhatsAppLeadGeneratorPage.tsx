@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
@@ -21,6 +22,28 @@ export default function WhatsAppLeadGeneratorPage() {
   });
   const connection: WaConnection | undefined = data?.waConnection;
 
+  const handleChanged = () => {
+    refetch().catch((e: unknown) => console.error('waConnection refetch failed', e));
+  };
+
+  let body: ReactNode = null;
+  if (loading && !connection) {
+    body = (
+      <Stack alignItems="center" sx={{ py: 6 }}>
+        <CircularProgress />
+      </Stack>
+    );
+  } else if (error) {
+    body = <Alert severity="error">{error.message}</Alert>;
+  } else if (connection) {
+    body = (
+      <Stack spacing={2}>
+        <WhatsAppConnectCard connection={connection} onChanged={handleChanged} />
+        {connection.status === 'CONNECTED' ? <WhatsAppBrowser /> : <WhatsAppApiKeyHelp />}
+      </Stack>
+    );
+  }
+
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 860, mx: 'auto' }}>
       <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
@@ -30,18 +53,7 @@ export default function WhatsAppLeadGeneratorPage() {
         </Typography>
       </Stack>
 
-      {loading && !connection ? (
-        <Stack alignItems="center" sx={{ py: 6 }}>
-          <CircularProgress />
-        </Stack>
-      ) : error ? (
-        <Alert severity="error">{error.message}</Alert>
-      ) : connection ? (
-        <Stack spacing={2}>
-          <WhatsAppConnectCard connection={connection} onChanged={() => void refetch()} />
-          {connection.status === 'CONNECTED' ? <WhatsAppBrowser /> : <WhatsAppApiKeyHelp />}
-        </Stack>
-      ) : null}
+      {body}
     </Box>
   );
 }

@@ -9,6 +9,9 @@ import { isPushSupported, unsubscribePush } from '../../pwa';
 import { formatRelative } from './queries';
 import { notificationIcon } from './notificationIcon';
 
+/** Background per stacked hero avatar (index 0, 1, 2). */
+const AVATAR_BG = ['primary.main', 'secondary.main', 'info.main'];
+
 interface NotificationsScreenProps {
   open: boolean;
   onClose: () => void;
@@ -45,6 +48,8 @@ export default function NotificationsScreen({
   // Derive unread from the actual items so the header never disagrees with the
   // list / badge (the server count can lag behind the rendered notifications).
   const liveUnread = notifs.filter((n) => !n.read_at).length || unreadCount;
+  const unreadLabel = `${liveUnread} unread update${liveUnread === 1 ? '' : 's'}`;
+  const headerSubtitle = liveUnread > 0 ? unreadLabel : 'All caught up';
 
   return (
     <Dialog
@@ -69,7 +74,7 @@ export default function NotificationsScreen({
               Notifications
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-              {liveUnread > 0 ? `${liveUnread} unread update${liveUnread === 1 ? '' : 's'}` : 'All caught up'}
+              {headerSubtitle}
             </Typography>
           </Box>
           <IconButton onClick={onMarkAll} disabled={liveUnread === 0} aria-label="Mark all as read" sx={{ bgcolor: 'action.hover' }}>
@@ -82,7 +87,7 @@ export default function NotificationsScreen({
             <Stack direction="row" alignItems="center" spacing={1.25}>
               <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
                 {[0, 1, 2].map((index) => (
-                  <Avatar key={index} sx={{ width: 34, height: 34, bgcolor: index === 0 ? 'primary.main' : index === 1 ? 'secondary.main' : 'info.main', border: 2, borderColor: 'background.paper' }}>
+                  <Avatar key={index} sx={{ width: 34, height: 34, bgcolor: AVATAR_BG[index], border: 2, borderColor: 'background.paper' }}>
                     <NotificationsActiveIcon fontSize="small" />
                   </Avatar>
                 ))}

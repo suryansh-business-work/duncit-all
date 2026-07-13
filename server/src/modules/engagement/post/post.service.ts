@@ -14,7 +14,7 @@ const toPub = (p: IPost, viewerId?: string | null) => ({
   kind: p.kind || 'POST',
   expires_at: p.expires_at ? p.expires_at.toISOString() : null,
   caption: p.caption || '',
-  likes: (p.likes || []).map((x) => String(x)),
+  likes: (p.likes || []).map(String),
   likes_count: p.likes?.length || 0,
   liked_by_me: viewerId
     ? (p.likes || []).some((x) => String(x) === viewerId)

@@ -6,7 +6,7 @@ import MomentLightbox from '../moments/MomentLightbox';
 import CategoryBreadcrumb from '../CategoryBreadcrumb';
 
 interface Props {
-  club: any | null;
+  club: any;
   /** The club's Super › Category › Sub category names (root-first). */
   categoryCrumbs?: readonly string[];
 }
@@ -77,7 +77,7 @@ export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<P
           sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}
         >
           {moments.slice(0, 12).map((m: any, i: number) => (
-            <Box key={i} sx={{ width: 96, height: 96, flex: '0 0 auto' }}>
+            <Box key={m.url} sx={{ width: 96, height: 96, flex: '0 0 auto' }}>
               <MomentTile
                 url={m.url}
                 type={m.type}

@@ -16,7 +16,7 @@ import {
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 interface Props {
-  active: any | null;
+  active: any;
   notes: string;
   setNotes: (v: string) => void;
   tagsText: string;

@@ -75,12 +75,8 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
     );
   }
 
-  const headerTitle =
-    flow.phase === 'survey'
-      ? flow.survey?.title || title
-      : flow.phase === 'meeting'
-        ? 'Book your onboarding meeting'
-        : title;
+  const nonSurveyTitle = flow.phase === 'meeting' ? 'Book your onboarding meeting' : title;
+  const headerTitle = flow.phase === 'survey' ? flow.survey?.title || title : nonSurveyTitle;
 
   return (
     <YStack flex={1} testID="onboarding-survey">

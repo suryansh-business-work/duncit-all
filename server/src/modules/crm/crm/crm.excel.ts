@@ -101,7 +101,10 @@ const stringifyServices = (services: any[]): string => {
   );
 };
 
-const parseServices = (value: unknown): { service: string; custom_name: string; description: string }[] => {
+/** A raw spreadsheet cell — the XLSX parser only ever hands back primitives. */
+type CellValue = string | number | boolean | null | undefined;
+
+const parseServices = (value: CellValue): { service: string; custom_name: string; description: string }[] => {
   const raw = String(value ?? '').trim();
   if (!raw) return [];
   try {
@@ -119,13 +122,13 @@ const parseServices = (value: unknown): { service: string; custom_name: string; 
   }
 };
 
-const splitCsv = (value: unknown): string[] =>
+const splitCsv = (value: CellValue): string[] =>
   String(value ?? '')
     .split(/[,\n;|]/)
     .map((s) => s.trim())
     .filter(Boolean);
 
-const toBool = (value: unknown): boolean => {
+const toBool = (value: CellValue): boolean => {
   const s = String(value ?? '').trim().toLowerCase();
   return ['true', 'yes', 'y', '1'].includes(s);
 };

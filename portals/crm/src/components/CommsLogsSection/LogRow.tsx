@@ -24,6 +24,13 @@ const STATUS_COLOUR: Record<string, 'success' | 'error' | 'warning' | 'info' | '
   BUSY: 'warning',
 };
 
+const transcriptLabel = (log: CommunicationLogItem) => {
+  if (log.transcript_status === 'PENDING') return 'Transcript pending';
+  if (log.transcript_status === 'FAILED') return 'Transcript failed';
+  if (log.recording_url) return 'Transcript not requested';
+  return 'No recording yet';
+};
+
 interface Props {
   log: CommunicationLogItem;
   onRequestTranscript: (id: string) => void;
@@ -79,15 +86,7 @@ export default function LogRow({ log, onRequestTranscript, refreshing }: Readonl
                   size="small"
                   variant="outlined"
                   color={log.transcript_status === 'FAILED' ? 'error' : 'default'}
-                  label={
-                    log.transcript_status === 'PENDING'
-                      ? 'Transcript pending'
-                      : log.transcript_status === 'FAILED'
-                        ? 'Transcript failed'
-                        : log.recording_url
-                          ? 'Transcript not requested'
-                          : 'No recording yet'
-                  }
+                  label={transcriptLabel(log)}
                 />
                 {log.recording_url && (
                   <Button

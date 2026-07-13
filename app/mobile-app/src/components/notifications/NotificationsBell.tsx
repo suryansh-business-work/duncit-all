@@ -28,7 +28,7 @@ export function NotificationsBell() {
     const target = resolveNotificationLink(link);
     if (target.kind === 'external') {
       setOpen(false);
-      void Linking.openURL(target.url);
+      Linking.openURL(target.url);
       return;
     }
     if (target.kind === 'post') {
@@ -48,12 +48,14 @@ export function NotificationsBell() {
     if (link) openLink(link);
   };
 
+  const unreadSuffix = unreadCount ? ` (${unreadCount} unread)` : '';
+
   return (
     <>
       <XStack
         testID="notifications-bell"
         role="button"
-        aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
+        aria-label={`Notifications${unreadSuffix}`}
         onPress={onOpen}
         width={40}
         height={40}

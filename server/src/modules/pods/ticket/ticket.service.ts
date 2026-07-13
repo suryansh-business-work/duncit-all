@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { TicketModel, type ITicket } from './ticket.model';
 import { signTicketToken, verifyTicketToken } from './ticket.token';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -206,8 +206,10 @@ export const ticketService = {
     const t = await TicketModel.findOne({ ticket_code: payload.t });
     if (!t) return { ok: false, message: 'Ticket not found', ticket: null };
     if (t.status === 'CANCELLED') return { ok: false, message: 'Ticket cancelled', ticket: toPub(t) };
-    if (t.status === 'CHECKED_IN')
-      return { ok: true, message: `Already checked in${t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : ''}`, ticket: toPub(t) };
+    if (t.status === 'CHECKED_IN') {
+      const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
+      return { ok: true, message: `Already checked in${at}`, ticket: toPub(t) };
+    }
     return { ok: true, message: 'Valid ticket', ticket: toPub(t) };
   },
 

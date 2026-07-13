@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 interface Props {
-  pod: any | null;
+  pod: any;
   busy: boolean;
   onClose: () => void;
   onConfirm: () => void;

@@ -10,8 +10,8 @@ import { formatMeetingPlatform } from '../../utils/meetingPlatform';
 
 interface Props {
   pod: any;
-  location?: any | null;
-  venue?: any | null;
+  location?: any;
+  venue?: any;
 }
 
 const formatStart = (iso?: string | null) =>

@@ -13,7 +13,7 @@ import { useRegisterVenueForm, type EditableSectionKey } from './useRegisterVenu
 import type { RegisterVenueMode, VenueRegistrationConfig } from './register-venue.types';
 
 interface Props {
-  venue: any | null;
+  venue: any;
   locations: any[];
   account: { name: string; email: string };
   config: VenueRegistrationConfig;

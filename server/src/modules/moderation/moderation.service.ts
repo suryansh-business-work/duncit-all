@@ -10,8 +10,10 @@ export interface ModerationResult {
 /** Deterministic pass over every text field — always runs, no OpenAI needed. */
 function runRegexLayer(input: ModeratePodInput): ModerationViolation[] {
   const out: ModerationViolation[] = [];
-  out.push(...moderateText('pod_title', input.pod_title ?? ''));
-  out.push(...moderateText('pod_description', input.pod_description ?? ''));
+  out.push(
+    ...moderateText('pod_title', input.pod_title ?? ''),
+    ...moderateText('pod_description', input.pod_description ?? '')
+  );
   if (input.pod_info) out.push(...moderateText('pod_info', input.pod_info));
   for (const tag of input.pod_hashtag ?? []) {
     out.push(...moderateText('pod_hashtag', tag));

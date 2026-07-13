@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, TouchableOpacity } from 'react-native';
-import { Avatar, AvatarImage } from 'tamagui';
-import { Text, XStack, YStack } from 'tamagui';
+import { Avatar, AvatarImage, Text, XStack, YStack } from 'tamagui';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import { graphqlRequest } from '@/services/graphql.client';

@@ -11,13 +11,13 @@ const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 // Roles allowed to see pods still awaiting a venue's slot approval (admin +
 // onboarding review consoles). Everyone else — including the public discovery
 // feed — never receives a PENDING pod, so it stays offline until approved.
-const POD_REVIEW_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+const POD_REVIEW_ROLES = new Set(['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER']);
 
 const isAdminCtx = (ctx: GraphQLContext) =>
   !!ctx.user?.roles?.some((r) => ADMIN_WRITE.includes(r));
 
 const canReviewPendingPods = (ctx: GraphQLContext) =>
-  !!ctx.user?.roles?.some((r) => POD_REVIEW_ROLES.includes(r));
+  !!ctx.user?.roles?.some((r) => POD_REVIEW_ROLES.has(r));
 
 const cleanParts = (parts: Array<string | null | undefined>) =>
   parts.map((part) => part?.trim()).filter(Boolean) as string[];
@@ -31,9 +31,7 @@ const getPlaceCache = (ctx: GraphQLContext) => {
       locations: Map<string, Promise<any>>;
     };
   };
-  if (!bag.__podPlaceCache) {
-    bag.__podPlaceCache = { venues: new Map(), locations: new Map() };
-  }
+  bag.__podPlaceCache ??= { venues: new Map(), locations: new Map() };
   return bag.__podPlaceCache;
 };
 

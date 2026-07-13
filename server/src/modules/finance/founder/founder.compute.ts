@@ -78,7 +78,7 @@ export async function computeMetrics(
   settings: Record<string, number>
 ): Promise<Record<string, MetricValue>> {
   const lenMs = Math.max(to.getTime() - from.getTime(), 24 * 3600 * 1000);
-  const prevTo = new Date(from.getTime());
+  const prevTo = new Date(from);
   const prevFrom = new Date(from.getTime() - lenMs);
   const inRange = { created_at: { $gte: from, $lte: to } };
   const expRange = { date: { $gte: from, $lte: to } };

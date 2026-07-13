@@ -45,7 +45,9 @@ export default function TicketDetailPage() {
     if (ticketId) markTicketRead({ variables: { ticket_id: ticketId } }).catch(() => undefined);
   }, [ticketId, markTicketRead]);
   // Live refresh so the user's own Sent ticks flip to Seen without a manual reload.
-  useTicketSocket(ticketId, () => void refetch());
+  useTicketSocket(ticketId, () => {
+    refetch().catch(() => undefined);
+  });
 
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopenError, setReopenError] = useState<string | null>(null);

@@ -117,7 +117,7 @@ export function buildOrderTimeline(order: Pick<ProductOrder, 'fulfilment_method'
   }
   const ladder = order.fulfilment_method === 'SHIP' ? SHIP_LADDER : PICKUP_LADDER;
   const found = ladder.indexOf(order.fulfilment_status);
-  const currentIdx = found >= 0 ? found : 0;
+  const currentIdx = Math.max(found, 0);
   return ladder.map((s, i) => ({
     status: s,
     label: statusLabel(s),

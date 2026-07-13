@@ -128,7 +128,7 @@ export function ClubBody({
               testID={`club-chat-${link.key}`}
               role="button"
               aria-label={`Open ${link.label} on WhatsApp`}
-              onPress={() => void Linking.openURL(link.href as string)}
+              onPress={() => Linking.openURL(link.href as string)}
               alignItems="center"
               justifyContent="center"
               gap={8}

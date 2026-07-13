@@ -10,6 +10,9 @@ interface ClubListCardProps {
 
 export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubListCardProps>) {
   const cover = club.club_feature_images_and_videos?.[0];
+  const coverMediaProps = cover?.type === 'VIDEO'
+    ? { autoPlay: true, muted: true, loop: true, playsInline: true }
+    : { alt: club.club_name };
 
   return (
     <Card
@@ -32,9 +35,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
             component={cover.type === 'VIDEO' ? 'video' : 'img'}
             src={cover.url}
             sx={{ height: 154, borderRadius: 3, objectFit: 'cover' }}
-            {...(cover.type === 'VIDEO'
-              ? { autoPlay: true, muted: true, loop: true, playsInline: true }
-              : { alt: club.club_name })}
+            {...coverMediaProps}
           />
         ) : (
           <Box sx={{ height: 154, borderRadius: 3, display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 50%, #35158a 100%)' }}>

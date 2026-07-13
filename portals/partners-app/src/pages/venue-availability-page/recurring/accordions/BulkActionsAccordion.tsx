@@ -5,7 +5,6 @@ import {
   AccordionDetails,
   AccordionSummary,
   Alert,
-  Box,
   Button,
   Dialog,
   DialogActions,
@@ -54,7 +53,8 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
   const runUpdate = async (extra: Record<string, unknown>, label: string) => {
     const { data } = await bulkUpdate({ variables: { input: { ...filter(), ...extra } } });
     const r = data.bulkUpdateVenueSlots;
-    setResult(`${label}: ${r.affected} updated${r.skipped ? `, ${r.skipped} skipped` : ''}.`);
+    const skippedText = r.skipped ? `, ${r.skipped} skipped` : '';
+    setResult(`${label}: ${r.affected} updated${skippedText}.`);
     await onDone();
   };
 

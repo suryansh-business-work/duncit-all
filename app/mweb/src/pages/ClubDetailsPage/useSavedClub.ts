@@ -30,7 +30,7 @@ export default function useSavedClub(clubId: string) {
     localStorage.setItem(SAVED_CLUBS_KEY, JSON.stringify(updated));
     setSaved(nextSaved);
     notify(nextSaved ? 'Saved' : 'Removed from saved', 'success');
-    window.setTimeout(() => setSaving(false), 180);
+    globalThis.setTimeout(() => setSaving(false), 180);
   };
 
   return { saved, saving, toggleSaved };

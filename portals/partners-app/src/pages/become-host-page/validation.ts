@@ -3,8 +3,8 @@ import { validationRules } from '../../forms/validation/rules';
 import { HOST_DOB_RANGE_ERROR, isValidHostDob } from '../../utils/hostDob';
 import type { HostStep1, HostStep2, HostStep3 } from './types';
 
-const AADHAR_PATTERN = /^[0-9]{12}$/;
-const PAN_PATTERN = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+const AADHAR_PATTERN = /^\d{12}$/;
+const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/;
 
 export const hostStep1Schema: yup.ObjectSchema<HostStep1> = yup.object({
   full_name: validationRules.personName('Full name'),

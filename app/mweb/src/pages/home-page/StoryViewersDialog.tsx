@@ -35,6 +35,26 @@ export default function StoryViewersDialog({
   });
   const viewers: StoryViewer[] = data?.storyViewers ?? [];
 
+  const viewersBody =
+    viewers.length === 0 ? (
+      <Box sx={{ py: 3, textAlign: 'center' }}>
+        <Typography variant="body2" color="text.secondary">
+          No one has viewed this story yet.
+        </Typography>
+      </Box>
+    ) : (
+      <List disablePadding>
+        {viewers.map((viewer) => (
+          <ListItem key={viewer.user_id} disableGutters>
+            <ListItemAvatar>
+              <Avatar src={viewer.user?.profile_photo || undefined} />
+            </ListItemAvatar>
+            <ListItemText primary={viewer.user?.full_name ?? 'Someone'} />
+          </ListItem>
+        ))}
+      </List>
+    );
+
   return (
     <Dialog open={!!storyId} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
@@ -55,23 +75,8 @@ export default function StoryViewersDialog({
               Loading…
             </Typography>
           </Box>
-        ) : viewers.length === 0 ? (
-          <Box sx={{ py: 3, textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
-              No one has viewed this story yet.
-            </Typography>
-          </Box>
         ) : (
-          <List disablePadding>
-            {viewers.map((viewer) => (
-              <ListItem key={viewer.user_id} disableGutters>
-                <ListItemAvatar>
-                  <Avatar src={viewer.user?.profile_photo || undefined} />
-                </ListItemAvatar>
-                <ListItemText primary={viewer.user?.full_name ?? 'Someone'} />
-              </ListItem>
-            ))}
-          </List>
+          viewersBody
         )}
       </DialogContent>
     </Dialog>

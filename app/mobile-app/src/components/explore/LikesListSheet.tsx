@@ -58,6 +58,59 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
     navigation.navigate('PublicProfile', { userId });
   };
 
+  const likersList =
+    likers.length === 0 ? (
+      <Text padding={16} color="$muted" testID="likes-empty">
+        No likes yet.
+      </Text>
+    ) : (
+      <FlatList<Liker>
+        style={{ flex: 1 }}
+        data={likers}
+        keyExtractor={(u) => u.user_id}
+        contentContainerStyle={{ paddingHorizontal: 16 }}
+        renderItem={({ item }) => (
+          <XStack
+            testID={`liker-${item.user_id}`}
+            role="button"
+            aria-label={item.full_name ?? 'User'}
+            onPress={() => openProfile(item.user_id)}
+            alignItems="center"
+            gap={12}
+            paddingVertical={10}
+          >
+            {item.profile_photo ? (
+              <AppImage
+                source={{ uri: item.profile_photo }}
+                style={{ width: 44, height: 44, borderRadius: 22 }}
+              />
+            ) : (
+              <YStack
+                width={44}
+                height={44}
+                borderRadius={22}
+                backgroundColor="$muted"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <MaterialIcons name="person" size={24} color="#ffffff" />
+              </YStack>
+            )}
+            <YStack flex={1}>
+              <Text fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+                {item.full_name || item.first_name || 'User'}
+              </Text>
+              {item.username ? (
+                <Text fontSize={12} color="$muted" numberOfLines={1}>
+                  @{item.username}
+                </Text>
+              ) : null}
+            </YStack>
+          </XStack>
+        )}
+      />
+    );
+
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -112,56 +165,8 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                 <YStack flex={1} alignItems="center" justifyContent="center">
                   <Spinner color="$primary" />
                 </YStack>
-              ) : likers.length === 0 ? (
-                <Text padding={16} color="$muted" testID="likes-empty">
-                  No likes yet.
-                </Text>
               ) : (
-                <FlatList<Liker>
-                  style={{ flex: 1 }}
-                  data={likers}
-                  keyExtractor={(u) => u.user_id}
-                  contentContainerStyle={{ paddingHorizontal: 16 }}
-                  renderItem={({ item }) => (
-                    <XStack
-                      testID={`liker-${item.user_id}`}
-                      role="button"
-                      aria-label={item.full_name ?? 'User'}
-                      onPress={() => openProfile(item.user_id)}
-                      alignItems="center"
-                      gap={12}
-                      paddingVertical={10}
-                    >
-                      {item.profile_photo ? (
-                        <AppImage
-                          source={{ uri: item.profile_photo }}
-                          style={{ width: 44, height: 44, borderRadius: 22 }}
-                        />
-                      ) : (
-                        <YStack
-                          width={44}
-                          height={44}
-                          borderRadius={22}
-                          backgroundColor="$muted"
-                          alignItems="center"
-                          justifyContent="center"
-                        >
-                          <MaterialIcons name="person" size={24} color="#ffffff" />
-                        </YStack>
-                      )}
-                      <YStack flex={1}>
-                        <Text fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
-                          {item.full_name || item.first_name || 'User'}
-                        </Text>
-                        {item.username ? (
-                          <Text fontSize={12} color="$muted" numberOfLines={1}>
-                            @{item.username}
-                          </Text>
-                        ) : null}
-                      </YStack>
-                    </XStack>
-                  )}
-                />
+                likersList
               )}
             </SafeAreaView>
           </YStack>

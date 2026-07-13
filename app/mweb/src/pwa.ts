@@ -24,17 +24,17 @@ const DELETE_SUB = gql`
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = window.atob(base64);
+  const raw = globalThis.atob(base64);
   const out = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; ++i) out[i] = raw.charCodeAt(i);
+  for (let i = 0; i < raw.length; ++i) out[i] = raw.codePointAt(i) ?? 0;
   return out;
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-  return window.btoa(binary);
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCodePoint(bytes[i]);
+  return globalThis.btoa(binary);
 }
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
@@ -53,13 +53,13 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 export function isPushSupported(): boolean {
   return (
     'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window
+    'PushManager' in globalThis &&
+    'Notification' in globalThis
   );
 }
 
 export function notificationPermission(): NotificationPermission | 'unsupported' {
-  if (!('Notification' in window)) return 'unsupported';
+  if (!('Notification' in globalThis)) return 'unsupported';
   return Notification.permission;
 }
 

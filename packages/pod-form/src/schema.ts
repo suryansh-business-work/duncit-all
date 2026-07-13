@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { PodFormConfig } from './types';
+import type { PodFormConfig, PodFormValues } from './types';
 
 /** Returns true when the string parses as an http(s) URL. */
 const isHttpUrl = (value: string) => {
@@ -39,6 +39,62 @@ const productRequestSchema = z.object({
     z.number({ invalid_type_error: 'Quantity required' }).min(1).max(10000),
   ),
 });
+
+/** Host, venue, venue-slot and meeting-link rules (config-gated). */
+function refineVenue(values: PodFormValues, ctx: z.RefinementCtx, config: PodFormConfig) {
+  if (config.showHosts && values.pod_hosts_id.length < 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_hosts_id'], message: 'Add at least one host' });
+  }
+  if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_id'], message: 'Select a venue' });
+  }
+  if (config.showVenueSlot && values.pod_mode === 'PHYSICAL' && values.venue_id && !values.venue_slot_id) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: 'Pick an available slot' });
+  }
+  if (values.pod_mode === 'VIRTUAL') {
+    if (!values.meeting_url) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: 'Meeting link is required' });
+    } else if (!isHttpUrl(values.meeting_url)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: 'Meeting link must be a valid http(s) URL' });
+    }
+  }
+}
+
+/** Start/end date-time rules. */
+function refineDates(values: PodFormValues, ctx: z.RefinementCtx) {
+  if (!values.pod_date_time) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_date_time'], message: 'Start date/time required' });
+  } else if (values.pod_date_time.getTime() <= Date.now()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_date_time'], message: 'Start date/time must be after current date/time' });
+  }
+  if (
+    values.pod_end_date_time &&
+    values.pod_date_time &&
+    values.pod_end_date_time.getTime() <= values.pod_date_time.getTime()
+  ) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_end_date_time'], message: 'End must be after start' });
+  }
+}
+
+/** Free-pod pricing + media rules. */
+function refinePricingAndMedia(values: PodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_type.includes('FREE') && values.pod_amount !== 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_amount'], message: 'Free pods must have amount 0' });
+  }
+  if (!hasImage(values.media_text)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['media_text'], message: 'At least one image is required' });
+  }
+}
+
+/** Duncit product-request rules (config-gated). */
+function refineProducts(values: PodFormValues, ctx: z.RefinementCtx, config: PodFormConfig) {
+  if (config.showProducts && values.products_enabled && values.product_requests.length < 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'Select at least one Duncit product' });
+  }
+  if (config.showProducts && !values.products_enabled && values.product_requests.length > 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'Remove the Duncit products' });
+  }
+}
 
 /**
  * Config-driven Zod factory. Ports the admin `podFormSchema` 1:1 (identical
@@ -97,46 +153,10 @@ export function makePodSchema(config: PodFormConfig) {
       is_active: z.boolean().default(true),
     })
     .superRefine((values, ctx) => {
-      if (config.showHosts && values.pod_hosts_id.length < 1) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_hosts_id'], message: 'Add at least one host' });
-      }
-      if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_id'], message: 'Select a venue' });
-      }
-      if (config.showVenueSlot && values.pod_mode === 'PHYSICAL' && values.venue_id && !values.venue_slot_id) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: 'Pick an available slot' });
-      }
-      if (values.pod_mode === 'VIRTUAL') {
-        if (!values.meeting_url) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: 'Meeting link is required' });
-        } else if (!isHttpUrl(values.meeting_url)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['meeting_url'], message: 'Meeting link must be a valid http(s) URL' });
-        }
-      }
-      if (!values.pod_date_time) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_date_time'], message: 'Start date/time required' });
-      } else if (values.pod_date_time.getTime() <= Date.now()) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_date_time'], message: 'Start date/time must be after current date/time' });
-      }
-      if (
-        values.pod_end_date_time &&
-        values.pod_date_time &&
-        values.pod_end_date_time.getTime() <= values.pod_date_time.getTime()
-      ) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_end_date_time'], message: 'End must be after start' });
-      }
-      if (values.pod_type.includes('FREE') && values.pod_amount !== 0) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_amount'], message: 'Free pods must have amount 0' });
-      }
-      if (!hasImage(values.media_text)) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['media_text'], message: 'At least one image is required' });
-      }
-      if (config.showProducts && values.products_enabled && values.product_requests.length < 1) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'Select at least one Duncit product' });
-      }
-      if (config.showProducts && !values.products_enabled && values.product_requests.length > 0) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['product_requests'], message: 'Remove the Duncit products' });
-      }
+      refineVenue(values, ctx, config);
+      refineDates(values, ctx);
+      refinePricingAndMedia(values, ctx);
+      refineProducts(values, ctx, config);
     });
 }
 

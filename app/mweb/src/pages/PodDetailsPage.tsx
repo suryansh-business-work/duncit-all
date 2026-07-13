@@ -112,6 +112,7 @@ export default function PodDetailsPage() {
   const isFree = pod.pod_type?.includes('FREE');
   const isPodHost = (pod.pod_hosts_id ?? []).includes(data?.me?.user_id);
   const media = pod.pod_images_and_videos ?? [];
+  const supportSubject = `Support - ${pod.pod_title}`;
   return (
     <Stack
       spacing={3}
@@ -176,7 +177,7 @@ export default function PodDetailsPage() {
         startIcon={<ContactSupportIcon />}
         onClick={() =>
           navigate(
-            `/support/tickets?category=BOOKING&podId=${pod.id}&podTitle=${encodeURIComponent(pod.pod_title)}&subject=${encodeURIComponent(`Support - ${pod.pod_title}`)}`
+            `/support/tickets?category=BOOKING&podId=${pod.id}&podTitle=${encodeURIComponent(pod.pod_title)}&subject=${encodeURIComponent(supportSubject)}`
           )
         }
         sx={{ alignSelf: 'flex-start', fontWeight: 800 }}

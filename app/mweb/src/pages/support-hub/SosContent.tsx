@@ -19,10 +19,10 @@ interface GeoSample {
 async function captureLocation(): Promise<GeoSample | null> {
   if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
   return new Promise((resolve) => {
-    const timeout = window.setTimeout(() => resolve(null), 5000);
+    const timeout = globalThis.setTimeout(() => resolve(null), 5000);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        window.clearTimeout(timeout);
+        globalThis.clearTimeout(timeout);
         resolve({
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
@@ -30,7 +30,7 @@ async function captureLocation(): Promise<GeoSample | null> {
         });
       },
       () => {
-        window.clearTimeout(timeout);
+        globalThis.clearTimeout(timeout);
         resolve(null);
       },
       { enableHighAccuracy: true, maximumAge: 30000, timeout: 4500 }

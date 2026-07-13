@@ -82,6 +82,8 @@ export default function ImageUploadField({
     setError(null);
   };
 
+  const idleLabel = field.value ? 'Replace' : 'Upload';
+
   return (
     <Stack spacing={1}>
       <Stack direction="row" spacing={2} alignItems="center">
@@ -124,7 +126,7 @@ export default function ImageUploadField({
               disabled={busy}
               data-testid={`upload-${name}`}
             >
-              {busy ? 'Uploading…' : field.value ? 'Replace' : 'Upload'}
+              {busy ? 'Uploading…' : idleLabel}
             </Button>
             {field.value && (
               <Tooltip title="Remove image">

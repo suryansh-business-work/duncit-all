@@ -48,11 +48,11 @@ export function useDraggable(enabled: boolean) {
     const up = () => {
       start.current = null;
     };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
+    globalThis.addEventListener('pointermove', move);
+    globalThis.addEventListener('pointerup', up);
     return () => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
+      globalThis.removeEventListener('pointermove', move);
+      globalThis.removeEventListener('pointerup', up);
     };
   }, []);
 

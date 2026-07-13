@@ -25,7 +25,7 @@ interface Props {
 }
 
 export default function SupportForm({ initialValues, loading, errorMessage, onSubmit }: Readonly<Props>) {
-  const defaults = { ...supportInitialValues, ...(initialValues ?? {}) };
+  const defaults = { ...supportInitialValues, ...initialValues };
   const { control, register, handleSubmit, reset, setError, formState } = useForm<SupportFormValues>({
     resolver: zodResolver(supportSchema),
     defaultValues: defaults,
@@ -34,7 +34,7 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
   const { errors, isSubmitting } = formState;
 
   useEffect(() => {
-    reset({ ...supportInitialValues, ...(initialValues ?? {}) });
+    reset({ ...supportInitialValues, ...initialValues });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues?.name, initialValues?.email, initialValues?.category, initialValues?.subject, initialValues?.message]);
 

@@ -24,6 +24,7 @@ const overlayBtn = {
 };
 
 export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggleSave, onShare }: Readonly<Props>) {
+  const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
   return (
     <Stack
       direction="row"
@@ -50,7 +51,7 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggl
           disabled={saveLoading}
           sx={overlayBtn}
         >
-          {saveLoading ? <CircularProgress size={18} color="inherit" /> : saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+          {saveLoading ? <CircularProgress size={18} color="inherit" /> : savedIcon}
         </IconButton>
         <IconButton size="small" aria-label="Share" onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />

@@ -21,7 +21,7 @@ export default function AdjustmentRow({ adjustment, busy, onEdit, onDelete }: Re
       <Stack direction="row" alignItems="center" spacing={1}>
         <Chip size="small" color={color} label={sign} sx={{ fontWeight: 900 }} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="body2">{remark ? remark : '—'}</Typography>
+          <Typography variant="body2">{remark || '—'}</Typography>
           <Typography variant="caption" color="text.secondary">
             {adjustment.created_by_name} ·{' '}
             {format(new Date(adjustment.created_at), 'dd MMM yyyy, hh:mm a')}

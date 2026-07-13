@@ -44,7 +44,7 @@ export function ExtractionProvider({ children }: Readonly<{ children: React.Reac
   // Fire the completion callback (e.g. refetch the leads table) once per finish.
   const [lastDone, setLastDone] = useState<string | null>(null);
   useEffect(() => {
-    if (job && job.status === 'DONE' && job.id !== lastDone) {
+    if (job?.status === 'DONE' && job.id !== lastDone) {
       setLastDone(job.id);
       onDone?.();
     }

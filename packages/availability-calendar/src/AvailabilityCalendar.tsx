@@ -53,6 +53,19 @@ function cellColors(isSelected: boolean, isOtherMonth: boolean, isDisabled: bool
   return { bgcolor: 'background.paper', color: 'text.primary' };
 }
 
+// Flat geometry/interaction resolution keeps the day-cell `sx` free of ternaries.
+function cellShape(isDayView: boolean, isSelected: boolean, isDisabled: boolean, isOtherMonth: boolean) {
+  return {
+    aspectRatio: isDayView ? undefined : '1 / 1',
+    minHeight: isDayView ? 120 : undefined,
+    borderColor: isSelected ? 'primary.main' : 'divider',
+    // Past and beyond-window days are read-only — dimmed and non-interactive.
+    cursor: isDisabled ? 'default' : 'pointer',
+    opacity: isOtherMonth ? 0.5 : 1,
+    hoverBorderColor: isDisabled ? 'divider' : 'primary.main',
+  } as const;
+}
+
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 interface BadgeProps {
@@ -80,6 +93,50 @@ function CountBadge({ count, selected, label, bg, fg }: Readonly<BadgeProps>) {
       {count}
       {label}
     </Box>
+  );
+}
+
+interface DayHeaderProps {
+  date: Date;
+  isDayView: boolean;
+  isToday: boolean;
+  isHoliday: boolean;
+}
+
+/** The day number (or full date in day view) plus the venue-leave tag. */
+function DayHeader({ date, isDayView, isToday, isHoliday }: Readonly<DayHeaderProps>) {
+  return (
+    <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Typography
+        variant="body2"
+        sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
+      >
+        {isDayView ? format(date, 'EEEE, dd MMM') : format(date, 'd')}
+      </Typography>
+      {isHoliday && !isDayView && (
+        <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 800 }} aria-label="Venue on leave">
+          LEAVE
+        </Typography>
+      )}
+    </Stack>
+  );
+}
+
+interface DayBadgesProps {
+  bucket?: Bucket;
+  isSelected: boolean;
+}
+
+/** The A/P/B/× slot counts for a day; renders nothing when the day has no slots. */
+function DayBadges({ bucket, isSelected }: Readonly<DayBadgesProps>) {
+  if (!bucket) return null;
+  return (
+    <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ rowGap: 0.25 }}>
+      <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
+      <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.light" fg="info.contrastText" />
+      <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
+      <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="text.secondary" />
+    </Stack>
   );
 }
 
@@ -130,6 +187,7 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
   const isToday = isSameDay(date, today);
   const isDayView = view === 'day';
   const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isDisabled, isHoliday);
+  const shape = cellShape(isDayView, isSelected, isDisabled, isOtherMonth);
 
   return (
     <Box
@@ -145,52 +203,32 @@ function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, se
             }
       }
       sx={{
-        aspectRatio: isDayView ? undefined : '1 / 1',
-        minHeight: isDayView ? 120 : undefined,
+        aspectRatio: shape.aspectRatio,
+        minHeight: shape.minHeight,
         p: { xs: 0.5, sm: 0.75 },
         borderRadius: 1.5,
         border: 1.5,
-        borderColor: isSelected ? 'primary.main' : 'divider',
+        borderColor: shape.borderColor,
         bgcolor,
         color,
-        // Past and beyond-window days are read-only — dimmed and non-interactive.
-        cursor: isDisabled ? 'default' : 'pointer',
-        opacity: isOtherMonth ? 0.5 : 1,
+        cursor: shape.cursor,
+        opacity: shape.opacity,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.25,
         position: 'relative',
         outline: 'none',
-        '&:hover': { borderColor: isDisabled ? 'divider' : 'primary.main' },
+        '&:hover': { borderColor: shape.hoverBorderColor },
         '&:focus-visible': { boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}` },
       }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
-        >
-          {isDayView ? format(date, 'EEEE, dd MMM') : format(date, 'd')}
-        </Typography>
-        {isHoliday && !isDayView && (
-          <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 800 }} aria-label="Venue on leave">
-            LEAVE
-          </Typography>
-        )}
-      </Stack>
+      <DayHeader date={date} isDayView={isDayView} isToday={isToday} isHoliday={isHoliday} />
       {isHoliday && isDayView && (
         <Typography variant="caption" sx={{ fontWeight: 800 }}>
           Venue on leave — not bookable
         </Typography>
       )}
-      {bucket && (
-        <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ rowGap: 0.25 }}>
-          <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
-          <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.light" fg="info.contrastText" />
-          <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
-          <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="text.secondary" />
-        </Stack>
-      )}
+      <DayBadges bucket={bucket} isSelected={isSelected} />
     </Box>
   );
 }

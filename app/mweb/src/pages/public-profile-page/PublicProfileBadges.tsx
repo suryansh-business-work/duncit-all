@@ -32,7 +32,7 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
     fetchPolicy: 'cache-and-network',
   });
   const badges = data?.userBadges ?? [];
-  const [active, setActive] = useState<any | null>(null);
+  const [active, setActive] = useState<any>(null);
   if (loading && !data) return null;
   if (badges.length === 0) return null;
 

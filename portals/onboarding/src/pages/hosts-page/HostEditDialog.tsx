@@ -26,7 +26,7 @@ import {
 } from '../../forms/host.form';
 
 interface Props {
-  host: any | null;
+  host: any;
   onClose: () => void;
   onSaved: () => void;
 }

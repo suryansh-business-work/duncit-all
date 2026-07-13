@@ -24,7 +24,7 @@ const byName = <T extends { name: string }>(items: T[]) =>
 const flagForIso = (isoCode: string) =>
   isoCode
     .toUpperCase()
-    .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)));
+    .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + (letter.codePointAt(0) ?? 0)));
 
 const countries = byName(
   allCountries.map(([name, isoCode]) => ({

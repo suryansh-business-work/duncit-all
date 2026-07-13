@@ -65,7 +65,7 @@ const ToolbarButton = ({
 function Toolbar({ editor, compact }: Readonly<{ editor: Editor; compact?: boolean }>) {
   const promptLink = () => {
     const current = editor.getAttributes('link').href ?? '';
-    const url = window.prompt('Link URL', current);
+    const url = globalThis.prompt('Link URL', current);
     if (url === null) return;
     if (url === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();

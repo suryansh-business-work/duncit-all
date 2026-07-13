@@ -69,7 +69,7 @@ function applyInput(brand: IEcommBrand, input: any) {
   }
   if (input.documents !== undefined) {
     brand.documents = (input.documents || [])
-      .filter((d: any) => d && d.type && d.url)
+      .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({ type: str(d.type), url: str(d.url), uploaded_at: new Date() }));
   }
 }

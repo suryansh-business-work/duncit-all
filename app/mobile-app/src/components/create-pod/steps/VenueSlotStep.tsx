@@ -64,7 +64,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
     (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId),
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  const ownVenue = Boolean(selectedVenue && selectedVenue.owner_user_id === viewerUserId);
+  const ownVenue = selectedVenue?.owner_user_id === viewerUserId;
   const spaces = venueSpaces(selectedVenue);
   const spaceLabel = watch('venue_space_label');
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;

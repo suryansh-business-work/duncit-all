@@ -159,11 +159,11 @@ export default function CreatePodStepper({
         message: violation.message,
         type: violation.type,
         stepIndex,
-        stepTitle: STEP_TITLES[stepIndex] as string,
+        stepTitle: STEP_TITLES[stepIndex],
       };
     });
     setBlocked(mapped);
-    setStep((mapped[0] as BlockedViolation).stepIndex);
+    setStep(mapped[0].stepIndex);
   };
 
   const submit = form.handleSubmit(async (values) => {
@@ -247,8 +247,12 @@ export default function CreatePodStepper({
         isLast={isLast}
         busy={busy}
         onBack={() => goTo(step - 1)}
-        onNext={() => void next()}
-        onSubmit={() => void submit()}
+        onNext={() => {
+          next().catch(() => undefined);
+        }}
+        onSubmit={() => {
+          submit().catch(() => undefined);
+        }}
       />
       <ModerationBlockedDialog violations={blocked} onJump={jumpToStep} onClose={() => setBlocked([])} />
     </Stack>

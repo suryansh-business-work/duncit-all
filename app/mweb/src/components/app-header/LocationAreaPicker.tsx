@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Box,
-  Chip,
   InputAdornment,
   List,
   ListItemButton,

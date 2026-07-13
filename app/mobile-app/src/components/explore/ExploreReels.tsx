@@ -63,66 +63,66 @@ export function ExploreReels() {
   };
 
   let reelsBody: ReactNode = null;
-  if (height === 0) {
-    reelsBody = null;
-  } else if (isLoading && !hasData) {
-    reelsBody = <DetailSkeleton testID="explore-loading" />;
-  } else if (pods.length === 0) {
-    reelsBody = (
-      <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-        <Text color="$muted" textAlign="center" testID="explore-empty">
-          No pods to explore yet.
-        </Text>
-      </YStack>
-    );
-  } else {
-    reelsBody = (
-      <FlatList
-        data={pods}
-        keyExtractor={(pod) => pod.id}
-        pagingEnabled
-        showsVerticalScrollIndicator={false}
-        snapToInterval={height}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-        // Full-screen items: keep only the current reel ±2 mounted (default
-        // windowSize 21 = ~21 full-screen image cards alive → heavy memory/GC).
-        windowSize={5}
-        initialNumToRender={2}
-        maxToRenderPerBatch={2}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#ffffff"
-            testID="explore-refresh"
-          />
-        }
-        renderItem={({ item }) => {
-          const like = likeStateFor(item);
-          const saved = isSaved(item.id);
-          return (
-            <ExplorePodCard
-              pod={item}
-              club={clubsById.get(item.club_id)}
-              width={width}
-              height={height}
-              saved={saved}
-              savePending={isSavePending(item.id)}
-              like={like}
-              commentCount={commentCountFor(item)}
-              onOpen={() => openPod(item)}
-              onOpenClub={() => openClub(item)}
-              onToggleSave={() => toggleSave(item.id, saved)}
-              onToggleLike={() => toggleLike(item.id, like)}
-              onComment={() => setCommentsPod(item)}
-              onShowLikers={() => setLikersPod(item)}
+  if (height > 0) {
+    if (isLoading && !hasData) {
+      reelsBody = <DetailSkeleton testID="explore-loading" />;
+    } else if (pods.length === 0) {
+      reelsBody = (
+        <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
+          <Text color="$muted" textAlign="center" testID="explore-empty">
+            No pods to explore yet.
+          </Text>
+        </YStack>
+      );
+    } else {
+      reelsBody = (
+        <FlatList
+          data={pods}
+          keyExtractor={(pod) => pod.id}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+          snapToInterval={height}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+          // Full-screen items: keep only the current reel ±2 mounted (default
+          // windowSize 21 = ~21 full-screen image cards alive → heavy memory/GC).
+          windowSize={5}
+          initialNumToRender={2}
+          maxToRenderPerBatch={2}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#ffffff"
+              testID="explore-refresh"
             />
-          );
-        }}
-      />
-    );
+          }
+          renderItem={({ item }) => {
+            const like = likeStateFor(item);
+            const saved = isSaved(item.id);
+            return (
+              <ExplorePodCard
+                pod={item}
+                club={clubsById.get(item.club_id)}
+                width={width}
+                height={height}
+                saved={saved}
+                savePending={isSavePending(item.id)}
+                like={like}
+                commentCount={commentCountFor(item)}
+                onOpen={() => openPod(item)}
+                onOpenClub={() => openClub(item)}
+                onToggleSave={() => toggleSave(item.id, saved)}
+                onToggleLike={() => toggleLike(item.id, like)}
+                onComment={() => setCommentsPod(item)}
+                onShowLikers={() => setLikersPod(item)}
+              />
+            );
+          }}
+        />
+      );
+    }
   }
 
   return (

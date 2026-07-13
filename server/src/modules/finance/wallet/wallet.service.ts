@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import {
@@ -15,7 +15,7 @@ import { UserModel } from '@modules/access/user/user.model';
 
 const withdrawalId = () => `wd_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
-const clean = (value: unknown, max = 160) => String(value ?? '').trim().slice(0, max);
+const clean = (value: string | number | null | undefined, max = 160) => String(value ?? '').trim().slice(0, max);
 const METHODS = new Set<string>(['UPI', 'IMPS', 'NEFT']);
 
 /** Next disbursement date for a payout mode, from the configured cycle. */

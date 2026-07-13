@@ -52,7 +52,7 @@ export default function HomeStatusViewerDetails({
         <Stack direction="row" spacing={1} sx={{ overflow: 'hidden' }}>
           {nextPeek.map((s, i) => (
             <Box
-              key={i}
+              key={s.id ?? s.mediaUrl ?? s.thumbnailUrl}
               onClick={() => onJumpTo(index + 1 + i)}
               sx={{
                 width: 56,

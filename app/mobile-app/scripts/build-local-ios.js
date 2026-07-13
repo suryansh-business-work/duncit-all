@@ -15,12 +15,12 @@ const isMac = process.platform === 'darwin';
 const args = ['eas', 'build', '--platform', 'ios', '--profile', 'production'];
 if (isMac) args.push('--local');
 
-if (!isMac) {
+if (isMac) {
+  console.log('\nBuilding iOS locally via eas build --local (Xcode required)…\n');
+} else {
   console.log('\nℹ  iOS builds need Xcode, which only exists on macOS.');
   console.log('   Building in the EAS cloud instead — nothing heavy runs on this PC.');
   console.log('   Track progress + download the .ipa at https://expo.dev\n');
-} else {
-  console.log('\nBuilding iOS locally via eas build --local (Xcode required)…\n');
 }
 
 const result = spawnSync('npx', args, {

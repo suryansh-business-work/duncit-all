@@ -28,21 +28,21 @@ const log = (...m: unknown[]) => console.log("[sync-user-indexes]", ...m);
 // `phone_number_1_phone_extension_1` indexes phone-less users as (null,null),
 // so the 2nd phone-less signup collides. The schema's nested `auth.*` partial
 // indexes replace them.
-const LEGACY_AUTH_KEY_FIELDS = [
+const LEGACY_AUTH_KEY_FIELDS = new Set([
   "email",
   "google_id",
   "phone_number",
   "phone_extension",
-];
+]);
 
-async function run() {
-  await connectDB();
-  const collection = UserModel.collection;
+type UsersCollection = typeof UserModel.collection;
+type IndexInfo = Awaited<ReturnType<UsersCollection["indexes"]>>[number];
 
-  // Empty-string phone subdocs (`{ number: '', extension: '' }`) from older code
-  // still count as `$type: string`, so they sit in the partial unique index and
-  // collide with each other — and block the new index from building. Unset them
-  // so phone-less users are truly excluded from the index.
+// Empty-string phone subdocs (`{ number: '', extension: '' }`) from older code
+// still count as `$type: string`, so they sit in the partial unique index and
+// collide with each other — and block the new index from building. Unset them
+// so phone-less users are truly excluded from the index.
+async function clearEmptyPhoneSubdocs(collection: UsersCollection) {
   const emptyPhoneFilter = {
     $or: [{ "auth.phone.number": "" }, { "auth.phone.extension": "" }],
   };
@@ -53,11 +53,9 @@ async function run() {
       $unset: { "auth.phone": "" },
     });
   }
+}
 
-  const existing = await collection.indexes();
-  log(
-    `mode: ${dryRun ? "DRY-RUN" : "WRITE"} — ${existing.length} indexes on "users"`,
-  );
+function logAuthIndexes(existing: IndexInfo[]) {
   for (const i of existing) {
     if (/phone|email|google/i.test(JSON.stringify(i.key))) {
       log(
@@ -65,15 +63,20 @@ async function run() {
       );
     }
   }
+}
 
-  // Drop legacy unique indexes built on the old top-level auth fields. The
-  // current nested `auth.*` partial indexes (kept by syncIndexes below) replace
-  // them. Indexes keyed on `auth.*` are NOT touched here.
+// Drop legacy unique indexes built on the old top-level auth fields. The
+// current nested `auth.*` partial indexes (kept by syncIndexes below) replace
+// them. Indexes keyed on `auth.*` are NOT touched here.
+async function dropLegacyAuthIndexes(
+  collection: UsersCollection,
+  existing: IndexInfo[],
+) {
   for (const index of existing) {
     if (index.name === "_id_") continue;
     const keys = Object.keys(index.key);
     const isLegacyAuthIndex = keys.some((k) =>
-      LEGACY_AUTH_KEY_FIELDS.includes(k),
+      LEGACY_AUTH_KEY_FIELDS.has(k),
     );
     if (isLegacyAuthIndex && index.unique) {
       log(
@@ -82,28 +85,46 @@ async function run() {
       if (!dryRun) await collection.dropIndex(index.name as string);
     }
   }
+}
+
+async function syncAndVerify(collection: UsersCollection) {
+  const dropped = await UserModel.syncIndexes();
+  log("syncIndexes() complete. Dropped by sync:", dropped);
+  const after = await collection.indexes();
+  const phone = after.find(
+    (i) =>
+      JSON.stringify(i.key) ===
+      JSON.stringify({ "auth.phone.number": 1, "auth.phone.extension": 1 }),
+  );
+  const legacyGone = !after.some((i) =>
+    Object.keys(i.key).some((k) => LEGACY_AUTH_KEY_FIELDS.has(k)),
+  );
+  log(
+    "phone index now:",
+    phone?.name,
+    "partial:",
+    !!phone?.partialFilterExpression,
+  );
+  log("legacy auth indexes removed:", legacyGone);
+}
+
+async function run() {
+  await connectDB();
+  const collection = UserModel.collection;
+
+  await clearEmptyPhoneSubdocs(collection);
+
+  const existing = await collection.indexes();
+  log(
+    `mode: ${dryRun ? "DRY-RUN" : "WRITE"} — ${existing.length} indexes on "users"`,
+  );
+  logAuthIndexes(existing);
+  await dropLegacyAuthIndexes(collection, existing);
 
   if (dryRun) {
     log("dry-run: skipping syncIndexes()");
   } else {
-    const dropped = await UserModel.syncIndexes();
-    log("syncIndexes() complete. Dropped by sync:", dropped);
-    const after = await collection.indexes();
-    const phone = after.find(
-      (i) =>
-        JSON.stringify(i.key) ===
-        JSON.stringify({ "auth.phone.number": 1, "auth.phone.extension": 1 }),
-    );
-    const legacyGone = !after.some((i) =>
-      Object.keys(i.key).some((k) => LEGACY_AUTH_KEY_FIELDS.includes(k)),
-    );
-    log(
-      "phone index now:",
-      phone?.name,
-      "partial:",
-      !!phone?.partialFilterExpression,
-    );
-    log("legacy auth indexes removed:", legacyGone);
+    await syncAndVerify(collection);
   }
 
   await mongoose.disconnect();

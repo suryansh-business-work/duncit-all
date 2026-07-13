@@ -37,7 +37,7 @@ const hydrateLocation = (values: RegisterVenueValues, locations: any[]): Registe
 };
 
 export function venueToValues(
-  venue: any | null,
+  venue: any,
   locations: any[],
   account: { name: string; email: string }
 ): RegisterVenueValues {

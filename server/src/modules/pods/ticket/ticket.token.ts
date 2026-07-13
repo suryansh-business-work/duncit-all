@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 
 /**
  * Compact, HMAC-signed QR payload for an event ticket. Format is

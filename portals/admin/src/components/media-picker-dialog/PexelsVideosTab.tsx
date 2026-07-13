@@ -104,6 +104,23 @@ export default function PexelsVideosTab({
     }
   };
 
+  const resultsContent =
+    videos.length === 0 ? (
+      <Alert severity="info">No videos — try a different query.</Alert>
+    ) : (
+      <ImageList cols={3} gap={8} rowHeight={160}>
+        {videos.map((v: any) => (
+          <PexelsVideoCard
+            key={v.id}
+            video={v}
+            importing={vimportingId === v.id}
+            anyImporting={!!vimportingId}
+            onPick={importPexelsVideo}
+          />
+        ))}
+      </ImageList>
+    );
+
   return (
     <Box>
       <Stack
@@ -148,20 +165,8 @@ export default function PexelsVideosTab({
         <Box sx={{ textAlign: 'center', py: 6 }}>
           <CircularProgress />
         </Box>
-      ) : videos.length === 0 ? (
-        <Alert severity="info">No videos — try a different query.</Alert>
       ) : (
-        <ImageList cols={3} gap={8} rowHeight={160}>
-          {videos.map((v: any) => (
-            <PexelsVideoCard
-              key={v.id}
-              video={v}
-              importing={vimportingId === v.id}
-              anyImporting={!!vimportingId}
-              onPick={importPexelsVideo}
-            />
-          ))}
-        </ImageList>
+        resultsContent
       )}
       {vhasMore && (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
@@ -187,8 +192,7 @@ export default function PexelsVideosTab({
           style={{ color: 'inherit' }}
         >
           Pexels
-        </a>
-        .
+        </a>.
       </Typography>
     </Box>
   );

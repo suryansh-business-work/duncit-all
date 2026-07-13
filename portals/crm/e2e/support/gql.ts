@@ -11,14 +11,14 @@ interface GqlBody {
 
 /** GraphQL error payload for a named operation (drives the app's error states). */
 export function gqlError(message: string): GqlData {
-  return { __error: message } as GqlData;
+  return { __error: message };
 }
 
 function resolve(fixtures: GqlFixtures, op: GqlBody) {
   const fx = op.operationName ? fixtures[op.operationName] : undefined;
   const data = typeof fx === 'function' ? fx(op.variables ?? {}) : fx;
   if (data && typeof data === 'object' && '__error' in data) {
-    return { data: null, errors: [{ message: String((data as { __error: unknown }).__error) }] };
+    return { data: null, errors: [{ message: String((data as { __error: string }).__error) }] };
   }
   // Unmocked operations resolve to empty data — the app's `?? []`/optional
   // chaining guards render the corresponding empty state without crashing.

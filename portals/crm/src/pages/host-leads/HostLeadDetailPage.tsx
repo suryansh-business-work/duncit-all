@@ -51,7 +51,7 @@ import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
 import { hostVariableValues } from '../../config/leadVariables';
 
-const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
+const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
 const formatDate = (iso?: string | null) => {
   if (!iso) return null;
@@ -82,6 +82,7 @@ export default function HostLeadDetailPage() {
 
   const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
   const preferredDate = formatDate(lead.preferred_event_date);
+  const servicesPlural = lead.services_offered.length === 1 ? '' : 's';
 
   const tabs: LeadTab[] = [
     {
@@ -189,7 +190,7 @@ export default function HostLeadDetailPage() {
           title="Services offered"
           subtitle={
             lead.services_offered.length
-              ? `${lead.services_offered.length} service${lead.services_offered.length === 1 ? '' : 's'} tagged`
+              ? `${lead.services_offered.length} service${servicesPlural} tagged`
               : 'Catalogue managed via Manage Host Services'
           }
           icon={<HandymanIcon color="primary" />}

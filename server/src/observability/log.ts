@@ -91,13 +91,13 @@ export function ingestRemoteLog(raw: unknown): void {
   if (!raw || typeof raw !== 'object') return;
   const r = raw as Partial<LogRecord>;
   if (typeof r.app !== 'string' || typeof r.page !== 'string' || typeof r.component !== 'string') return;
-  const level: LogLevel = typeof r.level === 'string' && LEVELS.has(r.level as LogLevel) ? (r.level as LogLevel) : 'info';
+  const level: LogLevel = typeof r.level === 'string' && LEVELS.has(r.level) ? r.level : 'info';
   emitStructured({
     app: r.app,
     portal: typeof r.portal === 'string' ? r.portal : undefined,
     level,
     page: r.page,
     component: r.component,
-    data: r.data && typeof r.data === 'object' ? (r.data as Record<string, unknown>) : undefined,
+    data: r.data && typeof r.data === 'object' ? r.data : undefined,
   });
 }

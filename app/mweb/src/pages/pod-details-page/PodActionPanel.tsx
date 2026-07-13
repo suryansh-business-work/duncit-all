@@ -97,7 +97,7 @@ export default function PodActionPanel({
     );
   }
 
-  if (m && m.status === 'BACKED_OUT' && referralToken) {
+  if (m?.status === 'BACKED_OUT' && referralToken) {
     return (
       <Stack spacing={1}>
         <Alert severity="warning">

@@ -10,6 +10,12 @@ interface Props extends Omit<LinkProps, 'href' | 'children'> {
   withIcon?: boolean;
 }
 
+/** Normalise the incoming `sx` (array | object | undefined) into a spreadable list. */
+const toSxList = (sx: LinkProps['sx']) => {
+  if (Array.isArray(sx)) return sx;
+  return sx ? [sx] : [];
+};
+
 /**
  * Anchor styled as inline text that always opens external URLs in a new tab
  * with `rel="noreferrer"` to avoid window.opener leaks. Used everywhere a
@@ -33,7 +39,7 @@ export default function ExternalLink({ href, children, withIcon = true, sx, ...r
           gap: 0.5,
           wordBreak: 'break-all',
         },
-        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+        ...toSxList(sx),
       ]}
     >
       {children ?? href}

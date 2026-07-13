@@ -300,7 +300,6 @@ export function StatusViewer({
                   testID="status-like"
                   role="button"
                   aria-label={liked ? 'Unlike story' : 'Like story'}
-                  aria-checked={liked}
                   onPress={toggleLike}
                   alignItems="center"
                   gap={6}

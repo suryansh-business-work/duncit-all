@@ -8,7 +8,7 @@ import {
 } from '@mui/material';
 
 interface Props {
-  target: any | null;
+  target: any;
   onClose: () => void;
   onConfirm: () => void;
 }

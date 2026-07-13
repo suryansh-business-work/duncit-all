@@ -39,6 +39,7 @@ export function NotificationsScreen({
   // Derive unread from the loaded items so the header can't say "All caught up"
   // while unread rows are visible; fall back to the count when items lag (BUG-5).
   const liveUnread = notifs.filter((item) => !item.read_at).length || unreadCount;
+  const plural = liveUnread === 1 ? '' : 's';
 
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
@@ -67,9 +68,7 @@ export function NotificationsScreen({
                   Notifications
                 </Text>
                 <Text fontSize={12} fontWeight="800" color="$muted">
-                  {liveUnread > 0
-                    ? `${liveUnread} unread update${liveUnread === 1 ? '' : 's'}`
-                    : 'All caught up'}
+                  {liveUnread > 0 ? `${liveUnread} unread update${plural}` : 'All caught up'}
                 </Text>
               </YStack>
               <XStack

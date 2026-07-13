@@ -8,8 +8,12 @@ import {
   Typography,
 } from '@mui/material';
 
-const statusColor = (s: string) =>
-  s === 'APPROVED' ? 'success' : s === 'REJECTED' ? 'error' : s === 'SUBMITTED' ? 'warning' : 'default';
+const statusColor = (s: string) => {
+  if (s === 'APPROVED') return 'success';
+  if (s === 'REJECTED') return 'error';
+  if (s === 'SUBMITTED') return 'warning';
+  return 'default';
+};
 
 interface Props {
   host: any;

@@ -60,8 +60,8 @@ COPY --from=builder /repo/portals/ai/package.json ./portals/ai/
 COPY --from=builder /repo/portals/products/package.json ./portals/products/
 COPY --from=builder /repo/portals/marketing/package.json ./portals/marketing/
 
-RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
-RUN pnpm install --prod --frozen-lockfile --filter server
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate \
+    && pnpm install --prod --frozen-lockfile --filter server
 
 COPY --from=builder /repo/server/dist ./server/dist
 

@@ -36,7 +36,7 @@ export const policyService = {
     const q: any = {};
     if (typeof filter?.is_active === 'boolean') q.is_active = filter.is_active;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ title: r }, { slug: r }];
     }
     const docs = await PolicyModel.find(q).sort({ sort_order: 1, title: 1 });

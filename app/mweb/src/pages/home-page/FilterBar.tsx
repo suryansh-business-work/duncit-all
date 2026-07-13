@@ -41,8 +41,8 @@ export default function FilterBar({
           <Chip
             label="All"
             size="small"
-            color={!categoryId ? 'primary' : 'default'}
-            variant={!categoryId ? 'filled' : 'outlined'}
+            color={categoryId ? 'default' : 'primary'}
+            variant={categoryId ? 'outlined' : 'filled'}
             onClick={() => setCategoryId('')}
             sx={{ flexShrink: 0, height: 30 }}
           />

@@ -10,9 +10,9 @@ import { PartnerFaqForm, PARTNER_FAQ_TOPICS, emptyPartnerFaqForm, toPartnerFaqFo
 export default function PartnerFaqsPage() {
   const [topic, setTopic] = useState<PartnerFaqTopic | ''>('');
   const [search, setSearch] = useState('');
-  const [editing, setEditing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState<PartnerFaqFormValues>(emptyPartnerFaqForm);
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 

@@ -41,6 +41,13 @@ export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProp
         {pods.map((pod) => {
           const media = mediaOf(pod);
           const attendees = pod.pod_attendees?.length ?? 0;
+          const imageOrPlaceholder = media?.url ? (
+            <Box component="img" src={media.url} alt={pod.pod_title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #6b4b22 0%, #17110d 100%)' }}>
+              <EventIcon sx={{ fontSize: 64, opacity: 0.72 }} />
+            </Box>
+          );
           return (
             <Box
               key={pod.id}
@@ -66,12 +73,8 @@ export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProp
             >
               {media?.type === 'VIDEO' ? (
                 <Box component="video" src={media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : media?.url ? (
-                <Box component="img" src={media.url} alt={pod.pod_title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #6b4b22 0%, #17110d 100%)' }}>
-                  <EventIcon sx={{ fontSize: 64, opacity: 0.72 }} />
-                </Box>
+                imageOrPlaceholder
               )}
               <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.18) 42%, rgba(0,0,0,0.84) 100%)' }} />
               <Stack spacing={1} sx={{ position: 'absolute', left: 16, right: 16, bottom: 16 }}>

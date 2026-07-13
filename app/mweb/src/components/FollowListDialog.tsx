@@ -125,6 +125,24 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
     navigate(`/u/${id}`);
   };
 
+  const emptyOrList = people.length === 0 ? (
+    <Typography color="text.secondary" textAlign="center" sx={{ py: 4, fontWeight: 700 }}>
+      {tab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+    </Typography>
+  ) : (
+    <Box>
+      {people.map((person) => (
+        <FollowRow
+          key={person.user_id}
+          person={person}
+          isSelf={person.user_id === viewerId}
+          onToggle={toggle}
+          onOpen={openProfile}
+        />
+      ))}
+    </Box>
+  );
+
   return (
     <ResponsiveDialog open={open} onClose={onClose} title="Connections" sheetMaxHeight="80dvh">
       <Tabs value={tab} onChange={(_e, v) => setTab(v)} variant="fullWidth" sx={{ mb: 1 }}>
@@ -135,22 +153,8 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
         <Stack alignItems="center" sx={{ py: 4 }}>
           <CircularProgress size={28} />
         </Stack>
-      ) : people.length === 0 ? (
-        <Typography color="text.secondary" textAlign="center" sx={{ py: 4, fontWeight: 700 }}>
-          {tab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
-        </Typography>
       ) : (
-        <Box>
-          {people.map((person) => (
-            <FollowRow
-              key={person.user_id}
-              person={person}
-              isSelf={person.user_id === viewerId}
-              onToggle={toggle}
-              onOpen={openProfile}
-            />
-          ))}
-        </Box>
+        emptyOrList
       )}
     </ResponsiveDialog>
   );

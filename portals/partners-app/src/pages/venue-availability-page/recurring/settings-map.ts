@@ -51,8 +51,8 @@ export function readVenueSettings(settings: any): VenueSettingsView {
     },
     weekly_off_days: settings?.weekly_off_days ?? [],
     holidays: settings?.holidays ?? [],
-    rules: { ...DEFAULT_RULES, ...(settings?.rules ?? {}) },
-    auto_extend: { ...DEFAULT_AUTO_EXTEND, ...(settings?.auto_extend ?? {}) },
+    rules: { ...DEFAULT_RULES, ...settings?.rules },
+    auto_extend: { ...DEFAULT_AUTO_EXTEND, ...settings?.auto_extend },
   };
 }
 

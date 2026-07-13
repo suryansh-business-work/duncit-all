@@ -32,7 +32,7 @@ export default function BrandPickupPanel({ brandId }: Readonly<Props>) {
   const [setDefault, { loading: settingDefault }] = useMutation(SET_DEFAULT_BRAND_PICKUP_LOCATION);
   const [register, { loading: registering }] = useMutation(REGISTER_BRAND_PICKUP_WITH_SHIPROCKET);
 
-  const [editing, setEditing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 

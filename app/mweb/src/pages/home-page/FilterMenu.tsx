@@ -52,9 +52,9 @@ export default function FilterMenu(props: Readonly<Props>) {
 
   const activeCount =
     (categoryId ? 1 : 0) +
-    (priceFilter !== 'ALL' ? 1 : 0) +
-    (dateFilter !== 'ALL' ? 1 : 0) +
-    (sortBy !== DEFAULT_SORT ? 1 : 0);
+    (priceFilter === 'ALL' ? 0 : 1) +
+    (dateFilter === 'ALL' ? 0 : 1) +
+    (sortBy === DEFAULT_SORT ? 0 : 1);
 
   const handleReset = () => {
     setCategoryId('');
@@ -63,6 +63,8 @@ export default function FilterMenu(props: Readonly<Props>) {
     setSortBy(DEFAULT_SORT);
   };
 
+  const activeCountSuffix = activeCount ? ` (${activeCount} active)` : '';
+
   return (
     <>
       <Tooltip title={props.disabled ? '' : 'Filters'}>
@@ -70,7 +72,7 @@ export default function FilterMenu(props: Readonly<Props>) {
         <IconButton
           onClick={() => setOpen(true)}
           disabled={props.disabled}
-          aria-label={`Open filters${activeCount ? ` (${activeCount} active)` : ''}`}
+          aria-label={`Open filters${activeCountSuffix}`}
           sx={{
             border: 1,
             borderColor: 'divider',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -70,6 +70,45 @@ export function PodCommentsSheet({
     navigation.navigate('PublicProfile', { userId: authorId });
   };
 
+  let commentsBody: ReactNode;
+  if (isLoading) {
+    commentsBody = (
+      <YStack flex={1} alignItems="center" justifyContent="center">
+        <Spinner color="$primary" />
+      </YStack>
+    );
+  } else if (error) {
+    commentsBody = (
+      <Text padding={16} color="$danger">
+        {error}
+      </Text>
+    );
+  } else if (comments.length === 0) {
+    commentsBody = (
+      <Text padding={16} color="$muted" testID="pod-comments-empty">
+        No comments yet. Be the first to comment.
+      </Text>
+    );
+  } else {
+    commentsBody = (
+      <FlatList<PodComment>
+        style={{ flex: 1 }}
+        data={comments}
+        keyExtractor={(c) => c.id}
+        contentContainerStyle={{ paddingHorizontal: 16 }}
+        renderItem={({ item }) => (
+          <CommentRow
+            comment={item}
+            canDelete={!!viewerId && item.author_id === viewerId}
+            onToggleLike={() => toggleLike(item.id)}
+            onRequestDelete={() => setDeleteTarget(item)}
+            onOpenProfile={() => openProfile(item.author_id)}
+          />
+        )}
+      />
+    );
+  }
+
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
@@ -121,35 +160,7 @@ export function PodCommentsSheet({
                   </XStack>
                 </XStack>
 
-                {isLoading ? (
-                  <YStack flex={1} alignItems="center" justifyContent="center">
-                    <Spinner color="$primary" />
-                  </YStack>
-                ) : error ? (
-                  <Text padding={16} color="$danger">
-                    {error}
-                  </Text>
-                ) : comments.length === 0 ? (
-                  <Text padding={16} color="$muted" testID="pod-comments-empty">
-                    No comments yet. Be the first to comment.
-                  </Text>
-                ) : (
-                  <FlatList<PodComment>
-                    style={{ flex: 1 }}
-                    data={comments}
-                    keyExtractor={(c) => c.id}
-                    contentContainerStyle={{ paddingHorizontal: 16 }}
-                    renderItem={({ item }) => (
-                      <CommentRow
-                        comment={item}
-                        canDelete={!!viewerId && item.author_id === viewerId}
-                        onToggleLike={() => toggleLike(item.id)}
-                        onRequestDelete={() => setDeleteTarget(item)}
-                        onOpenProfile={() => openProfile(item.author_id)}
-                      />
-                    )}
-                  />
-                )}
+                {commentsBody}
 
                 <CommentComposer
                   value={text}

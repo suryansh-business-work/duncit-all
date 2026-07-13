@@ -126,6 +126,78 @@ function validateLink(input: any) {
   }
 }
 
+function buildNextScope(doc: any, input: any) {
+  let nextLocationId: any;
+  if (input.location_id === undefined) {
+    nextLocationId = doc.location_id ? String(doc.location_id) : null;
+  } else {
+    nextLocationId = input.location_id;
+  }
+  return {
+    scope: input.scope ?? doc.scope,
+    location_id: nextLocationId,
+    zone_name: input.zone_name === undefined ? doc.zone_name : input.zone_name,
+  };
+}
+
+function validateLinkUpdate(doc: any, input: any) {
+  if (input.link_type === undefined) return;
+  validateLink({
+    link_type: input.link_type,
+    link_target_kind: input.link_target_kind ?? (doc.link_target_kind as any) ?? null,
+    link_target_id: input.link_target_id ?? doc.link_target_id ?? null,
+    link_url: input.link_url ?? doc.link_url ?? '',
+  });
+}
+
+function applyDirectFields(doc: any, input: any) {
+  const fields = [
+    'title',
+    'description',
+    'media_url',
+    'media_type',
+    'link_url',
+    'scope',
+    'sort_order',
+    'is_active',
+  ] as const;
+  for (const f of fields) if (input[f] !== undefined) (doc as any)[f] = input[f];
+}
+
+function applyLinkFields(doc: any, input: any) {
+  if (input.link_type !== undefined) doc.link_type = input.link_type;
+  if (input.link_target_kind !== undefined) doc.link_target_kind = input.link_target_kind;
+  if (input.link_target_id !== undefined) doc.link_target_id = input.link_target_id;
+
+  if (doc.link_type === 'EXTERNAL') {
+    doc.link_target_kind = null;
+    doc.link_target_id = null;
+  } else if (doc.link_type === 'INTERNAL') {
+    doc.link_url = '';
+  }
+}
+
+function applyScopeFields(doc: any, input: any, next: ReturnType<typeof buildNextScope>) {
+  if (input.scope !== undefined || input.location_id !== undefined) {
+    doc.location_id = next.scope === 'GLOBAL' ? null : next.location_id;
+  }
+  if (input.scope !== undefined || input.zone_name !== undefined) {
+    doc.zone_name = next.scope === 'ZONE' ? next.zone_name ?? null : null;
+  }
+}
+
+function applyScheduleAndCategoryFields(doc: any, input: any) {
+  if (input.starts_at !== undefined)
+    doc.starts_at = input.starts_at ? new Date(input.starts_at) : null;
+  if (input.ends_at !== undefined)
+    doc.ends_at = input.ends_at ? new Date(input.ends_at) : null;
+  if (input.super_category_slug !== undefined) {
+    doc.super_category_slug = input.super_category_slug
+      ? String(input.super_category_slug).toLowerCase()
+      : null;
+  }
+}
+
 export const sliderService = {
   async list(filter?: {
     scope?: SliderScope;
@@ -197,66 +269,14 @@ export const sliderService = {
     const doc = await SliderModel.findById(id);
     if (!doc) throw new GraphQLError('Slider not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const next = {
-      scope: input.scope ?? doc.scope,
-      location_id:
-        input.location_id !== undefined
-          ? input.location_id
-          : doc.location_id
-            ? String(doc.location_id)
-            : null,
-      zone_name: input.zone_name !== undefined ? input.zone_name : doc.zone_name,
-    };
+    const next = buildNextScope(doc, input);
     validateScope(next);
+    validateLinkUpdate(doc, input);
 
-    if (input.link_type !== undefined) {
-      validateLink({
-        link_type: input.link_type,
-        link_target_kind:
-          input.link_target_kind ?? (doc.link_target_kind as any) ?? null,
-        link_target_id: input.link_target_id ?? doc.link_target_id ?? null,
-        link_url: input.link_url ?? doc.link_url ?? '',
-      });
-    }
-
-    const fields = [
-      'title',
-      'description',
-      'media_url',
-      'media_type',
-      'link_url',
-      'scope',
-      'sort_order',
-      'is_active',
-    ] as const;
-    for (const f of fields) if (input[f] !== undefined) (doc as any)[f] = input[f];
-
-    if (input.link_type !== undefined) doc.link_type = input.link_type;
-    if (input.link_target_kind !== undefined) doc.link_target_kind = input.link_target_kind;
-    if (input.link_target_id !== undefined) doc.link_target_id = input.link_target_id;
-
-    if (doc.link_type === 'EXTERNAL') {
-      doc.link_target_kind = null;
-      doc.link_target_id = null;
-    } else if (doc.link_type === 'INTERNAL') {
-      doc.link_url = '';
-    }
-
-    if (input.scope !== undefined || input.location_id !== undefined) {
-      doc.location_id = next.scope === 'GLOBAL' ? null : (next.location_id as any);
-    }
-    if (input.scope !== undefined || input.zone_name !== undefined) {
-      doc.zone_name = next.scope === 'ZONE' ? next.zone_name ?? null : null;
-    }
-    if (input.starts_at !== undefined)
-      doc.starts_at = input.starts_at ? new Date(input.starts_at) : null;
-    if (input.ends_at !== undefined)
-      doc.ends_at = input.ends_at ? new Date(input.ends_at) : null;
-    if (input.super_category_slug !== undefined) {
-      doc.super_category_slug = input.super_category_slug
-        ? String(input.super_category_slug).toLowerCase()
-        : null;
-    }
+    applyDirectFields(doc, input);
+    applyLinkFields(doc, input);
+    applyScopeFields(doc, input, next);
+    applyScheduleAndCategoryFields(doc, input);
 
     await doc.save();
     return toPub(doc);

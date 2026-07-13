@@ -62,7 +62,7 @@ export default function WhenWhereSection() {
         required
         disabled={!clubId}
         error={!!errors.venue_id}
-        helperText={errors.venue_id?.message || (!clubId ? 'Pick a club in Basic Information first.' : venueHint)}
+        helperText={errors.venue_id?.message || (clubId ? venueHint : 'Pick a club in Basic Information first.')}
       >
         {clubVenues.map((venue) => (
           <MenuItem key={venue.id} value={venue.id}>

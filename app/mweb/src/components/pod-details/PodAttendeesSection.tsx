@@ -50,13 +50,14 @@ export default function PodAttendeesSection({
     [attendees, attendeeIds, hostIds]
   );
   const count = people.length;
+  const countPlural = count === 1 ? '' : 's';
 
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
         {totalSpots > 0
           ? `${count} of ${totalSpots} spots filled`
-          : `${count} attendee${count === 1 ? '' : 's'} so far`}
+          : `${count} attendee${countPlural} so far`}
       </Typography>
       {count === 0 ? (
         <Typography variant="caption" color="text.secondary">

@@ -55,7 +55,19 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
       acc[log.type] += 1;
       return acc;
     },
-    { EMAIL: 0, CALL: 0 } as Record<'EMAIL' | 'CALL', number>
+    { EMAIL: 0, CALL: 0 }
+  );
+
+  const logsContent = logs.length === 0 ? (
+    <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+      No communication yet. Email or call from the actions above to start the log.
+    </Typography>
+  ) : (
+    <Stack spacing={1}>
+      {logs.map((log) => (
+        <LogRow key={log.id} log={log} onRequestTranscript={handleTranscript} refreshing={requesting} />
+      ))}
+    </Stack>
   );
 
   return (
@@ -100,16 +112,8 @@ export default function CommsLogsSection({ entityType, entityId }: Readonly<Prop
 
         {loading && !logs.length ? (
           <Box sx={{ py: 4, textAlign: 'center' }}><CircularProgress size={24} /></Box>
-        ) : logs.length === 0 ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-            No communication yet. Email or call from the actions above to start the log.
-          </Typography>
         ) : (
-          <Stack spacing={1}>
-            {logs.map((log) => (
-              <LogRow key={log.id} log={log} onRequestTranscript={handleTranscript} refreshing={requesting} />
-            ))}
-          </Stack>
+          logsContent
         )}
       </CardContent>
     </Card>

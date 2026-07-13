@@ -30,7 +30,7 @@ import { normalizeBankAccountValues } from '../../forms/validation/bankAccount';
 import { STATUSES, UPDATE_VENUE } from './queries';
 
 interface Props {
-  venue: any | null;
+  venue: any;
   onClose: () => void;
   onSaved: () => void;
 }

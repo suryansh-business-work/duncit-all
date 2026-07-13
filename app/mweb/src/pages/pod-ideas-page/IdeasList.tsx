@@ -24,6 +24,25 @@ export default function IdeasList({
   onShare,
   onDelete,
 }: Readonly<IdeasListProps>) {
+  const ideasContent =
+    ideas.length === 0 ? (
+      <Alert severity="info">No ideas yet — be the first to share one!</Alert>
+    ) : (
+      <Stack spacing={1.5}>
+        {ideas.map((idea: any) => (
+          <IdeaCard
+            key={idea.id}
+            idea={idea}
+            myId={myId}
+            onOpen={() => onOpen(idea.id)}
+            onLike={() => onLike(idea.id)}
+            onShare={() => onShare(idea)}
+            onDelete={() => onDelete(idea.id)}
+          />
+        ))}
+      </Stack>
+    );
+
   return (
     <>
       {myIdeas.length > 0 && (
@@ -56,22 +75,8 @@ export default function IdeasList({
         <Box sx={{ py: 6, textAlign: 'center' }}>
           <CircularProgress />
         </Box>
-      ) : ideas.length === 0 ? (
-        <Alert severity="info">No ideas yet — be the first to share one!</Alert>
       ) : (
-        <Stack spacing={1.5}>
-          {ideas.map((idea: any) => (
-            <IdeaCard
-              key={idea.id}
-              idea={idea}
-              myId={myId}
-              onOpen={() => onOpen(idea.id)}
-              onLike={() => onLike(idea.id)}
-              onShare={() => onShare(idea)}
-              onDelete={() => onDelete(idea.id)}
-            />
-          ))}
-        </Stack>
+        ideasContent
       )}
     </>
   );

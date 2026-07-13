@@ -27,8 +27,8 @@ export default function EcommBrandsPage() {
   const [reject] = useMutation(REJECT_BRAND);
   const [setBrandCommission, { loading: savingCommission }] = useMutation(SET_BRAND_COMMISSION);
   const lifecycle = useEntityLifecycle(SET_ECOMM_BRAND_ACTIVE, DELETE_ECOMM_BRAND, refetch);
-  const [active, setActive] = useState<any | null>(null);
-  const [editing, setEditing] = useState<any | null>(null);
+  const [active, setActive] = useState<any>(null);
+  const [editing, setEditing] = useState<any>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
 

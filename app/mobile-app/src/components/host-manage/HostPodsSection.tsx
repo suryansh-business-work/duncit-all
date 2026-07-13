@@ -67,7 +67,7 @@ export function HostPodsSection() {
           title={pod.pod_title}
           when={formatWhen(pod.pod_date_time)}
           zoneName={pod.zone_name}
-          typeLabel={pod.pod_type.replace(/_/g, ' ')}
+          typeLabel={pod.pod_type.replaceAll('_', ' ')}
           onOpen={() => openPod(pod)}
           onComplete={() =>
             setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id })

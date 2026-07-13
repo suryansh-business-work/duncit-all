@@ -58,6 +58,7 @@ export default function RecurringAvailabilityDialog({
   const canCreate = result.errors.length === 0 && result.summary.total > 0 && !submitting;
   const datesPicked = !!form.startDate && !!form.endDate;
   const advanceCap = effectiveMaxAdvance(venueSettings.rules.max_advance_days);
+  const slotPlural = result.summary.total === 1 ? '' : 's';
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="lg" fullScreen={fullScreen} scroll="paper">
@@ -110,7 +111,7 @@ export default function RecurringAvailabilityDialog({
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={close}>Cancel</Button>
         <Button variant="contained" disabled={!canCreate} onClick={handleCreate}>
-          {submitting ? 'Creating…' : `Create ${result.summary.total} slot${result.summary.total === 1 ? '' : 's'}`}
+          {submitting ? 'Creating…' : `Create ${result.summary.total} slot${slotPlural}`}
         </Button>
       </DialogActions>
     </Dialog>

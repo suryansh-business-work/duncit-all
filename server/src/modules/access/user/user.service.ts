@@ -54,7 +54,7 @@ const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
 // Escape user-supplied search terms before building a RegExp so special chars
 // (., *, (, etc.) are matched literally and cannot break the query.
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const EMAIL_OTP_MINUTES = 10;
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
 // Privileged role keys that require phone-verified + 2FA for elevated session.
@@ -105,7 +105,7 @@ async function loadRelationIds(userId: string) {
   };
 }
 
-const escapeSavedRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeSavedRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /** Walk the category tree downward so a SUPER/CATEGORY selection also matches its
  * descendant sub-categories (a club may be tagged at any level). */
@@ -270,10 +270,11 @@ async function startTwilioRecordedBridge(actionId: string, target: string) {
     From: fromNumber,
     Twiml: twiml,
   });
+  const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`, {
     method: 'POST',
     headers: {
-      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+      Authorization: `Basic ${basicAuth}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body,
@@ -455,6 +456,8 @@ async function toPublic(u: any) {
 
   const firstName = profile.first_name ?? legacy.first_name ?? '';
   const lastName = profile.last_name ?? legacy.last_name ?? '';
+  const legacyDob = legacy.dob ? new Date(legacy.dob).toISOString() : '';
+  const dob = profile.dob ? new Date(profile.dob).toISOString() : legacyDob;
   return {
     user_id: userId,
     first_name: firstName,
@@ -469,12 +472,7 @@ async function toPublic(u: any) {
     last_login_provider: auth.last_login_provider ?? legacy.last_login_provider ?? null,
     last_login_at:
       (auth.last_login_at ?? legacy.last_login_at)?.toISOString?.() ?? null,
-    dob:
-      profile.dob
-        ? new Date(profile.dob).toISOString()
-        : legacy.dob
-        ? new Date(legacy.dob).toISOString()
-        : '',
+    dob,
     country: profile.country ?? legacy.country ?? 'India',
     city: profile.city ?? legacy.city ?? null,
     state: profile.state ?? null,
@@ -581,6 +579,76 @@ function shapeUserDoc(input: any, opts?: { passwordHash?: string; googleId?: str
   };
 }
 
+/** Map a Mongo duplicate-key error raised by register() onto its user-facing CONFLICT. */
+function registerDuplicateError(e: any): GraphQLError {
+  const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
+  if (key.includes('phone')) {
+    return new GraphQLError(
+      'This phone number is already registered. Please use a different number or login.',
+      { extensions: { code: 'CONFLICT' } }
+    );
+  }
+  if (key.includes('email')) {
+    return new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
+  }
+  return new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
+}
+
+/** Map an error raised by the signupWithGoogle transaction onto the error to rethrow. */
+function googleSignupError(e: any): any {
+  if (e instanceof GraphQLError) return e;
+  if (e?.code !== 11000) return e;
+  const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
+  if (key.includes('phone')) {
+    return new GraphQLError(
+      'This phone number is already registered. Please use a different number or login.',
+      { extensions: { code: 'CONFLICT' } }
+    );
+  }
+  if (key.includes('email') || key.includes('google')) {
+    return new GraphQLError('Account already exists. Please login instead.', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+  return new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
+}
+
+/** Map the admin UpdateUserDTO field names onto their document dot-paths. */
+const ADMIN_UPDATE_PATHS: Record<string, string> = {
+  first_name: 'profile.first_name',
+  last_name: 'profile.last_name',
+  bio: 'profile.bio',
+  profile_photo: 'profile.profile_photo',
+  city: 'profile.city',
+  state: 'profile.state',
+  pincode: 'profile.pincode',
+  zone: 'profile.zone',
+  email: 'auth.email',
+  phone_extension: 'auth.phone.extension',
+  dob: 'profile.dob',
+  status: 'metadata.status',
+  assigned_city: 'profile.assigned_city',
+  assigned_zones: 'metadata.assigned_zones',
+  host_share_pct: 'finance.host_share_pct',
+  host_commission_pct: 'finance.host_commission_pct',
+};
+
+/** Build the `$set` document for an admin user update. Throws on a placeholder phone. */
+function buildAdminUserSet(input: UpdateUserDTO): Record<string, any> {
+  const set: Record<string, any> = {};
+  for (const [field, path] of Object.entries(ADMIN_UPDATE_PATHS)) {
+    if ((input as any)[field] !== undefined) set[path] = (input as any)[field];
+  }
+  if ((input as any).phone_number !== undefined) {
+    const v = (input as any).phone_number;
+    if (v && isPlaceholderPhone(v)) {
+      throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    set['auth.phone.number'] = v;
+  }
+  return set;
+}
+
 export const userService = {
   // Backward-compat helper used by other modules. Returns the materialized
   // flat shape (toPublic) for a given doc.
@@ -619,19 +687,7 @@ export const userService = {
         scope: { city: null, zone: null },
       });
     } catch (e: any) {
-      if (e?.code === 11000) {
-        const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
-        if (key.includes('phone')) {
-          throw new GraphQLError(
-            'This phone number is already registered. Please use a different number or login.',
-            { extensions: { code: 'CONFLICT' } }
-          );
-        }
-        if (key.includes('email')) {
-          throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
-        }
-        throw new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
-      }
+      if (e?.code === 11000) throw registerDuplicateError(e);
       throw e;
     }
 
@@ -775,23 +831,7 @@ export const userService = {
         );
       });
     } catch (e: any) {
-      if (e instanceof GraphQLError) throw e;
-      if (e?.code === 11000) {
-        const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
-        if (key.includes('phone')) {
-          throw new GraphQLError(
-            'This phone number is already registered. Please use a different number or login.',
-            { extensions: { code: 'CONFLICT' } }
-          );
-        }
-        if (key.includes('email') || key.includes('google')) {
-          throw new GraphQLError('Account already exists. Please login instead.', {
-            extensions: { code: 'CONFLICT' },
-          });
-        }
-        throw new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
-      }
-      throw e;
+      throw googleSignupError(e);
     } finally {
       await session.endSession();
     }
@@ -1322,7 +1362,7 @@ export const userService = {
       throw new GraphQLError('Invalid club', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const club = await ClubModel.findById(clubId).select('_id is_active');
-    if (!club || !club.is_active) {
+    if (!club?.is_active) {
       throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
     }
     const oid = new Types.ObjectId(user_id);
@@ -1356,7 +1396,7 @@ export const userService = {
       throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const pod = await PodModel.findById(podId).select('_id is_active');
-    if (!pod || !pod.is_active) {
+    if (!pod?.is_active) {
       throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     }
     const oid = new Types.ObjectId(user_id);
@@ -1702,45 +1742,7 @@ export const userService = {
   },
 
   async update(user_id: string, input: UpdateUserDTO) {
-    const set: Record<string, any> = {};
-    const profileFields = [
-      'first_name',
-      'last_name',
-      'bio',
-      'profile_photo',
-      'city',
-      'state',
-      'pincode',
-      'zone',
-    ] as const;
-    for (const f of profileFields) {
-      if ((input as any)[f] !== undefined) set[`profile.${f}`] = (input as any)[f];
-    }
-    if ((input as any).email !== undefined) set['auth.email'] = (input as any).email;
-    if ((input as any).phone_number !== undefined) {
-      const v = (input as any).phone_number;
-      if (v && isPlaceholderPhone(v)) {
-        throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-      set['auth.phone.number'] = v;
-    }
-    if ((input as any).phone_extension !== undefined) {
-      set['auth.phone.extension'] = (input as any).phone_extension;
-    }
-    if ((input as any).dob !== undefined) set['profile.dob'] = (input as any).dob;
-    if ((input as any).status !== undefined) set['metadata.status'] = (input as any).status;
-    if ((input as any).assigned_city !== undefined) {
-      set['profile.assigned_city'] = (input as any).assigned_city;
-    }
-    if ((input as any).assigned_zones !== undefined) {
-      set['metadata.assigned_zones'] = (input as any).assigned_zones;
-    }
-    if ((input as any).host_share_pct !== undefined) {
-      set['finance.host_share_pct'] = (input as any).host_share_pct;
-    }
-    if ((input as any).host_commission_pct !== undefined) {
-      set['finance.host_commission_pct'] = (input as any).host_commission_pct;
-    }
+    const set = buildAdminUserSet(input);
     const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
@@ -1887,7 +1889,19 @@ export const userService = {
     const existing = await UserModel.findOne({ 'auth.email': DEFAULT_EMAIL });
     let created = false;
 
-    if (!existing) {
+    if (existing) {
+      const hasSuper = (existing.metadata?.role_keys ?? []).includes('SUPER_ADMIN');
+      if (!hasSuper) {
+        await replaceUserRoles(
+          String(existing._id),
+          [...(existing.metadata?.role_keys ?? []), 'SUPER_ADMIN'],
+          {
+            assignedZones: existing.metadata?.assigned_zones ?? [],
+            assignedCity: existing.profile?.assigned_city ?? null,
+          }
+        );
+      }
+    } else {
       const hashed = await bcrypt.hash(DEFAULT_PASSWORD, 10);
       // Seed uses sentinel phone 0000000000 / +91 by design — these rows are
       // the only place that bypasses the placeholder-phone validator. Mark
@@ -1917,18 +1931,6 @@ export const userService = {
         scope: { city: null, zone: null },
       });
       created = true;
-    } else {
-      const hasSuper = (existing.metadata?.role_keys ?? []).includes('SUPER_ADMIN');
-      if (!hasSuper) {
-        await replaceUserRoles(
-          String(existing._id),
-          [...(existing.metadata?.role_keys ?? []), 'SUPER_ADMIN'],
-          {
-            assignedZones: existing.metadata?.assigned_zones ?? [],
-            assignedCity: existing.profile?.assigned_city ?? null,
-          }
-        );
-      }
     }
 
     let emailed = false;

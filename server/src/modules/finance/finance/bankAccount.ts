@@ -31,7 +31,7 @@ export const bankAccountSchema = new Schema<IBankAccountVerification>(
   { _id: false }
 );
 
-const clean = (value: unknown) => String(value ?? '').trim();
+const clean = (value?: string | null) => String(value ?? '').trim();
 
 export function normalizeBankAccountInput(input: any): IBankAccountVerification {
   const method = clean(input?.payout_method).toUpperCase() as BankPayoutMethod;

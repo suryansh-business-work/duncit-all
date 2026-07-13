@@ -2,7 +2,6 @@ import { categoryService } from './category.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
 export const categoryResolvers = {
@@ -31,5 +30,3 @@ export const categoryResolvers = {
     },
   },
 };
-
-void ADMIN_READ;

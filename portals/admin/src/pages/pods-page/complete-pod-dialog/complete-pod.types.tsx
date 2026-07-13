@@ -8,7 +8,7 @@ export interface CompletePodValues {
 
 export interface CompletePodDialogProps {
   open: boolean;
-  pod: any | null;
+  pod: any;
   users: any[];
   busy: boolean;
   errorMessage?: string | null;

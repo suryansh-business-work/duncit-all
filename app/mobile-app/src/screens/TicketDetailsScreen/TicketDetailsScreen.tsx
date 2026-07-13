@@ -102,13 +102,7 @@ export function TicketDetailsScreen() {
         <Spinner size="large" testID="ticket-details-loading" />
       </YStack>
     );
-  } else if (!ticket) {
-    ticketBody = (
-      <Text testID="ticket-details-missing" textAlign="center" color="$muted" padding={24}>
-        This ticket is unavailable.
-      </Text>
-    );
-  } else {
+  } else if (ticket) {
     ticketBody = (
       <YStack flex={1}>
         <YStack padding={16} gap={6} borderBottomWidth={1} borderColor="$borderColor">
@@ -153,6 +147,12 @@ export function TicketDetailsScreen() {
         />
         <TicketComposer locked={!!resolved} busy={a.busy} onSend={onSendReply} />
       </YStack>
+    );
+  } else {
+    ticketBody = (
+      <Text testID="ticket-details-missing" textAlign="center" color="$muted" padding={24}>
+        This ticket is unavailable.
+      </Text>
     );
   }
 

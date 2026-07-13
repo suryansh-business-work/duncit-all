@@ -32,6 +32,8 @@ export default function EcommBrandPage() {
   const brandId = editingBrand?.id;
   const locked = editingBrand?.status === 'SUBMITTED' || editingBrand?.status === 'APPROVED';
   const defaultValues = useMemo(() => toFormValues(editingBrand, accountEmail), [editingBrand, accountEmail]);
+  const existingBrandTitle = locked ? 'Brand details' : 'Edit brand';
+  const dialogTitle = editing === 'new' ? 'New brand' : existingBrandTitle;
 
   const pickImage = () =>
     new Promise<string | null>((resolve) => {
@@ -116,7 +118,7 @@ export default function EcommBrandPage() {
 
       <Dialog open={!!editing} onClose={closeDialog} fullWidth maxWidth="sm">
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-          <span>{editing === 'new' ? 'New brand' : locked ? 'Brand details' : 'Edit brand'}</span>
+          <span>{dialogTitle}</span>
           <IconButton size="small" onClick={closeDialog} aria-label="Close"><CloseIcon /></IconButton>
         </DialogTitle>
         <DialogContent dividers>

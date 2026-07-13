@@ -134,7 +134,7 @@ export default function WhatsAppBrowser() {
               page={page}
               onPageChange={(_e, p) => setPage(p)}
               rowsPerPage={pageSize}
-              onRowsPerPageChange={(e) => { setPageSize(parseInt(e.target.value, 10)); setPage(0); }}
+              onRowsPerPageChange={(e) => { setPageSize(Number.parseInt(e.target.value, 10)); setPage(0); }}
               rowsPerPageOptions={[25, 50, 100]}
             />
           )}

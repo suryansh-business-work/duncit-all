@@ -147,7 +147,9 @@ export function LiveChatScreen() {
           timeZone={timeZone}
           typing={typing}
           aiThinking={aiThinking}
-          onRetry={(m) => void retry(m)}
+          onRetry={(m) => {
+            retry(m);
+          }}
           onScroll={onScroll}
           onContentSizeChange={handleContentSizeChange}
         />

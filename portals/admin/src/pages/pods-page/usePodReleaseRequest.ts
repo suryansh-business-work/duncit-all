@@ -11,7 +11,7 @@ interface Args {
 
 export default function usePodReleaseRequest({ refetch, setToast }: Args) {
   const [completePodSettlement] = useMutation(COMPLETE_POD_SETTLEMENT);
-  const [completePod, setCompletePod] = useState<any | null>(null);
+  const [completePod, setCompletePod] = useState<any>(null);
   const [releaseBusy, setReleaseBusy] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);
   const [releaseSummary, setReleaseSummary] = useState<ReleaseSummary | null>(null);

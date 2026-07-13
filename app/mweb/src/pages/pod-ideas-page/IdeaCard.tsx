@@ -39,6 +39,8 @@ export default function IdeaCard({
 }: Readonly<IdeaCardProps>) {
   const author = idea.author;
   const isMine = myId && idea.author_id === myId;
+  const notApprovedColor = idea.status === 'REJECTED' ? 'error' : 'warning';
+  const statusColor = idea.status === 'APPROVED' ? 'success' : notApprovedColor;
   return (
     <Card variant="outlined">
       <CardContent>
@@ -55,17 +57,7 @@ export default function IdeaCard({
             </Typography>
           </Box>
           {showStatus && (
-            <Chip
-              size="small"
-              label={idea.status}
-              color={
-                idea.status === 'APPROVED'
-                  ? 'success'
-                  : idea.status === 'REJECTED'
-                    ? 'error'
-                    : 'warning'
-              }
-            />
+            <Chip size="small" label={idea.status} color={statusColor} />
           )}
           {isMine && (
             <Tooltip title="Delete">

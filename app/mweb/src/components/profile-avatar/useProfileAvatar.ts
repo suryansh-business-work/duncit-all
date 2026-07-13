@@ -20,7 +20,7 @@ interface Story {
 function toBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
     reader.onerror = () => reject(new Error('Could not read the selected image'));
     reader.readAsDataURL(file);
   });

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { POSTAL_CODE_PATTERN, zodRules } from '../../../forms/validation/rules';
 import type { RegisterVenueValues, VenueSectionKey } from './register-venue.types';
 
-const PAN_PATTERN = /^[A-Z]{5}[0-9]{4}[A-Z]$/;
+const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/;
 const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/;
 const OWNER_PHONE_PATTERN = /^\+?\d{6,15}$/;
 

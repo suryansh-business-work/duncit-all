@@ -53,7 +53,7 @@ interface GenerateMeetingLinkResponse {
  */
 export async function generateMeetingLink(input: GenerateMeetingLinkInput): Promise<string> {
   const endpoint =
-    (typeof window !== 'undefined' && (window as any).__GRAPHQL_URL__) ||
+    (typeof globalThis.window !== 'undefined' && (globalThis as any).__GRAPHQL_URL__) ||
     urlConfigs.graphqlUrl;
 
   const query = /* GraphQL */ `

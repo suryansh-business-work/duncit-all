@@ -94,7 +94,11 @@ export default function PartnerDashboardPage() {
               {loading && <CircularProgress size={22} />}
             </Stack>
             <Tabs value={tab} onChange={(_event, value) => setTab(value)} variant="scrollable" allowScrollButtonsMobile>
-              {tabs.map((item) => <Tab key={item.value} value={item.value} label={`${item.label}${itemCounts[item.value] ? ` (${itemCounts[item.value]})` : ''}`} />)}
+              {tabs.map((item) => {
+                const count = itemCounts[item.value];
+                const countSuffix = count ? ` (${count})` : '';
+                return <Tab key={item.value} value={item.value} label={`${item.label}${countSuffix}`} />;
+              })}
             </Tabs>
             {hasItems && <DashboardMetricCards metrics={metrics} tab={tab} />}
             <DashboardPanels tab={tab} venues={venues} pods={pods} products={products} hasRoleAccess={roleAccess[tab]} />

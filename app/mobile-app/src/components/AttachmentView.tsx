@@ -16,7 +16,7 @@ function FileCard({ info }: Readonly<{ info: AttachmentInfo }>) {
       testID={`support-attach-${info.url}`}
       role="button"
       aria-label={`Open ${info.name}`}
-      onPress={() => void Linking.openURL(info.url)}
+      onPress={() => Linking.openURL(info.url)}
       alignItems="center"
       gap={8}
       padding={8}

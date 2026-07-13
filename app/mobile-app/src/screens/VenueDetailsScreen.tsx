@@ -76,7 +76,7 @@ function VenueDetailsContent({
       >
         {gallery[0] ? (
           <AppImage
-            source={{ uri: gallery[0] as string }}
+            source={{ uri: gallery[0] }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
           />
@@ -145,6 +145,14 @@ export function VenueDetailsScreen() {
   const venueId = route.params?.venueId ?? '';
   const { venue, isLoading, error } = useVenueDetails(venueId);
   const gallery = venue ? [venue.cover_image_url, ...(venue.gallery ?? [])].filter(Boolean) : [];
+  const body =
+    error || !venue ? (
+      <Text testID="venue-details-missing" padding={24} color="$muted">
+        This venue is unavailable or not approved yet.
+      </Text>
+    ) : (
+      <VenueDetailsContent venue={venue} gallery={gallery} />
+    );
 
   return (
     <StackScreen title={venue?.venue_name || 'Venue'} testID="venue-details-screen">
@@ -152,12 +160,8 @@ export function VenueDetailsScreen() {
         <YStack flex={1} alignItems="center" justifyContent="center">
           <Spinner testID="venue-details-loading" color="$primary" />
         </YStack>
-      ) : error || !venue ? (
-        <Text testID="venue-details-missing" padding={24} color="$muted">
-          This venue is unavailable or not approved yet.
-        </Text>
       ) : (
-        <VenueDetailsContent venue={venue} gallery={gallery} />
+        body
       )}
     </StackScreen>
   );

@@ -1,6 +1,6 @@
 import { gql, useLazyQuery } from '@apollo/client';
 import { useState } from 'react';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import AppleIcon from '@mui/icons-material/Apple';
 import DownloadIcon from '@mui/icons-material/Download';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';

@@ -47,7 +47,7 @@ const toFilterInput = (f: ExpenseFilterState) => ({
 export default function ExpenseManagementPage() {
   const [filters, setFilters] = useState<ExpenseFilterState>(BLANK_FILTERS);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [active, setActive] = useState<any | null>(null);
+  const [active, setActive] = useState<any>(null);
 
   const filter = toFilterInput(filters);
   const expensesQ = useQuery(EXPENSES, { variables: { filter }, fetchPolicy: 'cache-and-network' });

@@ -159,7 +159,10 @@ export default function ExtractionWidget() {
           <IconButton
             size="small"
             color={running ? 'error' : 'default'}
-            onClick={() => (running ? void cancel() : setHiddenId(job.id))}
+            onClick={() => {
+              if (running) cancel().catch(console.error);
+              else setHiddenId(job.id);
+            }}
           >
             <CloseIcon fontSize="small" />
           </IconButton>

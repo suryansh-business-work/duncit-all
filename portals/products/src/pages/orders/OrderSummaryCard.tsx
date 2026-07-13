@@ -40,6 +40,8 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
         .filter(Boolean)
         .join(', ')
     : 'Pickup order — no shipping address';
+  const phoneSuffix = order.buyer_phone ? ` · ${order.buyer_phone}` : '';
+  const contactText = `${order.buyer_email}${phoneSuffix}`;
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -49,7 +51,7 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
             <Field label="Buyer" value={order.buyer_name} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <Field label="Contact" value={`${order.buyer_email}${order.buyer_phone ? ` · ${order.buyer_phone}` : ''}`} />
+            <Field label="Contact" value={contactText} />
           </Grid>
           <Grid item xs={12} sm={6}>
             <Field label="Pod" value={order.pod?.pod_title ?? '—'} />

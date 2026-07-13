@@ -17,6 +17,7 @@ import { useChatRoom } from '@/hooks/useChatRoom';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 
@@ -46,7 +47,7 @@ export function ChatRoomScreen() {
   };
 
   const handleSelectEmoji = (emoji: string) => {
-    if (emojiFor?.type === 'react') void react(emojiFor.id, emoji);
+    if (emojiFor?.type === 'react') fireAndForget(react(emojiFor.id, emoji));
     else setText((prev) => prev + emoji);
     setEmojiFor(null);
   };

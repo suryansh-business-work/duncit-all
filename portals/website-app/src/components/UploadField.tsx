@@ -46,7 +46,7 @@ export default function UploadField({
   const readAsDataUrl = (file: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
       reader.onerror = () => reject(new Error('Could not read selected file'));
       reader.readAsDataURL(file);
     });

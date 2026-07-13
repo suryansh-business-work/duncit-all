@@ -218,7 +218,7 @@ async function createSlotsCore(
       space_label: p.space_label,
       capacity: p.capacity,
       notes: p.notes,
-      status: 'AVAILABLE' as VenueSlotStatus,
+      status: 'AVAILABLE',
     }))
   );
   return withVenueAndPod(docs as IVenueSlot[]);
@@ -295,6 +295,47 @@ async function matchingBulkSlots(
   return docs.filter((s) => set.has(s.start_at.getDay()));
 }
 
+/** Bulk price/status change with no time shift — a single atomic updateMany. */
+async function bulkSetFields(slots: IVenueSlot[], set: { price?: number; status?: VenueSlotStatus }) {
+  if (set.price === undefined && set.status === undefined) {
+    fail('BAD_USER_INPUT', 'No bulk update specified');
+  }
+  const ids = slots.map((s) => s._id);
+  const r = await VenueSlotModel.updateMany({ _id: { $in: ids } }, { $set: set });
+  return { matched: slots.length, affected: r.modifiedCount ?? 0, skipped: 0 };
+}
+
+/** The shifted / resized window for one bulk-updated slot, or null when the slot
+ * must be skipped (out of range, in the past, or colliding with another slot). */
+async function bulkShiftedWindow(
+  slot: IVenueSlot,
+  input: { shift_minutes?: number; set_duration_minutes?: number },
+  rules: SlotRules
+): Promise<{ start: Date; end: Date } | null> {
+  let start = new Date(slot.start_at);
+  let end = new Date(slot.end_at);
+  if (input.shift_minutes !== undefined) {
+    start = new Date(start.getTime() + input.shift_minutes * 60_000);
+    end = new Date(end.getTime() + input.shift_minutes * 60_000);
+  }
+  if (input.set_duration_minutes !== undefined) {
+    end = new Date(start.getTime() + input.set_duration_minutes * 60_000);
+  }
+  try {
+    validateSlotWindow(start, end, rules);
+  } catch {
+    return null; // out of range / past → skip this slot, keep the batch
+  }
+  const overlap = await findOverlap(
+    String(slot.venue_id),
+    start,
+    end,
+    slot.space_label ?? '',
+    String(slot._id)
+  );
+  return overlap ? null : { start, end };
+}
+
 /** Best-effort in-app note to the pod's hosts when a venue decides a request. */
 async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean, reason?: string | null) {
   try {
@@ -316,6 +357,29 @@ async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean,
     // eslint-disable-next-line no-console
     console.error('[venueSlot] decision notification failed:', err);
   }
+}
+
+/** One pending booking request row: the slot joined with its requesting pod,
+ * that pod's first host's contact details and the venue name. */
+function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
+  const hostName = host
+    ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
+    : '';
+  return {
+    slot_id: String(s._id),
+    venue_id: String(s.venue_id),
+    venue_name: venueName,
+    start_at: s.start_at.toISOString(),
+    end_at: s.end_at.toISOString(),
+    price: s.price ?? 0,
+    requested_at: s.updated_at?.toISOString() ?? '',
+    pod_id: String(pod._id),
+    pod_title: pod.pod_title ?? '',
+    pod_description: pod.pod_description ?? '',
+    host_name: hostName,
+    host_email: host?.auth?.email ?? '',
+    host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
+  };
 }
 
 export const venueSlotService = {
@@ -440,7 +504,7 @@ export const venueSlotService = {
         end_at: p.end,
         price: p.price,
         notes: p.notes,
-        status: 'AVAILABLE' as VenueSlotStatus,
+        status: 'AVAILABLE',
       }))
     );
     return docs.length;
@@ -510,42 +574,18 @@ export const venueSlotService = {
     if (input.block !== undefined) set.status = input.block ? 'BLOCKED' : 'AVAILABLE';
     const shiftsTime = input.shift_minutes !== undefined || input.set_duration_minutes !== undefined;
 
-    if (!shiftsTime) {
-      if (set.price === undefined && set.status === undefined) {
-        fail('BAD_USER_INPUT', 'No bulk update specified');
-      }
-      const ids = slots.map((s) => s._id);
-      const r = await VenueSlotModel.updateMany({ _id: { $in: ids } }, { $set: set });
-      return { matched: slots.length, affected: r.modifiedCount ?? 0, skipped: 0 };
-    }
+    if (!shiftsTime) return bulkSetFields(slots, set);
 
     let affected = 0;
     let skipped = 0;
     for (const slot of slots) {
-      let start = new Date(slot.start_at);
-      let end = new Date(slot.end_at);
-      if (input.shift_minutes !== undefined) {
-        start = new Date(start.getTime() + input.shift_minutes * 60_000);
-        end = new Date(end.getTime() + input.shift_minutes * 60_000);
-      }
-      if (input.set_duration_minutes !== undefined) {
-        end = new Date(start.getTime() + input.set_duration_minutes * 60_000);
-      }
-      let windowOk = true;
-      try {
-        validateSlotWindow(start, end, rules);
-      } catch {
-        windowOk = false; // out of range / past → skip this slot, keep the batch
-      }
-      if (
-        !windowOk ||
-        (await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id)))
-      ) {
+      const shifted = await bulkShiftedWindow(slot, input, rules);
+      if (!shifted) {
         skipped += 1;
         continue;
       }
-      slot.start_at = start;
-      slot.end_at = end;
+      slot.start_at = shifted.start;
+      slot.end_at = shifted.end;
       if (set.price !== undefined) slot.price = set.price;
       if (set.status !== undefined) slot.status = set.status;
       await (slot as any).save();
@@ -599,24 +639,7 @@ export const venueSlotService = {
       .map((s) => {
         const pod = podMap.get(String(s.booked_by_pod_id))!;
         const host: any = hostMap.get(String((pod.pod_hosts_id ?? [])[0])) ?? null;
-        const hostName = host
-          ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
-          : '';
-        return {
-          slot_id: String(s._id),
-          venue_id: String(s.venue_id),
-          venue_name: venueMap.get(String(s.venue_id)) ?? '',
-          start_at: s.start_at.toISOString(),
-          end_at: s.end_at.toISOString(),
-          price: s.price ?? 0,
-          requested_at: s.updated_at?.toISOString() ?? '',
-          pod_id: String(pod._id),
-          pod_title: pod.pod_title ?? '',
-          pod_description: pod.pod_description ?? '',
-          host_name: hostName,
-          host_email: host?.auth?.email ?? '',
-          host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
-        };
+        return toRequestRow(s, pod, host, venueMap.get(String(s.venue_id)) ?? '');
       });
   },
 

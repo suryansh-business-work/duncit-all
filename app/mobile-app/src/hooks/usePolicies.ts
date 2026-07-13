@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 import { usePolicyStore, usePublicPoliciesStore } from '@/stores/policies.store';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Public policy links for the drawer's Policies section. */
 export function usePublicPolicies() {
@@ -21,7 +22,7 @@ export function usePolicy(slug: string) {
   const fetch = usePolicyStore((s) => s.fetch);
 
   useEffect(() => {
-    if (slug) void fetch(slug);
+    if (slug) fireAndForget(fetch(slug));
   }, [slug, fetch]);
 
   return {

@@ -15,7 +15,7 @@ jest.mock('@/stores/theme.store', () => ({
 
 const mockedHook = jest.mocked(Google.useIdTokenAuthRequest);
 
-function mockHook(response: unknown, promptAsync = jest.fn()) {
+function mockHook(response: unknown, promptAsync = jest.fn().mockResolvedValue(undefined)) {
   mockedHook.mockReturnValue([{} as never, response as never, promptAsync as never]);
   return promptAsync;
 }

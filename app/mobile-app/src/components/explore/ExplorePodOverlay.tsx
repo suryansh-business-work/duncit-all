@@ -28,6 +28,70 @@ function Chip({ icon, label, tint }: Readonly<{ icon?: string; label: string; ti
   );
 }
 
+/** The tappable club row (avatar + name + verified badge) at the top of the overlay. */
+function ClubLink({
+  clubName,
+  isVerified,
+  onOpenClub,
+}: Readonly<{ clubName: string; isVerified?: boolean; onOpenClub?: () => void }>) {
+  return (
+    <PressScale testID="explore-club-link" accessibilityLabel={clubName} onPress={onOpenClub}>
+      <XStack alignItems="center" gap={8}>
+        <YStack
+          width={24}
+          height={24}
+          borderRadius={12}
+          backgroundColor="$primary"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialIcons name="groups" size={14} color="#ffffff" />
+        </YStack>
+        <Text color="#ffffff" fontSize={13} fontWeight="900" numberOfLines={1}>
+          {clubName}
+        </Text>
+        {isVerified ? (
+          <MaterialIcons testID="explore-club-verified" name="verified" size={15} color="#1d9bf0" />
+        ) : null}
+      </XStack>
+    </PressScale>
+  );
+}
+
+/** The pod description, clamped to 2 lines with a More / Show less toggle when long. */
+function Caption({
+  description,
+  collapsible,
+  expanded,
+  onToggle,
+}: Readonly<{
+  description: string;
+  collapsible: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+}>) {
+  const lines = collapsible && !expanded ? 2 : undefined;
+  const toggleLabel = expanded ? 'Show less' : 'More';
+
+  return (
+    <YStack testID="explore-caption-wrap" onPress={collapsible ? onToggle : undefined}>
+      <Text
+        testID="explore-caption"
+        color="rgba(255,255,255,0.9)"
+        fontSize={13}
+        numberOfLines={lines}
+      >
+        {description}
+      </Text>
+      {collapsible ? (
+        <Text testID="explore-caption-toggle" color="#ffffff" fontSize={12} fontWeight="800">
+          {toggleLabel}
+        </Text>
+      ) : null}
+    </YStack>
+  );
+}
+
 interface ExplorePodOverlayProps {
   pod: ExplorePod;
   clubName?: string;
@@ -49,6 +113,7 @@ export function ExplorePodOverlay({
   const isFree = pod.pod_type.includes('FREE');
   const description = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
+  const toggleCaption = () => setExpanded((v) => !v);
 
   return (
     <>
@@ -59,54 +124,18 @@ export function ExplorePodOverlay({
       />
       <YStack position="absolute" left={16} right={80} bottom={bottom} gap={8}>
         {clubName ? (
-          <PressScale testID="explore-club-link" accessibilityLabel={clubName} onPress={onOpenClub}>
-            <XStack alignItems="center" gap={8}>
-              <YStack
-                width={24}
-                height={24}
-                borderRadius={12}
-                backgroundColor="$primary"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <MaterialIcons name="groups" size={14} color="#ffffff" />
-              </YStack>
-              <Text color="#ffffff" fontSize={13} fontWeight="900" numberOfLines={1}>
-                {clubName}
-              </Text>
-              {isVerified ? (
-                <MaterialIcons
-                  testID="explore-club-verified"
-                  name="verified"
-                  size={15}
-                  color="#1d9bf0"
-                />
-              ) : null}
-            </XStack>
-          </PressScale>
+          <ClubLink clubName={clubName} isVerified={isVerified} onOpenClub={onOpenClub} />
         ) : null}
         <Text color="#ffffff" fontSize={22} fontWeight="900" numberOfLines={2}>
           {pod.pod_title}
         </Text>
         {description ? (
-          <YStack
-            testID="explore-caption-wrap"
-            onPress={collapsible ? () => setExpanded((v) => !v) : undefined}
-          >
-            <Text
-              testID="explore-caption"
-              color="rgba(255,255,255,0.9)"
-              fontSize={13}
-              numberOfLines={collapsible && !expanded ? 2 : undefined}
-            >
-              {description}
-            </Text>
-            {collapsible ? (
-              <Text testID="explore-caption-toggle" color="#ffffff" fontSize={12} fontWeight="800">
-                {expanded ? 'Show less' : 'More'}
-              </Text>
-            ) : null}
-          </YStack>
+          <Caption
+            description={description}
+            collapsible={collapsible}
+            expanded={expanded}
+            onToggle={toggleCaption}
+          />
         ) : null}
         <XStack gap={8} flexWrap="wrap">
           <Chip

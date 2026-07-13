@@ -17,7 +17,9 @@ const FALLBACK_DATE = 'dd MMM yyyy';
 const FALLBACK_TIME = 'HH:mm';
 const FALLBACK_ZONE = 'Asia/Kolkata';
 
-function toDate(input: string | number | Date | null | undefined): Date | null {
+type DateInput = string | number | Date | null | undefined;
+
+function toDate(input: DateInput): Date | null {
   if (!input) return null;
   const d = input instanceof Date ? input : new Date(input);
   return Number.isNaN(d.getTime()) ? null : d;
@@ -35,7 +37,7 @@ export function useDateFormat() {
   const timeFormat: string = settings?.time_format || FALLBACK_TIME;
   const timeZone: string = settings?.time_zone || FALLBACK_ZONE;
 
-  const safeFmt = (input: string | number | Date | null | undefined, pattern: string) => {
+  const safeFmt = (input: DateInput, pattern: string) => {
     const d = toDate(input);
     if (!d) return '';
     try {
@@ -45,7 +47,7 @@ export function useDateFormat() {
     }
   };
 
-  const dayLabel = (input: string | number | Date | null | undefined) => {
+  const dayLabel = (input: DateInput) => {
     const d = toDate(input);
     if (!d) return '';
     if (isToday(d)) return 'Today';
@@ -55,10 +57,10 @@ export function useDateFormat() {
 
   return {
     timeZone,
-    formatTime: (input: string | number | Date | null | undefined) => safeFmt(input, timeFormat),
+    formatTime: (input: DateInput) => safeFmt(input, timeFormat),
     /** Returns Today / Yesterday / the configured date pattern. */
     dayLabel,
     /** Calendar-day key (in the configured zone) used to group messages. */
-    dayKey: (input: string | number | Date | null | undefined) => safeFmt(input, 'yyyy-MM-dd'),
+    dayKey: (input: DateInput) => safeFmt(input, 'yyyy-MM-dd'),
   };
 }

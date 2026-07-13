@@ -24,13 +24,13 @@ const BLANK = { category: 'RENT', amount: '', vendor_name: '', payment_method: '
 
 interface Props {
   open: boolean;
-  expense: any | null;
+  expense: any;
   onClose: () => void;
   onSaved: () => void;
 }
 
 export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Readonly<Props>) {
-  const [current, setCurrent] = useState<any | null>(null);
+  const [current, setCurrent] = useState<any>(null);
   const [date, setDate] = useState<Date | null>(new Date());
   const [form, setForm] = useState(BLANK);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
 
   const save = async () => {
     setError(null);
-    if (!(Number(form.amount) > 0)) return setError('Enter an amount greater than 0');
+    if (Number(form.amount) <= 0) return setError('Enter an amount greater than 0');
     try {
       if (editing) await update({ variables: { id: current.id, input: input() } });
       else await create({ variables: { input: input() } });
@@ -84,6 +84,8 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
     onSaved();
     onClose();
   };
+
+  const saveLabel = editing ? 'Save changes' : 'Add expense';
 
   return (
     <Drawer anchor="right" open={open} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 440 }, p: 2.5 } }}>
@@ -116,7 +118,7 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
         <TextField label="Description" value={form.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} fullWidth />
         <AttachmentField value={form.attachment_url} onChange={set('attachment_url')} />
         <Button variant="contained" onClick={save} disabled={saving}>
-          {saving ? 'Saving…' : editing ? 'Save changes' : 'Add expense'}
+          {saving ? 'Saving…' : saveLabel}
         </Button>
       </Stack>
 

@@ -8,7 +8,7 @@ import type { LogRecord, Transport } from './types';
 export function httpTransport(endpoint: string): Transport {
   return (record: LogRecord) => {
     try {
-      void fetch(endpoint, {
+      fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(record),

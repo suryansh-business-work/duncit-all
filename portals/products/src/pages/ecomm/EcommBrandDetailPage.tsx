@@ -56,9 +56,7 @@ export default function EcommBrandDetailPage() {
         Back to brands
       </Button>
 
-      {!brand ? (
-        <Alert severity="warning">Brand not found or not currently listed.</Alert>
-      ) : (
+      {brand ? (
         <>
           <Card variant="outlined" sx={{ borderRadius: 3 }}>
             <CardContent>
@@ -110,6 +108,8 @@ export default function EcommBrandDetailPage() {
             </CardContent>
           </Card>
         </>
+      ) : (
+        <Alert severity="warning">Brand not found or not currently listed.</Alert>
       )}
     </Stack>
   );

@@ -54,7 +54,7 @@ export default function PaymentLogsPage() {
 
   const apollo = useApolloClient();
   const [refundMut, { loading: refundLoading }] = useMutation(REFUND_PAYMENT);
-  const [refundFor, setRefundFor] = useState<any | null>(null);
+  const [refundFor, setRefundFor] = useState<any>(null);
   const [refundReason, setRefundReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);

@@ -13,6 +13,8 @@ export const PUBLIC_APP_SETTINGS = gql`
 const FALLBACK_DATE = 'dd MMM yyyy';
 const FALLBACK_TIME = 'hh:mm a';
 
+type DateInput = string | number | Date | null | undefined;
+
 /**
  * Reads the global date/time format configured in the admin panel so every
  * date rendered in the portal honours the org-wide setting (project rule 11).
@@ -22,7 +24,7 @@ export function useDateFormat() {
   const dateFormat: string = data?.publicAppSettings?.date_format || FALLBACK_DATE;
   const timeFormat: string = data?.publicAppSettings?.time_format || FALLBACK_TIME;
 
-  const toDate = (input: string | number | Date | null | undefined): Date | null => {
+  const toDate = (input: DateInput): Date | null => {
     if (!input) return null;
     if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
     if (typeof input === 'number') return new Date(input);
@@ -45,11 +47,8 @@ export function useDateFormat() {
   return {
     dateFormat,
     timeFormat,
-    formatDate: (input: string | number | Date | null | undefined) =>
-      safeFmt(toDate(input), dateFormat),
-    formatTime: (input: string | number | Date | null | undefined) =>
-      safeFmt(toDate(input), timeFormat),
-    formatDateTime: (input: string | number | Date | null | undefined) =>
-      safeFmt(toDate(input), `${dateFormat} · ${timeFormat}`),
+    formatDate: (input: DateInput) => safeFmt(toDate(input), dateFormat),
+    formatTime: (input: DateInput) => safeFmt(toDate(input), timeFormat),
+    formatDateTime: (input: DateInput) => safeFmt(toDate(input), `${dateFormat} · ${timeFormat}`),
   };
 }

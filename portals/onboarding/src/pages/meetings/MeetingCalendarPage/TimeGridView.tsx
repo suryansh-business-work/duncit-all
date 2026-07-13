@@ -53,12 +53,13 @@ export default function TimeGridView({ days, meetings, holidays, availability, s
         <Stack direction="row" sx={{ pl: `${GUTTER}px`, borderBottom: 1, borderColor: 'divider' }}>
           {days.map((day) => {
             const holiday = holidays.get(format(day, 'yyyy-MM-dd'));
+            const holidayNamePart = holiday?.name ? ` · ${holiday.name}` : '';
             return (
               <Box key={day.toISOString()} sx={{ flex: 1, textAlign: 'center', py: 0.5, bgcolor: headerBg(day, !!holiday, bg) }}>
                 <Typography variant="caption" color="text.secondary" fontWeight={700}>{format(day, 'EEE')}</Typography>
                 <Typography variant="subtitle2" fontWeight={isToday(day) ? 800 : 600}>{format(day, 'd')}</Typography>
                 {holiday && (
-                  <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holiday.name ? ` · ${holiday.name}` : ''}`}>
+                  <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holidayNamePart}`}>
                     <Typography variant="caption" sx={{ display: 'block', color: 'warning.main', fontWeight: 700, lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {holiday.name || HOLIDAY_TYPE_LABELS[holiday.type]}
                     </Typography>

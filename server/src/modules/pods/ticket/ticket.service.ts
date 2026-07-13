@@ -117,7 +117,7 @@ export const ticketService = {
     });
     await doc.save();
 
-    void this.email(doc).catch((e) => console.warn('Ticket email failed', e));
+    this.email(doc).catch((e) => console.warn('Ticket email failed', e));
     return doc;
   },
 

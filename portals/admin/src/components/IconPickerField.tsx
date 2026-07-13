@@ -73,6 +73,7 @@ export default function IconPickerField({
 }: Readonly<Props>) {
   const known = useMemo(() => UNIQUE_NAMES, []);
   const isKnown = !!resolveIcon(value);
+  const rawAdornment = value ? <Box sx={{ pl: 1, fontSize: 18 }}>{value}</Box> : null;
 
   return (
     <Autocomplete
@@ -105,9 +106,9 @@ export default function IconPickerField({
               <Box sx={{ display: 'flex', alignItems: 'center', pl: 1 }}>
                 {renderIconByName(value, 'small')}
               </Box>
-            ) : value ? (
-              <Box sx={{ pl: 1, fontSize: 18 }}>{value}</Box>
-            ) : null,
+            ) : (
+              rawAdornment
+            ),
           }}
         />
       )}

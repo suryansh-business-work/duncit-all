@@ -69,14 +69,14 @@ export default function PexelsVideosTab({
 
   useEffect(() => {
     if (open && active && videos.length === 0) {
-      void runPexelsVideos(vquery, 1, false);
+      runPexelsVideos(vquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, active]);
 
   useEffect(() => {
     if (open && active) {
-      void runPexelsVideos(vquery, 1, false);
+      runPexelsVideos(vquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vorientation]);
@@ -104,6 +104,32 @@ export default function PexelsVideosTab({
     }
   };
 
+  const renderResults = () => {
+    if (vsearching && videos.length === 0) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    if (videos.length === 0) {
+      return <Alert severity="info">No videos — try a different query.</Alert>;
+    }
+    return (
+      <ImageList cols={3} gap={8} rowHeight={160}>
+        {videos.map((v: any) => (
+          <PexelsVideoCard
+            key={v.id}
+            video={v}
+            importing={vimportingId === v.id}
+            anyImporting={!!vimportingId}
+            onPick={importPexelsVideo}
+          />
+        ))}
+      </ImageList>
+    );
+  };
+
   return (
     <Box>
       <Stack
@@ -119,7 +145,7 @@ export default function PexelsVideosTab({
           value={vquery}
           onChange={(e) => setVquery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') void runPexelsVideos(vquery, 1, false);
+            if (e.key === 'Enter') runPexelsVideos(vquery, 1, false).catch(console.error);
           }}
           InputProps={{
             startAdornment: (
@@ -144,25 +170,7 @@ export default function PexelsVideosTab({
           Search
         </Button>
       </Stack>
-      {vsearching && videos.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <CircularProgress />
-        </Box>
-      ) : videos.length === 0 ? (
-        <Alert severity="info">No videos — try a different query.</Alert>
-      ) : (
-        <ImageList cols={3} gap={8} rowHeight={160}>
-          {videos.map((v: any) => (
-            <PexelsVideoCard
-              key={v.id}
-              video={v}
-              importing={vimportingId === v.id}
-              anyImporting={!!vimportingId}
-              onPick={importPexelsVideo}
-            />
-          ))}
-        </ImageList>
-      )}
+      {renderResults()}
       {vhasMore && (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Button
@@ -187,8 +195,7 @@ export default function PexelsVideosTab({
           style={{ color: 'inherit' }}
         >
           Pexels
-        </a>
-        .
+        </a>.
       </Typography>
     </Box>
   );

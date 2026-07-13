@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMe } from '@/hooks/useMe';
 import { toErrorMessage } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   ActiveSurveyForDocument,
   MeetingSlotsDocument,
@@ -89,7 +90,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
 
   const afterSurvey = () => {
     setPhase('meeting');
-    void loadSlots();
+    fireAndForget(loadSlots());
   };
 
   const chooseCategory = async (chosen: Scope) => {
@@ -187,7 +188,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
     } catch (e) {
       setError(toErrorMessage(e, 'Could not book the slot'));
       // The slot may have just been taken — refresh the grid.
-      void loadSlots();
+      fireAndForget(loadSlots());
     } finally {
       setBusy(false);
     }

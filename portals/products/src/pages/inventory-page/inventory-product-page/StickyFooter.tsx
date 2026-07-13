@@ -18,11 +18,8 @@ export default function StickyFooter({
   onSaveAndContinue,
   onSave,
 }: Readonly<StickyFooterProps>) {
-  const saveLabel = busy
-    ? 'Saving…'
-    : isEdit
-      ? 'Save changes'
-      : 'Save product';
+  const idleSaveLabel = isEdit ? 'Save changes' : 'Save product';
+  const saveLabel = busy ? 'Saving…' : idleSaveLabel;
   return (
     <Box
       sx={{

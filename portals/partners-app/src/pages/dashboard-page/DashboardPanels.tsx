@@ -71,9 +71,15 @@ function DataTable({ headers, rows }: Readonly<{ headers: string[]; rows: DataRo
   );
 }
 
+function statusChipColor(status: string): 'success' | 'error' | 'info' | 'warning' {
+  if (status === 'APPROVED') return 'success';
+  if (status === 'REJECTED' || status === 'DENIED') return 'error';
+  if (status === 'SUBMITTED') return 'info';
+  return 'warning';
+}
+
 function StatusChip({ status }: Readonly<{ status: string }>) {
-  const color = status === 'APPROVED' ? 'success' : status === 'REJECTED' || status === 'DENIED' ? 'error' : status === 'SUBMITTED' ? 'info' : 'warning';
-  return <Chip size="small" label={status || 'PENDING'} color={color} />;
+  return <Chip size="small" label={status || 'PENDING'} color={statusChipColor(status)} />;
 }
 
 function formatDate(value?: string) {

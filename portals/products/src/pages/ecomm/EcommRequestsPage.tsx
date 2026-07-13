@@ -98,6 +98,59 @@ export default function EcommRequestsPage() {
     }
   };
 
+  const loadedContent = requests.length === 0 ? (
+    <Alert severity="info" sx={{ m: 2 }}>No product requests found for this filter.</Alert>
+  ) : (
+    <Table size="small">
+      <TableHead>
+        <TableRow>
+          <TableCell>Product</TableCell>
+          <TableCell>Inventory</TableCell>
+          <TableCell>Commission</TableCell>
+          <TableCell>Status</TableCell>
+          <TableCell width={280}>Review</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {requests.map((item: any) => (
+          <TableRow key={item.id} hover>
+            <TableCell>
+              <Stack direction="row" spacing={1.25} alignItems="center">
+                <Box component="img" src={item.image_url} alt={item.product_name} sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', bgcolor: 'action.hover' }} />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography fontWeight={900}>{item.product_name}</Typography>
+                  <Typography variant="caption" color="text.secondary">{item.listing_submitted_by_name || 'Partner'} · {item.size_label} · {item.color}</Typography>
+                  <Typography variant="caption" display="block" color="text.secondary">{item.height_cm}cm · {item.weight_kg}kg · {item.delivery_target === 'HOST' ? 'Host delivery' : 'Venue delivery'}</Typography>
+                </Box>
+              </Stack>
+            </TableCell>
+            <TableCell>{item.inventory_count} units<br />₹{item.unit_cost}</TableCell>
+            <TableCell>{item.commission_pct}%<br /><Typography variant="caption">{item.is_duncit_delivery_partner ? 'Delivery partner' : 'Not delivery partner'}</Typography></TableCell>
+            <TableCell><Chip size="small" label={item.listing_review_status} color={statusColors[item.listing_review_status] || 'default'} /></TableCell>
+            <TableCell>
+              <Stack spacing={1}>
+                <TextField size="small" label="Admin note" value={notes[item.id] ?? item.listing_review_notes ?? ''} onChange={(event) => setNotes((prev) => ({ ...prev, [item.id]: event.target.value }))} multiline minRows={2} />
+                <TextField
+                  size="small"
+                  label="Commission %"
+                  type="number"
+                  value={commission[item.id] ?? String(item.commission_pct ?? '')}
+                  onChange={(event) => setCommission((prev) => ({ ...prev, [item.id]: event.target.value }))}
+                  inputProps={{ min: 5, max: 50, step: 1, 'aria-label': 'Product commission percentage' }}
+                  helperText="5–50% Duncit cut. Blank keeps current."
+                />
+                <Stack direction="row" spacing={1}>
+                  <Button size="small" variant="contained" disabled={reviewing} onClick={() => submitReview(item, 'APPROVED')}>Approve</Button>
+                  <Button size="small" color="error" variant="outlined" disabled={reviewing} onClick={() => submitReview(item, 'DENIED')}>Deny</Button>
+                </Stack>
+              </Stack>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
   return (
     <Stack spacing={2.5}>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
@@ -117,57 +170,8 @@ export default function EcommRequestsPage() {
         <CardContent sx={{ p: 0 }}>
           {loading ? (
             <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress size={24} /></Stack>
-          ) : requests.length === 0 ? (
-            <Alert severity="info" sx={{ m: 2 }}>No product requests found for this filter.</Alert>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Product</TableCell>
-                  <TableCell>Inventory</TableCell>
-                  <TableCell>Commission</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell width={280}>Review</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {requests.map((item: any) => (
-                  <TableRow key={item.id} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1.25} alignItems="center">
-                        <Box component="img" src={item.image_url} alt={item.product_name} sx={{ width: 64, height: 64, borderRadius: 2, objectFit: 'cover', bgcolor: 'action.hover' }} />
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography fontWeight={900}>{item.product_name}</Typography>
-                          <Typography variant="caption" color="text.secondary">{item.listing_submitted_by_name || 'Partner'} · {item.size_label} · {item.color}</Typography>
-                          <Typography variant="caption" display="block" color="text.secondary">{item.height_cm}cm · {item.weight_kg}kg · {item.delivery_target === 'HOST' ? 'Host delivery' : 'Venue delivery'}</Typography>
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{item.inventory_count} units<br />₹{item.unit_cost}</TableCell>
-                    <TableCell>{item.commission_pct}%<br /><Typography variant="caption">{item.is_duncit_delivery_partner ? 'Delivery partner' : 'Not delivery partner'}</Typography></TableCell>
-                    <TableCell><Chip size="small" label={item.listing_review_status} color={statusColors[item.listing_review_status] || 'default'} /></TableCell>
-                    <TableCell>
-                      <Stack spacing={1}>
-                        <TextField size="small" label="Admin note" value={notes[item.id] ?? item.listing_review_notes ?? ''} onChange={(event) => setNotes((prev) => ({ ...prev, [item.id]: event.target.value }))} multiline minRows={2} />
-                        <TextField
-                          size="small"
-                          label="Commission %"
-                          type="number"
-                          value={commission[item.id] ?? String(item.commission_pct ?? '')}
-                          onChange={(event) => setCommission((prev) => ({ ...prev, [item.id]: event.target.value }))}
-                          inputProps={{ min: 5, max: 50, step: 1, 'aria-label': 'Product commission percentage' }}
-                          helperText="5–50% Duncit cut. Blank keeps current."
-                        />
-                        <Stack direction="row" spacing={1}>
-                          <Button size="small" variant="contained" disabled={reviewing} onClick={() => submitReview(item, 'APPROVED')}>Approve</Button>
-                          <Button size="small" color="error" variant="outlined" disabled={reviewing} onClick={() => submitReview(item, 'DENIED')}>Deny</Button>
-                        </Stack>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            loadedContent
           )}
         </CardContent>
       </Card>

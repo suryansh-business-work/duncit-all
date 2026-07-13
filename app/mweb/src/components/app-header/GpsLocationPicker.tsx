@@ -45,7 +45,7 @@ export default function GpsLocationPicker({
         startIcon={busy ? <CircularProgress size={14} /> : <GpsFixedIcon fontSize="small" />}
         onClick={() => {
           reset();
-          void request();
+          request().catch(console.error);
         }}
         disabled={busy}
         sx={{

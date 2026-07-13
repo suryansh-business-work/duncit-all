@@ -16,7 +16,7 @@ import { ADMIN_UPDATE_ECOMM_BRAND, STATUSES } from './queries';
 import EcommBrandEditFields, { type BrandValues, type DocEntry } from './EcommBrandEditFields';
 
 interface Props {
-  brand: any | null;
+  brand: any;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -29,7 +29,7 @@ const blankValues: BrandValues = {
   account_holder_name: '', account_number: '', ifsc_code: '', upi_id: '',
 };
 
-const str = (value: unknown) => (value == null ? '' : String(value));
+const str = (value: string | number | null | undefined) => (value == null ? '' : String(value));
 
 export default function EcommBrandEditDialog({ brand, onClose, onSaved }: Readonly<Props>) {
   const [values, setValues] = useState<BrandValues>(blankValues);

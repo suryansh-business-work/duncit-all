@@ -106,6 +106,26 @@ function messagePub(doc: ISupportChatMessage) {
   };
 }
 
+/** Bump the unread counter of the side that did NOT send the message, and claim
+ * the session for an agent sender that does not hold it yet. */
+function applyUnreadCounters(
+  session: ISupportChatSession,
+  isAgent: boolean,
+  senderId: string,
+  aiHandling: boolean
+) {
+  if (isAgent) {
+    if (!session.agent_id) session.agent_id = new Types.ObjectId(senderId);
+    session.unread_for_user = (session.unread_for_user || 0) + 1;
+    return;
+  }
+  // While the AI is fielding the chat, don't surface it to human agents
+  // until it decides to hand off — keeps the agent inbox clean.
+  if (!aiHandling) session.unread_for_agent = (session.unread_for_agent || 0) + 1;
+  // A user message re-opens a closed session.
+  if (session.status === 'CLOSED') session.status = 'OPEN';
+}
+
 export const supportChatService = {
   async canAccessSession(sessionId: string, userId: string, isAgent: boolean): Promise<boolean> {
     if (!Types.ObjectId.isValid(sessionId)) return false;
@@ -228,16 +248,7 @@ export const supportChatService = {
     session!.last_message_at = new Date();
     session!.last_message_preview = text || '📎 Attachment';
     const aiHandling = session!.ai_active !== false && !session!.agent_id;
-    if (isAgent) {
-      if (!session!.agent_id) session!.agent_id = new Types.ObjectId(senderId);
-      session!.unread_for_user = (session!.unread_for_user || 0) + 1;
-    } else {
-      // While the AI is fielding the chat, don't surface it to human agents
-      // until it decides to hand off — keeps the agent inbox clean.
-      if (!aiHandling) session!.unread_for_agent = (session!.unread_for_agent || 0) + 1;
-      // A user message re-opens a closed session.
-      if (session!.status === 'CLOSED') session!.status = 'OPEN';
-    }
+    applyUnreadCounters(session, isAgent, senderId, aiHandling);
     await session!.save();
 
     const pubMsg = messagePub(msg);
@@ -295,7 +306,7 @@ export const supportChatService = {
     session!.status = 'CLOSED';
     session!.resolved_at = new Date();
     await session!.save();
-    const pub = await sessionPub(session!);
+    const pub = await sessionPub(session);
     emitToSupportAgents('support_chat:session_update', pub);
     emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pub);
     return pub;
@@ -315,7 +326,7 @@ export const supportChatService = {
     }
     await session!.save();
     // Push the read state so the other side's "Seen" (blue) ticks update live.
-    const pub = await sessionPub(session!);
+    const pub = await sessionPub(session);
     emitToSupportSession(String(session!._id), 'support_chat:session_update', pub);
     emitToSupportAgents('support_chat:session_update', pub);
     emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pub);
@@ -413,13 +424,13 @@ export const supportChatService = {
     if (!session) fail('NOT_FOUND', 'Chat session not found');
     session!.status = 'CLOSED';
     session!.resolved_at = new Date();
-    await this.appendBubble(session!, {
+    await this.appendBubble(session, {
       senderId: AI_SENDER_ID,
       role: 'SYSTEM',
       name: AI_NAME,
       text: `Chat marked resolved by ${byLabel}.`,
     });
-    return sessionPub(session!);
+    return sessionPub(session);
   },
 
   async reopen(sessionId: string, byLabel = 'the user', isAgent = false, reason?: string | null) {
@@ -437,13 +448,13 @@ export const supportChatService = {
       session!.unread_for_agent = (session!.unread_for_agent || 0) + 1;
     }
     const trimmed = (reason || '').trim();
-    await this.appendBubble(session!, {
+    await this.appendBubble(session, {
       senderId: AI_SENDER_ID,
       role: 'SYSTEM',
       name: AI_NAME,
       text: trimmed ? `Chat re-opened by ${byLabel}. Reason: ${trimmed}` : `Chat re-opened by ${byLabel}.`,
     });
-    return sessionPub(session!);
+    return sessionPub(session);
   },
 
   async submitFeedback(
@@ -465,7 +476,7 @@ export const supportChatService = {
     session!.feedback_comment = (input.comment ?? '').trim();
     session!.feedback_at = new Date();
     await session!.save();
-    const pub = await sessionPub(session!);
+    const pub = await sessionPub(session);
     emitToSupportAgents('support_chat:session_update', pub);
     return pub;
   },
@@ -488,12 +499,13 @@ export const supportChatService = {
         m.text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');
       return { who, when: m.created_at?.toISOString?.() ?? '', body };
     });
+    const phoneSuffix = user.phone ? ` (${user.phone})` : '';
     return {
       title: 'Duncit — Support chat transcript',
       no,
       header: [
         { label: 'Ticket', value: no },
-        { label: 'User', value: `${user.name}${user.phone ? ` (${user.phone})` : ''}` },
+        { label: 'User', value: `${user.name}${phoneSuffix}` },
         { label: 'Status', value: session!.status },
         { label: 'Started', value: session!.created_at?.toISOString?.() ?? '' },
         { label: 'Generated', value: new Date().toISOString() },

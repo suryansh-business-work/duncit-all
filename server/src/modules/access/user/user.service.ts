@@ -649,6 +649,57 @@ function buildAdminUserSet(input: UpdateUserDTO): Record<string, any> {
   return set;
 }
 
+/** Map the self-service UpdateMyProfileDTO field names onto their document dot-paths. */
+const MY_PROFILE_PATHS: Record<string, string> = {
+  first_name: 'profile.first_name',
+  last_name: 'profile.last_name',
+  bio: 'profile.bio',
+  profile_photo: 'profile.profile_photo',
+  city: 'profile.city',
+  state: 'profile.state',
+  zone: 'profile.zone',
+  country: 'profile.country',
+};
+const MY_PHONE_PATHS: Record<string, string> = {
+  phone_number: 'auth.phone.number',
+  phone_extension: 'auth.phone.extension',
+};
+const MY_WHATSAPP_PATHS: Record<string, string> = {
+  whatsapp_number: 'communication.whatsapp.number',
+  whatsapp_extension: 'communication.whatsapp.extension',
+};
+
+/** Copy every supplied field of `paths` onto the `$set` doc, blanking empties to null. */
+function assignMappedFields(
+  set: Record<string, any>,
+  input: UpdateMyProfileDTO,
+  paths: Record<string, string>
+) {
+  for (const [field, path] of Object.entries(paths)) {
+    if ((input as any)[field] !== undefined) set[path] = (input as any)[field] || null;
+  }
+}
+
+/** Phone fields map like any other, but a placeholder number is rejected. */
+function assignMyPhoneFields(set: Record<string, any>, input: UpdateMyProfileDTO) {
+  const v = (input as any).phone_number;
+  if (v && isPlaceholderPhone(v)) {
+    throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  assignMappedFields(set, input, MY_PHONE_PATHS);
+}
+
+/** Parse the optional date of birth onto the `$set` doc. Throws on an unparsable value. */
+function assignMyDob(set: Record<string, any>, input: UpdateMyProfileDTO) {
+  if ((input as any).dob === undefined) return;
+  const raw = (input as any).dob;
+  const d = raw ? new Date(raw) : null;
+  if (raw && (!d || Number.isNaN(d.getTime()))) {
+    throw new GraphQLError('Invalid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  set['profile.dob'] = d;
+}
+
 export const userService = {
   // Backward-compat helper used by other modules. Returns the materialized
   // flat shape (toPublic) for a given doc.
@@ -861,48 +912,11 @@ export const userService = {
 
   async updateMyProfile(user_id: string, input: UpdateMyProfileDTO) {
     const set: Record<string, any> = {};
-    const profileMap: Record<string, string> = {
-      first_name: 'profile.first_name',
-      last_name: 'profile.last_name',
-      bio: 'profile.bio',
-      profile_photo: 'profile.profile_photo',
-      city: 'profile.city',
-      state: 'profile.state',
-      zone: 'profile.zone',
-      country: 'profile.country',
-    };
-    const phoneMap: Record<string, string> = {
-      phone_number: 'auth.phone.number',
-      phone_extension: 'auth.phone.extension',
-    };
-    const waMap: Record<string, string> = {
-      whatsapp_number: 'communication.whatsapp.number',
-      whatsapp_extension: 'communication.whatsapp.extension',
-    };
-    for (const [field, path] of Object.entries(profileMap)) {
-      if ((input as any)[field] !== undefined) set[path] = (input as any)[field] || null;
-    }
-    for (const [field, path] of Object.entries(phoneMap)) {
-      if ((input as any)[field] !== undefined) {
-        const v = (input as any)[field];
-        if (field === 'phone_number' && v && isPlaceholderPhone(v)) {
-          throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
-        }
-        set[path] = v || null;
-      }
-    }
-    for (const [field, path] of Object.entries(waMap)) {
-      if ((input as any)[field] !== undefined) set[path] = (input as any)[field] || null;
-    }
+    assignMappedFields(set, input, MY_PROFILE_PATHS);
+    assignMyPhoneFields(set, input);
+    assignMappedFields(set, input, MY_WHATSAPP_PATHS);
     if (input.profile_links !== undefined) set.profile_links = cleanProfileLinks(input.profile_links);
-    if ((input as any).dob !== undefined) {
-      const raw = (input as any).dob;
-      const d = raw ? new Date(raw) : null;
-      if (raw && (!d || Number.isNaN(d.getTime()))) {
-        throw new GraphQLError('Invalid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-      set['profile.dob'] = d;
-    }
+    assignMyDob(set, input);
     // Save the whole main address as a normalized object (partial inputs fill in).
     if ((input as any).address !== undefined) {
       set['profile.address'] = toPostalAddress((input as any).address);

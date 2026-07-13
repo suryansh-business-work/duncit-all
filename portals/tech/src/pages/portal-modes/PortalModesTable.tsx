@@ -22,6 +22,14 @@ interface Props {
 
 const KIND_LABEL: Record<string, string> = { PORTAL: 'Portal', WEBSITE: 'Website', APP: 'App' };
 
+type StatusMeta = { color: 'warning' | 'info' | 'success'; label: string };
+
+const statusMeta = (isMaint: boolean, isDev: boolean): StatusMeta => {
+  if (isMaint) return { color: 'warning', label: 'Maintenance' };
+  if (isDev) return { color: 'info', label: 'Development' };
+  return { color: 'success', label: 'Live' };
+};
+
 export default function PortalModesTable({ rows, busyKey, onChange }: Readonly<Props>) {
   return (
     <Box sx={{ overflowX: 'auto' }}>
@@ -40,6 +48,7 @@ export default function PortalModesTable({ rows, busyKey, onChange }: Readonly<P
             const disabled = busyKey === row.key;
             const isMaint = row.mode === 'MAINTENANCE';
             const isDev = row.mode === 'DEVELOPMENT';
+            const status = statusMeta(isMaint, isDev);
             return (
               <TableRow key={row.key} hover>
                 <TableCell>
@@ -84,8 +93,8 @@ export default function PortalModesTable({ rows, busyKey, onChange }: Readonly<P
                 <TableCell align="right">
                   <Chip
                     size="small"
-                    color={isMaint ? 'warning' : isDev ? 'info' : 'success'}
-                    label={isMaint ? 'Maintenance' : isDev ? 'Development' : 'Live'}
+                    color={status.color}
+                    label={status.label}
                   />
                 </TableCell>
               </TableRow>

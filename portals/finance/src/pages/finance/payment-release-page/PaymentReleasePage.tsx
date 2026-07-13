@@ -9,7 +9,7 @@ import { PAYMENT_RELEASE_REQUESTS, REVIEW_PAYMENT_RELEASE } from './queries';
 export default function PaymentReleasePage() {
   const [status, setStatus] = useState('PENDING');
   const [kind, setKind] = useState('');
-  const [reviewFor, setReviewFor] = useState<any | null>(null);
+  const [reviewFor, setReviewFor] = useState<any>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const filter = useMemo(() => ({ status: status || undefined, kind: kind || undefined }), [kind, status]);
   const { data, loading, error, refetch } = useQuery(PAYMENT_RELEASE_REQUESTS, { variables: { filter }, fetchPolicy: 'cache-and-network' });

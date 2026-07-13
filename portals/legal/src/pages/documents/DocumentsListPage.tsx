@@ -66,6 +66,52 @@ export default function DocumentsListPage() {
     else refetch();
   };
 
+  const renderBody = () => {
+    if (loading && !items.length) {
+      return (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <CircularProgress size={24} />
+        </Box>
+      );
+    }
+    if (!items.length) {
+      return (
+        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+          No documents yet.
+        </Typography>
+      );
+    }
+    return (
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Name</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Updated by</TableCell>
+            <TableCell>Versions</TableCell>
+            <TableCell>Last updated</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((d) => (
+            <TableRow
+              key={d.id}
+              hover
+              sx={{ cursor: 'pointer' }}
+              onClick={() => navigate(`/documents/${d.id}`)}
+            >
+              <TableCell sx={{ fontWeight: 700 }}>{d.name}</TableCell>
+              <TableCell>{d.document_type}</TableCell>
+              <TableCell>{d.updated_by_name || '—'}</TableCell>
+              <TableCell>{d.version_count}</TableCell>
+              <TableCell>{formatDistanceToNow(new Date(d.updated_at), { addSuffix: true })}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} flexWrap="wrap">
@@ -92,43 +138,7 @@ export default function DocumentsListPage() {
         </Stack>
       </Stack>
 
-      {loading && !items.length ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : !items.length ? (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-          No documents yet.
-        </Typography>
-      ) : (
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Updated by</TableCell>
-              <TableCell>Versions</TableCell>
-              <TableCell>Last updated</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((d) => (
-              <TableRow
-                key={d.id}
-                hover
-                sx={{ cursor: 'pointer' }}
-                onClick={() => navigate(`/documents/${d.id}`)}
-              >
-                <TableCell sx={{ fontWeight: 700 }}>{d.name}</TableCell>
-                <TableCell>{d.document_type}</TableCell>
-                <TableCell>{d.updated_by_name || '—'}</TableCell>
-                <TableCell>{d.version_count}</TableCell>
-                <TableCell>{formatDistanceToNow(new Date(d.updated_at), { addSuffix: true })}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      {renderBody()}
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>New Document</DialogTitle>

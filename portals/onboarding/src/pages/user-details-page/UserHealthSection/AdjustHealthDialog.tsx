@@ -53,6 +53,7 @@ export default function AdjustHealthDialog({
 
   const delta = direction === 'plus' ? Math.abs(magnitude) : -Math.abs(magnitude);
   const projected = Math.max(0, Math.min(100, currentScore + delta));
+  const deltaLabel = delta > 0 ? `+${delta}` : String(delta);
 
   const submit = async () => {
     setError(null);
@@ -109,7 +110,7 @@ export default function AdjustHealthDialog({
             size="small"
             value={magnitude}
             onChange={(e) => setMagnitude(Number(e.target.value) || 0)}
-            helperText={`Applied as ${delta > 0 ? `+${delta}` : delta}. Projected score: ${projected}/100.`}
+            helperText={`Applied as ${deltaLabel}. Projected score: ${projected}/100.`}
           />
 
           <TextField

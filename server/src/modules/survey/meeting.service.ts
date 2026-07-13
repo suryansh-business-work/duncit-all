@@ -1,13 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, nextMeetingRequestNo, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
+import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, nextMeetingRequestNo, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus, type MeetingApprovalStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { leadSurveyService } from './leadSurvey.service';
 import { surveyService } from './survey.service';
 import { approvalService } from '@modules/approval/approval.service';
 import type { SurveyKind } from './survey.model';
-import type { MeetingApprovalStatus } from './meeting.model';
 import {
   sendMeetingBookedEmail,
   sendMeetingCancelledEmail,
@@ -193,6 +192,19 @@ const minutesOf = (hhmm: string) => {
 };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
+/** Availability input guards — a bad value is a BAD_USER_INPUT error. */
+function assertHhmm(value: string, label: string) {
+  if (!TIME_RE.test(value)) {
+    throw new GraphQLError(`${label} must be HH:mm`, { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+}
+
+function assertRange(value: number, min: number, max: number, message: string) {
+  if (value < min || value > max) {
+    throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+}
+
 /** Wall-clock (offset-shifted) calendar day 'YYYY-MM-DD' for an instant. */
 function localDayKey(instantMs: number, offsetMin: number): string {
   const local = new Date(instantMs + offsetMin * 60_000);
@@ -294,6 +306,29 @@ async function slotWindowMs(): Promise<number> {
   return Math.max(av?.slot_minutes ?? 30, 5) * 60_000;
 }
 
+/**
+ * Notify the applicant after staff schedule / reschedule / update a confirmed
+ * meeting — the distinct events drive distinct copy. Best-effort: a delivery
+ * failure must not fail the staff's update.
+ */
+async function notifyScheduleChange(doc: any, wasScheduled: boolean, prevScheduledMs: number | null) {
+  const newScheduledMs = doc.scheduled_at?.getTime() ?? null;
+  let event: MeetingEvent;
+  if (!wasScheduled) {
+    event = 'scheduled';
+  } else if (newScheduledMs === prevScheduledMs) {
+    event = 'updated';
+  } else {
+    event = 'rescheduled';
+  }
+  try {
+    await notifyMeetingEvent(doc, event);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[meeting.update] notify failed:', err);
+  }
+}
+
 /** Best-effort applicant notification for booking + cancellation actions. */
 async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: string) {
   try {
@@ -313,6 +348,35 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
     // eslint-disable-next-line no-console
     console.error('[meeting] applicant email failed:', err);
   }
+}
+
+/** The staff-editable fields of a meeting (Onboarding portal update form). */
+interface MeetingStaffInput {
+  status?: MeetingStatus | null;
+  scheduled_at?: string | null;
+  meeting_link?: string | null;
+  notes?: string | null;
+}
+
+/** Staff can't schedule onto a slot another applicant already holds. */
+async function assertStaffSlotFree(meetingId: string, scheduledAt: string) {
+  const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: meetingId }), slotWindowMs()]);
+  if (isTaken(new Date(scheduledAt).getTime(), busy, slotMs)) {
+    throw new GraphQLError('That slot is already taken by another meeting', { extensions: { code: 'CONFLICT' } });
+  }
+}
+
+/** Anything schedule-related in the staff edit — drives the applicant notify. */
+const touchesSchedule = (input: MeetingStaffInput) =>
+  input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
+
+/** Write the staff-editable fields onto the doc (caller saves). */
+function applyStaffFields(doc: any, input: MeetingStaffInput, by?: string | null) {
+  if (input.status != null) doc.status = input.status;
+  if (input.scheduled_at !== undefined) doc.scheduled_at = input.scheduled_at ? new Date(input.scheduled_at) : null;
+  if (input.meeting_link !== undefined) doc.meeting_link = input.meeting_link || null;
+  if (input.notes !== undefined) doc.notes = input.notes;
+  doc.created_by = doc.created_by ?? by ?? null;
 }
 
 export const meetingService = {
@@ -339,26 +403,22 @@ export const meetingService = {
       doc.week_days = days;
     }
     if (input.start_time != null) {
-      if (!TIME_RE.test(input.start_time)) throw new GraphQLError('Start time must be HH:mm', { extensions: { code: 'BAD_USER_INPUT' } });
+      assertHhmm(input.start_time, 'Start time');
       doc.start_time = input.start_time;
     }
     if (input.end_time != null) {
-      if (!TIME_RE.test(input.end_time)) throw new GraphQLError('End time must be HH:mm', { extensions: { code: 'BAD_USER_INPUT' } });
+      assertHhmm(input.end_time, 'End time');
       doc.end_time = input.end_time;
     }
     if (minutesOf(doc.start_time) >= minutesOf(doc.end_time)) {
       throw new GraphQLError('End time must be after the start time', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     if (input.slot_minutes != null) {
-      if (input.slot_minutes < 10 || input.slot_minutes > 240) {
-        throw new GraphQLError('Slot length must be between 10 and 240 minutes', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
+      assertRange(input.slot_minutes, 10, 240, 'Slot length must be between 10 and 240 minutes');
       doc.slot_minutes = input.slot_minutes;
     }
     if (input.horizon_days != null) {
-      if (input.horizon_days < 1 || input.horizon_days > 60) {
-        throw new GraphQLError('Booking horizon must be between 1 and 60 days', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
+      assertRange(input.horizon_days, 1, 60, 'Booking horizon must be between 1 and 60 days');
       doc.horizon_days = input.horizon_days;
     }
     if (input.timezone_offset_minutes != null) doc.timezone_offset_minutes = input.timezone_offset_minutes;
@@ -671,55 +731,20 @@ export const meetingService = {
   },
 
   /** Onboarding staff schedule/track a meeting (date, link, status, notes). */
-  async update(
-    id: string,
-    input: {
-      status?: MeetingStatus | null;
-      scheduled_at?: string | null;
-      meeting_link?: string | null;
-      notes?: string | null;
-    },
-    by?: string | null,
-  ) {
+  async update(id: string, input: MeetingStaffInput, by?: string | null) {
     const doc = await MeetingModel.findById(id);
     if (!doc) throw notFound();
-    // Staff can't schedule onto a slot another applicant already holds.
     if (input.scheduled_at) {
-      const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: id }), slotWindowMs()]);
-      if (isTaken(new Date(input.scheduled_at).getTime(), busy, slotMs)) {
-        throw new GraphQLError('That slot is already taken by another meeting', { extensions: { code: 'CONFLICT' } });
-      }
+      await assertStaffSlotFree(id, input.scheduled_at);
     }
     // Capture the prior schedule state so we can classify the event after save.
     const wasScheduled = doc.status === 'SCHEDULED';
     const prevScheduledMs = doc.scheduled_at?.getTime() ?? null;
-    const touchedSchedule =
-      input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
-    if (input.status != null) doc.status = input.status;
-    if (input.scheduled_at !== undefined) doc.scheduled_at = input.scheduled_at ? new Date(input.scheduled_at) : null;
-    if (input.meeting_link !== undefined) doc.meeting_link = input.meeting_link || null;
-    if (input.notes !== undefined) doc.notes = input.notes;
-    doc.created_by = doc.created_by ?? by ?? null;
+    const touchedSchedule = touchesSchedule(input);
+    applyStaffFields(doc, input, by);
     await doc.save();
-    // Notify the applicant (in-app + email) when staff schedule / reschedule /
-    // update a confirmed meeting. Distinct events drive distinct copy.
-    // Best-effort — a delivery failure must not fail the staff's update.
     if (doc.status === 'SCHEDULED' && touchedSchedule) {
-      const newScheduledMs = doc.scheduled_at?.getTime() ?? null;
-      let event: MeetingEvent;
-      if (!wasScheduled) {
-        event = 'scheduled';
-      } else if (newScheduledMs !== prevScheduledMs) {
-        event = 'rescheduled';
-      } else {
-        event = 'updated';
-      }
-      try {
-        await notifyMeetingEvent(doc, event);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[meeting.update] notify failed:', err);
-      }
+      await notifyScheduleChange(doc, wasScheduled, prevScheduledMs);
     }
     return pub(doc);
   },

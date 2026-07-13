@@ -270,7 +270,7 @@ function scheduleDoc(doc: IMarketingCampaign) {
   const timer = setTimeout(() => {
     timers.delete(doc.campaign_id);
     if (delay > MAX_TIMER_DELAY) scheduleDoc(doc);
-    else void sendCampaign(doc.campaign_id);
+    else sendCampaign(doc.campaign_id).catch((e) => console.error('Campaign send failed', e));
   }, Math.max(0, Math.min(delay, MAX_TIMER_DELAY)));
   timers.set(doc.campaign_id, timer);
 }

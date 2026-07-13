@@ -68,14 +68,14 @@ export default function PexelsPhotosTab({
 
   useEffect(() => {
     if (open && active && photos.length === 0) {
-      void runPexels(pquery, 1, false);
+      runPexels(pquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, active]);
 
   useEffect(() => {
     if (open && active) {
-      void runPexels(pquery, 1, false);
+      runPexels(pquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [porientation]);
@@ -99,6 +99,32 @@ export default function PexelsPhotosTab({
     }
   };
 
+  const renderResults = () => {
+    if (psearching && photos.length === 0) {
+      return (
+        <Box sx={{ textAlign: 'center', py: 6 }}>
+          <CircularProgress />
+        </Box>
+      );
+    }
+    if (photos.length === 0) {
+      return <Alert severity="info">No results — try a different query.</Alert>;
+    }
+    return (
+      <ImageList cols={3} gap={8} rowHeight={160}>
+        {photos.map((p: any) => (
+          <PexelsPhotoCard
+            key={p.id}
+            photo={p}
+            importing={importingId === p.id}
+            anyImporting={!!importingId}
+            onPick={importPexels}
+          />
+        ))}
+      </ImageList>
+    );
+  };
+
   return (
     <Box>
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
@@ -109,7 +135,7 @@ export default function PexelsPhotosTab({
           value={pquery}
           onChange={(e) => setPquery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') void runPexels(pquery, 1, false);
+            if (e.key === 'Enter') runPexels(pquery, 1, false).catch(console.error);
           }}
           InputProps={{
             startAdornment: (
@@ -135,25 +161,7 @@ export default function PexelsPhotosTab({
         <ToggleButton value="portrait">Portrait</ToggleButton>
         <ToggleButton value="square">Square</ToggleButton>
       </ToggleButtonGroup>
-      {psearching && photos.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 6 }}>
-          <CircularProgress />
-        </Box>
-      ) : photos.length === 0 ? (
-        <Alert severity="info">No results — try a different query.</Alert>
-      ) : (
-        <ImageList cols={3} gap={8} rowHeight={160}>
-          {photos.map((p: any) => (
-            <PexelsPhotoCard
-              key={p.id}
-              photo={p}
-              importing={importingId === p.id}
-              anyImporting={!!importingId}
-              onPick={importPexels}
-            />
-          ))}
-        </ImageList>
-      )}
+      {renderResults()}
       {hasMore && (
         <Box sx={{ textAlign: 'center', mt: 2 }}>
           <Button
@@ -179,7 +187,7 @@ export default function PexelsPhotosTab({
         >
           Pexels
         </a>
-        . Selected images are imported into your ImageKit account.
+        {'. Selected images are imported into your ImageKit account.'}
       </Typography>
     </Box>
   );

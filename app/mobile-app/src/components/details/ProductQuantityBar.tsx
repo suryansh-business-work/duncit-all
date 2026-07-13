@@ -14,49 +14,52 @@ interface Props {
   onUpdate?: (quantity: number) => void;
 }
 
-/** Product-sheet cart control: add the product to the selection, or adjust its
- * quantity (+/-) and remove it. Quantity is clamped to available stock. Renders
- * nothing when the pod is view-only (already booked) or no handler is wired. */
-export function ProductQuantityBar({
+/** Nothing selected yet: a single "Add to selection" call to action, greyed out
+ * and inert once the product is out of stock. */
+function AddToSelection({
+  outOfStock,
+  onAdd,
+}: Readonly<{ outOfStock: boolean; onAdd: () => void }>) {
+  const iconColor = outOfStock ? MUTED_ICON : '#fff';
+  const textColor = outOfStock ? '$muted' : '#fff';
+  const label = outOfStock ? 'Out of stock' : 'Add to selection';
+  return (
+    <XStack
+      testID="product-detail-add"
+      role="button"
+      aria-disabled={outOfStock}
+      aria-label="Add to selection"
+      onPress={outOfStock ? undefined : onAdd}
+      marginTop={4}
+      paddingVertical={12}
+      borderRadius={12}
+      backgroundColor={outOfStock ? '$surface' : '$primary'}
+      alignItems="center"
+      justifyContent="center"
+      gap={8}
+      opacity={outOfStock ? 0.6 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <MaterialIcons name="add-shopping-cart" size={18} color={iconColor} />
+      <Text fontSize={14} fontWeight="900" color={textColor}>
+        {label}
+      </Text>
+    </XStack>
+  );
+}
+
+/** Already in the selection: step the quantity up to available stock, or remove. */
+function QuantityStepper({
   quantity,
   maxQuantity,
   primary,
-  readOnly,
   onUpdate,
-}: Readonly<Props>) {
-  if (readOnly || !onUpdate) return null;
-
-  const outOfStock = maxQuantity <= 0;
-  if (quantity <= 0) {
-    return (
-      <XStack
-        testID="product-detail-add"
-        role="button"
-        aria-disabled={outOfStock}
-        aria-label="Add to selection"
-        onPress={outOfStock ? undefined : () => onUpdate(1)}
-        marginTop={4}
-        paddingVertical={12}
-        borderRadius={12}
-        backgroundColor={outOfStock ? '$surface' : '$primary'}
-        alignItems="center"
-        justifyContent="center"
-        gap={8}
-        opacity={outOfStock ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
-      >
-        <MaterialIcons
-          name="add-shopping-cart"
-          size={18}
-          color={outOfStock ? MUTED_ICON : '#fff'}
-        />
-        <Text fontSize={14} fontWeight="900" color={outOfStock ? '$muted' : '#fff'}>
-          {outOfStock ? 'Out of stock' : 'Add to selection'}
-        </Text>
-      </XStack>
-    );
-  }
-
+}: Readonly<{
+  quantity: number;
+  maxQuantity: number;
+  primary: string;
+  onUpdate: (quantity: number) => void;
+}>) {
   const atMax = quantity >= maxQuantity;
   return (
     <XStack marginTop={4} alignItems="center" justifyContent="space-between">
@@ -96,5 +99,29 @@ export function ProductQuantityBar({
         </Text>
       </XStack>
     </XStack>
+  );
+}
+
+/** Product-sheet cart control: add the product to the selection, or adjust its
+ * quantity (+/-) and remove it. Quantity is clamped to available stock. Renders
+ * nothing when the pod is view-only (already booked) or no handler is wired. */
+export function ProductQuantityBar({
+  quantity,
+  maxQuantity,
+  primary,
+  readOnly,
+  onUpdate,
+}: Readonly<Props>) {
+  if (readOnly || !onUpdate) return null;
+  if (quantity <= 0) {
+    return <AddToSelection outOfStock={maxQuantity <= 0} onAdd={() => onUpdate(1)} />;
+  }
+  return (
+    <QuantityStepper
+      quantity={quantity}
+      maxQuantity={maxQuantity}
+      primary={primary}
+      onUpdate={onUpdate}
+    />
   );
 }

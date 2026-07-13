@@ -513,6 +513,187 @@ async function assertPartnerVenue(input: any, userObjectId: Types.ObjectId) {
   }
 }
 
+/** The new pod's slug: an explicit `pod_id` wins over the title, and it must be
+ * unique inside its club. */
+async function resolvePodSlugForCreate(input: any): Promise<string> {
+  if (!input.club_id) {
+    throw new GraphQLError('club_id is required', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const baseSlug = input.pod_id?.trim()
+    ? slugify(input.pod_id.trim())
+    : slugify(input.pod_title ?? '');
+  if (!baseSlug) {
+    throw new GraphQLError('Pod title is required', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const dupe = await PodModel.findOne({ club_id: input.club_id, pod_id: baseSlug });
+  if (dupe) {
+    throw new GraphQLError(
+      'A pod with this title already exists in this club. Choose a different title.',
+      { extensions: { code: 'CONFLICT' } }
+    );
+  }
+  return baseSlug;
+}
+
+/** A picked slot is the source of truth for the pod's window — overwrite
+ * the incoming date/time so a stale or hand-edited form value can't break
+ * the booking contract. The slot itself is booked atomically *after* the
+ * pod row is created (see `bookOrHoldSlotForPod`) so we never orphan a slot. */
+async function resolveSlotForCreate(
+  input: any,
+  podMode: PodMode
+): Promise<{ slotDoc: any; needsVenueApproval: boolean }> {
+  if (!(podMode === 'PHYSICAL' && input.venue_slot_id)) {
+    return { slotDoc: null, needsVenueApproval: false };
+  }
+  const slotDoc = await VenueSlotModel.findById(input.venue_slot_id);
+  if (!slotDoc) {
+    throw new GraphQLError('Selected slot not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+  if (slotDoc.status !== 'AVAILABLE') {
+    throw new GraphQLError('Selected slot is no longer available', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+  if (input.venue_id && String(slotDoc.venue_id) !== String(input.venue_id)) {
+    throw new GraphQLError('Slot does not belong to the selected venue', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const slotVenue = await VenueModel.findById(slotDoc.venue_id).select('settings.holidays owner_user_id');
+  const holidays = new Set(slotVenue?.settings?.holidays ?? []);
+  const { venueLocalYmd } = await import('@modules/venues/autoExtend/slotGenerator');
+  if (holidays.has(venueLocalYmd(slotDoc.start_at))) {
+    throw new GraphQLError('The venue is on leave on this date. Pick another slot.', {
+      extensions: { code: 'CONFLICT' },
+    });
+  }
+  // Booking another partner's venue holds the slot until that venue
+  // approves; booking your own venue confirms instantly.
+  const needsVenueApproval = !(input.pod_hosts_id ?? [])
+    .map(String)
+    .includes(String(slotDoc.owner_user_id));
+  input.venue_id = String(slotDoc.venue_id);
+  input.pod_date_time = slotDoc.start_at.toISOString();
+  input.pod_end_date_time = slotDoc.end_at.toISOString();
+  return { slotDoc, needsVenueApproval };
+}
+
+/** Meeting details are persisted for virtual pods only. */
+function meetingFieldsForCreate(
+  podMode: PodMode,
+  input: any
+): { platform: any; url: any; notes: any } {
+  if (podMode !== 'VIRTUAL') return { platform: null, url: null, notes: null };
+  return {
+    platform: input.meeting_platform?.trim() || null,
+    url: input.meeting_url?.trim() || null,
+    notes: input.meeting_notes?.trim() || null,
+  };
+}
+
+/** Atomic book/hold — if a concurrent request snatched the slot between our
+ * status check and now, this throws CONFLICT and we roll the pod back so
+ * the caller can retry with a different slot. */
+async function bookOrHoldSlotForPod(doc: any, slotDoc: any, needsVenueApproval: boolean) {
+  if (!slotDoc) return;
+  try {
+    if (needsVenueApproval) {
+      await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+      await notifyVenueSlotRequested(doc, slotDoc);
+      await emailVenueSlotRequested(doc, slotDoc);
+    } else {
+      await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+    }
+  } catch (e) {
+    await doc.deleteOne();
+    throw e;
+  }
+}
+
+/** An edit only re-checks the pod window when the incoming start/end actually
+ * differ from what is stored, so re-saving an untouched date still works. */
+function validatePodDatesForUpdate(input: any, doc: any) {
+  if (input.pod_date_time === undefined && input.pod_end_date_time === undefined) return;
+  const nextStart = input.pod_date_time ?? doc.pod_date_time;
+  const nextEnd = input.pod_end_date_time === undefined ? doc.pod_end_date_time : input.pod_end_date_time;
+  const startChanged = input.pod_date_time !== undefined
+    && new Date(input.pod_date_time).getTime() !== doc.pod_date_time?.getTime();
+  const nextEndTime = nextEnd ? new Date(nextEnd).getTime() : null;
+  const docEndTime = doc.pod_end_date_time ? doc.pod_end_date_time.getTime() : null;
+  const endChanged = input.pod_end_date_time !== undefined && nextEndTime !== docEndTime;
+  if (startChanged || endChanged) validateFutureDates(nextStart, nextEnd);
+}
+
+/** A virtual pod carries no place; a physical one re-resolves its venue/location
+ * whenever a place input (or the mode) moves, or it has no venue yet. */
+async function applyPlaceForUpdate(doc: any, input: any, nextMode: PodMode) {
+  if (nextMode === 'VIRTUAL') {
+    doc.venue_id = null as any;
+    doc.location_id = null as any;
+    doc.zone_name = null;
+    return;
+  }
+  if (
+    input.venue_id !== undefined ||
+    input.location_id !== undefined ||
+    input.club_id !== undefined ||
+    input.pod_mode !== undefined ||
+    !doc.venue_id
+  ) {
+    const venueLocation = await resolveVenueLocation({
+      venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null),
+      location_id: input.location_id ?? (doc.location_id ? String(doc.location_id) : null),
+      club_id: input.club_id ?? String(doc.club_id),
+      zone_name: input.zone_name ?? doc.zone_name,
+    });
+    doc.venue_id = venueLocation.venue_id;
+    doc.location_id = venueLocation.location_id;
+    doc.zone_name = venueLocation.zone_name;
+  }
+}
+
+/** Re-prices the pod's product requests and moves the reserved inventory counts. */
+async function applyProductsForUpdate(doc: any, input: any) {
+  if (input.products_enabled === undefined && input.product_requests === undefined) return;
+  const productsEnabled = input.products_enabled ?? doc.products_enabled;
+  const nextRequests = await buildProductRequests(
+    !!productsEnabled,
+    input.product_requests ?? doc.product_requests ?? []
+  );
+  await applyProductDeltas(doc.product_requests ?? [], nextRequests);
+  doc.products_enabled = !!productsEnabled;
+  doc.product_requests = nextRequests as any;
+  doc.product_cost_total = nextRequests.reduce((sum, item) => sum + item.total_cost, 0);
+}
+
+/** Meeting details are normalized on a virtual pod and cleared on a physical one. */
+function applyMeetingFieldsForUpdate(doc: any, input: any, nextMode: PodMode) {
+  if (nextMode === 'VIRTUAL') {
+    if (input.meeting_platform !== undefined) doc.meeting_platform = input.meeting_platform?.trim() || null;
+    if (input.meeting_url !== undefined) doc.meeting_url = input.meeting_url?.trim() || null;
+    if (input.meeting_notes !== undefined) doc.meeting_notes = input.meeting_notes?.trim() || null;
+  }
+  if (nextMode === 'PHYSICAL') {
+    doc.meeting_platform = null;
+    doc.meeting_url = null;
+    doc.meeting_notes = null;
+  }
+}
+
+function applyDatesForUpdate(doc: any, input: any) {
+  if (input.pod_date_time !== undefined) {
+    doc.pod_date_time = new Date(input.pod_date_time);
+  }
+  if (input.pod_end_date_time !== undefined) {
+    doc.pod_end_date_time = input.pod_end_date_time ? new Date(input.pod_end_date_time) : null;
+  }
+}
+
 export const podService = {
   async list(
     filter?: {
@@ -587,27 +768,7 @@ export const podService = {
   },
 
   async create(input: any) {
-    if (!input.club_id) {
-      throw new GraphQLError('club_id is required', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-    const baseSlug = input.pod_id?.trim()
-      ? slugify(input.pod_id.trim())
-      : slugify(input.pod_title ?? '');
-    if (!baseSlug) {
-      throw new GraphQLError('Pod title is required', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-    const dupe = await PodModel.findOne({ club_id: input.club_id, pod_id: baseSlug });
-    if (dupe) {
-      throw new GraphQLError(
-        'A pod with this title already exists in this club. Choose a different title.',
-        { extensions: { code: 'CONFLICT' } }
-      );
-    }
-    const pod_id = baseSlug;
+    const pod_id = await resolvePodSlugForCreate(input);
     if (!input.pod_hosts_id?.length) {
       throw new GraphQLError('At least one host is required', {
         extensions: { code: 'BAD_USER_INPUT' },
@@ -617,44 +778,7 @@ export const podService = {
     const podMode = normalizePodMode(input.pod_mode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
 
-    // A picked slot is the source of truth for the pod's window — overwrite
-    // the incoming date/time so a stale or hand-edited form value can't break
-    // the booking contract. The slot itself is booked atomically *after* the
-    // pod row is created (further down) so we never orphan a slot.
-    let slotDoc: any = null;
-    let needsVenueApproval = false;
-    if (podMode === 'PHYSICAL' && input.venue_slot_id) {
-      slotDoc = await VenueSlotModel.findById(input.venue_slot_id);
-      if (!slotDoc) {
-        throw new GraphQLError('Selected slot not found', { extensions: { code: 'NOT_FOUND' } });
-      }
-      if (slotDoc.status !== 'AVAILABLE') {
-        throw new GraphQLError('Selected slot is no longer available', {
-          extensions: { code: 'CONFLICT' },
-        });
-      }
-      if (input.venue_id && String(slotDoc.venue_id) !== String(input.venue_id)) {
-        throw new GraphQLError('Slot does not belong to the selected venue', {
-          extensions: { code: 'BAD_USER_INPUT' },
-        });
-      }
-      const slotVenue = await VenueModel.findById(slotDoc.venue_id).select('settings.holidays owner_user_id');
-      const holidays = new Set(slotVenue?.settings?.holidays ?? []);
-      const { venueLocalYmd } = await import('@modules/venues/autoExtend/slotGenerator');
-      if (holidays.has(venueLocalYmd(slotDoc.start_at))) {
-        throw new GraphQLError('The venue is on leave on this date. Pick another slot.', {
-          extensions: { code: 'CONFLICT' },
-        });
-      }
-      // Booking another partner's venue holds the slot until that venue
-      // approves; booking your own venue confirms instantly.
-      needsVenueApproval = !(input.pod_hosts_id ?? [])
-        .map(String)
-        .includes(String(slotDoc.owner_user_id));
-      input.venue_id = String(slotDoc.venue_id);
-      input.pod_date_time = slotDoc.start_at.toISOString();
-      input.pod_end_date_time = slotDoc.end_at.toISOString();
-    }
+    const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(input, podMode);
 
     validateFutureDates(input.pod_date_time, input.pod_end_date_time);
     validateMeetingDetails(podMode, input);
@@ -671,6 +795,7 @@ export const podService = {
     const attendees = Array.from(
       new Set([...(input.pod_attendees ?? []), ...input.pod_hosts_id])
     );
+    const meeting = meetingFieldsForCreate(podMode, input);
 
     const doc = await PodModel.create({
       pod_id,
@@ -682,9 +807,9 @@ export const podService = {
       club_id: input.club_id,
       zone_name: venueLocation.zone_name,
       pod_mode: podMode,
-      meeting_platform: podMode === 'VIRTUAL' ? input.meeting_platform?.trim() || null : null,
-      meeting_url: podMode === 'VIRTUAL' ? input.meeting_url?.trim() || null : null,
-      meeting_notes: podMode === 'VIRTUAL' ? input.meeting_notes?.trim() || null : null,
+      meeting_platform: meeting.platform,
+      meeting_url: meeting.url,
+      meeting_notes: meeting.notes,
       pod_hashtag: input.pod_hashtag ?? [],
       pod_images_and_videos: input.pod_images_and_videos ?? [],
       pod_hits: 0,
@@ -709,23 +834,7 @@ export const podService = {
       venue_approval_status: needsVenueApproval ? 'PENDING' : 'NONE',
     });
 
-    // Atomic book/hold — if a concurrent request snatched the slot between our
-    // status check and now, this throws CONFLICT and we roll the pod back so
-    // the caller can retry with a different slot.
-    if (slotDoc) {
-      try {
-        if (needsVenueApproval) {
-          await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
-          await notifyVenueSlotRequested(doc, slotDoc);
-          await emailVenueSlotRequested(doc, slotDoc);
-        } else {
-          await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
-        }
-      } catch (e) {
-        await doc.deleteOne();
-        throw e;
-      }
-    }
+    await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval);
 
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
@@ -772,50 +881,11 @@ export const podService = {
     }
     const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
     validateMeetingDetails(nextMode, input, doc);
-    if (input.pod_date_time !== undefined || input.pod_end_date_time !== undefined) {
-      const nextStart = input.pod_date_time ?? doc.pod_date_time;
-      const nextEnd = input.pod_end_date_time === undefined ? doc.pod_end_date_time : input.pod_end_date_time;
-      const startChanged = input.pod_date_time !== undefined
-        && new Date(input.pod_date_time).getTime() !== doc.pod_date_time?.getTime();
-      const nextEndTime = nextEnd ? new Date(nextEnd).getTime() : null;
-      const docEndTime = doc.pod_end_date_time ? doc.pod_end_date_time.getTime() : null;
-      const endChanged = input.pod_end_date_time !== undefined && nextEndTime !== docEndTime;
-      if (startChanged || endChanged) validateFutureDates(nextStart, nextEnd);
-    }
+    validatePodDatesForUpdate(input, doc);
 
-    if (nextMode === 'VIRTUAL') {
-      doc.venue_id = null as any;
-      doc.location_id = null as any;
-      doc.zone_name = null;
-    } else if (
-      input.venue_id !== undefined ||
-      input.location_id !== undefined ||
-      input.club_id !== undefined ||
-      input.pod_mode !== undefined ||
-      !doc.venue_id
-    ) {
-      const venueLocation = await resolveVenueLocation({
-        venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null),
-        location_id: input.location_id ?? (doc.location_id ? String(doc.location_id) : null),
-        club_id: input.club_id ?? String(doc.club_id),
-        zone_name: input.zone_name ?? doc.zone_name,
-      });
-      doc.venue_id = venueLocation.venue_id;
-      doc.location_id = venueLocation.location_id;
-      doc.zone_name = venueLocation.zone_name;
-    }
+    await applyPlaceForUpdate(doc, input, nextMode);
 
-    if (input.products_enabled !== undefined || input.product_requests !== undefined) {
-      const productsEnabled = input.products_enabled ?? doc.products_enabled;
-      const nextRequests = await buildProductRequests(
-        !!productsEnabled,
-        input.product_requests ?? doc.product_requests ?? []
-      );
-      await applyProductDeltas(doc.product_requests ?? [], nextRequests);
-      doc.products_enabled = !!productsEnabled;
-      doc.product_requests = nextRequests as any;
-      doc.product_cost_total = nextRequests.reduce((sum, item) => sum + item.total_cost, 0);
-    }
+    await applyProductsForUpdate(doc, input);
 
     const fields = [
       'pod_title',
@@ -843,20 +913,8 @@ export const podService = {
     for (const f of fields) {
       if (input[f] !== undefined) (doc as any)[f] = input[f];
     }
-    if (nextMode === 'VIRTUAL') {
-      if (input.meeting_platform !== undefined) doc.meeting_platform = input.meeting_platform?.trim() || null;
-      if (input.meeting_url !== undefined) doc.meeting_url = input.meeting_url?.trim() || null;
-      if (input.meeting_notes !== undefined) doc.meeting_notes = input.meeting_notes?.trim() || null;
-    }
-    if (nextMode === 'PHYSICAL') {
-      doc.meeting_platform = null;
-      doc.meeting_url = null;
-      doc.meeting_notes = null;
-    }
-    if (input.pod_date_time !== undefined)
-      doc.pod_date_time = new Date(input.pod_date_time);
-    if (input.pod_end_date_time !== undefined)
-      doc.pod_end_date_time = input.pod_end_date_time ? new Date(input.pod_end_date_time) : null;
+    applyMeetingFieldsForUpdate(doc, input, nextMode);
+    applyDatesForUpdate(doc, input);
     await doc.save();
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);

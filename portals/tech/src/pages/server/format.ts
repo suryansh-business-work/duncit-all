@@ -12,7 +12,7 @@ export function formatBytes(bytes: number): string {
   else if (value >= 10) digits = 1;
   else digits = 2;
   // toFixed then parseFloat drops trailing zeros (8.00 -> 8, 0.090 -> 0.09).
-  return `${parseFloat(value.toFixed(digits))} ${UNITS[i]}`;
+  return `${Number.parseFloat(value.toFixed(digits))} ${UNITS[i]}`;
 }
 
 /** Compact uptime, e.g. 7081200 -> "81d 22h". */

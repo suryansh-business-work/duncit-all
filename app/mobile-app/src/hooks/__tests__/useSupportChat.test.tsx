@@ -411,6 +411,8 @@ describe('useSupportChat', () => {
       await Promise.resolve();
       await Promise.resolve();
     });
+    // The boot request fired, and its late rejection is swallowed (no state update).
+    expect(mockRequest).toHaveBeenCalled();
   });
 
   it('drops boot results that resolve/reject after unmount', async () => {

@@ -7,10 +7,10 @@ export function formatMjml(source: string) {
   let depth = 0;
   return lines
     .map((line) => {
-      if (/^<\//.test(line)) depth = Math.max(0, depth - 1);
+      if (line.startsWith('</')) depth = Math.max(0, depth - 1);
       const formatted = `${'  '.repeat(depth)}${line}`;
       const opens = /^<mj-[\w-]+\b/i.test(line) || /^<mjml\b/i.test(line);
-      const closes = /<\//.test(line) || /\/>$/.test(line);
+      const closes = /<\//.test(line) || line.endsWith('/>');
       if (opens && !closes) depth += 1;
       return formatted;
     })

@@ -16,7 +16,7 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: { draftId: 'd1' } }),
 }));
 jest.mock('@/hooks/useCreatePod', () => ({ useCreatePod: jest.fn() }));
-const mockFetch = jest.fn();
+const mockFetch = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/stores/home.store', () => ({
   useHomeStore: { getState: () => ({ fetch: mockFetch }) },
 }));

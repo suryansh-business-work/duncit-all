@@ -79,7 +79,7 @@ export default function ClubForm({
                 type="button"
                 disabled={busyOrSubmitting || !nameFilled}
                 onClick={() => {
-                  void saveDraft();
+                  saveDraft().catch(console.error);
                 }}
               >
                 Save as Draft

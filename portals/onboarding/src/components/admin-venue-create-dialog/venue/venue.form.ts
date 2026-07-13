@@ -1,10 +1,7 @@
 import * as yup from 'yup';
 import {
-  AADHAR_PATTERN,
   GSTIN_PATTERN,
   PAN_PATTERN,
-  PHONE_EXTENSION_PATTERN,
-  PHONE_NUMBER_PATTERN,
   validationRules,
 } from '../../../forms/validation/rules';
 import { bankAccountSchema } from '../../../forms/validation/bankAccount';
@@ -196,4 +193,9 @@ export function getVenueError(errors: VenueValidationErrors | undefined, path: s
 }
 
 // Used by AADHAR-needing flows if reused — re-exported for completeness.
-export { AADHAR_PATTERN, PAN_PATTERN, GSTIN_PATTERN, PHONE_NUMBER_PATTERN, PHONE_EXTENSION_PATTERN };
+export { PAN_PATTERN, GSTIN_PATTERN };
+export {
+  AADHAR_PATTERN,
+  PHONE_NUMBER_PATTERN,
+  PHONE_EXTENSION_PATTERN,
+} from '../../../forms/validation/rules';

@@ -20,6 +20,7 @@ import { ClosedNote } from './ClosedNote';
 import { ChatModals } from './ChatModals';
 import { useLiveChatActions } from './useLiveChatActions';
 import { useChatAttachments } from './useChatAttachments';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Live chat — real-time support with AI-first replies, read receipts, resolve/
  * reopen, feedback, attachments and transcript export. mWeb twin of the chat. */
@@ -89,7 +90,7 @@ export function LiveChatScreen() {
 
   const onSendText = (text: string) => {
     pinnedRef.current = true;
-    void submit(text, attachments);
+    fireAndForget(submit(text, attachments));
     setAttachments([]);
   };
 

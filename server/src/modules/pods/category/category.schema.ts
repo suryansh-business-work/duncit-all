@@ -32,6 +32,10 @@ export const categoryTypeDefs = /* GraphQL */ `
     is_active: Boolean!
     is_system: Boolean!
     sort_order: Int!
+    "SUB level only: may a host invite co-hosts to a pod in this sub-category?"
+    allow_co_hosts: Boolean!
+    "SUB level only: how many co-hosts one pod may carry (1-5)."
+    max_co_hosts: Int!
     created_at: String!
     updated_at: String!
   }
@@ -50,6 +54,8 @@ export const categoryTypeDefs = /* GraphQL */ `
     description: String
     media: [CategoryMediaInput!]
     sort_order: Int
+    allow_co_hosts: Boolean
+    max_co_hosts: Int
   }
 
   input UpdateCategoryInput {
@@ -59,6 +65,8 @@ export const categoryTypeDefs = /* GraphQL */ `
     media: [CategoryMediaInput!]
     sort_order: Int
     is_active: Boolean
+    allow_co_hosts: Boolean
+    max_co_hosts: Int
   }
 
   extend type Query {

@@ -37,10 +37,31 @@ export interface IPodComment {
   created_at: Date;
 }
 
+export type CoHostStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED';
+
+/**
+ * A co-host invited to help run a pod.
+ *
+ * Deliberately NOT stored in `pod_hosts_id`: membership of that array is what
+ * `findHostedPod` uses to authorise hostUpdatePod / hostDeletePod /
+ * addPodStatus, so putting a co-host there would let them DELETE the pod and
+ * trigger attendee refunds. A co-host is view-only, and the pod's earnings are
+ * unaffected — the primary host still receives 100%.
+ */
+export interface IPodCoHost {
+  user_id: Types.ObjectId;
+  status: CoHostStatus;
+  invited_at: Date;
+  responded_at?: Date | null;
+}
+
 export interface IPod extends Document {
   pod_id: string;
   pod_title: string;
+  /** The pod's real hosts. Membership here grants full host powers. */
   pod_hosts_id: Types.ObjectId[];
+  /** Invited co-hosts (view-only). See IPodCoHost. */
+  co_hosts: IPodCoHost[];
   location_id?: Types.ObjectId | null;
   venue_id?: Types.ObjectId | null;
   venue_slot_id?: Types.ObjectId | null;
@@ -122,12 +143,27 @@ const commentSchema = new Schema<IPodComment>(
   { _id: true }
 );
 
+const coHostSchema = new Schema<IPodCoHost>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    status: {
+      type: String,
+      enum: ['PENDING', 'ACCEPTED', 'DECLINED'],
+      default: 'PENDING',
+    },
+    invited_at: { type: Date, default: () => new Date() },
+    responded_at: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
 const podSchema = new Schema<IPod>(
   {
     // Slug is unique per club via a compound index below, not globally.
     pod_id: { type: String, required: true, lowercase: true, trim: true, index: true },
     pod_title: { type: String, required: true, trim: true },
     pod_hosts_id: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
+    co_hosts: { type: [coHostSchema], default: [] },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', default: null, index: true },
     venue_slot_id: { type: Schema.Types.ObjectId, ref: 'VenueSlot', default: null, index: true },
@@ -183,6 +219,9 @@ podSchema.index({ club_id: 1, pod_id: 1 }, { unique: true });
 podSchema.index({ club_id: 1, pod_date_time: -1 });
 podSchema.index({ location_id: 1, zone_name: 1, pod_date_time: -1 });
 podSchema.index({ venue_id: 1, pod_date_time: -1 });
+// "Pods I'm co-hosting" / "my pods that have co-hosts" both look up by co-host
+// user, so keep that a covered index rather than a collection scan.
+podSchema.index({ 'co_hosts.user_id': 1, 'co_hosts.status': 1 });
 
 // Soft-delete: every read automatically excludes deleted pods (deleted_at set),
 // so discovery/listing/metrics never surface a deleted pod. Callers that must

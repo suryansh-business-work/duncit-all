@@ -88,6 +88,35 @@ function parseHostDob(value: unknown) {
   return normalized;
 }
 
+/**
+ * SECURITY: `publicHosts` is an UNAUTHENTICATED discovery query. It used to
+ * return the whole Host document, which meant anyone — signed in or not — could
+ * read every approved host's Aadhaar number, PAN, bank account, police-
+ * verification document, DOB and phone. This strips all of that.
+ *
+ * What survives is exactly what the discovery UIs actually render (mWeb
+ * HostsVenuesPage / PodDetailsPage, mobile HostsVenuesScreen): name, avatar,
+ * address, tags, categories. Nothing here is a credential.
+ */
+const redactForPublic = (h: ReturnType<typeof toPub>) => ({
+  ...h,
+  email: '',
+  phone: '',
+  dob: null,
+  aadhar_number: '',
+  pan_number: '',
+  police_verification_url: '',
+  bank_account: {
+    ...h.bank_account,
+    account_number: '',
+    ifsc: '',
+    upi_id: '',
+    account_holder_name: '',
+  },
+  reviewer_notes: '',
+  host_commission_pct: null,
+});
+
 const toPub = (h: IHost) => ({
   id: String(h._id),
   user_id: String(h.user_id),
@@ -165,7 +194,10 @@ export const hostService = {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
     return h ? toPub(h) : null;
   },
-  async list(filter?: { status?: string; activeOnly?: boolean }, opts?: { withCommission?: boolean }) {
+  async list(
+    filter?: { status?: string; activeOnly?: boolean },
+    opts?: { withCommission?: boolean; redacted?: boolean }
+  ) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;
     // publicHosts passes activeOnly so deactivated hosts drop off discovery;
@@ -173,6 +205,8 @@ export const hostService = {
     if (filter?.activeOnly) q.is_active = { $ne: false };
     const docs = await HostModel.find(q).sort({ created_at: -1 });
     const rows = docs.map(toPub);
+    // Never hand onboarding PII to an unauthenticated caller.
+    if (opts?.redacted) return rows.map(redactForPublic);
     return opts?.withCommission ? withCommission(rows) : rows;
   },
   async getById(id: string) {

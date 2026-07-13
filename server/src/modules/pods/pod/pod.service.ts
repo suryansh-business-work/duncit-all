@@ -22,6 +22,7 @@ import {
 } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { moderationService } from '@modules/moderation/moderation.service';
+import { assertInvitable } from './coHost.service';
 
 const slugify = (s: string) =>
   s
@@ -49,6 +50,12 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     pod_id: d.pod_id,
     pod_title: d.pod_title,
     pod_hosts_id: (d.pod_hosts_id ?? []).map(String),
+    co_hosts: (d.co_hosts ?? []).map((c: any) => ({
+      user_id: String(c.user_id),
+      status: c.status ?? 'PENDING',
+      invited_at: c.invited_at?.toISOString?.() ?? '',
+      responded_at: c.responded_at?.toISOString?.() ?? null,
+    })),
     location_id: d.location_id ? String(d.location_id) : null,
     venue_id: d.venue_id ? String(d.venue_id) : null,
     venue_slot_id: d.venue_slot_id ? String(d.venue_slot_id) : null,
@@ -807,10 +814,27 @@ export const podService = {
     );
     const meeting = meetingFieldsForCreate(podMode, input);
 
+    // Co-hosts are validated BEFORE the row is written, so a rejected invite
+    // cannot leave a half-created pod behind. They land as PENDING: nobody
+    // co-hosts without accepting.
+    const invitedCoHosts: string[] = input.co_host_user_ids?.length
+      ? await assertInvitable(
+          { club_id: input.club_id, pod_hosts_id: input.pod_hosts_id, co_hosts: [] } as any,
+          input.co_host_user_ids,
+          0
+        )
+      : [];
+
     const doc = await PodModel.create({
       pod_id,
       pod_title: input.pod_title.trim(),
       pod_hosts_id: input.pod_hosts_id,
+      co_hosts: invitedCoHosts.map((id) => ({
+        user_id: new Types.ObjectId(id),
+        status: 'PENDING',
+        invited_at: new Date(),
+        responded_at: null,
+      })),
       location_id: venueLocation.location_id,
       venue_id: venueLocation.venue_id,
       venue_slot_id: slotDoc ? slotDoc._id : null,

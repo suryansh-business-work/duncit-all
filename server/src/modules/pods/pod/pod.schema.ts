@@ -67,6 +67,29 @@ export const podTypeDefs = /* GraphQL */ `
     quantity: Int!
   }
 
+  enum CoHostStatus {
+    PENDING
+    ACCEPTED
+    DECLINED
+  }
+
+  "A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected."
+  type PodCoHost {
+    user_id: ID!
+    name: String!
+    profile_photo: String
+    status: CoHostStatus!
+    invited_at: String!
+    responded_at: String
+  }
+
+  "A host who can be invited as a co-host. Carries ONLY what the picker needs — never onboarding PII."
+  type CoHostCandidate {
+    user_id: ID!
+    name: String!
+    profile_photo: String
+  }
+
   type Pod {
     id: ID!
     pod_id: String!
@@ -111,6 +134,8 @@ export const podTypeDefs = /* GraphQL */ `
     deleted_at: String
     venue_approval_status: PodVenueApproval!
     host_names: [String!]!
+    "Invited co-hosts (view-only). Empty unless the pod's sub-category allows co-hosting."
+    co_hosts: [PodCoHost!]!
     like_count: Int!
     liked_by_me: Boolean!
     comment_count: Int!
@@ -146,6 +171,10 @@ export const podTypeDefs = /* GraphQL */ `
     pod_id: String
     pod_title: String!
     pod_hosts_id: [ID!]!
+    "The sub-category the host picked in step 2. Required to enforce the co-host cap."
+    sub_category_id: ID
+    "Users to invite as co-hosts. Capped by the sub-category's max_co_hosts."
+    co_host_user_ids: [ID!]
     location_id: ID
     venue_id: ID
     venue_slot_id: ID
@@ -232,6 +261,12 @@ export const podTypeDefs = /* GraphQL */ `
     "Location ids that currently have at least one live (active, not-yet-passed) pod."
     activePodLocationIds: [ID!]!
     hostPodDeleteImpact(pod_doc_id: ID!): HostPodDeleteImpact!
+    "Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited."
+    coHostCandidates(sub_category_id: ID!, search: String, pod_doc_id: ID): [CoHostCandidate!]!
+    "Pods where I am a co-host. status defaults to ACCEPTED; pass PENDING for my invites."
+    myCoHostedPods(status: CoHostStatus): [Pod!]!
+    "My own pods that carry at least one co-host."
+    myPodsWithCoHosts: [Pod!]!
   }
 
   extend type Mutation {
@@ -254,6 +289,12 @@ export const podTypeDefs = /* GraphQL */ `
       start: String!
       end: String
     ): MeetingLinkResult!
+    "Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts."
+    inviteCoHost(pod_doc_id: ID!, user_id: ID!): Pod!
+    "Primary host withdraws an invite / removes a co-host."
+    removeCoHost(pod_doc_id: ID!, user_id: ID!): Pod!
+    "The invited user accepts or declines."
+    respondToCoHostInvite(pod_doc_id: ID!, accept: Boolean!): Pod!
   }
 
   type MeetingLinkResult {

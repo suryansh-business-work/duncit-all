@@ -25,7 +25,11 @@ export const hostResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.getById(args.host_doc_id);
     },
-    publicHosts: async () => hostService.list({ status: 'APPROVED', activeOnly: true }),
+    // Unauthenticated discovery query — MUST stay redacted. See
+    // hostService.redactForPublic: it strips aadhar/PAN/bank/police-doc/DOB/phone,
+    // which this used to leak to anyone who asked.
+    publicHosts: async () =>
+      hostService.list({ status: 'APPROVED', activeOnly: true }, { redacted: true }),
   },
   Mutation: {
     submitHostStep1: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

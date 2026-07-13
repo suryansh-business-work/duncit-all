@@ -68,4 +68,13 @@ COPY --from=builder /repo/server/dist ./server/dist
 ENV PORT=2001
 EXPOSE 2001
 WORKDIR /app/server
+
+# Runs as root deliberately (Sonar docker:S6471 reviewed, not ignored).
+# deploy/docker-compose.yml bind-mounts /var/run/docker.sock:ro so the Tech
+# portal's Server > Docker page (techDockerInfo, gated to SUPER_ADMIN/
+# TECH_MANAGER) can list host containers. That socket is root:docker on the
+# host, so an unprivileged `node` user cannot read it and the feature breaks —
+# verified before reverting a USER node attempt. Dropping root here therefore
+# requires either removing that mount or matching the host's docker GID, which
+# is a deployment change, not a Dockerfile one.
 CMD ["node", "-r", "./dist/tracing.js", "dist/index.js"]

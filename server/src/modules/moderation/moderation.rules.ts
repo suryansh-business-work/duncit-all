@@ -16,8 +16,12 @@ export interface ModerationViolation {
   evidence?: string | null;
 }
 
-const EMAIL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i;
-const EMAIL_GLOBAL_RE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi;
+// Bounded quantifiers on purpose: `[a-z0-9.-]+\.` is ambiguous (the class
+// contains `.`), so the unbounded form backtracks super-linearly on a long
+// non-matching string — and this runs on arbitrary user content (S5852).
+// The bounds are the RFC limits, so no real address stops matching.
+const EMAIL_RE = /[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,253}\.[a-z]{2,24}/i;
+const EMAIL_GLOBAL_RE = /[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,253}\.[a-z]{2,24}/gi;
 // A scheme/www link is always a link; a bare `word.tld` only counts for TLDs
 // that are not common English words (dropping in/co/me/app/club avoids blocking
 // "fill.in", "join.me", "notes.app", "photography.club"; adding ai/tech/live

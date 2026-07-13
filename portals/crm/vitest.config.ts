@@ -22,7 +22,7 @@ export default defineConfig({
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'html', 'json-summary'],
+      reporter: ['text', 'html', 'json-summary', 'lcov'],
       reportsDirectory: path.resolve(projectRoot, 'cypress-artifacts/coverage'),
       // Only instrument the source we own + can sensibly unit-test.
       include: ['src/**/*.{ts,tsx}'],

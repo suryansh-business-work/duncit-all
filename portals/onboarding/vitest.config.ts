@@ -18,7 +18,7 @@ export default defineConfig({
       enabled: true,
       provider: 'v8',
       all: true,
-      reporter: ['text', 'json-summary', 'html'],
+      reporter: ['text', 'json-summary', 'html', 'lcov'],
       reportsDirectory: path.resolve(projectRoot, 'coverage'),
       include: ['src/**/*.{ts,tsx}'],
       exclude: [

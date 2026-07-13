@@ -12,7 +12,7 @@ export default defineConfig({
     server: { deps: { inline: [/@mui/] } },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary'],
+      reporter: ['text', 'json-summary', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         // Bootstrap + theme + apollo glue — exercised end-to-end, not in jsdom.

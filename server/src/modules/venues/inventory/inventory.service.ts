@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
@@ -14,7 +15,7 @@ const SKU_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const randomSku = () => {
   let s = '';
   for (let i = 0; i < 8; i++) {
-    s += SKU_ALPHABET[Math.floor(Math.random() * SKU_ALPHABET.length)];
+    s += SKU_ALPHABET[randomInt(SKU_ALPHABET.length)];
   }
   return s;
 };

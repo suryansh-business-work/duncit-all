@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getOrCreateDuid } from '../../src/duid';
+import { getOrCreateDuid } from '../src/duid';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -14,11 +14,21 @@ describe('getOrCreateDuid', () => {
     expect(getOrCreateDuid()).toBe(first);
   });
 
-  it('uses the timestamp+random fallback when crypto.randomUUID is unavailable', () => {
+  it('falls back to getRandomValues when crypto.randomUUID is unavailable', () => {
+    localStorage.clear();
+    vi.stubGlobal('crypto', {
+      getRandomValues: (arr: Uint8Array) => arr.fill(0xab),
+    });
+    const id = getOrCreateDuid();
+    // 16 bytes of 0xab, hex-encoded.
+    expect(id).toBe(`duid-${'ab'.repeat(16)}`);
+  });
+
+  it('falls back to timestamp+sequence when Web Crypto is missing entirely', () => {
     localStorage.clear();
     vi.stubGlobal('crypto', {});
     const id = getOrCreateDuid();
-    expect(id).toMatch(/^duid-/);
+    expect(id).toMatch(/^duid-[a-z0-9]+-[a-z0-9]+$/);
   });
 
   it('still returns an id when localStorage throws (private mode)', () => {

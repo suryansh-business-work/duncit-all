@@ -1,7 +1,7 @@
 import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
-import { getOrCreateDuid } from './duid';
+import { getOrCreateDuid } from '@duncit/utils';
 import { urlConfigs } from './config/url-configs';
 import { apolloErrorLink } from './utils/apolloErrorLink';
 import { getToken } from './lib/session';

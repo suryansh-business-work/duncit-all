@@ -22,7 +22,7 @@ import type { InventoryStatus } from './types';
 
 interface ProductPageHeaderProps {
   isNew: boolean;
-  product: any | null;
+  product: any;
   onError: (msg: string) => void;
   onToast: (msg: string) => void;
   onRefetch: () => Promise<unknown>;

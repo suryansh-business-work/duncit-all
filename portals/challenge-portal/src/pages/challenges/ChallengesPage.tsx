@@ -64,6 +64,14 @@ export default function ChallengesPage() {
     setDeleting(null);
   };
 
+  const listContent = rows.length === 0 ? (
+    <Alert severity="info">No challenges yet. Create one with “New challenge”.</Alert>
+  ) : (
+    <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+      <ChallengesTable rows={rows} onEdit={openEdit} onDelete={setDeleting} />
+    </Paper>
+  );
+
   return (
     <Stack spacing={2.5}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
@@ -88,12 +96,8 @@ export default function ChallengesPage() {
       {error && <Alert severity="error">{error.message}</Alert>}
       {loading && rows.length === 0 ? (
         <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={24} /></Box>
-      ) : rows.length === 0 ? (
-        <Alert severity="info">No challenges yet. Create one with “New challenge”.</Alert>
       ) : (
-        <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-          <ChallengesTable rows={rows} onEdit={openEdit} onDelete={setDeleting} />
-        </Paper>
+        listContent
       )}
 
       <ChallengeFormDialog open={formOpen} editing={editing} onClose={() => setFormOpen(false)} />

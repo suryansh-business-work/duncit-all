@@ -6,7 +6,7 @@ export interface PaymentReleaseReviewValues {
 }
 
 export interface PaymentReleaseReviewFormProps {
-  request: any | null;
+  request: any;
   busy: boolean;
   errorMessage?: string | null;
   onClose: () => void;

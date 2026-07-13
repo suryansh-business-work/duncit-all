@@ -65,7 +65,7 @@ export const envEntrySchema = (def: EnvCategoryDef, isEdit: boolean) =>
         const secret = def.fields.find((f) => f.secret);
         if (secret) {
           const value = config[secret.name];
-          if (!value || !value.trim()) {
+          if (!value?.trim()) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               path: ['config', secret.name],

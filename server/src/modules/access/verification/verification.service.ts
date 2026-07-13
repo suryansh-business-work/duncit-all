@@ -101,7 +101,7 @@ export const verificationService = {
       },
       { new: true, upsert: true }
     );
-    return toPub(type, doc as UserVerificationDoc);
+    return toPub(type, doc);
   },
 
   async submitAddress(userId: string, input: AddressInput) {
@@ -126,7 +126,7 @@ export const verificationService = {
       },
       { new: true, upsert: true }
     );
-    return toPub('ADDRESS', doc as UserVerificationDoc);
+    return toPub('ADDRESS', doc);
   },
 
   async review(
@@ -162,6 +162,6 @@ export const verificationService = {
       },
       { new: true, upsert: true }
     );
-    return toPub(type, doc as UserVerificationDoc);
+    return toPub(type, doc);
   },
 };

@@ -72,9 +72,9 @@ const toSettingsPub = (s?: IVenueSettings | null) => ({
 
 function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
   const intField = (value: unknown, min: number, max: number, fallback: number) =>
-    value !== undefined ? clampInt(value, min, max, fallback) : fallback;
+    value === undefined ? fallback : clampInt(value, min, max, fallback);
   const boolField = (value: unknown, fallback: boolean) =>
-    value !== undefined ? Boolean(value) : fallback;
+    value === undefined ? fallback : Boolean(value);
   return {
     buffer_minutes: intField(input.buffer_minutes, 0, 1440, base.buffer_minutes),
     min_notice_minutes: intField(input.min_notice_minutes, 0, 525_600, base.min_notice_minutes),
@@ -211,7 +211,7 @@ const toPub = (v: IVenue) => ({
   updated_at: v.updated_at?.toISOString?.() ?? '',
 });
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 async function findStep1Location(input: any) {
   if (input.location_id) return LocationModel.findById(input.location_id);
@@ -260,11 +260,11 @@ async function normalizeVenueCategoryInput(input: any) {
   }
   const docs = await Promise.all(ids.map((id) => CategoryModel.findById(id)));
   const [superCat, category, subCat] = docs;
-  if (!superCat || superCat.level !== 'SUPER') fail('BAD_USER_INPUT', 'Select a valid super category');
-  if (!category || category.level !== 'CATEGORY' || String(category.parent_id) !== String(superCat!._id)) {
+  if (superCat?.level !== 'SUPER') fail('BAD_USER_INPUT', 'Select a valid super category');
+  if (category?.level !== 'CATEGORY' || String(category.parent_id) !== String(superCat!._id)) {
     fail('BAD_USER_INPUT', 'Select a valid category under the chosen super category');
   }
-  if (!subCat || subCat.level !== 'SUB' || String(subCat.parent_id) !== String(category!._id)) {
+  if (subCat?.level !== 'SUB' || String(subCat.parent_id) !== String(category!._id)) {
     fail('BAD_USER_INPUT', 'Select a valid sub category under the chosen category');
   }
   return {
@@ -425,6 +425,40 @@ function buildClubMatchQuery(criteria: {
   return q;
 }
 
+/** Applies the whitelisted owner-editable fields of an APPROVED venue in place.
+ * Documents are append-only: existing entries are never replaced or removed. */
+function applyApprovedVenueInput(v: any, input: any) {
+  if (input.description !== undefined) v.description = String(input.description ?? '').slice(0, 2000);
+  if (input.cover_image_url !== undefined) v.cover_image_url = String(input.cover_image_url ?? '');
+  if (input.gallery !== undefined) {
+    v.gallery = (input.gallery as unknown[]).map(String).filter(Boolean);
+  }
+  const capacityItems = normalizeCapacityItems(input.capacity_items);
+  if (capacityItems !== null) {
+    if (capacityItems.length === 0) fail('BAD_USER_INPUT', 'Keep at least one capacity entry');
+    v.capacity_items = capacityItems as any;
+    v.capacity = capacityItems.reduce((sum, item) => sum + item.capacity, 0);
+  }
+  if (input.add_documents !== undefined) {
+    const added = (input.add_documents as any[])
+      .filter((d) => d?.type && d?.url)
+      .map((d) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
+    v.documents = [...(v.documents ?? []), ...added] as any;
+  }
+  if (input.owner_name !== undefined) v.owner_name = String(input.owner_name ?? '').trim();
+  if (input.owner_phone !== undefined) v.owner_phone = String(input.owner_phone ?? '').trim();
+  if (input.owner_dob !== undefined) v.owner_dob = input.owner_dob ? new Date(input.owner_dob) : null;
+  if (input.owner_address !== undefined) v.owner_address = String(input.owner_address ?? '');
+}
+
+/** Applies an admin status transition and its timestamp side-effects. */
+function applyAdminStatus(v: any, status: string) {
+  v.status = status as any;
+  if (status === 'APPROVED' && !v.approved_at) v.approved_at = new Date();
+  if (status === 'SUBMITTED' && !v.submitted_at) v.submitted_at = new Date();
+  if (status !== 'REJECTED') v.rejected_at = null;
+}
+
 export const venueService = {
   registrationConfig() {
     return {
@@ -503,7 +537,7 @@ export const venueService = {
       throw new GraphQLError('Complete venue details first', { extensions: { code: 'BAD_REQUEST' } });
     }
     v.documents = (input.documents || [])
-      .filter((d: any) => d && d.type && d.url)
+      .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({
         type: String(d.type).trim(),
         url: String(d.url).trim(),
@@ -551,27 +585,7 @@ export const venueService = {
     if (v!.status !== 'APPROVED') {
       fail('BAD_REQUEST', 'Only approved venues can be edited here');
     }
-    if (input.description !== undefined) v!.description = String(input.description ?? '').slice(0, 2000);
-    if (input.cover_image_url !== undefined) v!.cover_image_url = String(input.cover_image_url ?? '');
-    if (input.gallery !== undefined) {
-      v!.gallery = (input.gallery as unknown[]).map(String).filter(Boolean);
-    }
-    const capacityItems = normalizeCapacityItems(input.capacity_items);
-    if (capacityItems !== null) {
-      if (capacityItems.length === 0) fail('BAD_USER_INPUT', 'Keep at least one capacity entry');
-      v!.capacity_items = capacityItems as any;
-      v!.capacity = capacityItems.reduce((sum, item) => sum + item.capacity, 0);
-    }
-    if (input.add_documents !== undefined) {
-      const added = (input.add_documents as any[])
-        .filter((d) => d && d.type && d.url)
-        .map((d) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
-      v!.documents = [...(v!.documents ?? []), ...added] as any;
-    }
-    if (input.owner_name !== undefined) v!.owner_name = String(input.owner_name ?? '').trim();
-    if (input.owner_phone !== undefined) v!.owner_phone = String(input.owner_phone ?? '').trim();
-    if (input.owner_dob !== undefined) v!.owner_dob = input.owner_dob ? new Date(input.owner_dob) : null;
-    if (input.owner_address !== undefined) v!.owner_address = String(input.owner_address ?? '');
+    applyApprovedVenueInput(v!, input);
     await v!.save();
     return toPub(v!);
   },
@@ -615,7 +629,7 @@ export const venueService = {
     }
     const normalized = await buildStep1Patch(opts.step1);
     const documents = (opts.step2.documents || [])
-      .filter((d: any) => d && d.type && d.url)
+      .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({
         type: String(d.type).trim(),
         url: String(d.url).trim(),
@@ -645,7 +659,7 @@ export const venueService = {
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
     Object.assign(v, await buildStep1Patch(opts.step1));
     v.documents = (opts.step2.documents || [])
-      .filter((d: any) => d && d.type && d.url)
+      .filter((d: any) => d?.type && d?.url)
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
     if (opts.step2.gstin !== undefined) v.gstin = opts.step2.gstin;
     if (opts.step2.pan !== undefined) v.pan = opts.step2.pan;
@@ -657,12 +671,7 @@ export const venueService = {
     if (opts.step3.owner_address !== undefined) v.owner_address = opts.step3.owner_address;
     if (opts.step1.tags !== undefined) v.tags = opts.step1.tags;
     v.step_completed = Math.max(v.step_completed ?? 0, 3);
-    if (opts.status) {
-      v.status = opts.status as any;
-      if (opts.status === 'APPROVED' && !v.approved_at) v.approved_at = new Date();
-      if (opts.status === 'SUBMITTED' && !v.submitted_at) v.submitted_at = new Date();
-      if (opts.status !== 'REJECTED') v.rejected_at = null;
-    }
+    if (opts.status) applyAdminStatus(v, opts.status);
     await v.save();
     if (opts.status === 'APPROVED') await assignApprovedVenueRole(v.owner_user_id);
     return toPub(v);

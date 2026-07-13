@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
@@ -17,7 +17,7 @@ async function persist(coverage: CoverageMap | undefined): Promise<void> {
 /** Reads istanbul's `window.__coverage__` from the page (undefined if none). */
 async function read(page: Page): Promise<CoverageMap | undefined> {
   try {
-    return await page.evaluate(() => (window as unknown as { __coverage__?: CoverageMap }).__coverage__);
+    return await page.evaluate(() => (globalThis as unknown as { __coverage__?: CoverageMap }).__coverage__);
   } catch {
     return undefined;
   }
@@ -39,4 +39,4 @@ export const test = base.extend<{ saveCoverage: (page: Page) => Promise<void> }>
   },
 });
 
-export { expect };
+export { expect } from '@playwright/test';

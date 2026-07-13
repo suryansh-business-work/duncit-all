@@ -12,7 +12,7 @@ import {
 import { fmt } from './helpers';
 
 interface Props {
-  refundFor: any | null;
+  refundFor: any;
   refundReason: string;
   setRefundReason: (s: string) => void;
   refundLoading: boolean;

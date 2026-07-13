@@ -17,8 +17,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ARCHIVE_INVENTORY_PRODUCT } from './inventory-product-page/productQueries';
 import {
+  ARCHIVE_INVENTORY_PRODUCT,
   INVENTORY_LINKED_PODS,
   PERMANENT_DELETE_INVENTORY_PRODUCT,
 } from './inventory-product-page/productQueries';
@@ -52,7 +52,7 @@ export default function InventoryDeleteDialog({
 
   useEffect(() => {
     if (open && product?.id && intent === 'delete') {
-      void loadLinkedPods({ variables: { id: product.id } });
+      loadLinkedPods({ variables: { id: product.id } }).catch(() => undefined);
     }
   }, [open, product?.id, intent, loadLinkedPods]);
 
@@ -84,6 +84,37 @@ export default function InventoryDeleteDialog({
   const isDelete = intent === 'delete';
   const title = isDelete ? 'Permanently delete product?' : 'Archive product?';
 
+  const linkedPodsSummary =
+    linkedPods.length > 0 ? (
+      <Alert severity="warning">
+        <Typography variant="subtitle2" gutterBottom>
+          Linked to {linkedPods.length} pod{linkedPods.length === 1 ? '' : 's'}
+        </Typography>
+        <List dense disablePadding sx={{ maxHeight: 180, overflowY: 'auto' }}>
+          {linkedPods.slice(0, 8).map((pod) => (
+            <ListItem key={pod.id} disablePadding>
+              <ListItemText
+                primary={pod.pod_title}
+                secondary={
+                  <Chip
+                    size="small"
+                    label={pod.is_active ? 'Active' : 'Inactive'}
+                    color={pod.is_active ? 'success' : 'default'}
+                    sx={{ height: 18, fontSize: 11 }}
+                  />
+                }
+              />
+            </ListItem>
+          ))}
+        </List>
+        <Typography variant="caption">
+          Those pods will keep a snapshot copy but the link will be lost.
+        </Typography>
+      </Alert>
+    ) : (
+      <Alert severity="info">No pods reference this product.</Alert>
+    );
+
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle>{title}</DialogTitle>
@@ -110,34 +141,8 @@ export default function InventoryDeleteDialog({
                   Checking linked pods…
                 </Typography>
               </Stack>
-            ) : linkedPods.length > 0 ? (
-              <Alert severity="warning">
-                <Typography variant="subtitle2" gutterBottom>
-                  Linked to {linkedPods.length} pod{linkedPods.length === 1 ? '' : 's'}
-                </Typography>
-                <List dense disablePadding sx={{ maxHeight: 180, overflowY: 'auto' }}>
-                  {linkedPods.slice(0, 8).map((pod) => (
-                    <ListItem key={pod.id} disablePadding>
-                      <ListItemText
-                        primary={pod.pod_title}
-                        secondary={
-                          <Chip
-                            size="small"
-                            label={pod.is_active ? 'Active' : 'Inactive'}
-                            color={pod.is_active ? 'success' : 'default'}
-                            sx={{ height: 18, fontSize: 11 }}
-                          />
-                        }
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-                <Typography variant="caption">
-                  Those pods will keep a snapshot copy but the link will be lost.
-                </Typography>
-              </Alert>
             ) : (
-              <Alert severity="info">No pods reference this product.</Alert>
+              linkedPodsSummary
             )}
           </Box>
         )}

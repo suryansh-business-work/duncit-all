@@ -43,11 +43,12 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
           const dayMeetings = meetings.filter((m) => isSameDay(eventStart(m), day));
           const muted = !isSameMonth(day, cursor);
           const holiday = holidays.get(format(day, 'yyyy-MM-dd'));
+          const holidayNamePart = holiday?.name ? ` · ${holiday.name}` : '';
           return (
             <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: holiday ? bg.holiday : cellBg(day, cursor, bg) }}>
               <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: muted ? 'text.disabled' : 'text.primary' }}>{format(day, 'd')}</Typography>
               {holiday && (
-                <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holiday.name ? ` · ${holiday.name}` : ''}`}>
+                <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holidayNamePart}`}>
                   <Chip
                     size="small"
                     color="warning"

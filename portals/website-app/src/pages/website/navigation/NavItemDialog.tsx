@@ -180,7 +180,13 @@ export default function NavItemDialog({ open, item, defaultSite, onClose, onSave
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={() => void submit()} disabled={form.formState.isSubmitting}>
+        <Button
+          variant="contained"
+          onClick={() => {
+            submit().catch(() => undefined);
+          }}
+          disabled={form.formState.isSubmitting}
+        >
           Save
         </Button>
       </DialogActions>

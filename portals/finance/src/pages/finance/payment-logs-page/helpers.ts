@@ -13,7 +13,7 @@ export const fmt = (n: number, sym = '₹') => `${sym}${n.toFixed(2)}`;
 export function downloadPdfFromBase64(b64: string, filename: string) {
   const bin = atob(b64);
   const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.codePointAt(i) ?? 0;
   const blob = new Blob([arr], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

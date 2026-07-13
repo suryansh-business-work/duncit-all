@@ -23,8 +23,9 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
   const trimmedTo = to.trim();
   const phoneValid = PHONE_RE.test(trimmedTo);
   const phoneError = trimmedTo.length > 0 && !phoneValid;
-  const extValid = ext.trim() === '' || EXT_RE.test(ext.trim());
-  const target = ext.trim() ? `${trimmedTo}${ext.trim() ? `,${ext.trim()}` : ''}` : trimmedTo;
+  const trimmedExt = ext.trim();
+  const extValid = trimmedExt === '' || EXT_RE.test(trimmedExt);
+  const target = trimmedExt ? `${trimmedTo},${trimmedExt}` : trimmedTo;
 
   const call = async () => {
     const ok = await confirm({
@@ -65,7 +66,7 @@ export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) 
         onChange={(e) => setExt(e.target.value)}
         placeholder="e.g. 101"
         error={!extValid}
-        helperText={!extValid ? 'Extension must be 1–6 digits' : 'Digits dialed after the call connects'}
+        helperText={extValid ? 'Digits dialed after the call connects' : 'Extension must be 1–6 digits'}
         fullWidth
         autoComplete="off"
         inputProps={{ autoComplete: 'off', inputMode: 'numeric', 'data-1p-ignore': true, 'data-lpignore': true }}

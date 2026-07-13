@@ -115,6 +115,54 @@ export default function PoliciesPage() {
     await refetch();
   };
 
+  const renderBody = () => {
+    if (loading && !items.length) {
+      return (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <CircularProgress size={24} />
+        </Box>
+      );
+    }
+    if (!items.length) {
+      return (
+        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
+          No policies yet.
+        </Typography>
+      );
+    }
+    return (
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell>Title</TableCell>
+            <TableCell>Slug</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Sort</TableCell>
+            <TableCell align="right">Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((p) => (
+            <TableRow key={p.id} hover>
+              <TableCell sx={{ fontWeight: 700 }}>{p.title}</TableCell>
+              <TableCell>{p.slug}</TableCell>
+              <TableCell>
+                <Chip size="small" color={p.is_active ? 'success' : 'default'} label={p.is_active ? 'Active' : 'Hidden'} />
+              </TableCell>
+              <TableCell>{p.sort_order}</TableCell>
+              <TableCell align="right">
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button size="small" onClick={() => openEdit(p)}>Edit</Button>
+                  <Button size="small" color="error" onClick={() => setDelTarget(p)}>Delete</Button>
+                </Stack>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} flexWrap="wrap">
@@ -141,45 +189,7 @@ export default function PoliciesPage() {
         </Stack>
       </Stack>
 
-      {loading && !items.length ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : !items.length ? (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-          No policies yet.
-        </Typography>
-      ) : (
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Slug</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Sort</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((p) => (
-              <TableRow key={p.id} hover>
-                <TableCell sx={{ fontWeight: 700 }}>{p.title}</TableCell>
-                <TableCell>{p.slug}</TableCell>
-                <TableCell>
-                  <Chip size="small" color={p.is_active ? 'success' : 'default'} label={p.is_active ? 'Active' : 'Hidden'} />
-                </TableCell>
-                <TableCell>{p.sort_order}</TableCell>
-                <TableCell align="right">
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Button size="small" onClick={() => openEdit(p)}>Edit</Button>
-                    <Button size="small" color="error" onClick={() => setDelTarget(p)}>Delete</Button>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      {renderBody()}
 
       <Dialog open={!!editing} onClose={() => !saving && setEditing(null)} fullWidth maxWidth="md">
         <DialogTitle>{isNew ? 'New Policy' : `Edit · ${editing?.title}`}</DialogTitle>

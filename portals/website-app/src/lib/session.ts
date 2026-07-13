@@ -1,4 +1,4 @@
-import { createSession, SUPER_ROLE } from '@duncit/shell';
+import { createSession } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 
 /**
@@ -11,4 +11,4 @@ export const { getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage
   appConfig.fullName,
 );
 
-export { SUPER_ROLE };
+export { SUPER_ROLE } from '@duncit/shell';

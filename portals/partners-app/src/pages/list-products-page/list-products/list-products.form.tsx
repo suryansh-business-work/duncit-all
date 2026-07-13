@@ -61,7 +61,7 @@ const stepFields: Path<ProductListingValues>[][] = [['super_category_id', 'categ
 
 interface Props {
   brandId: string;
-  product?: any | null;
+  product?: any;
   onSaved?: () => void;
 }
 
@@ -126,6 +126,9 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
     },
   };
 
+  const saveLabel = editing ? 'Update listing' : 'Submit for approval';
+  const submitLabel = loading ? 'Saving...' : saveLabel;
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -138,7 +141,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
           <StepBody step={activeStep} control={control} watch={watch} setValue={setValue} onImageClick={() => setPickerOpen(true)} category={category} />
           <Stack direction="row" spacing={1} justifyContent="space-between">
             <Button disabled={activeStep === 0 || loading} onClick={() => setActiveStep((step) => step - 1)}>Back</Button>
-            {activeStep < steps.length - 1 ? <Button variant="contained" onClick={next}>Next</Button> : <Button type="submit" variant="contained" disabled={loading}>{loading ? 'Saving...' : editing ? 'Update listing' : 'Submit for approval'}</Button>}
+            {activeStep < steps.length - 1 ? <Button variant="contained" onClick={next}>Next</Button> : <Button type="submit" variant="contained" disabled={loading}>{submitLabel}</Button>}
           </Stack>
         </Stack>
       </CardContent>
@@ -147,7 +150,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   );
 }
 
-function productToValues(product?: any | null): ProductListingValues {
+function productToValues(product?: any): ProductListingValues {
   if (!product) return emptyValues;
   const image_urls = Array.from(new Set([product.image_url, ...(product.images ?? [])].filter(Boolean)));
   return { ...emptyValues, ...product, image_urls };

@@ -57,7 +57,7 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
   const remaining = expense.net_amount;
 
   const add = async () => {
-    if (!(Number(amount) > 0) || !date) return;
+    if (Number(amount) <= 0 || !date) return;
     setBusy(true);
     try {
       await onAdd({ date: date.toISOString(), amount: Number(amount), note });

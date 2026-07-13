@@ -58,6 +58,59 @@ export default function WithdrawalsPage() {
     await refetch(variables);
   };
 
+  const tableContent = rows.length === 0 ? (
+    <Alert severity="info" sx={{ m: 2 }}>No withdrawals for this filter.</Alert>
+  ) : (
+    <Table size="small">
+      <TableHead>
+        <TableRow>
+          <TableCell>Host</TableCell>
+          <TableCell>Account</TableCell>
+          <TableCell>Scheduled</TableCell>
+          <TableCell align="right">Amount</TableCell>
+          <TableCell>Status</TableCell>
+          <TableCell align="right">Review</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {rows.map((w: any) => (
+          <TableRow key={w.id} hover>
+            <TableCell>
+              <Typography fontWeight={700}>{w.beneficiary_name}</Typography>
+              <Typography variant="caption" color="text.secondary">{w.beneficiary_email}</Typography>
+            </TableCell>
+            <TableCell>
+              {w.payout_method}
+              <Typography variant="caption" display="block" color="text.secondary">{account(w)}</Typography>
+            </TableCell>
+            <TableCell>{fmtDate(w.scheduled_for)}</TableCell>
+            <TableCell align="right">₹{Number(w.amount).toFixed(2)}</TableCell>
+            <TableCell>
+              <Chip size="small" color={STATUS_COLOR[w.status] ?? 'default'} label={w.status} />
+              {w.reject_reason ? (
+                <Typography variant="caption" display="block" color="text.secondary">{w.reject_reason}</Typography>
+              ) : null}
+            </TableCell>
+            <TableCell align="right">
+              {w.status === 'PENDING' ? (
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button size="small" variant="contained" disabled={reviewing} onClick={() => submit(w.id, 'PAID')}>
+                    Mark paid
+                  </Button>
+                  <Button size="small" color="error" variant="outlined" disabled={reviewing} onClick={() => setReject({ id: w.id, name: w.beneficiary_name })}>
+                    Reject
+                  </Button>
+                </Stack>
+              ) : (
+                '—'
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+
   return (
     <Box>
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2} sx={{ mb: 3 }}>
@@ -89,57 +142,8 @@ export default function WithdrawalsPage() {
             <Stack alignItems="center" sx={{ py: 5 }}>
               <CircularProgress size={24} />
             </Stack>
-          ) : rows.length === 0 ? (
-            <Alert severity="info" sx={{ m: 2 }}>No withdrawals for this filter.</Alert>
           ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Host</TableCell>
-                  <TableCell>Account</TableCell>
-                  <TableCell>Scheduled</TableCell>
-                  <TableCell align="right">Amount</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Review</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.map((w: any) => (
-                  <TableRow key={w.id} hover>
-                    <TableCell>
-                      <Typography fontWeight={700}>{w.beneficiary_name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{w.beneficiary_email}</Typography>
-                    </TableCell>
-                    <TableCell>
-                      {w.payout_method}
-                      <Typography variant="caption" display="block" color="text.secondary">{account(w)}</Typography>
-                    </TableCell>
-                    <TableCell>{fmtDate(w.scheduled_for)}</TableCell>
-                    <TableCell align="right">₹{Number(w.amount).toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Chip size="small" color={STATUS_COLOR[w.status] ?? 'default'} label={w.status} />
-                      {w.reject_reason ? (
-                        <Typography variant="caption" display="block" color="text.secondary">{w.reject_reason}</Typography>
-                      ) : null}
-                    </TableCell>
-                    <TableCell align="right">
-                      {w.status === 'PENDING' ? (
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
-                          <Button size="small" variant="contained" disabled={reviewing} onClick={() => submit(w.id, 'PAID')}>
-                            Mark paid
-                          </Button>
-                          <Button size="small" color="error" variant="outlined" disabled={reviewing} onClick={() => setReject({ id: w.id, name: w.beneficiary_name })}>
-                            Reject
-                          </Button>
-                        </Stack>
-                      ) : (
-                        '—'
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            tableContent
           )}
         </CardContent>
       </Card>

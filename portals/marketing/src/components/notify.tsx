@@ -12,7 +12,7 @@ interface Payload {
 
 /** Imperative notification — replaces window.alert() across the admin. */
 export function notify(message: string, severity: Severity = 'info', duration = 4000) {
-  if (typeof window === 'undefined') return;
+  if (typeof globalThis.window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent<Payload>(EVENT, { detail: { message, severity, duration } })
   );

@@ -72,9 +72,9 @@ export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo 
               {
                 label: 'Expires',
                 value:
-                  ssl.daysRemaining !== null
-                    ? `${formatDate(ssl.validTo)} · ${ssl.daysRemaining} days left`
-                    : formatDate(ssl.validTo),
+                  ssl.daysRemaining === null
+                    ? formatDate(ssl.validTo)
+                    : `${formatDate(ssl.validTo)} · ${ssl.daysRemaining} days left`,
               },
             ]}
           />

@@ -60,7 +60,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{isEdit ? `Edit ${initial!.name}` : `New ${def.label} entry`}</DialogTitle>
+      <DialogTitle>{isEdit ? `Edit ${initial.name}` : `New ${def.label} entry`}</DialogTitle>
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogContent dividers>
           <Stack spacing={1.5}>
@@ -143,7 +143,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between' }}>
           {isEdit && onTest ? (
-            <Button startIcon={<ScienceIcon />} onClick={() => onTest(initial!)} disabled={testing}>
+            <Button startIcon={<ScienceIcon />} onClick={() => onTest(initial)} disabled={testing}>
               {testing ? 'Testing…' : 'Test connection'}
             </Button>
           ) : <span />}

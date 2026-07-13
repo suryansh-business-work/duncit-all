@@ -148,7 +148,9 @@ export default function NavigationPage() {
             color="error"
             variant="contained"
             onClick={() => {
-              if (confirmDelete) void deleteItem({ variables: { id: confirmDelete.id } });
+              if (confirmDelete) {
+                deleteItem({ variables: { id: confirmDelete.id } }).catch(() => undefined);
+              }
               setConfirmDelete(null);
             }}
           >

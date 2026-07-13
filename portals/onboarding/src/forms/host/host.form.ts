@@ -107,7 +107,7 @@ export type HostCreateValues = z.input<typeof hostCreateSchema>;
 const dateOnly = (value?: string | null) =>
   value ? new Date(value).toISOString().slice(0, 10) : '';
 
-export function hostEditInitialValues(host: any | null): HostEditValues {
+export function hostEditInitialValues(host: any): HostEditValues {
   return {
     step1: {
       full_name: host?.full_name ?? '',

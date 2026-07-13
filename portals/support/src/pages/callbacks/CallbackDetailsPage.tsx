@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -62,6 +62,104 @@ export default function CallbackDetailsPage() {
     };
   };
 
+  let content: ReactNode;
+  if (loading && !req) {
+    content = (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
+  } else if (req) {
+    content = (
+      <Card variant="outlined">
+        <CardContent>
+          <Stack spacing={1.5}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                  {req.user.name}
+                </Typography>
+                <Chip size="small" variant="outlined" label={req.ticket_no} />
+                <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                {formatDistanceToNow(new Date(req.created_at), { addSuffix: true })}
+              </Typography>
+            </Stack>
+
+            {req.contact_phone && (
+              <Link href={`tel:${req.contact_phone}`} variant="body2">
+                📞 {req.contact_phone}
+              </Link>
+            )}
+            <Typography variant="body2">
+              <strong>Pod:</strong> {req.pod?.title ?? '—'}
+            </Typography>
+            <Typography variant="body2">
+              <strong>Reason:</strong> {req.reason || '—'}
+            </Typography>
+            {(req.duration_seconds || req.conclusion) && (
+              <Typography variant="body2" color="text.secondary">
+                <strong>Outcome:</strong>{' '}
+                {req.duration_seconds ? `${Math.round(req.duration_seconds / 60)} min · ` : ''}
+                {req.conclusion || '—'}
+              </Typography>
+            )}
+
+            {req.status !== 'CLOSED' && (
+              <Stack spacing={1.25}>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    size="small"
+                    type="number"
+                    label="Call duration (min)"
+                    value={durationMin}
+                    onChange={(e) => setDurationMin(e.target.value)}
+                    sx={{ width: 160 }}
+                    inputProps={{ min: 0 }}
+                  />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Conclusion"
+                    value={conclusion}
+                    onChange={(e) => setConclusion(e.target.value)}
+                  />
+                </Stack>
+                <Stack direction="row" spacing={1}>
+                  {req.status === 'PENDING' && (
+                    <Button
+                      variant="contained"
+                      disabled={busy}
+                      onClick={() =>
+                        run(() => markContacted({ variables: { id: req.id, ...outcomeVars() } }))
+                      }
+                    >
+                      Mark contacted
+                    </Button>
+                  )}
+                  <Button
+                    variant="outlined"
+                    disabled={busy}
+                    onClick={() => run(() => closeCb({ variables: { id: req.id, ...outcomeVars() } }))}
+                  >
+                    Close
+                  </Button>
+                </Stack>
+              </Stack>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
+    );
+  } else {
+    content = (
+      <Typography variant="body2" color="text.secondary">
+        This request could not be found.
+      </Typography>
+    );
+  }
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -73,96 +171,7 @@ export default function CallbackDetailsPage() {
         </Typography>
       </Stack>
 
-      {loading && !req ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : !req ? (
-        <Typography variant="body2" color="text.secondary">
-          This request could not be found.
-        </Typography>
-      ) : (
-        <Card variant="outlined">
-          <CardContent>
-            <Stack spacing={1.5}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                    {req.user.name}
-                  </Typography>
-                  <Chip size="small" variant="outlined" label={req.ticket_no} />
-                  <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {formatDistanceToNow(new Date(req.created_at), { addSuffix: true })}
-                </Typography>
-              </Stack>
-
-              {req.contact_phone && (
-                <Link href={`tel:${req.contact_phone}`} variant="body2">
-                  📞 {req.contact_phone}
-                </Link>
-              )}
-              <Typography variant="body2">
-                <strong>Pod:</strong> {req.pod?.title ?? '—'}
-              </Typography>
-              <Typography variant="body2">
-                <strong>Reason:</strong> {req.reason || '—'}
-              </Typography>
-              {(req.duration_seconds || req.conclusion) && (
-                <Typography variant="body2" color="text.secondary">
-                  <strong>Outcome:</strong>{' '}
-                  {req.duration_seconds ? `${Math.round(req.duration_seconds / 60)} min · ` : ''}
-                  {req.conclusion || '—'}
-                </Typography>
-              )}
-
-              {req.status !== 'CLOSED' && (
-                <Stack spacing={1.25}>
-                  <Stack direction="row" spacing={1}>
-                    <TextField
-                      size="small"
-                      type="number"
-                      label="Call duration (min)"
-                      value={durationMin}
-                      onChange={(e) => setDurationMin(e.target.value)}
-                      sx={{ width: 160 }}
-                      inputProps={{ min: 0 }}
-                    />
-                    <TextField
-                      size="small"
-                      fullWidth
-                      label="Conclusion"
-                      value={conclusion}
-                      onChange={(e) => setConclusion(e.target.value)}
-                    />
-                  </Stack>
-                  <Stack direction="row" spacing={1}>
-                    {req.status === 'PENDING' && (
-                      <Button
-                        variant="contained"
-                        disabled={busy}
-                        onClick={() =>
-                          run(() => markContacted({ variables: { id: req.id, ...outcomeVars() } }))
-                        }
-                      >
-                        Mark contacted
-                      </Button>
-                    )}
-                    <Button
-                      variant="outlined"
-                      disabled={busy}
-                      onClick={() => run(() => closeCb({ variables: { id: req.id, ...outcomeVars() } }))}
-                    >
-                      Close
-                    </Button>
-                  </Stack>
-                </Stack>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
+      {content}
     </Stack>
   );
 }

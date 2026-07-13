@@ -13,21 +13,25 @@ export default function GoogleMapsTest({ entry }: Readonly<{ entry: EnvEntry }>)
   const [load, setLoad] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<unknown>(null);
 
   useEffect(() => {
     if (!load || !savedKey || !mapRef.current) return;
     setMapError(null);
     const id = 'gmaps-test-script';
-    (window as any).__duncitMapInit = () => {
-      const g = (window as any).google;
+    (globalThis as any).__duncitMapInit = () => {
+      const g = (globalThis as any).google;
       if (!g?.maps) {
         setMapError('Maps failed to load — check the saved key.');
         return;
       }
-      new g.maps.Map(mapRef.current, { center: { lat: 20.5937, lng: 78.9629 }, zoom: 4 });
+      mapInstanceRef.current = new g.maps.Map(mapRef.current, {
+        center: { lat: 20.5937, lng: 78.9629 },
+        zoom: 4,
+      });
     };
     document.getElementById(id)?.remove();
-    delete (window as any).google;
+    delete (globalThis as any).google;
     const script = document.createElement('script');
     script.id = id;
     script.async = true;

@@ -7,14 +7,13 @@ import RhfTextField from '../../../forms/components/RhfTextField';
 import DateTimeField from '../../../components/DateTimeField';
 import CampaignMjmlEditor from './CampaignMjmlEditor';
 import {
-  blankMarketingCampaignValues,
   marketingCampaignSchema,
-  toMarketingCampaignInput,
   type MarketingCampaignFormProps,
   type MarketingCampaignFormValues,
 } from './marketing-campaign.types';
 
-export { blankMarketingCampaignValues, marketingCampaignSchema, toMarketingCampaignInput };
+export { blankMarketingCampaignValues, toMarketingCampaignInput } from './marketing-campaign.types';
+export { marketingCampaignSchema };
 
 export default function MarketingCampaignForm({
   initialValues,

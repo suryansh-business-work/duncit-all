@@ -12,7 +12,7 @@ async function requireTicketAccess(ctx: GraphQLContext, ticketId: string) {
   const isAgent = hasRole(user, SUPPORT_ROLES);
   if (isAgent) return;
   const ticket = await ticketService.getById(ticketId);
-  if (!ticket || ticket.user.id !== user.id) {
+  if (ticket?.user.id !== user.id) {
     throw new GraphQLError('Ticket not found', { extensions: { code: 'NOT_FOUND' } });
   }
 }

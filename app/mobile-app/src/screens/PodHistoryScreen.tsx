@@ -58,13 +58,7 @@ export function PodHistoryScreen() {
         {toErrorMessage(error)}
       </Text>
     );
-  } else if (!hasHistory) {
-    body = (
-      <Text testID="pod-history-empty" padding={24} color="$muted">
-        Pods you have joined will appear here.
-      </Text>
-    );
-  } else {
+  } else if (hasHistory) {
     body = (
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
         <YStack gap={2} marginBottom={4}>
@@ -95,6 +89,12 @@ export function PodHistoryScreen() {
           ))
         )}
       </ScrollView>
+    );
+  } else {
+    body = (
+      <Text testID="pod-history-empty" padding={24} color="$muted">
+        Pods you have joined will appear here.
+      </Text>
     );
   }
 

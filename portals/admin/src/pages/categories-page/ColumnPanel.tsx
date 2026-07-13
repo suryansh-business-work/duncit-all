@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Alert,
@@ -55,6 +56,118 @@ export default function ColumnPanel({
 
   const items: CatItem[] = data?.categories ?? [];
 
+  let body: ReactNode;
+  if (enabled) {
+    if (loading && items.length === 0) {
+      body = (
+        <Stack alignItems="center" sx={{ p: 4 }}>
+          <CircularProgress size={24} />
+        </Stack>
+      );
+    } else if (error) {
+      body = (
+        <Alert severity="error" sx={{ m: 2 }}>
+          {error.message}
+        </Alert>
+      );
+    } else if (items.length === 0) {
+      body = (
+        <Box sx={{ p: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            No items yet. Click + to create one.
+          </Typography>
+        </Box>
+      );
+    } else {
+      body = (
+        <List dense disablePadding>
+          {items.map((it) => {
+            const iconIsImage = isImageIconValue(it.icon);
+            const hasIconValue = !!it.icon?.trim();
+            const materialIcon = iconIsImage ? null : renderIconByName(it.icon, 'small');
+            const mediaFallback = hasIconValue ? undefined : it.media[0]?.url;
+            const avatarSrc = iconIsImage ? it.icon : mediaFallback;
+            const textIcon = iconIsImage ? '' : it.icon;
+            const ellipsis = (it.description?.length ?? 0) > 50 ? '…' : '';
+            const secondaryText = it.description
+              ? it.description.slice(0, 50) + ellipsis
+              : undefined;
+            return (
+              <ListItemButton
+                key={it.id}
+                selected={selectedId === it.id}
+                onClick={() => onSelect(it)}
+              >
+                <Avatar
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    mr: 1.5,
+                    bgcolor: 'primary.main',
+                    fontSize: 16,
+                  }}
+                  src={avatarSrc}
+                >
+                  {materialIcon || textIcon || it.name[0]}
+                </Avatar>
+                <ListItemText
+                  primary={
+                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {it.name}
+                      </Typography>
+                      {it.is_system && (
+                        <Chip label="system" size="small" sx={{ height: 16, fontSize: 10 }} />
+                      )}
+                      {!it.is_active && (
+                        <Chip
+                          label="inactive"
+                          size="small"
+                          color="warning"
+                          sx={{ height: 16, fontSize: 10 }}
+                        />
+                      )}
+                    </Stack>
+                  }
+                  secondary={secondaryText}
+                />
+                <Stack direction="row">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(it);
+                    }}
+                  >
+                    <EditIcon fontSize="inherit" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(it);
+                    }}
+                  >
+                    <DeleteIcon fontSize="inherit" />
+                  </IconButton>
+                  {level !== 'SUB' && <ChevronRightIcon fontSize="small" />}
+                </Stack>
+              </ListItemButton>
+            );
+          })}
+        </List>
+      );
+    }
+  } else {
+    body = (
+      <Box sx={{ p: 3 }}>
+        <Typography variant="body2" color="text.secondary">
+          Select a {level === 'CATEGORY' ? 'super category' : 'category'} on the left.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CardContent sx={{ pb: 1 }}>
@@ -79,108 +192,7 @@ export default function ColumnPanel({
         </Stack>
       </CardContent>
       <Divider />
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        {!enabled ? (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              Select a {level === 'CATEGORY' ? 'super category' : 'category'} on the left.
-            </Typography>
-          </Box>
-        ) : loading && items.length === 0 ? (
-          <Stack alignItems="center" sx={{ p: 4 }}>
-            <CircularProgress size={24} />
-          </Stack>
-        ) : error ? (
-          <Alert severity="error" sx={{ m: 2 }}>
-            {error.message}
-          </Alert>
-        ) : items.length === 0 ? (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              No items yet. Click + to create one.
-            </Typography>
-          </Box>
-        ) : (
-          <List dense disablePadding>
-            {items.map((it) => {
-              const iconIsImage = isImageIconValue(it.icon);
-              const hasIconValue = !!it.icon?.trim();
-              const materialIcon = iconIsImage ? null : renderIconByName(it.icon, 'small');
-              return (
-                <ListItemButton
-                  key={it.id}
-                  selected={selectedId === it.id}
-                  onClick={() => onSelect(it)}
-                >
-                  <Avatar
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      mr: 1.5,
-                      bgcolor: 'primary.main',
-                      fontSize: 16,
-                    }}
-                    src={iconIsImage ? it.icon : !hasIconValue ? it.media[0]?.url : undefined}
-                  >
-                    {materialIcon || (!iconIsImage ? it.icon : '') || it.name[0]}
-                  </Avatar>
-                  <ListItemText
-                    primary={
-                      <Stack direction="row" alignItems="center" spacing={0.5}>
-                        <Typography variant="body2" fontWeight={500}>
-                          {it.name}
-                        </Typography>
-                        {it.is_system && (
-                          <Chip
-                            label="system"
-                            size="small"
-                            sx={{ height: 16, fontSize: 10 }}
-                          />
-                        )}
-                        {!it.is_active && (
-                          <Chip
-                            label="inactive"
-                            size="small"
-                            color="warning"
-                            sx={{ height: 16, fontSize: 10 }}
-                          />
-                        )}
-                      </Stack>
-                    }
-                    secondary={
-                      it.description
-                        ? it.description.slice(0, 50) +
-                          (it.description.length > 50 ? '…' : '')
-                        : undefined
-                    }
-                  />
-                  <Stack direction="row">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEdit(it);
-                      }}
-                    >
-                      <EditIcon fontSize="inherit" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(it);
-                      }}
-                    >
-                      <DeleteIcon fontSize="inherit" />
-                    </IconButton>
-                    {level !== 'SUB' && <ChevronRightIcon fontSize="small" />}
-                  </Stack>
-                </ListItemButton>
-              );
-            })}
-          </List>
-        )}
-      </Box>
+      <Box sx={{ flex: 1, overflow: 'auto' }}>{body}</Box>
     </Card>
   );
 }

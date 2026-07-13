@@ -97,6 +97,88 @@ export default function DocumentDetailPage() {
     navigate('/documents');
   };
 
+  const renderBody = () => {
+    if (loading && !doc) {
+      return (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <CircularProgress size={24} />
+        </Box>
+      );
+    }
+    if (!doc) {
+      return (
+        <Typography variant="body2" color="text.secondary">
+          This document could not be found.
+        </Typography>
+      );
+    }
+    if (editing) {
+      return (
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <Stack spacing={2}>
+            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
+            <DocumentTypeSelect value={docType} onChange={setDocType} />
+            <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth multiline minRows={2} />
+            <Box>
+              <Typography variant="caption" color="text.secondary">Content</Typography>
+              <RichTextEditor value={content} onChange={setContent} minHeight={260} />
+            </Box>
+            <Stack direction="row" spacing={1} justifyContent="flex-end">
+              <Button onClick={() => setEditing(false)}>Cancel</Button>
+              <Button variant="contained" disabled={saving || !name.trim() || !docType.trim()} onClick={save}>
+                Save
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+      );
+    }
+    return (
+      <>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+          <Chip size="small" color="primary" label={doc.document_type} />
+          <Typography variant="body2" color="text.secondary">
+            Updated by {doc.updated_by_name || '—'} · v{doc.version_count}
+          </Typography>
+        </Stack>
+        {doc.description && <Typography variant="body2">{doc.description}</Typography>}
+
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          {doc.content ? (
+            <Box sx={{ '& p': { mt: 0 } }} dangerouslySetInnerHTML={{ __html: doc.content }} />
+          ) : (
+            <Typography variant="body2" color="text.secondary">No content yet.</Typography>
+          )}
+        </Paper>
+
+        <Divider />
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+            Update history
+          </Typography>
+          {doc.versions.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No edits yet — this is the original version.
+            </Typography>
+          ) : (
+            <Stack spacing={0.75}>
+              {doc.versions.map((v) => (
+                <Stack key={v.id} direction="row" spacing={1} alignItems="center">
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {v.updated_by_name || 'Unknown'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {format(new Date(v.created_at), 'd MMM yyyy, HH:mm')}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+          )}
+        </Box>
+      </>
+    );
+  };
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
@@ -118,76 +200,7 @@ export default function DocumentDetailPage() {
         )}
       </Stack>
 
-      {loading && !doc ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : !doc ? (
-        <Typography variant="body2" color="text.secondary">
-          This document could not be found.
-        </Typography>
-      ) : editing ? (
-        <Paper variant="outlined" sx={{ p: 2 }}>
-          <Stack spacing={2}>
-            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-            <DocumentTypeSelect value={docType} onChange={setDocType} />
-            <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth multiline minRows={2} />
-            <Box>
-              <Typography variant="caption" color="text.secondary">Content</Typography>
-              <RichTextEditor value={content} onChange={setContent} minHeight={260} />
-            </Box>
-            <Stack direction="row" spacing={1} justifyContent="flex-end">
-              <Button onClick={() => setEditing(false)}>Cancel</Button>
-              <Button variant="contained" disabled={saving || !name.trim() || !docType.trim()} onClick={save}>
-                Save
-              </Button>
-            </Stack>
-          </Stack>
-        </Paper>
-      ) : (
-        <>
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <Chip size="small" color="primary" label={doc.document_type} />
-            <Typography variant="body2" color="text.secondary">
-              Updated by {doc.updated_by_name || '—'} · v{doc.version_count}
-            </Typography>
-          </Stack>
-          {doc.description && <Typography variant="body2">{doc.description}</Typography>}
-
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            {doc.content ? (
-              <Box sx={{ '& p': { mt: 0 } }} dangerouslySetInnerHTML={{ __html: doc.content }} />
-            ) : (
-              <Typography variant="body2" color="text.secondary">No content yet.</Typography>
-            )}
-          </Paper>
-
-          <Divider />
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Update history
-            </Typography>
-            {doc.versions.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                No edits yet — this is the original version.
-              </Typography>
-            ) : (
-              <Stack spacing={0.75}>
-                {doc.versions.map((v) => (
-                  <Stack key={v.id} direction="row" spacing={1} alignItems="center">
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {v.updated_by_name || 'Unknown'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {format(new Date(v.created_at), 'd MMM yyyy, HH:mm')}
-                    </Typography>
-                  </Stack>
-                ))}
-              </Stack>
-            )}
-          </Box>
-        </>
-      )}
+      {renderBody()}
 
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
         <DialogTitle>Delete document?</DialogTitle>

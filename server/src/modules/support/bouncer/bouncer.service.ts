@@ -169,16 +169,13 @@ async function loadPodOrFail(podId: string) {
 async function notifyHost(opts: { hostId: string | null; title: string; body: string; link: string }) {
   if (!opts.hostId) return;
   try {
-    await notificationService.create(
-      {
-        title: opts.title,
-        body: opts.body,
-        scope: 'USER',
-        target_user_ids: [opts.hostId],
-        link_url: opts.link,
-      },
-      undefined
-    );
+    await notificationService.create({
+      title: opts.title,
+      body: opts.body,
+      scope: 'USER',
+      target_user_ids: [opts.hostId],
+      link_url: opts.link,
+    });
   } catch {
     // Notification failure must not block the SOS / feedback write.
   }
@@ -346,7 +343,7 @@ export const bouncerService = {
     doc!.status = 'CONTACTED';
     doc!.contacted_by = new Types.ObjectId(adminId);
     doc!.contacted_at = new Date();
-    applyCallbackOutcome(doc!, outcome);
+    applyCallbackOutcome(doc, outcome);
     await doc!.save();
     const pub = await toCallbackPub(doc);
     emit('bouncer:callback_update', pub);
@@ -366,7 +363,7 @@ export const bouncerService = {
       doc!.contacted_by = new Types.ObjectId(adminId);
       doc!.contacted_at = new Date();
     }
-    applyCallbackOutcome(doc!, outcome);
+    applyCallbackOutcome(doc, outcome);
     await doc!.save();
     const pub = await toCallbackPub(doc);
     emit('bouncer:callback_update', pub);

@@ -33,7 +33,8 @@ export default function ConfigField({ field, value, error, helperText, onChange,
     );
   }
 
-  const type = field.secret && !reveal ? 'password' : field.number ? 'number' : 'text';
+  const visibleType = field.number ? 'number' : 'text';
+  const type = field.secret && !reveal ? 'password' : visibleType;
 
   return (
     <TextField

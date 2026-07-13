@@ -37,7 +37,7 @@ function socketOrigin(): string {
 // audio asset on disk. Falls back silently if the browser blocks audio.
 function playBeep() {
   try {
-    const Ctx = (window as any).AudioContext || (window as any).webkitAudioContext;
+    const Ctx = (globalThis as any).AudioContext || (globalThis as any).webkitAudioContext;
     if (!Ctx) return;
     const ctx = new Ctx();
     const beep = (when: number, freq: number, dur: number) => {
@@ -54,7 +54,7 @@ function playBeep() {
     };
     beep(0, 880, 0.18);
     beep(0.22, 660, 0.22);
-    window.setTimeout(() => ctx.close().catch(() => {}), 800);
+    globalThis.setTimeout(() => ctx.close().catch(() => {}), 800);
   } catch {
     // ignore — audio is best-effort
   }

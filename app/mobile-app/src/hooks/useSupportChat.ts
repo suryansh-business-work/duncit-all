@@ -100,6 +100,23 @@ export function useSupportChat() {
   useEffect(() => {
     if (!sessionId) return undefined;
     let cancelled = false;
+    const onMessage = (m: SupportChatMessage) => {
+      if (m.session_id !== sessionId) return;
+      setMessages((prev) => appendUnique(prev, m));
+      if (m.sender_role !== 'USER') {
+        setAiThinking(false);
+        markRead(sessionId);
+      }
+    };
+    const onSessionUpdate = (sess: SupportChatSession) => {
+      if (sess.id === sessionId) setSession((prev) => ({ ...prev, ...sess }));
+    };
+    const onTyping = (payload: TypingPayload) => {
+      if (payload?.session_id !== sessionId) return;
+      setTyping(typingLabel(payload));
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+      typingTimer.current = setTimeout(() => setTyping(''), 2500);
+    };
     getAuthToken().then((token) => {
       if (cancelled || !token) return;
       const s = io(config.apiUrl, {
@@ -109,23 +126,9 @@ export function useSupportChat() {
       });
       socketRef.current = s;
       s.on('connect', () => s.emit('join_support_session', sessionId));
-      s.on('support_chat:message', (m: SupportChatMessage) => {
-        if (m.session_id !== sessionId) return;
-        setMessages((prev) => appendUnique(prev, m));
-        if (m.sender_role !== 'USER') {
-          setAiThinking(false);
-          markRead(sessionId);
-        }
-      });
-      s.on('support_chat:session_update', (sess: SupportChatSession) => {
-        if (sess.id === sessionId) setSession((prev) => ({ ...prev, ...sess }));
-      });
-      s.on('support_typing', (payload: TypingPayload) => {
-        if (payload?.session_id !== sessionId) return;
-        setTyping(typingLabel(payload));
-        if (typingTimer.current) clearTimeout(typingTimer.current);
-        typingTimer.current = setTimeout(() => setTyping(''), 2500);
-      });
+      s.on('support_chat:message', onMessage);
+      s.on('support_chat:session_update', onSessionUpdate);
+      s.on('support_typing', onTyping);
     });
     return () => {
       cancelled = true;

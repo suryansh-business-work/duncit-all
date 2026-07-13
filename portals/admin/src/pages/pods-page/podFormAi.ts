@@ -57,6 +57,6 @@ export function applyAiFillToForm(
     place_charges: charges ?? prev.place_charges,
   };
 
-  if (next.pod_type && next.pod_type.includes('FREE')) next.pod_amount = 0;
+  if (next.pod_type?.includes('FREE')) next.pod_amount = 0;
   setValues(next);
 }

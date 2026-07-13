@@ -38,7 +38,7 @@ const buildV1Lines = (b: any, sym: string): BreakdownLine[] => {
 
 /** Read-only settlement lines shown in the review dialog. v2 = the pool
  * waterfall; v1 = the legacy venue-bill snapshot. */
-export default function ReleaseBreakdownLines({ request }: Readonly<{ request: any | null }>) {
+export default function ReleaseBreakdownLines({ request }: Readonly<{ request: any }>) {
   const settings = useQuery<{ publicFinanceSettings: { currency_symbol: string } }>(
     PUBLIC_FINANCE_SETTINGS,
     { fetchPolicy: 'cache-first' },

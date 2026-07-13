@@ -98,7 +98,7 @@ export default function MediaPickerDialog({
     try {
       const fileBase64: string = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
         reader.onerror = () => reject(new Error('Could not read selected file'));
         reader.readAsDataURL(picked);
       });

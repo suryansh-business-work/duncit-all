@@ -6,6 +6,7 @@ import { MY_HOST_PODS } from './queries';
 export default function HostPodsList() {
   const { data, loading, error } = useQuery(MY_HOST_PODS, { fetchPolicy: 'cache-and-network' });
   const pods = data?.myHostPods ?? [];
+  const emptyState = renderEmptyState(loading && !data, pods.length);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -15,7 +16,7 @@ export default function HostPodsList() {
           <Typography variant="body2" color="text.secondary">Pods assigned to your host profile appear here.</Typography>
           {error && <Alert severity="error">{error.message}</Alert>}
         </Stack>
-        {loading && !data ? <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack> : pods.length === 0 ? <Alert severity="info" sx={{ m: 2 }}>No hosted pods yet.</Alert> : (
+        {emptyState ?? (
           <TableContainer>
             <Table size="small">
               <TableHead><TableRow><TableCell>Pod</TableCell><TableCell>Date</TableCell><TableCell>Attendees</TableCell><TableCell>Pod earning</TableCell><TableCell>Status</TableCell></TableRow></TableHead>
@@ -26,7 +27,7 @@ export default function HostPodsList() {
                     <TableCell>{formatDate(pod.pod_date_time)}</TableCell>
                     <TableCell>{pod.pod_attendees?.length ?? 0}</TableCell>
                     <TableCell>{formatMoney(Number(pod.pod_amount || 0) * (pod.pod_attendees?.length ?? 0))}</TableCell>
-                    <TableCell><Chip size="small" label={pod.completed_at ? 'Completed' : pod.is_active ? 'Active' : 'Inactive'} color={pod.completed_at ? 'success' : pod.is_active ? 'info' : 'default'} /></TableCell>
+                    <TableCell><Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -36,6 +37,22 @@ export default function HostPodsList() {
       </CardContent>
     </Card>
   );
+}
+
+function renderEmptyState(isLoading: boolean, totalCount: number) {
+  if (isLoading) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>;
+  if (totalCount === 0) return <Alert severity="info" sx={{ m: 2 }}>No hosted pods yet.</Alert>;
+  return null;
+}
+
+function podStatusLabel(pod: any) {
+  if (pod.completed_at) return 'Completed';
+  return pod.is_active ? 'Active' : 'Inactive';
+}
+
+function podStatusColor(pod: any): 'success' | 'info' | 'default' {
+  if (pod.completed_at) return 'success';
+  return pod.is_active ? 'info' : 'default';
 }
 
 function formatDate(value?: string) {

@@ -10,6 +10,18 @@ interface Props {
   onEdit?: (pod: any) => void;
 }
 
+/** Status label for a pod row. */
+const podStatusLabel = (pod: any): string => {
+  if (pod.completed_at) return 'Completed';
+  return pod.is_active ? 'Active' : 'Draft';
+};
+
+/** Chip colour matching the pod status label. */
+const podStatusColor = (pod: any): 'success' | 'info' | 'default' => {
+  if (pod.completed_at) return 'success';
+  return pod.is_active ? 'info' : 'default';
+};
+
 export default function PartnerPodsTable({ loading, pods, clubName, venueName, onEdit }: Readonly<Props>) {
   if (loading) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>;
   if (pods.length === 0) return <Alert severity="info">No pods created from your partner account yet.</Alert>;
@@ -23,7 +35,7 @@ export default function PartnerPodsTable({ loading, pods, clubName, venueName, o
             <TableCell>{pod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(pod.venue_id)}</TableCell>
             <TableCell>{pod.pod_date_time ? format(new Date(pod.pod_date_time), 'dd MMM yyyy, h:mm a') : 'Not scheduled'}</TableCell>
             <TableCell>{pod.pod_attendees?.length ?? 0}</TableCell>
-            <TableCell><Chip size="small" label={pod.completed_at ? 'Completed' : pod.is_active ? 'Active' : 'Draft'} color={pod.completed_at ? 'success' : pod.is_active ? 'info' : 'default'} /></TableCell>
+            <TableCell><Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} /></TableCell>
             {onEdit && (
               <TableCell align="right">
                 <Tooltip title="Edit name, description & images">

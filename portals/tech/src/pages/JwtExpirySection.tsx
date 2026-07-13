@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -103,6 +103,66 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
     }
   };
 
+  let body: ReactNode;
+  if (loading && !data) {
+    body = (
+      <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
+    );
+  } else if (error) {
+    body = <Alert severity="error">{error.message}</Alert>;
+  } else {
+    body = (
+      <Stack spacing={2}>
+        <FormControlLabel
+          control={<Switch checked={noExpire} onChange={(_, v) => setNoExpire(v)} color="warning" />}
+          label={
+            <Box>
+              <Typography variant="body2" fontWeight={600}>Tokens never expire</Typography>
+              <Typography variant="caption" color="text.secondary">Not recommended for production.</Typography>
+            </Box>
+          }
+        />
+        <Divider />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <TextField
+            label="Duration"
+            type="number"
+            value={value}
+            onChange={(e) => setValue(Math.max(1, Number(e.target.value) || 1))}
+            inputProps={{ min: 1 }}
+            disabled={noExpire}
+            sx={{ maxWidth: 160 }}
+          />
+          <TextField
+            label="Unit"
+            select
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as Unit)}
+            disabled={noExpire}
+            sx={{ maxWidth: 200 }}
+          >
+            {(['m', 'h', 'd'] as Unit[]).map((u) => (
+              <MenuItem key={u} value={u}>{UNIT_LABELS[u]}</MenuItem>
+            ))}
+          </TextField>
+          <Box sx={{ alignSelf: 'center' }}>
+            <Typography variant="caption" color="text.secondary">
+              {noExpire
+                ? 'Tokens issued from now will not expire.'
+                : `Tokens will expire after ${value}${unit} (${value} ${UNIT_LABELS[unit].toLowerCase()}).`}
+            </Typography>
+          </Box>
+        </Stack>
+        {opError && <Alert severity="error">{opError}</Alert>}
+        {data?.appSettings?.updated_at && (
+          <Typography variant="caption" color="text.secondary">
+            Last updated {new Date(data.appSettings.updated_at).toLocaleString()}
+          </Typography>
+        )}
+      </Stack>
+    );
+  }
+
   return (
     <Card>
       <CardContent>
@@ -124,60 +184,7 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
           </Button>
         </Stack>
 
-        {loading && !data ? (
-          <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-        ) : error ? (
-          <Alert severity="error">{error.message}</Alert>
-        ) : (
-          <Stack spacing={2}>
-            <FormControlLabel
-              control={<Switch checked={noExpire} onChange={(_, v) => setNoExpire(v)} color="warning" />}
-              label={
-                <Box>
-                  <Typography variant="body2" fontWeight={600}>Tokens never expire</Typography>
-                  <Typography variant="caption" color="text.secondary">Not recommended for production.</Typography>
-                </Box>
-              }
-            />
-            <Divider />
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                label="Duration"
-                type="number"
-                value={value}
-                onChange={(e) => setValue(Math.max(1, Number(e.target.value) || 1))}
-                inputProps={{ min: 1 }}
-                disabled={noExpire}
-                sx={{ maxWidth: 160 }}
-              />
-              <TextField
-                label="Unit"
-                select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value as Unit)}
-                disabled={noExpire}
-                sx={{ maxWidth: 200 }}
-              >
-                {(['m', 'h', 'd'] as Unit[]).map((u) => (
-                  <MenuItem key={u} value={u}>{UNIT_LABELS[u]}</MenuItem>
-                ))}
-              </TextField>
-              <Box sx={{ alignSelf: 'center' }}>
-                <Typography variant="caption" color="text.secondary">
-                  {noExpire
-                    ? 'Tokens issued from now will not expire.'
-                    : `Tokens will expire after ${value}${unit} (${value} ${UNIT_LABELS[unit].toLowerCase()}).`}
-                </Typography>
-              </Box>
-            </Stack>
-            {opError && <Alert severity="error">{opError}</Alert>}
-            {data?.appSettings?.updated_at && (
-              <Typography variant="caption" color="text.secondary">
-                Last updated {new Date(data.appSettings.updated_at).toLocaleString()}
-              </Typography>
-            )}
-          </Stack>
-        )}
+        {body}
       </CardContent>
     </Card>
   );

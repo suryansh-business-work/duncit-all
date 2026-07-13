@@ -40,7 +40,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
 
   useEffect(() => {
     if (!draft.subject.trim() || !draft.mjml.trim()) return;
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       renderCampaign({
         variables: {
           input: {
@@ -52,7 +52,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
         },
       });
     }, 350);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [draft.subject, draft.mjml, draft.card_type, draft.card_ref_id, renderCampaign]);
 
   const cards = useMemo(() => {

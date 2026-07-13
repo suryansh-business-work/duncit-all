@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -29,6 +29,86 @@ const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> 
   RESOLVED: 'success',
 };
 
+type SosAlertCardProps = {
+  alert: SosAlert;
+  busy: boolean;
+  onAck: () => void;
+  onResolve: () => void;
+};
+
+function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardProps>) {
+  return (
+    <Card variant="outlined" sx={{ borderColor: alert.status === 'ACTIVE' ? 'error.main' : 'divider' }}>
+      <CardContent>
+        <Stack spacing={1.5}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                {alert.user.name}
+              </Typography>
+              <Chip size="small" variant="outlined" label={alert.ticket_no} />
+              <Chip size="small" color={STATUS_COLOR[alert.status]} label={alert.status} />
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+            </Typography>
+          </Stack>
+
+          <Typography variant="body2">
+            <strong>Pod:</strong> {alert.pod.title}
+            {alert.pod.venue_name ? ` · ${alert.pod.venue_name}` : ''}
+            {alert.pod.club_name ? ` · ${alert.pod.club_name}` : ''}
+          </Typography>
+
+          {alert.message && (
+            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+              "{alert.message}"
+            </Typography>
+          )}
+
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            {alert.contact_phone && (
+              <Link href={`tel:${alert.contact_phone}`} variant="body2">
+                📞 {alert.contact_phone}
+              </Link>
+            )}
+            {alert.location && (
+              <Link
+                href={`https://www.google.com/maps?q=${alert.location.lat},${alert.location.lng}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="body2"
+                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+              >
+                <LocationOnIcon fontSize="inherit" /> Open in Maps
+              </Link>
+            )}
+            {alert.host && (
+              <Typography variant="body2" color="text.secondary">
+                Host: {alert.host.name}
+                {alert.host.phone ? ` (${alert.host.phone})` : ''}
+              </Typography>
+            )}
+          </Stack>
+
+          {alert.status !== 'RESOLVED' && (
+            <Stack direction="row" spacing={1}>
+              {alert.status === 'ACTIVE' && (
+                <Button variant="contained" color="warning" disabled={busy} onClick={onAck}>
+                  Acknowledge
+                </Button>
+              )}
+              <Button variant="contained" color="success" disabled={busy} onClick={onResolve}>
+                Mark resolved
+              </Button>
+            </Stack>
+          )}
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function SosDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -51,6 +131,30 @@ export default function SosDetailsPage() {
     }
   };
 
+  let content: ReactNode;
+  if (loading && !alert) {
+    content = (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <CircularProgress size={24} />
+      </Box>
+    );
+  } else if (alert) {
+    content = (
+      <SosAlertCard
+        alert={alert}
+        busy={busy}
+        onAck={() => run(() => ack({ variables: { id: alert.id } }))}
+        onResolve={() => run(() => resolve({ variables: { id: alert.id } }))}
+      />
+    );
+  } else {
+    content = (
+      <Typography variant="body2" color="text.secondary">
+        This alert could not be found.
+      </Typography>
+    );
+  }
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -62,94 +166,7 @@ export default function SosDetailsPage() {
         </Typography>
       </Stack>
 
-      {loading && !alert ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      ) : !alert ? (
-        <Typography variant="body2" color="text.secondary">
-          This alert could not be found.
-        </Typography>
-      ) : (
-        <Card variant="outlined" sx={{ borderColor: alert.status === 'ACTIVE' ? 'error.main' : 'divider' }}>
-          <CardContent>
-            <Stack spacing={1.5}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                    {alert.user.name}
-                  </Typography>
-                  <Chip size="small" variant="outlined" label={alert.ticket_no} />
-                  <Chip size="small" color={STATUS_COLOR[alert.status]} label={alert.status} />
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
-                </Typography>
-              </Stack>
-
-              <Typography variant="body2">
-                <strong>Pod:</strong> {alert.pod.title}
-                {alert.pod.venue_name ? ` · ${alert.pod.venue_name}` : ''}
-                {alert.pod.club_name ? ` · ${alert.pod.club_name}` : ''}
-              </Typography>
-
-              {alert.message && (
-                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-                  "{alert.message}"
-                </Typography>
-              )}
-
-              <Stack direction="row" spacing={2} flexWrap="wrap">
-                {alert.contact_phone && (
-                  <Link href={`tel:${alert.contact_phone}`} variant="body2">
-                    📞 {alert.contact_phone}
-                  </Link>
-                )}
-                {alert.location && (
-                  <Link
-                    href={`https://www.google.com/maps?q=${alert.location.lat},${alert.location.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    variant="body2"
-                    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-                  >
-                    <LocationOnIcon fontSize="inherit" /> Open in Maps
-                  </Link>
-                )}
-                {alert.host && (
-                  <Typography variant="body2" color="text.secondary">
-                    Host: {alert.host.name}
-                    {alert.host.phone ? ` (${alert.host.phone})` : ''}
-                  </Typography>
-                )}
-              </Stack>
-
-              {alert.status !== 'RESOLVED' && (
-                <Stack direction="row" spacing={1}>
-                  {alert.status === 'ACTIVE' && (
-                    <Button
-                      variant="contained"
-                      color="warning"
-                      disabled={busy}
-                      onClick={() => run(() => ack({ variables: { id: alert.id } }))}
-                    >
-                      Acknowledge
-                    </Button>
-                  )}
-                  <Button
-                    variant="contained"
-                    color="success"
-                    disabled={busy}
-                    onClick={() => run(() => resolve({ variables: { id: alert.id } }))}
-                  >
-                    Mark resolved
-                  </Button>
-                </Stack>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      )}
+      {content}
     </Stack>
   );
 }

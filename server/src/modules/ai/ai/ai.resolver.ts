@@ -421,7 +421,9 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 function promptTerms(prompt: string) {
-  const email = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(prompt)?.[0]?.toLowerCase() ?? '';
+  // Bounded to RFC limits — the unbounded form backtracks super-linearly on a
+  // long prompt that never matches (S5852).
+  const email = /[A-Z0-9._%+-]{1,64}@[A-Z0-9.-]{1,253}\.[A-Z]{2,24}/i.exec(prompt)?.[0]?.toLowerCase() ?? '';
   const phone = /\+?\d[\d\s-]{5,}\d/.exec(prompt)?.[0]?.replace(/\D/g, '') ?? '';
   const words = prompt
     .toLowerCase()

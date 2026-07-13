@@ -522,7 +522,7 @@ export const supportChatService = {
 
   async emailTranscript(sessionId: string, email: string, format: TranscriptFormat = 'DOCX') {
     const addr = (email || '').trim();
-    if (!/^\S+@\S+\.\S+$/.test(addr)) fail('BAD_USER_INPUT', 'A valid email is required');
+    if (!/^\S{1,64}@\S{1,253}\.\S{2,24}$/.test(addr)) fail('BAD_USER_INPUT', 'A valid email is required');
     const data = await this.buildTranscript(sessionId);
     const artifact = await buildTranscriptArtifact(data, format);
     await sendHtmlEmail({

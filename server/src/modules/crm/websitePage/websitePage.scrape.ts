@@ -36,7 +36,10 @@ export function normaliseSite(raw?: string | null): string | null {
 }
 
 const locMatches = (xml: string): string[] =>
-  [...xml.matchAll(/<loc>\s*([\s\S]*?)\s*<\/loc>/gi)].map((m) => m[1].trim()).filter(Boolean);
+  // No `\s*` around the lazy group: padding a lazy any-match with optional
+  // whitespace is ambiguous and backtracks catastrophically on malformed XML
+  // from a site we do not control (S5852). .trim() below already does the job.
+  [...xml.matchAll(/<loc>([\s\S]*?)<\/loc>/gi)].map((m) => m[1].trim()).filter(Boolean);
 
 const sameOrigin = (a: string, origin: string) => {
   try {

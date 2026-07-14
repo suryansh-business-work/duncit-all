@@ -1,126 +1,129 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  MenuItem,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { useCallback, useMemo, useRef } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Button, Chip, Stack, Typography } from '@mui/material';
+import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
 import { useDateFormat } from '../../../utils/dateFormat';
-import { parseApiError } from '../../../utils/parseApiError';
 import {
   FAQ_STATUS_COLOR,
   FAQ_STATUSES,
-  FAQ_SUBMISSIONS,
+  FAQ_SUBMISSIONS_TABLE,
   UPDATE_FAQ_SUBMISSION_STATUS,
   type FaqSubmission,
   type FaqSubmissionStatus,
 } from './queries';
 
+const getFaqRowId = (row: FaqSubmission) => row.id;
+
+const STATUS_OPTIONS = FAQ_STATUSES.map((status) => ({ value: status, label: status }));
+
+const renderStatus = (row: FaqSubmission) => (
+  <Chip size="small" label={row.status} color={FAQ_STATUS_COLOR[row.status] || 'default'} />
+);
+
 export default function FaqSubmissionsPage() {
-  const [status, setStatus] = useState<FaqSubmissionStatus | ''>('');
-  const { data, loading, error, refetch } = useQuery<{ faqSubmissions: FaqSubmission[] }>(
-    FAQ_SUBMISSIONS,
-    { variables: { status: status || null }, fetchPolicy: 'cache-and-network' },
-  );
-  const [updateStatus] = useMutation(UPDATE_FAQ_SUBMISSION_STATUS, { onCompleted: () => refetch() });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
+  const [updateStatus] = useMutation(UPDATE_FAQ_SUBMISSION_STATUS, {
+    onCompleted: () => refetchRef.current?.(),
+  });
   const { formatDateTime } = useDateFormat();
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: FAQ_SUBMISSIONS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.faqSubmissionsTable.rows as FaqSubmission[],
+        total: data.faqSubmissionsTable.total as number,
+      };
+    },
+    [client],
+  );
+
+  const columns = useMemo<DuncitColumn<FaqSubmission>[]>(() => {
+    const setStatus = (row: FaqSubmission, status: FaqSubmissionStatus) => {
+      updateStatus({ variables: { id: row.id, status } }).catch(() => undefined);
+    };
+    const renderActions = (row: FaqSubmission) => (
+      <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
+        <Button
+          size="small"
+          variant="outlined"
+          disabled={row.status === 'CONVERTED'}
+          onClick={() => setStatus(row, 'CONVERTED')}
+        >
+          Mark Converted
+        </Button>
+        <Button
+          size="small"
+          color="warning"
+          disabled={row.status === 'IGNORED'}
+          onClick={() => setStatus(row, 'IGNORED')}
+        >
+          Ignore
+        </Button>
+      </Stack>
+    );
+    return [
+      { field: 'question', headerName: 'Question', flex: 2, minWidth: 260 },
+      {
+        field: 'email',
+        headerName: 'Email',
+        flex: 1,
+        minWidth: 180,
+        valueGetter: (row) => row.email || '—',
+      },
+      {
+        field: 'super_category_slug',
+        headerName: 'Super Cat.',
+        sortable: false,
+        filter: { type: 'text' },
+        minWidth: 130,
+        valueGetter: (row) => row.super_category_slug || '—',
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        filter: { type: 'select', options: STATUS_OPTIONS },
+        width: 130,
+        cellRenderer: renderStatus,
+        valueGetter: (row) => row.status,
+      },
+      {
+        field: 'created_at',
+        headerName: 'Received',
+        filter: { type: 'date' },
+        minWidth: 180,
+        valueGetter: (row) => formatDateTime(row.created_at),
+      },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        sortable: false,
+        width: 250,
+        cellRenderer: renderActions,
+      },
+    ];
+  }, [formatDateTime, updateStatus]);
 
   return (
     <Stack spacing={2}>
       <Typography variant="h5" fontWeight={700}>
         FAQ Submission
       </Typography>
-      <Card>
-        <CardContent>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value as FaqSubmissionStatus | '')}
-            sx={{ minWidth: 200, mb: 2 }}
-          >
-            <MenuItem value="">All</MenuItem>
-            {FAQ_STATUSES.map((s) => (
-              <MenuItem key={s} value={s}>
-                {s}
-              </MenuItem>
-            ))}
-          </TextField>
-          {loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={28} />
-            </Box>
-          )}
-          {error && <Typography color="error">{parseApiError(error)}</Typography>}
-          {!loading && !error && (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Question</TableCell>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Super Cat.</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Received</TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(data?.faqSubmissions ?? []).map((r) => (
-                  <TableRow key={r.id} hover>
-                    <TableCell sx={{ maxWidth: 360 }}>{r.question}</TableCell>
-                    <TableCell>{r.email || '—'}</TableCell>
-                    <TableCell>{r.super_category_slug || '—'}</TableCell>
-                    <TableCell>
-                      <Chip size="small" label={r.status} color={FAQ_STATUS_COLOR[r.status] || 'default'} />
-                    </TableCell>
-                    <TableCell>{formatDateTime(r.created_at)}</TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          disabled={r.status === 'CONVERTED'}
-                          onClick={() => updateStatus({ variables: { id: r.id, status: 'CONVERTED' } })}
-                        >
-                          Mark Converted
-                        </Button>
-                        <Button
-                          size="small"
-                          color="warning"
-                          disabled={r.status === 'IGNORED'}
-                          onClick={() => updateStatus({ variables: { id: r.id, status: 'IGNORED' } })}
-                        >
-                          Ignore
-                        </Button>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!(data?.faqSubmissions ?? []).length && (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      No submissions.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DuncitTable<FaqSubmission>
+        tableId="website-faq-submissions"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getFaqRowId}
+        emptyText="No submissions."
+        defaultSort={{ field: 'created_at', dir: 'desc' }}
+        searchPlaceholder="Search question, email or category"
+        refetchRef={refetchRef}
+      />
     </Stack>
   );
 }

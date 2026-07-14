@@ -22,6 +22,10 @@ export const walletResolvers = {
       requireRole(ctx, FINANCE_RW);
       return walletService.listAllWithdrawals(args.status);
     },
+    withdrawalRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_RW);
+      return walletService.withdrawalsTable(args.query);
+    },
   },
   Mutation: {
     requestWithdrawal: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

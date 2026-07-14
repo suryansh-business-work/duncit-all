@@ -20,6 +20,10 @@ export const surveyResolvers = {
       requireRole(ctx, SURVEY_RW);
       return surveyService.list(args);
     },
+    surveysTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, SURVEY_RW);
+      return surveyService.table(args.query);
+    },
     surveyById: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, SURVEY_RW);
       return surveyService.getById(args.id);

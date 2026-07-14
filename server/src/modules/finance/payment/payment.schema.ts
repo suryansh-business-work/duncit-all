@@ -73,6 +73,14 @@ export const paymentTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (paymentsTable)."
+  type PaymentTablePage {
+    rows: [Payment!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type CheckoutQuote {
     subtotal: Float!
     platform_fee_pct: Float!
@@ -175,6 +183,7 @@ export const paymentTypeDefs = /* GraphQL */ `
 
   extend type Query {
     payments(filter: PaymentFilterInput, limit: Int): [Payment!]!
+    paymentsTable(query: TableQueryInput): PaymentTablePage!
     payment(payment_doc_id: ID!): Payment
     myPayments: [Payment!]!
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!

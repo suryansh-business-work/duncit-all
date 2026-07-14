@@ -13,6 +13,10 @@ export const websiteContentResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return websiteContentService.list(args.type ?? null, false);
     },
+    websiteContentTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return websiteContentService.table(args.query);
+    },
     publicWebsiteContent: async (_p: unknown, args: { type: any }) =>
       websiteContentService.list(args.type, true),
   },

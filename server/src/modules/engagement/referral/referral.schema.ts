@@ -24,6 +24,14 @@ export const referralTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "Server-side table page for the shared table engine (referralsTable)."
+  type AdminReferralTablePage {
+    rows: [AdminReferral!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type ReferralSettings {
     gift_description: String!
   }
@@ -33,6 +41,7 @@ export const referralTypeDefs = /* GraphQL */ `
     myReferral: MyReferral!
     "Admin: every redeemed referral, newest first."
     referrals: [AdminReferral!]!
+    referralsTable(query: TableQueryInput): AdminReferralTablePage!
     referralSettings: ReferralSettings!
   }
 

@@ -111,4 +111,57 @@ describe('envEntryService integration', () => {
     expect((await envEntryService.get(created!.id))?.last_used_at).toBeTruthy();
     delete (global as any).fetch;
   });
+
+  it('serves the envEntriesTable page with search, filters, sort and paging', async () => {
+    await envEntryService.create({ name: 'Primary SMTP', category: 'EMAIL', config: cfg({ host: 'smtp.a' }) });
+    await envEntryService.create({
+      name: 'Backup SMTP',
+      category: 'EMAIL',
+      description: 'fallback sender',
+      config: cfg({ host: 'smtp.b' }),
+    });
+    const ik = await envEntryService.create({
+      name: 'IK Main',
+      category: 'IMAGEKIT',
+      is_active: false,
+      config: cfg({ private_key: 'x' }),
+    });
+    await envEntryService.setPortalAssignments('crm', [ik!.id]);
+
+    // Default sort matches list(): category asc, default first, then name.
+    const all = await envEntryService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((e) => e!.name)).toEqual(['Primary SMTP', 'Backup SMTP', 'IK Main']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans name and description.
+    const byName = await envEntryService.table({ search: 'backup' });
+    expect(byName.rows.map((e) => e!.name)).toEqual(['Backup SMTP']);
+    const byDescription = await envEntryService.table({ search: 'fallback' });
+    expect(byDescription.rows.map((e) => e!.name)).toEqual(['Backup SMTP']);
+
+    // Enum, boolean and portal-membership filters narrow.
+    const email = await envEntryService.table({
+      filters: [{ field: 'category', op: 'eq', value: 'EMAIL' }],
+    });
+    expect(email.total).toBe(2);
+    const inactive = await envEntryService.table({ filters: [{ field: 'is_active', op: 'is_false' }] });
+    expect(inactive.rows.map((e) => e!.name)).toEqual(['IK Main']);
+    const forCrm = await envEntryService.table({
+      filters: [{ field: 'assigned_portals', op: 'eq', value: 'crm' }],
+    });
+    expect(forCrm.rows.map((e) => e!.name)).toEqual(['IK Main']);
+
+    // Allowlisted sort, both directions.
+    const desc = await envEntryService.table({ sort_by: 'name', sort_dir: 'desc' });
+    expect(desc.rows.map((e) => e!.name)).toEqual(['Primary SMTP', 'IK Main', 'Backup SMTP']);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await envEntryService.table({ page: 2, page_size: 1 });
+    expect(page2.rows.map((e) => e!.name)).toEqual(['Backup SMTP']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
 });

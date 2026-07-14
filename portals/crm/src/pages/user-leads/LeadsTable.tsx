@@ -1,20 +1,9 @@
-import {
-  Checkbox,
-  Chip,
-  IconButton,
-  Link,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TableSortLabel,
-  Tooltip,
-} from '@mui/material';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { Chip, IconButton, Link, Stack, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 
 export interface SourceRef {
   jid: string;
@@ -29,31 +18,19 @@ export interface LeadRow {
   imported_at?: string | null;
 }
 
-type SortDir = 'asc' | 'desc';
 interface Props {
-  rows: readonly LeadRow[];
-  sortBy: string;
-  sortDir: SortDir;
-  onSort: (field: string) => void;
+  fetchRows: TableFetch<LeadRow>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  toolbarActions?: ReactNode;
   onRowClick: (id: string) => void;
-  selected: ReadonlySet<string>;
-  onToggle: (id: string) => void;
-  onToggleAll: (checked: boolean) => void;
   onEdit: (lead: LeadRow) => void;
   onDelete: (lead: LeadRow) => void;
 }
 
-const COLS: { field: string; label: string; sortable: boolean }[] = [
-  { field: 'name', label: 'Name', sortable: true },
-  { field: 'phone', label: 'Phone', sortable: true },
-  { field: 'community', label: 'Community', sortable: false },
-  { field: 'groups', label: 'Groups', sortable: false },
-  { field: 'imported_at', label: 'Imported', sortable: true },
-];
-
+const getLeadRowId = (lead: LeadRow) => lead.id;
 const fmtDate = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('en-IN') : '—');
 const waWebUrl = (phone: string) => `https://web.whatsapp.com/send?phone=${phone}`;
-const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+const sourceNames = (refs?: SourceRef[]) => (refs ?? []).map((r) => r.name || r.jid).join(', ');
 
 /** Names from a community/group provenance list, as chips (or an em dash). */
 function SourceChips({ refs }: Readonly<{ refs?: SourceRef[] }>) {
@@ -61,7 +38,7 @@ function SourceChips({ refs }: Readonly<{ refs?: SourceRef[] }>) {
     return <span>—</span>;
   }
   return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap component="span">
       {refs.map((r) => (
         <Chip key={r.jid} size="small" variant="outlined" label={r.name || r.jid} />
       ))}
@@ -69,95 +46,83 @@ function SourceChips({ refs }: Readonly<{ refs?: SourceRef[] }>) {
   );
 }
 
+const renderPhone = (lead: LeadRow) => (
+  <Link
+    href={waWebUrl(lead.phone)}
+    target="_blank"
+    rel="noopener"
+    underline="hover"
+    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'success.dark', fontWeight: 600 }}
+  >
+    <WhatsAppIcon sx={{ fontSize: 16, color: 'success.main' }} />
+    +{lead.phone}
+  </Link>
+);
+
+const renderCommunities = (lead: LeadRow) => <SourceChips refs={lead.source_communities} />;
+const renderGroups = (lead: LeadRow) => <SourceChips refs={lead.source_groups} />;
+const importedValue = (lead: LeadRow) => fmtDate(lead.imported_at);
+
+/** WhatsApp user leads on @duncit/table — search/sort/paging stay server-side (waUserLeads). */
 export default function LeadsTable({
-  rows,
-  sortBy,
-  sortDir,
-  onSort,
+  fetchRows,
+  refetchRef,
+  toolbarActions,
   onRowClick,
-  selected,
-  onToggle,
-  onToggleAll,
   onEdit,
   onDelete,
 }: Readonly<Props>) {
-  const selectedOnPage = rows.filter((r) => selected.has(r.id)).length;
-  const allSelected = rows.length > 0 && selectedOnPage === rows.length;
-  const someSelected = selectedOnPage > 0 && !allSelected;
+  const columns = useMemo<DuncitColumn<LeadRow>[]>(() => {
+    const renderActions = (lead: LeadRow) => (
+      <Stack direction="row" justifyContent="flex-end" component="span">
+        <Tooltip title="Edit">
+          <IconButton size="small" aria-label="Edit lead" onClick={() => onEdit(lead)}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete">
+          <IconButton size="small" color="error" aria-label="Delete lead" onClick={() => onDelete(lead)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+    );
+    return [
+      { field: 'name', headerName: 'Name', flex: 1, minWidth: 160, valueGetter: (lead) => lead.name || '—' },
+      { field: 'phone', headerName: 'Phone', minWidth: 170, cellRenderer: renderPhone, valueGetter: (lead) => `+${lead.phone}` },
+      {
+        field: 'source_communities',
+        headerName: 'Community',
+        sortable: false,
+        minWidth: 160,
+        cellRenderer: renderCommunities,
+        valueGetter: (lead) => sourceNames(lead.source_communities),
+      },
+      {
+        field: 'source_groups',
+        headerName: 'Groups',
+        sortable: false,
+        minWidth: 160,
+        cellRenderer: renderGroups,
+        valueGetter: (lead) => sourceNames(lead.source_groups),
+      },
+      { field: 'imported_at', headerName: 'Imported', width: 130, valueGetter: importedValue },
+      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+    ];
+  }, [onEdit, onDelete]);
 
   return (
-    <Table size="small">
-      <TableHead>
-        <TableRow>
-          <TableCell padding="checkbox">
-            <Checkbox
-              size="small"
-              checked={allSelected}
-              indeterminate={someSelected}
-              onChange={(e) => onToggleAll(e.target.checked)}
-              inputProps={{ 'aria-label': 'Select all leads on this page' }}
-            />
-          </TableCell>
-          {COLS.map((c) => (
-            <TableCell key={c.field} sortDirection={sortBy === c.field ? sortDir : false}>
-              {c.sortable ? (
-                <TableSortLabel
-                  active={sortBy === c.field}
-                  direction={sortBy === c.field ? sortDir : 'asc'}
-                  onClick={() => onSort(c.field)}
-                >
-                  {c.label}
-                </TableSortLabel>
-              ) : (
-                c.label
-              )}
-            </TableCell>
-          ))}
-          <TableCell align="right">Actions</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {rows.map((lead) => (
-          <TableRow key={lead.id} hover sx={{ cursor: 'pointer' }} onClick={() => onRowClick(lead.id)}>
-            <TableCell padding="checkbox" onClick={stop}>
-              <Checkbox
-                size="small"
-                checked={selected.has(lead.id)}
-                onChange={() => onToggle(lead.id)}
-                inputProps={{ 'aria-label': `Select ${lead.name || lead.phone}` }}
-              />
-            </TableCell>
-            <TableCell>{lead.name || '—'}</TableCell>
-            <TableCell onClick={stop}>
-              <Link
-                href={waWebUrl(lead.phone)}
-                target="_blank"
-                rel="noopener"
-                underline="hover"
-                sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: '#075E54', fontWeight: 600 }}
-              >
-                <WhatsAppIcon sx={{ fontSize: 16, color: '#25D366' }} />
-                +{lead.phone}
-              </Link>
-            </TableCell>
-            <TableCell><SourceChips refs={lead.source_communities} /></TableCell>
-            <TableCell><SourceChips refs={lead.source_groups} /></TableCell>
-            <TableCell>{fmtDate(lead.imported_at)}</TableCell>
-            <TableCell align="right" onClick={stop}>
-              <Tooltip title="Edit">
-                <IconButton size="small" onClick={() => onEdit(lead)} aria-label="Edit lead">
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Delete">
-                <IconButton size="small" color="error" onClick={() => onDelete(lead)} aria-label="Delete lead">
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DuncitTable<LeadRow>
+      tableId="crm-user-leads"
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getLeadRowId}
+      onRowClick={(lead) => onRowClick(lead.id)}
+      toolbarActions={toolbarActions}
+      emptyText='No WhatsApp leads yet. Add one with "New", or "Import" an Excel/CSV.'
+      defaultSort={{ field: 'imported_at', dir: 'desc' }}
+      searchPlaceholder="Search by name or phone…"
+      refetchRef={refetchRef}
+    />
   );
 }

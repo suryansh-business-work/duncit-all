@@ -10,6 +10,7 @@ import {
   type ExpenseCategory,
   type ExpensePaymentMethod,
 } from './expense.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const expenseId = () => `exp_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const refundId = () => `ref_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
@@ -65,6 +66,27 @@ function toPub(doc: IExpense) {
   };
 }
 
+/** Allowlists for the shared table engine (expensesTable — DUNCIT TABLE CONTRACT v1). */
+const EXPENSE_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['vendor_name', 'description', 'reference'],
+  sortFields: {
+    date: 'date',
+    category: 'category',
+    vendor_name: 'vendor_name',
+    payment_method: 'payment_method',
+    amount: 'amount',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    category: { type: 'enum' },
+    payment_method: { type: 'enum' },
+    date: { type: 'date' },
+    amount: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { date: -1, created_at: -1 },
+};
+
 function buildFilter(filter?: ExpenseFilter) {
   const query: any = {};
   const range: any = {};
@@ -88,6 +110,17 @@ export const expenseService = {
   async list(filter?: ExpenseFilter) {
     const docs = await ExpenseModel.find(buildFilter(filter)).sort({ date: -1, created_at: -1 }).limit(500);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the expensesTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IExpense>(
+      ExpenseModel,
+      {},
+      input,
+      EXPENSE_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async summary(filter?: ExpenseFilter) {

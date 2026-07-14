@@ -2,6 +2,12 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { LegalDocumentModel, type ILegalDocument } from './legalDocument.model';
 import { UserModel } from '@modules/access/user/user.model';
+import {
+  applyTableQueryInMemory,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -55,6 +61,37 @@ function snapshot(doc: ILegalDocument, userId: string, name: string) {
   if (doc.versions.length > 50) doc.versions.splice(0, doc.versions.length - 50);
 }
 
+/** Allowlists for the shared table engine (legalDocumentsTable — DUNCIT TABLE CONTRACT v1). */
+const LEGAL_DOCUMENT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'description', 'document_type'],
+  sortFields: {
+    name: 'name',
+    document_type: 'document_type',
+    updated_by_name: 'updated_by_name',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    document_type: { type: 'string' },
+    updated_by_name: { type: 'string' },
+    created_at: { type: 'date' },
+    updated_at: { type: 'date' },
+  },
+  defaultSort: { updated_at: -1 },
+};
+
+/** The dashboard "Documents by type" rows are a computed aggregate, so its
+ * table (legalDocumentStatsTable) pages in memory over the same array. */
+const LEGAL_DOCUMENT_STATS_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['document_type'],
+  sortFields: { document_type: 'document_type', count: 'count' },
+  filterFields: {
+    document_type: { type: 'string' },
+    count: { type: 'number' },
+  },
+  defaultSort: { count: -1 },
+};
+
 export const legalDocumentService = {
   async list(filter?: { search?: string; document_type?: string }) {
     const q: any = {};
@@ -65,6 +102,17 @@ export const legalDocumentService = {
     }
     const docs = await LegalDocumentModel.find(q).sort({ updated_at: -1 }).limit(500);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the legalDocumentsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<ILegalDocument>(
+      LegalDocumentModel,
+      {},
+      input,
+      LEGAL_DOCUMENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {
@@ -83,6 +131,12 @@ export const legalDocumentService = {
       total,
       by_type: grouped.map((g) => ({ document_type: g._id || 'Other', count: g.count })),
     };
+  },
+
+  /** In-memory table page over the computed by-type aggregate (legalDocumentStatsTable). */
+  async statsTable(input?: TableQueryInput | null) {
+    const { by_type } = await this.stats();
+    return applyTableQueryInMemory(by_type, input, LEGAL_DOCUMENT_STATS_TABLE_CONFIG);
   },
 
   async create(

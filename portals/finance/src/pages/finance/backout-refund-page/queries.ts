@@ -33,6 +33,56 @@ export const BACKOUT_REFUND_REQUESTS = gql`
   }
 `;
 
+/** Same selection as BACKOUT_REFUND_REQUESTS rows, for the server-paged table query. */
+const BACKOUT_REFUND_ROW_FIELDS = gql`
+  fragment BackoutRefundRowFields on BackoutRefundRequest {
+    id
+    pod_id
+    user_id
+    user_name
+    user_email
+    status
+    joined_at
+    backed_out_at
+    refund_status
+    payment_id
+    payment_amount
+    payment_currency
+    payment_status
+    refund_threshold_pct
+    created_at
+    pod {
+      id
+      pod_id
+      pod_title
+      pod_date_time
+      pod_type
+    }
+  }
+`;
+
+export const BACKOUT_REFUNDS_TABLE = gql`
+  query BackoutRefundRequestsTable($query: TableQueryInput) {
+    backoutRefundRequestsTable(query: $query) {
+      total
+      rows {
+        ...BackoutRefundRowFields
+      }
+    }
+  }
+  ${BACKOUT_REFUND_ROW_FIELDS}
+`;
+
+/** Currency + deduction settings alone — rows come from the paged table query now. */
+export const BACKOUT_FINANCE_SETTINGS = gql`
+  query BackoutFinanceSettings {
+    publicFinanceSettings {
+      currency_symbol
+      default_backout_deduction_pct
+    }
+  }
+`;
+
 export const BACKOUT_REFUND_DETAIL = gql`
   query BackoutRefundDetail($id: ID!) {
     backoutRefundRequest(id: $id) {

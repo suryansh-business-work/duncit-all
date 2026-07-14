@@ -17,7 +17,7 @@ interface Props {
   memberIds: string[];
 }
 
-/** Club members — everyone attending the club's pods. Tapping the avatar group
+/** Pod members — everyone attending the club's pods. Tapping the avatar group
  * opens the full list; each row opens that member's full profile (B4-12). */
 export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
@@ -47,11 +47,11 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
   return (
     <Box>
       <Typography variant="h6" fontWeight={700} gutterBottom>
-        Members
+        Pod Members
       </Typography>
       <ButtonBase
         onClick={() => setOpen(true)}
-        aria-label="View all members"
+        aria-label="View all pod members"
         sx={{ borderRadius: 999, p: 0.5 }}
       >
         <AvatarGroup

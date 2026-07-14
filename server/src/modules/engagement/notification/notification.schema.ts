@@ -24,6 +24,14 @@ export const notificationTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (notificationsTable)."
+  type NotificationTablePage {
+    rows: [Notification!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type UserNotification {
     id: ID!
     notification: Notification!
@@ -56,6 +64,7 @@ export const notificationTypeDefs = /* GraphQL */ `
 
   extend type Query {
     notifications(limit: Int): [Notification!]!
+    notificationsTable(query: TableQueryInput): NotificationTablePage!
     myNotifications(limit: Int, unreadOnly: Boolean): [UserNotification!]!
     myUnreadNotificationCount: Int!
     pushConfig: PushConfig!

@@ -10,6 +10,10 @@ export const podPlanResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return podPlanService.list();
     },
+    podPlansTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return podPlanService.table(args.query);
+    },
     publicPodPlans: async () => podPlanService.listPublic(),
   },
   Mutation: {

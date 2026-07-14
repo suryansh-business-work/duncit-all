@@ -23,6 +23,14 @@ export const couponTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (couponsTable / couponsForPodTable)."
+  type CouponTablePage {
+    rows: [Coupon!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   "Result of evaluating a coupon against an order — drives the strikethrough UI."
   type CouponPreview {
     ok: Boolean!
@@ -78,8 +86,11 @@ export const couponTypeDefs = /* GraphQL */ `
 
   extend type Query {
     coupons(filter: CouponFilterInput): [Coupon!]!
+    couponsTable(query: TableQueryInput): CouponTablePage!
     coupon(id: ID!): Coupon
     couponsForPod(pod_id: ID!): [Coupon!]!
+    "Table sibling of couponsForPod — this pod's coupons plus every GLOBAL coupon."
+    couponsForPodTable(pod_id: ID!, query: TableQueryInput): CouponTablePage!
     "Active, currently-valid coupons a shopper can apply (global + this pod)."
     availableCouponsForPod(pod_id: ID): [Coupon!]!
     previewCoupon(input: CouponPreviewInput!): CouponPreview!

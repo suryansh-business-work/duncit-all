@@ -1,6 +1,11 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    // Node 20 runs ES2022. The inherited target is ES2020, whose lib has no
+    // String#replaceAll — which is why 15 replace(/g) calls could not be
+    // modernised (Sonar S7781). Widening only the LIB (not the target) gives us
+    // the newer runtime APIs while the emit stays exactly as it was.
+    "lib": ["ES2022"],
     "module": "CommonJS",
     "moduleResolution": "Node",
     "outDir": "dist",

@@ -1,204 +1,66 @@
-import {
-  Avatar,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import PodActionButtons from './PodActionButtons';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { DuncitTable, type TableFetch } from '@duncit/table';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { buildPodsColumns } from './podsColumns';
+import type { PodRow } from './queries';
 
 interface Props {
-  loading: boolean;
-  pods: any[];
+  fetchRows: TableFetch<PodRow>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  toolbarActions?: ReactNode;
   clubName: (id: string) => string;
   venueName: (id: string) => string;
   locName: (id: string) => string;
-  onEdit: (p: any) => void;
-  onQuickEdit: (p: any) => void;
-  onDelete: (p: any) => void;
-  onComplete: (p: any) => void;
-  onView?: (p: any) => void;
+  onEdit: (p: PodRow) => void;
+  onQuickEdit: (p: PodRow) => void;
+  onDelete: (p: PodRow) => void;
+  onComplete: (p: PodRow) => void;
+  onView: (p: PodRow) => void;
 }
 
-function PodCover({ pod }: Readonly<{ pod: any }>) {
-  const first = pod.pod_images_and_videos?.[0];
-  if (!first) {
-    return (
-      <Avatar variant="rounded" sx={{ width: 40, height: 40 }}>
-        {pod.pod_title[0]}
-      </Avatar>
-    );
-  }
-  if (first.type === 'VIDEO') {
-    return (
-      <Box
-        component="video"
-        src={first.url}
-        muted
-        playsInline
-        preload="metadata"
-        sx={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 1, display: 'block' }}
-      />
-    );
-  }
-  return (
-    <Avatar variant="rounded" src={first.url} sx={{ width: 40, height: 40 }}>
-      {pod.pod_title[0]}
-    </Avatar>
-  );
-}
+const getPodRowId = (p: PodRow) => p.id;
 
-interface PodPlaceProps {
-  pod: any;
-  venueName: (id: string) => string;
-  locName: (id: string) => string;
-}
-
-function PodPlace({ pod, venueName, locName }: Readonly<PodPlaceProps>) {
-  if (pod.pod_mode === 'VIRTUAL') {
-    return <>{pod.meeting_platform || 'Virtual'}</>;
-  }
-  if (pod.venue_id) {
-    return <>{venueName(pod.venue_id)}</>;
-  }
-  return <>{locName(pod.location_id)}</>;
-}
-
-function PodStatusChip({ pod }: Readonly<{ pod: any }>) {
-  if (pod.completed_at) {
-    return <Chip size="small" label="Completed" color="info" />;
-  }
-  if (pod.is_active) {
-    return <Chip size="small" label="Active" color="success" />;
-  }
-  return <Chip size="small" label="Draft" color="default" />;
-}
-
-export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onView }: Readonly<Props>) {
+export default function PodsTable({
+  fetchRows,
+  refetchRef,
+  toolbarActions,
+  clubName,
+  venueName,
+  locName,
+  onEdit,
+  onQuickEdit,
+  onDelete,
+  onComplete,
+  onView,
+}: Readonly<Props>) {
   const showProducts = useFeatureFlag('is_product_visible');
+  const columns = useMemo(
+    () =>
+      buildPodsColumns({
+        showProducts,
+        clubName,
+        venueName,
+        locName,
+        onEdit,
+        onQuickEdit,
+        onDelete,
+        onComplete,
+      }),
+    [showProducts, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete],
+  );
+
   return (
-    <Card>
-      <CardContent sx={{ p: 0 }}>
-        {loading && pods.length === 0 ? (
-          <Stack alignItems="center" sx={{ p: 4 }}>
-            <CircularProgress />
-          </Stack>
-        ) : (
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Cover</TableCell>
-                <TableCell>Title</TableCell>
-                <TableCell>Club</TableCell>
-                <TableCell>Venue</TableCell>
-                <TableCell>Date / Time</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Amount</TableCell>
-                {showProducts && <TableCell>Products</TableCell>}
-                <TableCell>Spots</TableCell>
-                <TableCell>Hits</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pods.map((p) => (
-                <TableRow
-                  key={p.id}
-                  hover
-                  onClick={() => onView?.(p)}
-                  sx={{ cursor: onView ? 'pointer' : 'default' }}
-                >
-                  <TableCell>
-                    <PodCover pod={p} />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {p.pod_title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {p.pod_id}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{clubName(p.club_id)}</TableCell>
-                  <TableCell>
-                    <PodPlace pod={p} venueName={venueName} locName={locName} />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption">
-                      {p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : '—'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                      <Chip size="small" label={p.pod_mode === 'VIRTUAL' ? 'Virtual' : 'Physical'} />
-                      <Chip
-                        size="small"
-                        label={p.pod_type.replace(/_/g, ' ')}
-                        color={p.pod_type.includes('FREE') ? 'default' : 'primary'}
-                      />
-                    </Stack>
-                  </TableCell>
-                  <TableCell>{p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'}</TableCell>
-                  {showProducts && (
-                    <TableCell>
-                      {p.product_requests?.length ? (
-                        <Stack spacing={0.25}>
-                          {p.product_requests.map((item: any) => (
-                            <Typography key={item.product_id} variant="caption">
-                              {item.product_name}: {item.quantity}
-                            </Typography>
-                          ))}
-                          <Typography variant="caption" fontWeight={700}>
-                            ₹{p.product_cost_total ?? 0}
-                          </Typography>
-                        </Stack>
-                      ) : '—'}
-                    </TableCell>
-                  )}
-                  <TableCell>
-                    {p.pod_attendees?.length ?? 0}
-                    {p.no_of_spots ? ` / ${p.no_of_spots}` : ''}
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <VisibilityIcon fontSize="inherit" color="action" />
-                      <Typography variant="caption">{p.pod_hits}</Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <PodStatusChip pod={p} />
-                  </TableCell>
-                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <PodActionButtons pod={p} onEdit={onEdit} onQuickEdit={onQuickEdit} onDelete={onDelete} onComplete={onComplete} />
-                  </TableCell>
-                </TableRow>
-              ))}
-              {pods.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={12}>
-                    <Box sx={{ p: 3, textAlign: 'center' }}>
-                      <Typography variant="body2" color="text.secondary">
-                        No pods yet.
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+    <DuncitTable<PodRow>
+      tableId="admin-pods"
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getPodRowId}
+      onRowClick={onView}
+      toolbarActions={toolbarActions}
+      emptyText="No pods yet."
+      defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
+      searchPlaceholder="Search title or pod ID"
+      refetchRef={refetchRef}
+    />
   );
 }

@@ -50,6 +50,31 @@ export const SURVEYS = gql`
   }
 `;
 
+/** Row shape for the surveys table (list columns only). */
+export interface SurveyRow {
+  id: string;
+  kind: SurveyKind;
+  title: string;
+  is_active: boolean;
+  updated_at?: string | null;
+  super_category_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+  questions: { qid: string }[];
+}
+
+export const SURVEYS_TABLE = gql`
+  query SurveysTable($query: TableQueryInput) {
+    surveysTable(query: $query) {
+      total
+      rows {
+        id kind super_category_name category_name sub_category_name title is_active updated_at
+        questions { qid }
+      }
+    }
+  }
+`;
+
 export const SURVEY_BY_ID = gql`
   query SurveyById($id: ID!) {
     surveyById(id: $id) { ${FIELDS} }

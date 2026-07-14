@@ -2,6 +2,12 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { FaqModel, type FaqAudience, type IFaq, type PartnerFaqTopic } from './faq.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import {
+  runTableQuery,
+  type TableEntityConfig,
+  type TableFilterInput,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 const toPub = (f: IFaq) => ({
   id: String(f._id),
@@ -35,6 +41,37 @@ function normalizeAudience(input: any): { audience: FaqAudience; partner_topic: 
   return { audience, partner_topic: audience === 'PARTNERS' ? partnerTopic : null };
 }
 
+/** Allowlists for the shared table engine (faqsTable — DUNCIT TABLE CONTRACT v1).
+ * `audience` is deliberately NOT in filterFields: it is lifted into the
+ * baseFilter in table() so `APP` keeps matching legacy rows that predate the
+ * field (same `$exists` semantics as list()). */
+const FAQ_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['question', 'answer'],
+  sortFields: {
+    question: 'question',
+    sort_order: 'sort_order',
+    is_active: 'is_active',
+    partner_topic: 'partner_topic',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    super_category_id: { type: 'string' },
+    partner_topic: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { sort_order: 1, created_at: -1 },
+};
+
+/** `audience` filter → mongo baseFilter fragment (APP includes legacy no-field rows). */
+function audienceBaseFilter(filters: TableFilterInput[]): Record<string, unknown> {
+  const audience = filters.find((f) => f.field === 'audience' && f.op === 'eq')?.value;
+  if (audience === 'APP') return { $or: [{ audience: 'APP' }, { audience: { $exists: false } }] };
+  if (audience) return { audience };
+  return {};
+}
+
 export const faqService = {
   async list(filter?: { super_category_id?: string; audience?: FaqAudience; partner_topic?: PartnerFaqTopic; is_active?: boolean; search?: string }) {
     const q: any = {};
@@ -51,6 +88,20 @@ export const faqService = {
     if (and.length) q.$and = and;
     const docs = await FaqModel.find(q).sort({ sort_order: 1, created_at: -1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the faqsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const filters = input?.filters ?? [];
+    const base = audienceBaseFilter(filters);
+    const rest = filters.filter((f) => f.field !== 'audience');
+    const { docs, total, page, page_size } = await runTableQuery<IFaq>(
+      FaqModel,
+      base,
+      { ...(input ?? {}), filters: rest },
+      FAQ_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

@@ -11,7 +11,6 @@ interface Props {
   podCount: number;
   venueCount: number;
   followersCount: number;
-  membersCount: number;
   /** Super › Category › Sub category names (root-first). */
   categoryCrumbs: readonly string[];
   following: boolean;
@@ -38,7 +37,6 @@ export default function ClubSummaryHeader({
   podCount,
   venueCount,
   followersCount,
-  membersCount,
   categoryCrumbs,
   following,
   chatUrl,
@@ -90,8 +88,7 @@ export default function ClubSummaryHeader({
         </Box>
       </Stack>
       <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
-        <Stat label="followers" value={followersCount} />
-        <Stat label="members" value={membersCount} />
+        <Stat label="total members" value={followersCount} />
         <Stat label="pods" value={podCount} />
         <Stat label="moments" value={momentsCount} />
         <Stat label="venues" value={venueCount} />

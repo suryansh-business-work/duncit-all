@@ -1,20 +1,23 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import EcommBrandForm from './EcommBrandForm';
 import PartnerBrandsTable from './PartnerBrandsTable';
-import { MY_BRANDS, SAVE_BRAND, SUBMIT_BRAND, WITHDRAW_BRAND, type EcommBrand } from './queries';
+import { MY_BRANDS, MY_BRANDS_TABLE, SAVE_BRAND, SUBMIT_BRAND, WITHDRAW_BRAND, type EcommBrand, type EcommBrandRow } from './queries';
 import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
 
 type Editing = EcommBrand | 'new' | null;
 
 export default function EcommBrandPage() {
   const navigate = useNavigate();
-  const { data, loading, refetch } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [saveBrand, saveState] = useMutation(SAVE_BRAND);
   const [submitBrand, submitState] = useMutation(SUBMIT_BRAND);
   const [withdrawBrand, withdrawState] = useMutation(WITHDRAW_BRAND);
@@ -24,7 +27,6 @@ export default function EcommBrandPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerResolve = useRef<((url: string | null) => void) | null>(null);
 
-  const brands: EcommBrand[] = data?.myEcommBrands ?? [];
   const accountEmail = data?.me?.email || '';
   const busy = saveState.loading || submitState.loading || withdrawState.loading;
 
@@ -34,6 +36,21 @@ export default function EcommBrandPage() {
   const defaultValues = useMemo(() => toFormValues(editingBrand, accountEmail), [editingBrand, accountEmail]);
   const existingBrandTitle = locked ? 'Brand details' : 'Edit brand';
   const dialogTitle = editing === 'new' ? 'New brand' : existingBrandTitle;
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data: page } = await client.query({
+        query: MY_BRANDS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.myEcommBrandsTable.rows as EcommBrandRow[],
+        total: page.myEcommBrandsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const pickImage = () =>
     new Promise<string | null>((resolve) => {
@@ -56,7 +73,7 @@ export default function EcommBrandPage() {
       await saveBrand({ variables: { brand_doc_id: brandId ?? null, input: toSaveInput(values) } });
       setMessage('Brand saved.');
       closeDialog();
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
     }
@@ -69,7 +86,7 @@ export default function EcommBrandPage() {
       await submitBrand({ variables: { brand_doc_id: id } });
       setMessage('Brand submitted for review.');
       closeDialog();
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
     }
@@ -80,7 +97,7 @@ export default function EcommBrandPage() {
       await withdrawBrand({ variables: { brand_doc_id: brand.id } });
       setEditing({ ...brand, status: 'DRAFT' }); // unlock the form in place
       setMessage('Brand moved back to draft.');
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
     }
@@ -102,14 +119,15 @@ export default function EcommBrandPage() {
 
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-            <Typography variant="h6" fontWeight={900}>Your brands</Typography>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setError(null); setEditing('new'); }}>
-              New brand
-            </Button>
-          </Stack>
+          <Typography variant="h6" fontWeight={900} sx={{ mb: 2 }}>Your brands</Typography>
           <PartnerBrandsTable
-            brands={brands}
+            fetchRows={fetchRows}
+            refetchRef={refetchRef}
+            toolbarActions={
+              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => { setError(null); setEditing('new'); }}>
+                New brand
+              </Button>
+            }
             onOpen={(brand) => { setError(null); setEditing(brand); }}
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
           />

@@ -1,115 +1,58 @@
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { Chip } from '@mui/material';
+import type { DuncitColumn, TableFetch } from '@duncit/table';
+import FaqsTableBase, { type FaqRow } from '../../components/FaqsTableBase';
 
 interface Props {
-  loading: boolean;
-  items: any[];
-  onEdit: (it: any) => void;
-  onDelete: (it: any) => void;
+  fetchRows: TableFetch<FaqRow>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  supers: { id: string; name: string }[];
+  toolbarActions?: ReactNode;
+  onEdit: (row: FaqRow) => void;
+  onDelete: (row: FaqRow) => void;
 }
 
-export default function FaqsTable({ loading, items, onEdit, onDelete }: Readonly<Props>) {
-  const renderBody = () => {
-    if (loading) {
-      return (
-        <Box sx={{ p: 6, textAlign: 'center' }}>
-          <CircularProgress />
-        </Box>
-      );
-    }
-    if (items.length === 0) {
-      return (
-        <Alert severity="info" sx={{ m: 2 }}>
-          No FAQs yet. Create the first one.
-        </Alert>
-      );
-    }
-    return (
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Question</TableCell>
-              <TableCell>Super Category</TableCell>
-              <TableCell align="center">Sort</TableCell>
-              <TableCell align="center">Active</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((it) => (
-              <TableRow key={it.id} hover>
-                <TableCell>
-                  <Typography variant="body2" fontWeight={600}>
-                    {it.question}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {it.answer}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  {it.super_category ? (
-                    <Chip size="small" label={it.super_category.name} variant="outlined" />
-                  ) : (
-                    <Chip size="small" label="General" />
-                  )}
-                </TableCell>
-                <TableCell align="center">{it.sort_order}</TableCell>
-                <TableCell align="center">
-                  <Chip
-                    size="small"
-                    color={it.is_active ? 'success' : 'default'}
-                    label={it.is_active ? 'Active' : 'Hidden'}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <IconButton size="small" onClick={() => onEdit(it)}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton size="small" color="error" onClick={() => onDelete(it)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </Box>
-    );
-  };
+const renderSuperCategory = (row: FaqRow) => {
+  if (row.super_category) {
+    return <Chip size="small" label={row.super_category.name} variant="outlined" />;
+  }
+  return <Chip size="small" label="General" />;
+};
+
+export default function FaqsTable({
+  fetchRows,
+  refetchRef,
+  supers,
+  toolbarActions,
+  onEdit,
+  onDelete,
+}: Readonly<Props>) {
+  const entityColumn = useMemo<DuncitColumn<FaqRow>>(
+    () => ({
+      field: 'super_category_id',
+      headerName: 'Super Category',
+      sortable: false,
+      filter: {
+        type: 'select',
+        options: supers.map((sc) => ({ value: sc.id, label: sc.name })),
+      },
+      minWidth: 170,
+      cellRenderer: renderSuperCategory,
+      valueGetter: (row) => row.super_category?.name ?? 'General',
+    }),
+    [supers],
+  );
 
   return (
-    <Card>
-      <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>{renderBody()}</CardContent>
-    </Card>
+    <FaqsTableBase
+      tableId="admin-faqs"
+      fetchRows={fetchRows}
+      refetchRef={refetchRef}
+      entityColumn={entityColumn}
+      toolbarActions={toolbarActions}
+      emptyText='No FAQs yet. Click "New FAQ" to create the first one.'
+      onEdit={onEdit}
+      onDelete={onDelete}
+    />
   );
 }

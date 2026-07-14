@@ -5,6 +5,7 @@ import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { InventoryProductModel, type IInventoryProduct } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -337,6 +338,99 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   doc.last_updated_by_name = info.name;
 }
 
+/* ---- Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1) ---- */
+
+/** inventoryProductsTable — Products portal Duncit catalogue (search + status/ownership). */
+const INVENTORY_PRODUCT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['product_name', 'sku', 'tags', 'brand_name'],
+  sortFields: {
+    product_name: 'product_name',
+    sku: 'sku',
+    brand_name: 'brand_name',
+    selling_price: 'selling_price',
+    inventory_count: 'inventory_count',
+    status: 'status',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    ownership: { type: 'enum' },
+    visibility: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    pod_available: { type: 'boolean' },
+    brand_name: { type: 'string' },
+    sku: { type: 'string' },
+    selling_price: { type: 'number' },
+    inventory_count: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { product_name: 1 },
+};
+
+/** marketplaceBrandProductsTable — one brand's approved storefront products. */
+const MARKETPLACE_BRAND_PRODUCT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['product_name', 'sku'],
+  sortFields: {
+    product_name: 'product_name',
+    sku: 'sku',
+    selling_price: 'selling_price',
+    inventory_count: 'inventory_count',
+    commission_pct: 'commission_pct',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    selling_price: { type: 'number' },
+    commission_pct: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { product_name: 1 },
+};
+
+/** productListingRequestsTable — partner listing review inbox (status toggle). */
+const PRODUCT_LISTING_REQUEST_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['product_name', 'sku', 'brand_name', 'listing_submitted_by_name'],
+  sortFields: {
+    product_name: 'product_name',
+    listing_submitted_by_name: 'listing_submitted_by_name',
+    inventory_count: 'inventory_count',
+    unit_cost: 'unit_cost',
+    commission_pct: 'commission_pct',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    listing_review_status: { type: 'enum' },
+    delivery_target: { type: 'enum' },
+    commission_pct: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
+/** myProductListingsTable — a partner's own listings (old client-side controls). */
+const MY_PRODUCT_LISTING_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['product_name', 'description', 'size_label', 'color'],
+  sortFields: {
+    product_name: 'product_name',
+    selling_price: 'selling_price',
+    unit_cost: 'unit_cost',
+    inventory_count: 'inventory_count',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    listing_review_status: { type: 'enum' },
+    delivery_target: { type: 'enum' },
+    status: { type: 'enum' },
+    inventory_count: { type: 'number' },
+    updated_at: { type: 'date' },
+  },
+  defaultSort: { updated_at: -1 },
+};
+
+/** Canonical match-nothing mongo filter ($in: [] matches no document). */
+const MATCH_NOTHING = { _id: { $in: [] as never[] } };
+
 function applyInput(target: any, input: any) {
   for (const field of TRACKED_FIELDS) {
     if (input[field] === undefined) continue;
@@ -368,6 +462,17 @@ export const inventoryService = {
     return docs.map(inventoryProductToPub);
   },
 
+  /** Server-side table page for the inventoryProductsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IInventoryProduct>(
+      InventoryProductModel,
+      {},
+      input,
+      INVENTORY_PRODUCT_TABLE_CONFIG
+    );
+    return { rows: docs.map(inventoryProductToPub), total, page, page_size };
+  },
+
   /** Approved products of one external brand — the e-commerce marketplace list.
    * A deactivated brand shows no products (its storefront is hidden). */
   async listMarketplaceBrandProducts(brandId: string) {
@@ -382,11 +487,46 @@ export const inventoryService = {
     return docs.map(inventoryProductToPub);
   },
 
+  /** Server-side table page for the marketplaceBrandProductsTable query. Mirrors
+   * listMarketplaceBrandProducts' scope: an invalid, missing, deactivated or
+   * un-approved brand yields an empty page. */
+  async marketplaceBrandProductsTable(brandId: string, input?: TableQueryInput | null) {
+    let scope: Record<string, unknown> = MATCH_NOTHING;
+    if (Types.ObjectId.isValid(brandId)) {
+      const brand = await EcommBrandModel.findById(brandId).select('is_active status');
+      if (brand && brand.is_active !== false && brand.status === 'APPROVED') {
+        scope = {
+          brand_id: new Types.ObjectId(brandId),
+          ownership: 'BRAND',
+          listing_review_status: 'APPROVED',
+        };
+      }
+    }
+    const { docs, total, page, page_size } = await runTableQuery<IInventoryProduct>(
+      InventoryProductModel,
+      scope,
+      input,
+      MARKETPLACE_BRAND_PRODUCT_TABLE_CONFIG
+    );
+    return { rows: docs.map(inventoryProductToPub), total, page, page_size };
+  },
+
   async listProductRequests(status?: string | null) {
     const q: any = { listing_submitted_by_id: { $exists: true, $nin: [null, ''] } };
     if (status) q.listing_review_status = status;
     const docs = await InventoryProductModel.find(q).sort({ created_at: -1 }).limit(300);
     return docs.map(inventoryProductToPub);
+  },
+
+  /** Server-side table page for the productListingRequestsTable query. */
+  async productListingRequestsTable(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IInventoryProduct>(
+      InventoryProductModel,
+      { listing_submitted_by_id: { $exists: true, $nin: [null, ''] } },
+      input,
+      PRODUCT_LISTING_REQUEST_TABLE_CONFIG
+    );
+    return { rows: docs.map(inventoryProductToPub), total, page, page_size };
   },
 
   async listMyProductListings(user: AuthUser | null, brandId?: string | null) {
@@ -395,6 +535,26 @@ export const inventoryService = {
     if (brandId && Types.ObjectId.isValid(brandId)) q.brand_id = new Types.ObjectId(brandId);
     const docs = await InventoryProductModel.find(q).sort({ updated_at: -1 }).limit(200);
     return docs.map(inventoryProductToPub);
+  },
+
+  /** Server-side table page for the myProductListingsTable query. The owner
+   * scope goes through runTableQuery's baseFilter ($and-merged), so client
+   * filters can never widen it to another partner's listings. */
+  async myProductListingsTable(
+    user: AuthUser | null,
+    brandId?: string | null,
+    input?: TableQueryInput | null
+  ) {
+    if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    const scope: Record<string, unknown> = { listing_submitted_by_id: user.id };
+    if (brandId && Types.ObjectId.isValid(brandId)) scope.brand_id = new Types.ObjectId(brandId);
+    const { docs, total, page, page_size } = await runTableQuery<IInventoryProduct>(
+      InventoryProductModel,
+      scope,
+      input,
+      MY_PRODUCT_LISTING_TABLE_CONFIG
+    );
+    return { rows: docs.map(inventoryProductToPub), total, page, page_size };
   },
 
   async listAvailablePodProducts(filter?: {

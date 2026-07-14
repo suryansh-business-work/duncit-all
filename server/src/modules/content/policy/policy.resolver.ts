@@ -12,6 +12,7 @@ const ADMIN_RW = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
 export const policyResolvers = {
   Query: {
     policies: (_p: unknown, args: { filter?: any }) => policyService.list(args.filter),
+    policiesTable: (_p: unknown, args: { query?: any }) => policyService.table(args.query),
     policy: (_p: unknown, args: { policy_doc_id: string }) =>
       policyService.getById(args.policy_doc_id),
     policyBySlug: (_p: unknown, args: { slug: string }) => policyService.getBySlug(args.slug),

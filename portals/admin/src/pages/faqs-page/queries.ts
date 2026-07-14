@@ -20,6 +20,31 @@ export const FAQS = gql`
   }
 `;
 
+/** Server-side table page over faqs — audience is pinned to APP in fetchRows. */
+export const FAQS_TABLE = gql`
+  query AdminFaqsTable($query: TableQueryInput) {
+    faqsTable(query: $query) {
+      total
+      rows {
+        id
+        audience
+        partner_topic
+        super_category_id
+        super_category {
+          id
+          name
+        }
+        question
+        answer
+        is_active
+        sort_order
+        created_at
+        updated_at
+      }
+    }
+  }
+`;
+
 export const SUPER_CATS_FOR_FAQ = gql`
   query SuperCatsForFaq {
     categories(filter: { level: SUPER }) {

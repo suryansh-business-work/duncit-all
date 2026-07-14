@@ -10,6 +10,10 @@ export const newsletterResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return newsletterService.list();
     },
+    newsletterSubscribersTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return newsletterService.table(args.query);
+    },
   },
   Mutation: {
     subscribeNewsletter: (_p: unknown, args: { input: { email: string; source?: string } }) =>

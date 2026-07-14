@@ -1,26 +1,39 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { notifyError, notifySuccess } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import CouponsTable from './CouponsTable';
 import CouponFormDialog from './CouponFormDialog';
-import { COUPONS, DELETE_COUPON, type CouponRow } from './queries';
+import { COUPONS_TABLE, DELETE_COUPON, type CouponRow } from './queries';
 import { PODS } from '../pods-page/queries';
 
 export default function CouponsPage() {
-  const { data, loading, error, refetch } = useQuery(COUPONS, { fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data: podsData } = useQuery(PODS, { variables: { filter: {} }, fetchPolicy: 'cache-first' });
   const [deleteCoupon] = useMutation(DELETE_COUPON);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();
 
-  const coupons: CouponRow[] = data?.coupons ?? [];
   const pods = useMemo(
     () => (podsData?.pods ?? []).map((p: any) => ({ id: p.id, title: p.pod_title })),
     [podsData]
+  );
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: COUPONS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.couponsTable.rows as CouponRow[], total: data.couponsTable.total as number };
+    },
+    [client],
   );
 
   const openCreate = () => {
@@ -37,7 +50,7 @@ export default function CouponsPage() {
     try {
       await deleteCoupon({ variables: { id: c.id } });
       notifySuccess('Coupon deleted');
-      refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message ?? 'Could not delete coupon');
     }
@@ -45,30 +58,34 @@ export default function CouponsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Box>
-          <Typography variant="h5" fontWeight={900}>
-            Coupons
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Global discount codes + per-pod offer codes. Discounts apply on the payment step.
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          New coupon
-        </Button>
-      </Stack>
+      <Box>
+        <Typography variant="h5" fontWeight={900}>
+          Coupons
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Global discount codes + per-pod offer codes. Discounts apply on the payment step.
+        </Typography>
+      </Box>
 
-      {error && <Alert severity="error">{error.message}</Alert>}
-
-      <CouponsTable loading={loading} coupons={coupons} onEdit={openEdit} onDelete={onDelete} />
+      <CouponsTable
+        tableId="admin-coupons"
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New coupon
+          </Button>
+        }
+        onEdit={openEdit}
+        onDelete={onDelete}
+      />
 
       <CouponFormDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
         onSaved={() => {
           notifySuccess(editing ? 'Coupon updated' : 'Coupon created');
-          refetch();
+          refetchRef.current?.();
         }}
         initial={editing}
         pods={pods}

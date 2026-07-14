@@ -41,6 +41,16 @@ export const CRM_SERVICES_OFFERED = gql`
   }
 `;
 
+/** Server-side table page (search/sort/filter/paginate) for the Services Offered table. */
+export const CRM_SERVICES_OFFERED_TABLE = gql`
+  query CrmServicesOfferedTable($query: TableQueryInput) {
+    crmServicesOfferedTable(query: $query) {
+      total
+      rows { ${SERVICE_OFFERED_FIELDS} created_at }
+    }
+  }
+`;
+
 export const CREATE_CRM_SERVICES_OFFERED = gql`
   mutation CreateCrmServicesOffered($input: CreateCrmServiceOfferedInput!) {
     createCrmServicesOffered(input: $input) { ${SERVICE_OFFERED_FIELDS} }
@@ -118,4 +128,9 @@ export interface CrmServiceOffered {
   applies_to_host: boolean;
   is_active: boolean;
   sort_order: number;
+}
+
+/** Table row = list shape + created_at (carries the table's Created filter column). */
+export interface CrmServiceOfferedRow extends CrmServiceOffered {
+  created_at?: string | null;
 }

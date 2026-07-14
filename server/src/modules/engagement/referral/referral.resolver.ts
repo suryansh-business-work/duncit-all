@@ -14,6 +14,10 @@ export const referralResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return referralService.listAll();
     },
+    referralsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return referralService.table(args.query);
+    },
     referralSettings: async () => referralService.settings(),
   },
   Mutation: {

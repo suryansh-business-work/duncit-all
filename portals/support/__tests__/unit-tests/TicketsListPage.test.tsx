@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { act, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import TicketsListPage from '../../src/pages/tickets/TicketsListPage';
 import { CREATE_TICKET, TICKETS, type Ticket } from '../../src/graphql/tickets';
 import { renderWithProviders } from './testkit';
@@ -73,24 +73,32 @@ describe('TicketsListPage', () => {
       ),
     });
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
-    sockMock.events.onTicketNew();
-    sockMock.events.onTicketUpdate();
+    act(() => {
+      sockMock.events.onTicketNew();
+      sockMock.events.onTicketUpdate();
+    });
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
     fireEvent.click(screen.getByText('Cannot pay'));
-    expect(screen.getByText('TICKET DETAIL')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('TICKET DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by status', async () => {
+  it('filters by status from the table filter popover', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [listMock(null, [ticket('t1', 'Open one')]), listMock('RESOLVED', [ticket('t2', 'Resolved one')])],
     });
     await waitFor(() => expect(screen.getByText('Open one')).toBeInTheDocument());
-    // The header Status select is the first combobox (TablePagination adds another).
-    fireEvent.mouseDown(screen.getAllByRole('combobox')[0]);
-    fireEvent.click(screen.getByRole('option', { name: 'RESOLVED' }));
+
+    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Status' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'RESOLVED' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
     await waitFor(() => expect(screen.getByText('Resolved one')).toBeInTheDocument());
+    // AG Grid removes replaced row elements asynchronously.
+    await waitFor(() => expect(screen.queryByText('Open one')).not.toBeInTheDocument());
   });
 
-  it('searches on the server (a new query keyed on the search variable)', async () => {
+  it('searches on the server (a debounced query keyed on the search variable)', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
         listMock(null, [ticket('t1', 'Cannot pay'), ticket('t2', 'Refund please')]),
@@ -98,8 +106,12 @@ describe('TicketsListPage', () => {
       ],
     });
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'Refund' } });
-    await waitFor(() => expect(screen.queryByText('Cannot pay')).not.toBeInTheDocument());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search subject' }), {
+      target: { value: 'Refund' },
+    });
+    await waitFor(() => expect(screen.queryByText('Cannot pay')).not.toBeInTheDocument(), {
+      timeout: 2000,
+    });
     expect(screen.getByText('Refund please')).toBeInTheDocument();
   });
 

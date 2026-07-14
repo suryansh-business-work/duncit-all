@@ -1,19 +1,10 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { CRM_CALL_PROMPTS, DELETE_CRM_CALL_PROMPT, type CrmCallPrompt } from '../../api/call.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { CRM_CALL_PROMPTS_TABLE, DELETE_CRM_CALL_PROMPT, type CrmCallPrompt } from '../../api/call.gql';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import CallPromptsTable from './CallPromptsTable';
 import CallPromptDialog from './CallPromptDialog';
@@ -24,15 +15,27 @@ import CallPromptDialog from './CallPromptDialog';
  * for add/edit and delete confirmation (no native alert/confirm).
  */
 export default function CallPromptsPage() {
-  const { data, loading, error, refetch } = useQuery<{ crmCallPrompts: CrmCallPrompt[] }>(CRM_CALL_PROMPTS, {
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [editing, setEditing] = useState<CrmCallPrompt | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toDelete, setToDelete] = useState<CrmCallPrompt | null>(null);
   const [deletePrompt, { loading: deleting }] = useMutation(DELETE_CRM_CALL_PROMPT);
 
-  const prompts = data?.crmCallPrompts ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: CRM_CALL_PROMPTS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.crmCallPromptsTable.rows as CrmCallPrompt[],
+        total: data.crmCallPromptsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const openCreate = () => {
     setEditing(null);
@@ -46,51 +49,40 @@ export default function CallPromptsPage() {
     if (!toDelete) return;
     await deletePrompt({ variables: { id: toDelete.id } });
     setToDelete(null);
-    refetch();
+    refetchRef.current?.();
   };
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} flexWrap="wrap" useFlexGap>
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <SmartToyIcon color="primary" />
-            <Typography variant="h5" fontWeight={800}>
-              Static Content
-            </Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Reusable context blocks the AI agent speaks in during an AI Call.
+      <Box>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <SmartToyIcon color="primary" />
+          <Typography variant="h5" fontWeight={800}>
+            Static Content
           </Typography>
-        </Box>
-        <Button startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
-          Add Static Content
-        </Button>
-      </Stack>
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          Reusable context blocks the AI agent speaks in during an AI Call.
+        </Typography>
+      </Box>
 
-      {error && <Alert severity="error">{parseApiError(error)}</Alert>}
-
-      <Card>
-        <CardContent>
-          {loading && prompts.length === 0 && (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-              <CircularProgress />
-            </Stack>
-          )}
-          {!loading && prompts.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-              No Static Content yet. Click "Add Static Content" to create your first AI Call prompt.
-            </Typography>
-          )}
-          {prompts.length > 0 && <CallPromptsTable prompts={prompts} onEdit={openEdit} onDelete={setToDelete} />}
-        </CardContent>
-      </Card>
+      <CallPromptsTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={openCreate}>
+            Add Static Content
+          </Button>
+        }
+        onEdit={openEdit}
+        onDelete={setToDelete}
+      />
 
       <CallPromptDialog
         open={dialogOpen}
         prompt={editing}
         onClose={() => setDialogOpen(false)}
-        onSaved={() => refetch()}
+        onSaved={() => refetchRef.current?.()}
       />
       <ConfirmDialog
         open={!!toDelete}

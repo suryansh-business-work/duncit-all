@@ -53,6 +53,28 @@ export const TEMPLATES = gql`
   }
 `;
 
+/** Slim row for the templates table — the editor fetches the full doc by id. */
+export interface EmailTemplateRow {
+  template_id: string;
+  slug: string;
+  name: string;
+  subject: string;
+  target: EmailTemplateTarget;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+/** Server-side table page (search/sort/filter/paginate) for the templates table. */
+export const TEMPLATES_TABLE = gql`
+  query CrmEmailTemplatesTable($query: TableQueryInput) {
+    crmEmailTemplatesTable(query: $query) {
+      total
+      rows { template_id slug name subject target is_active created_at updated_at }
+    }
+  }
+`;
+
 export const EMAIL_TEMPLATE = gql`
   query CrmEmailTemplate($id: ID!) {
     emailTemplate: crmEmailTemplate(template_id: $id) { ${TEMPLATE_FIELDS} }

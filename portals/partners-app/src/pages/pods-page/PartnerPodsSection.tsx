@@ -1,21 +1,25 @@
-import { useRef, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 import { format } from 'date-fns';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
 import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { CREATE_PARTNER_POD, HOST_UPDATE_POD, PARTNER_PODS_PAGE } from './queries';
-import PartnerPodsTable from './PartnerPodsTable';
+import PodsTable from '../../components/PodsTable';
+import { CREATE_PARTNER_POD, HOST_UPDATE_POD, MY_HOST_PODS_TABLE, PARTNER_POD_LOOKUPS, type PartnerPodRow } from './queries';
 import { PARTNER_POD_CONFIG, getClubVenueIds } from './partner-pod-config';
 
 export default function PartnerPodsSection() {
-  const { data, loading, error, refetch } = useQuery(PARTNER_PODS_PAGE, { fetchPolicy: 'cache-and-network' });
+  const { data, error } = useQuery(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [createPod, createState] = useMutation(CREATE_PARTNER_POD);
   const [hostUpdatePod, updateState] = useMutation(HOST_UPDATE_POD);
   const [open, setOpen] = useState(false);
-  const [editPod, setEditPod] = useState<any>(null);
+  const [editPod, setEditPod] = useState<PartnerPodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -27,13 +31,28 @@ export default function PartnerPodsSection() {
   const clubName = (id: string) => clubs.find((club: any) => club.id === id)?.club_name ?? 'Club';
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
 
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data: page } = await client.query({
+        query: MY_HOST_PODS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.myHostPodsTable.rows as PartnerPodRow[],
+        total: page.myHostPodsTable.total as number,
+      };
+    },
+    [client],
+  );
+
   const submit = async (values: PodFormValues, options: { draft: boolean }) => {
     setOpError(null);
     try {
       await createPod({ variables: { input: buildPodInput(values, { draft: options.draft, config: PARTNER_POD_CONFIG }) } });
       setOpen(false);
       setMessage(options.draft ? 'Pod draft saved.' : 'Pod created.');
-      await refetch();
+      refetchRef.current?.();
     } catch (submitError: any) {
       setOpError(submitError.message);
     }
@@ -67,26 +86,46 @@ export default function PartnerPodsSection() {
       });
       setEditPod(null);
       setMessage('Pod updated.');
-      await refetch();
+      refetchRef.current?.();
     } catch (editError: any) {
       setOpError(editError.message);
     }
   };
 
+  const renderActions = (pod: PartnerPodRow) => (
+    <Tooltip title="Edit name, description & images">
+      <span>
+        <IconButton size="small" onClick={() => { setOpError(null); setEditPod(pod); }} disabled={!!pod.completed_at}>
+          <EditIcon fontSize="small" />
+        </IconButton>
+      </span>
+    </Tooltip>
+  );
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1.5}>
-            <Stack spacing={0.25}>
-              <Typography variant="h6" fontWeight={950}>Pods</Typography>
-              <Typography variant="body2" color="text.secondary">Create and manage pods from your approved host profile.</Typography>
-            </Stack>
-            <Button variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)}>New Pod</Button>
+          <Stack spacing={0.25}>
+            <Typography variant="h6" fontWeight={950}>Pods</Typography>
+            <Typography variant="body2" color="text.secondary">Create and manage pods from your approved host profile.</Typography>
           </Stack>
           {!approvedHost && <Alert severity="info">Host approval is required before creating pods.</Alert>}
           {error && <Alert severity="error">{error.message}</Alert>}
-          <PartnerPodsTable loading={loading && !data} pods={data?.myHostPods ?? []} clubName={clubName} venueName={venueName} onEdit={(pod) => { setOpError(null); setEditPod(pod); }} />
+          <PodsTable<PartnerPodRow>
+            tableId="partners-app-partner-pods"
+            fetchRows={fetchRows}
+            refetchRef={refetchRef}
+            clubName={clubName}
+            venueName={venueName}
+            emptyText="No pods created from your partner account yet."
+            toolbarActions={
+              <Button size="small" variant="contained" startIcon={<AddIcon />} disabled={!approvedHost} onClick={() => setOpen(true)}>
+                New Pod
+              </Button>
+            }
+            renderActions={renderActions}
+          />
         </Stack>
       </CardContent>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">

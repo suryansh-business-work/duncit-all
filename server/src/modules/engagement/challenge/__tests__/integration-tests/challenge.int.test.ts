@@ -37,6 +37,44 @@ describe('challengeService', () => {
     expect(stats.active).toBe(1);
   });
 
+  it('serves the challengesTable page with search, filter, sort and paging', async () => {
+    const sup = await CategoryModel.create({ name: 'Sports', slug: 'sports2', level: 'SUPER' });
+    await ChallengeModel.create({ name: 'Alpha Run', is_active: true, super_category_id: sup._id });
+    await ChallengeModel.create({ name: 'Beta Quiz', is_active: false });
+    await ChallengeModel.create({ name: 'Gamma Trek', is_active: true });
+
+    // Plain envelope with the clamp defaults; category names resolve like list().
+    const all = await challengeService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+    expect(all.rows.find((c) => c?.name === 'Alpha Run')?.super_category_name).toBe('Sports');
+
+    // Search matches the name.
+    const searched = await challengeService.table({ search: 'beta' });
+    expect(searched.rows.map((c) => c?.name)).toEqual(['Beta Quiz']);
+    expect(searched.total).toBe(1);
+
+    // Boolean filter narrows.
+    const active = await challengeService.table({
+      filters: [{ field: 'is_active', op: 'is_true' }],
+      sort_by: 'name',
+      sort_dir: 'asc',
+    });
+    expect(active.rows.map((c) => c?.name)).toEqual(['Alpha Run', 'Gamma Trek']);
+
+    // Allowlisted sort, both directions.
+    const desc = await challengeService.table({ sort_by: 'name', sort_dir: 'desc' });
+    expect(desc.rows.map((c) => c?.name)).toEqual(['Gamma Trek', 'Beta Quiz', 'Alpha Run']);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await challengeService.table({ page: 2, page_size: 1, sort_by: 'name', sort_dir: 'asc' });
+    expect(page2.rows.map((c) => c?.name)).toEqual(['Beta Quiz']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('updates and deletes a challenge', async () => {
     const c = await ChallengeModel.create({ name: 'Temp' });
     const updated = await challengeService.update(String(c._id), { name: 'Renamed', is_active: false });

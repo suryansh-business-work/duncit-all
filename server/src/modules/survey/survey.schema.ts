@@ -97,9 +97,19 @@ export const surveyTypeDefs = gql`
     items: [SurveyResponseItem!]!
   }
 
+  "Server-side table page for the shared table engine (surveysTable)."
+  type SurveyTablePage {
+    rows: [Survey!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Onboarding list — surveys for a kind, optionally narrowed by taxonomy/search."
     surveys(kind: SurveyKind, super_category_id: ID, category_id: ID, sub_category_id: ID, search: String): [Survey!]!
+    "Server-side table page (search/filter/sort/paginate) over surveys."
+    surveysTable(query: TableQueryInput): SurveyTablePage!
     "Builder read of a single survey by id."
     surveyById(id: ID!): Survey
     "Kind-level default survey (all scope null) — back-compat."

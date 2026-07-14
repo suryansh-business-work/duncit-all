@@ -91,13 +91,27 @@ export const ecommBrandTypeDefs = gql`
     documents: [EcommBrandDocumentInput!]
   }
 
+  "Server-side table page for the shared table engine (DUNCIT TABLE CONTRACT v1)."
+  type EcommBrandTablePage {
+    rows: [EcommBrand!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "The signed-in partner's e-commerce brands (a partner may run several)."
     myEcommBrands: [EcommBrand!]!
+    "Server-side table sibling of myEcommBrands — always scoped to the caller's own brands."
+    myEcommBrandsTable(query: TableQueryInput): EcommBrandTablePage!
     "Onboarding/admin: all brands, optionally filtered by status."
     ecommBrands(status: EcommBrandStatus): [EcommBrand!]!
+    "Server-side table sibling of ecommBrands (shared table engine)."
+    ecommBrandsTable(query: TableQueryInput): EcommBrandTablePage!
     "Products portal e-commerce: external brands (default APPROVED) + approved-product counts."
     marketplaceBrands(status: EcommBrandStatus): [EcommBrand!]!
+    "Server-side table sibling of marketplaceBrands (shared table engine; active brands only)."
+    marketplaceBrandsTable(query: TableQueryInput): EcommBrandTablePage!
     "Onboarding/admin: a single brand by id."
     ecommBrand(brand_doc_id: ID!): EcommBrand
     "Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side)."

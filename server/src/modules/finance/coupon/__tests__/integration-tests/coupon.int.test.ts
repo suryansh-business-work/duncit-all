@@ -21,6 +21,59 @@ describe('couponService integration', () => {
     expect(await couponService.getById(created.id)).toMatchObject({ code: 'SAVE20' });
   });
 
+  it('serves the couponsTable page with search, filter, sort and paging', async () => {
+    await couponService.create({ code: 'SAVE10', description: 'Global saver', discount_pct: 10, scope: 'GLOBAL' });
+    await couponService.create({ code: 'PODA20', discount_pct: 20, scope: 'POD', pod_id: podId });
+    await couponService.create({ code: 'DEAD30', discount_pct: 30, scope: 'GLOBAL', is_active: false });
+
+    // Plain envelope with the clamp defaults (created_at desc).
+    const all = await couponService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans code + description.
+    const byCode = await couponService.table({ search: 'poda' });
+    expect(byCode.rows.map((c) => c.code)).toEqual(['PODA20']);
+    const byDescription = await couponService.table({ search: 'saver' });
+    expect(byDescription.rows.map((c) => c.code)).toEqual(['SAVE10']);
+
+    // Boolean + enum filters narrow.
+    const active = await couponService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((c) => c.code).sort((x, y) => x.localeCompare(y))).toEqual(['PODA20', 'SAVE10']);
+    const global = await couponService.table({ filters: [{ field: 'scope', op: 'eq', value: 'GLOBAL' }] });
+    expect(global.total).toBe(2);
+
+    // Allowlisted sort + paging keep the total.
+    const asc = await couponService.table({ sort_by: 'discount_pct', sort_dir: 'asc' });
+    expect(asc.rows.map((c) => c.discount_pct)).toEqual([10, 20, 30]);
+    const page2 = await couponService.table({ sort_by: 'discount_pct', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((c) => c.discount_pct)).toEqual([20]);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
+  it('couponsForPodTable scopes rows to this pod + GLOBAL, and client filters cannot widen it', async () => {
+    const otherPod = new Types.ObjectId().toString();
+    await couponService.create({ code: 'SAVE10', discount_pct: 10, scope: 'GLOBAL' });
+    await couponService.create({ code: 'PODA20', discount_pct: 20, scope: 'POD', pod_id: podId });
+    await couponService.create({ code: 'PODB30', discount_pct: 30, scope: 'POD', pod_id: otherPod });
+
+    // This pod's coupons + every GLOBAL coupon — never another pod's codes.
+    const page = await couponService.tableForPod(podId);
+    expect(page.rows.map((c) => c.code).sort((x, y) => x.localeCompare(y))).toEqual(['PODA20', 'SAVE10']);
+    expect(page.total).toBe(2);
+
+    // A client pod_id filter is $and-merged with the base scope, so it can
+    // only narrow within it — pointing it at the other pod yields nothing.
+    const widened = await couponService.tableForPod(podId, {
+      filters: [{ field: 'pod_id', op: 'eq', value: otherPod }],
+    });
+    expect(widened.rows).toEqual([]);
+    expect(widened.total).toBe(0);
+  });
+
   it('evaluates a valid global coupon and computes the discount', async () => {
     await couponService.create({ code: 'TEN', discount_pct: 10, scope: 'GLOBAL' });
     const res = await couponService.evaluate('TEN', podId, 500, new Types.ObjectId().toString());

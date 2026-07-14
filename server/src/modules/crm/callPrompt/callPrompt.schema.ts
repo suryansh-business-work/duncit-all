@@ -22,6 +22,14 @@ export const callPromptTypeDefs = gql`
     search: String
   }
 
+  "Server-side table page for the shared table engine (crmCallPromptsTable)."
+  type CrmCallPromptTablePage {
+    rows: [CrmCallPrompt!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateCrmCallPromptInput {
     name: String!
     description: String
@@ -40,6 +48,7 @@ export const callPromptTypeDefs = gql`
 
   extend type Query {
     crmCallPrompts(filter: CrmCallPromptFilter): [CrmCallPrompt!]!
+    crmCallPromptsTable(query: TableQueryInput): CrmCallPromptTablePage!
     crmCallPrompt(id: ID!): CrmCallPrompt
   }
 

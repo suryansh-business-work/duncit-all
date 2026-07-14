@@ -216,4 +216,61 @@ describe('backout refund requests (finance)', () => {
     expect(await podMemberService.getBackoutRefund('not-a-valid-id')).toBeNull();
     expect(await podMemberService.getBackoutRefund(new Types.ObjectId().toString())).toBeNull();
   });
+
+  it('serves the backoutRefundRequestsTable page scoped to BACKED_OUT rows only', async () => {
+    const pod = await makePodDoc();
+    const memberA = new Types.ObjectId();
+    const memberB = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: memberA,
+      profile: { first_name: 'Amit', last_name: 'Kumar' },
+      auth: { email: 'amit@example.com' },
+    } as never);
+    await backedOut(pod._id, memberA, { backed_out_at: new Date('2030-01-02T00:00:00Z') });
+    await backedOut(pod._id, memberB, {
+      backed_out_at: new Date('2030-01-01T00:00:00Z'),
+      source: 'FREE',
+      refund_status: 'NOT_ELIGIBLE',
+      payment_id: null,
+    });
+    await PodMemberModel.create({
+      pod_id: pod._id,
+      user_id: new Types.ObjectId(),
+      status: 'JOINED',
+      source: 'FREE',
+      refund_status: 'NONE',
+    });
+
+    // Default page: backed_out_at desc; the JOINED membership never surfaces.
+    const all = await podMemberService.tableBackoutRefunds();
+    expect(all.total).toBe(2);
+    expect(all.rows.map((r) => r.refund_status)).toEqual(['PENDING', 'NOT_ELIGIBLE']);
+    expect(all.rows[0].user_name).toBe('Amit Kumar'); // hydrated buyer identity
+    expect(all.rows[0].user_email).toBe('amit@example.com');
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // `status` is not allowlisted, so a crafted filter cannot widen past the
+    // BACKED_OUT baseFilter.
+    const forced = await podMemberService.tableBackoutRefunds({
+      filters: [{ field: 'status', op: 'eq', value: 'JOINED' }],
+    });
+    expect(forced.total).toBe(2);
+    expect(forced.rows.every((r) => r.status === 'BACKED_OUT')).toBe(true);
+
+    // Enum filter narrows.
+    const pending = await podMemberService.tableBackoutRefunds({
+      filters: [{ field: 'refund_status', op: 'eq', value: 'PENDING' }],
+    });
+    expect(pending.rows.map((r) => r.user_id)).toEqual([String(memberA)]);
+
+    // Allowlisted sort + paging over it.
+    const sorted = await podMemberService.tableBackoutRefunds({ sort_by: 'backed_out_at', sort_dir: 'asc' });
+    expect(sorted.rows.map((r) => r.refund_status)).toEqual(['NOT_ELIGIBLE', 'PENDING']);
+    const page2 = await podMemberService.tableBackoutRefunds({ page: 2, page_size: 1 });
+    expect(page2.rows).toHaveLength(1);
+    expect(page2.total).toBe(2);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
 });

@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { Types } from 'mongoose';
 import { ChallengeModel } from './challenge.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 export interface ChallengeInput {
   name?: string;
@@ -51,6 +52,25 @@ function notFound(): never {
 const allCategoryIds = (docs: Record<string, any>[]) =>
   docs.flatMap((d) => [d.super_category_id, d.category_id, d.sub_category_id]);
 
+/** Allowlists for the shared table engine (challengesTable — DUNCIT TABLE CONTRACT v1). */
+const CHALLENGE_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name'],
+  sortFields: {
+    name: 'name',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    super_category_id: { type: 'string' },
+    category_id: { type: 'string' },
+    sub_category_id: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 export const challengeService = {
   async list(search?: string | null) {
     const q: Record<string, unknown> = {};
@@ -60,6 +80,18 @@ export const challengeService = {
     const docs = await ChallengeModel.find(q).sort({ created_at: -1 }).lean();
     const names = await nameMap(allCategoryIds(docs));
     return docs.map((d) => toPub(d, names));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for challengesTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<Record<string, any>>(
+      ChallengeModel,
+      {},
+      input,
+      CHALLENGE_TABLE_CONFIG
+    );
+    const names = await nameMap(allCategoryIds(docs));
+    return { rows: docs.map((d) => toPub(d, names)), total, page, page_size };
   },
 
   async stats() {

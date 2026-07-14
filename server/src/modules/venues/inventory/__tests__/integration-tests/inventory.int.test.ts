@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { inventoryService } from '../../inventory.service';
 import { InventoryProductModel } from '../../inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 
 describe('inventoryService integration', () => {
   it('lists no products / requests on an empty dataset', async () => {
@@ -33,5 +34,146 @@ describe('inventoryService integration', () => {
     const sku = await inventoryService.generateSku();
     expect(typeof sku).toBe('string');
     expect(sku.length).toBeGreaterThan(0);
+  });
+});
+
+describe('inventory table queries (shared table engine)', () => {
+  it('serves the inventoryProductsTable page with search, filters, sort and paging', async () => {
+    await InventoryProductModel.create({ product_name: 'Alpha Mat', sku: 'ALPHA1', unit_cost: 10, brand_name: 'Zen', status: 'ACTIVE', selling_price: 100, ownership: 'DUNCIT' });
+    await InventoryProductModel.create({ product_name: 'Beta Ball', sku: 'BETA1', unit_cost: 10, brand_name: 'Kick', status: 'DRAFT', selling_price: 50, ownership: 'DUNCIT' });
+    await InventoryProductModel.create({ product_name: 'Gamma Glove', sku: 'GAMMA1', unit_cost: 10, brand_name: 'Kick', status: 'ACTIVE', selling_price: 75, ownership: 'BRAND' });
+
+    // Plain envelope with the default sort (product_name asc) and clamp defaults.
+    const all = await inventoryService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((p) => p.product_name)).toEqual(['Alpha Mat', 'Beta Ball', 'Gamma Glove']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans sku and brand_name.
+    const bySku = await inventoryService.table({ search: 'beta1' });
+    expect(bySku.rows.map((p) => p.product_name)).toEqual(['Beta Ball']);
+    const byBrand = await inventoryService.table({ search: 'kick' });
+    expect(byBrand.total).toBe(2);
+
+    // Enum filters narrow (the old UI's status select + hardcoded ownership).
+    const active = await inventoryService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'ACTIVE' }],
+    });
+    expect(active.rows.map((p) => p.product_name)).toEqual(['Alpha Mat', 'Gamma Glove']);
+    const duncit = await inventoryService.table({
+      filters: [{ field: 'ownership', op: 'eq', value: 'DUNCIT' }],
+    });
+    expect(duncit.total).toBe(2);
+
+    // Allowlisted numeric sort.
+    const priced = await inventoryService.table({ sort_by: 'selling_price', sort_dir: 'desc' });
+    expect(priced.rows.map((p) => p.product_name)).toEqual(['Alpha Mat', 'Gamma Glove', 'Beta Ball']);
+
+    // Paging keeps total and echoes the clamped page/page_size.
+    const page2 = await inventoryService.table({ page: 2, page_size: 1 });
+    expect(page2.rows.map((p) => p.product_name)).toEqual(['Beta Ball']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
+  it('scopes marketplaceBrandProductsTable to one approved, active brand', async () => {
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Mine Co', status: 'APPROVED', is_active: true });
+    const other = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Other Co', status: 'APPROVED', is_active: true });
+    await InventoryProductModel.create({ product_name: 'Mine Approved', sku: 'MBA1', unit_cost: 5, brand_id: brand._id, ownership: 'BRAND', listing_review_status: 'APPROVED' });
+    await InventoryProductModel.create({ product_name: 'Mine Pending', sku: 'MBP1', unit_cost: 5, brand_id: brand._id, ownership: 'BRAND', listing_review_status: 'PENDING' });
+    await InventoryProductModel.create({ product_name: 'Other Approved', sku: 'MBO1', unit_cost: 5, brand_id: other._id, ownership: 'BRAND', listing_review_status: 'APPROVED' });
+
+    const page = await inventoryService.marketplaceBrandProductsTable(String(brand._id));
+    expect(page.rows.map((p) => p.product_name)).toEqual(['Mine Approved']);
+    expect(page.total).toBe(1);
+
+    // A deactivated brand's storefront is empty (mirrors listMarketplaceBrandProducts).
+    await EcommBrandModel.updateOne({ _id: brand._id }, { is_active: false });
+    const hidden = await inventoryService.marketplaceBrandProductsTable(String(brand._id));
+    expect(hidden.rows).toEqual([]);
+    expect(hidden.total).toBe(0);
+
+    // An invalid brand id yields an empty page rather than an error.
+    const invalid = await inventoryService.marketplaceBrandProductsTable('not-an-id');
+    expect(invalid.total).toBe(0);
+  });
+
+  it('productListingRequestsTable only shows partner submissions and filters by review status', async () => {
+    await InventoryProductModel.create({ product_name: 'Sub Pending', sku: 'PLR1', unit_cost: 5, listing_submitted_by_id: 'u1', listing_submitted_by_name: 'Uma Seller', listing_review_status: 'PENDING' });
+    await InventoryProductModel.create({ product_name: 'Sub Approved', sku: 'PLR2', unit_cost: 5, listing_submitted_by_id: 'u2', listing_submitted_by_name: 'Vik Seller', listing_review_status: 'APPROVED' });
+    // Catalogue product with no submitter — never a review-inbox row.
+    await InventoryProductModel.create({ product_name: 'Catalogue', sku: 'PLR3', unit_cost: 5 });
+
+    const all = await inventoryService.productListingRequestsTable();
+    expect(all.total).toBe(2);
+    expect(all.rows.map((p) => p.product_name).sort((a, b) => a.localeCompare(b))).toEqual([
+      'Sub Approved',
+      'Sub Pending',
+    ]);
+
+    // The old UI's status toggle becomes a listing_review_status filter.
+    const pending = await inventoryService.productListingRequestsTable({
+      filters: [{ field: 'listing_review_status', op: 'eq', value: 'PENDING' }],
+    });
+    expect(pending.rows.map((p) => p.product_name)).toEqual(['Sub Pending']);
+
+    // Search matches the submitter's name.
+    const byName = await inventoryService.productListingRequestsTable({ search: 'uma' });
+    expect(byName.rows.map((p) => p.product_name)).toEqual(['Sub Pending']);
+  });
+
+  it('myProductListingsTable serves ONLY the caller\'s listings (ownership scope)', async () => {
+    const userA = { id: new Types.ObjectId().toString(), roles: ['ECOMM_MANAGER'] };
+    const userB = { id: new Types.ObjectId().toString(), roles: ['ECOMM_MANAGER'] };
+    const brandA = new Types.ObjectId();
+    await InventoryProductModel.create({ product_name: 'A Red Cap', sku: 'MYA1', unit_cost: 5, selling_price: 20, inventory_count: 3, color: 'red', listing_submitted_by_id: userA.id, listing_review_status: 'APPROVED', brand_id: brandA });
+    await InventoryProductModel.create({ product_name: 'A Blue Mug', sku: 'MYA2', unit_cost: 5, selling_price: 10, inventory_count: 7, color: 'blue', listing_submitted_by_id: userA.id, listing_review_status: 'PENDING' });
+    await InventoryProductModel.create({ product_name: 'B Green Tee', sku: 'MYB1', unit_cost: 5, selling_price: 30, inventory_count: 1, color: 'green', listing_submitted_by_id: userB.id, listing_review_status: 'APPROVED' });
+
+    // Default sort = updated_at desc (newest listing first).
+    const mine = await inventoryService.myProductListingsTable(userA);
+    expect(mine.total).toBe(2);
+    expect(mine.rows.map((p) => p.product_name)).toEqual(['A Blue Mug', 'A Red Cap']);
+
+    // User B only ever sees their own row.
+    const theirs = await inventoryService.myProductListingsTable(userB);
+    expect(theirs.rows.map((p) => p.product_name)).toEqual(['B Green Tee']);
+
+    // A scope-breaking filter on a non-allowlisted field is silently dropped —
+    // user A can NEVER pull user B's listings through the table query.
+    const hostile = await inventoryService.myProductListingsTable(userA, null, {
+      filters: [{ field: 'listing_submitted_by_id', op: 'eq', value: userB.id }],
+    });
+    expect(hostile.total).toBe(2);
+    expect(hostile.rows.every((p) => p.listing_submitted_by_id === userA.id)).toBe(true);
+
+    // Search spans the old client-side fields (color here).
+    const red = await inventoryService.myProductListingsTable(userA, null, { search: 'red' });
+    expect(red.rows.map((p) => p.product_name)).toEqual(['A Red Cap']);
+
+    // Status filter + allowlisted sort + paging, still inside the owner scope.
+    const approved = await inventoryService.myProductListingsTable(userA, null, {
+      filters: [{ field: 'listing_review_status', op: 'eq', value: 'APPROVED' }],
+    });
+    expect(approved.rows.map((p) => p.product_name)).toEqual(['A Red Cap']);
+    const cheapFirst = await inventoryService.myProductListingsTable(userA, null, {
+      sort_by: 'selling_price',
+      sort_dir: 'asc',
+      page: 2,
+      page_size: 1,
+    });
+    expect(cheapFirst.rows.map((p) => p.product_name)).toEqual(['A Red Cap']);
+    expect(cheapFirst.total).toBe(2);
+    expect(cheapFirst.page).toBe(2);
+    expect(cheapFirst.page_size).toBe(1);
+
+    // The brand_id arg narrows exactly like the sibling myProductListings query.
+    const brandScoped = await inventoryService.myProductListingsTable(userA, String(brandA));
+    expect(brandScoped.rows.map((p) => p.product_name)).toEqual(['A Red Cap']);
+
+    // Unauthenticated callers are rejected like listMyProductListings.
+    await expect(inventoryService.myProductListingsTable(null)).rejects.toThrow(/authentication/i);
   });
 });

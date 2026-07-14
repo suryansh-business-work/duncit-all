@@ -5,6 +5,7 @@ jest.mock('../../tech.service', () => ({
   techService: {
     serverInfo: jest.fn().mockResolvedValue({ kind: 'server' }),
     dockerInfo: jest.fn().mockResolvedValue({ kind: 'docker' }),
+    containersTable: jest.fn().mockResolvedValue({ kind: 'table' }),
   },
 }));
 
@@ -44,5 +45,24 @@ describe('techResolvers.techDockerInfo', () => {
   it('rejects an unauthenticated caller', async () => {
     await expect(techResolvers.Query.techDockerInfo({}, {}, ctxWith(null))).rejects.toBeInstanceOf(GraphQLError);
     expect(techService.dockerInfo).not.toHaveBeenCalled();
+  });
+});
+
+describe('techResolvers.techDockerContainersTable', () => {
+  it('returns the container table page and forwards the query', async () => {
+    const res = await techResolvers.Query.techDockerContainersTable(
+      {},
+      { query: { search: 'api' } },
+      tech
+    );
+    expect(res).toEqual({ kind: 'table' });
+    expect(techService.containersTable).toHaveBeenCalledWith({ search: 'api' });
+  });
+
+  it('denies callers without a tech role', async () => {
+    await expect(
+      techResolvers.Query.techDockerContainersTable({}, {}, ctxWith(['USER']))
+    ).rejects.toBeInstanceOf(GraphQLError);
+    expect(techService.containersTable).not.toHaveBeenCalled();
   });
 });

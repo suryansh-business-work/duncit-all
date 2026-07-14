@@ -1,124 +1,65 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
-import { useEffect, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Alert, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
+import { format } from 'date-fns';
+import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
 import { parseApiError } from '../../utils/parseApiError';
-import ProductListingsToolbar from './ProductListingsToolbar';
+import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';
+import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
 
-/** Chip colour for a listing's review status. */
-const statusChipColor = (status: string): 'success' | 'error' | 'warning' => {
-  if (status === 'APPROVED') return 'success';
-  if (status === 'DENIED') return 'error';
-  return 'warning';
-};
+// Legacy full-list doc kept here so ProductListingEditorPage's import keeps working.
+export { MY_PRODUCT_LISTINGS } from './queries';
 
-const PRODUCT_FIELDS = `
-  id
-  product_name
-  description
-  image_url
-  images
-  size_label
-  height_cm
-  weight_kg
-  color
-  inventory_count
-  available_count
-  unit_cost
-  commission_pct
-  delivery_target
-  listing_review_status
-  listing_review_notes
-  is_duncit_delivery_partner
-  updated_at
-`;
+const STATUS_OPTIONS = ['PENDING', 'APPROVED', 'DENIED'].map((value) => ({ value, label: value }));
+const DELIVERY_OPTIONS = [
+  { value: 'HOST', label: 'Host' },
+  { value: 'VENUE', label: 'Venue' },
+];
 
-export const MY_PRODUCT_LISTINGS = gql`
-  query MyProductListings($brand_id: ID) { myProductListings(brand_id: $brand_id) { ${PRODUCT_FIELDS} } }
-`;
-
-const UPDATE_QUANTITY = gql`
-  mutation UpdateMyProductListingQuantity($product_doc_id: ID!, $inventory_count: Int!) {
-    updateMyProductListingQuantity(product_doc_id: $product_doc_id, inventory_count: $inventory_count) { ${PRODUCT_FIELDS} }
-  }
-`;
-
-const DELETE_LISTING = gql`
-  mutation DeleteMyProductListing($product_doc_id: ID!) {
-    deleteMyProductListing(product_doc_id: $product_doc_id)
-  }
-`;
+const getProductRowId = (product: ProductListingRow) => product.id;
 
 interface Props {
   brandId: string;
-  refreshKey?: number;
   canManageProducts?: boolean;
-  onEdit: (product: any) => void;
+  onEdit: (product: ProductListingRow) => void;
 }
 
-export default function ProductListingsTable({ brandId, refreshKey = 0, canManageProducts = false, onEdit }: Readonly<Props>) {
-  const { data, loading, error, refetch } = useQuery(MY_PRODUCT_LISTINGS, { variables: { brand_id: brandId }, fetchPolicy: 'cache-and-network' });
+export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit }: Readonly<Props>) {
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
   const [deleteListing, deleteState] = useMutation(DELETE_LISTING);
-  const [quantities, setQuantities] = useState<Record<string, string>>({});
-  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ProductListingRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('ALL');
-  const [target, setTarget] = useState('ALL');
-  const [sort, setSort] = useState('updated_desc');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const products = data?.myProductListings ?? [];
-  const statusOptions = (Array.from(new Set(products.map((product: any) => product.listing_review_status).filter(Boolean))) as string[]).sort((a, b) => a.localeCompare(b));
-  const filteredProducts = sortProducts(products.filter((product: any) => matchesProduct(product, search, status, target)), sort);
-  const visibleProducts = filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  let listState: 'loading' | 'empty' | 'no-match' | 'table' = 'table';
-  if (loading && !data) {
-    listState = 'loading';
-  } else if (products.length === 0) {
-    listState = 'empty';
-  } else if (filteredProducts.length === 0) {
-    listState = 'no-match';
-  }
 
-  useEffect(() => { refetch(); }, [refreshKey, refetch]);
-  useEffect(() => { setPage(0); }, [search, status, target, sort, products.length]);
-  useEffect(() => {
-    setQuantities(Object.fromEntries(products.map((item: any) => [item.id, String(item.inventory_count ?? 0)])));
-  }, [products]);
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: MY_PRODUCT_LISTINGS_TABLE,
+        variables: { brand_id: brandId, ...tableQueryToGql(q) },
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.myProductListingsTable.rows as ProductListingRow[],
+        total: data.myProductListingsTable.total as number,
+      };
+    },
+    [client, brandId],
+  );
 
-  const saveQuantity = async (product: any) => {
-    setMessage(null);
-    try {
-      await updateQuantity({ variables: { product_doc_id: product.id, inventory_count: Number(quantities[product.id] || 0) } });
-      setMessage('Quantity updated.');
-      await refetch();
-    } catch (updateError) {
-      setMessage(parseApiError(updateError));
-    }
-  };
+  const saveQuantity = useCallback(
+    async (product: ProductListingRow, quantity: number) => {
+      setMessage(null);
+      try {
+        await updateQuantity({ variables: { product_doc_id: product.id, inventory_count: quantity } });
+        setMessage('Quantity updated.');
+        refetchRef.current?.();
+      } catch (updateError) {
+        setMessage(parseApiError(updateError));
+      }
+    },
+    [updateQuantity],
+  );
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -127,80 +68,101 @@ export default function ProductListingsTable({ brandId, refreshKey = 0, canManag
       await deleteListing({ variables: { product_doc_id: deleteTarget.id } });
       setDeleteTarget(null);
       setMessage('Product listing deleted.');
-      await refetch();
+      refetchRef.current?.();
     } catch (deleteError) {
       setMessage(parseApiError(deleteError));
     }
   };
 
+  const columns = useMemo<DuncitColumn<ProductListingRow>[]>(() => {
+    const quantityDisabled = !canManageProducts || quantityState.loading;
+    const renderQuantity = (product: ProductListingRow) => (
+      <QuantityCell product={product} disabled={quantityDisabled} onSave={saveQuantity} />
+    );
+    const renderActions = (product: ProductListingRow) => (
+      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
+        <Button size="small" disabled={!canManageProducts} onClick={() => onEdit(product)}>Edit</Button>
+        <Button size="small" color="error" disabled={!canManageProducts} onClick={() => setDeleteTarget(product)}>Delete</Button>
+      </Stack>
+    );
+    return [
+      {
+        field: 'product_name',
+        headerName: 'Product',
+        flex: 1,
+        minWidth: 240,
+        cellRenderer: renderProduct,
+        valueGetter: (product) => product.product_name,
+      },
+      {
+        field: 'unit_cost',
+        headerName: 'Price',
+        width: 110,
+        valueGetter: (product) => `₹${Number(product.unit_cost ?? 0).toFixed(2)}`,
+      },
+      {
+        field: 'inventory_count',
+        headerName: 'Quantity',
+        width: 190,
+        filter: { type: 'number' },
+        cellRenderer: renderQuantity,
+        valueGetter: (product) => product.inventory_count ?? 0,
+      },
+      {
+        field: 'listing_review_status',
+        headerName: 'Status',
+        width: 130,
+        filter: { type: 'select', options: STATUS_OPTIONS },
+        cellRenderer: renderListingStatus,
+        valueGetter: (product) => product.listing_review_status,
+      },
+      {
+        field: 'delivery_target',
+        headerName: 'Delivery',
+        hide: true,
+        width: 120,
+        sortable: false,
+        filter: { type: 'select', options: DELIVERY_OPTIONS },
+      },
+      {
+        field: 'updated_at',
+        headerName: 'Updated',
+        hide: true,
+        width: 140,
+        filter: { type: 'date' },
+        valueGetter: (product) =>
+          product.updated_at ? format(new Date(product.updated_at), 'dd MMM yyyy') : '—',
+      },
+      { field: 'actions', headerName: 'Actions', sortable: false, width: 160, cellRenderer: renderActions },
+    ];
+  }, [canManageProducts, quantityState.loading, saveQuantity, onEdit]);
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
-      <CardContent sx={{ p: 0 }}>
-        <Stack spacing={1.5} sx={{ p: 2, pb: 1 }}>
+      <CardContent>
+        <Stack spacing={1.5}>
           <Typography variant="h6" fontWeight={950}>Your listed products</Typography>
-          <ProductListingsToolbar search={search} status={status} target={target} sort={sort} statusOptions={statusOptions} onSearch={setSearch} onStatus={setStatus} onTarget={setTarget} onSort={setSort} />
           {message && <Alert severity={message.includes('deleted') || message.includes('updated') ? 'success' : 'error'}>{message}</Alert>}
-          {error && <Alert severity="error">{error.message}</Alert>}
+          <DuncitTable<ProductListingRow>
+            tableId="partners-app-product-listings"
+            columns={columns}
+            fetchRows={fetchRows}
+            getRowId={getProductRowId}
+            emptyText="No product listings yet."
+            defaultSort={{ field: 'updated_at', dir: 'desc' }}
+            searchPlaceholder="Search product, size, color"
+            refetchRef={refetchRef}
+          />
         </Stack>
-        {listState === 'loading' && <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>}
-        {listState === 'empty' && <Alert severity="info" sx={{ m: 2 }}>No product listings yet.</Alert>}
-        {listState === 'no-match' && <Alert severity="info" sx={{ m: 2 }}>No product listings match your filters.</Alert>}
-        {listState === 'table' && (
-          <TableContainer>
-          <Table size="small">
-            <TableHead><TableRow><TableCell>Product</TableCell><TableCell>Price</TableCell><TableCell>Quantity</TableCell><TableCell>Status</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
-            <TableBody>
-              {visibleProducts.map((product: any) => {
-                const image = product.image_url || product.images?.[0];
-                const statusColor = statusChipColor(product.listing_review_status);
-                return (
-                  <TableRow key={product.id} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1.25} alignItems="center">
-                        <Box component="img" src={image} alt={product.product_name} sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover', bgcolor: 'action.hover' }} />
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography fontWeight={900} noWrap>{product.product_name}</Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap>{product.images?.length || 0} images · {product.size_label || 'No size'}</Typography>
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>₹{Number(product.unit_cost || 0).toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <TextField size="small" type="number" value={quantities[product.id] ?? ''} disabled={!canManageProducts} onChange={(event) => setQuantities((prev) => ({ ...prev, [product.id]: event.target.value }))} inputProps={{ min: 0 }} sx={{ width: 92 }} />
-                        <Button size="small" disabled={!canManageProducts || quantityState.loading} onClick={() => saveQuantity(product)}>Update</Button>
-                      </Stack>
-                    </TableCell>
-                    <TableCell><Chip size="small" label={product.listing_review_status} color={statusColor} /></TableCell>
-                    <TableCell align="right"><Button size="small" disabled={!canManageProducts} onClick={() => onEdit(product)}>Edit</Button><Button size="small" color="error" disabled={!canManageProducts} onClick={() => setDeleteTarget(product)}>Delete</Button></TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <TablePagination component="div" count={filteredProducts.length} page={page} rowsPerPage={rowsPerPage} rowsPerPageOptions={[5, 10, 25]} onPageChange={(_event, nextPage) => setPage(nextPage)} onRowsPerPageChange={(event) => { setRowsPerPage(Number(event.target.value)); setPage(0); }} />
-          </TableContainer>
-        )}
       </CardContent>
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} fullWidth maxWidth="xs">
         <DialogTitle>Delete product listing</DialogTitle>
         <DialogContent><Typography>{deleteTarget?.product_name} will be archived and removed from active listing.</Typography></DialogContent>
-        <DialogActions><Button onClick={() => setDeleteTarget(null)}>Cancel</Button><Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>Delete</Button></DialogActions>
+        <DialogActions>
+          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>Delete</Button>
+        </DialogActions>
       </Dialog>
     </Card>
   );
-}
-
-function matchesProduct(product: any, search: string, status: string, target: string) {
-  const query = search.trim().toLowerCase();
-  const haystack = [product.product_name, product.description, product.size_label, product.color].filter(Boolean).join(' ').toLowerCase();
-  return (!query || haystack.includes(query)) && (status === 'ALL' || product.listing_review_status === status) && (target === 'ALL' || product.delivery_target === target);
-}
-
-function sortProducts(products: any[], sort: string) {
-  const next = [...products];
-  if (sort === 'name_asc') return next.sort((a, b) => String(a.product_name || '').localeCompare(String(b.product_name || '')));
-  if (sort === 'price_desc') return next.sort((a, b) => Number(b.unit_cost || 0) - Number(a.unit_cost || 0));
-  if (sort === 'quantity_asc') return next.sort((a, b) => Number(a.inventory_count || 0) - Number(b.inventory_count || 0));
-  return next.sort((a, b) => Date.parse(b.updated_at || '') - Date.parse(a.updated_at || ''));
 }

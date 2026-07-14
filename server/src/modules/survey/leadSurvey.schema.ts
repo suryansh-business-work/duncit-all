@@ -52,9 +52,19 @@ export const leadSurveyTypeDefs = gql`
     already_filled: Boolean!
   }
 
+  "Server-side table page for the shared table engine (leadSurveyEntriesTable)."
+  type LeadSurveyEntryTablePage {
+    rows: [LeadSurveyEntry!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Optional category_id/sub_category_id resolve the survey for a chosen scope (multi-category leads)."
     leadSurvey(entity: LeadSurveyEntity!, lead_id: ID!, category_id: ID, sub_category_id: ID): LeadSurvey!
+    "Server-side table page (filter/sort/paginate) over one lead's survey entries."
+    leadSurveyEntriesTable(entity: LeadSurveyEntity!, lead_id: ID!, query: TableQueryInput): LeadSurveyEntryTablePage!
     "Public — resolve a survey from a share token (no auth)."
     leadSurveyByToken(token: String!): PublicLeadSurvey!
   }

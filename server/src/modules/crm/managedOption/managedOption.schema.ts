@@ -17,6 +17,14 @@ export const managedOptionTypeDefs = gql`
     EVENT_SUITABILITY
   }
 
+  "Server-side table page for the shared table engine (crmManagedOptionsTable)."
+  type CrmManagedOptionTablePage {
+    rows: [CrmManagedOption!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateCrmManagedOptionInput {
     name: String!
     group: CrmManagedOptionGroup!
@@ -32,6 +40,7 @@ export const managedOptionTypeDefs = gql`
 
   extend type Query {
     crmManagedOptions(group: CrmManagedOptionGroup!, include_inactive: Boolean): [CrmManagedOption!]!
+    crmManagedOptionsTable(group: CrmManagedOptionGroup!, query: TableQueryInput): CrmManagedOptionTablePage!
   }
 
   extend type Mutation {

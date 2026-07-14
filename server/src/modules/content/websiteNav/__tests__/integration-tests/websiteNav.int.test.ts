@@ -24,6 +24,42 @@ describe('websiteNavService integration', () => {
     expect(main.every((i) => i.site === 'MAIN' && i.is_active)).toBe(true);
   });
 
+  it('serves the websiteNavTable page with search, filter, sort and paging', async () => {
+    await websiteNavService.create({ site: 'MAIN', area: 'HEADER', group_label: 'About', label: 'Careers', url: '/careers', sort_order: 1 });
+    await websiteNavService.create({ site: 'MAIN', area: 'HEADER', group_label: 'About', label: 'Our story', url: '/about', sort_order: 0 });
+    await websiteNavService.create({ site: 'ADS', area: 'FOOTER', group_label: 'Duncit', label: 'Support', url: '/help', is_active: false });
+
+    // Plain envelope with the default sort (site/area/group/sort_order, like the admin list).
+    const all = await websiteNavService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((i) => i.label)).toEqual(['Support', 'Our story', 'Careers']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans label, group_label and url.
+    const searched = await websiteNavService.table({ search: 'careers' });
+    expect(searched.rows.map((i) => i.label)).toEqual(['Careers']);
+    expect(searched.total).toBe(1);
+
+    // Enum + boolean filters narrow (the site tabs become an enum filter).
+    const mainOnly = await websiteNavService.table({
+      filters: [{ field: 'site', op: 'eq', value: 'MAIN' }],
+    });
+    expect(mainOnly.total).toBe(2);
+    const active = await websiteNavService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.total).toBe(2);
+
+    // Allowlisted sort + paging keep total and report the clamps back.
+    const byLabel = await websiteNavService.table({ sort_by: 'label', sort_dir: 'desc' });
+    expect(byLabel.rows.map((i) => i.label)).toEqual(['Support', 'Our story', 'Careers']);
+
+    const page2 = await websiteNavService.table({ sort_by: 'label', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((i) => i.label)).toEqual(['Our story']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('updates and deletes items', async () => {
     const item = await websiteNavService.create({ site: 'EARNWITH', area: 'HEADER', label: 'Ways', url: '/ways' });
     const updated = await websiteNavService.update(item.id, {

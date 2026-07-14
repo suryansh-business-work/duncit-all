@@ -1,89 +1,139 @@
-import {
-  Chip,
-  IconButton,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { format } from 'date-fns';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { AiPrompt } from './queries';
 
 interface Props {
-  prompts: AiPrompt[];
+  fetchRows: TableFetch<AiPrompt>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  toolbarActions?: ReactNode;
   onEdit: (prompt: AiPrompt) => void;
   onDelete: (prompt: AiPrompt) => void;
 }
 
+const getPromptRowId = (p: AiPrompt) => p.id;
+
+const renderName = (p: AiPrompt) => (
+  <Box sx={{ lineHeight: 1.2 }}>
+    <Typography variant="body2" fontWeight={700} component="div">
+      {p.name}
+    </Typography>
+    {p.description && (
+      <Typography variant="caption" color="text.secondary" component="div">
+        {p.description}
+      </Typography>
+    )}
+  </Box>
+);
+
+const renderCategory = (p: AiPrompt) => <Chip size="small" variant="outlined" label={p.category} />;
+
+const renderModel = (p: AiPrompt) => (
+  <Typography variant="body2" color={p.target_model ? 'text.primary' : 'text.disabled'}>
+    {p.target_model || '—'}
+  </Typography>
+);
+
+const renderTokens = (p: AiPrompt) => (
+  <Tooltip title="Estimated token size of the prompt content">
+    <Chip size="small" color="primary" variant="outlined" label={`≈ ${p.token_count}`} />
+  </Tooltip>
+);
+
+const renderStatus = (p: AiPrompt) => (
+  <Chip size="small" color={p.is_active ? 'success' : 'default'} label={p.is_active ? 'Active' : 'Inactive'} />
+);
+
+const createdValue = (p: AiPrompt) => (p.created_at ? format(new Date(p.created_at), 'd MMM yyyy') : '—');
+
 /** Prompt Library table — name/category/model/token size/status with row actions. */
-export default function PromptsTable({ prompts, onEdit, onDelete }: Readonly<Props>) {
+export default function PromptsTable({
+  fetchRows,
+  refetchRef,
+  toolbarActions,
+  onEdit,
+  onDelete,
+}: Readonly<Props>) {
+  const columns = useMemo<DuncitColumn<AiPrompt>[]>(() => {
+    const renderActions = (p: AiPrompt) => (
+      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
+        <Tooltip title="Edit">
+          <IconButton size="small" onClick={() => onEdit(p)} aria-label={`Edit ${p.name}`}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete">
+          <IconButton size="small" color="error" onClick={() => onDelete(p)} aria-label={`Delete ${p.name}`}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      </Stack>
+    );
+    return [
+      {
+        field: 'name',
+        headerName: 'Name',
+        flex: 1,
+        minWidth: 220,
+        cellRenderer: renderName,
+        valueGetter: (p) => p.name,
+      },
+      {
+        field: 'category',
+        headerName: 'Category',
+        minWidth: 140,
+        filter: { type: 'text' },
+        cellRenderer: renderCategory,
+        valueGetter: (p) => p.category,
+      },
+      {
+        field: 'target_model',
+        headerName: 'Model',
+        width: 150,
+        cellRenderer: renderModel,
+        valueGetter: (p) => p.target_model || '—',
+      },
+      {
+        field: 'token_count',
+        headerName: 'Tokens',
+        width: 110,
+        filter: { type: 'number' },
+        cellRenderer: renderTokens,
+        valueGetter: (p) => p.token_count,
+      },
+      {
+        field: 'is_active',
+        headerName: 'Status',
+        width: 110,
+        filter: { type: 'boolean' },
+        cellRenderer: renderStatus,
+        valueGetter: (p) => (p.is_active ? 'Active' : 'Inactive'),
+      },
+      {
+        field: 'created_at',
+        headerName: 'Created',
+        hide: true,
+        width: 130,
+        filter: { type: 'date' },
+        valueGetter: createdValue,
+      },
+      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+    ];
+  }, [onEdit, onDelete]);
+
   return (
-    <Table size="small">
-      <TableHead>
-        <TableRow>
-          <TableCell>Name</TableCell>
-          <TableCell>Category</TableCell>
-          <TableCell>Model</TableCell>
-          <TableCell align="right">Tokens</TableCell>
-          <TableCell>Status</TableCell>
-          <TableCell align="right">Actions</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {prompts.map((p) => (
-          <TableRow key={p.id} hover>
-            <TableCell>
-              <Typography variant="body2" fontWeight={700}>
-                {p.name}
-              </Typography>
-              {p.description && (
-                <Typography variant="caption" color="text.secondary">
-                  {p.description}
-                </Typography>
-              )}
-            </TableCell>
-            <TableCell>
-              <Chip size="small" variant="outlined" label={p.category} />
-            </TableCell>
-            <TableCell>
-              <Typography variant="body2" color={p.target_model ? 'text.primary' : 'text.disabled'}>
-                {p.target_model || '—'}
-              </Typography>
-            </TableCell>
-            <TableCell align="right">
-              <Tooltip title="Estimated token size of the prompt content">
-                <Chip size="small" color="primary" variant="outlined" label={`≈ ${p.token_count}`} />
-              </Tooltip>
-            </TableCell>
-            <TableCell>
-              <Chip
-                size="small"
-                color={p.is_active ? 'success' : 'default'}
-                label={p.is_active ? 'Active' : 'Inactive'}
-              />
-            </TableCell>
-            <TableCell align="right">
-              <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                <Tooltip title="Edit">
-                  <IconButton size="small" onClick={() => onEdit(p)} aria-label={`Edit ${p.name}`}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Delete">
-                  <IconButton size="small" color="error" onClick={() => onDelete(p)} aria-label={`Delete ${p.name}`}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DuncitTable<AiPrompt>
+      tableId="ai-prompts"
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getPromptRowId}
+      toolbarActions={toolbarActions}
+      emptyText={'No prompts yet. Click "Add prompt" to create your first one.'}
+      searchPlaceholder="Search by name, category or content…"
+      refetchRef={refetchRef}
+    />
   );
 }

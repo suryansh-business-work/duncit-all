@@ -32,6 +32,22 @@ export const FAQ_SUBMISSIONS = gql`
   }
 `;
 
+export const FAQ_SUBMISSIONS_TABLE = gql`
+  query FaqSubmissionsTable($query: TableQueryInput) {
+    faqSubmissionsTable(query: $query) {
+      total
+      rows {
+        id
+        question
+        email
+        super_category_slug
+        status
+        created_at
+      }
+    }
+  }
+`;
+
 export const UPDATE_FAQ_SUBMISSION_STATUS = gql`
   mutation UpdateFaqSubmissionStatus($id: ID!, $status: FaqSubmissionStatus!) {
     updateFaqSubmissionStatus(faq_submission_id: $id, status: $status) {

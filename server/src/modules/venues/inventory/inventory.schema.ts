@@ -260,6 +260,14 @@ export const inventoryTypeDefs = /* GraphQL */ `
     reason: String
   }
 
+  "Server-side table page for the shared table engine (DUNCIT TABLE CONTRACT v1)."
+  type InventoryProductTablePage {
+    rows: [InventoryProduct!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input ProductListingInput {
     "Legacy delivery-partner flag. No longer collected from brands (defaults to false); kept optional for backward compatibility."
     is_duncit_delivery_partner: Boolean
@@ -285,10 +293,18 @@ export const inventoryTypeDefs = /* GraphQL */ `
 
   extend type Query {
     inventoryProducts(search: String, activeOnly: Boolean, status: InventoryStatus, ownership: ProductOwnership): [InventoryProduct!]!
+    "Server-side table sibling of inventoryProducts (shared table engine)."
+    inventoryProductsTable(query: TableQueryInput): InventoryProductTablePage!
     "Approved products of one external brand — the e-commerce marketplace list."
     marketplaceBrandProducts(brand_doc_id: ID!): [InventoryProduct!]!
+    "Server-side table sibling of marketplaceBrandProducts (shared table engine)."
+    marketplaceBrandProductsTable(brand_doc_id: ID!, query: TableQueryInput): InventoryProductTablePage!
     productListingRequests(status: ProductListingReviewStatus): [InventoryProduct!]!
+    "Server-side table sibling of productListingRequests (shared table engine)."
+    productListingRequestsTable(query: TableQueryInput): InventoryProductTablePage!
     myProductListings(brand_id: ID): [InventoryProduct!]!
+    "Server-side table sibling of myProductListings — always scoped to the caller's own listings."
+    myProductListingsTable(brand_id: ID, query: TableQueryInput): InventoryProductTablePage!
     availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     "Public read of a single product (any signed-in user) — powers the product-detail view on a pod's shop."

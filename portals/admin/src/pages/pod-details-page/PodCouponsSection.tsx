@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import CouponsTable from '../coupons-page/CouponsTable';
 import CouponFormDialog from '../coupons-page/CouponFormDialog';
-import { COUPONS_FOR_POD, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';
+import { COUPONS_FOR_POD_TABLE, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';
 import { notifyError, notifySuccess } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 
@@ -14,19 +15,30 @@ interface Props {
   podTitle: string;
 }
 
-/** Per-pod offer codes — list of global + pod-scoped coupons, with create/edit/
- * delete locked to this pod. Reuses the global coupons table + dialog. */
+/** Per-pod offer codes — server-paged list of global + pod-scoped coupons, with
+ * create/edit/delete locked to this pod. Reuses the global coupons table + dialog. */
 export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) {
-  const { data, loading, refetch } = useQuery(COUPONS_FOR_POD, {
-    variables: { pod_id: podId },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [deleteCoupon] = useMutation(DELETE_COUPON);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();
 
-  const coupons: CouponRow[] = data?.couponsForPod ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: COUPONS_FOR_POD_TABLE,
+        variables: { pod_id: podId, ...tableQueryToGql(q) },
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.couponsForPodTable.rows as CouponRow[],
+        total: data.couponsForPodTable.total as number,
+      };
+    },
+    [client, podId],
+  );
 
   const onDelete = async (c: CouponRow) => {
     const ok = await confirm({ title: 'Delete coupon', message: `Delete coupon "${c.code}"?` });
@@ -34,7 +46,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
     try {
       await deleteCoupon({ variables: { id: c.id } });
       notifySuccess('Coupon deleted');
-      refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message ?? 'Could not delete coupon');
     }
@@ -43,28 +55,29 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
   return (
     <Card>
       <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <LocalOfferIcon color="primary" />
-            <Typography variant="subtitle1" fontWeight={900}>
-              Offer codes
-            </Typography>
-          </Stack>
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setEditing(null);
-              setOpen(true);
-            }}
-          >
-            New offer code
-          </Button>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <LocalOfferIcon color="primary" />
+          <Typography variant="subtitle1" fontWeight={900}>
+            Offer codes
+          </Typography>
         </Stack>
         <CouponsTable
-          loading={loading}
-          coupons={coupons}
+          tableId="admin-pod-coupons"
+          fetchRows={fetchRows}
+          refetchRef={refetchRef}
+          toolbarActions={
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              New offer code
+            </Button>
+          }
           onEdit={(c) => {
             setEditing(c);
             setOpen(true);
@@ -77,7 +90,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
         onClose={() => setOpen(false)}
         onSaved={() => {
           notifySuccess(editing ? 'Coupon updated' : 'Coupon created');
-          refetch();
+          refetchRef.current?.();
         }}
         initial={editing}
         lockedPod={editing?.scope === 'GLOBAL' ? null : { id: podId, title: podTitle }}

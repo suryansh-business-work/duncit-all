@@ -47,6 +47,48 @@ describe('jobApplicationService integration', () => {
     expect(await jobApplicationService.list('SHORTLISTED')).toHaveLength(1);
   });
 
+  it('serves the jobApplicationsTable page with search, filter, sort and paging', async () => {
+    await jobApplicationService.submit(baseInput);
+    await jobApplicationService.submit({ ...baseInput, name: 'Bram Voss', email: 'bram@example.com', role_title: 'Designer' });
+    await jobApplicationService.submit({ ...baseInput, name: 'Chan Li', email: 'chan@example.com', role_title: 'Backend Engineer' });
+    const rows = await jobApplicationService.list();
+    const chan = rows.find((r) => r.name === 'Chan Li');
+    await jobApplicationService.updateStatus(chan!.id, 'SHORTLISTED');
+
+    // Plain envelope with the default sort (created_at desc, like the triage inbox).
+    const all = await jobApplicationService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows[0].name).toBe('Chan Li');
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans role_title, name and email.
+    const searched = await jobApplicationService.table({ search: 'bram@' });
+    expect(searched.rows.map((r) => r.name)).toEqual(['Bram Voss']);
+    expect(searched.total).toBe(1);
+
+    // Enum filter narrows (the status select becomes an enum filter).
+    const shortlisted = await jobApplicationService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'SHORTLISTED' }],
+    });
+    expect(shortlisted.rows.map((r) => r.name)).toEqual(['Chan Li']);
+
+    // Allowlisted sort + paging keep total and report the clamps back.
+    const byName = await jobApplicationService.table({ sort_by: 'name', sort_dir: 'asc' });
+    expect(byName.rows.map((r) => r.name)).toEqual(['Asha Rao', 'Bram Voss', 'Chan Li']);
+
+    const page2 = await jobApplicationService.table({
+      sort_by: 'name',
+      sort_dir: 'asc',
+      page: 2,
+      page_size: 1,
+    });
+    expect(page2.rows.map((r) => r.name)).toEqual(['Bram Voss']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('rejects a bad id and reports missing applications', async () => {
     await expect(jobApplicationService.updateStatus('nope', 'HIRED')).rejects.toThrow(/invalid/i);
     await expect(

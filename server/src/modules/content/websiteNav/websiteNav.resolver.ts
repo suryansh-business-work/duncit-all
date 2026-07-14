@@ -15,6 +15,10 @@ export const websiteNavResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return websiteNavService.list(args.site ?? null);
     },
+    websiteNavTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return websiteNavService.table(args.query);
+    },
   },
   Mutation: {
     createWebsiteNavItem: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {

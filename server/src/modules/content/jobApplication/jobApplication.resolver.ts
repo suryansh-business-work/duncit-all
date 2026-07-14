@@ -12,6 +12,10 @@ export const jobApplicationResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return jobApplicationService.list(args.status ?? null);
     },
+    jobApplicationsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return jobApplicationService.table(args.query);
+    },
   },
   Mutation: {
     // Public — the careers pages submit anonymously.

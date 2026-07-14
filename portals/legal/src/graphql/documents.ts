@@ -14,10 +14,24 @@ export const LEGAL_DOCUMENT_FIELDS = gql`
   }
 `;
 
+// NOTE: no page imports this since the DuncitTable migration (kept per the
+// table contract — existing list queries are never removed by a migration).
 export const LEGAL_DOCUMENTS = gql`
   query LegalDocuments($filter: LegalDocumentFilterInput) {
     legalDocuments(filter: $filter) {
       ...LegalDocumentFields
+    }
+  }
+  ${LEGAL_DOCUMENT_FIELDS}
+`;
+
+export const LEGAL_DOCUMENTS_TABLE = gql`
+  query LegalDocumentsTable($query: TableQueryInput) {
+    legalDocumentsTable(query: $query) {
+      total
+      rows {
+        ...LegalDocumentFields
+      }
     }
   }
   ${LEGAL_DOCUMENT_FIELDS}
@@ -47,6 +61,18 @@ export const LEGAL_DOCUMENT_STATS = gql`
     legalDocumentStats {
       total
       by_type {
+        document_type
+        count
+      }
+    }
+  }
+`;
+
+export const LEGAL_DOCUMENT_STATS_TABLE = gql`
+  query LegalDocumentStatsTable($query: TableQueryInput) {
+    legalDocumentStatsTable(query: $query) {
+      total
+      rows {
         document_type
         count
       }
@@ -113,7 +139,12 @@ export interface LegalDocumentDetail extends LegalDocumentListItem {
   versions: LegalDocumentVersion[];
 }
 
+export interface LegalDocumentTypeCount {
+  document_type: string;
+  count: number;
+}
+
 export interface LegalDocumentStats {
   total: number;
-  by_type: { document_type: string; count: number }[];
+  by_type: LegalDocumentTypeCount[];
 }

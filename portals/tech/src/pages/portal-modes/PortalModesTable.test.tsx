@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PortalModesTable from './PortalModesTable';
 import type { PortalModeRow } from './queries';
@@ -6,33 +6,46 @@ import type { PortalModeRow } from './queries';
 const row = (over: Partial<PortalModeRow>): PortalModeRow =>
   ({ id: '1', key: 'tech', name: 'Tech', kind: 'PORTAL', mode: 'LIVE', note: null, url: 'https://tech.duncit.com/', updated_at: null, ...over });
 
+const fetchFor = (rows: PortalModeRow[]) => vi.fn(async () => ({ rows, total: rows.length }));
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
+
 describe('PortalModesTable', () => {
-  it('renders links, kind labels, status and the unknown-kind fallback', () => {
+  it('renders links, status chips and the unknown-kind fallback', async () => {
     const rows = [
       row({ key: 'tech', name: 'Tech', mode: 'LIVE', url: 'https://tech.duncit.com/' }),
       row({ key: 'mweb', name: 'mWeb', kind: 'APP', mode: 'MAINTENANCE', url: 'https://mweb.duncit.com/' }),
       row({ key: 'site', name: 'Site', kind: 'WEBSITE', mode: 'DEVELOPMENT', url: null }),
       row({ key: 'odd', name: 'Odd', kind: 'OTHER' as any, url: null }),
     ];
-    render(<PortalModesTable rows={rows} busyKey="tech" onChange={vi.fn()} />);
+    render(<PortalModesTable fetchRows={fetchFor(rows)} refetchRef={{ current: null }} busyKey="tech" onChange={vi.fn()} />);
 
-    expect(screen.getByText('tech.duncit.com').closest('a')).toHaveAttribute('href', 'https://tech.duncit.com/');
+    expect((await screen.findByText('tech.duncit.com')).closest('a')).toHaveAttribute('href', 'https://tech.duncit.com/');
     expect(screen.getByText('App')).toBeInTheDocument();
     expect(screen.getByText('Website')).toBeInTheDocument();
     expect(screen.getByText('OTHER')).toBeInTheDocument(); // kind fallback
     // "Maintenance"/"Development" appear as both column headers and status chips.
     expect(screen.getAllByText('Maintenance').length).toBeGreaterThan(1);
     expect(screen.getAllByText('Development').length).toBeGreaterThan(1);
+    expect(screen.getAllByText('Live').length).toBe(2); // tech + odd rows are LIVE
     expect(screen.getAllByText('—').length).toBeGreaterThan(0); // null url rows
+    // The busy row's switches are disabled; others stay interactive.
+    const switches = screen.getAllByRole('checkbox');
+    expect(switches[0]).toBeDisabled();
+    expect(switches[1]).toBeDisabled();
+    expect(switches[2]).not.toBeDisabled();
   });
 
-  it('emits the right mode for each switch direction', () => {
+  it('emits the right mode for each switch direction', async () => {
     const onChange = vi.fn();
     const rows = [
       row({ key: 'mweb', name: 'mWeb', mode: 'MAINTENANCE' }),
       row({ key: 'site', name: 'Site', mode: 'DEVELOPMENT' }),
     ];
-    render(<PortalModesTable rows={rows} busyKey={null} onChange={onChange} />);
+    render(<PortalModesTable fetchRows={fetchFor(rows)} refetchRef={{ current: null }} busyKey={null} onChange={onChange} />);
+    await screen.findByText('mWeb');
     // switches order per row: [maintenance, development]
     const sw = screen.getAllByRole('checkbox');
     fireEvent.click(sw[0]); // mweb maintenance ON→OFF → LIVE

@@ -1,35 +1,39 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import TableSkeleton from '../../components/TableSkeleton';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Box, Stack, Typography } from '@mui/material';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
-import { APPROVE, DELETE_HOST, HOSTS, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, STATUSES } from './queries';
+import { APPROVE, DELETE_HOST, HOSTS_TABLE, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, type HostRow } from './queries';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
 
 export default function HostsPage() {
-  const [status, setStatus] = useState('');
-  const { data, loading, error, refetch } = useQuery(HOSTS, {
-    variables: { status: status || null },
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
+  const refresh = useCallback(() => refetchRef.current?.(), []);
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
   const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
-  const lifecycle = useEntityLifecycle(SET_HOST_ACTIVE, DELETE_HOST, refetch);
+  const lifecycle = useEntityLifecycle(SET_HOST_ACTIVE, DELETE_HOST, refresh);
   const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
   const [editing, setEditing] = useState<any>(null);
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: HOSTS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.hostsTable.rows as HostRow[], total: data.hostsTable.total as number };
+    },
+    [client],
+  );
 
   const parseTags = () =>
     tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);
@@ -44,7 +48,7 @@ export default function HostsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refetch();
+    refresh();
   };
   const doReject = async () => {
     if (!notes.trim()) return;
@@ -52,7 +56,7 @@ export default function HostsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refetch();
+    refresh();
   };
   const doSaveCommission = async (commissionPct: number) => {
     await setHostDeductions({
@@ -61,48 +65,27 @@ export default function HostsPage() {
     setActive((current: any) =>
       current ? { ...current, host_commission_pct: commissionPct } : current
     );
-    refetch();
+    refresh();
   };
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Stack spacing={0.25}>
-          <Typography variant="h5" fontWeight={700}>Hosts</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Review submitted host requests and manage approved hosts for Duncit communities.
-          </Typography>
-        </Stack>
-        <TextField
-          select
-          size="small"
-          label="Status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          sx={{ minWidth: 180 }}
-        >
-          {STATUSES.map((s) => (
-            <MenuItem key={s} value={s}>
-              {s || 'All'}
-            </MenuItem>
-          ))}
-        </TextField>
+      <Stack spacing={0.25} mb={2}>
+        <Typography variant="h5" fontWeight={700}>Hosts</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Review submitted host requests and manage approved hosts for Duncit communities.
+        </Typography>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
-
-      {loading && !data ? (
-        <TableSkeleton columns={8} />
-      ) : (
-        <HostsTable
-          hosts={data?.hosts ?? []}
-          onEdit={setEditing}
-          onReview={openReview}
-          canHardDelete={lifecycle.canHardDelete}
-          onToggleActive={lifecycle.setToggleTarget}
-          onDelete={lifecycle.setDeleteTarget}
-        />
-      )}
+      <HostsTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onEdit={setEditing}
+        onReview={openReview}
+        canHardDelete={lifecycle.canHardDelete}
+        onToggleActive={lifecycle.setToggleTarget}
+        onDelete={lifecycle.setDeleteTarget}
+      />
 
       <ConfirmDialog
         open={!!lifecycle.toggleTarget}
@@ -142,7 +125,7 @@ export default function HostsPage() {
         savingCommission={savingCommission}
       />
 
-      <HostEditDialog host={editing} onClose={() => setEditing(null)} onSaved={() => refetch()} />
+      <HostEditDialog host={editing} onClose={() => setEditing(null)} onSaved={refresh} />
     </Box>
   );
 }

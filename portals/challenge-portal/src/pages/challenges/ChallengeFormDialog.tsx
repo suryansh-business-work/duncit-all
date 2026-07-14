@@ -11,7 +11,6 @@ import {
   TextField,
 } from '@mui/material';
 import {
-  CHALLENGES,
   CHALLENGE_STATS,
   CREATE_CHALLENGE,
   UPDATE_CHALLENGE,
@@ -24,17 +23,19 @@ interface Props {
   /** When set, the dialog edits this challenge; otherwise it creates a new one. */
   editing: Challenge | null;
   onClose: () => void;
+  /** Called after a successful create/update (e.g. to reload the table). */
+  onSaved?: () => void;
 }
 
 const emptyCascade: CascadeValue = { superId: '', categoryId: '', subId: '' };
 
 /** Create or edit a challenge: name, description + cascading category scope. */
-export default function ChallengeFormDialog({ open, editing, onClose }: Readonly<Props>) {
+export default function ChallengeFormDialog({ open, editing, onClose, onSaved }: Readonly<Props>) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [cascade, setCascade] = useState<CascadeValue>(emptyCascade);
 
-  const refetchQueries = [{ query: CHALLENGES, variables: { search: null } }, { query: CHALLENGE_STATS }];
+  const refetchQueries = [{ query: CHALLENGE_STATS }];
   const [createChallenge, createState] = useMutation(CREATE_CHALLENGE, { refetchQueries });
   const [updateChallenge, updateState] = useMutation(UPDATE_CHALLENGE, { refetchQueries });
   const loading = createState.loading || updateState.loading;
@@ -65,6 +66,7 @@ export default function ChallengeFormDialog({ open, editing, onClose }: Readonly
     } else {
       await createChallenge({ variables: { input } });
     }
+    onSaved?.();
     onClose();
   };
 

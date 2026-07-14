@@ -31,6 +31,7 @@ COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
+COPY packages/table/package.json ./packages/table/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

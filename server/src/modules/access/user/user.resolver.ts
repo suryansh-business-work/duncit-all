@@ -108,6 +108,10 @@ export const userResolvers = {
       requireRole(ctx, DIRECTORY_ROLES);
       return userService.list(args.filter);
     },
+    usersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, DIRECTORY_ROLES);
+      return userService.table(args.query);
+    },
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return userService.getById(args.user_id);
@@ -115,6 +119,14 @@ export const userResolvers = {
     userContactActions: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return userService.listContactActions(args.user_id);
+    },
+    userContactActionsTable: async (
+      _p: unknown,
+      args: { user_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return userService.contactActionsTable(args.user_id, args.query);
     },
     publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }, ctx: GraphQLContext) =>
       mapPublicProfiles(args.user_ids ?? [], ctx.user?.id ?? null),

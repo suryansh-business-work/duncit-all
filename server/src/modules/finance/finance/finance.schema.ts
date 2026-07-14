@@ -268,6 +268,14 @@ export const financeTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (paymentReleaseRequestsTable)."
+  type PaymentReleaseRequestTablePage {
+    rows: [PaymentReleaseRequest!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   # One party's reconciled settlement lines for a completed pod.
   type PodSettlementParty {
     collected_total: Float!
@@ -335,6 +343,7 @@ export const financeTypeDefs = /* GraphQL */ `
     financeSettings: FinanceSettings!
     publicFinanceSettings: PublicFinanceSettings!
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
+    paymentReleaseRequestsTable(query: TableQueryInput): PaymentReleaseRequestTablePage!
     # Live preview of the host/venue split for a pod given a venue bill.
     podSettlementPreview(pod_id: ID!, venue_bill_amount: Float!): PodSettlement!
     # The signed-in host's own completion payouts (Host Share history).

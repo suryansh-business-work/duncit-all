@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useCallback } from 'react';
+import { useApolloClient } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import { MY_VENUES } from '../register-venue-page/queries';
-import VenueListingsToolbar from './VenueListingsToolbar';
+import { format } from 'date-fns';
+import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { MY_VENUES_TABLE, type VenueListingRow } from './queries';
 
 const rowAction = (status: string) => {
   if (status === 'APPROVED' || status === 'SUBMITTED') return 'View';
@@ -19,96 +20,135 @@ const statusColor = (status: string): 'success' | 'error' | 'info' | 'warning' =
   return 'warning';
 };
 
-export default function VenueListingsTable() {
-  const { data, loading, error } = useQuery(MY_VENUES, { fetchPolicy: 'cache-and-network' });
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('ALL');
-  const [sort, setSort] = useState('updated_desc');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const venues = data?.myVenues ?? [];
-  const statusOptions = Array.from(new Set(venues.map((venue: any) => venue.status).filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b))) as string[];
-  const filteredVenues = sortVenues(venues.filter((venue: any) => matchesVenue(venue, search, status)), sort);
-  const visibleVenues = filteredVenues.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  const emptyState = renderEmptyState(loading && !data, venues.length, filteredVenues.length);
+const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value) => ({
+  value,
+  label: value,
+}));
 
-  useEffect(() => { setPage(0); }, [search, status, sort, venues.length]);
+const formatDate = (value?: string | null) =>
+  value ? format(new Date(value), 'dd MMM yyyy') : 'Not available';
+
+const getVenueRowId = (venue: VenueListingRow) => venue.id;
+
+const renderVenue = (venue: VenueListingRow) => (
+  <Stack direction="row" spacing={1.25} alignItems="center">
+    <Avatar
+      variant="rounded"
+      src={venue.cover_image_url || '/duncit-logo.svg'}
+      alt={venue.venue_name ?? 'Venue'}
+      sx={{ width: 32, height: 32, bgcolor: 'action.hover' }}
+    />
+    <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
+      <Typography variant="body2" fontWeight={900} noWrap component="div">
+        {venue.venue_name || 'Untitled venue'}
+      </Typography>
+      <Typography variant="caption" color="text.secondary" noWrap component="div">
+        {venue.venue_type || 'Venue'} · {venue.city || 'City pending'}
+      </Typography>
+    </Box>
+  </Stack>
+);
+
+const renderStatus = (venue: VenueListingRow) => (
+  <Chip size="small" label={venue.status} color={statusColor(venue.status)} />
+);
+
+const renderActions = (venue: VenueListingRow) => (
+  <Stack direction="row" spacing={1} justifyContent="flex-end" component="span">
+    {venue.status === 'APPROVED' && (
+      <Button
+        size="small"
+        component={RouterLink}
+        to={`/venues/${venue.id}/availability`}
+        startIcon={<EventAvailableIcon />}
+      >
+        Availability
+      </Button>
+    )}
+    <Button size="small" component={RouterLink} to={`/register-venue/${venue.id}`}>
+      {rowAction(venue.status)}
+    </Button>
+  </Stack>
+);
+
+const COLUMNS: DuncitColumn<VenueListingRow>[] = [
+  {
+    field: 'venue_name',
+    headerName: 'Venue',
+    flex: 1,
+    minWidth: 230,
+    cellRenderer: renderVenue,
+    valueGetter: (venue) => venue.venue_name ?? 'Untitled venue',
+  },
+  {
+    field: 'capacity',
+    headerName: 'Capacity',
+    width: 110,
+    filter: { type: 'number' },
+    valueGetter: (venue) => Number(venue.capacity ?? 0),
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 140,
+    filter: { type: 'select', options: STATUS_OPTIONS },
+    cellRenderer: renderStatus,
+    valueGetter: (venue) => venue.status,
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Updated',
+    width: 140,
+    valueGetter: (venue) => formatDate(venue.updated_at ?? venue.created_at),
+  },
+  { field: 'venue_type', headerName: 'Type', hide: true, filter: { type: 'text' }, minWidth: 130 },
+  { field: 'city', headerName: 'City', hide: true, filter: { type: 'text' }, minWidth: 130 },
+  { field: 'locality', headerName: 'Locality', hide: true, filter: { type: 'text' }, minWidth: 140 },
+  {
+    field: 'created_at',
+    headerName: 'Created',
+    hide: true,
+    filter: { type: 'date' },
+    width: 140,
+    valueGetter: (venue) => formatDate(venue.created_at),
+  },
+  { field: 'actions', headerName: 'Action', sortable: false, width: 230, cellRenderer: renderActions },
+];
+
+export default function VenueListingsTable() {
+  const client = useApolloClient();
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: MY_VENUES_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.myVenuesTable.rows as VenueListingRow[],
+        total: data.myVenuesTable.total as number,
+      };
+    },
+    [client],
+  );
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
-      <CardContent sx={{ p: 0 }}>
-        <Stack spacing={1.5} sx={{ p: 2, pb: 1 }}>
+      <CardContent>
+        <Stack spacing={1.5}>
           <Typography variant="h6" fontWeight={950}>Your venue registrations</Typography>
-          <VenueListingsToolbar search={search} status={status} sort={sort} statusOptions={statusOptions} onSearch={setSearch} onStatus={setStatus} onSort={setSort} />
-          {error && <Alert severity="error">{error.message}</Alert>}
+          <DuncitTable<VenueListingRow>
+            tableId="partners-app-venues"
+            columns={COLUMNS}
+            fetchRows={fetchRows}
+            getRowId={getVenueRowId}
+            emptyText="No venue registration yet."
+            defaultSort={{ field: 'updated_at', dir: 'desc' }}
+            searchPlaceholder="Search venue, type, city"
+          />
         </Stack>
-        {emptyState ?? (
-          <TableContainer>
-            <Table size="small">
-              <TableHead><TableRow><TableCell>Venue</TableCell><TableCell>Capacity</TableCell><TableCell>Status</TableCell><TableCell>Updated</TableCell><TableCell align="right">Action</TableCell></TableRow></TableHead>
-              <TableBody>
-                {visibleVenues.map((venue: any) => (
-                  <TableRow key={venue.id} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={1.25} alignItems="center">
-                        <Box component="img" src={venue.cover_image_url || '/duncit-logo.svg'} alt={venue.venue_name} sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover', bgcolor: 'action.hover' }} />
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography fontWeight={900} noWrap>{venue.venue_name || 'Untitled venue'}</Typography>
-                          <Typography variant="caption" color="text.secondary" noWrap>{venue.venue_type || 'Venue'} · {venue.city || 'City pending'}</Typography>
-                        </Box>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>{Number(venue.capacity || 0)}</TableCell>
-                    <TableCell><Chip size="small" label={venue.status} color={statusColor(venue.status)} /></TableCell>
-                    <TableCell>{formatDate(venue.updated_at || venue.created_at)}</TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        {venue.status === 'APPROVED' && (
-                          <Button
-                            size="small"
-                            component={RouterLink}
-                            to={`/venues/${venue.id}/availability`}
-                            startIcon={<EventAvailableIcon />}
-                          >
-                            Availability
-                          </Button>
-                        )}
-                        <Button size="small" component={RouterLink} to={`/register-venue/${venue.id}`}>{rowAction(venue.status)}</Button>
-                      </Stack>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePagination component="div" count={filteredVenues.length} page={page} rowsPerPage={rowsPerPage} rowsPerPageOptions={[5, 10, 25]} onPageChange={(_event, nextPage) => setPage(nextPage)} onRowsPerPageChange={(event) => { setRowsPerPage(Number(event.target.value)); setPage(0); }} />
-          </TableContainer>
-        )}
       </CardContent>
     </Card>
   );
-}
-
-function renderEmptyState(isLoading: boolean, totalCount: number, filteredCount: number) {
-  if (isLoading) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>;
-  if (totalCount === 0) return <Alert severity="info" sx={{ m: 2 }}>No venue registration yet.</Alert>;
-  if (filteredCount === 0) return <Alert severity="info" sx={{ m: 2 }}>No venue registration matches your filters.</Alert>;
-  return null;
-}
-
-function matchesVenue(venue: any, search: string, status: string) {
-  const query = search.trim().toLowerCase();
-  const haystack = [venue.venue_name, venue.venue_type, venue.city, venue.locality, venue.status].filter(Boolean).join(' ').toLowerCase();
-  return (!query || haystack.includes(query)) && (status === 'ALL' || venue.status === status);
-}
-
-function sortVenues(venues: any[], sort: string) {
-  const next = [...venues];
-  if (sort === 'name_asc') return next.sort((a, b) => String(a.venue_name || '').localeCompare(String(b.venue_name || '')));
-  if (sort === 'capacity_desc') return next.sort((a, b) => Number(b.capacity || 0) - Number(a.capacity || 0));
-  return next.sort((a, b) => Date.parse(b.updated_at || '') - Date.parse(a.updated_at || ''));
-}
-
-function formatDate(value?: string) {
-  if (!value) return 'Not available';
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));
 }

@@ -1,4 +1,5 @@
-import { podService } from './pod.service';
+import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
+import { coHostService } from './coHost.service';
 import { clubService } from '@modules/pods/club/club.service';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
@@ -158,6 +159,27 @@ export const podResolvers = {
       if (!uid) return false;
       return (parent.liked_user_ids ?? []).some((x: string) => String(x) === uid);
     },
+    co_hosts: async (parent: any): Promise<any[]> => {
+      const entries = parent.co_hosts ?? [];
+      if (entries.length === 0) return [];
+      const ids = entries.map((c: any) => String(c.user_id));
+      const users = await UserModel.find({ _id: { $in: ids } }).select(
+        'profile.first_name profile.last_name profile.profile_photo'
+      );
+      const byId = new Map<string, any>(users.map((u: any) => [String(u._id), u]));
+      return entries.map((c: any) => {
+        const u = byId.get(String(c.user_id));
+        const name = `${u?.profile?.first_name ?? ''} ${u?.profile?.last_name ?? ''}`.trim();
+        return {
+          user_id: String(c.user_id),
+          name,
+          profile_photo: u?.profile?.profile_photo ?? null,
+          status: c.status ?? 'PENDING',
+          invited_at: c.invited_at ?? '',
+          responded_at: c.responded_at ?? null,
+        };
+      });
+    },
   },
   PodComment: {
     like_count: (parent: any): number => (parent.likes ?? []).length,
@@ -170,9 +192,15 @@ export const podResolvers = {
   Query: {
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
       podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
+    podsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
+      podService.table(args.query, { includePendingApproval: canReviewPendingPods(ctx) }),
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return podService.listMyHostPods(user.id, { from: args.from, to: args.to });
+    },
+    myHostPodsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podService.tableMine(user.id, args.query);
     },
     pod: async (_p: unknown, args: { pod_doc_id: string }) => podService.getById(args.pod_doc_id),
     podBySlugs: async (
@@ -182,6 +210,30 @@ export const podResolvers = {
     podComments: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.listComments(args.pod_doc_id),
     activePodLocationIds: async () => podService.activeLocationIds(),
+    coHostCandidates: async (
+      _p: unknown,
+      args: { sub_category_id: string; search?: string | null; pod_doc_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return coHostService.candidates(user.id, args);
+    },
+    myCoHostedPods: async (
+      _p: unknown,
+      args: { status?: 'PENDING' | 'ACCEPTED' | 'DECLINED' },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const docs = await coHostService.myCoHostedPods(user.id, args.status ?? 'ACCEPTED');
+      const slugMap = await loadPodClubSlugMap(docs);
+      return docs.map((d) => mapPodToPublic(d, slugMap));
+    },
+    myPodsWithCoHosts: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      const docs = await coHostService.myPodsWithCoHosts(user.id);
+      const slugMap = await loadPodClubSlugMap(docs);
+      return docs.map((d) => mapPodToPublic(d, slugMap));
+    },
     hostPodDeleteImpact: async (
       _p: unknown,
       args: { pod_doc_id: string },
@@ -207,6 +259,36 @@ export const podResolvers = {
     ) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.update(args.pod_doc_id, args.input);
+    },
+    inviteCoHost: async (
+      _p: unknown,
+      args: { pod_doc_id: string; user_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const doc = await coHostService.invite(args.pod_doc_id, user.id, args.user_id);
+      const slugMap = await loadPodClubSlugMap([doc]);
+      return mapPodToPublic(doc, slugMap);
+    },
+    removeCoHost: async (
+      _p: unknown,
+      args: { pod_doc_id: string; user_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const doc = await coHostService.remove(args.pod_doc_id, user.id, args.user_id);
+      const slugMap = await loadPodClubSlugMap([doc]);
+      return mapPodToPublic(doc, slugMap);
+    },
+    respondToCoHostInvite: async (
+      _p: unknown,
+      args: { pod_doc_id: string; accept: boolean },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const doc = await coHostService.respond(args.pod_doc_id, user.id, args.accept);
+      const slugMap = await loadPodClubSlugMap([doc]);
+      return mapPodToPublic(doc, slugMap);
     },
     hostUpdatePod: async (
       _p: unknown,

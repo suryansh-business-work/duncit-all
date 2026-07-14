@@ -15,6 +15,25 @@ export const WEBSITE_NAV = gql`
   }
 `;
 
+export const WEBSITE_NAV_TABLE = gql`
+  query WebsiteNavTable($query: TableQueryInput) {
+    websiteNavTable(query: $query) {
+      total
+      rows {
+        id
+        site
+        area
+        group_label
+        label
+        url
+        sort_order
+        is_active
+        created_at
+      }
+    }
+  }
+`;
+
 export const CREATE_NAV_ITEM = gql`
   mutation CreateWebsiteNavItem($input: WebsiteNavItemInput!) {
     createWebsiteNavItem(input: $input) {
@@ -49,6 +68,8 @@ export interface WebsiteNavItem {
   url: string;
   sort_order: number;
   is_active: boolean;
+  /** Selected by WEBSITE_NAV_TABLE only (Created filter column); absent on WEBSITE_NAV rows. */
+  created_at?: string;
 }
 
 export const NAV_SITES: { value: WebsiteNavSite; label: string }[] = [

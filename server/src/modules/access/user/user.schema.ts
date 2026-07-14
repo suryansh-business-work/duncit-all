@@ -161,6 +161,22 @@ export const userTypeDefs = gql`
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (usersTable)."
+  type UserTablePage {
+    rows: [User!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "Server-side table page for the shared table engine (userContactActionsTable)."
+  type UserContactActionTablePage {
+    rows: [UserContactAction!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateUserInput {
     first_name: String!
     last_name: String!
@@ -337,8 +353,10 @@ export const userTypeDefs = gql`
     "The viewer's saved pods, with optional server-side search, category filter (matches the selected category and its sub-categories) and sort."
     mySavedPods(search: String, category_id: ID, sort: SavedPodSort): [Pod!]!
     users(filter: UsersFilter): [User!]!
+    usersTable(query: TableQueryInput): UserTablePage!
     user(user_id: ID!): User
     userContactActions(user_id: ID!): [UserContactAction!]!
+    userContactActionsTable(user_id: ID!, query: TableQueryInput): UserContactActionTablePage!
     publicUsersByIds(user_ids: [ID!]!): [PublicProfile!]!
     publicUserProfile(user_id: ID!): PublicProfile
     "People who follow the given user (their public profiles)."

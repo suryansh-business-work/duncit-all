@@ -1,33 +1,20 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Snackbar, Stack } from '@mui/material';
-import {
-  SLIDERS,
-  LOCATIONS,
-  SUPER_CATEGORIES,
-  CREATE,
-  UPDATE,
-  DELETE,
-  SliderForm,
-  blankForm,
-} from './queries';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { Button, Snackbar, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { LOCATIONS, SUPER_CATEGORIES, CREATE, UPDATE, DELETE, SliderForm, blankForm } from './queries';
+import { SLIDERS_TABLE, type SliderRow } from './table.queries';
 import { toCreateSliderInput, toUpdateSliderInput } from './slider.form';
 import SliderFormDialog from './SliderFormDialog';
 import SlidersTable from './SlidersTable';
 import SlidersToolbar from './SlidersToolbar';
 
 export default function SlidersPage() {
-  const [scopeFilter, setScopeFilter] = useState<string>('');
-  const [search, setSearch] = useState('');
-
-  const { data, loading, error, refetch } = useQuery(SLIDERS, {
-    variables: {
-      filter: { scope: scopeFilter || undefined, search: search || undefined },
-    },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data: locsData } = useQuery(LOCATIONS);
   const { data: superCatData } = useQuery(SUPER_CATEGORIES);
 
@@ -45,21 +32,33 @@ export default function SlidersPage() {
   const locations = locsData?.locations ?? [];
   const superCategories = superCatData?.categories ?? [];
 
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: SLIDERS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.slidersTable.rows as SliderRow[], total: data.slidersTable.total as number };
+    },
+    [client],
+  );
+
   const openCreate = () => {
     setForm(blankForm);
     setOpError(null);
     setOpen(true);
   };
-  const openEdit = (s: any) => {
+  const openEdit = (s: SliderRow) => {
     setForm({
       id: s.id,
       slider_id: s.slider_id,
       title: s.title,
       description: s.description ?? '',
       media_url: s.media_url,
-      media_type: s.media_type,
-      link_type: s.link_type ?? (s.link_url ? 'EXTERNAL' : 'EXTERNAL'),
-      link_target_kind: s.link_target_kind ?? '',
+      media_type: s.media_type as SliderForm['media_type'],
+      link_type: (s.link_type ?? 'EXTERNAL') as SliderForm['link_type'],
+      link_target_kind: (s.link_target_kind ?? '') as SliderForm['link_target_kind'],
       link_target_id: s.link_target_id ?? '',
       link_url: s.link_url ?? '',
       scope: s.scope,
@@ -90,7 +89,7 @@ export default function SlidersPage() {
       }
       setToast('Saved');
       setOpen(false);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -98,7 +97,7 @@ export default function SlidersPage() {
     }
   };
 
-  const remove = async (s: any) => {
+  const remove = async (s: SliderRow) => {
     const ok = await confirm({
       title: 'Delete slider',
       message: `Delete slider "${s.title}"?`,
@@ -109,7 +108,7 @@ export default function SlidersPage() {
     try {
       await deleteMut({ variables: { id: s.id } });
       setToast('Deleted');
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);
     }
@@ -117,21 +116,17 @@ export default function SlidersPage() {
 
   return (
     <Stack spacing={3}>
-      <SlidersToolbar
-        scopeFilter={scopeFilter}
-        setScopeFilter={setScopeFilter}
-        search={search}
-        setSearch={setSearch}
-        onCreate={openCreate}
-      />
-
-      {error && <Alert severity="error">{error.message}</Alert>}
+      <SlidersToolbar />
 
       <SlidersTable
-        loading={loading}
-        hasData={!!data}
-        rows={data?.sliders ?? []}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
         locations={locations}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New Slider
+          </Button>
+        }
         onEdit={openEdit}
         onRemove={remove}
       />

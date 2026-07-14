@@ -253,8 +253,6 @@ export default function RichTextField({
     >
       {!readOnly && <Toolbar editor={editor} compact={compact} />}
       <EditorContent editor={editor} />
-      {/* `theme` is referenced via sx callbacks; keep the linter happy. */}
-      {theme ? null : null}
     </Box>
   );
 }

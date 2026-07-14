@@ -56,6 +56,7 @@ export function ClubDetailsScreen() {
             navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
           }
           onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
+          onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
         />
       </Reveal>
     </ScrollView>

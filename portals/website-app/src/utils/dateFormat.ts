@@ -26,7 +26,7 @@ export function useDateFormat() {
 
   const toDate = (input: DateInput): Date | null => {
     if (!input) return null;
-    if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+    if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
     if (typeof input === 'number') return new Date(input);
     try {
       return parseISO(input);

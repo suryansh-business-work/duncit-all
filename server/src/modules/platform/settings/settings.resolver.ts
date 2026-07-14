@@ -24,6 +24,14 @@ export const settingsResolvers = {
       requireRole(ctx, ADMIN_READ);
       return settingsService.listFlags();
     },
+    featureFlagsTable: async (
+      _p: unknown,
+      args: { query?: any },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, ADMIN_READ);
+      return settingsService.flagsTable(args.query);
+    },
     featureFlag: async (
       _p: unknown,
       args: { key: string },

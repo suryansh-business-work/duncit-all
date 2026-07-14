@@ -14,6 +14,31 @@ export const MY_API_KEYS = gql`
   }
 `;
 
+/** Same selection as MY_API_KEYS rows — every column the table renders. */
+const API_KEY_ROW_FIELDS = gql`
+  fragment ApiKeyRowFields on ApiKey {
+    id
+    name
+    key_prefix
+    scopes
+    last_used_at
+    revoked_at
+    created_at
+  }
+`;
+
+export const MY_API_KEYS_TABLE = gql`
+  query MyApiKeysTable($query: TableQueryInput) {
+    myApiKeysTable(query: $query) {
+      total
+      rows {
+        ...ApiKeyRowFields
+      }
+    }
+  }
+  ${API_KEY_ROW_FIELDS}
+`;
+
 export const CREATE_API_KEY = gql`
   mutation CreateApiKey($name: String!) {
     createApiKey(name: $name) {

@@ -27,6 +27,10 @@ export const couponResolvers = {
       requireRole(ctx, ADMIN_RW);
       return couponService.list(args.filter);
     },
+    couponsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return couponService.table(args.query);
+    },
     coupon: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return couponService.getById(args.id);
@@ -34,6 +38,10 @@ export const couponResolvers = {
     couponsForPod: (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return couponService.listForPod(args.pod_id);
+    },
+    couponsForPodTable: (_p: unknown, args: { pod_id: string; query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return couponService.tableForPod(args.pod_id, args.query);
     },
     availableCouponsForPod: (_p: unknown, args: { pod_id?: string }) =>
       couponService.listAvailableForPod(args.pod_id ?? null),

@@ -24,6 +24,16 @@ export const ENV_ENTRIES = gql`
   }
 `;
 
+/** Server-side table page (search/sort/filter/paginate) for the Variables tab. */
+export const ENV_ENTRIES_TABLE = gql`
+  query EnvEntriesTable($query: TableQueryInput) {
+    envEntriesTable(query: $query) {
+      total
+      rows { ${ENV_ENTRY_FIELDS} }
+    }
+  }
+`;
+
 export const CREATE_ENV_ENTRY = gql`
   mutation CreateEnvEntry($input: CreateEnvEntryInput!) {
     createEnvEntry(input: $input) { ${ENV_ENTRY_FIELDS} }

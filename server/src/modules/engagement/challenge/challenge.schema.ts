@@ -23,6 +23,14 @@ export const challengeTypeDefs = gql`
     active: Int!
   }
 
+  "Server-side table page for the shared table engine (challengesTable)."
+  type ChallengeTablePage {
+    rows: [Challenge!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateChallengeInput {
     name: String!
     description: String
@@ -43,6 +51,7 @@ export const challengeTypeDefs = gql`
   extend type Query {
     "All challenges (optionally filtered by a name search)."
     challenges(search: String): [Challenge!]!
+    challengesTable(query: TableQueryInput): ChallengeTablePage!
     "Total + active challenge counts for the dashboard."
     challengeStats: ChallengeStats!
     "A single challenge by id."

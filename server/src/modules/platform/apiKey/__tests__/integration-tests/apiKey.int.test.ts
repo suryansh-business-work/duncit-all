@@ -71,4 +71,65 @@ describe('apiKeyService integration', () => {
     await expect(apiKeyService.create(ownerId, '   ')).rejects.toThrow(/required/i);
     await expect(apiKeyService.create(ownerId, 'x'.repeat(81))).rejects.toThrow(/80/);
   });
+
+  it('serves the myApiKeysTable page with search, filter, sort and paging', async () => {
+    await apiKeyService.create(ownerId, 'Alpha key');
+    await apiKeyService.create(ownerId, 'Beta key');
+    await apiKeyService.create(ownerId, 'Gamma integration');
+
+    // Default sort matches listForOwner (created_at desc, newest first).
+    const all = await apiKeyService.tableForOwner(ownerId);
+    expect(all.total).toBe(3);
+    expect(all.rows.map((k) => k.name)).toEqual(['Gamma integration', 'Beta key', 'Alpha key']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+    expect(all.rows[0]).not.toHaveProperty('key_hash');
+
+    // Search spans name and key_prefix.
+    const byName = await apiKeyService.tableForOwner(ownerId, { search: 'beta' });
+    expect(byName.rows.map((k) => k.name)).toEqual(['Beta key']);
+    const byPrefix = await apiKeyService.tableForOwner(ownerId, { search: 'dk_live_' });
+    expect(byPrefix.total).toBe(3);
+
+    // Allowlisted contains filter narrows.
+    const keysOnly = await apiKeyService.tableForOwner(ownerId, {
+      filters: [{ field: 'name', op: 'contains', value: 'key' }],
+    });
+    expect(keysOnly.rows.map((k) => k.name)).toEqual(['Beta key', 'Alpha key']);
+
+    // Allowlisted sort, both directions.
+    const asc = await apiKeyService.tableForOwner(ownerId, { sort_by: 'name', sort_dir: 'asc' });
+    expect(asc.rows.map((k) => k.name)).toEqual(['Alpha key', 'Beta key', 'Gamma integration']);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await apiKeyService.tableForOwner(ownerId, {
+      sort_by: 'name',
+      sort_dir: 'asc',
+      page: 2,
+      page_size: 1,
+    });
+    expect(page2.rows.map((k) => k.name)).toEqual(['Beta key']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
+  it('scopes myApiKeysTable to the owner — user A can never see user B rows', async () => {
+    const otherId = new Types.ObjectId().toString();
+    await apiKeyService.create(ownerId, 'Mine only');
+    await apiKeyService.create(otherId, 'Theirs only');
+
+    const mine = await apiKeyService.tableForOwner(ownerId);
+    expect(mine.rows.map((k) => k.name)).toEqual(['Mine only']);
+    expect(mine.rows.every((k) => k.owner_user_id === ownerId)).toBe(true);
+
+    // Searching/filtering for the other user's key cannot widen the scope:
+    // the owner baseFilter is $and-merged with every client filter.
+    const searched = await apiKeyService.tableForOwner(ownerId, { search: 'Theirs' });
+    expect(searched.total).toBe(0);
+    const filtered = await apiKeyService.tableForOwner(ownerId, {
+      filters: [{ field: 'name', op: 'eq', value: 'Theirs only' }],
+    });
+    expect(filtered.total).toBe(0);
+  });
 });

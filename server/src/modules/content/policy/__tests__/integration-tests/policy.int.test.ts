@@ -34,6 +34,38 @@ describe('policyService integration', () => {
     expect(await PolicyModel.countDocuments()).toBe(0);
   });
 
+  it('serves the policiesTable page with search, filter, sort and paging', async () => {
+    await policyService.create({ title: 'Privacy', slug: 'privacy', sort_order: 2 });
+    await policyService.create({ title: 'Terms', slug: 'terms', sort_order: 1 });
+    await policyService.create({ title: 'Refunds', slug: 'refunds', sort_order: 3, is_active: false });
+
+    // Plain envelope with the default sort (sort_order asc, like the list) and clamp defaults.
+    const all = await policyService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((p) => p.slug)).toEqual(['terms', 'privacy', 'refunds']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans title and slug.
+    const searched = await policyService.table({ search: 'priv' });
+    expect(searched.rows.map((p) => p.slug)).toEqual(['privacy']);
+    expect(searched.total).toBe(1);
+
+    // Boolean filter narrows.
+    const active = await policyService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((p) => p.slug)).toEqual(['terms', 'privacy']);
+
+    // Allowlisted sort + paging keep total and report the clamps back.
+    const byTitle = await policyService.table({ sort_by: 'title', sort_dir: 'asc' });
+    expect(byTitle.rows.map((p) => p.title)).toEqual(['Privacy', 'Refunds', 'Terms']);
+
+    const page2 = await policyService.table({ page: 2, page_size: 1 });
+    expect(page2.rows.map((p) => p.slug)).toEqual(['privacy']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('seeds default policies idempotently', async () => {
     await policyService.seedDefaults();
     await policyService.seedDefaults();

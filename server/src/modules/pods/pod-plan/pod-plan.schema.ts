@@ -16,6 +16,14 @@ export const podPlanTypeDefs = gql`
     updated_at: String
   }
 
+  "Server-side table page for the shared table engine (podPlansTable)."
+  type PodPlanTablePage {
+    rows: [PodPlan!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input PodPlanInput {
     key: String!
     name: String!
@@ -41,6 +49,7 @@ export const podPlanTypeDefs = gql`
 
   extend type Query {
     podPlans: [PodPlan!]!
+    podPlansTable(query: TableQueryInput): PodPlanTablePage!
     publicPodPlans: [PodPlan!]!
   }
 

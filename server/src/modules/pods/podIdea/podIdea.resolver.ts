@@ -32,6 +32,8 @@ export const podIdeaResolvers = {
   Query: {
     podIdeas: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
       podIdeaService.list(args.filter, ctx.user?.id ?? null),
+    podIdeasTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
+      podIdeaService.table(args.query, ctx.user?.id ?? null),
     podIdea: (_p: unknown, args: { pod_idea_doc_id: string }, ctx: GraphQLContext) =>
       podIdeaService.getById(args.pod_idea_doc_id, ctx.user?.id ?? null),
     myPodIdeas: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

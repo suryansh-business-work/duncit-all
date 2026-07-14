@@ -29,10 +29,16 @@ export const venueResolvers = {
       venueService.getMine(uid(ctx), args.venue_id),
     myVenues: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       venueService.listMine(uid(ctx)),
+    myVenuesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
+      venueService.tableMine(uid(ctx), args.query),
     venueRegistrationConfig: async () => venueService.registrationConfig(),
     venues: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.list({ status: args.status });
+    },
+    venuesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return venueService.table(args.query);
     },
     venue: async (_p: unknown, args: { venue_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);

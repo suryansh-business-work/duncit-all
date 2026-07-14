@@ -84,11 +84,21 @@ export const clubTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (clubsTable)."
+  type ClubTablePage {
+    rows: [Club!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input ClubFilterInput {
     search: String
     category_id: ID
     super_category_id: ID
     location_id: ID
+    "Narrow to a locality/zone within the city."
+    locality: String
     is_verified: Boolean
     is_active: Boolean
   }
@@ -144,6 +154,7 @@ export const clubTypeDefs = /* GraphQL */ `
 
   extend type Query {
     clubs(filter: ClubFilterInput): [Club!]!
+    clubsTable(query: TableQueryInput): ClubTablePage!
     club(club_doc_id: ID!): Club
     clubBySlug(club_slug: String!): Club
     clubRatings(club_doc_id: ID!): [ClubRating!]!

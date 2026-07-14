@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import type { TableFetch } from '@duncit/table';
 import HostRequestsTable from './HostRequestsTable';
 import type { HostRequest } from './queries';
 
@@ -28,12 +29,29 @@ const sparse: HostRequest = {
   created_at: '2026-01-03T10:00:00.000Z',
 };
 
+const makeFetch = (rows: HostRequest[]) =>
+  vi.fn(async () => ({ rows, total: rows.length })) as TableFetch<HostRequest>;
+
 const handlers = () => ({ onAcknowledge: vi.fn(), onApprove: vi.fn(), onReject: vi.fn(), onDelete: vi.fn() });
 
+const renderTable = (requests: HostRequest[], h = handlers()) =>
+  render(
+    <HostRequestsTable
+      fetchRows={makeFetch(requests)}
+      refetchRef={{ current: null }}
+      busy={false}
+      {...h}
+    />,
+  );
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
+
 describe('HostRequestsTable', () => {
-  it('renders rows with the category path, fallbacks and a status chip', () => {
-    render(<HostRequestsTable requests={[full, sparse]} busy={false} {...handlers()} />);
-    expect(screen.getByText('HOSTREQ-000001')).toBeInTheDocument();
+  it('renders rows with the category path, fallbacks and a status chip', async () => {
+    renderTable([full, sparse]);
+    expect(await screen.findByText('HOSTREQ-000001')).toBeInTheDocument();
     expect(screen.getByText('Asha')).toBeInTheDocument();
     expect(screen.getByText('For You › Sports › Badminton')).toBeInTheDocument();
     expect(screen.getByText('REQUESTED')).toBeInTheDocument();
@@ -41,16 +59,17 @@ describe('HostRequestsTable', () => {
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 
-  it('wires the kebab acknowledge action through to the handler', () => {
+  it('wires the kebab acknowledge action through to the handler', async () => {
     const h = handlers();
-    render(<HostRequestsTable requests={[full]} busy={false} {...h} />);
+    renderTable([full], h);
+    expect(await screen.findByText('HOSTREQ-000001')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Host request actions' }));
     fireEvent.click(screen.getByText('Acknowledge'));
     expect(h.onAcknowledge).toHaveBeenCalledWith(full);
   });
 
-  it('shows an empty state', () => {
-    render(<HostRequestsTable requests={[]} busy={false} {...handlers()} />);
-    expect(screen.getByText('No host requests found.')).toBeInTheDocument();
+  it('shows an empty state', async () => {
+    renderTable([]);
+    expect(await screen.findByText('No host requests found.')).toBeInTheDocument();
   });
 });

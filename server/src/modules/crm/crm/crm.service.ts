@@ -8,6 +8,12 @@ import {
   CrmDynamicFieldModel,
 } from './crm.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import {
+  runTableQuery,
+  type TableEntityConfig,
+  type TableFieldConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
@@ -157,6 +163,73 @@ function buildQuery(filter: any, nameField: string) {
 }
 
 const parseDate = (v?: string | null) => (v ? new Date(v) : null);
+
+/**
+ * Allowlists for the shared table engine (*LeadsTable — DUNCIT TABLE CONTRACT
+ * v1). Search mirrors the legacy CrmLeadFilter regex (name / city / contact
+ * phone / contact email) and filterFields cover every CrmLeadFilter field, so
+ * the *Table siblings accept the same filter semantics via TableQueryInput.
+ * Default sort matches the lead DataGrids' default (next follow-up asc).
+ */
+function leadTableConfig(
+  nameField: string,
+  extras: {
+    searchFields?: string[];
+    sortFields?: Record<string, string>;
+    filterFields?: Record<string, TableFieldConfig>;
+  } = {}
+): TableEntityConfig {
+  return {
+    searchFields: [
+      nameField,
+      'city',
+      'contacts.mobile_number',
+      'contacts.email',
+      ...(extras.searchFields ?? []),
+    ],
+    sortFields: {
+      [nameField]: nameField,
+      city: 'city',
+      lead_status: 'lead_status',
+      priority: 'priority',
+      next_follow_up_date: 'next_follow_up_date',
+      created_at: 'created_at',
+      updated_at: 'updated_at',
+      ...(extras.sortFields ?? {}),
+    },
+    filterFields: {
+      city: { type: 'string' },
+      lead_status: { type: 'enum' },
+      priority: { type: 'enum' },
+      super_category_id: { type: 'string' },
+      next_follow_up_date: { type: 'date' },
+      created_at: { type: 'date' },
+      ...(extras.filterFields ?? {}),
+    },
+    defaultSort: { next_follow_up_date: 1 },
+  };
+}
+
+const VENUE_LEAD_TABLE_CONFIG = leadTableConfig('venue_name');
+const HOST_LEAD_TABLE_CONFIG = leadTableConfig('host_name', {
+  sortFields: { host_type: 'host_type' },
+  filterFields: { host_type: { type: 'string' } },
+});
+const ECOMM_LEAD_TABLE_CONFIG = leadTableConfig('seller_name', {
+  searchFields: ['brand_name'],
+  sortFields: { brand_name: 'brand_name' },
+  filterFields: { brand_name: { type: 'string' } },
+});
+
+/** Server-side table page (search/filter/sort/paginate) for a lead collection. */
+async function leadTable(
+  Model: typeof VenueLeadModel | typeof HostLeadModel | typeof EcommLeadModel,
+  config: TableEntityConfig,
+  input?: TableQueryInput | null
+) {
+  const { docs, total, page, page_size } = await runTableQuery(Model, {}, input, config);
+  return { rows: docs.map(pub), total, page, page_size };
+}
 
 /**
  * Normalise the inbound input so it round-trips cleanly with Mongoose. Right
@@ -570,6 +643,10 @@ export const crmService = {
     const docs = await VenueLeadModel.find(buildQuery(filter, 'venue_name')).sort({ created_at: -1 });
     return docs.map(pub);
   },
+  /** Server-side table page (search/filter/sort/paginate) for the venueLeadsTable query. */
+  venueLeadsTable(input?: TableQueryInput | null) {
+    return leadTable(VenueLeadModel, VENUE_LEAD_TABLE_CONFIG, input);
+  },
   async getVenueLead(id: string) {
     const doc = await VenueLeadModel.findById(id);
     return doc ? pub(doc) : null;
@@ -601,6 +678,10 @@ export const crmService = {
   async listHostLeads(filter: any) {
     const docs = await HostLeadModel.find(buildQuery(filter, 'host_name')).sort({ created_at: -1 });
     return docs.map(pub);
+  },
+  /** Server-side table page (search/filter/sort/paginate) for the hostLeadsTable query. */
+  hostLeadsTable(input?: TableQueryInput | null) {
+    return leadTable(HostLeadModel, HOST_LEAD_TABLE_CONFIG, input);
   },
   async getHostLead(id: string) {
     const doc = await HostLeadModel.findById(id);
@@ -643,6 +724,10 @@ export const crmService = {
   async listEcommLeads(filter: any) {
     const docs = await EcommLeadModel.find(buildQuery(filter, 'seller_name')).sort({ created_at: -1 });
     return docs.map(pub);
+  },
+  /** Server-side table page (search/filter/sort/paginate) for the ecommLeadsTable query. */
+  ecommLeadsTable(input?: TableQueryInput | null) {
+    return leadTable(EcommLeadModel, ECOMM_LEAD_TABLE_CONFIG, input);
   },
   async getEcommLead(id: string) {
     const doc = await EcommLeadModel.findById(id);

@@ -242,3 +242,45 @@ describe('host commission enrichment (Onboarded Hosts console)', () => {
     expect(await hostService.getById(new Types.ObjectId().toString())).toBeNull();
   });
 });
+
+describe('hostsTable (shared table engine)', () => {
+  it('serves the hosts table page with search, filters, sort, paging and commission enrichment', async () => {
+    const user = await UserModel.create({
+      auth: { email: 'table-host@x.com' },
+      profile: { first_name: 'Tara' },
+      finance: { host_commission_pct: 7 },
+    });
+    await HostModel.create({ user_id: user._id, full_name: 'Tara Table', email: 'tara@x.com', phone: '+911', status: 'APPROVED' });
+    await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Ben Bench', email: 'ben@x.com', phone: '+922', status: 'SUBMITTED' });
+    await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Cara Chair', email: 'cara@x.com', phone: '+933', status: 'APPROVED', is_active: false });
+
+    // Plain envelope: newest-first default (mirrors list()) + clamp defaults.
+    const all = await hostService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((h) => h.full_name)).toEqual(['Cara Chair', 'Ben Bench', 'Tara Table']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Rows carry the commission override like the sibling gated hosts query.
+    expect(all.rows.find((h) => h.full_name === 'Tara Table')?.host_commission_pct).toBe(7);
+    expect(all.rows.find((h) => h.full_name === 'Ben Bench')?.host_commission_pct).toBe(0);
+
+    // Search spans full_name / email / phone.
+    const byEmail = await hostService.table({ search: 'ben@x.com' });
+    expect(byEmail.rows.map((h) => h.full_name)).toEqual(['Ben Bench']);
+    expect(byEmail.total).toBe(1);
+
+    // Enum + boolean filters narrow.
+    const approved = await hostService.table({ filters: [{ field: 'status', op: 'eq', value: 'APPROVED' }] });
+    expect(approved.rows.map((h) => h.full_name)).toEqual(['Cara Chair', 'Tara Table']);
+    const active = await hostService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((h) => h.full_name)).toEqual(['Ben Bench', 'Tara Table']);
+
+    // Allowlisted sort, then paging keeps total and echoes the clamped page.
+    const page2 = await hostService.table({ sort_by: 'full_name', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((h) => h.full_name)).toEqual(['Cara Chair']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+});

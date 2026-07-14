@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { SliderModel, type ISlider, type SliderScope } from './slider.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const slugify = (s: string) =>
   s
@@ -81,6 +82,35 @@ async function toPub(s: ISlider) {
     updated_at: s.updated_at.toISOString(),
   };
 }
+
+/** Allowlists for the shared table engine (slidersTable — DUNCIT TABLE CONTRACT v1). */
+const SLIDER_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'slider_id'],
+  sortFields: {
+    title: 'title',
+    scope: 'scope',
+    sort_order: 'sort_order',
+    starts_at: 'starts_at',
+    ends_at: 'ends_at',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    scope: { type: 'enum' },
+    media_type: { type: 'enum' },
+    link_type: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    location_id: { type: 'string' },
+    zone_name: { type: 'string' },
+    super_category_slug: { type: 'string' },
+    sort_order: { type: 'number' },
+    starts_at: { type: 'date' },
+    ends_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { sort_order: 1, created_at: -1 },
+};
 
 const validateScope = (input: {
   scope: SliderScope;
@@ -223,6 +253,17 @@ export const sliderService = {
     return Promise.all(docs.map(toPub));
   },
 
+  /** Server-side table page (search/filter/sort/paginate) for slidersTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<ISlider>(
+      SliderModel,
+      {},
+      input,
+      SLIDER_TABLE_CONFIG
+    );
+    return { rows: await Promise.all(docs.map(toPub)), total, page, page_size };
+  },
+
   async getById(id: string) {
     const doc = await SliderModel.findById(id);
     return doc ? toPub(doc) : null;
@@ -240,7 +281,7 @@ export const sliderService = {
         extensions: { code: 'CONFLICT' },
       });
 
-    const linkType = input.link_type ?? (input.link_url ? 'EXTERNAL' : 'EXTERNAL');
+    const linkType = input.link_type ?? 'EXTERNAL';
     const doc = await SliderModel.create({
       slider_id,
       title: input.title,

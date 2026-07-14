@@ -58,6 +58,10 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.listVenueLeads(args.filter);
     },
+    venueLeadsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.venueLeadsTable(args.query);
+    },
     venueLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.getVenueLead(args.id);
@@ -66,6 +70,10 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.listHostLeads(args.filter);
     },
+    hostLeadsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.hostLeadsTable(args.query);
+    },
     hostLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.getHostLead(args.id);
@@ -73,6 +81,10 @@ export const crmResolvers = {
     ecommLeads: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.listEcommLeads(args.filter);
+    },
+    ecommLeadsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.ecommLeadsTable(args.query);
     },
     ecommLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);

@@ -15,6 +15,7 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { SlotTemplateModel } from '@modules/venues/slotTemplate/slotTemplate.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   VENUE_AMENITIES,
   VENUE_CAPACITY_ITEM_LIMIT,
@@ -222,6 +223,50 @@ const toPub = (v: IVenue) => ({
   created_at: v.created_at?.toISOString?.() ?? '',
   updated_at: v.updated_at?.toISOString?.() ?? '',
 });
+
+/** Shared allowlists for the table engine (venuesTable / myVenuesTable —
+ * DUNCIT TABLE CONTRACT v1). Only defaultSort differs per query. */
+const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
+  searchFields: ['venue_name', 'venue_type', 'city', 'locality', 'owner_name', 'owner_email'],
+  sortFields: {
+    venue_name: 'venue_name',
+    venue_type: 'venue_type',
+    city: 'city',
+    locality: 'locality',
+    capacity: 'capacity',
+    owner_name: 'owner_name',
+    status: 'status',
+    is_active: 'is_active',
+    venue_commission_pct: 'venue_commission_pct',
+    submitted_at: 'submitted_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    venue_type: { type: 'string' },
+    city: { type: 'string' },
+    locality: { type: 'string' },
+    location_id: { type: 'string' },
+    capacity: { type: 'number' },
+    submitted_at: { type: 'date' },
+    created_at: { type: 'date' },
+    updated_at: { type: 'date' },
+  },
+};
+
+/** Admin/onboarding venues list defaults to newest-first (mirrors list()). */
+const VENUE_TABLE_CONFIG: TableEntityConfig = {
+  ...VENUE_TABLE_FIELDS,
+  defaultSort: { created_at: -1 },
+};
+
+/** Owner "Your venue registrations" defaults to recently-updated (mirrors listMine()). */
+const MY_VENUE_TABLE_CONFIG: TableEntityConfig = {
+  ...VENUE_TABLE_FIELDS,
+  defaultSort: { updated_at: -1 },
+};
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
@@ -505,6 +550,29 @@ export const venueService = {
     if (filter?.activeOnly) q.is_active = { $ne: false };
     const docs = await VenueModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
+  },
+  /** Server-side table page (search/filter/sort/paginate) for the admin/
+   * onboarding venuesTable query — same rows as list(). */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IVenue>(
+      VenueModel,
+      {},
+      input,
+      VENUE_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+  /** Owner-scoped table page for myVenuesTable. The baseFilter pins
+   * owner_user_id ($and-merged by runTableQuery), so client-supplied filters
+   * can never widen the scope to another owner's venues. */
+  async tableMine(userId: string, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IVenue>(
+      VenueModel,
+      { owner_user_id: new Types.ObjectId(userId) },
+      input,
+      MY_VENUE_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
   /** APPROVED, active venues that match a club: same location, and the club's
    * Super + Sub category (when set). This is the single source of truth for the

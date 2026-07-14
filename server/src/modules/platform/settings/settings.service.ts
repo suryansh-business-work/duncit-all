@@ -6,6 +6,11 @@ import {
 } from "./settings.model";
 import { getRuntimeEnvValue } from "@config/runtimeEnv";
 import {
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from "@utils/table-query";
+import {
   setReopenWindowZone,
   DEFAULT_REOPEN_ZONE,
 } from "@modules/support/reopenWindow";
@@ -31,6 +36,24 @@ const toFlagPub = (d: any) => {
     created_at: d.created_at?.toISOString?.() ?? "",
     updated_at: d.updated_at?.toISOString?.() ?? "",
   };
+};
+
+/** Allowlists for the shared table engine (featureFlagsTable — DUNCIT TABLE CONTRACT v1). */
+const FEATURE_FLAG_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ["key", "name", "description"],
+  sortFields: {
+    key: "key",
+    name: "name",
+    enabled: "enabled",
+    is_system: "is_system",
+    created_at: "created_at",
+    updated_at: "updated_at",
+  },
+  filterFields: {
+    enabled: { type: "boolean" },
+    is_system: { type: "boolean" },
+  },
+  defaultSort: { key: 1 },
 };
 
 function notFound(what: string): never {
@@ -241,6 +264,17 @@ export const settingsService = {
   async listFlags() {
     const all = await FeatureFlagModel.find().sort({ key: 1 });
     return all.map(toFlagPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the featureFlagsTable query. */
+  async flagsTable(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      FeatureFlagModel,
+      {},
+      input,
+      FEATURE_FLAG_TABLE_CONFIG,
+    );
+    return { rows: docs.map(toFlagPub), total, page, page_size };
   },
 
   async getFlag(key: string) {

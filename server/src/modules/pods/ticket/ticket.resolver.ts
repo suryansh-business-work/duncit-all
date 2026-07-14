@@ -22,6 +22,10 @@ export const eventTicketResolvers = {
       requireRole(ctx, ADMIN_RW);
       return ticketService.listAdmin(args.filter);
     },
+    eventTicketsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return ticketService.table(args.query);
+    },
     eventTicket: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return ticketService.getById(args.id);

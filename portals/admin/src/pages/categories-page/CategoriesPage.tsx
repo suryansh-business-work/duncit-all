@@ -74,6 +74,8 @@ export default function CategoriesPage() {
         mediaText: item.media.map((m) => m.url).join('\n'),
         sort_order: item.sort_order,
         is_active: item.is_active,
+        allow_co_hosts: item.allow_co_hosts ?? false,
+        max_co_hosts: item.max_co_hosts ?? 1,
       },
     });
   };
@@ -86,7 +88,10 @@ export default function CategoriesPage() {
       const media = buildMediaFromText(dialog.form.mediaText);
       if (dialog.form.id) {
         await updateMut({
-          variables: { category_id: dialog.form.id, input: buildUpdateInput(dialog.form, media) },
+          variables: {
+            category_id: dialog.form.id,
+            input: buildUpdateInput(dialog.form, media, dialog.level),
+          },
           refetchQueries,
         });
       } else {

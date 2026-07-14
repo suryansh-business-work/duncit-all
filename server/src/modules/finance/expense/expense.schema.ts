@@ -26,6 +26,14 @@ export const expenseTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (expensesTable)."
+  type ExpenseTablePage {
+    rows: [Expense!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type ExpenseCategoryTotal {
     category: String!
     total: Float!
@@ -68,6 +76,7 @@ export const expenseTypeDefs = /* GraphQL */ `
 
   extend type Query {
     expenses(filter: ExpenseFilterInput): [Expense!]!
+    expensesTable(query: TableQueryInput): ExpenseTablePage!
     expenseSummary(filter: ExpenseFilterInput): ExpenseSummary!
   }
 

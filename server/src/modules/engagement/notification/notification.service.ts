@@ -13,6 +13,7 @@ import {
 } from './notification.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { emitNotifyForUsers } from './notification.events';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 let vapidReady = false;
 
@@ -42,6 +43,28 @@ const toUserNotifPub = (un: IUserNotification & { notification_id: any }) => ({
   read_at: un.read_at ? un.read_at.toISOString() : null,
   created_at: un.created_at.toISOString(),
 });
+
+/** Allowlists for the shared table engine (notificationsTable — DUNCIT TABLE CONTRACT v1). */
+const NOTIFICATION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'body'],
+  sortFields: {
+    title: 'title',
+    scope: 'scope',
+    delivered_count: 'delivered_count',
+    failed_count: 'failed_count',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    scope: { type: 'enum' },
+    silent: { type: 'boolean' },
+    location_id: { type: 'string' },
+    zone_name: { type: 'string' },
+    delivered_count: { type: 'number' },
+    failed_count: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 interface ExpoMessage {
   to: string;
@@ -110,6 +133,17 @@ export const notificationService = {
   async list(limit = 100) {
     const docs = await NotificationModel.find().sort({ created_at: -1 }).limit(limit);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for notificationsTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<INotification>(
+      NotificationModel,
+      {},
+      input,
+      NOTIFICATION_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async resolveTargetUsers(input: {

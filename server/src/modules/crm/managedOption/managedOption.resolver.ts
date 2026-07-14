@@ -16,6 +16,14 @@ export const managedOptionResolvers = {
       requireRole(ctx, RW);
       return managedOptionService.list(args.group, args.include_inactive ?? false);
     },
+    crmManagedOptionsTable: (
+      _p: unknown,
+      args: { group: ManagedOptionGroup; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return managedOptionService.table(args.group, args.query);
+    },
   },
   Mutation: {
     createCrmManagedOption: (

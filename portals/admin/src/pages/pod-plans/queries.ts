@@ -18,6 +18,27 @@ export const PLANS = gql`
   }
 `;
 
+export const PLANS_TABLE = gql`
+  query PodPlansTable($query: TableQueryInput) {
+    podPlansTable(query: $query) {
+      total
+      rows {
+        id
+        key
+        name
+        description
+        image_url
+        features
+        price_label
+        is_coming_soon
+        sort_order
+        is_active
+        updated_at
+      }
+    }
+  }
+`;
+
 export const CREATE_POD_PLAN = gql`
   mutation CreatePodPlan($input: PodPlanInput!) {
     createPodPlan(input: $input) {

@@ -1,8 +1,15 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useQuery } from '@apollo/client';
 import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { subDays, subMonths, startOfMonth } from 'date-fns';
-import { CLUB_ADMIN_DASHBOARD, emptyClubAdminDashboard, type ClubAdminDashboard } from './queries';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import {
+  CLUB_ADMIN_DASHBOARD,
+  CLUB_ADMIN_DASHBOARD_TABLE,
+  emptyClubAdminDashboard,
+  type ClubAdminClubRow,
+  type ClubAdminDashboard,
+} from './queries';
 import ClubAdminKpiCards from './ClubAdminKpiCards';
 import ClubAdminTrendChart from './ClubAdminTrendChart';
 import ClubAdminClubsTable from './ClubAdminClubsTable';
@@ -16,6 +23,8 @@ const RANGES = [
 
 export default function ClubAdminDashboardPage() {
   const [range, setRange] = useState('12m');
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
 
   const from = useMemo(() => {
     const start = RANGES.find((item) => item.value === range)?.from() ?? null;
@@ -26,6 +35,32 @@ export default function ClubAdminDashboardPage() {
     variables: { from, to: null },
     fetchPolicy: 'cache-and-network',
   });
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data: page } = await client.query({
+        query: CLUB_ADMIN_DASHBOARD_TABLE,
+        variables: { ...tableQueryToGql(q), from, to: null },
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.clubAdminDashboardTable.rows as ClubAdminClubRow[],
+        total: page.clubAdminDashboardTable.total as number,
+      };
+    },
+    [client, from],
+  );
+
+  // The table only refetches on its own query-state changes — reload it when the
+  // page-level range select swaps the `from` boundary (skip the mount fetch).
+  const rangeMounted = useRef(false);
+  useEffect(() => {
+    if (!rangeMounted.current) {
+      rangeMounted.current = true;
+      return;
+    }
+    refetchRef.current?.();
+  }, [from]);
 
   const dashboard: ClubAdminDashboard = data?.clubAdminDashboard ?? emptyClubAdminDashboard;
 
@@ -64,7 +99,11 @@ export default function ClubAdminDashboardPage() {
 
       <ClubAdminKpiCards kpis={dashboard.kpis} loading={loading && !data} />
       <ClubAdminTrendChart trend={dashboard.trend} />
-      <ClubAdminClubsTable clubs={dashboard.clubs} currencySymbol={dashboard.kpis.currency_symbol} />
+      <ClubAdminClubsTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        currencySymbol={dashboard.kpis.currency_symbol}
+      />
     </Stack>
   );
 }

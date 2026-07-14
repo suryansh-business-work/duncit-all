@@ -1,24 +1,13 @@
-import { Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 
 interface Props {
   clubs: any[];
   clubFilter: string;
   setClubFilter: (id: string) => void;
-  search: string;
-  setSearch: (v: string) => void;
-  onCreate: () => void;
 }
 
-export default function PodsToolbar({
-  clubs,
-  clubFilter,
-  setClubFilter,
-  search,
-  setSearch,
-  onCreate,
-}: Readonly<Props>) {
+export default function PodsToolbar({ clubs, clubFilter, setClubFilter }: Readonly<Props>) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
@@ -35,32 +24,21 @@ export default function PodsToolbar({
           Events organised inside a club. Hosts are attendees by default.
         </Typography>
       </Box>
-      <Stack direction="row" spacing={2}>
-        <TextField
-          size="small"
-          select
-          label="Club"
-          value={clubFilter}
-          onChange={(e) => setClubFilter(e.target.value)}
-          sx={{ minWidth: 200 }}
-        >
-          <MenuItem value="">All clubs</MenuItem>
-          {clubs.map((c: any) => (
-            <MenuItem key={c.id} value={c.id}>
-              {c.club_name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          size="small"
-          placeholder="Search title"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate}>
-          New Pod
-        </Button>
-      </Stack>
+      <TextField
+        size="small"
+        select
+        label="Club"
+        value={clubFilter}
+        onChange={(e) => setClubFilter(e.target.value)}
+        sx={{ minWidth: 200 }}
+      >
+        <MenuItem value="">All clubs</MenuItem>
+        {clubs.map((c: any) => (
+          <MenuItem key={c.id} value={c.id}>
+            {c.club_name}
+          </MenuItem>
+        ))}
+      </TextField>
     </Stack>
   );
 }

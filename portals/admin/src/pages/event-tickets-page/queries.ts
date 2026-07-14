@@ -28,6 +28,18 @@ export const EVENT_TICKETS = gql`
   ${EVENT_TICKET_FIELDS}
 `;
 
+export const EVENT_TICKETS_TABLE = gql`
+  query EventTicketsTable($query: TableQueryInput) {
+    eventTicketsTable(query: $query) {
+      total
+      rows {
+        ...EventTicketFields
+      }
+    }
+  }
+  ${EVENT_TICKET_FIELDS}
+`;
+
 export const EVENT_TICKET_PDF = gql`
   query EventTicketPdf($id: ID!) {
     eventTicketPdfBase64(ticket_doc_id: $id)

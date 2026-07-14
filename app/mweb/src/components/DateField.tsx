@@ -34,14 +34,14 @@ export default function DateField({
   onBlur,
 }: Readonly<Props>) {
   const dateValue = value ? new Date(value) : null;
-  const valid = dateValue && !isNaN(dateValue.getTime()) ? dateValue : null;
+  const valid = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue : null;
 
   return (
     <DatePicker
       label={label}
       value={valid}
       onChange={(d) => {
-        if (!d || isNaN(d.getTime())) return onChange('');
+        if (!d || Number.isNaN(d.getTime())) return onChange('');
         const yyyy = d.getFullYear();
         const mm = String(d.getMonth() + 1).padStart(2, '0');
         const dd = String(d.getDate()).padStart(2, '0');

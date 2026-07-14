@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { CouponModel, type ICoupon } from './coupon.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
@@ -26,6 +27,30 @@ const toPub = (c: ICoupon) => ({
 });
 
 const toDate = (v?: string | null) => (v ? new Date(v) : null);
+
+/** Allowlists for the shared table engine (couponsTable / couponsForPodTable — DUNCIT TABLE CONTRACT v1). */
+const COUPON_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['code', 'description'],
+  sortFields: {
+    code: 'code',
+    discount_pct: 'discount_pct',
+    valid_from: 'valid_from',
+    valid_until: 'valid_until',
+    used_count: 'used_count',
+    is_active: 'is_active',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    scope: { type: 'enum' },
+    pod_id: { type: 'string' },
+    is_active: { type: 'boolean' },
+    discount_pct: { type: 'number' },
+    valid_from: { type: 'date' },
+    valid_until: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 function buildDoc(input: any) {
   return {
@@ -124,6 +149,30 @@ export const couponService = {
     }
     const docs = await CouponModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the couponsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<ICoupon>(
+      CouponModel,
+      {},
+      input,
+      COUPON_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
+  /** Table sibling of couponsForPod — same $or scope (this pod + GLOBAL) as a
+   * baseFilter, so client filters can never widen it to other pods' coupons. */
+  async tableForPod(podId: string, input?: TableQueryInput | null) {
+    const base = { $or: [{ pod_id: new Types.ObjectId(podId) }, { scope: 'GLOBAL' }] };
+    const { docs, total, page, page_size } = await runTableQuery<ICoupon>(
+      CouponModel,
+      base,
+      input,
+      COUPON_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

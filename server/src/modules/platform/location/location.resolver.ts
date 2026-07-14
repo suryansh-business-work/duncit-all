@@ -38,6 +38,8 @@ export const locationResolvers = {
   },
   Query: {
     locations: async (_p: unknown, args: { filter?: any }) => locationService.list(args.filter),
+    locationsTable: async (_p: unknown, args: { query?: any }) =>
+      locationService.table(args.query),
     location: async (_p: unknown, args: { location_doc_id: string }) =>
       locationService.getById(args.location_doc_id),
   },

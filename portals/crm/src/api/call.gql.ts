@@ -8,6 +8,16 @@ export const CRM_CALL_PROMPTS = gql`
   }
 `;
 
+/** Server-side table page (search/sort/filter/paginate) for the Static Content table. */
+export const CRM_CALL_PROMPTS_TABLE = gql`
+  query CrmCallPromptsTable($query: TableQueryInput) {
+    crmCallPromptsTable(query: $query) {
+      total
+      rows { ${CALL_PROMPT_FIELDS} }
+    }
+  }
+`;
+
 export const CRM_CALL_PROMPT = gql`
   query CrmCallPrompt($id: ID!) {
     crmCallPrompt(id: $id) { ${CALL_PROMPT_FIELDS} }

@@ -6,6 +6,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 // % of spots that must be filled before a backout triggers a refund.
 const REFUND_THRESHOLD_PCT = 80;
@@ -75,6 +76,30 @@ const toBackoutRefund = (m: IPodMember, user: any, payment: any) => ({
   refund_threshold_pct: REFUND_THRESHOLD_PCT,
   created_at: m.created_at?.toISOString?.() ?? '',
 });
+
+/** Allowlists for the shared table engine (backoutRefundRequestsTable — DUNCIT
+ * TABLE CONTRACT v1). Member name/email and payment fields are HYDRATED (not
+ * stored on PodMember), so there are no db-searchable text fields — search is
+ * intentionally a no-op; `status` is not filterable either, so a client can
+ * never widen past the BACKED_OUT baseFilter. */
+const BACKOUT_REFUND_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: [],
+  sortFields: {
+    backed_out_at: 'backed_out_at',
+    joined_at: 'joined_at',
+    refund_status: 'refund_status',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    refund_status: { type: 'enum' },
+    source: { type: 'enum' },
+    pod_id: { type: 'string' },
+    user_id: { type: 'string' },
+    backed_out_at: { type: 'date' },
+    joined_at: { type: 'date' },
+  },
+  defaultSort: { backed_out_at: -1 },
+};
 
 // Batch-load users + payments to avoid an N+1 across the whole backed-out list.
 async function hydrateBackouts(docs: IPodMember[]) {
@@ -395,6 +420,21 @@ export const podMemberService = {
   async listBackoutRefunds() {
     const docs = await PodMemberModel.find({ status: 'BACKED_OUT' }).sort({ backed_out_at: -1 });
     return hydrateBackouts(docs);
+  },
+
+  /** Server-side table page (filter/sort/paginate) for the
+   * backoutRefundRequestsTable query — same hydrated rows as
+   * listBackoutRefunds. The BACKED_OUT scope lives in the baseFilter
+   * ($and-merged by runTableQuery), so client filters can never surface a
+   * JOINED membership. */
+  async tableBackoutRefunds(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPodMember>(
+      PodMemberModel,
+      { status: 'BACKED_OUT' },
+      input,
+      BACKOUT_REFUND_TABLE_CONFIG
+    );
+    return { rows: await hydrateBackouts(docs), total, page, page_size };
   },
 
   /** Finance: one backed-out member by membership id (null once rejoined). */

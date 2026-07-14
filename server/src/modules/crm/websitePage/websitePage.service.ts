@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { WebsitePageModel } from './websitePage.model';
 import { VenueLeadModel, HostLeadModel } from '@modules/crm/crm/crm.model';
 import { discoverUrls, extractContent, fetchText, normaliseSite } from './websitePage.scrape';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 export type WebsiteEntity = 'VENUE_LEAD' | 'HOST_LEAD';
 
@@ -31,6 +32,28 @@ const pub = (doc: any) => {
 
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
+/** Allowlists for the shared table engine (crmWebsitePagesTable — DUNCIT TABLE CONTRACT v1). */
+const WEBSITE_PAGE_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['url', 'title'],
+  sortFields: {
+    url: 'url',
+    title: 'title',
+    status: 'status',
+    http_status: 'http_status',
+    content_chars: 'content_chars',
+    fetched_at: 'fetched_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    http_status: { type: 'number' },
+    content_chars: { type: 'number' },
+    fetched_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: 1 },
+};
+
 /** Read the `website` field off the owning lead (Venue or Host). */
 async function leadWebsite(entity: WebsiteEntity, leadId: string): Promise<string | null> {
   const Model: any = entity === 'HOST_LEAD' ? HostLeadModel : VenueLeadModel;
@@ -45,6 +68,21 @@ export const websitePageService = {
       created_at: 1,
     });
     return docs.map(pub);
+  },
+
+  /**
+   * Server-side table page for the crmWebsitePagesTable query. The
+   * (entity_type, lead_id) scope goes through runTableQuery's baseFilter
+   * ($and-merged) so client filters can never reach another lead's pages.
+   */
+  async table(entity: WebsiteEntity, leadId: string, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      WebsitePageModel,
+      { entity_type: entity, lead_id: oid(leadId) },
+      input,
+      WEBSITE_PAGE_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   /**

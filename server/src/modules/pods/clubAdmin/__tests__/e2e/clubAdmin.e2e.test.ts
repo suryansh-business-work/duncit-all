@@ -93,4 +93,50 @@ describe('clubAdmin e2e', () => {
       )
     ).rejects.toThrow(/do not administer/i);
   });
+
+  it('serves clubAdminDashboardTable scoped to the caller and requires auth', async () => {
+    const admin = new Types.ObjectId().toString();
+    const alpha = await seedClub([admin], 'Alpha Club');
+    await seedClub([admin], 'Beta Club');
+    await seedClub([new Types.ObjectId().toString()], 'Other Club');
+    await seedPod(alpha._id);
+
+    type Page = {
+      clubAdminDashboardTable: {
+        rows: { club_name: string; total_pods: number }[];
+        total: number;
+        page: number;
+        page_size: number;
+      };
+    };
+    const TABLE = gql`
+      query ($query: TableQueryInput) {
+        clubAdminDashboardTable(query: $query) {
+          rows {
+            club_name
+            total_pods
+          }
+          total
+          page
+          page_size
+        }
+      }
+    `;
+
+    const client = server.client(signToken({ id: admin, roles: ['CLUB_ADMIN'] }));
+    const all = await client.request<Page>(TABLE);
+    expect(all.clubAdminDashboardTable.total).toBe(2); // never the other admin's club
+    expect(all.clubAdminDashboardTable.rows.map((r) => r.club_name)).toEqual([
+      'Alpha Club',
+      'Beta Club',
+    ]);
+    expect(all.clubAdminDashboardTable.rows[0].total_pods).toBe(1);
+    expect(all.clubAdminDashboardTable.page).toBe(1);
+    expect(all.clubAdminDashboardTable.page_size).toBe(25);
+
+    const searched = await client.request<Page>(TABLE, { query: { search: 'beta' } });
+    expect(searched.clubAdminDashboardTable.rows.map((r) => r.club_name)).toEqual(['Beta Club']);
+
+    await expect(server.client().request(TABLE)).rejects.toThrow();
+  });
 });

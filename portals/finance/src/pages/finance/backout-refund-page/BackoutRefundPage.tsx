@@ -1,21 +1,27 @@
-import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { parseApiError } from '../../../utils/parseApiError';
 import BackoutRefundTable from './BackoutRefundTable';
 import RefundBreakupDialog from './RefundBreakupDialog';
-import { BACKOUT_REFUND_REQUESTS, type BackoutRefundRequest } from './queries';
+import {
+  BACKOUT_FINANCE_SETTINGS,
+  BACKOUT_REFUNDS_TABLE,
+  type BackoutRefundRequest,
+} from './queries';
 
-interface QueryData {
-  backoutRefundRequests: BackoutRefundRequest[];
+interface SettingsData {
   publicFinanceSettings: { currency_symbol: string; default_backout_deduction_pct: number };
 }
 
 export default function BackoutRefundPage() {
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery<QueryData>(BACKOUT_REFUND_REQUESTS, {
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
+  const { data, error } = useQuery<SettingsData>(BACKOUT_FINANCE_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
   const [toast, setToast] = useState<string | null>(null);
@@ -23,14 +29,31 @@ export default function BackoutRefundPage() {
 
   const sym = data?.publicFinanceSettings?.currency_symbol ?? '';
   const deductionPct = data?.publicFinanceSettings?.default_backout_deduction_pct ?? 0;
-  const rows = data?.backoutRefundRequests ?? [];
-  const showLoader = loading && rows.length === 0 && !error;
-  const showEmpty = !loading && rows.length === 0 && !error;
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data: page } = await client.query({
+        query: BACKOUT_REFUNDS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.backoutRefundRequestsTable.rows as BackoutRefundRequest[],
+        total: page.backoutRefundRequestsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const confirmRefund = () => {
     setRefundFor(null);
     setToast('Refund successful');
   };
+
+  const openDetail = useCallback(
+    (row: BackoutRefundRequest) => navigate(`/backout-refunds/${row.id}`),
+    [navigate],
+  );
 
   return (
     <Box>
@@ -45,18 +68,14 @@ export default function BackoutRefundPage() {
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{parseApiError(error)}</Alert>}
-      {showLoader && (
-        <Stack alignItems="center" sx={{ p: 4 }}><CircularProgress /></Stack>
-      )}
-      {showEmpty && <Alert severity="info">No backout refund requests yet.</Alert>}
-      {rows.length > 0 && (
-        <BackoutRefundTable
-          rows={rows}
-          sym={sym}
-          onRowClick={(row) => navigate(`/backout-refunds/${row.id}`)}
-          onRefund={(row) => setRefundFor(row)}
-        />
-      )}
+
+      <BackoutRefundTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        sym={sym}
+        onRowClick={openDetail}
+        onRefund={setRefundFor}
+      />
 
       <RefundBreakupDialog
         refundFor={refundFor}

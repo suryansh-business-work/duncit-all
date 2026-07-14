@@ -11,6 +11,7 @@ import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { generateTicketPdf } from '@services/ticket/ticket.pdf';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const newTicketCode = () =>
   `TKT-${Date.now().toString(36).toUpperCase().slice(-5)}${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
@@ -46,6 +47,33 @@ const toPub = (t: ITicket) => ({
   created_at: t.created_at.toISOString(),
   updated_at: t.updated_at.toISOString(),
 });
+
+/** Allowlists for the shared table engine (eventTicketsTable — DUNCIT TABLE
+ * CONTRACT v1). Search spans the same code/attendee/event fields as listAdmin.
+ * snapshot.pod_date_time is stored as an ISO string, so it sorts fine but is
+ * deliberately NOT a date filter. */
+const EVENT_TICKET_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['ticket_code', 'snapshot.user_name', 'snapshot.user_email', 'snapshot.pod_title'],
+  sortFields: {
+    ticket_code: 'ticket_code',
+    status: 'status',
+    pod_title: 'snapshot.pod_title',
+    pod_date_time: 'snapshot.pod_date_time',
+    user_name: 'snapshot.user_name',
+    user_email: 'snapshot.user_email',
+    checked_in_at: 'checked_in_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    pod_id: { type: 'string' },
+    user_id: { type: 'string' },
+    status: { type: 'enum' },
+    checked_in_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 const dateLabel = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString('en-IN', { dateStyle: 'full', timeStyle: 'short' }) : 'Date pending';
@@ -197,6 +225,18 @@ export const ticketService = {
     }
     const docs = await TicketModel.find(q).sort({ created_at: -1 }).limit(500);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the
+   * eventTicketsTable query — same rows as listAdmin, without its 500 cap. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<ITicket>(
+      TicketModel,
+      {},
+      input,
+      EVENT_TICKET_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   /** Decode + verify a scanned QR token without mutating. */

@@ -18,9 +18,18 @@ export interface ICategory extends Document {
   is_active: boolean;
   is_system: boolean;
   sort_order: number;
+  /** SUB level only: may a host invite co-hosts to a pod in this sub-category? */
+  allow_co_hosts: boolean;
+  /** SUB level only: how many co-hosts a single pod may carry (1-5). Only
+   * meaningful while allow_co_hosts is true. */
+  max_co_hosts: number;
   created_at: Date;
   updated_at: Date;
 }
+
+/** Bounds for ICategory.max_co_hosts — shared with the schema + validators. */
+export const MIN_CO_HOSTS = 1;
+export const MAX_CO_HOSTS = 5;
 
 const mediaSchema = new Schema<ICategoryMedia>(
   {
@@ -42,6 +51,15 @@ const categorySchema = new Schema<ICategory>(
     is_active: { type: Boolean, default: true },
     is_system: { type: Boolean, default: false },
     sort_order: { type: Number, default: 0 },
+    // Co-hosting is configured per SUB-category by an admin. Defaults keep every
+    // existing sub-category behaving exactly as before (no co-hosts).
+    allow_co_hosts: { type: Boolean, default: false },
+    max_co_hosts: {
+      type: Number,
+      default: MIN_CO_HOSTS,
+      min: MIN_CO_HOSTS,
+      max: MAX_CO_HOSTS,
+    },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -17,6 +17,16 @@ export const PARTNER_FAQS = gql`
   }
 `;
 
+/** Server-side table page over faqs — audience is pinned to PARTNERS in fetchRows. */
+export const PARTNER_FAQS_TABLE = gql`
+  query PartnerFaqsTable($query: TableQueryInput) {
+    faqsTable(query: $query) {
+      total
+      rows { ${PARTNER_FAQ_FIELDS} created_at }
+    }
+  }
+`;
+
 export const CREATE_PARTNER_FAQ = gql`
   mutation CreatePartnerFaq($input: CreateFaqInput!) {
     createFaq(input: $input) { id }

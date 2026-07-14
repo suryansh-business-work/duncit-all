@@ -49,6 +49,7 @@ import { rbacService } from '@modules/access/rbac/rbac.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 import { toPostalAddress } from '@utils/address';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
@@ -225,13 +226,58 @@ const contactActionToPublic = (doc: any) => ({
   updated_at: doc.updated_at?.toISOString?.() ?? '',
 });
 
+/** Allowlists for the shared table engine (usersTable — DUNCIT TABLE CONTRACT v1).
+ * Storage is nested (profile/auth/metadata), so every API field maps to its db path. */
+const USER_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['profile.first_name', 'profile.last_name', 'auth.email', 'auth.phone.number'],
+  sortFields: {
+    first_name: 'profile.first_name',
+    last_name: 'profile.last_name',
+    email: 'auth.email',
+    city: 'profile.city',
+    zone: 'profile.zone',
+    status: 'metadata.status',
+    last_login_at: 'auth.last_login_at',
+    created_at: 'metadata.created_at',
+  },
+  filterFields: {
+    role: { path: 'metadata.role_keys', type: 'string' },
+    status: { path: 'metadata.status', type: 'enum' },
+    city: { path: 'profile.city', type: 'string' },
+    zone: { path: 'profile.zone', type: 'string' },
+    last_login_provider: { path: 'auth.last_login_provider', type: 'enum' },
+    last_login_at: { path: 'auth.last_login_at', type: 'date' },
+    created_at: { path: 'metadata.created_at', type: 'date' },
+  },
+  defaultSort: { 'metadata.created_at': -1 },
+};
+
+/** Allowlists for the shared table engine (userContactActionsTable). */
+const CONTACT_ACTION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['target', 'subject', 'notes'],
+  sortFields: {
+    type: 'type',
+    target: 'target',
+    status: 'status',
+    duration_seconds: 'duration_seconds',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    type: { type: 'enum' },
+    status: { type: 'string' },
+    duration_seconds: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 const escapeTwiml = (value: string) =>
   value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
+    .replaceAll(/&/g, '&amp;')
+    .replaceAll(/</g, '&lt;')
+    .replaceAll(/>/g, '&gt;')
+    .replaceAll(/"/g, '&quot;')
+    .replaceAll(/'/g, '&apos;');
 
 async function startTwilioRecordedBridge(actionId: string, target: string) {
   const [accountSid, authToken, fromNumber, agentNumber, webhookBaseUrl, recordingEnabled] =
@@ -1724,6 +1770,30 @@ export const userService = {
     }
     const all = await UserModel.find(query).sort({ 'metadata.created_at': -1 });
     return Promise.all(all.map((u) => toPublic(u)));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the usersTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      UserModel,
+      {},
+      input,
+      USER_TABLE_CONFIG
+    );
+    return { rows: await Promise.all(docs.map((u) => toPublic(u))), total, page, page_size };
+  },
+
+  /** Server-side table page for the userContactActionsTable query. The user_id
+   * baseFilter is $and-merged by the engine, so client filters can never widen
+   * the page beyond the requested user's own call/email log. */
+  async contactActionsTable(user_id: string, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      UserContactActionModel,
+      { user_id: new Types.ObjectId(user_id) },
+      input,
+      CONTACT_ACTION_TABLE_CONFIG
+    );
+    return { rows: docs.map(contactActionToPublic), total, page, page_size };
   },
 
   async create(input: CreateUserDTO) {

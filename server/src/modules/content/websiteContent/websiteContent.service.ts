@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { WebsiteContentModel, type IWebsiteContent, type WebsitePageType } from './websiteContent.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const slugify = (value: string) =>
   value
@@ -51,6 +52,29 @@ function normalizeInput(input: any) {
   };
 }
 
+/** Allowlists for the shared table engine (websiteContentTable — DUNCIT TABLE CONTRACT v1). */
+const WEBSITE_CONTENT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'slug', 'category'],
+  sortFields: {
+    title: 'title',
+    slug: 'slug',
+    category: 'category',
+    published_at: 'published_at',
+    sort_order: 'sort_order',
+    is_published: 'is_published',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    type: { type: 'enum' },
+    category: { type: 'string' },
+    is_published: { type: 'boolean' },
+    published_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { sort_order: 1, published_at: -1, created_at: -1 },
+};
+
 const blogSeed = [
   {
     type: 'BLOG',
@@ -97,6 +121,17 @@ export const websiteContentService = {
     if (publicOnly) query.is_published = true;
     const docs = await WebsiteContentModel.find(query).sort({ sort_order: 1, published_at: -1, created_at: -1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the websiteContentTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IWebsiteContent>(
+      WebsiteContentModel,
+      {},
+      input,
+      WEBSITE_CONTENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async create(input: any) {

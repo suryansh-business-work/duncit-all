@@ -16,27 +16,16 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import BrandProductsTable from './BrandProductsTable';
 import BrandPickupPanel from './BrandPickupPanel';
-import { MARKETPLACE_BRANDS, MARKETPLACE_BRAND_PRODUCTS } from './queries';
-
-const BRAND_STATUS_COLOR: Record<string, 'default' | 'success' | 'warning' | 'error'> = {
-  APPROVED: 'success',
-  SUBMITTED: 'warning',
-  DRAFT: 'default',
-  REJECTED: 'error',
-};
+import { BRAND_STATUS_COLOR } from './brandStatus';
+import { MARKETPLACE_BRANDS } from './queries';
 
 export default function EcommBrandDetailPage() {
   const navigate = useNavigate();
   const { brandId = '' } = useParams<{ brandId: string }>();
 
   const brandsQuery = useQuery(MARKETPLACE_BRANDS, { fetchPolicy: 'cache-and-network' });
-  const productsQuery = useQuery(MARKETPLACE_BRAND_PRODUCTS, {
-    variables: { brand_doc_id: brandId },
-    fetchPolicy: 'cache-and-network',
-  });
 
   const brand = (brandsQuery.data?.marketplaceBrands ?? []).find((item: any) => item.id === brandId);
-  const products = productsQuery.data?.marketplaceBrandProducts ?? [];
 
   if (brandsQuery.loading && !brandsQuery.data) {
     return (
@@ -90,11 +79,7 @@ export default function EcommBrandDetailPage() {
               <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
                 Approved products
               </Typography>
-              <BrandProductsTable
-                products={products}
-                loading={productsQuery.loading}
-                error={productsQuery.error?.message}
-              />
+              <BrandProductsTable brandId={brandId} />
             </CardContent>
           </Card>
 

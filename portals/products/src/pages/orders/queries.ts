@@ -85,6 +85,56 @@ export const PRODUCT_ORDERS = gql`
   }
 `;
 
+/** Row shape consumed by the product orders table columns. */
+export interface ProductOrderRow {
+  id: string;
+  order_no: string;
+  buyer_name?: string | null;
+  buyer_email?: string | null;
+  pod?: { id: string; pod_title: string } | null;
+  currency_symbol: string;
+  total: number;
+  fulfilment_method: string;
+  fulfilment_status: string;
+  shiprocket?: { awb?: string | null } | null;
+  created_at?: string | null;
+}
+
+/** Same selection as PRODUCT_ORDERS rows — feeds the server-paged table. */
+const PRODUCT_ORDER_ROW_FIELDS = gql`
+  fragment ProductOrderRowFields on ProductOrder {
+    id
+    order_no
+    buyer_name
+    buyer_email
+    pod {
+      id
+      pod_title
+    }
+    currency_symbol
+    total
+    fulfilment_method
+    fulfilment_status
+    shiprocket {
+      awb
+      courier_name
+    }
+    created_at
+  }
+`;
+
+export const PRODUCT_ORDERS_TABLE = gql`
+  query ProductOrdersTable($query: TableQueryInput) {
+    productOrdersTable(query: $query) {
+      total
+      rows {
+        ...ProductOrderRowFields
+      }
+    }
+  }
+  ${PRODUCT_ORDER_ROW_FIELDS}
+`;
+
 export const PRODUCT_ORDER = gql`
   query ProductOrder($id: ID!) {
     productOrder(id: $id) {

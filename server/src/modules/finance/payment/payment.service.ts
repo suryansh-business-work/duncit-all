@@ -15,6 +15,7 @@ import {
 } from './razorpay.gateway';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -62,6 +63,38 @@ const toPub = (p: IPayment) => ({
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
 });
+
+/** Allowlists for the shared table engine (paymentsTable — DUNCIT TABLE CONTRACT v1). */
+const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['payment_id', 'invoice_no', 'user_name', 'user_email'],
+  sortFields: {
+    payment_id: 'payment_id',
+    invoice_no: 'invoice_no',
+    user_name: 'user_name',
+    user_email: 'user_email',
+    description: 'description',
+    subtotal: 'subtotal',
+    platform_fee_amount: 'platform_fee_amount',
+    gst_amount: 'gst_amount',
+    total: 'total',
+    status: 'status',
+    paid_at: 'paid_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    target_type: { type: 'enum' },
+    gateway: { type: 'string' },
+    user_id: { type: 'string' },
+    pod_id: { type: 'string' },
+    coupon_code: { type: 'string' },
+    subtotal: { type: 'number' },
+    total: { type: 'number' },
+    paid_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 export interface QuoteBreakup {
   subtotal: number;
@@ -430,6 +463,17 @@ export const paymentService = {
     }
     const docs = await PaymentModel.find(q).sort({ created_at: -1 }).limit(limit);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the paymentsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPayment>(
+      PaymentModel,
+      {},
+      input,
+      PAYMENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

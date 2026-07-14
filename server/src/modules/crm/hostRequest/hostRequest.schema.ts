@@ -49,11 +49,20 @@ export const hostRequestTypeDefs = /* GraphQL */ `
     answers: [HostRequestSurveyAnswer!]
   }
 
+  "Server-side table page for the shared table engine (hostRequestsTable)."
+  type HostRequestTablePage {
+    rows: [HostRequest!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     myHostRequest: HostRequest
     myHostRequests: [HostRequest!]!
     myHostTakenCategoryIds: [ID!]!
     hostRequests(status: HostRequestStatus): [HostRequest!]!
+    hostRequestsTable(query: TableQueryInput): HostRequestTablePage!
     hostRequest(id: ID!): HostRequest
   }
 

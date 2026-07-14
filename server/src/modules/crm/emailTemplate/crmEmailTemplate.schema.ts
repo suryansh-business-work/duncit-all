@@ -71,6 +71,14 @@ export const crmEmailTemplateTypeDefs = gql`
     is_active: Boolean
   }
 
+  "Server-side table page for the shared table engine (crmEmailTemplatesTable)."
+  type CrmEmailTemplateTablePage {
+    rows: [CrmEmailTemplate!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type CrmEmailTemplateRender {
     html: String!
     errors: [String!]!
@@ -84,6 +92,7 @@ export const crmEmailTemplateTypeDefs = gql`
 
   extend type Query {
     crmEmailTemplates: [CrmEmailTemplate!]!
+    crmEmailTemplatesTable(query: TableQueryInput): CrmEmailTemplateTablePage!
     crmEmailTemplate(template_id: ID!): CrmEmailTemplate
     "Render MJML with sample vars for the editor preview (CRM store)."
     renderCrmEmailTemplate(mjml: String!, vars: String): CrmEmailTemplateRender!

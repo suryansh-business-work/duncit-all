@@ -1,114 +1,138 @@
-import {
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Link,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { useMemo, type MutableRefObject, type ReactNode } from 'react';
+import { Chip, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { format } from 'date-fns';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { portalForRole } from '../../constants/portalAccess';
+import type { RoleRow } from './queries';
 
 interface Props {
-  loading: boolean;
-  roles: any[];
-  onEdit: (r: any) => void;
-  onDelete: (r: any) => void;
+  fetchRows: TableFetch<RoleRow>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  toolbarActions?: ReactNode;
+  onEdit: (r: RoleRow) => void;
+  onDelete: (r: RoleRow) => void;
 }
 
-export default function RolesTable({ loading, roles, onEdit, onDelete }: Readonly<Props>) {
+const getRoleRowId = (r: RoleRow) => r.id;
+
+const renderKey = (r: RoleRow) => (
+  <Typography variant="body2" fontWeight={600} component="span">
+    {r.key}
+  </Typography>
+);
+
+const renderPortal = (r: RoleRow) => {
+  const portal = portalForRole(r.key);
+  if (!portal) {
+    return (
+      <Typography variant="body2" color="text.secondary" component="span">
+        —
+      </Typography>
+    );
+  }
   return (
-    <Card>
-      <CardContent sx={{ p: 0 }}>
-        {loading ? (
-          <Stack alignItems="center" sx={{ p: 4 }}>
-            <CircularProgress />
-          </Stack>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Key</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Portal</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {roles.map((r: any) => (
-                <TableRow key={r.id} hover>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={600}>
-                      {r.key}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{r.name}</TableCell>
-                  <TableCell>
-                    {portalForRole(r.key) ? (
-                      <Link
-                        href={portalForRole(r.key)!.url}
-                        target="_blank"
-                        rel="noopener"
-                        underline="hover"
-                        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 13 }}
-                      >
-                        {portalForRole(r.key)!.portalName}
-                        <OpenInNewIcon sx={{ fontSize: 14 }} />
-                      </Link>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        —
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ maxWidth: 280 }}>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {r.description || '—'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {r.is_system ? (
-                      <Chip size="small" label="System" color="info" />
-                    ) : (
-                      <Chip size="small" label="Custom" />
-                    )}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton size="small" onClick={() => onEdit(r)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title={r.is_system ? 'System (locked)' : 'Delete'}>
-                      <span>
-                        <IconButton
-                          size="small"
-                          disabled={r.is_system}
-                          onClick={() => onDelete(r)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+    <Link
+      href={portal.url}
+      target="_blank"
+      rel="noopener"
+      underline="hover"
+      sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 13 }}
+    >
+      {portal.portalName}
+      <OpenInNewIcon sx={{ fontSize: 14 }} />
+    </Link>
+  );
+};
+
+const portalValue = (r: RoleRow) => portalForRole(r.key)?.portalName ?? '—';
+
+const renderType = (r: RoleRow) =>
+  r.is_system ? (
+    <Chip size="small" label="System" color="info" />
+  ) : (
+    <Chip size="small" label="Custom" />
+  );
+
+const createdValue = (r: RoleRow) =>
+  r.created_at ? format(new Date(r.created_at), 'd MMM yyyy') : '—';
+
+export default function RolesTable({
+  fetchRows,
+  refetchRef,
+  toolbarActions,
+  onEdit,
+  onDelete,
+}: Readonly<Props>) {
+  const columns = useMemo<DuncitColumn<RoleRow>[]>(() => {
+    const renderActions = (r: RoleRow) => (
+      <Stack direction="row" justifyContent="flex-end" component="span">
+        <Tooltip title="Edit">
+          <IconButton size="small" onClick={() => onEdit(r)}>
+            <EditIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={r.is_system ? 'System (locked)' : 'Delete'}>
+          <span>
+            <IconButton size="small" disabled={r.is_system} onClick={() => onDelete(r)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
+    );
+    return [
+      { field: 'key', headerName: 'Key', minWidth: 180, cellRenderer: renderKey, valueGetter: (r) => r.key },
+      { field: 'name', headerName: 'Name', flex: 1, minWidth: 160 },
+      {
+        field: 'portal',
+        headerName: 'Portal',
+        sortable: false,
+        minWidth: 160,
+        cellRenderer: renderPortal,
+        valueGetter: portalValue,
+      },
+      {
+        field: 'description',
+        headerName: 'Description',
+        sortable: false,
+        flex: 1,
+        minWidth: 200,
+        valueGetter: (r) => r.description || '—',
+      },
+      {
+        field: 'is_system',
+        headerName: 'Type',
+        filter: { type: 'boolean' },
+        width: 110,
+        cellRenderer: renderType,
+        valueGetter: (r) => (r.is_system ? 'System' : 'Custom'),
+      },
+      {
+        field: 'created_at',
+        headerName: 'Created',
+        filter: { type: 'date' },
+        hide: true,
+        width: 130,
+        valueGetter: createdValue,
+      },
+      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+    ];
+  }, [onEdit, onDelete]);
+
+  return (
+    <DuncitTable<RoleRow>
+      tableId="admin-roles"
+      columns={columns}
+      fetchRows={fetchRows}
+      getRowId={getRoleRowId}
+      toolbarActions={toolbarActions}
+      emptyText='No roles yet. Click "New Role" to create the first one.'
+      defaultSort={{ field: 'key', dir: 'asc' }}
+      searchPlaceholder="Search key, name or description"
+      refetchRef={refetchRef}
+    />
   );
 }

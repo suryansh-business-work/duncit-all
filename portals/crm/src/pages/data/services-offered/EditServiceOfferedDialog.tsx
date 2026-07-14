@@ -24,10 +24,11 @@ import ServiceTargetSwitches from './ServiceTargetSwitches';
 interface Props {
   service: CrmServiceOffered | null;
   onClose: () => void;
+  onSaved?: () => void;
 }
 
 /** Edit a single Service Offered title / active state. Hierarchy stays fixed. */
-export default function EditServiceOfferedDialog({ service, onClose }: Readonly<Props>) {
+export default function EditServiceOfferedDialog({ service, onClose, onSaved }: Readonly<Props>) {
   const [title, setTitle] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [venue, setVenue] = useState(true);
@@ -65,6 +66,7 @@ export default function EditServiceOfferedDialog({ service, onClose }: Readonly<
           input: { title: trimmed, is_active: isActive, applies_to_venue: venue, applies_to_host: host },
         },
       });
+      onSaved?.();
       onClose();
     } catch (err) {
       setFormError(parseApiError(err));

@@ -10,6 +10,14 @@ export const policyTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (policiesTable)."
+  type PolicyTablePage {
+    rows: [Policy!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input PolicyFilterInput {
     is_active: Boolean
     search: String
@@ -33,6 +41,7 @@ export const policyTypeDefs = /* GraphQL */ `
 
   extend type Query {
     policies(filter: PolicyFilterInput): [Policy!]!
+    policiesTable(query: TableQueryInput): PolicyTablePage!
     policy(policy_doc_id: ID!): Policy
     policyBySlug(slug: String!): Policy
     publicPolicies: [Policy!]!

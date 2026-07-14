@@ -1,5 +1,10 @@
 import { GraphQLError } from 'graphql';
-import { CategoryModel, type CategoryLevel } from './category.model';
+import {
+  CategoryModel,
+  MAX_CO_HOSTS,
+  MIN_CO_HOSTS,
+  type CategoryLevel,
+} from './category.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { FaqModel } from '@modules/support/faq/faq.model';
@@ -28,6 +33,8 @@ const toPub = (d: any) => {
     is_active: !!d.is_active,
     is_system: !!d.is_system,
     sort_order: d.sort_order ?? 0,
+    allow_co_hosts: !!d.allow_co_hosts,
+    max_co_hosts: d.max_co_hosts ?? MIN_CO_HOSTS,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -35,6 +42,33 @@ const toPub = (d: any) => {
 
 function notFound(): never {
   throw new GraphQLError('Category not found', { extensions: { code: 'NOT_FOUND' } });
+}
+
+/**
+ * Co-hosting is configured on the SUB level only, and the cap is bounded.
+ * Rejecting (rather than silently clamping) keeps the admin honest about what
+ * they saved.
+ */
+function validateCoHosts(
+  level: CategoryLevel,
+  input: { allow_co_hosts?: boolean; max_co_hosts?: number }
+) {
+  const touchesCoHosts = input.allow_co_hosts !== undefined || input.max_co_hosts !== undefined;
+  if (touchesCoHosts && level !== 'SUB') {
+    throw new GraphQLError('Co-hosting can only be configured on a sub-category', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (
+    input.max_co_hosts !== undefined &&
+    (!Number.isInteger(input.max_co_hosts) ||
+      input.max_co_hosts < MIN_CO_HOSTS ||
+      input.max_co_hosts > MAX_CO_HOSTS)
+  ) {
+    throw new GraphQLError(`max_co_hosts must be between ${MIN_CO_HOSTS} and ${MAX_CO_HOSTS}`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
 }
 
 function validateParent(level: CategoryLevel, parent: any) {
@@ -91,10 +125,13 @@ export const categoryService = {
     description?: string;
     media?: { url: string; type?: 'IMAGE' | 'VIDEO' }[];
     sort_order?: number;
+    allow_co_hosts?: boolean;
+    max_co_hosts?: number;
   }) {
     const parent = input.parent_id ? await CategoryModel.findById(input.parent_id) : null;
     if (input.parent_id && !parent) notFound();
     validateParent(input.level, parent);
+    validateCoHosts(input.level, input);
 
     const slug = slugify(input.name);
     const dupe = await CategoryModel.findOne({ parent_id: input.parent_id ?? null, slug });
@@ -113,6 +150,8 @@ export const categoryService = {
       description: input.description ?? '',
       media: input.media ?? [],
       sort_order: input.sort_order ?? 0,
+      allow_co_hosts: input.allow_co_hosts ?? false,
+      max_co_hosts: input.max_co_hosts ?? MIN_CO_HOSTS,
     });
     return toPub(doc);
   },
@@ -126,10 +165,13 @@ export const categoryService = {
       media?: { url: string; type?: 'IMAGE' | 'VIDEO' }[];
       sort_order?: number;
       is_active?: boolean;
+      allow_co_hosts?: boolean;
+      max_co_hosts?: number;
     }
   ) {
     const doc = await CategoryModel.findById(id);
     if (!doc) notFound();
+    validateCoHosts(doc.level, input);
     if (input.name !== undefined) {
       doc.name = input.name.trim();
       doc.slug = slugify(input.name);
@@ -139,6 +181,8 @@ export const categoryService = {
     if (input.media !== undefined) doc.media = input.media as any;
     if (input.sort_order !== undefined) doc.sort_order = input.sort_order;
     if (input.is_active !== undefined) doc.is_active = input.is_active;
+    if (input.allow_co_hosts !== undefined) doc.allow_co_hosts = input.allow_co_hosts;
+    if (input.max_co_hosts !== undefined) doc.max_co_hosts = input.max_co_hosts;
     await doc.save();
     return toPub(doc);
   },

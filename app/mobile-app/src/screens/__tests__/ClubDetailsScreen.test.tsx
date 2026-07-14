@@ -30,7 +30,22 @@ const club = {
   club_moments: [],
   club_whats_app_community_link: null,
   club_whats_app_group_link: null,
-  matched_venues_count: 0,
+  matched_venues_count: 1,
+  matched_venues: [
+    {
+      id: 'v1',
+      venue_name: 'Turf Arena',
+      address_line1: 'Plot 4',
+      address_line2: null,
+      locality: 'Andheri',
+      city: 'Mumbai',
+      state: 'Maharashtra',
+      country: 'India',
+      postal_code: '400053',
+      lat: 19.12,
+      lng: 72.85,
+    },
+  ],
   followers_count: 42,
   category_id: null,
   who_we_are: [],
@@ -87,9 +102,18 @@ describe('ClubDetailsScreen', () => {
     expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
       'Sports › Racquet › Badminton',
     );
-    // Followers count is shown in the stats row.
-    expect(screen.getByText('42')).toBeOnTheScreen();
-    expect(screen.getByText('followers')).toBeOnTheScreen();
+    // Followers count is the single "total members" truth — the dedicated card
+    // and the stats row both show it, so the number appears twice.
+    expect(screen.getAllByText('42')).toHaveLength(2);
+    expect(screen.getByTestId('club-total-members')).toBeOnTheScreen();
+    expect(screen.getByText('Total Members')).toBeOnTheScreen();
+    expect(screen.getByText('total members')).toBeOnTheScreen();
+    // The attendee rail keeps its own, distinct heading.
+    expect(screen.getByText('Pod Members')).toBeOnTheScreen();
+    // The club's linked venues render, and open the venue screen.
+    expect(screen.getByTestId('club-venues')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('club-venue-open-v1'));
+    expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
     fireEvent.press(screen.getByTestId('club-follow'));
     expect(mockClubToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));

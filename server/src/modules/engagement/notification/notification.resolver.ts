@@ -10,6 +10,10 @@ export const notificationResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return notificationService.list(args.limit ?? 100);
     },
+    notificationsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return notificationService.table(args.query);
+    },
     myNotifications: async (
       _p: unknown,
       args: { limit?: number; unreadOnly?: boolean },

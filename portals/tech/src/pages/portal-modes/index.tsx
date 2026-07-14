@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import ConstructionIcon from '@mui/icons-material/Construction';
-import { PORTAL_MODES, SET_PORTAL_MODE, type PortalModeRow, type PortalModeState } from './queries';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { PORTAL_MODES_TABLE, SET_PORTAL_MODE, type PortalModeRow, type PortalModeState } from './queries';
 import PortalModesTable from './PortalModesTable';
 import { notify } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
@@ -16,12 +17,22 @@ const MODE_VERB: Record<PortalModeState, string> = {
 
 export default function PortalModesPage() {
   const confirm = useConfirm();
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const { data, loading, refetch } = useQuery<{ portalModes: PortalModeRow[] }>(PORTAL_MODES, {
-    fetchPolicy: 'cache-and-network',
-  });
   const [setModeMut] = useMutation(SET_PORTAL_MODE);
-  const rows = data?.portalModes ?? [];
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: PORTAL_MODES_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.portalModesTable.rows as PortalModeRow[], total: data.portalModesTable.total as number };
+    },
+    [client]
+  );
 
   const handleChange = async (row: PortalModeRow, mode: PortalModeState) => {
     if (mode !== 'LIVE') {
@@ -39,7 +50,7 @@ export default function PortalModesPage() {
     try {
       await setModeMut({ variables: { key: row.key, mode } });
       notify(`${row.name} → ${mode.toLowerCase()}`, 'success');
-      await refetch();
+      refetchRef.current?.();
     } catch (err) {
       notify(parseApiError(err), 'error');
     } finally {
@@ -65,15 +76,7 @@ export default function PortalModesPage() {
         returning to Live.
       </Alert>
 
-      <Card>
-        <CardContent>
-          {loading && !rows.length ? (
-            <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={28} /></Box>
-          ) : (
-            <PortalModesTable rows={rows} busyKey={busyKey} onChange={handleChange} />
-          )}
-        </CardContent>
-      </Card>
+      <PortalModesTable fetchRows={fetchRows} refetchRef={refetchRef} busyKey={busyKey} onChange={handleChange} />
     </Stack>
   );
 }

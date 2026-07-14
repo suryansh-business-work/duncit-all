@@ -86,3 +86,55 @@ describe('productOrderService.createFromPayment', () => {
     expect(await productOrderService.createFromPayment(payment)).toEqual([]);
   });
 });
+
+describe('productOrderService.table', () => {
+  async function seedOrder(overrides: Record<string, any> = {}) {
+    return ProductOrderModel.create({
+      order_no: `ord_${++seq}`,
+      buyer_id: new Types.ObjectId(),
+      buyer_name: 'Buyer',
+      buyer_email: 'buyer@x.com',
+      payment_id: new Types.ObjectId(),
+      items_total: 100,
+      total: 100,
+      fulfilment_method: 'PICKUP',
+      ...overrides,
+    });
+  }
+
+  it('serves the productOrdersTable page with search, filter, sort and paging', async () => {
+    await seedOrder({ order_no: 'ord_alpha', buyer_name: 'Asha', total: 300, fulfilment_method: 'SHIP', fulfilment_status: 'AWAITING_SHIPMENT' });
+    await seedOrder({ order_no: 'ord_beta', buyer_name: 'Bela', total: 100 });
+    await seedOrder({ order_no: 'ord_gamma', buyer_name: 'Gita', total: 200 });
+
+    // Plain envelope with the clamp defaults.
+    const all = await productOrderService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans order_no and buyer fields.
+    const byNo = await productOrderService.table({ search: 'ord_beta' });
+    expect(byNo.rows.map((o) => o.order_no)).toEqual(['ord_beta']);
+    const byBuyer = await productOrderService.table({ search: 'gita' });
+    expect(byBuyer.rows.map((o) => o.buyer_name)).toEqual(['Gita']);
+
+    // Enum filter narrows.
+    const ship = await productOrderService.table({
+      filters: [{ field: 'fulfilment_method', op: 'eq', value: 'SHIP' }],
+    });
+    expect(ship.rows.map((o) => o.order_no)).toEqual(['ord_alpha']);
+    expect(ship.total).toBe(1);
+
+    // Allowlisted numeric sort.
+    const byTotal = await productOrderService.table({ sort_by: 'total', sort_dir: 'asc' });
+    expect(byTotal.rows.map((o) => o.total)).toEqual([100, 200, 300]);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await productOrderService.table({ page: 2, page_size: 1, sort_by: 'order_no', sort_dir: 'asc' });
+    expect(page2.rows.map((o) => o.order_no)).toEqual(['ord_beta']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+});

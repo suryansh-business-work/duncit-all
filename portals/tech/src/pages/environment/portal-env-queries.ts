@@ -13,6 +13,16 @@ export const PORTAL_LIST = gql`
   }
 `;
 
+/** Server-paged portal registry for the Portal Mapping table (same registry). */
+export const PORTAL_MODES_TABLE_FOR_ENV = gql`
+  query PortalModesTableForEnv($query: TableQueryInput) {
+    portalModesTable(query: $query) {
+      total
+      rows { key name kind }
+    }
+  }
+`;
+
 export interface PortalListItem {
   key: string;
   name: string;

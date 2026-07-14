@@ -7,6 +7,7 @@ const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
 export const sliderResolvers = {
   Query: {
     sliders: async (_p: unknown, args: { filter?: any }) => sliderService.list(args.filter),
+    slidersTable: async (_p: unknown, args: { query?: any }) => sliderService.table(args.query),
     slider: async (_p: unknown, args: { slider_doc_id: string }) =>
       sliderService.getById(args.slider_doc_id),
   },

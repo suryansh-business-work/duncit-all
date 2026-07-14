@@ -14,6 +14,14 @@ export const verificationResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return verificationService.listForUser(args.user_id);
     },
+    userVerificationsTable: (
+      _p: unknown,
+      args: { user_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return verificationService.tableForUser(args.user_id, args.query);
+    },
   },
   Mutation: {
     submitVerification: (

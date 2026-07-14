@@ -1,5 +1,7 @@
 import { gql } from '@apollo/client';
 
+// NOTE: no page imports this since the DuncitTable migration (kept per the
+// table contract — existing list queries are never removed by a migration).
 export const POLICIES = gql`
   query LegalPolicies($filter: PolicyFilterInput) {
     policies(filter: $filter) {
@@ -10,6 +12,24 @@ export const POLICIES = gql`
       is_active
       sort_order
       updated_at
+    }
+  }
+`;
+
+// Row selection keeps 'content': the edit dialog pre-fills from the row object.
+export const POLICIES_TABLE = gql`
+  query LegalPoliciesTable($query: TableQueryInput) {
+    policiesTable(query: $query) {
+      total
+      rows {
+        id
+        slug
+        title
+        content
+        is_active
+        sort_order
+        updated_at
+      }
     }
   }
 `;

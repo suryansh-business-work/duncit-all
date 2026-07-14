@@ -69,6 +69,14 @@ export const podMemberTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "Server-side table page for the shared table engine (backoutRefundRequestsTable)."
+  type BackoutRefundRequestTablePage {
+    rows: [BackoutRefundRequest!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     myPodMemberships(status: MembershipStatus): [PodMember!]!
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
@@ -76,6 +84,7 @@ export const podMemberTypeDefs = /* GraphQL */ `
     referralLookup(token: String!): PodMember
     "Finance-only: every currently backed-out member (rejoined members drop off)."
     backoutRefundRequests: [BackoutRefundRequest!]!
+    backoutRefundRequestsTable(query: TableQueryInput): BackoutRefundRequestTablePage!
     backoutRefundRequest(id: ID!): BackoutRefundRequest
   }
 

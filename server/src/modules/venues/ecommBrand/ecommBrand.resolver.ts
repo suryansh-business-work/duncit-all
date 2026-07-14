@@ -35,13 +35,23 @@ export const ecommBrandResolvers = {
   Query: {
     myEcommBrands: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       ecommBrandService.listMine(uid(ctx)),
+    myEcommBrandsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
+      ecommBrandService.myTable(uid(ctx), args.query),
     ecommBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.list({ status: args.status });
     },
+    ecommBrandsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.table(args.query);
+    },
     marketplaceBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return ecommBrandService.list({ status: args.status ?? 'APPROVED', activeOnly: true });
+    },
+    marketplaceBrandsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return ecommBrandService.marketplaceTable(args.query);
     },
     ecommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);

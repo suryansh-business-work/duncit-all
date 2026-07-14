@@ -124,6 +124,45 @@ describe('withdrawals', () => {
     expect((await walletService.getMyWallet(String(host._id))).balance).toBe(700);
   });
 
+  it('serves the withdrawalRequestsTable page with search, filter, sort and paging', async () => {
+    const a = await fund(2000);
+    const b = await fund(2000);
+    const c = await fund(2000);
+    await walletService.requestWithdrawal(String(a._id), { amount: 1200, payout_method: 'UPI', upi_id: 'alpha@upi' });
+    await walletService.requestWithdrawal(String(b._id), { amount: 400, payout_method: 'UPI', upi_id: 'beta@upi' });
+    const paid = await walletService.requestWithdrawal(String(c._id), { amount: 300, payout_method: 'UPI', upi_id: 'gamma@upi' });
+    await walletService.reviewWithdrawal(paid.id, 'PAID', undefined, null);
+
+    // Plain envelope with the clamp defaults (created_at desc).
+    const all = await walletService.withdrawalsTable();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans the payout account fields.
+    const byUpi = await walletService.withdrawalsTable({ search: 'alpha' });
+    expect(byUpi.rows.map((w) => w.upi_id)).toEqual(['alpha@upi']);
+    expect(byUpi.total).toBe(1);
+
+    // Status enum filter narrows (the old UI's ToggleButtonGroup).
+    const pending = await walletService.withdrawalsTable({
+      filters: [{ field: 'status', op: 'eq', value: 'PENDING' }],
+    });
+    expect(pending.rows.map((w) => w.upi_id).sort((x, y) => x.localeCompare(y))).toEqual([
+      'alpha@upi',
+      'beta@upi',
+    ]);
+
+    // Allowlisted sort + paging keep the total.
+    const asc = await walletService.withdrawalsTable({ sort_by: 'amount', sort_dir: 'asc' });
+    expect(asc.rows.map((w) => w.amount)).toEqual([300, 400, 1200]);
+    const page2 = await walletService.withdrawalsTable({ sort_by: 'amount', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((w) => w.amount)).toEqual([400]);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('validates the review (reason required, only pending)', async () => {
     const host = await fund(500);
     const w = await walletService.requestWithdrawal(String(host._id), { amount: 100, payout_method: 'UPI', upi_id: 'a@upi' });

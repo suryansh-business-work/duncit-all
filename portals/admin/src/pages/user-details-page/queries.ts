@@ -153,6 +153,40 @@ export const USER_CONTACT_ACTIONS = gql`
   }
 `;
 
+/** Row shape for the server-paged contact-actions table. */
+export interface ContactActionRow {
+  id: string;
+  type: 'CALL' | 'EMAIL';
+  target: string;
+  subject: string;
+  notes: string;
+  status: string;
+  duration_seconds: number;
+  recording_url: string;
+  created_at: string;
+}
+
+export const USER_CONTACT_ACTIONS_TABLE = gql`
+  query UserContactActionsTable($user_id: ID!, $query: TableQueryInput) {
+    userContactActionsTable(user_id: $user_id, query: $query) {
+      total
+      rows {
+        id
+        type
+        target
+        subject
+        notes
+        status
+        duration_seconds
+        twilio_call_sid
+        recording_sid
+        recording_url
+        created_at
+      }
+    }
+  }
+`;
+
 export const USER_SUPPORT_TICKETS = gql`
   query UserSupportTickets($email: String, $status: ContactStatus) {
     contactSubmissions(email: $email, status: $status) {

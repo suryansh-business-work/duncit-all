@@ -19,6 +19,10 @@ export const SURVEY_COLORS = [
 function hashId(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) {
+    // charCodeAt (not codePointAt) on purpose: this is a stable hash over UTF-16
+    // units, so full code points are NOT wanted — and codePointAt's
+    // `number | undefined` would add a branch that can never be taken, which the
+    // 100% branch-coverage gate would then fail. (Sonar S7758 marked won't-fix.)
     h = (h * 31 + id.charCodeAt(i)) >>> 0;
   }
   return h;

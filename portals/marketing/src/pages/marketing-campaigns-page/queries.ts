@@ -22,6 +22,42 @@ export const MARKETING_CAMPAIGNS = gql`
   }
 `;
 
+/** Same selection as MARKETING_CAMPAIGNS rows — every allowlisted sort/filter
+ * field (name, channel, audience, status, recipient_count, scheduled_at,
+ * sent_at, created_at) is already selected. */
+const MARKETING_CAMPAIGN_ROW_FIELDS = gql`
+  fragment MarketingCampaignRowFields on MarketingCampaign {
+    campaign_id
+    name
+    channel
+    audience
+    subject
+    scheduled_at
+    sent_at
+    status
+    recipient_count
+    error
+    created_at
+    card {
+      type
+      title
+    }
+  }
+`;
+
+/** Server-side table page (search/sort/filter/paginate) for Campaign History. */
+export const MARKETING_CAMPAIGNS_TABLE = gql`
+  query MarketingCampaignsTable($query: TableQueryInput) {
+    marketingCampaignsTable(query: $query) {
+      total
+      rows {
+        ...MarketingCampaignRowFields
+      }
+    }
+  }
+  ${MARKETING_CAMPAIGN_ROW_FIELDS}
+`;
+
 export const MARKETING_PREVIEW_CARDS = gql`
   query MarketingCampaignPreviewCards($type: MarketingCampaignCardType!) {
     marketingCampaignPreviewCards(type: $type) {

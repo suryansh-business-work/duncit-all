@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodIdeaModel, type IPodIdea } from './podIdea.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const toPub = (p: IPodIdea, viewerId?: string | null) => ({
   id: String(p._id),
@@ -28,6 +29,24 @@ const toPub = (p: IPodIdea, viewerId?: string | null) => ({
   updated_at: p.updated_at.toISOString(),
 });
 
+/** Allowlists for the shared table engine (podIdeasTable — DUNCIT TABLE CONTRACT v1). */
+const POD_IDEA_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'description'],
+  sortFields: {
+    title: 'title',
+    status: 'status',
+    shares_count: 'shares_count',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    author_id: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 function assertId(id: string, label = 'id') {
   if (!Types.ObjectId.isValid(id))
     throw new GraphQLError(`Invalid ${label}`, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -50,6 +69,18 @@ export const podIdeaService = {
     }
     const docs = await PodIdeaModel.find(q).sort({ created_at: -1 });
     return docs.map((d) => toPub(d, viewerId));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the podIdeasTable
+   * query — same rows (and viewer-aware liked_by_me) as list(). */
+  async table(input?: TableQueryInput | null, viewerId?: string | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPodIdea>(
+      PodIdeaModel,
+      {},
+      input,
+      POD_IDEA_TABLE_CONFIG
+    );
+    return { rows: docs.map((d) => toPub(d, viewerId)), total, page, page_size };
   },
 
   async getById(id: string, viewerId?: string | null) {

@@ -48,6 +48,51 @@ export const CLUB_ADMIN_PODS = gql`
   }
 `;
 
+/** Same wide selection as CLUB_ADMIN_PODS rows — table rows prefill the edit form. */
+const CLUB_ADMIN_POD_ROW_FIELDS = gql`
+  fragment ClubAdminPodRowFields on Pod {
+    id
+    pod_title
+    pod_description
+    pod_images_and_videos { url type }
+    club_id
+    venue_id
+    venue_slot_id
+    pod_mode
+    meeting_platform
+    meeting_url
+    meeting_notes
+    pod_hashtag
+    pod_date_time
+    pod_end_date_time
+    pod_type
+    pod_amount
+    pod_occurrence
+    no_of_spots
+    pod_info
+    what_this_pod_offers
+    available_perks
+    payment_terms
+    products_enabled
+    product_requests { product_id quantity }
+    pod_attendees
+    is_active
+    completed_at
+  }
+`;
+
+export const CLUB_ADMIN_PODS_TABLE = gql`
+  query ClubAdminPodsTable($query: TableQueryInput) {
+    podsTable(query: $query) {
+      total
+      rows {
+        ...ClubAdminPodRowFields
+      }
+    }
+  }
+  ${CLUB_ADMIN_POD_ROW_FIELDS}
+`;
+
 export const CLUB_ADMIN_CREATE_POD = gql`
   mutation ClubAdminCreatePod($input: CreatePodInput!) {
     clubAdminCreatePod(input: $input) { id }

@@ -28,6 +28,10 @@ export const hostRequestResolvers = {
       requireRole(ctx, ONBOARDING_REVIEW);
       return hostRequestService.list({ status: args.status ?? null });
     },
+    hostRequestsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_REVIEW);
+      return hostRequestService.table(args.query);
+    },
     hostRequest: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_REVIEW);
       return hostRequestService.getById(args.id);

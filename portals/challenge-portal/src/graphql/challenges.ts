@@ -66,6 +66,19 @@ export const CHALLENGES = gql`
   }
 `;
 
+/** Server-side table page for the shared @duncit/table engine. */
+export const CHALLENGES_TABLE = gql`
+  ${CHALLENGE_FIELDS}
+  query ChallengesTable($query: TableQueryInput) {
+    challengesTable(query: $query) {
+      total
+      rows {
+        ...ChallengeFields
+      }
+    }
+  }
+`;
+
 export const CATEGORY_OPTIONS = gql`
   query CategoryOptions($filter: CategoryFilterInput) {
     categories(filter: $filter) {

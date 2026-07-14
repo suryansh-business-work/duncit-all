@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import type { TableFetch } from '@duncit/table';
 import EcommBrandsTable from './EcommBrandsTable';
+import type { EcommBrandRow } from './queries';
 
 interface Handlers {
   onEdit?: ReturnType<typeof vi.fn>;
@@ -10,10 +12,14 @@ interface Handlers {
   canHardDelete?: boolean;
 }
 
-const renderTable = (brands: unknown[], h: Handlers = {}) =>
+const makeFetch = (rows: EcommBrandRow[]) =>
+  vi.fn(async () => ({ rows, total: rows.length })) as TableFetch<EcommBrandRow>;
+
+const renderTable = (brands: EcommBrandRow[], h: Handlers = {}) =>
   render(
     <EcommBrandsTable
-      brands={brands as never}
+      fetchRows={makeFetch(brands)}
+      refetchRef={{ current: null }}
       onEdit={h.onEdit ?? vi.fn()}
       onReview={h.onReview ?? vi.fn()}
       canHardDelete={h.canHardDelete ?? false}
@@ -22,29 +28,33 @@ const renderTable = (brands: unknown[], h: Handlers = {}) =>
     />,
   );
 
-const full = {
+const full: EcommBrandRow = {
   id: '1', brand_name: 'Acme', logo_url: 'https://img/acme.png', tagline: 'Quality goods',
   product_categories: ['Apparel', 'Decor'], contact_person: 'Asha', contact_email: 'a@b.com',
   contact_phone: '999', status: 'SUBMITTED', is_active: true, submitted_at: '2026-01-02', product_commission_pct: 8,
   approved_product_count: 3,
 };
-const sparse = {
+const sparse: EcommBrandRow = {
   id: '2', brand_name: '', logo_url: '', tagline: '', product_categories: [],
   contact_person: '', contact_email: '', contact_phone: '', status: 'DRAFT', is_active: false, submitted_at: null,
   product_commission_pct: 0,
 };
 // product_categories omitted (nullish fallback) + phone-only contact (email empty).
-const phoneOnly = {
+const phoneOnly: EcommBrandRow = {
   id: '3', brand_name: 'PhoneCo', logo_url: '', tagline: '',
   contact_person: 'Ravi', contact_email: '', contact_phone: '999', status: 'APPROVED', is_active: true, submitted_at: '2026-02-02',
 };
 
+beforeEach(() => {
+  window.localStorage.clear();
+});
+
 describe('EcommBrandsTable', () => {
-  it('renders brands with fallbacks and fires edit/review', () => {
+  it('renders brands with fallbacks and fires edit/review', async () => {
     const onEdit = vi.fn();
     const onReview = vi.fn();
     renderTable([full, sparse, phoneOnly], { onEdit, onReview });
-    expect(screen.getByText('Acme')).toBeInTheDocument();
+    expect(await screen.findByText('Acme')).toBeInTheDocument();
     expect(screen.getByText('Apparel, Decor')).toBeInTheDocument();
     expect(screen.getByText('Untitled brand')).toBeInTheDocument();
     expect(screen.getByText('999')).toBeInTheDocument();
@@ -54,28 +64,32 @@ describe('EcommBrandsTable', () => {
     expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
     expect(screen.getByText('Inactive')).toBeInTheDocument();
-    const buttons = screen.getAllByRole('button');
-    fireEvent.click(buttons[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
     expect(onEdit).toHaveBeenCalledWith(full);
-    fireEvent.click(buttons[1]);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Review' })[0]);
     expect(onReview).toHaveBeenCalledWith(full);
   });
 
-  it('fires deactivate and shows the developer delete only when allowed', () => {
+  it('fires deactivate and shows the developer delete only when allowed', async () => {
     const onToggleActive = vi.fn();
     const onDelete = vi.fn();
     renderTable([full], { onToggleActive, onDelete, canHardDelete: true });
-    const buttons = screen.getAllByRole('button');
-    // [edit, review, toggle, delete]
-    expect(buttons).toHaveLength(4);
-    fireEvent.click(buttons[2]);
+    expect(await screen.findByText('Acme')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Deactivate' }));
     expect(onToggleActive).toHaveBeenCalledWith(full);
-    fireEvent.click(buttons[3]);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete permanently (developer)' }));
     expect(onDelete).toHaveBeenCalledWith(full);
   });
 
-  it('shows an empty state', () => {
+  it('hides the developer delete without access', async () => {
+    renderTable([sparse]);
+    expect(await screen.findByText('Untitled brand')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete permanently (developer)' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Activate' })).toBeInTheDocument();
+  });
+
+  it('shows an empty state', async () => {
     renderTable([]);
-    expect(screen.getByText('No brands found.')).toBeInTheDocument();
+    expect(await screen.findByText('No brands found.')).toBeInTheDocument();
   });
 });

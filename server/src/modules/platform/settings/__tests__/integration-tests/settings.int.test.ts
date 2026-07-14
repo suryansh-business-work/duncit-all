@@ -123,4 +123,49 @@ describe('settingsService integration', () => {
     expect(flags.length).toBeGreaterThanOrEqual(6);
     expect(flags.every((f) => typeof f.enabled === 'boolean')).toBe(true);
   });
+
+  it('serves the featureFlagsTable page with search, filters, sort and paging', async () => {
+    await settingsService.seedDefaults();
+    await settingsService.createFlag({
+      key: 'zz_custom',
+      name: 'ZZ Custom',
+      description: 'a bespoke toggle',
+      enabled: true,
+    });
+
+    // Default sort matches listFlags (key asc) and the envelope reports clamps.
+    const all = await settingsService.flagsTable();
+    expect(all.total).toBe((await settingsService.listFlags()).length);
+    expect(all.rows[all.rows.length - 1]!.key).toBe('zz_custom');
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans key, name and description.
+    const byKey = await settingsService.flagsTable({ search: 'zz_' });
+    expect(byKey.rows.map((f) => f!.key)).toEqual(['zz_custom']);
+    const byDescription = await settingsService.flagsTable({ search: 'bespoke' });
+    expect(byDescription.rows.map((f) => f!.key)).toEqual(['zz_custom']);
+
+    // Boolean filters narrow.
+    const custom = await settingsService.flagsTable({
+      filters: [{ field: 'is_system', op: 'is_false' }],
+    });
+    expect(custom.rows.map((f) => f!.key)).toEqual(['zz_custom']);
+    const enabled = await settingsService.flagsTable({
+      filters: [{ field: 'enabled', op: 'is_true' }],
+    });
+    expect(enabled.rows.some((f) => f!.key === 'zz_custom')).toBe(true);
+    expect(enabled.rows.every((f) => f!.enabled)).toBe(true);
+
+    // Allowlisted sort, descending.
+    const desc = await settingsService.flagsTable({ sort_by: 'key', sort_dir: 'desc' });
+    expect(desc.rows[0]!.key).toBe('zz_custom');
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await settingsService.flagsTable({ page: 2, page_size: 2 });
+    expect(page2.rows).toHaveLength(2);
+    expect(page2.total).toBe(all.total);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(2);
+  });
 });

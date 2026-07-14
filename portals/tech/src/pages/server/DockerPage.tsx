@@ -1,29 +1,39 @@
-import { useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { useCallback, useRef } from 'react';
+import { useApolloClient, useQuery } from '@apollo/client';
+import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { formatDateTime } from './format';
-import { DOCKER_INFO, type DockerInfo } from './queries';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import DockerContainersTable from './DockerContainersTable';
+import { DOCKER_CONTAINERS_TABLE, DOCKER_INFO, type DockerContainer, type DockerInfo } from './queries';
 
 export default function DockerPage() {
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data, loading, error, refetch } = useQuery<{ techDockerInfo: DockerInfo }>(DOCKER_INFO, {
     fetchPolicy: 'cache-and-network',
   });
   const docker = data?.techDockerInfo;
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data: page } = await client.query({
+        query: DOCKER_CONTAINERS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.techDockerContainersTable.rows as DockerContainer[],
+        total: page.techDockerContainersTable.total as number,
+      };
+    },
+    [client]
+  );
+
+  const handleRefresh = () => {
+    refetch();
+    refetchRef.current?.();
+  };
 
   return (
     <Stack spacing={2.5}>
@@ -37,18 +47,12 @@ export default function DockerPage() {
             Containers running on the host{docker?.version ? ` · Docker ${docker.version}` : ''}.
           </Typography>
         </Box>
-        <Button size="small" variant="outlined" startIcon={<RefreshIcon />} onClick={() => refetch()} disabled={loading}>
+        <Button size="small" variant="outlined" startIcon={<RefreshIcon />} onClick={handleRefresh} disabled={loading}>
           Refresh
         </Button>
       </Stack>
 
       {error && !docker && <Alert severity="error">Could not load Docker info: {error.message}</Alert>}
-
-      {!docker && loading && (
-        <Stack alignItems="center" sx={{ py: 6 }}>
-          <CircularProgress />
-        </Stack>
-      )}
 
       {docker && !docker.available && (
         <Alert severity="warning">
@@ -64,45 +68,7 @@ export default function DockerPage() {
             <Chip variant="outlined" label={`${docker.containersTotal} total`} />
           </Stack>
 
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Image</TableCell>
-                  <TableCell>State</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {docker.containers.map((c) => (
-                  <TableRow key={c.id} hover>
-                    <TableCell sx={{ fontWeight: 600 }}>{c.name || c.id}</TableCell>
-                    <TableCell sx={{ wordBreak: 'break-all' }}>{c.image}</TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        color={c.state === 'running' ? 'success' : 'default'}
-                        label={c.state}
-                      />
-                    </TableCell>
-                    <TableCell>{c.status}</TableCell>
-                    <TableCell>{formatDateTime(c.createdAt)}</TableCell>
-                  </TableRow>
-                ))}
-                {docker.containers.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5}>
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                        No containers found.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <DockerContainersTable fetchRows={fetchRows} refetchRef={refetchRef} />
         </>
       )}
     </Stack>

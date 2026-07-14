@@ -38,6 +38,39 @@ describe('expenseService integration', () => {
     expect(salaries[0].amount).toBe(9000);
   });
 
+  it('serves the expensesTable page with search, filter, sort and paging', async () => {
+    await seed({ vendor_name: 'AWS', category: 'SOFTWARE', amount: 1000, date: '2026-06-10' });
+    await seed({ vendor_name: 'Chai stall', category: 'OFFICE', amount: 50, date: '2026-06-15' });
+    await seed({ vendor_name: 'Landlord', category: 'RENT', amount: 9000, date: '2026-06-01' });
+
+    // Plain envelope with the old UI's default order (date desc) and clamp defaults.
+    const all = await expenseService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((e) => e.vendor_name)).toEqual(['Chai stall', 'AWS', 'Landlord']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans vendor_name / description / reference.
+    const byVendor = await expenseService.table({ search: 'aws' });
+    expect(byVendor.rows.map((e) => e.vendor_name)).toEqual(['AWS']);
+    expect(byVendor.total).toBe(1);
+
+    // Category enum filter narrows (the old UI's category select).
+    const rent = await expenseService.table({
+      filters: [{ field: 'category', op: 'eq', value: 'RENT' }],
+    });
+    expect(rent.rows.map((e) => e.vendor_name)).toEqual(['Landlord']);
+
+    // Allowlisted sort + paging keep the total.
+    const asc = await expenseService.table({ sort_by: 'amount', sort_dir: 'asc' });
+    expect(asc.rows.map((e) => e.amount)).toEqual([50, 1000, 9000]);
+    const page2 = await expenseService.table({ sort_by: 'amount', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((e) => e.amount)).toEqual([1000]);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('normalizes unknown category/method and rejects bad amount/date', async () => {
     const e = await seed({ category: 'NONSENSE', payment_method: 'BITCOIN', amount: 42 });
     expect(e.category).toBe('OTHER');

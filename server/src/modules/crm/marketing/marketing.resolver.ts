@@ -10,6 +10,10 @@ export const marketingResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return marketingService.list();
     },
+    marketingCampaignsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return marketingService.table(args.query);
+    },
     marketingCampaignPreviewCards: (
       _p: unknown,
       args: { type: 'POD' | 'CLUB' },

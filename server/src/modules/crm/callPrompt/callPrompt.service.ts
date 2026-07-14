@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { CallPromptModel } from './callPrompt.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -23,6 +24,24 @@ function notFound(): never {
   throw new GraphQLError('Call prompt not found', { extensions: { code: 'NOT_FOUND' } });
 }
 
+/** Allowlists for the shared table engine (crmCallPromptsTable — DUNCIT TABLE CONTRACT v1). */
+const CALL_PROMPT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'description', 'context'],
+  sortFields: {
+    name: 'name',
+    language: 'language',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    language: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { is_active: -1, name: 1 },
+};
+
 export interface CallPromptInput {
   name: string;
   description?: string | null;
@@ -41,6 +60,17 @@ export const callPromptService = {
     }
     const docs = await CallPromptModel.find(query).sort({ is_active: -1, name: 1 });
     return docs.map(pub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the crmCallPromptsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      CallPromptModel,
+      {},
+      input,
+      CALL_PROMPT_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   async get(id: string) {

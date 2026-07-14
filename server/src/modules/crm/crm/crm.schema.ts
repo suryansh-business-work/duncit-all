@@ -440,6 +440,30 @@ export const crmTypeDefs = gql`
     super_category_id: ID
   }
 
+  "Server-side table page for the shared table engine (venueLeadsTable)."
+  type VenueLeadTablePage {
+    rows: [VenueLead!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "Server-side table page for the shared table engine (hostLeadsTable)."
+  type HostLeadTablePage {
+    rows: [HostLead!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "Server-side table page for the shared table engine (ecommLeadsTable)."
+  type EcommLeadTablePage {
+    rows: [EcommLead!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type LeadContactActionResult {
     ok: Boolean!
     message: String!
@@ -499,10 +523,13 @@ export const crmTypeDefs = gql`
   extend type Query {
     crmLeadConfig: CrmOptionGroup!
     venueLeads(filter: CrmLeadFilter): [VenueLead!]!
+    venueLeadsTable(query: TableQueryInput): VenueLeadTablePage!
     venueLead(id: ID!): VenueLead
     hostLeads(filter: CrmLeadFilter): [HostLead!]!
+    hostLeadsTable(query: TableQueryInput): HostLeadTablePage!
     hostLead(id: ID!): HostLead
     ecommLeads(filter: CrmLeadFilter): [EcommLead!]!
+    ecommLeadsTable(query: TableQueryInput): EcommLeadTablePage!
     ecommLead(id: ID!): EcommLead
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!

@@ -1,0 +1,50 @@
+{
+  "name": "@duncit/table",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared server-driven AG Grid + MUI table (search, sort, filters, pagination, column prefs) used by every portal. One table, one path.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "@mui/x-date-pickers": ">=6",
+    "ag-grid-community": ">=34",
+    "ag-grid-react": ">=34",
+    "date-fns": ">=2",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "devDependencies": {
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@mui/x-date-pickers": "^6.20.2",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "ag-grid-community": "^34.3.1",
+    "ag-grid-react": "^34.3.1",
+    "date-fns": "^2.30.0",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  }
+}

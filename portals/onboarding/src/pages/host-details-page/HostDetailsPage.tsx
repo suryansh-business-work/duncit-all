@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useQuery } from '@apollo/client';
+import { useCallback } from 'react';
+import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -12,10 +12,11 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import PodsTable from '../../components/pods-table/PodsTable';
+import { PODS_TABLE, type PodRow } from '../../components/pods-table/queries';
 import { useDateFormat } from '../../utils/dateFormat';
-import { podBucket } from '../../utils/podBucket';
-import { HOST_DETAILS, HOST_PODS, type HostPod } from '../hosts-page/queries';
-import HostPodsSection from './HostPodsSection';
+import { HOST_DETAILS } from '../hosts-page/queries';
 
 const catPath = (c: { super_category_name: string; category_name: string; sub_category_name: string }) =>
   [c.super_category_name, c.category_name, c.sub_category_name].filter(Boolean).join(' › ');
@@ -24,6 +25,7 @@ export default function HostDetailsPage() {
   const { hostId = '' } = useParams<{ hostId: string }>();
   const navigate = useNavigate();
   const { formatDateTime } = useDateFormat();
+  const client = useApolloClient();
 
   const { data, loading, error } = useQuery(HOST_DETAILS, {
     variables: { host_doc_id: hostId },
@@ -31,21 +33,20 @@ export default function HostDetailsPage() {
     skip: !hostId,
   });
   const host = data?.host;
+  const hostUserId = host?.user_id ?? '';
 
-  const { data: podsData } = useQuery<{ pods: HostPod[] }>(HOST_PODS, {
-    variables: { host_user_id: host?.user_id },
-    fetchPolicy: 'cache-and-network',
-    skip: !host?.user_id,
-  });
-
-  const buckets = useMemo(() => {
-    const pods = podsData?.pods ?? [];
-    return {
-      upcoming: pods.filter((p) => podBucket(p) === 'upcoming'),
-      ongoing: pods.filter((p) => podBucket(p) === 'ongoing'),
-      hosted: pods.filter((p) => podBucket(p) === 'hosted'),
-    };
-  }, [podsData]);
+  const fetchPods = useCallback(
+    async (q: TableQueryState) => {
+      const filters = [...q.filters, { field: 'host_user_id', op: 'eq' as const, value: hostUserId }];
+      const { data: podsData } = await client.query({
+        query: PODS_TABLE,
+        variables: tableQueryToGql({ ...q, filters }),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: podsData.podsTable.rows as PodRow[], total: podsData.podsTable.total as number };
+    },
+    [client, hostUserId],
+  );
 
   if (loading && !data) {
     return (
@@ -90,9 +91,15 @@ export default function HostDetailsPage() {
 
       <Divider />
 
-      <HostPodsSection title="Ongoing / current pods" emptyLabel="No pods running right now." pods={buckets.ongoing} formatDateTime={formatDateTime} />
-      <HostPodsSection title="Upcoming pods" emptyLabel="No upcoming pods." pods={buckets.upcoming} formatDateTime={formatDateTime} />
-      <HostPodsSection title="Hosted pods" emptyLabel="No pods hosted yet." pods={buckets.hosted} formatDateTime={formatDateTime} />
+      <Stack spacing={1}>
+        <Typography variant="subtitle1" fontWeight={800}>Pods</Typography>
+        <PodsTable
+          tableId="onboarding-host-pods"
+          fetchRows={fetchPods}
+          formatDateTime={formatDateTime}
+          emptyText="No pods for this host yet."
+        />
+      </Stack>
     </Stack>
   );
 }

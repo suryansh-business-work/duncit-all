@@ -7,6 +7,7 @@ import { leadSurveyService } from './leadSurvey.service';
 import { surveyService } from './survey.service';
 import { approvalService } from '@modules/approval/approval.service';
 import type { SurveyKind } from './survey.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   sendMeetingBookedEmail,
   sendMeetingCancelledEmail,
@@ -181,6 +182,30 @@ export interface MeetingFilter {
   from?: string | null;
   to?: string | null;
 }
+
+/** Allowlists for the shared table engine (onboardingMeetingsTable — DUNCIT TABLE CONTRACT v1). */
+const MEETING_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['request_no', 'contact_name', 'contact_phone'],
+  sortFields: {
+    request_no: 'request_no',
+    kind: 'kind',
+    status: 'status',
+    approval_status: 'approval_status',
+    requested_at: 'requested_at',
+    scheduled_at: 'scheduled_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    kind: { type: 'enum' },
+    status: { type: 'enum' },
+    approval_status: { type: 'enum' },
+    dismissed: { type: 'boolean' },
+    requested_at: { type: 'date' },
+    scheduled_at: { type: 'date' },
+  },
+  // Mirrors list(): order by the effective date (scheduled, then requested).
+  defaultSort: { scheduled_at: 1, requested_at: 1 },
+};
 
 const notFound = () => new GraphQLError('Meeting not found', { extensions: { code: 'NOT_FOUND' } });
 
@@ -728,6 +753,21 @@ export const meetingService = {
       categoryNameMap(docs),
     ]);
     return docs.map((d) => pub(d, names, catNames));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for onboardingMeetingsTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      MeetingModel,
+      {},
+      input,
+      MEETING_TABLE_CONFIG
+    );
+    const [names, catNames] = await Promise.all([
+      userMap(docs.map((d: any) => String(d.user_id))),
+      categoryNameMap(docs),
+    ]);
+    return { rows: docs.map((d) => pub(d, names, catNames)), total, page, page_size };
   },
 
   /** Onboarding staff schedule/track a meeting (date, link, status, notes). */

@@ -313,4 +313,76 @@ describe('pod comment reactions (explore item 4)', () => {
     const reviewList = await podService.list({ club_id: String(clubId) }, { includePendingApproval: true });
     expect(reviewList.map((p) => p.pod_title).sort()).toEqual(['Live pod', 'Pending pod']);
   });
+
+  it('serves the podsTable page with search, filters, sort, paging and the PENDING guard', async () => {
+    await PodModel.create(
+      makePod({ pod_title: 'Alpha Jam', pod_amount: 100, pod_date_time: new Date('2030-01-01T10:00:00Z') })
+    );
+    await PodModel.create(
+      makePod({
+        pod_title: 'Beta Bash',
+        pod_amount: 50,
+        pod_date_time: new Date('2030-02-01T10:00:00Z'),
+        is_active: false,
+      })
+    );
+    await PodModel.create(makePod({ pod_title: 'Hidden Pending', venue_approval_status: 'PENDING' }));
+    await PodModel.create(makePod({ pod_title: 'Deleted Pod', deleted_at: new Date() }));
+
+    // Default page: pod_date_time desc; PENDING + soft-deleted rows excluded.
+    const all = await podService.table();
+    expect(all.total).toBe(2);
+    expect(all.rows.map((p) => p!.pod_title)).toEqual(['Beta Bash', 'Alpha Jam']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Reviewers opt in and see the PENDING pod too.
+    const review = await podService.table(undefined, { includePendingApproval: true });
+    expect(review.total).toBe(3);
+
+    // A crafted client filter cannot override the PENDING baseFilter guard.
+    const forced = await podService.table({
+      filters: [{ field: 'venue_approval_status', op: 'eq', value: 'PENDING' }],
+    });
+    expect(forced.total).toBe(0);
+
+    // Search spans pod_title and the pod_id slug.
+    const searched = await podService.table({ search: 'beta' });
+    expect(searched.rows.map((p) => p!.pod_title)).toEqual(['Beta Bash']);
+    expect(searched.total).toBe(1);
+
+    // Boolean filter narrows.
+    const active = await podService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((p) => p!.pod_title)).toEqual(['Alpha Jam']);
+
+    // Allowlisted sort, asc.
+    const sorted = await podService.table({ sort_by: 'pod_amount', sort_dir: 'asc' });
+    expect(sorted.rows.map((p) => p!.pod_amount)).toEqual([50, 100]);
+
+    // Paging reports the clamped page/page_size back; total unaffected.
+    const page2 = await podService.table({ page: 2, page_size: 1 });
+    expect(page2.rows).toHaveLength(1);
+    expect(page2.total).toBe(2);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
+  it('scopes myHostPodsTable to the calling host — user A can never see user B rows', async () => {
+    const hostA = new Types.ObjectId();
+    const hostB = new Types.ObjectId();
+    await PodModel.create(makePod({ pod_title: 'A Pod', pod_hosts_id: [hostA] }));
+    await PodModel.create(makePod({ pod_title: 'B Pod', pod_hosts_id: [hostB] }));
+
+    const mine = await podService.tableMine(String(hostA));
+    expect(mine.total).toBe(1);
+    expect(mine.rows.map((p) => p!.pod_title)).toEqual(['A Pod']);
+
+    // A client filter cannot widen the scope to another host's pods.
+    const widened = await podService.tableMine(String(hostA), {
+      filters: [{ field: 'host_user_id', op: 'eq', value: String(hostB) }],
+    });
+    expect(widened.total).toBe(0);
+
+    await expect(podService.tableMine('not-an-object-id')).rejects.toThrow(/authentication required/i);
+  });
 });

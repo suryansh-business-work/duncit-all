@@ -35,6 +35,9 @@ describe('Legal portal (authenticated)', () => {
       LegalDocumentStats: {
         data: { legalDocumentStats: { total: 4, by_type: [{ document_type: 'Privacy Policy', count: 2 }, { document_type: 'NDA', count: 2 }] } },
       },
+      LegalDocumentStatsTable: {
+        data: { legalDocumentStatsTable: { total: 2, rows: [{ document_type: 'Privacy Policy', count: 2 }, { document_type: 'NDA', count: 2 }] } },
+      },
     });
     cy.visit('/');
     cy.contains(/legal dashboard/i, { timeout: 10000 }).should('be.visible');
@@ -55,7 +58,7 @@ describe('Legal portal (authenticated)', () => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-    cy.mockGraphql({ ...shellMocks(), LegalDocuments: { data: { legalDocuments: [doc] } } });
+    cy.mockGraphql({ ...shellMocks(), LegalDocumentsTable: { data: { legalDocumentsTable: { total: 1, rows: [doc] } } } });
     cy.visit('/documents');
     cy.contains('Master NDA', { timeout: 10000 }).should('be.visible');
     cy.contains('button', /new document/i).click();
@@ -76,7 +79,7 @@ describe('Legal portal (authenticated)', () => {
       sort_order: 0,
       updated_at: new Date().toISOString(),
     };
-    cy.mockGraphql({ ...shellMocks(), LegalPolicies: { data: { policies: [pol] } } });
+    cy.mockGraphql({ ...shellMocks(), LegalPoliciesTable: { data: { policiesTable: { total: 1, rows: [pol] } } } });
     cy.visit('/policies');
     cy.contains('Policies', { timeout: 10000 }).should('be.visible');
     cy.contains('Privacy Policy').should('be.visible');

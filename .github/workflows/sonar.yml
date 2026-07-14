@@ -13,21 +13,28 @@ on:
         description: 'Fail the run (instead of skipping) if the SonarQube server is down'
         type: boolean
         default: false
+      skip_coverage:
+        description: 'Skip the test runs and scan without coverage (much faster; use only for a quick issue check)'
+        type: boolean
+        default: false
 
+# A newer push supersedes an in-flight scan — no point burning ~30 min analysing
+# a commit that is already stale.
+concurrency:
+  group: sonar-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build and analyze
+  # ---------------------------------------------------------------------------
+  # Is the server even up? It is a manually-managed VPS container; when it is
+  # down the scanner returns 502 and fails the pipeline for no good reason.
+  # ---------------------------------------------------------------------------
+  probe:
+    name: Probe SonarQube
     runs-on: ubuntu-latest
-
+    outputs:
+      up: ${{ steps.sonar.outputs.up }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      # The SonarQube server is a manually-managed VPS container; when it is down
-      # the scanner returns 502 and fails the whole pipeline. Probe it first and
-      # skip (not fail) the scan when it is unreachable — a real quality gate still
-      # runs and can fail whenever the server is up.
       - name: Check SonarQube availability
         id: sonar
         run: |
@@ -42,56 +49,139 @@ jobs:
             fi
             echo "::warning::SonarQube server unreachable (HTTP $code) — skipping scan."
           fi
-      # Coverage has to be PRODUCED before the scan: the scanner never runs the
-      # tests, it only reads the lcov each runner writes
-      # (sonar.javascript.lcov.reportPaths). Without this the gate sees 0%
-      # coverage and fails `new_coverage` no matter how good the suites are.
-      - name: Setup pnpm
-        if: steps.sonar.outputs.up == 'true'
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
 
-      - name: Setup Node.js
-        if: steps.sonar.outputs.up == 'true'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+  # ---------------------------------------------------------------------------
+  # Coverage. The scanner NEVER runs tests — it only reads the lcov each runner
+  # writes (sonar.javascript.lcov.reportPaths). Without these the gate sees 0%
+  # and fails new_coverage no matter how good the suites are.
+  #
+  # These two jobs run IN PARALLEL and hand their lcov to the analyze job as
+  # artifacts. Previously everything was sequential in one job, so the mobile
+  # suite waited on all 23 workspaces for no reason.
+  # ---------------------------------------------------------------------------
+  coverage-workspaces:
+    name: Coverage — workspaces
+    runs-on: ubuntu-latest
+    needs: probe
+    if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: pnpm
-
-      - name: Install dependencies
-        if: steps.sonar.outputs.up == 'true'
-        run: pnpm install --frozen-lockfile
-
-      # A workspace whose own coverage threshold is unmet (challenge-portal
-      # relies on Cypress e2e coverage being merged in) must NOT block the scan:
-      # the lcov is still written either way, and the gate is what judges us.
-      - name: Coverage — workspaces (server, mWeb, portals, websites)
-        if: steps.sonar.outputs.up == 'true'
+      - run: pnpm install --frozen-lockfile
+      # A workspace whose OWN threshold is unmet must not veto the scan:
+      # challenge-portal's 100%-line target needs its Cypress e2e coverage merged
+      # in, which does not happen here. The lcov is written either way, and the
+      # quality gate — not a local threshold — is what judges us.
+      - name: Run coverage
         continue-on-error: true
         run: pnpm -r --if-present --no-bail test:coverage
+      - name: Collect lcov
+        run: |
+          mkdir -p lcov-out
+          find . -name 'lcov.info' -not -path '*/node_modules/*' -print0 |
+            while IFS= read -r -d '' f; do
+              dest="lcov-out/$(dirname "${f#./}" | tr '/' '_').info"
+              cp "$f" "$dest"
+            done
+          ls -la lcov-out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lcov-workspaces
+          path: lcov-out
+          if-no-files-found: error
 
-      # The mobile app is standalone (npm, outside the pnpm workspace).
-      - name: Coverage — mobile app
-        if: steps.sonar.outputs.up == 'true'
+  coverage-mobile:
+    name: Coverage — mobile app
+    runs-on: ubuntu-latest
+    needs: probe
+    if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/mobile-app/package-lock.json
+      # Standalone (npm, outside the pnpm workspace).
+      - name: Run coverage
         continue-on-error: true
         working-directory: app/mobile-app
         run: |
           npm ci
           npm run test:coverage
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lcov-mobile
+          path: app/mobile-app/coverage/lcov.info
+          if-no-files-found: error
 
-      - name: Report which lcov files reached the scanner
-        if: steps.sonar.outputs.up == 'true'
+  # ---------------------------------------------------------------------------
+  # The scan itself. Needs the full history (fetch-depth: 0) for accurate
+  # new-code / blame attribution.
+  # ---------------------------------------------------------------------------
+  analyze:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    needs: [probe, coverage-workspaces, coverage-mobile]
+    # `always()` so a skipped/failed coverage job still lets the scan run —
+    # a scan without coverage beats no scan at all.
+    if: always() && needs.probe.outputs.up == 'true'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # shallow clones hurt new-code relevancy
+
+      - name: Download workspace lcov
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: lcov-workspaces
+          path: lcov-out
+
+      - name: Download mobile lcov
+        continue-on-error: true
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: lcov-mobile
+          path: app/mobile-app/coverage
+
+      # Put each lcov back where sonar.javascript.lcov.reportPaths expects it.
+      - name: Restore lcov layout
+        continue-on-error: true
         run: |
-          echo "lcov reports found:"
+          shopt -s nullglob
+          for f in lcov-out/*.info; do
+            dir=$(basename "$f" .info | tr '_' '/')
+            mkdir -p "$dir"
+            cp "$f" "$dir/lcov.info"
+          done
+          echo "lcov reports available to the scanner:"
           find . -name 'lcov.info' -not -path '*/node_modules/*' | sort | sed 's/^/  /'
 
+      # SonarQube keeps a per-file analysis cache; reusing it across runs is the
+      # single biggest saving on a repeat scan of the same branch.
+      - name: Cache SonarQube analysis
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ~/.sonar/cache
+          key: sonar-cache-${{ runner.os }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            sonar-cache-${{ runner.os }}-${{ github.ref_name }}-
+            sonar-cache-${{ runner.os }}-
+
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
-        if: steps.sonar.outputs.up == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          # The runner has ~16 GB. Give the scanner JVM room to hold the index,
-          # and sonar.javascript.node.maxspace (see sonar-project.properties)
-          # gives the Node bridge server room for the type graph. Without both,
-          # the JS/TS sensor OOMs on this monorepo and the analysis never
-          # publishes.
+          # NB: SONAR_USER_HOME is left at its default (~/.sonar) so the cache
+          # step above actually hits — overriding it would silently orphan it.
+          # The runner has ~16 GB. The scanner JVM holds the index; the Node
+          # "bridge server" (sonar.javascript.node.maxspace in
+          # sonar-project.properties) holds the TS type graph. Starve either and
+          # the JS/TS sensor dies with "bridge server is unresponsive" after ~25
+          # minutes, publishing nothing.
           SONAR_SCANNER_JAVA_OPTS: -Xmx4096m

@@ -17,6 +17,14 @@ export const rbacTypeDefs = gql`
     description: String
   }
 
+  "Server-side table page for the shared table engine (rolesTable)."
+  type RoleTablePage {
+    rows: [Role!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateRoleInput {
     key: String!
     name: String!
@@ -29,6 +37,7 @@ export const rbacTypeDefs = gql`
 
   extend type Query {
     roles: [Role!]!
+    rolesTable(query: TableQueryInput): RoleTablePage!
     role(role_id: ID!): Role
     publicRoles: [PublicRole!]!
   }

@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { PolicyModel, type IPolicy } from './policy.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -31,6 +32,27 @@ function assertSlug(slug: string) {
   }
 }
 
+/** Allowlists for the shared table engine (policiesTable — DUNCIT TABLE CONTRACT v1). */
+const POLICY_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'slug'],
+  sortFields: {
+    title: 'title',
+    slug: 'slug',
+    sort_order: 'sort_order',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    slug: { type: 'string' },
+    sort_order: { type: 'number' },
+    created_at: { type: 'date' },
+    updated_at: { type: 'date' },
+  },
+  defaultSort: { sort_order: 1, title: 1 },
+};
+
 export const policyService = {
   async list(filter?: { is_active?: boolean; search?: string }) {
     const q: any = {};
@@ -41,6 +63,17 @@ export const policyService = {
     }
     const docs = await PolicyModel.find(q).sort({ sort_order: 1, title: 1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the policiesTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPolicy>(
+      PolicyModel,
+      {},
+      input,
+      POLICY_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async publicList() {

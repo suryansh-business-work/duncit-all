@@ -10,6 +10,10 @@ export const legalDocumentResolvers = {
       requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.list(args.filter);
     },
+    legalDocumentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.table(args.query);
+    },
     legalDocument: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.getById(args.id);
@@ -17,6 +21,10 @@ export const legalDocumentResolvers = {
     legalDocumentStats: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, LEGAL_ROLES);
       return legalDocumentService.stats();
+    },
+    legalDocumentStatsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, LEGAL_ROLES);
+      return legalDocumentService.statsTable(args.query);
     },
   },
   Mutation: {

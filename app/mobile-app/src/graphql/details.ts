@@ -289,6 +289,19 @@ export const ClubDetailsDocument = gql(`
       club_whats_app_community_link
       club_whats_app_group_link
       matched_venues_count
+      matched_venues {
+        id
+        venue_name
+        address_line1
+        address_line2
+        locality
+        city
+        state
+        country
+        postal_code
+        lat
+        lng
+      }
       followers_count
       category_id
       super_category_id

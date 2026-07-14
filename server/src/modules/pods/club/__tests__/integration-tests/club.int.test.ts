@@ -33,6 +33,53 @@ describe('clubService integration', () => {
     expect(await ClubModel.countDocuments()).toBe(0);
   });
 
+  it('serves the clubsTable page with search, filters, sort and paging', async () => {
+    await clubService.create({ club_name: 'Alpha Runners', locality: 'Saket' });
+    await clubService.create({ club_name: 'Beta Bakers', locality: 'Rohini' });
+    await clubService.create({ club_name: 'Gamma Gamers', locality: 'Saket', is_active: false });
+
+    // Plain envelope with the default sort (club_name asc) and clamp defaults.
+    const all = await clubService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((c) => c!.club_name)).toEqual([
+      'Alpha Runners',
+      'Beta Bakers',
+      'Gamma Gamers',
+    ]);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans club_name, club_id and locality.
+    const byName = await clubService.table({ search: 'gamers' });
+    expect(byName.rows.map((c) => c!.club_name)).toEqual(['Gamma Gamers']);
+    expect(byName.total).toBe(1);
+    const byLocality = await clubService.table({ search: 'rohini' });
+    expect(byLocality.rows.map((c) => c!.club_name)).toEqual(['Beta Bakers']);
+
+    // Boolean + string filters narrow.
+    const active = await clubService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((c) => c!.club_name)).toEqual(['Alpha Runners', 'Beta Bakers']);
+    const saket = await clubService.table({
+      filters: [{ field: 'locality', op: 'eq', value: 'Saket' }],
+    });
+    expect(saket.total).toBe(2);
+
+    // Allowlisted sort, both directions.
+    const desc = await clubService.table({ sort_by: 'club_name', sort_dir: 'desc' });
+    expect(desc.rows.map((c) => c!.club_name)).toEqual([
+      'Gamma Gamers',
+      'Beta Bakers',
+      'Alpha Runners',
+    ]);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await clubService.table({ page: 2, page_size: 1 });
+    expect(page2.rows.map((c) => c!.club_name)).toEqual(['Beta Bakers']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('persists linked host_ids on create and update (Bug 5)', async () => {
     const h1 = new Types.ObjectId().toString();
     const created = await clubService.create({ club_name: 'Cyclists', host_ids: [h1] });

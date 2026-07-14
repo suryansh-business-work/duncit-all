@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { ServiceOfferedModel } from './serviceOffered.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
@@ -74,6 +75,29 @@ async function applyTitleUpdate(doc: any, rawTitle: string): Promise<void> {
   doc.slug = slug;
 }
 
+/** Allowlists for the shared table engine (crmServicesOfferedTable — DUNCIT TABLE CONTRACT v1). */
+const SERVICE_OFFERED_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'slug'],
+  sortFields: {
+    title: 'title',
+    sort_order: 'sort_order',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    super_category_id: { type: 'string' },
+    category_id: { type: 'string' },
+    sub_category_id: { type: 'string' },
+    is_active: { type: 'boolean' },
+    applies_to_venue: { type: 'boolean' },
+    applies_to_host: { type: 'boolean' },
+    applies_to_ecomm: { type: 'boolean' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { sort_order: 1, title: 1 },
+};
+
 export interface ServiceOfferedFilter {
   super_category_id?: string | null;
   category_id?: string | null;
@@ -103,6 +127,18 @@ export const serviceOfferedService = {
     const docs = await ServiceOfferedModel.find(q).sort({ sort_order: 1, title: 1 }).lean();
     const names = await categoryNameMap(docs);
     return docs.map((d) => pub(d, names));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the crmServicesOfferedTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      ServiceOfferedModel,
+      {},
+      input,
+      SERVICE_OFFERED_TABLE_CONFIG
+    );
+    const names = await categoryNameMap(docs);
+    return { rows: docs.map((d) => pub(d, names)), total, page, page_size };
   },
 
   /** Bulk-create one or many titles under a single hierarchy slot (dedupes). */

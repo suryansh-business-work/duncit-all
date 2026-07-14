@@ -17,6 +17,8 @@ export const CATEGORIES = gql`
       is_active
       is_system
       sort_order
+      allow_co_hosts
+      max_co_hosts
       updated_at
     }
   }
@@ -54,6 +56,8 @@ export interface CatItem {
   is_active: boolean;
   is_system: boolean;
   sort_order: number;
+  allow_co_hosts: boolean;
+  max_co_hosts: number;
 }
 
 export interface FormState {
@@ -65,6 +69,10 @@ export interface FormState {
   mediaText: string;
   sort_order: number;
   is_active: boolean;
+  /** SUB-category only. */
+  allow_co_hosts: boolean;
+  /** SUB-category only, 1-5. */
+  max_co_hosts: number;
 }
 
 export const blankForm: FormState = {
@@ -75,4 +83,6 @@ export const blankForm: FormState = {
   mediaText: '',
   sort_order: 0,
   is_active: true,
+  allow_co_hosts: false,
+  max_co_hosts: 1,
 };

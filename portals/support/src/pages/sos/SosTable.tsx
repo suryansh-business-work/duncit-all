@@ -1,18 +1,8 @@
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TableSortLabel,
-  Typography,
-} from '@mui/material';
-import { formatDistanceToNow } from 'date-fns';
+import type { MutableRefObject } from 'react';
+import { Chip, Typography } from '@mui/material';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { SosAlert } from '../../graphql/bouncer';
+import { relativeTime } from '../../lib/supportTable';
 
 const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> = {
   ACTIVE: 'error',
@@ -20,111 +10,94 @@ const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> 
   RESOLVED: 'success',
 };
 
-// Only fields the server whitelists (BOUNCER_SORTABLE) are sortable.
-const COLS: { field: string; label: string; sortable: boolean }[] = [
-  { field: 'ticket_no', label: 'ID', sortable: false },
-  { field: 'user', label: 'User', sortable: false },
-  { field: 'pod', label: 'Pod', sortable: false },
-  { field: 'phone', label: 'Phone', sortable: false },
-  { field: 'status', label: 'Status', sortable: true },
-  { field: 'created_at', label: 'Raised', sortable: true },
+const STATUS_OPTIONS: ReadonlyArray<{ value: SosAlert['status']; label: string }> = [
+  { value: 'ACTIVE', label: 'Active' },
+  { value: 'ACKNOWLEDGED', label: 'Acknowledged' },
+  { value: 'RESOLVED', label: 'Resolved' },
+];
+
+const getSosRowId = (a: SosAlert) => a.id;
+
+const renderTicketNo = (a: SosAlert) => (
+  <Typography variant="body2" component="span" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+    {a.ticket_no}
+  </Typography>
+);
+
+const renderUser = (a: SosAlert) => (
+  <Typography variant="body2" component="span" sx={{ fontWeight: 700 }}>
+    {a.user.name}
+  </Typography>
+);
+
+const renderStatus = (a: SosAlert) => (
+  <Chip size="small" color={STATUS_COLOR[a.status]} label={a.status} />
+);
+
+const podValue = (a: SosAlert) =>
+  a.pod.venue_name ? `${a.pod.title} · ${a.pod.venue_name}` : a.pod.title;
+
+// Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status
+// filter maps onto the bouncerSosAlerts query's `status` arg.
+const COLUMNS: DuncitColumn<SosAlert>[] = [
+  {
+    field: 'ticket_no',
+    headerName: 'ID',
+    sortable: false,
+    width: 140,
+    cellRenderer: renderTicketNo,
+    valueGetter: (a) => a.ticket_no,
+  },
+  {
+    field: 'user',
+    headerName: 'User',
+    sortable: false,
+    minWidth: 140,
+    cellRenderer: renderUser,
+    valueGetter: (a) => a.user.name,
+  },
+  { field: 'pod', headerName: 'Pod', sortable: false, flex: 1, minWidth: 180, valueGetter: podValue },
+  {
+    field: 'contact_phone',
+    headerName: 'Phone',
+    sortable: false,
+    minWidth: 150,
+    valueGetter: (a) => a.contact_phone || '—',
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 150,
+    filter: { type: 'select', options: STATUS_OPTIONS },
+    cellRenderer: renderStatus,
+    valueGetter: (a) => a.status,
+  },
+  {
+    field: 'created_at',
+    headerName: 'Raised',
+    minWidth: 160,
+    valueGetter: (a) => relativeTime(a.created_at),
+  },
 ];
 
 interface Props {
-  alerts: SosAlert[];
-  total: number;
-  loading: boolean;
-  emptyLabel: string;
-  page: number;
-  pageSize: number;
-  sortBy: string;
-  sortDir: 'asc' | 'desc';
-  onSort: (field: string) => void;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  onRowClick: (id: string) => void;
+  fetchRows: TableFetch<SosAlert>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  onRowClick: (a: SosAlert) => void;
 }
 
-export default function SosTable({
-  alerts,
-  total,
-  loading,
-  emptyLabel,
-  page,
-  pageSize,
-  sortBy,
-  sortDir,
-  onSort,
-  onPageChange,
-  onPageSizeChange,
-  onRowClick,
-}: Readonly<Props>) {
-  if (loading && !alerts.length) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <CircularProgress size={24} />
-      </Box>
-    );
-  }
+export default function SosTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
   return (
-    <Box>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            {COLS.map((c) => (
-              <TableCell key={c.field} sortDirection={sortBy === c.field ? sortDir : false}>
-                {c.sortable ? (
-                  <TableSortLabel
-                    active={sortBy === c.field}
-                    direction={sortBy === c.field ? sortDir : 'asc'}
-                    onClick={() => onSort(c.field)}
-                  >
-                    {c.label}
-                  </TableSortLabel>
-                ) : (
-                  c.label
-                )}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {alerts.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={COLS.length}>
-                <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                  {emptyLabel}
-                </Typography>
-              </TableCell>
-            </TableRow>
-          ) : (
-            alerts.map((a) => (
-              <TableRow key={a.id} hover sx={{ cursor: 'pointer' }} onClick={() => onRowClick(a.id)}>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{a.ticket_no}</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>{a.user.name}</TableCell>
-                <TableCell>
-                  {a.pod.title}
-                  {a.pod.venue_name ? ` · ${a.pod.venue_name}` : ''}
-                </TableCell>
-                <TableCell>{a.contact_phone || '—'}</TableCell>
-                <TableCell>
-                  <Chip size="small" color={STATUS_COLOR[a.status]} label={a.status} />
-                </TableCell>
-                <TableCell>{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-      <TablePagination
-        component="div"
-        count={total}
-        page={page}
-        onPageChange={(_e, p) => onPageChange(p)}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={(e) => onPageSizeChange(Number.parseInt(e.target.value, 10))}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-      />
-    </Box>
+    <DuncitTable<SosAlert>
+      tableId="support-sos"
+      columns={COLUMNS}
+      fetchRows={fetchRows}
+      getRowId={getSosRowId}
+      onRowClick={onRowClick}
+      emptyText="No SOS Alerts Found"
+      defaultSort={{ field: 'created_at', dir: 'desc' }}
+      searchPlaceholder="Search message or phone"
+      refetchRef={refetchRef}
+    />
   );
 }

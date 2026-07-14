@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import PoliciesPage from '../../src/pages/policies/PoliciesPage';
-import { CREATE_POLICY, DELETE_POLICY, POLICIES, UPDATE_POLICY, type Policy } from '../../src/graphql/policies';
+import { CREATE_POLICY, DELETE_POLICY, POLICIES_TABLE, UPDATE_POLICY, type Policy } from '../../src/graphql/policies';
 import { renderWithProviders } from './testkit';
 
 vi.mock('react-quill', () => ({
@@ -20,21 +20,25 @@ const policy = (id: string, title: string, slug: string): Policy => ({
   updated_at: new Date().toISOString(),
 });
 
-const listMock = (filter: any, policies: Policy[]) => ({
-  request: { query: POLICIES, variables: { filter } },
-  result: { data: { policies } },
+const tableMock = (
+  policies: Policy[],
+  match: (variables: Record<string, any>) => boolean = () => true
+) => ({
+  request: { query: POLICIES_TABLE },
+  variableMatcher: match,
+  result: { data: { policiesTable: { total: policies.length, rows: policies } } },
 });
 
 describe('PoliciesPage', () => {
   it('shows an empty state', async () => {
-    renderWithProviders(<PoliciesPage />, { mocks: [listMock(undefined, [])] });
+    renderWithProviders(<PoliciesPage />, { mocks: [tableMock([])] });
     await waitFor(() => expect(screen.getByText(/no policies yet/i)).toBeInTheDocument());
   });
 
   it('lists active and hidden policies', async () => {
     const hidden: Policy = { ...policy('p2', 'Draft Policy', 'draft-policy'), is_active: false };
     renderWithProviders(<PoliciesPage />, {
-      mocks: [listMock(undefined, [policy('p1', 'Privacy Policy', 'privacy-policy'), hidden])],
+      mocks: [tableMock([policy('p1', 'Privacy Policy', 'privacy-policy'), hidden])],
     });
     await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
     expect(screen.getByText('privacy-policy')).toBeInTheDocument();
@@ -42,24 +46,28 @@ describe('PoliciesPage', () => {
     expect(screen.getByText('Hidden')).toBeInTheDocument();
   });
 
-  it('filters by search', async () => {
+  it('filters by search via the table toolbar', async () => {
     renderWithProviders(<PoliciesPage />, {
       mocks: [
-        listMock(undefined, [policy('p1', 'Privacy Policy', 'privacy-policy')]),
-        listMock({ search: 'refund' }, [policy('p2', 'Refund Policy', 'refund-policy')]),
+        tableMock([policy('p1', 'Privacy Policy', 'privacy-policy')], (v) => !v.query.search),
+        tableMock([policy('p2', 'Refund Policy', 'refund-policy')], (v) => v.query.search === 'refund'),
       ],
     });
     await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'refund' } });
-    await waitFor(() => expect(screen.getByText('Refund Policy')).toBeInTheDocument());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search title or slug' }), {
+      target: { value: 'refund' },
+    });
+    await waitFor(() => expect(screen.getByText('Refund Policy')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
   });
 
   it('creates a policy with an auto-generated slug', async () => {
     renderWithProviders(<PoliciesPage />, {
       mocks: [
-        listMock(undefined, []),
+        tableMock([]),
         { request: { query: CREATE_POLICY }, variableMatcher: () => true, result: { data: { createPolicy: { id: 'new-1' } } } },
-        listMock(undefined, [policy('new-1', 'Cookie Policy', 'cookie-policy')]),
+        tableMock([policy('new-1', 'Cookie Policy', 'cookie-policy')]),
       ],
     });
     await waitFor(() => expect(screen.getByText(/no policies yet/i)).toBeInTheDocument());
@@ -71,7 +79,7 @@ describe('PoliciesPage', () => {
   });
 
   it('validates that a title is required', async () => {
-    renderWithProviders(<PoliciesPage />, { mocks: [listMock(undefined, [])] });
+    renderWithProviders(<PoliciesPage />, { mocks: [tableMock([])] });
     await waitFor(() => expect(screen.getByText(/no policies yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new policy/i }));
     const dialog = await screen.findByRole('dialog');
@@ -80,7 +88,7 @@ describe('PoliciesPage', () => {
   });
 
   it('rejects a title that cannot form a slug', async () => {
-    renderWithProviders(<PoliciesPage />, { mocks: [listMock(undefined, [])] });
+    renderWithProviders(<PoliciesPage />, { mocks: [tableMock([])] });
     await waitFor(() => expect(screen.getByText(/no policies yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new policy/i }));
     const dialog = await screen.findByRole('dialog');
@@ -92,7 +100,7 @@ describe('PoliciesPage', () => {
   it('surfaces a server error on create', async () => {
     renderWithProviders(<PoliciesPage />, {
       mocks: [
-        listMock(undefined, []),
+        tableMock([]),
         { request: { query: CREATE_POLICY }, variableMatcher: () => true, result: { errors: [{ message: 'Slug already exists' }] } },
       ],
     });
@@ -104,12 +112,12 @@ describe('PoliciesPage', () => {
     expect(await within(dialog).findByText(/slug already exists/i)).toBeInTheDocument();
   });
 
-  it('edits a policy', async () => {
+  it('edits a policy from the row action', async () => {
     renderWithProviders(<PoliciesPage />, {
       mocks: [
-        listMock(undefined, [policy('p1', 'Privacy Policy', 'privacy-policy')]),
+        tableMock([policy('p1', 'Privacy Policy', 'privacy-policy')]),
         { request: { query: UPDATE_POLICY }, variableMatcher: () => true, result: { data: { updatePolicy: { id: 'p1' } } } },
-        listMock(undefined, [policy('p1', 'Privacy Policy v2', 'privacy-policy')]),
+        tableMock([policy('p1', 'Privacy Policy v2', 'privacy-policy')]),
       ],
     });
     await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
@@ -122,7 +130,7 @@ describe('PoliciesPage', () => {
 
   it('toggles active state and edits sort order in the dialog', async () => {
     renderWithProviders(<PoliciesPage />, {
-      mocks: [listMock(undefined, [policy('p1', 'Privacy Policy', 'privacy-policy')])],
+      mocks: [tableMock([policy('p1', 'Privacy Policy', 'privacy-policy')])],
     });
     await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
@@ -135,12 +143,12 @@ describe('PoliciesPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('deletes a policy', async () => {
+  it('deletes a policy from the row action', async () => {
     renderWithProviders(<PoliciesPage />, {
       mocks: [
-        listMock(undefined, [policy('p1', 'Privacy Policy', 'privacy-policy')]),
+        tableMock([policy('p1', 'Privacy Policy', 'privacy-policy')]),
         { request: { query: DELETE_POLICY, variables: { id: 'p1' } }, result: { data: { deletePolicy: true } } },
-        listMock(undefined, []),
+        tableMock([]),
       ],
     });
     await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());

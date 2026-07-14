@@ -213,7 +213,7 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 34. No Duplicate Code Deep think on the same use common module generic jo multiple place me use ho sake, Create Common Utils, Common Packages, Shared File etc
 35. SonarQube Coding Standards — write clean the first time
 
-When writing or editing TS/TSX/JS/CSS in this repo, follow these. They map to the
+36. When writing or editing TS/TSX/JS/CSS in this repo, follow these. They map to the
 Sonar rules that keep failing here (rule id in brackets). **Get them right up front — there is no eslint autofix to save you.**
 
 ### Globals, imports & modern APIs
@@ -264,3 +264,6 @@ Sonar rules that keep failing here (rule id in brackets). **Get them right up fr
 ### Before you finish
 - Typecheck the workspace you touched (`pnpm --filter <name> exec tsc -b --noEmit`, or `tsc --noEmit -p tsconfig.json` for server) and run its tests. Don't introduce a new Sonar issue to fix an old one.
 - `portals/crm/open-wa-server/**` is vendored third-party — don't apply these standards there.
+
+
+37. Use @duncit/table jaha jaha bhi Portal me table use kar rahe ho

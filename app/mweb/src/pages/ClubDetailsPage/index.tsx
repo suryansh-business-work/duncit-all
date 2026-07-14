@@ -9,6 +9,7 @@ import ClubDetailsSkeleton from '../club-details-page/ClubDetailsSkeleton';
 import ClubMeetupVenuesSection from '../club-details-page/ClubMeetupVenuesSection';
 import ClubSocialLinks from '../club-details-page/ClubSocialLinks';
 import ClubSummaryHeader from '../club-details-page/ClubSummaryHeader';
+import ClubTotalMembersSection from '../club-details-page/ClubTotalMembersSection';
 import ClubMembersSection from '../club-details-page/ClubMembersSection';
 import ClubStoriesSection from '../club-details-page/ClubStoriesSection';
 import ClubSegments from '../club-details-page/ClubSegments';
@@ -122,7 +123,6 @@ export default function ClubDetailsPage() {
         podCount={pods.length}
         venueCount={venues.length}
         followersCount={club.followers_count ?? 0}
-        membersCount={memberIds.length}
         categoryCrumbs={categoryCrumbs}
         following={isFollowing(club.id)}
         chatUrl={club.club_whats_app_group_link || club.club_whats_app_community_link}
@@ -140,6 +140,7 @@ export default function ClubDetailsPage() {
           </Typography>
         </Box>
       )}
+      <ClubTotalMembersSection count={club.followers_count ?? 0} />
       <ClubMembersSection memberIds={memberIds} />
       <ClubFriendsSection friendIds={friendIds} />
       <ClubRatingSection

@@ -30,8 +30,17 @@ export const portalModeTypeDefs = gql`
     mode: PortalModeState!
   }
 
+  "Server-side table page for the shared table engine (portalModesTable)."
+  type PortalModeTablePage {
+    rows: [PortalMode!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     portalModes: [PortalMode!]!
+    portalModesTable(query: TableQueryInput): PortalModeTablePage!
     portalMode(key: String!): PortalModePublic!
   }
 

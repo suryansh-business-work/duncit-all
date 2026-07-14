@@ -41,6 +41,17 @@ export const MY_BRANDS = gql`
   }
 `;
 
+/** Server-paged sibling of myEcommBrands (shared table engine). Rows keep the
+ * full BRAND_FIELDS selection so a row can prefill the brand dialog. */
+export const MY_BRANDS_TABLE = gql`
+  query MyEcommBrandsTable($query: TableQueryInput) {
+    myEcommBrandsTable(query: $query) {
+      total
+      rows { ${BRAND_FIELDS} created_at updated_at }
+    }
+  }
+`;
+
 export const SAVE_BRAND = gql`
   mutation SaveEcommBrand($brand_doc_id: ID, $input: EcommBrandInput!) {
     saveEcommBrand(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_FIELDS} }
@@ -96,4 +107,10 @@ export interface EcommBrand {
   reviewer_notes: string;
   submitted_at: string | null;
   approved_at: string | null;
+}
+
+/** Table rows add the sort timestamps on top of the dialog's brand shape. */
+export interface EcommBrandRow extends EcommBrand {
+  created_at?: string | null;
+  updated_at?: string | null;
 }

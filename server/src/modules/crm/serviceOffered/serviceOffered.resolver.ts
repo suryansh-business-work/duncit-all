@@ -11,6 +11,10 @@ export const serviceOfferedResolvers = {
       requireRole(ctx, RW);
       return serviceOfferedService.list(args.filter ?? {});
     },
+    crmServicesOfferedTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return serviceOfferedService.table(args.query);
+    },
   },
   Mutation: {
     createCrmServicesOffered: (

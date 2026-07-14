@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
   Button,
   Card,
   CardContent,
-  MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { notifyError, notifySuccess } from '../../components/notify';
 import EventTicketsTable from './EventTicketsTable';
 import {
   CHECK_IN_EVENT_TICKET,
-  EVENT_TICKETS,
+  EVENT_TICKETS_TABLE,
   EVENT_TICKET_PDF,
   VERIFY_EVENT_TICKET,
   type EventTicketRow,
@@ -36,18 +36,26 @@ function downloadPdf(base64: string, filename: string) {
 
 export default function EventTicketsPage() {
   const client = useApolloClient();
-  const [status, setStatus] = useState('');
-  const [search, setSearch] = useState('');
+  const refetchRef = useRef<(() => void) | null>(null);
   const [token, setToken] = useState('');
   const [verifyResult, setVerifyResult] = useState<{ ok: boolean; message: string } | null>(null);
-  const { data, loading, error, refetch } = useQuery(EVENT_TICKETS, {
-    variables: { filter: { status: status || undefined, search: search || undefined } },
-    fetchPolicy: 'cache-and-network',
-  });
   const [verifyQr] = useMutation(VERIFY_EVENT_TICKET);
   const [checkIn] = useMutation(CHECK_IN_EVENT_TICKET);
 
-  const tickets: EventTicketRow[] = data?.eventTickets ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: EVENT_TICKETS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.eventTicketsTable.rows as EventTicketRow[],
+        total: data.eventTicketsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const onDownload = async (t: EventTicketRow) => {
     try {
@@ -61,7 +69,7 @@ export default function EventTicketsPage() {
     try {
       await checkIn({ variables: { input: { ticket_doc_id: t.id } } });
       notifySuccess(`Checked in ${t.ticket_code}`);
-      refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message ?? 'Could not check in');
     }
@@ -81,7 +89,7 @@ export default function EventTicketsPage() {
       notifySuccess('Checked in');
       setToken('');
       setVerifyResult(null);
-      refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message ?? 'Could not check in');
     }
@@ -129,24 +137,12 @@ export default function EventTicketsPage() {
         </CardContent>
       </Card>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        <TextField
-          size="small"
-          label="Search code / attendee / event"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ flex: 1 }}
-        />
-        <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="VALID">Valid</MenuItem>
-          <MenuItem value="CHECKED_IN">Checked in</MenuItem>
-          <MenuItem value="CANCELLED">Cancelled</MenuItem>
-        </TextField>
-      </Stack>
-
-      {error && <Alert severity="error">{error.message}</Alert>}
-      <EventTicketsTable loading={loading} tickets={tickets} onDownload={onDownload} onCheckIn={onCheckIn} />
+      <EventTicketsTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onDownload={onDownload}
+        onCheckIn={onCheckIn}
+      />
     </Stack>
   );
 }

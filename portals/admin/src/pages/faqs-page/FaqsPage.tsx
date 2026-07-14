@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import {
   Box,
   Button,
@@ -7,18 +7,18 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
   Snackbar,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import type { FaqRow } from '../../components/FaqsTableBase';
 import {
   CREATE_FAQ,
   DELETE_FAQ,
-  FAQS,
+  FAQS_TABLE,
   SUPER_CATS_FOR_FAQ,
   UPDATE_FAQ,
 } from './queries';
@@ -27,33 +27,35 @@ import FaqsTable from './FaqsTable';
 import FaqEditDialog from './FaqEditDialog';
 
 export default function FaqsPage() {
-  const [filterSuper, setFilterSuper] = useState<string>('');
-  const [search, setSearch] = useState('');
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [editing, setEditing] = useState<any>(null);
-  const [delTarget, setDelTarget] = useState<any>(null);
+  const [delTarget, setDelTarget] = useState<FaqRow | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const filter = useMemo(() => {
-    const f: any = { audience: 'APP' };
-    if (filterSuper) f.super_category_id = filterSuper;
-    if (search.trim()) f.search = search.trim();
-    return f;
-  }, [filterSuper, search]);
-
-  const { data, loading, refetch } = useQuery(FAQS, {
-    variables: { filter },
-    fetchPolicy: 'cache-and-network',
-  });
   const { data: scData } = useQuery(SUPER_CATS_FOR_FAQ);
   const supers: any[] = scData?.categories ?? [];
-  const items: any[] = data?.faqs ?? [];
 
   const [createMut, { loading: creating }] = useMutation(CREATE_FAQ);
   const [updateMut, { loading: updating }] = useMutation(UPDATE_FAQ);
   const [deleteMut] = useMutation(DELETE_FAQ);
   const saving = creating || updating;
+
+  // This page manages App FAQs only — pin the audience alongside the table's filters.
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const filters = [...q.filters, { field: 'audience', op: 'eq' as const, value: 'APP' }];
+      const { data } = await client.query({
+        query: FAQS_TABLE,
+        variables: tableQueryToGql({ ...q, filters }),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.faqsTable.rows as FaqRow[], total: data.faqsTable.total as number };
+    },
+    [client],
+  );
 
   const openNew = () => {
     setEditing({});
@@ -61,7 +63,7 @@ export default function FaqsPage() {
     setError(null);
   };
 
-  const openEdit = (it: any) => {
+  const openEdit = (it: FaqRow) => {
     setEditing(it);
     setForm({
       super_category_id: it.super_category_id || '',
@@ -95,7 +97,7 @@ export default function FaqsPage() {
         setToast('FAQ created');
       }
       setEditing(null);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
     }
@@ -107,7 +109,7 @@ export default function FaqsPage() {
       await deleteMut({ variables: { faq_doc_id: delTarget.id } });
       setToast('Deleted');
       setDelTarget(null);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
     }
@@ -120,39 +122,17 @@ export default function FaqsPage() {
         <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>
           FAQs
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-          New FAQ
-        </Button>
-      </Stack>
-
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-        <TextField
-          select
-          size="small"
-          label="Super Category"
-          value={filterSuper}
-          onChange={(e) => setFilterSuper(e.target.value)}
-          sx={{ minWidth: 220 }}
-        >
-          <MenuItem value="">All categories</MenuItem>
-          {supers.map((sc) => (
-            <MenuItem key={sc.id} value={sc.id}>
-              {sc.name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          size="small"
-          label="Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ flex: 1 }}
-        />
       </Stack>
 
       <FaqsTable
-        loading={loading}
-        items={items}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        supers={supers}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+            New FAQ
+          </Button>
+        }
         onEdit={openEdit}
         onDelete={setDelTarget}
       />

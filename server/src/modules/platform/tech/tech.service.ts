@@ -8,6 +8,11 @@ import os from 'node:os';
 import { statfs, readFile } from 'node:fs/promises';
 import http from 'node:http';
 import { probe, isAllowedHost } from '../../../observability/statusProbe';
+import {
+  applyTableQueryInMemory,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 const DOCKER_SOCKET = process.env.DOCKER_SOCKET_PATH || '/var/run/docker.sock';
 const DOCKER_TIMEOUT_MS = 4000;
@@ -227,6 +232,25 @@ function dockerGet<T>(path: string): Promise<T> {
   });
 }
 
+/** Allowlists for the shared table engine (techDockerContainersTable — computed dataset). */
+const DOCKER_CONTAINER_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'image', 'id'],
+  sortFields: {
+    name: 'name',
+    image: 'image',
+    state: 'state',
+    status: 'status',
+    createdAt: 'createdAt',
+  },
+  filterFields: {
+    name: { type: 'string' },
+    image: { type: 'string' },
+    state: { type: 'enum' },
+    createdAt: { type: 'date' },
+  },
+  defaultSort: { name: 1 },
+};
+
 interface RawContainer {
   Id: string;
   Names: string[];
@@ -250,6 +274,15 @@ export const techService = {
       ssl,
       collectedAt: new Date().toISOString(),
     };
+  },
+
+  /** Table page over the COMPUTED containers list (no Model) — in-memory engine.
+   * When Docker is unavailable dockerInfo() yields an empty containers array,
+   * so this degrades to an empty page rather than erroring. */
+  async containersTable(input?: TableQueryInput | null) {
+    const info = await this.dockerInfo();
+    const rows = info.containers as Array<TechDockerContainer & Record<string, unknown>>;
+    return applyTableQueryInMemory(rows, input, DOCKER_CONTAINER_TABLE_CONFIG);
   },
 
   async dockerInfo(): Promise<TechDockerInfo> {

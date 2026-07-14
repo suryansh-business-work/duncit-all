@@ -50,6 +50,14 @@ export const walletTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "Server-side table page for the shared table engine (withdrawalRequestsTable)."
+  type WalletWithdrawalTablePage {
+    rows: [WalletWithdrawal!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input RequestWithdrawalInput {
     amount: Float!
     payout_method: WithdrawalMethod!
@@ -69,6 +77,7 @@ export const walletTypeDefs = /* GraphQL */ `
     myWalletTransactions: [WalletTransaction!]!
     myWithdrawals: [WalletWithdrawal!]!
     withdrawalRequests(status: WithdrawalStatus): [WalletWithdrawal!]!
+    withdrawalRequestsTable(query: TableQueryInput): WalletWithdrawalTablePage!
   }
 
   extend type Mutation {

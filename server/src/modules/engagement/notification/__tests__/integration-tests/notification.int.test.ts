@@ -50,6 +50,44 @@ describe('notificationService integration', () => {
     expect(list.length).toBeGreaterThanOrEqual(1);
   });
 
+  it('serves the notificationsTable page with search, filter, sort and paging', async () => {
+    await NotificationModel.create({ title: 'Alpha promo', body: 'First body', scope: 'GLOBAL', delivered_count: 5 });
+    await NotificationModel.create({ title: 'Beta news', body: 'Second body', scope: 'LOCATION', location_id: new Types.ObjectId(), delivered_count: 2 });
+    await NotificationModel.create({ title: 'Gamma alert', body: 'Third body', scope: 'GLOBAL', delivered_count: 9 });
+
+    // Plain envelope with the clamp defaults.
+    const all = await notificationService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans title and body.
+    const byTitle = await notificationService.table({ search: 'beta' });
+    expect(byTitle.rows.map((n) => n.title)).toEqual(['Beta news']);
+    const byBody = await notificationService.table({ search: 'third body' });
+    expect(byBody.rows.map((n) => n.title)).toEqual(['Gamma alert']);
+
+    // Enum filter narrows.
+    const global = await notificationService.table({
+      filters: [{ field: 'scope', op: 'eq', value: 'GLOBAL' }],
+      sort_by: 'title',
+      sort_dir: 'asc',
+    });
+    expect(global.rows.map((n) => n.title)).toEqual(['Alpha promo', 'Gamma alert']);
+    expect(global.total).toBe(2);
+
+    // Allowlisted numeric sort.
+    const byDelivered = await notificationService.table({ sort_by: 'delivered_count', sort_dir: 'desc' });
+    expect(byDelivered.rows.map((n) => n.delivered_count)).toEqual([9, 5, 2]);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await notificationService.table({ page: 2, page_size: 1, sort_by: 'title', sort_dir: 'asc' });
+    expect(page2.rows.map((n) => n.title)).toEqual(['Beta news']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('saves and deletes a push subscription', async () => {
     const userId = new Types.ObjectId().toString();
     await notificationService.savePushSubscription(userId, {

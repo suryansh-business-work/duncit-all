@@ -1,77 +1,39 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { notifyError } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useApolloClient } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Alert, Snackbar, Stack } from '@mui/material';
-import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
-import {
-  blankPodFormValues,
-  buildPodInput,
-  podToFormValues,
-  type PodFormConfig,
-  type PodFormValues,
-} from '@duncit/pod-form';
+import { Button, Snackbar, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { type PodFormConfig } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
-import {
-  PODS,
-  CLUBS,
-  LOCATIONS,
-  APPROVED_VENUES,
-  INVENTORY_PRODUCTS,
-  USERS,
-  FINANCE_FOR_PODS,
-  CREATE,
-  UPDATE,
-  DELETE,
-} from './queries';
+import { PODS_TABLE, type PodRow } from './queries';
 import CompletePodDialog from './complete-pod-dialog';
 import ReleaseSummaryDialog from './ReleaseSummaryDialog';
 import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
+import QuickEditPodDialog from './QuickEditPodDialog';
+import useMediaPickerBridge from './useMediaPickerBridge';
+import usePodEditor from './usePodEditor';
+import usePodPageData from './usePodPageData';
 import usePodReleaseRequest from './usePodReleaseRequest';
 
 export default function PodsPage() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const clubFilter = params.get('club_id') ?? '';
-  const editId = params.get('edit') ?? '';
-  const [search, setSearch] = useState('');
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
 
-  const { data, loading, error, refetch } = useQuery(PODS, {
-    variables: {
-      filter: {
-        club_id: clubFilter || undefined,
-        search: search || undefined,
-      },
-    },
-    fetchPolicy: 'cache-and-network',
-  });
-  const { data: clubsData } = useQuery(CLUBS);
-  const { data: locsData } = useQuery(LOCATIONS);
-  const { data: venuesData } = useQuery(APPROVED_VENUES);
-  const { data: inventoryData } = useQuery(INVENTORY_PRODUCTS);
-  const { data: usersData } = useQuery(USERS);
-  const { data: financeData } = useQuery(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
-
-  const [createMut] = useMutation(CREATE);
-  const [updateMut] = useMutation(UPDATE);
-  const [deleteMut] = useMutation(DELETE);
-  const confirm = useConfirm();
-
-  const [open, setOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [initialValues, setInitialValues] = useState<PodFormValues>(blankPodFormValues);
-  const [busy, setBusy] = useState(false);
-  const [opError, setOpError] = useState<string | null>(null);
+  const lookups = usePodPageData();
   const [toast, setToast] = useState<string | null>(null);
-  const [quickPod, setQuickPod] = useState<any>(null);
-  const [quickBusy, setQuickBusy] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerResolve = useRef<((url: string | null) => void) | null>(null);
-  const releaseRequest = usePodReleaseRequest({ refetch, setToast });
+  const [quickPod, setQuickPod] = useState<PodRow | null>(null);
+  const picker = useMediaPickerBridge();
+  const releaseRequest = usePodReleaseRequest({
+    refetch: async () => refetchRef.current?.(),
+    setToast,
+  });
 
   const productsFlag = useFeatureFlag('is_product_visible');
   const config = useMemo<PodFormConfig>(
@@ -88,134 +50,61 @@ export default function PodsPage() {
     [productsFlag]
   );
 
-  // Bridge the URL-callback media picker to the shared form's promise picker.
-  const pickImage = () =>
-    new Promise<string | null>((resolve) => {
-      pickerResolve.current = resolve;
-      setPickerOpen(true);
-    });
-  const settlePicker = (url: string | null) => {
-    pickerResolve.current?.(url);
-    pickerResolve.current = null;
-    setPickerOpen(false);
-  };
+  const editor = usePodEditor({
+    config,
+    clubFilter,
+    editId: params.get('edit') ?? '',
+    onChanged: (message) => {
+      setToast(message);
+      refetchRef.current?.();
+    },
+  });
 
-  const saveQuickEdit = async (values: PodContentValues) => {
-    if (!quickPod) return;
-    setQuickBusy(true);
-    setOpError(null);
-    try {
-      await updateMut({
-        variables: {
-          id: quickPod.id,
-          input: {
-            pod_title: values.pod_title,
-            pod_description: values.pod_description,
-            pod_images_and_videos: values.pod_images_and_videos.map((m) => ({ url: m.url, type: m.type || 'IMAGE' })),
-          },
-        },
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const filters = clubFilter
+        ? [...q.filters, { field: 'club_id', op: 'eq' as const, value: clubFilter }]
+        : q.filters;
+      const { data } = await client.query({
+        query: PODS_TABLE,
+        variables: tableQueryToGql({ ...q, filters }),
+        fetchPolicy: 'network-only',
       });
-      setQuickPod(null);
-      setToast('Saved');
-      await refetch();
-    } catch (e: any) {
-      setOpError(e.message);
-    } finally {
-      setQuickBusy(false);
-    }
-  };
+      return { rows: data.podsTable.rows as PodRow[], total: data.podsTable.total as number };
+    },
+    [client, clubFilter],
+  );
 
-  const clubs = clubsData?.clubs ?? [];
-  const locations = locsData?.locations ?? [];
-  const approvedVenues = venuesData?.venues ?? [];
-  const inventoryProducts = inventoryData?.inventoryProducts ?? [];
-  const users = usersData?.users ?? [];
-
-  const clubName = (id: string) => clubs.find((c: any) => c.id === id)?.club_name ?? '—';
-  const locName = (id: string) => locations.find((l: any) => l.id === id)?.location_name ?? '—';
-  const venueName = (id: string) => approvedVenues.find((v: any) => v.id === id)?.venue_name ?? '—';
-
-  const openCreate = () => {
-    setEditingId(null);
-    setInitialValues({ ...blankPodFormValues, club_id: clubFilter || '' });
-    setOpError(null);
-    setOpen(true);
-  };
-  const openEdit = (p: any) => {
-    setEditingId(p.id);
-    setInitialValues(podToFormValues(p));
-    setOpError(null);
-    setOpen(true);
-  };
-
-  // Deep-link from the Pod details page: /pods?edit=<id> opens the edit dialog.
+  // The club select lives outside the table, so a change must trigger a reload.
+  const prevClubRef = useRef(clubFilter);
   useEffect(() => {
-    if (!editId || open) return;
-    const pod = (data?.pods ?? []).find((p: any) => p.id === editId);
-    if (pod) openEdit(pod);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editId, data?.pods]);
-
-  const submit = async (values: PodFormValues, options: { draft: boolean }) => {
-    setBusy(true);
-    setOpError(null);
-    try {
-      const isDraft = options.draft;
-      const input = buildPodInput(values, { draft: isDraft, config });
-      if (editingId) {
-        await updateMut({ variables: { id: editingId, input: { ...input, is_active: values.is_active } } });
-      } else {
-        await createMut({ variables: { input: { ...input, pod_id: values.pod_id || undefined } } });
-      }
-      setToast(isDraft ? 'Draft saved' : 'Saved');
-      setOpen(false);
-      await refetch();
-    } catch (e: any) {
-      setOpError(e.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const remove = async (p: any) => {
-    const ok = await confirm({
-      title: 'Delete pod',
-      message: `Delete pod "${p.pod_title}"?`,
-      destructive: true,
-      confirmLabel: 'Delete',
-    });
-    if (!ok) return;
-    try {
-      await deleteMut({ variables: { id: p.id } });
-      setToast('Deleted');
-      await refetch();
-    } catch (e: any) {
-      notifyError(e.message);
-    }
-  };
+    if (prevClubRef.current === clubFilter) return;
+    prevClubRef.current = clubFilter;
+    refetchRef.current?.();
+  }, [clubFilter]);
 
   return (
     <Stack spacing={3}>
       <PodsToolbar
-        clubs={clubs}
+        clubs={lookups.clubs}
         clubFilter={clubFilter}
         setClubFilter={(v) => (v ? setParams({ club_id: v }) : setParams({}))}
-        search={search}
-        setSearch={setSearch}
-        onCreate={openCreate}
       />
 
-      {error && <Alert severity="error">{error.message}</Alert>}
-
       <PodsTable
-        loading={loading}
-        pods={data?.pods ?? []}
-        clubName={clubName}
-        venueName={venueName}
-        locName={locName}
-        onEdit={openEdit}
-        onQuickEdit={(p) => { setOpError(null); setQuickPod(p); }}
-        onDelete={remove}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>
+            New Pod
+          </Button>
+        }
+        clubName={lookups.clubName}
+        venueName={lookups.venueName}
+        locName={lookups.locName}
+        onEdit={editor.openEdit}
+        onQuickEdit={setQuickPod}
+        onDelete={editor.remove}
         onComplete={releaseRequest.openCompletePod}
         onView={(p) => navigate(`/pods/${p.id}`)}
       />
@@ -223,7 +112,7 @@ export default function PodsPage() {
       <CompletePodDialog
         open={!!releaseRequest.completePod}
         pod={releaseRequest.completePod}
-        users={users}
+        users={lookups.users}
         busy={releaseRequest.releaseBusy}
         errorMessage={releaseRequest.releaseError}
         onClose={() => releaseRequest.setCompletePod(null)}
@@ -236,47 +125,38 @@ export default function PodsPage() {
       />
 
       <PodFormDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        initialValues={initialValues}
+        open={editor.open}
+        onClose={editor.close}
+        initialValues={editor.initialValues}
         config={config}
-        busy={busy}
-        opError={opError}
-        clubs={clubs}
-        venues={approvedVenues}
-        inventoryProducts={inventoryProducts}
-        users={users}
-        onSubmit={submit}
-        finance={financeData?.publicFinanceSettings}
-        onPickImage={pickImage}
+        busy={editor.busy}
+        opError={editor.opError}
+        clubs={lookups.clubs}
+        venues={lookups.approvedVenues}
+        inventoryProducts={lookups.inventoryProducts}
+        users={lookups.users}
+        onSubmit={editor.submit}
+        finance={lookups.finance}
+        onPickImage={picker.pickImage}
       />
 
-      {quickPod && (
-        <PodContentFormDialog
-          open={!!quickPod}
-          title="Quick edit pod"
-          defaultValues={{
-            pod_title: quickPod.pod_title || '',
-            pod_description: quickPod.pod_description || '',
-            pod_images_and_videos: (quickPod.pod_images_and_videos ?? []).map((m: any) => ({ url: m.url, type: m.type })),
-          }}
-          editableFields={['pod_title', 'pod_description', 'pod_images_and_videos']}
-          readOnlyContext={[
-            { label: 'Club', value: clubName(quickPod.club_id) },
-            { label: 'Place', value: quickPod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(quickPod.venue_id) },
-          ]}
-          busy={quickBusy}
-          error={opError}
-          onClose={() => setQuickPod(null)}
-          onSubmit={saveQuickEdit}
-          onPickImage={pickImage}
-        />
-      )}
+      <QuickEditPodDialog
+        pod={quickPod}
+        clubName={lookups.clubName}
+        venueName={lookups.venueName}
+        onClose={() => setQuickPod(null)}
+        onSaved={() => {
+          setQuickPod(null);
+          setToast('Saved');
+          refetchRef.current?.();
+        }}
+        onPickImage={picker.pickImage}
+      />
 
       <MediaPickerDialog
-        open={pickerOpen}
-        onClose={() => settlePicker(null)}
-        onPicked={(url) => settlePicker(url)}
+        open={picker.pickerOpen}
+        onClose={() => picker.settlePicker(null)}
+        onPicked={(url) => picker.settlePicker(url)}
         folder="/pods/media"
         title="Add pod image"
       />

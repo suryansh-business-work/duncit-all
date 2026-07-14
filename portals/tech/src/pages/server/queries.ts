@@ -80,6 +80,23 @@ export const DOCKER_INFO = gql`
   }
 `;
 
+/** Server-side table page over techDockerInfo.containers (search/sort/filter/paginate). */
+export const DOCKER_CONTAINERS_TABLE = gql`
+  query TechDockerContainersTable($query: TableQueryInput) {
+    techDockerContainersTable(query: $query) {
+      total
+      rows {
+        id
+        name
+        image
+        state
+        status
+        createdAt
+      }
+    }
+  }
+`;
+
 /** Extract the hostname from a URL, or undefined when it can't be parsed. */
 export function hostFromUrl(url: string): string | undefined {
   try {

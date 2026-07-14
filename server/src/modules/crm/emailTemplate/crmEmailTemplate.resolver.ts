@@ -11,6 +11,10 @@ export const crmEmailTemplateResolvers = {
       requireRole(ctx, RW);
       return crmEmailTemplateService.list();
     },
+    crmEmailTemplatesTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmEmailTemplateService.table(args.query);
+    },
     crmEmailTemplate: (_p: unknown, args: { template_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmEmailTemplateService.byId(args.template_id);

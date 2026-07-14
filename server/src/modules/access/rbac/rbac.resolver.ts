@@ -11,6 +11,10 @@ export const rbacResolvers = {
       requireRole(ctx, READ_ROLES);
       return rbacService.listRoles();
     },
+    rolesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, READ_ROLES);
+      return rbacService.table(args.query);
+    },
     role: async (_p: unknown, args: { role_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, READ_ROLES);
       return rbacService.getRole(args.role_id);

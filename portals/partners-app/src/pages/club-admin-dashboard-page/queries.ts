@@ -43,6 +43,26 @@ export const CLUB_ADMIN_DASHBOARD = gql`
   }
 `;
 
+/** Server-paged sibling of the dashboard's per-club rows (shared table engine). */
+export const CLUB_ADMIN_DASHBOARD_TABLE = gql`
+  query ClubAdminDashboardTable($query: TableQueryInput, $from: String, $to: String) {
+    clubAdminDashboardTable(query: $query, from: $from, to: $to) {
+      total
+      rows {
+        club_id
+        club_slug
+        club_name
+        total_pods
+        upcoming_pods
+        completed_pods
+        followers
+        rating
+        revenue
+      }
+    }
+  }
+`;
+
 export interface ClubAdminKpis {
   assigned_clubs: number;
   total_pods: number;

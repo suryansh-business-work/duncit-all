@@ -19,6 +19,10 @@ export const meetingResolvers = {
       requireRole(ctx, ONBOARDING_RW);
       return meetingService.list(args.filter ?? {});
     },
+    onboardingMeetingsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.table(args.query);
+    },
     meetingAvailability: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return meetingService.availability();

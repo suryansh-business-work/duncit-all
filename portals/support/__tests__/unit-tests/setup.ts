@@ -42,3 +42,37 @@ if (typeof URL.createObjectURL !== 'function') {
 if (typeof URL.revokeObjectURL !== 'function') {
   URL.revokeObjectURL = vi.fn();
 }
+
+// AG Grid (via @duncit/table) needs ResizeObserver, which jsdom lacks.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserverStub {
+    observe(): void {
+      // no-op — jsdom has no layout to observe
+    }
+
+    unobserve(): void {
+      // no-op
+    }
+
+    disconnect(): void {
+      // no-op
+    }
+  }
+  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+}
+
+// jsdom reports zero dimensions; AG Grid virtualises everything away at width 0,
+// so give every element a nominal size to make columns/rows render. Tests that
+// need specific sizes still win by defining own properties on the instance.
+const DIMENSIONS: Record<string, number> = {
+  offsetWidth: 800,
+  offsetHeight: 600,
+  clientWidth: 800,
+  clientHeight: 600,
+};
+for (const [property, value] of Object.entries(DIMENSIONS)) {
+  Object.defineProperty(globalThis.HTMLElement.prototype, property, {
+    configurable: true,
+    get: () => value,
+  });
+}

@@ -85,12 +85,32 @@ export const faqTypeDefs = /* GraphQL */ `
     message: String!
   }
 
+  "Server-side table page for the shared table engine (faqsTable)."
+  type FaqTablePage {
+    rows: [Faq!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "Server-side table page for the shared table engine (faqSubmissionsTable)."
+  type FaqSubmissionTablePage {
+    rows: [FaqSubmission!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     faqs(filter: FaqFilterInput): [Faq!]!
+    "Server-side table page (search/filter/sort/paginate) over faqs."
+    faqsTable(query: TableQueryInput): FaqTablePage!
     faq(faq_doc_id: ID!): Faq
     publicFaqGroups: [FaqGroup!]!
     publicPartnerFaqs(topic: PartnerFaqTopic): [Faq!]!
     faqSubmissions(status: FaqSubmissionStatus): [FaqSubmission!]!
+    "Server-side table page (search/filter/sort/paginate) over FAQ submissions."
+    faqSubmissionsTable(query: TableQueryInput): FaqSubmissionTablePage!
   }
 
   extend type Mutation {

@@ -153,7 +153,7 @@ import { hostRequestTypeDefs } from '@modules/crm/hostRequest/hostRequest.schema
 import { hostRequestResolvers } from '@modules/crm/hostRequest/hostRequest.resolver';
 import { apiKeyTypeDefs } from '@modules/platform/apiKey/apiKey.schema';
 import { apiKeyResolvers } from '@modules/platform/apiKey/apiKey.resolver';
-import { tableQueryTypeDefs } from '@utils/table-query.schema';
+import { tableQueryTypeDefs } from './table-query.schema';
 
 const rootTypeDefs = gql`
   type Query {

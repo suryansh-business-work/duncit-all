@@ -42,6 +42,30 @@ export const COUPONS_FOR_POD = gql`
   ${COUPON_FIELDS}
 `;
 
+export const COUPONS_TABLE = gql`
+  query CouponsTable($query: TableQueryInput) {
+    couponsTable(query: $query) {
+      total
+      rows {
+        ...CouponFields
+      }
+    }
+  }
+  ${COUPON_FIELDS}
+`;
+
+export const COUPONS_FOR_POD_TABLE = gql`
+  query CouponsForPodTable($pod_id: ID!, $query: TableQueryInput) {
+    couponsForPodTable(pod_id: $pod_id, query: $query) {
+      total
+      rows {
+        ...CouponFields
+      }
+    }
+  }
+  ${COUPON_FIELDS}
+`;
+
 export const CREATE_COUPON = gql`
   mutation CreateCoupon($input: CreateCouponInput!) {
     createCoupon(input: $input) {

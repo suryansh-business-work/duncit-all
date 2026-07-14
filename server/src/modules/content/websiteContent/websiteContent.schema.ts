@@ -23,6 +23,14 @@ export const websiteContentTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (websiteContentTable)."
+  type WebsiteContentItemTablePage {
+    rows: [WebsiteContentItem!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input WebsiteContentInput {
     type: WebsitePageType!
     title: String!
@@ -40,6 +48,7 @@ export const websiteContentTypeDefs = /* GraphQL */ `
 
   extend type Query {
     websiteContent(type: WebsitePageType): [WebsiteContentItem!]!
+    websiteContentTable(query: TableQueryInput): WebsiteContentItemTablePage!
     publicWebsiteContent(type: WebsitePageType!): [WebsiteContentItem!]!
   }
 

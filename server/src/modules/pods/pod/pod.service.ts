@@ -23,6 +23,7 @@ import {
 import { getUrlConfigs } from '@config/url-configs';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { assertInvitable } from './coHost.service';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const slugify = (s: string) =>
   s
@@ -119,6 +120,42 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
 export const mapPodToPublic = (doc: any, clubSlugById?: Map<string, string>) =>
   toPub(doc, clubSlugById);
 export const loadPodClubSlugMap = (podDocs: any[]) => loadClubSlugMap(podDocs);
+
+/** Shared allowlists for the table engine (podsTable / myHostPodsTable —
+ * DUNCIT TABLE CONTRACT v1). Only defaultSort could differ; both lists sort by
+ * pod_date_time desc today (mirrors list() / listMyHostPods()). */
+const POD_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['pod_title', 'pod_id'],
+  sortFields: {
+    pod_title: 'pod_title',
+    pod_date_time: 'pod_date_time',
+    pod_amount: 'pod_amount',
+    pod_hits: 'pod_hits',
+    no_of_spots: 'no_of_spots',
+    is_active: 'is_active',
+    completed_at: 'completed_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    club_id: { type: 'string' },
+    venue_id: { type: 'string' },
+    location_id: { type: 'string' },
+    zone_name: { type: 'string' },
+    host_user_id: { path: 'pod_hosts_id', type: 'string' },
+    pod_mode: { type: 'enum' },
+    pod_type: { type: 'enum' },
+    pod_occurrence: { type: 'enum' },
+    venue_approval_status: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    products_enabled: { type: 'boolean' },
+    pod_amount: { type: 'number' },
+    pod_date_time: { type: 'date' },
+    completed_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { pod_date_time: -1 },
+};
 
 const MEET_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
 
@@ -740,6 +777,43 @@ export const podService = {
     const docs = await PodModel.find(q).sort({ pod_date_time: -1 });
     const slugMap = await loadClubSlugMap(docs);
     return docs.map((d) => toPub(d, slugMap));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the podsTable
+   * query — same rows as list(). The venue-approval guard lives in the
+   * baseFilter, so a client filter can never surface a PENDING pod to a
+   * non-review caller (runTableQuery $and-merges the two). Soft-deleted pods
+   * stay excluded via the model's pre-find hook. */
+  async table(input?: TableQueryInput | null, opts?: { includePendingApproval?: boolean }) {
+    const baseFilter = opts?.includePendingApproval
+      ? {}
+      : { venue_approval_status: { $ne: 'PENDING' } };
+    const { docs, total, page, page_size } = await runTableQuery<any>(
+      PodModel,
+      baseFilter,
+      input,
+      POD_TABLE_CONFIG
+    );
+    const slugMap = await loadClubSlugMap(docs);
+    return { rows: docs.map((d) => toPub(d, slugMap)), total, page, page_size };
+  },
+
+  /** Host-scoped table page for myHostPodsTable. The baseFilter pins
+   * pod_hosts_id to the caller ($and-merged by runTableQuery), so client
+   * filters can never widen the scope to another host's pods. Like
+   * listMyHostPods, the host still sees their own PENDING-approval pods. */
+  async tableMine(userId: string, input?: TableQueryInput | null) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    }
+    const { docs, total, page, page_size } = await runTableQuery<any>(
+      PodModel,
+      { pod_hosts_id: new Types.ObjectId(userId) },
+      input,
+      POD_TABLE_CONFIG
+    );
+    const slugMap = await loadClubSlugMap(docs);
+    return { rows: docs.map((d) => toPub(d, slugMap)), total, page, page_size };
   },
 
   async activeLocationIds(): Promise<string[]> {

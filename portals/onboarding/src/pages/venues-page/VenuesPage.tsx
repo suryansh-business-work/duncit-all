@@ -1,35 +1,39 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import TableSkeleton from '../../components/TableSkeleton';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Box, Stack, Typography } from '@mui/material';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
-import { APPROVE, DELETE_VENUE, REJECT, SET_VENUE_ACTIVE, SET_VENUE_DEDUCTIONS, STATUSES, VENUES } from './queries';
+import { APPROVE, DELETE_VENUE, REJECT, SET_VENUE_ACTIVE, SET_VENUE_DEDUCTIONS, VENUES_TABLE, type VenueRow } from './queries';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
 
 export default function VenuesPage() {
-  const [status, setStatus] = useState('');
-  const { data, loading, error, refetch } = useQuery(VENUES, {
-    variables: { status: status || null },
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
+  const refresh = useCallback(() => refetchRef.current?.(), []);
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
   const [setVenueDeductions, { loading: savingDeductions }] = useMutation(SET_VENUE_DEDUCTIONS);
-  const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refetch);
+  const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refresh);
   const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
   const [editing, setEditing] = useState<any>(null);
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: VENUES_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.venuesTable.rows as VenueRow[], total: data.venuesTable.total as number };
+    },
+    [client],
+  );
 
   const parseTags = () =>
     tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);
@@ -44,7 +48,7 @@ export default function VenuesPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refetch();
+    refresh();
   };
   const doReject = async () => {
     if (!notes.trim()) return;
@@ -52,7 +56,7 @@ export default function VenuesPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refetch();
+    refresh();
   };
   const doSaveDeductions = async (sharePct: number, commissionPct: number) => {
     await setVenueDeductions({
@@ -61,48 +65,27 @@ export default function VenuesPage() {
     setActive((current: any) =>
       current ? { ...current, venue_share_pct: sharePct, venue_commission_pct: commissionPct } : current
     );
-    refetch();
+    refresh();
   };
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Stack spacing={0.25}>
-          <Typography variant="h5" fontWeight={700}>Registered Venues</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Review submitted venue requests and manage approved spaces for clubs, pods and meetups.
-          </Typography>
-        </Stack>
-        <TextField
-          select
-          size="small"
-          label="Status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          sx={{ minWidth: 180 }}
-        >
-          {STATUSES.map((s) => (
-            <MenuItem key={s} value={s}>
-              {s || 'All'}
-            </MenuItem>
-          ))}
-        </TextField>
+      <Stack spacing={0.25} mb={2}>
+        <Typography variant="h5" fontWeight={700}>Registered Venues</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Review submitted venue requests and manage approved spaces for clubs, pods and meetups.
+        </Typography>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
-
-      {loading && !data ? (
-        <TableSkeleton columns={8} />
-      ) : (
-        <VenuesTable
-          venues={data?.venues ?? []}
-          onEdit={setEditing}
-          onReview={openReview}
-          canHardDelete={lifecycle.canHardDelete}
-          onToggleActive={lifecycle.setToggleTarget}
-          onDelete={lifecycle.setDeleteTarget}
-        />
-      )}
+      <VenuesTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onEdit={setEditing}
+        onReview={openReview}
+        canHardDelete={lifecycle.canHardDelete}
+        onToggleActive={lifecycle.setToggleTarget}
+        onDelete={lifecycle.setDeleteTarget}
+      />
 
       <ConfirmDialog
         open={!!lifecycle.toggleTarget}
@@ -142,7 +125,7 @@ export default function VenuesPage() {
         savingDeductions={savingDeductions}
       />
 
-      <VenueEditDialog venue={editing} onClose={() => setEditing(null)} onSaved={() => refetch()} />
+      <VenueEditDialog venue={editing} onClose={() => setEditing(null)} onSaved={refresh} />
     </Box>
   );
 }

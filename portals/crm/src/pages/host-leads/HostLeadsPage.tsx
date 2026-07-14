@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Snackbar, Stack, Typography } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import { DELETE_HOST_LEAD, HOST_LEADS } from '../../api/crm.gql';
+import { Alert, Button, Snackbar, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { DELETE_HOST_LEAD, HOST_LEADS_TABLE } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
 import type { HostLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
@@ -12,7 +13,7 @@ import LeadsToolbar from '../../components/LeadsToolbar';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
-import HostLeadsTable from './HostLeadsTable';
+import { CrmLeadsTable } from '../../components/lead-table';
 import { parseApiError } from '../../utils/parseApiError';
 
 export default function HostLeadsPage() {
@@ -20,34 +21,27 @@ export default function HostLeadsPage() {
   const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
+  const refetchRef = useRef<(() => void) | null>(null);
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
-  const [superCategoryFilter, setSuperCategoryFilter] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAi, setShowAi] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<HostLead | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkBusy, setBulkBusy] = useState(false);
 
-  const { data, loading, refetch } = useQuery<{ hostLeads: HostLead[] }>(HOST_LEADS, {
-    variables: {
-      filter: {
-        search,
-        lead_status: statusFilter || null,
-        priority: priorityFilter || null,
-        super_category_id: superCategoryFilter || null,
-      },
-    },
-    fetchPolicy: 'cache-and-network',
-  });
   const [deleteLead, { loading: deleting }] = useMutation(DELETE_HOST_LEAD);
 
-  const leads = data?.hostLeads ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: HOST_LEADS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.hostLeadsTable.rows as HostLead[], total: data.hostLeadsTable.total as number };
+    },
+    [client],
+  );
 
   const statusOptions = useMemo(
     () => (config.host_lead_statuses ?? []).map((value) => ({ label: value, value })),
@@ -68,24 +62,9 @@ export default function HostLeadsPage() {
       await deleteLead({ variables: { id: toDelete.id } });
       setToast('Host lead deleted');
       setToDelete(null);
-      await refetch();
+      refetchRef.current?.();
     } catch (err) {
       setError(parseApiError(err));
-    }
-  };
-
-  const bulkDelete = async () => {
-    setBulkBusy(true);
-    try {
-      await Promise.all(selectedIds.map((id) => deleteLead({ variables: { id } })));
-      setToast(`Deleted ${selectedIds.length} host lead${selectedIds.length === 1 ? '' : 's'}`);
-      setSelectedIds([]);
-      setBulkOpen(false);
-      await refetch();
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setBulkBusy(false);
     }
   };
 
@@ -100,8 +79,7 @@ export default function HostLeadsPage() {
       const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
       if (!payload) throw new Error('Empty response');
       downloadBase64Xlsx(payload.filename, payload.content_base64);
-      const plural = leads.length === 1 ? '' : 's';
-      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} host lead${plural}`);
+      setToast(kind === 'template' ? 'Template downloaded' : 'Host leads exported');
     } catch (err) {
       setError(parseApiError(err));
     }
@@ -112,19 +90,8 @@ export default function HostLeadsPage() {
       <LeadsToolbar
         title="Host Leads"
         subtitle="Capture and qualify host and organizer leads."
-        search={search}
-        onSearch={setSearch}
-        onCreate={() => navigate('/host-leads/new')}
-        createLabel="New Host Lead"
         onManageServices={() => navigate('/host-leads/services')}
         manageServicesLabel="Manage Host Services"
-        superCategory={{
-          selected: superCategoryFilter,
-          options: superCategoryOptions,
-          onChange: setSuperCategoryFilter,
-        }}
-        status={{ selected: statusFilter, options: statusOptions, onChange: setStatusFilter }}
-        priority={{ selected: priorityFilter, options: priorityOptions, onChange: setPriorityFilter }}
         onFillWithAi={() => setShowAi(true)}
         onImport={() => setShowImport(true)}
         onExport={() => fetchExcel('export')}
@@ -133,23 +100,21 @@ export default function HostLeadsPage() {
 
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
 
-      {selectedIds.length > 0 && (
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
-          <Typography variant="body2" color="text.secondary">{selectedIds.length} selected</Typography>
-          <Button size="small" color="error" variant="outlined" startIcon={<DeleteSweepIcon />} onClick={() => setBulkOpen(true)}>
-            Delete selected
+      <CrmLeadsTable<HostLead>
+        entity="host"
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        statusOptions={statusOptions}
+        priorityOptions={priorityOptions}
+        superCategoryOptions={superCategoryOptions}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/host-leads/new')}>
+            New Host Lead
           </Button>
-        </Stack>
-      )}
-
-      <HostLeadsTable
-        leads={leads}
-        loading={loading && !data}
+        }
         onView={(lead) => navigate(`/host-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/host-leads/${lead.id}`)}
         onDelete={setToDelete}
-        selectionModel={selectedIds}
-        onSelectionChange={setSelectedIds}
       />
 
       <ConfirmDialog
@@ -162,16 +127,6 @@ export default function HostLeadsPage() {
         onClose={() => setToDelete(null)}
       />
 
-      <ConfirmDialog
-        open={bulkOpen}
-        title="Delete selected host leads"
-        message={`Delete ${selectedIds.length} selected host lead${selectedIds.length === 1 ? '' : 's'}? This cannot be undone.`}
-        confirmLabel="Delete all"
-        loading={bulkBusy}
-        onConfirm={bulkDelete}
-        onClose={() => setBulkOpen(false)}
-      />
-
       <FillWithAiDialog
         open={showAi}
         entity="HOST_LEAD"
@@ -179,7 +134,7 @@ export default function HostLeadsPage() {
         onClose={() => setShowAi(false)}
         onSaved={(count) => {
           setToast(`Created ${count} host lead${count === 1 ? '' : 's'}`);
-          refetch();
+          refetchRef.current?.();
         }}
       />
 
@@ -190,7 +145,7 @@ export default function HostLeadsPage() {
         onClose={() => setShowImport(false)}
         onImported={(result) => {
           setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);
-          refetch();
+          refetchRef.current?.();
         }}
         onDownloadTemplate={() => fetchExcel('template')}
       />

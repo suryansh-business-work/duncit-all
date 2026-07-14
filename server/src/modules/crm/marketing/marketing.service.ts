@@ -11,6 +11,7 @@ import { applyVars, detectVariables, renderMjml } from '@modules/content/emailTe
 import { sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getMailConfigs } from '@config/url-configs';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
 const timers = new Map<string, NodeJS.Timeout>();
@@ -275,10 +276,45 @@ function scheduleDoc(doc: IMarketingCampaign) {
   timers.set(doc.campaign_id, timer);
 }
 
+/** Allowlists for the shared table engine (marketingCampaignsTable — DUNCIT TABLE CONTRACT v1). */
+const MARKETING_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'subject'],
+  sortFields: {
+    name: 'name',
+    channel: 'channel',
+    audience: 'audience',
+    status: 'status',
+    recipient_count: 'recipient_count',
+    scheduled_at: 'scheduled_at',
+    sent_at: 'sent_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    channel: { type: 'enum' },
+    audience: { type: 'enum' },
+    status: { type: 'enum' },
+    scheduled_at: { type: 'date' },
+    sent_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 export const marketingService = {
   async list() {
     const docs = await MarketingCampaignModel.find().sort({ created_at: -1 }).exec();
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the marketingCampaignsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IMarketingCampaign>(
+      MarketingCampaignModel,
+      {},
+      input,
+      MARKETING_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
   previewCards,
   async renderPreview(input: any) {

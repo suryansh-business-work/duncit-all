@@ -84,6 +84,14 @@ export const clubTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (clubsTable)."
+  type ClubTablePage {
+    rows: [Club!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input ClubFilterInput {
     search: String
     category_id: ID
@@ -146,6 +154,7 @@ export const clubTypeDefs = /* GraphQL */ `
 
   extend type Query {
     clubs(filter: ClubFilterInput): [Club!]!
+    clubsTable(query: TableQueryInput): ClubTablePage!
     club(club_doc_id: ID!): Club
     clubBySlug(club_slug: String!): Club
     clubRatings(club_doc_id: ID!): [ClubRating!]!

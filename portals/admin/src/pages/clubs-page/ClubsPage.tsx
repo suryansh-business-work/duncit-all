@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
-import { useMutation, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Alert, Snackbar, Stack } from '@mui/material';
+import { Button, Snackbar, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import {
   blankClubFormValues,
   buildClubInput,
@@ -13,7 +15,7 @@ import {
   type ClubFormValues,
 } from '@duncit/club-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { CLUBS, CATEGORIES, CREATE, UPDATE, DELETE } from './queries';
+import { CLUBS_TABLE, CLUB_FOR_EDIT, CATEGORIES, CREATE, UPDATE, DELETE, type ClubRow } from './queries';
 import ClubFormDialog from './ClubFormDialog';
 import ClubsTable from './ClubsTable';
 import ClubsToolbar from './ClubsToolbar';
@@ -28,11 +30,8 @@ export default function ClubsPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const editId = params.get('edit') ?? '';
-  const [search, setSearch] = useState('');
-  const { data, loading, error, refetch } = useQuery(CLUBS, {
-    variables: { filter: { search: search || undefined } },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data: catData } = useQuery(CATEGORIES);
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
@@ -49,6 +48,18 @@ export default function ClubsPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerFolder, setPickerFolder] = useState('/clubs');
   const pickerResolve = useRef<((url: string | null) => void) | null>(null);
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: CLUBS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.clubsTable.rows as ClubRow[], total: data.clubsTable.total as number };
+    },
+    [client],
+  );
 
   // Bridge the URL-callback media picker to the shared form's promise picker.
   const pickImage = (folder = '/clubs') =>
@@ -77,12 +88,19 @@ export default function ClubsPage() {
   };
 
   // Deep-link from the Club details page: /clubs?edit=<id> opens the edit dialog.
+  // Rows are server-paged now, so fetch the club directly instead of scanning the list.
+  const handledEditRef = useRef('');
   useEffect(() => {
-    if (!editId || open) return;
-    const club = (data?.clubs ?? []).find((c: any) => c.id === editId);
-    if (club) openEdit(club);
+    if (!editId || handledEditRef.current === editId) return;
+    handledEditRef.current = editId;
+    client
+      .query({ query: CLUB_FOR_EDIT, variables: { id: editId }, fetchPolicy: 'network-only' })
+      .then(({ data }) => {
+        if (data?.club) openEdit(data.club);
+      })
+      .catch((e: Error) => notifyError(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editId, data?.clubs]);
+  }, [editId, client]);
 
   const submit = async (values: ClubFormValues, options: { draft: boolean }) => {
     setBusy(true);
@@ -96,7 +114,7 @@ export default function ClubsPage() {
       }
       setToast(options.draft ? 'Draft saved' : 'Saved');
       setOpen(false);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -104,7 +122,7 @@ export default function ClubsPage() {
     }
   };
 
-  const remove = async (c: any) => {
+  const remove = async (c: ClubRow) => {
     const ok = await confirm({
       title: 'Delete club',
       message: `Delete club "${c.club_name}"?`,
@@ -115,27 +133,30 @@ export default function ClubsPage() {
     try {
       await deleteMut({ variables: { id: c.id } });
       setToast('Deleted');
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);
     }
   };
 
-  const allCats = catData?.categories ?? [];
-  const catName = (id: string) => allCats.find((c: any) => c.id === id)?.name ?? '—';
+  const catName = useCallback(
+    (id: string) => (catData?.categories ?? []).find((c: any) => c.id === id)?.name ?? '—',
+    [catData],
+  );
 
   return (
     <Stack spacing={3}>
-      <ClubsToolbar search={search} setSearch={setSearch} onCreate={openCreate} />
-
-      {error && <Alert severity="error">{error.message}</Alert>}
+      <ClubsToolbar />
 
       <ClubsTable
-        loading={loading}
-        hasData={!!data}
-        clubs={data?.clubs ?? []}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
         catName={catName}
-        onCreate={openCreate}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New Club
+          </Button>
+        }
         onEdit={openEdit}
         onRemove={remove}
         onView={(c) => navigate(`/clubs/${c.id}`)}

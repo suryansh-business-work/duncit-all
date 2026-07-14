@@ -1,19 +1,22 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useParams } from 'react-router-dom';
-import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { PodForm, blankPodFormValues, buildPodInput, podToFormValues, type PodFormValues } from '@duncit/pod-form';
-import { CLUB_ADMIN_CREATE_POD, CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS, CLUB_ADMIN_UPDATE_POD } from './queries';
+import { CLUB_ADMIN_CREATE_POD, CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE, CLUB_ADMIN_UPDATE_POD } from './queries';
 import { PARTNER_POD_CONFIG, getClubVenueIds } from '../pods-page/partner-pod-config';
-import ClubAdminPodsTable from './ClubAdminPodsTable';
+import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 import DeletePodDialog from './DeletePodDialog';
 
 export default function ClubAdminClubPodsPage() {
   const { clubId = '' } = useParams();
   const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
-  const podsQuery = useQuery(CLUB_ADMIN_PODS, { variables: { filter: { club_id: clubId } }, fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [createPod, createState] = useMutation(CLUB_ADMIN_CREATE_POD);
   const [updatePod, updateState] = useMutation(CLUB_ADMIN_UPDATE_POD);
   const [deletePod, deleteState] = useMutation(CLUB_ADMIN_DELETE_POD);
@@ -29,6 +32,24 @@ export default function ClubAdminClubPodsPage() {
   const products = lookups.data?.availablePodProducts ?? [];
   const club = clubs.find((item: any) => item.id === clubId);
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
+
+  // Every page (and every user filter) stays pinned to this club server-side.
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const variables = tableQueryToGql(q);
+      variables.query.filters = [
+        ...variables.query.filters,
+        { field: 'club_id', op: 'eq', value: clubId, values: null },
+      ];
+      const { data } = await client.query({
+        query: CLUB_ADMIN_PODS_TABLE,
+        variables,
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.podsTable.rows as PodRowBase[], total: data.podsTable.total as number };
+    },
+    [client, clubId],
+  );
 
   const openCreate = () => { setOpError(null); setEditPod(null); setFormOpen(true); };
   const openEdit = (pod: any) => { setOpError(null); setEditPod(pod); setFormOpen(true); };
@@ -55,7 +76,7 @@ export default function ClubAdminClubPodsPage() {
         setMessage(options.draft ? 'Pod draft saved.' : 'Pod created.');
       }
       closeForm();
-      await podsQuery.refetch();
+      refetchRef.current?.();
     } catch (submitError: any) {
       setOpError(submitError.message);
     }
@@ -68,12 +89,25 @@ export default function ClubAdminClubPodsPage() {
       await deletePod({ variables: { pod_doc_id: podToDelete.id } });
       setPodToDelete(null);
       setMessage('Pod deleted.');
-      await podsQuery.refetch();
+      refetchRef.current?.();
     } catch (deleteError: any) {
       setOpError(deleteError.message);
       setPodToDelete(null);
     }
   };
+
+  const renderActions = (pod: PodRowBase) => (
+    <Stack direction="row" justifyContent="flex-end" component="span">
+      <Tooltip title="Edit pod">
+        <IconButton size="small" onClick={() => openEdit(pod)}><EditIcon fontSize="small" /></IconButton>
+      </Tooltip>
+      <Tooltip title="Delete pod">
+        <IconButton size="small" color="error" onClick={() => { setOpError(null); setPodToDelete(pod); }}>
+          <DeleteOutlineIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    </Stack>
+  );
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -85,27 +119,27 @@ export default function ClubAdminClubPodsPage() {
               <Typography variant="h6" fontWeight={950}>{club?.club_name ?? 'Club pods'}</Typography>
               <Typography variant="body2" color="text.secondary">Create, edit and delete pods for this club.</Typography>
             </Stack>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="outlined"
-                startIcon={<EditIcon />}
-                component={RouterLink}
-                to={`/club-admin/clubs/${clubId}/edit`}
-              >
-                Edit Club Details
-              </Button>
-              <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Pod</Button>
-            </Stack>
+            <Button
+              variant="outlined"
+              startIcon={<EditIcon />}
+              component={RouterLink}
+              to={`/club-admin/clubs/${clubId}/edit`}
+            >
+              Edit Club Details
+            </Button>
           </Stack>
           {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
-          {podsQuery.error && <Alert severity="error">{podsQuery.error.message}</Alert>}
           {opError && !formOpen && <Alert severity="error">{opError}</Alert>}
-          <ClubAdminPodsTable
-            loading={podsQuery.loading && !podsQuery.data}
-            pods={podsQuery.data?.pods ?? []}
+          <PodsTable<PodRowBase>
+            tableId="partners-app-club-admin-pods"
+            fetchRows={fetchRows}
+            refetchRef={refetchRef}
             venueName={venueName}
-            onEdit={openEdit}
-            onDelete={(pod) => { setOpError(null); setPodToDelete(pod); }}
+            emptyText="This club has no pods yet. Create the first one."
+            toolbarActions={
+              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Pod</Button>
+            }
+            renderActions={renderActions}
           />
         </Stack>
       </CardContent>

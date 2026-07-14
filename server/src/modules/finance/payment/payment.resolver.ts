@@ -31,6 +31,10 @@ export const paymentResolvers = {
       requireRole(ctx, ADMIN_RW);
       return paymentService.list(args.filter, args.limit ?? 200);
     },
+    paymentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentService.table(args.query);
+    },
     payment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return paymentService.getById(args.payment_doc_id);

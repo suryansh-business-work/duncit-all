@@ -25,6 +25,14 @@ export const clubAdminResolvers = {
       const user = requireAuth(ctx);
       return clubAdminService.dashboard(user.id, args.from, args.to);
     },
+    clubAdminDashboardTable: (
+      _p: unknown,
+      args: { query?: any; from?: string | null; to?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return clubAdminService.dashboardClubsTable(user.id, args.query, args.from, args.to);
+    },
   },
   Mutation: {
     clubAdminCreatePod: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

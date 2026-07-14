@@ -73,6 +73,53 @@ describe('surveyService integration', () => {
     expect(fallback!.title).toBe('default');
   });
 
+  it('serves the surveysTable page with search, filters, sort and paging', async () => {
+    await surveyService.create({ kind: 'VENUE', title: 'Venue basics', questions: [{ type: 'TEXT', label: 'Q' }] });
+    await surveyService.create({
+      kind: 'HOST',
+      title: 'Host basics',
+      super_category_id: superA,
+      questions: [{ type: 'TEXT', label: 'Q' }],
+    });
+    await surveyService.create({
+      kind: 'ECOMM',
+      title: 'Seller extras',
+      is_active: false,
+      questions: [{ type: 'TEXT', label: 'Q' }],
+    });
+
+    // Plain envelope with clamp defaults.
+    const all = await surveyService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows).toHaveLength(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search matches the title (same field as the surveys(search:) arg).
+    const searched = await surveyService.table({ search: 'basics' });
+    expect(searched.total).toBe(2);
+
+    // Enum + scope + boolean filters narrow.
+    const hosts = await surveyService.table({ filters: [{ field: 'kind', op: 'eq', value: 'HOST' }] });
+    expect(hosts.rows.map((s) => s!.title)).toEqual(['Host basics']);
+    expect(hosts.rows[0]!.super_category_id).toBe(superA);
+    const scoped = await surveyService.table({
+      filters: [{ field: 'super_category_id', op: 'eq', value: superA }],
+    });
+    expect(scoped.rows.map((s) => s!.title)).toEqual(['Host basics']);
+    const active = await surveyService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.total).toBe(2);
+
+    // Allowlisted sort + paging keep the total and report the clamped page back.
+    const asc = await surveyService.table({ sort_by: 'title', sort_dir: 'asc' });
+    expect(asc.rows.map((s) => s!.title)).toEqual(['Host basics', 'Seller extras', 'Venue basics']);
+    const page2 = await surveyService.table({ sort_by: 'title', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((s) => s!.title)).toEqual(['Seller extras']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('submits one response per user/survey (upsert) and joins labels for admin', async () => {
     const survey = await surveyService.create({
       kind: 'VENUE',
@@ -113,6 +160,64 @@ describe('leadSurveyService integration', () => {
     expect(after.entries).toHaveLength(1);
     expect(after.entries[0]).toMatchObject({ source: 'MANUAL', filled: true, submitted_by: 'staff-1' });
     expect(after.entries[0].answers[0]).toMatchObject({ qid, value: 'Large' });
+  });
+
+  it('serves a lead-scoped entries table without leaking another lead (leadSurveyEntriesTable)', async () => {
+    const { survey, lead } = await venueWith();
+    const otherLead = await VenueLeadModel.create({
+      super_category_id: new Types.ObjectId(superA),
+      venue_name: 'Other Hall',
+      city: 'Pune',
+      full_address: '2 Road',
+    });
+    const qid = survey.questions[0].qid;
+    await leadSurveyService.saveManual('VENUE_LEAD', String(lead._id), survey.id, [{ qid, value: 'A' }], 'staff-1');
+    await leadSurveyService.generateLink('VENUE_LEAD', String(lead._id), survey.id, 'staff-2');
+    await leadSurveyService.saveManual('VENUE_LEAD', String(otherLead._id), survey.id, [{ qid, value: 'B' }], 'staff-9');
+
+    // SCOPE: only this lead's entries — the other lead's rows never appear.
+    const page = await leadSurveyService.entriesTable('VENUE_LEAD', String(lead._id));
+    expect(page.total).toBe(2);
+    expect(page.rows.map((e) => e.generated_by)).toEqual(['staff-2', 'staff-1']); // created_at desc
+    expect(page.page).toBe(1);
+    expect(page.page_size).toBe(25);
+
+    // ...and client filters cannot widen the baseFilter scope.
+    const widened = await leadSurveyService.entriesTable('VENUE_LEAD', String(lead._id), {
+      filters: [{ field: 'source', op: 'in', values: ['MANUAL', 'LINK', 'APP'] }],
+    });
+    expect(widened.total).toBe(2);
+
+    // Search matches generated_by/submitted_by.
+    const searched = await leadSurveyService.entriesTable('VENUE_LEAD', String(lead._id), { search: 'staff-1' });
+    expect(searched.rows.map((e) => e.source)).toEqual(['MANUAL']);
+
+    // Boolean + enum filters narrow.
+    const filled = await leadSurveyService.entriesTable('VENUE_LEAD', String(lead._id), {
+      filters: [{ field: 'filled', op: 'is_true' }],
+    });
+    expect(filled.rows.map((e) => e.source)).toEqual(['MANUAL']);
+    const links = await leadSurveyService.entriesTable('VENUE_LEAD', String(lead._id), {
+      filters: [{ field: 'source', op: 'eq', value: 'LINK' }],
+    });
+    expect(links.rows.map((e) => e.generated_by)).toEqual(['staff-2']);
+
+    // Allowlisted sort + paging keep the total and clamp report (LINK < MANUAL asc).
+    const asc = await leadSurveyService.entriesTable('VENUE_LEAD', String(lead._id), {
+      sort_by: 'source',
+      sort_dir: 'asc',
+      page: 2,
+      page_size: 1,
+    });
+    expect(asc.rows.map((e) => e.generated_by)).toEqual(['staff-1']);
+    expect(asc.total).toBe(2);
+    expect(asc.page).toBe(2);
+    expect(asc.page_size).toBe(1);
+
+    // An unknown lead is a NOT_FOUND, not an empty page.
+    await expect(
+      leadSurveyService.entriesTable('VENUE_LEAD', new Types.ObjectId().toString())
+    ).rejects.toThrow(/not found/i);
   });
 
   it('generates a public link, fills it by token, then revoking kills it', async () => {

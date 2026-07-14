@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import SosListPage from '../../src/pages/sos/SosListPage';
 import { BOUNCER_SOS_ALERTS, type SosAlert } from '../../src/graphql/bouncer';
 import { renderWithProviders } from './testkit';
@@ -65,25 +65,34 @@ describe('SosListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     expect(screen.getByText('SOS-AAA111')).toBeInTheDocument();
+    // Computed Pod cell: title + venue when present, bare title otherwise.
+    expect(screen.getByText('Saturday Run · Park')).toBeInTheDocument();
+    expect(screen.getByText('Yoga')).toBeInTheDocument();
 
     // Live socket callbacks trigger a refetch without throwing.
-    sockMock.events.onSos();
-    sockMock.events.onSosUpdate();
+    act(() => {
+      sockMock.events.onSos();
+      sockMock.events.onSosUpdate();
+    });
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
 
     fireEvent.click(screen.getByText('Riya'));
-    expect(screen.getByText('SOS DETAIL')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('SOS DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by status (Active sends ACTIVE) with an Active-specific empty state', async () => {
+  it('filters by status (Active sends ACTIVE) from the filter popover', async () => {
     renderWithProviders(<SosListPage />, {
       mocks: [queryMock([alert]), queryMock([], 'ACTIVE')],
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
 
-    // The header status filter is the first combobox (TablePagination adds another).
-    fireEvent.mouseDown(screen.getAllByRole('combobox')[0]);
-    fireEvent.click(screen.getByRole('option', { name: 'Active' }));
-    await waitFor(() => expect(screen.getByText(/no active sos alerts found/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Status' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Active' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() => expect(screen.getByText(/no sos alerts found/i)).toBeInTheDocument());
+    expect(screen.queryByText('Riya')).not.toBeInTheDocument();
   });
 
   it('searches on the server (a debounced query keyed on the search variable)', async () => {
@@ -92,8 +101,12 @@ describe('SosListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
 
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'BBB222' } });
-    await waitFor(() => expect(screen.queryByText('Riya')).not.toBeInTheDocument());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search message or phone' }), {
+      target: { value: 'BBB222' },
+    });
+    await waitFor(() => expect(screen.queryByText('Riya')).not.toBeInTheDocument(), {
+      timeout: 2000,
+    });
     expect(screen.getByText('Dev')).toBeInTheDocument();
   });
 });

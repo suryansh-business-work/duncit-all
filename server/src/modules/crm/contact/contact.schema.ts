@@ -18,6 +18,14 @@ export const contactTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (contactSubmissionsTable)."
+  type ContactSubmissionTablePage {
+    rows: [ContactSubmission!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input SubmitContactInput {
     name: String!
     email: String!
@@ -33,6 +41,7 @@ export const contactTypeDefs = /* GraphQL */ `
 
   extend type Query {
     contactSubmissions(status: ContactStatus, email: String): [ContactSubmission!]!
+    contactSubmissionsTable(query: TableQueryInput): ContactSubmissionTablePage!
   }
 
   extend type Mutation {

@@ -42,6 +42,10 @@ export const envEntryResolvers = {
       requireRole(ctx, TECH_MANAGE);
       return envEntryService.list(args.filter ?? {});
     },
+    envEntriesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryService.table(args.query);
+    },
     envEntry: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return envEntryService.get(args.id);

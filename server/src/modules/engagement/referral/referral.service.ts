@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
 import { ReferralCodeModel, ReferralModel, ReferralSettingsModel } from './referral.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const badInput = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: 'BAD_USER_INPUT' } });
@@ -30,6 +31,33 @@ async function nameMap(ids: string[]): Promise<Map<string, string>> {
     ])
   );
 }
+
+/** Admin-log row mapper — shared by listAll and the table page. */
+const toAdminPub = (r: any, names: Map<string, string>) => ({
+  id: String(r._id),
+  code: r.code,
+  referrer_user_id: String(r.referrer_user_id),
+  referrer_name: names.get(String(r.referrer_user_id)) || null,
+  referred_user_id: String(r.referred_user_id),
+  referred_name: names.get(String(r.referred_user_id)) || null,
+  created_at: r.created_at.toISOString(),
+});
+
+/** Allowlists for the shared table engine (referralsTable — DUNCIT TABLE CONTRACT v1). */
+const REFERRAL_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['code'],
+  sortFields: {
+    code: 'code',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    code: { type: 'string' },
+    referrer_user_id: { type: 'string' },
+    referred_user_id: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 export const referralService = {
   /** The viewer's code (lazily created) + gift + redemptions + who referred them. */
@@ -89,15 +117,21 @@ export const referralService = {
     const names = await nameMap(
       rows.flatMap((r: any) => [String(r.referrer_user_id), String(r.referred_user_id)])
     );
-    return rows.map((r: any) => ({
-      id: String(r._id),
-      code: r.code,
-      referrer_user_id: String(r.referrer_user_id),
-      referrer_name: names.get(String(r.referrer_user_id)) || null,
-      referred_user_id: String(r.referred_user_id),
-      referred_name: names.get(String(r.referred_user_id)) || null,
-      created_at: r.created_at.toISOString(),
-    }));
+    return rows.map((r: any) => toAdminPub(r, names));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for referralsTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<any>(
+      ReferralModel,
+      {},
+      input,
+      REFERRAL_TABLE_CONFIG
+    );
+    const names = await nameMap(
+      docs.flatMap((r: any) => [String(r.referrer_user_id), String(r.referred_user_id)])
+    );
+    return { rows: docs.map((r: any) => toAdminPub(r, names)), total, page, page_size };
   },
 
   async settings() {

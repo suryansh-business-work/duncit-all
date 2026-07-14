@@ -34,6 +34,58 @@ describe('serviceOfferedService integration', () => {
     expect(otherSup).toHaveLength(0);
   });
 
+  it('serves the crmServicesOfferedTable page with search, filters, sort and paging', async () => {
+    const supA = new Types.ObjectId().toString();
+    const supB = new Types.ObjectId().toString();
+    await serviceOfferedService.createMany({ super_category_id: supA, titles: ['Catering', 'Decor'] });
+    await serviceOfferedService.createMany({
+      super_category_id: supB,
+      applies_to_venue: false,
+      applies_to_ecomm: true,
+      titles: ['Shipping'],
+    });
+
+    // Default sort sort_order asc then title asc + clamp defaults.
+    const all = await serviceOfferedService.table();
+    expect(all.total).toBeGreaterThanOrEqual(3);
+    const titles = all.rows.map((s) => s!.title);
+    expect(titles.indexOf('Catering')).toBeLessThan(titles.indexOf('Decor'));
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans title and slug.
+    const search = await serviceOfferedService.table({ search: 'shipping' });
+    expect(search.rows.map((s) => s!.title)).toEqual(['Shipping']);
+    expect(search.total).toBe(1);
+
+    // Hierarchy id filter (string -> ObjectId cast) + boolean filter narrow.
+    const bySuper = await serviceOfferedService.table({
+      filters: [{ field: 'super_category_id', op: 'eq', value: supA }],
+    });
+    expect(bySuper.rows.map((s) => s!.title)).toEqual(['Catering', 'Decor']);
+    const ecomm = await serviceOfferedService.table({
+      filters: [{ field: 'applies_to_ecomm', op: 'is_true' }],
+    });
+    expect(ecomm.rows.map((s) => s!.title)).toEqual(['Shipping']);
+
+    // Allowlisted sort override + paging within the supA scope.
+    const desc = await serviceOfferedService.table({
+      sort_by: 'title',
+      sort_dir: 'desc',
+      filters: [{ field: 'super_category_id', op: 'eq', value: supA }],
+    });
+    expect(desc.rows.map((s) => s!.title)).toEqual(['Decor', 'Catering']);
+    const page2 = await serviceOfferedService.table({
+      page: 2,
+      page_size: 1,
+      filters: [{ field: 'super_category_id', op: 'eq', value: supA }],
+    });
+    expect(page2.rows.map((s) => s!.title)).toEqual(['Decor']);
+    expect(page2.total).toBe(2);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('updates and deletes', async () => {
     const [svc] = await serviceOfferedService.createMany({ super_category_id: sup, titles: ['Temp'] });
     const updated = await serviceOfferedService.update(svc!.id, { title: 'Renamed', is_active: false });

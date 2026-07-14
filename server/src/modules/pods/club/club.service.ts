@@ -5,6 +5,7 @@ import { ClubRatingModel } from './clubRating.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const slugify = (s: string) =>
   s
@@ -54,6 +55,29 @@ const toPub = (d: any) => {
  * that the existing `Club` field resolvers can read without re-querying. */
 export const mapClubToPublic = (doc: any) => toPub(doc);
 
+/** Allowlists for the shared table engine (clubsTable — DUNCIT TABLE CONTRACT v1). */
+const CLUB_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['club_name', 'club_id', 'locality'],
+  sortFields: {
+    club_name: 'club_name',
+    locality: 'locality',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+    is_active: 'is_active',
+    is_verified: 'is_verified',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    is_verified: { type: 'boolean' },
+    category_id: { type: 'string' },
+    super_category_id: { type: 'string' },
+    location_id: { type: 'string' },
+    locality: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { club_name: 1 },
+};
+
 function notFound(): never {
   throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
 }
@@ -84,6 +108,17 @@ export const clubService = {
     if (filter?.is_verified !== undefined) q.is_verified = filter.is_verified;
     const docs = await ClubModel.find(q).sort({ club_name: 1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the clubsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      ClubModel,
+      {},
+      input,
+      CLUB_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

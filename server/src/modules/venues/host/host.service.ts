@@ -6,6 +6,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -152,6 +153,28 @@ const toPub = (h: IHost) => ({
   updated_at: h.updated_at?.toISOString?.() ?? '',
 });
 
+/** Allowlists for the shared table engine (hostsTable — DUNCIT TABLE CONTRACT
+ * v1). Onboarded Hosts defaults to newest-first, mirroring list(). */
+const HOST_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['full_name', 'email', 'phone'],
+  sortFields: {
+    full_name: 'full_name',
+    email: 'email',
+    status: 'status',
+    is_active: 'is_active',
+    submitted_at: 'submitted_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    submitted_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 async function getOrCreate(userId: string) {
   const uid = new Types.ObjectId(userId);
   let h = await HostModel.findOne({ user_id: uid });
@@ -208,6 +231,17 @@ export const hostService = {
     // Never hand onboarding PII to an unauthenticated caller.
     if (opts?.redacted) return rows.map(redactForPublic);
     return opts?.withCommission ? withCommission(rows) : rows;
+  },
+  /** Server-side table page (admin/onboarding hostsTable) — rows carry the
+   * per-host commission override exactly like the sibling gated hosts query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IHost>(
+      HostModel,
+      {},
+      input,
+      HOST_TABLE_CONFIG
+    );
+    return { rows: await withCommission(docs.map(toPub)), total, page, page_size };
   },
   async getById(id: string) {
     const h = await HostModel.findById(id);

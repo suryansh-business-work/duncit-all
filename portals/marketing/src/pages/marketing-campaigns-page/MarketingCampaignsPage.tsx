@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { Box, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { notifyError, notifySuccess } from '../../components/notify';
 import CampaignPreview from './CampaignPreview';
 import CampaignTable from './CampaignTable';
@@ -12,7 +13,7 @@ import MarketingCampaignForm, {
 } from './marketing-campaign-form';
 import {
   CREATE_MARKETING_CAMPAIGN,
-  MARKETING_CAMPAIGNS,
+  MARKETING_CAMPAIGNS_TABLE,
   MARKETING_PREVIEW_CARDS,
   RENDER_MARKETING_CAMPAIGN,
   SEND_MARKETING_CAMPAIGN,
@@ -27,12 +28,28 @@ interface Props {
 export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Readonly<Props>) {
   const [draft, setDraft] = useState<MarketingCampaignFormValues>(() => blankMarketingCampaignValues(defaultChannel));
   const [formError, setFormError] = useState<string | null>(null);
-  const { data, loading, refetch } = useQuery<{ marketingCampaigns: MarketingCampaignRow[] }>(MARKETING_CAMPAIGNS, { fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data: podsData } = useQuery<{ marketingCampaignPreviewCards: CampaignPreviewCard[] }>(MARKETING_PREVIEW_CARDS, { variables: { type: 'POD' } });
   const { data: clubsData } = useQuery<{ marketingCampaignPreviewCards: CampaignPreviewCard[] }>(MARKETING_PREVIEW_CARDS, { variables: { type: 'CLUB' } });
   const [renderCampaign, { data: previewData, loading: previewLoading }] = useLazyQuery(RENDER_MARKETING_CAMPAIGN, { fetchPolicy: 'no-cache' });
   const [createCampaign, { loading: saving }] = useMutation(CREATE_MARKETING_CAMPAIGN);
   const [sendCampaign, { loading: sending }] = useMutation(SEND_MARKETING_CAMPAIGN);
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: MARKETING_CAMPAIGNS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.marketingCampaignsTable.rows as MarketingCampaignRow[],
+        total: data.marketingCampaignsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   useEffect(() => {
     setDraft((prev) => ({ ...prev, channel: defaultChannel }));
@@ -69,7 +86,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
       if (created?.error) notifyError(created.error);
       else notifySuccess(values.scheduled_at ? 'Campaign scheduled' : 'Campaign sent');
       setDraft(blankMarketingCampaignValues(defaultChannel));
-      await refetch();
+      refetchRef.current?.();
     } catch (error: any) {
       setFormError(error.message || 'Campaign could not be saved');
     }
@@ -81,7 +98,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
       const sent = result.data?.sendMarketingCampaign;
       if (sent?.error) notifyError(sent.error);
       else notifySuccess('Campaign sent');
-      await refetch();
+      refetchRef.current?.();
     } catch (error: any) {
       notifyError(error.message || 'Campaign send failed');
     }
@@ -110,12 +127,10 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
           <CampaignPreview html={preview?.html ?? ''} errors={preview?.errors ?? []} loading={previewLoading} subject={preview?.subject} />
         </Grid>
       </Grid>
-      <Card>
-        <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Campaign History</Typography>
-          <CampaignTable rows={data?.marketingCampaigns ?? []} loading={loading} sending={sending} onSend={handleSend} />
-        </CardContent>
-      </Card>
+      <Box>
+        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Campaign History</Typography>
+        <CampaignTable fetchRows={fetchRows} refetchRef={refetchRef} sending={sending} onSend={handleSend} />
+      </Box>
     </Stack>
   );
 }

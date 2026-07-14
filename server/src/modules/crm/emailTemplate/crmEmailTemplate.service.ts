@@ -4,6 +4,7 @@ import { CrmEmailTemplateModel } from './crmEmailTemplate.model';
 // Reuse the pure MJML helpers (no DB access) from the core module.
 import { renderMjml, applyVars, detectVariables } from '@modules/content/emailTemplate/emailTemplate.service';
 import { commsService } from '@services/comms/comms.service';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -44,10 +45,42 @@ function parseVars(json?: string | null): Record<string, string> {
   }
 }
 
+/** Allowlists for the shared table engine (crmEmailTemplatesTable — DUNCIT TABLE CONTRACT v1). */
+const EMAIL_TEMPLATE_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'slug', 'subject'],
+  sortFields: {
+    name: 'name',
+    slug: 'slug',
+    subject: 'subject',
+    target: 'target',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    target: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    created_at: { type: 'date' },
+    updated_at: { type: 'date' },
+  },
+  defaultSort: { name: 1 },
+};
+
 export const crmEmailTemplateService = {
   async list() {
     const docs = await CrmEmailTemplateModel.find().sort({ name: 1 });
     return docs.map(pub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the crmEmailTemplatesTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      CrmEmailTemplateModel,
+      {},
+      input,
+      EMAIL_TEMPLATE_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   async byId(template_id: string) {

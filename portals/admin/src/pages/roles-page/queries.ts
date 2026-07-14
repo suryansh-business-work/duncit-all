@@ -12,6 +12,32 @@ export const ROLES_QUERY = gql`
   }
 `;
 
+/** Row shape for the server-paged roles table. */
+export interface RoleRow {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  is_system: boolean;
+  created_at: string;
+}
+
+export const ROLES_TABLE = gql`
+  query RolesTable($query: TableQueryInput) {
+    rolesTable(query: $query) {
+      total
+      rows {
+        id
+        key
+        name
+        description
+        is_system
+        created_at
+      }
+    }
+  }
+`;
+
 export const CREATE_ROLE = gql`
   mutation CreateRole($input: CreateRoleInput!) {
     createRole(input: $input) {

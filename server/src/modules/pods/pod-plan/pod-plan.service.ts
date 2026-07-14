@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { PodPlanModel, type IPodPlan } from './pod-plan.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const toPub = (d: IPodPlan) => ({
   id: String(d._id),
@@ -15,6 +16,26 @@ const toPub = (d: IPodPlan) => ({
   created_at: d.created_at?.toISOString?.() ?? '',
   updated_at: d.updated_at?.toISOString?.() ?? '',
 });
+
+/** Allowlists for the shared table engine (podPlansTable — DUNCIT TABLE CONTRACT v1). */
+const POD_PLAN_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'key'],
+  sortFields: {
+    name: 'name',
+    key: 'key',
+    price_label: 'price_label',
+    sort_order: 'sort_order',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    is_coming_soon: { type: 'boolean' },
+    key: { type: 'string' },
+  },
+  defaultSort: { sort_order: 1, name: 1 },
+};
 
 const DEFAULT_PLANS = [
   {
@@ -60,6 +81,18 @@ export const podPlanService = {
   async list() {
     const docs = await PodPlanModel.find().sort({ sort_order: 1, name: 1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the podPlansTable
+   * query — same rows and default sort_order/name order as list(). */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPodPlan>(
+      PodPlanModel,
+      {},
+      input,
+      POD_PLAN_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async listPublic() {

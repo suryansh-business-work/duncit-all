@@ -112,6 +112,14 @@ export const meetingTypeDefs = gql`
     type: HolidayType
   }
 
+  "Server-side table page for the shared table engine (onboardingMeetingsTable)."
+  type OnboardingMeetingTablePage {
+    rows: [OnboardingMeeting!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Current user's meeting request for a kind."
     myMeeting(kind: SurveyKind!): OnboardingMeeting
@@ -119,6 +127,8 @@ export const meetingTypeDefs = gql`
     myMeetings: [OnboardingMeeting!]!
     "Onboarding list of meetings (calendar + tables)."
     onboardingMeetings(filter: MeetingFilter): [OnboardingMeeting!]!
+    "Server-side table page (search/filter/sort/paginate) over onboarding meetings."
+    onboardingMeetingsTable(query: TableQueryInput): OnboardingMeetingTablePage!
     "Global slot-availability config."
     meetingAvailability: MeetingAvailability!
     "Bookable slots (others' bookings disabled). Pass kind so the user's own other-flow bookings show unavailable; staff pass exclude_meeting_id to keep the meeting being scheduled selectable."

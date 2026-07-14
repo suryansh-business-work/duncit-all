@@ -10,6 +10,10 @@ export const challengeResolvers = {
       requireRole(ctx, RW);
       return challengeService.list(args.search ?? null);
     },
+    challengesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return challengeService.table(args.query);
+    },
     challengeStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return challengeService.stats();

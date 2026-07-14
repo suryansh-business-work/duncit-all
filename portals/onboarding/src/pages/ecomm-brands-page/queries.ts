@@ -2,6 +2,28 @@ import { gql } from '@apollo/client';
 
 export const STATUSES = ['', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
 
+/** Status options for the table's select filter ('' All entry excluded). */
+export const STATUS_OPTIONS = STATUSES.filter(Boolean).map((s) => ({ value: s, label: s }));
+
+/** Row shape used by the brands table columns; rows also carry the full
+ * EcommBrandRowFields selection so the Edit/Review dialogs can reuse the row object. */
+export interface EcommBrandRow {
+  id: string;
+  brand_name?: string | null;
+  logo_url?: string | null;
+  tagline?: string | null;
+  product_categories?: string[] | null;
+  contact_person?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  city?: string | null;
+  status: string;
+  is_active?: boolean | null;
+  approved_product_count?: number | null;
+  product_commission_pct?: number | null;
+  submitted_at?: string | null;
+}
+
 export const ECOMM_BRANDS = gql`
   query EcommBrands($status: EcommBrandStatus) {
     ecommBrands(status: $status) {
@@ -41,6 +63,60 @@ export const ECOMM_BRANDS = gql`
       approved_at
     }
   }
+`;
+
+/** Same selection as ECOMM_BRANDS rows (+ created_at for the hidden Created
+ * filter column) so table rows keep feeding the Edit/Review dialogs without refetch. */
+const ECOMM_BRAND_ROW_FIELDS = gql`
+  fragment EcommBrandRowFields on EcommBrand {
+    id
+    brand_name
+    logo_url
+    cover_image_url
+    tagline
+    description
+    product_categories
+    website_url
+    instagram_url
+    contact_person
+    contact_email
+    contact_phone
+    registered_business_name
+    gstin
+    pan
+    established_year
+    address_line1
+    city
+    state
+    postal_code
+    country
+    account_holder_name
+    account_number
+    ifsc_code
+    upi_id
+    documents { type url }
+    tags
+    product_commission_pct
+    status
+    is_active
+    approved_product_count
+    reviewer_notes
+    submitted_at
+    approved_at
+    created_at
+  }
+`;
+
+export const ECOMM_BRANDS_TABLE = gql`
+  query EcommBrandsTable($query: TableQueryInput) {
+    ecommBrandsTable(query: $query) {
+      total
+      rows {
+        ...EcommBrandRowFields
+      }
+    }
+  }
+  ${ECOMM_BRAND_ROW_FIELDS}
 `;
 
 export const APPROVE_BRAND = gql`

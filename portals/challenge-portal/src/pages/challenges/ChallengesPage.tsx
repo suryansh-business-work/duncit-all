@@ -1,26 +1,20 @@
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import {
-  Alert,
-  Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  InputAdornment,
-  Paper,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import {
-  CHALLENGES,
+  CHALLENGES_TABLE,
   CHALLENGE_STATS,
   DELETE_CHALLENGE,
   type Challenge,
@@ -29,26 +23,30 @@ import ChallengesTable from './ChallengesTable';
 import ChallengeFormDialog from './ChallengeFormDialog';
 
 export default function ChallengesPage() {
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Challenge | null>(null);
   const [deleting, setDeleting] = useState<Challenge | null>(null);
 
-  useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput.trim()), 350);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  const { data, loading, error } = useQuery(CHALLENGES, {
-    variables: { search: search || null },
-    fetchPolicy: 'cache-and-network',
-  });
   const [deleteChallenge, deleteState] = useMutation(DELETE_CHALLENGE, {
-    refetchQueries: [{ query: CHALLENGES, variables: { search: null } }, { query: CHALLENGE_STATS }],
+    refetchQueries: [{ query: CHALLENGE_STATS }],
   });
 
-  const rows: Challenge[] = data?.challenges ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: CHALLENGES_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.challengesTable.rows as Challenge[],
+        total: data.challengesTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const openNew = () => {
     setEditing(null);
@@ -62,45 +60,34 @@ export default function ChallengesPage() {
     if (!deleting) return;
     await deleteChallenge({ variables: { id: deleting.id } });
     setDeleting(null);
+    refetchRef.current?.();
   };
-
-  const listContent = rows.length === 0 ? (
-    <Alert severity="info">No challenges yet. Create one with “New challenge”.</Alert>
-  ) : (
-    <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-      <ChallengesTable rows={rows} onEdit={openEdit} onDelete={setDeleting} />
-    </Paper>
-  );
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
-        <Stack direction="row" spacing={1.25} alignItems="center">
-          <EmojiEventsIcon color="primary" />
-          <Typography variant="h5" fontWeight={800}>Challenges</Typography>
-        </Stack>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
-          New challenge
-        </Button>
+      <Stack direction="row" spacing={1.25} alignItems="center">
+        <EmojiEventsIcon color="primary" />
+        <Typography variant="h5" fontWeight={800}>Challenges</Typography>
       </Stack>
 
-      <TextField
-        size="small"
-        fullWidth
-        placeholder="Search challenges by name…"
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+      <ChallengesTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+            New challenge
+          </Button>
+        }
+        onEdit={openEdit}
+        onDelete={setDeleting}
       />
 
-      {error && <Alert severity="error">{error.message}</Alert>}
-      {loading && rows.length === 0 ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}><CircularProgress size={24} /></Box>
-      ) : (
-        listContent
-      )}
-
-      <ChallengeFormDialog open={formOpen} editing={editing} onClose={() => setFormOpen(false)} />
+      <ChallengeFormDialog
+        open={formOpen}
+        editing={editing}
+        onClose={() => setFormOpen(false)}
+        onSaved={() => refetchRef.current?.()}
+      />
 
       <Dialog open={!!deleting} onClose={() => setDeleting(null)}>
         <DialogTitle>Delete challenge?</DialogTitle>

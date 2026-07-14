@@ -1,36 +1,47 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import TableSkeleton from '../../components/TableSkeleton';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Box, Stack, Typography } from '@mui/material';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
 import {
   APPROVE_BRAND,
   DELETE_ECOMM_BRAND,
-  ECOMM_BRANDS,
+  ECOMM_BRANDS_TABLE,
   REJECT_BRAND,
   SET_BRAND_COMMISSION,
   SET_ECOMM_BRAND_ACTIVE,
-  STATUSES,
+  type EcommBrandRow,
 } from './queries';
 import EcommBrandsTable from './EcommBrandsTable';
 import EcommBrandReviewDialog from './EcommBrandReviewDialog';
 import EcommBrandEditDialog from './EcommBrandEditDialog';
 
 export default function EcommBrandsPage() {
-  const [status, setStatus] = useState('');
-  const { data, loading, error, refetch } = useQuery(ECOMM_BRANDS, {
-    variables: { status: status || null },
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
+  const refresh = useCallback(() => refetchRef.current?.(), []);
   const [approve] = useMutation(APPROVE_BRAND);
   const [reject] = useMutation(REJECT_BRAND);
   const [setBrandCommission, { loading: savingCommission }] = useMutation(SET_BRAND_COMMISSION);
-  const lifecycle = useEntityLifecycle(SET_ECOMM_BRAND_ACTIVE, DELETE_ECOMM_BRAND, refetch);
+  const lifecycle = useEntityLifecycle(SET_ECOMM_BRAND_ACTIVE, DELETE_ECOMM_BRAND, refresh);
   const [active, setActive] = useState<any>(null);
   const [editing, setEditing] = useState<any>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: ECOMM_BRANDS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.ecommBrandsTable.rows as EcommBrandRow[], total: data.ecommBrandsTable.total as number };
+    },
+    [client],
+  );
 
   const openReview = (brand: any) => {
     setActive(brand);
@@ -43,7 +54,7 @@ export default function EcommBrandsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refetch();
+    refresh();
   };
   const doReject = async () => {
     if (!notes.trim()) return;
@@ -51,7 +62,7 @@ export default function EcommBrandsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
-    refetch();
+    refresh();
   };
   const doSaveCommission = async (commissionPct: number) => {
     await setBrandCommission({
@@ -60,48 +71,27 @@ export default function EcommBrandsPage() {
     setActive((current: any) =>
       current ? { ...current, product_commission_pct: commissionPct } : current
     );
-    refetch();
+    refresh();
   };
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Stack spacing={0.25}>
-          <Typography variant="h5" fontWeight={700}>E-Commerce Brands</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Review and verify partner product brands before they go live.
-          </Typography>
-        </Stack>
-        <TextField
-          select
-          size="small"
-          label="Status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          sx={{ minWidth: 180 }}
-        >
-          {STATUSES.map((s) => (
-            <MenuItem key={s} value={s}>
-              {s || 'All'}
-            </MenuItem>
-          ))}
-        </TextField>
+      <Stack spacing={0.25} mb={2}>
+        <Typography variant="h5" fontWeight={700}>E-Commerce Brands</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Review and verify partner product brands before they go live.
+        </Typography>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
-
-      {loading && !data ? (
-        <TableSkeleton columns={7} />
-      ) : (
-        <EcommBrandsTable
-          brands={data?.ecommBrands ?? []}
-          onEdit={setEditing}
-          onReview={openReview}
-          canHardDelete={lifecycle.canHardDelete}
-          onToggleActive={lifecycle.setToggleTarget}
-          onDelete={lifecycle.setDeleteTarget}
-        />
-      )}
+      <EcommBrandsTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onEdit={setEditing}
+        onReview={openReview}
+        canHardDelete={lifecycle.canHardDelete}
+        onToggleActive={lifecycle.setToggleTarget}
+        onDelete={lifecycle.setDeleteTarget}
+      />
 
       <ConfirmDialog
         open={!!lifecycle.toggleTarget}
@@ -131,7 +121,7 @@ export default function EcommBrandsPage() {
       <EcommBrandEditDialog
         brand={editing}
         onClose={() => setEditing(null)}
-        onSaved={() => refetch()}
+        onSaved={refresh}
       />
 
       <EcommBrandReviewDialog

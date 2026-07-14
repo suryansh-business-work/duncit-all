@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { useDateFormat } from '../../utils/dateFormat';
-import { APPROVAL_REQUESTS, APPROVE_REQUEST, DENY_REQUEST } from './queries';
+import { APPROVAL_REQUESTS_TABLE, APPROVE_REQUEST, DENY_REQUEST } from './queries';
 import { type ApprovalRequest, type ApprovalStatus } from './helpers';
 import ApprovalsToolbar from './ApprovalsToolbar';
 import ApprovalsTable from './ApprovalsTable';
@@ -17,22 +18,47 @@ export default function ApprovalsPage() {
   const [saving, setSaving] = useState(false);
   const { formatDateTime } = useDateFormat();
 
-  const variables = useMemo(() => ({ status: status || undefined }), [status]);
-  const { data, loading, refetch } = useQuery(APPROVAL_REQUESTS, { variables });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [approveMut] = useMutation(APPROVE_REQUEST);
   const [denyMut] = useMutation(DENY_REQUEST);
 
-  const items: ApprovalRequest[] = data?.approvalRequests ?? [];
+  // The status toggle lives outside the table (default PENDING), so it is pinned
+  // into the query here rather than offered as a column filter.
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const filters = status
+        ? [...q.filters, { field: 'status', op: 'eq' as const, value: status }]
+        : q.filters;
+      const { data } = await client.query({
+        query: APPROVAL_REQUESTS_TABLE,
+        variables: tableQueryToGql({ ...q, filters }),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.approvalRequestsTable.rows as ApprovalRequest[],
+        total: data.approvalRequestsTable.total as number,
+      };
+    },
+    [client, status],
+  );
+
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    if (prevStatusRef.current === status) return;
+    prevStatusRef.current = status;
+    refetchRef.current?.();
+  }, [status]);
 
   const openReview = useCallback((row: ApprovalRequest) => {
     setOpError(null);
     setActive(row);
   }, []);
 
-  const finish = async (message: string) => {
+  const finish = (message: string) => {
     setToast(message);
     setActive(null);
-    await refetch();
+    refetchRef.current?.();
   };
 
   const handleApprove = async (id: string) => {
@@ -40,7 +66,7 @@ export default function ApprovalsPage() {
     setOpError(null);
     try {
       await approveMut({ variables: { id } });
-      await finish('Request approved');
+      finish('Request approved');
     } catch (e) {
       setOpError(e instanceof Error ? e.message : 'Failed to approve');
     } finally {
@@ -53,7 +79,7 @@ export default function ApprovalsPage() {
     setOpError(null);
     try {
       await denyMut({ variables: { id, notes: notes || undefined } });
-      await finish('Request denied');
+      finish('Request denied');
     } catch (e) {
       setOpError(e instanceof Error ? e.message : 'Failed to deny');
     } finally {
@@ -78,8 +104,8 @@ export default function ApprovalsPage() {
       <ApprovalsToolbar status={status} onChange={setStatus} />
 
       <ApprovalsTable
-        loading={loading}
-        items={items}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
         formatDateTime={formatDateTime}
         onReview={openReview}
       />

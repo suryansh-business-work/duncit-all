@@ -1,17 +1,18 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Snackbar, Stack, Typography } from '@mui/material';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { useConfirm } from '../../../components/useConfirm';
 import { parseApiError } from '../../../utils/parseApiError';
 import ContentTable from './ContentTable';
 import ContentDialog from './ContentDialog';
 import {
   CONTENT_LABELS,
+  CONTENT_TABLE,
   CREATE_CONTENT,
   DELETE_CONTENT,
   UPDATE_CONTENT,
-  WEBSITE_CONTENT,
   type WebsiteContentItem,
   type WebsitePageType,
 } from './queries';
@@ -20,10 +21,8 @@ import type { WebsiteContentInput } from './website-content';
 /** Reusable content manager bound to a single website page type. */
 export default function ContentManager({ type }: Readonly<{ type: WebsitePageType }>) {
   const labels = CONTENT_LABELS[type];
-  const { data, loading, error, refetch } = useQuery(WEBSITE_CONTENT, {
-    variables: { type },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [createContent] = useMutation(CREATE_CONTENT);
   const [updateContent] = useMutation(UPDATE_CONTENT);
   const [deleteContent] = useMutation(DELETE_CONTENT);
@@ -34,6 +33,26 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      // Scope the shared websiteContentTable query to this page's type.
+      const scoped: TableQueryState = {
+        ...q,
+        filters: [...q.filters, { field: 'type', op: 'eq', value: type }],
+      };
+      const { data } = await client.query({
+        query: CONTENT_TABLE,
+        variables: tableQueryToGql(scoped),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.websiteContentTable.rows as WebsiteContentItem[],
+        total: data.websiteContentTable.total as number,
+      };
+    },
+    [client, type],
+  );
 
   const openCreate = () => {
     setEditing(null);
@@ -55,7 +74,7 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
       else await createContent({ variables: { input } });
       setDialogOpen(false);
       setToast(`${labels.title} entry saved`);
-      await refetch();
+      refetchRef.current?.();
     } catch (saveError) {
       setFormError(parseApiError(saveError));
     } finally {
@@ -74,31 +93,34 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
     try {
       await deleteContent({ variables: { id: item.id } });
       setToast(`${labels.title} entry deleted`);
-      await refetch();
+      refetchRef.current?.();
     } catch (deleteError) {
       setToast(parseApiError(deleteError));
     }
   };
 
-  const items: WebsiteContentItem[] = data?.websiteContent ?? [];
-
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
-        <Box>
-          <Typography variant="h5" fontWeight={700}>
-            {labels.title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {labels.description}
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          New entry
-        </Button>
-      </Stack>
-      {error && <Alert severity="error">{parseApiError(error)}</Alert>}
-      <ContentTable items={items} loading={loading} onEdit={openEdit} onDelete={remove} />
+      <Box>
+        <Typography variant="h5" fontWeight={700}>
+          {labels.title}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {labels.description}
+        </Typography>
+      </Box>
+      <ContentTable
+        tableId={`website-content-${type.toLowerCase()}`}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New entry
+          </Button>
+        }
+        onEdit={openEdit}
+        onDelete={remove}
+      />
       <ContentDialog
         open={dialogOpen}
         type={type}

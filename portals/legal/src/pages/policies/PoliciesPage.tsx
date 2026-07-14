@@ -1,55 +1,43 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import {
-  Alert,
   Box,
   Button,
-  Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  FormControlLabel,
   Snackbar,
   Stack,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { CREATE_POLICY, DELETE_POLICY, POLICIES, UPDATE_POLICY, type Policy } from '../../graphql/policies';
-import RichTextEditor from '../../components/RichTextEditor';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { CREATE_POLICY, DELETE_POLICY, POLICIES_TABLE, UPDATE_POLICY, type Policy } from '../../graphql/policies';
 import { slugify } from '../../lib/slug';
-
-interface FormState {
-  slug: string;
-  title: string;
-  content: string;
-  is_active: boolean;
-  sort_order: number;
-}
-const EMPTY: FormState = { slug: '', title: '', content: '', is_active: true, sort_order: 0 };
+import PoliciesTable from './PoliciesTable';
+import PolicyFormDialog, { EMPTY_POLICY_FORM, type PolicyFormState } from './PolicyFormDialog';
 
 export default function PoliciesPage() {
-  const [search, setSearch] = useState('');
-  const filter = useMemo(() => (search.trim() ? { search: search.trim() } : undefined), [search]);
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
 
-  const { data, loading, refetch } = useQuery<{ policies: Policy[] }>(POLICIES, {
-    variables: { filter },
-    fetchPolicy: 'cache-and-network',
-  });
-  const items = data?.policies ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: POLICIES_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.policiesTable.rows as Policy[], total: data.policiesTable.total as number };
+    },
+    [client]
+  );
 
   const [editing, setEditing] = useState<Policy | null>(null);
   const [isNew, setIsNew] = useState(false);
-  const [form, setForm] = useState<FormState>(EMPTY);
+  const [form, setForm] = useState<PolicyFormState>(EMPTY_POLICY_FORM);
   const [slugTouched, setSlugTouched] = useState(false);
   const [delTarget, setDelTarget] = useState<Policy | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +51,7 @@ export default function PoliciesPage() {
   const openNew = () => {
     setIsNew(true);
     setEditing({} as Policy);
-    setForm({ ...EMPTY });
+    setForm({ ...EMPTY_POLICY_FORM });
     setSlugTouched(false);
     setError(null);
   };
@@ -77,6 +65,11 @@ export default function PoliciesPage() {
 
   const onTitle = (title: string) => {
     setForm((f) => ({ ...f, title, slug: isNew && !slugTouched ? slugify(title) : f.slug }));
+  };
+
+  const onFormChange = (patch: Partial<PolicyFormState>) => {
+    if (patch.slug !== undefined) setSlugTouched(true);
+    setForm((f) => ({ ...f, ...patch }));
   };
 
   const submit = async () => {
@@ -100,7 +93,7 @@ export default function PoliciesPage() {
         setToast('Policy updated');
       }
       setEditing(null);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setError(e.message);
     }
@@ -112,131 +105,44 @@ export default function PoliciesPage() {
     await deleteMut({ variables: { id: delTarget.id } });
     setToast('Policy deleted');
     setDelTarget(null);
-    await refetch();
-  };
-
-  const renderBody = () => {
-    if (loading && !items.length) {
-      return (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      );
-    }
-    if (!items.length) {
-      return (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-          No policies yet.
-        </Typography>
-      );
-    }
-    return (
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Title</TableCell>
-            <TableCell>Slug</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Sort</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {items.map((p) => (
-            <TableRow key={p.id} hover>
-              <TableCell sx={{ fontWeight: 700 }}>{p.title}</TableCell>
-              <TableCell>{p.slug}</TableCell>
-              <TableCell>
-                <Chip size="small" color={p.is_active ? 'success' : 'default'} label={p.is_active ? 'Active' : 'Hidden'} />
-              </TableCell>
-              <TableCell>{p.sort_order}</TableCell>
-              <TableCell align="right">
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button size="small" onClick={() => openEdit(p)}>Edit</Button>
-                  <Button size="small" color="error" onClick={() => setDelTarget(p)}>Delete</Button>
-                </Stack>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
+    refetchRef.current?.();
   };
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} flexWrap="wrap">
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            Policies
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Website &amp; app policies — managed in one place.
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <TextField
-            size="small"
-            label="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Title or slug"
-            sx={{ minWidth: 200 }}
-          />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          Policies
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Website &amp; app policies — managed in one place.
+        </Typography>
+      </Box>
+
+      <PoliciesTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onEdit={openEdit}
+        onRemove={setDelTarget}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>
             New Policy
           </Button>
-        </Stack>
-      </Stack>
+        }
+      />
 
-      {renderBody()}
-
-      <Dialog open={!!editing} onClose={() => !saving && setEditing(null)} fullWidth maxWidth="md">
-        <DialogTitle>{isNew ? 'New Policy' : `Edit · ${editing?.title}`}</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField label="Title" value={form.title} onChange={(e) => onTitle(e.target.value)} required fullWidth autoFocus />
-              <TextField
-                label="Slug"
-                value={form.slug}
-                onChange={(e) => {
-                  setSlugTouched(true);
-                  setForm({ ...form, slug: e.target.value });
-                }}
-                required
-                fullWidth
-                helperText="lowercase letters, numbers and dashes"
-              />
-            </Stack>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                label="Sort order"
-                type="number"
-                value={form.sort_order}
-                onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
-                size="small"
-                sx={{ width: 150 }}
-              />
-              <FormControlLabel
-                control={<Switch checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />}
-                label={form.is_active ? 'Active (visible in app)' : 'Hidden'}
-              />
-            </Stack>
-            <Box>
-              <Typography variant="caption" color="text.secondary">Content</Typography>
-              <RichTextEditor value={form.content} onChange={(v) => setForm({ ...form, content: v })} minHeight={260} />
-            </Box>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditing(null)} disabled={saving}>Cancel</Button>
-          <Button variant="contained" onClick={submit} disabled={saving}>
-            {isNew ? 'Create' : 'Save changes'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <PolicyFormDialog
+        open={!!editing}
+        isNew={isNew}
+        editingTitle={editing?.title ?? ''}
+        form={form}
+        error={error}
+        saving={saving}
+        onTitle={onTitle}
+        onChange={onFormChange}
+        onClose={() => setEditing(null)}
+        onSubmit={submit}
+      />
 
       <Dialog open={!!delTarget} onClose={() => setDelTarget(null)}>
         <DialogTitle>Delete policy?</DialogTitle>

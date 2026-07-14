@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Snackbar, Stack, Typography } from '@mui/material';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import { DELETE_VENUE_LEAD, VENUE_LEADS } from '../../api/crm.gql';
+import { Alert, Button, Snackbar, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { DELETE_VENUE_LEAD, VENUE_LEADS_TABLE } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
 import type { VenueLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
@@ -12,7 +13,7 @@ import LeadsToolbar from '../../components/LeadsToolbar';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
-import VenueLeadsTable from './VenueLeadsTable';
+import { CrmLeadsTable } from '../../components/lead-table';
 import { parseApiError } from '../../utils/parseApiError';
 
 export default function VenueLeadsPage() {
@@ -20,34 +21,27 @@ export default function VenueLeadsPage() {
   const client = useApolloClient();
   const { config } = useCrmConfig();
   const { options: superCategories } = useSuperCategories();
+  const refetchRef = useRef<(() => void) | null>(null);
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
-  const [superCategoryFilter, setSuperCategoryFilter] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAi, setShowAi] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<VenueLead | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkBusy, setBulkBusy] = useState(false);
 
-  const { data, loading, refetch } = useQuery<{ venueLeads: VenueLead[] }>(VENUE_LEADS, {
-    variables: {
-      filter: {
-        search,
-        lead_status: statusFilter || null,
-        priority: priorityFilter || null,
-        super_category_id: superCategoryFilter || null,
-      },
-    },
-    fetchPolicy: 'cache-and-network',
-  });
   const [deleteLead, { loading: deleting }] = useMutation(DELETE_VENUE_LEAD);
 
-  const leads = data?.venueLeads ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: VENUE_LEADS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.venueLeadsTable.rows as VenueLead[], total: data.venueLeadsTable.total as number };
+    },
+    [client],
+  );
 
   const statusOptions = useMemo(
     () => (config.venue_lead_statuses ?? []).map((value) => ({ label: value, value })),
@@ -68,24 +62,9 @@ export default function VenueLeadsPage() {
       await deleteLead({ variables: { id: toDelete.id } });
       setToast('Venue lead deleted');
       setToDelete(null);
-      await refetch();
+      refetchRef.current?.();
     } catch (err) {
       setError(parseApiError(err));
-    }
-  };
-
-  const bulkDelete = async () => {
-    setBulkBusy(true);
-    try {
-      await Promise.all(selectedIds.map((id) => deleteLead({ variables: { id } })));
-      setToast(`Deleted ${selectedIds.length} venue lead${selectedIds.length === 1 ? '' : 's'}`);
-      setSelectedIds([]);
-      setBulkOpen(false);
-      await refetch();
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setBulkBusy(false);
     }
   };
 
@@ -100,8 +79,7 @@ export default function VenueLeadsPage() {
       const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
       if (!payload) throw new Error('Empty response');
       downloadBase64Xlsx(payload.filename, payload.content_base64);
-      const plural = leads.length === 1 ? '' : 's';
-      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} venue lead${plural}`);
+      setToast(kind === 'template' ? 'Template downloaded' : 'Venue leads exported');
     } catch (err) {
       setError(parseApiError(err));
     }
@@ -112,19 +90,8 @@ export default function VenueLeadsPage() {
       <LeadsToolbar
         title="Venue Leads"
         subtitle="Capture and track venue partnership leads."
-        search={search}
-        onSearch={setSearch}
-        onCreate={() => navigate('/venue-leads/new')}
-        createLabel="New Venue Lead"
         onManageServices={() => navigate('/venue-leads/services')}
         manageServicesLabel="Manage Venue Services"
-        superCategory={{
-          selected: superCategoryFilter,
-          options: superCategoryOptions,
-          onChange: setSuperCategoryFilter,
-        }}
-        status={{ selected: statusFilter, options: statusOptions, onChange: setStatusFilter }}
-        priority={{ selected: priorityFilter, options: priorityOptions, onChange: setPriorityFilter }}
         onFillWithAi={() => setShowAi(true)}
         onImport={() => setShowImport(true)}
         onExport={() => fetchExcel('export')}
@@ -133,23 +100,21 @@ export default function VenueLeadsPage() {
 
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
 
-      {selectedIds.length > 0 && (
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
-          <Typography variant="body2" color="text.secondary">{selectedIds.length} selected</Typography>
-          <Button size="small" color="error" variant="outlined" startIcon={<DeleteSweepIcon />} onClick={() => setBulkOpen(true)}>
-            Delete selected
+      <CrmLeadsTable<VenueLead>
+        entity="venue"
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        statusOptions={statusOptions}
+        priorityOptions={priorityOptions}
+        superCategoryOptions={superCategoryOptions}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/venue-leads/new')}>
+            New Venue Lead
           </Button>
-        </Stack>
-      )}
-
-      <VenueLeadsTable
-        leads={leads}
-        loading={loading && !data}
+        }
         onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}
         onDelete={setToDelete}
-        selectionModel={selectedIds}
-        onSelectionChange={setSelectedIds}
       />
 
       <ConfirmDialog
@@ -162,16 +127,6 @@ export default function VenueLeadsPage() {
         onClose={() => setToDelete(null)}
       />
 
-      <ConfirmDialog
-        open={bulkOpen}
-        title="Delete selected venue leads"
-        message={`Delete ${selectedIds.length} selected venue lead${selectedIds.length === 1 ? '' : 's'}? This cannot be undone.`}
-        confirmLabel="Delete all"
-        loading={bulkBusy}
-        onConfirm={bulkDelete}
-        onClose={() => setBulkOpen(false)}
-      />
-
       <FillWithAiDialog
         open={showAi}
         entity="VENUE_LEAD"
@@ -179,7 +134,7 @@ export default function VenueLeadsPage() {
         onClose={() => setShowAi(false)}
         onSaved={(count) => {
           setToast(`Created ${count} venue lead${count === 1 ? '' : 's'}`);
-          refetch();
+          refetchRef.current?.();
         }}
       />
 
@@ -190,7 +145,7 @@ export default function VenueLeadsPage() {
         onClose={() => setShowImport(false)}
         onImported={(result) => {
           setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);
-          refetch();
+          refetchRef.current?.();
         }}
         onDownloadTemplate={() => fetchExcel('template')}
       />

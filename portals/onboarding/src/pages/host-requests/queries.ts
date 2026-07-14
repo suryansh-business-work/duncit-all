@@ -35,6 +35,21 @@ export const HOST_REQUESTS = gql`
   }
 `;
 
+export const HOST_REQUESTS_TABLE = gql`
+  query HostRequestsTable($query: TableQueryInput) {
+    hostRequestsTable(query: $query) {
+      total
+      rows { ${FIELDS} }
+    }
+  }
+`;
+
+/** Status options for the table's select filter (the '' All entry excluded). */
+export const STATUS_OPTIONS = STATUS_FILTERS.filter((f) => f.value).map((f) => ({
+  value: f.value,
+  label: f.label,
+}));
+
 export const ACKNOWLEDGE_HOST_REQUEST = gql`
   mutation AcknowledgeHostRequest($id: ID!) {
     acknowledgeHostRequest(id: $id) { ${FIELDS} }

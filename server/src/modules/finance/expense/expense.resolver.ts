@@ -10,6 +10,10 @@ export const expenseResolvers = {
       requireRole(ctx, FINANCE_RW);
       return expenseService.list(args.filter);
     },
+    expensesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, FINANCE_RW);
+      return expenseService.table(args.query);
+    },
     expenseSummary: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, FINANCE_RW);
       return expenseService.summary(args.filter);

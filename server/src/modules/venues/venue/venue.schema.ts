@@ -168,6 +168,14 @@ export const venueTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (venuesTable / myVenuesTable)."
+  type VenueTablePage {
+    rows: [Venue!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input VenueStep1Input {
     venue_name: String!
     venue_type: String!
@@ -231,7 +239,11 @@ export const venueTypeDefs = /* GraphQL */ `
     "Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's)."
     myVenue(venue_id: ID): Venue
     myVenues: [Venue!]!
+    "Owner-scoped table page over the caller's venues (shared table engine)."
+    myVenuesTable(query: TableQueryInput): VenueTablePage!
     venues(status: VenueStatus): [Venue!]!
+    "Admin/onboarding table page over all venues (shared table engine)."
+    venuesTable(query: TableQueryInput): VenueTablePage!
     venue(venue_doc_id: ID!): Venue
     publicVenues: [Venue!]!
     "APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category (admin Club form). Empty when no location is given."

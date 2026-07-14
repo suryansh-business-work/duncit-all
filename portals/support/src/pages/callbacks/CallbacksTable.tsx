@@ -1,18 +1,8 @@
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TablePagination,
-  TableRow,
-  TableSortLabel,
-  Typography,
-} from '@mui/material';
-import { formatDistanceToNow } from 'date-fns';
+import type { MutableRefObject } from 'react';
+import { Chip, Typography } from '@mui/material';
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { CallbackRequest } from '../../graphql/bouncer';
+import { relativeTime } from '../../lib/supportTable';
 
 const STATUS_COLOR: Record<CallbackRequest['status'], 'warning' | 'primary' | 'default'> = {
   PENDING: 'warning',
@@ -20,106 +10,99 @@ const STATUS_COLOR: Record<CallbackRequest['status'], 'warning' | 'primary' | 'd
   CLOSED: 'default',
 };
 
-// Only fields the server whitelists (BOUNCER_SORTABLE) are sortable.
-const COLS: { field: string; label: string; sortable: boolean }[] = [
-  { field: 'ticket_no', label: 'ID', sortable: false },
-  { field: 'user', label: 'User', sortable: false },
-  { field: 'phone', label: 'Phone', sortable: false },
-  { field: 'pod', label: 'Pod', sortable: false },
-  { field: 'status', label: 'Status', sortable: true },
-  { field: 'created_at', label: 'Requested', sortable: true },
+// "Resolved" is the user-facing label for the backend CLOSED status.
+const STATUS_OPTIONS: ReadonlyArray<{ value: CallbackRequest['status']; label: string }> = [
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CONTACTED', label: 'Contacted' },
+  { value: 'CLOSED', label: 'Resolved' },
+];
+
+const getCallbackRowId = (req: CallbackRequest) => req.id;
+
+const renderTicketNo = (req: CallbackRequest) => (
+  <Typography variant="body2" component="span" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+    {req.ticket_no}
+  </Typography>
+);
+
+const renderUser = (req: CallbackRequest) => (
+  <Typography variant="body2" component="span" sx={{ fontWeight: 700 }}>
+    {req.user.name}
+  </Typography>
+);
+
+const renderStatus = (req: CallbackRequest) => (
+  <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
+);
+
+// Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status
+// filter maps onto the bouncerCallbackRequests query's `status` arg.
+const COLUMNS: DuncitColumn<CallbackRequest>[] = [
+  {
+    field: 'ticket_no',
+    headerName: 'ID',
+    sortable: false,
+    width: 140,
+    cellRenderer: renderTicketNo,
+    valueGetter: (req) => req.ticket_no,
+  },
+  {
+    field: 'user',
+    headerName: 'User',
+    sortable: false,
+    minWidth: 140,
+    cellRenderer: renderUser,
+    valueGetter: (req) => req.user.name,
+  },
+  {
+    field: 'contact_phone',
+    headerName: 'Phone',
+    sortable: false,
+    minWidth: 150,
+    valueGetter: (req) => req.contact_phone || '—',
+  },
+  {
+    field: 'pod',
+    headerName: 'Pod',
+    sortable: false,
+    flex: 1,
+    minWidth: 180,
+    valueGetter: (req) => req.pod?.title ?? '—',
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 150,
+    filter: { type: 'select', options: STATUS_OPTIONS },
+    cellRenderer: renderStatus,
+    valueGetter: (req) => req.status,
+  },
+  {
+    field: 'created_at',
+    headerName: 'Requested',
+    minWidth: 160,
+    valueGetter: (req) => relativeTime(req.created_at),
+  },
 ];
 
 interface Props {
-  items: CallbackRequest[];
-  total: number;
-  loading: boolean;
-  page: number;
-  pageSize: number;
-  sortBy: string;
-  sortDir: 'asc' | 'desc';
-  onSort: (field: string) => void;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  onRowClick: (id: string) => void;
+  fetchRows: TableFetch<CallbackRequest>;
+  refetchRef: MutableRefObject<(() => void) | null>;
+  onRowClick: (req: CallbackRequest) => void;
 }
 
-export default function CallbacksTable({
-  items,
-  total,
-  loading,
-  page,
-  pageSize,
-  sortBy,
-  sortDir,
-  onSort,
-  onPageChange,
-  onPageSizeChange,
-  onRowClick,
-}: Readonly<Props>) {
-  if (loading && !items.length) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <CircularProgress size={24} />
-      </Box>
-    );
-  }
+export default function CallbacksTable({ fetchRows, refetchRef, onRowClick }: Readonly<Props>) {
   return (
-    <Box>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            {COLS.map((c) => (
-              <TableCell key={c.field} sortDirection={sortBy === c.field ? sortDir : false}>
-                {c.sortable ? (
-                  <TableSortLabel
-                    active={sortBy === c.field}
-                    direction={sortBy === c.field ? sortDir : 'asc'}
-                    onClick={() => onSort(c.field)}
-                  >
-                    {c.label}
-                  </TableSortLabel>
-                ) : (
-                  c.label
-                )}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {items.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={COLS.length}>
-                <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-                  No Callback Requests Found
-                </Typography>
-              </TableCell>
-            </TableRow>
-          ) : (
-            items.map((req) => (
-              <TableRow key={req.id} hover sx={{ cursor: 'pointer' }} onClick={() => onRowClick(req.id)}>
-                <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{req.ticket_no}</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>{req.user.name}</TableCell>
-                <TableCell>{req.contact_phone || '—'}</TableCell>
-                <TableCell>{req.pod?.title ?? '—'}</TableCell>
-                <TableCell>
-                  <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
-                </TableCell>
-                <TableCell>{formatDistanceToNow(new Date(req.created_at), { addSuffix: true })}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-      <TablePagination
-        component="div"
-        count={total}
-        page={page}
-        onPageChange={(_e, p) => onPageChange(p)}
-        rowsPerPage={pageSize}
-        onRowsPerPageChange={(e) => onPageSizeChange(Number.parseInt(e.target.value, 10))}
-        rowsPerPageOptions={[10, 25, 50, 100]}
-      />
-    </Box>
+    <DuncitTable<CallbackRequest>
+      tableId="support-callbacks"
+      columns={COLUMNS}
+      fetchRows={fetchRows}
+      getRowId={getCallbackRowId}
+      onRowClick={onRowClick}
+      emptyText="No Callback Requests Found"
+      defaultSort={{ field: 'created_at', dir: 'desc' }}
+      searchPlaceholder="Search reason or phone"
+      refetchRef={refetchRef}
+    />
   );
 }

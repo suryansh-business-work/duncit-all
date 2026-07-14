@@ -192,9 +192,15 @@ export const podResolvers = {
   Query: {
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
       podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
+    podsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
+      podService.table(args.query, { includePendingApproval: canReviewPendingPods(ctx) }),
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return podService.listMyHostPods(user.id, { from: args.from, to: args.to });
+    },
+    myHostPodsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podService.tableMine(user.id, args.query);
     },
     pod: async (_p: unknown, args: { pod_doc_id: string }) => podService.getById(args.pod_doc_id),
     podBySlugs: async (

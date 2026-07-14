@@ -56,4 +56,46 @@ describe('podIdeaService integration', () => {
     expect(approved.status).toBe('APPROVED');
     expect(await PodIdeaModel.countDocuments()).toBe(1);
   });
+
+  it('serves the podIdeasTable page with search, status filter, sort and paging', async () => {
+    const rooftop = await podIdeaService.create(author, { title: 'Rooftop cinema', description: 'Movies' });
+    await podIdeaService.create(author, { title: 'Beach cleanup', description: 'Sunday drive' });
+    const chess = await podIdeaService.create(author, { title: 'Chess night', description: 'Blitz games' });
+    await podIdeaService.setStatus(chess.id, 'APPROVED');
+
+    // Default envelope: newest first (created_at desc) with clamp defaults.
+    const all = await podIdeaService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows[0].title).toBe('Chess night');
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans title AND description.
+    const byTitle = await podIdeaService.table({ search: 'beach' });
+    expect(byTitle.rows.map((r) => r.title)).toEqual(['Beach cleanup']);
+    const byDescription = await podIdeaService.table({ search: 'blitz' });
+    expect(byDescription.rows.map((r) => r.title)).toEqual(['Chess night']);
+
+    // Enum filter narrows.
+    const approvedOnly = await podIdeaService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'APPROVED' }],
+    });
+    expect(approvedOnly.rows.map((r) => r.title)).toEqual(['Chess night']);
+    expect(approvedOnly.total).toBe(1);
+
+    // Allowlisted sort, both the order and paging over it.
+    const sorted = await podIdeaService.table({ sort_by: 'title', sort_dir: 'asc' });
+    expect(sorted.rows.map((r) => r.title)).toEqual(['Beach cleanup', 'Chess night', 'Rooftop cinema']);
+    const page2 = await podIdeaService.table({ sort_by: 'title', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((r) => r.title)).toEqual(['Chess night']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+
+    // Viewer-aware liked_by_me flows through the same mapper as list().
+    const liker = new Types.ObjectId().toString();
+    await podIdeaService.toggleLike(rooftop.id, liker);
+    const asLiker = await podIdeaService.table({ search: 'rooftop' }, liker);
+    expect(asLiker.rows[0].liked_by_me).toBe(true);
+  });
 });

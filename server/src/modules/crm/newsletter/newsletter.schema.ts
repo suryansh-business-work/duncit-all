@@ -16,6 +16,14 @@ export const newsletterTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (newsletterSubscribersTable)."
+  type NewsletterSubscriberTablePage {
+    rows: [NewsletterSubscriber!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input SubscribeNewsletterInput {
     email: String!
     source: NewsletterSource
@@ -28,6 +36,7 @@ export const newsletterTypeDefs = /* GraphQL */ `
 
   extend type Query {
     newsletterSubscribers: [NewsletterSubscriber!]!
+    newsletterSubscribersTable(query: TableQueryInput): NewsletterSubscriberTablePage!
   }
 
   extend type Mutation {

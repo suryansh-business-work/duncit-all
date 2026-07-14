@@ -14,6 +14,10 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.list(args);
     },
+    inventoryProductsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.table(args.query);
+    },
     marketplaceBrandProducts: async (
       _p: unknown,
       args: { brand_doc_id: string },
@@ -21,6 +25,14 @@ export const inventoryResolvers = {
     ) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.listMarketplaceBrandProducts(args.brand_doc_id);
+    },
+    marketplaceBrandProductsTable: async (
+      _p: unknown,
+      args: { brand_doc_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.marketplaceBrandProductsTable(args.brand_doc_id, args.query);
     },
     productListingRequests: async (
       _p: unknown,
@@ -30,9 +42,21 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.listProductRequests(args.status ?? null);
     },
+    productListingRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.productListingRequestsTable(args.query);
+    },
     myProductListings: async (_p: unknown, args: { brand_id?: string | null }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return inventoryService.listMyProductListings(ctx.user, args.brand_id);
+    },
+    myProductListingsTable: async (
+      _p: unknown,
+      args: { brand_id?: string | null; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.myProductListingsTable(ctx.user, args.brand_id, args.query);
     },
     availablePodProducts: async (
       _p: unknown,

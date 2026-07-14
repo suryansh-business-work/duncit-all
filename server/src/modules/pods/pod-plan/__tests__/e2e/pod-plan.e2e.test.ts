@@ -35,4 +35,45 @@ describe('pod-plan e2e', () => {
     const user = server.client(signToken({ roles: ['USER'] }));
     await expect(user.request(CREATE, { input: { key: 'x', name: 'X' } })).rejects.toThrow();
   });
+
+  it('serves podPlansTable to admins only: envelope, search and paging', async () => {
+    const admin = server.client(signToken({ roles: ['CITY_ADMIN'] }));
+    await admin.request(CREATE, { input: { key: 'starter', name: 'Starter', sort_order: 0 } });
+    await admin.request(CREATE, { input: { key: 'growth', name: 'Growth', sort_order: 1 } });
+
+    type Page = {
+      podPlansTable: { rows: { key: string }[]; total: number; page: number; page_size: number };
+    };
+    const TABLE = gql`
+      query ($query: TableQueryInput) {
+        podPlansTable(query: $query) {
+          rows {
+            key
+          }
+          total
+          page
+          page_size
+        }
+      }
+    `;
+
+    const all = await admin.request<Page>(TABLE);
+    expect(all.podPlansTable.total).toBe(2);
+    expect(all.podPlansTable.rows.map((r) => r.key)).toEqual(['starter', 'growth']);
+    expect(all.podPlansTable.page).toBe(1);
+    expect(all.podPlansTable.page_size).toBe(25);
+
+    const searched = await admin.request<Page>(TABLE, { query: { search: 'grow' } });
+    expect(searched.podPlansTable.rows.map((r) => r.key)).toEqual(['growth']);
+
+    const page2 = await admin.request<Page>(TABLE, { query: { page: 2, page_size: 1 } });
+    expect(page2.podPlansTable.rows.map((r) => r.key)).toEqual(['growth']);
+    expect(page2.podPlansTable.total).toBe(2);
+    expect(page2.podPlansTable.page).toBe(2);
+    expect(page2.podPlansTable.page_size).toBe(1);
+
+    // Same guard as podPlans — plain users are rejected.
+    const user = server.client(signToken({ roles: ['USER'] }));
+    await expect(user.request(TABLE)).rejects.toThrow();
+  });
 });

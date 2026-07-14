@@ -1,30 +1,26 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
-import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import {
   CREATE_FLAG,
   DELETE_FLAG,
-  QUERY,
+  FLAGS_TABLE,
   SET_FLAG,
   UPDATE_FLAG,
   blankFlag,
+  type FeatureFlagRow,
   type FlagEdit,
 } from './queries';
 import FeatureFlagsTable from './FeatureFlagsTable';
 import FlagEditDialog from './FlagEditDialog';
 
 export default function FeatureFlagsPage() {
-  const { data, loading, error, refetch } = useQuery(QUERY);
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [setFlag] = useMutation(SET_FLAG);
   const [createFlag] = useMutation(CREATE_FLAG);
   const [updateFlag] = useMutation(UPDATE_FLAG);
@@ -37,12 +33,24 @@ export default function FeatureFlagsPage() {
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: FLAGS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.featureFlagsTable.rows as FeatureFlagRow[], total: data.featureFlagsTable.total as number };
+    },
+    [client]
+  );
+
   const openCreate = () => {
     setEditing(blankFlag);
     setOpError(null);
     setEditOpen(true);
   };
-  const openEdit = (f: any) => {
+  const openEdit = (f: FeatureFlagRow) => {
     setEditing({
       id: f.id,
       key: f.key,
@@ -54,11 +62,11 @@ export default function FeatureFlagsPage() {
     setEditOpen(true);
   };
 
-  const toggle = async (f: any) => {
+  const toggle = async (f: FeatureFlagRow) => {
     try {
       await setFlag({ variables: { flag_id: f.id, enabled: !f.enabled } });
       setToast(`${f.name} ${f.enabled ? 'disabled' : 'enabled'}`);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setToast(e.message);
     }
@@ -93,7 +101,7 @@ export default function FeatureFlagsPage() {
       }
       setEditOpen(false);
       setToast('Saved');
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -101,7 +109,7 @@ export default function FeatureFlagsPage() {
     }
   };
 
-  const remove = async (f: any) => {
+  const remove = async (f: FeatureFlagRow) => {
     const ok = await confirm({
       title: 'Delete flag',
       message: `Delete flag "${f.key}"?`,
@@ -111,7 +119,7 @@ export default function FeatureFlagsPage() {
     if (!ok) return;
     try {
       await deleteFlag({ variables: { flag_id: f.id } });
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);
     }
@@ -119,23 +127,21 @@ export default function FeatureFlagsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Box>
-          <Typography variant="h5">Feature Flags</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Toggle features on or off across the platform without deploying code.
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          New Flag
-        </Button>
-      </Stack>
-
-      {error && <Alert severity="error">{error.message}</Alert>}
+      <Box>
+        <Typography variant="h5">Feature Flags</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Toggle features on or off across the platform without deploying code.
+        </Typography>
+      </Box>
 
       <FeatureFlagsTable
-        loading={loading}
-        flags={data?.featureFlags ?? []}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New Flag
+          </Button>
+        }
         onToggle={toggle}
         onEdit={openEdit}
         onRemove={remove}

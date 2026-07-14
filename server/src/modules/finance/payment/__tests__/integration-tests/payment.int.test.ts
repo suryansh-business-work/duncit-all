@@ -39,6 +39,39 @@ describe('paymentService integration', () => {
     expect(await paymentService.getById(new Types.ObjectId().toString())).toBeNull();
   });
 
+  it('serves the paymentsTable page with search, filter, sort and paging', async () => {
+    await makePayment({ user_name: 'Asha', user_email: 'asha@x.com', status: 'SUCCESS', total: 118 });
+    await makePayment({ user_name: 'Bela', user_email: 'bela@x.com', status: 'FAILED', total: 236 });
+    await makePayment({ user_name: 'Chitra', user_email: 'chitra@x.com', status: 'SUCCESS', total: 59 });
+
+    // Plain envelope with the clamp defaults (created_at desc).
+    const all = await paymentService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans payment_id / invoice_no / user_name / user_email.
+    const byName = await paymentService.table({ search: 'bela' });
+    expect(byName.rows.map((p) => p.user_name)).toEqual(['Bela']);
+    expect(byName.total).toBe(1);
+
+    // Status enum filter narrows (the old UI's status select).
+    const success = await paymentService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'SUCCESS' }],
+    });
+    expect(success.total).toBe(2);
+    expect(success.rows.every((p) => p.status === 'SUCCESS')).toBe(true);
+
+    // Allowlisted sort + paging keep the total.
+    const asc = await paymentService.table({ sort_by: 'total', sort_dir: 'asc' });
+    expect(asc.rows.map((p) => p.total)).toEqual([59, 118, 236]);
+    const page2 = await paymentService.table({ sort_by: 'total', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((p) => p.total)).toEqual([118]);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('createRazorpayCheckout throws when Razorpay is not configured', async () => {
     await expect(
       paymentService.createRazorpayCheckout(

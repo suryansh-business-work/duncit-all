@@ -41,6 +41,84 @@ export const HOSTS = gql`
   }
 `;
 
+export interface HostCategoryRow {
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+  request_no: string;
+}
+
+/** Row shape used by the hosts table columns; rows also carry the full
+ * HostRowFields selection so the Edit/Review dialogs can reuse the row object. */
+export interface HostRow {
+  id: string;
+  user_id: string;
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  aadhar_number?: string | null;
+  pan_number?: string | null;
+  status: string;
+  is_active?: boolean | null;
+  submitted_at?: string | null;
+  host_commission_pct?: number | null;
+  host_categories?: HostCategoryRow[] | null;
+}
+
+/** Same selection as HOSTS rows (+ created_at for the hidden Created filter
+ * column) so table rows keep feeding the Edit/Review dialogs without refetch. */
+const HOST_ROW_FIELDS = gql`
+  fragment HostRowFields on Host {
+    id
+    user_id
+    full_name
+    email
+    phone
+    dob
+    aadhar_number
+    pan_number
+    passport_photo_url
+    police_verification_url
+    full_address
+    bank_account {
+      payout_method
+      account_holder_name
+      account_number
+      ifsc_code
+      upi_id
+    }
+    tags
+    step_completed
+    status
+    is_active
+    submitted_at
+    created_at
+    reviewer_notes
+    host_commission_pct
+    host_categories {
+      super_category_id
+      category_id
+      sub_category_id
+      super_category_name
+      category_name
+      sub_category_name
+      request_no
+    }
+  }
+`;
+
+export const HOSTS_TABLE = gql`
+  query HostsTable($query: TableQueryInput) {
+    hostsTable(query: $query) {
+      total
+      rows {
+        ...HostRowFields
+      }
+    }
+  }
+  ${HOST_ROW_FIELDS}
+`;
+
 export const APPROVE = gql`
   mutation ApproveHost($id: ID!, $notes: String, $tags: [String!]) {
     approveHost(host_doc_id: $id, notes: $notes, tags: $tags) {
@@ -173,3 +251,6 @@ export interface CategoryOption {
 }
 
 export const STATUSES = ['', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
+
+/** Status options for the table's select filter ('' All entry excluded). */
+export const STATUS_OPTIONS = STATUSES.filter(Boolean).map((s) => ({ value: s, label: s }));

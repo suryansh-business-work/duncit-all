@@ -15,6 +15,10 @@ export const callPromptResolvers = {
       requireRole(ctx, RW);
       return callPromptService.list(args.filter ?? {});
     },
+    crmCallPromptsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return callPromptService.table(args.query);
+    },
     crmCallPrompt: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return callPromptService.get(args.id);

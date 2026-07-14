@@ -12,6 +12,7 @@ import {
 } from './wallet.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const withdrawalId = () => `wd_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
@@ -76,6 +77,29 @@ const withdrawalPub = (w: IWalletWithdrawal) => ({
   paid_at: w.paid_at?.toISOString?.() ?? null,
   created_at: w.created_at?.toISOString?.() ?? '',
 });
+
+/** Allowlists for the shared table engine (withdrawalRequestsTable — DUNCIT TABLE CONTRACT v1). */
+const WITHDRAWAL_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['withdrawal_id', 'beneficiary_name', 'beneficiary_email', 'upi_id', 'account_number'],
+  sortFields: {
+    beneficiary_name: 'beneficiary_name',
+    amount: 'amount',
+    status: 'status',
+    payout_method: 'payout_method',
+    scheduled_for: 'scheduled_for',
+    requested_at: 'requested_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    payout_method: { type: 'enum' },
+    amount: { type: 'number' },
+    scheduled_for: { type: 'date' },
+    requested_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 async function ensureWallet(userId: string, currency: string) {
   return WalletModel.findOneAndUpdate(
@@ -184,6 +208,17 @@ export const walletService = {
     if (status) query.status = status;
     const docs = await WalletWithdrawalModel.find(query).sort({ created_at: -1 }).limit(300);
     return docs.map(withdrawalPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the withdrawalRequestsTable query. */
+  async withdrawalsTable(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IWalletWithdrawal>(
+      WalletWithdrawalModel,
+      {},
+      input,
+      WITHDRAWAL_TABLE_CONFIG
+    );
+    return { rows: docs.map(withdrawalPub), total, page, page_size };
   },
 
   async reviewWithdrawal(id: string, status: string, reason: string | undefined, reviewerId?: string | null) {

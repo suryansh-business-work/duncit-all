@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Box, Button, Card, CardContent, CircularProgress, Stack, Tab, Tabs } from '@mui/material';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { Button, Stack, Tab, Tabs } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableFilterValue, type TableQueryState } from '@duncit/table';
 import {
   CATEGORY_DEFS,
   CREATE_ENV_ENTRY,
   DELETE_ENV_ENTRY,
   ENV_CATEGORIES,
-  ENV_ENTRIES,
+  ENV_ENTRIES_TABLE,
   SET_DEFAULT_ENV_ENTRY,
   UPDATE_ENV_ENTRY,
   type EnvCategory,
@@ -24,20 +25,32 @@ import { parseApiError } from '../../utils/parseApiError';
 /** Manage the named entries within each environment category. */
 export default function EnvVariablesTab() {
   const confirm = useConfirm();
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [category, setCategory] = useState<EnvCategory>('EMAIL');
   const [editing, setEditing] = useState<EnvEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [testing, setTesting] = useState<EnvEntry | null>(null);
 
   const { data: catData } = useQuery<{ envCategories: EnvCategoryDef[] }>(ENV_CATEGORIES, { fetchPolicy: 'cache-first' });
-  const { data, loading, refetch } = useQuery<{ envEntries: EnvEntry[] }>(ENV_ENTRIES, {
-    variables: { filter: { category } },
-    fetchPolicy: 'cache-and-network',
-  });
   const [createMut, createState] = useMutation(CREATE_ENV_ENTRY);
   const [updateMut, updateState] = useMutation(UPDATE_ENV_ENTRY);
   const [deleteMut] = useMutation(DELETE_ENV_ENTRY);
   const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
+
+  // Server-paged rows for the active category tab; the tab pins a category filter.
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const filters: TableFilterValue[] = [...q.filters, { field: 'category', op: 'eq', value: category }];
+      const { data } = await client.query({
+        query: ENV_ENTRIES_TABLE,
+        variables: tableQueryToGql({ ...q, filters }),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.envEntriesTable.rows as EnvEntry[], total: data.envEntriesTable.total as number };
+    },
+    [client, category]
+  );
 
   // Prefer the server definition (authoritative); fall back to the static one so
   // the tabs, Add button and form always work even if the query hasn't loaded.
@@ -46,7 +59,6 @@ export default function EnvVariablesTab() {
     () => categories.find((c) => c.category === category) ?? CATEGORY_DEFS.find((c) => c.category === category),
     [categories, category]
   );
-  const entries = data?.envEntries ?? [];
   const busy = createState.loading || updateState.loading;
 
   const handleSubmit = async (values: EnvEntryFormValues) => {
@@ -63,7 +75,7 @@ export default function EnvVariablesTab() {
       }
       setEditing(null);
       setCreating(false);
-      await refetch();
+      refetchRef.current?.();
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
@@ -74,7 +86,7 @@ export default function EnvVariablesTab() {
     try {
       await deleteMut({ variables: { id: e.id } });
       notify(`${e.name} deleted`, 'success');
-      await refetch();
+      refetchRef.current?.();
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
@@ -84,7 +96,7 @@ export default function EnvVariablesTab() {
     try {
       await setDefaultMut({ variables: { id: e.id } });
       notify(`${e.name} is now the default`, 'success');
-      await refetch();
+      refetchRef.current?.();
     } catch (err) {
       notify(parseApiError(err), 'error');
     }
@@ -92,23 +104,24 @@ export default function EnvVariablesTab() {
 
   return (
     <Stack spacing={2}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <Button startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
-          Add {def?.label ?? ''}
-        </Button>
-      </Box>
-      <Card>
-        <CardContent>
-          <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
-            {CATEGORY_DEFS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
-          </Tabs>
-          {loading && !entries.length ? (
-            <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={28} /></Box>
-          ) : (
-            <EnvEntriesTable entries={entries} onEdit={setEditing} onDelete={handleDelete} onSetDefault={handleSetDefault} onTest={setTesting} />
-          )}
-        </CardContent>
-      </Card>
+      <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto">
+        {CATEGORY_DEFS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
+      </Tabs>
+      {/* key remounts the table per category so the page/query state resets with the tab. */}
+      <EnvEntriesTable
+        key={category}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
+            Add {def?.label ?? ''}
+          </Button>
+        }
+        onEdit={setEditing}
+        onDelete={handleDelete}
+        onSetDefault={handleSetDefault}
+        onTest={setTesting}
+      />
 
       {def && (
         <EnvEntryForm

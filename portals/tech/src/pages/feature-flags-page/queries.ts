@@ -13,6 +13,34 @@ export const QUERY = gql`
     }
   }
 `;
+
+/** Server-side table page (search/sort/filter/paginate) for the flags table. */
+export const FLAGS_TABLE = gql`
+  query FeatureFlagsTable($query: TableQueryInput) {
+    featureFlagsTable(query: $query) {
+      total
+      rows {
+        id
+        key
+        name
+        description
+        enabled
+        is_system
+        updated_at
+      }
+    }
+  }
+`;
+
+export interface FeatureFlagRow {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  is_system: boolean;
+  updated_at: string;
+}
 export const SET_FLAG = gql`
   mutation SetFlag($flag_id: ID!, $enabled: Boolean!) {
     setFeatureFlag(flag_id: $flag_id, enabled: $enabled) {

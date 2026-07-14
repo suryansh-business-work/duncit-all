@@ -39,9 +39,19 @@ export const approvalTypeDefs = gql`
     updated_at: String
   }
 
+  "Server-side table page for the shared table engine (approvalRequestsTable)."
+  type ApprovalRequestTablePage {
+    rows: [ApprovalRequest!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Admin inbox of approval requests (defaults to all; filter by status/type)."
     approvalRequests(status: ApprovalStatus, type: String): [ApprovalRequest!]!
+    "Server-side table page (search/filter/sort/paginate) over the admin approval inbox."
+    approvalRequestsTable(query: TableQueryInput): ApprovalRequestTablePage!
     "Products portal: brand/product change requests raised from this portal (kind = BRAND | PRODUCT)."
     myEcommChangeRequests(kind: String): [ApprovalRequest!]!
   }

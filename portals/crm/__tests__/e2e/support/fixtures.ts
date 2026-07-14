@@ -206,6 +206,9 @@ export const baseMocks = () => ({
   AdminLocations: { data: { locations: adminLocations } },
   VenueLeads: { data: { venueLeads: [sampleVenueLead] } },
   HostLeads: { data: { hostLeads: [sampleHostLead] } },
+  VenueLeadsTable: { data: { venueLeadsTable: { __typename: 'VenueLeadTablePage', total: 1, rows: [sampleVenueLead] } } },
+  HostLeadsTable: { data: { hostLeadsTable: { __typename: 'HostLeadTablePage', total: 1, rows: [sampleHostLead] } } },
+  EcommLeadsTable: { data: { ecommLeadsTable: { __typename: 'EcommLeadTablePage', total: 0, rows: [] } } },
   VenueLead: { data: { venueLead: sampleVenueLead } },
   HostLead: { data: { hostLead: sampleHostLead } },
 });

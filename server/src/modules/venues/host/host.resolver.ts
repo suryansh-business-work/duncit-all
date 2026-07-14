@@ -21,6 +21,10 @@ export const hostResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.list({ status: args.status }, { withCommission: true });
     },
+    hostsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.table(args.query);
+    },
     host: async (_p: unknown, args: { host_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.getById(args.host_doc_id);

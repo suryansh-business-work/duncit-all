@@ -46,6 +46,14 @@ export const hostTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (hostsTable)."
+  type HostTablePage {
+    rows: [Host!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input HostStep1Input {
     full_name: String!
     email: String!
@@ -76,6 +84,8 @@ export const hostTypeDefs = /* GraphQL */ `
   extend type Query {
     myHost: Host
     hosts(status: HostStatus): [Host!]!
+    "Admin/onboarding table page over all hosts (shared table engine)."
+    hostsTable(query: TableQueryInput): HostTablePage!
     host(host_doc_id: ID!): Host
     publicHosts: [Host!]!
   }

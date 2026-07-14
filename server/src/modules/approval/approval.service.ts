@@ -3,6 +3,7 @@ import { ApprovalRequestModel, type ApprovalStatus, type ApprovalType } from './
 import { hostService } from '@modules/venues/host/host.service';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { ecommBrandService } from '@modules/venues/ecommBrand/ecommBrand.service';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -35,6 +36,30 @@ const pub = (doc: any) => {
 };
 
 const notFound = () => new GraphQLError('Request not found', { extensions: { code: 'NOT_FOUND' } });
+
+/** Allowlists for the shared table engine (approvalRequestsTable — DUNCIT TABLE CONTRACT v1). */
+const APPROVAL_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title', 'summary', 'subject_name', 'subject_email', 'requested_by_name'],
+  sortFields: {
+    type: 'type',
+    status: 'status',
+    kind: 'kind',
+    source_portal: 'source_portal',
+    subject_name: 'subject_name',
+    requested_by_name: 'requested_by_name',
+    reviewed_at: 'reviewed_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    type: { type: 'enum' },
+    kind: { type: 'string' },
+    source_portal: { type: 'string' },
+    reviewed_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 export interface CreateApprovalInput {
   type: ApprovalType;
@@ -128,6 +153,17 @@ export const approvalService = {
     if (filter.type) q.type = filter.type;
     const docs = await ApprovalRequestModel.find(q).sort({ created_at: -1 });
     return docs.map(pub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the approvalRequestsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      ApprovalRequestModel,
+      {},
+      input,
+      APPROVAL_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   /** Generic creation — used by the onboarding meeting-feedback flow. */

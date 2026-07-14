@@ -18,8 +18,17 @@ export const apiKeyTypeDefs = /* GraphQL */ `
     raw_key: String!
   }
 
+  "Server-side table page for the shared table engine (myApiKeysTable)."
+  type ApiKeyTablePage {
+    rows: [ApiKey!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     myApiKeys: [ApiKey!]!
+    myApiKeysTable(query: TableQueryInput): ApiKeyTablePage!
   }
 
   extend type Mutation {

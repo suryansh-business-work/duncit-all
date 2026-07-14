@@ -14,5 +14,13 @@ export const techResolvers = {
       requireRole(ctx, TECH_MANAGE);
       return techService.dockerInfo();
     },
+    techDockerContainersTable: async (
+      _p: unknown,
+      args: { query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_MANAGE);
+      return techService.containersTable(args.query);
+    },
   },
 };

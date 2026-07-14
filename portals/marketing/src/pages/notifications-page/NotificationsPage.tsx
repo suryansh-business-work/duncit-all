@@ -1,22 +1,17 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { notifyError } from '../../components/notify';
 import {
   CREATE_NOTIFICATION,
   DELETE_NOTIFICATION,
   LOCATIONS_FOR_NOTIF,
-  NOTIFS,
+  NOTIFS_TABLE,
   USERS_FOR_NOTIF,
+  type NotificationRow,
 } from './queries';
 import { blankForm, type NotifForm } from './helpers';
 import NotificationsTable from './NotificationsTable';
@@ -25,10 +20,8 @@ import { useConfirm } from '../../components/useConfirm';
 import { notificationFormSchema, toCreateNotificationInput } from './notification.form';
 
 export default function NotificationsPage() {
-  const { data, loading, error, refetch } = useQuery(NOTIFS, {
-    variables: { limit: 100 },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const { data: locsData } = useQuery(LOCATIONS_FOR_NOTIF);
   const { data: usersData } = useQuery(USERS_FOR_NOTIF);
 
@@ -44,8 +37,34 @@ export default function NotificationsPage() {
 
   const locations = locsData?.locations ?? [];
   const users = usersData?.users ?? [];
-  const locName = (id?: string | null) =>
-    locations.find((l: any) => l.id === id)?.location_name ?? '—';
+  const locName = useCallback(
+    (id?: string | null) =>
+      (locsData?.locations ?? []).find((l: any) => l.id === id)?.location_name ?? '—',
+    [locsData],
+  );
+  const locationOptions = useMemo(
+    () =>
+      (locsData?.locations ?? []).map((l: any) => ({
+        value: l.id as string,
+        label: l.location_name as string,
+      })),
+    [locsData],
+  );
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: NOTIFS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.notificationsTable.rows as NotificationRow[],
+        total: data.notificationsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const openCreate = () => {
     setForm(blankForm);
@@ -63,7 +82,7 @@ export default function NotificationsPage() {
       const c = res.data?.createNotification;
       setToast(`Sent · delivered ${c?.delivered_count ?? 0} · failed ${c?.failed_count ?? 0}`);
       setOpen(false);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -71,7 +90,7 @@ export default function NotificationsPage() {
     }
   };
 
-  const remove = async (n: any) => {
+  const remove = async (n: NotificationRow) => {
     const ok = await confirm({
       title: 'Delete notification',
       message: `Delete notification "${n.title}"?`,
@@ -82,7 +101,7 @@ export default function NotificationsPage() {
     try {
       await deleteMut({ variables: { id: n.id } });
       setToast('Deleted');
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);
     }
@@ -90,33 +109,26 @@ export default function NotificationsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <NotificationsActiveIcon color="primary" />
-            <Typography variant="h5">Notifications</Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Send push + in-app notifications to all users, a city, a zone, or specific users.
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-          New Notification
-        </Button>
-      </Stack>
-
-      {error && <Alert severity="error">{error.message}</Alert>}
+      <Box>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <NotificationsActiveIcon color="primary" />
+          <Typography variant="h5">Notifications</Typography>
+        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          Send push + in-app notifications to all users, a city, a zone, or specific users.
+        </Typography>
+      </Box>
 
       <NotificationsTable
-        loading={loading}
-        hasData={!!data}
-        notifications={data?.notifications ?? []}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
         locName={locName}
+        locationOptions={locationOptions}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New Notification
+          </Button>
+        }
         onDelete={remove}
       />
 

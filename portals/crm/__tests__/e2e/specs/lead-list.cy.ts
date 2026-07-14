@@ -5,16 +5,17 @@ describe('Venue leads list — row click + super category filter', () => {
     cy.mockGraphql({
       ...baseMocks(),
       ConsoleLogin: loginSuccess,
-      // The list page issues VenueLeads with the filter object; we want to
-      // assert that the super_category_id flows through. We therefore key
-      // the response on `filter.super_category_id` so the test can prove the
-      // toolbar chip actually moved that variable.
-      VenueLeads: (vars) => {
-        const filter = (vars as any).filter ?? {};
-        if (filter.super_category_id === 'cat-music') {
-          return { data: { venueLeads: [] } };
+      // The list page issues VenueLeadsTable (DuncitTable); we want to assert
+      // that the super_category_id filter flows through. We therefore key the
+      // response on `query.filters` so the test can prove the Filters popover
+      // actually moved that variable.
+      VenueLeadsTable: (vars) => {
+        const filters = ((vars as any).query?.filters ?? []) as { field: string; value?: string }[];
+        const superCat = filters.find((f) => f.field === 'super_category_id');
+        if (superCat?.value === 'cat-music') {
+          return { data: { venueLeadsTable: { total: 0, rows: [] } } };
         }
-        return { data: { venueLeads: [sampleVenueLead] } };
+        return { data: { venueLeadsTable: { total: 1, rows: [sampleVenueLead] } } };
       },
     });
     cy.login();
@@ -22,18 +23,22 @@ describe('Venue leads list — row click + super category filter', () => {
   });
 
   it('navigates to the detail view when a row is clicked', () => {
-    // Wait for the row to render, then click anywhere on it (not the action
-    // buttons — those stopPropagation).
+    // Wait for the AG Grid row to render, then click anywhere on it (not the
+    // action buttons — DuncitTable ignores clicks inside buttons/links).
     cy.contains('div', /sample arena/i, { timeout: 10000 }).should('be.visible');
-    cy.contains('.MuiDataGrid-row', /sample arena/i).click();
+    cy.contains('.ag-row', /sample arena/i).click();
     cy.location('pathname', { timeout: 8000 }).should('eq', `/venue-leads/${sampleVenueLead.id}/view`);
   });
 
-  it('filters leads when a Super Category chip is clicked', () => {
+  it('filters leads when a Super Category filter is applied', () => {
     // Default response returns the seeded venue.
     cy.contains('div', /sample arena/i).should('be.visible');
-    // Click the "Music" chip — the mock returns an empty list for that id.
-    cy.contains('.MuiChip-root', /^music$/i).click();
+    // Apply Super Category = Music from the Filters popover — the mock
+    // returns an empty list for that id.
+    cy.contains('button', /filters/i).click();
+    cy.get('[aria-labelledby*="duncit-filter-super_category_id"]').click();
+    cy.get('li[role="option"]').contains(/^music$/i).click();
+    cy.contains('button', /^apply$/i).click();
     cy.contains('div', /sample arena/i).should('not.exist');
   });
 });

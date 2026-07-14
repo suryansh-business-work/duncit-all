@@ -37,12 +37,17 @@ export const faqResolvers = {
   },
   Query: {
     faqs: (_p: unknown, args: { filter?: any }) => faqService.list(args.filter),
+    faqsTable: (_p: unknown, args: { query?: any }) => faqService.table(args.query),
     faq: (_p: unknown, args: { faq_doc_id: string }) => faqService.getById(args.faq_doc_id),
     publicFaqGroups: () => faqService.publicGroups(),
     publicPartnerFaqs: (_p: unknown, args: { topic?: any }) => faqService.publicPartnerFaqs(args.topic),
     faqSubmissions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, SUBMISSION_ROLES);
       return faqSubmissionService.list(args.status);
+    },
+    faqSubmissionsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, SUBMISSION_ROLES);
+      return faqSubmissionService.table(args.query);
     },
   },
   Mutation: {

@@ -305,4 +305,49 @@ describe('clubAdminService dashboard', () => {
     });
     expect(d.trend.length).toBeGreaterThan(0);
   });
+
+  it('serves the clubAdminDashboardTable page over the computed per-club rows, scoped to the caller', async () => {
+    const adminA = uid();
+    const adminB = uid();
+    const alpha = await seedClub({ club_name: 'Alpha Club', admin_user_ids: [adminA] });
+    await seedClub({ club_name: 'Beta Club', admin_user_ids: [adminA] });
+    await seedClub({ club_name: 'Other Club', admin_user_ids: [adminB] });
+    await seedPod(alpha._id); // one upcoming pod on Alpha
+
+    // Default page: club_name asc; admin B's club never appears for admin A.
+    const all = await clubAdminService.dashboardClubsTable(adminA);
+    expect(all.total).toBe(2);
+    expect(all.rows.map((r) => r.club_name)).toEqual(['Alpha Club', 'Beta Club']);
+    expect(all.rows[0].total_pods).toBe(1);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans club name and slug.
+    const searched = await clubAdminService.dashboardClubsTable(adminA, { search: 'beta' });
+    expect(searched.rows.map((r) => r.club_name)).toEqual(['Beta Club']);
+    expect(searched.total).toBe(1);
+
+    // Number filter over a computed column narrows.
+    const withPods = await clubAdminService.dashboardClubsTable(adminA, {
+      filters: [{ field: 'total_pods', op: 'gte', value: '1' }],
+    });
+    expect(withPods.rows.map((r) => r.club_name)).toEqual(['Alpha Club']);
+
+    // Allowlisted sort over a computed column + paging.
+    const sorted = await clubAdminService.dashboardClubsTable(adminA, {
+      sort_by: 'total_pods',
+      sort_dir: 'desc',
+    });
+    expect(sorted.rows[0].club_name).toBe('Alpha Club');
+    const page2 = await clubAdminService.dashboardClubsTable(adminA, { page: 2, page_size: 1 });
+    expect(page2.rows).toHaveLength(1);
+    expect(page2.total).toBe(2);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+
+    // A user with no assigned clubs gets an empty page, never someone else's rows.
+    const none = await clubAdminService.dashboardClubsTable(uid());
+    expect(none.total).toBe(0);
+    expect(none.rows).toEqual([]);
+  });
 });

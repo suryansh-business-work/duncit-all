@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { ManagedOptionModel, type ManagedOptionGroup } from './managedOption.model';
 import * as C from '@modules/crm/crm/crm.constants';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -26,12 +27,44 @@ const conflict = () =>
 const notFound = () =>
   new GraphQLError('Option not found', { extensions: { code: 'NOT_FOUND' } });
 
+/** Allowlists for the shared table engine (crmManagedOptionsTable — DUNCIT TABLE CONTRACT v1). */
+const MANAGED_OPTION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name'],
+  sortFields: {
+    name: 'name',
+    sort_order: 'sort_order',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { sort_order: 1, name: 1 },
+};
+
 export const managedOptionService = {
   async list(group: ManagedOptionGroup, includeInactive = false) {
     const q: Record<string, any> = { group };
     if (!includeInactive) q.is_active = { $ne: false };
     const docs = await ManagedOptionModel.find(q).sort({ sort_order: 1, name: 1 });
     return docs.map(pub);
+  },
+
+  /**
+   * Server-side table page for the crmManagedOptionsTable query. The `group`
+   * scope goes through runTableQuery's baseFilter ($and-merged) so client
+   * filters can never widen the result to another group's options.
+   */
+  async table(group: ManagedOptionGroup, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      ManagedOptionModel,
+      { group },
+      input,
+      MANAGED_OPTION_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   /** Active option names for a group — consumed by `crmLeadConfig`. */

@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { EcommBrandModel, type IEcommBrand } from './ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -74,6 +75,46 @@ function applyInput(brand: IEcommBrand, input: any) {
   }
 }
 
+/* ---- Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1) ---- */
+
+/** ecommBrandsTable + marketplaceBrandsTable — onboarding/products brand lists. */
+const ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['brand_name', 'contact_person', 'contact_email', 'contact_phone', 'city'],
+  sortFields: {
+    brand_name: 'brand_name',
+    city: 'city',
+    status: 'status',
+    submitted_at: 'submitted_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    is_active: { type: 'boolean' },
+    city: { type: 'string' },
+    product_commission_pct: { type: 'number' },
+    submitted_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
+/** myEcommBrandsTable — a partner's own brands ("Your brands" list). */
+const MY_ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['brand_name', 'tagline'],
+  sortFields: {
+    brand_name: 'brand_name',
+    status: 'status',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    is_active: { type: 'boolean' },
+  },
+  defaultSort: { updated_at: -1 },
+};
+
 // Load a brand that belongs to the signed-in partner (404 otherwise).
 async function loadOwned(userId: string, brandId: string) {
   if (!Types.ObjectId.isValid(brandId)) {
@@ -125,6 +166,46 @@ export const ecommBrandService = {
     if (filter?.activeOnly) q.is_active = { $ne: false };
     const docs = await EcommBrandModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page for the myEcommBrandsTable query. The owner scope
+   * goes through runTableQuery's baseFilter ($and-merged), so client filters
+   * can never widen it to another partner's brands. */
+  async myTable(userId: string, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IEcommBrand>(
+      EcommBrandModel,
+      { owner_user_id: new Types.ObjectId(userId) },
+      input,
+      MY_ECOMM_BRAND_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
+  /** Server-side table page for the ecommBrandsTable query (onboarding/admin). */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IEcommBrand>(
+      EcommBrandModel,
+      {},
+      input,
+      ECOMM_BRAND_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
+  },
+
+  /** Server-side table page for the marketplaceBrandsTable query. Mirrors the
+   * marketplaceBrands sibling: deactivated brands never surface, and status
+   * defaults to APPROVED unless the client filters on status itself. */
+  async marketplaceTable(input?: TableQueryInput | null) {
+    const scope: Record<string, unknown> = { is_active: { $ne: false } };
+    const hasStatusFilter = (input?.filters ?? []).some((f) => f.field === 'status');
+    if (!hasStatusFilter) scope.status = 'APPROVED';
+    const { docs, total, page, page_size } = await runTableQuery<IEcommBrand>(
+      EcommBrandModel,
+      scope,
+      input,
+      ECOMM_BRAND_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

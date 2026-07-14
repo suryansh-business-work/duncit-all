@@ -37,6 +37,44 @@ describe('referralService integration', () => {
     await expect(referralService.applyCode(userId, code)).rejects.toThrow(/your own code/i);
   });
 
+  it('serves the referralsTable page with search, filter, sort and paging', async () => {
+    const referrerA = new Types.ObjectId();
+    const referrerB = new Types.ObjectId();
+    await ReferralModel.create({ referrer_user_id: referrerA, referred_user_id: new Types.ObjectId(), code: 'DUN-AAAAAA' });
+    await ReferralModel.create({ referrer_user_id: referrerA, referred_user_id: new Types.ObjectId(), code: 'DUN-AAAAAA' });
+    await ReferralModel.create({ referrer_user_id: referrerB, referred_user_id: new Types.ObjectId(), code: 'DUN-BBBBBB' });
+
+    // Plain envelope with the clamp defaults.
+    const all = await referralService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search matches the code.
+    const searched = await referralService.table({ search: 'bbbbbb' });
+    expect(searched.rows.map((r) => r.code)).toEqual(['DUN-BBBBBB']);
+    expect(searched.total).toBe(1);
+
+    // String filter narrows to one referrer's redemptions.
+    const byReferrer = await referralService.table({
+      filters: [{ field: 'referrer_user_id', op: 'eq', value: String(referrerA) }],
+    });
+    expect(byReferrer.total).toBe(2);
+    expect(byReferrer.rows.every((r) => r.referrer_user_id === String(referrerA))).toBe(true);
+
+    // Allowlisted sort, both directions.
+    const asc = await referralService.table({ sort_by: 'code', sort_dir: 'asc' });
+    expect(asc.rows[0].code).toBe('DUN-AAAAAA');
+    expect(asc.rows[2].code).toBe('DUN-BBBBBB');
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page3 = await referralService.table({ page: 3, page_size: 1, sort_by: 'code', sort_dir: 'asc' });
+    expect(page3.rows.map((r) => r.code)).toEqual(['DUN-BBBBBB']);
+    expect(page3.total).toBe(3);
+    expect(page3.page).toBe(3);
+    expect(page3.page_size).toBe(1);
+  });
+
   it('admin can read the log and manage the gift', async () => {
     const referrer = new Types.ObjectId().toString();
     const friend = new Types.ObjectId().toString();

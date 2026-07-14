@@ -157,6 +157,14 @@ export const podTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "Server-side table page for the shared table engine (podsTable / myHostPodsTable)."
+  type PodTablePage {
+    rows: [Pod!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input PodFilterInput {
     club_id: ID
     venue_id: ID
@@ -254,7 +262,10 @@ export const podTypeDefs = /* GraphQL */ `
 
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
+    podsTable(query: TableQueryInput): PodTablePage!
     myHostPods(from: String, to: String): [Pod!]!
+    "Table page over the caller's own hosted pods (myHostPods rows)."
+    myHostPodsTable(query: TableQueryInput): PodTablePage!
     pod(pod_doc_id: ID!): Pod
     podBySlugs(club_slug: String!, pod_slug: String!): Pod
     podComments(pod_doc_id: ID!): [PodComment!]!

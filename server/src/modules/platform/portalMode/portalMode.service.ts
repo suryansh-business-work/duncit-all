@@ -1,11 +1,29 @@
 import { GraphQLError } from 'graphql';
 import { PortalModeModel, PORTAL_MODES, type PortalMode } from './portalMode.model';
 import { PORTAL_REGISTRY } from './portalMode.registry';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
 /** Public URL per portal key — kept in the registry (single source of truth). */
 const URL_BY_KEY = new Map(PORTAL_REGISTRY.map((e) => [e.key, e.url]));
+
+/** Allowlists for the shared table engine (portalModesTable — DUNCIT TABLE CONTRACT v1). */
+const PORTAL_MODE_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'key'],
+  sortFields: {
+    name: 'name',
+    key: 'key',
+    kind: 'kind',
+    mode: 'mode',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    kind: { type: 'enum' },
+    mode: { type: 'enum' },
+  },
+  defaultSort: { kind: 1, name: 1 },
+};
 
 const pub = (doc: any) => ({
   id: String(doc._id),
@@ -34,6 +52,18 @@ export const portalModeService = {
     await this.seedDefaults();
     const docs = await PortalModeModel.find().sort({ kind: 1, name: 1 });
     return docs.map(pub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the portalModesTable query. */
+  async table(input?: TableQueryInput | null) {
+    await this.seedDefaults();
+    const { docs, total, page, page_size } = await runTableQuery(
+      PortalModeModel,
+      {},
+      input,
+      PORTAL_MODE_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   /** Public, unauthenticated read used by every app's gate. Fails open to LIVE. */

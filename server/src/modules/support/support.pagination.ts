@@ -17,10 +17,9 @@ export interface SupportPageOpts {
   sort_dir?: string | null;
 }
 
-/** Case-insensitive regex with the user input escaped (no ReDoS / injection). */
-export function supportSearchRegex(search: string): RegExp {
-  return new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
-}
+/** Case-insensitive regex with the user input escaped (no ReDoS / injection).
+ * Single implementation lives in the shared table-query engine. */
+export { escapedSearchRegex as supportSearchRegex } from '@utils/table-query';
 
 interface PaginableModel {
   find: (filter: Record<string, unknown>) => any;

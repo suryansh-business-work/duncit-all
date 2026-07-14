@@ -11,6 +11,7 @@ import {
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const newOrderNo = () =>
@@ -87,6 +88,29 @@ const toPub = (d: IProductOrder) => ({
   created_at: d.created_at?.toISOString?.() ?? '',
   updated_at: d.updated_at?.toISOString?.() ?? '',
 });
+
+/** Allowlists for the shared table engine (productOrdersTable — DUNCIT TABLE CONTRACT v1). */
+const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['order_no', 'buyer_name', 'buyer_email', 'shiprocket.awb'],
+  sortFields: {
+    order_no: 'order_no',
+    buyer_name: 'buyer_name',
+    fulfilment_method: 'fulfilment_method',
+    fulfilment_status: 'fulfilment_status',
+    total: 'total',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    fulfilment_method: { type: 'enum' },
+    fulfilment_status: { type: 'enum' },
+    buyer_email: { type: 'string' },
+    order_no: { type: 'string' },
+    total: { type: 'number' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 /** Enrich a snapshot line from Payment.metadata with the live product's
  * ownership/dimensions so the order carries everything ShipRocket needs even if
@@ -227,6 +251,17 @@ export const productOrderService = {
     }
     const docs = await ProductOrderModel.find(q).sort({ created_at: -1 }).limit(limit);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for productOrdersTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IProductOrder>(
+      ProductOrderModel,
+      {},
+      input,
+      PRODUCT_ORDER_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

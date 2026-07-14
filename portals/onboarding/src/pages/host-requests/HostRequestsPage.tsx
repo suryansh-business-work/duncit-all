@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import TableSkeleton from '../../components/TableSkeleton';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Alert, Box, Stack, Typography } from '@mui/material';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HostRequestsTable from './HostRequestsTable';
 import ContactDetailsDialog from './ContactDetailsDialog';
@@ -10,20 +10,15 @@ import {
   ACKNOWLEDGE_HOST_REQUEST,
   APPROVE_HOST_REQUEST,
   DELETE_HOST_REQUEST,
-  HOST_REQUESTS,
+  HOST_REQUESTS_TABLE,
   REJECT_HOST_REQUEST,
-  STATUS_FILTERS,
   type HostRequest,
-  type HostRequestStatus,
 } from './queries';
 
 /** Onboarding → Host Requests: approved hosts applying to host in a new category. */
 export default function HostRequestsPage() {
-  const [status, setStatus] = useState<HostRequestStatus | ''>('');
-  const { data, loading, error, refetch } = useQuery<{ hostRequests: HostRequest[] }>(HOST_REQUESTS, {
-    variables: { status: status || null },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [acknowledge, { loading: acking }] = useMutation(ACKNOWLEDGE_HOST_REQUEST);
   const [approve, { loading: approving }] = useMutation(APPROVE_HOST_REQUEST);
   const [reject, { loading: rejecting }] = useMutation(REJECT_HOST_REQUEST);
@@ -35,13 +30,27 @@ export default function HostRequestsPage() {
   const [actionError, setActionError] = useState<string | null>(null);
 
   const busy = acking || approving || rejecting || deleting;
-  const requests = data?.hostRequests ?? [];
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: HOST_REQUESTS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.hostRequestsTable.rows as HostRequest[],
+        total: data.hostRequestsTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const run = async (work: Promise<unknown>, fallback: string) => {
     setActionError(null);
     try {
       await work;
-      await refetch();
+      refetchRef.current?.();
       return true;
     } catch (e) {
       setActionError(e instanceof Error ? e.message : fallback);
@@ -74,42 +83,24 @@ export default function HostRequestsPage() {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Stack spacing={0.25}>
-          <Typography variant="h5" fontWeight={700}>Host Requests</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Review requests from approved hosts to start hosting in a new category.
-          </Typography>
-        </Stack>
-        <TextField
-          select
-          size="small"
-          label="Status"
-          value={status}
-          onChange={(e) => setStatus(e.target.value as HostRequestStatus | '')}
-          sx={{ minWidth: 180 }}
-        >
-          {STATUS_FILTERS.map((f) => (
-            <MenuItem key={f.label} value={f.value}>{f.label}</MenuItem>
-          ))}
-        </TextField>
+      <Stack spacing={0.25} mb={2}>
+        <Typography variant="h5" fontWeight={700}>Host Requests</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Review requests from approved hosts to start hosting in a new category.
+        </Typography>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
       {actionError && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setActionError(null)}>{actionError}</Alert>}
 
-      {loading && !data ? (
-        <TableSkeleton columns={6} />
-      ) : (
-        <HostRequestsTable
-          requests={requests}
-          busy={busy}
-          onAcknowledge={doAcknowledge}
-          onApprove={(r) => openDecision('APPROVE', r)}
-          onReject={(r) => openDecision('REJECT', r)}
-          onDelete={setDeleteFor}
-        />
-      )}
+      <HostRequestsTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        busy={busy}
+        onAcknowledge={doAcknowledge}
+        onApprove={(r) => openDecision('APPROVE', r)}
+        onReject={(r) => openDecision('REJECT', r)}
+        onDelete={setDeleteFor}
+      />
 
       <ContactDetailsDialog
         request={contactFor}

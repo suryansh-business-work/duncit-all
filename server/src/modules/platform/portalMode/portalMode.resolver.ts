@@ -11,6 +11,10 @@ export const portalModeResolvers = {
       requireRole(ctx, TECH_MANAGE);
       return portalModeService.list();
     },
+    portalModesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return portalModeService.table(args.query);
+    },
     // Public — every app reads its own row on load. No auth.
     portalMode: async (_p: unknown, args: { key: string }) => {
       return portalModeService.getPublic(args.key);

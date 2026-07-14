@@ -1,58 +1,45 @@
-import { useEffect, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useCallback, useEffect, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Typography,
 } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-
-const REFERRALS = gql`
-  query AdminReferrals {
-    referrals {
-      id
-      code
-      referrer_user_id
-      referrer_name
-      referred_user_id
-      referred_name
-      created_at
-    }
-    referralSettings {
-      gift_description
-    }
-  }
-`;
-
-const UPDATE_GIFT = gql`
-  mutation UpdateReferralGift($gift_description: String!) {
-    updateReferralGift(gift_description: $gift_description) {
-      gift_description
-    }
-  }
-`;
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import ReferralsTable from './ReferralsTable';
+import { REFERRALS_TABLE, REFERRAL_SETTINGS, UPDATE_GIFT, type ReferralRow } from './queries';
 
 /** Referrals — who referred whom, plus the gift users earn (B4-11). */
 export default function ReferralsPage() {
-  const { data, loading, error, refetch } = useQuery(REFERRALS, { fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const { data, refetch } = useQuery(REFERRAL_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [updateGift, giftState] = useMutation(UPDATE_GIFT);
   const [gift, setGift] = useState('');
-  const rows: any[] = data?.referrals ?? [];
+  const [total, setTotal] = useState<number | null>(null);
 
   useEffect(() => {
     if (data?.referralSettings) setGift(data.referralSettings.gift_description ?? '');
   }, [data?.referralSettings]);
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const res = await client.query({
+        query: REFERRALS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      const page = res.data.referralsTable;
+      setTotal(page.total as number);
+      return { rows: page.rows as ReferralRow[], total: page.total as number };
+    },
+    [client],
+  );
 
   const saveGift = async () => {
     await updateGift({ variables: { gift_description: gift } });
@@ -66,7 +53,7 @@ export default function ReferralsPage() {
         <Typography variant="h5" sx={{ fontWeight: 900 }}>
           Referrals
         </Typography>
-        <Chip size="small" label={rows.length} sx={{ ml: 1 }} />
+        {total != null && <Chip size="small" label={total} sx={{ ml: 1 }} />}
       </Stack>
 
       <Card variant="outlined" sx={{ borderRadius: 3 }}>
@@ -85,7 +72,14 @@ export default function ReferralsPage() {
               value={gift}
               onChange={(e) => setGift(e.target.value)}
             />
-            <Button variant="contained" onClick={() => void saveGift().catch(() => undefined)} disabled={giftState.loading} sx={{ fontWeight: 900, px: 3 }}>
+            <Button
+              variant="contained"
+              onClick={() => {
+                saveGift().catch(() => undefined);
+              }}
+              disabled={giftState.loading}
+              sx={{ fontWeight: 900, px: 3 }}
+            >
               {giftState.loading ? 'Saving…' : 'Save'}
             </Button>
           </Stack>
@@ -93,47 +87,7 @@ export default function ReferralsPage() {
         </CardContent>
       </Card>
 
-      {loading && !data && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
-          <CircularProgress size={22} />
-        </Stack>
-      )}
-      {error && <Alert severity="error">{error.message}</Alert>}
-
-      <Card variant="outlined" sx={{ borderRadius: 3 }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 900 }}>Referrer</TableCell>
-              <TableCell sx={{ fontWeight: 900 }}>Referred</TableCell>
-              <TableCell sx={{ fontWeight: 900 }}>Code</TableCell>
-              <TableCell sx={{ fontWeight: 900 }}>When</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4}>
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                    No referrals yet.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => (
-                <TableRow key={row.id} hover>
-                  <TableCell>{row.referrer_name || row.referrer_user_id}</TableCell>
-                  <TableCell>{row.referred_name || row.referred_user_id}</TableCell>
-                  <TableCell>
-                    <Chip size="small" label={row.code} sx={{ fontWeight: 800 }} />
-                  </TableCell>
-                  <TableCell>{new Date(row.created_at).toLocaleString()}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <ReferralsTable fetchRows={fetchRows} />
     </Stack>
   );
 }

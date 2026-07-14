@@ -34,6 +34,22 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
     by_type: [LegalDocumentTypeCount!]!
   }
 
+  "Server-side table page for the shared table engine (legalDocumentsTable)."
+  type LegalDocumentTablePage {
+    rows: [LegalDocument!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "Server-side table page over the by-type aggregate (legalDocumentStatsTable)."
+  type LegalDocumentTypeCountTablePage {
+    rows: [LegalDocumentTypeCount!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input LegalDocumentFilterInput {
     search: String
     document_type: String
@@ -55,8 +71,10 @@ export const legalDocumentTypeDefs = /* GraphQL */ `
 
   extend type Query {
     legalDocuments(filter: LegalDocumentFilterInput): [LegalDocument!]!
+    legalDocumentsTable(query: TableQueryInput): LegalDocumentTablePage!
     legalDocument(id: ID!): LegalDocument
     legalDocumentStats: LegalDocumentStats!
+    legalDocumentStatsTable(query: TableQueryInput): LegalDocumentTypeCountTablePage!
   }
 
   extend type Mutation {

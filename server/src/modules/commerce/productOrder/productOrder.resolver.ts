@@ -34,6 +34,10 @@ export const productOrderResolvers = {
       requireRole(ctx, OPS_RW);
       return productOrderService.list(args.filter);
     },
+    productOrdersTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, OPS_RW);
+      return productOrderService.table(args.query);
+    },
     productOrder: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, OPS_RW);
       return productOrderService.getById(args.id);

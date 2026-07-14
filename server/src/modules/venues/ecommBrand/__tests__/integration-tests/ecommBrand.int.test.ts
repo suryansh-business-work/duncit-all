@@ -68,6 +68,92 @@ describe('ecommBrandService integration', () => {
   });
 });
 
+describe('ecommBrand table queries (shared table engine)', () => {
+  it('serves ecommBrandsTable with search, filters, sort and paging', async () => {
+    const owner = new Types.ObjectId();
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Alpha Attire', city: 'Delhi', status: 'APPROVED', contact_person: 'Asha' });
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Beta Bags', city: 'Mumbai', status: 'SUBMITTED', contact_person: 'Bala' });
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Gamma Goods', city: 'Delhi', status: 'DRAFT', is_active: false });
+
+    // Plain envelope with the default sort (created_at desc) and clamp defaults.
+    const all = await ecommBrandService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((b) => b.brand_name)).toEqual(['Gamma Goods', 'Beta Bags', 'Alpha Attire']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans brand_name and contact_person.
+    const byPerson = await ecommBrandService.table({ search: 'bala' });
+    expect(byPerson.rows.map((b) => b.brand_name)).toEqual(['Beta Bags']);
+
+    // Enum + boolean filters narrow (old UI's status select + active toggle).
+    const approved = await ecommBrandService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'APPROVED' }],
+    });
+    expect(approved.rows.map((b) => b.brand_name)).toEqual(['Alpha Attire']);
+    const inactive = await ecommBrandService.table({
+      filters: [{ field: 'is_active', op: 'is_false' }],
+    });
+    expect(inactive.rows.map((b) => b.brand_name)).toEqual(['Gamma Goods']);
+
+    // Allowlisted sort + paging.
+    const sorted = await ecommBrandService.table({ sort_by: 'brand_name', sort_dir: 'asc' });
+    expect(sorted.rows.map((b) => b.brand_name)).toEqual(['Alpha Attire', 'Beta Bags', 'Gamma Goods']);
+    const page2 = await ecommBrandService.table({ sort_by: 'brand_name', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((b) => b.brand_name)).toEqual(['Beta Bags']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
+  it('myEcommBrandsTable is scoped to the caller and ignores scope-breaking filters', async () => {
+    const a = new Types.ObjectId();
+    const b = new Types.ObjectId();
+    await EcommBrandModel.create({ owner_user_id: a, brand_name: 'Mine One' });
+    await EcommBrandModel.create({ owner_user_id: a, brand_name: 'Mine Two' });
+    await EcommBrandModel.create({ owner_user_id: b, brand_name: 'Theirs' });
+
+    // Default sort = updated_at desc (newest brand first).
+    const mine = await ecommBrandService.myTable(String(a));
+    expect(mine.total).toBe(2);
+    expect(mine.rows.map((x) => x.brand_name)).toEqual(['Mine Two', 'Mine One']);
+
+    const theirs = await ecommBrandService.myTable(String(b));
+    expect(theirs.rows.map((x) => x.brand_name)).toEqual(['Theirs']);
+
+    // owner_user_id is not allowlisted — a hostile filter is dropped and user A
+    // can NEVER pull user B's brands through the table query.
+    const hostile = await ecommBrandService.myTable(String(a), {
+      filters: [{ field: 'owner_user_id', op: 'eq', value: String(b) }],
+    });
+    expect(hostile.total).toBe(2);
+    expect(hostile.rows.every((x) => x.owner_user_id === String(a))).toBe(true);
+  });
+
+  it('marketplaceBrandsTable hides deactivated brands and defaults to APPROVED', async () => {
+    const owner = new Types.ObjectId();
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Live', status: 'APPROVED', is_active: true });
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Hidden', status: 'APPROVED', is_active: false });
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Pending', status: 'SUBMITTED', is_active: true });
+
+    // No status filter → APPROVED default (mirrors marketplaceBrands' `status ?? 'APPROVED'`).
+    const dflt = await ecommBrandService.marketplaceTable();
+    expect(dflt.rows.map((b) => b.brand_name)).toEqual(['Live']);
+
+    // An explicit status filter replaces the default…
+    const submitted = await ecommBrandService.marketplaceTable({
+      filters: [{ field: 'status', op: 'eq', value: 'SUBMITTED' }],
+    });
+    expect(submitted.rows.map((b) => b.brand_name)).toEqual(['Pending']);
+
+    // …but the active-only storefront gate always holds.
+    const approvedExplicit = await ecommBrandService.marketplaceTable({
+      filters: [{ field: 'status', op: 'eq', value: 'APPROVED' }],
+    });
+    expect(approvedExplicit.rows.map((b) => b.brand_name)).toEqual(['Live']);
+  });
+});
+
 describe('brand-level product commission (Onboarded E-Commerce Brands console)', () => {
   const newOwner = () => new Types.ObjectId().toString();
 

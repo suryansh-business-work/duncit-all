@@ -47,6 +47,14 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     revenue: Float!
   }
 
+  "Server-side table page for the shared table engine (clubAdminDashboardTable)."
+  type ClubAdminClubRowTablePage {
+    rows: [ClubAdminClubRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type ClubAdminDashboard {
     kpis: ClubAdminKpis!
     trend: [ClubAdminTrendPoint!]!
@@ -77,6 +85,8 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     myAdminClubsPage(filter: MyAdminClubsFilter): ClubAdminClubsPage!
     "Aggregated metrics for the signed-in Club Admin's clubs."
     clubAdminDashboard(from: String, to: String): ClubAdminDashboard!
+    "Table page over the dashboard's computed per-club breakdown rows."
+    clubAdminDashboardTable(query: TableQueryInput, from: String, to: String): ClubAdminClubRowTablePage!
   }
 
   extend type Mutation {

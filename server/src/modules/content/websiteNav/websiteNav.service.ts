@@ -5,6 +5,7 @@ import {
   type IWebsiteNavItem,
   type WebsiteNavSite,
 } from './websiteNav.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const toPub = (i: IWebsiteNavItem) => ({
   id: String(i._id),
@@ -18,6 +19,29 @@ const toPub = (i: IWebsiteNavItem) => ({
   created_at: i.created_at?.toISOString?.() ?? '',
   updated_at: i.updated_at?.toISOString?.() ?? '',
 });
+
+/** Allowlists for the shared table engine (websiteNavTable — DUNCIT TABLE CONTRACT v1). */
+const WEBSITE_NAV_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['label', 'group_label', 'url'],
+  sortFields: {
+    site: 'site',
+    area: 'area',
+    group_label: 'group_label',
+    label: 'label',
+    url: 'url',
+    sort_order: 'sort_order',
+    is_active: 'is_active',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    site: { type: 'enum' },
+    area: { type: 'enum' },
+    group_label: { type: 'string' },
+    is_active: { type: 'boolean' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { site: 1, area: 1, group_label: 1, sort_order: 1 },
+};
 
 export const websiteNavService = {
   async publicList(site: WebsiteNavSite) {
@@ -35,6 +59,17 @@ export const websiteNavService = {
     if (site) q.site = site;
     const docs = await WebsiteNavItemModel.find(q).sort({ site: 1, area: 1, group_label: 1, sort_order: 1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the websiteNavTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IWebsiteNavItem>(
+      WebsiteNavItemModel,
+      {},
+      input,
+      WEBSITE_NAV_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async create(input: any) {

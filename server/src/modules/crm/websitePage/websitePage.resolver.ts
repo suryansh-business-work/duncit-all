@@ -15,6 +15,14 @@ export const websitePageResolvers = {
       requireRole(ctx, RW);
       return websitePageService.list(args.entity_type, args.lead_id);
     },
+    crmWebsitePagesTable: (
+      _p: unknown,
+      args: { entity_type: WebsiteEntity; lead_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return websitePageService.table(args.entity_type, args.lead_id, args.query);
+    },
   },
   Mutation: {
     crmScrapeWebsitePages: (

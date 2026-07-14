@@ -19,3 +19,21 @@ export const NEWSLETTER_SUBSCRIBERS = gql`
     }
   }
 `;
+
+/** NewsletterSource enum values (server newsletter.schema.ts) for the Source filter. */
+export const NEWSLETTER_SOURCES = ['WEBSITE_FOOTER', 'WEBSITE_PAGE', 'MWEB', 'ADMIN', 'OTHER'] as const;
+
+export const NEWSLETTER_TABLE = gql`
+  query NewsletterSubscribersTable($query: TableQueryInput) {
+    newsletterSubscribersTable(query: $query) {
+      total
+      rows {
+        id
+        email
+        source
+        unsubscribed_at
+        created_at
+      }
+    }
+  }
+`;

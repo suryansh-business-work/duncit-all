@@ -1,42 +1,31 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  IconButton,
-  MenuItem,
-  Stack,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { INVOICE_PDF, PAYMENTS, REFUND_PAYMENT } from './queries';
-import { downloadPdfFromBase64 } from './helpers';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { INVOICE_PDF, PAYMENTS, PAYMENTS_TABLE, REFUND_PAYMENT, type PaymentRow } from './queries';
+import { downloadPdfFromBase64, paymentTableFilter } from './helpers';
 import TotalsCards from './TotalsCards';
 import PaymentsTable from './PaymentsTable';
 import RefundDialog from './RefundDialog';
 
+const POLL_MS = 30000;
+
 export default function PaymentLogsPage() {
-  const [statusFilter, setStatusFilter] = useState('');
-  const [search, setSearch] = useState('');
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
 
-  const filter = useMemo(() => {
-    const f: any = {};
-    if (statusFilter) f.status = statusFilter;
-    if (search.trim()) f.search = search.trim();
-    return Object.keys(f).length ? f : undefined;
-  }, [statusFilter, search]);
-
-  const { data, loading, refetch } = useQuery(PAYMENTS, {
-    variables: { filter, limit: 200 },
+  // KPI totals keep the legacy list query (limit 200, 30s poll); its filter is
+  // synced from the table's search/status so the cards track what the table shows.
+  const [totalsFilter, setTotalsFilter] = useState<Record<string, string> | undefined>(undefined);
+  const totalsKeyRef = useRef('null');
+  const { data, refetch } = useQuery(PAYMENTS, {
+    variables: { filter: totalsFilter, limit: 200 },
     fetchPolicy: 'cache-and-network',
-    pollInterval: 30000,
+    pollInterval: POLL_MS,
   });
 
   const items: any[] = data?.payments ?? [];
-
   const totals = useMemo(() => {
     return items.reduce(
       (a, p) => {
@@ -52,32 +41,61 @@ export default function PaymentLogsPage() {
     );
   }, [items]);
 
-  const apollo = useApolloClient();
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const filter = paymentTableFilter(q);
+      const key = JSON.stringify(filter ?? null);
+      if (key !== totalsKeyRef.current) {
+        totalsKeyRef.current = key;
+        setTotalsFilter(filter);
+      }
+      const { data: page } = await client.query({
+        query: PAYMENTS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.paymentsTable.rows as PaymentRow[],
+        total: page.paymentsTable.total as number,
+      };
+    },
+    [client],
+  );
+
+  // The old page auto-refreshed via pollInterval — keep the table live too.
+  useEffect(() => {
+    const timer = globalThis.setInterval(() => refetchRef.current?.(), POLL_MS);
+    return () => globalThis.clearInterval(timer);
+  }, []);
+
   const [refundMut, { loading: refundLoading }] = useMutation(REFUND_PAYMENT);
-  const [refundFor, setRefundFor] = useState<any>(null);
+  const [refundFor, setRefundFor] = useState<PaymentRow | null>(null);
   const [refundReason, setRefundReason] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const handleDownloadInvoice = async (p: any) => {
-    if (!p.invoice_no) return;
-    setActionError(null);
-    setDownloadingId(p.id);
-    try {
-      const { data: pdfData } = await apollo.query({
-        query: INVOICE_PDF,
-        variables: { id: p.id },
-        fetchPolicy: 'network-only',
-      });
-      const b64 = pdfData?.paymentInvoicePdfBase64;
-      if (!b64) throw new Error('Invoice not available');
-      downloadPdfFromBase64(b64, `invoice-${p.invoice_no.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`);
-    } catch (e: any) {
-      setActionError(e?.message ?? 'Could not download invoice');
-    } finally {
-      setDownloadingId(null);
-    }
-  };
+  const handleDownloadInvoice = useCallback(
+    async (p: PaymentRow) => {
+      if (!p.invoice_no) return;
+      setActionError(null);
+      setDownloadingId(p.id);
+      try {
+        const { data: pdfData } = await client.query({
+          query: INVOICE_PDF,
+          variables: { id: p.id },
+          fetchPolicy: 'network-only',
+        });
+        const b64 = pdfData?.paymentInvoicePdfBase64;
+        if (!b64) throw new Error('Invoice not available');
+        downloadPdfFromBase64(b64, `invoice-${p.invoice_no.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`);
+      } catch (e: any) {
+        setActionError(e?.message ?? 'Could not download invoice');
+      } finally {
+        setDownloadingId(null);
+      }
+    },
+    [client],
+  );
 
   const handleConfirmRefund = async () => {
     if (!refundFor) return;
@@ -86,6 +104,7 @@ export default function PaymentLogsPage() {
       await refundMut({ variables: { id: refundFor.id, reason: refundReason || null } });
       setRefundFor(null);
       setRefundReason('');
+      refetchRef.current?.();
       refetch();
     } catch (e: any) {
       setActionError(e?.message ?? 'Refund failed');
@@ -99,43 +118,13 @@ export default function PaymentLogsPage() {
         <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>
           Payment Logs
         </Typography>
-        <Tooltip title="Refresh">
-          <IconButton onClick={() => refetch()}>
-            <RefreshIcon />
-          </IconButton>
-        </Tooltip>
       </Stack>
 
       <TotalsCards totals={totals} />
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 2 }}>
-        <TextField
-          select
-          size="small"
-          label="Status"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          sx={{ minWidth: 180 }}
-        >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="PENDING">Pending</MenuItem>
-          <MenuItem value="SUCCESS">Success</MenuItem>
-          <MenuItem value="FAILED">Failed</MenuItem>
-          <MenuItem value="REFUNDED">Refunded</MenuItem>
-        </TextField>
-        <TextField
-          size="small"
-          label="Search (txn id, invoice, name, email)"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          sx={{ flex: 1 }}
-        />
-      </Stack>
-
       <PaymentsTable
-        loading={loading}
-        hasData={!!data}
-        items={items}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
         downloadingId={downloadingId}
         onDownload={handleDownloadInvoice}
         onRefund={setRefundFor}

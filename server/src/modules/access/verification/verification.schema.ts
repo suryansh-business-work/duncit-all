@@ -32,11 +32,21 @@ export const verificationTypeDefs = /* GraphQL */ `
     updated_at: String
   }
 
+  "Server-side table page for the shared table engine (userVerificationsTable)."
+  type VerificationTablePage {
+    rows: [Verification!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "All verification types for the signed-in user (NOT_SUBMITTED when absent)."
     myVerifications: [Verification!]!
     "A user's verifications — admin review (user details)."
     userVerifications(user_id: ID!): [Verification!]!
+    "Server-side table page over a user's verifications — admin review (user details)."
+    userVerificationsTable(user_id: ID!, query: TableQueryInput): VerificationTablePage!
   }
 
   extend type Mutation {

@@ -1,125 +1,64 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { TICKETS, type TicketPage, type TicketStatus } from '../../../graphql/tickets';
+import type { TableQueryState } from '@duncit/table';
+import { TICKETS, type TicketPage } from '../../../graphql/tickets';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
+import { supportListVars } from '../../../lib/supportTable';
 import TicketsTable from './TicketsTable';
 import NewTicketDialog from './NewTicketDialog';
 
-const STATUSES: TicketStatus[] = ['OPEN', 'PENDING', 'RESOLVED', 'CLOSED'];
-
 export default function TicketsListPage() {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | ''>('');
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-  const [sortBy, setSortBy] = useState('last_message_at');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(0);
-    }, 350);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  const { data, loading, refetch } = useQuery<{ tickets: TicketPage }>(TICKETS, {
-    variables: {
-      status: statusFilter || null,
-      search: search || null,
-      page: page + 1,
-      page_size: pageSize,
-      sort_by: sortBy,
-      sort_dir: sortDir,
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query<{ tickets: TicketPage }>({
+        query: TICKETS,
+        variables: supportListVars(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.tickets.items, total: data.tickets.total };
     },
-    fetchPolicy: 'cache-and-network',
+    [client]
+  );
+
+  useSupportSocket({
+    onTicketNew: () => refetchRef.current?.(),
+    onTicketUpdate: () => refetchRef.current?.(),
   });
-
-  useSupportSocket({ onTicketNew: () => refetch(), onTicketUpdate: () => refetch() });
-
-  const items = data?.tickets.items ?? [];
-  const total = data?.tickets.total ?? 0;
-
-  const onSort = (field: string) => {
-    if (sortBy === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortBy(field);
-      setSortDir('asc');
-    }
-    setPage(0);
-  };
 
   const onCreated = (id: string | null) => {
     setOpen(false);
     if (id) navigate(`/tickets/${id}`);
-    else refetch();
+    else refetchRef.current?.();
   };
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} flexWrap="wrap">
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            Tickets
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Support tickets from users. Open one to reply, or raise a new ticket.
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-          <TextField
-            size="small"
-            label="Search"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            sx={{ minWidth: 200 }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value as TicketStatus | '');
-              setPage(0);
-            }}
-            sx={{ minWidth: 140 }}
-          >
-            <MenuItem value="">All</MenuItem>
-            {STATUSES.map((s) => (
-              <MenuItem key={s} value={s}>
-                {s}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
-            New Ticket
-          </Button>
-        </Stack>
-      </Stack>
+      <Box>
+        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          Tickets
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Support tickets from users. Open one to reply, or raise a new ticket.
+        </Typography>
+      </Box>
 
       <TicketsTable
-        items={items}
-        total={total}
-        loading={loading}
-        page={page}
-        pageSize={pageSize}
-        sortBy={sortBy}
-        sortDir={sortDir}
-        onSort={onSort}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPage(0);
-        }}
-        onRowClick={(id) => navigate(`/tickets/${id}`)}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+            New Ticket
+          </Button>
+        }
+        onRowClick={(t) => navigate(`/tickets/${t.id}`)}
       />
 
       <NewTicketDialog open={open} onClose={() => setOpen(false)} onCreated={onCreated} />

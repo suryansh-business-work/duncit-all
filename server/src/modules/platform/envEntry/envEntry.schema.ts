@@ -90,6 +90,14 @@ export const envEntryTypeDefs = gql`
     is_active: Boolean
   }
 
+  "Server-side table page for the shared table engine (envEntriesTable)."
+  type EnvEntryTablePage {
+    rows: [EnvEntry!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type EnvTestResult {
     ok: Boolean!
     message: String!
@@ -105,6 +113,7 @@ export const envEntryTypeDefs = gql`
 
   extend type Query {
     envEntries(filter: EnvEntryFilter): [EnvEntry!]!
+    envEntriesTable(query: TableQueryInput): EnvEntryTablePage!
     envEntry(id: ID!): EnvEntry
     envCategories: [EnvCategoryDef!]!
     "Entries currently assigned to a portal (by portal key)."

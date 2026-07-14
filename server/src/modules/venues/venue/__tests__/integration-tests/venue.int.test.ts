@@ -276,3 +276,65 @@ describe('venueService integration', () => {
     expect(await VenueSlotModel.countDocuments({ venue_id: venue._id })).toBe(0);
   });
 });
+
+describe('venuesTable / myVenuesTable (shared table engine)', () => {
+  it('serves the admin venuesTable page with search, filters, sort and paging', async () => {
+    const owner = new Types.ObjectId();
+    await VenueModel.create({ owner_user_id: owner, venue_name: 'Alpha Cafe', venue_type: 'CAFE', city: 'Mumbai', capacity: 40, status: 'APPROVED' });
+    await VenueModel.create({ owner_user_id: owner, venue_name: 'Beta Turf', venue_type: 'TURF', city: 'Pune', capacity: 80, status: 'SUBMITTED' });
+    await VenueModel.create({ owner_user_id: owner, venue_name: 'Gamma Hall', venue_type: 'BANQUET', city: 'Mumbai', capacity: 120, status: 'APPROVED', is_active: false });
+
+    // Plain envelope: newest-first default (mirrors list()) + clamp defaults.
+    const all = await venueService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((v) => v.venue_name)).toEqual(['Gamma Hall', 'Beta Turf', 'Alpha Cafe']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans venue_name / venue_type / city / locality / owner fields.
+    const byCity = await venueService.table({ search: 'pune' });
+    expect(byCity.rows.map((v) => v.venue_name)).toEqual(['Beta Turf']);
+    expect(byCity.total).toBe(1);
+
+    // Enum + boolean filters narrow.
+    const approved = await venueService.table({ filters: [{ field: 'status', op: 'eq', value: 'APPROVED' }] });
+    expect(approved.rows.map((v) => v.venue_name)).toEqual(['Gamma Hall', 'Alpha Cafe']);
+    const active = await venueService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((v) => v.venue_name)).toEqual(['Beta Turf', 'Alpha Cafe']);
+
+    // Allowlisted sort, then paging keeps total and echoes the clamped page.
+    const byCapacity = await venueService.table({ sort_by: 'capacity', sort_dir: 'asc' });
+    expect(byCapacity.rows.map((v) => v.capacity)).toEqual([40, 80, 120]);
+    const page2 = await venueService.table({ sort_by: 'venue_name', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((v) => v.venue_name)).toEqual(['Beta Turf']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
+  it('scopes myVenuesTable to the caller — user A can never see user B rows', async () => {
+    const ownerA = new Types.ObjectId();
+    const ownerB = new Types.ObjectId();
+    await VenueModel.create({ owner_user_id: ownerA, venue_name: 'A One', city: 'Mumbai' });
+    await VenueModel.create({ owner_user_id: ownerA, venue_name: 'A Two', city: 'Pune' });
+    await VenueModel.create({ owner_user_id: ownerB, venue_name: 'B Secret', city: 'Mumbai' });
+
+    // Owner default sort is recently-updated (mirrors listMine()).
+    const mine = await venueService.tableMine(String(ownerA));
+    expect(mine.total).toBe(2);
+    expect(mine.rows.map((v) => v.venue_name)).toEqual(['A Two', 'A One']);
+
+    // Client search/filters $and-merge with the owner scope — they can narrow
+    // it but never widen it to another owner's venues.
+    const filtered = await venueService.tableMine(String(ownerA), {
+      search: 'secret',
+      filters: [{ field: 'city', op: 'eq', value: 'Mumbai' }],
+    });
+    expect(filtered.total).toBe(0);
+    expect(filtered.rows).toEqual([]);
+
+    const other = await venueService.tableMine(String(ownerB));
+    expect(other.rows.map((v) => v.venue_name)).toEqual(['B Secret']);
+    expect(other.total).toBe(1);
+  });
+});

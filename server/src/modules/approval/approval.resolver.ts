@@ -18,6 +18,10 @@ export const approvalResolvers = {
       requireRole(ctx, APPROVAL_REVIEW);
       return approvalService.list({ status: args.status ?? null, type: args.type ?? null });
     },
+    approvalRequestsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, APPROVAL_REVIEW);
+      return approvalService.table(args.query);
+    },
     myEcommChangeRequests: (_p: unknown, args: { kind?: string | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ECOMM_PORTAL);
       return approvalService.listEcommChanges(args.kind ?? null);

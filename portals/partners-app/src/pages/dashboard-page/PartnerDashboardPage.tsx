@@ -101,7 +101,7 @@ export default function PartnerDashboardPage() {
               })}
             </Tabs>
             {hasItems && <DashboardMetricCards metrics={metrics} tab={tab} />}
-            <DashboardPanels tab={tab} venues={venues} pods={pods} products={products} hasRoleAccess={roleAccess[tab]} />
+            <DashboardPanels tab={tab} range={range} itemCount={itemCounts[tab]} hasRoleAccess={roleAccess[tab]} />
           </Stack>
         </CardContent>
       </Card>

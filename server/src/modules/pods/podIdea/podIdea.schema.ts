@@ -30,6 +30,14 @@ export const podIdeaTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (podIdeasTable)."
+  type PodIdeaTablePage {
+    rows: [PodIdea!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input PodIdeaFilterInput {
     status: PodIdeaStatus
     author_id: ID
@@ -48,6 +56,7 @@ export const podIdeaTypeDefs = /* GraphQL */ `
 
   extend type Query {
     podIdeas(filter: PodIdeaFilterInput): [PodIdea!]!
+    podIdeasTable(query: TableQueryInput): PodIdeaTablePage!
     podIdea(pod_idea_doc_id: ID!): PodIdea
     myPodIdeas: [PodIdea!]!
   }

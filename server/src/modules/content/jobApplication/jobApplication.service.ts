@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { JobApplicationModel, type IJobApplication, type JobApplicationStatus } from './jobApplication.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const toPub = (a: IJobApplication) => ({
   id: String(a._id),
@@ -16,6 +17,25 @@ const toPub = (a: IJobApplication) => ({
   created_at: a.created_at?.toISOString?.() ?? '',
   updated_at: a.updated_at?.toISOString?.() ?? '',
 });
+
+/** Allowlists for the shared table engine (jobApplicationsTable — DUNCIT TABLE CONTRACT v1). */
+const JOB_APPLICATION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['role_title', 'name', 'email'],
+  sortFields: {
+    role_title: 'role_title',
+    name: 'name',
+    email: 'email',
+    status: 'status',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    role_title: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 export const jobApplicationService = {
   /** Public submit from the careers page. Soft-dedupes rapid re-submits of the
@@ -51,6 +71,17 @@ export const jobApplicationService = {
     if (status) q.status = status;
     const docs = await JobApplicationModel.find(q).sort({ created_at: -1 }).limit(500);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the jobApplicationsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IJobApplication>(
+      JobApplicationModel,
+      {},
+      input,
+      JOB_APPLICATION_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async updateStatus(id: string, status: JobApplicationStatus) {

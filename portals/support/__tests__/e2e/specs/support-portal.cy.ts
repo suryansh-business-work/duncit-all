@@ -58,7 +58,8 @@ describe('Support portal (authenticated)', () => {
     });
     cy.visit('/sos');
     cy.contains('SOS Alerts', { timeout: 10000 }).should('be.visible');
-    cy.contains('td', 'Riya').click();
+    // The list is an AG Grid (via @duncit/table) — rows are divs, not <td>s.
+    cy.contains('.ag-cell', 'Riya').click();
     cy.location('pathname').should('eq', '/sos/sos-1');
     cy.contains('Need help').should('be.visible');
   });

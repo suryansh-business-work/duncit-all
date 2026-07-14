@@ -47,6 +47,14 @@ export const settingsTypeDefs = gql`
     enabled: Boolean!
   }
 
+  "Server-side table page for the shared table engine (featureFlagsTable)."
+  type FeatureFlagTablePage {
+    rows: [FeatureFlag!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateFeatureFlagInput {
     key: String!
     name: String!
@@ -146,6 +154,7 @@ export const settingsTypeDefs = gql`
     publicAppSettings: PublicAppSettings!
     publicClientConfig: PublicClientConfig!
     featureFlags: [FeatureFlag!]!
+    featureFlagsTable(query: TableQueryInput): FeatureFlagTablePage!
     featureFlag(key: String!): FeatureFlag
     publicFeatureFlags: [PublicFeatureFlag!]!
     branding: Branding!

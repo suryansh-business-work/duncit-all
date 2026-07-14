@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { EnvEntryModel, ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -47,6 +48,31 @@ const pub = (doc: any) => {
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
   };
+};
+
+/** Allowlists for the shared table engine (envEntriesTable — DUNCIT TABLE CONTRACT v1). */
+const ENV_ENTRY_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'description'],
+  sortFields: {
+    name: 'name',
+    category: 'category',
+    is_default: 'is_default',
+    is_active: 'is_active',
+    last_tested_at: 'last_tested_at',
+    last_used_at: 'last_used_at',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    category: { type: 'enum' },
+    is_default: { type: 'boolean' },
+    is_active: { type: 'boolean' },
+    last_test_ok: { type: 'boolean' },
+    // eq on a portal key matches array membership in mongo (assigned_portals is [String]).
+    assigned_portals: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { category: 1, is_default: -1, name: 1 },
 };
 
 /** Record the outcome of any interactive/credential test on the entry. */
@@ -199,6 +225,17 @@ export const envEntryService = {
     if (filter.is_active != null) query.is_active = filter.is_active;
     const docs = await EnvEntryModel.find(query).sort({ category: 1, is_default: -1, name: 1 });
     return docs.map(pub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the envEntriesTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      EnvEntryModel,
+      {},
+      input,
+      ENV_ENTRY_TABLE_CONFIG
+    );
+    return { rows: docs.map(pub), total, page, page_size };
   },
 
   async get(id: string) {

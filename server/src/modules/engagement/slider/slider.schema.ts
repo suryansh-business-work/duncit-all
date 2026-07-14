@@ -47,6 +47,14 @@ export const sliderTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (slidersTable)."
+  type SliderTablePage {
+    rows: [Slider!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input SliderFilterInput {
     scope: SliderScope
     super_category_slug: String
@@ -97,6 +105,7 @@ export const sliderTypeDefs = /* GraphQL */ `
 
   extend type Query {
     sliders(filter: SliderFilterInput): [Slider!]!
+    slidersTable(query: TableQueryInput): SliderTablePage!
     slider(slider_doc_id: ID!): Slider
   }
 

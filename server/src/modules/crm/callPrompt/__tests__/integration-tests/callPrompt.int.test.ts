@@ -40,6 +40,43 @@ describe('callPromptService integration', () => {
     expect(active.every((p) => p!.is_active)).toBe(true);
   });
 
+  it('serves the crmCallPromptsTable page with search, filters, sort and paging', async () => {
+    await callPromptService.create({ name: 'Alpha', context: 'discount offer', language: 'hi-IN' });
+    await callPromptService.create({ name: 'Beta', context: 'renewal reminder' });
+    await callPromptService.create({ name: 'Gamma', context: 'welcome pitch', is_active: false });
+
+    // Default sort: active first, then name asc — with clamp defaults echoed back.
+    const all = await callPromptService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((p) => p!.name)).toEqual(['Alpha', 'Beta', 'Gamma']);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans name, description and context.
+    const search = await callPromptService.table({ search: 'renewal' });
+    expect(search.rows.map((p) => p!.name)).toEqual(['Beta']);
+    expect(search.total).toBe(1);
+
+    // Boolean + string filters narrow.
+    const active = await callPromptService.table({ filters: [{ field: 'is_active', op: 'is_true' }] });
+    expect(active.rows.map((p) => p!.name)).toEqual(['Alpha', 'Beta']);
+    const hindi = await callPromptService.table({
+      filters: [{ field: 'language', op: 'eq', value: 'hi-IN' }],
+    });
+    expect(hindi.rows.map((p) => p!.name)).toEqual(['Alpha']);
+
+    // Allowlisted sort override.
+    const desc = await callPromptService.table({ sort_by: 'name', sort_dir: 'desc' });
+    expect(desc.rows.map((p) => p!.name)).toEqual(['Gamma', 'Beta', 'Alpha']);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await callPromptService.table({ page: 2, page_size: 1 });
+    expect(page2.rows.map((p) => p!.name)).toEqual(['Beta']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+
   it('deletes a prompt', async () => {
     const created = await callPromptService.create({ name: 'Temp', context: 'temp' });
     expect(await callPromptService.remove(created!.id)).toBe(true);

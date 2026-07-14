@@ -4,6 +4,7 @@ import { NewsletterSubscriberModel, type INewsletterSubscriber } from './newslet
 import { sendEmail } from '@services/email/email.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const subscribeSchema = yup.object({
   email: yup.string().required('Email required').email('Invalid email').max(160),
@@ -22,10 +23,38 @@ const toPub = (s: INewsletterSubscriber) => ({
   updated_at: s.updated_at.toISOString(),
 });
 
+/** Allowlists for the shared table engine (newsletterSubscribersTable — DUNCIT TABLE CONTRACT v1). */
+const NEWSLETTER_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['email', 'source'],
+  sortFields: {
+    email: 'email',
+    source: 'source',
+    unsubscribed_at: 'unsubscribed_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    source: { type: 'enum' },
+    unsubscribed_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 export const newsletterService = {
   async list() {
     const docs = await NewsletterSubscriberModel.find({}).sort({ created_at: -1 }).exec();
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the newsletterSubscribersTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<INewsletterSubscriber>(
+      NewsletterSubscriberModel,
+      {},
+      input,
+      NEWSLETTER_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async subscribe(input: { email: string; source?: string }) {

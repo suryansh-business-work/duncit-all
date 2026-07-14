@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { ApiKeyModel, type IApiKey } from './apiKey.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -11,6 +12,26 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 
 const MAX_NAME_LENGTH = 80;
 const KEY_PREFIX_LENGTH = 10;
+
+/** Allowlists for the shared table engine (myApiKeysTable — DUNCIT TABLE CONTRACT v1). */
+const API_KEY_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'key_prefix'],
+  sortFields: {
+    name: 'name',
+    key_prefix: 'key_prefix',
+    created_at: 'created_at',
+    last_used_at: 'last_used_at',
+    revoked_at: 'revoked_at',
+  },
+  filterFields: {
+    name: { type: 'string' },
+    key_prefix: { type: 'string' },
+    created_at: { type: 'date' },
+    last_used_at: { type: 'date' },
+    revoked_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 /** Public shape — never includes key_hash. The raw key only exists in create(). */
 const toPub = (k: IApiKey) => ({
@@ -50,6 +71,18 @@ export const apiKeyService = {
       created_at: -1,
     });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page for myApiKeysTable. The owner scope lives in the
+   * baseFilter, so client-supplied filters can never widen it to other users. */
+  async tableForOwner(ownerId: string, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IApiKey>(
+      ApiKeyModel,
+      { owner_user_id: new Types.ObjectId(ownerId) },
+      input,
+      API_KEY_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   /** Owner-scoped revoke — a revoked key immediately stops verifying. */

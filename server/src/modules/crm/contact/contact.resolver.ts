@@ -10,6 +10,10 @@ export const contactResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return contactService.list(args.status, args.email);
     },
+    contactSubmissionsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return contactService.table(args.query);
+    },
   },
   Mutation: {
     submitContactForm: (_p: unknown, args: { input: any }) => contactService.submit(args.input),

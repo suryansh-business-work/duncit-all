@@ -13,6 +13,7 @@ import {
   type PodSettlement,
 } from './settlement.service';
 import { generatePayoutPdf } from '@services/payout/payout.pdf';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const releaseId = () => `rel_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
@@ -68,6 +69,29 @@ function toPub(doc: IPaymentRelease) {
     updated_at: doc.updated_at?.toISOString?.() ?? '',
   };
 }
+
+/** Allowlists for the shared table engine (paymentReleaseRequestsTable — DUNCIT TABLE CONTRACT v1). */
+const RELEASE_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['release_id', 'pod_title', 'beneficiary_name', 'beneficiary_email'],
+  sortFields: {
+    kind: 'kind',
+    status: 'status',
+    pod_title: 'pod_title',
+    beneficiary_name: 'beneficiary_name',
+    amount_requested: 'amount_requested',
+    requested_at: 'requested_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    kind: { type: 'enum' },
+    pod_id: { type: 'string' },
+    amount_requested: { type: 'number' },
+    requested_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 async function beneficiaryFor(kind: PaymentReleaseKind, pod: any, hostUserId?: string | null) {
   if (kind === 'VENUE_BILLING') {
@@ -261,6 +285,17 @@ export const paymentReleaseService = {
     if (filter?.kind) query.kind = filter.kind;
     const docs = await PaymentReleaseModel.find(query).sort({ created_at: -1 }).limit(300);
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the paymentReleaseRequestsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IPaymentRelease>(
+      PaymentReleaseModel,
+      {},
+      input,
+      RELEASE_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async create(input: any, actorId?: string | null) {

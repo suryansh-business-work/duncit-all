@@ -369,6 +369,65 @@ describe('hostRequestService — queries', () => {
   });
 });
 
+describe('hostRequestService — table (shared table engine)', () => {
+  it('serves the hostRequestsTable page with search, status filter, sort and paging', async () => {
+    const seed = await seedApprovedHost();
+    const first = await submit(seed.userId, submitInput(seed));
+    await hostRequestService.acknowledge(first.id, REVIEWER);
+    // A sibling sub-category leaf so the same host can file a second request.
+    const sibling = await CategoryModel.create({
+      name: 'Tennis',
+      slug: `tennis-table-${seed.userId}`,
+      level: 'SUB',
+      parent_id: new Types.ObjectId(seed.category_id),
+    });
+    const second = await submit(seed.userId, { ...submitInput(seed), sub_category_id: String(sibling._id) });
+    // A second host so search has something to discriminate.
+    const userId2 = new Types.ObjectId().toString();
+    await HostModel.create({
+      user_id: userId2,
+      full_name: 'Zoya Host',
+      email: 'zoya@example.com',
+      phone: '+911111111111',
+      status: 'APPROVED',
+    });
+    const third = await submit(userId2, {});
+
+    // Plain envelope: legacy newest-first default sort + clamp defaults.
+    const all = await hostRequestService.table();
+    expect(all.total).toBe(3);
+    expect(all.rows.map((r) => r.id)).toEqual([third.id, second.id, first.id]);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans request_no and the host contact snapshot.
+    expect((await hostRequestService.table({ search: first.request_no })).rows.map((r) => r.id)).toEqual([first.id]);
+    expect((await hostRequestService.table({ search: 'zoya' })).rows.map((r) => r.host_name)).toEqual(['Zoya Host']);
+    expect((await hostRequestService.table({ search: 'zoya@example.com' })).total).toBe(1);
+
+    // Status filter mirrors the legacy hostRequests(status:) arg (eq + in).
+    const acknowledged = await hostRequestService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'ACKNOWLEDGED' }],
+    });
+    expect(acknowledged.rows.map((r) => r.id)).toEqual([first.id]);
+    const requested = await hostRequestService.table({
+      filters: [{ field: 'status', op: 'in', values: ['REQUESTED'] }],
+    });
+    expect(requested.total).toBe(2);
+
+    // Allowlisted sort.
+    const byNo = await hostRequestService.table({ sort_by: 'request_no', sort_dir: 'asc' });
+    expect(byNo.rows.map((r) => r.request_no)).toEqual(['HOSTREQ-000001', 'HOSTREQ-000002', 'HOSTREQ-000003']);
+
+    // Paging keeps total and reports the clamped page/page_size back.
+    const page2 = await hostRequestService.table({ page: 2, page_size: 1, sort_by: 'request_no', sort_dir: 'asc' });
+    expect(page2.rows.map((r) => r.request_no)).toEqual(['HOSTREQ-000002']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
+});
+
 describe('hostRequestService — takenCategoryIds', () => {
   it('returns [] when the host holds no categories and has no active requests', async () => {
     const seed = await seedApprovedHost();

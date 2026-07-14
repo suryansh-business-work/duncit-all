@@ -95,6 +95,74 @@ describe('meetingService integration', () => {
   it('requires a preferred date', async () => {
     await expect(meetingService.request(userId, 'VENUE', { requested_at: '' } as any)).rejects.toThrow(/date/i);
   });
+
+  it('serves the onboardingMeetingsTable page with search, filters, sort and paging', async () => {
+    const u1 = new Types.ObjectId().toString();
+    const u2 = new Types.ObjectId().toString();
+    const a = await meetingService.request(u1, 'VENUE', {
+      requested_at: '2026-08-01T10:00:00.000Z',
+      contact_name: 'Asha',
+      contact_phone: '9000000011',
+    });
+    const b = await meetingService.request(u2, 'HOST', {
+      requested_at: '2026-08-02T10:00:00.000Z',
+      contact_name: 'Bina',
+      contact_phone: '9000000022',
+    });
+    await meetingService.update(b!.id, {
+      status: 'SCHEDULED',
+      scheduled_at: '2026-08-03T09:00:00.000Z',
+      meeting_link: 'https://meet.example/b',
+    });
+
+    // Plain envelope, default effective-date order (null scheduled_at sorts first).
+    const all = await meetingService.table();
+    expect(all.total).toBe(2);
+    expect(all.rows.map((m) => m!.id)).toEqual([a!.id, b!.id]);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+    // Rows keep the joined pub shape, like the onboardingMeetings list.
+    expect(all.rows[0]!.contact_name).toBe('Asha');
+    expect(all.rows[0]!.request_no).toMatch(/^DUN-VEN-\d{6}$/);
+
+    // Search spans request_no and contact name/phone.
+    const byNo = await meetingService.table({ search: a!.request_no! });
+    expect(byNo.rows.map((m) => m!.id)).toEqual([a!.id]);
+    const byName = await meetingService.table({ search: 'bina' });
+    expect(byName.rows.map((m) => m!.id)).toEqual([b!.id]);
+
+    // Enum + date-range filters narrow.
+    const scheduled = await meetingService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'SCHEDULED' }],
+    });
+    expect(scheduled.rows.map((m) => m!.id)).toEqual([b!.id]);
+    const venue = await meetingService.table({ filters: [{ field: 'kind', op: 'eq', value: 'VENUE' }] });
+    expect(venue.rows.map((m) => m!.id)).toEqual([a!.id]);
+    const ranged = await meetingService.table({
+      filters: [
+        {
+          field: 'requested_at',
+          op: 'between',
+          values: ['2026-08-01T00:00:00.000Z', '2026-08-01T23:59:59.000Z'],
+        },
+      ],
+    });
+    expect(ranged.rows.map((m) => m!.id)).toEqual([a!.id]);
+
+    // Allowlisted sort + paging keep the total and report the clamped page back.
+    const desc = await meetingService.table({ sort_by: 'requested_at', sort_dir: 'desc', page_size: 1 });
+    expect(desc.rows.map((m) => m!.id)).toEqual([b!.id]);
+    expect(desc.total).toBe(2);
+    const page2 = await meetingService.table({
+      sort_by: 'requested_at',
+      sort_dir: 'desc',
+      page: 2,
+      page_size: 1,
+    });
+    expect(page2.rows.map((m) => m!.id)).toEqual([a!.id]);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
 });
 
 describe('meeting slot booking', () => {

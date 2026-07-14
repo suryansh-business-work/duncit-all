@@ -11,6 +11,7 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 // Schema defaults guarantee Date timestamps, so a direct toISOString is safe.
 const iso = (v: Date) => v.toISOString();
@@ -106,6 +107,36 @@ async function resolveCategoryNames(input: SubmitInput) {
     sub_category_name: nameFor(slots[2]),
   };
 }
+
+/**
+ * Allowlists for the shared table engine (hostRequestsTable — DUNCIT TABLE
+ * CONTRACT v1). Search covers the onboarding table's identity fields
+ * (request no + host contact snapshot); `status` mirrors the legacy
+ * hostRequests(status:) filter; default sort keeps the legacy newest-first
+ * order. API `host_*` fields map to the stored `contact_*` snapshot paths.
+ */
+const HOST_REQUEST_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['request_no', 'contact_name', 'contact_email', 'contact_phone'],
+  sortFields: {
+    request_no: 'request_no',
+    host_name: 'contact_name',
+    super_category_name: 'super_category_name',
+    category_name: 'category_name',
+    sub_category_name: 'sub_category_name',
+    status: 'status',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    host_name: { path: 'contact_name', type: 'string' },
+    super_category_id: { type: 'string' },
+    category_id: { type: 'string' },
+    sub_category_id: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
 
 const catPath = (h: IHostRequest) =>
   [h.super_category_name, h.category_name, h.sub_category_name].filter(Boolean).join(' › ');
@@ -350,6 +381,17 @@ export const hostRequestService = {
     if (filter.status) q.status = filter.status;
     const docs = await HostRequestModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the hostRequestsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IHostRequest>(
+      HostRequestModel,
+      {},
+      input,
+      HOST_REQUEST_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

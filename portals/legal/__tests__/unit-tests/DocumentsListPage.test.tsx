@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import DocumentsListPage from '../../src/pages/documents/DocumentsListPage';
-import { CREATE_LEGAL_DOCUMENT, LEGAL_DOCUMENTS, type LegalDocumentListItem } from '../../src/graphql/documents';
+import {
+  CREATE_LEGAL_DOCUMENT,
+  LEGAL_DOCUMENTS_TABLE,
+  type LegalDocumentListItem,
+} from '../../src/graphql/documents';
 import { renderWithProviders } from './testkit';
 
 vi.mock('react-quill', () => ({
@@ -24,21 +28,25 @@ const doc = (id: string, name: string): LegalDocumentListItem & { __typename: st
   updated_at: new Date().toISOString(),
 });
 
-const listMock = (filter: any, docs: any[]) => ({
-  request: { query: LEGAL_DOCUMENTS, variables: { filter } },
-  result: { data: { legalDocuments: docs } },
+const tableMock = (
+  docs: any[],
+  match: (variables: Record<string, any>) => boolean = () => true
+) => ({
+  request: { query: LEGAL_DOCUMENTS_TABLE },
+  variableMatcher: match,
+  result: { data: { legalDocumentsTable: { total: docs.length, rows: docs } } },
 });
 
 describe('DocumentsListPage', () => {
   it('shows an empty state', async () => {
-    renderWithProviders(<DocumentsListPage />, { mocks: [listMock(undefined, [])] });
+    renderWithProviders(<DocumentsListPage />, { mocks: [tableMock([])] });
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
   });
 
   it('lists documents and opens a detail row', async () => {
     const noEditor = { ...doc('d2', 'Orphan Doc'), updated_by_name: '' };
     renderWithProviders(<></>, {
-      mocks: [listMock(undefined, [doc('d1', 'Master NDA'), noEditor])],
+      mocks: [tableMock([doc('d1', 'Master NDA'), noEditor])],
       initialEntries: ['/documents'],
       routes: (
         <>
@@ -48,26 +56,32 @@ describe('DocumentsListPage', () => {
       ),
     });
     await waitFor(() => expect(screen.getByText('Master NDA')).toBeInTheDocument());
+    // The no-editor row falls back to an em-dash in the Updated-by column.
+    expect(screen.getByText('—')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Master NDA'));
-    expect(screen.getByText('DOC DETAIL')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('DOC DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by search text', async () => {
+  it('filters by search text via the table toolbar', async () => {
     renderWithProviders(<DocumentsListPage />, {
       mocks: [
-        listMock(undefined, [doc('d1', 'Master NDA')]),
-        listMock({ search: 'privacy' }, [doc('d2', 'Privacy Policy Doc')]),
+        tableMock([doc('d1', 'Master NDA')], (v) => !v.query.search),
+        tableMock([doc('d2', 'Privacy Policy Doc')], (v) => v.query.search === 'privacy'),
       ],
     });
     await waitFor(() => expect(screen.getByText('Master NDA')).toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'privacy' } });
-    await waitFor(() => expect(screen.getByText('Privacy Policy Doc')).toBeInTheDocument());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search name, type or description' }), {
+      target: { value: 'privacy' },
+    });
+    await waitFor(() => expect(screen.getByText('Privacy Policy Doc')).toBeInTheDocument(), {
+      timeout: 2000,
+    });
   });
 
   it('creates a document and navigates to it', async () => {
     renderWithProviders(<></>, {
       mocks: [
-        listMock(undefined, []),
+        tableMock([]),
         { request: { query: CREATE_LEGAL_DOCUMENT }, variableMatcher: () => true, result: { data: { createLegalDocument: { id: 'new-1' } } } },
       ],
       initialEntries: ['/documents'],
@@ -90,7 +104,7 @@ describe('DocumentsListPage', () => {
   });
 
   it('cancels the new-document dialog', async () => {
-    renderWithProviders(<DocumentsListPage />, { mocks: [listMock(undefined, [])] });
+    renderWithProviders(<DocumentsListPage />, { mocks: [tableMock([])] });
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new document/i }));
     const dialog = await screen.findByRole('dialog');
@@ -98,12 +112,12 @@ describe('DocumentsListPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('refetches the list when create returns no id', async () => {
+  it('refetches the table when create returns no id', async () => {
     renderWithProviders(<DocumentsListPage />, {
       mocks: [
-        listMock(undefined, []),
+        tableMock([]),
         { request: { query: CREATE_LEGAL_DOCUMENT }, variableMatcher: () => true, result: { data: { createLegalDocument: { id: null } } } },
-        listMock(undefined, [doc('d9', 'Created elsewhere')]),
+        tableMock([doc('d9', 'Created elsewhere')]),
       ],
     });
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());

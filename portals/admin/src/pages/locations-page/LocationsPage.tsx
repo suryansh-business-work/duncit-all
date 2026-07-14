@@ -1,28 +1,25 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Snackbar, Stack } from '@mui/material';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Button, Snackbar, Stack } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
-import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import {
   CREATE_LOCATION,
   DELETE_LOCATION,
-  LOCATIONS,
+  LOCATIONS_TABLE,
   UPDATE_LOCATION,
+  type LocationRow,
 } from './queries';
-import { blankForm, type LocForm, type ZoneEdit } from './types';
+import { blankForm, buildLocationInput, type LocForm, type ZoneEdit } from './types';
 import LocationsTable from './LocationsTable';
 import LocationFormDialog from './LocationFormDialog';
 import LocationsToolbar from './LocationsToolbar';
 
 export default function LocationsPage() {
-  const [search, setSearch] = useState('');
-  // Debounce so we query ~300ms after typing stops, not on every keystroke (B26).
-  const debouncedSearch = useDebouncedValue(search, 300);
-  const { data, loading, error, refetch } = useQuery(LOCATIONS, {
-    variables: { filter: { search: debouncedSearch || undefined } },
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [createMut] = useMutation(CREATE_LOCATION);
   const [updateMut] = useMutation(UPDATE_LOCATION);
   const [deleteMut] = useMutation(DELETE_LOCATION);
@@ -34,13 +31,25 @@ export default function LocationsPage() {
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: LOCATIONS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.locationsTable.rows as LocationRow[], total: data.locationsTable.total as number };
+    },
+    [client],
+  );
+
   const openCreate = () => {
     setForm({ ...blankForm, zones: [{ zone_name: '', zone_code: '', pincode: '' }] });
     setOpError(null);
     setDialogOpen(true);
   };
 
-  const openEdit = (loc: any) => {
+  const openEdit = (loc: LocationRow) => {
     setForm({
       id: loc.id,
       location_id: '',
@@ -50,12 +59,12 @@ export default function LocationsPage() {
       state: loc.state ?? '',
       state_code: loc.state_code ?? '',
       city: loc.city ?? loc.location_name ?? '',
-      location_image: loc.location_image,
+      location_image: loc.location_image ?? '',
       location_pincode: '',
       is_active: loc.is_active,
       zones:
         loc.location_zones.length > 0
-          ? loc.location_zones.map((z: any) => ({
+          ? loc.location_zones.map((z) => ({
               zone_name: z.zone_name,
               zone_code: '',
               pincode: z.pincode ?? '',
@@ -84,63 +93,15 @@ export default function LocationsPage() {
     setBusy(true);
     setOpError(null);
     try {
-      const cleanZones = form.zones
-        .map((z) => ({
-          zone_name: z.zone_name.trim(),
-          pincode: z.pincode.trim() || undefined,
-        }))
-        .filter((z) => z.zone_name);
-
-      if (!form.country_code.trim()) throw new Error('Country is required');
-      if (!form.state.trim()) throw new Error('State is required');
-      if (!form.city.trim()) throw new Error('City is required');
-      if (cleanZones.length === 0) throw new Error('At least one locality / area is required');
-      if (cleanZones.some((zone) => !zone.pincode)) {
-        throw new Error('PIN code is required for every locality / area');
-      }
-      if (!form.location_image.trim()) throw new Error('Location image URL is required');
-      const primaryPincode = form.location_pincode.trim() || cleanZones[0]?.pincode || '';
-      if (!primaryPincode) throw new Error('PIN code is required');
-      const locationName = form.city.trim();
-
+      const input = buildLocationInput(form);
       if (form.id) {
-        await updateMut({
-          variables: {
-            id: form.id,
-            input: {
-              location_name: locationName,
-              country: form.country,
-              country_code: form.country_code,
-              state: form.state,
-              state_code: form.state_code,
-              city: form.city,
-              location_image: form.location_image,
-              location_pincode: primaryPincode,
-              location_zones: cleanZones,
-              is_active: form.is_active,
-            },
-          },
-        });
+        await updateMut({ variables: { id: form.id, input: { ...input, is_active: form.is_active } } });
       } else {
-        await createMut({
-          variables: {
-            input: {
-              location_name: locationName,
-              country: form.country,
-              country_code: form.country_code,
-              state: form.state,
-              state_code: form.state_code,
-              city: form.city,
-              location_image: form.location_image,
-              location_pincode: primaryPincode,
-              location_zones: cleanZones,
-            },
-          },
-        });
+        await createMut({ variables: { input } });
       }
       setToast('Saved');
       setDialogOpen(false);
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       setOpError(e.message);
     } finally {
@@ -148,7 +109,7 @@ export default function LocationsPage() {
     }
   };
 
-  const remove = async (loc: any) => {
+  const remove = async (loc: LocationRow) => {
     const ok = await confirm({
       title: 'Delete location',
       message: `Delete location "${loc.location_name}"?`,
@@ -159,7 +120,7 @@ export default function LocationsPage() {
     try {
       await deleteMut({ variables: { id: loc.id } });
       setToast('Deleted');
-      await refetch();
+      refetchRef.current?.();
     } catch (e: any) {
       notifyError(e.message);
     }
@@ -167,14 +128,16 @@ export default function LocationsPage() {
 
   return (
     <Stack spacing={3}>
-      <LocationsToolbar search={search} setSearch={setSearch} onCreate={openCreate} />
-
-      {error && <Alert severity="error">{error.message}</Alert>}
+      <LocationsToolbar />
 
       <LocationsTable
-        loading={loading}
-        hasData={!!data}
-        locations={data?.locations ?? []}
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
+            New Location
+          </Button>
+        }
         onEdit={openEdit}
         onDelete={remove}
       />

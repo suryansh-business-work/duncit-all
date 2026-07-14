@@ -24,6 +24,14 @@ export const websitePageTypeDefs = gql`
     ERROR
   }
 
+  "Server-side table page for the shared table engine (crmWebsitePagesTable)."
+  type CrmWebsitePageTablePage {
+    rows: [CrmWebsitePage!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type CrmWebsiteScrapeResult {
     discovered: Int!
     saved: Int!
@@ -32,6 +40,7 @@ export const websitePageTypeDefs = gql`
 
   extend type Query {
     crmWebsitePages(entity_type: CrmEntityType!, lead_id: ID!): [CrmWebsitePage!]!
+    crmWebsitePagesTable(entity_type: CrmEntityType!, lead_id: ID!, query: TableQueryInput): CrmWebsitePageTablePage!
   }
 
   extend type Mutation {

@@ -4,6 +4,7 @@ import { ContactSubmissionModel, type IContactSubmission, type ContactStatus } f
 import { sendEmail } from '@services/email/email.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const submitSchema = yup.object({
   name: yup.string().required('Name is required').max(120),
@@ -25,6 +26,25 @@ const toPub = (c: IContactSubmission) => ({
   updated_at: c.updated_at.toISOString(),
 });
 
+/** Allowlists for the shared table engine (contactSubmissionsTable — DUNCIT TABLE CONTRACT v1). */
+const CONTACT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'email', 'subject'],
+  sortFields: {
+    name: 'name',
+    email: 'email',
+    subject: 'subject',
+    status: 'status',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    email: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 export const contactService = {
   async list(status?: ContactStatus, email?: string | null) {
     const q: any = {};
@@ -32,6 +52,17 @@ export const contactService = {
     if (email?.trim()) q.email = email.trim().toLowerCase();
     const docs = await ContactSubmissionModel.find(q).sort({ created_at: -1 }).exec();
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the contactSubmissionsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IContactSubmission>(
+      ContactSubmissionModel,
+      {},
+      input,
+      CONTACT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async submit(input: { name: string; email: string; subject?: string; message: string; attachments?: string[] }) {

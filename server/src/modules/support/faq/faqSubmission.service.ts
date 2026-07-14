@@ -4,6 +4,7 @@ import { FaqSubmissionModel, type IFaqSubmission, type FaqSubmissionStatus } fro
 import { sendEmail } from '@services/email/email.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const submitSchema = yup.object({
   question: yup.string().required('Question is required').min(5).max(2000),
@@ -22,12 +23,40 @@ const toPub = (f: IFaqSubmission) => ({
   updated_at: f.updated_at.toISOString(),
 });
 
+/** Allowlists for the shared table engine (faqSubmissionsTable — DUNCIT TABLE CONTRACT v1). */
+const FAQ_SUBMISSION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['question', 'email', 'super_category_slug'],
+  sortFields: {
+    question: 'question',
+    email: 'email',
+    status: 'status',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    status: { type: 'enum' },
+    super_category_slug: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 export const faqSubmissionService = {
   async list(status?: FaqSubmissionStatus) {
     const q: any = {};
     if (status) q.status = status;
     const docs = await FaqSubmissionModel.find(q).sort({ created_at: -1 }).exec();
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for faqSubmissionsTable. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<IFaqSubmission>(
+      FaqSubmissionModel,
+      {},
+      input,
+      FAQ_SUBMISSION_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async submit(input: { question: string; email?: string | null; super_category_slug?: string | null }) {

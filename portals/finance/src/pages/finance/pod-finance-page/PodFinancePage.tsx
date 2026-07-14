@@ -1,24 +1,12 @@
-import { useQuery } from '@apollo/client';
+import { useCallback, useMemo, useState } from 'react';
+import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
-import { parseApiError } from '../../../utils/parseApiError';
+import { DuncitTable, type DuncitColumn, type TableQueryState } from '@duncit/table';
 import {
   POD_FINANCE_RELEASES,
+  applyPodFinanceQuery,
   groupReleasesByPod,
   money,
   type PodFinanceGroup,
@@ -33,7 +21,7 @@ const STATUS_COLORS: Record<string, 'warning' | 'success' | 'error'> = {
 
 function StatusCountChips({ counts }: Readonly<{ counts: Record<string, number> }>) {
   return (
-    <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+    <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" component="span">
       {Object.entries(counts).map(([status, count]) => (
         <Chip key={status} size="small" label={`${count} ${status}`} color={STATUS_COLORS[status] ?? 'default'} />
       ))}
@@ -46,14 +34,76 @@ interface QueryData {
   publicFinanceSettings: { currency_symbol: string };
 }
 
+const getGroupRowId = (g: PodFinanceGroup) => g.pod_id;
+
+const renderPod = (g: PodFinanceGroup) => (
+  <Typography variant="body2" fontWeight={700} component="span">
+    {g.pod_title}
+  </Typography>
+);
+
+const renderStatuses = (g: PodFinanceGroup) => <StatusCountChips counts={g.status_counts} />;
+
+const statusesValue = (g: PodFinanceGroup) =>
+  Object.entries(g.status_counts)
+    .map(([status, count]) => `${count} ${status}`)
+    .join(', ');
+
+const lastActivityValue = (g: PodFinanceGroup) => {
+  const d = new Date(g.last_requested_at);
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('en-IN');
+};
+
 export default function PodFinancePage() {
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery<QueryData>(POD_FINANCE_RELEASES, {
-    fetchPolicy: 'cache-and-network',
-  });
+  const client = useApolloClient();
+  const [sym, setSym] = useState('');
 
-  const sym = data?.publicFinanceSettings?.currency_symbol ?? '';
-  const groups: PodFinanceGroup[] = groupReleasesByPod(data?.paymentReleaseRequests ?? []);
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query<QueryData>({
+        query: POD_FINANCE_RELEASES,
+        fetchPolicy: 'network-only',
+      });
+      setSym(data?.publicFinanceSettings?.currency_symbol ?? '');
+      return applyPodFinanceQuery(groupReleasesByPod(data?.paymentReleaseRequests ?? []), q);
+    },
+    [client],
+  );
+
+  const columns = useMemo<DuncitColumn<PodFinanceGroup>[]>(
+    () => [
+      { field: 'pod_title', headerName: 'Pod', flex: 1, minWidth: 200, cellRenderer: renderPod },
+      { field: 'releases_count', headerName: 'Releases', width: 110 },
+      {
+        field: 'requested_total',
+        headerName: 'Requested',
+        width: 130,
+        valueGetter: (g) => money(sym, g.requested_total),
+      },
+      {
+        field: 'status_counts',
+        headerName: 'Release statuses',
+        sortable: false,
+        minWidth: 220,
+        cellRenderer: renderStatuses,
+        valueGetter: statusesValue,
+      },
+      {
+        field: 'last_requested_at',
+        headerName: 'Last activity',
+        hide: true,
+        width: 170,
+        valueGetter: lastActivityValue,
+      },
+    ],
+    [sym],
+  );
+
+  const openDetail = useCallback(
+    (g: PodFinanceGroup) => navigate(`/pod-finance/${g.pod_id}`),
+    [navigate],
+  );
 
   return (
     <Box>
@@ -66,53 +116,17 @@ export default function PodFinancePage() {
           </Typography>
         </Box>
       </Stack>
-      <Card variant="outlined">
-        <CardContent>
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{parseApiError(error)}</Alert>}
-          {loading && groups.length === 0 ? (
-            <Stack alignItems="center" sx={{ p: 4 }}><CircularProgress /></Stack>
-          ) : (
-            <Box sx={{ overflowX: 'auto' }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Pod</TableCell>
-                    <TableCell>Releases</TableCell>
-                    <TableCell>Requested</TableCell>
-                    <TableCell>Release statuses</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {groups.map((group) => (
-                    <TableRow
-                      key={group.pod_id}
-                      hover
-                      sx={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/pod-finance/${group.pod_id}`)}
-                    >
-                      <TableCell>
-                        <Typography variant="body2" fontWeight={700}>{group.pod_title}</Typography>
-                      </TableCell>
-                      <TableCell>{group.releases_count}</TableCell>
-                      <TableCell>{money(sym, group.requested_total)}</TableCell>
-                      <TableCell><StatusCountChips counts={group.status_counts} /></TableCell>
-                    </TableRow>
-                  ))}
-                  {groups.length === 0 && !loading && (
-                    <TableRow>
-                      <TableCell colSpan={4}>
-                        <Typography align="center" color="text.secondary" sx={{ py: 3 }}>
-                          No pods with payment activity yet.
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+
+      <DuncitTable<PodFinanceGroup>
+        tableId="finance-pod-finance"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getGroupRowId}
+        onRowClick={openDetail}
+        emptyText="No pods with payment activity yet."
+        defaultSort={{ field: 'last_requested_at', dir: 'desc' }}
+        searchPlaceholder="Search pod title"
+      />
     </Box>
   );
 }

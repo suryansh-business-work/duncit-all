@@ -99,4 +99,58 @@ describe('podMember e2e', () => {
     expect(data.rejoinPod.status).toBe('JOINED');
     expect(data.rejoinPod.refund_status).toBe('NONE');
   });
+
+  it('serves backoutRefundRequestsTable to finance admins only', async () => {
+    const pod = await seedPod();
+    await PodMemberModel.create({
+      pod_id: pod._id,
+      user_id: new Types.ObjectId(),
+      status: 'BACKED_OUT',
+      backed_out_at: new Date(),
+      source: 'FREE',
+      refund_status: 'NOT_ELIGIBLE',
+    });
+    await PodMemberModel.create({
+      pod_id: pod._id,
+      user_id: new Types.ObjectId(),
+      status: 'JOINED',
+      source: 'FREE',
+      refund_status: 'NONE',
+    });
+
+    type Page = {
+      backoutRefundRequestsTable: {
+        rows: { status: string; refund_status: string }[];
+        total: number;
+        page: number;
+        page_size: number;
+      };
+    };
+    const TABLE = gql`
+      query ($query: TableQueryInput) {
+        backoutRefundRequestsTable(query: $query) {
+          rows {
+            status
+            refund_status
+          }
+          total
+          page
+          page_size
+        }
+      }
+    `;
+
+    const admin = server.client(adminToken());
+    const page = await admin.request<Page>(TABLE);
+    expect(page.backoutRefundRequestsTable.total).toBe(1);
+    expect(page.backoutRefundRequestsTable.rows).toEqual([
+      { status: 'BACKED_OUT', refund_status: 'NOT_ELIGIBLE' },
+    ]);
+    expect(page.backoutRefundRequestsTable.page).toBe(1);
+    expect(page.backoutRefundRequestsTable.page_size).toBe(25);
+
+    // Same guard as backoutRefundRequests — plain users are rejected.
+    const user = server.client(signToken({ roles: ['USER'] }));
+    await expect(user.request(TABLE)).rejects.toThrow();
+  });
 });

@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { LocationModel } from './location.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const slugify = (s: string) =>
   s
@@ -39,6 +40,38 @@ function notFound(): never {
   throw new GraphQLError('Location not found', { extensions: { code: 'NOT_FOUND' } });
 }
 
+/** Allowlists for the shared table engine (locationsTable — DUNCIT TABLE CONTRACT v1).
+ * Search spans the same paths the legacy list() search matched. */
+const LOCATION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: [
+    'location_name',
+    'country',
+    'state',
+    'city',
+    'location_id',
+    'location_pincode',
+    'location_zones.zone_name',
+    'location_zones.pincode',
+  ],
+  sortFields: {
+    location_name: 'location_name',
+    city: 'city',
+    state: 'state',
+    country: 'country',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    is_active: { type: 'boolean' },
+    country: { type: 'string' },
+    state: { type: 'string' },
+    city: { type: 'string' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { location_name: 1 },
+};
+
 export const locationService = {
   async list(filter?: { search?: string; is_active?: boolean }) {
     const q: any = {};
@@ -57,6 +90,17 @@ export const locationService = {
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     const docs = await LocationModel.find(q).sort({ location_name: 1 });
     return docs.map(toPub);
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the locationsTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      LocationModel,
+      {},
+      input,
+      LOCATION_TABLE_CONFIG
+    );
+    return { rows: docs.map(toPub), total, page, page_size };
   },
 
   async getById(id: string) {

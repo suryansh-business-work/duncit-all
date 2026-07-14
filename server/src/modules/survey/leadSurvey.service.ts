@@ -7,6 +7,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { surveyService } from './survey.service';
 import { SurveyModel, SurveyResponseModel, type SurveyKind } from './survey.model';
 import { LeadSurveyEntryModel, type LeadSurveyEntity } from './leadSurveyEntry.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 // Returned as `any` — the lead models have structurally different docs, so
@@ -52,6 +53,25 @@ const pubEntry = (e: any) => ({
 
 const leadName = (entity: LeadSurveyEntity, lead: any) => lead?.[NAME_FIELD[entity]] ?? '';
 
+/** Allowlists for the shared table engine (leadSurveyEntriesTable — DUNCIT TABLE CONTRACT v1). */
+const LEAD_SURVEY_ENTRY_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['generated_by', 'submitted_by'],
+  sortFields: {
+    source: 'source',
+    filled: 'filled',
+    submitted_at: 'submitted_at',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    source: { type: 'enum' },
+    filled: { type: 'boolean' },
+    token_revoked: { type: 'boolean' },
+    submitted_at: { type: 'date' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { created_at: -1 },
+};
+
 const leadScope = (lead: any) => ({
   super_category_id: lead?.super_category_id ? String(lead.super_category_id) : null,
   category_id: lead?.category_ids?.[0] ? String(lead.category_ids[0]) : null,
@@ -86,6 +106,23 @@ export const leadSurveyService = {
       categories: await resolveCategoryRefs(lead.category_ids),
       sub_categories: await resolveCategoryRefs(lead.sub_category_ids),
     };
+  },
+
+  /**
+   * Server-side table page of a lead's survey entries (leadSurveyEntriesTable).
+   * SECURITY: rows are always scoped to the given entity + lead via baseFilter —
+   * runTableQuery $and-merges it, so client filters can never widen the scope.
+   */
+  async entriesTable(entity: LeadSurveyEntity, leadId: string, input?: TableQueryInput | null) {
+    const lead = await modelFor(entity).findById(leadId).select('_id').lean();
+    if (!lead) throw new GraphQLError('Lead not found', { extensions: { code: 'NOT_FOUND' } });
+    const { docs, total, page, page_size } = await runTableQuery(
+      LeadSurveyEntryModel,
+      { entity, lead_id: new Types.ObjectId(leadId) },
+      input,
+      LEAD_SURVEY_ENTRY_TABLE_CONFIG
+    );
+    return { rows: docs.map((d) => pubEntry(d)), total, page, page_size };
   },
 
   /** Staff filled the survey inside CRM — append a MANUAL entry. */

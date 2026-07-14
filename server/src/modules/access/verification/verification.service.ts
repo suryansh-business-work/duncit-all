@@ -8,6 +8,11 @@ import {
   type UserVerificationDoc,
   type VerificationType,
 } from './verification.model';
+import {
+  applyTableQueryInMemory,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
 
@@ -41,6 +46,25 @@ const toPub = (type: VerificationType, doc?: UserVerificationDoc | null) => ({
   reviewed_at: iso(doc?.reviewed_at),
   updated_at: iso((doc as any)?.updated_at),
 });
+
+/** Allowlists for the shared table engine (userVerificationsTable — DUNCIT TABLE
+ * CONTRACT v1). The dataset is COMPUTED (one row per VERIFICATION_TYPES entry),
+ * so it pages in memory; type_rank keeps the catalog order (IDENTITY, ADDRESS,
+ * EMAIL) as the default sort, matching the review UI. */
+const VERIFICATION_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['type', 'status'],
+  sortFields: {
+    type: 'type',
+    status: 'status',
+    reviewed_at: 'reviewed_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    type: { type: 'enum' },
+    status: { type: 'enum' },
+  },
+  defaultSort: { type_rank: 1 },
+};
 
 function assertType(type: string): asserts type is VerificationType {
   if (!(VERIFICATION_TYPES as readonly string[]).includes(type)) {
@@ -77,6 +101,14 @@ export const verificationService = {
       const doc = byType.get(type);
       return toPub(type, doc);
     });
+  },
+
+  /** Server-side table page over the computed verification rows for a user —
+   * same dataset as listForUser, paged with the shared in-memory engine. */
+  async tableForUser(userId: string, input?: TableQueryInput | null) {
+    const rows = await this.listForUser(userId);
+    const ranked = rows.map((row, index) => ({ ...row, type_rank: index }));
+    return applyTableQueryInMemory(ranked, input, VERIFICATION_TABLE_CONFIG);
   },
 
   async submit(userId: string, type: string, documentUrl: string) {

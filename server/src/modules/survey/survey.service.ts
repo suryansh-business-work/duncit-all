@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { SurveyModel, SurveyResponseModel, type SurveyKind } from './survey.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
@@ -86,6 +87,27 @@ interface UpsertInput extends SurveyScope {
   questions: QuestionInput[];
 }
 
+/** Allowlists for the shared table engine (surveysTable — DUNCIT TABLE CONTRACT v1). */
+const SURVEY_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['title'],
+  sortFields: {
+    title: 'title',
+    kind: 'kind',
+    is_active: 'is_active',
+    created_at: 'created_at',
+    updated_at: 'updated_at',
+  },
+  filterFields: {
+    kind: { type: 'enum' },
+    super_category_id: { type: 'string' },
+    category_id: { type: 'string' },
+    sub_category_id: { type: 'string' },
+    is_active: { type: 'boolean' },
+    updated_at: { type: 'date' },
+  },
+  defaultSort: { updated_at: -1 },
+};
+
 /** Normalise + validate questions; assigns a qid where missing. */
 const normaliseQuestions = (questions: QuestionInput[]) => {
   const out = (questions ?? []).map((q, idx) => ({
@@ -121,6 +143,18 @@ export const surveyService = {
     const docs = await SurveyModel.find(q).sort({ updated_at: -1 }).lean();
     const names = await categoryNameMap(docs);
     return docs.map((d) => pubSurvey(d, names));
+  },
+
+  /** Server-side table page (search/filter/sort/paginate) for the surveysTable query. */
+  async table(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      SurveyModel,
+      {},
+      input,
+      SURVEY_TABLE_CONFIG
+    );
+    const names = await categoryNameMap(docs);
+    return { rows: docs.map((d) => pubSurvey(d, names)), total, page, page_size };
   },
 
   /** Builder load by id. */

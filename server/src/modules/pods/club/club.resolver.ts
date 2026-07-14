@@ -35,6 +35,7 @@ export const clubResolvers = {
   },
   Query: {
     clubs: async (_p: unknown, args: { filter?: any }) => clubService.list(args.filter),
+    clubsTable: async (_p: unknown, args: { query?: any }) => clubService.table(args.query),
     club: async (_p: unknown, args: { club_doc_id: string }) => clubService.getById(args.club_doc_id),
     clubBySlug: async (_p: unknown, args: { club_slug: string }) =>
       clubService.getBySlug(args.club_slug),

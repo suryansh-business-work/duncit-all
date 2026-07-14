@@ -9,6 +9,11 @@ import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import {
+  applyTableQueryInMemory,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 type Actor = { id: string; roles?: string[] };
 
@@ -105,6 +110,32 @@ function tallyRevenue(
   }
   return { total_revenue, revenueSeries };
 }
+
+/** Allowlists for the shared table engine over the COMPUTED per-club dashboard
+ * rows (clubAdminDashboardTable — DUNCIT TABLE CONTRACT v1). Rows are built in
+ * memory by dashboard(), so field keys map to themselves. */
+const CLUB_ADMIN_CLUB_ROW_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['club_name', 'club_slug'],
+  sortFields: {
+    club_name: 'club_name',
+    total_pods: 'total_pods',
+    upcoming_pods: 'upcoming_pods',
+    completed_pods: 'completed_pods',
+    followers: 'followers',
+    rating: 'rating',
+    revenue: 'revenue',
+  },
+  filterFields: {
+    club_name: { type: 'string' },
+    total_pods: { type: 'number' },
+    upcoming_pods: { type: 'number' },
+    completed_pods: { type: 'number' },
+    followers: { type: 'number' },
+    rating: { type: 'number' },
+    revenue: { type: 'number' },
+  },
+  defaultSort: { club_name: 1 },
+};
 
 const EMPTY_KPIS = {
   assigned_clubs: 0,
@@ -379,5 +410,19 @@ export const clubAdminService = {
     };
 
     return { kpis, trend, clubs };
+  },
+
+  /** Server-side table page over the COMPUTED per-club dashboard rows for the
+   * clubAdminDashboardTable query. Rows come from dashboard() (already scoped
+   * to the caller's assigned clubs), then search/filter/sort/paginate in
+   * memory — a client query can never reach another admin's clubs. */
+  async dashboardClubsTable(
+    userId: string,
+    input?: TableQueryInput | null,
+    from?: string | null,
+    to?: string | null
+  ) {
+    const { clubs } = await this.dashboard(userId, from, to);
+    return applyTableQueryInMemory(clubs, input, CLUB_ADMIN_CLUB_ROW_TABLE_CONFIG);
   },
 };

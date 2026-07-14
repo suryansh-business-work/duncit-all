@@ -22,6 +22,14 @@ export const jobApplicationTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (jobApplicationsTable)."
+  type JobApplicationTablePage {
+    rows: [JobApplication!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input SubmitJobApplicationInput {
     role_content_id: ID
     role_title: String!
@@ -40,6 +48,7 @@ export const jobApplicationTypeDefs = /* GraphQL */ `
 
   extend type Query {
     jobApplications(status: JobApplicationStatus): [JobApplication!]!
+    jobApplicationsTable(query: TableQueryInput): JobApplicationTablePage!
   }
 
   extend type Mutation {

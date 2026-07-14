@@ -18,6 +18,28 @@ export const JOB_APPLICATIONS = gql`
   }
 `;
 
+/** Rows keep phone/resume/portfolio/cover so the detail dialog opens without a second fetch. */
+export const JOB_APPLICATIONS_TABLE = gql`
+  query JobApplicationsTable($query: TableQueryInput) {
+    jobApplicationsTable(query: $query) {
+      total
+      rows {
+        id
+        role_content_id
+        role_title
+        name
+        email
+        phone
+        resume_url
+        portfolio_url
+        cover_note
+        status
+        created_at
+      }
+    }
+  }
+`;
+
 export const UPDATE_JOB_APPLICATION_STATUS = gql`
   mutation UpdateJobApplicationStatus($id: ID!, $status: JobApplicationStatus!) {
     updateJobApplicationStatus(application_id: $id, status: $status) {

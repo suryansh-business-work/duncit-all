@@ -10,6 +10,10 @@ export const apiKeyResolvers = {
       const user = requireRole(ctx, API_KEY_MANAGE);
       return apiKeyService.listForOwner(user.id);
     },
+    myApiKeysTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, API_KEY_MANAGE);
+      return apiKeyService.tableForOwner(user.id, args.query);
+    },
   },
   Mutation: {
     createApiKey: async (_p: unknown, args: { name: string }, ctx: GraphQLContext) => {

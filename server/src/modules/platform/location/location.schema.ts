@@ -37,6 +37,14 @@ export const locationTypeDefs = /* GraphQL */ `
     is_active: Boolean
   }
 
+  "Server-side table page for the shared table engine (locationsTable)."
+  type LocationTablePage {
+    rows: [Location!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateLocationInput {
     location_name: String!
     location_id: String
@@ -65,6 +73,7 @@ export const locationTypeDefs = /* GraphQL */ `
 
   extend type Query {
     locations(filter: LocationFilterInput): [Location!]!
+    locationsTable(query: TableQueryInput): LocationTablePage!
     location(location_doc_id: ID!): Location
   }
 

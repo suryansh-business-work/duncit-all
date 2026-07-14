@@ -113,6 +113,10 @@ export const financeResolvers = {
       requireRole(ctx, ADMIN_RW);
       return paymentReleaseService.list(args.filter);
     },
+    paymentReleaseRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentReleaseService.table(args.query);
+    },
     podSettlementPreview: async (
       _p: unknown,
       args: { pod_id: string; venue_bill_amount: number },

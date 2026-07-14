@@ -77,4 +77,55 @@ describe('ticketService integration', () => {
     const asAdmin = await ticketService.pdfBase64(t.id, new Types.ObjectId().toString(), true);
     expect(asAdmin.length).toBeGreaterThan(100);
   });
+
+  it('serves the eventTicketsTable page with search, filters, sort and paging', async () => {
+    const podA = new Types.ObjectId();
+    await makeTicket({
+      ticket_code: 'TKT-AAA11',
+      pod_id: podA,
+      snapshot: { pod_title: 'Jazz Night', pod_mode: 'PHYSICAL', user_name: 'Asha Rao', user_email: 'asha@example.com' },
+    });
+    await makeTicket({
+      ticket_code: 'TKT-BBB22',
+      status: 'CHECKED_IN',
+      snapshot: { pod_title: 'Poetry Slam', pod_mode: 'PHYSICAL', user_name: 'Bela Sen', user_email: 'bela@example.com' },
+    });
+    await makeTicket({
+      ticket_code: 'TKT-CCC33',
+      status: 'CANCELLED',
+      snapshot: { pod_title: 'Jazz Night', pod_mode: 'PHYSICAL', user_name: 'Chirag Dev', user_email: 'chirag@example.com' },
+    });
+
+    const all = await ticketService.table();
+    expect(all.total).toBe(3);
+    expect(all.page).toBe(1);
+    expect(all.page_size).toBe(25);
+
+    // Search spans code, attendee name/email and event title (same as listAdmin).
+    const byCode = await ticketService.table({ search: 'bbb22' });
+    expect(byCode.rows.map((r) => r.ticket_code)).toEqual(['TKT-BBB22']);
+    const byAttendee = await ticketService.table({ search: 'asha' });
+    expect(byAttendee.rows.map((r) => r.ticket_code)).toEqual(['TKT-AAA11']);
+    const byEvent = await ticketService.table({ search: 'jazz' });
+    expect(byEvent.total).toBe(2);
+
+    // Enum + id filters narrow.
+    const cancelled = await ticketService.table({
+      filters: [{ field: 'status', op: 'eq', value: 'CANCELLED' }],
+    });
+    expect(cancelled.rows.map((r) => r.ticket_code)).toEqual(['TKT-CCC33']);
+    const byPod = await ticketService.table({
+      filters: [{ field: 'pod_id', op: 'eq', value: String(podA) }],
+    });
+    expect(byPod.rows.map((r) => r.ticket_code)).toEqual(['TKT-AAA11']);
+
+    // Allowlisted sort + paging over it.
+    const sorted = await ticketService.table({ sort_by: 'ticket_code', sort_dir: 'asc' });
+    expect(sorted.rows.map((r) => r.ticket_code)).toEqual(['TKT-AAA11', 'TKT-BBB22', 'TKT-CCC33']);
+    const page2 = await ticketService.table({ sort_by: 'ticket_code', sort_dir: 'asc', page: 2, page_size: 1 });
+    expect(page2.rows.map((r) => r.ticket_code)).toEqual(['TKT-BBB22']);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(1);
+  });
 });

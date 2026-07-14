@@ -45,6 +45,10 @@ export const podMemberResolvers = {
       requireRole(ctx, ADMIN_RW);
       return podMemberService.listBackoutRefunds();
     },
+    backoutRefundRequestsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return podMemberService.tableBackoutRefunds(args.query);
+    },
     backoutRefundRequest: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return podMemberService.getBackoutRefund(args.id);

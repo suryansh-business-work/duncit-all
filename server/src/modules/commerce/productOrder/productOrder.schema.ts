@@ -117,6 +117,14 @@ export const productOrderTypeDefs = /* GraphQL */ `
     search: String
   }
 
+  "Server-side table page for the shared table engine (productOrdersTable)."
+  type ProductOrderTablePage {
+    rows: [ProductOrder!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input OrderShippingAddressInput {
     name: String!
     phone: String!
@@ -136,6 +144,7 @@ export const productOrderTypeDefs = /* GraphQL */ `
     myProductOrdersForPod(pod_doc_id: ID!): [ProductOrder!]!
     "Ops: all pod-placed product orders (Products portal)."
     productOrders(filter: ProductOrderFilter): [ProductOrder!]!
+    productOrdersTable(query: TableQueryInput): ProductOrderTablePage!
     productOrder(id: ID!): ProductOrder
     productOrderTracking(order_no: String!): OrderTracking
   }

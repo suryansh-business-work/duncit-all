@@ -1,56 +1,63 @@
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
-  Alert, Box, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, IconButton, Paper, Stack, Table, TableBody, TableCell,
-  TableHead, TableRow, ToggleButton, ToggleButtonGroup, Tooltip, Typography,
+  Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
+  DialogContentText, DialogTitle, Stack, ToggleButton, ToggleButtonGroup, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { DELETE_SURVEY, SURVEYS, type SurveyKind } from './queries';
+import { tableQueryToGql, type TableFilterValue, type TableQueryState } from '@duncit/table';
+import { CATEGORIES, DELETE_SURVEY, SURVEYS_TABLE, type CategoryOption, type SurveyKind, type SurveyRow } from './queries';
 import ScopePicker, { type Scope } from './ScopePicker';
 import DefaultSurveysSection from './DefaultSurveysSection';
-
-type Row = {
-  id: string; kind: SurveyKind; title: string; is_active: boolean; updated_at?: string | null;
-  super_category_name?: string | null; category_name?: string | null; sub_category_name?: string | null;
-  questions: { qid: string }[];
-};
+import SurveysTable from './SurveysTable';
 
 const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
-const scopeLabel = (r: Row) =>
-  [r.super_category_name, r.category_name, r.sub_category_name].filter(Boolean).join(' › ') || 'Kind default';
-const isScoped = (r: Row) => Boolean(r.super_category_name || r.category_name || r.sub_category_name);
 
 /** List + manage onboarding surveys across the Super → Category → Sub taxonomy. */
 export default function SurveysListPage() {
   const navigate = useNavigate();
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
   const [kind, setKind] = useState<SurveyKind | ''>('');
   const [scope, setScope] = useState<Scope>(emptyScope);
   const [confirmId, setConfirmId] = useState<string | null>(null);
-
-  const variables = useMemo(
-    () => ({
-      kind: kind || null,
-      super_category_id: scope.super_category_id || null,
-      category_id: scope.category_id || null,
-      sub_category_id: scope.sub_category_id || null,
-    }),
-    [kind, scope]
-  );
-  const { data, loading, error, refetch } = useQuery<{ surveys: Row[] }>(SURVEYS, { variables, fetchPolicy: 'cache-and-network' });
   const [deleteSurvey, { loading: deleting }] = useMutation(DELETE_SURVEY);
-  const rows = (data?.surveys ?? []).filter(isScoped);
+
+  // Kind-default (unscoped) surveys are managed via the Default Survey menu and
+  // must never surface in this table. The server cannot filter on "scoped", so
+  // when no Super category is picked we filter on super_category_id IN <all supers>.
+  const { data: supersData } = useQuery<{ categories: CategoryOption[] }>(CATEGORIES, {
+    variables: { level: 'SUPER', parent_id: null },
+  });
+  const superIds = (supersData?.categories ?? []).map((c) => c.id);
+  const superIdsKey = superIds.join(',');
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const filters: TableFilterValue[] = [...q.filters];
+      if (kind) filters.push({ field: 'kind', op: 'eq', value: kind });
+      if (scope.super_category_id) filters.push({ field: 'super_category_id', op: 'eq', value: scope.super_category_id });
+      else filters.push({ field: 'super_category_id', op: 'in', values: superIdsKey.split(',') });
+      if (scope.category_id) filters.push({ field: 'category_id', op: 'eq', value: scope.category_id });
+      if (scope.sub_category_id) filters.push({ field: 'sub_category_id', op: 'eq', value: scope.sub_category_id });
+      const { data } = await client.query({
+        query: SURVEYS_TABLE,
+        variables: tableQueryToGql({ ...q, filters }),
+        fetchPolicy: 'network-only',
+      });
+      return { rows: data.surveysTable.rows as SurveyRow[], total: data.surveysTable.total as number };
+    },
+    [client, kind, scope, superIdsKey],
+  );
 
   const onDelete = async () => {
     if (!confirmId) return;
     try {
       await deleteSurvey({ variables: { id: confirmId } });
       setConfirmId(null);
-      await refetch();
+      refetchRef.current?.();
     } catch {
       setConfirmId(null);
     }
@@ -78,46 +85,20 @@ export default function SurveysListPage() {
         <ScopePicker value={scope} onChange={setScope} emptyLabel="All" />
       </Stack>
 
-      {error && <Alert severity="error">{error.message}</Alert>}
-
-      {loading && !data && (
+      {!supersData && (
         <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
       )}
-      {(!loading || data) && rows.length === 0 && (
+      {supersData && superIds.length === 0 && (
         <Alert severity="info">No category-specific surveys yet. The Default Survey (button above) is used as the fallback. Create one with “New survey”.</Alert>
       )}
-      {(!loading || data) && rows.length > 0 && (
-        <Paper variant="outlined">
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Kind</TableCell>
-                <TableCell>Scope</TableCell>
-                <TableCell align="center">Questions</TableCell>
-                <TableCell align="center">Active</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {rows.map((r) => (
-                <TableRow key={r.id} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/surveys/${r.id}/edit`)}>
-                  <TableCell>{r.title || <em>Untitled</em>}</TableCell>
-                  <TableCell><Chip size="small" label={r.kind} variant="outlined" /></TableCell>
-                  <TableCell>{scopeLabel(r)}</TableCell>
-                  <TableCell align="center">{r.questions.length}</TableCell>
-                  <TableCell align="center">
-                    <Chip size="small" color={r.is_active ? 'success' : 'default'} label={r.is_active ? 'Active' : 'Off'} variant="outlined" />
-                  </TableCell>
-                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/surveys/${r.id}/edit`)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-                    <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => setConfirmId(r.id)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Paper>
+      {supersData && superIds.length > 0 && (
+        <SurveysTable
+          key={`${kind}|${scope.super_category_id}|${scope.category_id}|${scope.sub_category_id}`}
+          fetchRows={fetchRows}
+          refetchRef={refetchRef}
+          onOpen={(r) => navigate(`/surveys/${r.id}/edit`)}
+          onDelete={(r) => setConfirmId(r.id)}
+        />
       )}
 
       <Dialog open={!!confirmId} onClose={() => setConfirmId(null)}>

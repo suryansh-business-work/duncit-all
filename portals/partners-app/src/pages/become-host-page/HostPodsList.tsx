@@ -1,64 +1,113 @@
-import { useQuery } from '@apollo/client';
-import { Alert, Card, CardContent, Chip, CircularProgress, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { useCallback } from 'react';
+import { useApolloClient } from '@apollo/client';
+import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import { MY_HOST_PODS } from './queries';
+import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';
 
-export default function HostPodsList() {
-  const { data, loading, error } = useQuery(MY_HOST_PODS, { fetchPolicy: 'cache-and-network' });
-  const pods = data?.myHostPods ?? [];
-  const emptyState = renderEmptyState(loading && !data, pods.length);
-
-  return (
-    <Card variant="outlined" sx={{ borderRadius: 2 }}>
-      <CardContent sx={{ p: 0 }}>
-        <Stack spacing={1.25} sx={{ p: 2, pb: 1 }}>
-          <Typography variant="h6" fontWeight={950}>Your hosted pods</Typography>
-          <Typography variant="body2" color="text.secondary">Pods assigned to your host profile appear here.</Typography>
-          {error && <Alert severity="error">{error.message}</Alert>}
-        </Stack>
-        {emptyState ?? (
-          <TableContainer>
-            <Table size="small">
-              <TableHead><TableRow><TableCell>Pod</TableCell><TableCell>Date</TableCell><TableCell>Attendees</TableCell><TableCell>Pod earning</TableCell><TableCell>Status</TableCell></TableRow></TableHead>
-              <TableBody>
-                {pods.map((pod: any) => (
-                  <TableRow key={pod.id} hover>
-                    <TableCell><Typography fontWeight={900}>{pod.pod_title}</Typography></TableCell>
-                    <TableCell>{formatDate(pod.pod_date_time)}</TableCell>
-                    <TableCell>{pod.pod_attendees?.length ?? 0}</TableCell>
-                    <TableCell>{formatMoney(Number(pod.pod_amount || 0) * (pod.pod_attendees?.length ?? 0))}</TableCell>
-                    <TableCell><Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function renderEmptyState(isLoading: boolean, totalCount: number) {
-  if (isLoading) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>;
-  if (totalCount === 0) return <Alert severity="info" sx={{ m: 2 }}>No hosted pods yet.</Alert>;
-  return null;
-}
-
-function podStatusLabel(pod: any) {
+function podStatusLabel(pod: PartnerPodRow) {
   if (pod.completed_at) return 'Completed';
   return pod.is_active ? 'Active' : 'Inactive';
 }
 
-function podStatusColor(pod: any): 'success' | 'info' | 'default' {
+function podStatusColor(pod: PartnerPodRow): 'success' | 'info' | 'default' {
   if (pod.completed_at) return 'success';
   return pod.is_active ? 'info' : 'default';
 }
 
-function formatDate(value?: string) {
+function formatDate(value?: string | null) {
   return value ? format(new Date(value), 'dd MMM yyyy, h:mm a') : 'Not scheduled';
 }
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
+}
+
+const getPodRowId = (pod: PartnerPodRow) => pod.id;
+
+const renderStatus = (pod: PartnerPodRow) => (
+  <Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} />
+);
+
+const earningValue = (pod: PartnerPodRow) =>
+  formatMoney(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0));
+
+const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
+  {
+    field: 'pod_title',
+    headerName: 'Pod',
+    flex: 1,
+    minWidth: 200,
+    valueGetter: (pod) => pod.pod_title,
+  },
+  {
+    field: 'pod_date_time',
+    headerName: 'Date',
+    filter: { type: 'date' },
+    minWidth: 175,
+    valueGetter: (pod) => formatDate(pod.pod_date_time),
+  },
+  {
+    field: 'attendees',
+    headerName: 'Attendees',
+    sortable: false,
+    width: 110,
+    valueGetter: (pod) => pod.pod_attendees?.length ?? 0,
+  },
+  { field: 'earning', headerName: 'Pod earning', sortable: false, width: 130, valueGetter: earningValue },
+  {
+    field: 'pod_amount',
+    headerName: 'Amount',
+    filter: { type: 'number' },
+    hide: true,
+    width: 110,
+    valueGetter: (pod) => pod.pod_amount ?? 0,
+  },
+  {
+    field: 'is_active',
+    headerName: 'Status',
+    filter: { type: 'boolean' },
+    width: 120,
+    cellRenderer: renderStatus,
+    valueGetter: podStatusLabel,
+  },
+];
+
+export default function HostPodsList() {
+  const client = useApolloClient();
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: MY_HOST_PODS_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.myHostPodsTable.rows as PartnerPodRow[],
+        total: data.myHostPodsTable.total as number,
+      };
+    },
+    [client],
+  );
+
+  return (
+    <Card variant="outlined" sx={{ borderRadius: 2 }}>
+      <CardContent>
+        <Stack spacing={1.25}>
+          <Typography variant="h6" fontWeight={950}>Your hosted pods</Typography>
+          <Typography variant="body2" color="text.secondary">Pods assigned to your host profile appear here.</Typography>
+          <DuncitTable<PartnerPodRow>
+            tableId="partners-app-host-pods"
+            columns={COLUMNS}
+            fetchRows={fetchRows}
+            getRowId={getPodRowId}
+            emptyText="No hosted pods yet."
+            defaultSort={{ field: 'pod_date_time', dir: 'desc' }}
+            searchPlaceholder="Search pod title or ID"
+          />
+        </Stack>
+      </CardContent>
+    </Card>
+  );
 }

@@ -88,10 +88,20 @@ export const techTypeDefs = gql`
     containers: [TechDockerContainer!]!
   }
 
+  "Server-side table page for the shared table engine (techDockerContainersTable)."
+  type TechDockerContainerTablePage {
+    rows: [TechDockerContainer!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     "Live host metrics for the Tech portal Server > Info page. Pass sslHost to include that domain's TLS certificate."
     techServerInfo(sslHost: String): TechServerInfo!
     "Docker daemon + container status (requires the docker socket mounted into the API container)."
     techDockerInfo: TechDockerInfo!
+    "Paged/searchable view over techDockerInfo.containers for the shared table engine."
+    techDockerContainersTable(query: TableQueryInput): TechDockerContainerTablePage!
   }
 `;

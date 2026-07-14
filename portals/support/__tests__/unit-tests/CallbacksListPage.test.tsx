@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import CallbacksListPage from '../../src/pages/callbacks/CallbacksListPage';
 import { BOUNCER_CALLBACK_REQUESTS, type CallbackRequest } from '../../src/graphql/bouncer';
 import { renderWithProviders } from './testkit';
@@ -64,22 +64,30 @@ describe('CallbacksListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
     expect(screen.getByText('CB-AAA111')).toBeInTheDocument();
-    sockMock.events.onCallback();
-    sockMock.events.onCallbackUpdate();
+    // Nullable pod cell: title when present, em-dash otherwise.
+    expect(screen.getByText('Sunday Brunch')).toBeInTheDocument();
+    act(() => {
+      sockMock.events.onCallback();
+      sockMock.events.onCallbackUpdate();
+    });
+    await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
     fireEvent.click(screen.getByText('Aman'));
-    expect(screen.getByText('CALLBACK DETAIL')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('CALLBACK DETAIL')).toBeInTheDocument());
   });
 
-  it('filters by status (Resolved sends CLOSED)', async () => {
+  it('filters by status (Resolved sends CLOSED) from the filter popover', async () => {
     renderWithProviders(<CallbacksListPage />, {
       mocks: [queryMock([req]), queryMock([], 'CLOSED')],
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 
-    // The header status filter is the first combobox (TablePagination adds another).
-    fireEvent.mouseDown(screen.getAllByRole('combobox')[0]);
-    fireEvent.click(screen.getByRole('option', { name: 'Resolved' }));
+    fireEvent.click(screen.getByRole('button', { name: /filters/i }));
+    fireEvent.mouseDown(await screen.findByRole('combobox', { name: 'Status' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Resolved' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
     await waitFor(() => expect(screen.getByText(/no callback requests found/i)).toBeInTheDocument());
+    expect(screen.queryByText('Aman')).not.toBeInTheDocument();
   });
 
   it('searches on the server (a debounced query keyed on the search variable)', async () => {
@@ -88,8 +96,12 @@ describe('CallbacksListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'Brunch' } });
-    await waitFor(() => expect(screen.queryByText('Aman')).not.toBeInTheDocument());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search reason or phone' }), {
+      target: { value: 'Brunch' },
+    });
+    await waitFor(() => expect(screen.queryByText('Aman')).not.toBeInTheDocument(), {
+      timeout: 2000,
+    });
     expect(screen.getByText('Dev')).toBeInTheDocument();
   });
 });

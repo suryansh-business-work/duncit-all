@@ -19,6 +19,14 @@ export const leadSurveyResolvers = {
         sub_category_id: args.sub_category_id ?? null,
       });
     },
+    leadSurveyEntriesTable: (
+      _p: unknown,
+      args: { entity: LeadSurveyEntity; lead_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return leadSurveyService.entriesTable(args.entity, args.lead_id, args.query);
+    },
     // Public — the share link is the capability; no auth.
     leadSurveyByToken: (_p: unknown, args: { token: string }) => leadSurveyService.byToken(args.token),
   },

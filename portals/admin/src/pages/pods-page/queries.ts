@@ -52,6 +52,106 @@ export const PODS = gql`
     }
   }
 `;
+/** Row shape used by the pods table and the deep-link edit fetch. */
+export interface PodRow {
+  id: string;
+  pod_id: string;
+  pod_title: string;
+  club_id: string;
+  venue_id?: string | null;
+  location_id?: string | null;
+  pod_mode: string;
+  meeting_platform?: string | null;
+  pod_images_and_videos?: { url: string; type: string }[] | null;
+  pod_hits: number;
+  pod_attendees?: string[] | null;
+  pod_date_time?: string | null;
+  pod_type: string;
+  pod_amount: number;
+  no_of_spots?: number | null;
+  product_requests?: { product_id: string; product_name: string; quantity: number }[] | null;
+  product_cost_total?: number | null;
+  is_active: boolean;
+  completed_at?: string | null;
+  created_at?: string | null;
+}
+
+/** Same selection as PODS rows (+ created_at for the table's Created filter),
+ * so table rows can feed the edit dialogs without a second fetch. */
+const POD_ROW_FIELDS = gql`
+  fragment PodRowFields on Pod {
+    id
+    pod_id
+    pod_title
+    pod_hosts_id
+    location_id
+    venue_id
+    club_id
+    pod_mode
+    meeting_platform
+    meeting_url
+    meeting_notes
+    pod_hashtag
+    pod_images_and_videos {
+      url
+      type
+    }
+    pod_hits
+    pod_attendees
+    pod_description
+    pod_date_time
+    pod_end_date_time
+    pod_type
+    pod_amount
+    pod_occurrence
+    no_of_spots
+    pod_info
+    what_this_pod_offers
+    available_perks
+    payment_terms
+    place_charges {
+      label
+      amount
+      note
+    }
+    products_enabled
+    product_requests {
+      product_id
+      product_name
+      unit_cost
+      quantity
+      total_cost
+    }
+    product_cost_total
+    is_active
+    completed_at
+    created_at
+    zone_name
+  }
+`;
+
+export const PODS_TABLE = gql`
+  query PodsTable($query: TableQueryInput) {
+    podsTable(query: $query) {
+      total
+      rows {
+        ...PodRowFields
+      }
+    }
+  }
+  ${POD_ROW_FIELDS}
+`;
+
+/** Single-pod fetch for the /pods?edit=<id> deep-link (rows are paged now). */
+export const POD_FOR_EDIT = gql`
+  query PodForEdit($id: ID!) {
+    pod(pod_doc_id: $id) {
+      ...PodRowFields
+    }
+  }
+  ${POD_ROW_FIELDS}
+`;
+
 export const CLUBS = gql`
   query AllClubs {
     clubs {

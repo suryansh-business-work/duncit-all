@@ -32,6 +32,14 @@ export const serviceOfferedTypeDefs = gql`
     search: String
   }
 
+  "Server-side table page for the shared table engine (crmServicesOfferedTable)."
+  type CrmServiceOfferedTablePage {
+    rows: [CrmServiceOffered!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input CreateCrmServiceOfferedInput {
     super_category_id: ID!
     category_id: ID
@@ -53,6 +61,7 @@ export const serviceOfferedTypeDefs = gql`
 
   extend type Query {
     crmServicesOffered(filter: CrmServiceOfferedFilter): [CrmServiceOffered!]!
+    crmServicesOfferedTable(query: TableQueryInput): CrmServiceOfferedTablePage!
   }
 
   extend type Mutation {

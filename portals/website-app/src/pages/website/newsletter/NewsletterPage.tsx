@@ -1,42 +1,88 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { useCallback, useMemo } from 'react';
+import { useApolloClient, useQuery } from '@apollo/client';
+import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
 import { useDateFormat } from '../../../utils/dateFormat';
-import { parseApiError } from '../../../utils/parseApiError';
-import { NEWSLETTER_SUBSCRIBERS, type Subscriber } from './queries';
+import {
+  NEWSLETTER_SOURCES,
+  NEWSLETTER_SUBSCRIBERS,
+  NEWSLETTER_TABLE,
+  type Subscriber,
+} from './queries';
+
+const getSubscriberRowId = (row: Subscriber) => row.id;
+
+const SOURCE_OPTIONS = NEWSLETTER_SOURCES.map((source) => ({ value: source, label: source }));
+
+const renderStatus = (row: Subscriber) => (
+  <Chip
+    size="small"
+    label={row.unsubscribed_at ? 'Unsubscribed' : 'Active'}
+    color={row.unsubscribed_at ? 'default' : 'success'}
+  />
+);
 
 export default function NewsletterPage() {
-  const { data, loading, error } = useQuery<{ newsletterSubscribers: Subscriber[] }>(
-    NEWSLETTER_SUBSCRIBERS,
-    { fetchPolicy: 'cache-and-network' },
-  );
+  // KPI cards still need the whole dataset; the table itself is server-paged.
+  const { data } = useQuery<{ newsletterSubscribers: Subscriber[] }>(NEWSLETTER_SUBSCRIBERS, {
+    fetchPolicy: 'cache-and-network',
+  });
+  const client = useApolloClient();
   const { formatDateTime } = useDateFormat();
-  const [search, setSearch] = useState('');
 
   const all = data?.newsletterSubscribers ?? [];
-  const rows = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter(
-      (r) => r.email.toLowerCase().includes(q) || r.source.toLowerCase().includes(q),
-    );
-  }, [all, search]);
-
   const active = all.filter((r) => !r.unsubscribed_at).length;
+
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data: page } = await client.query({
+        query: NEWSLETTER_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: page.newsletterSubscribersTable.rows as Subscriber[],
+        total: page.newsletterSubscribersTable.total as number,
+      };
+    },
+    [client],
+  );
+
+  const columns = useMemo<DuncitColumn<Subscriber>[]>(
+    () => [
+      { field: 'email', headerName: 'Email', flex: 1, minWidth: 220 },
+      {
+        field: 'source',
+        headerName: 'Source',
+        filter: { type: 'select', options: SOURCE_OPTIONS },
+        minWidth: 150,
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        sortable: false,
+        width: 140,
+        cellRenderer: renderStatus,
+        valueGetter: (row) => (row.unsubscribed_at ? 'Unsubscribed' : 'Active'),
+      },
+      {
+        field: 'created_at',
+        headerName: 'Subscribed',
+        filter: { type: 'date' },
+        minWidth: 180,
+        valueGetter: (row) => formatDateTime(row.created_at),
+      },
+      {
+        field: 'unsubscribed_at',
+        headerName: 'Unsubscribed',
+        filter: { type: 'date' },
+        hide: true,
+        minWidth: 180,
+        valueGetter: (row) => (row.unsubscribed_at ? formatDateTime(row.unsubscribed_at) : '—'),
+      },
+    ],
+    [formatDateTime],
+  );
 
   return (
     <Stack spacing={2}>
@@ -57,59 +103,15 @@ export default function NewsletterPage() {
           </CardContent>
         </Card>
       </Stack>
-      <Card>
-        <CardContent>
-          <TextField
-            size="small"
-            placeholder="Search email or source"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            fullWidth
-            sx={{ mb: 2 }}
-          />
-          {loading && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={28} />
-            </Box>
-          )}
-          {error && <Typography color="error">{parseApiError(error)}</Typography>}
-          {!loading && !error && (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Email</TableCell>
-                  <TableCell>Source</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Subscribed</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.map((r) => (
-                  <TableRow key={r.id} hover>
-                    <TableCell>{r.email}</TableCell>
-                    <TableCell>{r.source}</TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={r.unsubscribed_at ? 'Unsubscribed' : 'Active'}
-                        color={r.unsubscribed_at ? 'default' : 'success'}
-                      />
-                    </TableCell>
-                    <TableCell>{formatDateTime(r.created_at)}</TableCell>
-                  </TableRow>
-                ))}
-                {!rows.length && (
-                  <TableRow>
-                    <TableCell colSpan={4} align="center">
-                      No subscribers yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DuncitTable<Subscriber>
+        tableId="website-newsletter"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getSubscriberRowId}
+        emptyText="No subscribers yet."
+        defaultSort={{ field: 'created_at', dir: 'desc' }}
+        searchPlaceholder="Search email or source"
+      />
     </Stack>
   );
 }

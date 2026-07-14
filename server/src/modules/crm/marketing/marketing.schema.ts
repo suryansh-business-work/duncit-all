@@ -49,6 +49,14 @@ export const marketingTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "Server-side table page for the shared table engine (marketingCampaignsTable)."
+  type MarketingCampaignTablePage {
+    rows: [MarketingCampaign!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type MarketingCampaignPreviewCard {
     id: ID!
     type: MarketingCampaignCardType!
@@ -87,6 +95,7 @@ export const marketingTypeDefs = /* GraphQL */ `
 
   extend type Query {
     marketingCampaigns: [MarketingCampaign!]!
+    marketingCampaignsTable(query: TableQueryInput): MarketingCampaignTablePage!
     marketingCampaignPreviewCards(type: MarketingCampaignCardType!): [MarketingCampaignPreviewCard!]!
     renderMarketingCampaign(input: MarketingCampaignPreviewInput!): MarketingCampaignRender!
   }

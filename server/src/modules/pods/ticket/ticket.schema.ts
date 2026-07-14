@@ -35,6 +35,14 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     ticket: EventTicket
   }
 
+  "Server-side table page for the shared table engine (eventTicketsTable)."
+  type EventTicketTablePage {
+    rows: [EventTicket!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   input EventTicketFilterInput {
     pod_id: ID
     status: EventTicketStatus
@@ -51,6 +59,7 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     myEventTicketForPod(pod_doc_id: ID!): EventTicket
     eventTicketPdfBase64(ticket_doc_id: ID!): String!
     eventTickets(filter: EventTicketFilterInput): [EventTicket!]!
+    eventTicketsTable(query: TableQueryInput): EventTicketTablePage!
     eventTicket(id: ID!): EventTicket
   }
 

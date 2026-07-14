@@ -79,6 +79,15 @@ export const ONBOARDING_MEETINGS = gql`
   }
 `;
 
+export const ONBOARDING_MEETINGS_TABLE = gql`
+  query OnboardingMeetingsTable($query: TableQueryInput) {
+    onboardingMeetingsTable(query: $query) {
+      total
+      rows { ${FIELDS} }
+    }
+  }
+`;
+
 export const MEETING_AVAILABILITY = gql`
   query CalendarMeetingAvailability {
     meetingAvailability {

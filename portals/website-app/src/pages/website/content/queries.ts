@@ -32,6 +32,8 @@ export interface WebsiteContentItem {
   published_at: string | null;
   is_published: boolean;
   sort_order: number;
+  /** Selected by CONTENT_TABLE only (Created filter column); absent on WEBSITE_CONTENT rows. */
+  created_at?: string;
   updated_at: string;
 }
 
@@ -54,6 +56,39 @@ export const WEBSITE_CONTENT = gql`
       updated_at
     }
   }
+`;
+
+/** Same selection as WEBSITE_CONTENT rows so table rows can feed the edit dialog. */
+const CONTENT_ROW_FIELDS = gql`
+  fragment WebsiteContentRowFields on WebsiteContentItem {
+    id
+    type
+    title
+    slug
+    summary
+    body
+    category
+    image_url
+    cta_label
+    cta_url
+    published_at
+    is_published
+    sort_order
+    created_at
+    updated_at
+  }
+`;
+
+export const CONTENT_TABLE = gql`
+  query WebsiteContentTable($query: TableQueryInput) {
+    websiteContentTable(query: $query) {
+      total
+      rows {
+        ...WebsiteContentRowFields
+      }
+    }
+  }
+  ${CONTENT_ROW_FIELDS}
 `;
 
 export const CREATE_CONTENT = gql`

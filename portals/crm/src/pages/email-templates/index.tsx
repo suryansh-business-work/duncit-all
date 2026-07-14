@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Card, CardContent, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import { DELETE, TEMPLATES, type EmailTemplate } from '../../api/emailTemplates.gql';
+import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { DELETE, TEMPLATES, TEMPLATES_TABLE, type EmailTemplateRow } from '../../api/emailTemplates.gql';
 import { parseApiError } from '../../utils/parseApiError';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import TemplatesTable from './TemplatesTable';
@@ -13,19 +14,35 @@ import CreateTemplateDialog from './CreateTemplateDialog';
 /** CRM → Email Templates. Table of CRM-owned templates with CRUD; edit opens the editor. */
 export default function EmailTemplatesPage() {
   const navigate = useNavigate();
-  const { data, loading, refetch } = useQuery<{ emailTemplates: EmailTemplate[] }>(TEMPLATES, { fetchPolicy: 'cache-and-network' });
+  const client = useApolloClient();
+  const refetchRef = useRef<(() => void) | null>(null);
+  // Also refresh the legacy list doc so the compose-window template picker stays warm.
   const [deleteMut, { loading: deleting }] = useMutation(DELETE, { refetchQueries: [{ query: TEMPLATES }] });
   const [createOpen, setCreateOpen] = useState(false);
-  const [removing, setRemoving] = useState<EmailTemplate | null>(null);
+  const [removing, setRemoving] = useState<EmailTemplateRow | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
 
-  const templates = data?.emailTemplates ?? [];
+  const fetchRows = useCallback(
+    async (q: TableQueryState) => {
+      const { data } = await client.query({
+        query: TEMPLATES_TABLE,
+        variables: tableQueryToGql(q),
+        fetchPolicy: 'network-only',
+      });
+      return {
+        rows: data.crmEmailTemplatesTable.rows as EmailTemplateRow[],
+        total: data.crmEmailTemplatesTable.total as number,
+      };
+    },
+    [client],
+  );
 
   const confirmDelete = async () => {
     if (!removing) return;
     try {
       await deleteMut({ variables: { id: removing.template_id } });
       setSnack('Template deleted');
+      refetchRef.current?.();
     } catch (e) {
       setSnack(parseApiError(e));
     }
@@ -34,45 +51,34 @@ export default function EmailTemplatesPage() {
 
   return (
     <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <MarkEmailReadIcon color="primary" />
-          <Box>
-            <Typography variant="h5" fontWeight={800}>Email Templates</Typography>
-            <Typography variant="body2" color="text.secondary">
-              CRM-owned MJML templates with variables. Open one to edit the source and preview.
-            </Typography>
-          </Box>
-        </Stack>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>New template</Button>
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <MarkEmailReadIcon color="primary" />
+        <Box>
+          <Typography variant="h5" fontWeight={800}>Email Templates</Typography>
+          <Typography variant="body2" color="text.secondary">
+            CRM-owned MJML templates with variables. Open one to edit the source and preview.
+          </Typography>
+        </Box>
       </Stack>
 
-      <Card>
-        <CardContent>
-          {loading && templates.length === 0 && (
-            <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-          )}
-          {!loading && templates.length === 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-              No templates yet. Click "New template" to create your first one.
-            </Typography>
-          )}
-          {templates.length > 0 && (
-            <TemplatesTable
-              templates={templates}
-              onEdit={(t) => navigate(`/email-templates/${t.template_id}`)}
-              onDelete={setRemoving}
-            />
-          )}
-        </CardContent>
-      </Card>
+      <TemplatesTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        toolbarActions={
+          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>
+            New template
+          </Button>
+        }
+        onEdit={(t) => navigate(`/email-templates/${t.template_id}`)}
+        onDelete={setRemoving}
+      />
 
       <CreateTemplateDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={async (templateId) => {
+        onCreated={(templateId) => {
           setCreateOpen(false);
-          await refetch();
+          refetchRef.current?.();
           if (templateId) navigate(`/email-templates/${templateId}`);
         }}
       />

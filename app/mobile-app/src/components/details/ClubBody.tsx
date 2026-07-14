@@ -7,7 +7,9 @@ import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodS
 import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import { ClubSegments } from '@/components/details/club/ClubSegments';
 import { ClubFriendsSection } from '@/components/details/club/ClubFriendsSection';
+import { ClubMeetupVenuesSection } from '@/components/details/club/ClubMeetupVenuesSection';
 import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
+import { ClubTotalMembersSection } from '@/components/details/club/ClubTotalMembersSection';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { FollowPillButton } from '@/components/FollowPillButton';
@@ -39,6 +41,7 @@ export function ClubBody({
   onToggleFollow,
   onOpenPod,
   onOpenMember,
+  onOpenVenue,
 }: Readonly<{
   club: ClubDetail;
   pods: ClubPod[];
@@ -50,6 +53,7 @@ export function ClubBody({
   onToggleFollow: () => void;
   onOpenPod: (pod: ClubPod) => void;
   onOpenMember: (userId: string) => void;
+  onOpenVenue: (venueId: string) => void;
 }>) {
   const { onPrimary } = useThemeColors();
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
@@ -92,16 +96,16 @@ export function ClubBody({
         borderColor="$borderColor"
         backgroundColor="$surface"
       >
-        <Stat value={club.followers_count ?? 0} label="followers" />
-        <Stat value={members.length} label="members" />
+        <Stat value={club.followers_count ?? 0} label="total members" />
         <Stat value={pods.length} label="pods" />
         <Stat value={moments.length} label="moments" />
         <Stat value={club.matched_venues_count} label="venues" />
       </XStack>
+      <ClubTotalMembersSection count={club.followers_count ?? 0} />
       {members.length > 0 ? (
         <YStack gap={8} testID="club-members">
           <Text fontSize={16} fontWeight="900" color="$color">
-            Members
+            Pod Members
           </Text>
           <AttendeesSection
             people={buildAttendeePeople(
@@ -147,6 +151,7 @@ export function ClubBody({
           ))}
         </XStack>
       ) : null}
+      <ClubMeetupVenuesSection venues={club.matched_venues} onOpenVenue={onOpenVenue} />
       <ClubSegments
         club={club}
         pods={pods}

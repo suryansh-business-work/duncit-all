@@ -84,6 +84,7 @@ const EMPTY_CONTENT = {
   values: [],
   faqs: [],
   hosts: [],
+  matched_venues: [],
 };
 
 describe('ClubBody', () => {
@@ -109,6 +110,7 @@ describe('ClubBody', () => {
         onToggleFollow={jest.fn()}
         onOpenPod={jest.fn()}
         onOpenMember={jest.fn()}
+        onOpenVenue={jest.fn()}
       />,
     );
     expect(screen.getByText('Creative')).toBeOnTheScreen();
@@ -136,6 +138,7 @@ describe('ClubBody', () => {
         onToggleFollow={jest.fn()}
         onOpenPod={jest.fn()}
         onOpenMember={jest.fn()}
+        onOpenVenue={jest.fn()}
       />,
     );
     expect(screen.getByText('Art')).toBeOnTheScreen();
@@ -163,6 +166,7 @@ describe('ClubBody', () => {
         onToggleFollow={jest.fn()}
         onOpenPod={jest.fn()}
         onOpenMember={jest.fn()}
+        onOpenVenue={jest.fn()}
       />,
     );
     expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent('Creative › Art');
@@ -210,6 +214,7 @@ describe('ClubBody', () => {
         onToggleFollow={jest.fn()}
         onOpenPod={onOpenPod}
         onOpenMember={jest.fn()}
+        onOpenVenue={jest.fn()}
       />,
     );
     expect(screen.getByTestId('club-pods-schedule')).toBeOnTheScreen();
@@ -262,6 +267,7 @@ describe('ClubBody', () => {
         onToggleFollow={jest.fn()}
         onOpenPod={jest.fn()}
         onOpenMember={jest.fn()}
+        onOpenVenue={jest.fn()}
       />,
     );
     expect(screen.getByText('Previous')).toBeOnTheScreen();
@@ -366,6 +372,7 @@ describe('empty / minimal branches', () => {
         followingUserIds={[]}
         categoryCrumbs={[]}
         onOpenMember={jest.fn()}
+        onOpenVenue={jest.fn()}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}

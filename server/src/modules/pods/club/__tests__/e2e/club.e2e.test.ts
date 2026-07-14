@@ -36,4 +36,23 @@ describe('club e2e', () => {
     const user = server.client(signToken({ roles: ['USER'] }));
     await expect(user.request(CREATE, { input: { club_name: 'X' } })).rejects.toThrow();
   });
+
+  it('narrows the public club list to a locality/zone via ClubFilterInput', async () => {
+    const admin = server.client(signToken({ roles: ['CITY_ADMIN'] }));
+    await admin.request(CREATE, { input: { club_name: 'Saket Runners', locality: 'Saket' } });
+    await admin.request(CREATE, { input: { club_name: 'Rohini Runners', locality: 'Rohini' } });
+
+    const pub = server.client();
+    const saket = await pub.request<{ clubs: { club_name: string }[] }>(
+      gql`
+        query ($locality: String) {
+          clubs(filter: { is_active: true, locality: $locality }) {
+            club_name
+          }
+        }
+      `,
+      { locality: 'Saket' }
+    );
+    expect(saket.clubs).toEqual([{ club_name: 'Saket Runners' }]);
+  });
 });

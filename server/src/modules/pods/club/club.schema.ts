@@ -89,6 +89,8 @@ export const clubTypeDefs = /* GraphQL */ `
     category_id: ID
     super_category_id: ID
     location_id: ID
+    "Narrow to a locality/zone within the city."
+    locality: String
     is_verified: Boolean
     is_active: Boolean
   }

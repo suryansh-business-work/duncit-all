@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { ListProductsForm } from './list-products';
+import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
 
@@ -44,6 +45,7 @@ export default function ProductListingEditorPage() {
       {accessError && <Alert severity="error">{accessError.message}</Alert>}
       {error && <Alert severity="error">{error.message}</Alert>}
       {content}
+      {editing && product && canManageProducts && <ProductReviewsPanel productId={product.id} />}
     </Stack>
   );
 }

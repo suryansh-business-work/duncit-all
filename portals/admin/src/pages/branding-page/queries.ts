@@ -25,6 +25,9 @@ export const BRANDING_FIELDS = `
   ios_app_url
   home_all_vibe_icon_url
   home_header_tagline
+  mobile_font_family
+  mweb_font_family
+  portals_font_family
   updated_at
 `;
 
@@ -77,6 +80,9 @@ export interface BrandingFormState {
   ios_app_url: string;
   home_all_vibe_icon_url: string;
   home_header_tagline: string;
+  mobile_font_family: string;
+  mweb_font_family: string;
+  portals_font_family: string;
 }
 
 export type PlatformPrefix = 'mweb' | 'mobile' | 'portals';
@@ -106,4 +112,7 @@ export const emptyBrandingForm: BrandingFormState = {
   ios_app_url: '',
   home_all_vibe_icon_url: '',
   home_header_tagline: 'It All Starts Here!',
+  mobile_font_family: '',
+  mweb_font_family: '',
+  portals_font_family: '',
 };

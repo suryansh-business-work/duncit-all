@@ -9,7 +9,12 @@ import type { RootStackParamList } from '@/navigation/types';
  * under the `Home` stack screen, so they're nested under it.
  */
 export const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: [Linking.createURL('/')],
+  // The custom scheme (duncit://) plus the mWeb origin: a shared mWeb link
+  // opens the installed app via Android App Links / the OS chooser (app.json
+  // android.intentFilters). Verified App Links additionally need
+  // /.well-known/assetlinks.json served from mweb.duncit.com with the Play
+  // signing cert's SHA-256 fingerprint.
+  prefixes: [Linking.createURL('/'), 'https://mweb.duncit.com'],
   config: {
     screens: {
       Login: 'login',

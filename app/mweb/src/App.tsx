@@ -4,6 +4,8 @@ import { Box, Container } from '@mui/material';
 import ScrollToTop from './components/ScrollToTop';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
+import BrandFontLoader from './components/BrandFontLoader';
+import OpenInAppBanner from './components/OpenInAppBanner';
 import SplashScreen from './components/SplashScreen';
 import OfflineBanner from './components/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -118,6 +120,8 @@ export default function App() {
       </Container>
       {showBottomNav && <BottomNav />}
       {isAuthed && <PodFeedbackPrompt />}
+      <OpenInAppBanner />
+      <BrandFontLoader />
       <NotifyHost />
     </Box>
     </StatusUploadProvider>

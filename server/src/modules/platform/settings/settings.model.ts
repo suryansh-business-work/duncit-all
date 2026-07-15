@@ -95,6 +95,11 @@ export interface IBranding extends Document {
   // Autoplay/loop/muted background video of the "Venues" card in the consumer
   // account drawer (native + mWeb). Admin-managed — never hardcode the URL.
   venues_card_video_url: string;
+  // Per-platform Google Font family names (admin Branding → Fonts tabs).
+  // Empty string = each platform's built-in default (Quicksand).
+  mobile_font_family: string;
+  mweb_font_family: string;
+  portals_font_family: string;
   // Marketing websites (duncit.com + partners/ads/earnwith subsites) — admin
   // Branding accordion 1D. Distinct from mweb_* (the PWA): these feed the
   // static Astro sites' header, footer and favicon at build time.
@@ -149,8 +154,11 @@ const brandingSchema = new Schema<IBranding>(
     // native/web video players may refuse to follow).
     venues_card_video_url: {
       type: String,
-      default: "https://videos.pexels.com/video-files/32603222/13903093_1920_1080_60fps.mp4",
+      default: "https://ik.imagekit.io/esdata1/pods/13903093_1920_1080_60fps_CGCbnkfjK.mp4?tr=orig",
     },
+    mobile_font_family: { type: String, default: "" },
+    mweb_font_family: { type: String, default: "" },
+    portals_font_family: { type: String, default: "" },
     website_header_logo_url: { type: String, default: "" },
     website_footer_logo_url: { type: String, default: "" },
     website_favicon_url: { type: String, default: "" },

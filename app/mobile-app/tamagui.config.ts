@@ -60,29 +60,36 @@ const brandDark: typeof brandLight = {
 // Tamagui's resolved system family until a Quicksand asset is bundled, so RN
 // falls back cleanly to the platform font instead of an unknown family.
 const brandFamily = Platform.OS === 'web' ? typography.fontFamily : defaultConfig.fonts.body.family;
-const fonts = {
-  ...defaultConfig.fonts,
-  body: { ...defaultConfig.fonts.body, family: brandFamily },
-  heading: { ...defaultConfig.fonts.heading, family: brandFamily },
-};
 
-export const config = createTamagui({
-  ...defaultConfig,
-  fonts,
-  // Allow long-form React Native style props (alignItems, paddingHorizontal, …)
-  // and raw colour values (hex/rgba), not just shorthands + tokens — the app
-  // uses RN-style prop names and dynamic per-category hues.
-  settings: {
-    ...defaultConfig.settings,
-    onlyAllowShorthands: false,
-    allowedStyleValues: false,
-  },
-  themes: {
-    ...defaultConfig.themes,
-    light: { ...defaultConfig.themes.light, ...brandLight },
-    dark: { ...defaultConfig.themes.dark, ...brandDark },
-  },
-});
+/** Builds the Tamagui config, optionally around a runtime-loaded font family
+ * (the admin Branding → Fonts pick, registered via expo-font). */
+export function createBrandConfig(customFamily?: string) {
+  const family = customFamily || brandFamily;
+  const fonts = {
+    ...defaultConfig.fonts,
+    body: { ...defaultConfig.fonts.body, family },
+    heading: { ...defaultConfig.fonts.heading, family },
+  };
+  return createTamagui({
+    ...defaultConfig,
+    fonts,
+    // Allow long-form React Native style props (alignItems, paddingHorizontal, …)
+    // and raw colour values (hex/rgba), not just shorthands + tokens — the app
+    // uses RN-style prop names and dynamic per-category hues.
+    settings: {
+      ...defaultConfig.settings,
+      onlyAllowShorthands: false,
+      allowedStyleValues: false,
+    },
+    themes: {
+      ...defaultConfig.themes,
+      light: { ...defaultConfig.themes.light, ...brandLight },
+      dark: { ...defaultConfig.themes.dark, ...brandDark },
+    },
+  });
+}
+
+export const config = createBrandConfig();
 
 export type AppConfig = typeof config;
 

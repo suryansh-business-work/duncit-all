@@ -18,6 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import IdentitySection from './IdentitySection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
+import FontsSection from './FontsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
 import { BRANDING, UPDATE_BRANDING, emptyBrandingForm, type BrandingFormState } from './queries';
 
@@ -131,6 +132,13 @@ export default function BrandingPage() {
           subtitle="Header logo, footer logo, favicon + app-store links for duncit.com and its subsites."
         >
           <WebsiteAssetsSection form={form} setForm={setForm} />
+        </BrandingAccordion>
+
+        <BrandingAccordion
+          title="Fonts"
+          subtitle="Google Font per platform — Mobile App, mWeb and the Portals pick it up live."
+        >
+          <FontsSection form={form} setForm={setForm} />
         </BrandingAccordion>
       </Stack>
 

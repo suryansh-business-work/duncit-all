@@ -12,6 +12,8 @@ jest.mock('@/hooks/useHostsVenues', () => ({
   useVenueDetails: jest.fn(),
 }));
 jest.mock('@/hooks/usePublicProfile', () => ({ usePublicProfile: jest.fn() }));
+// Venue pods load their own data + are covered by VenuePodsSection.test — stub here.
+jest.mock('@/components/details/VenuePodsSection', () => ({ VenuePodsSection: () => null }));
 jest.mock('@/hooks/useMyMeeting', () => ({
   useMyMeeting: () => ({ meeting: null, isLoading: false }),
 }));

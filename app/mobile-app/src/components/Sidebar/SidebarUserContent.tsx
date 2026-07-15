@@ -6,6 +6,7 @@ import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfi
 import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
 import { SidebarQuickGrid } from './SidebarQuickGrid';
 import { SidebarReferralCard } from './SidebarReferralCard';
+import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
 import { buildManageItems } from './profileSections';
 
@@ -32,6 +33,7 @@ export function SidebarUserContent({
         <SidebarIncompleteBanner percent={percent} onComplete={() => onNavigate('Account')} />
       ) : null}
       <SidebarQuickGrid onNavigate={onNavigate} />
+      <SidebarVenuesCard onNavigate={onNavigate} />
       <SidebarReferralCard onNavigate={onNavigate} />
       <SidebarManageList items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
     </YStack>

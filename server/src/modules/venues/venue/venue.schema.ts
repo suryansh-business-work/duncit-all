@@ -245,7 +245,10 @@ export const venueTypeDefs = /* GraphQL */ `
     "Admin/onboarding table page over all venues (shared table engine)."
     venuesTable(query: TableQueryInput): VenueTablePage!
     venue(venue_doc_id: ID!): Venue
-    publicVenues: [Venue!]!
+    "APPROVED, active venues for the consumer Venues page — optionally scoped to a location, with server-side search + Super→Cat→Sub category filter. No args = every public venue (legacy callers)."
+    publicVenues(location_id: ID, search: String, super_category_id: ID, category_id: ID, sub_category_id: ID): [Venue!]!
+    "Public single-venue detail (APPROVED + active only)."
+    publicVenue(venue_id: ID!): Venue
     "APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category (admin Club form). Empty when no location is given."
     matchingVenues(location_id: ID!, locality: String, super_category_id: ID, category_id: ID): [Venue!]!
     venueRegistrationConfig: VenueRegistrationConfig!

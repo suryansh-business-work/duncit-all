@@ -44,7 +44,18 @@ export const venueResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.getById(args.venue_doc_id);
     },
-    publicVenues: async () => venueService.list({ status: 'APPROVED', activeOnly: true }),
+    publicVenues: async (
+      _p: unknown,
+      args: {
+        location_id?: string;
+        search?: string;
+        super_category_id?: string;
+        category_id?: string;
+        sub_category_id?: string;
+      }
+    ) => venueService.publicList(args),
+    publicVenue: async (_p: unknown, args: { venue_id: string }) =>
+      venueService.getPublicById(args.venue_id),
     matchingVenues: async (
       _p: unknown,
       args: { location_id: string; locality?: string; super_category_id?: string; category_id?: string },

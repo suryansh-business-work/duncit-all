@@ -94,6 +94,7 @@ export const settingsTypeDefs = gql`
     portals_logo_url: String!
     portals_splash_url: String!
     portals_splash_type: String!
+    venues_card_video_url: String!
     website_header_logo_url: String!
     website_footer_logo_url: String!
     website_favicon_url: String!
@@ -129,6 +130,7 @@ export const settingsTypeDefs = gql`
     portals_logo_url: String
     portals_splash_url: String
     portals_splash_type: String
+    venues_card_video_url: String
     website_header_logo_url: String
     website_footer_logo_url: String
     website_favicon_url: String

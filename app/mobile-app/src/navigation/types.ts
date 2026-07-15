@@ -56,6 +56,7 @@ export type RootStackParamList = {
   HappeningNearby: undefined;
   Checkout: { podId: string; selectedProducts?: { product_id: string; quantity: number }[] };
   HostsVenues: undefined;
+  Venues: undefined;
   PublicProfile: { userId: string };
   PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };

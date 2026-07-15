@@ -92,6 +92,9 @@ export interface IBranding extends Document {
   portals_logo_url: string;
   portals_splash_url: string;
   portals_splash_type: string;
+  // Autoplay/loop/muted background video of the "Venues" card in the consumer
+  // account drawer (native + mWeb). Admin-managed — never hardcode the URL.
+  venues_card_video_url: string;
   // Marketing websites (duncit.com + partners/ads/earnwith subsites) — admin
   // Branding accordion 1D. Distinct from mweb_* (the PWA): these feed the
   // static Astro sites' header, footer and favicon at build time.
@@ -142,6 +145,12 @@ const brandingSchema = new Schema<IBranding>(
     portals_logo_url: { type: String, default: "" },
     portals_splash_url: { type: String, default: "" },
     portals_splash_type: { type: String, default: "IMAGE" },
+    // Direct CDN file (the pexels.com/download/… link is a 302 redirect that
+    // native/web video players may refuse to follow).
+    venues_card_video_url: {
+      type: String,
+      default: "https://videos.pexels.com/video-files/32603222/13903093_1920_1080_60fps.mp4",
+    },
     website_header_logo_url: { type: String, default: "" },
     website_footer_logo_url: { type: String, default: "" },
     website_favicon_url: { type: String, default: "" },

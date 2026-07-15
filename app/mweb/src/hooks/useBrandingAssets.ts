@@ -9,6 +9,7 @@ const BRANDING_ASSETS = gql`
       mweb_logo_url
       mweb_splash_url
       mweb_splash_type
+      venues_card_video_url
     }
   }
 `;
@@ -28,5 +29,6 @@ export function useBrandingAssets() {
     faviconUrl: b?.mweb_favicon_url || '',
     splashUrl: b?.mweb_splash_url || '',
     splashType: b?.mweb_splash_type || 'IMAGE',
+    venuesCardVideoUrl: b?.venues_card_video_url || '',
   };
 }

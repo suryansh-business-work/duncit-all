@@ -32,6 +32,7 @@ const WalletPage = lazy(() => import('../pages/wallet-page'));
 const VenueManagePage = lazy(() => import('../pages/VenueManagePage'));
 const VenueEarningsPage = lazy(() => import('../pages/venue-earnings-page'));
 const VenueDetailsPage = lazy(() => import('../pages/VenueDetailsPage'));
+const VenuesPage = lazy(() => import('../pages/venues-page'));
 const FaqsPage = lazy(() => import('../pages/FaqsPage'));
 const PolicyPage = lazy(() => import('../pages/PolicyPage'));
 const PodIdeasPage = lazy(() => import('../pages/PodIdeasPage'));
@@ -114,6 +115,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/account" element={withAuth(<AccountPage />)} />
         <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
         <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
+        <Route path="/venues" element={withAuth(<VenuesPage locationId={locationId} />)} />
         <Route path="/club/:clubSlug/pod/:podSlug" element={withAuth(<PodDetailsPage />)} />
         <Route path="/u/:userId" element={withAuth(<PublicProfilePage />)} />
         <Route path="/become-host" element={<PartnerRedirect path="/become-host" />} />

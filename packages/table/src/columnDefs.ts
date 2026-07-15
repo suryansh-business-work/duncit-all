@@ -1,5 +1,13 @@
-import type { ColDef, ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
+import type {
+  ColDef,
+  ICellRendererParams,
+  ITooltipParams,
+  ValueGetterParams,
+} from 'ag-grid-community';
 import type { DuncitColumn, TableSortDir } from './types';
+
+/** Class applied to plain-text cells so a global CSS rule can ellipsize them. */
+export const TRUNCATE_CELL_CLASS = 'duncit-truncate-cell';
 
 /** Effective hidden flag: persisted override wins, else the column's declared default. */
 export function isColumnHidden<T>(
@@ -24,6 +32,23 @@ function buildCellRenderer<T>(column: DuncitColumn<T>) {
 }
 
 /**
+ * Full-text hover tooltip for plain-text (non-renderer) cells so truncated content
+ * is still readable. Custom renderers own their own layout, so they get no tooltip.
+ */
+function buildTooltipValueGetter<T>(column: DuncitColumn<T>) {
+  if (column.cellRenderer) return undefined;
+  return (params: ITooltipParams<T>): string | undefined => {
+    const data = params.data;
+    if (!data) return undefined;
+    const raw = column.valueGetter
+      ? column.valueGetter(data)
+      : (data as Record<string, unknown>)[column.field];
+    if (raw == null || typeof raw === 'object') return undefined;
+    return String(raw);
+  };
+}
+
+/**
  * Derives AG Grid column defs from DuncitColumn[]. Sort display is controlled: the def
  * carries the hook's current sort so header arrows always mirror the query state.
  */
@@ -44,5 +69,7 @@ export function buildColDefs<T>(
     sort: sortBy === column.field ? sortDir : null,
     valueGetter: buildValueGetter(column),
     cellRenderer: buildCellRenderer(column),
+    cellClass: column.cellRenderer ? undefined : TRUNCATE_CELL_CLASS,
+    tooltipValueGetter: buildTooltipValueGetter(column),
   }));
 }

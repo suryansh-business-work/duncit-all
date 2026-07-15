@@ -91,16 +91,35 @@ interface Reviewer {
   name?: string | null;
 }
 
+/** The Super → Category → Sub the applicant picked in the onboarding gate, read
+ * off the source meeting so the drafted entity carries it into its Edit dialog.
+ * Best-effort: returns null when the meeting has no (complete) category. */
+async function loadMeetingCategory(meetingId: any) {
+  if (!meetingId) return null;
+  const { MeetingModel } = await import('@modules/survey/meeting.model');
+  const m = await MeetingModel.findById(meetingId).select(
+    'super_category_id category_id sub_category_id'
+  );
+  if (!m?.super_category_id || !m.category_id || !m.sub_category_id) return null;
+  return {
+    super_category_id: String(m.super_category_id),
+    category_id: String(m.category_id),
+    sub_category_id: String(m.sub_category_id),
+  };
+}
+
 /** On approval of an onboarding-meeting request, draft the matching onboarded
  * entity so it surfaces in the portal's Onboarded {Hosts,Venues,Brands} list. */
 async function draftOnboardedEntity(doc: any) {
+  if (!doc.subject_user_id) return;
+  const category = await loadMeetingCategory(doc.meeting_id);
   const prefill = {
     userId: String(doc.subject_user_id),
     name: doc.subject_name ?? '',
     email: doc.subject_email ?? '',
     phone: doc.subject_phone ?? '',
+    category,
   };
-  if (!doc.subject_user_id) return;
   if (doc.kind === 'HOST') await hostService.createDraftFromApproval(prefill);
   else if (doc.kind === 'VENUE') await venueService.createDraftFromApproval(prefill);
   else if (doc.kind === 'ECOMM') await ecommBrandService.createDraftFromApproval(prefill);

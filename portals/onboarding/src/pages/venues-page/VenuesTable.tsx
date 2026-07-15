@@ -40,6 +40,17 @@ const renderVenue = (v: VenueRow) => (
 
 const locationValue = (v: VenueRow) => [v.locality, v.city].filter(Boolean).join(', ') || '—';
 
+const categoryValue = (v: VenueRow) =>
+  [
+    v.venue_category?.super_category_name,
+    v.venue_category?.category_name,
+    v.venue_category?.sub_category_name,
+  ]
+    .filter(Boolean)
+    .join(' > ') || '—';
+
+const renderCategory = (v: VenueRow) => <Typography variant="body2">{categoryValue(v)}</Typography>;
+
 const renderLocation = (v: VenueRow) => (
   <>
     <Typography variant="body2">{locationValue(v)}</Typography>
@@ -124,6 +135,7 @@ export default function VenuesTable({
       { field: 'locality', headerName: 'Location', minWidth: 160, filter: { type: 'text' }, cellRenderer: renderLocation, valueGetter: locationValue },
       { field: 'city', headerName: 'City', hide: true, minWidth: 130, filter: { type: 'text' } },
       { field: 'venue_type', headerName: 'Type', hide: true, minWidth: 130, filter: { type: 'text' } },
+      { field: 'venue_category', headerName: 'Category', minWidth: 200, sortable: false, cellRenderer: renderCategory, valueGetter: categoryValue },
       { field: 'owner_name', headerName: 'Owner', minWidth: 150, cellRenderer: renderOwner, valueGetter: (v) => v.owner_name || '—' },
       { field: 'capacity', headerName: 'Capacity', width: 105, filter: { type: 'number' } },
       { field: 'status', headerName: 'Status', width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (v) => v.status },

@@ -84,6 +84,11 @@ export interface VenueRow {
   owner_email?: string | null;
   owner_phone?: string | null;
   venue_commission_pct?: number | null;
+  venue_category?: {
+    super_category_name?: string | null;
+    category_name?: string | null;
+    sub_category_name?: string | null;
+  } | null;
 }
 
 /** Same selection as VENUES rows (+ created_at for the hidden Created filter

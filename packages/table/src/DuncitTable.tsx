@@ -3,13 +3,14 @@ import { useCallback, useEffect, useMemo, useRef, type MutableRefObject, type Re
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import { useTheme } from '@mui/material/styles';
 import type { GetRowIdParams, RowClickedEvent, SortChangedEvent } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
-import { buildColDefs } from './columnDefs';
+import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
 import type { DuncitColumn, TableFetch, TableSortDir } from './types';
@@ -29,6 +30,19 @@ const ROW_PAD_Y = { compact: 4, standard: 12 } as const;
 // runner) reports none and silently drops rows past the first couple. Keep the
 // content-fit rows in real browsers, skip the measurement pass under jsdom.
 const IS_JSDOM = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
+
+// Restore single-line ellipsis for plain-text cells. defaultColDef's `display:flex`
+// makes the value span a flex child, which defeats AG Grid's built-in truncation, so
+// re-apply it (with min-width:0 so the flex child can shrink) only on plain-text
+// columns — custom renderers keep their own multi-line layout.
+const TRUNCATE_STYLES = {
+  [`.${TRUNCATE_CELL_CLASS} .ag-cell-value`]: {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  },
+};
 
 function escapeHtml(text: string): string {
   return text
@@ -80,7 +94,16 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     const padY = `${ROW_PAD_Y[prefs.density]}px`;
     return {
       autoHeight: !IS_JSDOM,
-      cellStyle: { display: 'flex', alignItems: 'center', paddingTop: padY, paddingBottom: padY },
+      // minWidth/overflow let a cell shrink below its content so nothing bleeds into
+      // the neighbouring column; plain-text cells then ellipsize via TRUNCATE_CELL_CLASS.
+      cellStyle: {
+        display: 'flex',
+        alignItems: 'center',
+        minWidth: 0,
+        overflow: 'hidden',
+        paddingTop: padY,
+        paddingBottom: padY,
+      },
     };
   }, [prefs.density]);
   const columnDefs = useMemo(
@@ -133,7 +156,9 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   const gridOpacity = table.loading ? LOADING_DIM_OPACITY : 1;
 
   return (
-    <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
+    <>
+      <GlobalStyles styles={TRUNCATE_STYLES} />
+      <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
       <Box sx={{ p: 1.5 }}>
         <DuncitTableToolbar
           columns={columns}
@@ -178,6 +203,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             domLayout="autoHeight"
             headerHeight={HEADER_HEIGHT[prefs.density]}
             suppressCellFocus
+            enableBrowserTooltips
             overlayNoRowsTemplate={noRowsTemplate}
             onSortChanged={handleSortChanged}
             onRowClicked={handleRowClicked}
@@ -193,6 +219,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
         rowsPerPageOptions={PAGE_SIZE_OPTIONS}
         onRowsPerPageChange={(event) => table.setPageSize(Number(event.target.value))}
       />
-    </Paper>
+      </Paper>
+    </>
   );
 }

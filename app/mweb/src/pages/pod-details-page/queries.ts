@@ -120,6 +120,48 @@ export const POD_DETAILS = gql`
   }
 `;
 
+export const PRODUCT_REVIEWS = gql`
+  query ProductReviews($id: ID!) {
+    productReviewSummary(product_id: $id) {
+      average_rating
+      total
+      star_counts
+    }
+    productReviews(product_id: $id) {
+      id
+      user_name
+      rating
+      comment
+      images
+      up_votes
+      down_votes
+      my_vote
+      seller_reply
+      seller_reply_at
+      created_at
+    }
+  }
+`;
+
+export const CREATE_PRODUCT_REVIEW = gql`
+  mutation CreateProductReview($input: CreateProductReviewInput!) {
+    createProductReview(input: $input) {
+      id
+    }
+  }
+`;
+
+export const VOTE_PRODUCT_REVIEW = gql`
+  mutation VoteProductReview($review_id: ID!, $vote: Int!) {
+    voteProductReview(review_id: $review_id, vote: $vote) {
+      id
+      up_votes
+      down_votes
+      my_vote
+    }
+  }
+`;
+
 export const PUBLIC_PRODUCT = gql`
   query PublicInventoryProduct($id: ID!) {
     publicInventoryProduct(product_doc_id: $id) {
@@ -139,6 +181,15 @@ export const PUBLIC_PRODUCT = gql`
       weight_kg
       unit_cost
       selling_price
+      variants {
+        id
+        option_label
+        color
+        size_label
+        unit_cost
+        inventory_count
+        images
+      }
     }
   }
 `;

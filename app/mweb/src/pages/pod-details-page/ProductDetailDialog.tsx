@@ -15,12 +15,14 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import Chip from '@mui/material/Chip';
 import CloseIcon from '@mui/icons-material/Close';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import BrandDetailDialog from './BrandDetailDialog';
 import ProductQuantityBar from './ProductQuantityBar';
+import ProductReviews from './ProductReviews';
 import { formatRupees, productSpecs } from './product-specs';
 import { PUBLIC_PRODUCT } from './queries';
 
@@ -50,21 +52,27 @@ export default function ProductDetailDialog({
 }: Readonly<Props>) {
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
+  const [variantId, setVariantId] = useState<string | null>(null);
   const { data, loading, error } = useQuery(PUBLIC_PRODUCT, {
     variables: { id: productId },
     skip: !productId,
     fetchPolicy: 'cache-first',
   });
   const product = data?.publicInventoryProduct;
+  const variants: any[] = product?.variants ?? [];
+  const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
   let images: string[] = [];
   if (product) {
-    images = product.images?.length ? product.images : [product.image_url].filter(Boolean);
+    const variantImages: string[] = selectedVariant?.images ?? [];
+    const base = product.images?.length ? product.images : [product.image_url].filter(Boolean);
+    images = variantImages.length ? variantImages : base;
   }
   const description = product?.description || product?.short_description || '';
-  const specs = product ? productSpecs(product) : [];
-  const price = product?.unit_cost ?? 0;
+  const specs = product ? productSpecs(selectedVariant ? { ...product, ...selectedVariant } : product) : [];
+  const price = selectedVariant?.unit_cost ?? product?.unit_cost ?? 0;
   const mrp = product?.selling_price ?? 0;
   const brandId = product?.brand_id ?? null;
+  const stock = selectedVariant ? selectedVariant.inventory_count : maxQuantity;
 
   let body: React.ReactNode = null;
   if (loading) {
@@ -110,6 +118,21 @@ export default function ProductDetailDialog({
             </Typography>
           )}
         </Stack>
+        {variants.length > 0 && (
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {variants.map((v) => (
+              <Chip
+                key={v.id}
+                label={v.option_label || v.color || v.size_label || 'Variant'}
+                onClick={() => setVariantId(v.id)}
+                color={selectedVariant?.id === v.id ? 'primary' : 'default'}
+                variant={selectedVariant?.id === v.id ? 'filled' : 'outlined'}
+                size="small"
+                sx={{ fontWeight: 700 }}
+              />
+            ))}
+          </Stack>
+        )}
         {product.brand_name &&
           (brandId ? (
             <Link
@@ -151,6 +174,7 @@ export default function ProductDetailDialog({
             ))}
           </Box>
         )}
+        <ProductReviews productId={product.id} />
       </Stack>
     );
   }
@@ -167,7 +191,7 @@ export default function ProductDetailDialog({
         <DialogContent>{body}</DialogContent>
         {product && !viewOnly && onUpdateQuantity ? (
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <ProductQuantityBar quantity={quantity} maxQuantity={maxQuantity} onUpdate={onUpdateQuantity} />
+            <ProductQuantityBar quantity={quantity} maxQuantity={stock} onUpdate={onUpdateQuantity} />
           </DialogActions>
         ) : null}
       </Dialog>

@@ -1,15 +1,12 @@
 {
   "name": "@duncit/geo",
   "version": "1.0.0",
-  "description": "Shared country/state dataset helpers (country-region-data) for the profile location pickers across native + mWeb.",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
-  "files": [
-    "lib",
-    "src"
-  ],
-  "scripts": {
-    "build": "tsc -p tsconfig.json"
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
   },
   "dependencies": {
     "country-region-data": "^4.1.0"

@@ -25,6 +25,11 @@ const LOADING_DIM_OPACITY = 0.55;
 // roomy. `alignItems: center` keeps content vertically centred within the padding.
 const ROW_PAD_Y = { compact: 4, standard: 12 } as const;
 
+// AG Grid's per-cell autoHeight measures real rendered layout; jsdom (the test
+// runner) reports none and silently drops rows past the first couple. Keep the
+// content-fit rows in real browsers, skip the measurement pass under jsdom.
+const IS_JSDOM = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
+
 function escapeHtml(text: string): string {
   return text
     .replaceAll('&', '&amp;')
@@ -74,7 +79,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   const defaultColDef = useMemo(() => {
     const padY = `${ROW_PAD_Y[prefs.density]}px`;
     return {
-      autoHeight: true,
+      autoHeight: !IS_JSDOM,
       cellStyle: { display: 'flex', alignItems: 'center', paddingTop: padY, paddingBottom: padY },
     };
   }, [prefs.density]);

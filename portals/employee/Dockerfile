@@ -35,6 +35,8 @@ COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
+COPY packages/geo/package.json ./packages/geo/
+COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/

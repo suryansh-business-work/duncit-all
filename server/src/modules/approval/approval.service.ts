@@ -123,6 +123,12 @@ async function draftOnboardedEntity(doc: any) {
   if (doc.kind === 'HOST') await hostService.createDraftFromApproval(prefill);
   else if (doc.kind === 'VENUE') await venueService.createDraftFromApproval(prefill);
   else if (doc.kind === 'ECOMM') await ecommBrandService.createDraftFromApproval(prefill);
+  else if (doc.kind === 'CLUB_ADMIN') {
+    // Club Admin has no drafted entity — approval grants the CLUB_ADMIN role so the
+    // user gets the club-admin dashboard in the Partners portal.
+    const { userService } = await import('@modules/access/user/user.service');
+    await userService.addRole(String(doc.subject_user_id), 'CLUB_ADMIN');
+  }
 }
 
 /** Apply an approved ecomm change-request's payload to its brand/product. The

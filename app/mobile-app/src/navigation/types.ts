@@ -33,6 +33,7 @@ export type RootStackParamList = {
   VenueEarnings: undefined;
   Earn: undefined;
   ListProduct: undefined;
+  BeClubAdmin: undefined;
   ProductsManage: undefined;
   Support: undefined;
   Sos: undefined;

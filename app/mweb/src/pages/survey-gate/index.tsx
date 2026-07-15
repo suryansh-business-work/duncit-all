@@ -30,7 +30,7 @@ export default function SurveyGatePage() {
   const params = useParams<{ kind: string }>();
   const navigate = useNavigate();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
-  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM';
+  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
   const [step, setStep] = useState<Step>('loading');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
@@ -121,6 +121,7 @@ export default function SurveyGatePage() {
     VENUE: 'Register your venue',
     HOST: 'Become a host',
     ECOMM: 'List your product',
+    CLUB_ADMIN: 'Be a Club Admin',
   };
   const kindHeading = KIND_HEADINGS[kind];
   let heading: string;

@@ -53,6 +53,7 @@ import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { EarnScreen } from '@/screens/EarnScreen';
 import { MenuScreen } from '@/screens/MenuScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
+import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
 import type { RootStackParamList } from './types';
@@ -99,6 +100,7 @@ export function RootNavigator() {
       <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
       <Stack.Screen name="Earn" component={EarnScreen} />
       <Stack.Screen name="ListProduct" component={ListProductScreen} />
+      <Stack.Screen name="BeClubAdmin" component={BeClubAdminScreen} />
       <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Sos" component={SosScreen} />

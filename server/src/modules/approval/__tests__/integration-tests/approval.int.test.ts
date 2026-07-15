@@ -7,6 +7,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { userService } from '@modules/access/user/user.service';
 import type { SurveyKind } from '@modules/survey/survey.model';
 
 jest.mock('@services/email/email.service', () => ({
@@ -107,6 +108,19 @@ describe('approval — meeting feedback flow', () => {
     const b: any = await EcommBrandModel.findOne({ owner_user_id: new Types.ObjectId(seller.userId) });
     expect(b?.status).toBe('DRAFT');
     expect(b?.contact_person).toBe('Seller Person');
+  });
+
+  it('grants the CLUB_ADMIN role on approval (no drafted entity)', async () => {
+    // Role assignment uses a transaction (real replica set in prod); the standalone
+    // test mongo can't run it, so spy on addRole to assert the branch wiring.
+    const spy = jest.spyOn(userService, 'addRole').mockResolvedValue(undefined as never);
+    const club = await doneMeeting('CLUB_ADMIN', '2027-08-05T05:00:00.000Z', 'Club Boss');
+    await meetingService.sendFeedback(club.meetingId, 'ok', ADMIN);
+    await approvalService.approve(String((await pendingFor(club.userId))!._id), ADMIN);
+    expect(spy).toHaveBeenCalledWith(club.userId, 'CLUB_ADMIN');
+    const meeting = await meetingService.myMeeting(club.userId, 'CLUB_ADMIN');
+    expect(meeting!.approval_status).toBe('APPROVED');
+    spy.mockRestore();
   });
 
   it('denying marks the meeting denied, drafts nothing, and blocks a re-send until re-requested', async () => {

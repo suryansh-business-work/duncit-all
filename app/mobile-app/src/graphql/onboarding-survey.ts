@@ -7,7 +7,7 @@ import { parse } from 'graphql';
  * (server schema, no codegen) via graphqlRequest. Distinct from the
  * signup-interest survey in `survey.ts`.
  */
-export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM';
+export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM' | 'CLUB_ADMIN';
 export type SurveyQuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
 export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';
 

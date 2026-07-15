@@ -17,8 +17,8 @@ import ScopePicker, { type Scope } from './ScopePicker';
 
 const blankByType = (type: QuestionType): DraftQuestion => ({ type, label: '', help: '', required: false, multi: false, options: type === 'MCQ' ? [''] : [] });
 const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
-const KINDS = new Set<SurveyKind>(['VENUE', 'HOST', 'ECOMM']);
-const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const KINDS = new Set<SurveyKind>(['VENUE', 'HOST', 'ECOMM', 'CLUB_ADMIN']);
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
 const initialKind = (raw: string | null): SurveyKind => (raw && KINDS.has(raw as SurveyKind) ? (raw as SurveyKind) : 'VENUE');
 
 /** Create / edit a single onboarding survey scoped to a taxonomy slot. */
@@ -121,6 +121,7 @@ export default function SurveyBuilderPage() {
                     <MenuItem value="VENUE">Venue</MenuItem>
                     <MenuItem value="HOST">Host</MenuItem>
                     <MenuItem value="ECOMM">Ecomm (Seller)</MenuItem>
+                    <MenuItem value="CLUB_ADMIN">Club Admin</MenuItem>
                   </TextField>
                 )}
                 <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />

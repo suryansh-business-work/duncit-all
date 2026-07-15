@@ -127,7 +127,7 @@ function slotLabelTz(value: string | null | undefined, offsetMin: number): strin
   return `${formatted} ${gmtLabel(offsetMin)}`;
 }
 
-const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
 
 type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'approved' | 'rejected';
 

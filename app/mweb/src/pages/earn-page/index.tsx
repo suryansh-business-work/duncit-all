@@ -5,6 +5,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import GroupsIcon from '@mui/icons-material/Groups';
 import EarnBox from './EarnBox';
 import EarnMeetingActions from './EarnMeetingActions';
 
@@ -51,6 +52,14 @@ const BOXES = [
     description: 'Sell your products to the Duncit community through pods and the shop.',
     to: '/survey/ecomm',
     icon: <Inventory2Icon />,
+  },
+  {
+    role: 'CLUB_ADMIN',
+    kind: 'CLUB_ADMIN',
+    title: 'By managing a club',
+    description: 'Run a Duncit club and manage its pods and members as a club admin.',
+    to: '/survey/club_admin',
+    icon: <GroupsIcon />,
   },
 ];
 

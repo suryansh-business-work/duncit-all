@@ -38,6 +38,14 @@ const BOXES = [
     icon: 'inventory-2',
     route: 'ListProduct',
   },
+  {
+    role: 'CLUB_ADMIN',
+    kind: 'CLUB_ADMIN',
+    title: 'By managing a club',
+    description: 'Run a Duncit club and manage its pods and members as a club admin.',
+    icon: 'groups',
+    route: 'BeClubAdmin',
+  },
 ] as const;
 
 const PENDING = new Set(['REQUESTED', 'SCHEDULED']);

@@ -51,6 +51,7 @@ import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { EarnScreen } from '@/screens/EarnScreen';
+import { MenuScreen } from '@/screens/MenuScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
@@ -73,6 +74,11 @@ export function RootNavigator() {
   const signedInScreens = surveyCompleted ? (
     <>
       <Stack.Screen name="Home" component={MainTabs} />
+      <Stack.Screen
+        name="Menu"
+        component={MenuScreen}
+        options={{ presentation: 'transparentModal' }}
+      />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Account" component={AccountScreen} />

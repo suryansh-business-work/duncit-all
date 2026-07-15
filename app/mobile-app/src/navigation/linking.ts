@@ -17,6 +17,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ForgotPassword: 'forgot-password',
       ResetPassword: 'reset-password',
       Survey: 'survey',
+      Menu: 'menu',
       Home: {
         path: '',
         screens: {

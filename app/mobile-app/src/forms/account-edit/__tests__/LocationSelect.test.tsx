@@ -4,31 +4,7 @@ import { Text } from 'tamagui';
 
 import { LocationSelect } from '@/forms/account-edit/LocationSelect';
 import type { AccountEditValues } from '@/forms/account-edit/account-edit.types';
-import type { CountryNode } from '@/utils/location-tree';
 import { renderWithProviders } from '@/utils/test-utils';
-
-const countries: CountryNode[] = [
-  {
-    country: 'India',
-    country_code: 'in',
-    states: [
-      {
-        state: 'Maharashtra',
-        state_code: 'MH',
-        cities: [
-          { city: 'Pune', location_name: 'Pune' },
-          { city: '', location_name: 'Mumbai Central' },
-        ] as never,
-      },
-      {
-        state: 'Goa',
-        state_code: 'GA',
-        cities: [{ city: 'Panaji', location_name: 'Panaji' }] as never,
-      },
-    ],
-  },
-  { country: 'Nepal', country_code: 'np', states: [] },
-];
 
 function Harness({
   initial,
@@ -42,7 +18,7 @@ function Harness({
   const v = watch();
   return (
     <>
-      <LocationSelect control={control} setValue={setValue} countries={countries} />
+      <LocationSelect control={control} setValue={setValue} />
       <Text testID="snapshot">{`${v.country ?? ''}|${v.state ?? ''}|${v.city ?? ''}`}</Text>
     </>
   );
@@ -50,58 +26,55 @@ function Harness({
 
 const snapshot = () => screen.getByTestId('snapshot').props.children;
 
+/** Filter the open picker, then tap the option (the dataset has ~250 items). */
+const pick = (field: 'country' | 'state', query: string, value: string) => {
+  fireEvent.press(screen.getByTestId(`location-${field}-trigger`));
+  fireEvent.changeText(screen.getByTestId(`location-${field}-search`), query);
+  fireEvent.press(screen.getByTestId(`location-${field}-option-${value}`));
+};
+
 describe('LocationSelect', () => {
-  it('picks a country and resets state + city', () => {
+  it('picks a country from the dataset and resets state + city', () => {
     renderWithProviders(<Harness initial={{ country: 'India', state: 'Goa', city: 'Panaji' }} />);
-    fireEvent.press(screen.getByTestId('location-country-trigger'));
-    fireEvent.press(screen.getByTestId('location-country-option-Nepal'));
-    expect(snapshot()).toBe('Nepal||');
+    pick('country', 'United States', 'United States');
+    expect(snapshot()).toBe('United States||');
   });
 
-  it('disables state until a country is picked and city until a state is picked', () => {
+  it('disables the state picker until a country is chosen', () => {
     renderWithProviders(<Harness />);
     fireEvent.press(screen.getByTestId('location-state-trigger'));
     expect(screen.queryByTestId('location-state-sheet')).toBeNull();
-    fireEvent.press(screen.getByTestId('location-city-trigger'));
-    expect(screen.queryByTestId('location-city-sheet')).toBeNull();
   });
 
-  it('cascades country → state → city and dedupes city names', () => {
+  it('cascades country → state (dataset) and takes a free-text city', () => {
     renderWithProviders(<Harness />);
-    fireEvent.press(screen.getByTestId('location-country-trigger'));
-    fireEvent.press(screen.getByTestId('location-country-option-India'));
+    pick('country', 'India', 'India');
     expect(snapshot()).toBe('India||');
 
-    fireEvent.press(screen.getByTestId('location-state-trigger'));
-    fireEvent.press(screen.getByTestId('location-state-option-Maharashtra'));
+    pick('state', 'Maharashtra', 'Maharashtra');
     expect(snapshot()).toBe('India|Maharashtra|');
 
-    fireEvent.press(screen.getByTestId('location-city-trigger'));
-    // The blank city falls back to the location_name.
-    fireEvent.press(screen.getByTestId('location-city-option-Mumbai Central'));
-    expect(snapshot()).toBe('India|Maharashtra|Mumbai Central');
+    // City is a custom free-text value — not a fixed picklist.
+    fireEvent.changeText(screen.getByTestId('location-city'), 'Pune');
+    expect(snapshot()).toBe('India|Maharashtra|Pune');
   });
 
-  it('resets the city when the state changes', () => {
-    renderWithProviders(
-      <Harness initial={{ country: 'India', state: 'Maharashtra', city: 'Pune' }} />,
-    );
-    fireEvent.press(screen.getByTestId('location-state-trigger'));
-    fireEvent.press(screen.getByTestId('location-state-option-Goa'));
-    expect(snapshot()).toBe('India|Goa|');
-  });
-
-  it('keeps a saved value that is missing from the tree selectable (withCurrent)', () => {
+  it('keeps a saved country that is missing from the dataset selectable', () => {
     renderWithProviders(<Harness initial={{ country: 'Atlantis' }} />);
     fireEvent.press(screen.getByTestId('location-country-trigger'));
-    // The off-tree saved country is still offered as an option.
+    // The off-dataset saved country is still offered (withCurrent).
     expect(screen.getByTestId('location-country-option-Atlantis')).toBeOnTheScreen();
+  });
+
+  it('keeps a saved state that is missing from the country dataset selectable', () => {
+    renderWithProviders(<Harness initial={{ country: 'Atlantis', state: 'Poseidon' }} />);
+    fireEvent.press(screen.getByTestId('location-state-trigger'));
+    expect(screen.getByTestId('location-state-option-Poseidon')).toBeOnTheScreen();
   });
 
   it('treats unset location fields as empty (country picker starts at the placeholder)', () => {
     renderWithProviders(<Harness unset />);
-    fireEvent.press(screen.getByTestId('location-country-trigger'));
-    fireEvent.press(screen.getByTestId('location-country-option-India'));
+    pick('country', 'India', 'India');
     expect(snapshot()).toBe('India||');
   });
 });

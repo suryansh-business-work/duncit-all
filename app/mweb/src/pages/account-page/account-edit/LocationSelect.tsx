@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useWatch, type Control, type UseFormSetValue } from 'react-hook-form';
-import { AdminLocationSelect, buildLocationValueFromNames, useAdminLocations } from '@duncit/location';
+import { Autocomplete, Stack, TextField, Typography } from '@mui/material';
+import { COUNTRY_OPTIONS, findCountryByName, getStatesForCountry } from '@duncit/geo';
 import type { AccountEditValues } from './account-edit.types';
 
 interface Props {
@@ -8,38 +9,67 @@ interface Props {
   setValue: UseFormSetValue<AccountEditValues>;
 }
 
+/** Keep a saved value selectable even if it is missing from the dataset. */
+const withCurrent = (names: string[], current: string): string[] =>
+  current && !names.includes(current) ? [current, ...names] : names;
+
+type LocationField = 'country' | 'state' | 'city';
+
 /**
- * Dependent Country → State → City dropdowns, sourced strictly from the admin
- * Location DB via the shared @duncit/location picker. The profile stores the
- * country/state/city names, so we hydrate the picker from those names and write
- * the names back on change.
+ * Country → State (dataset-driven — the State list depends on the Country) plus
+ * a free-text City. Country/State come from the shared @duncit/geo dataset (not
+ * admin locations); City is a custom value. Twin of the native LocationSelect.
  */
 export default function LocationSelect({ control, setValue }: Readonly<Props>) {
-  const country = useWatch({ control, name: 'country' }) as string;
-  const state = useWatch({ control, name: 'state' }) as string;
-  const city = useWatch({ control, name: 'city' }) as string;
-  const { locations } = useAdminLocations();
+  const country = (useWatch({ control, name: 'country' }) as string) ?? '';
+  const state = (useWatch({ control, name: 'state' }) as string) ?? '';
+  const city = (useWatch({ control, name: 'city' }) as string) ?? '';
 
-  const value = useMemo(
-    () => buildLocationValueFromNames(locations, { country, state, city }),
-    [locations, country, state, city],
+  const write = (field: LocationField, value: string) =>
+    setValue(field, value, { shouldDirty: true, shouldValidate: true });
+
+  const countryNames = useMemo(
+    () => withCurrent(COUNTRY_OPTIONS.map((c) => c.name), country),
+    [country],
+  );
+  const stateNames = useMemo(
+    () =>
+      withCurrent(
+        getStatesForCountry(findCountryByName(country)?.isoCode).map((s) => s.name),
+        state,
+      ),
+    [country, state],
   );
 
-  const write = (field: 'country' | 'state' | 'city', next: string) =>
-    setValue(field, next, { shouldDirty: true, shouldValidate: true });
-
   return (
-    <AdminLocationSelect
-      value={value}
-      onChange={(next) => {
-        write('country', next.country);
-        write('state', next.state);
-        write('city', next.city);
-      }}
-      fields={['country', 'state', 'city']}
-      required
-      legend="Location"
-      hint="Your city — used to surface pods and clubs near you."
-    />
+    <Stack spacing={1.5}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+        Location
+      </Typography>
+      <Autocomplete
+        options={countryNames}
+        value={country || null}
+        onChange={(_event, next) => {
+          write('country', next ?? '');
+          write('state', '');
+          write('city', '');
+        }}
+        renderInput={(params) => <TextField {...params} label="Country" />}
+      />
+      <Autocomplete
+        options={stateNames}
+        value={state || null}
+        disabled={!country}
+        onChange={(_event, next) => write('state', next ?? '')}
+        renderInput={(params) => <TextField {...params} label="State" />}
+      />
+      <TextField
+        label="City"
+        value={city}
+        onChange={(event) => write('city', event.target.value)}
+        placeholder="Enter your city"
+        helperText="Your city — used to surface pods and clubs near you."
+      />
+    </Stack>
   );
 }

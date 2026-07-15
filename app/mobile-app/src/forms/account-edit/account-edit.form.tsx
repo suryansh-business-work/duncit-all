@@ -7,7 +7,6 @@ import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { AddressFields } from '@/forms/components/AddressFields';
 import type { AccountMe } from '@/hooks/useAccount';
-import type { CountryNode } from '@/utils/location-tree';
 import { ContactFields } from './ContactFields';
 import { DobDateField } from './DobDateField';
 import { LocationSelect } from './LocationSelect';
@@ -29,7 +28,6 @@ const ADDRESS_NAMES = {
 
 export interface AccountEditFormProps {
   me: AccountMe | null;
-  countries: CountryNode[];
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: AccountEditValues) => void | Promise<void>;
@@ -44,7 +42,6 @@ export interface AccountEditFormProps {
  * rule 10); Save stays disabled until a valid change is made. */
 export function AccountEditForm({
   me,
-  countries,
   loading,
   errorMessage,
   onSubmit,
@@ -105,7 +102,7 @@ export function AccountEditForm({
 
       <DobDateField control={control} />
 
-      <LocationSelect control={control} setValue={setValue} countries={countries} />
+      <LocationSelect control={control} setValue={setValue} />
 
       <ContactFields control={control} setValue={setValue} />
 

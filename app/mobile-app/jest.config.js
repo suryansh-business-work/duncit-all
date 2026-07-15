@@ -8,6 +8,10 @@ module.exports = {
   ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    // Linked workspace packages (e.g. @duncit/geo) live outside this app's
+    // node_modules, so babel-jest's injected runtime helpers can't be resolved
+    // from there — pin them to this app's @babel/runtime.
+    '^@babel/runtime/(.*)$': '<rootDir>/node_modules/@babel/runtime/$1',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

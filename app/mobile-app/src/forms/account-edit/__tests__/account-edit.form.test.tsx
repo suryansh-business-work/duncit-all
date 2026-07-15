@@ -2,7 +2,6 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { AccountEditForm } from '@/forms/account-edit';
 import type { AccountMe } from '@/hooks/useAccount';
-import type { CountryNode } from '@/utils/location-tree';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const me = {
@@ -26,24 +25,8 @@ const me = {
   created_at: '2024-01-01',
 } as unknown as AccountMe;
 
-const countries: CountryNode[] = [
-  {
-    country: 'India',
-    country_code: 'in',
-    states: [
-      {
-        state: 'Maharashtra',
-        state_code: 'MH',
-        cities: [{ city: 'Pune', location_name: 'Pune' }] as never,
-      },
-    ],
-  },
-];
-
 const setup = (props: Partial<Parameters<typeof AccountEditForm>[0]> = {}) =>
-  renderWithProviders(
-    <AccountEditForm me={me} countries={countries} onSubmit={jest.fn()} {...props} />,
-  );
+  renderWithProviders(<AccountEditForm me={me} onSubmit={jest.fn()} {...props} />);
 
 const saveDisabled = () =>
   screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled === true;

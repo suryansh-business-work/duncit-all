@@ -1,7 +1,7 @@
 # Ignore file used ONLY for Dockerfile.android (BuildKit picks
 # `<dockerfile>.dockerignore` over the repo-root `.dockerignore`). Because it is
-# android-only, it can prune the whole monorepo down to the four paths this build
-# actually COPYs — app/mobile-app, packages/auth-tokens, packages/logs and
+# android-only, it can prune the whole monorepo down to the paths this build
+# actually COPYs — app/mobile-app, packages/{auth-tokens,logs,geo,regex} and
 # server/src/modules — which shrinks the build context (faster context sync,
 # fewer spurious cache busts) WITHOUT affecting the main Dockerfile.
 #
@@ -45,7 +45,7 @@ server/src/modules/**/__tests__
 
 # ── Monorepo areas the Android build never reads (context shrink only) ───────
 # Whole-directory excludes → safe, no whitelist gymnastics. The build only COPYs
-# app/mobile-app, packages/auth-tokens, packages/logs and server/src/modules.
+# app/mobile-app, packages/{auth-tokens,logs,geo,regex} and server/src/modules.
 portals
 website
 deploy

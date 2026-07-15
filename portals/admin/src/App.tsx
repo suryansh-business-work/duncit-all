@@ -12,6 +12,7 @@ import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
 import ClubsPage from './pages/ClubsPage';
 import VenuesPage from './pages/VenuesPage';
+import PartnersPage from './pages/PartnersPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
 import PodsPage from './pages/PodsPage';
 import PodDetailsPage from './pages/PodDetailsPage';
@@ -55,6 +56,7 @@ export default function App() {
                 <Route path="/locations" element={<LocationsPage />} />
                 <Route path="/clubs" element={<ClubsPage />} />
                 <Route path="/venues" element={<VenuesPage />} />
+                <Route path="/partners" element={<PartnersPage />} />
                 <Route path="/clubs/:id" element={<ClubDetailsPage />} />
                 <Route path="/pods" element={<PodsPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />

@@ -21,6 +21,7 @@ import FlagIcon from '@mui/icons-material/Flag';
 import ForumIcon from '@mui/icons-material/Forum';
 import GavelIcon from '@mui/icons-material/Gavel';
 import GroupsIcon from '@mui/icons-material/Groups';
+import HandshakeIcon from '@mui/icons-material/Handshake';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import HelpIcon from '@mui/icons-material/Help';
 import HubIcon from '@mui/icons-material/Hub';
@@ -84,6 +85,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   flag: FlagIcon,
   forum: ForumIcon,
   groups: GroupsIcon,
+  handshake: HandshakeIcon,
   help: HelpIcon,
   'host-request': AssignmentIndIcon,
   hub: HubIcon,

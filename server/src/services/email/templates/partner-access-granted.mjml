@@ -1,0 +1,36 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Duncit Partner access is live</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#F82C2E" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="{{brand_logo_url}}" alt="Duncit" width="110px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">Welcome aboard, {{name}} 🎉</mj-text>
+        <mj-text color="#555555">Your <strong>{{partner_type}}</strong> access on Duncit is now active. Manage everything from your Partners account.</mj-text>
+        <mj-button href="{{portal_url}}">Open your Partners account</mj-button>
+        <mj-text color="#555555" font-size="13px">Portal link: {{portal_url}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#eff6ff" padding="16px 20px" border-left="4px solid #3b82f6">
+      <mj-column>
+        <mj-text font-size="15px" font-weight="bold" color="#1e3a8a">Your login credentials</mj-text>
+        <mj-text color="#1e40af">Sign in with your existing Duncit account — email <strong>{{email}}</strong> and your Duncit password. Forgot it? Use “Forgot password” on the login page. Never share your password with anyone.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because your Duncit account was granted partner access.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

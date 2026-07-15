@@ -112,6 +112,10 @@ export const userResolvers = {
       requireRole(ctx, DIRECTORY_ROLES);
       return userService.table(args.query);
     },
+    partnersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, DIRECTORY_ROLES);
+      return userService.partnersTable(args.query);
+    },
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return userService.getById(args.user_id);

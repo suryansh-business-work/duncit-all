@@ -21,7 +21,7 @@
 ARG BUILD_TYPE=apk
 
 # ── Stage 1: JS deps + codegen ──────────────────────────────────────────────
-FROM node:20-slim AS js-builder
+FROM node:24-slim AS js-builder
 WORKDIR /repo
 ENV CI=1 EXPO_NO_TELEMETRY=1
 

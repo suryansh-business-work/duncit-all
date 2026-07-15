@@ -9,7 +9,7 @@
 # The root .dockerignore already excludes node_modules/dist.
 
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:20 AS builder
+FROM public.ecr.aws/docker/library/node:24 AS builder
 WORKDIR /repo
 ENV CI=1
 

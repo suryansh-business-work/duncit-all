@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { BrandDetailSheet } from '@/components/details/BrandDetailSheet';
 import { ZoomableImageModal } from '@/components/details/ZoomableImageModal';
 import { ProductQuantityBar } from '@/components/details/ProductQuantityBar';
+import { ProductReviews } from '@/components/details/ProductReviews';
 import { PublicInventoryProductDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -19,6 +20,7 @@ import { toErrorMessage } from '@/utils/errors';
 type Product = NonNullable<
   ResultOf<typeof PublicInventoryProductDocument>['publicInventoryProduct']
 >;
+type Variant = Product['variants'][number];
 
 interface Props {
   productId: string | null;
@@ -35,11 +37,15 @@ interface Props {
 
 interface BodyProps {
   product: Product | null;
+  variants: Variant[];
+  selectedVariantId: string | null;
+  onSelectVariant: (id: string) => void;
   images: string[];
   price: number;
   mrp: number;
   hasMrp: boolean;
   brandId: string | null;
+  specSource: Product;
   quantity: number;
   maxQuantity: number;
   primary: string;
@@ -49,12 +55,56 @@ interface BodyProps {
   onOpenBrand: (brandId: string) => void;
 }
 
-/** The gallery: the product's image list, falling back to its single cover
- * image. Shared by the sheet and the pinch-zoom viewer, so it lives in the parent. */
-function productImages(product: Product | null): string[] {
+/** The gallery: the selected variant's images, else the product's image list,
+ * falling back to its single cover image. Shared with the pinch-zoom viewer. */
+function productImages(product: Product | null, variant: Variant | null): string[] {
+  const variantImages = variant?.images ?? [];
+  if (variantImages.length > 0) return variantImages;
   if (!product) return [];
   const gallery = product.images;
   return gallery.length > 0 ? gallery : [product.image_url].filter(Boolean);
+}
+
+/** Colour/size variant chips — tapping one swaps the price, stock and images. */
+function VariantChips({
+  variants,
+  selectedVariantId,
+  primary,
+  onSelectVariant,
+}: Readonly<{
+  variants: Variant[];
+  selectedVariantId: string | null;
+  primary: string;
+  onSelectVariant: (id: string) => void;
+}>) {
+  if (variants.length === 0) return null;
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <XStack gap={8}>
+        {variants.map((v) => {
+          const selected = v.id === selectedVariantId;
+          return (
+            <YStack
+              key={v.id}
+              testID={`variant-${v.id}`}
+              role="button"
+              onPress={() => onSelectVariant(v.id)}
+              paddingHorizontal={12}
+              paddingVertical={7}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor={selected ? primary : '$borderColor'}
+              backgroundColor={selected ? primary : 'transparent'}
+            >
+              <Text fontSize={13} fontWeight="800" color={selected ? 'white' : '$color'}>
+                {[v.option_label, v.color, v.size_label].find(Boolean) ?? 'Variant'}
+              </Text>
+            </YStack>
+          );
+        })}
+      </XStack>
+    </ScrollView>
+  );
 }
 
 /** Horizontal image strip — tapping a thumbnail opens the pinch-zoom viewer. */
@@ -153,11 +203,15 @@ function SpecGrid({ specs }: Readonly<{ specs: ProductSpec[] }>) {
  * quantity bar. Renders nothing until the product has arrived. */
 function ProductBody({
   product,
+  variants,
+  selectedVariantId,
+  onSelectVariant,
   images,
   price,
   mrp,
   hasMrp,
   brandId,
+  specSource,
   quantity,
   maxQuantity,
   primary,
@@ -168,7 +222,7 @@ function ProductBody({
 }: Readonly<BodyProps>) {
   if (!product) return null;
   const description = product.description || product.short_description;
-  const specs = productSpecs(product);
+  const specs = productSpecs(specSource);
 
   return (
     <ScrollView paddingHorizontal={16}>
@@ -187,6 +241,12 @@ function ProductBody({
             </Text>
           ) : null}
         </XStack>
+        <VariantChips
+          variants={variants}
+          selectedVariantId={selectedVariantId}
+          primary={primary}
+          onSelectVariant={onSelectVariant}
+        />
         {product.brand_name ? (
           <BrandRow
             brandId={brandId}
@@ -206,6 +266,7 @@ function ProductBody({
           readOnly={readOnly}
           onUpdate={onUpdateQuantity}
         />
+        <ProductReviews productId={product.id} />
       </YStack>
     </ScrollView>
   );
@@ -228,6 +289,7 @@ export function ProductDetailSheet({
   const [error, setError] = useState('');
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
+  const [variantId, setVariantId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!productId) return;
@@ -235,6 +297,7 @@ export function ProductDetailSheet({
     setIsLoading(true);
     setError('');
     setProduct(null);
+    setVariantId(null);
     graphqlRequest(PublicInventoryProductDocument, { productDocId: productId }, { auth: true })
       .then((data) => active && setProduct(data.publicInventoryProduct ?? null))
       .catch((e) => active && setError(toErrorMessage(e, 'Could not load product.')))
@@ -244,12 +307,17 @@ export function ProductDetailSheet({
     };
   }, [productId]);
 
-  const images = productImages(product);
-  const price = product?.unit_cost ?? 0;
+  const variants = product?.variants ?? [];
+  const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
+  const images = productImages(product, selectedVariant);
+  const price = selectedVariant?.unit_cost ?? product?.unit_cost ?? 0;
   const mrp = product?.selling_price ?? 0;
   const hasMrp = mrp > price;
   // Non-empty only when the product carries a brand link → the brand is tappable.
   const brandId = product?.brand_id ?? null;
+  const stock = selectedVariant ? selectedVariant.inventory_count : maxQuantity;
+  // Specs reflect the selected variant's colour/size when one is chosen.
+  const specSource = (selectedVariant ? { ...product, ...selectedVariant } : product) as Product;
 
   // Body variants hoisted to consts so the render tree keeps flat (non-nested)
   // ternaries — identical branches, same scope.
@@ -260,13 +328,17 @@ export function ProductDetailSheet({
   ) : (
     <ProductBody
       product={product}
+      variants={variants}
+      selectedVariantId={selectedVariant?.id ?? null}
+      onSelectVariant={setVariantId}
       images={images}
       price={price}
       mrp={mrp}
       hasMrp={hasMrp}
       brandId={brandId}
+      specSource={specSource}
       quantity={quantity}
-      maxQuantity={maxQuantity}
+      maxQuantity={stock}
       primary={primary}
       readOnly={readOnly}
       onUpdateQuantity={onUpdateQuantity}

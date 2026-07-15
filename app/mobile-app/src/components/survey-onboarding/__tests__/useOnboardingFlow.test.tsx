@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { useOnboardingFlow } from '@/components/survey-onboarding/useOnboardingFlow';
+import { useOnboardingDraftStore } from '@/stores/onboarding-draft.store';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
@@ -336,6 +337,36 @@ describe('useOnboardingFlow', () => {
     });
     expect(result.current.error).toBeTruthy();
     expect(result.current.phase).toBe('meeting');
+  });
+
+  it('restores a saved draft (step, category, survey and answers) on re-mount', async () => {
+    route({ meeting: null, survey: SURVEY });
+    useOnboardingDraftStore.getState().setDraft('HOST' as never, {
+      phase: 'survey',
+      scope: FULL_SCOPE,
+      survey: SURVEY as never,
+      answers: { q1: { value: '', values: ['A'] } },
+    });
+    const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+    expect(result.current.phase).toBe('survey');
+    expect(result.current.survey?.id).toBe('sv1');
+    expect(result.current.answer.get('q1').values).toEqual(['A']);
+  });
+
+  it('clears the saved draft once the meeting is booked', async () => {
+    route({ meeting: null, survey: null });
+    const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+    await waitFor(() => expect(result.current.phase).toBe('category'));
+    await act(async () => {
+      await result.current.chooseCategory(SCOPE);
+    });
+    act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
+    act(() => result.current.setPhone('9876543210'));
+    await act(async () => {
+      await result.current.submitMeeting();
+    });
+    expect(result.current.phase).toBe('done');
+    expect(useOnboardingDraftStore.getState().getDraft('HOST' as never)).toBeUndefined();
   });
 
   it('surfaces a slot load failure', async () => {

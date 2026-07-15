@@ -11,9 +11,10 @@ import {
   type SurveyKind,
 } from './queries';
 import CategoryStep, { type CategoryScope } from './CategoryStep';
-import SurveyStepper, { type SurveyAnswerInput } from './SurveyStepper';
+import SurveyStepper, { type SurveyAnswerInput, type SurveyAnswerState } from './SurveyStepper';
 import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
+import { getGateDraft, setGateDraft, clearGateDraft } from './draft';
 import AuthLogo from '../../components/AuthLogo';
 
 type Step = 'loading' | 'category' | 'survey' | 'meeting' | 'thanks';
@@ -32,6 +33,7 @@ export default function SurveyGatePage() {
   const [step, setStep] = useState<Step>('loading');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
+  const [surveyAnswers, setSurveyAnswers] = useState<SurveyAnswerState>({});
   const [scope, setScope] = useState<CategoryScope | null>(null);
   const [resolving, setResolving] = useState(false);
   const [bookedSlot, setBookedSlot] = useState('');
@@ -43,11 +45,27 @@ export default function SurveyGatePage() {
 
   useEffect(() => {
     if (!valid) { navigate('/hosts-venues', { replace: true }); return; }
-    // Always walk the full gate — category → survey (when one matches) →
-    // meeting — even when a meeting was requested before: requestMeeting
-    // upserts per (user, kind), so re-submitting only updates the request.
-    setStep('category');
+    // Restore an in-progress draft (category + survey answers + step) so a Back
+    // navigation returns here instead of restarting. Always walk the full gate —
+    // requestMeeting upserts per (user, kind), so re-submitting only updates it.
+    const draft = getGateDraft(kind);
+    if (draft) {
+      setScope(draft.scope);
+      setSurvey(draft.survey);
+      setSurveyAnswers(draft.answers);
+      setSubmittedAnswers(draft.submittedAnswers);
+      setStep(draft.step);
+    } else {
+      setStep('category');
+    }
   }, [valid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist the draft while the user is inside the gate; clear it once booked.
+  useEffect(() => {
+    if (step === 'thanks') { clearGateDraft(kind); return; }
+    if (step === 'loading') return;
+    setGateDraft(kind, { step, scope, survey, answers: surveyAnswers, submittedAnswers });
+  }, [step, scope, survey, surveyAnswers, submittedAnswers, kind]);
 
   const afterSurvey = () => setStep('meeting');
 
@@ -134,7 +152,15 @@ export default function SurveyGatePage() {
             <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
           </Stack>
           {step === 'category' && <CategoryStep submitting={resolving} onContinue={onCategory} />}
-          {step === 'survey' && survey && <SurveyStepper survey={survey} submitting={submittingSurvey} onSubmit={onSurvey} />}
+          {step === 'survey' && survey && (
+            <SurveyStepper
+              survey={survey}
+              submitting={submittingSurvey}
+              onSubmit={onSurvey}
+              answers={surveyAnswers}
+              setAnswers={setSurveyAnswers}
+            />
+          )}
           {step === 'meeting' && (
             <>
               {survey && <SubmittedSummary survey={survey} answers={submittedAnswers} />}

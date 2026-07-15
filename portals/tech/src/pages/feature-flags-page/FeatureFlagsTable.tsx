@@ -72,7 +72,6 @@ export default function FeatureFlagsTable({
       {
         field: 'description',
         headerName: 'Description',
-        sortable: false,
         flex: 1.4,
         minWidth: 200,
         cellRenderer: renderDescription,

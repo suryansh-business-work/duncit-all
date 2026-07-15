@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,7 +17,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import TuneIcon from '@mui/icons-material/Tune';
 import ClubListCard from './clubs-page/ClubListCard';
 import SearchFilterSheet from './search-page/SearchFilterSheet';
-import { useSearchCategories } from './search-page/useSearchDiscovery';
+import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
 import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
 
 const ALL_CLUBS = gql`
@@ -68,8 +68,26 @@ export default function ClubsPage({
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
-  const { buttons: categoryOptions, matchesCategory } = useSearchCategories();
+  const { all, buttons, matchesCategory } = useSearchCategories();
+  const selectedSuperId = useMemo(
+    () =>
+      superCategorySlug
+        ? ((data?.superCategories ?? []).find((s: any) => s.slug === superCategorySlug)?.id ?? null)
+        : null,
+    [data, superCategorySlug],
+  );
+  // Category chips follow the header's selected super category.
+  const categoryOptions = useMemo(
+    () => scopeCategoryButtons(buttons, all, selectedSuperId),
+    [buttons, all, selectedSuperId],
+  );
   const selectedCategory = categoryOptions.find((c) => c.id === categoryId) ?? null;
+
+  // Clear the chosen chip when the super category changes so a now-hidden chip
+  // isn't left selected.
+  useEffect(() => {
+    setCategoryId('');
+  }, [superCategorySlug]);
   const selectedLocationName = useMemo(
     () => (data?.locations ?? []).find((l: any) => l.id === locationId)?.location_name ?? '',
     [data, locationId],
@@ -89,10 +107,6 @@ export default function ClubsPage({
   const clubs = useMemo(() => {
     const list = (data?.clubs ?? []).slice();
     const term = q.trim().toLowerCase();
-    const supers = data?.superCategories ?? [];
-    const selectedSuperId = superCategorySlug
-      ? supers.find((s: any) => s.slug === superCategorySlug)?.id
-      : null;
     return list
       .filter((c: any) => !selectedSuperId || c.super_category_id === selectedSuperId)
       .filter((c: any) => matchesCategory(c, categoryId))
@@ -103,7 +117,7 @@ export default function ClubsPage({
           c.club_description?.toLowerCase().includes(term),
       )
       .sort((a: any, b: any) => a.club_name.localeCompare(b.club_name));
-  }, [data, q, categoryId, superCategorySlug, matchesCategory]);
+  }, [data, q, categoryId, selectedSuperId, matchesCategory]);
 
   if (loading && !data)
     return (

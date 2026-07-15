@@ -7,13 +7,6 @@ export const HEADER_DATA = gql`
       logo_url
       mweb_logo_url
       primary_color
-      mascot_name
-      mascot_description_html
-      mascot_image_url
-      mascot_lottie_url
-      app_loader_lottie_url
-      confetti_lottie_url
-      welcome_lottie_url
       home_all_vibe_icon_url
       home_header_tagline
     }

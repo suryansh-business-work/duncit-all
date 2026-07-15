@@ -13,6 +13,8 @@ interface Props {
   attendeeIds: string[];
   hostIds: string[];
   totalSpots: number;
+  /** Past pods show "attended" instead of "going". */
+  expired?: boolean;
 }
 
 const MAX_PREVIEW = 8;
@@ -43,6 +45,7 @@ export default function PodAttendeesSection({
   attendeeIds,
   hostIds,
   totalSpots,
+  expired,
 }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const people = useMemo(
@@ -50,14 +53,12 @@ export default function PodAttendeesSection({
     [attendees, attendeeIds, hostIds]
   );
   const count = people.length;
-  const countPlural = count === 1 ? '' : 's';
+  const noun = expired ? 'attended' : 'going';
 
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
-        {totalSpots > 0
-          ? `${count} of ${totalSpots} spots filled`
-          : `${count} attendee${countPlural} so far`}
+        {totalSpots > 0 ? `${count} / ${totalSpots} ${noun}` : `${count} ${noun}`}
       </Typography>
       {count === 0 ? (
         <Typography variant="caption" color="text.secondary">

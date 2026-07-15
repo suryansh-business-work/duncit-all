@@ -2,6 +2,7 @@ import type { HomePod } from '@/hooks/useHomeFeed';
 import {
   formatMeetingPlatform,
   isPodActive,
+  isPodExpired,
   podDateLabel,
   podImageUrl,
   podModeLabel,
@@ -118,6 +119,13 @@ describe('pod-format', () => {
     expect(isPodActive(recentStart, futureEnd)).toBe(true);
     const pastEnd = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     expect(isPodActive(recentStart, pastEnd)).toBe(false);
+  });
+
+  it('marks a pod expired only once its start time has passed', () => {
+    expect(isPodExpired(null)).toBe(false);
+    expect(isPodExpired('not-a-date')).toBe(false);
+    expect(isPodExpired(new Date(Date.now() + 60 * 60 * 1000).toISOString())).toBe(false);
+    expect(isPodExpired(new Date(Date.now() - 60 * 60 * 1000).toISOString())).toBe(true);
   });
 
   it('formats the long schedule label with and without an end', () => {

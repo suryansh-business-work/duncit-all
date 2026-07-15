@@ -75,6 +75,7 @@ export function SearchScreen() {
         <Input
           ref={inputRef}
           testID="search-input"
+          aria-label="Search"
           flex={1}
           unstyled
           autoFocus

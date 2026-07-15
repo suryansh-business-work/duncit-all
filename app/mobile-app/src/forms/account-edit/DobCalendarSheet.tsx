@@ -118,6 +118,7 @@ export function DobCalendarSheet({
         <MaterialIcons name="search" size={16} color={muted} />
         <Input
           testID={`${testID}-year-search`}
+          aria-label="Type a year"
           flex={1}
           unstyled
           keyboardType="number-pad"

@@ -108,7 +108,6 @@ export default function ClubsTable({
       {
         field: 'category_id',
         headerName: 'Category',
-        sortable: false,
         minWidth: 140,
         cellRenderer: renderCategory,
         valueGetter: (c) => (c.category_id ? catName(c.category_id) : '—'),

@@ -29,6 +29,7 @@ const FAQ_SUBMISSION_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     question: 'question',
     email: 'email',
+    super_category_slug: 'super_category_slug',
     status: 'status',
     created_at: 'created_at',
   },

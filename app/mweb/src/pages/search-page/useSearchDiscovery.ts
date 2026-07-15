@@ -52,5 +52,24 @@ export function useSearchCategories() {
 
   const matchesCategory = useMemo(() => makeCategoryMatcher(all), [all]);
 
-  return { buttons, nameOf, matchesCategory };
+  return { all, buttons, nameOf, matchesCategory };
+}
+
+/** The CATEGORY-level chips that descend from `superId` (all of them when no
+ *  super is selected). Walks `parent_id` so a category under the super matches. */
+export function scopeCategoryButtons<
+  T extends { id: string; parent_id?: string | null },
+>(buttons: T[], all: T[], superId?: string | null): T[] {
+  if (!superId) return buttons;
+  const parentById = new Map(all.map((c) => [c.id, c.parent_id ?? null]));
+  const isUnder = (id: string): boolean => {
+    let current: string | null | undefined = id;
+    let guard = 0;
+    while (current && guard++ < 16) {
+      if (current === superId) return true;
+      current = parentById.get(current) ?? null;
+    }
+    return false;
+  };
+  return buttons.filter((c) => isUnder(c.id));
 }

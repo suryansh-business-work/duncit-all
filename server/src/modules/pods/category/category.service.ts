@@ -9,7 +9,6 @@ import { ClubModel } from '@modules/pods/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { FaqModel } from '@modules/support/faq/faq.model';
 import { FaqSubmissionModel } from '@modules/support/faq/faqSubmission.model';
-import { SliderModel } from '@modules/engagement/slider/slider.model';
 import { ActiveUserPingModel } from '@modules/platform/analytics/activeUser.model';
 
 const slugify = (s: string) =>
@@ -230,10 +229,9 @@ export const categoryService = {
       await FaqModel.deleteMany({ super_category_id: rootId });
     }
 
-    // 4. Slug-based references (sliders, FAQ submissions, active-user pings).
+    // 4. Slug-based references (FAQ submissions, active-user pings).
     const slug = doc!.slug;
     if (slug) {
-      await SliderModel.deleteMany({ super_category_slug: slug });
       await FaqSubmissionModel.deleteMany({ super_category_slug: slug });
       await ActiveUserPingModel.deleteMany({ super_category_slug: slug });
     }

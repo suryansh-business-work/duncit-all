@@ -84,7 +84,6 @@ export default function CouponsTable({
       {
         field: 'scope',
         headerName: 'Scope',
-        sortable: false,
         filter: { type: 'select', options: SCOPE_OPTIONS },
         minWidth: 140,
         cellRenderer: renderScope,

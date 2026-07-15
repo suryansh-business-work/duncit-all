@@ -41,6 +41,13 @@ describe('AttendeesSection', () => {
     expect(screen.getByText('0 going')).toBeOnTheScreen();
   });
 
+  it('shows "attended" instead of "going" for an expired pod', () => {
+    renderWithProviders(
+      <AttendeesSection people={[]} spots={0} expired onOpenProfile={jest.fn()} />,
+    );
+    expect(screen.getByText('0 attended')).toBeOnTheScreen();
+  });
+
   it('opens the dialog from the avatar group and forwards profile taps', () => {
     const onOpenProfile = jest.fn();
     renderWithProviders(

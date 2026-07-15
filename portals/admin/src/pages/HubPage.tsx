@@ -41,7 +41,7 @@ const CARDS: HubCard[] = [
   {
     key: 'catalog',
     title: 'Catalog',
-    description: 'Categories, locations and home sliders.',
+    description: 'Categories and locations.',
     to: '/categories',
     icon: 'catalog',
     accent: '#16a34a',

@@ -6,7 +6,7 @@ import { analyticsService } from '@modules/platform/analytics/analytics.service'
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-type Entity = 'CLUB' | 'POD' | 'SLIDER' | 'INVENTORY_PRODUCT';
+type Entity = 'CLUB' | 'POD' | 'INVENTORY_PRODUCT';
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 
 const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }> = {
@@ -47,18 +47,6 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
     example: '',
     notes:
       'If pod_type contains FREE, set pod_amount to 0 and place_charges to []. Otherwise pick a sensible price. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
-  },
-  SLIDER: {
-    fields: `{
-  "title": string,             // short marketing headline (3-6 words)
-  "description": string,       // 1-line subtext
-  "media_url": string,         // public image URL (https://images.unsplash.com/... or https://picsum.photos/seed/...)
-  "media_type": "IMAGE" | "VIDEO",
-  "link_url": string,          // realistic deep link, e.g. https://duncit.app/clubs/abc123
-  "sort_order": number         // 0-100
-}`,
-    example: '',
-    notes: 'Prefer media_type IMAGE unless prompt says video. media_url must be a working https URL.',
   },
   INVENTORY_PRODUCT: {
     fields: `{
@@ -178,14 +166,12 @@ export async function generateDummy(entity: Entity, prompt?: string | null): Pro
 // ---------------------------------------------------------------------------
 
 const IMAGE_FIELDS_BY_ENTITY: Record<Entity, { single: string[]; multiline: string[]; folder: string }> = {
-  SLIDER: { single: ['media_url'], multiline: [], folder: '/sliders' },
   CLUB: { single: [], multiline: ['feature_text', 'moments_text'], folder: '/clubs' },
   POD: { single: [], multiline: ['media_text'], folder: '/pods' },
   INVENTORY_PRODUCT: { single: [], multiline: [], folder: '/inventory' },
 };
 
 const TITLE_FIELD_BY_ENTITY: Record<Entity, string> = {
-  SLIDER: 'title',
   POD: 'pod_title',
   INVENTORY_PRODUCT: 'product_name',
   CLUB: 'club_name',

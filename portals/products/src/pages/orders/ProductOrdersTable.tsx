@@ -99,7 +99,6 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       {
         field: 'awb',
         headerName: 'AWB',
-        sortable: false,
         width: 140,
         valueGetter: (o) => o.shiprocket?.awb || '—',
       },
@@ -113,7 +112,6 @@ export default function ProductOrdersTable({ fetchRows, refetchRef, onView }: Re
       {
         field: 'buyer_email',
         headerName: 'Buyer email',
-        sortable: false,
         filter: { type: 'text' },
         hide: true,
         minWidth: 180,

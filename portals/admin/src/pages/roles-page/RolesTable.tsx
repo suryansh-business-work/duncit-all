@@ -97,7 +97,6 @@ export default function RolesTable({
       {
         field: 'description',
         headerName: 'Description',
-        sortable: false,
         flex: 1,
         minWidth: 200,
         valueGetter: (r) => r.description || '—',

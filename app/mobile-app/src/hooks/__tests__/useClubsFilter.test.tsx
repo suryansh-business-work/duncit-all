@@ -64,4 +64,21 @@ describe('useClubsFilter', () => {
     });
     expect(result.current.filtered).toHaveLength(0);
   });
+
+  it('scopes category options to the selected super and resets the chip on change', () => {
+    const scoped: HomeCategory[] = [
+      { id: 'cat1', name: 'Sports', slug: 'sports', level: 'CATEGORY', parent_id: 'superA' },
+      { id: 'cat2', name: 'Arts', slug: 'arts', level: 'CATEGORY', parent_id: 'superB' },
+    ] as never;
+    const { result, rerender } = renderHook(
+      ({ superId }: { superId: string }) => useClubsFilter(clubs, scoped, superId),
+      { initialProps: { superId: 'superA' } },
+    );
+    expect(result.current.categoryOptions).toEqual([['cat1', 'Sports']]);
+    act(() => result.current.setCategoryId('cat1'));
+    expect(result.current.categoryId).toBe('cat1');
+    rerender({ superId: 'superB' });
+    expect(result.current.categoryId).toBe('');
+    expect(result.current.categoryOptions).toEqual([['cat2', 'Arts']]);
+  });
 });

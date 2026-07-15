@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@duncit/breadcrumb": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/user-context": "workspace:*"

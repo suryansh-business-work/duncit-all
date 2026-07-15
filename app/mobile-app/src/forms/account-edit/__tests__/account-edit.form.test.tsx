@@ -108,11 +108,13 @@ describe('AccountEditForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('rejects non-digit phone numbers', async () => {
+  it('rejects an invalid phone number', async () => {
     setup();
     fireEvent.changeText(screen.getByTestId('field-phone_number'), 'abc123');
     await waitFor(() =>
-      expect(screen.getByTestId('phone_number-error')).toHaveTextContent('Digits only'),
+      expect(screen.getByTestId('phone_number-error')).toHaveTextContent(
+        'Enter a 10-digit phone number',
+      ),
     );
   });
 

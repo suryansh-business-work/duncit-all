@@ -58,10 +58,13 @@ function AttendeeBubble({ person, first }: Readonly<{ person: AttendeePerson; fi
 export function AttendeesSection({
   people,
   spots,
+  expired,
   onOpenProfile,
 }: Readonly<{
   people: AttendeePerson[];
   spots: number;
+  /** Past pods show "attended" instead of "going". */
+  expired?: boolean;
   onOpenProfile: (userId: string) => void;
 }>) {
   const [open, setOpen] = useState(false);
@@ -74,7 +77,7 @@ export function AttendeesSection({
     <YStack gap={8}>
       <Text fontSize={13.5} fontWeight="700" color="$color">
         {going}
-        {spots > 0 ? ` / ${spots}` : ''} going
+        {spots > 0 ? ` / ${spots}` : ''} {expired ? 'attended' : 'going'}
       </Text>
       {spots > 0 ? (
         <YStack height={8} borderRadius={4} backgroundColor="$background" overflow="hidden">

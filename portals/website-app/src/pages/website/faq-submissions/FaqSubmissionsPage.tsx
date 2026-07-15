@@ -79,7 +79,6 @@ export default function FaqSubmissionsPage() {
       {
         field: 'super_category_slug',
         headerName: 'Super Cat.',
-        sortable: false,
         filter: { type: 'text' },
         minWidth: 130,
         valueGetter: (row) => row.super_category_slug || '—',

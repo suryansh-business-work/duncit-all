@@ -16,8 +16,6 @@ import {
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import IdentitySection from './IdentitySection';
-import MascotSection from './MascotSection';
-import AnimationsSection from './AnimationsSection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
@@ -96,8 +94,8 @@ export default function BrandingPage() {
         <Box>
           <Typography variant="h5">Branding</Typography>
           <Typography variant="body2" color="text.secondary">
-            Identity, per-platform assets (favicon · logo · splash), mascot and animations — every
-            app reads these live, nothing is hard-coded.
+            Identity, per-platform assets (favicon · logo · splash) — every app reads these live,
+            nothing is hard-coded.
           </Typography>
         </Box>
       </Stack>
@@ -129,21 +127,10 @@ export default function BrandingPage() {
         ))}
 
         <BrandingAccordion
-          title="1D · Website Logos (marketing sites)"
+          title="Website Logos (marketing sites)"
           subtitle="Header logo, footer logo, favicon + app-store links for duncit.com and its subsites."
         >
           <WebsiteAssetsSection form={form} setForm={setForm} />
-        </BrandingAccordion>
-
-        <BrandingAccordion title="Mascot" subtitle="Name, story and artwork of the app mascot.">
-          <MascotSection form={form} setForm={setForm} />
-        </BrandingAccordion>
-
-        <BrandingAccordion
-          title="Animations"
-          subtitle="Lottie animations used across loaders and celebrations."
-        >
-          <AnimationsSection form={form} setForm={setForm} />
         </BrandingAccordion>
       </Stack>
 

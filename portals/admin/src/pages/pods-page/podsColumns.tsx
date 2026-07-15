@@ -117,7 +117,6 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     {
       field: 'club_id',
       headerName: 'Club',
-      sortable: false,
       minWidth: 140,
       valueGetter: (p) => clubName(p.club_id),
     },
@@ -132,7 +131,6 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     {
       field: 'pod_mode',
       headerName: 'Type',
-      sortable: false,
       filter: { type: 'select', options: POD_MODE_OPTIONS },
       minWidth: 210,
       cellRenderer: renderType,
@@ -141,7 +139,6 @@ export function buildPodsColumns(deps: Readonly<PodsColumnDeps>): DuncitColumn<P
     {
       field: 'pod_type',
       headerName: 'Pod Type',
-      sortable: false,
       filter: { type: 'select', options: POD_TYPE_OPTIONS },
       hide: true,
       minWidth: 150,

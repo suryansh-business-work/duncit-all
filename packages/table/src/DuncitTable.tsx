@@ -17,9 +17,13 @@ import { useTablePrefs } from './useTablePrefs';
 import { useTableQuery } from './useTableQuery';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
-const ROW_HEIGHT = { compact: 32, standard: 44 } as const;
 const HEADER_HEIGHT = { compact: 36, standard: 48 } as const;
 const LOADING_DIM_OPACITY = 0.55;
+
+// Rows auto-size to their content, so multi-line cells never clip. Density is the
+// per-cell vertical padding (auto-height measures it): compact = tight, standard =
+// roomy. `alignItems: center` keeps content vertically centred within the padding.
+const ROW_PAD_Y = { compact: 4, standard: 12 } as const;
 
 function escapeHtml(text: string): string {
   return text
@@ -66,7 +70,14 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   const { refetch, setSort } = table;
   const { sortBy, sortDir } = table.query;
 
-  const agTheme = useMemo(() => buildAgTheme(muiTheme), [muiTheme]);
+  const agTheme = useMemo(() => buildAgTheme(muiTheme, prefs.density), [muiTheme, prefs.density]);
+  const defaultColDef = useMemo(() => {
+    const padY = `${ROW_PAD_Y[prefs.density]}px`;
+    return {
+      autoHeight: true,
+      cellStyle: { display: 'flex', alignItems: 'center', paddingTop: padY, paddingBottom: padY },
+    };
+  }, [prefs.density]);
   const columnDefs = useMemo(
     () => buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir),
     [columns, prefs.hiddenOverrides, sortBy, sortDir],
@@ -156,10 +167,10 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             ref={gridRef}
             theme={agTheme}
             columnDefs={columnDefs}
+            defaultColDef={defaultColDef}
             rowData={table.rows}
             getRowId={agGetRowId}
             domLayout="autoHeight"
-            rowHeight={ROW_HEIGHT[prefs.density]}
             headerHeight={HEADER_HEIGHT[prefs.density]}
             suppressCellFocus
             overlayNoRowsTemplate={noRowsTemplate}

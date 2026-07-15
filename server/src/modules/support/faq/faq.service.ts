@@ -49,6 +49,7 @@ const FAQ_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['question', 'answer'],
   sortFields: {
     question: 'question',
+    super_category_id: 'super_category_id',
     sort_order: 'sort_order',
     is_active: 'is_active',
     partner_topic: 'partner_topic',

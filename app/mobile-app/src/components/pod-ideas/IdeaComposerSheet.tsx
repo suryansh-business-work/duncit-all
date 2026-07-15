@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -98,25 +99,31 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                 </XStack>
 
                 <YStack gap={10} paddingHorizontal={16} paddingBottom={16}>
-                  <Input
-                    testID="idea-title-input"
-                    value={title}
-                    onChangeText={(t) => setTitle(t.slice(0, 160))}
-                    placeholder="Title"
-                    placeholderTextColor="$muted"
-                    backgroundColor="$surface"
-                  />
-                  <Input
-                    testID="idea-description-input"
-                    value={description}
-                    onChangeText={(t) => setDescription(t.slice(0, 2000))}
-                    placeholder="Describe the vibe, format, location, audience…"
-                    placeholderTextColor="$muted"
-                    backgroundColor="$surface"
-                    multiline
-                    numberOfLines={5}
-                    minHeight={120}
-                  />
+                  <Field label="Title" gap={4}>
+                    <Input
+                      testID="idea-title-input"
+                      aria-label="Title"
+                      value={title}
+                      onChangeText={(t) => setTitle(t.slice(0, 160))}
+                      placeholder="Title"
+                      placeholderTextColor="$muted"
+                      backgroundColor="$surface"
+                    />
+                  </Field>
+                  <Field label="Description" gap={4}>
+                    <Input
+                      testID="idea-description-input"
+                      aria-label="Description"
+                      value={description}
+                      onChangeText={(t) => setDescription(t.slice(0, 2000))}
+                      placeholder="Describe the vibe, format, location, audience…"
+                      placeholderTextColor="$muted"
+                      backgroundColor="$surface"
+                      multiline
+                      numberOfLines={5}
+                      minHeight={120}
+                    />
+                  </Field>
                   {error ? (
                     <Text testID="idea-composer-error" color="$danger" fontSize={12.5}>
                       {error}

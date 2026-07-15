@@ -101,6 +101,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
             ) : null}
             {q.type === 'TEXT' && (
               <Input
+                aria-label={q.label}
                 testID={`q-${q.qid}`}
                 value={a.value}
                 onChangeText={(t) => answer.set(q.qid, { value: t })}
@@ -108,6 +109,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
             )}
             {q.type === 'TEXTAREA' && (
               <TextArea
+                aria-label={q.label}
                 testID={`q-${q.qid}`}
                 value={a.value}
                 onChangeText={(t) => answer.set(q.qid, { value: t })}

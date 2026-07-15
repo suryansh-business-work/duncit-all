@@ -39,6 +39,7 @@ export function ClubsSearchFilter({
         <MaterialIcons name="search" size={20} color={muted} />
         <Input
           testID="clubs-search-input"
+          aria-label="Search clubs"
           flex={1}
           unstyled
           value={query}

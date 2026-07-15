@@ -59,6 +59,7 @@ const ENV_ENTRY_TABLE_CONFIG: TableEntityConfig = {
     is_default: 'is_default',
     is_active: 'is_active',
     last_tested_at: 'last_tested_at',
+    last_test_ok: 'last_test_ok',
     last_used_at: 'last_used_at',
     created_at: 'created_at',
     updated_at: 'updated_at',

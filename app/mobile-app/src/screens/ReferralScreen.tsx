@@ -114,6 +114,7 @@ function ApplyCard({
       <XStack gap={8}>
         <Input
           testID="referral-code-input"
+          aria-label="Referral code"
           flex={1}
           size="$4"
           backgroundColor="$background"

@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
+import { Field } from '@/components/Field';
 import { PodPicker } from '@/components/support-live';
 import { StackScreen } from '@/components/StackScreen';
 import { useBouncer, type ActiveSos } from '@/hooks/useBouncer';
@@ -130,15 +131,19 @@ export function SosScreen() {
                 </Text>
               </YStack>
             </XStack>
-            <TextArea
-              testID="sos-message"
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Quick note (optional)"
-              maxLength={500}
-              backgroundColor="$surface"
-              borderColor="$borderColor"
-            />
+            <Field label="Message">
+              <TextArea
+                testID="sos-message"
+                aria-label="Message"
+                value={message}
+                onChangeText={setMessage}
+                placeholder="Quick note (optional)"
+                placeholderTextColor="$muted"
+                maxLength={500}
+                backgroundColor="$surface"
+                borderColor="$borderColor"
+              />
+            </Field>
             {error ? (
               <Text testID="sos-error" fontSize={13} color="$danger">
                 {error}

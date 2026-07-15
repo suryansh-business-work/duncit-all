@@ -3,6 +3,7 @@ import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostDeletePodDocument, HostPodDeleteImpactDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -157,18 +158,21 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                       </XStack>
                     );
                   })}
-                  <Input
-                    testID="pod-delete-note"
-                    value={note}
-                    onChangeText={setNote}
-                    placeholder="Note (shared with attendees)"
-                    placeholderTextColor="$muted"
-                    multiline
-                    size="$4"
-                    backgroundColor="$surface"
-                    color="$color"
-                    borderColor="$borderColor"
-                  />
+                  <Field label="Note for attendees">
+                    <Input
+                      testID="pod-delete-note"
+                      value={note}
+                      onChangeText={setNote}
+                      placeholder="Note (shared with attendees)"
+                      placeholderTextColor="$muted"
+                      aria-label="Note for attendees"
+                      multiline
+                      size="$4"
+                      backgroundColor="$surface"
+                      color="$color"
+                      borderColor="$borderColor"
+                    />
+                  </Field>
                   {error ? (
                     <Text testID="pod-delete-error" fontSize={12.5} color="$danger">
                       {error}

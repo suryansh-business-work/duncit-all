@@ -95,7 +95,6 @@ export const appConfig: AppConfig = {
       children: [
         { label: 'Categories', to: '/categories', icon: 'accountTree' },
         { label: 'Locations', to: '/locations', icon: 'location' },
-        { label: 'Sliders', to: '/sliders', icon: 'image' },
       ],
     },
     {
@@ -135,7 +134,6 @@ export const appConfig: AppConfig = {
     { label: 'Referrals', to: '/referrals', section: 'Marketing', keywords: ['invite', 'growth'] },
     { label: 'Categories', to: '/categories', section: 'Catalog' },
     { label: 'Locations', to: '/locations', section: 'Catalog' },
-    { label: 'Sliders', to: '/sliders', section: 'Catalog', keywords: ['carousel', 'banner', 'promo'] },
     { label: 'FAQs', to: '/faqs', section: 'Engagement' },
     { label: 'Partner FAQs', to: '/partners/faqs', section: 'Engagement', keywords: ['partner', 'help'] },
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },

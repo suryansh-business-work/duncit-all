@@ -8,6 +8,7 @@ jest.mock('@/hooks/useSupport', () => ({ useTickets: jest.fn() }));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
+  useFocusEffect: (cb: () => void) => cb(),
 }));
 
 const mockedTickets = useTickets as jest.Mock;

@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
@@ -19,6 +20,7 @@ import ExplorePodOverlay from './ExplorePodOverlay';
 import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
+import { isPodExpired } from '../../utils/podStatus';
 
 interface Props {
   pod: any;
@@ -52,6 +54,11 @@ export default function ExplorePodCard({
   const navigate = useNavigate();
   const { format } = usePricing();
   const cover = club?.club_feature_images_and_videos?.[0]?.url ?? null;
+  // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
+  const expired = isPodExpired(pod.pod_date_time);
+  const ctaSubtitle = pod.pod_type?.includes('FREE')
+    ? 'Free spot'
+    : `${format(pod.pod_amount)} · Confirm with UPI`;
   const [liked, setLiked] = useState<boolean>(!!pod.liked_by_me);
   const [likeCount, setLikeCount] = useState<number>(pod.like_count ?? 0);
   const [commentCount, setCommentCount] = useState<number>(pod.comment_count ?? 0);
@@ -130,10 +137,10 @@ export default function ExplorePodCard({
         actions={[
           {
             key: 'join',
-            icon: <HowToRegIcon />,
-            label: `${pod.pod_attendees?.length ?? 0}${spotsSuffix}`,
+            icon: expired ? <InfoOutlinedIcon /> : <HowToRegIcon />,
+            label: expired ? 'Expired' : `${pod.pod_attendees?.length ?? 0}${spotsSuffix}`,
             onClick: openPod,
-            tooltip: 'Join',
+            tooltip: expired ? 'This pod is expired.' : 'Join',
           },
           {
             key: 'like',
@@ -179,25 +186,27 @@ export default function ExplorePodCard({
         }}
       >
         <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
-          <FlashOnIcon sx={{ fontSize: 19 }} />
+          {expired ? <InfoOutlinedIcon sx={{ fontSize: 19 }} /> : <FlashOnIcon sx={{ fontSize: 19 }} />}
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
-            Join in 2 taps
+            {expired ? 'This pod is expired' : 'Join in 2 taps'}
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.82 }} noWrap>
-            {pod.pod_type?.includes('FREE') ? 'Free spot' : `${format(pod.pod_amount)} · Confirm with UPI`}
+            {expired ? 'You can still view the pod details.' : ctaSubtitle}
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          endIcon={<ArrowForwardIcon />}
-          onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
-          sx={{ minWidth: 48, borderRadius: 2.5, px: 1.2 }}
-          aria-label="Open pod details"
-        >
-          Go
-        </Button>
+        {!expired && (
+          <Button
+            variant="contained"
+            endIcon={<ArrowForwardIcon />}
+            onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
+            sx={{ minWidth: 48, borderRadius: 2.5, px: 1.2 }}
+            aria-label="Open pod details"
+          >
+            Go
+          </Button>
+        )}
       </Stack>
 
       <PodCommentsSheet

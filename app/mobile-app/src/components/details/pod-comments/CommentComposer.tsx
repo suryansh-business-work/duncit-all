@@ -55,6 +55,7 @@ export function CommentComposer({
       )}
       <Input
         testID="pod-comment-input"
+        aria-label="Comment"
         flex={1}
         value={value}
         onChangeText={onChange}

@@ -1,10 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
 import type { TextInputProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Input, XStack } from 'tamagui';
 
-import { Reveal } from '@/animations/Reveal';
+import { Field } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 /** The RN TextInput props the auth forms pass through (Tamagui's <Input> styles
@@ -32,10 +32,11 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
 }
 
 /**
- * Themed, react-hook-form-bound text input built on Tamagui's <Input>. Light/dark
- * surfaces + error states resolve from the shared theme tokens. Secure fields get
- * a built-in show/hide eye toggle, and the placeholder colour is pinned to the
- * theme's muted token so it stays legible in dark mode.
+ * Themed, react-hook-form-bound text input built on Tamagui's <Input>. The
+ * shared <Field> renders the label-on-top + helper/error line, so this field
+ * looks identical to every other labelled input. Secure fields get a built-in
+ * show/hide eye toggle, and the placeholder colour is pinned to the theme's
+ * muted token so it stays legible in dark mode.
  */
 export function FormTextField<T extends FieldValues>({
   control,
@@ -51,28 +52,13 @@ export function FormTextField<T extends FieldValues>({
   const hasError = !!fieldState.error;
   const isSecure = !!secureTextEntry;
 
-  let helper: ReactNode = null;
-  if (hasError) {
-    helper = (
-      <Reveal>
-        <Text fontSize={12} color="$danger" testID={`${name}-error`}>
-          {fieldState.error?.message}
-        </Text>
-      </Reveal>
-    );
-  } else if (hint) {
-    helper = (
-      <Text fontSize={12} color="$muted" testID={`${name}-hint`}>
-        {hint}
-      </Text>
-    );
-  }
-
   return (
-    <YStack gap={6}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {label}
-      </Text>
+    <Field
+      label={label}
+      error={hasError ? fieldState.error?.message : undefined}
+      hint={hint}
+      testID={name}
+    >
       <XStack position="relative" alignItems="center">
         <Input
           flex={1}
@@ -115,7 +101,6 @@ export function FormTextField<T extends FieldValues>({
           </XStack>
         ) : null}
       </XStack>
-      {helper}
-    </YStack>
+    </Field>
   );
 }

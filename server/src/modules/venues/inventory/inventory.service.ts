@@ -396,6 +396,7 @@ const PRODUCT_LISTING_REQUEST_TABLE_CONFIG: TableEntityConfig = {
     inventory_count: 'inventory_count',
     unit_cost: 'unit_cost',
     commission_pct: 'commission_pct',
+    delivery_target: 'delivery_target',
     created_at: 'created_at',
   },
   filterFields: {
@@ -415,6 +416,8 @@ const MY_PRODUCT_LISTING_TABLE_CONFIG: TableEntityConfig = {
     selling_price: 'selling_price',
     unit_cost: 'unit_cost',
     inventory_count: 'inventory_count',
+    listing_review_status: 'listing_review_status',
+    delivery_target: 'delivery_target',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },

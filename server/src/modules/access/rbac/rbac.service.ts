@@ -22,6 +22,7 @@ const ROLE_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     key: 'key',
     name: 'name',
+    description: 'description',
     is_system: 'is_system',
     created_at: 'created_at',
   },

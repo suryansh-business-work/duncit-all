@@ -195,6 +195,7 @@ function leadTableConfig(
       next_follow_up_date: 'next_follow_up_date',
       created_at: 'created_at',
       updated_at: 'updated_at',
+      super_category_id: 'super_category_id',
       ...(extras.sortFields ?? {}),
     },
     filterFields: {

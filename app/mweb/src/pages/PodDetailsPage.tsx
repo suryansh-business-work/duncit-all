@@ -14,6 +14,7 @@ import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import PodHero from './pod-details-page/PodHero';
 import PodOverview from './pod-details-page/PodOverview';
 import PodCommercePreview from './pod-details-page/PodCommercePreview';
+import { isPodExpired } from '../utils/podStatus';
 import StickyPodActionPanel from './pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
@@ -149,7 +150,7 @@ export default function PodDetailsPage() {
           priceFormat={priceFormat}
           selectedProducts={productSelection.selectedProducts}
           onSelectionChange={productSelection.setSelectedProducts}
-          viewOnly={!!data?.podMembershipState?.is_member}
+          viewOnly={!!data?.podMembershipState?.is_member || isPodExpired(pod.pod_date_time)}
         />
       )}
 

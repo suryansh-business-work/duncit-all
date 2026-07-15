@@ -2,8 +2,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Drawer } from '@mui/material';
 import { tokens } from '@duncit/theme';
+import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import type { AppNavItem, SearchItem } from '../types';
-import { AppBreadcrumbs } from './AppBreadcrumbs';
 import { AppHeader } from './AppHeader';
 import { AppSidebar } from './AppSidebar';
 import type { ShellUser } from './user-display';
@@ -125,10 +125,12 @@ export function AppShell({
           onLogout={onLogout}
           onOpenMobileNav={() => setMobileOpen(true)}
         />
-        <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
-        <Box component="main" id={MAIN_ID} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 } }}>
-          {children}
-        </Box>
+        <BreadcrumbProvider>
+          <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
+          <Box component="main" id={MAIN_ID} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 } }}>
+            {children}
+          </Box>
+        </BreadcrumbProvider>
       </Box>
     </Box>
   );

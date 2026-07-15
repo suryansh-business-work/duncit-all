@@ -4,6 +4,7 @@ export { default as UserDataNotLoadedDialog } from './UserDataNotLoadedDialog';
 export type { UserDataNotLoadedDialogProps } from './UserDataNotLoadedDialog';
 export type { DuncitUser } from './types';
 export { clearAllStorages, readCachedUser, writeCachedUser } from './storage';
+export { AUTH_CHANGED_EVENT, emitAuthChanged } from './auth-events';
 export { LoginScreen, LoginForm, loginSchema, glass, loginInitialValues } from './login-screen';
 export type { LoginFormValues, LoginScreenConfig, LoginScreenProps } from './login-screen';
 export { PortalModeGate, MaintenanceScreen, UnderDevelopmentScreen } from './portal-mode';

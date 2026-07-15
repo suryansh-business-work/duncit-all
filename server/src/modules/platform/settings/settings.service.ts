@@ -15,12 +15,18 @@ import {
   DEFAULT_REOPEN_ZONE,
 } from "@modules/support/reopenWindow";
 
+/** Signup birth-year bound defaults when the admin hasn't set explicit values. */
+const DEFAULT_MIN_BIRTH_YEAR = 1940;
+const DEFAULT_MAX_BIRTH_YEAR = 2012;
+
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
   jwt_no_expiry: true,
   date_format: d?.date_format ?? "dd MMM yyyy",
   time_format: d?.time_format ?? "hh:mm a",
   time_zone: d?.time_zone ?? DEFAULT_REOPEN_ZONE,
+  min_birth_year: d?.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
+  max_birth_year: d?.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -44,6 +50,7 @@ const FEATURE_FLAG_TABLE_CONFIG: TableEntityConfig = {
   sortFields: {
     key: "key",
     name: "name",
+    description: "description",
     enabled: "enabled",
     is_system: "is_system",
     created_at: "created_at",
@@ -68,15 +75,6 @@ const BRANDING_FIELDS = [
   "primary_color",
   "support_email",
   "support_phone",
-  "mascot_name",
-  "mascot_description_html",
-  "mascot_image_url",
-  "mascot_lottie_url",
-  "mascot_on_chair_lottie_url",
-  "mascot_winner_lottie_url",
-  "welcome_lottie_url",
-  "app_loader_lottie_url",
-  "confetti_lottie_url",
   "mweb_favicon_url",
   "mweb_logo_url",
   "mweb_splash_url",
@@ -106,15 +104,6 @@ const brandingToPub = (doc: any) => ({
   primary_color: doc.primary_color ?? "#1976d2",
   support_email: doc.support_email ?? "",
   support_phone: doc.support_phone ?? "",
-  mascot_name: doc.mascot_name ?? "Duncit",
-  mascot_description_html: doc.mascot_description_html ?? "",
-  mascot_image_url: doc.mascot_image_url ?? "",
-  mascot_lottie_url: doc.mascot_lottie_url ?? "",
-  mascot_on_chair_lottie_url: doc.mascot_on_chair_lottie_url ?? "",
-  mascot_winner_lottie_url: doc.mascot_winner_lottie_url ?? "",
-  welcome_lottie_url: doc.welcome_lottie_url ?? "",
-  app_loader_lottie_url: doc.app_loader_lottie_url ?? "",
-  confetti_lottie_url: doc.confetti_lottie_url ?? "",
   mweb_favicon_url: doc.mweb_favicon_url ?? "",
   mweb_logo_url: doc.mweb_logo_url ?? "",
   mweb_splash_url: doc.mweb_splash_url ?? "",
@@ -206,6 +195,8 @@ export const settingsService = {
       date_format: doc.date_format ?? "dd MMM yyyy",
       time_format: doc.time_format ?? "hh:mm a",
       time_zone: doc.time_zone ?? DEFAULT_REOPEN_ZONE,
+      min_birth_year: doc.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
+      max_birth_year: doc.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
     };
   },
 
@@ -232,6 +223,8 @@ export const settingsService = {
     date_format?: string;
     time_format?: string;
     time_zone?: string;
+    min_birth_year?: number;
+    max_birth_year?: number;
   }) {
     const update: any = {};
     if (input.jwt_no_expiry !== undefined)
@@ -241,6 +234,10 @@ export const settingsService = {
     if (input.date_format !== undefined) update.date_format = input.date_format;
     if (input.time_format !== undefined) update.time_format = input.time_format;
     if (input.time_zone !== undefined) update.time_zone = input.time_zone;
+    if (input.min_birth_year !== undefined)
+      update.min_birth_year = input.min_birth_year;
+    if (input.max_birth_year !== undefined)
+      update.max_birth_year = input.max_birth_year;
     const doc = await AppSettingsModel.findOneAndUpdate(
       { singleton_key: "app" },
       { $set: update },

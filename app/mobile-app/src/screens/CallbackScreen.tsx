@@ -3,6 +3,7 @@ import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
 import { StackScreen } from '@/components/StackScreen';
 import { SupportAlert } from '@/components/support/SupportAlert';
 import { CallbackHistory } from '@/components/support/CallbackHistory';
@@ -119,15 +120,19 @@ export function CallbackScreen() {
           <Text fontSize={13} color="$muted">
             We will call you back on your registered phone number.
           </Text>
-          <TextArea
-            testID="callback-reason"
-            value={reason}
-            onChangeText={setReason}
-            placeholder="What's it about? (optional)"
-            maxLength={500}
-            backgroundColor="$background"
-            borderColor="$borderColor"
-          />
+          <Field label="Reason">
+            <TextArea
+              testID="callback-reason"
+              aria-label="Reason"
+              value={reason}
+              onChangeText={setReason}
+              placeholder="What's it about? (optional)"
+              placeholderTextColor="$muted"
+              maxLength={500}
+              backgroundColor="$background"
+              borderColor="$borderColor"
+            />
+          </Field>
           {error ? (
             <SupportAlert
               testID="callback-error"

@@ -93,7 +93,6 @@ export default function ChallengesTable({
       {
         field: 'super_category_id',
         headerName: 'Super category',
-        sortable: false,
         minWidth: 150,
         filter: { type: 'select', options: superOptions },
         valueGetter: (c) => dash(c.super_category_name),
@@ -101,7 +100,6 @@ export default function ChallengesTable({
       {
         field: 'category_id',
         headerName: 'Category',
-        sortable: false,
         minWidth: 150,
         filter: { type: 'select', options: categoryOptions },
         valueGetter: (c) => dash(c.category_name),
@@ -109,7 +107,6 @@ export default function ChallengesTable({
       {
         field: 'sub_category_id',
         headerName: 'Sub-category',
-        sortable: false,
         minWidth: 150,
         filter: { type: 'select', options: subOptions },
         valueGetter: (c) => dash(c.sub_category_name),

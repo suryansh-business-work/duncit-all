@@ -119,7 +119,6 @@ export default function PodPlansTable({
       {
         field: 'is_coming_soon',
         headerName: 'Coming soon',
-        sortable: false,
         filter: { type: 'boolean' },
         hide: true,
         width: 130,

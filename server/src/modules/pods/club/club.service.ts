@@ -65,6 +65,7 @@ const CLUB_TABLE_CONFIG: TableEntityConfig = {
     updated_at: 'updated_at',
     is_active: 'is_active',
     is_verified: 'is_verified',
+    category_id: 'category_id',
   },
   filterFields: {
     is_active: { type: 'boolean' },

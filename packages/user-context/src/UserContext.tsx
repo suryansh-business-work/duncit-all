@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { clearAllStorages, readCachedUser, writeCachedUser, DEFAULT_STORAGE_KEY } from './storage';
+import { AUTH_CHANGED_EVENT } from './auth-events';
 import UserDataNotLoadedDialog from './UserDataNotLoadedDialog';
 import type { DuncitUser } from './types';
 
@@ -160,12 +161,22 @@ export function UserProvider({
     }
   }, []);
 
-  // On mount and whenever the auth state flips on, load fresh user data.
-  // Refresh after a focus event so a tab left open overnight reloads `me`
-  // when the user returns — keeps roles / profile_photo current.
+  // Load fresh user data on mount (when already authed) AND whenever the auth
+  // token flips in this tab. A portal logs in with a client-side navigation, so
+  // without this the provider — mounted once above the router — would keep the
+  // header/sidebar empty until a manual refresh. Also refresh after the tab
+  // becomes visible again so a tab left open overnight reloads `me`.
   useEffect(() => {
-    if (!isAuthed()) return;
-    refetch().catch(() => undefined);
+    // Initial load: only when this mount is already authed (refresh / return).
+    if (isAuthedRef.current()) refetch().catch(() => undefined);
+
+    // Auth flips in THIS tab (login sets / logout clears the token). `refetch`
+    // itself short-circuits to clear the user when the new state is logged-out.
+    const onAuthChanged = () => {
+      refetch().catch(() => undefined);
+    };
+    globalThis.window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+
     // Refresh `me` when the user RETURNS to a tab that's been hidden for a while
     // (e.g. left open overnight) so roles / profile stay current. Uses
     // visibilitychange — NOT window 'focus', which mobile taps fire constantly —
@@ -178,7 +189,11 @@ export function UserProvider({
       refetch().catch(() => undefined);
     };
     document.addEventListener('visibilitychange', onVisible);
-    return () => document.removeEventListener('visibilitychange', onVisible);
+
+    return () => {
+      globalThis.window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

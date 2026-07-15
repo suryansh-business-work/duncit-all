@@ -5,6 +5,7 @@ import { Alert, Button } from '@mui/material';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
 import { useColorMode, useBranding } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
+import { setToken } from '../lib/session';
 import { parseApiError } from '../utils/parseApiError';
 import { getSafeRedirectPath, redirectPathFromLocation, type RedirectLocation } from '../utils/redirect';
 import { urlConfigs } from '../config/url-configs';
@@ -42,7 +43,7 @@ export default function LoginPage() {
       const res = await loginMutation({ variables: { input: { ...values, portal_key: appConfig.key } } });
       const token = res.data?.login?.token;
       if (!token) throw new Error('Login failed. Please try again.');
-      localStorage.setItem('token', token);
+      setToken(token);
       navigate(redirectAfterLogin(), { replace: true });
     } catch (err) {
       setError(parseApiError(err));

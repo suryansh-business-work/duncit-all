@@ -59,7 +59,7 @@ const pod = (id: string) =>
     pod_id: `p-${id}`,
     pod_title: `Pod ${id}`,
     pod_description: 'A fun pod',
-    pod_date_time: '2026-06-10T18:30:00.000Z',
+    pod_date_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     pod_type: 'NATIVE_FREE',
     pod_amount: 0,
     pod_attendees: ['u1'],
@@ -107,6 +107,29 @@ describe('ExplorePodCard', () => {
     expect(onComment).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-go-p-1'));
     expect(onOpen).toHaveBeenCalled();
+  });
+
+  it('shows the expired notice and hides the Join CTA for an expired pod', () => {
+    const expiredPod = {
+      ...(pod('1') as Record<string, unknown>),
+      pod_date_time: '2020-01-01T00:00:00.000Z',
+    } as never;
+    renderWithProviders(
+      <ExplorePodCard
+        pod={expiredPod}
+        width={390}
+        height={700}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 3 }}
+        commentCount={2}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('This pod is expired')).toBeOnTheScreen();
+    expect(screen.queryByTestId('reel-go-p-1')).toBeNull();
   });
 
   it('renders the liked/saved/pending states and an unlimited-spots join label', () => {

@@ -152,7 +152,6 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       field: 'super_category_id',
       headerName: 'Super Category',
       hide: true,
-      sortable: false,
       minWidth: 150,
       filter: { type: 'select', options: options.superCategoryOptions },
       valueGetter: superCategoryName,

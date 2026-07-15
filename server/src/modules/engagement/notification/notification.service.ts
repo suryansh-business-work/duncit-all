@@ -49,7 +49,11 @@ const NOTIFICATION_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['title', 'body'],
   sortFields: {
     title: 'title',
+    body: 'body',
     scope: 'scope',
+    location_id: 'location_id',
+    zone_name: 'zone_name',
+    silent: 'silent',
     delivered_count: 'delivered_count',
     failed_count: 'failed_count',
     created_at: 'created_at',

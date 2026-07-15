@@ -6,14 +6,6 @@ export const BRANDING_FIELDS = `
   primary_color
   support_email
   support_phone
-  mascot_name
-  mascot_description_html
-  mascot_lottie_url
-  mascot_on_chair_lottie_url
-  mascot_winner_lottie_url
-  welcome_lottie_url
-  app_loader_lottie_url
-  confetti_lottie_url
   mweb_favicon_url
   mweb_logo_url
   mweb_splash_url
@@ -66,14 +58,6 @@ export interface BrandingFormState {
   primary_color: string;
   support_email: string;
   support_phone: string;
-  mascot_name: string;
-  mascot_description_html: string;
-  mascot_lottie_url: string;
-  mascot_on_chair_lottie_url: string;
-  mascot_winner_lottie_url: string;
-  welcome_lottie_url: string;
-  app_loader_lottie_url: string;
-  confetti_lottie_url: string;
   mweb_favicon_url: string;
   mweb_logo_url: string;
   mweb_splash_url: string;
@@ -103,14 +87,6 @@ export const emptyBrandingForm: BrandingFormState = {
   primary_color: '#1976d2',
   support_email: '',
   support_phone: '',
-  mascot_name: 'Dunko',
-  mascot_description_html: '',
-  mascot_lottie_url: '',
-  mascot_on_chair_lottie_url: '',
-  mascot_winner_lottie_url: '',
-  welcome_lottie_url: '',
-  app_loader_lottie_url: '',
-  confetti_lottie_url: '',
   mweb_favicon_url: '',
   mweb_logo_url: '',
   mweb_splash_url: '',

@@ -4,7 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { ExploreClub, ExplorePod, LikeState } from '@/stores/explore.store';
-import { podPriceLabel } from '@/utils/pod-format';
+import { isPodExpired, podPriceLabel } from '@/utils/pod-format';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
@@ -56,10 +56,11 @@ export function ExplorePodCard({
   const attendees = pod.pod_attendees.length;
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
   const joinLabel = `${attendees}${spotsSuffix}`;
+  // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
+  const expired = isPodExpired(pod.pod_date_time);
   // Free pods need no payment, so the "Confirm with UPI" copy is hidden for them.
-  const ctaSubtitle = pod.pod_type.includes('FREE')
-    ? 'Free spot'
-    : `${podPriceLabel(pod)} · Confirm with UPI`;
+  const paidSubtitle = `${podPriceLabel(pod)} · Confirm with UPI`;
+  const ctaSubtitle = pod.pod_type.includes('FREE') ? 'Free spot' : paidSubtitle;
 
   const share = async () => {
     try {
@@ -95,8 +96,8 @@ export function ExplorePodCard({
             {
               key: 'join',
               testID: `reel-join-${pod.pod_id}`,
-              icon: 'how-to-reg',
-              label: joinLabel,
+              icon: expired ? 'info-outline' : 'how-to-reg',
+              label: expired ? 'Expired' : joinLabel,
               onPress: onOpen,
             },
             {
@@ -163,34 +164,36 @@ export function ExplorePodCard({
           alignItems="center"
           justifyContent="center"
         >
-          <MaterialIcons name="bolt" size={20} color="#ffffff" />
+          <MaterialIcons name={expired ? 'info-outline' : 'bolt'} size={20} color="#ffffff" />
         </YStack>
         <YStack flex={1}>
           <Text color="#ffffff" fontSize={14} fontWeight="900" numberOfLines={1}>
-            Join in 2 taps
+            {expired ? 'This pod is expired' : 'Join in 2 taps'}
           </Text>
           <Text color="rgba(255,255,255,0.82)" fontSize={11.5} numberOfLines={1}>
-            {ctaSubtitle}
+            {expired ? 'You can still view the pod details.' : ctaSubtitle}
           </Text>
         </YStack>
-        <XStack
-          testID={`reel-go-${pod.pod_id}`}
-          role="button"
-          aria-label="Open pod"
-          onPress={onOpen}
-          alignItems="center"
-          gap={4}
-          backgroundColor="$primary"
-          borderRadius={12}
-          paddingHorizontal={14}
-          paddingVertical={9}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <Text color="$onPrimary" fontSize={13} fontWeight="900">
-            Go
-          </Text>
-          <MaterialIcons name="arrow-forward" size={16} color="#ffffff" />
-        </XStack>
+        {expired ? null : (
+          <XStack
+            testID={`reel-go-${pod.pod_id}`}
+            role="button"
+            aria-label="Open pod"
+            onPress={onOpen}
+            alignItems="center"
+            gap={4}
+            backgroundColor="$primary"
+            borderRadius={12}
+            paddingHorizontal={14}
+            paddingVertical={9}
+            pressStyle={{ opacity: 0.85 }}
+          >
+            <Text color="$onPrimary" fontSize={13} fontWeight="900">
+              Go
+            </Text>
+            <MaterialIcons name="arrow-forward" size={16} color="#ffffff" />
+          </XStack>
+        )}
       </XStack>
     </YStack>
   );

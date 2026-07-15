@@ -41,6 +41,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../../packages/media-picker
+      '@duncit/regex':
+        specifier: workspace:*
+        version: link:../../packages/regex
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
@@ -197,6 +200,33 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/breadcrumb:
+    devDependencies:
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -430,8 +460,13 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
 
+  packages/regex: {}
+
   packages/shell:
     dependencies:
+      '@duncit/breadcrumb':
+        specifier: workspace:*
+        version: link:../breadcrumb
       '@duncit/logs':
         specifier: workspace:*
         version: link:../logs

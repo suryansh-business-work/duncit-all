@@ -1,13 +1,17 @@
 import { z } from 'zod';
+import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
 
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 
 /**
  * Edit-profile contract — mirrors mWeb's account-edit schema so both apps
  * validate identical rules (name required, optional contact/location fields,
- * digit-only phone numbers).
+ * a proper 10-digit phone number). Regex patterns are the shared @duncit/regex.
  */
-const phone = z.string().trim().regex(/^\d*$/, 'Digits only').max(15, 'Too long');
+const phone = z
+  .string()
+  .trim()
+  .refine((value) => value === '' || PHONE_NUMBER.test(value), 'Enter a 10-digit phone number');
 
 const extension = z
   .string()
@@ -51,7 +55,10 @@ export const accountEditSchema = z.object({
   address_landmark: z.string().trim().max(160, 'Too long'),
   address_city: z.string().trim().max(120, 'Too long'),
   address_state: z.string().trim().max(120, 'Too long'),
-  address_pincode: z.string().trim().max(10, 'Too long'),
+  address_pincode: z
+    .string()
+    .trim()
+    .refine((value) => value === '' || PINCODE.test(value), 'Enter a valid 6-digit pincode'),
   address_country: z.string().trim().max(80, 'Too long'),
 });
 

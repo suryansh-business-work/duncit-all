@@ -1,3 +1,5 @@
+import { emitAuthChanged } from '@duncit/user-context';
+
 /** SUPER_ADMIN can access every Duncit console regardless of app role. */
 export const SUPER_ROLE = 'SUPER_ADMIN';
 
@@ -27,6 +29,9 @@ export function createSession(tokenKey: string, requiredRoles: string[] = [], fu
     },
     setToken(token: string) {
       localStorage.setItem(tokenKey, token);
+      // Tell the UserProvider (this tab) to load `me` so the header/sidebar fill
+      // in right after a client-side login — no manual refresh needed.
+      emitAuthChanged();
     },
     clearToken() {
       try {
@@ -34,6 +39,7 @@ export function createSession(tokenKey: string, requiredRoles: string[] = [], fu
       } catch {
         /* storage unavailable — nothing to clear */
       }
+      emitAuthChanged();
     },
     hasAppAccess(roles?: readonly string[] | null) {
       if (!roles || roles.length === 0) return false;

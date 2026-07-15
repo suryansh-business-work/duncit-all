@@ -107,7 +107,6 @@ export default function NotificationsTable({
       {
         field: 'body',
         headerName: 'Body',
-        sortable: false,
         flex: 1,
         minWidth: 200,
         cellRenderer: renderBody,
@@ -147,7 +146,6 @@ export default function NotificationsTable({
       {
         field: 'location_id',
         headerName: 'Location',
-        sortable: false,
         hide: true,
         minWidth: 150,
         filter: { type: 'select', options: locationOptions },
@@ -156,7 +154,6 @@ export default function NotificationsTable({
       {
         field: 'zone_name',
         headerName: 'Zone',
-        sortable: false,
         hide: true,
         minWidth: 130,
         filter: { type: 'text' },
@@ -165,7 +162,6 @@ export default function NotificationsTable({
       {
         field: 'silent',
         headerName: 'Silent',
-        sortable: false,
         hide: true,
         width: 100,
         filter: { type: 'boolean' },

@@ -112,7 +112,6 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     {
       field: 'phone_number',
       headerName: 'Contact',
-      sortable: false,
       minWidth: 180,
       cellRenderer: renderContact,
       valueGetter: (u) => u.phone_number ?? '',
@@ -137,7 +136,6 @@ export function getUsersColumns({ formatDate, formatDateTime, roleOptions }: Rea
     {
       field: 'last_login_provider',
       headerName: 'Login Method',
-      sortable: false,
       filter: { type: 'select', options: PROVIDER_OPTIONS },
       width: 170,
       cellRenderer: renderLogin,

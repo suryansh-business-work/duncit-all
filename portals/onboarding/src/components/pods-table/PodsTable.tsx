@@ -121,7 +121,6 @@ export default function PodsTable({
     cols.push({
       field: 'pod_mode',
       headerName: 'Mode',
-      sortable: false,
       width: 120,
       filter: { type: 'select', options: MODE_OPTIONS },
       cellRenderer: renderMode,
@@ -131,7 +130,6 @@ export default function PodsTable({
       cols.push({
         field: 'venue_approval_status',
         headerName: 'Venue approval',
-        sortable: false,
         width: 150,
         filter: { type: 'select', options: APPROVAL_OPTIONS },
         cellRenderer: renderApproval,

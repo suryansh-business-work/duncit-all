@@ -105,6 +105,7 @@ export function MeetingPhase({
         </Text>
         <Input
           testID="meeting-name"
+          aria-label="Your name"
           value={name}
           onChangeText={setName}
           disabled={lockName}
@@ -121,6 +122,7 @@ export function MeetingPhase({
         <XStack gap={8}>
           <Input
             testID="meeting-ext"
+            aria-label="Country code"
             value={ext}
             onChangeText={setExt}
             disabled={hasProfilePhone}
@@ -129,6 +131,7 @@ export function MeetingPhase({
           />
           <Input
             testID="meeting-phone"
+            aria-label="Phone"
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
@@ -145,7 +148,13 @@ export function MeetingPhase({
         <Text fontSize={14} fontWeight="700" color={ink}>
           Notes (optional)
         </Text>
-        <TextArea testID="meeting-notes" value={notes} onChangeText={setNotes} minHeight={70} />
+        <TextArea
+          testID="meeting-notes"
+          aria-label="Notes"
+          value={notes}
+          onChangeText={setNotes}
+          minHeight={70}
+        />
       </YStack>
       {error ? <Text color="$red10">{error}</Text> : null}
       <Button

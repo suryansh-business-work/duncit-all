@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -24,8 +24,16 @@ const LABEL: Record<Filter, string> = {
  */
 export function MyTicketsList() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { tickets, isLoading } = useTickets();
+  const { tickets, isLoading, reload } = useTickets();
   const [filter, setFilter] = useState<Filter>('ALL');
+
+  // Reload whenever the screen regains focus so a ticket just created (which
+  // navigates to its detail thread and back) appears in the list right away.
+  useFocusEffect(
+    useCallback(() => {
+      reload();
+    }, [reload]),
+  );
 
   const items = filter === 'ALL' ? tickets : tickets.filter((t) => t.status === filter);
   // Count per status filter, computed from the loaded tickets (Bug 4).

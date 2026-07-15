@@ -41,7 +41,6 @@ const COLUMNS: DuncitColumn<CallbackRequest>[] = [
   {
     field: 'ticket_no',
     headerName: 'ID',
-    sortable: false,
     width: 140,
     cellRenderer: renderTicketNo,
     valueGetter: (req) => req.ticket_no,
@@ -57,7 +56,6 @@ const COLUMNS: DuncitColumn<CallbackRequest>[] = [
   {
     field: 'contact_phone',
     headerName: 'Phone',
-    sortable: false,
     minWidth: 150,
     valueGetter: (req) => req.contact_phone || '—',
   },

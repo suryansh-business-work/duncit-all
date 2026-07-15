@@ -121,7 +121,6 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         headerName: 'Delivery',
         hide: true,
         width: 120,
-        sortable: false,
         filter: { type: 'select', options: DELIVERY_OPTIONS },
       },
       {

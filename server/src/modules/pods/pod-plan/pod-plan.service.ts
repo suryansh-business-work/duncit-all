@@ -26,6 +26,7 @@ const POD_PLAN_TABLE_CONFIG: TableEntityConfig = {
     price_label: 'price_label',
     sort_order: 'sort_order',
     is_active: 'is_active',
+    is_coming_soon: 'is_coming_soon',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },

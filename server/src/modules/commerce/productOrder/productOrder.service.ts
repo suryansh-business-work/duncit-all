@@ -100,6 +100,8 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
     total: 'total',
     created_at: 'created_at',
     updated_at: 'updated_at',
+    awb: 'shiprocket.awb',
+    buyer_email: 'buyer_email',
   },
   filterFields: {
     fulfilment_method: { type: 'enum' },

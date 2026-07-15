@@ -88,7 +88,6 @@ export default function EcommRequestsTable({
       {
         field: 'delivery_target',
         headerName: 'Delivery',
-        sortable: false,
         filter: { type: 'select', options: DELIVERY_OPTIONS },
         width: 140,
         cellRenderer: renderDelivery,

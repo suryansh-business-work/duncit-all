@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, TextArea, XStack, YStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
 import { Backdrop, ModalButton } from './ModalBase';
 import { FEEDBACK_SCALE, feedbackOption } from './feedback-scale';
 
@@ -107,15 +108,19 @@ export function SupportFeedbackModal({
         How did we do?
       </Text>
       <EmojiScale rating={picked} onPick={setPicked} />
-      <TextArea
-        testID="feedback-comment"
-        value={comment}
-        onChangeText={setComment}
-        placeholder="Anything to add? (optional)"
-        maxLength={1000}
-        backgroundColor="$surface"
-        borderColor="$borderColor"
-      />
+      <Field label="Comments">
+        <TextArea
+          testID="feedback-comment"
+          aria-label="Comments"
+          value={comment}
+          onChangeText={setComment}
+          placeholder="Anything to add? (optional)"
+          placeholderTextColor="$muted"
+          maxLength={1000}
+          backgroundColor="$surface"
+          borderColor="$borderColor"
+        />
+      </Field>
       {error ? (
         <Text testID="feedback-error" fontSize={12} color="$danger">
           {error}

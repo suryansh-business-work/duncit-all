@@ -26,7 +26,7 @@ const SPLASH_PORTRAIT_VIDEO =
 export const PLATFORM_SECTIONS: PlatformSection[] = [
   {
     prefix: 'mweb',
-    title: '1A · mWeb (duncit.com)',
+    title: 'mWeb (duncit.com)',
     subtitle: 'Favicon, logo and the boot splash of the mobile-web app.',
     sizes: {
       favicon: FAVICON_GUIDE,
@@ -37,7 +37,7 @@ export const PLATFORM_SECTIONS: PlatformSection[] = [
   },
   {
     prefix: 'mobile',
-    title: '1B · Mobile App (Android / iOS / native web)',
+    title: 'Mobile App (Android / iOS / native web)',
     subtitle: 'Favicon (web build), logo and the in-app boot splash.',
     sizes: {
       favicon: FAVICON_GUIDE,
@@ -49,7 +49,7 @@ export const PLATFORM_SECTIONS: PlatformSection[] = [
   },
   {
     prefix: 'portals',
-    title: '1C · Portals (admin / crm / tech / …)',
+    title: 'Portals (admin / crm / tech / …)',
     subtitle: 'Favicon, logo and the boot splash shared by all consoles.',
     sizes: {
       favicon: FAVICON_GUIDE,

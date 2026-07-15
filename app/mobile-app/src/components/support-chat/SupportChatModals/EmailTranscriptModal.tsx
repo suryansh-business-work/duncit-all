@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Input, Text, XStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
+
 import { Backdrop, ModalButton } from './ModalBase';
 
 interface Props {
@@ -33,16 +35,20 @@ export function EmailTranscriptModal({
           Transcript sent to {email}.
         </Text>
       ) : (
-        <Input
-          testID="email-input"
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Email address"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          backgroundColor="$surface"
-          borderColor="$borderColor"
-        />
+        <Field label="Email address" gap={4}>
+          <Input
+            testID="email-input"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email address"
+            placeholderTextColor="$muted"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            backgroundColor="$surface"
+            borderColor="$borderColor"
+            aria-label="Email address"
+          />
+        </Field>
       )}
       {error ? (
         <Text testID="email-error" fontSize={12} color="$danger">

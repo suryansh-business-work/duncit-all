@@ -3,6 +3,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useMe } from '@/hooks/useMe';
 import { toErrorMessage } from '@/utils/errors';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { useOnboardingDraftStore } from '@/stores/onboarding-draft.store';
 import {
   ActiveSurveyForDocument,
   MeetingSlotsDocument,
@@ -30,14 +31,22 @@ export function useOnboardingFlow(kind: SurveyKind) {
   // Always walk the full gate — category → survey (when one matches) →
   // meeting — even when a meeting was requested before: requestMeeting
   // upserts per (user, kind), so re-submitting only updates the request.
-  const [phase, setPhase] = useState<Phase>('category');
-  const [scope, setScope] = useState<Scope>({
-    super_category_id: '',
-    category_id: '',
-    sub_category_id: '',
-  });
-  const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
-  const [answers, setAnswers] = useState<Record<string, Answer>>({});
+  // Seed from any saved draft so a Back navigation (which unmounts this hook)
+  // returns to the same step with the category + survey answers intact. Read
+  // once (no subscription) — the store is written to below.
+  const savedDraft = useOnboardingDraftStore.getState().getDraft(kind);
+  const setDraft = useOnboardingDraftStore((s) => s.setDraft);
+  const clearDraft = useOnboardingDraftStore((s) => s.clearDraft);
+  const [phase, setPhase] = useState<Phase>(savedDraft?.phase ?? 'category');
+  const [scope, setScope] = useState<Scope>(
+    savedDraft?.scope ?? {
+      super_category_id: '',
+      category_id: '',
+      sub_category_id: '',
+    },
+  );
+  const [survey, setSurvey] = useState<ActiveSurvey | null>(savedDraft?.survey ?? null);
+  const [answers, setAnswers] = useState<Record<string, Answer>>(savedDraft?.answers ?? {});
   const [slots, setSlots] = useState<MeetingSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState('');
@@ -63,6 +72,16 @@ export function useOnboardingFlow(kind: SurveyKind) {
     // Prefill once when the profile lands.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me?.user_id]);
+
+  // Persist the draft (category + survey + answers + step) so pressing Back and
+  // returning restores it; cleared once the meeting is booked (phase 'done').
+  useEffect(() => {
+    if (phase === 'done') {
+      clearDraft(kind);
+    } else {
+      setDraft(kind, { phase, scope, survey, answers });
+    }
+  }, [kind, phase, scope, survey, answers, setDraft, clearDraft]);
 
   const get = (qid: string): Answer => answers[qid] ?? { value: '', values: [] };
   const set = (qid: string, patch: Partial<Answer>) =>

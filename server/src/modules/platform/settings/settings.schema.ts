@@ -8,6 +8,10 @@ export const settingsTypeDefs = gql`
     time_format: String!
     "IANA timezone (e.g. Asia/Kolkata) used to display all dates & times."
     time_zone: String!
+    "Earliest allowed signup birth year (inclusive)."
+    min_birth_year: Int!
+    "Latest allowed signup birth year (inclusive)."
+    max_birth_year: Int!
     updated_at: String
   }
 
@@ -16,6 +20,8 @@ export const settingsTypeDefs = gql`
     time_format: String!
     "IANA timezone (e.g. Asia/Kolkata) used to display all dates & times."
     time_zone: String!
+    min_birth_year: Int!
+    max_birth_year: Int!
   }
 
   type PublicClientConfig {
@@ -29,6 +35,8 @@ export const settingsTypeDefs = gql`
     date_format: String
     time_format: String
     time_zone: String
+    min_birth_year: Int
+    max_birth_year: Int
   }
 
   type FeatureFlag {
@@ -74,15 +82,6 @@ export const settingsTypeDefs = gql`
     primary_color: String!
     support_email: String!
     support_phone: String!
-    mascot_name: String!
-    mascot_description_html: String!
-    mascot_image_url: String!
-    mascot_lottie_url: String!
-    mascot_on_chair_lottie_url: String!
-    mascot_winner_lottie_url: String!
-    welcome_lottie_url: String!
-    app_loader_lottie_url: String!
-    confetti_lottie_url: String!
     mweb_favicon_url: String!
     mweb_logo_url: String!
     mweb_splash_url: String!
@@ -118,15 +117,6 @@ export const settingsTypeDefs = gql`
     primary_color: String
     support_email: String
     support_phone: String
-    mascot_name: String
-    mascot_description_html: String
-    mascot_image_url: String
-    mascot_lottie_url: String
-    mascot_on_chair_lottie_url: String
-    mascot_winner_lottie_url: String
-    welcome_lottie_url: String
-    app_loader_lottie_url: String
-    confetti_lottie_url: String
     mweb_favicon_url: String
     mweb_logo_url: String
     mweb_splash_url: String

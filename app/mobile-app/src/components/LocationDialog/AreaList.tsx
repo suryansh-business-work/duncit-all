@@ -109,6 +109,7 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
             <MaterialIcons name="search" size={16} color={muted} />
             <Input
               testID="area-search"
+              aria-label="Search area or PIN code"
               flex={1}
               unstyled
               value={query}

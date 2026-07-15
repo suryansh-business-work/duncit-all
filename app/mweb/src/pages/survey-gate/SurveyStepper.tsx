@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { Alert, Button, Stack, Step, StepLabel, Stepper, Typography } from '@mui/material';
 import SurveyQuestionField, { type FieldAnswer } from './SurveyQuestionField';
 import { splitSections } from './surveySections';
@@ -10,19 +10,33 @@ export interface SurveyAnswerInput {
   values?: string[];
 }
 
+export type SurveyAnswerState = Record<string, FieldAnswer>;
+
 interface Props {
   survey: ActiveSurvey;
   submitting: boolean;
   onSubmit: (answers: SurveyAnswerInput[]) => void;
   submitLabel?: string;
+  // Optionally hand answer ownership to the parent so an in-progress survey
+  // survives a Back navigation (the page unmounts, the draft cache keeps them).
+  // Falls back to internal state when omitted.
+  answers?: SurveyAnswerState;
+  setAnswers?: Dispatch<SetStateAction<SurveyAnswerState>>;
 }
 
-type State = Record<string, FieldAnswer>;
-
 /** Section-stepped survey — one step per SECTION; final step calls onSubmit. */
-export default function SurveyStepper({ survey, submitting, onSubmit, submitLabel = 'Continue' }: Readonly<Props>) {
+export default function SurveyStepper({
+  survey,
+  submitting,
+  onSubmit,
+  submitLabel = 'Continue',
+  answers: answersProp,
+  setAnswers: setAnswersProp,
+}: Readonly<Props>) {
   const sections = useMemo(() => splitSections(survey.questions, survey.title || 'Survey'), [survey]);
-  const [answers, setAnswers] = useState<State>({});
+  const [localAnswers, setLocalAnswers] = useState<SurveyAnswerState>({});
+  const answers = answersProp ?? localAnswers;
+  const setAnswers = setAnswersProp ?? setLocalAnswers;
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
 

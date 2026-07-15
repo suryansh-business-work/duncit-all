@@ -12,9 +12,6 @@ export const BrandingDocument = gql(`
       app_name
       logo_url
       primary_color
-      mascot_name
-      mascot_description_html
-      mascot_image_url
       mobile_favicon_url
       mobile_logo_url
       mobile_splash_url

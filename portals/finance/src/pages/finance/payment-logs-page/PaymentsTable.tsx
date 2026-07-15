@@ -136,7 +136,6 @@ export default function PaymentsTable({
         field: 'gateway',
         headerName: 'Gateway',
         hide: true,
-        sortable: false,
         width: 120,
         filter: { type: 'text' },
       },

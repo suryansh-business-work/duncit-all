@@ -79,3 +79,13 @@ jest.mock('moti', () => {
     AnimatePresence: ({ children }) => children,
   };
 });
+
+// Clear the in-memory Earn onboarding draft between tests so a draft written by
+// one test never seeds the next (the store persists within a test file).
+afterEach(() => {
+  try {
+    require('./src/stores/onboarding-draft.store').useOnboardingDraftStore.setState({ drafts: {} });
+  } catch {
+    // Store not loaded in this file — nothing to reset.
+  }
+});

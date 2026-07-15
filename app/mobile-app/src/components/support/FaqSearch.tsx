@@ -105,6 +105,7 @@ export function FaqSearch({ query, onQueryChange, onOpen }: Readonly<FaqSearchPr
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
           testID="support-search"
+          aria-label="Search help topics"
           flex={1}
           unstyled
           value={query}

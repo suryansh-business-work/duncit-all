@@ -19,6 +19,8 @@ export const PublicAppSettingsDocument = gql(`
       date_format
       time_format
       time_zone
+      min_birth_year
+      max_birth_year
     }
   }
 `);

@@ -34,7 +34,7 @@ export default function CategoryDeleteDialog({ target, busy, error, onClose, onC
           {target?.level === 'SUPER' && (
             <>
               {' '}This will also remove all its categories, sub-categories, clubs, pods,
-              FAQs, sliders and submissions.
+              FAQs and submissions.
             </>
           )}
           {target?.level === 'CATEGORY' && (

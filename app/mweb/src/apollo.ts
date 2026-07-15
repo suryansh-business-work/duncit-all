@@ -65,9 +65,6 @@ export const apolloClient = new ApolloClient({
       Branding: { keyFields: false },
       Query: {
         fields: {
-          // Treat each unique argument combination as a distinct cache entry
-          // so aliased calls like `globalSliders: sliders(...)` never collide.
-          sliders: { keyArgs: ['filter'] },
           branding: { merge: (_existing, incoming) => incoming },
         },
       },

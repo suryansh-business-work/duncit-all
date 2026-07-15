@@ -60,6 +60,9 @@ const CHALLENGE_TABLE_CONFIG: TableEntityConfig = {
     is_active: 'is_active',
     created_at: 'created_at',
     updated_at: 'updated_at',
+    super_category_id: 'super_category_id',
+    category_id: 'category_id',
+    sub_category_id: 'sub_category_id',
   },
   filterFields: {
     is_active: { type: 'boolean' },

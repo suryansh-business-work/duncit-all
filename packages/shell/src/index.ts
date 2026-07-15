@@ -22,7 +22,14 @@ export { AppHeader, type AppHeaderProps } from './chrome/AppHeader';
 export { HeaderSearch, deriveSearchItems, type HeaderSearchProps } from './chrome/HeaderSearch';
 export { AppSidebar, type AppSidebarProps } from './chrome/AppSidebar';
 export { SidebarUserCard, type SidebarUserCardProps } from './chrome/AppSidebar/SidebarUserCard';
-export { AppBreadcrumbs, type AppBreadcrumbsProps } from './chrome/AppBreadcrumbs';
+export {
+  AppBreadcrumbs,
+  BreadcrumbProvider,
+  useSetBreadcrumbs,
+  type AppBreadcrumbsProps,
+  type BreadcrumbNavItem,
+  type Crumb,
+} from '@duncit/breadcrumb';
 export { AppIcon } from './chrome/AppIcon';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';
 export { ProfilePage } from './chrome/ProfilePage';

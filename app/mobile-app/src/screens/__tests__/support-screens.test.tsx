@@ -14,6 +14,7 @@ let mockRouteParams: { podId?: string; podTitle?: string } | undefined;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
+  useFocusEffect: (cb: () => void) => cb(),
 }));
 
 const mockedCreate = createTicket as jest.Mock;

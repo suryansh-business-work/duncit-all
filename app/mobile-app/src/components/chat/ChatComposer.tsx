@@ -58,6 +58,7 @@ export function ChatComposer({
 
       <Input
         testID="chat-input"
+        aria-label="Message"
         flex={1}
         value={value}
         onChangeText={onChangeText}

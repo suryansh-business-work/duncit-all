@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:20-alpine AS builder
+FROM public.ecr.aws/docker/library/node:24-alpine AS builder
 WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
@@ -29,6 +29,8 @@ COPY portals/developers/package.json ./portals/developers/
 COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/shell/package.json ./packages/shell/
+COPY packages/geo/package.json ./packages/geo/
+COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 
 COPY packages/logs/package.json ./packages/logs/

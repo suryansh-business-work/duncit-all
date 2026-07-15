@@ -11,7 +11,6 @@ import { useAccount } from '@/hooks/useAccount';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useLogout } from '@/hooks/useLogout';
 import { useMe } from '@/hooks/useMe';
-import { useMenuItems } from '@/hooks/useMenuItems';
 import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useThemeStore } from '@/stores/theme.store';
@@ -20,16 +19,14 @@ import { STUDIO_HOME_ROUTE, STUDIO_LABEL, availableModes, resolveMode } from '@/
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
-import { SidebarMenuItem } from './SidebarMenuItem';
 import { SidebarPolicies } from './SidebarPolicies';
 import { SidebarUserContent } from './SidebarUserContent';
-import { SidebarUserSummary } from './SidebarUserSummary';
 
 /**
- * Account drawer — the RN twin of mWeb's right-anchored <ProfileDrawer/>. USER
- * mode shows the card-based profile layout (identity, quick grid, referral,
- * Manage Account); each studio mode keeps its role-based menu list. Slides in
- * from the right with the shared role switch, dark-mode toggle, policies, logout.
+ * Account drawer — the RN twin of mWeb's right-anchored <ProfileDrawer/>. Every
+ * role shares one card-based profile layout (identity, quick grid, referral,
+ * Manage Account) — the old per-studio menu list was retired. Slides in from the
+ * right with the shared role switch, dark-mode toggle, policies, logout.
  */
 export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: () => void }>) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -47,7 +44,6 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
   const setStudioMode = useStudioModeStore((s) => s.setMode);
   const effectiveMode = resolveMode(studioMode, roles);
   const canSwitch = availableModes(roles).length > 1;
-  const { items } = useMenuItems(effectiveMode);
   const logout = useLogout();
   const scheme = useThemeStore((s) => s.scheme);
   const toggleTheme = useThemeStore((s) => s.toggle);
@@ -112,21 +108,14 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingVertical: 4 }}
             >
-              {effectiveMode === 'USER' ? (
-                <SidebarUserContent
-                  me={me}
-                  account={account}
-                  showPodPlans={showPodPlans}
-                  onNavigate={go}
-                />
-              ) : (
-                <YStack>
-                  <SidebarUserSummary me={me} onPress={() => go('Profile')} />
-                  {items.map((it) => (
-                    <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
-                  ))}
-                </YStack>
-              )}
+              {/* One unified card layout for every role — the studio-specific
+                  menu list was retired so all modes share this design. */}
+              <SidebarUserContent
+                me={me}
+                account={account}
+                showPodPlans={showPodPlans}
+                onNavigate={go}
+              />
 
               {canSwitch ? (
                 <XStack

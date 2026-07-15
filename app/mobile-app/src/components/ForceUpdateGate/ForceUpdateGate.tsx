@@ -1,4 +1,4 @@
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { dark, light } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
@@ -42,6 +42,12 @@ export function ForceUpdateGate() {
   // and the empty-server-value fallback stays reachable/tested.
   const storeUrl = info?.android_store_url || FALLBACK_STORE_URL;
 
+  // The gate is a native app-store update prompt — the web build has no store
+  // binary to update to, so it never blocks web. This also keeps localhost/web
+  // development unblocked (the baked version trails the DB `latest_version`).
+  /* istanbul ignore next -- jest runs a native platform, so this web short-circuit is never exercised */
+  if (Platform.OS === 'web') return null;
+
   if (!isOutdated(current, latest)) return null;
 
   const openStore = () => {
@@ -58,7 +64,7 @@ export function ForceUpdateGate() {
       right={0}
       bottom={0}
       zIndex={10000}
-      backgroundColor="$background"
+      backgroundColor={scheme === 'dark' ? '#100d18' : '#fff5f7'}
       alignItems="center"
       justifyContent="center"
       padding={28}

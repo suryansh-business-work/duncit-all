@@ -96,6 +96,7 @@ export function PodIdeasScreen() {
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
           testID="pod-ideas-search"
+          aria-label="Search pod ideas"
           flex={1}
           unstyled
           value={search}

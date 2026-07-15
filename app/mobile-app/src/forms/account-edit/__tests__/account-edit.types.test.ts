@@ -18,7 +18,7 @@ const fullMe = {
   phone_extension: '+91',
   phone_number: '9876543210',
   whatsapp_extension: '+44',
-  whatsapp_number: '5551234',
+  whatsapp_number: '5551234567',
 } as unknown as AccountMe;
 
 describe('accountEditDefaults', () => {
@@ -71,7 +71,7 @@ describe('accountEditDefaults', () => {
       first_name: 'Riya',
       state: 'Maharashtra',
       whatsapp_extension: '+44',
-      whatsapp_number: '5551234',
+      whatsapp_number: '5551234567',
     });
   });
 
@@ -104,7 +104,7 @@ describe('toUpdateProfileInput', () => {
       phone_extension: '+91',
       phone_number: '9876543210',
       whatsapp_extension: '+44',
-      whatsapp_number: '5551234',
+      whatsapp_number: '5551234567',
       address: {
         line1: '',
         line2: '',
@@ -151,6 +151,20 @@ describe('accountEditSchema field validation', () => {
   });
   it('rejects non-digit phone numbers', () => {
     expect(accountEditSchema.safeParse({ ...base, phone_number: 'abc' }).success).toBe(false);
+  });
+  it('rejects a phone number with more than 10 digits', () => {
+    expect(accountEditSchema.safeParse({ ...base, phone_number: '123456789012' }).success).toBe(
+      false,
+    );
+  });
+  it('accepts an empty (optional) phone number', () => {
+    expect(
+      accountEditSchema.safeParse({ ...base, phone_number: '', whatsapp_number: '' }).success,
+    ).toBe(true);
+  });
+  it('accepts a valid 6-digit pincode and rejects a malformed one', () => {
+    expect(accountEditSchema.safeParse({ ...base, address_pincode: '110001' }).success).toBe(true);
+    expect(accountEditSchema.safeParse({ ...base, address_pincode: '12' }).success).toBe(false);
   });
   it('rejects an over-long extension', () => {
     expect(accountEditSchema.safeParse({ ...base, phone_extension: '+123456' }).success).toBe(

@@ -136,6 +136,10 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
     completed_at: 'completed_at',
     created_at: 'created_at',
     updated_at: 'updated_at',
+    club_id: 'club_id',
+    pod_mode: 'pod_mode',
+    pod_type: 'pod_type',
+    venue_approval_status: 'venue_approval_status',
   },
   filterFields: {
     club_id: { type: 'string' },

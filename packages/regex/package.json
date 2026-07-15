@@ -1,0 +1,17 @@
+{
+  "name": "@duncit/regex",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared, framework-agnostic regex patterns + validators (phone, pincode, email, OTP, …) used across portals, mWeb and the native app. Ships prebuilt cjs/mjs/d.ts so Metro, Vite and tsc all resolve it.",
+  "main": "./regex.cjs",
+  "module": "./regex.mjs",
+  "types": "./regex.d.ts",
+  "exports": {
+    ".": {
+      "types": "./regex.d.ts",
+      "import": "./regex.mjs",
+      "require": "./regex.cjs"
+    }
+  },
+  "files": ["regex.cjs", "regex.mjs", "regex.d.ts"]
+}

@@ -23,7 +23,7 @@ import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { usePodBackout } from '@/hooks/usePodHistory';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
-import { podShareMessage } from '@/utils/pod-format';
+import { isPodExpired, podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Pod details — hero gallery + overview card + schedule/map + social bar + pod
@@ -155,7 +155,7 @@ export function PodDetailsScreen() {
               pod={pod}
               selectedProducts={selectedProducts}
               onSelectionChange={setSelectedProducts}
-              readOnly={!!membershipState?.is_member}
+              readOnly={!!membershipState?.is_member || isPodExpired(pod.pod_date_time)}
             />
           </Reveal>
         ) : null}

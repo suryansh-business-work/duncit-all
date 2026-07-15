@@ -143,6 +143,7 @@ export function SelectSheet({
                 <MaterialIcons name="search" size={16} color={muted} />
                 <Input
                   testID={`${testID}-search`}
+                  aria-label="Search"
                   flex={1}
                   unstyled
                   value={query}

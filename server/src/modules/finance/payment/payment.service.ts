@@ -78,6 +78,7 @@ const PAYMENT_TABLE_CONFIG: TableEntityConfig = {
     gst_amount: 'gst_amount',
     total: 'total',
     status: 'status',
+    gateway: 'gateway',
     paid_at: 'paid_at',
     created_at: 'created_at',
   },

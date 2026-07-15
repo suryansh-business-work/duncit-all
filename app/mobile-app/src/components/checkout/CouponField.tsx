@@ -4,6 +4,7 @@ import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import type { AvailableCoupon, CouponPreview } from '@/hooks/useCheckout';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { Field } from '@/components/Field';
 import { CouponsSheet } from '@/components/checkout/CouponsSheet';
 
 interface Props {
@@ -71,41 +72,44 @@ export function CouponField({
 
   return (
     <YStack gap={6}>
-      <XStack gap={8} alignItems="center">
-        <Input
-          testID="coupon-input"
-          flex={1}
-          value={code}
-          onChangeText={(t) => setCode(t.toUpperCase())}
-          placeholder="Coupon code"
-          placeholderTextColor="$muted"
-          autoCapitalize="characters"
-          onSubmitEditing={() => onApply()}
-        />
-        <XStack
-          testID="coupon-apply"
-          role="button"
-          aria-label="Apply coupon"
-          onPress={() => onApply()}
-          alignItems="center"
-          justifyContent="center"
-          paddingHorizontal={16}
-          height={44}
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$primary"
-          opacity={applying || !code.trim() ? 0.5 : 1}
-          pressStyle={{ opacity: 0.8 }}
-        >
-          {applying ? (
-            <Spinner color={primary} />
-          ) : (
-            <Text fontSize={14} fontWeight="800" color="$primary">
-              Apply
-            </Text>
-          )}
+      <Field label="Coupon code">
+        <XStack gap={8} alignItems="center">
+          <Input
+            testID="coupon-input"
+            flex={1}
+            value={code}
+            onChangeText={(t) => setCode(t.toUpperCase())}
+            placeholder="Coupon code"
+            placeholderTextColor="$muted"
+            autoCapitalize="characters"
+            aria-label="Coupon code"
+            onSubmitEditing={() => onApply()}
+          />
+          <XStack
+            testID="coupon-apply"
+            role="button"
+            aria-label="Apply coupon"
+            onPress={() => onApply()}
+            alignItems="center"
+            justifyContent="center"
+            paddingHorizontal={16}
+            height={44}
+            borderRadius={10}
+            borderWidth={1}
+            borderColor="$primary"
+            opacity={applying || !code.trim() ? 0.5 : 1}
+            pressStyle={{ opacity: 0.8 }}
+          >
+            {applying ? (
+              <Spinner color={primary} />
+            ) : (
+              <Text fontSize={14} fontWeight="800" color="$primary">
+                Apply
+              </Text>
+            )}
+          </XStack>
         </XStack>
-      </XStack>
+      </Field>
       {available.length > 0 ? (
         <XStack
           testID="coupon-view-available"

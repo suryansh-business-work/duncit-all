@@ -9,14 +9,18 @@
 # The root .dockerignore already excludes node_modules/dist.
 
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:20 AS builder
+FROM public.ecr.aws/docker/library/node:24 AS builder
 WORKDIR /repo
 ENV CI=1
 
 # Shared design-token package (file: dep + metro watchFolders) and the server
 # GraphQL SDL that codegen reads (self-contained `export const … = gql\`…\``).
+# Every @duncit/* file: dep the app imports (Metro resolves them via
+# watchFolders, so each must be present in the build context).
 COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs ./packages/logs
+COPY packages/geo ./packages/geo
+COPY packages/regex ./packages/regex
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

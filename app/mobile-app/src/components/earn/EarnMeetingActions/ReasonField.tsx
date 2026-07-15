@@ -16,9 +16,11 @@ export function ReasonField({ testID, label, value, onChangeText }: Readonly<Pro
       </Text>
       <TextArea
         testID={testID}
+        aria-label={label}
         value={value}
         onChangeText={onChangeText}
         placeholder="Add a short reason"
+        placeholderTextColor="$muted"
         minHeight={70}
         maxLength={500}
         backgroundColor="$surface"

@@ -20,12 +20,11 @@ const AI_FILL = gql`
   }
 `;
 
-export type AiDummyEntity = 'CLUB' | 'POD' | 'SLIDER';
+export type AiDummyEntity = 'CLUB' | 'POD';
 
 const promptPlaceholder = (entity: AiDummyEntity) => {
   if (entity === 'POD') return 'e.g. weekend rooftop chess meetup in Bandra';
-  if (entity === 'CLUB') return 'e.g. urban hikers in Bangalore';
-  return 'e.g. monsoon photography promo banner';
+  return 'e.g. urban hikers in Bangalore';
 };
 
 interface Props {

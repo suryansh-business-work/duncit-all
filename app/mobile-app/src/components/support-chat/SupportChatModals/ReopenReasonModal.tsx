@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, TextArea, XStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
 import { Backdrop, ModalButton } from './ModalBase';
 
 interface Props {
@@ -36,15 +37,19 @@ export function ReopenReasonModal({
           You can reopen until {deadlineLabel}
         </Text>
       ) : null}
-      <TextArea
-        testID="reopen-reason-input"
-        value={reason}
-        onChangeText={setReason}
-        placeholder="Reason for re-opening (optional)"
-        maxLength={1000}
-        backgroundColor="$surface"
-        borderColor="$borderColor"
-      />
+      <Field label="Reason">
+        <TextArea
+          testID="reopen-reason-input"
+          aria-label="Reason"
+          value={reason}
+          onChangeText={setReason}
+          placeholder="Reason for re-opening (optional)"
+          placeholderTextColor="$muted"
+          maxLength={1000}
+          backgroundColor="$surface"
+          borderColor="$borderColor"
+        />
+      </Field>
       {error ? (
         <Text testID="reopen-error" fontSize={12} color="$danger">
           {error}

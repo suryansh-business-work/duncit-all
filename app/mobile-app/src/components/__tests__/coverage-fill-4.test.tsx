@@ -1,11 +1,10 @@
-import { FlatList, Modal, Share } from 'react-native';
+import { FlatList, Share } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ClubSection } from '@/components/home/ClubSection';
 import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { HostCard } from '@/components/hosts-venues/HostCard';
-import { Mascot } from '@/components/Mascot';
 import { VenueCard } from '@/components/hosts-venues/VenueCard';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -163,23 +162,5 @@ describe('VenueCard with capacity', () => {
       />,
     );
     expect(screen.getByText(/200 capacity/)).toBeOnTheScreen();
-  });
-});
-
-describe('Mascot modal close', () => {
-  it('opens the meet sheet and handles the modal request-close', () => {
-    mockBranding.mockReturnValue({
-      data: {
-        branding: {
-          mascot_image_url: 'https://i/m.png',
-          mascot_name: 'Dunko',
-          mascot_description_html: '<p>Hello</p>',
-        },
-      },
-    });
-    renderWithProviders(<Mascot />);
-    fireEvent.press(screen.getByTestId('mascot-button'));
-    fireEvent(screen.UNSAFE_getByType(Modal), 'requestClose');
-    expect(screen.getByTestId('mascot-button')).toBeOnTheScreen();
   });
 });

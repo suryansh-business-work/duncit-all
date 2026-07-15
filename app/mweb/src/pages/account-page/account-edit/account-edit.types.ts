@@ -1,10 +1,9 @@
 import { z } from 'zod';
+import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
 import { PERSON_NAME_PATTERN } from '../../../forms/validation/rules';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-const PHONE_PATTERN = /^\d{6,15}$/;
 const EXT_PATTERN = /^\+?\d{1,5}$/;
-const PINCODE_PATTERN = /^\d{4,10}$/;
 
 const addressText = (label: string, max: number) =>
   z.string().trim().max(max, `${label} must be ${max} characters or fewer`);
@@ -13,7 +12,7 @@ const addressText = (label: string, max: number) =>
 const addressPincode = z
   .string()
   .trim()
-  .refine((v) => v === '' || PINCODE_PATTERN.test(v), 'Enter a valid pincode');
+  .refine((v) => v === '' || PINCODE.test(v), 'Enter a valid 6-digit pincode');
 
 const optionalPersonName = (label: string) =>
   z
@@ -41,7 +40,7 @@ const dob = z
 const phone = z
   .string()
   .trim()
-  .refine((v) => v === '' || PHONE_PATTERN.test(v), 'Enter 6–15 digits');
+  .refine((v) => v === '' || PHONE_NUMBER.test(v), 'Enter a 10-digit phone number');
 
 const extension = z
   .string()

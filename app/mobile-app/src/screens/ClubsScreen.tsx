@@ -11,6 +11,7 @@ import { useClubsFilter } from '@/hooks/useClubsFilter';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeData } from '@/hooks/useHomeFeed';
 import { useLocations } from '@/hooks/useLocations';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
 
 /** Clubs tab — active communities in the selected location, with client-side
  * search + category filter. Selecting a Country > City > Area location re-scopes
@@ -18,6 +19,7 @@ import { useLocations } from '@/hooks/useLocations';
 export function ClubsScreen() {
   const { clubs, categories, isLoading, refetch } = useHomeData();
   const { selectedId: selectedLocationId, zoneName } = useLocations();
+  const { selectedSuperId } = useSuperCategories();
   const { openClub } = useDetailNav();
 
   const locationClubs = useMemo(() => {
@@ -31,6 +33,7 @@ export function ClubsScreen() {
   const { query, setQuery, categoryId, setCategoryId, categoryOptions, filtered } = useClubsFilter(
     locationClubs,
     categories,
+    selectedSuperId,
   );
   const isSearching = !!query || !!categoryId;
   // No club operates in the selected locality at all (vs. a search that matched nothing).

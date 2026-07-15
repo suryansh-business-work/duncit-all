@@ -27,7 +27,7 @@ import {
 
 const ADMIN_ROOM = 'admin:bouncers';
 
-const BOUNCER_SORTABLE = new Set(['created_at', 'status']);
+const BOUNCER_SORTABLE = new Set(['created_at', 'status', 'ticket_no', 'contact_phone']);
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });

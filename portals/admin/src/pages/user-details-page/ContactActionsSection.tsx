@@ -113,7 +113,6 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
       {
         field: 'notes',
         headerName: 'Notes',
-        sortable: false,
         flex: 2,
         minWidth: 240,
         cellRenderer: renderNotes,

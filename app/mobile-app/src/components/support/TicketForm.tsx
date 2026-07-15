@@ -100,6 +100,7 @@ export function TicketForm({
         <FieldLabel>Name</FieldLabel>
         <Input
           testID="ticket-name"
+          aria-label="Name"
           value={initialName}
           disabled
           autoComplete="name"
@@ -111,6 +112,7 @@ export function TicketForm({
         <FieldLabel>Email</FieldLabel>
         <Input
           testID="ticket-email"
+          aria-label="Email"
           value={initialEmail}
           disabled
           autoCapitalize="none"
@@ -130,7 +132,9 @@ export function TicketForm({
         <FieldLabel>Subject</FieldLabel>
         <Input
           testID="ticket-subject"
+          aria-label="Subject"
           placeholder="A short summary"
+          placeholderTextColor="$muted"
           value={subject}
           onChangeText={setSubject}
           backgroundColor="$background"
@@ -140,7 +144,9 @@ export function TicketForm({
         <FieldLabel>Message</FieldLabel>
         <Input
           testID="ticket-message"
+          aria-label="Message"
           placeholder="Tell us what's going on"
+          placeholderTextColor="$muted"
           value={message}
           onChangeText={setMessage}
           multiline

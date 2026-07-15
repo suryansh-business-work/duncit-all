@@ -30,7 +30,11 @@ export default function SupportTicketsPage() {
       : {}),
   };
 
-  const [createTicket, { loading }] = useMutation(CREATE_TICKET);
+  // Refetch the ticket list so a freshly-created ticket shows up immediately in
+  // "Your tickets" (the list is cache-first and would otherwise stay stale).
+  const [createTicket, { loading }] = useMutation(CREATE_TICKET, {
+    refetchQueries: ['MyTickets'],
+  });
   const [error, setError] = useState<string | null>(null);
 
   // The support form categories are user-friendly labels; the Ticket enum is

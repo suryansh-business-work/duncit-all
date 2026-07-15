@@ -43,7 +43,6 @@ const COLUMNS: DuncitColumn<SosAlert>[] = [
   {
     field: 'ticket_no',
     headerName: 'ID',
-    sortable: false,
     width: 140,
     cellRenderer: renderTicketNo,
     valueGetter: (a) => a.ticket_no,
@@ -60,7 +59,6 @@ const COLUMNS: DuncitColumn<SosAlert>[] = [
   {
     field: 'contact_phone',
     headerName: 'Phone',
-    sortable: false,
     minWidth: 150,
     valueGetter: (a) => a.contact_phone || '—',
   },

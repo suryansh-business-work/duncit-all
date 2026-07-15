@@ -71,8 +71,8 @@ export default function ServicesOfferedTable({
       { field: 'category_name', headerName: 'Category', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.category_name) },
       { field: 'sub_category_name', headerName: 'Sub Category', sortable: false, minWidth: 140, valueGetter: (s) => dash(s.sub_category_name) },
       { field: 'applies_to', headerName: 'Applies to', sortable: false, width: 110, cellRenderer: renderTarget, valueGetter: targetLabel },
-      { field: 'applies_to_venue', headerName: 'For Venue', sortable: false, filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
-      { field: 'applies_to_host', headerName: 'For Host', sortable: false, filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
+      { field: 'applies_to_venue', headerName: 'For Venue', filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_venue ? 'Yes' : 'No') },
+      { field: 'applies_to_host', headerName: 'For Host', filter: { type: 'boolean' }, hide: true, width: 110, valueGetter: (s) => (s.applies_to_host ? 'Yes' : 'No') },
       {
         field: 'is_active',
         headerName: 'Status',

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, TextArea, XStack, YStack } from 'tamagui';
 
+import { Field } from '@/components/Field';
 import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
 
 const CATEGORIES = ['VENUE', 'HOST', 'SAFETY', 'FOOD', 'OTHER'] as const;
@@ -110,15 +111,19 @@ export function PodFeedbackPrompt() {
             );
           })}
         </XStack>
-        <TextArea
-          testID="pod-feedback-comment"
-          value={message}
-          onChangeText={setMessage}
-          placeholder="Tell us more (optional)"
-          maxLength={1000}
-          backgroundColor="$surface"
-          borderColor="$borderColor"
-        />
+        <Field label="Comments">
+          <TextArea
+            testID="pod-feedback-comment"
+            aria-label="Comments"
+            value={message}
+            onChangeText={setMessage}
+            placeholder="Tell us more (optional)"
+            placeholderTextColor="$muted"
+            maxLength={1000}
+            backgroundColor="$surface"
+            borderColor="$borderColor"
+          />
+        </Field>
         <XStack gap={8} justifyContent="flex-end">
           <XStack
             testID="pod-feedback-skip"

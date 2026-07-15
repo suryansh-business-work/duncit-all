@@ -33,7 +33,7 @@ describe('accountEditSchema', () => {
   });
 
   it('rejects a phone number with letters', () => {
-    expect(firstError(accountEditSchema.safeParse({ ...valid, phone_number: 'abc' }))).toMatch(/digits/i);
+    expect(firstError(accountEditSchema.safeParse({ ...valid, phone_number: 'abc' }))).toMatch(/10-digit/i);
   });
 
   it('allows an empty whatsapp number', () => {
@@ -41,7 +41,7 @@ describe('accountEditSchema', () => {
   });
 
   it('rejects a whatsapp number with non-digits', () => {
-    expect(firstError(accountEditSchema.safeParse({ ...valid, whatsapp_number: 'abc' }))).toMatch(/digits/i);
+    expect(firstError(accountEditSchema.safeParse({ ...valid, whatsapp_number: 'abc' }))).toMatch(/10-digit/i);
   });
 
   it('rejects a bad country code', () => {

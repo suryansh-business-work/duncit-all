@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { PodDetail, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { inclusiveGst } from '@/utils/checkout-math';
+import { isPodExpired } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
 import { PodClubCard } from '@/components/details/PodClubCard';
 import {
@@ -144,6 +145,7 @@ export function PodAccordions({
           <AttendeesSection
             people={attendeePeople}
             spots={pod.no_of_spots}
+            expired={isPodExpired(pod.pod_date_time)}
             onOpenProfile={onOpenProfile}
           />
         ),

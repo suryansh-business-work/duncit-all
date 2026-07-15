@@ -8,6 +8,9 @@ export interface IAppSettings extends Document {
   time_format: string;
   /** IANA timezone used to format/display dates & times across all apps. */
   time_zone: string;
+  /** Signup birth-year bounds (inclusive), configurable from Admin > Settings. */
+  min_birth_year: number;
+  max_birth_year: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -25,6 +28,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     date_format: { type: String, default: "dd MMM yyyy" },
     time_format: { type: String, default: "hh:mm a" },
     time_zone: { type: String, default: "Asia/Kolkata" },
+    min_birth_year: { type: Number, default: 1940 },
+    max_birth_year: { type: Number, default: 2012 },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
@@ -73,15 +78,6 @@ export interface IBranding extends Document {
   primary_color: string;
   support_email: string;
   support_phone: string;
-  mascot_name: string;
-  mascot_description_html: string;
-  mascot_image_url: string;
-  mascot_lottie_url: string;
-  mascot_on_chair_lottie_url: string;
-  mascot_winner_lottie_url: string;
-  welcome_lottie_url: string;
-  app_loader_lottie_url: string;
-  confetti_lottie_url: string;
   // Per-platform assets (admin Branding accordions 1A/1B/1C). Empty string
   // falls back to the global logo_url / bundled defaults on each client.
   mweb_favicon_url: string;
@@ -134,16 +130,6 @@ const brandingSchema = new Schema<IBranding>(
     primary_color: { type: String, default: "#1976d2" },
     support_email: { type: String, default: "" },
     support_phone: { type: String, default: "" },
-    mascot_name: { type: String, default: "Duncit" },
-    mascot_description_html: { type: String, default: "" },
-    // Uploaded mascot image (transparent PNG). Replaces the Lottie mascot.
-    mascot_image_url: { type: String, default: "" },
-    mascot_lottie_url: { type: String, default: "" },
-    mascot_on_chair_lottie_url: { type: String, default: "" },
-    mascot_winner_lottie_url: { type: String, default: "" },
-    welcome_lottie_url: { type: String, default: "" },
-    app_loader_lottie_url: { type: String, default: "" },
-    confetti_lottie_url: { type: String, default: "" },
     mweb_favicon_url: { type: String, default: "" },
     mweb_logo_url: { type: String, default: "" },
     mweb_splash_url: { type: String, default: "" },

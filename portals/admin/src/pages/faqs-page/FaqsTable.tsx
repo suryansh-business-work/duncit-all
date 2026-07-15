@@ -31,7 +31,6 @@ export default function FaqsTable({
     () => ({
       field: 'super_category_id',
       headerName: 'Super Category',
-      sortable: false,
       filter: {
         type: 'select',
         options: supers.map((sc) => ({ value: sc.id, label: sc.name })),

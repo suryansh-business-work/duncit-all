@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { Sidebar } from '@/components/Sidebar';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { STUDIO_HOME_ROUTE } from '@/utils/studio-mode';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
@@ -80,17 +81,17 @@ describe('Sidebar', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Account');
   });
 
-  it('switches into Host Studio and shows its menu', () => {
+  it('switches into Host Studio and keeps the unified card layout', () => {
     renderWithProviders(<Sidebar open onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     // Dismissing via the backdrop keeps the current (USER) mode.
     fireEvent.press(screen.getByTestId('studio-switch-backdrop'));
-    expect(screen.queryByTestId('sidebar-item-Your Pods')).toBeNull();
+    expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-HOST'));
-    expect(screen.getByTestId('sidebar-item-Your Pods')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('sidebar-item-Your Pods'));
-    expect(mockNavigate).toHaveBeenCalledWith('HostManage');
+    // Every role now shares the same profile card layout — no studio-only list.
+    expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
+    expect(mockNavigate).toHaveBeenCalledWith(STUDIO_HOME_ROUTE.HOST);
   });
 
   it('logs out from the footer', () => {

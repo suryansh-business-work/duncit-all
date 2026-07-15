@@ -4,7 +4,6 @@ import {
   Divider,
   Drawer,
   IconButton,
-  List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -22,12 +21,9 @@ import { useStudioMode } from '../../../StudioModeContext';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { STUDIO_HOME_PATH, STUDIO_LABEL, availableModes, resolveMode } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
-import MenuItemRow from './MenuItem';
 import PoliciesSection from './PoliciesSection';
 import StudioSwitchDialog from './StudioSwitchDialog';
-import UserSummary from './UserSummary';
 import UserModeContent from './UserModeContent';
-import { useMenuItems } from './useMenuItems';
 
 interface Props {
   open: boolean;
@@ -57,11 +53,9 @@ export default function ProfileDrawer({
   const roles: string[] = me?.roles ?? [];
   const effectiveMode = resolveMode(mode, roles);
   const canSwitch = availableModes(roles).length > 1;
-  const { items } = useMenuItems({ roles, onClose });
-  const go = (to: string) => {
-    onClose();
-    navigate(to);
-  };
+  // Navigate on top of the open drawer (which lives at ?menu=open) — the URL
+  // change closes it, and Back returns to ?menu=open so it reopens.
+  const go = (to: string) => navigate(to);
 
   return (
     <Drawer
@@ -92,18 +86,9 @@ export default function ProfileDrawer({
         </Box>
 
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
-          {effectiveMode === 'USER' ? (
-            <UserModeContent me={me} showPodPlans={showPodPlans} onNavigate={go} />
-          ) : (
-            <>
-              <UserSummary me={me} onClick={() => go('/profile')} />
-              <List sx={{ py: 1 }}>
-                {items.map((it) => (
-                  <MenuItemRow key={it.label} item={it} />
-                ))}
-              </List>
-            </>
-          )}
+          {/* One unified card layout for every role — the studio-specific menu
+              list was retired so all modes share this design. */}
+          <UserModeContent me={me} showPodPlans={showPodPlans} onNavigate={go} />
 
           {canSwitch && (
             <Box sx={{ px: 2, pb: 1.25 }}>
@@ -140,7 +125,6 @@ export default function ProfileDrawer({
                 publicPolicies={publicPolicies}
                 policiesOpen={policiesOpen}
                 setPoliciesOpen={setPoliciesOpen}
-                onClose={onClose}
               />
             </>
           )}
@@ -157,7 +141,7 @@ export default function ProfileDrawer({
         onSelect={(next) => {
           setMode(next);
           setSwitchOpen(false);
-          onClose();
+          // Navigating away closes the drawer (its ?menu=open URL is replaced).
           navigate(STUDIO_HOME_PATH[next]);
         }}
       />

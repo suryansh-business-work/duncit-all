@@ -61,6 +61,7 @@ export function SavedScreen() {
           <MaterialIcons name="search" size={20} color={muted} />
           <Input
             testID="saved-search"
+            aria-label="Search saved pods"
             flex={1}
             unstyled
             value={searchText}

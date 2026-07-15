@@ -1,5 +1,5 @@
 # --- builder ---
-FROM public.ecr.aws/docker/library/node:20-alpine AS builder
+FROM public.ecr.aws/docker/library/node:24-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
@@ -37,6 +37,8 @@ COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
+COPY packages/geo/package.json ./packages/geo/
+COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/
 COPY packages/category/package.json ./packages/category/
 COPY packages/utils/package.json ./packages/utils/

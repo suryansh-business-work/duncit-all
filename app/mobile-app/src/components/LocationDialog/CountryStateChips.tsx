@@ -108,6 +108,7 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
           <MaterialIcons name="search" size={16} color={muted} />
           <Input
             testID="state-search"
+            aria-label="Search state"
             flex={1}
             unstyled
             value={query}

@@ -39,6 +39,7 @@ const COUPON_TABLE_CONFIG: TableEntityConfig = {
     used_count: 'used_count',
     is_active: 'is_active',
     created_at: 'created_at',
+    scope: 'scope',
   },
   filterFields: {
     scope: { type: 'enum' },

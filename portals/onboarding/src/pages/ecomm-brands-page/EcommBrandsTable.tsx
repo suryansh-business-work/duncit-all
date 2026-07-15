@@ -116,7 +116,6 @@ export default function EcommBrandsTable({
       {
         field: 'contact_person',
         headerName: 'Owner',
-        sortable: false,
         minWidth: 160,
         cellRenderer: renderOwner,
         valueGetter: (b) => b.contact_person || '—',
@@ -133,7 +132,6 @@ export default function EcommBrandsTable({
       {
         field: 'is_active',
         headerName: 'Active',
-        sortable: false,
         width: 110,
         filter: { type: 'boolean' },
         cellRenderer: renderActive,
@@ -142,7 +140,6 @@ export default function EcommBrandsTable({
       {
         field: 'product_commission_pct',
         headerName: 'Commission',
-        sortable: false,
         width: 130,
         filter: { type: 'number' },
         cellRenderer: renderCommission,

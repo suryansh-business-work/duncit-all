@@ -46,6 +46,7 @@ export function ChatsScreen() {
         <MaterialIcons name="search" size={20} color={muted} />
         <Input
           testID="chats-search-input"
+          aria-label="Search chats"
           flex={1}
           unstyled
           value={query}

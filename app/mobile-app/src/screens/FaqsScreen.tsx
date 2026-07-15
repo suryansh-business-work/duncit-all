@@ -71,6 +71,7 @@ export function FaqsScreen() {
         <MaterialIcons name="search" size={18} color={muted} />
         <Input
           testID="faqs-search"
+          aria-label="Search FAQs"
           flex={1}
           unstyled
           value={search}

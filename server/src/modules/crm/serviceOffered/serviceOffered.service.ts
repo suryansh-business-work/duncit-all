@@ -82,6 +82,8 @@ const SERVICE_OFFERED_TABLE_CONFIG: TableEntityConfig = {
     title: 'title',
     sort_order: 'sort_order',
     is_active: 'is_active',
+    applies_to_venue: 'applies_to_venue',
+    applies_to_host: 'applies_to_host',
     created_at: 'created_at',
     updated_at: 'updated_at',
   },

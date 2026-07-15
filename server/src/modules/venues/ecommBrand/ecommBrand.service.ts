@@ -87,6 +87,9 @@ const ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
     submitted_at: 'submitted_at',
     created_at: 'created_at',
     updated_at: 'updated_at',
+    contact_person: 'contact_person',
+    is_active: 'is_active',
+    product_commission_pct: 'product_commission_pct',
   },
   filterFields: {
     status: { type: 'enum' },

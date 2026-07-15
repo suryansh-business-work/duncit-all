@@ -7,9 +7,9 @@
 #   npm run build:local:aab   →  <repo-root>/build/duncit-release.aab
 #
 # Build context MUST be the REPO ROOT (same convention as Dockerfile) because
-# the build needs packages/auth-tokens, packages/logs, and the server GraphQL
-# schema for codegen. A per-Dockerfile ignore (Dockerfile.android.dockerignore)
-# prunes the context to just those paths.
+# the build needs the @duncit/* file: deps (auth-tokens, logs, geo, regex) and
+# the server GraphQL schema for codegen. A per-Dockerfile ignore
+# (Dockerfile.android.dockerignore) prunes the context to just those paths.
 #
 # Requires BuildKit (default in Docker Desktop / `docker buildx`). The
 # `# syntax` line above + `--mount=type=cache` give incremental local builds:
@@ -25,10 +25,13 @@ FROM node:24-slim AS js-builder
 WORKDIR /repo
 ENV CI=1 EXPO_NO_TELEMETRY=1
 
-# `file:` workspace deps — must exist BEFORE `npm ci` resolves them. They change
+# `file:` workspace deps — must exist BEFORE `npm ci` resolves them (and Metro
+# resolves them via watchFolders during the Gradle JS bundle). They change
 # rarely, so keeping them above the install layer maximises cache reuse.
 COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs        ./packages/logs
+COPY packages/geo         ./packages/geo
+COPY packages/regex       ./packages/regex
 
 WORKDIR /repo/app/mobile-app
 # Dependency manifests only → the slow install layer is reused for every build
@@ -49,7 +52,7 @@ COPY server/src/modules /repo/server/src/modules
 COPY app/mobile-app/ ./
 RUN npm run codegen
 
-# ── Stage 2: Android SDK (JDK 21 + Node 20 + SDK 35 + NDK 27) ────────────────
+# ── Stage 2: Android SDK (JDK 21 + Node 24 + SDK 35 + NDK 27) ────────────────
 # Depends only on the base image + its own RUNs, so it stays fully cached across
 # every app-source rebuild (it never sees the JS layers). The React Native Gradle
 # plugin shells out to `node` during configuration (resolveAppEntry,
@@ -62,7 +65,7 @@ ENV ANDROID_HOME=/opt/android-sdk \
 
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends wget unzip ca-certificates curl gnupg && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    curl -fsSL https://deb.nodesource.com/setup_24.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/*
 

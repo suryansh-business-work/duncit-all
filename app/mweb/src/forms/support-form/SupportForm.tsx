@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -36,11 +36,22 @@ export default function SupportForm({
   onSubmit,
 }: Readonly<Props>) {
   const [status, setStatus] = useState<string | undefined>(undefined);
-  const { control, handleSubmit, formState } = useForm<SupportFormValues>({
+  const { control, handleSubmit, formState, setValue } = useForm<SupportFormValues>({
     defaultValues: { ...DEFAULTS, ...initialValues },
     resolver: zodResolver(supportSchema),
     mode: 'onBlur',
   });
+
+  // Name/email (and any attached pod) come from an async `me` query that can
+  // resolve AFTER mount. RHF reads defaultValues only once, so sync the
+  // auto-filled fields in — otherwise the read-only Name/Email stay empty and
+  // Zod silently blocks submit. User-typed fields are left untouched.
+  useEffect(() => {
+    if (initialValues?.name !== undefined) setValue('name', initialValues.name);
+    if (initialValues?.email !== undefined) setValue('email', initialValues.email);
+    if (initialValues?.pod_id !== undefined) setValue('pod_id', initialValues.pod_id);
+    if (initialValues?.pod_title !== undefined) setValue('pod_title', initialValues.pod_title);
+  }, [initialValues?.name, initialValues?.email, initialValues?.pod_id, initialValues?.pod_title, setValue]);
 
   const submit = handleSubmit(async (values) => {
     setStatus(undefined);

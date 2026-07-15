@@ -61,8 +61,11 @@ export function TicketForm({
         podId && podTitle ? { id: podId, title: podTitle } : undefined,
       );
       onCreated(id);
-    } catch {
-      setError('Could not create the ticket. Please try again.');
+    } catch (err) {
+      // Surface the real server message (was swallowed) so failures are diagnosable.
+      setError(
+        err instanceof Error ? err.message : 'Could not create the ticket. Please try again.',
+      );
     } finally {
       setSubmitting(false);
     }
@@ -137,6 +140,7 @@ export function TicketForm({
           placeholderTextColor="$muted"
           value={subject}
           onChangeText={setSubject}
+          maxLength={120}
           backgroundColor="$background"
         />
       </YStack>

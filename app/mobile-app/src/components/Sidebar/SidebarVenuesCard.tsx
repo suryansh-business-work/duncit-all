@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -17,6 +18,15 @@ function VenuesCardVideo({ url }: Readonly<{ url: string }>) {
     p.muted = true;
     p.play();
   });
+  // The card lives inside the sidebar Modal, where the setup-time play() can be
+  // swallowed before the remote source finishes loading — re-assert play once it
+  // reports ready so it actually autoplays (the muted loop then runs on its own).
+  useEffect(() => {
+    const sub = player.addListener('statusChange', ({ status }) => {
+      if (status === 'readyToPlay') player.play();
+    });
+    return () => sub.remove();
+  }, [player]);
   return (
     <VideoView
       testID="sidebar-venues-video"

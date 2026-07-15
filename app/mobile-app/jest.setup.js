@@ -58,7 +58,12 @@ jest.mock('expo-image-manipulator', () => ({
 jest.mock('expo-video', () => ({
   __esModule: true,
   useVideoPlayer: jest.fn((_source, setup) => {
-    const player = { loop: false, muted: false, play: jest.fn() };
+    const player = {
+      loop: false,
+      muted: false,
+      play: jest.fn(),
+      addListener: jest.fn(() => ({ remove: jest.fn() })),
+    };
     if (setup) setup(player);
     return player;
   }),

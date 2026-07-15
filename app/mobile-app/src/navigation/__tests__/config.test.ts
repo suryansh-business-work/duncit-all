@@ -14,6 +14,8 @@ describe('navigation + web-fonts config', () => {
       'Following',
     ]);
     expect(linking.config?.screens).toHaveProperty('Home');
+    // The account drawer is a routable overlay at /menu.
+    expect(linking.config?.screens).toHaveProperty('Menu', 'menu');
   });
 
   it('loadWebFonts is a no-op on native', () => {

@@ -1,5 +1,6 @@
 import { Avatar, Box, Divider, Stack, TextField, Typography } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
+import ColorField from '../../components/ColorField';
 import type { BrandingFormState } from './queries';
 
 interface Props {
@@ -63,12 +64,10 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         showPreview={false}
       />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
+        <ColorField
           label="Primary color"
           value={form.primary_color}
-          onChange={(e) => update('primary_color', e.target.value)}
-          fullWidth
-          placeholder="#1976d2"
+          onChange={(v) => update('primary_color', v)}
         />
         <TextField
           label="Support email"

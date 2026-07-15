@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM';
+export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM' | 'CLUB_ADMIN';
 export type MeetingStatus = 'REQUESTED' | 'SCHEDULED' | 'DONE' | 'CANCELLED';
 export type MeetingApprovalStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'DENIED';
 

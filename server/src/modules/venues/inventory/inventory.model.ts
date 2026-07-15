@@ -16,9 +16,28 @@ export type UnitType =
   | 'METER'
   | 'OTHER';
 
+/** A purchasable variant of a product (e.g. by colour / size), each with its own
+ * price, stock, SKU and images. A product with no variants behaves as before —
+ * the flat fields act as its single implicit variant. */
+export interface IProductVariant {
+  _id?: Types.ObjectId;
+  option_label: string;
+  sku: string;
+  color: string;
+  size_label: string;
+  unit_cost: number;
+  inventory_count: number;
+  images: string[];
+  height_cm: number;
+  breadth_cm: number;
+  length_cm: number;
+  weight_kg: number;
+}
+
 export interface IInventoryProduct extends Document {
   product_name: string;
   sku: string;
+  variants: IProductVariant[];
   barcode: string;
   short_description: string;
   description: string;
@@ -94,10 +113,28 @@ export interface IInventoryProduct extends Document {
   updated_at: Date;
 }
 
+const variantSchema = new Schema<IProductVariant>(
+  {
+    option_label: { type: String, default: '', trim: true, maxlength: 120 },
+    sku: { type: String, default: '', uppercase: true, trim: true, maxlength: 60 },
+    color: { type: String, default: '', trim: true, maxlength: 80 },
+    size_label: { type: String, default: '', trim: true, maxlength: 120 },
+    unit_cost: { type: Number, default: 0, min: 0, max: 1000000 },
+    inventory_count: { type: Number, default: 0, min: 0 },
+    images: { type: [String], default: [] },
+    height_cm: { type: Number, default: 0, min: 0 },
+    breadth_cm: { type: Number, default: 0, min: 0 },
+    length_cm: { type: Number, default: 0, min: 0 },
+    weight_kg: { type: Number, default: 0, min: 0 },
+  },
+  { _id: true }
+);
+
 const productSchema = new Schema<IInventoryProduct>(
   {
     product_name: { type: String, required: true, trim: true, maxlength: 200 },
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true, maxlength: 50 },
+    variants: { type: [variantSchema], default: [] },
     barcode: { type: String, default: '', trim: true, maxlength: 80 },
     short_description: { type: String, default: '', trim: true, maxlength: 280 },
     description: { type: String, default: '', trim: true, maxlength: 4000 },

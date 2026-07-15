@@ -42,22 +42,18 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
   const { data: meData } = useQuery(MEETING_ME, { fetchPolicy: 'cache-and-network' });
   const [slot, setSlot] = useState('');
   const [name, setName] = useState('');
-  const [ext, setExt] = useState('+91');
-  const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Prefill from the signed-in user; locked when the profile already has them.
+  // Contact phone is always sourced from the signed-in profile and shown
+  // read-only — the user cannot add/edit it. Name is prefilled but editable
+  // when the profile has none.
   const me = meData?.me;
-  const hasProfilePhone = !!me?.phone_number?.trim();
+  const contactExt = me?.phone_extension?.trim() || '';
+  const contactPhone = me?.phone_number?.trim() || '';
   useEffect(() => {
-    if (!me) return;
-    if (me.full_name) setName(me.full_name);
-    if (hasProfilePhone) {
-      setPhone(me.phone_number);
-      if (me.phone_extension) setExt(me.phone_extension);
-    }
-    // Prefill once when the profile lands.
+    if (me?.full_name) setName(me.full_name);
+    // Prefill the name once when the profile lands.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me]);
 
@@ -65,13 +61,13 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
 
   const submit = () => {
     if (!slot) { setFormError('Pick an available slot.'); return; }
-    if (!phone.trim()) { setFormError('Phone number is required so our team can reach you.'); return; }
+    if (!contactPhone) { setFormError('Add a phone number to your profile so our team can reach you.'); return; }
     setFormError(null);
     onSubmit({
       requested_at: slot,
       notes: notes || null,
       contact_name: name || null,
-      contact_phone: `${ext.trim()} ${phone.trim()}`.trim(),
+      contact_phone: `${contactExt} ${contactPhone}`.trim(),
     });
   };
 
@@ -104,19 +100,18 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         <TextField
           size="small"
           label="Ext."
-          value={ext}
-          onChange={(e) => setExt(e.target.value)}
-          disabled={hasProfilePhone}
+          value={contactExt}
+          InputProps={{ readOnly: true }}
+          disabled
           sx={{ width: 96 }}
         />
         <TextField
           size="small"
           label="Phone"
-          required
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          disabled={hasProfilePhone}
-          helperText={hasProfilePhone ? 'From your profile.' : 'Required so our team can reach you.'}
+          value={contactPhone}
+          InputProps={{ readOnly: true }}
+          disabled
+          helperText="From your profile."
           fullWidth
         />
       </Stack>

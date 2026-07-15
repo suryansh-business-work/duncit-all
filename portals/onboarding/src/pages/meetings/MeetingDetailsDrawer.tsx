@@ -15,7 +15,7 @@ const STATUS_COLOR: Record<MeetingStatus, 'default' | 'info' | 'success' | 'erro
   DONE: 'success',
   CANCELLED: 'error',
 };
-const KIND_LABEL: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const KIND_LABEL: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
 
 interface Props {

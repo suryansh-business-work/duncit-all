@@ -7,7 +7,7 @@ import { parse } from 'graphql';
  * (server schema, no codegen) via graphqlRequest. Distinct from the
  * signup-interest survey in `survey.ts`.
  */
-export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM';
+export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM' | 'CLUB_ADMIN';
 export type SurveyQuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
 export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';
 
@@ -44,11 +44,15 @@ export interface MyResponseResult {
   mySurveyResponse: { survey_id: string } | null;
 }
 export type MeetingStatus = 'REQUESTED' | 'SCHEDULED' | 'DONE' | 'CANCELLED';
+export type MeetingApprovalStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'DENIED';
 export interface MyMeeting {
   id: string;
   /** Human-readable request id (DUN-VEN-/DUN-HOST-/DUN-BRAND-000001). */
   request_no?: string | null;
   status: MeetingStatus;
+  /** Admin-approval state of the post-meeting feedback. A DONE meeting still at
+   * NONE/PENDING means onboarding is in process (not yet completed). */
+  approval_status?: MeetingApprovalStatus | null;
   requested_at: string;
   scheduled_at?: string | null;
   meeting_link?: string | null;
@@ -170,6 +174,7 @@ export const MyMeetingsDocument = parse(`
       request_no
       kind
       status
+      approval_status
       requested_at
       scheduled_at
       reschedule_count

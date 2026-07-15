@@ -14,8 +14,8 @@ type DefaultRow = {
   sub_category_name?: string | null;
 };
 
-const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
-const KIND_ORDER: SurveyKind[] = ['VENUE', 'HOST', 'ECOMM'];
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
+const KIND_ORDER: SurveyKind[] = ['VENUE', 'HOST', 'ECOMM', 'CLUB_ADMIN'];
 const isDefault = (r: DefaultRow) => !r.super_category_name && !r.category_name && !r.sub_category_name;
 
 /** Compact entry point to the kind-level fallback ("default") surveys — used

@@ -17,6 +17,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ForgotPassword: 'forgot-password',
       ResetPassword: 'reset-password',
       Survey: 'survey',
+      Menu: 'menu',
       Home: {
         path: '',
         screens: {
@@ -44,6 +45,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       RegisterVenue: 'register-venue',
       VenueManage: 'venue-manage',
       VenueEarnings: 'venue-earnings',
+      BeClubAdmin: 'be-club-admin',
       Support: 'support',
       Sos: 'support/sos',
       Callback: 'support/callback',

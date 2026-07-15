@@ -55,7 +55,7 @@ describe('EarnScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('ListProduct');
   });
 
-  it('disables a box while its onboarding meeting is pending, with the notice', async () => {
+  it('blocks a box while its meeting is scheduled, and while a done meeting awaits approval', async () => {
     mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
     mockRequest.mockResolvedValue({
       myMeetings: [
@@ -63,10 +63,12 @@ describe('EarnScreen', () => {
           id: 'm1',
           kind: 'VENUE',
           status: 'SCHEDULED',
+          approval_status: 'NONE',
           requested_at: null,
           scheduled_at: '2027-01-04T04:30:00.000Z',
         },
         {
+          // DONE with no approval yet (approval_status omitted → defaults to NONE).
           id: 'm2',
           kind: 'HOST',
           status: 'DONE',
@@ -81,7 +83,41 @@ describe('EarnScreen', () => {
     // Pending venue meeting blocks the venue box…
     fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
     expect(mockNavigate).not.toHaveBeenCalled();
-    // …but a DONE host meeting leaves the host box available again.
+    // …and a DONE host meeting awaiting approval now reads "Onboarding in process."
+    expect(screen.getByText('Onboarding in process.')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('earn-box-HOST'));
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('re-enables the box once onboarding is approved or denied', async () => {
+    mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
+    mockRequest.mockResolvedValue({
+      myMeetings: [
+        {
+          id: 'm1',
+          kind: 'VENUE',
+          status: 'DONE',
+          approval_status: 'APPROVED',
+          requested_at: '2027-01-01T04:30:00.000Z',
+          scheduled_at: null,
+        },
+        {
+          id: 'm2',
+          kind: 'HOST',
+          status: 'DONE',
+          approval_status: 'DENIED',
+          requested_at: '2027-01-01T04:30:00.000Z',
+          scheduled_at: null,
+        },
+      ],
+    });
+    renderWithProviders(<EarnScreen />);
+    await waitFor(() => expect(screen.queryByTestId('earn-box-VENUE_OWNER-enabled')).toBeNull());
+    expect(screen.queryByText('Onboarding in process.')).toBeNull();
+    // Approved venue → user may re-apply.
+    fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
+    expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue');
+    // Denied host → also available to re-apply.
     fireEvent.press(screen.getByTestId('earn-box-HOST'));
     expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
   });

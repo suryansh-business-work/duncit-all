@@ -6,6 +6,19 @@ const requiredNumber = (message: string) =>
     z.number({ invalid_type_error: message }),
   );
 
+const variantSchema = z.object({
+  option_label: z.string().trim().min(1, 'Variant name is required').max(120, 'Variant name is too long'),
+  color: z.string().trim().max(80),
+  size_label: z.string().trim().max(120),
+  unit_cost: requiredNumber('Enter the variant price').pipe(
+    z.number().positive('Price must be greater than 0').max(1000000, 'Price cannot exceed ₹10,00,000'),
+  ),
+  inventory_count: requiredNumber('Enter the variant stock').pipe(
+    z.number().int('Stock must be a whole number').min(0, 'Stock cannot be negative').max(1000000),
+  ),
+  image_urls: z.array(z.string().trim().url('Use valid image URLs')),
+});
+
 export const productListingSchema = z.object({
   super_category_id: z.string().min(1, 'Select a super category'),
   category_id: z.string().min(1, 'Select a category'),
@@ -27,6 +40,7 @@ export const productListingSchema = z.object({
   unit_cost: requiredNumber('Enter the product price').pipe(
     z.number().positive('Price must be greater than 0').max(1000000, 'Price cannot exceed ₹10,00,000'),
   ),
+  variants: z.array(variantSchema).default([]),
   commission_pct: z.number().min(5, 'Commission starts at 5%').max(50, 'Commission cannot exceed 50%'),
   delivery_target: z.enum(['HOST', 'VENUE'], { errorMap: () => ({ message: 'Delivery target is required' }) }),
 });

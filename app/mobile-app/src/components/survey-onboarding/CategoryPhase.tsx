@@ -10,14 +10,18 @@ import {
   type CategoryLevel,
   type CategoryOption,
 } from '@/graphql/onboarding-survey';
-import type { Scope } from './useOnboardingFlow';
+import type { CategoryLabels, Scope } from './useOnboardingFlow';
+
+const EMPTY_SCOPE: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
 
 interface Props {
   busy: boolean;
   error: string | null;
-  onContinue: (scope: Scope) => void;
+  onContinue: (scope: Scope, labels: CategoryLabels) => void;
   /** Leaf category ids the host already holds/has pending — rendered non-pressable. */
   disabledIds?: string[];
+  /** Prior selection to seed the picker with when re-entered to edit. */
+  initialScope?: Scope;
 }
 
 function useCategories(level: CategoryLevel, parentId: string, enabled: boolean) {
@@ -52,14 +56,16 @@ function useCategories(level: CategoryLevel, parentId: string, enabled: boolean)
 }
 
 /** Super → Category → Sub picker; resolves which survey to ask. */
-export function CategoryPhase({ busy, error, onContinue, disabledIds }: Readonly<Props>) {
+export function CategoryPhase({
+  busy,
+  error,
+  onContinue,
+  disabledIds,
+  initialScope,
+}: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
   const disabledSet = useMemo(() => new Set(disabledIds ?? []), [disabledIds]);
-  const [scope, setScope] = useState<Scope>({
-    super_category_id: '',
-    category_id: '',
-    sub_category_id: '',
-  });
+  const [scope, setScope] = useState<Scope>(initialScope ?? EMPTY_SCOPE);
   const [validationError, setValidationError] = useState<string | null>(null);
   const supers = useCategories('SUPER', '', true);
   const cats = useCategories('CATEGORY', scope.super_category_id, !!scope.super_category_id);
@@ -82,13 +88,20 @@ export function CategoryPhase({ busy, error, onContinue, disabledIds }: Readonly
     return null;
   }, [scope, cats.length, subs.length]);
 
+  const nameOf = (options: CategoryOption[], id: string) =>
+    options.find((o) => o.id === id)?.name ?? '';
+
   const onContinuePress = () => {
     if (validationMessage) {
       setValidationError(validationMessage);
       return;
     }
     setValidationError(null);
-    onContinue(scope);
+    onContinue(scope, {
+      super: nameOf(supers, scope.super_category_id),
+      category: nameOf(cats, scope.category_id),
+      sub: nameOf(subs, scope.sub_category_id),
+    });
   };
 
   const group = (label: string, level: keyof Scope, options: CategoryOption[]) =>

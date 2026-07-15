@@ -127,7 +127,7 @@ function slotLabelTz(value: string | null | undefined, offsetMin: number): strin
   return `${formatted} ${gmtLabel(offsetMin)}`;
 }
 
-const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
 
 type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'approved' | 'rejected';
 
@@ -522,7 +522,12 @@ export const meetingService = {
     }
     // Slot race: block other users AND this user's other-kind meetings at the
     // same instant — only the caller's own meeting for THIS kind is excluded.
-    const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).select('_id request_no');
+    const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).select('_id request_no status approval_status');
+    // Onboarding still in process: the interview happened (DONE) but the admin has
+    // not yet approved/denied the feedback — the user must not re-apply until then.
+    if (own?.status === 'DONE' && (own.approval_status === 'NONE' || own.approval_status === 'PENDING')) {
+      throw new GraphQLError('Onboarding in process.', { extensions: { code: 'CONFLICT' } });
+    }
     const [busy, slotMs] = await Promise.all([
       occupiedInstants(own ? { excludeMeetingId: String(own._id) } : {}),
       slotWindowMs(),
@@ -536,8 +541,9 @@ export const meetingService = {
     // Assign a request id once and keep it across re-requests of the same
     // user+kind (also back-fills legacy rows that predate the field).
     const requestNo = own?.request_no ?? (await nextMeetingRequestNo(kind));
-    // A fresh booking always restarts the request — a previously CANCELLED or
-    // DONE meeting must come back as REQUESTED so the Earn card locks again.
+    // A fresh booking restarts the request — a previously CANCELLED meeting (or a
+    // DONE one the admin DENIED) comes back as REQUESTED so the Earn card locks
+    // again. A DONE meeting still awaiting approval was already blocked above.
     const doc = await MeetingModel.findOneAndUpdate(
       { user_id: new Types.ObjectId(userId), kind },
       {

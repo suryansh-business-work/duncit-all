@@ -9,6 +9,8 @@ jest.mock('@react-navigation/native', () => ({
 }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+const mockUseMe = jest.fn();
+jest.mock('@/hooks/useMe', () => ({ useMe: () => mockUseMe() }));
 
 const survey = {
   id: 'sv1',
@@ -127,7 +129,10 @@ async function passCategory() {
   fireEvent.press(screen.getByTestId('primary-action'));
 }
 
-beforeEach(() => mockRequest.mockReset());
+beforeEach(() => {
+  mockRequest.mockReset();
+  mockUseMe.mockReturnValue({ data: { me: null } });
+});
 
 describe('OnboardingSurvey', () => {
   it('starts at the category step even when the meeting is already requested', async () => {
@@ -138,6 +143,17 @@ describe('OnboardingSurvey', () => {
 
   it('category -> survey (validates) -> meeting -> done', async () => {
     mockApi({ surveyDone: false, meetingDone: false });
+    // Phone is sourced read-only from the profile now (not typed in the form).
+    mockUseMe.mockReturnValue({
+      data: {
+        me: {
+          user_id: 'u1',
+          full_name: 'Asha Roy',
+          phone_number: '9876543210',
+          phone_extension: '+91',
+        },
+      },
+    });
     renderSurvey();
     await passCategory();
 
@@ -168,13 +184,11 @@ describe('OnboardingSurvey', () => {
     fireEvent.press(screen.getByTestId('primary-action'));
     expect(await screen.findByText(/Pick an available slot/)).toBeOnTheScreen();
 
-    // Slot picked but no phone -> error.
-    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
-    fireEvent.press(screen.getByTestId('primary-action'));
-    expect(await screen.findByText(/Phone number is required/)).toBeOnTheScreen();
+    // Phone is prefilled read-only from the profile.
+    expect(screen.getByTestId('meeting-phone').props.value).toBe('9876543210');
 
-    // Phone + notes -> books the slot -> thank-you with the booked time.
-    fireEvent.changeText(screen.getByTestId('meeting-phone'), '9876543210');
+    // Slot + notes -> books the slot -> thank-you with the booked time.
+    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
     fireEvent.changeText(screen.getByTestId('meeting-notes'), 'Afternoon please');
     fireEvent.press(screen.getByTestId('primary-action'));
 

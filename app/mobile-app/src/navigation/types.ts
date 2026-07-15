@@ -10,6 +10,8 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   ResetPassword: { email: string };
   Survey: undefined;
+  /** Account drawer as a routable overlay (URL /menu) — Back/refresh work. */
+  Menu: undefined;
   Home: NavigatorScreenParams<TabParamList> | undefined;
   Search: undefined;
   Profile: undefined;
@@ -31,6 +33,7 @@ export type RootStackParamList = {
   VenueEarnings: undefined;
   Earn: undefined;
   ListProduct: undefined;
+  BeClubAdmin: undefined;
   ProductsManage: undefined;
   Support: undefined;
   Sos: undefined;
@@ -63,6 +66,7 @@ export type RootStackParamList = {
 /** Param-less destinations reachable from the account drawer menu. */
 export type MenuRoute = Exclude<
   keyof RootStackParamList,
+  | 'Menu'
   | 'CreatePod'
   | 'Policy'
   | 'TicketDetails'

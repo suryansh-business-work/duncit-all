@@ -1,7 +1,7 @@
 import type React from 'react';
-import type { ICellRendererParams, ValueGetterParams } from 'ag-grid-community';
+import type { ICellRendererParams, ITooltipParams, ValueGetterParams } from 'ag-grid-community';
 import { describe, expect, it } from 'vitest';
-import { buildColDefs, isColumnHidden } from '../src/columnDefs';
+import { buildColDefs, isColumnHidden, TRUNCATE_CELL_CLASS } from '../src/columnDefs';
 import type { DuncitColumn } from '../src/types';
 
 type Row = { id: string; name: string; score: number };
@@ -65,5 +65,23 @@ describe('buildColDefs', () => {
     expect(renderer({ data: row } as ICellRendererParams<Row>)).toEqual(<b>Alice</b>);
     expect(renderer({ data: undefined } as ICellRendererParams<Row>)).toBeNull();
     expect(defs[1].cellRenderer).toBeUndefined();
+  });
+
+  it('truncates + tooltips only plain-text cells; renderers keep their own layout', () => {
+    const mixed: DuncitColumn<Row>[] = [
+      { field: 'name', headerName: 'Name' },
+      { field: 'score', headerName: 'Score', cellRenderer: (row) => <b>{row.score}</b> },
+    ];
+    const defs = buildColDefs(mixed, {}, null, 'asc');
+    // Plain-text column: truncation class + a stringified tooltip.
+    expect(defs[0].cellClass).toBe(TRUNCATE_CELL_CLASS);
+    const tooltipOf = (i: number) =>
+      defs[i].tooltipValueGetter as ((p: ITooltipParams<Row>) => string | undefined) | undefined;
+    const row: Row = { id: '1', name: 'Alice', score: 3 };
+    expect(tooltipOf(0)?.({ data: row } as ITooltipParams<Row>)).toBe('Alice');
+    expect(tooltipOf(0)?.({ data: undefined } as ITooltipParams<Row>)).toBeUndefined();
+    // Renderer column: no truncation class, no tooltip (it owns its layout).
+    expect(defs[1].cellClass).toBeUndefined();
+    expect(defs[1].tooltipValueGetter).toBeUndefined();
   });
 });

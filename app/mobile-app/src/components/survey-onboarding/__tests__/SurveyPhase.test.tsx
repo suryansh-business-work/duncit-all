@@ -140,10 +140,7 @@ const meetingProps = {
   setName: jest.fn(),
   lockName: false,
   ext: '+91',
-  setExt: jest.fn(),
   phone: '',
-  setPhone: jest.fn(),
-  hasProfilePhone: false,
   notes: '',
   setNotes: jest.fn(),
   busy: false,
@@ -177,17 +174,13 @@ describe('MeetingPhase slot picker', () => {
     expect(setSelectedSlot).toHaveBeenCalledWith('');
   });
 
-  it('locks name and phone when they come from the profile', () => {
+  it('locks name and always shows the profile phone read-only', () => {
     renderWithProviders(
-      <MeetingPhase
-        {...meetingProps}
-        name="Asha Roy"
-        lockName
-        phone="9876543210"
-        hasProfilePhone
-      />,
+      <MeetingPhase {...meetingProps} name="Asha Roy" lockName phone="9876543210" />,
     );
+    // One "From your profile." for the locked name, one for the always-read-only phone.
     expect(screen.getAllByText('From your profile.')).toHaveLength(2);
+    expect(screen.getByTestId('meeting-phone').props.value).toBe('9876543210');
   });
 
   it('shows the loading and empty states', () => {

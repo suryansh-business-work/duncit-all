@@ -31,13 +31,13 @@ const STATUS_FILTERS: { value: MeetingStatus | ''; label: string }[] = [
   { value: 'DONE', label: 'Done' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
-const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
 
 /** Onboarding → Meeting → Venue/Host/Seller Meeting Schedule: requests + scheduling. */
 export default function MeetingSchedulePage() {
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
-  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM';
+  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
   const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>('');
 
   const client = useApolloClient();

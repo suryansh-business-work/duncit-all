@@ -140,7 +140,52 @@ export const PublicInventoryProductDocument = gql(`
       weight_kg
       unit_cost
       selling_price
+      variants {
+        id
+        option_label
+        color
+        size_label
+        unit_cost
+        inventory_count
+        images
+      }
     }
+  }
+`);
+
+/** Ratings & reviews for a product (summary + list) for the product-detail sheet. */
+export const ProductReviewsDocument = gql(`
+  query MobileProductReviews($id: ID!) {
+    productReviewSummary(product_id: $id) {
+      average_rating
+      total
+      star_counts
+    }
+    productReviews(product_id: $id) {
+      id
+      user_name
+      rating
+      comment
+      images
+      up_votes
+      down_votes
+      my_vote
+      seller_reply
+      seller_reply_at
+      created_at
+    }
+  }
+`);
+
+export const CreateProductReviewDocument = gql(`
+  mutation MobileCreateProductReview($input: CreateProductReviewInput!) {
+    createProductReview(input: $input) { id }
+  }
+`);
+
+export const VoteProductReviewDocument = gql(`
+  mutation MobileVoteProductReview($review_id: ID!, $vote: Int!) {
+    voteProductReview(review_id: $review_id, vote: $vote) { id up_votes down_votes my_vote }
   }
 `);
 

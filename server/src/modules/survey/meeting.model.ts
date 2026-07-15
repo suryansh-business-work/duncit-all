@@ -68,6 +68,7 @@ const MEETING_REQUEST_PREFIX: Record<string, string> = {
   VENUE: 'DUN-VEN',
   HOST: 'DUN-HOST',
   ECOMM: 'DUN-BRAND',
+  CLUB_ADMIN: 'DUN-CLUB',
 };
 
 // Atomic sequential counter per kind (pattern: hostRequest.nextHostRequestNo).

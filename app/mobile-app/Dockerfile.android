@@ -77,13 +77,26 @@ RUN mkdir -p /opt/android-sdk/cmdline-tools && \
     mv /opt/android-sdk/cmdline-tools/cmdline-tools /opt/android-sdk/cmdline-tools/latest && \
     rm /tmp/cmdtools.zip
 
-# SDK 35 + build-tools 35 + NDK 27 (pinned by withNdkVersion plugin for std::format)
+# SDK 35 + build-tools 35 (small, reliable via sdkmanager)
 RUN yes | sdkmanager --licenses > /dev/null && \
     sdkmanager \
       "platform-tools" \
       "platforms;android-35" \
-      "build-tools;35.0.0" \
-      "ndk;27.1.12297006"
+      "build-tools;35.0.0"
+
+# NDK 27 (pinned by the withNdkVersion plugin for std::format). Fetched straight
+# from Google instead of via sdkmanager: sdkmanager streams the ~700 MB NDK to a
+# temp file and unzips it in one shot, which intermittently dies with
+# "Error on ZipFile unknown archive" on a truncated download. wget (default 20
+# retries) + a checked unzip is robust and mirrors the cmdline-tools step above.
+# r27b == revision 27.1.12297006 (what the plugin pins); AGP resolves the NDK by
+# reading Pkg.Revision from source.properties under $ANDROID_HOME/ndk/<revision>.
+RUN wget -q https://dl.google.com/android/repository/android-ndk-r27b-linux.zip \
+         -O /tmp/ndk.zip && \
+    mkdir -p /opt/android-sdk/ndk && \
+    unzip -q /tmp/ndk.zip -d /opt/android-sdk/ndk && \
+    mv /opt/android-sdk/ndk/android-ndk-r27b /opt/android-sdk/ndk/27.1.12297006 && \
+    rm /tmp/ndk.zip
 
 # ── Stage 3: Gradle build ───────────────────────────────────────────────────
 FROM android-sdk AS builder

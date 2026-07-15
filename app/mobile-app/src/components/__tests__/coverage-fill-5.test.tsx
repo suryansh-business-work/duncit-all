@@ -108,8 +108,19 @@ describe('PublicProfileBadges', () => {
 });
 
 describe('TicketForm failure', () => {
-  it('shows an error when ticket creation fails', async () => {
-    mockCreateTicket.mockRejectedValueOnce(new Error('boom'));
+  it('surfaces the real server error message when ticket creation fails', async () => {
+    mockCreateTicket.mockRejectedValueOnce(new Error('Subject is too long'));
+    renderWithProviders(<TicketForm onCreated={jest.fn()} />);
+    fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Help');
+    fireEvent.changeText(screen.getByTestId('ticket-message'), 'It broke');
+    fireEvent.press(screen.getByTestId('ticket-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('ticket-error')).toHaveTextContent('Subject is too long'),
+    );
+  });
+
+  it('falls back to a generic message when the failure is not an Error', async () => {
+    mockCreateTicket.mockRejectedValueOnce('opaque');
     renderWithProviders(<TicketForm onCreated={jest.fn()} />);
     fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Help');
     fireEvent.changeText(screen.getByTestId('ticket-message'), 'It broke');

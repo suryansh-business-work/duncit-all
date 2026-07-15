@@ -25,6 +25,13 @@ export interface Scope {
   category_id: string;
   sub_category_id: string;
 }
+/** Display names for the chosen Super/Category/Sub — shown in the summary banner. */
+export interface CategoryLabels {
+  super: string;
+  category: string;
+  sub: string;
+}
+const EMPTY_LABELS: CategoryLabels = { super: '', category: '', sub: '' };
 
 /** State machine for the category → survey → meeting onboarding gate. */
 export function useOnboardingFlow(kind: SurveyKind) {
@@ -45,6 +52,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
       sub_category_id: '',
     },
   );
+  const [labels, setLabels] = useState<CategoryLabels>(savedDraft?.labels ?? EMPTY_LABELS);
   const [survey, setSurvey] = useState<ActiveSurvey | null>(savedDraft?.survey ?? null);
   const [answers, setAnswers] = useState<Record<string, Answer>>(savedDraft?.answers ?? {});
   const [slots, setSlots] = useState<MeetingSlot[]>([]);
@@ -79,9 +87,9 @@ export function useOnboardingFlow(kind: SurveyKind) {
     if (phase === 'done') {
       clearDraft(kind);
     } else {
-      setDraft(kind, { phase, scope, survey, answers });
+      setDraft(kind, { phase, scope, labels, survey, answers });
     }
-  }, [kind, phase, scope, survey, answers, setDraft, clearDraft]);
+  }, [kind, phase, scope, labels, survey, answers, setDraft, clearDraft]);
 
   const get = (qid: string): Answer => answers[qid] ?? { value: '', values: [] };
   const set = (qid: string, patch: Partial<Answer>) =>
@@ -112,10 +120,13 @@ export function useOnboardingFlow(kind: SurveyKind) {
     fireAndForget(loadSlots());
   };
 
-  const chooseCategory = async (chosen: Scope) => {
+  const goToCategory = () => setPhase('category');
+
+  const chooseCategory = async (chosen: Scope, chosenLabels: CategoryLabels) => {
     setError(null);
     setBusy(true);
     setScope(chosen);
+    setLabels(chosenLabels);
     try {
       const res = await graphqlRequest<ActiveSurveyResult, { kind: SurveyKind } & Scope>(
         ActiveSurveyForDocument,
@@ -215,6 +226,8 @@ export function useOnboardingFlow(kind: SurveyKind) {
 
   return {
     phase,
+    scope,
+    labels,
     survey,
     answer: { get, set, toggle },
     slots,
@@ -234,6 +247,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
     bookedSlot,
     busy,
     error,
+    goToCategory,
     chooseCategory,
     submitSurvey,
     submitMeeting,

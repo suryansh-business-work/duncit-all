@@ -13,6 +13,7 @@ import { useBranding } from '@/hooks/useBranding';
 import type { SurveyKind } from '@/graphql/onboarding-survey';
 import { useOnboardingFlow } from './useOnboardingFlow';
 import { CategoryPhase } from './CategoryPhase';
+import { CategorySummaryBanner } from './CategorySummaryBanner';
 import { SurveyPhase } from './SurveyPhase';
 import { MeetingPhase } from './MeetingPhase';
 
@@ -109,9 +110,17 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           </Text>
         </XStack>
 
+        {(flow.phase === 'survey' || flow.phase === 'meeting') && (
+          <CategorySummaryBanner labels={flow.labels} onChange={flow.goToCategory} />
+        )}
         <KeyboardScreen>
           {flow.phase === 'category' && (
-            <CategoryPhase busy={flow.busy} error={flow.error} onContinue={flow.chooseCategory} />
+            <CategoryPhase
+              busy={flow.busy}
+              error={flow.error}
+              onContinue={flow.chooseCategory}
+              initialScope={flow.scope}
+            />
           )}
           {flow.phase === 'survey' && flow.survey && (
             <SurveyPhase
@@ -134,10 +143,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
               setName={flow.setName}
               lockName={flow.lockName}
               ext={flow.ext}
-              setExt={flow.setExt}
               phone={flow.phone}
-              setPhone={flow.setPhone}
-              hasProfilePhone={flow.hasProfilePhone}
               notes={flow.notes}
               setNotes={flow.setNotes}
               busy={flow.busy}

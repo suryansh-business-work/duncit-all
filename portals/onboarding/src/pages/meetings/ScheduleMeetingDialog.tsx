@@ -64,6 +64,10 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
       setError('Pick an open slot for the meeting.');
       return;
     }
+    if (status === 'SCHEDULED' && !link.trim()) {
+      setError('Add a meeting link to schedule the meeting.');
+      return;
+    }
     setError(null);
     try {
       await updateMeeting({
@@ -92,7 +96,18 @@ export default function ScheduleMeetingDialog({ meeting, onClose, onSaved }: Rea
           ) : (
             <ScheduleSlotPicker slots={slots} value={slot} onChange={setSlot} />
           )}
-          <TextField size="small" type="url" label="Meeting link" placeholder="https://meet.google.com/…" value={link} onChange={(e) => setLink(e.target.value)} fullWidth />
+          <TextField
+            size="small"
+            type="url"
+            label="Meeting link"
+            required={status === 'SCHEDULED'}
+            error={!!error && status === 'SCHEDULED' && !link.trim()}
+            helperText={status === 'SCHEDULED' ? 'Required to schedule the meeting.' : undefined}
+            placeholder="https://meet.google.com/…"
+            value={link}
+            onChange={(e) => setLink(e.target.value)}
+            fullWidth
+          />
           <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value as MeetingStatus)} fullWidth>
             {STATUSES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
           </TextField>

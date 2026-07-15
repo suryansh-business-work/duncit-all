@@ -875,12 +875,28 @@ export const venueService = {
 
   /** Draft a venue shell from an approved onboarding-meeting request so it shows
    * in the Onboarded Venues list (status DRAFT). Reuses the owner's open draft. */
-  async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {
+  async createDraftFromApproval(prefill: {
+    userId: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    category?: { super_category_id: string; category_id: string; sub_category_id: string } | null;
+  }) {
     const v = await getOrCreate(prefill.userId);
     if (prefill.name && !v.venue_name) v.venue_name = prefill.name;
     if (prefill.name && !v.owner_name) v.owner_name = prefill.name;
     if (prefill.email && !v.owner_email) v.owner_email = prefill.email;
     if (prefill.phone && !v.owner_phone) v.owner_phone = prefill.phone;
+    // Seed the category the applicant chose in the onboarding gate so the portal's
+    // Edit Venue dialog prefills it. Never clobber a category an admin already set,
+    // and never let a partial/invalid meeting category block the draft.
+    if (prefill.category && !v.venue_category?.super_category_id) {
+      try {
+        v.venue_category = await normalizeVenueCategoryInput(prefill.category);
+      } catch {
+        // Meeting had no valid Super→Cat→Sub triple — leave the category empty.
+      }
+    }
     v.status = 'DRAFT';
     await v.save();
     return toPub(v);

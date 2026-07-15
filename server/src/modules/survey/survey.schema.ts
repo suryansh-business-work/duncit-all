@@ -5,6 +5,7 @@ export const surveyTypeDefs = gql`
     VENUE
     HOST
     ECOMM
+    CLUB_ADMIN
   }
   enum SurveyQuestionType {
     SECTION

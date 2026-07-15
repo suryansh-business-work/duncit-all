@@ -5,6 +5,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import GroupsIcon from '@mui/icons-material/Groups';
 import EarnBox from './EarnBox';
 import EarnMeetingActions from './EarnMeetingActions';
 
@@ -19,6 +20,7 @@ const EARN_ME = gql`
       request_no
       kind
       status
+      approval_status
       scheduled_at
       requested_at
       reschedule_count
@@ -51,6 +53,14 @@ const BOXES = [
     to: '/survey/ecomm',
     icon: <Inventory2Icon />,
   },
+  {
+    role: 'CLUB_ADMIN',
+    kind: 'CLUB_ADMIN',
+    title: 'By managing a club',
+    description: 'Run a Duncit club and manage its pods and members as a club admin.',
+    to: '/survey/club_admin',
+    icon: <GroupsIcon />,
+  },
 ];
 
 interface EarnMeeting {
@@ -58,12 +68,26 @@ interface EarnMeeting {
   request_no?: string | null;
   kind: string;
   status: string;
+  approval_status?: string | null;
   scheduled_at?: string | null;
   requested_at?: string | null;
   reschedule_count?: number | null;
 }
 
+interface EarnBoxDef {
+  role: string;
+  kind: string;
+  title: string;
+  description: string;
+  to: string;
+  icon: JSX.Element;
+}
+
 const PENDING = new Set(['REQUESTED', 'SCHEDULED']);
+// A DONE meeting still at NONE/PENDING approval = onboarding under way; the card
+// stays blocked until an admin approves (or denies) the post-meeting feedback.
+const APPROVAL_IN_PROGRESS = new Set(['NONE', 'PENDING']);
+const IN_PROCESS_LABEL = 'Onboarding in process.';
 
 const meetingNotice = (meeting: EarnMeeting) => {
   const at = meeting.scheduled_at ?? meeting.requested_at;
@@ -73,6 +97,41 @@ const meetingNotice = (meeting: EarnMeeting) => {
   const whenSuffix = when ? ` on ${when}` : '';
   const ref = meeting.request_no ? ` (Request ID: ${meeting.request_no})` : '';
   return `You already have an onboarding meeting${ref} scheduled for this${whenSuffix}. Our team will meet you then — this option unlocks once the meeting is done.`;
+};
+
+interface EarnBoxState {
+  disabled: boolean;
+  disabledLabel: string;
+  description: string;
+  scheduledMeeting?: EarnMeeting;
+}
+
+/** Resolve a card's locked/unlocked state — mirrors the native EarnScreen. */
+const earnBoxState = (
+  box: EarnBoxDef,
+  roles: readonly string[],
+  meetings: readonly EarnMeeting[],
+): EarnBoxState => {
+  if (roles.includes(box.role)) {
+    return { disabled: true, disabledLabel: 'Already enabled', description: box.description };
+  }
+  const meeting = meetings.find((m) => m.kind === box.kind);
+  if (meeting && PENDING.has(meeting.status)) {
+    return {
+      disabled: true,
+      disabledLabel: 'Meeting scheduled',
+      description: meetingNotice(meeting),
+      scheduledMeeting: meeting,
+    };
+  }
+  if (meeting?.status === 'DONE' && APPROVAL_IN_PROGRESS.has(meeting.approval_status ?? 'NONE')) {
+    return {
+      disabled: true,
+      disabledLabel: IN_PROCESS_LABEL,
+      description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+    };
+  }
+  return { disabled: false, disabledLabel: 'Already enabled', description: box.description };
 };
 
 /** "Earn with Duncit" — three ways to start earning. A box is disabled when the
@@ -110,26 +169,23 @@ export default function EarnPage() {
             ))
           : null}
         {showSkeleton ? null : BOXES.map((box) => {
-          const hasRole = roles.includes(box.role);
-          const pendingMeeting = meetings.find(
-            (m) => m.kind === box.kind && PENDING.has(m.status)
-          );
-          const showMeetingNotice = !hasRole && !!pendingMeeting;
+          const state = earnBoxState(box, roles, meetings);
+          const { scheduledMeeting } = state;
           return (
             <Stack key={box.role} spacing={0}>
               <EarnBox
                 icon={box.icon}
                 title={box.title}
-                description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
+                description={state.description}
                 to={box.to}
-                disabled={hasRole || showMeetingNotice}
-                disabledLabel={showMeetingNotice ? 'Meeting scheduled' : 'Already enabled'}
+                disabled={state.disabled}
+                disabledLabel={state.disabledLabel}
               />
-              {showMeetingNotice && (
+              {scheduledMeeting && (
                 <EarnMeetingActions
                   kind={box.kind}
-                  bookedAt={pendingMeeting.scheduled_at ?? pendingMeeting.requested_at ?? null}
-                  rescheduleCount={pendingMeeting.reschedule_count ?? 0}
+                  bookedAt={scheduledMeeting.scheduled_at ?? scheduledMeeting.requested_at ?? null}
+                  rescheduleCount={scheduledMeeting.reschedule_count ?? 0}
                   onChanged={() => {
                     refetch().catch(() => undefined);
                   }}

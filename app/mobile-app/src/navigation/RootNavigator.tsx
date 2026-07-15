@@ -51,7 +51,9 @@ import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { EarnScreen } from '@/screens/EarnScreen';
+import { MenuScreen } from '@/screens/MenuScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
+import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
 import type { RootStackParamList } from './types';
@@ -73,6 +75,11 @@ export function RootNavigator() {
   const signedInScreens = surveyCompleted ? (
     <>
       <Stack.Screen name="Home" component={MainTabs} />
+      <Stack.Screen
+        name="Menu"
+        component={MenuScreen}
+        options={{ presentation: 'transparentModal' }}
+      />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Account" component={AccountScreen} />
@@ -93,6 +100,7 @@ export function RootNavigator() {
       <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
       <Stack.Screen name="Earn" component={EarnScreen} />
       <Stack.Screen name="ListProduct" component={ListProductScreen} />
+      <Stack.Screen name="BeClubAdmin" component={BeClubAdminScreen} />
       <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
       <Stack.Screen name="Sos" component={SosScreen} />

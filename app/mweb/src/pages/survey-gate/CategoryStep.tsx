@@ -9,12 +9,23 @@ export interface CategoryScope {
   sub_category_id: string;
 }
 
+/** Display names for the chosen Super/Category/Sub — shown in the summary banner. */
+export interface CategoryLabels {
+  super: string;
+  category: string;
+  sub: string;
+}
+
+const EMPTY_SCOPE: CategoryScope = { super_category_id: '', category_id: '', sub_category_id: '' };
+
 interface Props {
   submitting: boolean;
-  onContinue: (scope: CategoryScope) => void;
+  onContinue: (scope: CategoryScope, labels: CategoryLabels) => void;
   /** Leaf category ids the caller already holds/has pending — greyed out in the picker.
    * Omitted (default) → no option is disabled, so the shared survey-gate is unaffected. */
   disabledIds?: string[];
+  /** Prior selection to seed the picker with when re-entered to edit. */
+  initialScope?: CategoryScope;
 }
 
 const useLevel = (level: CategoryLevel, parentId: string) => {
@@ -31,8 +42,13 @@ const useLevel = (level: CategoryLevel, parentId: string) => {
 };
 
 /** Super → Category → Sub picker shown before the survey; resolves which survey to ask. */
-export default function CategoryStep({ submitting, onContinue, disabledIds }: Readonly<Props>) {
-  const [scope, setScope] = useState<CategoryScope>({ super_category_id: '', category_id: '', sub_category_id: '' });
+export default function CategoryStep({
+  submitting,
+  onContinue,
+  disabledIds,
+  initialScope,
+}: Readonly<Props>) {
+  const [scope, setScope] = useState<CategoryScope>(initialScope ?? EMPTY_SCOPE);
   const disabledSet = new Set(disabledIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const supers = useLevel('SUPER', '');
@@ -55,11 +71,17 @@ export default function CategoryStep({ submitting, onContinue, disabledIds }: Re
     return null;
   };
 
+  const nameOf = (list: CategoryOption[], id: string) => list.find((c) => c.id === id)?.name ?? '';
+
   const onSubmit = () => {
     const missing = firstMissing();
     if (missing) { setError(missing); return; }
     setError(null);
-    onContinue(scope);
+    onContinue(scope, {
+      super: nameOf(supers.options, scope.super_category_id),
+      category: nameOf(cats.options, scope.category_id),
+      sub: nameOf(subs.options, scope.sub_category_id),
+    });
   };
 
   const field = (

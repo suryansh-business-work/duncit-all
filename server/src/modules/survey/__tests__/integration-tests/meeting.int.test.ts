@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { generateSlots, meetingService } from '../../meeting.service';
+import { MeetingModel } from '../../meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import {
   sendMeetingScheduledEmail,
@@ -269,6 +270,27 @@ describe('meeting slot booking', () => {
     expect(again!.request_no).toBe(first!.request_no);
     const mine = await meetingService.myMeetings(me);
     expect(mine.filter((m) => m!.kind === 'VENUE')).toHaveLength(1);
+  });
+
+  it('blocks re-applying while a done meeting still awaits approval, then allows it once approved', async () => {
+    const me = new Types.ObjectId().toString();
+    await meetingService.request(me, 'VENUE', { requested_at: '2027-05-01T05:00:00.000Z', contact_phone: '9888888881' });
+    // The interview happened (DONE) but the admin has not approved/denied yet.
+    await MeetingModel.updateOne(
+      { user_id: new Types.ObjectId(me), kind: 'VENUE' },
+      { $set: { status: 'DONE', approval_status: 'NONE' } },
+    );
+    await expect(
+      meetingService.request(me, 'VENUE', { requested_at: '2027-05-02T05:00:00.000Z', contact_phone: '9888888881' }),
+    ).rejects.toThrow(/onboarding in process/i);
+
+    // Once the admin approves, re-applying is allowed again (restarts as REQUESTED).
+    await MeetingModel.updateOne(
+      { user_id: new Types.ObjectId(me), kind: 'VENUE' },
+      { $set: { approval_status: 'APPROVED' } },
+    );
+    const again = await meetingService.request(me, 'VENUE', { requested_at: '2027-05-03T05:00:00.000Z', contact_phone: '9888888881' });
+    expect(again!.status).toBe('REQUESTED');
   });
 
   it('staff cancel a meeting with a required reason and the applicant is emailed it', async () => {

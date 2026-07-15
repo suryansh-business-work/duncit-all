@@ -22,7 +22,9 @@ const KIND_FOR: Record<LeadSurveyEntity, SurveyKind> = {
   HOST_LEAD: 'HOST',
   ECOMM_LEAD: 'ECOMM',
 };
-const ENTITY_FOR_KIND: Record<SurveyKind, LeadSurveyEntity> = {
+// CLUB_ADMIN intentionally omitted — Club Admin onboarding has no CRM lead entity,
+// so syncFromGate skips it (the meeting still books).
+const ENTITY_FOR_KIND: Partial<Record<SurveyKind, LeadSurveyEntity>> = {
   VENUE: 'VENUE_LEAD',
   HOST: 'HOST_LEAD',
   ECOMM: 'ECOMM_LEAD',
@@ -188,7 +190,8 @@ export const leadSurveyService = {
   async syncFromGate(userId: string, kind: SurveyKind) {
     const user: any = await UserModel.findById(userId).lean();
     if (!user) return;
-    const entity: LeadSurveyEntity = ENTITY_FOR_KIND[kind];
+    const entity = ENTITY_FOR_KIND[kind];
+    if (!entity) return; // kinds without a CRM lead entity (e.g. CLUB_ADMIN)
     const Model = modelFor(entity);
     const email = user.auth?.email || '';
     const phone = user.auth?.phone?.number || '';

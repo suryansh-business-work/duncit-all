@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM';
+export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM' | 'CLUB_ADMIN';
 export type SurveyQuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
 export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';
 
@@ -100,4 +100,5 @@ export const PARTNER_PATH: Record<SurveyKind, string> = {
   VENUE: '/register-venue',
   HOST: '/become-host',
   ECOMM: '/products/manage',
+  CLUB_ADMIN: '/club-admin',
 };

@@ -19,6 +19,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import type { ProductListingValues } from './list-products.types';
 import CategoryCascade, { type CategoryErrors } from './CategoryCascade';
+import VariantTabs from './VariantTabs';
 
 export interface CategoryStep {
   superId: string;
@@ -34,7 +35,7 @@ const hints: Record<string, string> = {
   size_label: 'Example: Small pouch, Medium box, XL hamper.',
   height_cm: 'Approximate package height in centimeters.',
   weight_kg: 'Approximate packed weight in kilograms.',
-  color: 'Primary visible color or assorted if it varies.',
+  color: 'Primary colour of the default variant. Add more colours as variants below.',
   inventory_count: 'Total units currently available for Duncit hosts.',
   unit_cost: 'Final per-unit selling price shown to users.',
 };
@@ -87,9 +88,18 @@ function InventoryFields({ control }: Readonly<{ control: Control<ProductListing
       {field(control, 'size_label', 'Size')}
       {numberField(control, 'height_cm', 'Height (cm)', { min: 0.1, step: 0.1, inputMode: 'decimal' })}
       {numberField(control, 'weight_kg', 'Weight (kg)', { min: 0.01, step: 0.01, inputMode: 'decimal' })}
-      {field(control, 'color', 'Color')}
+      <RhfTextField
+        control={control}
+        name="color"
+        label="Color"
+        type="color"
+        hint={hints.color}
+        InputLabelProps={{ shrink: true }}
+        sx={{ maxWidth: 160 }}
+      />
       {numberField(control, 'inventory_count', 'Available inventory', { min: 1, step: 1, inputMode: 'numeric' })}
       {numberField(control, 'unit_cost', 'Product price (₹)', { min: 1, step: 1, inputMode: 'decimal' })}
+      <VariantTabs control={control} />
     </Stack>
   );
 }

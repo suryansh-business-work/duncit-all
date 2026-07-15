@@ -126,6 +126,34 @@ describe('venueService integration', () => {
     ).rejects.toThrow(/needs a label/i);
   });
 
+  it('seeds the onboarding-gate category onto the draft venue, without clobbering or breaking on a bad triple', async () => {
+    const { superCat, category, subCat } = await seedCategoryTree();
+    const owner = new Types.ObjectId().toString();
+    const triple = {
+      super_category_id: String(superCat._id),
+      category_id: String(category._id),
+      sub_category_id: String(subCat._id),
+    };
+
+    const draft = await venueService.createDraftFromApproval({ userId: owner, name: 'Asha', category: triple });
+    expect(draft.status).toBe('DRAFT');
+    expect(draft.venue_category.super_category_name).toBe('Sports');
+    expect(draft.venue_category.sub_category_id).toBe(String(subCat._id));
+
+    // A later draft pass with no category must not wipe the seeded one.
+    const again = await venueService.createDraftFromApproval({ userId: owner });
+    expect(again.venue_category.category_name).toBe('Cricket');
+
+    // An invalid triple never throws and never clobbers the existing category.
+    const other = new Types.ObjectId().toString();
+    const bad = await venueService.createDraftFromApproval({
+      userId: other,
+      category: { super_category_id: String(superCat._id), category_id: String(category._id), sub_category_id: String(category._id) },
+    });
+    expect(bad.status).toBe('DRAFT');
+    expect(bad.venue_category?.super_category_name || '').toBe('');
+  });
+
   it('edits a specific venue via venue_id with ownership and status guards', async () => {
     await seedLocation();
     const owner = new Types.ObjectId().toString();

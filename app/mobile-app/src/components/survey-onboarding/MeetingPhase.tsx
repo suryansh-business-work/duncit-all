@@ -17,10 +17,7 @@ interface Props {
   setName: (v: string) => void;
   lockName: boolean;
   ext: string;
-  setExt: (v: string) => void;
   phone: string;
-  setPhone: (v: string) => void;
-  hasProfilePhone: boolean;
   notes: string;
   setNotes: (v: string) => void;
   busy: boolean;
@@ -41,10 +38,7 @@ export function MeetingPhase({
   setName,
   lockName,
   ext,
-  setExt,
   phone,
-  setPhone,
-  hasProfilePhone,
   notes,
   setNotes,
   busy,
@@ -124,27 +118,23 @@ export function MeetingPhase({
             testID="meeting-ext"
             aria-label="Country code"
             value={ext}
-            onChangeText={setExt}
-            disabled={hasProfilePhone}
-            opacity={hasProfilePhone ? 0.6 : 1}
+            disabled
+            opacity={0.6}
             width={84}
           />
           <Input
             testID="meeting-phone"
             aria-label="Phone"
             value={phone}
-            onChangeText={setPhone}
             keyboardType="phone-pad"
-            disabled={hasProfilePhone}
-            opacity={hasProfilePhone ? 0.6 : 1}
+            disabled
+            opacity={0.6}
             flex={1}
           />
         </XStack>
-        {hasProfilePhone ? (
-          <Text fontSize={11.5} color={ink} opacity={0.55}>
-            From your profile.
-          </Text>
-        ) : null}
+        <Text fontSize={11.5} color={ink} opacity={0.55}>
+          From your profile.
+        </Text>
         <Text fontSize={14} fontWeight="700" color={ink}>
           Notes (optional)
         </Text>

@@ -2,6 +2,7 @@
 import { render, screen } from '@testing-library/react-native';
 
 import { BecomeHostScreen } from '@/screens/BecomeHostScreen';
+import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
 import { ExploreScreen } from '@/screens/ExploreScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { RegisterVenueScreen } from '@/screens/RegisterVenueScreen';
@@ -49,6 +50,15 @@ describe('survey-gated account screens', () => {
       kind: 'ECOMM',
       title: 'List your product',
       icon: 'inventory-2',
+    });
+  });
+
+  it('BeClubAdminScreen renders the CLUB_ADMIN onboarding survey with its copy', () => {
+    render(<BeClubAdminScreen />);
+    expect(mockSurveyProps.mock.calls[0]![0]).toMatchObject({
+      kind: 'CLUB_ADMIN',
+      title: 'Be a Club Admin',
+      icon: 'groups',
     });
   });
 });

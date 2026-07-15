@@ -4,15 +4,11 @@ import { AccountButton } from '@/components/AccountButton';
 import { useMe } from '@/hooks/useMe';
 import { renderWithProviders } from '@/utils/test-utils';
 
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate, canGoBack: () => true, goBack: jest.fn() }),
+}));
 jest.mock('@/hooks/useMe', () => ({ useMe: jest.fn() }));
-// The drawer is unit-tested on its own; here we only assert it toggles open.
-jest.mock('@/components/Sidebar', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { View } = require('react-native');
-  return {
-    Sidebar: ({ open }: { open: boolean }) => (open ? <View testID="sidebar-open" /> : null),
-  };
-});
 
 const mockedUseMe = jest.mocked(useMe);
 
@@ -25,13 +21,12 @@ describe('AccountButton', () => {
     expect(screen.getByTestId('account-avatar-image')).toBeOnTheScreen();
   });
 
-  it('falls back to the initial and opens the drawer on press', () => {
+  it('falls back to the initial and opens the /menu route on press', () => {
     mockedUseMe.mockReturnValue({ data: { me: { first_name: 'Asha' } } } as never);
     renderWithProviders(<AccountButton />);
     expect(screen.getByText('A')).toBeOnTheScreen();
-    expect(screen.queryByTestId('sidebar-open')).toBeNull();
     fireEvent.press(screen.getByTestId('account-button'));
-    expect(screen.getByTestId('sidebar-open')).toBeOnTheScreen();
+    expect(mockNavigate).toHaveBeenCalledWith('Menu');
   });
 
   it('defaults to "U" with no user data', () => {

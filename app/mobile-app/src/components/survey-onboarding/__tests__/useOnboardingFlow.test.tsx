@@ -28,6 +28,7 @@ const SURVEY = {
 
 const SCOPE = { super_category_id: 's', category_id: '', sub_category_id: '' };
 const FULL_SCOPE = { super_category_id: 's', category_id: 'c', sub_category_id: 'sb' };
+const LABELS = { super: 'Sports', category: 'Cricket', sub: 'Box' };
 
 function route({
   meeting = null,
@@ -157,11 +158,25 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     expect(result.current.phase).toBe('meeting');
     await waitFor(() => expect(result.current.slots).toHaveLength(2));
     expect(result.current.slots[1]?.available).toBe(false);
+  });
+
+  it('captures the chosen category labels and can return to the category step to edit', async () => {
+    route({ meeting: null, survey: null });
+    const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+    await waitFor(() => expect(result.current.phase).toBe('category'));
+    await act(async () => {
+      await result.current.chooseCategory(FULL_SCOPE, LABELS);
+    });
+    expect(result.current.phase).toBe('meeting');
+    expect(result.current.labels).toEqual(LABELS);
+    expect(result.current.scope).toEqual(FULL_SCOPE);
+    act(() => result.current.goToCategory());
+    expect(result.current.phase).toBe('category');
   });
 
   it('walks the gate even when a meeting was already requested (request upserts)', async () => {
@@ -169,7 +184,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     expect(result.current.phase).toBe('category');
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     expect(result.current.phase).toBe('meeting');
   });
@@ -179,7 +194,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     expect(result.current.error).toBeTruthy();
   });
@@ -189,7 +204,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     expect(result.current.phase).toBe('survey');
 
@@ -220,7 +235,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     act(() => result.current.answer.toggle(SURVEY.questions[0] as never, 'A'));
     await act(async () => {
@@ -234,7 +249,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
 
     await act(async () => {
@@ -277,11 +292,14 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory({
-        super_category_id: '',
-        category_id: '',
-        sub_category_id: '',
-      });
+      await result.current.chooseCategory(
+        {
+          super_category_id: '',
+          category_id: '',
+          sub_category_id: '',
+        },
+        LABELS,
+      );
     });
     act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
     act(() => result.current.setPhone('9876543210'));
@@ -302,7 +320,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(FULL_SCOPE);
+      await result.current.chooseCategory(FULL_SCOPE, LABELS);
     });
     act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
     act(() => result.current.setPhone('9876543210'));
@@ -327,7 +345,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
     act(() => result.current.setPhone('9876543210'));
@@ -358,7 +376,7 @@ describe('useOnboardingFlow', () => {
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
     act(() => result.current.setPhone('9876543210'));
@@ -378,7 +396,7 @@ describe('useOnboardingFlow', () => {
     });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await act(async () => {
-      await result.current.chooseCategory(SCOPE);
+      await result.current.chooseCategory(SCOPE, LABELS);
     });
     await waitFor(() => expect(result.current.error).toMatch(/slots/i));
   });

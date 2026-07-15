@@ -1,5 +1,5 @@
 import type { ActiveSurvey, SurveyKind } from './queries';
-import type { CategoryScope } from './CategoryStep';
+import type { CategoryLabels, CategoryScope } from './CategoryStep';
 import type { FieldAnswer } from './SurveyQuestionField';
 import type { SurveyAnswerInput } from './SurveyStepper';
 
@@ -10,6 +10,7 @@ export type GateStep = 'category' | 'survey' | 'meeting';
 export interface GateDraft {
   step: GateStep;
   scope: CategoryScope | null;
+  labels?: CategoryLabels;
   survey: ActiveSurvey | null;
   answers: Record<string, FieldAnswer>;
   submittedAnswers: SurveyAnswerInput[];

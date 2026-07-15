@@ -49,11 +49,10 @@ describe('CategoryPhase', () => {
     expect(screen.queryByTestId('cat-sup0')).toBeNull(); // inactive filtered out
 
     fireEvent.press(screen.getByTestId('primary-action'));
-    expect(onContinue).toHaveBeenCalledWith({
-      super_category_id: 'sup1',
-      category_id: 'c1',
-      sub_category_id: 'sb1',
-    });
+    expect(onContinue).toHaveBeenCalledWith(
+      { super_category_id: 'sup1', category_id: 'c1', sub_category_id: 'sb1' },
+      { super: 'Banana', category: 'Cat', sub: 'Sub' },
+    );
   });
 
   it('blocks Continue with a Super Category message when nothing is picked', async () => {
@@ -96,11 +95,10 @@ describe('CategoryPhase', () => {
     fireEvent.press(screen.getByTestId('cat-sb1'));
     expect(screen.queryByTestId('category-error')).toBeNull();
     fireEvent.press(screen.getByTestId('primary-action'));
-    expect(onContinue).toHaveBeenCalledWith({
-      super_category_id: 'sup1',
-      category_id: 'c1',
-      sub_category_id: 'sb1',
-    });
+    expect(onContinue).toHaveBeenCalledWith(
+      { super_category_id: 'sup1', category_id: 'c1', sub_category_id: 'sb1' },
+      { super: 'Banana', category: 'Cat', sub: 'Sub' },
+    );
   });
 
   it('continues with only a super when no deeper levels are offered', async () => {
@@ -113,11 +111,10 @@ describe('CategoryPhase', () => {
     renderWithProviders(<CategoryPhase busy={false} error={null} onContinue={onContinue} />);
     fireEvent.press(await screen.findByTestId('cat-only'));
     fireEvent.press(screen.getByTestId('primary-action'));
-    expect(onContinue).toHaveBeenCalledWith({
-      super_category_id: 'only',
-      category_id: '',
-      sub_category_id: '',
-    });
+    expect(onContinue).toHaveBeenCalledWith(
+      { super_category_id: 'only', category_id: '', sub_category_id: '' },
+      { super: 'Only', category: '', sub: '' },
+    );
   });
 
   it('disables already-held options and blocks picking them', async () => {

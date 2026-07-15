@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 
 import type { ActiveSurvey, SurveyKind } from '@/graphql/onboarding-survey';
-import type { Answer, Phase, Scope } from '@/components/survey-onboarding/useOnboardingFlow';
+import type {
+  Answer,
+  CategoryLabels,
+  Phase,
+  Scope,
+} from '@/components/survey-onboarding/useOnboardingFlow';
 
 /** The in-progress Earn onboarding draft — category scope + survey answers +
  *  which step the user reached — so pressing Back and returning restores it. */
 export interface OnboardingDraft {
   phase: Phase;
   scope: Scope;
+  labels?: CategoryLabels;
   survey: ActiveSurvey | null;
   answers: Record<string, Answer>;
 }

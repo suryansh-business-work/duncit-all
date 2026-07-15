@@ -10,7 +10,8 @@ import {
   type ActiveSurvey,
   type SurveyKind,
 } from './queries';
-import CategoryStep, { type CategoryScope } from './CategoryStep';
+import CategoryStep, { type CategoryLabels, type CategoryScope } from './CategoryStep';
+import CategorySummaryBanner from './CategorySummaryBanner';
 import SurveyStepper, { type SurveyAnswerInput, type SurveyAnswerState } from './SurveyStepper';
 import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
@@ -35,6 +36,7 @@ export default function SurveyGatePage() {
   const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
   const [surveyAnswers, setSurveyAnswers] = useState<SurveyAnswerState>({});
   const [scope, setScope] = useState<CategoryScope | null>(null);
+  const [labels, setLabels] = useState<CategoryLabels>({ super: '', category: '', sub: '' });
   const [resolving, setResolving] = useState(false);
   const [bookedSlot, setBookedSlot] = useState('');
   const [meetingError, setMeetingError] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function SurveyGatePage() {
     const draft = getGateDraft(kind);
     if (draft) {
       setScope(draft.scope);
+      setLabels(draft.labels ?? { super: '', category: '', sub: '' });
       setSurvey(draft.survey);
       setSurveyAnswers(draft.answers);
       setSubmittedAnswers(draft.submittedAnswers);
@@ -64,13 +67,14 @@ export default function SurveyGatePage() {
   useEffect(() => {
     if (step === 'thanks') { clearGateDraft(kind); return; }
     if (step === 'loading') return;
-    setGateDraft(kind, { step, scope, survey, answers: surveyAnswers, submittedAnswers });
-  }, [step, scope, survey, surveyAnswers, submittedAnswers, kind]);
+    setGateDraft(kind, { step, scope, labels, survey, answers: surveyAnswers, submittedAnswers });
+  }, [step, scope, labels, survey, surveyAnswers, submittedAnswers, kind]);
 
   const afterSurvey = () => setStep('meeting');
 
-  const onCategory = async (picked: CategoryScope) => {
+  const onCategory = async (picked: CategoryScope, pickedLabels: CategoryLabels) => {
     setScope(picked);
+    setLabels(pickedLabels);
     setResolving(true);
     try {
       const { data } = await resolveSurvey({ variables: { kind, ...picked } });
@@ -151,18 +155,28 @@ export default function SurveyGatePage() {
             <Typography variant="h6" fontWeight={950}>{heading}</Typography>
             <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
           </Stack>
-          {step === 'category' && <CategoryStep submitting={resolving} onContinue={onCategory} />}
-          {step === 'survey' && survey && (
-            <SurveyStepper
-              survey={survey}
-              submitting={submittingSurvey}
-              onSubmit={onSurvey}
-              answers={surveyAnswers}
-              setAnswers={setSurveyAnswers}
+          {step === 'category' && (
+            <CategoryStep
+              submitting={resolving}
+              onContinue={onCategory}
+              initialScope={scope ?? undefined}
             />
+          )}
+          {step === 'survey' && survey && (
+            <>
+              <CategorySummaryBanner labels={labels} onChange={() => setStep('category')} />
+              <SurveyStepper
+                survey={survey}
+                submitting={submittingSurvey}
+                onSubmit={onSurvey}
+                answers={surveyAnswers}
+                setAnswers={setSurveyAnswers}
+              />
+            </>
           )}
           {step === 'meeting' && (
             <>
+              <CategorySummaryBanner labels={labels} onChange={() => setStep('category')} />
               {survey && <SubmittedSummary survey={survey} answers={submittedAnswers} />}
               <MeetingForm kind={kind} submitting={requesting} error={meetingError} onSubmit={onMeeting} />
             </>

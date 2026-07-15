@@ -50,10 +50,40 @@ export const inventoryTypeDefs = /* GraphQL */ `
     DELETE
   }
 
+  type ProductVariant {
+    id: ID!
+    option_label: String!
+    sku: String!
+    color: String!
+    size_label: String!
+    unit_cost: Float!
+    inventory_count: Int!
+    images: [String!]!
+    height_cm: Float!
+    breadth_cm: Float!
+    length_cm: Float!
+    weight_kg: Float!
+  }
+
+  input ProductVariantInput {
+    option_label: String
+    sku: String
+    color: String
+    size_label: String
+    unit_cost: Float
+    inventory_count: Int
+    images: [String!]
+    height_cm: Float
+    breadth_cm: Float
+    length_cm: Float
+    weight_kg: Float
+  }
+
   type InventoryProduct {
     id: ID!
     product_name: String!
     sku: String!
+    variants: [ProductVariant!]!
     barcode: String!
     short_description: String!
     description: String!
@@ -287,6 +317,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     color: String
     inventory_count: Int!
     unit_cost: Float!
+    "Optional per-variant rows (colour/size/etc.). The flat fields above stay the product default/primary variant."
+    variants: [ProductVariantInput!]
     commission_pct: Float!
     delivery_target: ProductListingDeliveryTarget!
   }

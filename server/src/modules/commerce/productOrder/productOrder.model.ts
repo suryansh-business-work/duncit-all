@@ -36,6 +36,10 @@ export const FULFILMENT_STATUSES: FulfilmentStatus[] = [
 
 export interface IOrderLineItem {
   product_id: Types.ObjectId;
+  /** Which variant of the product was purchased (empty when the product has none). */
+  variant_id: string;
+  variant_label: string;
+  variant_sku: string;
   name: string;
   sku: string;
   image_url: string;
@@ -115,6 +119,9 @@ export interface IProductOrder extends Document {
 const lineItemSchema = new Schema<IOrderLineItem>(
   {
     product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    variant_id: { type: String, default: '' },
+    variant_label: { type: String, default: '', trim: true, maxlength: 120 },
+    variant_sku: { type: String, default: '', trim: true, maxlength: 60 },
     name: { type: String, required: true, trim: true, maxlength: 200 },
     sku: { type: String, default: '', trim: true, maxlength: 60 },
     image_url: { type: String, default: '' },

@@ -6,7 +6,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
-import { InventoryProductModel, type IInventoryProduct } from './inventory.model';
+import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
 
@@ -92,6 +92,22 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     id: String(product._id),
     product_name: product.product_name ?? '',
     sku: product.sku ?? '',
+    variants: Array.isArray(product.variants)
+      ? product.variants.map((v) => ({
+          id: String(v._id),
+          option_label: v.option_label ?? '',
+          sku: v.sku ?? '',
+          color: v.color ?? '',
+          size_label: v.size_label ?? '',
+          unit_cost: v.unit_cost ?? 0,
+          inventory_count: v.inventory_count ?? 0,
+          images: Array.isArray(v.images) ? v.images : [],
+          height_cm: v.height_cm ?? 0,
+          breadth_cm: v.breadth_cm ?? 0,
+          length_cm: v.length_cm ?? 0,
+          weight_kg: v.weight_kg ?? 0,
+        }))
+      : [],
     barcode: product.barcode ?? '',
     short_description: product.short_description ?? '',
     description: product.description ?? '',
@@ -311,6 +327,40 @@ async function requireEcommManager(user: AuthUser | null) {
 
 const toOid = (v: any) => (v && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null);
 
+/** Persist per-variant rows and mirror the first variant into the product's flat
+ * fields (price/stock/color/size/images) so variant-unaware consumers — buyer
+ * pages, orders, stock — keep working. Total stock = sum of variant stock. */
+function applyVariants(doc: IInventoryProduct, input: any) {
+  if (!Array.isArray(input.variants) || input.variants.length === 0) return;
+  const variants = input.variants.map((v: any) => ({
+    option_label: cleanText(v.option_label, 120),
+    sku: (cleanText(v.sku, 60) || randomSku()).toUpperCase(),
+    color: cleanText(v.color, 80),
+    size_label: cleanText(v.size_label, 120),
+    unit_cost: Number(v.unit_cost) || 0,
+    inventory_count: Number(v.inventory_count) || 0,
+    images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
+    height_cm: Number(v.height_cm) || 0,
+    breadth_cm: Number(v.breadth_cm) || 0,
+    length_cm: Number(v.length_cm) || 0,
+    weight_kg: Number(v.weight_kg) || 0,
+  }));
+  doc.variants = variants as IProductVariant[];
+  const primary = variants[0];
+  doc.unit_cost = primary.unit_cost;
+  doc.purchase_price = primary.unit_cost;
+  doc.selling_price = primary.unit_cost;
+  doc.inventory_count = variants.reduce((sum: number, v: { inventory_count: number }) => sum + v.inventory_count, 0);
+  doc.color = primary.color;
+  doc.size_label = primary.size_label;
+  doc.height_cm = primary.height_cm;
+  doc.weight_kg = primary.weight_kg;
+  if (primary.images.length) {
+    doc.images = primary.images;
+    doc.image_url = primary.images[0];
+  }
+}
+
 function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser | null) {
   const images = listingImages(input);
   if (input.brand_id !== undefined) doc.brand_id = toOid(input.brand_id);
@@ -331,6 +381,7 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   doc.height_cm = Number(input.height_cm) || 0;
   doc.weight_kg = Number(input.weight_kg) || 0;
   doc.color = cleanText(input.color, 80);
+  applyVariants(doc, input);
   doc.commission_pct = Number(input.commission_pct) || 5;
   doc.delivery_target = input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST';
   const info = userInfo(user);
@@ -638,6 +689,10 @@ export const inventoryService = {
       last_updated_by_id: info.id,
       last_updated_by_name: info.name,
     });
+    if (Array.isArray(input.variants) && input.variants.length) {
+      applyVariants(doc, input);
+      await doc.save();
+    }
     await logActivity(doc._id, actor, 'CREATE', ['partner_listing'], 'Partner product listing submitted');
     return inventoryProductToPub(doc);
   },

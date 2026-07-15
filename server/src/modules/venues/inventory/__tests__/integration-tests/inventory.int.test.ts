@@ -35,6 +35,25 @@ describe('inventoryService integration', () => {
     expect(typeof sku).toBe('string');
     expect(sku.length).toBeGreaterThan(0);
   });
+
+  it('exposes per-variant price/stock/images on the product detail', async () => {
+    const id = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: id,
+      product_name: 'Tee',
+      sku: 'TEE1',
+      unit_cost: 10,
+      variants: [
+        { _id: new Types.ObjectId(), option_label: 'Red / M', sku: 'TEE1-RM', color: 'Red', size_label: 'M', unit_cost: 12, inventory_count: 5, images: ['https://cdn/r.jpg'], height_cm: 1, breadth_cm: 1, length_cm: 1, weight_kg: 0.2 },
+        { _id: new Types.ObjectId(), option_label: 'Blue / L', sku: 'TEE1-BL', color: 'Blue', size_label: 'L', unit_cost: 14, inventory_count: 3, images: [], height_cm: 0, breadth_cm: 0, length_cm: 0, weight_kg: 0 },
+      ],
+    } as never);
+    const pub = await inventoryService.getById(String(id));
+    expect(pub?.variants).toHaveLength(2);
+    expect(pub?.variants?.[0]).toMatchObject({ option_label: 'Red / M', color: 'Red', unit_cost: 12, inventory_count: 5 });
+    expect(pub?.variants?.[0].images).toEqual(['https://cdn/r.jpg']);
+    expect(pub?.variants?.[1].images).toEqual([]);
+  });
 });
 
 describe('inventory table queries (shared table engine)', () => {

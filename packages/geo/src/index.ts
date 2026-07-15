@@ -1,4 +1,4 @@
-import { allCountries } from 'country-region-data';
+import { COUNTRIES } from './data';
 
 export interface GeoCountry {
   name: string;
@@ -23,7 +23,7 @@ const flagForIso = (isoCode: string): string =>
     .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + (letter.codePointAt(0) ?? 0)));
 
 const countries: GeoCountry[] = byName(
-  allCountries.map(([name, isoCode]) => ({ name, isoCode, flag: flagForIso(isoCode) })),
+  COUNTRIES.map(([name, isoCode]) => ({ name, isoCode, flag: flagForIso(isoCode) })),
 );
 
 /** Every country (alphabetical), India pinned first for our India-heavy base. */
@@ -34,7 +34,7 @@ export const COUNTRY_OPTIONS: GeoCountry[] = [
 
 /** States/regions for a country ISO code (empty when unknown), alphabetical. */
 export const getStatesForCountry = (countryCode?: string): GeoState[] => {
-  const country = allCountries.find(([, isoCode]) => isoCode === countryCode);
+  const country = COUNTRIES.find(([, isoCode]) => isoCode === countryCode);
   return country
     ? byName(country[2].map(([name, isoCode]) => ({ name, isoCode, countryCode: country[1] })))
     : [];

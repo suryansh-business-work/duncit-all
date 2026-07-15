@@ -17,6 +17,7 @@ ENV CI=1
 # GraphQL SDL that codegen reads (self-contained `export const … = gql\`…\``).
 COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs ./packages/logs
+COPY packages/geo ./packages/geo
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

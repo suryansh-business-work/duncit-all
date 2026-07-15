@@ -49,6 +49,7 @@ export default function HeaderGreeting({
             cursor: 'pointer',
             color: 'primary.main',
             minWidth: 0,
+            minHeight: 'auto',
             maxWidth: { xs: 210, sm: 340 },
           }}
         >

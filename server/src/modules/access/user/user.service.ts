@@ -38,6 +38,7 @@ import {
   sendAccountDeletionOtpEmail,
   sendAdminAccessGrantedEmail,
   sendAdminAccessRevokedEmail,
+  sendPartnerAccessGrantedEmail,
 } from '@services/email/email.service';
 import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
@@ -349,6 +350,51 @@ async function signToken(payload: AuthUser): Promise<string> {
 // must downgrade the corresponding entity so the onboarding status reflects it.
 const ONBOARDING_REVOKE_ROLES = new Set(['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN']);
 
+// Partner-portal roles: granting one (from ANY path — admin grant or an
+// onboarding approval) emails the user their Partners-account link + login
+// guidance and sends a push notification.
+const PARTNER_ROLE_LABELS: Record<string, string> = {
+  HOST: 'Host',
+  VENUE_OWNER: 'Venue Partner',
+  ECOMM_MANAGER: 'Product Seller',
+  CLUB_ADMIN: 'Club Admin',
+};
+
+/** Best-effort partner-access mail + push for freshly granted partner roles —
+ * never blocks the role write. */
+async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) {
+  const partnerRoles = addedRoles.filter((r) => PARTNER_ROLE_LABELS[r]);
+  if (partnerRoles.length === 0) return;
+  try {
+    const target = await UserModel.findById(userId).select('auth.email profile.first_name');
+    if (!target) return;
+    const { getUrlConfigs } = await import('../../../config/url-configs');
+    const { partnersUrl } = await getUrlConfigs();
+    const name = target.profile?.first_name || 'there';
+    const email = target.auth?.email ?? '';
+    for (const role of partnerRoles) {
+      const label = PARTNER_ROLE_LABELS[role];
+      if (email) {
+        sendPartnerAccessGrantedEmail({ to: email, name, partner_type: label, portal_url: partnersUrl }).catch(
+          // eslint-disable-next-line no-console
+          (e) => console.error('[user.roles] partner access email failed:', e)
+        );
+      }
+      const { notificationService } = await import('@modules/engagement/notification/notification.service');
+      await notificationService.create({
+        title: `You're now a Duncit ${label} 🎉`,
+        body: 'Your Partners account is live — open it to get started.',
+        scope: 'USER',
+        target_user_ids: [userId],
+        silent: false,
+      });
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[user.roles] partner access notify failed:', err);
+  }
+}
+
 /** Downgrade a user's APPROVED onboarding entity when its role is revoked.
  * Best-effort + dynamic imports (the venue services import userService back). */
 async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
@@ -447,6 +493,9 @@ async function replaceUserRoles(
   // the Host/Venue/Brand status (e.g. revoking HOST un-approves the host).
   const removed = oldRoles.filter((r) => !normalized.includes(r));
   if (removed.length) await syncRevokedOnboarding(userId, removed);
+  // …and welcome freshly granted partner roles (mail + push, best-effort).
+  const added = normalized.filter((r) => !oldRoles.includes(r));
+  if (added.length) await notifyPartnerAccessGranted(userId, added);
 }
 
 // Soft-delete writes for a user: flag the doc (deleted_at + INACTIVE) and hard
@@ -1780,6 +1829,19 @@ export const userService = {
     const { docs, total, page, page_size } = await runTableQuery(
       UserModel,
       {},
+      input,
+      USER_TABLE_CONFIG
+    );
+    return { rows: await Promise.all(docs.map((u) => toPublic(u))), total, page, page_size };
+  },
+
+  /** Admin Partners list — every user holding a partner-portal role (Host,
+   * Venue Partner, Product Seller, Club Admin). The client's `role` filter
+   * narrows to one type; the base $in keeps non-partners out. */
+  async partnersTable(input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery(
+      UserModel,
+      { 'metadata.role_keys': { $in: Object.keys(PARTNER_ROLE_LABELS) } },
       input,
       USER_TABLE_CONFIG
     );

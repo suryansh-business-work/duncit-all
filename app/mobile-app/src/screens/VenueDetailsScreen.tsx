@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { VenuePodsSection } from '@/components/details/VenuePodsSection';
 import { useVenueDetails, type PublicVenue } from '@/hooks/useHostsVenues';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
@@ -111,6 +112,8 @@ function VenueDetailsContent({
       <Text testID="venue-address" fontSize={13} color="$muted">
         {addressLine(venue) || 'Address not provided'}
       </Text>
+
+      <VenuePodsSection venueId={venue.id} />
 
       <ChipsGroup title="Amenities" items={venue.amenities} />
       <ChipsGroup title="Facilities" items={venue.facilities} />

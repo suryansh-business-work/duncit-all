@@ -2,6 +2,7 @@ import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
 import ReferralCard from './ReferralCard';
+import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
 import { buildManageItems } from './profileSections';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
@@ -21,6 +22,7 @@ export default function UserModeContent({ me, showPodPlans, onNavigate }: Readon
       <ProfileIdentity me={me} onClick={() => onNavigate('/profile')} />
       {percent < 100 && <IncompleteBanner percent={percent} onComplete={() => onNavigate('/account')} />}
       <QuickActionGrid onNavigate={onNavigate} />
+      <VenuesCard onNavigate={onNavigate} />
       <ReferralCard onNavigate={onNavigate} />
       <ManageAccountList items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
     </>

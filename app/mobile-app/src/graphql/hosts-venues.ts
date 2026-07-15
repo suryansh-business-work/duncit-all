@@ -49,6 +49,70 @@ export const MobilePublicVenuesDocument = gql(`
   }
 `);
 
+/** Location-scoped venues for the Venues page — server-side search (client
+ * debounces) + Super→Cat→Sub category filter. mWeb's VENUES_EXPLORE twin. */
+export const MobileVenuesDocument = gql(`
+  query MobileVenues($location_id: ID, $search: String, $super_category_id: ID, $category_id: ID, $sub_category_id: ID) {
+    publicVenues(location_id: $location_id, search: $search, super_category_id: $super_category_id, category_id: $category_id, sub_category_id: $sub_category_id) {
+      id
+      owner_user_id
+      venue_name
+      venue_type
+      capacity
+      description
+      cover_image_url
+      gallery
+      address_line1
+      address_line2
+      country
+      city
+      state
+      locality
+      postal_code
+      lat
+      lng
+      amenities
+      facilities
+      security
+      tags
+      pod_count
+      venue_category {
+        super_category_name
+        category_name
+        sub_category_name
+      }
+    }
+  }
+`);
+
+/** All live pods hosted at a venue — the venue-detail "Pods at this venue"
+ * section (same selection as the club-detail pods). */
+export const MobileVenuePodsDocument = gql(`
+  query MobileVenueHostedPods($venueId: ID!) {
+    pods(filter: { venue_id: $venueId, is_active: true }) {
+      id
+      pod_id
+      pod_title
+      pod_date_time
+      pod_end_date_time
+      pod_type
+      pod_amount
+      pod_attendees
+      no_of_spots
+      host_names
+      pod_images_and_videos {
+        url
+        type
+      }
+      club_id
+      club_slug
+      pod_mode
+      place_label
+      place_detail
+    }
+  }
+`);
+
 /** Follow a user (host) — mWeb's FOLLOW_USER. */
 export const MobileFollowUserDocument = gql(`
   mutation MobileFollowUser($user_id: ID!) {

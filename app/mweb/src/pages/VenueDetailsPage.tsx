@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import VenueMapPreview from '../components/VenueMapPreview';
+import VenuePodsSection from './venues-page/VenuePodsSection';
 
 const PUBLIC_VENUES = gql`
   query PublicVenueDetails {
@@ -147,6 +148,8 @@ export default function VenueDetailsPage() {
         </Typography>
         <VenueMapPreview title={venue.venue_name} parts={addressParts(venue)} lat={venue.lat} lng={venue.lng} />
       </Stack>
+
+      <VenuePodsSection venueId={venue.id} />
 
       <VenueChipsSection title="Amenities" items={venue.amenities} />
       <VenueChipsSection title="Facilities" items={venue.facilities} />

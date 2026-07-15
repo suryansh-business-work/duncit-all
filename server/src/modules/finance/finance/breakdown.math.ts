@@ -6,6 +6,8 @@
  * Indian-GST model (all prices customer-facing GST-INCLUSIVE):
  *   1. GST is extracted from the customer payment:      gst  = P × g/(100+g)
  *   2. Platform fee applies on the net-of-GST amount:    fee  = net × f%
+ *   2b. The club-admin cut comes off the pool (net − fee): ca = pool × ca%
+ *       (0–10%); it counts as Duncit revenue, disbursed to the club admin later.
  *   3. The venue's money is its FIXED booked slot price (set by the venue in
  *      the Partners portal), taken from the remaining pool (clamped to the
  *      pool so the host side can never go negative).
@@ -36,6 +38,10 @@ export interface BreakdownRates {
   host_commission_percent: number;
   /** Duncit commission % taken from the venue's amount, e.g. 10. */
   venue_commission_percent: number;
+  /** Club-admin cut % taken off the pool (after GST + platform fee, before the
+   * venue/host split), 0–10. Counts as Duncit revenue (disbursed to the club
+   * admin later). */
+  club_admin_percent: number;
 }
 
 export interface PodFinanceBreakdown {
@@ -45,6 +51,8 @@ export interface PodFinanceBreakdown {
   net_paise: number;
   platform_fee_paise: number;
   pool_paise: number;
+  /** Club-admin cut taken off the pool after GST + platform fee (paise). */
+  club_admin_paise: number;
   /** The venue's booked slot price, clamped to the pool (paise). */
   venue_amount_paise: number;
   venue_commission_paise: number;
@@ -66,6 +74,7 @@ const RATE_KEYS: readonly (keyof BreakdownRates)[] = [
   'platform_fee_percent',
   'host_commission_percent',
   'venue_commission_percent',
+  'club_admin_percent',
 ];
 
 /** Validates a rate set: every key present, finite, within 0–100. Throws on
@@ -106,14 +115,19 @@ export function computePodFinanceBreakdown(
   const net = amountPaise - gst;
   const fee = Math.round((net * rates.platform_fee_percent) / 100);
   const pool = net - fee;
-  // The venue's fixed price comes off the pool first; the host owns the rest.
-  const venueAmount = Math.min(venueAmountPaise, pool);
-  const hostAmount = pool - venueAmount;
+  // The club-admin cut comes off the pool right after GST + platform fee (before
+  // the venue/host split); it becomes Duncit revenue (disbursed to the club admin
+  // later). Clamped to the pool so nothing downstream can go negative.
+  const clubAdmin = Math.min(pool, Math.round((pool * rates.club_admin_percent) / 100));
+  const splitPool = pool - clubAdmin;
+  // The venue's fixed price comes off what remains; the host owns the rest.
+  const venueAmount = Math.min(venueAmountPaise, splitPool);
+  const hostAmount = splitPool - venueAmount;
   const venueCommission = Math.round((venueAmount * rates.venue_commission_percent) / 100);
   const hostCommission = Math.round((hostAmount * rates.host_commission_percent) / 100);
   const venueReceives = venueAmount - venueCommission;
   const hostReceives = hostAmount - hostCommission;
-  const duncitRevenue = fee + hostCommission + venueCommission;
+  const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;
 
   const hostEarnPercent =
     amountPaise === 0 ? 0 : Math.round((hostReceives / amountPaise) * 10000) / 100;
@@ -124,6 +138,7 @@ export function computePodFinanceBreakdown(
     net_paise: net,
     platform_fee_paise: fee,
     pool_paise: pool,
+    club_admin_paise: clubAdmin,
     venue_amount_paise: venueAmount,
     venue_commission_paise: venueCommission,
     venue_receives_paise: venueReceives,

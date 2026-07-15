@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   DefaultTheme,
   NavigationContainer,
@@ -11,6 +11,7 @@ import { TamaguiProvider, Theme, YStack } from 'tamagui';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useBranding } from '@/hooks/useBranding';
+import { useBrandFont } from '@/hooks/useBrandFont';
 import { setWebFavicon } from '@/services/web-favicon';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
@@ -23,7 +24,7 @@ import { useAppVersionStore } from '@/stores/app-version.store';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import config from './tamagui.config';
+import config, { createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { config as appConfig } from '@/constants/config';
 
@@ -56,6 +57,13 @@ export default function App() {
   const loadConfig = useConfigStore((s) => s.load);
   const loadAppVersion = useAppVersionStore((s) => s.fetch);
   const { data: brandingData } = useBranding();
+  // Admin-picked Google Font (Branding → Fonts → Mobile App): once loaded, the
+  // Tamagui config is rebuilt around it so every Text/heading re-themes.
+  const brandFont = useBrandFont();
+  const tamaguiConfig = useMemo(
+    () => (brandFont ? createBrandConfig(brandFont) : config),
+    [brandFont],
+  );
 
   // Web build: swap the favicon to the admin-configured one once branding loads.
   useEffect(() => {
@@ -78,7 +86,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <TamaguiProvider config={config} defaultTheme={scheme}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme={scheme}>
         <Theme name={scheme}>
           <SafeAreaProvider>
             <ErrorBoundary>

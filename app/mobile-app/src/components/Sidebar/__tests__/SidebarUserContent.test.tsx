@@ -3,6 +3,10 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { SidebarUserContent } from '@/components/Sidebar/SidebarUserContent';
 import { renderWithProviders } from '@/utils/test-utils';
 
+jest.mock('@/hooks/useBranding', () => ({
+  useBranding: () => ({ data: { branding: { venues_card_video_url: 'https://cdn/v.mp4' } } }),
+}));
+
 const FULL_ACCOUNT = {
   first_name: 'Asha',
   last_name: 'Roy',
@@ -45,9 +49,11 @@ describe('SidebarUserContent', () => {
     fireEvent.press(screen.getByTestId('profile-completion-cta'));
     expect(onNavigate).toHaveBeenCalledWith('Account');
 
-    // Quick grid (Pod History / Earn) + referral card.
+    // Quick grid (Pod History / Earn) + venues card + referral card.
     fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
     expect(onNavigate).toHaveBeenCalledWith('PodHistory');
+    fireEvent.press(screen.getByTestId('sidebar-venues'));
+    expect(onNavigate).toHaveBeenCalledWith('Venues');
     fireEvent.press(screen.getByTestId('sidebar-grid-earn'));
     expect(onNavigate).toHaveBeenCalledWith('Earn');
     fireEvent.press(screen.getByTestId('sidebar-referral'));

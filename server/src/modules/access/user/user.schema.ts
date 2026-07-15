@@ -354,6 +354,8 @@ export const userTypeDefs = gql`
     mySavedPods(search: String, category_id: ID, sort: SavedPodSort): [Pod!]!
     users(filter: UsersFilter): [User!]!
     usersTable(query: TableQueryInput): UserTablePage!
+    "Admin Partners list — users holding a partner-portal role (Host / Venue Partner / Product Seller / Club Admin)."
+    partnersTable(query: TableQueryInput): UserTablePage!
     user(user_id: ID!): User
     userContactActions(user_id: ID!): [UserContactAction!]!
     userContactActionsTable(user_id: ID!, query: TableQueryInput): UserContactActionTablePage!

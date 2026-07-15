@@ -16,6 +16,8 @@ export const BrandingDocument = gql(`
       mobile_logo_url
       mobile_splash_url
       mobile_splash_type
+      venues_card_video_url
+      mobile_font_family
       home_all_vibe_icon_url
       home_header_tagline
     }

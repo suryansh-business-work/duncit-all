@@ -27,6 +27,8 @@ const waterfall = {
   gst_amount: 4576.27,
   platform_fee_pct: 5,
   platform_fee_amount: 1271.19,
+  club_admin_pct: 0,
+  club_admin_amount: 0,
   venue_amount: 300,
   host_amount: 23852.54,
   host_commission_pct: 10,
@@ -436,6 +438,25 @@ describe('PricePanel', () => {
     // The old per-booking framing is gone.
     expect(screen.queryByText(/per booking/)).toBeNull();
     expect(screen.queryByText(/Total take-home/)).toBeNull();
+  });
+
+  it('shows the club-admin row when a club-admin cut is configured', () => {
+    mockedEarnings.mockReturnValue({
+      waterfall: { ...waterfall, club_admin_pct: 10, club_admin_amount: 800.51 },
+      isLoading: false,
+    });
+    renderWithProviders(
+      <PricePanel
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={30}
+        isPhysical
+      />,
+    );
+    expect(screen.getByText('− Club Admin (10%)')).toBeOnTheScreen();
+    expect(screen.getByText('₹800.51')).toBeOnTheScreen();
   });
 
   it('shows a hint until both a ticket price and spots are set', () => {

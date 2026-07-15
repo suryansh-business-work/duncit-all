@@ -246,6 +246,25 @@ describe('breakdownService.potentialPodEarnings', () => {
     expect(w.host_earn_pct).toBe(40.41);
   });
 
+  it('applies the club-admin cut off the pool after GST + platform fee (into Duncit revenue)', async () => {
+    const host = await seedHost();
+    await FinanceSettingsModel.updateOne(
+      { singleton_key: 'finance' },
+      { $set: { default_club_admin_pct: 10 } },
+      { upsert: true }
+    );
+    const w = await breakdownService.potentialPodEarnings(String(host._id), 1000, null, 0);
+    expect(w.club_admin_pct).toBe(10);
+    expect(w.club_admin_amount).toBe(80.51); // pool 805.09 × 10%, off the top
+    expect(w.host_amount).toBe(724.58); // pool − club admin (no venue)
+    expect(w.host_receives).toBe(652.12); // − 10% host commission
+    // Club-admin cut is folded into Duncit revenue; reconciliation still holds.
+    expect(w.duncit_revenue).toBe(195.34); // 42.37 + 72.46 + 0 + 80.51
+    expect(
+      Math.round((w.gst_amount + w.host_receives + w.venue_receives + w.duncit_revenue) * 100) / 100
+    ).toBe(1000);
+  });
+
   it('uses defaults with no venue (venue amount ignored) and rejects bad input', async () => {
     const host = await seedHost();
     const w = await breakdownService.potentialPodEarnings(String(host._id), 1000, null, 300);

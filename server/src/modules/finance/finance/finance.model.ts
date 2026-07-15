@@ -13,6 +13,9 @@ export interface IFinanceSettings extends Document {
   default_venue_share_pct: number;
   default_venue_commission_pct: number;
   default_product_commission_pct: number;
+  // Club-admin cut % (0–10) taken off every pod's pool after GST + platform fee,
+  // before the venue/host split — counts as Duncit revenue (disbursed later).
+  default_club_admin_pct: number;
   // % kept from a member's refund when they back out of a paid pod (0 = full
   // refund). Config only for now — applied by the refund flow (built later).
   default_backout_deduction_pct: number;
@@ -93,6 +96,7 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     default_venue_share_pct: { type: Number, default: 90, min: 0, max: 100 },
     default_venue_commission_pct: { type: Number, default: 10, min: 0, max: 100 },
     default_product_commission_pct: { type: Number, default: 5, min: 0, max: 100 },
+    default_club_admin_pct: { type: Number, default: 0, min: 0, max: 10 },
     default_backout_deduction_pct: { type: Number, default: 0, min: 0, max: 100 },
     venue_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },
     host_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },

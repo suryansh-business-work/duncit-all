@@ -61,6 +61,7 @@ export const financeTypeDefs = /* GraphQL */ `
     default_venue_share_pct: Float!
     default_venue_commission_pct: Float!
     default_product_commission_pct: Float!
+    default_club_admin_pct: Float!
     default_backout_deduction_pct: Float!
     venue_payout_mode: PayoutMode!
     host_payout_mode: PayoutMode!
@@ -100,6 +101,7 @@ export const financeTypeDefs = /* GraphQL */ `
     default_venue_share_pct: Float
     default_venue_commission_pct: Float
     default_product_commission_pct: Float
+    default_club_admin_pct: Float
     default_backout_deduction_pct: Float
     venue_payout_mode: PayoutMode
     host_payout_mode: PayoutMode
@@ -183,6 +185,9 @@ export const financeTypeDefs = /* GraphQL */ `
     platform_fee_pct: Float!
     platform_fee_amount: Float!
     pool_amount: Float!
+    # Club-admin cut (% + amount) off the pool after GST + platform fee.
+    club_admin_pct: Float!
+    club_admin_amount: Float!
     # The venue's fixed booked slot price, clamped to the pool.
     venue_amount: Float!
     venue_commission_pct: Float!

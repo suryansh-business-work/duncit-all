@@ -8,6 +8,7 @@ const PORTAL_BRANDING = gql`
       portals_favicon_url
       portals_splash_url
       portals_splash_type
+      portals_font_family
     }
   }
 `;
@@ -33,6 +34,25 @@ function applyFavicon(url: string): void {
       el.removeAttribute('type');
     });
   });
+}
+
+/** Loads the admin-picked Google Font and applies it console-wide. Returns the
+ * cleanup that removes both injected tags. */
+function applyPortalFont(family: string): () => void {
+  const enc = family.trim().replace(/ /g, '+');
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${enc}:wght@400;500;600;700;800;900&display=swap`;
+  document.head.appendChild(link);
+  const style = document.createElement('style');
+  // The #root id selector outranks MUI's class selectors, so the picked family
+  // wins without !important; SVG icons are unaffected (no font glyphs).
+  style.textContent = `#root, #root * { font-family: '${family}', 'Quicksand', sans-serif; }`;
+  document.head.appendChild(style);
+  return () => {
+    link.remove();
+    style.remove();
+  };
 }
 
 const splashStyle: React.CSSProperties = {
@@ -67,6 +87,12 @@ export function PortalBranding(): React.ReactElement | null {
     const faviconUrl: string = branding?.portals_favicon_url || '';
     if (faviconUrl) applyFavicon(faviconUrl);
   }, [branding?.portals_favicon_url]);
+
+  useEffect(() => {
+    const family: string = branding?.portals_font_family || '';
+    if (!family) return undefined;
+    return applyPortalFont(family);
+  }, [branding?.portals_font_family]);
 
   useEffect(() => {
     if (!splashOpen || !splashUrl) return;

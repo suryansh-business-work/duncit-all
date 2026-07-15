@@ -87,6 +87,10 @@ const BRANDING_FIELDS = [
   "portals_logo_url",
   "portals_splash_url",
   "portals_splash_type",
+  "venues_card_video_url",
+  "mobile_font_family",
+  "mweb_font_family",
+  "portals_font_family",
   "website_header_logo_url",
   "website_footer_logo_url",
   "website_favicon_url",
@@ -116,6 +120,12 @@ const brandingToPub = (doc: any) => ({
   portals_logo_url: doc.portals_logo_url ?? "",
   portals_splash_url: doc.portals_splash_url ?? "",
   portals_splash_type: doc.portals_splash_type ?? "IMAGE",
+  venues_card_video_url:
+    doc.venues_card_video_url ??
+    "https://ik.imagekit.io/esdata1/pods/13903093_1920_1080_60fps_CGCbnkfjK.mp4?tr=orig",
+  mobile_font_family: doc.mobile_font_family ?? "",
+  mweb_font_family: doc.mweb_font_family ?? "",
+  portals_font_family: doc.portals_font_family ?? "",
   website_header_logo_url: doc.website_header_logo_url ?? "",
   website_footer_logo_url: doc.website_footer_logo_url ?? "",
   website_favicon_url: doc.website_favicon_url ?? "",

@@ -9,6 +9,7 @@ import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { HappeningNearbyScreen } from '@/screens/HappeningNearbyScreen';
 import { HostsVenuesScreen } from '@/screens/HostsVenuesScreen';
+import { VenuesScreen } from '@/screens/VenuesScreen';
 import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { FollowListScreen } from '@/screens/FollowListScreen';
@@ -122,6 +123,7 @@ export function RootNavigator() {
       <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
       <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
       <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
+      <Stack.Screen name="Venues" component={VenuesScreen} />
       <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
       <Stack.Screen name="Follow" component={FollowListScreen} />

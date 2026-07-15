@@ -31,6 +31,8 @@ export interface IPaymentReleaseBreakdown {
   platform_fee_pct: number;
   platform_fee_amount: number;
   pool_amount: number;
+  club_admin_pct: number;
+  club_admin_amount: number;
   share_pct: number;
   share_amount: number;
   commission_pct: number;
@@ -87,6 +89,8 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     platform_fee_pct: { type: Number, default: 0 },
     platform_fee_amount: { type: Number, default: 0 },
     pool_amount: { type: Number, default: 0 },
+    club_admin_pct: { type: Number, default: 0 },
+    club_admin_amount: { type: Number, default: 0 },
     share_pct: { type: Number, default: 0 },
     share_amount: { type: Number, default: 0 },
     commission_pct: { type: Number, default: 0 },

@@ -126,6 +126,58 @@ describe('venueService integration', () => {
     ).rejects.toThrow(/needs a label/i);
   });
 
+  it('publicList scopes by location, searches server-side, filters by category; publicVenue hides non-approved', async () => {
+    const { superCat, category, subCat } = await seedCategoryTree();
+    const locA = new Types.ObjectId();
+    const locB = new Types.ObjectId();
+    const cat = {
+      super_category_id: superCat._id,
+      category_id: category._id,
+      sub_category_id: subCat._id,
+      super_category_name: 'Sports',
+      category_name: 'Cricket',
+      sub_category_name: 'Box Cricket',
+    };
+    const mk = (over: Record<string, unknown>) => ({
+      owner_user_id: new Types.ObjectId(),
+      status: 'APPROVED',
+      is_active: true,
+      city: 'Pune',
+      ...over,
+    });
+    await VenueModel.create(mk({ venue_name: 'Turf One', location_id: locA, venue_category: cat }));
+    await VenueModel.create(mk({ venue_name: 'Cafe Beat', location_id: locA }));
+    await VenueModel.create(mk({ venue_name: 'Turf Two', location_id: locB }));
+    await VenueModel.create(mk({ venue_name: 'Hidden Draft', location_id: locA, status: 'DRAFT' }));
+    await VenueModel.create(mk({ venue_name: 'Switched Off', location_id: locA, is_active: false }));
+
+    // Location scope: only APPROVED + active venues in locA.
+    const inA = await venueService.publicList({ location_id: String(locA) });
+    expect(inA.map((v: any) => v.venue_name).sort()).toEqual(['Cafe Beat', 'Turf One']);
+
+    // Server-side search within the location.
+    const searched = await venueService.publicList({ location_id: String(locA), search: 'turf' });
+    expect(searched.map((v: any) => v.venue_name)).toEqual(['Turf One']);
+
+    // Category filter (any level of the Super→Cat→Sub triple).
+    const byCat = await venueService.publicList({
+      location_id: String(locA),
+      category_id: String(category._id),
+    });
+    expect(byCat.map((v: any) => v.venue_name)).toEqual(['Turf One']);
+
+    // No args = every public venue (legacy behaviour preserved).
+    const all = await venueService.publicList();
+    expect(all).toHaveLength(3);
+
+    // Public detail: approved venue is visible, a draft one is not.
+    const visible = await venueService.getPublicById(String(inA[0].id));
+    expect(visible?.venue_name).toBe(inA[0].venue_name);
+    const draft: any = await VenueModel.findOne({ venue_name: 'Hidden Draft' });
+    expect(await venueService.getPublicById(String(draft._id))).toBeNull();
+    expect(await venueService.getPublicById('nope')).toBeNull();
+  });
+
   it('seeds the onboarding-gate category onto the draft venue, without clobbering or breaking on a bad triple', async () => {
     const { superCat, category, subCat } = await seedCategoryTree();
     const owner = new Types.ObjectId().toString();

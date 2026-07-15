@@ -551,6 +551,44 @@ export const venueService = {
     const docs = await VenueModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
   },
+  /** Consumer Venues page: APPROVED + active venues, optionally scoped to the
+   * user's selected location, with server-side text search (the client
+   * debounces) and a Super→Cat→Sub category filter. */
+  async publicList(criteria?: {
+    location_id?: string | null;
+    search?: string | null;
+    super_category_id?: string | null;
+    category_id?: string | null;
+    sub_category_id?: string | null;
+  }) {
+    const q: any = { status: 'APPROVED', is_active: { $ne: false } };
+    if (criteria?.location_id && Types.ObjectId.isValid(criteria.location_id)) {
+      q.location_id = new Types.ObjectId(criteria.location_id);
+    }
+    const levels = [
+      ['venue_category.super_category_id', criteria?.super_category_id],
+      ['venue_category.category_id', criteria?.category_id],
+      ['venue_category.sub_category_id', criteria?.sub_category_id],
+    ] as const;
+    for (const [path, id] of levels) {
+      if (id && Types.ObjectId.isValid(id)) q[path] = new Types.ObjectId(id);
+    }
+    const search = (criteria?.search ?? '').trim();
+    if (search) {
+      const rx = new RegExp(escapeRegex(search), 'i');
+      q.$or = [{ venue_name: rx }, { venue_type: rx }, { city: rx }, { locality: rx }];
+    }
+    const docs = await VenueModel.find(q).sort({ created_at: -1 }).limit(200);
+    return docs.map(toPub);
+  },
+  /** Public single-venue detail — only an APPROVED, active venue is visible.
+   * (The admin getById would leak drafts/rejected venues.) */
+  async getPublicById(venueId: string) {
+    if (!Types.ObjectId.isValid(venueId)) return null;
+    const v = await VenueModel.findById(venueId);
+    if (!v || v.status !== 'APPROVED' || v.is_active === false) return null;
+    return toPub(v);
+  },
   /** Server-side table page (search/filter/sort/paginate) for the admin/
    * onboarding venuesTable query — same rows as list(). */
   async table(input?: TableQueryInput | null) {

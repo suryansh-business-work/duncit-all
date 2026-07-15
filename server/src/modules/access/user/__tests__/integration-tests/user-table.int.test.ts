@@ -29,6 +29,23 @@ async function seedUser(over: {
   return String(_id);
 }
 
+describe('userService.partnersTable integration', () => {
+  it('lists only partner-role holders and narrows by the role filter', async () => {
+    await seedUser({ first: 'Hosty', last: 'H', email: 'hosty@duncit.com', phone: '9990001111', city: 'Pune', roles: ['USER', 'HOST'], created: '2026-01-05' });
+    await seedUser({ first: 'Venya', last: 'V', email: 'venya@duncit.com', phone: '9990001112', city: 'Pune', roles: ['USER', 'VENUE_OWNER'], created: '2026-01-06' });
+    await seedUser({ first: 'Plain', last: 'P', email: 'plain@duncit.com', phone: '9990001113', city: 'Pune', roles: ['USER'], created: '2026-01-07' });
+
+    const partners = await userService.partnersTable();
+    expect(partners.total).toBe(2);
+    expect(partners.rows.map((u) => u!.first_name).sort()).toEqual(['Hosty', 'Venya']);
+
+    const hostsOnly = await userService.partnersTable({
+      filters: [{ field: 'role', op: 'eq', value: 'HOST' }],
+    });
+    expect(hostsOnly.rows.map((u) => u!.first_name)).toEqual(['Hosty']);
+  });
+});
+
 describe('userService.table (usersTable) integration', () => {
   it('serves the users table page with search, filters, sort and paging', async () => {
     await seedUser({ first: 'Alice', last: 'Anders', email: 'alice@duncit.com', phone: '9990000001', city: 'Delhi', created: '2026-01-01' });

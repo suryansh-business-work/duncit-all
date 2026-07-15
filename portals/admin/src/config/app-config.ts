@@ -71,6 +71,8 @@ export const appConfig: AppConfig = {
       ],
     },
     { label: 'Clubs', to: '/clubs', icon: 'community' },
+    { label: 'Venues', to: '/venues', icon: 'storefront' },
+    { label: 'Partners', to: '/partners', icon: 'handshake' },
     {
       label: 'Pods',
       icon: 'calendar',
@@ -126,6 +128,8 @@ export const appConfig: AppConfig = {
     },
     { label: 'Roles', to: '/rbac/roles', section: 'User Management', keywords: ['rbac', 'permissions', 'access'] },
     { label: 'Clubs', to: '/clubs', section: 'Clubs', keywords: ['community', 'communities'] },
+    { label: 'Venues', to: '/venues', section: 'Venues', keywords: ['spaces', 'places', 'turf'] },
+    { label: 'Partners', to: '/partners', section: 'Partners', keywords: ['host', 'venue partner', 'seller', 'club admin'] },
     { label: 'All Pods', to: '/pods', section: 'Pods', keywords: ['events', 'sessions'] },
     { label: 'Pod Ideas', to: '/pod-ideas', section: 'Pods' },
     { label: 'Pod Plans', to: '/pod-plans', section: 'Pods' },

@@ -9,6 +9,7 @@ const DEFAULT_RATES: BreakdownRates = {
   platform_fee_percent: 5,
   host_commission_percent: 10,
   venue_commission_percent: 10,
+  club_admin_percent: 0,
 };
 
 const invariant = (
@@ -20,8 +21,8 @@ const invariant = (
   expect(b.gst_paise + b.host_receives_paise + b.venue_receives_paise + b.duncit_revenue_paise).toBe(
     amountPaise
   );
-  // The pool always splits exactly between venue amount and host remainder.
-  expect(b.venue_amount_paise + b.host_amount_paise).toBe(b.pool_paise);
+  // The pool always splits exactly between club-admin, venue amount and host remainder.
+  expect(b.venue_amount_paise + b.host_amount_paise + b.club_admin_paise).toBe(b.pool_paise);
   return b;
 };
 
@@ -45,6 +46,17 @@ describe('computePodFinanceBreakdown', () => {
     expect(b.gst_paise + b.host_receives_paise + b.venue_receives_paise + b.duncit_revenue_paise).toBe(
       100000
     );
+  });
+
+  it('deducts a 10% club-admin cut off the pool (after GST + fee) into Duncit revenue', () => {
+    const b = invariant(100000, 30000, { ...DEFAULT_RATES, club_admin_percent: 10 });
+    expect(b.pool_paise).toBe(80509);
+    expect(b.club_admin_paise).toBe(8051); // 805.09 × 10% = 80.51, off the pool
+    expect(b.venue_amount_paise).toBe(30000); // venue's fixed slot price is untouched
+    expect(b.host_amount_paise).toBe(42458); // pool − club-admin − venue = 424.58
+    expect(b.host_receives_paise).toBe(38212); // 424.58 − 10% commission
+    // Club-admin cut is folded into Duncit revenue: 42.37 + 42.46 + 30.00 + 80.51.
+    expect(b.duncit_revenue_paise).toBe(19534);
   });
 
   it('gives the host the whole pool when there is no venue', () => {
@@ -80,6 +92,7 @@ describe('computePodFinanceBreakdown', () => {
       platform_fee_percent: 0,
       host_commission_percent: 0,
       venue_commission_percent: 0,
+      club_admin_percent: 0,
     });
     expect(b.gst_paise).toBe(0);
     expect(b.platform_fee_paise).toBe(0);
@@ -96,11 +109,14 @@ describe('computePodFinanceBreakdown', () => {
       DEFAULT_RATES,
       { ...DEFAULT_RATES, gst_percent: 12, platform_fee_percent: 2.5 },
       { ...DEFAULT_RATES, host_commission_percent: 12.5, venue_commission_percent: 7.5 },
+      { ...DEFAULT_RATES, club_admin_percent: 10 },
+      { ...DEFAULT_RATES, club_admin_percent: 7.5, platform_fee_percent: 3 },
       {
         gst_percent: 28,
         platform_fee_percent: 100,
         host_commission_percent: 100,
         venue_commission_percent: 100,
+        club_admin_percent: 100,
       },
     ];
     for (const rates of rateSets) {

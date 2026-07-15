@@ -33,6 +33,7 @@ const toPub = (d: IFinanceSettings) => ({
   default_venue_share_pct: d.default_venue_share_pct,
   default_venue_commission_pct: d.default_venue_commission_pct,
   default_product_commission_pct: d.default_product_commission_pct,
+  default_club_admin_pct: d.default_club_admin_pct,
   default_backout_deduction_pct: d.default_backout_deduction_pct,
   venue_payout_mode: d.venue_payout_mode,
   host_payout_mode: d.host_payout_mode,
@@ -71,6 +72,14 @@ function validatePctInputs(input: any) {
     'default_product_commission_pct',
     'default_backout_deduction_pct',
   ];
+  if (
+    input.default_club_admin_pct !== undefined &&
+    (input.default_club_admin_pct < 0 || input.default_club_admin_pct > 10)
+  ) {
+    throw new GraphQLError('default_club_admin_pct must be between 0 and 10', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
   for (const field of pctFields) {
     const value = input[field];
     if (value !== undefined && (value < 0 || value > 100)) {

@@ -21,6 +21,7 @@ interface Deductions {
   default_host_commission_pct: number;
   default_venue_commission_pct: number;
   default_product_commission_pct: number;
+  default_club_admin_pct: number;
   default_backout_deduction_pct: number;
 }
 
@@ -30,6 +31,7 @@ const BLANK: Deductions = {
   default_host_commission_pct: 0,
   default_venue_commission_pct: 0,
   default_product_commission_pct: 0,
+  default_club_admin_pct: 0,
   default_backout_deduction_pct: 0,
 };
 
@@ -75,6 +77,7 @@ export default function DefaultDeductionsPage() {
       default_host_commission_pct: fs.default_host_commission_pct ?? 0,
       default_venue_commission_pct: fs.default_venue_commission_pct ?? 0,
       default_product_commission_pct: fs.default_product_commission_pct ?? 0,
+      default_club_admin_pct: fs.default_club_admin_pct ?? 0,
       default_backout_deduction_pct: fs.default_backout_deduction_pct ?? 0,
     });
   }, [data]);
@@ -141,6 +144,16 @@ export default function DefaultDeductionsPage() {
 
         <DeductionCard title="Products" subtitle="Duncit's commission on a product's selling price.">
           <DeductionSlider label="Product commission" value={form.default_product_commission_pct} onChange={set('default_product_commission_pct')} max={50} />
+        </DeductionCard>
+
+        <DeductionCard title="Club Admin" subtitle="Cut taken off every pod's pool after GST + platform fee, before the venue/host split.">
+          <DeductionSlider
+            label="Club admin cut (0-10%)"
+            value={form.default_club_admin_pct}
+            onChange={set('default_club_admin_pct')}
+            max={10}
+            hint="Deducted from each pod's pool after GST + platform fee and shown in the host's create-pod pricing. Counts as Duncit revenue (disbursed to the club admin later)."
+          />
         </DeductionCard>
 
         <DeductionCard title="Backouts" subtitle="Kept from a member's refund when they back out of a paid pod.">

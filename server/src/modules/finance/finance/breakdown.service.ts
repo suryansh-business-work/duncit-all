@@ -92,6 +92,8 @@ function waterfallFromSnapshot(hostRelease: IPaymentRelease, venueRelease: IPaym
     platform_fee_pct: b.platform_fee_pct,
     platform_fee_amount: b.platform_fee_amount,
     pool_amount: b.pool_amount,
+    club_admin_pct: b.club_admin_pct ?? 0,
+    club_admin_amount: b.club_admin_amount ?? 0,
     venue_amount: vb ? vb.share_amount : 0,
     venue_commission_pct: vb ? vb.commission_pct : 0,
     venue_commission_amount: vb ? vb.commission_amount : 0,

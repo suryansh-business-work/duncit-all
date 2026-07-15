@@ -103,6 +103,8 @@ export const PotentialPodEarningsDocument = gql(`
       gst_amount
       platform_fee_pct
       platform_fee_amount
+      club_admin_pct
+      club_admin_amount
       venue_amount
       host_amount
       host_commission_pct

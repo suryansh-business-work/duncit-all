@@ -47,6 +47,12 @@ function EarningsRows({
       value: money(waterfall.platform_fee_amount),
     },
   ];
+  if (waterfall.club_admin_amount > 0) {
+    rows.push({
+      label: `− Club Admin (${waterfall.club_admin_pct}%)`,
+      value: money(waterfall.club_admin_amount),
+    });
+  }
   if (venuePicked) {
     rows.push({ label: '− Venue slot price', value: money(waterfall.venue_amount) });
   }

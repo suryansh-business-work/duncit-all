@@ -43,6 +43,9 @@ export interface SettlementWaterfall {
   platform_fee_pct: number;
   platform_fee_amount: number;
   pool_amount: number;
+  /** Club-admin cut % + amount taken off the pool after GST + platform fee. */
+  club_admin_pct: number;
+  club_admin_amount: number;
   /** The venue's booked slot price (Partners portal), clamped to the pool. */
   venue_amount: number;
   venue_commission_pct: number;
@@ -114,6 +117,7 @@ export async function resolveEffectiveRates(options: {
     venue_commission_percent: options.venueId
       ? clampPct(venueDoc?.venue_commission_pct || fs.default_venue_commission_pct)
       : 0,
+    club_admin_percent: clampPct(fs.default_club_admin_pct),
   };
 }
 
@@ -142,6 +146,8 @@ export function toWaterfall(b: PodFinanceBreakdown): SettlementWaterfall {
     platform_fee_pct: b.rates.platform_fee_percent,
     platform_fee_amount: toRupees(b.platform_fee_paise),
     pool_amount: toRupees(b.pool_paise),
+    club_admin_pct: b.rates.club_admin_percent,
+    club_admin_amount: toRupees(b.club_admin_paise),
     venue_amount: toRupees(b.venue_amount_paise),
     venue_commission_pct: b.rates.venue_commission_percent,
     venue_commission_amount: toRupees(b.venue_commission_paise),

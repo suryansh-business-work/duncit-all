@@ -13,6 +13,8 @@ export const POTENTIAL_POD_EARNINGS = gql`
       gst_amount
       platform_fee_pct
       platform_fee_amount
+      club_admin_pct
+      club_admin_amount
       venue_amount
       host_amount
       host_commission_pct
@@ -86,6 +88,9 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
         />
         <Row label={`− GST (${w.gst_pct}%)`} value={fmt(w.gst_amount)} />
         <Row label={`− Platform Fee (${w.platform_fee_pct}%)`} value={fmt(w.platform_fee_amount)} />
+        {w.club_admin_amount > 0 && (
+          <Row label={`− Club Admin (${w.club_admin_pct}%)`} value={fmt(w.club_admin_amount)} />
+        )}
         {hasVenue && <Row label="− Venue slot price" value={fmt(w.venue_amount)} />}
         <Row label="Your Amount (remainder)" value={fmt(w.host_amount)} />
         <Row label={`− Your Commission (${w.host_commission_pct}%)`} value={fmt(w.host_commission_amount)} />

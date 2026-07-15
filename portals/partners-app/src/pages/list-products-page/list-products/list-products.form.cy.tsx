@@ -45,7 +45,24 @@ describe('productListingSchema', () => {
     expect(messages(result)).toMatch(/price/i);
   });
 
-  it('accepts a complete product listing', () => {
-    expect(productListingSchema.safeParse(validListing).success).toBe(true);
+  it('accepts a complete product listing (variants optional, defaulting to [])', () => {
+    const parsed = productListingSchema.safeParse(validListing);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(parsed.data.variants).toEqual([]);
+  });
+
+  it('accepts extra variants and validates their price/stock/name', () => {
+    const ok = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ option_label: 'Red / L', color: '#ff0000', size_label: 'L', unit_cost: 599, inventory_count: 4, image_urls: [] }],
+    });
+    expect(ok.success).toBe(true);
+
+    const bad = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ option_label: '', color: '#000000', size_label: '', unit_cost: 0, inventory_count: -1, image_urls: [] }],
+    });
+    expect(messages(bad)).toMatch(/variant name/i);
+    expect(messages(bad)).toMatch(/price/i);
   });
 });

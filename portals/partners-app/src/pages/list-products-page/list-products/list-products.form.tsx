@@ -49,15 +49,16 @@ const emptyValues: ProductListingValues = {
   size_label: '',
   height_cm: '',
   weight_kg: '',
-  color: '',
+  color: '#000000',
   inventory_count: '',
   unit_cost: '',
+  variants: [],
   commission_pct: 15,
   delivery_target: 'HOST',
 };
 
 const steps = ['Category', 'Product details', 'Inventory', 'Commission', 'Delivery', 'Preview'];
-const stepFields: Path<ProductListingValues>[][] = [['super_category_id', 'category_id', 'sub_category_id'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost'], ['commission_pct'], ['delivery_target'], []];
+const stepFields: Path<ProductListingValues>[][] = [['super_category_id', 'category_id', 'sub_category_id'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost', 'variants'], ['commission_pct'], ['delivery_target'], []];
 
 interface Props {
   brandId: string;
@@ -153,7 +154,19 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
 function productToValues(product?: any): ProductListingValues {
   if (!product) return emptyValues;
   const image_urls = Array.from(new Set([product.image_url, ...(product.images ?? [])].filter(Boolean)));
-  return { ...emptyValues, ...product, image_urls };
+  // The first stored variant mirrors the flat fields; extras (index ≥ 1) are the
+  // additional variant tabs the seller manages.
+  const variants: ProductListingValues['variants'] = Array.isArray(product.variants)
+    ? product.variants.slice(1).map((v: any) => ({
+        option_label: v.option_label ?? '',
+        color: v.color ?? '',
+        size_label: v.size_label ?? '',
+        unit_cost: v.unit_cost ?? '',
+        inventory_count: v.inventory_count ?? '',
+        image_urls: Array.isArray(v.images) ? v.images : [],
+      }))
+    : [];
+  return { ...emptyValues, ...product, image_urls, variants };
 }
 
 // Build only the fields ProductListingInput accepts (an edited product carries
@@ -174,7 +187,36 @@ function toSubmitInput(values: ProductListingValues, brandId: string) {
     color: values.color,
     inventory_count: Number(values.inventory_count),
     unit_cost: Number(values.unit_cost),
+    variants: buildVariants(values),
     commission_pct: values.commission_pct,
     delivery_target: values.delivery_target,
   };
+}
+
+// The flat fields are the primary variant; the seller's extra tabs follow. Dims
+// are shared at the product level, so each variant inherits them.
+function buildVariants(values: ProductListingValues) {
+  const height_cm = Number(values.height_cm);
+  const weight_kg = Number(values.weight_kg);
+  const primary = {
+    option_label: values.size_label || values.color || 'Default',
+    color: values.color,
+    size_label: values.size_label,
+    unit_cost: Number(values.unit_cost),
+    inventory_count: Number(values.inventory_count),
+    images: values.image_urls,
+    height_cm,
+    weight_kg,
+  };
+  const extras = (values.variants ?? []).map((v) => ({
+    option_label: v.option_label,
+    color: v.color,
+    size_label: v.size_label,
+    unit_cost: Number(v.unit_cost),
+    inventory_count: Number(v.inventory_count),
+    images: v.image_urls,
+    height_cm,
+    weight_kg,
+  }));
+  return [primary, ...extras];
 }

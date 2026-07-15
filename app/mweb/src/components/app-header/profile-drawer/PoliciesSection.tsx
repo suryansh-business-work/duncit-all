@@ -16,14 +16,12 @@ interface PoliciesSectionProps {
   publicPolicies: { id: string; slug: string; title: string }[];
   policiesOpen: boolean;
   setPoliciesOpen: (fn: (v: boolean) => boolean) => void;
-  onClose: () => void;
 }
 
 export default function PoliciesSection({
   publicPolicies,
   policiesOpen,
   setPoliciesOpen,
-  onClose,
 }: Readonly<PoliciesSectionProps>) {
   const navigate = useNavigate();
   if (publicPolicies.length === 0) return null;
@@ -54,10 +52,7 @@ export default function PoliciesSection({
           {publicPolicies.map((p) => (
             <ListItem key={p.id} disablePadding>
               <ListItemButton
-                onClick={() => {
-                  onClose();
-                  navigate(`/policies/${p.slug}`);
-                }}
+                onClick={() => navigate(`/policies/${p.slug}`)}
                 sx={{ pl: 6, pr: 2.5, py: 1 }}
               >
                 <ListItemIcon sx={{ minWidth: 32 }}>

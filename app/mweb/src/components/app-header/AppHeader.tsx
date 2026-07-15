@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Avatar, Box, Chip, IconButton, Toolbar, Tooltip } from '@mui/material';
 import {
@@ -42,7 +42,29 @@ export default function AppHeader({
   onZoneChange,
 }: Readonly<AppHeaderProps>) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { logout: ctxLogout } = useUserData();
+  // The account drawer lives in URL history (?menu=open) so the browser Back
+  // button closes it instead of unloading the underlying full-screen page.
+  const menuOpen = searchParams.get('menu') === 'open';
+  const openMenu = () => {
+    const params = new URLSearchParams(location.search);
+    params.set('menu', 'open');
+    navigate({ search: `?${params.toString()}` });
+  };
+  const closeMenu = () => {
+    if (!menuOpen) return;
+    const idx = Number((window.history.state as { idx?: number })?.idx ?? 0);
+    if (idx > 0) {
+      navigate(-1);
+      return;
+    }
+    const params = new URLSearchParams(location.search);
+    params.delete('menu');
+    const search = params.toString();
+    navigate({ search: search ? `?${search}` : '' }, { replace: true });
+  };
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
   const [persistSelectedLocation] = useMutation(SET_MY_SELECTED_LOCATION, {
     onError: () => undefined,
@@ -50,7 +72,6 @@ export default function AppHeader({
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
-  const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
   const [policiesOpen, setPoliciesOpen] = useState(false);
   const [toast, setToast] = useState<{ title?: string; body?: string } | null>(null);
   const { mode: studioMode, setMode: setStudioMode } = useStudioMode();
@@ -114,7 +135,6 @@ export default function AppHeader({
   const publicPolicies = policiesData?.publicPolicies ?? [];
 
   const logout = () => {
-    setProfileAnchor(null);
     ctxLogout();
   };
 
@@ -197,7 +217,7 @@ export default function AppHeader({
 
             <Tooltip title={me?.full_name ?? 'Account'}>
               <IconButton
-                onClick={(e) => setProfileAnchor(e.currentTarget)}
+                onClick={openMenu}
                 sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
                 aria-label="Open account menu"
               >
@@ -218,8 +238,8 @@ export default function AppHeader({
               </IconButton>
             </Tooltip>
             <ProfileDrawer
-              open={!!profileAnchor}
-              onClose={() => setProfileAnchor(null)}
+              open={menuOpen}
+              onClose={closeMenu}
               me={me}
               publicPolicies={publicPolicies}
               policiesOpen={policiesOpen}

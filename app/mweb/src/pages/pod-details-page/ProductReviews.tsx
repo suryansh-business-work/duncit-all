@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -15,6 +15,9 @@ import {
 } from '@mui/material';
 import ThumbUpOffAltIcon from '@mui/icons-material/ThumbUpOffAlt';
 import ThumbDownOffAltIcon from '@mui/icons-material/ThumbDownOffAlt';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import CloseIcon from '@mui/icons-material/Close';
+import { useImagekitUpload } from '../../utils/imagekit';
 import { CREATE_PRODUCT_REVIEW, PRODUCT_REVIEWS, VOTE_PRODUCT_REVIEW } from './queries';
 
 interface Review {
@@ -40,12 +43,27 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
   });
   const [createReview, { loading: saving }] = useMutation(CREATE_PRODUCT_REVIEW);
   const [voteReview] = useMutation(VOTE_PRODUCT_REVIEW);
+  const { upload, uploading } = useImagekitUpload();
   const [rating, setRating] = useState<number | null>(0);
   const [comment, setComment] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const summary = data?.productReviewSummary;
   const reviews: Review[] = data?.productReviews ?? [];
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (fileRef.current) fileRef.current.value = '';
+    if (!file) return;
+    try {
+      const url = await upload(file, '/product-reviews');
+      setImages((prev) => [...prev, url]);
+    } catch {
+      setError('Could not upload the image.');
+    }
+  };
 
   const submit = async () => {
     if (!rating) {
@@ -54,8 +72,11 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
     }
     setError(null);
     try {
-      await createReview({ variables: { input: { product_id: productId, rating, comment: comment.trim() } } });
+      await createReview({
+        variables: { input: { product_id: productId, rating, comment: comment.trim(), images } },
+      });
       setComment('');
+      setImages([]);
       await refetch();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not submit your review.');
@@ -97,6 +118,37 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           size="small"
           sx={{ mt: 1 }}
         />
+        {images.length > 0 && (
+          <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap' }} useFlexGap>
+            {images.map((url) => (
+              <Box key={url} sx={{ position: 'relative' }}>
+                <Box
+                  component="img"
+                  src={url}
+                  alt="Review"
+                  sx={{ width: 56, height: 56, borderRadius: 1, objectFit: 'cover' }}
+                />
+                <IconButton
+                  size="small"
+                  onClick={() => setImages((prev) => prev.filter((u) => u !== url))}
+                  sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'background.paper', boxShadow: 1 }}
+                >
+                  <CloseIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              </Box>
+            ))}
+          </Stack>
+        )}
+        <Button
+          size="small"
+          startIcon={<AddPhotoAlternateIcon />}
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          sx={{ mt: 1 }}
+        >
+          {uploading ? 'Uploading…' : 'Add photo'}
+        </Button>
+        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickImage} />
         {error && (
           <Alert severity="warning" sx={{ mt: 1 }}>
             {error}

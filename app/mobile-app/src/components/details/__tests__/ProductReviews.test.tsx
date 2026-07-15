@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ProductReviews } from '@/components/details/ProductReviews';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -6,6 +6,11 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+const mockPickAndUpload = jest.fn();
+let mockUploading = false;
+jest.mock('@/hooks/useMediaUpload', () => ({
+  useMediaUpload: () => ({ uploading: mockUploading, pickAndUpload: mockPickAndUpload }),
+}));
 
 const REVIEWS = [
   {
@@ -64,7 +69,12 @@ const routeReviews = (reviews = REVIEWS, total = 3, avg = 4) => {
 const opName = (doc: { definitions?: { name?: { value?: string } }[] }) =>
   doc?.definitions?.[0]?.name?.value;
 
-beforeEach(() => mockRequest.mockReset());
+beforeEach(() => {
+  mockRequest.mockReset();
+  mockPickAndUpload.mockReset();
+  mockPickAndUpload.mockResolvedValue('https://cdn/new.jpg');
+  mockUploading = false;
+});
 
 describe('ProductReviews', () => {
   it('shows the summary and the review list (comment, images, seller reply)', async () => {
@@ -130,6 +140,44 @@ describe('ProductReviews', () => {
     );
     // Down-vote the second review too (covers the down branch).
     fireEvent.press(screen.getByTestId('review-down-rv2'));
+  });
+
+  it('uploads a photo and submits the review with the image', async () => {
+    routeReviews([], 0, 0);
+    renderWithProviders(<ProductReviews productId="pr1" />);
+    await waitFor(() => expect(screen.getByTestId('review-add-photo')).toBeOnTheScreen());
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('review-add-photo'));
+    });
+    fireEvent.press(screen.getByTestId('star-5'));
+    fireEvent.press(screen.getByTestId('review-submit'));
+    await waitFor(() => {
+      const call = mockRequest.mock.calls.find((c) => opName(c[0]) === 'MobileCreateProductReview');
+      expect(call?.[1].input.images).toEqual(['https://cdn/new.jpg']);
+    });
+  });
+
+  it('ignores a cancelled photo pick', async () => {
+    mockPickAndUpload.mockResolvedValue(null);
+    routeReviews([], 0, 0);
+    renderWithProviders(<ProductReviews productId="pr1" />);
+    await waitFor(() => expect(screen.getByTestId('review-add-photo')).toBeOnTheScreen());
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('review-add-photo'));
+    });
+    fireEvent.press(screen.getByTestId('star-4'));
+    fireEvent.press(screen.getByTestId('review-submit'));
+    await waitFor(() => {
+      const call = mockRequest.mock.calls.find((c) => opName(c[0]) === 'MobileCreateProductReview');
+      expect(call?.[1].input.images).toEqual([]);
+    });
+  });
+
+  it('shows the uploading state on the add-photo control', async () => {
+    mockUploading = true;
+    routeReviews([], 0, 0);
+    renderWithProviders(<ProductReviews productId="pr1" />);
+    await waitFor(() => expect(screen.getByText('Uploading…')).toBeOnTheScreen());
   });
 
   it('surfaces a submit failure', async () => {

@@ -9,6 +9,7 @@ import {
   VoteProductReviewDocument,
 } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
@@ -57,13 +58,20 @@ function Stars({
  * form (stars + comment), the list with images + seller reply and thumbs voting. */
 export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
   const { color: ink, primary } = useThemeColors();
+  const { uploading, pickAndUpload } = useMediaUpload('/product-reviews');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const addPhoto = async () => {
+    const url = await pickAndUpload();
+    if (url) setImages((prev) => [...prev, url]);
+  };
 
   const load = () => {
     setLoading(true);
@@ -91,10 +99,11 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
     try {
       await graphqlRequest(
         CreateProductReviewDocument,
-        { input: { product_id: productId, rating, comment: comment.trim() } },
+        { input: { product_id: productId, rating, comment: comment.trim(), images } },
         { auth: true },
       );
       setComment('');
+      setImages([]);
       await load();
     } catch {
       setError('Could not submit your review.');
@@ -138,6 +147,30 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
           placeholder="Share your experience (optional)"
           minHeight={60}
         />
+        {images.length > 0 ? (
+          <XStack gap={6}>
+            {images.map((u) => (
+              <AppImage
+                key={u}
+                source={{ uri: u }}
+                style={{ width: 56, height: 56, borderRadius: 8 }}
+              />
+            ))}
+          </XStack>
+        ) : null}
+        <XStack
+          testID="review-add-photo"
+          role="button"
+          onPress={addPhoto}
+          alignItems="center"
+          gap={6}
+          opacity={uploading ? 0.6 : 1}
+        >
+          <MaterialIcons name="add-photo-alternate" size={18} color={primary} />
+          <Text fontSize={13} fontWeight="700" color={primary}>
+            {uploading ? 'Uploading…' : 'Add photo'}
+          </Text>
+        </XStack>
         {error ? (
           <Text testID="review-error" color="$danger" fontSize={12}>
             {error}

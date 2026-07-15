@@ -36,6 +36,7 @@ const full: VenueRow = {
   postal_code: '411038', owner_name: 'Asha', owner_phone: '999', owner_email: 'a@b.com',
   capacity: 40, status: 'APPROVED', is_active: true, submitted_at: '2026-01-02', venue_commission_pct: 15,
   pod_count: 4,
+  venue_category: { super_category_name: 'Sports', category_name: 'Cricket', sub_category_name: 'Box Cricket' },
 };
 const sparse: VenueRow = {
   id: '2', venue_name: 'X', venue_type: 'BAR', locality: '', city: '',
@@ -56,6 +57,8 @@ describe('VenuesTable', () => {
     expect(screen.getByText('Kothrud, Pune')).toBeInTheDocument();
     expect(screen.getByText('15%')).toBeInTheDocument();
     expect(screen.getByText('Default')).toBeInTheDocument();
+    // Category column: the full row shows "Super > Cat > Sub"; the sparse row "—".
+    expect(screen.getByText('Sports > Cricket > Box Cricket')).toBeInTheDocument();
     // 'Active' matches the column header + the active chip.
     expect(screen.getAllByText('Active').length).toBeGreaterThan(1);
     expect(screen.getByText('Inactive')).toBeInTheDocument();

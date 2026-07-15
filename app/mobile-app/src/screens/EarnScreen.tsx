@@ -41,8 +41,13 @@ const BOXES = [
 ] as const;
 
 const PENDING = new Set(['REQUESTED', 'SCHEDULED']);
+// A DONE meeting still at NONE/PENDING approval = onboarding under way; the card
+// stays blocked until an admin approves (or denies) the post-meeting feedback.
+const APPROVAL_IN_PROGRESS = new Set(['NONE', 'PENDING']);
+const IN_PROCESS_LABEL = 'Onboarding in process.';
 
 type EarnMeeting = MyMeetingsResult['myMeetings'][number];
+type EarnBoxDef = (typeof BOXES)[number];
 
 const meetingNotice = (meeting: EarnMeeting) => {
   const at = meeting.scheduled_at ?? meeting.requested_at;
@@ -51,6 +56,43 @@ const meetingNotice = (meeting: EarnMeeting) => {
     : '';
   const whenSuffix = when ? ` on ${when}` : '';
   return `You already have an onboarding meeting scheduled for this${whenSuffix}. Our team will meet you then — this option unlocks once the meeting is done.`;
+};
+
+interface EarnBoxState {
+  disabled: boolean;
+  disabledLabel: string;
+  description: string;
+  scheduledMeeting?: EarnMeeting;
+}
+
+/** Resolve a card's locked/unlocked state: held role → 'Already enabled';
+ * an open (REQUESTED/SCHEDULED) meeting → 'Meeting scheduled' + reschedule/cancel
+ * actions; a DONE meeting awaiting approval → 'Onboarding in process.'. */
+const earnBoxState = (
+  box: EarnBoxDef,
+  roles: readonly string[],
+  meetings: readonly EarnMeeting[],
+): EarnBoxState => {
+  if (roles.includes(box.role)) {
+    return { disabled: true, disabledLabel: 'Already enabled', description: box.description };
+  }
+  const meeting = meetings.find((m) => m.kind === box.kind);
+  if (meeting && PENDING.has(meeting.status)) {
+    return {
+      disabled: true,
+      disabledLabel: 'Meeting scheduled',
+      description: meetingNotice(meeting),
+      scheduledMeeting: meeting,
+    };
+  }
+  if (meeting?.status === 'DONE' && APPROVAL_IN_PROGRESS.has(meeting.approval_status ?? 'NONE')) {
+    return {
+      disabled: true,
+      disabledLabel: IN_PROCESS_LABEL,
+      description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+    };
+  }
+  return { disabled: false, disabledLabel: 'Already enabled', description: box.description };
 };
 
 /** "Earn with Duncit" — three ways to start earning; a box is disabled when the
@@ -85,29 +127,24 @@ export function EarnScreen() {
             Pick a way to start earning on Duncit.
           </Text>
           {boxes.map((box) => {
-            const hasRole = roles.includes(box.role);
-            const pendingMeeting = meetings.find(
-              (m) => m.kind === box.kind && PENDING.has(m.status),
-            );
-            const showMeetingNotice = !hasRole && !!pendingMeeting;
-            let disabledLabel = 'Already enabled';
-            if (showMeetingNotice) disabledLabel = 'Meeting scheduled';
+            const state = earnBoxState(box, roles, meetings);
+            const { scheduledMeeting } = state;
             return (
               <YStack key={box.role} gap={8}>
                 <EarnBox
                   testID={`earn-box-${box.role}`}
                   title={box.title}
-                  description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
+                  description={state.description}
                   icon={box.icon}
-                  disabled={hasRole || showMeetingNotice}
-                  disabledLabel={disabledLabel}
+                  disabled={state.disabled}
+                  disabledLabel={state.disabledLabel}
                   onPress={() => navigation.navigate(box.route)}
                 />
-                {showMeetingNotice ? (
+                {scheduledMeeting ? (
                   <EarnMeetingActions
                     kind={box.kind}
-                    rescheduleCount={pendingMeeting.reschedule_count}
-                    currentSlot={pendingMeeting.scheduled_at ?? pendingMeeting.requested_at}
+                    rescheduleCount={scheduledMeeting.reschedule_count}
+                    currentSlot={scheduledMeeting.scheduled_at ?? scheduledMeeting.requested_at}
                     onChanged={() => void loadMeetings()}
                   />
                 ) : null}

@@ -54,7 +54,9 @@ describe('SignupForm', () => {
     fireEvent.press(screen.getByTestId('signup-submit'));
 
     await waitFor(() =>
-      expect(screen.getByTestId('birthYear-error')).toHaveTextContent('Enter a valid year'),
+      expect(screen.getByTestId('birthYear-error')).toHaveTextContent(
+        'Enter a year between 1940 and 2012',
+      ),
     );
   });
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AppearanceSection from './settings-page/AppearanceSection';
 import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
+import BirthYearSection from './settings-page/BirthYearSection';
 
 export default function SettingsPage() {
   const [toast, setToast] = useState<string | null>(null);
@@ -15,6 +16,7 @@ export default function SettingsPage() {
       </Box>
       <AppearanceSection />
       <DisplayFormatsSection onToast={setToast} />
+      <BirthYearSection onToast={setToast} />
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

@@ -1,10 +1,12 @@
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { signupDefaults, signupSchema, type SignupFormValues } from './signup.types';
+import { useAppSettings } from '@/hooks/useAppSettings';
+import { makeSignupSchema, signupDefaults, type SignupFormValues } from './signup.types';
 
 export interface SignupFormProps {
   loading?: boolean;
@@ -14,9 +16,14 @@ export interface SignupFormProps {
 
 /** Email signup form: Name, Birth Year, Email, Password, Confirm Password. */
 export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupFormProps>) {
+  const { minBirthYear, maxBirthYear } = useAppSettings();
+  const schema = useMemo(
+    () => makeSignupSchema(minBirthYear, maxBirthYear),
+    [minBirthYear, maxBirthYear],
+  );
   const { control, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: signupDefaults,
-    resolver: zodResolver(signupSchema),
+    resolver: zodResolver(schema),
     mode: 'onBlur',
   });
 
@@ -38,6 +45,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         placeholder="1995"
         keyboardType="number-pad"
         maxLength={4}
+        hint={`Between ${minBirthYear} and ${maxBirthYear}`}
       />
       <FormTextField
         control={control}

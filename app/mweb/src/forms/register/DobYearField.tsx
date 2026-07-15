@@ -2,14 +2,22 @@ import { Controller, type Control } from 'react-hook-form';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { subYears } from 'date-fns';
 import type { RegisterFormValues } from './register.types';
 
+interface Props {
+  control: Control<RegisterFormValues>;
+  /** Admin-configured birth-year bounds (Admin > Settings). */
+  minYear: number;
+  maxYear: number;
+}
+
 /** MUIX year-only birth-year picker bound to react-hook-form. Stores the value
- * as a 'YYYY-01-01' string so the page can build an ISO date for the server. */
-export default function DobYearField({ control }: Readonly<{ control: Control<RegisterFormValues> }>) {
-  const minDate = subYears(new Date(), 100);
-  const maxDate = subYears(new Date(), 13);
+ * as a 'YYYY-01-01' string so the page can build an ISO date for the server. The
+ * selectable range + hint follow the admin-configured min/max birth year. */
+export default function DobYearField({ control, minYear, maxYear }: Readonly<Props>) {
+  const minDate = new Date(minYear, 0, 1);
+  const maxDate = new Date(maxYear, 11, 31);
+  const hint = `Between ${minYear} and ${maxYear}`;
   return (
     <Controller
       control={control}
@@ -34,7 +42,7 @@ export default function DobYearField({ control }: Readonly<{ control: Control<Re
                 onBlur: field.onBlur,
                 InputLabelProps: { shrink: true },
                 error: !!fieldState.error,
-                helperText: fieldState.error?.message ?? ' ',
+                helperText: fieldState.error?.message ?? hint,
               },
             }}
           />

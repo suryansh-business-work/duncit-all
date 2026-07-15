@@ -8,6 +8,8 @@ export const PUBLIC_APP_SETTINGS = gql`
       date_format
       time_format
       time_zone
+      min_birth_year
+      max_birth_year
     }
   }
 `;
@@ -15,6 +17,17 @@ export const PUBLIC_APP_SETTINGS = gql`
 const FALLBACK_DATE = 'dd MMM yyyy';
 const FALLBACK_TIME = 'hh:mm a';
 const FALLBACK_ZONE = 'Asia/Kolkata';
+const FALLBACK_MIN_BIRTH_YEAR = 1940;
+const FALLBACK_MAX_BIRTH_YEAR = 2012;
+
+/** Admin-configured signup birth-year bounds (Admin > Settings), with fallbacks. */
+export function useSignupBirthYearBounds() {
+  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
+  return {
+    minBirthYear: (data?.publicAppSettings?.min_birth_year as number) ?? FALLBACK_MIN_BIRTH_YEAR,
+    maxBirthYear: (data?.publicAppSettings?.max_birth_year as number) ?? FALLBACK_MAX_BIRTH_YEAR,
+  };
+}
 
 type DateInput = string | number | Date | null | undefined;
 

@@ -60,11 +60,11 @@ describe('registerSchema', () => {
 
   it('rejects a future birth year', () => {
     const future = `${today.getFullYear() + 1}-01-01`;
-    expect(firstError(registerSchema.safeParse({ ...valid, dob: future }))).toMatch(/past|13/i);
+    expect(firstError(registerSchema.safeParse({ ...valid, dob: future }))).toMatch(/between/i);
   });
 
-  it('rejects users younger than 13', () => {
+  it('rejects a birth year outside the allowed bounds', () => {
     const tooYoung = `${today.getFullYear() - 10}-01-01`;
-    expect(firstError(registerSchema.safeParse({ ...valid, dob: tooYoung }))).toMatch(/13/);
+    expect(firstError(registerSchema.safeParse({ ...valid, dob: tooYoung }))).toMatch(/between/i);
   });
 });

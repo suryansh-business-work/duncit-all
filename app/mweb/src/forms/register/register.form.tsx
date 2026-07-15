@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, IconButton, InputAdornment, Link, Stack, Typography } from '@mui/material';
@@ -11,7 +11,8 @@ import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined
 import { Link as RouterLink } from 'react-router-dom';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
-import { registerDefaults, registerSchema, type RegisterFormValues } from './register.types';
+import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
+import { useSignupBirthYearBounds } from '../../utils/dateFormat';
 
 interface Props {
   loading?: boolean;
@@ -48,9 +49,14 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const { minBirthYear, maxBirthYear } = useSignupBirthYearBounds();
+  const schema = useMemo(
+    () => makeRegisterSchema(minBirthYear, maxBirthYear),
+    [minBirthYear, maxBirthYear],
+  );
   const { control, handleSubmit } = useForm<RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
   });
 
@@ -87,7 +93,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           InputLabelProps={{ shrink: true }}
           InputProps={startIcon(<EmailOutlinedIcon fontSize="small" />)}
         />
-        <DobYearField control={control} />
+        <DobYearField control={control} minYear={minBirthYear} maxYear={maxBirthYear} />
         <RhfTextField
           control={control}
           name="password"

@@ -21,7 +21,7 @@ function VenuesCardVideo({ url }: Readonly<{ url: string }>) {
     <VideoView
       testID="sidebar-venues-video"
       player={player}
-      style={StyleSheet.absoluteFill}
+      style={{ ...StyleSheet.absoluteFillObject, width: '100%', height: '100%' }}
       contentFit="cover"
       nativeControls={false}
     />

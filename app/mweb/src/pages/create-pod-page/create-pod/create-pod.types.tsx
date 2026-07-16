@@ -47,6 +47,8 @@ export interface CreatePodFormValues {
   no_of_spots: number;
   pod_hashtag_text: string;
   media_text: string;
+  /** Optional hosted reel video URL — shows in Explore while the pod is live. */
+  reel_url: string;
   what_this_pod_offers: string[];
   available_perks: string[];
   products_enabled: boolean;
@@ -79,6 +81,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   no_of_spots: 0,
   pod_hashtag_text: '',
   media_text: '',
+  reel_url: '',
   what_this_pod_offers: [],
   available_perks: [],
   products_enabled: false,

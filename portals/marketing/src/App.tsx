@@ -5,6 +5,8 @@ import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import MarketingCampaignsPage from './pages/marketing-campaigns-page/MarketingCampaignsPage';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
+import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
+import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -20,6 +22,8 @@ export default function App() {
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage defaultChannel="EMAIL" />)} />
         <Route path="/campaigns/whatsapp" element={authed(<MarketingCampaignsPage defaultChannel="WHATSAPP" />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
+        <Route path="/ads-approvals" element={authed(<AdsApprovalsPage />)} />
+        <Route path="/ads-settings" element={authed(<AdsSettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

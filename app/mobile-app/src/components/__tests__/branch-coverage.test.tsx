@@ -94,7 +94,7 @@ describe('component branch variants', () => {
     expect(screen.getByTestId('b')).toBeOnTheScreen();
   });
 
-  it('ExplorePodCard with media + club cover', () => {
+  it('ExplorePodCard without a reel renders the defensive fallback backdrop', () => {
     const club = {
       id: 'c1',
       club_name: 'Runners',
@@ -106,6 +106,7 @@ describe('component branch variants', () => {
         club={club}
         width={390}
         height={700}
+        isActive
         saved
         like={{ liked_by_me: true, like_count: 9 }}
         commentCount={3}
@@ -116,5 +117,7 @@ describe('component branch variants', () => {
       />,
     );
     expect(screen.getByTestId('reel-pod-1')).toBeOnTheScreen();
+    // No reel_url (defensive branch) → no video mounts.
+    expect(screen.queryByTestId('reel-video-pod-1')).toBeNull();
   });
 });

@@ -6,15 +6,17 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { ExploreClub, ExplorePod, LikeState } from '@/stores/explore.store';
 import { isPodExpired, podPriceLabel } from '@/utils/pod-format';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
-import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
+import { ReelBackdrop } from '@/components/explore/ReelVideo';
 
 interface ExplorePodCardProps {
   pod: ExplorePod;
   club?: ExploreClub;
   width: number;
   height: number;
+  /** True while this card is the visible reel — gates video playback. */
+  isActive: boolean;
   saved: boolean;
   savePending?: boolean;
   like: LikeState;
@@ -27,13 +29,14 @@ interface ExplorePodCardProps {
   onShowLikers?: () => void;
 }
 
-/** One full-screen reel: media background, info overlay, the right-side action
- * rail (join/like/comment/save/share/open) and the bottom "Join in 2 taps" CTA. */
+/** One full-screen reel: the pod's reel video, info overlay, the right-side
+ * action rail (join/like/comment/save/share/open) and the "Join in 2 taps" CTA. */
 export function ExplorePodCard({
   pod,
   club,
   width,
   height,
+  isActive,
   saved,
   savePending,
   like,
@@ -52,7 +55,6 @@ export function ExplorePodCard({
   // Space the action rail can occupy before it would overlap the header/overlay;
   // the rail collapses extra actions into a "More" menu on short screens.
   const railAvailable = height - contentBottom - (insets.top + 56);
-  const cover = club?.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
   const attendees = pod.pod_attendees.length;
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
   const joinLabel = `${attendees}${spotsSuffix}`;
@@ -73,13 +75,7 @@ export function ExplorePodCard({
   return (
     <YStack width={width} height={height} backgroundColor="#000000" testID={`reel-${pod.pod_id}`}>
       <DoubleTapJoin onJoin={onOpen} testID={`reel-doubletap-${pod.pod_id}`}>
-        <ExploreMediaCarousel
-          media={pod.pod_images_and_videos}
-          fallbackUrl={cover}
-          width={width}
-          height={height}
-          dotsBottom={ctaBottom + 56}
-        />
+        <ReelBackdrop pod={pod} isActive={isActive} width={width} height={height} />
       </DoubleTapJoin>
       <ExplorePodOverlay
         pod={pod}

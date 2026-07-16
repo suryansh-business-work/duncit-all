@@ -6,6 +6,13 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useBranding', () => ({
   useBranding: () => ({ data: { branding: { venues_card_video_url: 'https://cdn/v.mp4' } } }),
 }));
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
+beforeEach(() => {
+  mockAds = [];
+});
 
 const FULL_ACCOUNT = {
   first_name: 'Asha',
@@ -81,6 +88,24 @@ describe('SidebarUserContent', () => {
     expect(screen.queryByTestId('profile-completion')).toBeNull();
     fireEvent.press(screen.getByTestId('sidebar-item-Pod Plans'));
     expect(onNavigate).toHaveBeenCalledWith('PodPlans');
+  });
+
+  it('shows the SIDEBAR sponsored card under the venues card when an ad is live', () => {
+    mockAds = [
+      {
+        id: 'ad1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn/ad.jpg',
+        redirect_url: null,
+        ad_title: 'Sponsored Venue',
+        position: 'SIDEBAR',
+      },
+    ];
+    renderWithProviders(
+      <SidebarUserContent me={null} account={null} showPodPlans={false} onNavigate={jest.fn()} />,
+    );
+    expect(screen.getByTestId('ad-slot-SIDEBAR')).toBeOnTheScreen();
+    expect(screen.getByText('Sponsored Venue')).toBeOnTheScreen();
   });
 
   it('falls back to placeholders with no user and no account (0% complete)', () => {

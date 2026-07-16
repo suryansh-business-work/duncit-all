@@ -6,6 +6,7 @@ import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
 import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
+import { ReelUploadField } from '../ReelUploadField';
 import type { CreatePodForm } from '../create-pod.types';
 
 interface Props {
@@ -47,6 +48,11 @@ export function BasicsStep({ form }: Readonly<Props>) {
       />
       <HashtagChipsField form={form} />
       <OptionalSettingsCards form={form} />
+      <Controller
+        control={control}
+        name="reel_url"
+        render={({ field }) => <ReelUploadField value={field.value} onChange={field.onChange} />}
+      />
     </YStack>
   );
 }

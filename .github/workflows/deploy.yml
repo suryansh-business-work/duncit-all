@@ -83,7 +83,7 @@ jobs:
       developers: ${{ steps.filter.outputs.developers }}
       earnwith: ${{ steps.filter.outputs.earnwith }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -324,20 +324,20 @@ jobs:
     if: needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: server
           typecheck: 'tsc -p tsconfig.json --noEmit'
           test: 'test:ci'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push server
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -356,20 +356,20 @@ jobs:
     if: needs.changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: admin
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push admin
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -391,20 +391,20 @@ jobs:
     if: needs.changes.outputs.mweb == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: mweb-app
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push mweb
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -426,19 +426,19 @@ jobs:
     if: needs.changes.outputs.website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript
         uses: ./.github/actions/portal-ci
         with:
           workspace: duncit.com
           typecheck: 'tsc -b --noEmit'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push website
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -463,20 +463,20 @@ jobs:
     if: needs.changes.outputs.partners_app == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: partners-app
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push partners app
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -498,19 +498,19 @@ jobs:
     if: needs.changes.outputs.partners_website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript
         uses: ./.github/actions/portal-ci
         with:
           workspace: partners-website
           typecheck: 'tsc -b --noEmit'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push partners website
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -533,20 +533,20 @@ jobs:
     if: needs.changes.outputs.ads_portal == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: ads-portal
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push ads portal
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -567,19 +567,19 @@ jobs:
     if: needs.changes.outputs.ads_website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript
         uses: ./.github/actions/portal-ci
         with:
           workspace: ads-website
           typecheck: 'tsc -b --noEmit'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push ads website
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -603,14 +603,14 @@ jobs:
     if: needs.changes.outputs.native == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push native web
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -637,11 +637,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.4.0
         with:
           run_install: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -690,7 +690,7 @@ jobs:
 
       - name: Upload Cypress screenshots on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: crm-cypress-screenshots
           path: portals/crm/cypress-artifacts/screenshots
@@ -701,14 +701,14 @@ jobs:
     if: needs.changes.outputs.crm == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push crm
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -732,14 +732,14 @@ jobs:
     if: needs.changes.outputs.open_wa == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push open-wa
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 40
           max_attempts: 3
@@ -758,20 +758,20 @@ jobs:
     if: needs.changes.outputs.finance == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: finance
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push finance
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -792,20 +792,20 @@ jobs:
     if: needs.changes.outputs.tech == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: tech
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push tech
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -826,20 +826,20 @@ jobs:
     if: needs.changes.outputs.support == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: support
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push support
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -861,20 +861,20 @@ jobs:
     if: needs.changes.outputs.website_app == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: website-app
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push website-app
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -896,20 +896,20 @@ jobs:
     if: needs.changes.outputs.legal == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: legal
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push legal
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -931,20 +931,20 @@ jobs:
     if: needs.changes.outputs.ai == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: ai
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push ai
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -966,20 +966,20 @@ jobs:
     if: needs.changes.outputs.products == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: products
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push products
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1001,20 +1001,20 @@ jobs:
     if: needs.changes.outputs.marketing == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: marketing
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push marketing
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1036,20 +1036,20 @@ jobs:
     if: needs.changes.outputs.onboarding == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: onboarding
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push onboarding
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1071,20 +1071,20 @@ jobs:
     if: needs.changes.outputs.hr == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: hr
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push hr
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1106,20 +1106,20 @@ jobs:
     if: needs.changes.outputs.employee == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: employee
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push employee
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1141,20 +1141,20 @@ jobs:
     if: needs.changes.outputs.status == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: status
           typecheck: 'tsc -b --noEmit'
           test: 'test'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push status
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1174,20 +1174,20 @@ jobs:
     if: needs.changes.outputs.challenge == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: challenge-portal
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push challenge
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1209,20 +1209,20 @@ jobs:
     if: needs.changes.outputs.developers == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript + Test
         uses: ./.github/actions/portal-ci
         with:
           workspace: developers-portal
           typecheck: 'tsc -b --noEmit'
           test: 'test:forms'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push developers
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1244,19 +1244,19 @@ jobs:
     if: needs.changes.outputs.earnwith == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: TypeScript
         uses: ./.github/actions/portal-ci
         with:
           workspace: earnwith-website
           typecheck: 'tsc -b --noEmit'
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build & push earnwith
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 30
           max_attempts: 3
@@ -1290,7 +1290,7 @@ jobs:
       NGINX_SITE: ${{ github.ref_name == 'staging' && 'staging.duncit.com' || 'duncit.com' }}
       COMPOSE_SRC: ${{ github.ref_name == 'staging' && 'deploy/docker-compose.staging.yml' || 'deploy/docker-compose.yml' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup SSH
         run: |
@@ -1502,7 +1502,7 @@ jobs:
           REMOTE
 
       - name: Remote redeploy (only changed services)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 12
           max_attempts: 5
@@ -1519,7 +1519,7 @@ jobs:
                ${{ env.STACK_DIR }}/redeploy.sh"
 
       - name: Wait for health (loop until all up)
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 8
           max_attempts: 24

@@ -1,101 +1,44 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { Alert, CircularProgress, Grid, Pagination, Stack, Typography } from '@mui/material';
-import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
-import { useDebouncedValue } from '@duncit/ui';
-import { MY_ADMIN_CLUBS_PAGE, type AdminClub } from './queries';
-import ClubAdminClubsFilters from './ClubAdminClubsFilters';
-import ClubAdminClubCard from './ClubAdminClubCard';
+import { useApolloClient } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
+import { Stack, Typography } from '@mui/material';
+import { DuncitTable, useApolloTableFetch } from '@duncit/table';
+import { MY_ADMIN_CLUBS_TABLE, type ClubAdminClubInfoRow } from './queries';
+import { CLUB_ADMIN_CLUBS_COLUMNS } from './columns';
 
-const PAGE_SIZE = 12;
+const getClubRowId = (club: ClubAdminClubInfoRow) => club.id;
 
+/** "Your Clubs" — server-driven max-info table over the clubs the signed-in
+ * partner administers. Row click opens the club's details; the Pods action
+ * jumps to that club's pod list. */
 export default function ClubAdminClubsPage() {
-  const [searchInput, setSearchInput] = useState('');
-  const [category, setCategory] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
-  const [page, setPage] = useState(0);
+  const client = useApolloClient();
+  const navigate = useNavigate();
 
-  // Debounce the typed term into the server query.
-  const search = useDebouncedValue(searchInput.trim(), 300);
-
-  // Any filter change resets to the first page.
-  useEffect(() => {
-    setPage(0);
-  }, [search, category.super_id, category.category_id, category.sub_id]);
-
-  const filter = useMemo(
-    () => ({
-      search: search || undefined,
-      super_category_id: category.super_id || undefined,
-      category_id: category.category_id || undefined,
-      sub_category_id: category.sub_id || undefined,
-      limit: PAGE_SIZE,
-      offset: page * PAGE_SIZE,
-    }),
-    [search, category, page]
+  const fetchRows = useApolloTableFetch<ClubAdminClubInfoRow>(
+    client,
+    MY_ADMIN_CLUBS_TABLE,
+    'myAdminClubsTable',
   );
-
-  const { data, loading, error } = useQuery(MY_ADMIN_CLUBS_PAGE, {
-    variables: { filter },
-    fetchPolicy: 'cache-and-network',
-  });
-  const clubs: AdminClub[] = data?.myAdminClubsPage?.items ?? [];
-  const total: number = data?.myAdminClubsPage?.total ?? 0;
-  const pageCount = Math.ceil(total / PAGE_SIZE);
-  const active = !!search || !!category.super_id;
-
-  const clear = () => {
-    setSearchInput('');
-    setCategory(EMPTY_CATEGORY);
-  };
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Stack spacing={0.25}>
         <Typography variant="h5" fontWeight={950}>Your Clubs</Typography>
         <Typography variant="body2" color="text.secondary">
-          Clubs you administer. Open a club to manage its pods.
+          Clubs you administer. Click a club to open its details, or jump straight to its pods.
         </Typography>
       </Stack>
 
-      <ClubAdminClubsFilters
-        searchInput={searchInput}
-        onSearchInput={setSearchInput}
-        category={category}
-        onCategory={setCategory}
-        onClear={clear}
-        active={active}
+      <DuncitTable<ClubAdminClubInfoRow>
+        tableId="partners-club-admin-clubs"
+        columns={CLUB_ADMIN_CLUBS_COLUMNS}
+        fetchRows={fetchRows}
+        getRowId={getClubRowId}
+        onRowClick={(club) => navigate(`/club-admin/clubs/${club.id}/edit`)}
+        emptyText="No clubs are assigned to you yet."
+        defaultSort={{ field: 'club_name', dir: 'asc' }}
+        searchPlaceholder="Search clubs"
       />
-
-      {error && <Alert severity="error">{error.message}</Alert>}
-      {loading && !data && (
-        <Stack alignItems="center" sx={{ py: 4 }}>
-          <CircularProgress size={24} />
-        </Stack>
-      )}
-      {!loading && total === 0 && (
-        <Alert severity="info">
-          {active ? 'No clubs match these filters.' : 'No clubs are assigned to you yet.'}
-        </Alert>
-      )}
-
-      <Grid container spacing={2}>
-        {clubs.map((club) => (
-          <Grid item xs={12} sm={6} md={4} key={club.id}>
-            <ClubAdminClubCard club={club} />
-          </Grid>
-        ))}
-      </Grid>
-
-      {pageCount > 1 && (
-        <Stack alignItems="center" sx={{ pt: 1 }}>
-          <Pagination
-            count={pageCount}
-            page={page + 1}
-            onChange={(_, next) => setPage(next - 1)}
-            color="primary"
-          />
-        </Stack>
-      )}
     </Stack>
   );
 }

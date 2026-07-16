@@ -1,15 +1,19 @@
-import { useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   FlatList,
   RefreshControl,
   useWindowDimensions,
   type LayoutChangeEvent,
+  type ViewToken,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, YStack } from 'tamagui';
 
 import { DetailSkeleton } from '@/components/Skeleton';
+import { ExploreAdCard } from '@/components/ads/ExploreAdCard';
+import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
+import { useActiveAds } from '@/hooks/useActiveAds';
 import { useExplore } from '@/hooks/useExplore';
 import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
@@ -23,6 +27,8 @@ import { PodCommentsSheet } from '@/components/details/pod-comments';
 export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
+  // Only the visible reel plays its video — the others stay paused.
+  const [activeIndex, setActiveIndex] = useState(0);
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,8 +49,17 @@ export function ExploreReels() {
     toggleLike,
     refetch,
   } = useExplore();
+  // Sponsored reels woven into the feed — one full-screen ad every 5 pods.
+  const { ads } = useActiveAds('EXPLORE_SCROLL');
+  const feed = useMemo(() => interleaveAds(pods, ads, 5), [pods, ads]);
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
+  // FlatList requires a stable identity for the viewability pair across renders.
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const index = viewableItems[0]?.index;
+    if (index != null) setActiveIndex(index);
+  }).current;
   const openPod = (pod: ExplorePod) =>
     navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
   const openClub = (pod: ExplorePod) =>
@@ -77,8 +92,8 @@ export function ExploreReels() {
     } else {
       reelsBody = (
         <FlatList
-          data={pods}
-          keyExtractor={(pod) => pod.id}
+          data={feed}
+          keyExtractor={(entry) => (isAdEntry(entry) ? entry.key : entry.item.id)}
           pagingEnabled
           showsVerticalScrollIndicator={false}
           snapToInterval={height}
@@ -90,6 +105,8 @@ export function ExploreReels() {
           windowSize={5}
           initialNumToRender={2}
           maxToRenderPerBatch={2}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -98,7 +115,18 @@ export function ExploreReels() {
               testID="explore-refresh"
             />
           }
-          renderItem={({ item }) => {
+          renderItem={({ item: entry, index }) => {
+            if (isAdEntry(entry)) {
+              return (
+                <ExploreAdCard
+                  ad={entry.ad}
+                  width={width}
+                  height={height}
+                  isActive={index === activeIndex}
+                />
+              );
+            }
+            const item = entry.item;
             const like = likeStateFor(item);
             const saved = isSaved(item.id);
             return (
@@ -107,6 +135,7 @@ export function ExploreReels() {
                 club={clubsById.get(item.club_id)}
                 width={width}
                 height={height}
+                isActive={index === activeIndex}
                 saved={saved}
                 savePending={isSavePending(item.id)}
                 like={like}

@@ -7,6 +7,10 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
+import { UserModel } from '@modules/access/user/user.model';
+import { HostModel } from '@modules/venues/host/host.model';
+import { VenueModel } from '@modules/venues/venue/venue.model';
+import { LocationModel } from '@modules/platform/location/location.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 
 const uid = () => new Types.ObjectId().toString();
@@ -237,6 +241,129 @@ describe('clubAdminService listAdminClubsPage (Your Clubs)', () => {
   });
 });
 
+describe('clubAdminService myAdminClubsTable (Your Clubs table)', () => {
+  it('returns an empty page for a non-admin / invalid user', async () => {
+    const invalid = await clubAdminService.clubsInfoTable('not-an-id');
+    expect(invalid).toMatchObject({ rows: [], total: 0, page: 1, page_size: 25 });
+    const none = await clubAdminService.clubsInfoTable(uid());
+    expect(none.rows).toEqual([]);
+    expect(none.total).toBe(0);
+  });
+
+  it('builds max-info rows scoped to the caller', async () => {
+    const admin = uid();
+    const location = await LocationModel.create({
+      location_id: 'blr-info',
+      location_name: 'Bengaluru Metro',
+      city: 'Bengaluru',
+      location_image: 'https://img/loc.jpg',
+      location_pincode: '560001',
+    });
+    const superCat = await CategoryModel.create({ name: 'Sports', slug: 'sports-info', level: 'SUPER' });
+    const sub = await CategoryModel.create({ name: 'Tennis', slug: 'tennis-info', level: 'SUB', parent_id: superCat._id });
+    // One venue auto-matches (APPROVED + active, same location/locality + categories); one is in another city.
+    await VenueModel.collection.insertMany([
+      { venue_name: 'Match Hall', location_id: location._id, locality: 'Indiranagar', status: 'APPROVED', is_active: true,
+        venue_category: { super_category_id: superCat._id, sub_category_id: sub._id } },
+      { venue_name: 'Wrong City', location_id: new Types.ObjectId(), locality: 'Indiranagar', status: 'APPROVED', is_active: true,
+        venue_category: { super_category_id: superCat._id, sub_category_id: sub._id } },
+    ] as never);
+    const club = await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Alpha',
+      club_id: 'alpha-info',
+      locality: 'Indiranagar',
+      location_id: location._id,
+      super_category_id: superCat._id,
+      category_id: sub._id,
+      is_verified: true,
+      club_feature_images_and_videos: [
+        { url: 'https://img/reel.mp4', type: 'VIDEO' },
+        { url: 'https://img/cover.jpg', type: 'IMAGE' },
+      ],
+    });
+    await seedPod(club._id); // upcoming
+    await seedPod(club._id, { pod_date_time: new Date(Date.now() - 86_400_000) }); // completed
+    await ClubFollowerModel.create({ club_id: club._id, user_id: uid() });
+    await seedClub({ admin_user_ids: [uid()], club_name: 'Other Admins Club' });
+
+    const page = await clubAdminService.clubsInfoTable(admin);
+    expect(page.total).toBe(1); // the other admin's club never appears
+    expect(page.rows[0]).toMatchObject({
+      id: String(club._id),
+      club_name: 'Alpha',
+      slug: 'alpha-info',
+      cover_image_url: 'https://img/cover.jpg', // first IMAGE wins over a leading VIDEO
+      super_category: 'Sports',
+      category: 'Tennis',
+      locality: 'Indiranagar',
+      location_label: 'Bengaluru',
+      followers_count: 1,
+      total_pods: 2,
+      upcoming_pods: 1,
+      matched_venues_count: 1,
+      is_verified: true,
+      is_active: true,
+    });
+    expect(page.rows[0].created_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('defaults unresolvable references to empty row fields', async () => {
+    const admin = uid();
+    const club = await seedClub({ admin_user_ids: [admin], club_name: 'Bare', club_id: 'bare-info' });
+    const page = await clubAdminService.clubsInfoTable(admin);
+    expect(page.rows[0]).toMatchObject({
+      id: String(club._id),
+      cover_image_url: null,
+      super_category: null,
+      category: null,
+      locality: '',
+      location_label: null,
+      followers_count: 0,
+      total_pods: 0,
+      upcoming_pods: 0,
+      matched_venues_count: 0,
+      is_verified: false,
+    });
+  });
+
+  it('searches (name/slug), sorts and pages the computed rows', async () => {
+    const admin = uid();
+    const alpha = await seedClub({ admin_user_ids: [admin], club_name: 'Alpha Club', club_id: 'alpha-slug' });
+    await seedClub({ admin_user_ids: [admin], club_name: 'Beta Club', club_id: 'beta-slug' });
+    await seedClub({ admin_user_ids: [admin], club_name: 'Charlie Club', club_id: 'charlie-slug' });
+    await seedPod(alpha._id);
+
+    // Default sort: club_name asc.
+    const all = await clubAdminService.clubsInfoTable(admin);
+    expect(all.rows.map((r) => r.club_name)).toEqual(['Alpha Club', 'Beta Club', 'Charlie Club']);
+
+    // Search spans club name AND slug.
+    const byName = await clubAdminService.clubsInfoTable(admin, { search: 'beta' });
+    expect(byName.rows.map((r) => r.club_name)).toEqual(['Beta Club']);
+    const bySlug = await clubAdminService.clubsInfoTable(admin, { search: 'charlie-slug' });
+    expect(bySlug.rows.map((r) => r.club_name)).toEqual(['Charlie Club']);
+
+    // Allowlisted sort over a computed column.
+    const sorted = await clubAdminService.clubsInfoTable(admin, {
+      sort_by: 'total_pods',
+      sort_dir: 'desc',
+    });
+    expect(sorted.rows[0].club_name).toBe('Alpha Club');
+
+    // Number filter narrows; paging clamps.
+    const withPods = await clubAdminService.clubsInfoTable(admin, {
+      filters: [{ field: 'total_pods', op: 'gte', value: '1' }],
+    });
+    expect(withPods.rows.map((r) => r.club_name)).toEqual(['Alpha Club']);
+    const page2 = await clubAdminService.clubsInfoTable(admin, { page: 2, page_size: 2 });
+    expect(page2.rows).toHaveLength(1);
+    expect(page2.total).toBe(3);
+    expect(page2.page).toBe(2);
+    expect(page2.page_size).toBe(2);
+  });
+});
+
 describe('clubAdminService dashboard', () => {
   it('returns a zeroed dashboard when the user administers no clubs', async () => {
     const d = await clubAdminService.dashboard(uid());
@@ -349,5 +476,73 @@ describe('clubAdminService dashboard', () => {
     const none = await clubAdminService.dashboardClubsTable(uid());
     expect(none.total).toBe(0);
     expect(none.rows).toEqual([]);
+  });
+});
+
+describe('clubAdminService searchHosts (assign-host picker)', () => {
+  /** An onboarded host user in the given review status. */
+  const seedHostUser = async (first: string, status = 'APPROVED') => {
+    const user = await UserModel.create({
+      auth: { email: `${first.toLowerCase()}@example.com` },
+      profile: { first_name: first, last_name: 'Host' },
+    });
+    await HostModel.create({ user_id: user._id, status });
+    return String(user._id);
+  };
+
+  it('is forbidden for a user who administers no clubs and lacks SUPER_ADMIN', async () => {
+    await seedHostUser('Asha');
+    await seedClub({ admin_user_ids: [uid()] }); // clubs exist, just not this caller's
+    await expect(clubAdminService.searchHosts({ id: uid() })).rejects.toMatchObject({
+      extensions: { code: 'FORBIDDEN' },
+    });
+  });
+
+  it('returns only APPROVED hosts, shaped for the picker', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin] });
+    const approved = await seedHostUser('Asha');
+    await seedHostUser('Bala', 'SUBMITTED');
+    await seedHostUser('Chitra', 'REJECTED');
+
+    const rows = await clubAdminService.searchHosts({ id: admin });
+    expect(rows).toEqual([
+      { user_id: approved, full_name: 'Asha Host', email: 'asha@example.com' },
+    ]);
+  });
+
+  it('filters by first name, last name and email', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin] });
+    const asha = await seedHostUser('Asha');
+    const bala = await seedHostUser('Bala');
+
+    const byFirst = await clubAdminService.searchHosts({ id: admin }, 'ash');
+    expect(byFirst.map((r) => r.user_id)).toEqual([asha]);
+
+    const byEmail = await clubAdminService.searchHosts({ id: admin }, 'bala@example');
+    expect(byEmail.map((r) => r.user_id)).toEqual([bala]);
+
+    const byLast = await clubAdminService.searchHosts({ id: admin }, 'host');
+    expect(byLast.map((r) => r.user_id).sort()).toEqual([asha, bala].sort());
+
+    expect(await clubAdminService.searchHosts({ id: admin }, 'zzz-no-match')).toEqual([]);
+  });
+
+  it('lets SUPER_ADMIN search without administering any club; no approved hosts → empty', async () => {
+    await seedHostUser('Bala', 'SUBMITTED'); // not APPROVED → not offered
+    await expect(
+      clubAdminService.searchHosts({ id: uid(), roles: ['SUPER_ADMIN'] })
+    ).resolves.toEqual([]);
+  });
+
+  it('shapes a host missing a last name and email without blowing up', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin] });
+    const user = await UserModel.create({ auth: {}, profile: { first_name: 'Mono' } });
+    await HostModel.create({ user_id: user._id, status: 'APPROVED' });
+
+    const rows = await clubAdminService.searchHosts({ id: admin });
+    expect(rows).toEqual([{ user_id: String(user._id), full_name: 'Mono', email: null }]);
   });
 });

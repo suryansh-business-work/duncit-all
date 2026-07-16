@@ -13,6 +13,9 @@ jest.mock('@react-navigation/native', () => ({
 
 // Stub the data hooks so the screen renders deterministically (no network).
 jest.mock('@/hooks/useMe', () => ({ useMe: () => ({ data: undefined }) }));
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: [], loading: false }),
+}));
 jest.mock('@/hooks/useHomeFeed', () => ({
   useHomeFeed: () => ({
     isLoading: false,

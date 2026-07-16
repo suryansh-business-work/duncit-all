@@ -3,13 +3,15 @@ import { makePodSchema, type PodFormConfig } from '@duncit/pod-form';
 
 const adminConfig: PodFormConfig = {
   showHosts: true,
+  requireHosts: true,
   showLocationZone: true,
-  showVenueSlot: false,
+  showVenueSlot: true,
   showPlaceCharges: true,
   showInventory: true,
   showFinance: true,
   showIsActive: true,
   showProducts: true,
+  showReel: true,
 };
 
 const podFormSchema = makePodSchema(adminConfig);
@@ -80,6 +82,19 @@ describe('makePodSchema (admin config)', () => {
 
   it('rejects empty pod_hosts_id when hosts are shown', () => {
     expect(messagesFor({ ...base, pod_hosts_id: [] })).toMatch(/host/i);
+  });
+
+  it('requires a slot only while the dates are missing (slot picker on)', () => {
+    expect(messagesFor({ ...base, pod_date_time: null })).toMatch(/slot/i);
+    expect(podFormSchema.safeParse(base).success).toBe(true);
+  });
+
+  it('rejects a malformed reel url and accepts empty or valid ones', () => {
+    expect(messagesFor({ ...base, reel_url: 'not-a-url' })).toMatch(/reel/i);
+    expect(podFormSchema.safeParse({ ...base, reel_url: '' }).success).toBe(true);
+    expect(
+      podFormSchema.safeParse({ ...base, reel_url: 'https://cdn.example.com/reel.mp4' }).success,
+    ).toBe(true);
   });
 
   it('accepts a fully valid pod', () => {

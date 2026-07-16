@@ -100,6 +100,13 @@ describe('createPodSchema', () => {
     expect(issuesOf(valid({ location_id: '' }))).toContain('location_id');
   });
 
+  it('accepts an optional reel URL (blank or a hosted video URL)', () => {
+    expect(createPodSchema.safeParse(valid({ reel_url: '' })).success).toBe(true);
+    expect(
+      createPodSchema.safeParse(valid({ reel_url: 'https://ik.imagekit.io/pods/reels/clip.mp4' })).success,
+    ).toBe(true);
+  });
+
   it('gates publishing on accepting the Organizer Terms', () => {
     expect(issuesOf(valid({ agreed_to_terms: false }))).toContain('agreed_to_terms');
     expect(createPodSchema.safeParse(valid({ agreed_to_terms: true })).success).toBe(true);
@@ -145,6 +152,11 @@ describe('buildCreatePodInput', () => {
     expect(input.is_active).toBe(true);
   });
 
+  it('maps reel_url to the hosted URL, or null when blank', () => {
+    expect(buildCreatePodInput(valid()).reel_url).toBeNull();
+    expect(buildCreatePodInput(valid({ reel_url: 'https://cdn/reel.mp4' })).reel_url).toBe('https://cdn/reel.mp4');
+  });
+
   it('drops product requests when products are disabled', () => {
     const input = buildCreatePodInput(
       valid({ products_enabled: false, product_requests: [{ product_id: 'p1', quantity: 3 }] }),
@@ -175,7 +187,12 @@ describe('draft serialize/hydrate', () => {
   it('round-trips values and revives Date fields', () => {
     const start = future();
     const end = future(26);
-    const values = valid({ pod_date_time: start, pod_end_date_time: end, what_this_pod_offers: ['A'] });
+    const values = valid({
+      pod_date_time: start,
+      pod_end_date_time: end,
+      what_this_pod_offers: ['A'],
+      reel_url: 'https://cdn/reel.mp4',
+    });
     const draft = serializeDraft(values, 2);
     expect(draft.pod_title).toBe('Sunday community hike');
     expect(draft.step).toBe(2);
@@ -184,6 +201,7 @@ describe('draft serialize/hydrate', () => {
     expect(restored.pod_date_time?.getTime()).toBe(start.getTime());
     expect(restored.pod_end_date_time?.getTime()).toBe(end.getTime());
     expect(restored.what_this_pod_offers).toEqual(['A']);
+    expect(restored.reel_url).toBe('https://cdn/reel.mp4');
   });
 
   it('falls back to a blank form for invalid payloads', () => {

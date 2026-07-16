@@ -114,6 +114,8 @@ export function filterExplorePods({
   const term = filters.search.trim().toLowerCase();
 
   const filtered = pods.filter((pod) => {
+    // Explore is reel-only — drop reel-less pods defensively (server filters has_reel).
+    if (!pod.reel_url) return false;
     const club = clubsById.get(pod.club_id);
     if (selectedSuperId && club?.super_category_id !== selectedSuperId) return false;
     if (!categoryMatches(club, filters.categoryId, parentById)) return false;

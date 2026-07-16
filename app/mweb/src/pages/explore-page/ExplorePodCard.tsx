@@ -15,7 +15,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import { TOGGLE_POD_LIKE } from '../pod-details-page/queries';
 import ExploreActionRail from './ExploreActionRail';
-import ExploreMediaCarousel from './ExploreMediaCarousel';
+import ExploreReelVideo from './ExploreReelVideo';
 import ExplorePodOverlay from './ExplorePodOverlay';
 import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
@@ -53,7 +53,6 @@ export default function ExplorePodCard({
 }: Readonly<Props>) {
   const navigate = useNavigate();
   const { format } = usePricing();
-  const cover = club?.club_feature_images_and_videos?.[0]?.url ?? null;
   // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
   const expired = isPodExpired(pod.pod_date_time);
   const ctaSubtitle = pod.pod_type?.includes('FREE')
@@ -125,11 +124,7 @@ export default function ExplorePodCard({
         overflow: 'hidden',
       }}
     >
-      <ExploreMediaCarousel
-        media={pod.pod_images_and_videos ?? []}
-        fallbackUrl={cover}
-        alt={pod.pod_title}
-      />
+      <ExploreReelVideo src={pod.reel_url} />
 
       <ExplorePodOverlay pod={pod} club={club} location={location} />
 

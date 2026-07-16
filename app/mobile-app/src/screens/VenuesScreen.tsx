@@ -4,7 +4,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { AdCard } from '@/components/ads/AdCard';
+import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { VenueCard } from '@/components/hosts-venues';
+import { useActiveAds } from '@/hooks/useActiveAds';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useVenuesExplore, type VenueCategoryOption } from '@/hooks/useVenuesExplore';
 import type { RootStackParamList } from '@/navigation/types';
@@ -68,6 +71,8 @@ export function VenuesScreen() {
     isLoading,
     error,
   } = useVenuesExplore();
+  // A sponsored banner every 4 venues (server returns [] when none are booked).
+  const { ads } = useActiveAds('VENUE_LIST');
 
   return (
     <StackScreen title="Venues" testID="venues-screen">
@@ -107,13 +112,19 @@ export function VenuesScreen() {
               No venues found here yet — try another search or category.
             </Text>
           ) : null}
-          {venues.map((venue) => (
-            <VenueCard
-              key={venue.id}
-              venue={venue}
-              onOpen={() => navigation.navigate('VenueDetails', { venueId: venue.id })}
-            />
-          ))}
+          {interleaveAds(venues, ads, 4).map((entry) => {
+            if (isAdEntry(entry)) {
+              return <AdCard key={entry.key} ad={entry.ad} variant="banner" />;
+            }
+            const venue = entry.item;
+            return (
+              <VenueCard
+                key={venue.id}
+                venue={venue}
+                onOpen={() => navigation.navigate('VenueDetails', { venueId: venue.id })}
+              />
+            );
+          })}
         </YStack>
       </ScrollView>
     </StackScreen>

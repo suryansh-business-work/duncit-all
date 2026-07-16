@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { useMutation } from '@apollo/client';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import AdSlot from '../../components/ads/AdSlot';
 import HomeStatusTile from './HomeStatusTile';
 import HomeStatusViewer from './HomeStatusViewer';
 import MyStatusUploadTile from './MyStatusUploadTile';
@@ -110,6 +111,7 @@ export default function HomeStatusRail({
               onClick={() => setActiveIndex(offset + entryIndex)}
             />
           ))}
+          <AdSlot position="STATUS" variant="tile" />
         </Stack>
       </Box>
       <HomeStatusViewer

@@ -2,12 +2,13 @@ import { MenuItem, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mu
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { useFormContext, useWatch } from 'react-hook-form';
+import HostsField from '../components/HostsField';
 import RhfTextField from '../components/RhfTextField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
 
 export default function BasicSection() {
-  const { config, clubs, users } = usePodFormData();
+  const { config, clubs, users, searchHosts } = usePodFormData();
   const { control, register, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const clubId = useWatch({ control, name: 'club_id' });
@@ -68,7 +69,8 @@ export default function BasicSection() {
           </MenuItem>
         ))}
       </TextField>
-      {config.showHosts && (
+      {config.showHosts && searchHosts && <HostsField />}
+      {config.showHosts && !searchHosts && (
         <TextField
           select
           label="Hosts"

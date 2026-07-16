@@ -156,6 +156,8 @@ export const createPodSchema = z
     no_of_spots_text: z.string().refine(intIn(0, 10000), 'Spots must be 0–10000'),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
+    // Optional reel — uploaded straight to ImageKit, so only the URL travels here.
+    reel_url: z.string(),
     what_this_pod_offers: z
       .array(z.string().trim().min(1).max(40))
       .min(1, 'Add at least one thing this pod offers')
@@ -195,6 +197,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'pod_title',
     'pod_description',
     'media_text',
+    'reel_url',
     'pod_hashtag_text',
     'pod_info',
     'what_this_pod_offers',
@@ -272,6 +275,7 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       url,
       type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
+    reel_url: values.reel_url || null,
     payment_terms: values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,

@@ -65,9 +65,9 @@ jobs:
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4.4.0
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
@@ -88,7 +88,7 @@ jobs:
               cp "$f" "$dest"
             done
           ls -la lcov-out
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@v6
         with:
           name: lcov-workspaces
           path: lcov-out
@@ -100,8 +100,8 @@ jobs:
     needs: probe
     if: needs.probe.outputs.up == 'true' && !inputs.skip_coverage
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -113,7 +113,7 @@ jobs:
         run: |
           npm ci
           npm run test:coverage
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@v6
         with:
           name: lcov-mobile
           path: app/mobile-app/coverage/lcov.info
@@ -131,20 +131,20 @@ jobs:
     # a scan without coverage beats no scan at all.
     if: always() && needs.probe.outputs.up == 'true'
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # shallow clones hurt new-code relevancy
 
       - name: Download workspace lcov
         continue-on-error: true
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@v6
         with:
           name: lcov-workspaces
           path: lcov-out
 
       - name: Download mobile lcov
         continue-on-error: true
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@v6
         with:
           name: lcov-mobile
           path: app/mobile-app/coverage
@@ -165,7 +165,7 @@ jobs:
       # SonarQube keeps a per-file analysis cache; reusing it across runs is the
       # single biggest saving on a repeat scan of the same branch.
       - name: Cache SonarQube analysis
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@v5
         with:
           path: ~/.sonar/cache
           key: sonar-cache-${{ runner.os }}-${{ github.ref_name }}-${{ github.sha }}

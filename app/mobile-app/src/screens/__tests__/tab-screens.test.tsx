@@ -19,6 +19,10 @@ jest.mock('@/hooks/useLocations', () => ({ useLocations: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({ data: { me: { user_id: 'me1' } } }),
 }));
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 const mockViewer = jest.fn((_props: unknown) => null);
 jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => ({
   PostViewerSheet: (props: unknown) => mockViewer(props),
@@ -72,6 +76,7 @@ const emptyFeed = () => ({
 beforeEach(() => {
   mockNavigate.mockClear();
   mockViewer.mockClear();
+  mockAds = [];
   mockedHomeData.mockReturnValue({
     pods: [],
     clubs: [],
@@ -121,6 +126,32 @@ describe('ClubsScreen', () => {
     // Category filter to Arts drops the (sports) match → empty state.
     fireEvent.press(screen.getByTestId('clubs-filter-cat-cat2'));
     expect(screen.getByTestId('clubs-list-empty')).toBeOnTheScreen();
+  });
+
+  it('interleaves a sponsored banner after every 4 clubs', () => {
+    mockAds = [
+      {
+        id: 'ad1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn/ad.jpg',
+        redirect_url: null,
+        ad_title: 'Sponsored Club',
+        position: 'CLUB_LIST',
+      },
+    ];
+    mockedHomeData.mockReturnValue({
+      pods: [],
+      clubs: [club('1'), club('2'), club('3'), club('4'), club('5')],
+      categories: [],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ClubsScreen />);
+    expect(screen.getByTestId('ad-card-ad1')).toBeOnTheScreen();
+    expect(screen.getByText('Sponsored Club')).toBeOnTheScreen();
+    // Clubs still render around the woven banner.
+    expect(screen.getByTestId('club-card-cl-4')).toBeOnTheScreen();
+    expect(screen.getByTestId('club-card-cl-5')).toBeOnTheScreen();
   });
 
   it('shows only clubs in the selected location', () => {

@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
-import { type PodFormConfig } from '@duncit/pod-form';
+import { makeNativeParityPodConfig, useMediaPickerBridge, type PodFormConfig } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { useFeatureFlag } from '@duncit/app-settings';
 import { PODS_TABLE, type PodRow } from './queries';
@@ -14,7 +14,6 @@ import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
 import QuickEditPodDialog from './QuickEditPodDialog';
-import useMediaPickerBridge from './useMediaPickerBridge';
 import usePodEditor from './usePodEditor';
 import usePodPageData from './usePodPageData';
 import usePodReleaseRequest from './usePodReleaseRequest';
@@ -36,16 +35,15 @@ export default function PodsPage() {
   });
 
   const productsFlag = useFeatureFlag('is_product_visible');
+  // Native-parity base (venue slots, place charges, reel, hosts) + admin extras.
   const config = useMemo<PodFormConfig>(
     () => ({
-      showHosts: true,
+      ...makeNativeParityPodConfig({ showProducts: productsFlag }),
+      requireHosts: true,
       showLocationZone: true,
-      showVenueSlot: false,
-      showPlaceCharges: true,
       showInventory: true,
       showFinance: true,
       showIsActive: true,
-      showProducts: productsFlag,
     }),
     [productsFlag]
   );
@@ -119,6 +117,7 @@ export default function PodsPage() {
 
       <PodFormDialog
         open={editor.open}
+        editing={!!editor.editingPod}
         onClose={editor.close}
         initialValues={editor.initialValues}
         config={config}
@@ -131,6 +130,7 @@ export default function PodsPage() {
         onSubmit={editor.submit}
         finance={lookups.finance}
         onPickImage={picker.pickImage}
+        onPickVideo={picker.pickVideo}
       />
 
       <QuickEditPodDialog
@@ -151,7 +151,8 @@ export default function PodsPage() {
         onClose={() => picker.settlePicker(null)}
         onPicked={(url) => picker.settlePicker(url)}
         folder="/pods/media"
-        title="Add pod image"
+        title={picker.title}
+        accept={picker.accept}
       />
 
       <Snackbar

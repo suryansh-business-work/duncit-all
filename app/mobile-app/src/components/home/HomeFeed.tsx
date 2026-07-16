@@ -17,6 +17,7 @@ import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useHomeStore } from '@/stores/home.store';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { ClubSection } from '@/components/home/ClubSection';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeFeaturedPods } from '@/components/home/HomeFeaturedPods';
@@ -144,6 +145,11 @@ export function HomeFeed() {
                 onSeeAll={openPreviousPods}
                 onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
               />
+            </Reveal>
+            <Reveal index={6}>
+              <YStack paddingHorizontal={16}>
+                <AdSlot position="HOME_BOTTOM" variant="banner" />
+              </YStack>
             </Reveal>
           </YStack>
         </YStack>

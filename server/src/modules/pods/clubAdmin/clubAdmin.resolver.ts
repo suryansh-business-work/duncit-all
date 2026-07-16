@@ -17,6 +17,10 @@ export const clubAdminResolvers = {
       const user = requireAuth(ctx);
       return clubAdminService.listAdminClubsPage(user.id, args.filter ?? {});
     },
+    myAdminClubsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return clubAdminService.clubsInfoTable(user.id, args.query);
+    },
     clubAdminDashboard: (
       _p: unknown,
       args: { from?: string | null; to?: string | null },
@@ -33,6 +37,8 @@ export const clubAdminResolvers = {
       const user = requireAuth(ctx);
       return clubAdminService.dashboardClubsTable(user.id, args.query, args.from, args.to);
     },
+    clubAdminHostSearch: (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) =>
+      clubAdminService.searchHosts(actorOf(ctx), args.search),
   },
   Mutation: {
     clubAdminCreatePod: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

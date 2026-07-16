@@ -73,6 +73,8 @@ export interface IPod extends Document {
   meeting_notes?: string | null;
   pod_hashtag: string[];
   pod_images_and_videos: IPodMedia[];
+  /** Explore reel video URL (direct ImageKit upload, ≤100MB). Presence = reel enabled. */
+  reel_url?: string | null;
   pod_hits: number;
   pod_attendees: Types.ObjectId[];
   pod_description: string;
@@ -175,6 +177,7 @@ const podSchema = new Schema<IPod>(
     meeting_notes: { type: String, default: null, trim: true, maxlength: 1000 },
     pod_hashtag: { type: [String], default: [] },
     pod_images_and_videos: { type: [mediaSchema], default: [] },
+    reel_url: { type: String, default: null, trim: true, maxlength: 1000 },
     pod_hits: { type: Number, default: 0 },
     pod_attendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     pod_description: { type: String, required: true },

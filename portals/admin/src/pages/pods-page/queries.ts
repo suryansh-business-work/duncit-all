@@ -19,6 +19,7 @@ export const PODS = gql`
         url
         type
       }
+      reel_url
       pod_hits
       pod_attendees
       pod_description
@@ -96,6 +97,7 @@ const POD_ROW_FIELDS = gql`
       url
       type
     }
+    reel_url
     pod_hits
     pod_attendees
     pod_description

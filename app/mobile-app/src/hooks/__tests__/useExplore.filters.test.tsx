@@ -30,6 +30,7 @@ beforeEach(() => {
           club_id: 'c1',
           location_id: 'l1',
           pod_mode: 'PHYSICAL',
+          reel_url: 'https://cdn/r1.mp4',
           liked_by_me: false,
           like_count: 0,
           comment_count: 2,
@@ -39,6 +40,7 @@ beforeEach(() => {
           club_id: 'c2',
           location_id: 'l2',
           pod_mode: 'PHYSICAL',
+          reel_url: 'https://cdn/r2.mp4',
           liked_by_me: false,
           like_count: 0,
           comment_count: 0,
@@ -48,6 +50,18 @@ beforeEach(() => {
           club_id: 'c1',
           location_id: null,
           pod_mode: 'VIRTUAL',
+          reel_url: 'https://cdn/r3.mp4',
+          liked_by_me: false,
+          like_count: 0,
+          comment_count: 0,
+        },
+        // No reel → never shown in the reel-only Explore feed.
+        {
+          id: 'p4',
+          club_id: 'c1',
+          location_id: 'l1',
+          pod_mode: 'PHYSICAL',
+          reel_url: null,
           liked_by_me: false,
           like_count: 0,
           comment_count: 0,
@@ -69,6 +83,12 @@ beforeEach(() => {
 });
 
 describe('useExplore filtering', () => {
+  it('drops pods without a reel — Explore is reel-only', () => {
+    const { result } = renderHook(() => useExplore());
+    // p4 carries no reel_url and is filtered out even with no other filters set.
+    expect(result.current.pods.map((p) => p.id)).toEqual(['p1', 'p2', 'p3']);
+  });
+
   it('drops pods whose club is outside the selected super-category', () => {
     mockedSuper.mockReturnValue({ selectedSuperId: 's1' });
     const { result } = renderHook(() => useExplore());

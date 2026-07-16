@@ -25,6 +25,14 @@ export const appConfig = {
     { label: 'Email Campaigns', to: '/campaigns/email', icon: 'email' },
     { label: 'WhatsApp Campaigns', to: '/campaigns/whatsapp', icon: 'whatsapp' },
     { label: 'Notifications', to: '/notifications', icon: 'notifications' },
+    {
+      label: 'Ads',
+      icon: 'campaign',
+      children: [
+        { label: 'Ads Approval', to: '/ads-approvals', icon: 'campaign' },
+        { label: 'Ads Settings', to: '/ads-settings', icon: 'settings' },
+      ],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

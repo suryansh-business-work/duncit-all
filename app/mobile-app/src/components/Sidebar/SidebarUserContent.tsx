@@ -2,6 +2,7 @@ import { YStack } from 'tamagui';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
 import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
 import { SidebarQuickGrid } from './SidebarQuickGrid';
@@ -34,6 +35,7 @@ export function SidebarUserContent({
       ) : null}
       <SidebarQuickGrid onNavigate={onNavigate} />
       <SidebarVenuesCard onNavigate={onNavigate} />
+      <AdSlot position="SIDEBAR" variant="card" />
       <SidebarReferralCard onNavigate={onNavigate} />
       <SidebarManageList items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
     </YStack>

@@ -1,5 +1,6 @@
 import { FlatList, Share } from 'react-native';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { useVideoPlayer } from 'expo-video';
 
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { ExploreReels } from '@/components/explore/ExploreReels';
@@ -7,6 +8,10 @@ import { useExplore } from '@/hooks/useExplore';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useExplore');
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
@@ -52,6 +57,7 @@ jest.mock('@/components/explore/LikesListSheet', () => {
 });
 
 const mockedExplore = useExplore as jest.Mock;
+const mockUseVideoPlayer = useVideoPlayer as jest.Mock;
 
 const pod = (id: string) =>
   ({
@@ -66,6 +72,7 @@ const pod = (id: string) =>
     no_of_spots: 5,
     host_names: [],
     pod_images_and_videos: [],
+    reel_url: `https://cdn/reel-${id}.mp4`,
     club_id: 'c1',
     club_slug: 's',
     place_label: 'Cafe',
@@ -87,6 +94,7 @@ describe('ExplorePodCard', () => {
         pod={pod('1')}
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -119,6 +127,7 @@ describe('ExplorePodCard', () => {
         pod={expiredPod}
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -138,6 +147,7 @@ describe('ExplorePodCard', () => {
         pod={{ ...(pod('v') as Record<string, unknown>), no_of_spots: 0 } as never}
         width={390}
         height={2000}
+        isActive={false}
         saved
         savePending
         like={{ liked_by_me: true, like_count: 9 }}
@@ -160,6 +170,7 @@ describe('ExplorePodCard', () => {
         pod={pod('1')}
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -182,6 +193,7 @@ describe('ExplorePodCard', () => {
         pod={pod('tall')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -206,6 +218,7 @@ describe('ExplorePodCard', () => {
         pod={pod('err')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -232,6 +245,7 @@ describe('ExplorePodCard', () => {
         }
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -262,6 +276,7 @@ describe('ExplorePodCard', () => {
         }
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -288,6 +303,7 @@ describe('ExplorePodCard', () => {
         pod={pod('lk')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 4 }}
         commentCount={0}
@@ -308,6 +324,7 @@ describe('ExplorePodCard', () => {
         pod={pod('nolk')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -336,6 +353,7 @@ describe('ExplorePodCard', () => {
         }
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -350,6 +368,62 @@ describe('ExplorePodCard', () => {
     // Tapping the (non-collapsible) caption wrapper is a no-op.
     fireEvent.press(screen.getByTestId('explore-caption-wrap'));
     expect(screen.getByTestId('explore-caption')).toBeOnTheScreen();
+  });
+
+  it('plays the muted looping reel while active and re-asserts play once ready', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('vid')}
+        width={390}
+        height={700}
+        isActive
+        saved={false}
+        like={{ liked_by_me: false, like_count: 0 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('reel-video-p-vid')).toBeOnTheScreen();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.loop).toBe(true);
+    expect(player.muted).toBe(true);
+    expect(player.play).toHaveBeenCalled();
+    // A slow remote source: play is re-asserted only when it reports ready.
+    const [event, listener] = player.addListener.mock.calls[0];
+    expect(event).toBe('statusChange');
+    const playsBefore = player.play.mock.calls.length;
+    listener({ status: 'loading' });
+    expect(player.play.mock.calls.length).toBe(playsBefore);
+    listener({ status: 'readyToPlay' });
+    expect(player.play.mock.calls.length).toBe(playsBefore + 1);
+  });
+
+  it('pauses the reel and drops the ready-listener while the card is inactive', () => {
+    const props = {
+      width: 390,
+      height: 700,
+      saved: false,
+      like: { liked_by_me: false, like_count: 0 },
+      commentCount: 0,
+      onToggleLike: jest.fn(),
+      onToggleSave: jest.fn(),
+      onComment: jest.fn(),
+      onOpen: jest.fn(),
+    };
+    const { rerender } = renderWithProviders(
+      <ExplorePodCard pod={pod('idle')} isActive {...props} />,
+    );
+    const activePlayer = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    const sub = activePlayer.addListener.mock.results[0]?.value;
+    // Swiping away deactivates the card: the listener detaches and it pauses.
+    rerender(<ExplorePodCard pod={pod('idle')} isActive={false} {...props} />);
+    expect(sub.remove).toHaveBeenCalled();
+    const idlePlayer = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(idlePlayer.pause).toHaveBeenCalled();
+    expect(idlePlayer.play).not.toHaveBeenCalled();
   });
 });
 
@@ -379,6 +453,7 @@ describe('ExploreReels', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     bumpComment.mockClear();
+    mockAds = [];
     mockedExplore.mockReturnValue(base);
   });
 
@@ -400,6 +475,28 @@ describe('ExploreReels', () => {
 
     const list = screen.UNSAFE_getByType(FlatList);
     expect(list.props.getItemLayout(null, 2)).toEqual({ length: 700, offset: 1400, index: 2 });
+  });
+
+  it('plays only the visible reel and follows viewability changes', () => {
+    mockedExplore.mockReturnValue({ ...base, pods: [pod('1'), pod('2')] });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    const list = screen.UNSAFE_getByType(FlatList);
+    expect(list.props.viewabilityConfig).toEqual({ itemVisiblePercentThreshold: 60 });
+    // Index 0 starts active: its player plays, the second card's pauses.
+    let [first, second] = mockUseVideoPlayer.mock.results.slice(-2).map((r) => r.value);
+    expect(first.play).toHaveBeenCalled();
+    expect(second.pause).toHaveBeenCalled();
+    // Swipe to the second reel → it becomes the only playing card.
+    act(() => list.props.onViewableItemsChanged({ viewableItems: [{ index: 1 }] }));
+    [first, second] = mockUseVideoPlayer.mock.results.slice(-2).map((r) => r.value);
+    expect(first.pause).toHaveBeenCalled();
+    expect(second.play).toHaveBeenCalled();
+    // Empty / index-less viewability events keep the current reel active.
+    act(() => list.props.onViewableItemsChanged({ viewableItems: [] }));
+    act(() => list.props.onViewableItemsChanged({ viewableItems: [{ index: null }] }));
+    [, second] = mockUseVideoPlayer.mock.results.slice(-2).map((r) => r.value);
+    expect(second.play).toHaveBeenCalled();
   });
 
   it('opens comments inline (no redirect) and bumps the count', () => {
@@ -466,6 +563,67 @@ describe('ExploreReels', () => {
     expect(screen.getByTestId('explore-likes-count')).toHaveTextContent('2');
     fireEvent.press(screen.getByTestId('explore-likes-close'));
     expect(screen.queryByTestId('explore-likes-sheet')).toBeNull();
+  });
+
+  it('interleaves a sponsored reel after every 5 pods with stable keys', () => {
+    mockAds = [
+      {
+        id: 'ax',
+        ad_type: 'VIDEO',
+        media_url: 'https://cdn/ad.mp4',
+        redirect_url: null,
+        ad_title: 'Sponsored Reel',
+        position: 'EXPLORE_SCROLL',
+      },
+    ];
+    mockedExplore.mockReturnValue({
+      ...base,
+      pods: [pod('1'), pod('2'), pod('3'), pod('4'), pod('5')],
+    });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    const list = screen.UNSAFE_getByType(FlatList);
+    // 5 pods + 1 woven ad, uniform full-height pages either way.
+    expect(list.props.data).toHaveLength(6);
+    expect(list.props.getItemLayout(null, 5)).toEqual({ length: 700, offset: 3500, index: 5 });
+    expect(list.props.keyExtractor(list.props.data[0])).toBe('1');
+    expect(list.props.keyExtractor(list.props.data[5])).toBe('ad-ax-4');
+
+    // The ad renders through the ExploreAdCard branch, video gated on activeIndex.
+    renderWithProviders(list.props.renderItem({ item: list.props.data[5], index: 5 }));
+    expect(screen.getByTestId('ad-reel-ax')).toBeOnTheScreen();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.pause).toHaveBeenCalled(); // index 5 ≠ activeIndex 0 → paused
+  });
+
+  it('plays the sponsored reel once it becomes the visible page', () => {
+    mockAds = [
+      {
+        id: 'ax',
+        ad_type: 'VIDEO',
+        media_url: 'https://cdn/ad.mp4',
+        redirect_url: null,
+        ad_title: 'Sponsored Reel',
+        position: 'EXPLORE_SCROLL',
+      },
+    ];
+    mockedExplore.mockReturnValue({
+      ...base,
+      pods: [pod('1'), pod('2'), pod('3'), pod('4'), pod('5')],
+    });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    act(() =>
+      screen
+        .UNSAFE_getByType(FlatList)
+        .props.onViewableItemsChanged({ viewableItems: [{ index: 5 }] }),
+    );
+    // Re-read the list so renderItem closes over the updated activeIndex.
+    const list = screen.UNSAFE_getByType(FlatList);
+    renderWithProviders(list.props.renderItem({ item: list.props.data[5], index: 5 }));
+    expect(screen.getByTestId('ad-reel-ax')).toBeOnTheScreen();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.play).toHaveBeenCalled();
   });
 
   it('falls back to a generic club title when the club is unknown (item 14)', () => {

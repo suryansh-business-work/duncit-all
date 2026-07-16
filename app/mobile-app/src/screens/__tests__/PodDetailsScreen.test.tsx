@@ -45,6 +45,10 @@ jest.mock('@/hooks/usePolicies', () => ({
 jest.mock('@/hooks/usePublicFinance', () => ({
   usePublicFinance: () => ({ gstPct: 18, currency: '₹' }),
 }));
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
@@ -111,6 +115,7 @@ beforeEach(() => {
   mockGoBack.mockClear();
   mockNavigate.mockClear();
   mockBackout.mockClear();
+  mockAds = [];
   mockFeatureFlag.mockReturnValue(true);
   mockSaved = false;
   mockLiked = false;
@@ -141,6 +146,26 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByTestId('pod-details-error')).toBeOnTheScreen();
     fireEvent.press(screen.getByLabelText('Go back'));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('shows the POD_DETAILS sponsored banner between the accordions and support link', () => {
+    mockedPod.mockReturnValue({ ...podData, isLoading: false, savedInitially: false });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.queryByTestId('ad-slot-POD_DETAILS')).toBeNull();
+
+    mockAds = [
+      {
+        id: 'ad1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn/ad.jpg',
+        redirect_url: null,
+        ad_title: 'Sponsored Gear',
+        position: 'POD_DETAILS',
+      },
+    ];
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('ad-slot-POD_DETAILS')).toBeOnTheScreen();
+    expect(screen.getByText('Sponsored Gear')).toBeOnTheScreen();
   });
 
   it('reflects a saved pod and opens venue details', () => {

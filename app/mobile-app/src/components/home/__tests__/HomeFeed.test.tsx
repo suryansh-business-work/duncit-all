@@ -7,6 +7,10 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/status/StatusRail', () => ({ StatusRail: () => null }));
 jest.mock('@/hooks/useHomeFeed', () => ({ useHomeFeed: jest.fn() }));
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 let mockBrandingData: { branding: { home_all_vibe_icon_url: string } } | null = {
   branding: { home_all_vibe_icon_url: 'https://cdn.duncit/all.png' },
 };
@@ -63,6 +67,7 @@ const base = {
 beforeEach(() => {
   mockNavigate.mockClear();
   mockRoles = [];
+  mockAds = [];
   mockBrandingData = { branding: { home_all_vibe_icon_url: 'https://cdn.duncit/all.png' } };
   mockedFeed.mockReturnValue(base);
   useHomeStore.setState({ scrollTopNonce: 0 });
@@ -159,6 +164,25 @@ describe('HomeFeed', () => {
     mockBrandingData = null;
     renderWithProviders(<HomeFeed />);
     expect(screen.getByTestId('vibe-chip-all')).toBeOnTheScreen();
+  });
+
+  it('shows the HOME_BOTTOM sponsored banner only when an ad is live', () => {
+    renderWithProviders(<HomeFeed />);
+    expect(screen.queryByTestId('ad-slot-HOME_BOTTOM')).toBeNull();
+
+    mockAds = [
+      {
+        id: 'ad1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn/ad.jpg',
+        redirect_url: null,
+        ad_title: 'Sponsored Jam',
+        position: 'AUTO',
+      },
+    ];
+    renderWithProviders(<HomeFeed />);
+    expect(screen.getByTestId('ad-slot-HOME_BOTTOM')).toBeOnTheScreen();
+    expect(screen.getByText('Sponsored Jam')).toBeOnTheScreen();
   });
 
   it('scrolls the feed to the top when the logo bumps the nonce', () => {

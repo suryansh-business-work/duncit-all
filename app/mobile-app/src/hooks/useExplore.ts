@@ -37,6 +37,9 @@ export function useExplore() {
 
   const pods = useMemo(() => {
     return (data?.pods ?? []).filter((p) => {
+      // Explore is reel-only: the server filters on has_reel, but guard against
+      // stale caches / older servers so a card never renders without a video.
+      if (!p.reel_url) return false;
       if (selectedSuperId && clubsById.get(p.club_id)?.super_category_id !== selectedSuperId) {
         return false;
       }

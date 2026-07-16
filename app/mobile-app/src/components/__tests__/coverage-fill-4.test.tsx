@@ -1,8 +1,7 @@
-import { FlatList, Share } from 'react-native';
+import { Share } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ClubSection } from '@/components/home/ClubSection';
-import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { HostCard } from '@/components/hosts-venues/HostCard';
 import { VenueCard } from '@/components/hosts-venues/VenueCard';
@@ -21,36 +20,13 @@ const explorePod = {
   pod_attendees: ['u1'],
   no_of_spots: 5,
   pod_images_and_videos: [{ url: 'https://i/1.jpg', type: 'IMAGE' }],
+  reel_url: 'https://cdn/reel.mp4',
   club_id: 'c1',
   comment_count: 2,
   like_count: 9,
   liked_by_me: false,
   place_label: null,
 } as never;
-
-describe('ExploreMediaCarousel', () => {
-  it('handles momentum scroll, a fallback cover and an empty state', () => {
-    const { rerender } = renderWithProviders(
-      <ExploreMediaCarousel
-        media={[
-          { url: 'a', type: 'IMAGE' },
-          { url: 'b', type: 'IMAGE' },
-        ]}
-        width={390}
-        height={700}
-      />,
-    );
-    fireEvent(screen.UNSAFE_getByType(FlatList), 'momentumScrollEnd', {
-      nativeEvent: { contentOffset: { x: 390, y: 0 } },
-    });
-
-    rerender(<ExploreMediaCarousel media={[]} fallbackUrl="cover" width={390} height={700} />);
-    expect(screen.UNSAFE_getByType(FlatList)).toBeTruthy();
-
-    rerender(<ExploreMediaCarousel media={[]} fallbackUrl={null} width={390} height={700} />);
-    expect(screen.UNSAFE_queryByType(FlatList)).toBeNull();
-  });
-});
 
 describe('ExplorePodCard share', () => {
   it('invokes the native share sheet', async () => {
@@ -67,6 +43,7 @@ describe('ExplorePodCard share', () => {
         }
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 9 }}
         commentCount={0}

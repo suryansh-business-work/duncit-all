@@ -7,7 +7,6 @@ import { BottomNav } from '@/components/BottomNav';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodInfo } from '@/components/details/PodInfo';
-import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { FeedList } from '@/components/FeedList';
 import { useThemeStore } from '@/stores/theme.store';
@@ -58,9 +57,8 @@ describe('DetailHero', () => {
   });
 });
 
-describe('ExploreMediaCarousel + ExplorePodOverlay', () => {
-  it('renders images and the overlay chips', () => {
-    renderWithProviders(<ExploreMediaCarousel media={media} width={390} height={700} />);
+describe('ExplorePodOverlay', () => {
+  it('renders the overlay chips', () => {
     const pod = {
       pod_title: 'Jam',
       pod_description: 'desc',
@@ -353,8 +351,7 @@ describe('empty / minimal branches', () => {
     expect(screen.getByText('Bare')).toBeOnTheScreen();
   });
 
-  it('ExploreMediaCarousel + ClubBody render their empty branches', () => {
-    renderWithProviders(<ExploreMediaCarousel media={[]} width={390} height={700} />);
+  it('ClubBody renders its empty branch', () => {
     const club = {
       club_name: 'Empty FC',
       club_description: '',

@@ -11,11 +11,20 @@ interface Props {
   json: string;
 }
 
+/** Dynamic values come from JSON, so a printable value is a scalar; objects
+ * are JSON-stringified rather than becoming `[object Object]` (Sonar S6551). */
+const toText = (v: unknown): string => {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  return JSON.stringify(v);
+};
+
 const fmt = (field: CrmDynamicField, raw: unknown): string => {
   if (raw === null || raw === undefined || raw === '') return '—';
   if (field.kind === 'boolean') return raw ? 'Yes' : 'No';
   if (field.kind === 'date') {
-    const d = new Date(String(raw));
+    const d = new Date(toText(raw));
     if (!Number.isNaN(d.getTime())) {
       return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
     }
@@ -23,11 +32,11 @@ const fmt = (field: CrmDynamicField, raw: unknown): string => {
   if (field.kind === 'select') {
     // Map stored option value(s) back to their human label(s). Handles both
     // single-select (string) and multi-select (string[]).
-    const labelFor = (v: unknown) => field.options.find((o) => o.value === v)?.label ?? String(v);
+    const labelFor = (v: unknown) => field.options.find((o) => o.value === v)?.label ?? toText(v);
     if (Array.isArray(raw)) return raw.length ? raw.map(labelFor).join(', ') : '—';
     return labelFor(raw);
   }
-  return String(raw);
+  return toText(raw);
 };
 
 /**

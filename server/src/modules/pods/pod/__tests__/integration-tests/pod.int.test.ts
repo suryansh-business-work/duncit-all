@@ -386,3 +386,71 @@ describe('pod comment reactions (explore item 4)', () => {
     await expect(podService.tableMine('not-an-object-id')).rejects.toThrow(/authentication required/i);
   });
 });
+
+describe('pod reels (explore reel_url)', () => {
+  const REEL = 'https://cdn.example.com/reel.mp4';
+
+  it('create() persists a valid https reel_url (trimmed)', async () => {
+    const pod = await podService.create(
+      makeVirtualInput(new Types.ObjectId(), { reel_url: `  ${REEL}  ` })
+    );
+    expect(pod?.reel_url).toBe(REEL);
+    // …and it really is on the row, not just the pub shape.
+    const raw = await PodModel.findById(pod!.id);
+    expect(raw?.reel_url).toBe(REEL);
+  });
+
+  it('create() rejects a reel_url that is not a hosted URL', async () => {
+    await expect(
+      podService.create(
+        makeVirtualInput(new Types.ObjectId(), { reel_url: 'file:///tmp/reel.mp4' })
+      )
+    ).rejects.toMatchObject({
+      message: 'Reel video must be uploaded before saving',
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  });
+
+  it('create() without a reel_url stores null', async () => {
+    const pod = await podService.create(makeVirtualInput(new Types.ObjectId()));
+    expect(pod?.reel_url).toBeNull();
+  });
+
+  it('update() sets the reel, and an empty string clears it back to null', async () => {
+    const pod = await podService.create(makeVirtualInput(new Types.ObjectId()));
+    const withReel = await podService.update(String(pod!.id), { reel_url: REEL });
+    expect(withReel?.reel_url).toBe(REEL);
+
+    const cleared = await podService.update(String(pod!.id), { reel_url: '' });
+    expect(cleared?.reel_url).toBeNull();
+    const raw = await PodModel.findById(pod!.id);
+    expect(raw?.reel_url).toBeNull();
+  });
+
+  it('hostUpdate() attaches a reel when the host supplies one', async () => {
+    const hostId = new Types.ObjectId();
+    const doc = await PodModel.create(
+      makePod({ pod_hosts_id: [hostId], pod_images_and_videos: [IMG] })
+    );
+    const updated = await podService.hostUpdate(String(doc._id), String(hostId), {
+      pod_title: 'Reel title',
+      pod_description: 'Reel description',
+      pod_images_and_videos: [IMG],
+      reel_url: REEL,
+    });
+    expect(updated?.reel_url).toBe(REEL);
+  });
+
+  it('list({ has_reel: true }) returns only pods with a non-empty reel_url', async () => {
+    await PodModel.create(makePod({ pod_title: 'With reel', reel_url: REEL }));
+    await PodModel.create(makePod({ pod_title: 'Empty reel', reel_url: '' }));
+    await PodModel.create(makePod({ pod_title: 'No reel' }));
+
+    const reels = await podService.list({ has_reel: true });
+    expect(reels.map((p) => p.pod_title)).toEqual(['With reel']);
+    expect(reels[0]?.reel_url).toBe(REEL);
+
+    // The unfiltered list still serves all three.
+    expect(await podService.list()).toHaveLength(3);
+  });
+});

@@ -78,9 +78,18 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     total: Int!
   }
 
+  "A host a Club Admin can assign to a pod (approved hosts only)."
+  type ClubAdminHostOption {
+    user_id: ID!
+    full_name: String!
+    email: String
+  }
+
   extend type Query {
     "Clubs the signed-in user administers (CLUB_ADMIN scope)."
     myAdminClubs: [Club!]!
+    "Approved hosts matching the search, for the assign-host picker. Club-admin scoped."
+    clubAdminHostSearch(search: String): [ClubAdminHostOption!]!
     "Paginated + filtered 'Your Clubs' list for the signed-in Club Admin."
     myAdminClubsPage(filter: MyAdminClubsFilter): ClubAdminClubsPage!
     "Aggregated metrics for the signed-in Club Admin's clubs."

@@ -55,14 +55,18 @@ const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     pod_title
     pod_description
     pod_images_and_videos { url type }
+    reel_url
     club_id
     venue_id
     venue_slot_id
+    location_id
     pod_mode
     meeting_platform
     meeting_url
     meeting_notes
     pod_hashtag
+    pod_hosts_id
+    host_names
     pod_date_time
     pod_end_date_time
     pod_type
@@ -73,6 +77,7 @@ const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     what_this_pod_offers
     available_perks
     payment_terms
+    place_charges { label amount note }
     products_enabled
     product_requests { product_id quantity }
     pod_attendees
@@ -91,6 +96,17 @@ export const CLUB_ADMIN_PODS_TABLE = gql`
     }
   }
   ${CLUB_ADMIN_POD_ROW_FIELDS}
+`;
+
+/** Approved hosts for the assign-host picker (club-admin scoped, max 20 rows). */
+export const CLUB_ADMIN_HOST_SEARCH = gql`
+  query ClubAdminHostSearch($search: String) {
+    clubAdminHostSearch(search: $search) {
+      user_id
+      full_name
+      email
+    }
+  }
 `;
 
 export const CLUB_ADMIN_CREATE_POD = gql`

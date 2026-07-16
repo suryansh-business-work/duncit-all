@@ -1,5 +1,6 @@
 import { FlatList, Share } from 'react-native';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { useVideoPlayer } from 'expo-video';
 
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { ExploreReels } from '@/components/explore/ExploreReels';
@@ -52,6 +53,7 @@ jest.mock('@/components/explore/LikesListSheet', () => {
 });
 
 const mockedExplore = useExplore as jest.Mock;
+const mockUseVideoPlayer = useVideoPlayer as jest.Mock;
 
 const pod = (id: string) =>
   ({
@@ -66,6 +68,7 @@ const pod = (id: string) =>
     no_of_spots: 5,
     host_names: [],
     pod_images_and_videos: [],
+    reel_url: `https://cdn/reel-${id}.mp4`,
     club_id: 'c1',
     club_slug: 's',
     place_label: 'Cafe',
@@ -87,6 +90,7 @@ describe('ExplorePodCard', () => {
         pod={pod('1')}
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -119,6 +123,7 @@ describe('ExplorePodCard', () => {
         pod={expiredPod}
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -138,6 +143,7 @@ describe('ExplorePodCard', () => {
         pod={{ ...(pod('v') as Record<string, unknown>), no_of_spots: 0 } as never}
         width={390}
         height={2000}
+        isActive={false}
         saved
         savePending
         like={{ liked_by_me: true, like_count: 9 }}
@@ -160,6 +166,7 @@ describe('ExplorePodCard', () => {
         pod={pod('1')}
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -182,6 +189,7 @@ describe('ExplorePodCard', () => {
         pod={pod('tall')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
         commentCount={2}
@@ -206,6 +214,7 @@ describe('ExplorePodCard', () => {
         pod={pod('err')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -232,6 +241,7 @@ describe('ExplorePodCard', () => {
         }
         width={390}
         height={700}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -262,6 +272,7 @@ describe('ExplorePodCard', () => {
         }
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -288,6 +299,7 @@ describe('ExplorePodCard', () => {
         pod={pod('lk')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 4 }}
         commentCount={0}
@@ -308,6 +320,7 @@ describe('ExplorePodCard', () => {
         pod={pod('nolk')}
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -336,6 +349,7 @@ describe('ExplorePodCard', () => {
         }
         width={390}
         height={2000}
+        isActive={false}
         saved={false}
         like={{ liked_by_me: false, like_count: 0 }}
         commentCount={0}
@@ -350,6 +364,62 @@ describe('ExplorePodCard', () => {
     // Tapping the (non-collapsible) caption wrapper is a no-op.
     fireEvent.press(screen.getByTestId('explore-caption-wrap'));
     expect(screen.getByTestId('explore-caption')).toBeOnTheScreen();
+  });
+
+  it('plays the muted looping reel while active and re-asserts play once ready', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('vid')}
+        width={390}
+        height={700}
+        isActive
+        saved={false}
+        like={{ liked_by_me: false, like_count: 0 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('reel-video-p-vid')).toBeOnTheScreen();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.loop).toBe(true);
+    expect(player.muted).toBe(true);
+    expect(player.play).toHaveBeenCalled();
+    // A slow remote source: play is re-asserted only when it reports ready.
+    const [event, listener] = player.addListener.mock.calls[0];
+    expect(event).toBe('statusChange');
+    const playsBefore = player.play.mock.calls.length;
+    listener({ status: 'loading' });
+    expect(player.play.mock.calls.length).toBe(playsBefore);
+    listener({ status: 'readyToPlay' });
+    expect(player.play.mock.calls.length).toBe(playsBefore + 1);
+  });
+
+  it('pauses the reel and drops the ready-listener while the card is inactive', () => {
+    const props = {
+      width: 390,
+      height: 700,
+      saved: false,
+      like: { liked_by_me: false, like_count: 0 },
+      commentCount: 0,
+      onToggleLike: jest.fn(),
+      onToggleSave: jest.fn(),
+      onComment: jest.fn(),
+      onOpen: jest.fn(),
+    };
+    const { rerender } = renderWithProviders(
+      <ExplorePodCard pod={pod('idle')} isActive {...props} />,
+    );
+    const activePlayer = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    const sub = activePlayer.addListener.mock.results[0]?.value;
+    // Swiping away deactivates the card: the listener detaches and it pauses.
+    rerender(<ExplorePodCard pod={pod('idle')} isActive={false} {...props} />);
+    expect(sub.remove).toHaveBeenCalled();
+    const idlePlayer = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(idlePlayer.pause).toHaveBeenCalled();
+    expect(idlePlayer.play).not.toHaveBeenCalled();
   });
 });
 
@@ -400,6 +470,28 @@ describe('ExploreReels', () => {
 
     const list = screen.UNSAFE_getByType(FlatList);
     expect(list.props.getItemLayout(null, 2)).toEqual({ length: 700, offset: 1400, index: 2 });
+  });
+
+  it('plays only the visible reel and follows viewability changes', () => {
+    mockedExplore.mockReturnValue({ ...base, pods: [pod('1'), pod('2')] });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    const list = screen.UNSAFE_getByType(FlatList);
+    expect(list.props.viewabilityConfig).toEqual({ itemVisiblePercentThreshold: 60 });
+    // Index 0 starts active: its player plays, the second card's pauses.
+    let [first, second] = mockUseVideoPlayer.mock.results.slice(-2).map((r) => r.value);
+    expect(first.play).toHaveBeenCalled();
+    expect(second.pause).toHaveBeenCalled();
+    // Swipe to the second reel → it becomes the only playing card.
+    act(() => list.props.onViewableItemsChanged({ viewableItems: [{ index: 1 }] }));
+    [first, second] = mockUseVideoPlayer.mock.results.slice(-2).map((r) => r.value);
+    expect(first.pause).toHaveBeenCalled();
+    expect(second.play).toHaveBeenCalled();
+    // Empty / index-less viewability events keep the current reel active.
+    act(() => list.props.onViewableItemsChanged({ viewableItems: [] }));
+    act(() => list.props.onViewableItemsChanged({ viewableItems: [{ index: null }] }));
+    [, second] = mockUseVideoPlayer.mock.results.slice(-2).map((r) => r.value);
+    expect(second.play).toHaveBeenCalled();
   });
 
   it('opens comments inline (no redirect) and bumps the count', () => {

@@ -110,6 +110,8 @@ export const podTypeDefs = /* GraphQL */ `
     place_detail: String
     pod_hashtag: [String!]!
     pod_images_and_videos: [PodMedia!]!
+    "Explore reel video URL. Set = reel enabled; live pods with a reel appear in Explore."
+    reel_url: String
     pod_hits: Int!
     pod_attendees: [ID!]!
     "Users who liked this pod — powers the 'who liked' list (explore item 8)."
@@ -173,6 +175,8 @@ export const podTypeDefs = /* GraphQL */ `
     search: String
     is_active: Boolean
     host_user_id: ID
+    "Only pods with an uploaded reel video (Explore feed)."
+    has_reel: Boolean
   }
 
   input CreatePodInput {
@@ -194,6 +198,7 @@ export const podTypeDefs = /* GraphQL */ `
     meeting_notes: String
     pod_hashtag: [String!]
     pod_images_and_videos: [PodMediaInput!]
+    reel_url: String
     pod_attendees: [ID!]
     pod_description: String!
     pod_date_time: String!
@@ -225,6 +230,7 @@ export const podTypeDefs = /* GraphQL */ `
     meeting_notes: String
     pod_hashtag: [String!]
     pod_images_and_videos: [PodMediaInput!]
+    reel_url: String
     pod_attendees: [ID!]
     pod_description: String
     pod_date_time: String
@@ -258,6 +264,7 @@ export const podTypeDefs = /* GraphQL */ `
     pod_title: String!
     pod_description: String!
     pod_images_and_videos: [PodMediaInput!]!
+    reel_url: String
   }
 
   extend type Query {

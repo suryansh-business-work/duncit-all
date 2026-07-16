@@ -24,11 +24,16 @@ interface Slot {
 interface Props {
   venueId: string;
   selectedSlotId: string;
+  /**
+   * The pod's already-booked slot when editing. Booked slots are no longer
+   * "available", so it is offered as an extra option and never auto-cleared.
+   */
+  currentSlot?: { id: string; start_at: string; end_at: string } | null;
   onSelect: (slot: { id: string; start_at: string; end_at: string } | null) => void;
 }
 
 /** Lists a venue's bookable availability slots; picking one sets the pod dates. */
-export default function VenueSlotPicker({ venueId, selectedSlotId, onSelect }: Readonly<Props>) {
+export default function VenueSlotPicker({ venueId, selectedSlotId, currentSlot, onSelect }: Readonly<Props>) {
   const fromIso = useMemo(() => new Date().toISOString(), []);
   const { data, loading, error } = useQuery<{ venueAvailableSlots: Slot[] }>(VENUE_AVAILABLE_SLOTS, {
     variables: { venue_id: venueId, from: fromIso },
@@ -36,7 +41,11 @@ export default function VenueSlotPicker({ venueId, selectedSlotId, onSelect }: R
     skip: !venueId,
   });
 
-  const slots = data?.venueAvailableSlots ?? [];
+  const available = data?.venueAvailableSlots ?? [];
+  const slots =
+    currentSlot && !available.some((s) => s.id === currentSlot.id)
+      ? [{ ...currentSlot, notes: 'Currently booked for this pod' }, ...available]
+      : available;
 
   useEffect(() => {
     if (!selectedSlotId) return;

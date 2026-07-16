@@ -8,6 +8,8 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
+import { UserModel } from '@modules/access/user/user.model';
+import { HostModel } from '@modules/venues/host/host.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import {
   applyTableQueryInMemory,
@@ -229,6 +231,39 @@ export const clubAdminService = {
     const pod = await PodModel.findById(podDocId).select('club_id').lean();
     if (!pod) podNotFound();
     await this.assertClubAdmin(actor, String((pod as any).club_id));
+  },
+
+  /** Approved hosts matching the search, for the club admin assign-host picker.
+   * Guarded on administering at least one club (SUPER_ADMIN bypasses). */
+  async searchHosts(actor: Actor, search?: string | null) {
+    if (!actor.roles?.includes('SUPER_ADMIN')) {
+      const administersAny = await ClubModel.exists({
+        admin_user_ids: new Types.ObjectId(actor.id),
+      });
+      if (!administersAny) forbidden();
+    }
+    const hostDocs = await HostModel.find({ status: 'APPROVED' }).select('user_id').lean();
+    const hostUserIds = hostDocs.map((h: any) => h.user_id);
+    if (hostUserIds.length === 0) return [];
+    const q: any = { _id: { $in: hostUserIds } };
+    const term = search?.trim();
+    if (term) {
+      const re = new RegExp(escapeRegExp(term), 'i');
+      q.$or = [
+        { 'profile.first_name': re },
+        { 'profile.last_name': re },
+        { 'auth.email': re },
+      ];
+    }
+    const users = await UserModel.find(q)
+      .select('profile.first_name profile.last_name auth.email')
+      .limit(20)
+      .lean();
+    return users.map((u: any) => ({
+      user_id: String(u._id),
+      full_name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim(),
+      email: u.auth?.email ?? null,
+    }));
   },
 
   /** Full pod create under a club the actor administers. Reuses podService.create

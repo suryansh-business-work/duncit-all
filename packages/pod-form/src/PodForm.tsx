@@ -6,7 +6,15 @@ import { makePodSchema } from './schema';
 import { PodFormDataProvider } from './context';
 import CascadeEffect from './CascadeEffect';
 import PodSections from './PodSections';
-import type { GenerateMeetingLinkInput, PodFormConfig, PodFormData, PodFormValues, PodOption } from './types';
+import type {
+  GenerateMeetingLinkInput,
+  PodFormConfig,
+  PodFormData,
+  PodFormFinance,
+  PodFormValues,
+  PodOption,
+  SearchPodHosts,
+} from './types';
 
 export interface PodFormProps {
   initialValues: PodFormValues;
@@ -15,11 +23,13 @@ export interface PodFormProps {
   venues: any[];
   users?: any[];
   products?: any[];
-  finance?: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
+  finance?: PodFormFinance;
   getClubVenueIds: (club: any) => string[];
   meetingPlatforms?: PodOption[];
   onGenerateMeetingLink?: (input: GenerateMeetingLinkInput) => Promise<string>;
   onPickImage?: () => Promise<string | null>;
+  onPickVideo?: () => Promise<string | null>;
+  searchHosts?: SearchPodHosts;
   dateTimeFormat?: string;
   busy?: boolean;
   error?: string | null;
@@ -43,6 +53,8 @@ export default function PodForm({
   meetingPlatforms,
   onGenerateMeetingLink,
   onPickImage,
+  onPickVideo,
+  searchHosts,
   dateTimeFormat,
   busy = false,
   error,
@@ -81,9 +93,11 @@ export default function PodForm({
       meetingPlatforms,
       onGenerateMeetingLink,
       onPickImage,
+      onPickVideo,
+      searchHosts,
       dateTimeFormat,
     }),
-    [config, clubs, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, dateTimeFormat],
+    [config, clubs, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateTimeFormat],
   );
 
   const submit = methods.handleSubmit(async (values) => {

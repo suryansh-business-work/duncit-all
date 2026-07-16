@@ -1,9 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   FlatList,
   RefreshControl,
   useWindowDimensions,
   type LayoutChangeEvent,
+  type ViewToken,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,6 +24,8 @@ import { PodCommentsSheet } from '@/components/details/pod-comments';
 export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
+  // Only the visible reel plays its video — the others stay paused.
+  const [activeIndex, setActiveIndex] = useState(0);
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -45,6 +48,12 @@ export function ExploreReels() {
   } = useExplore();
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
+  // FlatList requires a stable identity for the viewability pair across renders.
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const index = viewableItems[0]?.index;
+    if (index != null) setActiveIndex(index);
+  }).current;
   const openPod = (pod: ExplorePod) =>
     navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
   const openClub = (pod: ExplorePod) =>
@@ -90,6 +99,8 @@ export function ExploreReels() {
           windowSize={5}
           initialNumToRender={2}
           maxToRenderPerBatch={2}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -98,7 +109,7 @@ export function ExploreReels() {
               testID="explore-refresh"
             />
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const like = likeStateFor(item);
             const saved = isSaved(item.id);
             return (
@@ -107,6 +118,7 @@ export function ExploreReels() {
                 club={clubsById.get(item.club_id)}
                 width={width}
                 height={height}
+                isActive={index === activeIndex}
                 saved={saved}
                 savePending={isSavePending(item.id)}
                 like={like}

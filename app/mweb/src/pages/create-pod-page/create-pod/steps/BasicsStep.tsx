@@ -2,6 +2,7 @@ import { Controller } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
+import PodReelAccordion from '../fields/PodReelAccordion';
 import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
 import type { CreatePodForm } from '../create-pod.types';
@@ -11,7 +12,8 @@ interface Props {
 }
 
 /** Step 1 — Pod Basics: title, description, cover media, hashtags and the
- * required "what this pod offers" list, with optional extras (info, perks). */
+ * required "what this pod offers" list, with optional extras (info, perks)
+ * and an optional Pod Reel video that shows in Explore while the pod is live. */
 export default function BasicsStep({ form }: Readonly<Props>) {
   const {
     register,
@@ -57,6 +59,7 @@ export default function BasicsStep({ form }: Readonly<Props>) {
       />
       <HashtagChipsField form={form} />
       <OptionalSettingsCards form={form} />
+      <PodReelAccordion form={form} />
     </Stack>
   );
 }

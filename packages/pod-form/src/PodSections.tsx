@@ -15,6 +15,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { usePodFormData } from './context';
 import MediaField from './components/MediaField';
+import ReelField from './components/ReelField';
 import BasicSection from './sections/BasicSection';
 import WhenWhereSection from './sections/WhenWhereSection';
 import MeetingSection from './sections/MeetingSection';
@@ -50,7 +51,7 @@ function buildSections(isVirtual: boolean, showProducts: boolean): SectionDef[] 
 }
 
 export default function PodSections() {
-  const { config, onPickImage } = usePodFormData();
+  const { config, onPickImage, onPickVideo } = usePodFormData();
   const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const productsEnabled = useWatch({ control, name: 'products_enabled' });
@@ -98,6 +99,20 @@ export default function PodSections() {
           />
         )}
       />
+      {config.showReel && (
+        <Controller
+          control={control}
+          name="reel_url"
+          render={({ field }) => (
+            <ReelField
+              value={field.value}
+              onChange={field.onChange}
+              onPickVideo={onPickVideo}
+              error={errors.reel_url?.message}
+            />
+          )}
+        />
+      )}
       {sections.map((section) => {
         const isProducts = section.id === 'products';
         return (

@@ -1,15 +1,17 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useParams } from 'react-router-dom';
-import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
+import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
-import { PodForm, blankPodFormValues, buildPodInput, podToFormValues, type PodFormValues } from '@duncit/pod-form';
-import { CLUB_ADMIN_CREATE_POD, CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE, CLUB_ADMIN_UPDATE_POD } from './queries';
-import { PARTNER_POD_CONFIG, getClubVenueIds } from '../pods-page/partner-pod-config';
+import { PodEditorDialog, useMediaPickerBridge } from '@duncit/pod-form';
+import MediaPickerDialog from '../../components/MediaPickerDialog';
+import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from './queries';
+import { getClubVenueIds } from '../pods-page/partner-pod-config';
+import useClubAdminPodEditor, { CLUB_ADMIN_POD_CONFIG } from './useClubAdminPodEditor';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 
 export default function ClubAdminClubPodsPage() {
@@ -17,15 +19,24 @@ export default function ClubAdminClubPodsPage() {
   const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [createPod, createState] = useMutation(CLUB_ADMIN_CREATE_POD);
-  const [updatePod, updateState] = useMutation(CLUB_ADMIN_UPDATE_POD);
   const [deletePod, deleteState] = useMutation(CLUB_ADMIN_DELETE_POD);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editPod, setEditPod] = useState<any>(null);
   const [podToDelete, setPodToDelete] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [opError, setOpError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const picker = useMediaPickerBridge();
+
+  const editor = useClubAdminPodEditor({
+    clubId,
+    onSaved: ({ created, draft }) => {
+      if (created) {
+        setMessage(draft ? 'Pod draft saved.' : 'Pod created.');
+      } else {
+        setMessage('Pod updated.');
+      }
+      refetchRef.current?.();
+    },
+  });
 
   const clubs = lookups.data?.myAdminClubs ?? [];
   const venues = (lookups.data?.myVenues ?? []).filter((venue: any) => venue.status === 'APPROVED' && venue.is_active);
@@ -42,47 +53,16 @@ export default function ClubAdminClubPodsPage() {
     [clubId],
   );
 
-  const openCreate = () => { setOpError(null); setEditPod(null); setFormOpen(true); };
-  const openEdit = (pod: any) => { setOpError(null); setEditPod(pod); setFormOpen(true); };
-  const closeForm = () => { setFormOpen(false); setEditPod(null); };
-
-  // Memoized so PodForm's reset effect only re-runs when the target pod changes.
-  const initialValues: PodFormValues = useMemo(
-    () => (editPod ? podToFormValues(editPod) : { ...blankPodFormValues, club_id: clubId }),
-    [editPod, clubId]
-  );
-
-  const submit = async (values: PodFormValues, options: { draft: boolean }) => {
-    setOpError(null);
-    const input = buildPodInput({ ...values, club_id: clubId }, { draft: options.draft, config: PARTNER_POD_CONFIG });
-    try {
-      if (editPod) {
-        // UpdatePodInput has no venue_slot_id (slot changes go through the venue flow).
-        const updateInput = { ...input };
-        delete (updateInput as { venue_slot_id?: unknown }).venue_slot_id;
-        await updatePod({ variables: { pod_doc_id: editPod.id, input: updateInput } });
-        setMessage('Pod updated.');
-      } else {
-        await createPod({ variables: { input } });
-        setMessage(options.draft ? 'Pod draft saved.' : 'Pod created.');
-      }
-      closeForm();
-      refetchRef.current?.();
-    } catch (submitError: any) {
-      setOpError(submitError.message);
-    }
-  };
-
   const confirmDelete = async () => {
     if (!podToDelete) return;
-    setOpError(null);
+    setDeleteError(null);
     try {
       await deletePod({ variables: { pod_doc_id: podToDelete.id } });
       setPodToDelete(null);
       setMessage('Pod deleted.');
       refetchRef.current?.();
-    } catch (deleteError: any) {
-      setOpError(deleteError.message);
+    } catch (error: any) {
+      setDeleteError(error.message);
       setPodToDelete(null);
     }
   };
@@ -90,10 +70,10 @@ export default function ClubAdminClubPodsPage() {
   const renderActions = (pod: PodRowBase) => (
     <Stack direction="row" justifyContent="flex-end" component="span">
       <Tooltip title="Edit pod">
-        <IconButton size="small" onClick={() => openEdit(pod)}><EditIcon fontSize="small" /></IconButton>
+        <IconButton size="small" onClick={() => editor.openEdit(pod)}><EditIcon fontSize="small" /></IconButton>
       </Tooltip>
       <Tooltip title="Delete pod">
-        <IconButton size="small" color="error" onClick={() => { setOpError(null); setPodToDelete(pod); }}>
+        <IconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
           <DeleteOutlineIcon fontSize="small" />
         </IconButton>
       </Tooltip>
@@ -120,7 +100,7 @@ export default function ClubAdminClubPodsPage() {
             </Button>
           </Stack>
           {lookups.error && <Alert severity="error">{lookups.error.message}</Alert>}
-          {opError && !formOpen && <Alert severity="error">{opError}</Alert>}
+          {deleteError && <Alert severity="error">{deleteError}</Alert>}
           <PodsTable<PodRowBase>
             tableId="partners-app-club-admin-pods"
             fetchRows={fetchRows}
@@ -128,31 +108,45 @@ export default function ClubAdminClubPodsPage() {
             venueName={venueName}
             emptyText="This club has no pods yet. Create the first one."
             toolbarActions={
-              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openCreate}>New Pod</Button>
+              <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>New Pod</Button>
             }
             renderActions={renderActions}
           />
         </Stack>
       </CardContent>
 
-      <Dialog open={formOpen} onClose={closeForm} fullWidth maxWidth="md">
-        <DialogTitle>{editPod ? 'Edit Pod' : 'New Pod'}</DialogTitle>
-        <DialogContent dividers>
-          <Alert severity="info" sx={{ mb: 1.5 }}>Your approved host profile is added as the pod host automatically.</Alert>
-          <PodForm
-            initialValues={initialValues}
-            config={PARTNER_POD_CONFIG}
-            clubs={clubs}
-            venues={venues}
-            products={products}
-            getClubVenueIds={getClubVenueIds}
-            busy={createState.loading || updateState.loading}
-            error={opError}
-            onCancel={closeForm}
-            onSubmit={submit}
-          />
-        </DialogContent>
-      </Dialog>
+      <PodEditorDialog
+        open={editor.open}
+        editing={!!editor.editingPod}
+        onClose={editor.close}
+        initialValues={editor.initialValues}
+        config={CLUB_ADMIN_POD_CONFIG}
+        busy={editor.busy}
+        error={editor.opError}
+        clubs={clubs}
+        venues={venues}
+        users={editor.hostSeed}
+        products={products}
+        getClubVenueIds={getClubVenueIds}
+        onPickImage={picker.pickImage}
+        onPickVideo={picker.pickVideo}
+        searchHosts={editor.searchHosts}
+        onSubmit={editor.submit}
+        intro={
+          <Alert severity="info" sx={{ mb: 1.5 }}>
+            You are added as the pod host automatically unless you assign hosts below.
+          </Alert>
+        }
+      />
+
+      <MediaPickerDialog
+        open={picker.pickerOpen}
+        onClose={() => picker.settlePicker(null)}
+        onPicked={(url) => picker.settlePicker(url)}
+        folder="/pods/media"
+        title={picker.title}
+        accept={picker.accept}
+      />
 
       <ConfirmDialog
         open={!!podToDelete}

@@ -13,11 +13,24 @@ const venueLabel = (venue: any) => {
 
 export default function WhenWhereSection() {
   const { config, clubs, venues, getClubVenueIds, dateTimeFormat } = usePodFormData();
-  const { control, setValue, formState: { errors } } = useFormContext<PodFormValues>();
+  const { control, setValue, formState: { errors, defaultValues } } = useFormContext<PodFormValues>();
   const clubId = useWatch({ control, name: 'club_id' });
   const venueId = useWatch({ control, name: 'venue_id' });
   const slotId = useWatch({ control, name: 'venue_slot_id' });
   const startDateTime = useWatch({ control, name: 'pod_date_time' });
+
+  // The pod's already-booked slot (edit): its id + dates come from the loaded
+  // pod, so the picker can keep offering it even though it is no longer free.
+  const initialSlotId = defaultValues?.venue_slot_id ?? '';
+  const initialStart = defaultValues?.pod_date_time ?? null;
+  const currentSlot =
+    initialSlotId && initialStart && defaultValues?.venue_id === venueId
+      ? {
+          id: initialSlotId,
+          start_at: initialStart.toISOString(),
+          end_at: (defaultValues?.pod_end_date_time ?? initialStart).toISOString(),
+        }
+      : null;
 
   const linkedVenueIds = new Set(getClubVenueIds(clubs.find((club) => club.id === clubId)));
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
@@ -73,7 +86,7 @@ export default function WhenWhereSection() {
 
       {config.showVenueSlot ? (
         <>
-          <VenueSlotPicker venueId={venueId} selectedSlotId={slotId} onSelect={handleSlotPick} />
+          <VenueSlotPicker venueId={venueId} selectedSlotId={slotId} currentSlot={currentSlot} onSelect={handleSlotPick} />
           {errors.venue_slot_id && <Alert severity="error">{String(errors.venue_slot_id.message)}</Alert>}
         </>
       ) : (

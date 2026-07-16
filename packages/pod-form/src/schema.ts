@@ -42,13 +42,22 @@ const productRequestSchema = z.object({
 
 /** Host, venue, venue-slot and meeting-link rules (config-gated). */
 function refineVenue(values: PodFormValues, ctx: z.RefinementCtx, config: PodFormConfig) {
-  if (config.showHosts && values.pod_hosts_id.length < 1) {
+  if (config.showHosts && (config.requireHosts ?? true) && values.pod_hosts_id.length < 1) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_hosts_id'], message: 'Add at least one host' });
   }
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_id'], message: 'Select a venue' });
   }
-  if (config.showVenueSlot && values.pod_mode === 'PHYSICAL' && values.venue_id && !values.venue_slot_id) {
+  // Dates come from the picked slot when the picker is on, so a missing slot is
+  // only an error while dates are missing too — an edited pod that keeps its
+  // already-booked slot dates never forces a re-pick.
+  if (
+    config.showVenueSlot &&
+    values.pod_mode === 'PHYSICAL' &&
+    values.venue_id &&
+    !values.venue_slot_id &&
+    !values.pod_date_time
+  ) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_slot_id'], message: 'Pick an available slot' });
   }
   if (values.pod_mode === 'VIRTUAL') {
@@ -83,6 +92,13 @@ function refinePricingAndMedia(values: PodFormValues, ctx: z.RefinementCtx) {
   }
   if (!hasImage(values.media_text)) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['media_text'], message: 'At least one image is required' });
+  }
+}
+
+/** Explore reel URL rule (config-gated; the field is optional). */
+function refineReel(values: PodFormValues, ctx: z.RefinementCtx, config: PodFormConfig) {
+  if (config.showReel && values.reel_url && !isHttpUrl(values.reel_url)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['reel_url'], message: 'Reel video must be a valid http(s) URL' });
   }
 }
 
@@ -144,6 +160,7 @@ export function makePodSchema(config: PodFormConfig) {
       pod_info: z.string().max(2000).default(''),
       pod_hashtag_text: z.string().max(500).default(''),
       media_text: z.string().default(''),
+      reel_url: z.string().trim().max(1000).default(''),
       payment_terms: z.string().max(4000).default(''),
       what_this_pod_offers: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
       available_perks: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
@@ -156,6 +173,7 @@ export function makePodSchema(config: PodFormConfig) {
       refineVenue(values, ctx, config);
       refineDates(values, ctx);
       refinePricingAndMedia(values, ctx);
+      refineReel(values, ctx, config);
       refineProducts(values, ctx, config);
     });
 }

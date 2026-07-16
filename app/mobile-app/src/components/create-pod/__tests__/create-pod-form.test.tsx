@@ -158,6 +158,7 @@ describe('buildCreatePodInput', () => {
       valid({
         pod_hashtag_text: '#weekend, #community fun',
         media_text: 'https://cdn/img.jpg\nhttps://cdn/clip.mp4\n',
+        reel_url: 'https://cdn/reel.mp4',
         what_this_pod_offers: ['Snacks', 'Guided trail'],
         available_perks: ['Stickers'],
         products_enabled: true,
@@ -170,6 +171,7 @@ describe('buildCreatePodInput', () => {
       { url: 'https://cdn/img.jpg', type: 'IMAGE' },
       { url: 'https://cdn/clip.mp4', type: 'VIDEO' },
     ]);
+    expect(input.reel_url).toBe('https://cdn/reel.mp4');
     expect(input.what_this_pod_offers).toEqual(['Snacks', 'Guided trail']);
     expect(input.available_perks).toEqual(['Stickers']);
     expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
@@ -201,10 +203,12 @@ describe('buildCreatePodInput', () => {
 });
 
 describe('buildCreatePodInput fallbacks', () => {
-  it('nulls an unset slot and location (legacy drafts)', () => {
+  it('nulls an unset slot, location and reel (legacy drafts)', () => {
     const input = buildCreatePodInput(valid({ venue_slot_id: '', location_id: '' }));
     expect(input.venue_slot_id).toBeNull();
     expect(input.location_id).toBeNull();
+    // No reel picked → the optional field travels as null, not ''.
+    expect(input.reel_url).toBeNull();
   });
 });
 

@@ -7,6 +7,8 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
+import { UserModel } from '@modules/access/user/user.model';
+import { HostModel } from '@modules/venues/host/host.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 
 const uid = () => new Types.ObjectId().toString();
@@ -349,5 +351,73 @@ describe('clubAdminService dashboard', () => {
     const none = await clubAdminService.dashboardClubsTable(uid());
     expect(none.total).toBe(0);
     expect(none.rows).toEqual([]);
+  });
+});
+
+describe('clubAdminService searchHosts (assign-host picker)', () => {
+  /** An onboarded host user in the given review status. */
+  const seedHostUser = async (first: string, status = 'APPROVED') => {
+    const user = await UserModel.create({
+      auth: { email: `${first.toLowerCase()}@example.com` },
+      profile: { first_name: first, last_name: 'Host' },
+    });
+    await HostModel.create({ user_id: user._id, status });
+    return String(user._id);
+  };
+
+  it('is forbidden for a user who administers no clubs and lacks SUPER_ADMIN', async () => {
+    await seedHostUser('Asha');
+    await seedClub({ admin_user_ids: [uid()] }); // clubs exist, just not this caller's
+    await expect(clubAdminService.searchHosts({ id: uid() })).rejects.toMatchObject({
+      extensions: { code: 'FORBIDDEN' },
+    });
+  });
+
+  it('returns only APPROVED hosts, shaped for the picker', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin] });
+    const approved = await seedHostUser('Asha');
+    await seedHostUser('Bala', 'SUBMITTED');
+    await seedHostUser('Chitra', 'REJECTED');
+
+    const rows = await clubAdminService.searchHosts({ id: admin });
+    expect(rows).toEqual([
+      { user_id: approved, full_name: 'Asha Host', email: 'asha@example.com' },
+    ]);
+  });
+
+  it('filters by first name, last name and email', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin] });
+    const asha = await seedHostUser('Asha');
+    const bala = await seedHostUser('Bala');
+
+    const byFirst = await clubAdminService.searchHosts({ id: admin }, 'ash');
+    expect(byFirst.map((r) => r.user_id)).toEqual([asha]);
+
+    const byEmail = await clubAdminService.searchHosts({ id: admin }, 'bala@example');
+    expect(byEmail.map((r) => r.user_id)).toEqual([bala]);
+
+    const byLast = await clubAdminService.searchHosts({ id: admin }, 'host');
+    expect(byLast.map((r) => r.user_id).sort()).toEqual([asha, bala].sort());
+
+    expect(await clubAdminService.searchHosts({ id: admin }, 'zzz-no-match')).toEqual([]);
+  });
+
+  it('lets SUPER_ADMIN search without administering any club; no approved hosts → empty', async () => {
+    await seedHostUser('Bala', 'SUBMITTED'); // not APPROVED → not offered
+    await expect(
+      clubAdminService.searchHosts({ id: uid(), roles: ['SUPER_ADMIN'] })
+    ).resolves.toEqual([]);
+  });
+
+  it('shapes a host missing a last name and email without blowing up', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin] });
+    const user = await UserModel.create({ auth: {}, profile: { first_name: 'Mono' } });
+    await HostModel.create({ user_id: user._id, status: 'APPROVED' });
+
+    const rows = await clubAdminService.searchHosts({ id: admin });
+    expect(rows).toEqual([{ user_id: String(user._id), full_name: 'Mono', email: null }]);
   });
 });

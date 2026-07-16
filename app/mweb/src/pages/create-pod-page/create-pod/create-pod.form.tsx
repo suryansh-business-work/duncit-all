@@ -66,6 +66,7 @@ export const createPodSchema = z
     no_of_spots: z.number({ invalid_type_error: 'Spots must be a number' }).min(0).max(10000),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
+    reel_url: z.string(),
     what_this_pod_offers: z
       .array(z.string().trim().min(1).max(40))
       .min(1, 'Add at least one thing this pod offers')
@@ -116,7 +117,7 @@ export const createPodSchema = z
 
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
-  ['pod_title', 'pod_description', 'media_text', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
+  ['pod_title', 'pod_description', 'media_text', 'reel_url', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
   ['location_id', 'locality', 'host_category_key', 'pod_mode', 'club_id'],
   ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
   ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
@@ -169,6 +170,7 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       url,
       type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE',
     })),
+    reel_url: values.reel_url || null,
     payment_terms: values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,
     available_perks: values.available_perks,

@@ -39,6 +39,8 @@ export interface PodFormValues {
   pod_info: string;
   pod_hashtag_text: string;
   media_text: string;
+  /** Explore reel video URL — set = reel enabled while the pod is live. */
+  reel_url: string;
   payment_terms: string;
   what_this_pod_offers: string[];
   available_perks: string[];
@@ -70,6 +72,30 @@ export interface PodFormConfig {
   showIsActive: boolean;
   /** Approved-products section + product validation rules. */
   showProducts: boolean;
+  /** Explore reel video field (`reel_url`). Off when omitted. */
+  showReel?: boolean;
+  /**
+   * Min-1 host rule when hosts are shown. Defaults to true (admin). Club-admin
+   * turns it off — the server injects the acting admin when none is supplied.
+   */
+  requireHosts?: boolean;
+}
+
+/** A host option in the assign-host pickers. */
+export interface PodHostOption {
+  user_id: string;
+  full_name?: string | null;
+  email?: string | null;
+}
+
+/** Server-backed host search injected by the portal (e.g. clubAdminHostSearch). */
+export type SearchPodHosts = (term: string) => Promise<PodHostOption[]>;
+
+/** Public finance settings feeding the live price breakdown. */
+export interface PodFormFinance {
+  platform_fee_pct: number;
+  gst_pct: number;
+  currency_symbol?: string;
 }
 
 export interface PodOption {
@@ -95,7 +121,7 @@ export interface PodFormData {
   venues: any[];
   users: any[];
   products: any[];
-  finance?: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
+  finance?: PodFormFinance;
   /** Portal-specific accessor for the venue ids linked to a club. */
   getClubVenueIds: (club: any) => string[];
   /** When provided, the meeting platform renders as a select of these options. */
@@ -104,6 +130,10 @@ export interface PodFormData {
   onGenerateMeetingLink?: (input: GenerateMeetingLinkInput) => Promise<string>;
   /** When provided, the media field uses a rich picker instead of a textarea. */
   onPickImage?: () => Promise<string | null>;
+  /** When provided, the reel field uses a video picker instead of a URL input. */
+  onPickVideo?: () => Promise<string | null>;
+  /** When provided (and hosts are shown), hosts use a server-search picker. */
+  searchHosts?: SearchPodHosts;
   /** MUI X date/time display format (e.g. from the admin app settings). */
   dateTimeFormat?: string;
 }
@@ -153,6 +183,7 @@ export const blankPodFormValues: PodFormValues = {
   pod_info: '',
   pod_hashtag_text: '',
   media_text: '',
+  reel_url: '',
   payment_terms: '',
   what_this_pod_offers: [],
   available_perks: [],

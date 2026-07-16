@@ -72,6 +72,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       url: m.url,
       type: m.type ?? 'IMAGE',
     })),
+    reel_url: d.reel_url ?? null,
     pod_hits: d.pod_hits ?? 0,
     pod_attendees: (d.pod_attendees ?? []).map(String),
     pod_description: d.pod_description ?? '',
@@ -216,6 +217,21 @@ function normalizeStatusMedia(media: any) {
 
 function normalizePodMode(mode?: string | null): PodMode {
   return mode === 'VIRTUAL' ? 'VIRTUAL' : 'PHYSICAL';
+}
+
+/**
+ * Reel videos are uploaded (direct-to-ImageKit) before the pod is saved, so the
+ * only acceptable value is a hosted https URL. Empty/null clears the reel.
+ */
+function normalizeReelUrl(value?: string | null): string | null {
+  const url = String(value ?? '').trim();
+  if (!url) return null;
+  if (!/^https?:\/\//i.test(url)) {
+    throw new GraphQLError('Reel video must be uploaded before saving', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return url;
 }
 
 function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
@@ -762,6 +778,7 @@ export const podService = {
       search?: string;
       is_active?: boolean;
       host_user_id?: string;
+      has_reel?: boolean;
     },
     opts?: { includePendingApproval?: boolean }
   ) {
@@ -771,6 +788,8 @@ export const podService = {
     const placeFilter = await buildPodPlaceFilter(filter);
     if (placeFilter) Object.assign(q, placeFilter);
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
+    // Explore reels: only pods that actually uploaded a reel video.
+    if (filter?.has_reel) q.reel_url = { $nin: [null, ''] };
     if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
     if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
     // A pod awaiting the venue owner's slot approval is NOT live. Hide it from
@@ -924,6 +943,7 @@ export const podService = {
       meeting_notes: meeting.notes,
       pod_hashtag: input.pod_hashtag ?? [],
       pod_images_and_videos: input.pod_images_and_videos ?? [],
+      reel_url: normalizeReelUrl(input.reel_url),
       pod_hits: 0,
       pod_attendees: attendees,
       pod_description: input.pod_description,
@@ -994,6 +1014,7 @@ export const podService = {
     const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
     validateMeetingDetails(nextMode, input, doc);
     validatePodDatesForUpdate(input, doc);
+    if (input.reel_url !== undefined) input.reel_url = normalizeReelUrl(input.reel_url);
 
     await applyPlaceForUpdate(doc, input, nextMode);
 
@@ -1009,6 +1030,7 @@ export const podService = {
       'meeting_notes',
       'pod_hashtag',
       'pod_images_and_videos',
+      'reel_url',
       'pod_attendees',
       'pod_description',
       'pod_type',
@@ -1052,6 +1074,7 @@ export const podService = {
       url: m.url,
       type: m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
     }));
+    if (input.reel_url !== undefined) doc.reel_url = normalizeReelUrl(input.reel_url);
     await doc.save();
 
     // Best-effort: tell every attendee the pod changed.

@@ -6,7 +6,7 @@ export const EXPLORE_PODS = gql`
       user_id
       saved_pod_ids
     }
-    pods(filter: { is_active: true }) {
+    pods(filter: { is_active: true, has_reel: true }) {
       id
       pod_id
       pod_title
@@ -17,10 +17,7 @@ export const EXPLORE_PODS = gql`
       pod_attendees
       no_of_spots
       zone_name
-      pod_images_and_videos {
-        url
-        type
-      }
+      reel_url
       club_id
       club_slug
       location_id
@@ -40,10 +37,6 @@ export const EXPLORE_PODS = gql`
       is_verified
       super_category_id
       category_id
-      club_feature_images_and_videos {
-        url
-        type
-      }
     }
     superCategories: categories(filter: { level: SUPER }) {
       id

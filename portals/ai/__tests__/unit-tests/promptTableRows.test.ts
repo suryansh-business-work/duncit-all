@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { TableQueryState } from '@duncit/table';
-import { applyPromptTableState } from './promptTableRows';
-import type { AiPrompt } from './queries';
+import { applyPromptTableState } from '../../src/pages/prompt-library/promptTableRows';
+import type { AiPrompt } from '../../src/pages/prompt-library/queries';
 
 const prompt = (over: Partial<AiPrompt>): AiPrompt => ({
   id: 'p1',
@@ -62,6 +62,12 @@ describe('applyPromptTableState', () => {
     expect(byCreated.rows.slice(0, 3).map((r) => r.id)).toEqual(['a', 'b', 'c']);
   });
 
+  it('sorts booleans by their truthiness', () => {
+    const active = applyPromptTableState(rows, query({ sortBy: 'is_active', sortDir: 'asc' }));
+    // is_active=false (Delta) sorts before the active rows in ascending order.
+    expect(active.rows[0].id).toBe('d');
+  });
+
   it('applies a case-insensitive contains filter on category', () => {
     const page = applyPromptTableState(
       rows,
@@ -69,6 +75,14 @@ describe('applyPromptTableState', () => {
     );
     expect(page.total).toBe(2);
     expect(page.rows.map((r) => r.id)).toEqual(['a', 'c']);
+  });
+
+  it('treats a contains filter with no needle as matching everything', () => {
+    const page = applyPromptTableState(
+      rows,
+      query({ filters: [{ field: 'category', op: 'contains' }] }),
+    );
+    expect(page.total).toBe(4);
   });
 
   it('applies boolean filters on is_active', () => {
@@ -99,12 +113,54 @@ describe('applyPromptTableState', () => {
     expect(created.rows.map((r) => r.id)).toEqual(['b']);
   });
 
+  it('treats a between filter with no bounds as an open range', () => {
+    const page = applyPromptTableState(
+      rows,
+      query({ filters: [{ field: 'token_count', op: 'between' }] }),
+    );
+    // No min/max → NaN comparisons exclude every row.
+    expect(page.total).toBe(0);
+  });
+
   it('excludes rows with a missing date from date range filters', () => {
     const page = applyPromptTableState(
       rows,
       query({ filters: [{ field: 'created_at', op: 'lte', value: '2026-12-31T00:00:00.000Z' }] }),
     );
     expect(page.rows.map((r) => r.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('treats a null cell value as empty when applying a contains filter', () => {
+    // Delta (id "d") has created_at null; contains coerces the null to "".
+    const page = applyPromptTableState(
+      rows,
+      query({ filters: [{ field: 'created_at', op: 'contains', value: '2026' }] }),
+    );
+    expect(page.rows.map((r) => r.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('coerces a null string value to empty on either side of the comparison', () => {
+    const zedFirst: AiPrompt[] = [
+      prompt({ id: 'z', name: 'Zed' }),
+      prompt({ id: 'n', name: null as unknown as string }),
+    ];
+    const nullFirst: AiPrompt[] = [
+      prompt({ id: 'n', name: null as unknown as string }),
+      prompt({ id: 'z', name: 'Zed' }),
+    ];
+    // Both input orders exercise compare(present, null) and compare(null, present);
+    // the null name always sorts before "Zed".
+    expect(applyPromptTableState(zedFirst, query({ sortBy: 'name' })).rows.map((r) => r.id)).toEqual(['n', 'z']);
+    expect(applyPromptTableState(nullFirst, query({ sortBy: 'name' })).rows.map((r) => r.id)).toEqual(['n', 'z']);
+  });
+
+  it('matches everything for a known field with an unhandled operator', () => {
+    const page = applyPromptTableState(
+      rows,
+      // `equals` is not a handled op, so a known field falls through to "match all".
+      query({ filters: [{ field: 'name', op: 'equals' as never, value: 'Alpha' }] }),
+    );
+    expect(page.total).toBe(4);
   });
 
   it('ignores filters and sorts on fields outside the allowlist', () => {

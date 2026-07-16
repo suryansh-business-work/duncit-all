@@ -1,24 +1,16 @@
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { afterEach, expect, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { afterEach, expect, vi } from 'vitest';
 
 // The '@testing-library/jest-dom/vitest' auto-extend does not register here, so
-// wire the matchers onto vitest's expect explicitly (repo-proven pattern).
+// extend the expect matchers explicitly (repo-proven pattern).
 expect.extend(matchers);
 
-// React Testing Library: unmount and clean the DOM between tests.
 afterEach(() => {
   cleanup();
-  try {
-    if (typeof localStorage !== 'undefined' && typeof localStorage.clear === 'function') {
-      localStorage.clear();
-    }
-  } catch {
-    /* storage unavailable in this test — nothing to reset */
-  }
 });
 
-// jsdom doesn't implement matchMedia (ColorModeContext reads prefers-color-scheme).
+// jsdom doesn't implement matchMedia (MUI/theme reads prefers-color-scheme).
 if (!window.matchMedia) {
   window.matchMedia = ((query: string) => ({
     matches: false,
@@ -32,6 +24,15 @@ if (!window.matchMedia) {
   })) as unknown as typeof window.matchMedia;
 }
 
+// jsdom elements have no scrollTo; some MUI views call it on refs.
 if (!Element.prototype.scrollTo) {
   Element.prototype.scrollTo = vi.fn();
+}
+
+// jsdom doesn't implement Blob URLs; the invoice downloader creates one.
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = vi.fn(() => 'blob:mock');
+}
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = vi.fn();
 }

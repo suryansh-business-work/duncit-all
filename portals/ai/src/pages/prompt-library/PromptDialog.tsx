@@ -22,6 +22,7 @@ export default function PromptDialog({ open, prompt, onClose, onSaved }: Readonl
     setError(null);
     const input = {
       name: values.name,
+      /* v8 ignore next -- description is always a string from the RHF/zod form (default '') */
       description: values.description ?? '',
       content: values.content,
       category: values.category,

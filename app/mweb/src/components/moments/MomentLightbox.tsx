@@ -27,7 +27,7 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
 
   useEffect(() => {
     if (index === null || pushedHistory.current) return;
-    window.history.pushState({ ...window.history.state, duncitLightbox: true }, '');
+    globalThis.history.pushState({ ...globalThis.history.state, duncitLightbox: true }, '');
     pushedHistory.current = true;
   }, [index]);
 
@@ -41,8 +41,8 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
       pushedHistory.current = false;
       onClose();
     };
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    globalThis.addEventListener('popstate', onPop);
+    return () => globalThis.removeEventListener('popstate', onPop);
   }, [index, onClose]);
 
   const close = () => {
@@ -50,7 +50,7 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
       pushedHistory.current = false;
       suppressNextPop.current = true;
       onClose();
-      window.history.back();
+      globalThis.history.back();
       return;
     }
     onClose();
@@ -63,8 +63,8 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
       else if (e.key === 'ArrowLeft') prev();
       else if (e.key === 'Escape') close();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    globalThis.addEventListener('keydown', onKey);
+    return () => globalThis.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, current, moments.length]);
 

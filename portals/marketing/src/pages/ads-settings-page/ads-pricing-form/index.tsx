@@ -8,5 +8,4 @@ export type {
   AdPricing,
   AdsPricingFormProps,
   AdsPricingFormValues,
-  UpdateAdPricingInput,
 } from './ads-pricing.types';

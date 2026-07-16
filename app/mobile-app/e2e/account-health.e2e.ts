@@ -23,6 +23,7 @@ describe('Account Health flow', () => {
     await waitFor(element(by.id('account-screen')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('account-screen'))).toBeVisible();
   });
 
   it('opens the Account Health detail from the health card', async () => {

@@ -259,7 +259,8 @@ function validateInput(input: any) {
 }
 
 function cleanText(value: unknown, max = 4000) {
-  return String(value ?? '').trim().slice(0, max);
+  const raw = value as string | number | boolean | null | undefined;
+  return String(raw ?? '').trim().slice(0, max);
 }
 
 function listingImages(input: any) {
@@ -299,8 +300,9 @@ function validateProductListingInput(input: any) {
 
 /** A deactivated brand cannot list new products (it is hidden everywhere). */
 async function assertBrandActive(brandId: unknown) {
-  if (!brandId || !Types.ObjectId.isValid(String(brandId))) return;
-  const brand = await EcommBrandModel.findById(String(brandId)).select('is_active');
+  const raw = brandId as string;
+  if (!raw || !Types.ObjectId.isValid(String(raw))) return;
+  const brand = await EcommBrandModel.findById(String(raw)).select('is_active');
   if (brand?.is_active === false) {
     throw new GraphQLError('This brand is deactivated and cannot list new products', {
       extensions: { code: 'BAD_REQUEST' },

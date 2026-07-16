@@ -122,7 +122,7 @@ export default function PodActionPanel({
               (navigator as any).share({
                 title: pod.pod_title,
                 text: buildPodShareText(pod),
-                url: `${window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`,
+                url: `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`,
               })
             }
             sx={compactButtonSx}

@@ -7,6 +7,7 @@ import { useMe } from '@/hooks/useMe';
 import { useMyHostRequest } from '@/hooks/useMyHostRequest';
 import { applyButtonState } from '@/graphql/host-request';
 import type { RootStackParamList } from '@/navigation/types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /**
  * Host Studio CTA inviting an approved host to apply to host in another
@@ -19,7 +20,7 @@ export function HostApplyBanner() {
   const { request, refetch } = useMyHostRequest();
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => void refetch());
+    const unsubscribe = navigation.addListener('focus', () => fireAndForget(refetch()));
     return unsubscribe;
   }, [navigation, refetch]);
 

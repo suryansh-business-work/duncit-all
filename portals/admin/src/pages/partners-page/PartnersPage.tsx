@@ -1,6 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { useApolloClient } from '@apollo/client';
-import { gql } from '@apollo/client';
+import { gql, useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';

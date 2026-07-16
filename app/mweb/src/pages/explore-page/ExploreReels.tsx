@@ -53,7 +53,7 @@ export default function ExploreReels({
             </Box>
           );
         }
-        const p = entry as any;
+        const p = entry;
         return (
           <Box key={p.id} sx={{ height: '100%' }}>
             <ExplorePodCard

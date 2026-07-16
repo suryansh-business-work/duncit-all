@@ -113,8 +113,8 @@ export function useHomeData({
     const onRefresh = () => {
       refetch().catch(() => undefined);
     };
-    window.addEventListener(HOME_REFRESH_EVENT, onRefresh);
-    return () => window.removeEventListener(HOME_REFRESH_EVENT, onRefresh);
+    globalThis.addEventListener(HOME_REFRESH_EVENT, onRefresh);
+    return () => globalThis.removeEventListener(HOME_REFRESH_EVENT, onRefresh);
   }, [refetch]);
 
   const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });

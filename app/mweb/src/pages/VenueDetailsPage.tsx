@@ -83,7 +83,7 @@ export default function VenueDetailsPage() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard?.writeText(window.location.href);
+      await navigator.clipboard?.writeText(globalThis.window.location.href);
       setSnack('Venue link copied');
     } catch {
       setSnack('Copy is unavailable in this browser');

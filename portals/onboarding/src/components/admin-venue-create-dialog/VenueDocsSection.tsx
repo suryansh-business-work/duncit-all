@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import {
   Box,
   Button,
@@ -22,13 +23,24 @@ interface Props {
 
 export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: Readonly<Props>) {
   const err = (path: string) => getVenueError(errors, path);
+  const rowKeys = useRef<{ keys: string[]; seq: number }>({ keys: [], seq: 0 });
+  if (rowKeys.current.keys.length !== docs.length) {
+    const keys = rowKeys.current.keys.slice(0, docs.length);
+    while (keys.length < docs.length) {
+      rowKeys.current.seq += 1;
+      keys.push(`doc-${rowKeys.current.seq}`);
+    }
+    rowKeys.current.keys = keys;
+  }
   return (
     <Stack spacing={2}>
       <Stack spacing={1.75}>
         {err('step2.documents') && <FormHelperText error>{err('step2.documents')}</FormHelperText>}
-        {docs.map((d, i) => (
+        {docs.map((d, i) => {
+          const rowKey = rowKeys.current.keys[i];
+          return (
           <Box
-            key={i}
+            key={rowKey}
             sx={{
               display: 'grid',
               gridTemplateColumns: { xs: '1fr', sm: '180px minmax(0, 1fr) auto' },
@@ -67,7 +79,8 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: R
               <DeleteIcon />
             </IconButton>
           </Box>
-        ))}
+          );
+        })}
         <Button onClick={() => setDocs([...docs, { type: 'GST Certificate', url: '' }])}>
           Add document
         </Button>

@@ -27,7 +27,7 @@ userRoleSchema.index(
 );
 
 userRoleSchema.pre('validate', function (next) {
-  const doc = this as any;
+  const doc = this;
   if (doc.role === 'CITY_ADMIN' && !doc.scope?.city) {
     return next(new Error('CITY_ADMIN role requires scope.city'));
   }

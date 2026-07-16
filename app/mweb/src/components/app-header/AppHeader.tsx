@@ -55,7 +55,7 @@ export default function AppHeader({
   };
   const closeMenu = () => {
     if (!menuOpen) return;
-    const idx = Number((window.history.state as { idx?: number })?.idx ?? 0);
+    const idx = Number((globalThis.history.state as { idx?: number })?.idx ?? 0);
     if (idx > 0) {
       navigate(-1);
       return;
@@ -127,8 +127,8 @@ export default function AppHeader({
 
   // Open the picker when another screen (e.g. the Clubs page note) asks for it.
   useEffect(() => {
-    window.addEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
-    return () => window.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
+    globalThis.addEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
+    return () => globalThis.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
   }, [openLocationPicker]);
 
   const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });

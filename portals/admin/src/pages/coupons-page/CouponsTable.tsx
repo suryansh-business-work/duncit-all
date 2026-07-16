@@ -51,7 +51,10 @@ const renderScope = (c: CouponRow) => (
 
 const validityValue = (c: CouponRow) => `${fmtDate(c.valid_from)} → ${fmtDate(c.valid_until)}`;
 
-const usedValue = (c: CouponRow) => `${c.used_count}${c.max_uses ? ` / ${c.max_uses}` : ''}`;
+const usedValue = (c: CouponRow) => {
+  const cap = c.max_uses ? ` / ${c.max_uses}` : '';
+  return `${c.used_count}${cap}`;
+};
 
 const localeDate = (d: Date) =>
   d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' });

@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** Dynamic values come from JSON, so a printable value is always a scalar. */
-const asText = (raw: unknown): string => String(raw as string | number | boolean);
+const asText = (raw: unknown): string => String(raw);
 
 const fmt = (field: CrmDynamicField, raw: unknown): string => {
   if (raw === null || raw === undefined || raw === '') return '—';

@@ -12,7 +12,7 @@ interface Payload {
 
 /** Imperative notification — replaces window.alert() across the mWeb app. */
 export function notify(message: string, severity: Severity = 'info', duration = 4000) {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   globalThis.dispatchEvent(
     new CustomEvent<Payload>(EVENT, { detail: { message, severity, duration } })
   );
@@ -29,8 +29,8 @@ export function NotifyHost() {
       if (!detail?.message) return;
       setItem(detail);
     };
-    window.addEventListener(EVENT, handler);
-    return () => window.removeEventListener(EVENT, handler);
+    globalThis.addEventListener(EVENT, handler);
+    return () => globalThis.removeEventListener(EVENT, handler);
   }, []);
   return (
     <Snackbar

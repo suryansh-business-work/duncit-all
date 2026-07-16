@@ -13,7 +13,8 @@
     "@duncit/logs": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/user-context": "workspace:*",
-    "@duncit/utils": "workspace:*"
+    "@duncit/utils": "workspace:*",
+    "@fontsource/nunito": "^5.1.1"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",

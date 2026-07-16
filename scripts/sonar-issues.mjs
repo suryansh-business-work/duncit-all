@@ -110,11 +110,15 @@ const bySeverity = tally((r) => r.severity);
 const byRule = tally((r) => r.rule);
 const byFile = tally((r) => r.file);
 
+const severityFilter = args.get('severity') ? `, severity=${args.get('severity')}` : '';
+const ruleFilter = args.get('rule') ? `, rule=${args.get('rule')}` : '';
+const escapedPipe = String.raw`\|`;
+
 const lines = [
   `# SonarQube open issues — ${key}`,
   '',
   `Fetched ${rows.length} of ${total} issue(s) from ${host}.`,
-  `Filters: statuses=${args.get('statuses') ?? 'OPEN,CONFIRMED'}${args.get('severity') ? `, severity=${args.get('severity')}` : ''}${args.get('rule') ? `, rule=${args.get('rule')}` : ''}`,
+  `Filters: statuses=${args.get('statuses') ?? 'OPEN,CONFIRMED'}${severityFilter}${ruleFilter}`,
   '',
   '## By severity',
   '',
@@ -136,7 +140,7 @@ const lines = [
   '',
   '| severity | rule | file:line | message |',
   '| -------- | ---- | --------- | ------- |',
-  ...rows.map((r) => `| ${r.severity} | ${r.rule} | ${r.file}:${r.line ?? '-'} | ${r.message.replaceAll('|', '\\|')} |`),
+  ...rows.map((r) => `| ${r.severity} | ${r.rule} | ${r.file}:${r.line ?? '-'} | ${r.message.replaceAll('|', escapedPipe)} |`),
   '',
 ];
 

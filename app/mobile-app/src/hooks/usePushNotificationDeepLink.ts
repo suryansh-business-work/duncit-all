@@ -40,7 +40,7 @@ export function usePushNotificationDeepLink() {
     let subscription: { remove: () => void } | undefined;
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy native-only module
-      const Notifications = require('expo-notifications') as typeof import('expo-notifications');
+      const Notifications: typeof import('expo-notifications') = require('expo-notifications');
 
       const handle = (response: unknown) => {
         const link = (

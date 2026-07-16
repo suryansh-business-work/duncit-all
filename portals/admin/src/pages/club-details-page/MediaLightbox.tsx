@@ -28,8 +28,8 @@ export default function MediaLightbox({ items, index, onNavigate, onClose }: Rea
       if (e.key === 'ArrowLeft' && canNavigate) goPrev();
       if (e.key === 'ArrowRight' && canNavigate) goNext();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    globalThis.addEventListener('keydown', onKey);
+    return () => globalThis.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, index, canNavigate, items.length]);
 

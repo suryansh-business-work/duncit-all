@@ -6,7 +6,7 @@ import type { ProbeResult, SslInfo } from '../../types';
 function SslRows({ ssl }: Readonly<{ ssl: SslInfo }>) {
   const expiresOn = formatDate(ssl.validTo);
   const expiry =
-    ssl.daysRemaining !== null ? `${expiresOn} · ${ssl.daysRemaining} days left` : expiresOn;
+    ssl.daysRemaining === null ? expiresOn : `${expiresOn} · ${ssl.daysRemaining} days left`;
   const trustLabel = ssl.authorized ? 'Valid & trusted' : 'Not trusted';
   return (
     <>
@@ -37,9 +37,9 @@ export default function ProbeSection({ probe, error }: Readonly<ProbeSectionProp
     );
   }
   const codeLabel =
-    probe.statusCode !== null
-      ? `${probe.statusCode} ${probe.statusText ?? ''}`.trim()
-      : (probe.error ?? 'Unreachable');
+    probe.statusCode === null
+      ? (probe.error ?? 'Unreachable')
+      : `${probe.statusCode} ${probe.statusText ?? ''}`.trim();
   return (
     <Box>
       <DetailRow label="HTTP status" value={<StatusPill ok={probe.ok} label={codeLabel} />} />

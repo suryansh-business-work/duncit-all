@@ -31,7 +31,9 @@ export const productsValue = (p: PodRow) => {
   return `${productLines(p)} · ₹${p.product_cost_total ?? 0}`;
 };
 
-export const spotsValue = (p: PodRow) =>
-  `${p.pod_attendees?.length ?? 0}${p.no_of_spots ? ` / ${p.no_of_spots}` : ''}`;
+export const spotsValue = (p: PodRow) => {
+  const cap = p.no_of_spots ? ` / ${p.no_of_spots}` : '';
+  return `${p.pod_attendees?.length ?? 0}${cap}`;
+};
 
 export const dateValue = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');

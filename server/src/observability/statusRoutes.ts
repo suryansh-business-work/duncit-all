@@ -174,7 +174,7 @@ export const modelStatusHistoryStore: StatusHistoryStore = {
 /** `hours` query param → validated integer (1..2160), default 24, null = invalid. */
 export function parseHistoryHours(raw: unknown): number | null {
   if (raw === undefined) return DEFAULT_HISTORY_HOURS;
-  const hours = Number.parseInt(String(raw), 10);
+  const hours = Number.parseInt(raw as string, 10);
   if (Number.isNaN(hours) || hours < 1 || hours > MAX_HISTORY_HOURS) return null;
   return hours;
 }

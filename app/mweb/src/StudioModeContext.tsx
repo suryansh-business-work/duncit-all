@@ -16,7 +16,7 @@ const VALID = new Set<StudioMode>(['USER', 'HOST', 'VENUE', 'ECOMM']);
 
 export function StudioModeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [mode, setMode] = useState<StudioMode>(() => {
-    if (typeof globalThis.window === 'undefined') return 'USER';
+    if (globalThis.window === undefined) return 'USER';
     const saved = localStorage.getItem(STORAGE_KEY) as StudioMode | null;
     return saved && VALID.has(saved) ? saved : 'USER';
   });

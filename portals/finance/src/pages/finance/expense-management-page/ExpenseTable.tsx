@@ -55,7 +55,7 @@ export default function ExpenseTable({
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<any>[]>(() => {
     const renderRefund = (e: any) => {
-      if (!(e.refund_total > 0)) return '—';
+      if (e.refund_total <= 0) return '—';
       return (
         <Typography variant="body2" color="warning.main" component="span">
           −{currency}{Number(e.refund_total).toFixed(2)}

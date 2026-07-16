@@ -45,6 +45,7 @@ describe('Pod History flow', () => {
     await waitFor(element(by.id('pod-history-screen')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('pod-history-screen'))).toBeVisible();
 
     // Only continue when at least one joined pod exists for this account.
     try {

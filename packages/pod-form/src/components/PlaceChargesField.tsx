@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -12,6 +13,15 @@ interface Props {
 const blank: PodPlaceCharge = { label: '', amount: 0, note: '' };
 
 export default function PlaceChargesField({ value, onChange, helperText }: Readonly<Props>) {
+  // Stable per-row keys — never the array index (S6479). Grow with the list by
+  // position and survive edits so a row's inputs aren't remounted (losing focus).
+  const keysRef = useRef<string[]>([]);
+  const nextKeyRef = useRef(0);
+  if (keysRef.current.length !== value.length) {
+    keysRef.current = value.map((_, i) => keysRef.current[i] ?? `place-charge-${nextKeyRef.current++}`);
+  }
+  const rows = value.map((row, i) => ({ row, key: keysRef.current[i] }));
+
   const update = (idx: number, patch: Partial<PodPlaceCharge>) => {
     const next = value.map((row, i) => (i === idx ? { ...row, ...patch } : row));
     onChange(next);
@@ -30,9 +40,9 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
         </Typography>
       )}
       <Stack spacing={1.5}>
-        {value.map((row, idx) => (
+        {rows.map(({ row, key }, idx) => (
           <Stack
-            key={`charge-${idx}`}
+            key={key}
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
             alignItems={{ xs: 'stretch', sm: 'center' }}

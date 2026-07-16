@@ -201,7 +201,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
           setSwitchOpen(false);
           onClose();
           // Jump straight to the selected role's dashboard (B3-2).
-          navigation.navigate(STUDIO_HOME_ROUTE[next] as never);
+          navigation.navigate(STUDIO_HOME_ROUTE[next]);
         }}
       />
     </Modal>

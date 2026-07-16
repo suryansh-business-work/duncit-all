@@ -1,3 +1,10 @@
+// Admin additionally uses Open Sans (alongside the shell's Nunito) — self-hosted
+// to drop the Google Fonts <link> in index.html.
+import '@fontsource/open-sans/400.css';
+import '@fontsource/open-sans/500.css';
+import '@fontsource/open-sans/600.css';
+import '@fontsource/open-sans/700.css';
+import '@fontsource/open-sans/800.css';
 import { mountPortal } from '@duncit/shell';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';

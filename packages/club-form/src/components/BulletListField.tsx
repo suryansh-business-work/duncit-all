@@ -55,7 +55,7 @@ export default function BulletListField({ name, label, helperText, error }: Read
           {error}
         </Typography>
       )}
-      <Button size="small" startIcon={<AddIcon />} onClick={() => append('' as never)} sx={{ alignSelf: 'flex-start' }}>
+      <Button size="small" startIcon={<AddIcon />} onClick={() => append('')} sx={{ alignSelf: 'flex-start' }}>
         Add point
       </Button>
     </Stack>

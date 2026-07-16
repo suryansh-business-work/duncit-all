@@ -18,8 +18,8 @@ export interface CommsResult {
 }
 
 const str = (config: Record<string, unknown>, key: string) => {
-  const v = config[key];
-  return v === undefined || v === null ? '' : String(v as string | number | boolean);
+  const v = config[key] as string | number | boolean | undefined;
+  return v === undefined || v === null ? '' : String(v);
 };
 
 const notConfigured = (provider: string, what: string): CommsResult => ({

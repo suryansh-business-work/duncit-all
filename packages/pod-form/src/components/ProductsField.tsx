@@ -21,7 +21,7 @@ export default function ProductsField({ products }: Readonly<Props>) {
   const total = getProductRequestTotal(requests, products);
 
   const updateRow = (index: number, key: 'product_id' | 'quantity', value: string | number) => {
-    setValue(`product_requests.${index}.${key}`, value as never, { shouldValidate: true });
+    setValue(`product_requests.${index}.${key}`, value, { shouldValidate: true });
   };
 
   return (

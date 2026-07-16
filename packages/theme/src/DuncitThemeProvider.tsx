@@ -31,7 +31,7 @@ interface Props {
 
 const readStored = (key: string, fallback: ColorMode): ColorMode => {
   /* v8 ignore next -- SSR guard, unreachable in the browser */
-  if (typeof globalThis.window === 'undefined') return fallback;
+  if (globalThis.window === undefined) return fallback;
   const saved = localStorage.getItem(key);
   return saved === 'dark' || saved === 'light' ? saved : fallback;
 };

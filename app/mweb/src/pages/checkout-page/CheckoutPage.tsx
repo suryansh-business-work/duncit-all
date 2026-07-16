@@ -168,7 +168,7 @@ export default function CheckoutPage() {
       description: state.description || `Pod booking · ${title}`,
       ...contact,
       billing,
-      checkout_url: window.location.href,
+      checkout_url: globalThis.window.location.href,
       coupon_code: coupon?.ok ? coupon.code : null,
     };
     await persistMainAddress(values);

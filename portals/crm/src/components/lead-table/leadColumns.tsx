@@ -54,6 +54,7 @@ export const LEAD_ENTITY_META: Record<CrmLeadEntity, EntityMeta> = {
 const fieldText = (row: object, key: string): string => {
   const value = (row as Record<string, unknown>)[key];
   if (value == null || value === '') return '—';
+  if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
 };
 

@@ -4,7 +4,7 @@ import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-
 import { UPDATE } from './queries';
 
 interface Props {
-  pod: any | null;
+  pod: any;
   clubName: (id: string) => string;
   venueName: (id: string) => string;
   onClose: () => void;

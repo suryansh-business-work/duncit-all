@@ -147,7 +147,7 @@ export function UserProvider({
   );
 
   const reloadApp = useCallback(() => {
-    if (typeof globalThis.window !== 'undefined') window.location.reload();
+    if (globalThis.window !== undefined) globalThis.window.location.reload();
   }, []);
 
   const logout = useCallback(() => {
@@ -156,8 +156,8 @@ export function UserProvider({
     setError(null);
     if (onLogoutRef.current) {
       onLogoutRef.current();
-    } else if (typeof globalThis.window !== 'undefined') {
-      window.location.href = '/login';
+    } else if (globalThis.window !== undefined) {
+      globalThis.window.location.href = '/login';
     }
   }, []);
 
@@ -245,5 +245,5 @@ export function useUserData<T = DuncitUser>(): UserDataContextValue<T> {
   if (!ctx) {
     throw new Error('useUserData must be used inside a <UserProvider>');
   }
-  return ctx as unknown as UserDataContextValue<T>;
+  return ctx as UserDataContextValue<T>;
 }

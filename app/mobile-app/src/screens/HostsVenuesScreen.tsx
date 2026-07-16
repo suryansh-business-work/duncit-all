@@ -9,6 +9,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useHostsVenues } from '@/hooks/useHostsVenues';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 type Tab = 'HOSTS' | 'VENUES';
 
@@ -36,7 +37,7 @@ export function HostsVenuesScreen() {
             isFollowing={followingIds.has(host.user_id)}
             pending={pendingFollow === host.user_id}
             onOpen={() => navigation.navigate('PublicProfile', { userId: host.user_id })}
-            onToggleFollow={() => void toggleFollow(host.user_id)}
+            onToggleFollow={() => fireAndForget(toggleFollow(host.user_id))}
           />
         ))
       );

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Box, IconButton, Stack, Tooltip, useTheme } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
@@ -171,7 +171,6 @@ export default function RichTextField({
   readOnly,
   bare,
 }: Readonly<Props>) {
-  const theme = useTheme();
   const editor = useEditor({
     extensions: [
       StarterKit.configure({

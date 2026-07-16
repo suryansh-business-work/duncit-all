@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostUpdatePodDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   buildHostUpdateInput,
   podEditInitialValues,
@@ -135,7 +136,7 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                   role="button"
                   aria-label="Save changes"
                   aria-disabled={busy}
-                  onPress={busy ? undefined : () => void submit()}
+                  onPress={busy ? undefined : () => fireAndForget(submit())}
                   flex={1}
                   height={46}
                   alignItems="center"

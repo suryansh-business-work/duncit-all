@@ -86,7 +86,7 @@ export default function PodIdeasPage() {
   };
 
   const share = async (idea: any) => {
-    const url = `${window.location.origin}/pod-ideas?id=${idea.id}`;
+    const url = `${globalThis.window.location.origin}/pod-ideas?id=${idea.id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: idea.title, text: idea.description, url });

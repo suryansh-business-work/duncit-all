@@ -5,13 +5,14 @@
  */
 const SCRIPT_SRC = 'https://checkout.razorpay.com/v1/checkout.js';
 
+type RazorpayConstructor = new (options: Record<string, unknown>) => {
+  open: () => void;
+  on: (event: string, cb: () => void) => void;
+};
+
 declare global {
-  interface Window {
-    Razorpay?: new (options: Record<string, unknown>) => {
-      open: () => void;
-      on: (event: string, cb: () => void) => void;
-    };
-  }
+  // eslint-disable-next-line no-var
+  var Razorpay: RazorpayConstructor | undefined;
 }
 
 export interface RazorpayOrderData {
@@ -33,11 +34,11 @@ export interface RazorpaySignature {
 }
 
 /** Resolve once the Razorpay global is available, injecting the script on first use. */
-export function loadRazorpay(): Promise<NonNullable<Window['Razorpay']>> {
-  if (window.Razorpay) return Promise.resolve(window.Razorpay);
+export function loadRazorpay(): Promise<RazorpayConstructor> {
+  if (globalThis.Razorpay) return Promise.resolve(globalThis.Razorpay);
   return new Promise((resolve, reject) => {
     const done = () =>
-      window.Razorpay ? resolve(window.Razorpay) : reject(new Error('Razorpay failed to load'));
+      globalThis.Razorpay ? resolve(globalThis.Razorpay) : reject(new Error('Razorpay failed to load'));
     const existing = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`);
     if (existing) {
       existing.addEventListener('load', done);

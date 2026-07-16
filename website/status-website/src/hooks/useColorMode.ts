@@ -11,7 +11,7 @@ function initialMode(): ColorMode {
   } catch {
     /* storage unavailable (private mode) — fall through to system preference */
   }
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 /** prefers-color-scheme default with a persisted manual light/dark toggle. */

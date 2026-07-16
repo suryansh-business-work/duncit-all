@@ -1,4 +1,4 @@
-import { by, device, element, waitFor } from 'detox';
+import { by, device, element, expect, waitFor } from 'detox';
 
 /**
  * Auth navigation between the login, signup and forgot-password screens. The
@@ -33,5 +33,6 @@ describe('Auth navigation', () => {
     await waitFor(element(by.id('forgot-password-screen')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('forgot-password-screen'))).toBeVisible();
   });
 });

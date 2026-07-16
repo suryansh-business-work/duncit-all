@@ -28,7 +28,7 @@ const mockedHV = useHostsVenues as jest.Mock;
 const mockedVenue = useVenueDetails as jest.Mock;
 const mockedProfile = usePublicProfile as jest.Mock;
 
-const toggleFollow = jest.fn();
+const toggleFollow = jest.fn().mockResolvedValue(undefined);
 const hvBase = {
   hosts: [{ id: 'a', user_id: 'h1', full_name: 'Host One', tags: [] }],
   venues: [{ id: 'v1', venue_name: 'Cafe', venue_type: 'CAFE', capacity: 20 }],

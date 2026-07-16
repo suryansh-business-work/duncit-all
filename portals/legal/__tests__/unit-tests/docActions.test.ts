@@ -20,10 +20,14 @@ describe('safeFileName', () => {
 
 describe('printHtml', () => {
   it('writes the html into a popup and prints it', () => {
-    const win = { document: { write: vi.fn(), close: vi.fn() }, focus: vi.fn(), print: vi.fn() };
+    const win = {
+      document: { body: { innerHTML: '' }, close: vi.fn() },
+      focus: vi.fn(),
+      print: vi.fn(),
+    };
     vi.stubGlobal('open', vi.fn(() => win));
     expect(printHtml('<h1>Doc</h1>')).toBe(true);
-    expect(win.document.write).toHaveBeenCalledWith('<h1>Doc</h1>');
+    expect(win.document.body.innerHTML).toBe('<h1>Doc</h1>');
     expect(win.print).toHaveBeenCalled();
   });
 

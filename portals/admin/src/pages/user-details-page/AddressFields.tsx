@@ -7,6 +7,7 @@ import {
   type GeoCity,
   type GeoState,
 } from '../../utils/geo';
+import type { EditForm } from './queries';
 
 const COUNTRY_CODE = 'IN';
 
@@ -22,7 +23,7 @@ interface Props {
   stateError: FieldError;
   cityError: FieldError;
   pincodeError: FieldError;
-  setFieldValue: (field: string, value: string) => void;
+  setFieldValue: (field: keyof EditForm, value: string) => void;
 }
 
 const cityLabel = (option: string | { name: string }) =>

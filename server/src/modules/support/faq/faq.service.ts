@@ -99,7 +99,7 @@ export const faqService = {
     const { docs, total, page, page_size } = await runTableQuery<IFaq>(
       FaqModel,
       base,
-      { ...(input ?? {}), filters: rest },
+      { ...input, filters: rest },
       FAQ_TABLE_CONFIG
     );
     return { rows: docs.map(toPub), total, page, page_size };

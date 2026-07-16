@@ -196,7 +196,7 @@ function leadTableConfig(
       created_at: 'created_at',
       updated_at: 'updated_at',
       super_category_id: 'super_category_id',
-      ...(extras.sortFields ?? {}),
+      ...extras.sortFields,
     },
     filterFields: {
       city: { type: 'string' },
@@ -205,7 +205,7 @@ function leadTableConfig(
       super_category_id: { type: 'string' },
       next_follow_up_date: { type: 'date' },
       created_at: { type: 'date' },
-      ...(extras.filterFields ?? {}),
+      ...extras.filterFields,
     },
     defaultSort: { next_follow_up_date: 1 },
   };
@@ -246,7 +246,7 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   }
   for (const key of ['category_ids', 'sub_category_ids']) {
     if (Array.isArray(out[key])) {
-      out[key] = (out[key] as any[]).map(toObjectIdOrNull).filter((v): v is Types.ObjectId => Boolean(v));
+      out[key] = out[key].map(toObjectIdOrNull).filter((v): v is Types.ObjectId => Boolean(v));
     }
   }
   if (Array.isArray(out.linked_host_ids)) {

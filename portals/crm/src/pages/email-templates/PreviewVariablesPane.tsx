@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -50,6 +50,16 @@ function foreignDetectedMessage(slugs: string[], target: EmailTemplate['target']
 export default function PreviewVariablesPane(p: Readonly<Props>) {
   const { draft, setDraft, tab, setTab, previewHtml, previewErrors, detected, onImportDetected, onAddVariable, onRemoveVariable } = p;
   const [fullscreen, setFullscreen] = useState(false);
+  // Stable per-row keys for the declared-variables editor: variables have no id
+  // and their key/description are edited in place, so a content-based key would
+  // remount the input and drop focus.
+  const varKeys = useRef<number[]>([]);
+  const keySeq = useRef(0);
+  if (varKeys.current.length !== draft.variables.length) {
+    while (varKeys.current.length < draft.variables.length) varKeys.current.push(keySeq.current++);
+    varKeys.current.length = draft.variables.length;
+  }
+  const declaredRows = draft.variables.map((v, index) => ({ v, index, key: varKeys.current[index] }));
   const declared = new Set(draft.variables.map((v) => v.key));
   const toggle = (slug: string) => (declared.has(slug) ? onRemoveVariable(slug) : onAddVariable(slug));
 
@@ -127,14 +137,14 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               <Typography variant="caption" color="text.secondary">Add from the chips above.</Typography>
             ) : (
               <Stack spacing={1}>
-                {draft.variables.map((v, i) => (
-                  <Stack key={i} direction="row" spacing={1} alignItems="center">
+                {declaredRows.map(({ v, index, key }) => (
+                  <Stack key={key} direction="row" spacing={1} alignItems="center">
                     <TextField
                       size="small"
                       value={v.key}
                       onChange={(e) => {
                         const copy = [...draft.variables];
-                        copy[i] = { ...copy[i], key: e.target.value };
+                        copy[index] = { ...copy[index], key: e.target.value };
                         setDraft({ ...draft, variables: copy });
                       }}
                       sx={{ width: 160 }}
@@ -145,7 +155,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                       value={v.description ?? ''}
                       onChange={(e) => {
                         const copy = [...draft.variables];
-                        copy[i] = { ...copy[i], description: e.target.value };
+                        copy[index] = { ...copy[index], description: e.target.value };
                         setDraft({ ...draft, variables: copy });
                       }}
                       sx={{ flex: 1 }}
@@ -153,7 +163,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
                     <Tooltip title={`Copy {{ ${v.key} }}`}>
                       <IconButton size="small" onClick={() => navigator.clipboard?.writeText(`{{ ${v.key} }}`)}><ContentCopyIcon fontSize="small" /></IconButton>
                     </Tooltip>
-                    <IconButton size="small" color="error" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== i) })}>
+                    <IconButton size="small" color="error" onClick={() => setDraft({ ...draft, variables: draft.variables.filter((_, j) => j !== index) })}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Stack>

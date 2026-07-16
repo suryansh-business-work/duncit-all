@@ -2,9 +2,10 @@
 
 /** Opens a print window for the given HTML. Returns false if the popup is blocked. */
 export function printHtml(html: string): boolean {
-  const win = window.open('', '_blank');
+  const win = globalThis.open('', '_blank');
   if (!win) return false;
-  win.document.write(html);
+  // `document.write` is deprecated (Sonar S1874); write into the popup's body instead.
+  win.document.body.innerHTML = html;
   win.document.close();
   win.focus();
   win.print();

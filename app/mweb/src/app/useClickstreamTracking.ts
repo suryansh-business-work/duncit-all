@@ -48,7 +48,7 @@ function describeTarget(target: Element | null) {
 
 function metadataJson(extra: Record<string, unknown>) {
   return JSON.stringify({
-    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    viewport: `${globalThis.window.innerWidth}x${globalThis.window.innerHeight}`,
     referrer: document.referrer || '',
     ...extra,
   });
@@ -65,7 +65,7 @@ export function useClickstreamTracking({ enabled, path, superCategory }: Args) {
           event_type: eventType,
           client_event_id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
           path,
-          route: window.location.pathname,
+          route: globalThis.window.location.pathname,
           title: document.title,
           super_category_slug: superCategory || null,
           metadata_json: metadataJson(extra),

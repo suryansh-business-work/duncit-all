@@ -54,7 +54,7 @@ async function adminEmails(): Promise<string[]> {
     'metadata.status': 'ACTIVE',
     'auth.email': { $ne: null },
   }).select('auth.email');
-  return admins.map((u) => (u as any).auth?.email).filter(Boolean);
+  return admins.map((u) => u.auth?.email).filter((email): email is string => Boolean(email));
 }
 
 export const interviewService = {

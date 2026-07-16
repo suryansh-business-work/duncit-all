@@ -3,7 +3,7 @@ import type { DuncitUser } from './types';
 const DEFAULT_STORAGE_KEY = 'duncit_user';
 
 export function readCachedUser(storageKey = DEFAULT_STORAGE_KEY): DuncitUser | null {
-  if (typeof globalThis.window === 'undefined') return null;
+  if (globalThis.window === undefined) return null;
   try {
     const raw = globalThis.localStorage.getItem(storageKey);
     if (!raw) return null;
@@ -21,7 +21,7 @@ export function readCachedUser(storageKey = DEFAULT_STORAGE_KEY): DuncitUser | n
 }
 
 export function writeCachedUser(user: DuncitUser | null, storageKey = DEFAULT_STORAGE_KEY): void {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
     if (user === null) {
       globalThis.localStorage.removeItem(storageKey);
@@ -37,7 +37,7 @@ export function writeCachedUser(user: DuncitUser | null, storageKey = DEFAULT_ST
 // similar preferences — the user can re-pick them after signing back in. The
 // goal of this helper is to leave no auth, no session, no cache behind.
 export function clearAllStorages(): void {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
     globalThis.localStorage.clear();
   } catch {

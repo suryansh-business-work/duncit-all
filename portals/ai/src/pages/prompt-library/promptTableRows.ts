@@ -3,6 +3,9 @@ import type { AiPrompt } from './queries';
 
 type FieldKind = 'string' | 'number' | 'boolean' | 'date';
 
+/** Scalar column values — never an object, so safe to stringify/compare. */
+type CellValue = string | number | boolean | null | undefined;
+
 /**
  * The server has no aiPromptsTable(query: TableQueryInput) yet — only the
  * full-list aiPrompts(filter) query (search applied server-side). Until that
@@ -18,12 +21,12 @@ const FIELD_KINDS: Record<string, FieldKind> = {
   created_at: 'date',
 };
 
-function rawValue(prompt: AiPrompt, field: string): unknown {
-  return (prompt as unknown as Record<string, unknown>)[field];
+function rawValue(prompt: AiPrompt, field: string): CellValue {
+  return (prompt as unknown as Record<string, CellValue>)[field];
 }
 
 /** Numeric stand-in for range comparisons (plain number, or date → epoch ms). */
-function toNumber(value: unknown, kind: FieldKind): number {
+function toNumber(value: CellValue, kind: FieldKind): number {
   if (kind === 'date') {
     return value ? new Date(String(value)).getTime() : Number.NaN;
   }

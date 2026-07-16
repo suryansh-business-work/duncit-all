@@ -10,6 +10,7 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { RequestWithdrawalDocument } from '@/graphql/wallet';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   blankWithdrawValues,
   buildWithdrawInput,
@@ -182,7 +183,7 @@ export function WithdrawDialog({ open, maxAmount, currency, onClose, onDone }: R
                   role="button"
                   aria-label="Request withdrawal"
                   aria-disabled={busy}
-                  onPress={busy ? undefined : () => void submit()}
+                  onPress={busy ? undefined : () => fireAndForget(submit())}
                   flex={1}
                   height={46}
                   alignItems="center"

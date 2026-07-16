@@ -1,3 +1,10 @@
+// Self-hosted Nunito (the shared portal theme font) — replaces the per-portal
+// Google Fonts <link>, so every console that mounts through the shell ships the
+// font from its own origin (no third-party request, no SRI concern).
+import '@fontsource/nunito/400.css';
+import '@fontsource/nunito/600.css';
+import '@fontsource/nunito/700.css';
+import '@fontsource/nunito/800.css';
 import React, { type ReactNode } from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';

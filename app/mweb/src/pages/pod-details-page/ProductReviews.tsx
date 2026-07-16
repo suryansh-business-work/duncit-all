@@ -83,6 +83,8 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
     }
   };
 
+  const removeImage = (url: string) => setImages((prev) => prev.filter((u) => u !== url));
+
   const vote = (id: string, value: number, current: number) =>
     voteReview({ variables: { review_id: id, vote: current === value ? 0 : value } })
       .then(() => refetch())
@@ -130,7 +132,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
                 />
                 <IconButton
                   size="small"
-                  onClick={() => setImages((prev) => prev.filter((u) => u !== url))}
+                  onClick={() => removeImage(url)}
                   sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'background.paper', boxShadow: 1 }}
                 >
                   <CloseIcon sx={{ fontSize: 14 }} />

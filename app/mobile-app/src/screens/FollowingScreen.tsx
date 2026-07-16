@@ -75,13 +75,13 @@ export function FollowingScreen() {
         isLoading={feed.isLoading}
         isEmpty={feed.posts.length === 0}
         emptyText={EMPTY_TEXT[tab]}
-        onRefresh={() => void feed.refetch()}
+        onRefresh={() => fireAndForget(feed.refetch())}
         data={feed.posts}
         keyExtractor={(post) => post.id}
         renderItem={(post) => (
           <FeedPostCard
             post={post}
-            onToggleLike={() => void feed.toggleLike(post)}
+            onToggleLike={() => fireAndForget(feed.toggleLike(post))}
             onOpenComments={() => setViewerPostId(post.id)}
             onOpenAuthor={() => openAuthor(post)}
           />

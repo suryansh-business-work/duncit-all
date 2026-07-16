@@ -12,9 +12,8 @@ interface Zone {
 
 /** Compact per-locality club count for the area rows, e.g. "3 clubs" / "No clubs yet". */
 const zoneClubLabel = (count?: number | null) => {
-  const n = count ?? 0;
-  if (n <= 0) return 'No clubs yet';
-  return `${n} club${n === 1 ? '' : 's'}`;
+  if (count === null || count === undefined || count <= 0) return 'No clubs yet';
+  return `${count} club${count === 1 ? '' : 's'}`;
 };
 
 interface Props {

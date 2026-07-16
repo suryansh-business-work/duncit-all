@@ -225,13 +225,21 @@ export async function runTableQuery<TDoc>(
 /* that never touch a Model. JS sort is stable, so it already gives the  */
 /* deterministic order the mongo `_id` tiebreaker exists for.            */
 
+/** Coerce a value to a string for comparison/search. Objects serialise via JSON
+ * so they never collapse to the ambiguous '[object Object]' (S6551). */
+const toText = (value: unknown): string => {
+  if (typeof value === 'object' && value !== null) return JSON.stringify(value);
+  const primitive = value as string | number | boolean | null | undefined;
+  return String(primitive ?? '');
+};
+
 /** number/date-aware ordering; everything else falls back to localeCompare. */
 function compareTyped(raw: unknown, target: Coerced, type: TableFieldType): number {
   if (type === 'number') return Number(raw) - (target as number);
   if (type === 'date') {
     return new Date(raw as string | number | Date).getTime() - (target as Date).getTime();
   }
-  return String(raw ?? '').localeCompare(target as string);
+  return toText(raw).localeCompare(target as string);
 }
 
 function matchesOps(raw: unknown, ops: Record<string, unknown>, type: TableFieldType): boolean {
@@ -246,7 +254,7 @@ function matchesOps(raw: unknown, ops: Record<string, unknown>, type: TableField
 
 /** Evaluates a condition produced by filterCondition() against a row value. */
 function matchesCondition(raw: unknown, cond: unknown, type: TableFieldType): boolean {
-  if (cond instanceof RegExp) return cond.test(String(raw ?? ''));
+  if (cond instanceof RegExp) return cond.test(toText(raw));
   if (typeof cond === 'boolean') return raw === cond;
   if (isOpObject(cond)) return matchesOps(raw, cond, type);
   return compareTyped(raw, cond as Coerced, type) === 0; // eq
@@ -270,7 +278,7 @@ function rowMatchesFilters(
 function compareValues(a: unknown, b: unknown): number {
   if (typeof a === 'number' && typeof b === 'number') return a - b;
   if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
-  return String(a ?? '').localeCompare(String(b ?? ''));
+  return toText(a).localeCompare(toText(b));
 }
 
 function compareRows(
@@ -296,7 +304,7 @@ export function applyTableQueryInMemory<T extends Record<string, unknown>>(
   if (search && config.searchFields.length > 0) {
     const rx = escapedSearchRegex(search);
     filtered = filtered.filter((row) =>
-      config.searchFields.some((field) => rx.test(String(row[field] ?? '')))
+      config.searchFields.some((field) => rx.test(toText(row[field])))
     );
   }
   const sort = resolveSort(q, config);

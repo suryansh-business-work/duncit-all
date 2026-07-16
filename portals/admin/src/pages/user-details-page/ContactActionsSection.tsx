@@ -53,8 +53,10 @@ const renderNotes = (a: ContactActionRow) => (
 
 const notesValue = (a: ContactActionRow) => [a.subject, a.notes].filter(Boolean).join(' — ');
 
-const whenValue = (a: ContactActionRow) =>
-  `${new Date(a.created_at).toLocaleString()}${a.duration_seconds ? ` (${a.duration_seconds}s)` : ''}`;
+const whenValue = (a: ContactActionRow) => {
+  const dur = a.duration_seconds ? ` (${a.duration_seconds}s)` : '';
+  return `${new Date(a.created_at).toLocaleString()}${dur}`;
+};
 
 export default function ContactActionsSection({ userId, refreshToken }: Readonly<Props>) {
   const client = useApolloClient();

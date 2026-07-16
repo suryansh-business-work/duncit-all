@@ -14,6 +14,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Profile — identity header, links/pet panels, host/venue shortcuts and the
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
@@ -33,7 +34,7 @@ export function ProfileScreen() {
 
   const body = me ? (
     <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
-      <ProfileHeader me={me} onChanged={() => void refetch()} />
+      <ProfileHeader me={me} onChanged={() => fireAndForget(refetch())} />
       <ProfilePanels
         me={me}
         onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}
@@ -42,8 +43,8 @@ export function ProfileScreen() {
       <ProfilePostsGrid
         posts={posts}
         meId={me.user_id}
-        onChanged={() => void refetch()}
-        onAddPost={() => void addPost()}
+        onChanged={() => fireAndForget(refetch())}
+        onAddPost={() => fireAndForget(addPost())}
         uploading={uploading}
       />
     </ScrollView>

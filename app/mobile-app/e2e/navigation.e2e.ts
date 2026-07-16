@@ -32,6 +32,7 @@ describe('Bottom-tab navigation', () => {
     await waitFor(element(by.id('app-header')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('app-header'))).toBeVisible();
   });
 
   it('Scenario 3: opens and closes the account drawer', async () => {

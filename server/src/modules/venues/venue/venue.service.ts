@@ -586,7 +586,8 @@ export const venueService = {
   async getPublicById(venueId: string) {
     if (!Types.ObjectId.isValid(venueId)) return null;
     const v = await VenueModel.findById(venueId);
-    if (!v || v.status !== 'APPROVED' || v.is_active === false) return null;
+    if (!v) return null;
+    if (v.status !== 'APPROVED' || v.is_active === false) return null;
     return toPub(v);
   },
   /** Server-side table page (search/filter/sort/paginate) for the admin/
@@ -698,14 +699,14 @@ export const venueService = {
   async updateApproved(userId: string, venueId: string, input: any) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
     const v = await VenueModel.findById(venueId);
-    if (!v) fail('NOT_FOUND', 'Venue not found');
-    if (String(v!.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
-    if (v!.status !== 'APPROVED') {
+    if (!v) return fail('NOT_FOUND', 'Venue not found');
+    if (String(v.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
+    if (v.status !== 'APPROVED') {
       fail('BAD_REQUEST', 'Only approved venues can be edited here');
     }
-    applyApprovedVenueInput(v!, input);
-    await v!.save();
-    return toPub(v!);
+    applyApprovedVenueInput(v, input);
+    await v.save();
+    return toPub(v);
   },
 
   async approve(id: string, notes?: string, tags?: string[]) {
@@ -818,22 +819,22 @@ export const venueService = {
   async updateSettings(userId: string, isAdmin: boolean, venueId: string, input: any) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
     const v = await VenueModel.findById(venueId);
-    if (!v) fail('NOT_FOUND', 'Venue not found');
-    if (!isAdmin && String(v!.owner_user_id) !== String(userId)) {
+    if (!v) return fail('NOT_FOUND', 'Venue not found');
+    if (!isAdmin && String(v.owner_user_id) !== String(userId)) {
       fail('FORBIDDEN', 'Not your venue');
     }
-    v!.settings = normalizeSettingsInput(v!.settings, input) as IVenueSettings;
-    v!.markModified('settings');
-    await v!.save();
+    v.settings = normalizeSettingsInput(v.settings, input) as IVenueSettings;
+    v.markModified('settings');
+    await v.save();
     // Don't make the owner wait for the daily sweep: top up straight away when
     // auto-extend is on. Best-effort — the scheduled job is the fallback.
-    if (v!.settings.auto_extend?.enabled) {
-      const venueDocId = String(v!._id);
+    if (v.settings.auto_extend?.enabled) {
+      const venueDocId = String(v._id);
       import('@modules/venues/autoExtend/autoExtend.service')
         .then(({ autoExtendService }) => autoExtendService.runForVenue(venueDocId))
         .catch(() => undefined);
     }
-    return toPub(v!);
+    return toPub(v);
   },
 
   async setActive(venueId: string, active: boolean) {

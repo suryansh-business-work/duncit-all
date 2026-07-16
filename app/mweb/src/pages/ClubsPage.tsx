@@ -167,7 +167,7 @@ export default function ClubsPage({
             type="button"
             underline="always"
             sx={{ fontWeight: 800, verticalAlign: 'baseline' }}
-            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
+            onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
           >
             Change your location here
           </Link>
@@ -214,7 +214,7 @@ export default function ClubsPage({
           </Typography>
           <Button
             variant="contained"
-            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
+            onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
             sx={{ borderRadius: 999, fontWeight: 800 }}
           >
             Reset Location

@@ -14,8 +14,8 @@ interface Payload {
 /** Imperative notification — replaces window.alert() across the portals. */
 export function notify(message: string, severity: NotifySeverity = 'info', duration = 4000) {
   /* v8 ignore next -- SSR guard, unreachable in jsdom */
-  if (typeof globalThis.window === 'undefined') return;
-  window.dispatchEvent(
+  if (globalThis.window === undefined) return;
+  globalThis.window.dispatchEvent(
     new CustomEvent<Payload>(EVENT, { detail: { message, severity, duration } })
   );
 }
@@ -49,8 +49,8 @@ export function NotifyHost() {
       if (!detail?.message) return;
       setItem(detail);
     };
-    window.addEventListener(EVENT, handler);
-    return () => window.removeEventListener(EVENT, handler);
+    globalThis.window.addEventListener(EVENT, handler);
+    return () => globalThis.window.removeEventListener(EVENT, handler);
   }, []);
 
   return (

@@ -17,6 +17,10 @@ export const clubAdminResolvers = {
       const user = requireAuth(ctx);
       return clubAdminService.listAdminClubsPage(user.id, args.filter ?? {});
     },
+    myAdminClubsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return clubAdminService.clubsInfoTable(user.id, args.query);
+    },
     clubAdminDashboard: (
       _p: unknown,
       args: { from?: string | null; to?: string | null },

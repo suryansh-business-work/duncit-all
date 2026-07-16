@@ -101,6 +101,27 @@ export const adsTypeDefs = gql`
     target_audience: String
   }
 
+  "Advertiser KPIs for the Ads portal dashboard. Counts bucket every ad by its DERIVED status."
+  type AdsDashboard {
+    total: Int!
+    pending: Int!
+    "Approved but not started yet."
+    approved: Int!
+    live: Int!
+    rejected: Int!
+    expired: Int!
+    "Sum of quoted costs across every request."
+    total_estimated_cost: Float!
+    "Sum of frozen approved costs across all approved ads (incl. live + expired)."
+    total_approved_cost: Float!
+    "Sum of approved costs of the ads that are live right now."
+    live_spend: Float!
+    "Start of the soonest approved ad that has not gone live yet."
+    next_start_at: String
+    next_start_title: String
+    currency_symbol: String!
+  }
+
   "The lean shape the apps render in ad slots."
   type PublicAd {
     id: ID!
@@ -116,6 +137,8 @@ export const adsTypeDefs = gql`
     adPricing: AdPricing!
     "The signed-in advertiser's own requests (Ads portal)."
     myAdRequestsTable(query: TableQueryInput): AdRequestTablePage!
+    "The signed-in advertiser's dashboard KPIs (Ads portal home)."
+    myAdsDashboard: AdsDashboard!
     "All requests, for the Marketing approval queue."
     adRequestsTable(query: TableQueryInput): AdRequestTablePage!
     "One request — owner or Marketing."

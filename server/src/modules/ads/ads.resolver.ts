@@ -18,6 +18,10 @@ export const adsResolvers = {
       const user = requireRole(ctx, ADS_SUBMIT);
       return adsService.myTable(user.id, args.query);
     },
+    myAdsDashboard: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADS_SUBMIT);
+      return adsService.myDashboard(user.id);
+    },
     adRequestsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, MARKETING_REVIEW);
       return adsService.table(args.query);

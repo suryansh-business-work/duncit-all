@@ -78,6 +78,37 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     total: Int!
   }
 
+  "Max-info per-club row for the Club Admin 'Your Clubs' table (myAdminClubsTable)."
+  type ClubAdminClubInfoRow {
+    id: ID!
+    club_name: String!
+    slug: String!
+    "First feature image of the club, for the table thumbnail."
+    cover_image_url: String
+    super_category: String
+    category: String
+    locality: String
+    "City the club operates in (resolved Location label)."
+    location_label: String
+    followers_count: Int!
+    total_pods: Int!
+    "Active pods dated now or later."
+    upcoming_pods: Int!
+    "Venues that auto-match the club (location + category)."
+    matched_venues_count: Int!
+    is_verified: Boolean!
+    is_active: Boolean!
+    created_at: String!
+  }
+
+  "Server-side table page for the shared table engine (myAdminClubsTable)."
+  type ClubAdminClubInfoTablePage {
+    rows: [ClubAdminClubInfoRow!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   "A host a Club Admin can assign to a pod (approved hosts only)."
   type ClubAdminHostOption {
     user_id: ID!
@@ -92,6 +123,8 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     clubAdminHostSearch(search: String): [ClubAdminHostOption!]!
     "Paginated + filtered 'Your Clubs' list for the signed-in Club Admin."
     myAdminClubsPage(filter: MyAdminClubsFilter): ClubAdminClubsPage!
+    "Max-info table page over the signed-in Club Admin's clubs ('Your Clubs' table)."
+    myAdminClubsTable(query: TableQueryInput): ClubAdminClubInfoTablePage!
     "Aggregated metrics for the signed-in Club Admin's clubs."
     clubAdminDashboard(from: String, to: String): ClubAdminDashboard!
     "Table page over the dashboard's computed per-club breakdown rows."

@@ -35,8 +35,4 @@ export const appConfig = {
       ],
     },
   ],
-  modules: [
-    { title: 'My Ads', description: 'Track your submitted ad requests, quotes and live status.', icon: 'campaign' },
-    { title: 'Create Ad', description: 'Submit a new ad with media, placement, schedule and a live cost estimate.', icon: 'image' },
-  ],
 } satisfies AppConfig;

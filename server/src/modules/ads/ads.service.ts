@@ -193,6 +193,48 @@ export const adsService = {
     return toPub(doc, pricing.currency_symbol);
   },
 
+  /**
+   * Advertiser dashboard KPIs, computed in-memory over the caller's own ads
+   * (advertiser volumes are small). Counts bucket every ad by its DERIVED
+   * status; "approved" therefore means approved-but-not-started.
+   */
+  async myDashboard(userId: string) {
+    const [pricing, docs] = await Promise.all([
+      getAdPricing(),
+      AdRequestModel.find({ submitted_by: new Types.ObjectId(userId) }),
+    ]);
+    const now = new Date();
+    const counts = { PENDING: 0, APPROVED: 0, LIVE: 0, REJECTED: 0, EXPIRED: 0 };
+    let totalEstimated = 0;
+    let totalApproved = 0;
+    let liveSpend = 0;
+    let next: IAdRequest | null = null;
+    for (const doc of docs) {
+      const status = deriveAdStatus(doc, now) as keyof typeof counts;
+      counts[status] += 1;
+      totalEstimated += doc.estimated_cost;
+      if (doc.status !== 'APPROVED') continue;
+      totalApproved += doc.approved_cost ?? 0;
+      if (status === 'LIVE') liveSpend += doc.approved_cost ?? 0;
+      // Derived APPROVED means the start is still in the future — keep the soonest.
+      if (status === 'APPROVED' && (!next || doc.start_at < next.start_at)) next = doc;
+    }
+    return {
+      total: docs.length,
+      pending: counts.PENDING,
+      approved: counts.APPROVED,
+      live: counts.LIVE,
+      rejected: counts.REJECTED,
+      expired: counts.EXPIRED,
+      total_estimated_cost: totalEstimated,
+      total_approved_cost: totalApproved,
+      live_spend: liveSpend,
+      next_start_at: next ? next.start_at.toISOString() : null,
+      next_start_title: next ? next.ad_title : null,
+      currency_symbol: pricing.currency_symbol,
+    };
+  },
+
   async myTable(userId: string, input?: TableQueryInput) {
     const pricing = await getAdPricing();
     const { docs, total, page, page_size } = await runTableQuery<IAdRequest>(

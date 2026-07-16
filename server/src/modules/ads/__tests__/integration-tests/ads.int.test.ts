@@ -313,6 +313,96 @@ describe('ads integration', () => {
     });
   });
 
+  describe('myAdsDashboard', () => {
+    it('returns zeros and no next start for a brand-new advertiser', async () => {
+      // Another advertiser's ads must never leak into the caller's dashboard.
+      await AdRequestModel.create(makeAdDoc());
+
+      const dash = await adsService.myDashboard(String(new Types.ObjectId()));
+      expect(dash).toEqual({
+        total: 0,
+        pending: 0,
+        approved: 0,
+        live: 0,
+        rejected: 0,
+        expired: 0,
+        total_estimated_cost: 0,
+        total_approved_cost: 0,
+        live_spend: 0,
+        next_start_at: null,
+        next_start_title: null,
+        currency_symbol: '₹',
+      });
+    });
+
+    it('buckets every ad by derived status and sums the right costs', async () => {
+      const me = new Types.ObjectId();
+      const mine = (over: Record<string, unknown>) => makeAdDoc({ submitted_by: me, ...over });
+      const soonestStart = new Date(Date.now() + DAY);
+
+      await AdRequestModel.create([
+        mine({ status: 'PENDING', estimated_cost: 100 }),
+        mine({ status: 'REJECTED', estimated_cost: 200 }),
+        // Approved-but-not-started: the LATER one must lose the next-start race.
+        mine({
+          ad_title: 'Later launch',
+          estimated_cost: 250,
+          approved_cost: 300,
+          start_at: new Date(Date.now() + 2 * DAY),
+          end_at: new Date(Date.now() + 5 * DAY),
+        }),
+        mine({
+          ad_title: 'Soonest launch',
+          estimated_cost: 350,
+          approved_cost: 400,
+          start_at: soonestStart,
+          end_at: new Date(Date.now() + 3 * DAY),
+        }),
+        // Two currently-live ads (makeAdDoc's default window covers "now").
+        mine({ estimated_cost: 450, approved_cost: 500 }),
+        mine({ estimated_cost: 550, approved_cost: 600 }),
+        // Expired.
+        mine({
+          estimated_cost: 650,
+          approved_cost: 700,
+          start_at: new Date(Date.now() - 5 * DAY),
+          end_at: new Date(Date.now() - 2 * DAY),
+        }),
+        // A stranger's live ad — out of scope.
+        makeAdDoc({ estimated_cost: 9999, approved_cost: 9999 }),
+      ]);
+
+      const dash = await adsService.myDashboard(String(me));
+      expect(dash).toEqual({
+        total: 7,
+        pending: 1,
+        approved: 2,
+        live: 2,
+        rejected: 1,
+        expired: 1,
+        total_estimated_cost: 2550,
+        // Every approved ad, including live + expired: 300+400+500+600+700.
+        total_approved_cost: 2500,
+        live_spend: 1100,
+        next_start_at: soonestStart.toISOString(),
+        next_start_title: 'Soonest launch',
+        currency_symbol: '₹',
+      });
+    });
+
+    it('treats an approved ad with no frozen cost as zero spend and reads the live currency symbol', async () => {
+      const me = new Types.ObjectId();
+      await AdRequestModel.create(makeAdDoc({ submitted_by: me, approved_cost: null }));
+      await adsService.updatePricing({ currency_symbol: '$' });
+
+      const dash = await adsService.myDashboard(String(me));
+      expect(dash.live).toBe(1);
+      expect(dash.total_approved_cost).toBe(0);
+      expect(dash.live_spend).toBe(0);
+      expect(dash.currency_symbol).toBe('$');
+    });
+  });
+
   describe('byId', () => {
     it('allows the owner and reviewers, forbids strangers', async () => {
       const owner = String(new Types.ObjectId());

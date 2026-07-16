@@ -10,6 +10,8 @@ import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { UserModel } from '@modules/access/user/user.model';
 import { HostModel } from '@modules/venues/host/host.model';
+import { venueService } from '@modules/venues/venue/venue.service';
+import { LocationModel } from '@modules/platform/location/location.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import {
   applyTableQueryInMemory,
@@ -138,6 +140,123 @@ const CLUB_ADMIN_CLUB_ROW_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { club_name: 1 },
 };
+
+/** Allowlists for the shared table engine over the COMPUTED max-info club rows
+ * (myAdminClubsTable — DUNCIT TABLE CONTRACT v1). Rows are built in memory by
+ * buildClubInfoRows(), so field keys map to themselves. */
+const MY_ADMIN_CLUBS_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['club_name', 'slug'],
+  sortFields: {
+    club_name: 'club_name',
+    super_category: 'super_category',
+    category: 'category',
+    locality: 'locality',
+    location_label: 'location_label',
+    followers_count: 'followers_count',
+    total_pods: 'total_pods',
+    upcoming_pods: 'upcoming_pods',
+    matched_venues_count: 'matched_venues_count',
+    is_verified: 'is_verified',
+    is_active: 'is_active',
+    created_at: 'created_at',
+  },
+  filterFields: {
+    club_name: { type: 'string' },
+    super_category: { type: 'string' },
+    category: { type: 'string' },
+    locality: { type: 'string' },
+    followers_count: { type: 'number' },
+    total_pods: { type: 'number' },
+    upcoming_pods: { type: 'number' },
+    matched_venues_count: { type: 'number' },
+    is_verified: { type: 'boolean' },
+    is_active: { type: 'boolean' },
+    created_at: { type: 'date' },
+  },
+  defaultSort: { club_name: 1 },
+};
+
+const firstImageUrl = (media: Array<{ url?: string; type?: string }> = []) =>
+  media.find((m) => m.type === 'IMAGE')?.url ?? media[0]?.url ?? null;
+
+const nameOf = (names: Map<string, string>, id: unknown) =>
+  id ? (names.get(String(id)) ?? null) : null;
+
+/** Per-club total/upcoming pod tallies (non-deleted pods; upcoming = active and
+ * dated now or later, matching the dashboard's definition). */
+function tallyClubPods(pods: any[]) {
+  const now = Date.now();
+  const tallies = new Map<string, { total: number; upcoming: number }>();
+  for (const p of pods) {
+    const key = String(p.club_id);
+    const t = tallies.get(key) ?? { total: 0, upcoming: 0 };
+    t.total += 1;
+    if (p.is_active && +new Date(p.pod_date_time) >= now) t.upcoming += 1;
+    tallies.set(key, t);
+  }
+  return tallies;
+}
+
+/** Batch lookups + row assembly for the max-info "Your Clubs" table. Category /
+ * location names resolve in one query each; venue counts reuse the single
+ * source of truth for the club↔venue auto-match. */
+async function buildClubInfoRows(clubs: any[]) {
+  if (clubs.length === 0) return [];
+  const clubOids = clubs.map((c) => c._id);
+  const categoryIds = clubs.flatMap((c) => [c.category_id, c.super_category_id]).filter(Boolean);
+  const locationIds = clubs.map((c) => c.location_id).filter(Boolean);
+  const [categories, locations, pods, followerRows, venueCounts] = await Promise.all([
+    CategoryModel.find({ _id: { $in: categoryIds } }).select('name').lean(),
+    LocationModel.find({ _id: { $in: locationIds } }).select('location_name city').lean(),
+    PodModel.find({ club_id: { $in: clubOids }, deleted_at: null })
+      .select('club_id pod_date_time is_active')
+      .lean(),
+    ClubFollowerModel.aggregate([
+      { $match: { club_id: { $in: clubOids } } },
+      { $group: { _id: '$club_id', count: { $sum: 1 } } },
+    ]),
+    Promise.all(
+      clubs.map((c) =>
+        venueService.countMatchingForClub({
+          location_id: c.location_id ? String(c.location_id) : null,
+          locality: c.locality ?? null,
+          super_category_id: c.super_category_id ? String(c.super_category_id) : null,
+          category_id: c.category_id ? String(c.category_id) : null,
+        })
+      )
+    ),
+  ]);
+  const categoryNames = new Map<string, string>(
+    (categories as any[]).map((c) => [String(c._id), c.name])
+  );
+  const locationLabels = new Map<string, string>(
+    (locations as any[]).map((l) => [String(l._id), l.city || l.location_name])
+  );
+  const followersByClub = new Map<string, number>(
+    (followerRows as any[]).map((r) => [String(r._id), r.count])
+  );
+  const podTallies = tallyClubPods(pods as any[]);
+  return clubs.map((c, i) => {
+    const tally = podTallies.get(String(c._id));
+    return {
+      id: String(c._id),
+      club_name: c.club_name,
+      slug: c.club_id,
+      cover_image_url: firstImageUrl(c.club_feature_images_and_videos),
+      super_category: nameOf(categoryNames, c.super_category_id),
+      category: nameOf(categoryNames, c.category_id),
+      locality: c.locality ?? '',
+      location_label: nameOf(locationLabels, c.location_id),
+      followers_count: followersByClub.get(String(c._id)) ?? 0,
+      total_pods: tally?.total ?? 0,
+      upcoming_pods: tally?.upcoming ?? 0,
+      matched_venues_count: venueCounts[i] ?? 0,
+      is_verified: !!c.is_verified,
+      is_active: !!c.is_active,
+      created_at: c.created_at?.toISOString?.() ?? '',
+    };
+  });
+}
 
 const EMPTY_KPIS = {
   assigned_clubs: 0,
@@ -459,5 +578,17 @@ export const clubAdminService = {
   ) {
     const { clubs } = await this.dashboard(userId, from, to);
     return applyTableQueryInMemory(clubs, input, CLUB_ADMIN_CLUB_ROW_TABLE_CONFIG);
+  },
+
+  /** Max-info table page over the caller's assigned clubs for the Partner
+   * "Your Clubs" table (myAdminClubsTable). Rows are computed in memory then
+   * searched/filtered/sorted/paginated via the shared engine — the row set is
+   * pre-scoped to admin_user_ids, so a client query can never widen it. */
+  async clubsInfoTable(userId: string, input?: TableQueryInput | null) {
+    const clubs = Types.ObjectId.isValid(userId)
+      ? await ClubModel.find({ admin_user_ids: new Types.ObjectId(userId) }).lean()
+      : [];
+    const rows = await buildClubInfoRows(clubs as any[]);
+    return applyTableQueryInMemory(rows, input, MY_ADMIN_CLUBS_TABLE_CONFIG);
   },
 };

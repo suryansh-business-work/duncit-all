@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { type PodFormConfig } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { useFeatureFlag } from '@duncit/app-settings';
@@ -60,19 +60,12 @@ export default function PodsPage() {
     },
   });
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters = clubFilter
-        ? [...q.filters, { field: 'club_id', op: 'eq' as const, value: clubFilter }]
-        : q.filters;
-      const { data } = await client.query({
-        query: PODS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.podsTable.rows as PodRow[], total: data.podsTable.total as number };
-    },
-    [client, clubFilter],
+  const fetchRows = useApolloTableFetch<PodRow>(
+    client,
+    PODS_TABLE,
+    'podsTable',
+    { extraFilters: clubFilter ? [{ field: 'club_id', op: 'eq', value: clubFilter }] : undefined },
+    [clubFilter],
   );
 
   // The club select lives outside the table, so a change must trigger a reload.

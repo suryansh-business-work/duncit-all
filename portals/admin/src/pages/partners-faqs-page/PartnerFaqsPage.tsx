@@ -1,9 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HandshakeIcon from '@mui/icons-material/Handshake';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import type { FaqRow } from '../../components/FaqsTableBase';
 import { CREATE_PARTNER_FAQ, DELETE_PARTNER_FAQ, PARTNER_FAQS_TABLE, UPDATE_PARTNER_FAQ } from './queries';
 import PartnerFaqsTable from './PartnerFaqsTable';
@@ -24,18 +24,9 @@ export default function PartnerFaqsPage() {
   const saving = createState.loading || updateState.loading;
 
   // This page manages Partner FAQs only — pin the audience alongside the table's filters.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters = [...q.filters, { field: 'audience', op: 'eq' as const, value: 'PARTNERS' }];
-      const { data } = await client.query({
-        query: PARTNER_FAQS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.faqsTable.rows as FaqRow[], total: data.faqsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<FaqRow>(client, PARTNER_FAQS_TABLE, 'faqsTable', {
+    extraFilters: [{ field: 'audience', op: 'eq', value: 'PARTNERS' }],
+  });
 
   const openNew = () => {
     setEditing({});

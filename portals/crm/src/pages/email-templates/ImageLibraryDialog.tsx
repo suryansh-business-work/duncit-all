@@ -18,9 +18,8 @@ import UploadIcon from '@mui/icons-material/Upload';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { UPLOAD_IMAGE } from '../../api/crm.gql';
+import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { ADD_TEMPLATE_IMAGE, REMOVE_TEMPLATE_IMAGE, type EmailAsset } from '../../api/emailTemplates.gql';
-import { fileToBase64 } from '../../utils/fileToBase64';
 import { parseApiError } from '@duncit/utils';
 
 interface Props {
@@ -40,7 +39,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
-  const [upload] = useMutation(UPLOAD_IMAGE);
+  const { upload } = useImagekitBase64Upload();
   const [addImage] = useMutation(ADD_TEMPLATE_IMAGE);
   const [removeImage] = useMutation(REMOVE_TEMPLATE_IMAGE);
 
@@ -50,10 +49,7 @@ export default function ImageLibraryDialog({ open, templateId, images, onClose, 
     if (file.size > 8 * 1024 * 1024) { setError('Max 8MB. Compress and try again.'); return; }
     setBusy(true);
     try {
-      const fileBase64 = await fileToBase64(file);
-      const res = await upload({ variables: { fileBase64, fileName: file.name, mimeType: file.type || 'image/png', folder: 'crm/email-templates' } });
-      const url = res.data?.uploadImageToImagekit?.url ?? '';
-      if (!url) throw new Error('Upload failed');
+      const { url } = await upload(file, { folder: 'crm/email-templates', fallbackMimeType: 'image/png' });
       // Persist immediately to the template's library.
       const saved = await addImage({ variables: { id: templateId, image: { url, name: file.name } } });
       onChangeImages(saved.data?.addCrmEmailTemplateImage?.images ?? [...images, { url, name: file.name }]);

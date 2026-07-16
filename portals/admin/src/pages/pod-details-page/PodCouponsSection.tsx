@@ -1,9 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import CouponsTable from '../coupons-page/CouponsTable';
 import CouponFormDialog from '../coupons-page/CouponFormDialog';
 import { COUPONS_FOR_POD_TABLE, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';
@@ -24,19 +24,12 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
   const [editing, setEditing] = useState<CouponRow | null>(null);
   const confirm = useConfirm();
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: COUPONS_FOR_POD_TABLE,
-        variables: { pod_id: podId, ...tableQueryToGql(q) },
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.couponsForPodTable.rows as CouponRow[],
-        total: data.couponsForPodTable.total as number,
-      };
-    },
-    [client, podId],
+  const fetchRows = useApolloTableFetch<CouponRow>(
+    client,
+    COUPONS_FOR_POD_TABLE,
+    'couponsForPodTable',
+    { extraVariables: { pod_id: podId } },
+    [podId],
   );
 
   const onDelete = async (c: CouponRow) => {

@@ -9,12 +9,12 @@ import {
   Checkbox,
   CircularProgress,
   FormControlLabel,
-  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { notifySuccess } from '@duncit/dialogs';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { format, parse } from 'date-fns';
 import MeetingHolidaysCard from './MeetingHolidaysCard';
@@ -73,7 +73,6 @@ export default function MeetingAvailabilityPage() {
   const [endTime, setEndTime] = useState('19:00');
   const [slotMinutes, setSlotMinutes] = useState('30');
   const [horizonDays, setHorizonDays] = useState('7');
-  const [toast, setToast] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const av = data?.meetingAvailability;
@@ -103,7 +102,7 @@ export default function MeetingAvailabilityPage() {
           },
         },
       });
-      setToast('Availability saved');
+      notifySuccess('Availability saved');
     } catch (e: any) {
       setSaveError(e?.message ?? 'Could not save');
     }
@@ -186,8 +185,6 @@ export default function MeetingAvailabilityPage() {
       </Card>
 
       <MeetingHolidaysCard />
-
-      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast(null)} message={toast ?? ''} />
     </Stack>
   );
 }

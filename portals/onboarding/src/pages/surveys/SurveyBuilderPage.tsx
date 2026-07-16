@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { BackButton } from '@duncit/ui';
 import {
   CREATE_SURVEY, SURVEY_BY_ID, UPDATE_SURVEY,
   type QuestionType, type Survey, type SurveyKind,
@@ -97,7 +97,7 @@ export default function SurveyBuilderPage() {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => navigate('/surveys')}>Back to Surveys</Button>
+        <BackButton onClick={() => navigate('/surveys')}>Back to Surveys</BackButton>
       </Box>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
         <Box sx={{ flex: 1 }}>

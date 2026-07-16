@@ -23,7 +23,7 @@ import {
   type CrmReminder,
 } from '../../api/reminders.gql';
 import { LeadDetailCard } from '../LeadDetailCard';
-import ConfirmDialog from '../ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import ReminderFormDialog from './ReminderFormDialog';
 
@@ -101,6 +101,8 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
         title="Delete reminder"
         message={`Delete "${removing?.title ?? ''}"?`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={async () => { if (removing) { await deleteMut({ variables: { id: removing.id } }); } setRemoving(null); }}
         onClose={() => setRemoving(null)}

@@ -4,7 +4,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link as RouterLink } from 'react-router-dom';
 import { Chip, IconButton, Link, Tooltip, Typography } from '@mui/material';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type HostCategoryRow, type HostRow } from './queries';
@@ -88,9 +88,6 @@ const renderCommission = (h: HostRow) => (
   <Chip size="small" variant="outlined" label={commissionLabel(h.host_commission_pct)} />
 );
 
-const submittedValue = (h: HostRow) =>
-  h.submitted_at ? new Date(h.submitted_at).toLocaleDateString() : '—';
-
 export default function HostsTable({
   fetchRows,
   refetchRef,
@@ -134,7 +131,7 @@ export default function HostsTable({
       { field: 'status', headerName: 'Status', width: 125, filter: { type: 'select', options: STATUS_OPTIONS }, cellRenderer: renderStatus, valueGetter: (h) => h.status },
       { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
       { field: 'commission', headerName: 'Commission', sortable: false, width: 130, cellRenderer: renderCommission, valueGetter: (h) => commissionLabel(h.host_commission_pct) },
-      { field: 'submitted_at', headerName: 'Submitted', width: 125, filter: { type: 'date' }, valueGetter: submittedValue },
+      dateColumn<HostRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125, formatDate: (d) => d.toLocaleDateString() }),
       { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 190, cellRenderer: renderActions },
     ];

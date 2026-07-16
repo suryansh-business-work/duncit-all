@@ -4,9 +4,8 @@ import { Chip, IconButton, Link, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {
   DuncitTable,
-  tableQueryToGql,
+  useApolloTableFetch,
   type DuncitColumn,
-  type TableFetch,
   type TableQueryState,
 } from '@duncit/table';
 import { notifyError } from '@duncit/dialogs';
@@ -62,20 +61,16 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
   const refetchRef = useRef<(() => void) | null>(null);
   const [deleteAction] = useMutation(DELETE_USER_CONTACT_ACTION);
 
+  const fetchTable = useApolloTableFetch<ContactActionRow>(
+    client,
+    USER_CONTACT_ACTIONS_TABLE,
+    'userContactActionsTable',
+    { extraVariables: { user_id: userId } },
+    [userId],
+  );
   const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      if (!userId) return { rows: [], total: 0 };
-      const { data } = await client.query({
-        query: USER_CONTACT_ACTIONS_TABLE,
-        variables: { user_id: userId, ...tableQueryToGql(q) },
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.userContactActionsTable.rows as ContactActionRow[],
-        total: data.userContactActionsTable.total as number,
-      };
-    },
-    [client, userId],
+    async (q: TableQueryState) => (userId ? fetchTable(q) : { rows: [], total: 0 }),
+    [userId, fetchTable],
   );
 
   // Parent bumps refreshToken after logging a new call/email via ContactActionDialog.

@@ -1,11 +1,15 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import EventIcon from '@mui/icons-material/Event';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import type { ClubRow } from './queries';
 
 interface Props {
@@ -53,17 +57,6 @@ const whatsAppValue = (c: ClubRow) =>
     .filter(Boolean)
     .join(' ');
 
-const renderStatus = (c: ClubRow) => (
-  <Chip
-    size="small"
-    label={c.is_active ? 'Active' : 'Draft'}
-    color={c.is_active ? 'success' : 'default'}
-  />
-);
-
-const createdValue = (c: ClubRow) =>
-  c.created_at ? format(new Date(c.created_at), 'd MMM yyyy') : '—';
-
 export default function ClubsTable({
   fetchRows,
   refetchRef,
@@ -76,24 +69,12 @@ export default function ClubsTable({
   const columns = useMemo<DuncitColumn<ClubRow>[]>(() => {
     const renderCategory = (c: ClubRow) =>
       c.category_id ? <Chip size="small" label={catName(c.category_id)} /> : '—';
-    const renderActions = (c: ClubRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="View Pods">
-          <IconButton size="small" component={RouterLink} to={`/pods?club_id=${c.id}`}>
-            <EventIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(c)}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" onClick={() => onRemove(c)}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+    const renderViewPods = (c: ClubRow) => (
+      <Tooltip title="View Pods">
+        <IconButton size="small" component={RouterLink} to={`/pods?club_id=${c.id}`}>
+          <EventIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
     );
     return [
       { field: 'cover', headerName: 'Cover', sortable: false, width: 80, cellRenderer: renderCover },
@@ -128,14 +109,7 @@ export default function ClubsTable({
         valueGetter: whatsAppValue,
       },
       { field: 'locality', headerName: 'Locality', filter: { type: 'text' }, hide: true, minWidth: 140 },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        filter: { type: 'boolean' },
-        width: 110,
-        cellRenderer: renderStatus,
-        valueGetter: (c) => (c.is_active ? 'Active' : 'Draft'),
-      },
+      activeChipColumn<ClubRow>({ inactiveLabel: 'Draft' }),
       {
         field: 'is_verified',
         headerName: 'Verified',
@@ -144,15 +118,14 @@ export default function ClubsTable({
         width: 110,
         valueGetter: (c) => (c.is_verified ? 'Yes' : 'No'),
       },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: createdValue,
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 140, cellRenderer: renderActions },
+      dateColumn<ClubRow>(),
+      actionsColumn<ClubRow>({
+        width: 140,
+        onEdit,
+        onDelete: onRemove,
+        delete: { color: 'default' },
+        renderExtra: renderViewPods,
+      }),
     ];
   }, [catName, onEdit, onRemove]);
 

@@ -5,7 +5,7 @@ import { Alert, Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_HOST_LEAD, HOST_LEADS_TABLE } from '../../api/crm.gql';
-import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
+import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE } from '../../api/excel.gql';
 import type { HostLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
 import { useSuperCategories } from '../../api/useSuperCategories';
@@ -14,7 +14,9 @@ import { ConfirmDialog } from '@duncit/dialogs';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
-import { parseApiError } from '@duncit/utils';
+import { downloadBase64File, parseApiError } from '@duncit/utils';
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export default function HostLeadsPage() {
   const navigate = useNavigate();
@@ -68,7 +70,7 @@ export default function HostLeadsPage() {
       });
       const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
       if (!payload) throw new Error('Empty response');
-      downloadBase64Xlsx(payload.filename, payload.content_base64);
+      downloadBase64File(payload.content_base64, payload.filename, XLSX_MIME);
       setToast(kind === 'template' ? 'Template downloaded' : 'Host leads exported');
     } catch (err) {
       setError(parseApiError(err));

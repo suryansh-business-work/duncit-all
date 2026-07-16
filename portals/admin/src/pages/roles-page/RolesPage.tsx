@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError } from '@duncit/dialogs';
 import { CREATE_ROLE, DELETE_ROLE, ROLES_TABLE, UPDATE_ROLE, type RoleRow } from './queries';
 import { blankRole, type RoleEdit } from './types';
@@ -23,17 +23,7 @@ export default function RolesPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: ROLES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.rolesTable.rows as RoleRow[], total: data.rolesTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<RoleRow>(client, ROLES_TABLE, 'rolesTable');
 
   const openCreate = () => {
     setEditing(blankRole);

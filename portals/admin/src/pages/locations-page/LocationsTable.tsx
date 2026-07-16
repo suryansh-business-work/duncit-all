@@ -1,9 +1,13 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Avatar, Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import {
+  DuncitTable,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import type { LocationRow } from './queries';
 
 interface Props {
@@ -62,17 +66,6 @@ const renderZones = (loc: LocationRow) => {
   );
 };
 
-const renderStatus = (loc: LocationRow) => (
-  <Chip
-    size="small"
-    label={loc.is_active ? 'Active' : 'Inactive'}
-    color={loc.is_active ? 'success' : 'default'}
-  />
-);
-
-const createdValue = (loc: LocationRow) =>
-  loc.created_at ? format(new Date(loc.created_at), 'd MMM yyyy') : '—';
-
 export default function LocationsTable({
   fetchRows,
   refetchRef,
@@ -81,20 +74,6 @@ export default function LocationsTable({
   onDelete,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<LocationRow>[]>(() => {
-    const renderActions = (loc: LocationRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(loc)}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" onClick={() => onDelete(loc)}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
-    );
     return [
       { field: 'image', headerName: 'Image', sortable: false, width: 76, cellRenderer: renderImage },
       {
@@ -130,23 +109,9 @@ export default function LocationsTable({
         minWidth: 130,
         valueGetter: (loc) => loc.country ?? '—',
       },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        filter: { type: 'boolean' },
-        width: 110,
-        cellRenderer: renderStatus,
-        valueGetter: (loc) => (loc.is_active ? 'Active' : 'Inactive'),
-      },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: createdValue,
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      activeChipColumn<LocationRow>(),
+      dateColumn<LocationRow>(),
+      actionsColumn<LocationRow>({ onEdit, onDelete, delete: { color: 'default' } }),
     ];
   }, [onEdit, onDelete]);
 

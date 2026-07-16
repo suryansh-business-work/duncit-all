@@ -4,7 +4,7 @@ import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import {
   blankClubFormValues,
   buildClubInput,
@@ -48,17 +48,7 @@ export default function ClubsPage() {
   const [pickerFolder, setPickerFolder] = useState('/clubs');
   const pickerResolve = useRef<((url: string | null) => void) | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: CLUBS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.clubsTable.rows as ClubRow[], total: data.clubsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<ClubRow>(client, CLUBS_TABLE, 'clubsTable');
 
   // Bridge the URL-callback media picker to the shared form's promise picker.
   const pickImage = (folder = '/clubs') =>

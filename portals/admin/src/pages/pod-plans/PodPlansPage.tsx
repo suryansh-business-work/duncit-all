@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import PodPlanFormDialog, { type PodPlanFormValues } from './PodPlanFormDialog';
 import PodPlansTable, { type PlanRow } from './PodPlansTable';
@@ -18,17 +18,7 @@ export default function PodPlansPage() {
   const [editing, setEditing] = useState<PlanRow | null>(null);
   const [open, setOpen] = useState(false);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: PLANS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.podPlansTable.rows as PlanRow[], total: data.podPlansTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<PlanRow>(client, PLANS_TABLE, 'podPlansTable');
 
   const onSave = async (values: PodPlanFormValues) => {
     try {

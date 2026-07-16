@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { parseApiError } from '@duncit/utils';
+import { fileToBase64, parseApiError } from '@duncit/utils';
 import { autoMatch, importFieldsFor } from '../config/importFields';
 import ColumnMappingStep from './import/ColumnMappingStep';
 import ImportResultView, { type ImportResult } from './import/ImportResultView';
@@ -38,19 +38,6 @@ interface Props {
   onClose: () => void;
   onImported: (result: { inserted: number; failed: number }) => void;
   onDownloadTemplate?: () => void;
-}
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      const idx = result.indexOf(',');
-      resolve(idx > -1 ? result.slice(idx + 1) : result);
-    };
-    reader.onerror = () => reject(new Error('Could not read file'));
-    reader.readAsDataURL(file);
-  });
 }
 
 type Step = 'file' | 'map' | 'done';

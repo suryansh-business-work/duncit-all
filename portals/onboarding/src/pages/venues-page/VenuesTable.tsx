@@ -5,7 +5,7 @@ import RateReviewIcon from '@mui/icons-material/RateReview';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import { Link as RouterLink } from 'react-router-dom';
 import { Button, Chip, IconButton, Link, Tooltip, Typography } from '@mui/material';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type VenueRow } from './queries';
@@ -92,9 +92,6 @@ const renderCommission = (v: VenueRow) => (
   <Chip size="small" variant="outlined" label={commissionLabel(v.venue_commission_pct)} />
 );
 
-const submittedValue = (v: VenueRow) =>
-  v.submitted_at ? new Date(v.submitted_at).toLocaleDateString() : '—';
-
 export default function VenuesTable({
   fetchRows,
   refetchRef,
@@ -142,7 +139,7 @@ export default function VenuesTable({
       { field: 'is_active', headerName: 'Active', width: 110, filter: { type: 'boolean' }, cellRenderer: renderActive, valueGetter: activeValue },
       { field: 'pod_count', headerName: 'Pods', sortable: false, width: 100, cellRenderer: renderPods, valueGetter: (v) => v.pod_count ?? 0 },
       { field: 'venue_commission_pct', headerName: 'Commission', width: 130, cellRenderer: renderCommission, valueGetter: (v) => commissionLabel(v.venue_commission_pct) },
-      { field: 'submitted_at', headerName: 'Submitted', width: 125, filter: { type: 'date' }, valueGetter: submittedValue },
+      dateColumn<VenueRow>({ field: 'submitted_at', headerName: 'Submitted', hide: false, width: 125, formatDate: (d) => d.toLocaleDateString() }),
       { field: 'created_at', headerName: 'Created', hide: true, width: 125, filter: { type: 'date' } },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 190, cellRenderer: renderActions },
     ];

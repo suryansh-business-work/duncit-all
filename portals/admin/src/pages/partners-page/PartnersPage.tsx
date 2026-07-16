@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import HandshakeIcon from '@mui/icons-material/Handshake';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 
 export const PARTNERS_TABLE = gql`
   query PartnersTable($query: TableQueryInput) {
@@ -75,20 +75,7 @@ export default function PartnersPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: PARTNERS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.partnersTable.rows as PartnerRow[],
-        total: data.partnersTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<PartnerRow>(client, PARTNERS_TABLE, 'partnersTable');
 
   const columns = useMemo<DuncitColumn<PartnerRow>[]>(
     () => [

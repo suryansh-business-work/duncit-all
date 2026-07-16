@@ -1,11 +1,9 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
 import { useController, useFormContext } from 'react-hook-form';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { UPLOAD_IMAGE } from '../../api/crm.gql';
-import { fileToBase64 } from '../../utils/fileToBase64';
+import { useImagekitBase64Upload } from '@duncit/media-picker';
 import { parseApiError } from '@duncit/utils';
 
 interface Props {
@@ -32,7 +30,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [upload] = useMutation(UPLOAD_IMAGE);
+  const { upload } = useImagekitBase64Upload();
 
   const maxBytes = kind === 'video' ? 100 * 1024 * 1024 : 8 * 1024 * 1024;
 
@@ -47,11 +45,10 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
           setError(`${file.name} exceeds the ${kind === 'video' ? '100MB' : '8MB'} limit and was skipped.`);
           continue;
         }
-        const fileBase64 = await fileToBase64(file);
-        const res = await upload({
-          variables: { fileBase64, fileName: file.name, mimeType: file.type || (kind === 'video' ? 'video/mp4' : 'image/png'), folder },
+        const { url } = await upload(file, {
+          folder,
+          fallbackMimeType: kind === 'video' ? 'video/mp4' : 'image/png',
         });
-        const url = res.data?.uploadImageToImagekit?.url ?? '';
         if (url) added.push(url);
       }
       if (added.length) field.onChange(toValue([...list, ...added]));

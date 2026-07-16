@@ -11,7 +11,7 @@ import {
   EMAIL_HOST_LEAD,
   EMAIL_VENUE_LEAD,
 } from '../api/crm.gql';
-import { parseApiError } from '../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import CommsProviderSelect from './CommsProviderSelect';
 import ComposeWindow from './compose/ComposeWindow';
 import EmailComposeFields, { type EmailPayload } from './compose/EmailComposeFields';

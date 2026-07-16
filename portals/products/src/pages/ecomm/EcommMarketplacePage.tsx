@@ -1,8 +1,8 @@
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import EcommBrandsTable from './EcommBrandsTable';
 import { MARKETPLACE_BRANDS_TABLE, type EcommBrandRow } from './queries';
 
@@ -13,20 +13,7 @@ export default function EcommMarketplacePage() {
 
   // The server defaults to APPROVED brands when no status filter is set —
   // same default view the old status select opened with.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MARKETPLACE_BRANDS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.marketplaceBrandsTable.rows as EcommBrandRow[],
-        total: data.marketplaceBrandsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<EcommBrandRow>(client, MARKETPLACE_BRANDS_TABLE, 'marketplaceBrandsTable');
 
   return (
     <Stack spacing={3}>

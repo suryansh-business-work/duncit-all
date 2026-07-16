@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fileToBase64 } from '@/utils/fileToBase64';
+import { fileToBase64 } from '@duncit/utils';
 
 describe('fileToBase64', () => {
   it('strips the data-URL prefix and returns bare base64', async () => {

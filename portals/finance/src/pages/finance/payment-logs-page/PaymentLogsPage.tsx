@@ -3,8 +3,9 @@ import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { downloadBase64File } from '@duncit/utils';
 import { INVOICE_PDF, PAYMENTS, PAYMENTS_TABLE, REFUND_PAYMENT, type PaymentRow } from './queries';
-import { downloadPdfFromBase64, paymentTableFilter } from './helpers';
+import { paymentTableFilter } from './helpers';
 import TotalsCards from './TotalsCards';
 import PaymentsTable from './PaymentsTable';
 import RefundDialog from './RefundDialog';
@@ -87,7 +88,7 @@ export default function PaymentLogsPage() {
         });
         const b64 = pdfData?.paymentInvoicePdfBase64;
         if (!b64) throw new Error('Invoice not available');
-        downloadPdfFromBase64(b64, `invoice-${p.invoice_no.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`);
+        downloadBase64File(b64, `invoice-${p.invoice_no.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`, 'application/pdf');
       } catch (e: any) {
         setActionError(e?.message ?? 'Could not download invoice');
       } finally {

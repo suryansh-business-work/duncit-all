@@ -1,8 +1,8 @@
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { VENUES_TABLE, type VenueRow } from './queries';
 import VenuesTable from './VenuesTable';
 
@@ -12,17 +12,7 @@ export default function VenuesPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: VENUES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.venuesTable.rows as VenueRow[], total: data.venuesTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<VenueRow>(client, VENUES_TABLE, 'venuesTable');
 
   return (
     <Box>

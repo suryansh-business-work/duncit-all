@@ -5,7 +5,7 @@ import ChatHeader from '../../src/pages/live-chat/LiveChatPage/ChatHeader';
 import TicketHeader from '../../src/pages/tickets/TicketDetailPage/TicketHeader';
 import TicketThread from '../../src/pages/tickets/TicketDetailPage/TicketThread';
 import TranscriptMenu from '../../src/components/TranscriptMenu';
-import ConfirmDialog from '../../src/components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import FeedbackPanel from '../../src/components/FeedbackPanel';
 import type { SupportChatSession } from '../../src/graphql/supportChat';
 import type { Ticket } from '../../src/graphql/tickets';

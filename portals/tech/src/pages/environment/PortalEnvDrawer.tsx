@@ -19,8 +19,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import { ENV_ENTRIES, type EnvEntry } from './queries';
 import { SET_PORTAL_ENV_ENTRIES, type PortalListItem } from './portal-env-queries';
-import { notify } from '../../components/notify';
-import { parseApiError } from '../../utils/parseApiError';
+import { notify } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   portal: PortalListItem | null;

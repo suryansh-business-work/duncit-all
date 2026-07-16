@@ -1,7 +1,8 @@
-import { Card, CardContent, Grid, Skeleton, Stack, Typography } from '@mui/material';
+import { Grid } from '@mui/material';
+import { StatCard } from '@duncit/ui';
+import { formatMoney } from '@duncit/utils';
 import type { VenueOwnerStats } from './queries';
 
-const formatMoney = (value: number) => `₹${Number(value || 0).toLocaleString('en-IN')}`;
 const formatCount = (value: number) => Number(value || 0).toLocaleString('en-IN');
 
 interface CardDef {
@@ -30,25 +31,18 @@ export default function VenueStatCards({ stats, loading }: Readonly<Props>) {
     <Grid container spacing={2}>
       {CARDS.map((card) => (
         <Grid item xs={12} sm={6} md={4} lg={2} key={card.key}>
-          <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
-            <CardContent>
-              <Stack spacing={0.75}>
-                <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ lineHeight: 1.4 }}>
-                  {card.label}
-                </Typography>
-                {loading ? (
-                  <Skeleton variant="text" width={90} height={36} />
-                ) : (
-                  <Typography variant="h5" fontWeight={950}>
-                    {card.money ? formatMoney(stats[card.key]) : formatCount(stats[card.key])}
-                  </Typography>
-                )}
-                <Typography variant="caption" color="text.secondary">
-                  {card.hint}
-                </Typography>
-              </Stack>
-            </CardContent>
-          </Card>
+          <StatCard
+            label={card.label}
+            labelWeight={800}
+            labelSx={{ lineHeight: 1.4 }}
+            value={card.money ? formatMoney(stats[card.key]) : formatCount(stats[card.key])}
+            valueWeight={950}
+            hint={card.hint}
+            loading={loading}
+            skeletonProps={{ width: 90, height: 36 }}
+            headerSx={{ mb: 0.75 }}
+            sx={{ height: '100%', borderRadius: 2 }}
+          />
         </Grid>
       ))}
     </Grid>

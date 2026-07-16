@@ -105,13 +105,23 @@ ARG BUILD_TYPE
 # the host — unthrottled Gradle maxes every core and can thermal-trip the PC.
 ARG GRADLE_WORKERS=4
 ARG GRADLE_HEAP=3g
+# Per-JVM heap for FORKED worker processes (dexing/R8, lint, etc.). Kept small and
+# separate from GRADLE_HEAP: with org.gradle.parallel + workers.max, several of
+# these run at once, so a big value here is what over-subscribes the WSL memory cap.
+ARG GRADLE_WORKER_HEAP=1g
 # Build-speed toggles. Both only affect SPEED, never the artifact. Flip
 # GRADLE_CONFIG_CACHE=false if a native/Expo plugin ever refuses the config cache
 # (it is enabled in `warn` mode below, so it degrades to a warning rather than
 # failing — this is just a hard off-switch).
 ARG GRADLE_CACHING=true
 ARG GRADLE_CONFIG_CACHE=true
-ENV JAVA_TOOL_OPTIONS="-Xmx${GRADLE_HEAP} -XX:+UseG1GC" \
+# JAVA_TOOL_OPTIONS is inherited by EVERY JVM the build forks, so it must carry
+# the small WORKER heap, never GRADLE_HEAP — otherwise each forked worker reserves
+# GRADLE_HEAP and N parallel workers blow past the WSL memory cap (native-memory
+# abort → "Aborted (core dumped)" → BuildKit "rpc error: EOF"). The main Gradle
+# daemon gets GRADLE_HEAP instead, via org.gradle.jvmargs injected below (an
+# explicit command-line -Xmx overrides the JAVA_TOOL_OPTIONS one for that JVM).
+ENV JAVA_TOOL_OPTIONS="-Xmx${GRADLE_WORKER_HEAP} -XX:+UseG1GC" \
     GRADLE_OPTS="-Dorg.gradle.workers.max=${GRADLE_WORKERS} -Dkotlin.compiler.execution.strategy=in-process"
 WORKDIR /repo
 
@@ -130,6 +140,7 @@ RUN chmod +x /repo/app/mobile-app/android/gradlew
 RUN { \
       echo ''; \
       echo '# --- injected by Dockerfile.android (build speed only, never affects the artifact) ---'; \
+      echo "org.gradle.jvmargs=-Xmx${GRADLE_HEAP} -XX:MaxMetaspaceSize=512m -XX:+UseG1GC"; \
       echo "org.gradle.caching=${GRADLE_CACHING}"; \
       echo "org.gradle.configuration-cache=${GRADLE_CONFIG_CACHE}"; \
       echo 'org.gradle.configuration-cache.problems=warn'; \

@@ -1,7 +1,8 @@
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import type { AdminVenueDetails } from './queries';
 
-const STATUS_COLOR: Record<AdminVenueDetails['status'], 'default' | 'info' | 'success' | 'error' | 'warning'> = {
+const STATUS_COLOR: StatusColorMap = {
   DRAFT: 'warning',
   SUBMITTED: 'info',
   APPROVED: 'success',
@@ -24,7 +25,7 @@ export default function VenueOverviewCard({ venue }: Readonly<{ venue: AdminVenu
           />
           <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Chip size="small" color={STATUS_COLOR[venue.status]} label={venue.status} sx={{ fontWeight: 800 }} />
+              <StatusChip status={venue.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
               {venue.venue_type && <Chip size="small" variant="outlined" label={venue.venue_type} />}
               {typeof venue.capacity === 'number' && venue.capacity > 0 && (
                 <Chip size="small" variant="outlined" label={`Capacity ${venue.capacity}`} />

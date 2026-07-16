@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { SLUG_KEY_PATTERN } from '../../../forms/validation/rules';
+import { SLUG_KEY_PATTERN } from '@duncit/forms';
 
 export const roleFormSchema = yup.object({
   key: yup

@@ -19,7 +19,7 @@ import {
   type CrmReminder,
   type ReminderEntity,
 } from '../../api/reminders.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   open: boolean;

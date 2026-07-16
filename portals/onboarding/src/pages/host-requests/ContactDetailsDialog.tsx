@@ -6,9 +6,9 @@ import {
   DialogTitle,
   IconButton,
   Stack,
-  Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { InfoRow } from '@duncit/ui';
 import type { HostRequest } from './queries';
 
 interface Props {
@@ -16,15 +16,6 @@ interface Props {
   onClose: () => void;
   onApprove: (r: HostRequest) => void;
   onReject: (r: HostRequest) => void;
-}
-
-function InfoRow({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 110 }}>{label}</Typography>
-      <Typography variant="body2" fontWeight={600} sx={{ wordBreak: 'break-word' }}>{value}</Typography>
-    </Stack>
-  );
 }
 
 /** Opens automatically after a request is acknowledged — shows the host's contact
@@ -40,9 +31,9 @@ export default function ContactDetailsDialog({ request, onClose, onApprove, onRe
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={1}>
-          <InfoRow label="Host Name" value={request?.host_name || '—'} />
-          <InfoRow label="Email" value={request?.host_email || '—'} />
-          <InfoRow label="Phone Number" value={request?.host_phone || '—'} />
+          <InfoRow variant="inline" labelWidth={110} label="Host Name" value={request?.host_name || '—'} />
+          <InfoRow variant="inline" labelWidth={110} label="Email" value={request?.host_email || '—'} />
+          <InfoRow variant="inline" labelWidth={110} label="Phone Number" value={request?.host_phone || '—'} />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

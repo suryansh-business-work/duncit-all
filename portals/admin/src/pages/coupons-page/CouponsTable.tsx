@@ -1,8 +1,14 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+import { Box, Chip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import type { CouponRow } from './queries';
 
 interface Props {
@@ -47,9 +53,8 @@ const validityValue = (c: CouponRow) => `${fmtDate(c.valid_from)} → ${fmtDate(
 
 const usedValue = (c: CouponRow) => `${c.used_count}${c.max_uses ? ` / ${c.max_uses}` : ''}`;
 
-const renderStatus = (c: CouponRow) => (
-  <Chip size="small" color={c.is_active ? 'success' : 'default'} label={c.is_active ? 'Active' : 'Inactive'} />
-);
+const localeDate = (d: Date) =>
+  d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' });
 
 /** Shared server-paged coupons table — used by /coupons (couponsTable) and the
  * pod details Offer codes section (couponsForPodTable). */
@@ -62,16 +67,6 @@ export default function CouponsTable({
   onDelete,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<CouponRow>[]>(() => {
-    const renderActions = (c: CouponRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <IconButton size="small" onClick={() => onEdit(c)} aria-label="Edit coupon">
-          <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" onClick={() => onDelete(c)} aria-label="Delete coupon">
-          <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-    );
     return [
       { field: 'code', headerName: 'Code', flex: 1, minWidth: 180, cellRenderer: renderCode, valueGetter: (c) => c.code },
       {
@@ -96,32 +91,16 @@ export default function CouponsTable({
         minWidth: 170,
         valueGetter: validityValue,
       },
-      {
-        field: 'valid_until',
-        headerName: 'Valid until',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: (c) => fmtDate(c.valid_until),
-      },
+      dateColumn<CouponRow>({ field: 'valid_until', headerName: 'Valid until', formatDate: localeDate }),
       { field: 'used_count', headerName: 'Used', width: 100, valueGetter: usedValue },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        filter: { type: 'boolean' },
-        width: 110,
-        cellRenderer: renderStatus,
-        valueGetter: (c) => (c.is_active ? 'Active' : 'Inactive'),
-      },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: (c) => fmtDate(c.created_at),
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      activeChipColumn<CouponRow>(),
+      dateColumn<CouponRow>({ formatDate: localeDate }),
+      actionsColumn<CouponRow>({
+        onEdit,
+        onDelete,
+        edit: { ariaLabel: 'Edit coupon' },
+        delete: { ariaLabel: 'Delete coupon', color: 'default', icon: <DeleteOutlineIcon fontSize="small" /> },
+      }),
     ];
   }, [onEdit, onDelete]);
 

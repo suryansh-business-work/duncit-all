@@ -27,8 +27,8 @@ import {
   type CrmManagedOptionGroup,
 } from '../../../api/data.gql';
 import { CRM_LEAD_CONFIG } from '../../../api/crm.gql';
-import ConfirmDialog from '../../../components/ConfirmDialog';
-import { parseApiError } from '../../../utils/parseApiError';
+import { ConfirmDialog } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import ManagedOptionEditRow, { type ManagedEditRow } from './ManagedOptionEditRow';
 import ManagedOptionRow from './ManagedOptionRow';
 
@@ -178,6 +178,8 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
         title={`Delete "${removing?.name ?? ''}"`}
         message="Existing leads keep their entries — only this list is affected."
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleteState.loading}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

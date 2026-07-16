@@ -1,5 +1,5 @@
 import { Stack } from '@mui/material';
-import FormField from '../../FormField';
+import { FormField } from '@duncit/forms';
 import FieldGrid from '../../fields/FieldGrid';
 import SwitchField from '../../fields/SwitchField';
 import TagsField from '../../fields/TagsField';

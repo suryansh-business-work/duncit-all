@@ -1,12 +1,16 @@
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloClient } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import InventoryDeleteDialog, { type InventoryDeleteIntent } from './InventoryDeleteDialog';
 import InventoryTable from './InventoryTable';
 import { INVENTORY_PRODUCTS_TABLE, type InventoryProductRow } from './queries';
+
+// This page is the Duncit catalogue only — same scope the old query
+// hardcoded via its `ownership` variable (server-allowlisted enum filter).
+const DUNCIT_OWNERSHIP_FILTER = [{ field: 'ownership', op: 'eq', value: 'DUNCIT' }] as const;
 
 export default function InventoryPage() {
   const navigate = useNavigate();
@@ -17,26 +21,11 @@ export default function InventoryPage() {
     product: { id: string; product_name: string };
   } | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const variables = tableQueryToGql(q);
-      // This page is the Duncit catalogue only — same scope the old query
-      // hardcoded via its `ownership` variable (server-allowlisted enum filter).
-      variables.query.filters = [
-        ...variables.query.filters,
-        { field: 'ownership', op: 'eq', value: 'DUNCIT', values: null },
-      ];
-      const { data } = await client.query({
-        query: INVENTORY_PRODUCTS_TABLE,
-        variables,
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.inventoryProductsTable.rows as InventoryProductRow[],
-        total: data.inventoryProductsTable.total as number,
-      };
-    },
-    [client],
+  const fetchRows = useApolloTableFetch<InventoryProductRow>(
+    client,
+    INVENTORY_PRODUCTS_TABLE,
+    'inventoryProductsTable',
+    { extraFilters: DUNCIT_OWNERSHIP_FILTER },
   );
 
   return (

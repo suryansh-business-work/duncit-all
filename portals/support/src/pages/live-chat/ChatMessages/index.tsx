@@ -1,6 +1,6 @@
 import { Chip, Divider, Stack, Typography } from '@mui/material';
 import type { SupportChatMessage } from '../../../graphql/supportChat';
-import { useDateFormat } from '../../../lib/useDateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import { groupByDay } from './groupByDay';
 import MessageBubble from './MessageBubble';
 
@@ -12,7 +12,7 @@ interface Props {
 /** The scrollable message stack — agent right, user left, SYSTEM centered, with
  * Today / Yesterday / date separators and timezone-aware per-message times. */
 export default function ChatMessages({ messages, userLastReadAt }: Readonly<Props>) {
-  const { formatTime, dayKey, dayLabel } = useDateFormat();
+  const { formatTime, dayKey, dayLabel } = useDateFormat({ timeZoneAware: true });
   const groups = groupByDay(messages, dayKey, dayLabel);
 
   return (

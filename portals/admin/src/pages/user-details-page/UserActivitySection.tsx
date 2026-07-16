@@ -21,7 +21,7 @@ import {
   USER_ACTIVITY_YEAR,
 } from './queries';
 import ActivityJourneyDialog from './ActivityJourneyDialog';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm } from '@duncit/dialogs';
 import DateField from '../../components/DateField';
 
 interface Props {

@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { useApolloTableFetch } from '@duncit/table';
+import { ConfirmDialog } from '@duncit/dialogs';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
 import { APPROVE, DELETE_HOST, HOSTS_TABLE, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, type HostRow } from './queries';
@@ -23,17 +23,7 @@ export default function HostsPage() {
   const [tagsText, setTagsText] = useState('');
   const [editing, setEditing] = useState<any>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: HOSTS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.hostsTable.rows as HostRow[], total: data.hostsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<HostRow>(client, HOSTS_TABLE, 'hostsTable');
 
   const parseTags = () =>
     tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);
@@ -98,6 +88,7 @@ export default function HostsPage() {
         confirmLabel={lifecycle.toggleTarget?.is_active === false ? 'Activate' : 'Deactivate'}
         confirmColor={lifecycle.toggleTarget?.is_active === false ? 'success' : 'warning'}
         loading={lifecycle.toggling}
+        busyLabel="Working…"
         onClose={() => lifecycle.setToggleTarget(null)}
         onConfirm={lifecycle.confirmToggle}
       />

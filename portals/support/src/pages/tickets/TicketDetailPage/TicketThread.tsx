@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Divider, Stack, Typography } from '@mui/material';
 import type { Ticket } from '../../../graphql/tickets';
-import { useDateFormat } from '../../../lib/useDateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import FeedbackPanel from '../../../components/FeedbackPanel';
 import JumpToLatestFab from '../../live-chat/LiveChatPage/JumpToLatestFab';
 import MessageBubble from './MessageBubble';
@@ -13,7 +13,7 @@ const RESOLVED = new Set(['RESOLVED', 'CLOSED']);
 /** Scrollable ticket thread with Today/Yesterday/date separators, the user's
  * feedback (when resolved) and a jump-to-latest FAB on long threads (B13). */
 export default function TicketThread({ ticket }: Readonly<{ ticket: Ticket }>) {
-  const { formatTime, dayKey, dayLabel } = useDateFormat();
+  const { formatTime, dayKey, dayLabel } = useDateFormat({ timeZoneAware: true });
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [atBottom, setAtBottom] = useState(true);
   const groups = groupTicketMessages(ticket.messages ?? [], dayKey, dayLabel);

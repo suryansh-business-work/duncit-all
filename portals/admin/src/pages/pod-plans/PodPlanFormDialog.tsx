@@ -12,7 +12,7 @@ import {
   Switch,
   TextField,
 } from '@mui/material';
-import RhfTextField from '../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import {
   parsePodPlanFeatures,
   podPlanFormDefaults,

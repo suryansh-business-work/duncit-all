@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { POSTAL_CODE_PATTERN, zodRules } from '../../../forms/validation/rules';
+import { POSTAL_CODE_PATTERN, zodRules } from '@duncit/forms';
 import type { RegisterVenueValues, VenueSectionKey } from './register-venue.types';
 
 const PAN_PATTERN = /^[A-Z]{5}\d{4}[A-Z]$/;
@@ -62,7 +62,7 @@ export const registerVenueSchema = z.object({
   gstin: optionalPattern(GSTIN_PATTERN, 'GSTIN must follow format like 22ABCDE1234F1Z5'),
   pan: optionalPattern(PAN_PATTERN, 'PAN must follow format ABCDE1234F'),
   owner_name: zodRules.personName('Owner name'),
-  owner_email: zodRules.email('Owner email'),
+  owner_email: zodRules.email('Owner email', { lengthFirst: true }),
   owner_phone: z
     .string()
     .trim()

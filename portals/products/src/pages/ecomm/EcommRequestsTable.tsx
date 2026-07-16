@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Avatar, Button, Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { useDateFormat } from '../../utils/dateFormat';
+import { StatusChip } from '@duncit/ui';
+import { useDateFormat } from '@duncit/app-settings';
 import { REQUEST_STATUS_COLOR, type ProductListingRow } from './requestsQueries';
 
 interface Props {
@@ -57,11 +58,7 @@ const renderCommission = (r: ProductListingRow) => (
 );
 
 const renderStatus = (r: ProductListingRow) => (
-  <Chip
-    size="small"
-    label={r.listing_review_status}
-    color={REQUEST_STATUS_COLOR[r.listing_review_status] ?? 'default'}
-  />
+  <StatusChip status={r.listing_review_status} colorMap={REQUEST_STATUS_COLOR} />
 );
 
 export default function EcommRequestsTable({

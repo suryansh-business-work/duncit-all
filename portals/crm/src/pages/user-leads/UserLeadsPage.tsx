@@ -14,7 +14,9 @@ import DeleteLeadsDialog from './DeleteLeadsDialog';
 import LeadStatsBar from './LeadStatsBar';
 import LeadsTable, { type LeadRow } from './LeadsTable';
 import CleanDataButton from './CleanDataButton';
-import { fileToBase64, downloadBase64Xlsx } from './leadFiles';
+import { downloadBase64File, fileToBase64 } from '@duncit/utils';
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** WhatsApp Leads — dashboard + server-side searchable/sortable/paginated table. */
 export default function UserLeadsPage() {
@@ -67,7 +69,7 @@ export default function UserLeadsPage() {
       fetchPolicy: 'network-only',
     });
     if (res.data?.waExportUserLeads) {
-      downloadBase64Xlsx(res.data.waExportUserLeads, 'whatsapp-leads.xlsx');
+      downloadBase64File(res.data.waExportUserLeads, 'whatsapp-leads.xlsx', XLSX_MIME);
     }
   };
 

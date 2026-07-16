@@ -1,10 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
-import { notifyError } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useRef, useState } from 'react';
+import { notifyError, useConfirm } from '@duncit/dialogs';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import {
   CREATE_FLAG,
   DELETE_FLAG,
@@ -33,17 +32,7 @@ export default function FeatureFlagsPage() {
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: FLAGS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.featureFlagsTable.rows as FeatureFlagRow[], total: data.featureFlagsTable.total as number };
-    },
-    [client]
-  );
+  const fetchRows = useApolloTableFetch<FeatureFlagRow>(client, FLAGS_TABLE, 'featureFlagsTable');
 
   const openCreate = () => {
     setEditing(blankFlag);

@@ -1,8 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Button, Stack, Tab, Tabs } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableFilterValue, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import {
   CATEGORY_DEFS,
   CREATE_ENV_ENTRY,
@@ -18,9 +18,8 @@ import {
 import EnvEntriesTable from './EnvEntriesTable';
 import { EnvEntryForm, toConfigPairs, type EnvEntryFormValues } from './env-entry';
 import TestDrawer from './test-panels';
-import { notify } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
-import { parseApiError } from '../../utils/parseApiError';
+import { notify, useConfirm } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 
 /** Manage the named entries within each environment category. */
 export default function EnvVariablesTab() {
@@ -39,17 +38,12 @@ export default function EnvVariablesTab() {
   const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
 
   // Server-paged rows for the active category tab; the tab pins a category filter.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters: TableFilterValue[] = [...q.filters, { field: 'category', op: 'eq', value: category }];
-      const { data } = await client.query({
-        query: ENV_ENTRIES_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.envEntriesTable.rows as EnvEntry[], total: data.envEntriesTable.total as number };
-    },
-    [client, category]
+  const fetchRows = useApolloTableFetch<EnvEntry>(
+    client,
+    ENV_ENTRIES_TABLE,
+    'envEntriesTable',
+    { extraFilters: [{ field: 'category', op: 'eq', value: category }] },
+    [category],
   );
 
   // Prefer the server definition (authoritative); fall back to the static one so

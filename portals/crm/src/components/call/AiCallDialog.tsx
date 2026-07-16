@@ -24,7 +24,7 @@ import { SERVAM_VOICES } from '../../config/servam-voices';
 import { useCallSocket } from '../../hooks/useCallSocket';
 import { useCallReconcile } from '../../hooks/useCallReconcile';
 import { isTerminalCallStatus, type CallStatus } from '../../lib/callSocket';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import { callStatusView } from './callStatusView';
 import CallStage from './CallStage';
 

@@ -1,8 +1,9 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Chip, CircularProgress, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { CircularProgress, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import UndoIcon from '@mui/icons-material/Undo';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
 import { STATUS_COLORS, fmt } from './helpers';
 import type { PaymentRow } from './queries';
 
@@ -29,7 +30,7 @@ const renderCustomer = (p: PaymentRow) => (
 );
 
 const renderStatus = (p: PaymentRow) => (
-  <Chip size="small" color={STATUS_COLORS[p.status]} label={p.status} />
+  <StatusChip status={p.status} colorMap={STATUS_COLORS} />
 );
 
 const renderIds = (p: PaymentRow) => (

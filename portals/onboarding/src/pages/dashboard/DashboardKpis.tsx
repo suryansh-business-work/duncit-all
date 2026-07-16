@@ -1,4 +1,5 @@
-import { Box, Card, CardContent, Typography } from '@mui/material';
+import { Box } from '@mui/material';
+import { StatCard } from '@duncit/ui';
 import type { DashboardKpi } from './onboardingStats';
 
 const TONE_COLOR: Record<DashboardKpi['tone'], string> = {
@@ -21,16 +22,16 @@ export default function DashboardKpis({ kpis }: Readonly<{ kpis: DashboardKpi[] 
       }}
     >
       {kpis.map((kpi) => (
-        <Card key={kpi.label} variant="outlined" sx={{ height: '100%' }}>
-          <CardContent>
-            <Typography variant="overline" color="text.secondary" fontWeight={800}>
-              {kpi.label}
-            </Typography>
-            <Typography variant="h4" fontWeight={900} sx={{ color: TONE_COLOR[kpi.tone] }}>
-              {kpi.value}
-            </Typography>
-          </CardContent>
-        </Card>
+        <StatCard
+          key={kpi.label}
+          label={kpi.label}
+          labelWeight={800}
+          value={kpi.value}
+          valueVariant="h4"
+          valueWeight={900}
+          valueColor={TONE_COLOR[kpi.tone]}
+          sx={{ height: '100%' }}
+        />
       ))}
     </Box>
   );

@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Chip, IconButton, Stack, Typography } from '@mui/material';
+import { IconButton, Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
+import { useDateFormat } from '@duncit/app-settings';
 import ApplicationDetailsDialog from './ApplicationDetailsDialog';
 import {
   JOB_APPLICATIONS_TABLE,
@@ -21,7 +22,7 @@ const STATUS_OPTIONS = JOB_APPLICATION_STATUSES.map((status) => ({
 }));
 
 const renderStatus = (row: JobApplication) => (
-  <Chip size="small" label={row.status} color={JOB_APPLICATION_STATUS_COLOR[row.status]} />
+  <StatusChip status={row.status} colorMap={JOB_APPLICATION_STATUS_COLOR} />
 );
 
 /** Careers-page applications ("Open roles" submissions) — triage inbox. */
@@ -34,20 +35,7 @@ export default function JobApplicationsPage() {
   const { formatDateTime } = useDateFormat();
   const [open, setOpen] = useState<JobApplication | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: JOB_APPLICATIONS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.jobApplicationsTable.rows as JobApplication[],
-        total: data.jobApplicationsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<JobApplication>(client, JOB_APPLICATIONS_TABLE, 'jobApplicationsTable');
 
   const columns = useMemo<DuncitColumn<JobApplication>[]>(() => {
     const renderActions = (row: JobApplication) => (

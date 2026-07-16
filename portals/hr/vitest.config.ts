@@ -14,5 +14,8 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
+    // The portal's only local tests (dead login-form folder) moved into shared
+    // @duncit packages during the dedup migration.
+    passWithNoTests: true,
   },
 });

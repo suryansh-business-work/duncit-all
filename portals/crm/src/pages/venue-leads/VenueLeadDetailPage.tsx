@@ -2,20 +2,18 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
   Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Divider,
   Stack,
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { BackButton, QueryGuard } from '@duncit/ui';
 import EditIcon from '@mui/icons-material/Edit';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -50,7 +48,6 @@ import MapEmbed from '../../components/MapEmbed';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
-import { parseApiError } from '../../utils/parseApiError';
 import { venueVariableValues } from '../../config/leadVariables';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
@@ -78,15 +75,11 @@ export default function VenueLeadDetailPage() {
   });
   const lead = data?.venueLead;
 
-  if (loading && !lead) {
+  if ((loading && !lead) || error || !lead) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
-        <CircularProgress />
-      </Stack>
+      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText="Venue lead not found." />
     );
   }
-  if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
-  if (!lead) return <Alert severity="info">Venue lead not found.</Alert>;
 
   const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
   const servicesPlural = lead.services_offered.length === 1 ? '' : 's';
@@ -321,9 +314,7 @@ export default function VenueLeadDetailPage() {
           hero card so it reads as a navigation breadcrumb, not part of the
           venue's identity row. */}
       <Box>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/venue-leads')} size="small">
-          Back to Venue Leads
-        </Button>
+        <BackButton onClick={() => navigate('/venue-leads')}>Back to Venue Leads</BackButton>
       </Box>
 
       {/* ---- Hero card (Venue details on top, per spec) ---- */}

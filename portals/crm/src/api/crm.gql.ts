@@ -199,15 +199,3 @@ export const REORDER_CRM_DYNAMIC_FIELDS = gql`
   }
 `;
 
-export const UPLOAD_IMAGE = gql`
-  mutation CrmUploadImage($fileBase64: String!, $fileName: String!, $mimeType: String, $folder: String) {
-    uploadImageToImagekit(
-      fileBase64: $fileBase64
-      fileName: $fileName
-      mimeType: $mimeType
-      folder: $folder
-    ) {
-      url fileId thumbnailUrl
-    }
-  }
-`;

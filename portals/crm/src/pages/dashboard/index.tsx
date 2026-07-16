@@ -9,7 +9,7 @@ import ServicesChart from './ServicesChart';
 import SuperCategoryChart from './SuperCategoryChart';
 import { rangeToWindow, type DashboardRange, type DateWindow } from './dashboardConfig';
 import { useDashboardData } from './useDashboardData';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 export default function DashboardPage() {
   const [range, setRange] = useState<DashboardRange>('month');

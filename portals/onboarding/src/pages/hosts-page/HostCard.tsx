@@ -7,13 +7,10 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 
-const statusColor = (s: string) => {
-  if (s === 'APPROVED') return 'success';
-  if (s === 'REJECTED') return 'error';
-  if (s === 'SUBMITTED') return 'warning';
-  return 'default';
-};
+// SUBMITTED intentionally stays 'warning' here (documented drift vs the shared default map).
+const STATUS_COLOR: StatusColorMap = { APPROVED: 'success', REJECTED: 'error', SUBMITTED: 'warning' };
 
 interface Props {
   host: any;
@@ -28,7 +25,7 @@ export default function HostCard({ host, onReview }: Readonly<Props>) {
           <Typography variant="subtitle1" fontWeight={700}>
             {host.full_name || '(Unnamed)'}
           </Typography>
-          <Chip size="small" label={host.status} color={statusColor(host.status) as any} />
+          <StatusChip status={host.status} colorMap={STATUS_COLOR} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {host.email} · {host.phone}

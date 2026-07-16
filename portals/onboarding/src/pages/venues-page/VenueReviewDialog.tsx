@@ -15,6 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 
 interface Props {
   active: any;
@@ -29,7 +30,7 @@ interface Props {
   savingDeductions: boolean;
 }
 
-const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
+const STATUS_COLOR: StatusColorMap = {
   DRAFT: 'warning',
   SUBMITTED: 'info',
   APPROVED: 'success',
@@ -86,7 +87,7 @@ export default function VenueReviewDialog({
             {active?.venue_name || 'Venue'}
           </Typography>
           {active?.status && (
-            <Chip size="small" color={STATUS_COLOR[active.status] ?? 'default'} label={active.status} sx={{ fontWeight: 800 }} />
+            <StatusChip status={active.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
           )}
         </Stack>
       </DialogTitle>

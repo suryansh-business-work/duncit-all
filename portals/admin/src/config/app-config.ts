@@ -7,44 +7,9 @@
  * `requiredRoles` can be overridden at build/runtime via `VITE_REQUIRED_ROLES`
  * (comma separated) so access control stays dynamic without a code change.
  */
-export interface AppNavItem {
-  label: string;
-  /** Route the item links to. Optional when the item is purely a group header. */
-  to?: string;
-  icon: string;
-  /** Optional nested children — rendered as a collapsible group. */
-  children?: AppNavItem[];
-}
+import { parseEnvRoles, type AppConfig } from '@duncit/shell';
 
-export interface SearchItem {
-  label: string;
-  to: string;
-  keywords?: string[];
-  section?: string;
-}
-
-export interface AppConfig {
-  key: string;
-  name: string;
-  fullName: string;
-  tagline: string;
-  promoTitle: string;
-  promoText: string;
-  portalLabel: string;
-  loginImage: string;
-  requiredRoles: string[];
-  tokenKey: string;
-  colorModeKey: string;
-  nav: AppNavItem[];
-  searchItems: SearchItem[];
-}
-
-const envRoles = String(import.meta.env.VITE_REQUIRED_ROLES ?? '')
-  .split(',')
-  .map((role: string) => role.trim())
-  .filter(Boolean);
-
-export const appConfig: AppConfig = {
+export const appConfig = {
   key: 'admin',
   name: 'Admin',
   fullName: 'Duncit Admin',
@@ -55,9 +20,13 @@ export const appConfig: AppConfig = {
   loginImage:
     (import.meta.env.VITE_LOGIN_IMAGE as string | undefined) ||
     'https://images.pexels.com/photos/36713016/pexels-photo-36713016.jpeg',
-  requiredRoles: envRoles.length
-    ? envRoles
-    : ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'FINANCE_USER'],
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, [
+    'SUPER_ADMIN',
+    'CITY_ADMIN',
+    'ZONAL_ADMIN',
+    'SUPPORT_USER',
+    'FINANCE_USER',
+  ]),
   tokenKey: 'admin_token',
   colorModeKey: 'admin_color_mode',
   nav: [
@@ -145,4 +114,4 @@ export const appConfig: AppConfig = {
     { label: 'Branding', to: '/branding', section: 'System', keywords: ['logo', 'theme', 'identity'] },
     { label: 'Settings', to: '/settings', section: 'System', keywords: ['system', 'config', 'preferences'] },
   ],
-};
+} satisfies AppConfig;

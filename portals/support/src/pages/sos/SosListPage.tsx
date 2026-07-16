@@ -1,7 +1,8 @@
 import { useCallback, useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
+import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';
 import { BOUNCER_SOS_ALERTS, type SosAlertPage } from '../../graphql/bouncer';
 import { useSupportSocket } from '../../lib/useSupportSocket';
@@ -32,14 +33,10 @@ export default function SosListPage() {
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          SOS Alerts
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Live safety alerts raised by users. Open one to acknowledge or resolve it.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="SOS Alerts"
+        subtitle="Live safety alerts raised by users. Open one to acknowledge or resolve it."
+      />
       <SosTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}

@@ -4,7 +4,7 @@ import { useUserData } from '@duncit/user-context';
 import { AppShell as ShellAppShell } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { clearToken, hasAppAccess } from '../lib/session';
-import { useFeatureFlag } from '../hooks/useFeatureFlag';
+import { useFeatureFlag } from '@duncit/app-settings';
 
 /**
  * Thin adapter over the shared @duncit/shell chrome: wires this portal's

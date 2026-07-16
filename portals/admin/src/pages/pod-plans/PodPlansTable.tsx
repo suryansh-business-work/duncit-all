@@ -1,8 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Box, Chip, Stack, Typography } from '@mui/material';
+import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { PodPlanFormValues } from './PodPlanFormDialog';
 
 export interface PlanRow extends PodPlanFormValues {
@@ -68,16 +66,6 @@ export default function PodPlansTable({
   onDelete,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<PlanRow>[]>(() => {
-    const renderActions = (r: PlanRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <IconButton size="small" onClick={() => onEdit(r)}>
-          <EditIcon fontSize="small" />
-        </IconButton>
-        <IconButton size="small" color="error" onClick={() => onDelete(r)}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-    );
     return [
       {
         field: 'name',
@@ -125,7 +113,7 @@ export default function PodPlansTable({
         valueGetter: (r) => (r.is_coming_soon ? 'Yes' : 'No'),
       },
       { field: 'sort_order', headerName: 'Sort', hide: true, width: 90 },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      actionsColumn<PlanRow>({ onEdit, onDelete }),
     ];
   }, [onEdit, onDelete]);
 

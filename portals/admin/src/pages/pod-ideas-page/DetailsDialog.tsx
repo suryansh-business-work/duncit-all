@@ -5,7 +5,6 @@ import {
   Avatar,
   Box,
   Button,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -17,11 +16,12 @@ import {
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ShareIcon from '@mui/icons-material/Share';
+import { StatusChip } from '@duncit/ui';
 import {
   POD_IDEA_DETAILS,
   SET_STATUS,
   DELETE_COMMENT,
-  statusColor,
+  STATUS_COLOR_MAP,
 } from './queries';
 import IdeaCommentsList from './IdeaCommentsList';
 import IdeaActionsBar from './IdeaActionsBar';
@@ -102,11 +102,11 @@ export default function DetailsDialog({ id, onClose, onChanged }: Readonly<Detai
       <DialogTitle sx={{ pr: 6 }}>
         {idea?.title ?? 'Pod idea'}
         {idea && (
-          <Chip
-            size="small"
+          <StatusChip
+            status={idea.status}
             sx={{ ml: 1.5 }}
-            label={idea.status}
-            color={statusColor(idea.status) as any}
+            fallbackColor="warning"
+            colorMap={STATUS_COLOR_MAP}
           />
         )}
       </DialogTitle>

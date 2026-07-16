@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { RENDER, TEMPLATES, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import VariablesValuesEditor from '../email/VariablesValuesEditor';
 
 export interface TemplateBody {

@@ -1,50 +1,11 @@
+import { parseEnvRoles, type AppConfig } from '@duncit/shell';
+
 /**
  * Per-app configuration. Single source of truth for the shared shell
  * (layout, login gating, theme accent, nav). `requiredRoles` is overridable
  * via `VITE_REQUIRED_ROLES` so access control stays dynamic.
  */
-export interface AppNavItem {
-  label: string;
-  to: string;
-  icon: string;
-}
-
-export interface AppModule {
-  title: string;
-  description: string;
-  icon: string;
-}
-
-export interface AccentColors {
-  light: string;
-  main: string;
-  hover: string;
-  active: string;
-}
-
-export interface AppConfig {
-  key: string;
-  name: string;
-  fullName: string;
-  tagline: string;
-  promoTitle: string;
-  promoText: string;
-  portalLabel: string;
-  loginImage: string;
-  requiredRoles: string[];
-  tokenKey: string;
-  colorModeKey: string;
-  accent: AccentColors;
-  nav: AppNavItem[];
-  modules: AppModule[];
-}
-
-const envRoles = String(import.meta.env.VITE_REQUIRED_ROLES ?? '')
-  .split(',')
-  .map((role: string) => role.trim())
-  .filter(Boolean);
-
-export const appConfig: AppConfig = {
+export const appConfig = {
   key: 'support',
   name: 'Support',
   fullName: 'Duncit Support',
@@ -55,7 +16,7 @@ export const appConfig: AppConfig = {
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/5453823/pexels-photo-5453823.jpeg',
-  requiredRoles: envRoles.length ? envRoles : ['SUPPORT_MANAGER'],
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['SUPPORT_MANAGER']),
   tokenKey: 'support_token',
   colorModeKey: 'support_color_mode',
   accent: { light: '#6ee7b7', main: '#10b981', hover: '#059669', active: '#047857' },
@@ -67,4 +28,4 @@ export const appConfig: AppConfig = {
     { label: 'Chat with Us', to: '/live-chat', icon: 'chat' },
   ],
   modules: [],
-};
+} satisfies AppConfig;

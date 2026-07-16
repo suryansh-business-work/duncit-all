@@ -18,7 +18,9 @@
  *
  * Env knobs:
  *   GRADLE_WORKERS=4           parallel Gradle workers inside Docker
- *   GRADLE_HEAP=3g             Gradle JVM heap
+ *   GRADLE_HEAP=3g             main Gradle daemon JVM heap
+ *   GRADLE_WORKER_HEAP=1g      per-JVM heap for forked workers (kept small — several
+ *                              run in parallel, so this is what pressures the RAM cap)
  *   MONITOR_WARN_FREE_MB=3000  warn below this much free host RAM
  *   MONITOR_ABORT_FREE_MB=1500 cancel the build below this much free host RAM
  */
@@ -39,6 +41,7 @@ const monitorLog = path.join(outputDir, 'build-monitor.log');
 
 const gradleWorkers = process.env.GRADLE_WORKERS || '4';
 const gradleHeap = process.env.GRADLE_HEAP || '3g';
+const gradleWorkerHeap = process.env.GRADLE_WORKER_HEAP || '1g';
 const warnFreeMb = Number(process.env.MONITOR_WARN_FREE_MB || 3000);
 const abortFreeMb = Number(process.env.MONITOR_ABORT_FREE_MB || 1500);
 const SAMPLE_MS = 10_000;
@@ -130,7 +133,9 @@ async function main() {
   console.log(`  Dockerfile : ${dockerfile}`);
   console.log(`  Context    : ${repoRoot}`);
   console.log(`  Output     : ${outputDir}`);
-  console.log(`  Throttle   : ${gradleWorkers} gradle workers · ${gradleHeap} heap`);
+  console.log(
+    `  Throttle   : ${gradleWorkers} gradle workers · ${gradleHeap} daemon heap · ${gradleWorkerHeap} worker heap`,
+  );
   console.log(`  Monitor    : warn <${warnFreeMb}MB free · abort <${abortFreeMb}MB free (${monitorLog})\n`);
 
   // 1. Build the Docker image (all stages up to the artifact runner)
@@ -140,6 +145,7 @@ async function main() {
     '--build-arg', `BUILD_TYPE=${buildType}`,
     '--build-arg', `GRADLE_WORKERS=${gradleWorkers}`,
     '--build-arg', `GRADLE_HEAP=${gradleHeap}`,
+    '--build-arg', `GRADLE_WORKER_HEAP=${gradleWorkerHeap}`,
     '--progress', 'plain',
     '-t', imageTag,
     repoRoot,

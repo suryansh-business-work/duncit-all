@@ -1,6 +1,5 @@
 import {
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,8 +8,8 @@ import {
   MenuItem,
   Stack,
   TextField,
-  Typography,
 } from '@mui/material';
+import { InfoRow, StatusChip } from '@duncit/ui';
 import {
   JOB_APPLICATION_STATUSES,
   JOB_APPLICATION_STATUS_COLOR,
@@ -26,14 +25,14 @@ interface Props {
 
 function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
-    <Stack direction="row" spacing={1}>
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 96 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" component="div" sx={{ wordBreak: 'break-word' }}>
-        {value || '—'}
-      </Typography>
-    </Stack>
+    <InfoRow
+      variant="inline"
+      label={label}
+      value={value || '—'}
+      labelWidth={96}
+      valueWeight={400}
+      sx={{ gap: 1, alignItems: 'flex-start' }}
+    />
   );
 }
 
@@ -44,11 +43,7 @@ export default function ApplicationDetailsDialog({ application, onClose, onUpdat
       <DialogTitle>
         <Stack direction="row" spacing={1} alignItems="center">
           <span>{application.role_title}</span>
-          <Chip
-            size="small"
-            label={application.status}
-            color={JOB_APPLICATION_STATUS_COLOR[application.status]}
-          />
+          <StatusChip status={application.status} colorMap={JOB_APPLICATION_STATUS_COLOR} />
         </Stack>
       </DialogTitle>
       <DialogContent dividers>

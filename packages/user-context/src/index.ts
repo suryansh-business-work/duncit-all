@@ -9,3 +9,5 @@ export { LoginScreen, LoginForm, loginSchema, glass, loginInitialValues } from '
 export type { LoginFormValues, LoginScreenConfig, LoginScreenProps } from './login-screen';
 export { PortalModeGate, MaintenanceScreen, UnderDevelopmentScreen } from './portal-mode';
 export type { PortalModeGateProps, PortalModeState } from './portal-mode';
+export { buildSessionMeQuery, createSessionUserLoader } from './session-user';
+export type { SessionUserLoaderOptions } from './session-user';

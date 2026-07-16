@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { POD_IDEAS_TABLE, SET_STATUS, DELETE_IDEA, type IdeaRow, type Status } from './queries';
 import DetailsDialog from './DetailsDialog';
 import IdeasTable from './IdeasTable';
@@ -15,17 +15,7 @@ export default function PodIdeasPage() {
   const [delTarget, setDelTarget] = useState<IdeaRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: POD_IDEAS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.podIdeasTable.rows as IdeaRow[], total: data.podIdeasTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<IdeaRow>(client, POD_IDEAS_TABLE, 'podIdeasTable');
 
   const [setStatusMut] = useMutation(SET_STATUS);
   const [deleteMut] = useMutation(DELETE_IDEA);

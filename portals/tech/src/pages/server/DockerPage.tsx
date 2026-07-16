@@ -1,9 +1,9 @@
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import DockerContainersTable from './DockerContainersTable';
 import { DOCKER_CONTAINERS_TABLE, DOCKER_INFO, type DockerContainer, type DockerInfo } from './queries';
 
@@ -15,20 +15,7 @@ export default function DockerPage() {
   });
   const docker = data?.techDockerInfo;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: DOCKER_CONTAINERS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.techDockerContainersTable.rows as DockerContainer[],
-        total: page.techDockerContainersTable.total as number,
-      };
-    },
-    [client]
-  );
+  const fetchRows = useApolloTableFetch<DockerContainer>(client, DOCKER_CONTAINERS_TABLE, 'techDockerContainersTable');
 
   const handleRefresh = () => {
     refetch();

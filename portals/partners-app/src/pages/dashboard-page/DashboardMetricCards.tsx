@@ -1,4 +1,5 @@
 import { Card, CardContent, Stack, Typography } from '@mui/material';
+import { formatINR } from '@duncit/utils';
 import type { DashboardMetrics, DashboardTab } from './dashboard.types';
 
 interface MetricCard {
@@ -44,14 +45,10 @@ export default function DashboardMetricCards({
         <Card key={card.key} variant="outlined" sx={{ borderRadius: 1.25, minWidth: { xs: '100%', sm: 156 }, flex: '1 1 156px' }}>
           <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
             <Typography variant="caption" color="text.secondary" fontWeight={900}>{card.label}</Typography>
-            <Typography variant="h6" fontWeight={950}>{card.money ? formatMoney(Number(data[card.key])) : Number(data[card.key] || 0)}</Typography>
+            <Typography variant="h6" fontWeight={950}>{card.money ? formatINR(Number(data[card.key])) : Number(data[card.key] || 0)}</Typography>
           </CardContent>
         </Card>
       ))}
     </Stack>
   );
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
 }

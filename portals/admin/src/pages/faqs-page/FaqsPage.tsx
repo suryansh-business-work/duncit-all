@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import {
   Box,
@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import type { FaqRow } from '../../components/FaqsTableBase';
 import {
   CREATE_FAQ,
@@ -44,18 +44,9 @@ export default function FaqsPage() {
   const saving = creating || updating;
 
   // This page manages App FAQs only — pin the audience alongside the table's filters.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters = [...q.filters, { field: 'audience', op: 'eq' as const, value: 'APP' }];
-      const { data } = await client.query({
-        query: FAQS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.faqsTable.rows as FaqRow[], total: data.faqsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<FaqRow>(client, FAQS_TABLE, 'faqsTable', {
+    extraFilters: [{ field: 'audience', op: 'eq', value: 'APP' }],
+  });
 
   const openNew = () => {
     setEditing({});

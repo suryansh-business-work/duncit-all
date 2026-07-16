@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
@@ -13,15 +13,15 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import HandymanIcon from '@mui/icons-material/Handyman';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import {
   CRM_SERVICES_OFFERED_TABLE,
   CREATE_CRM_SERVICES_OFFERED,
   DELETE_CRM_SERVICE_OFFERED,
   type CrmServiceOfferedRow,
 } from '../../../api/data.gql';
-import { parseApiError } from '../../../utils/parseApiError';
-import ConfirmDialog from '../../../components/ConfirmDialog';
+import { parseApiError } from '@duncit/utils';
+import { ConfirmDialog } from '@duncit/dialogs';
 import ServiceOfferedForm, { type ServiceOfferedDraft } from './ServiceOfferedForm';
 import ServicesOfferedTable from './ServicesOfferedTable';
 import EditServiceOfferedDialog from './EditServiceOfferedDialog';
@@ -44,20 +44,7 @@ export default function ServicesOfferedPage() {
 
   const targetValid = draft.applies_to_venue || draft.applies_to_host;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: CRM_SERVICES_OFFERED_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.crmServicesOfferedTable.rows as CrmServiceOfferedRow[],
-        total: data.crmServicesOfferedTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<CrmServiceOfferedRow>(client, CRM_SERVICES_OFFERED_TABLE, 'crmServicesOfferedTable');
 
   const submit = async () => {
     setFormError(null);
@@ -146,6 +133,8 @@ export default function ServicesOfferedPage() {
         title="Delete service"
         message={`Delete "${toDelete?.title ?? ''}"?`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

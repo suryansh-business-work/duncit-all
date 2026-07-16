@@ -2,10 +2,24 @@ import { useQuery } from '@apollo/client';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import DnsIcon from '@mui/icons-material/Dns';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import StatCard from './StatCard';
+import { StatCard } from '@duncit/ui';
 import ServerInfoDetails from './ServerInfoDetails';
 import { formatBytes, formatUptime } from './format';
 import { SERVER_INFO, apiHost, type ServerInfo } from './queries';
+
+/** The shared StatCard styled exactly like the old local server tile. */
+function ServerStatCard(props: Readonly<{ label: string; value: string; sub?: string; percent?: number }>) {
+  return (
+    <StatCard
+      {...props}
+      labelVariant="caption"
+      labelWeight={700}
+      labelSx={{ letterSpacing: 0.3 }}
+      valueNoWrap
+      sx={{ height: '100%' }}
+    />
+  );
+}
 
 export default function ServerInfoPage() {
   const { data, loading, error, refetch } = useQuery<{ techServerInfo: ServerInfo }>(SERVER_INFO, {
@@ -54,20 +68,20 @@ export default function ServerInfoPage() {
               gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
             }}
           >
-            <StatCard label="CPU USAGE" value={`${info.cpu.usagePercent}%`} sub={`${info.cpu.cores} cores`} percent={info.cpu.usagePercent} />
-            <StatCard
+            <ServerStatCard label="CPU USAGE" value={`${info.cpu.usagePercent}%`} sub={`${info.cpu.cores} cores`} percent={info.cpu.usagePercent} />
+            <ServerStatCard
               label="MEMORY"
               value={formatBytes(info.memory.usedBytes)}
               sub={`/ ${formatBytes(info.memory.totalBytes)}`}
               percent={info.memory.usagePercent}
             />
-            <StatCard
+            <ServerStatCard
               label="DISK"
               value={formatBytes(info.disk.usedBytes)}
               sub={`/ ${formatBytes(info.disk.totalBytes)}`}
               percent={info.disk.usagePercent}
             />
-            <StatCard label="UPTIME" value={formatUptime(info.os.kernelUptimeSeconds)} sub={info.os.distro} />
+            <ServerStatCard label="UPTIME" value={formatUptime(info.os.kernelUptimeSeconds)} sub={info.os.distro} />
           </Box>
 
           <ServerInfoDetails info={info} />

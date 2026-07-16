@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { DELETE, RENDER, TEMPLATES, Tpl, UPDATE } from './queries';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm } from '@duncit/dialogs';
 
 type Snack = { kind: 'success' | 'error'; msg: string };
 

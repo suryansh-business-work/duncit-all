@@ -7,7 +7,7 @@ import {
   type CrmCallPrompt,
 } from '../../api/call.gql';
 import { CallPromptForm, type CallPromptFormValues } from '../../forms/call-prompt';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   open: boolean;

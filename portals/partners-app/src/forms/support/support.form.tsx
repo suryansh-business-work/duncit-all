@@ -3,15 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, Button, MenuItem, Stack, TextField } from '@mui/material';
-import RhfTextField from '../components/RhfTextField';
-import { zodRules } from '../validation/rules';
+import { RhfTextField, zodRules } from '@duncit/forms';
 import { SUPPORT_CATEGORIES, supportInitialValues, type SupportFormValues } from './support.types';
 
 const CATEGORY_VALUES = SUPPORT_CATEGORIES.map((item) => item.value) as [SupportFormValues['category'], ...SupportFormValues['category'][]];
 
 export const supportSchema = z.object({
   name: zodRules.personName('Name'),
-  email: zodRules.email('Email'),
+  email: zodRules.email('Email', { lengthFirst: true }),
   category: z.enum(CATEGORY_VALUES, { errorMap: () => ({ message: 'Select a valid category' }) }),
   subject: zodRules.requiredText('Subject', 3, 120),
   message: zodRules.requiredText('Message', 10, 2000),

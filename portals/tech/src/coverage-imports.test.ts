@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import * as loginBarrel from './forms/login';
 import * as envQueries from './pages/environment/queries';
 import * as portalEnvQueries from './pages/environment/portal-env-queries';
 import * as envEntryBarrel from './pages/environment/env-entry';
@@ -16,12 +15,6 @@ import * as emailTplTestBarrel from './pages/email-templates-page/email-template
  * assertions just pin the public surface so the imports aren't tree-shaken.
  */
 describe('module barrels & GraphQL documents', () => {
-  it('exposes the login surface', () => {
-    expect(loginBarrel.LoginForm).toBeTypeOf('function');
-    expect(loginBarrel.loginSchema).toBeDefined();
-    expect(loginBarrel.loginInitialValues).toMatchObject({ email: '', password: '' });
-  });
-
   it('builds the static env category catalogue', () => {
     expect(envQueries.CATEGORY_DEFS.length).toBeGreaterThan(0);
     expect(envQueries.CATEGORY_DEFS.find((c) => c.category === 'EMAIL')?.docUrl).toMatch(/^https?:\/\//);

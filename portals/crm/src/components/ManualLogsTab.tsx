@@ -21,7 +21,7 @@ import EventNoteIcon from '@mui/icons-material/EventNote';
 import { ADD_CRM_MANUAL_LOG, ECOMM_LEAD, HOST_LEAD, VENUE_LEAD } from '../api/crm.gql';
 import type { CrmActivity } from '../api/crm.types';
 import RichTextField from '../forms/fields/RichTextField';
-import { parseApiError } from '../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   entityType: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';

@@ -1,16 +1,16 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
+import { ConfirmDialog } from '@duncit/dialogs';
 import { PodForm, blankPodFormValues, buildPodInput, podToFormValues, type PodFormValues } from '@duncit/pod-form';
 import { CLUB_ADMIN_CREATE_POD, CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE, CLUB_ADMIN_UPDATE_POD } from './queries';
 import { PARTNER_POD_CONFIG, getClubVenueIds } from '../pods-page/partner-pod-config';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
-import DeletePodDialog from './DeletePodDialog';
 
 export default function ClubAdminClubPodsPage() {
   const { clubId = '' } = useParams();
@@ -34,21 +34,12 @@ export default function ClubAdminClubPodsPage() {
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
 
   // Every page (and every user filter) stays pinned to this club server-side.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const variables = tableQueryToGql(q);
-      variables.query.filters = [
-        ...variables.query.filters,
-        { field: 'club_id', op: 'eq', value: clubId, values: null },
-      ];
-      const { data } = await client.query({
-        query: CLUB_ADMIN_PODS_TABLE,
-        variables,
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.podsTable.rows as PodRowBase[], total: data.podsTable.total as number };
-    },
-    [client, clubId],
+  const fetchRows = useApolloTableFetch<PodRowBase>(
+    client,
+    CLUB_ADMIN_PODS_TABLE,
+    'podsTable',
+    { extraFilters: [{ field: 'club_id', op: 'eq', value: clubId }] },
+    [clubId],
   );
 
   const openCreate = () => { setOpError(null); setEditPod(null); setFormOpen(true); };
@@ -163,11 +154,21 @@ export default function ClubAdminClubPodsPage() {
         </DialogContent>
       </Dialog>
 
-      <DeletePodDialog
-        pod={podToDelete}
+      <ConfirmDialog
+        open={!!podToDelete}
+        title="Delete pod?"
+        message={
+          <>
+            This will remove <strong>{podToDelete?.pod_title}</strong> from the club. Members lose
+            access to it. This cannot be undone.
+          </>
+        }
+        destructive
         busy={deleteState.loading}
-        onClose={() => setPodToDelete(null)}
+        busyLabel="Deleting..."
+        confirmLabel="Delete"
         onConfirm={confirmDelete}
+        onClose={() => setPodToDelete(null)}
       />
 
       <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />

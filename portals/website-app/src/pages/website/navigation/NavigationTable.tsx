@@ -3,7 +3,7 @@ import { Chip, IconButton, Stack } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import { NAV_AREAS, type WebsiteNavItem } from './queries';
 
 interface Props {

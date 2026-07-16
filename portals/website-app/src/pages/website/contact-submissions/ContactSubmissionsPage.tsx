@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Chip, IconButton, Stack, Typography } from '@mui/material';
+import { IconButton, Stack, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
+import { useDateFormat } from '@duncit/app-settings';
 import ContactDetailsDialog from './ContactDetailsDialog';
 import {
   CONTACT_STATUS_COLOR,
@@ -18,7 +19,7 @@ const getContactRowId = (row: ContactSubmission) => row.id;
 const STATUS_OPTIONS = CONTACT_STATUSES.map((status) => ({ value: status, label: status }));
 
 const renderStatus = (row: ContactSubmission) => (
-  <Chip size="small" label={row.status} color={CONTACT_STATUS_COLOR[row.status] || 'default'} />
+  <StatusChip status={row.status} colorMap={CONTACT_STATUS_COLOR} />
 );
 
 export default function ContactSubmissionsPage() {
@@ -30,20 +31,7 @@ export default function ContactSubmissionsPage() {
   const { formatDateTime } = useDateFormat();
   const [open, setOpen] = useState<ContactSubmission | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: CONTACT_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.contactSubmissionsTable.rows as ContactSubmission[],
-        total: data.contactSubmissionsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<ContactSubmission>(client, CONTACT_TABLE, 'contactSubmissionsTable');
 
   const columns = useMemo<DuncitColumn<ContactSubmission>[]>(() => {
     const renderActions = (row: ContactSubmission) => (

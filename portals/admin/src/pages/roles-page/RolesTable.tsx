@@ -1,10 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, IconButton, Link, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Chip, Link, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, actionsColumn, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { portalForRole } from '../../constants/portalAccess';
 import type { RoleRow } from './queries';
 
@@ -56,9 +53,6 @@ const renderType = (r: RoleRow) =>
     <Chip size="small" label="Custom" />
   );
 
-const createdValue = (r: RoleRow) =>
-  r.created_at ? format(new Date(r.created_at), 'd MMM yyyy') : '—';
-
 export default function RolesTable({
   fetchRows,
   refetchRef,
@@ -67,22 +61,6 @@ export default function RolesTable({
   onDelete,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<RoleRow>[]>(() => {
-    const renderActions = (r: RoleRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(r)}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={r.is_system ? 'System (locked)' : 'Delete'}>
-          <span>
-            <IconButton size="small" disabled={r.is_system} onClick={() => onDelete(r)}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </Stack>
-    );
     return [
       { field: 'key', headerName: 'Key', minWidth: 180, cellRenderer: renderKey, valueGetter: (r) => r.key },
       { field: 'name', headerName: 'Name', flex: 1, minWidth: 160 },
@@ -109,15 +87,12 @@ export default function RolesTable({
         cellRenderer: renderType,
         valueGetter: (r) => (r.is_system ? 'System' : 'Custom'),
       },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: createdValue,
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      dateColumn<RoleRow>(),
+      actionsColumn<RoleRow>({
+        onEdit,
+        onDelete,
+        delete: { color: 'default', disabled: (r) => r.is_system, disabledTitle: 'System (locked)' },
+      }),
     ];
   }, [onEdit, onDelete]);
 

@@ -1,9 +1,13 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, IconButton, Link, Stack, Tooltip } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Chip, Link, Stack } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import {
+  DuncitTable,
+  actionsColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 
 export interface SourceRef {
   jid: string;
@@ -28,7 +32,6 @@ interface Props {
 }
 
 const getLeadRowId = (lead: LeadRow) => lead.id;
-const fmtDate = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString('en-IN') : '—');
 const waWebUrl = (phone: string) => `https://web.whatsapp.com/send?phone=${phone}`;
 const sourceNames = (refs?: SourceRef[]) => (refs ?? []).map((r) => r.name || r.jid).join(', ');
 
@@ -61,7 +64,6 @@ const renderPhone = (lead: LeadRow) => (
 
 const renderCommunities = (lead: LeadRow) => <SourceChips refs={lead.source_communities} />;
 const renderGroups = (lead: LeadRow) => <SourceChips refs={lead.source_groups} />;
-const importedValue = (lead: LeadRow) => fmtDate(lead.imported_at);
 
 /** WhatsApp user leads on @duncit/table — search/sort/paging stay server-side (waUserLeads). */
 export default function LeadsTable({
@@ -72,22 +74,8 @@ export default function LeadsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
-  const columns = useMemo<DuncitColumn<LeadRow>[]>(() => {
-    const renderActions = (lead: LeadRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" aria-label="Edit lead" onClick={() => onEdit(lead)}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" color="error" aria-label="Delete lead" onClick={() => onDelete(lead)}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
-    );
-    return [
+  const columns = useMemo<DuncitColumn<LeadRow>[]>(
+    () => [
       { field: 'name', headerName: 'Name', flex: 1, minWidth: 160, valueGetter: (lead) => lead.name || '—' },
       { field: 'phone', headerName: 'Phone', minWidth: 170, cellRenderer: renderPhone, valueGetter: (lead) => `+${lead.phone}` },
       {
@@ -106,10 +94,22 @@ export default function LeadsTable({
         cellRenderer: renderGroups,
         valueGetter: (lead) => sourceNames(lead.source_groups),
       },
-      { field: 'imported_at', headerName: 'Imported', width: 130, valueGetter: importedValue },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
-    ];
-  }, [onEdit, onDelete]);
+      dateColumn<LeadRow>({
+        field: 'imported_at',
+        headerName: 'Imported',
+        hide: false,
+        filterable: false,
+        formatDate: (d) => d.toLocaleDateString('en-IN'),
+      }),
+      actionsColumn<LeadRow>({
+        onEdit,
+        onDelete,
+        edit: { ariaLabel: 'Edit lead' },
+        delete: { ariaLabel: 'Delete lead' },
+      }),
+    ],
+    [onEdit, onDelete],
+  );
 
   return (
     <DuncitTable<LeadRow>

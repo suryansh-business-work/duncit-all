@@ -1,4 +1,5 @@
-import { Card, CardContent, Grid, Skeleton, Stack, Typography } from '@mui/material';
+import { Grid, Stack, Typography } from '@mui/material';
+import { StatCard } from '@duncit/ui';
 import type { ClubAdminKpis } from './queries';
 import { formatCount, formatMoney, formatPercent, formatRating } from './format';
 
@@ -67,21 +68,18 @@ export default function ClubAdminKpiCards({ kpis, loading }: Readonly<Props>) {
           <Grid container spacing={2}>
             {group.cards.map((card) => (
               <Grid item xs={12} sm={6} md={3} key={card.key}>
-                <Card variant="outlined" sx={{ height: '100%', borderRadius: 2 }}>
-                  <CardContent>
-                    <Stack spacing={0.75}>
-                      <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ lineHeight: 1.4 }}>
-                        {card.label}
-                      </Typography>
-                      {loading ? (
-                        <Skeleton variant="text" width={90} height={36} />
-                      ) : (
-                        <Typography variant="h5" fontWeight={950}>{card.value(kpis)}</Typography>
-                      )}
-                      <Typography variant="caption" color="text.secondary">{card.hint}</Typography>
-                    </Stack>
-                  </CardContent>
-                </Card>
+                <StatCard
+                  label={card.label}
+                  labelWeight={800}
+                  labelSx={{ lineHeight: 1.4 }}
+                  value={card.value(kpis)}
+                  valueWeight={950}
+                  hint={card.hint}
+                  loading={loading}
+                  skeletonProps={{ width: 90, height: 36 }}
+                  headerSx={{ mb: 0.75 }}
+                  sx={{ height: '100%', borderRadius: 2 }}
+                />
               </Grid>
             ))}
           </Grid>

@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
+import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableQueryState } from '@duncit/table';
 import {
   POD_FINANCE_RELEASES,
@@ -23,7 +24,7 @@ function StatusCountChips({ counts }: Readonly<{ counts: Record<string, number> 
   return (
     <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap" component="span">
       {Object.entries(counts).map(([status, count]) => (
-        <Chip key={status} size="small" label={`${count} ${status}`} color={STATUS_COLORS[status] ?? 'default'} />
+        <StatusChip key={status} status={status} label={`${count} ${status}`} colorMap={STATUS_COLORS} />
       ))}
     </Stack>
   );

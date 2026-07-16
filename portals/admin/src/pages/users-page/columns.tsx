@@ -3,6 +3,7 @@ import { alpha } from '@mui/material/styles';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
 import { initials, loginMeta, STATUS_OPTIONS } from './helpers';
 import type { UserRow } from './queries';
@@ -64,11 +65,9 @@ const renderRoles = (u: UserRow) => (
   </Stack>
 );
 
-const renderStatus = (u: UserRow) => {
-  const suspendedColor = u.status === 'SUSPENDED' ? 'error' : 'default';
-  const statusColor = u.status === 'ACTIVE' ? 'success' : suspendedColor;
-  return <Chip label={u.status || 'ACTIVE'} size="small" color={statusColor} />;
-};
+const renderStatus = (u: UserRow) => (
+  <StatusChip status={u.status || 'ACTIVE'} colorMap={{ ACTIVE: 'success', SUSPENDED: 'error' }} />
+);
 
 interface ColumnDeps {
   formatDate: (s: string) => string;

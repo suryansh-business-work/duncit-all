@@ -7,7 +7,6 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Divider,
   Snackbar,
   Stack,
@@ -15,6 +14,7 @@ import {
 } from '@mui/material';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { QueryGuard } from '@duncit/ui';
 import IdentitySection from './IdentitySection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
@@ -81,11 +81,7 @@ export default function BrandingPage() {
   };
 
   if (loading && !data) {
-    return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
-        <CircularProgress />
-      </Stack>
-    );
+    return <QueryGuard loading spinnerSx={{ p: 6 }} />;
   }
 
   return (

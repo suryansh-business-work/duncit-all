@@ -1,8 +1,7 @@
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
-import { AdminLocationSelect, Fieldset, type AdminLocationValue } from '@duncit/location';
-import VenueMapPreview from '../../../components/VenueMapPreview';
+import { AdminLocationSelect, Fieldset, MapEmbedCard, type AdminLocationValue } from '@duncit/location';
 import VenueImagesField from './VenueImagesField';
 import type { RegisterVenueMode, RegisterVenueValues } from '../register-venue';
 
@@ -148,7 +147,7 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
         />
       </Fieldset>
 
-      <VenueMapPreview
+      <MapEmbedCard
         parts={[
           values.address_line1,
           values.address_line2,
@@ -158,6 +157,8 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
           values.postal_code,
           values.country,
         ]}
+        apiKey={import.meta.env.VITE_GOOGLE_MAP_API as string | undefined}
+        hideWhenKeyMissing
       />
     </Stack>
   );

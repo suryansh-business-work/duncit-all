@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { SEND_TEST } from '../../api/emailTemplates.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   open: boolean;

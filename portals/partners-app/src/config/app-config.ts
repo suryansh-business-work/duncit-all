@@ -1,16 +1,11 @@
+import type { AppNavItem } from '@duncit/shell';
+
 /**
  * Per-app configuration for the Duncit Partners console. Reusable configuration
  * only — no dynamic business data. The `key` is the stable portal identifier
  * sent as `portal_key` on login and used by the shared shell.
  */
-export interface AppNavItem {
-  label: string;
-  /** Route the item links to. Optional when the item is purely a group header. */
-  to?: string;
-  icon?: string;
-  /** Optional nested children (one level deep) — rendered as a collapsible group. */
-  children?: AppNavItem[];
-}
+export type { AppNavItem } from '@duncit/shell';
 
 export interface AppConfig {
   key: string;

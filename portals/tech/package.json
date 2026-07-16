@@ -13,10 +13,13 @@
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/dialogs": "workspace:*",
+    "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/theme": "workspace:*",
+    "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@emotion/react": "^11.11.4",

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SLUG_KEY_PATTERN } from '../../../forms/validation/rules';
+import { SLUG_KEY_PATTERN } from '@duncit/forms';
 
 const isHttpUrl = (value: string) => {
   if (!value) return true;

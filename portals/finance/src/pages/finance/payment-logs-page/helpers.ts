@@ -1,3 +1,5 @@
+import { formatMoney } from '@duncit/utils';
+
 export const STATUS_COLORS: Record<
   string,
   'default' | 'warning' | 'info' | 'success' | 'error'
@@ -8,7 +10,7 @@ export const STATUS_COLORS: Record<
   REFUNDED: 'info',
 };
 
-export const fmt = (n: number, sym = '₹') => `${sym}${n.toFixed(2)}`;
+export const fmt = (n: number, sym = '₹') => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
 
 /** Maps the table's query state to PaymentFilterInput so the KPI totals track
  * the table's search/status filter (only fields the input supports). */
@@ -22,19 +24,4 @@ export function paymentTableFilter(q: {
   const status = q.filters.find((f) => f.field === 'status' && f.op === 'eq')?.value;
   if (status) filter.status = status;
   return Object.keys(filter).length ? filter : undefined;
-}
-
-export function downloadPdfFromBase64(b64: string, filename: string) {
-  const bin = atob(b64);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.codePointAt(i) ?? 0;
-  const blob = new Blob([arr], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
 }

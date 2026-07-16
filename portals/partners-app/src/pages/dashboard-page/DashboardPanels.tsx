@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Alert } from '@mui/material';
-import { DuncitTable, tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import type { DashboardRange, DashboardTab } from './dashboard.types';
 import {
   DASHBOARD_HOST_PODS_TABLE,
@@ -35,62 +35,27 @@ export default function DashboardPanels({ tab, range, itemCount, hasRoleAccess }
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
-  const fetchVenues = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: DASHBOARD_VENUES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myVenuesTable.rows as DashboardVenueRow[],
-        total: data.myVenuesTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchVenues = useApolloTableFetch<DashboardVenueRow>(client, DASHBOARD_VENUES_TABLE, 'myVenuesTable');
 
   // The host tab mirrors the legacy myHostPods(from, to) date scope by pinning
   // the page's range onto pod_date_time server-side.
-  const fetchHostPods = useCallback(
-    async (q: TableQueryState) => {
-      const variables = tableQueryToGql(q);
-      variables.query.filters = [
-        ...variables.query.filters,
+  const fetchHostPods = useApolloTableFetch<DashboardHostPodRow>(
+    client,
+    DASHBOARD_HOST_PODS_TABLE,
+    'myHostPodsTable',
+    {
+      extraFilters: [
         {
           field: 'pod_date_time',
           op: 'between',
-          value: null,
           values: [range.from.toISOString(), range.to.toISOString()],
         },
-      ];
-      const { data } = await client.query({
-        query: DASHBOARD_HOST_PODS_TABLE,
-        variables,
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myHostPodsTable.rows as DashboardHostPodRow[],
-        total: data.myHostPodsTable.total as number,
-      };
+      ],
     },
-    [client, range],
+    [range],
   );
 
-  const fetchProducts = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: DASHBOARD_PRODUCTS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myProductListingsTable.rows as DashboardProductRow[],
-        total: data.myProductListingsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchProducts = useApolloTableFetch<DashboardProductRow>(client, DASHBOARD_PRODUCTS_TABLE, 'myProductListingsTable');
 
   // Tables only refetch on their own query-state changes — reload the visible
   // one when the page-level date range moves (skip the mount fetch).

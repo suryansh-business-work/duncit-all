@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { apolloErrorLink } from '@/utils/apolloErrorLink';
+import { apolloErrorLink } from '@duncit/shell';
 import { Observable } from '@apollo/client';
 
 /**

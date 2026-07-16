@@ -8,7 +8,7 @@ import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import MjmlAiButton from './MjmlAiButton';
 import ImageLibraryDialog from './ImageLibraryDialog';
 import { insertMjmlImage } from './insertMjmlImage';
-import { formatMjml } from '../../utils/mjmlFormat';
+import { formatMjml } from '@duncit/utils';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
 
 interface Props {

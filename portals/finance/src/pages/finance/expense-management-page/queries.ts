@@ -94,14 +94,6 @@ export const REMOVE_REFUND = gql`
   }
 `;
 
-export const UPLOAD_FILE = gql`
-  mutation UploadExpenseAttachment($fileBase64: String!, $fileName: String!, $mimeType: String, $folder: String) {
-    uploadImageToImagekit(fileBase64: $fileBase64, fileName: $fileName, mimeType: $mimeType, folder: $folder) {
-      url
-    }
-  }
-`;
-
 export const EXPENSE_CATEGORIES = [
   'RENT',
   'SALARY',

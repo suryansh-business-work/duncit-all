@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { DELETE, EMAIL_TEMPLATE, RENDER, UPDATE, type EmailAsset, type EmailTemplate } from '../../api/emailTemplates.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 export type Snack = { kind: 'success' | 'error'; msg: string };
 

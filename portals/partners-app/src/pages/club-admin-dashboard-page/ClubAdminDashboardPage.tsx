@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Alert, Box, Card, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { subDays, subMonths, startOfMonth } from 'date-fns';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import {
   CLUB_ADMIN_DASHBOARD,
   CLUB_ADMIN_DASHBOARD_TABLE,
@@ -36,19 +36,12 @@ export default function ClubAdminDashboardPage() {
     fetchPolicy: 'cache-and-network',
   });
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: CLUB_ADMIN_DASHBOARD_TABLE,
-        variables: { ...tableQueryToGql(q), from, to: null },
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.clubAdminDashboardTable.rows as ClubAdminClubRow[],
-        total: page.clubAdminDashboardTable.total as number,
-      };
-    },
-    [client, from],
+  const fetchRows = useApolloTableFetch<ClubAdminClubRow>(
+    client,
+    CLUB_ADMIN_DASHBOARD_TABLE,
+    'clubAdminDashboardTable',
+    { extraVariables: { from, to: null } },
+    [from],
   );
 
   // The table only refetches on its own query-state changes — reload it when the

@@ -18,7 +18,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CasinoIcon from '@mui/icons-material/Casino';
-import RhfTextField from '../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
 import DateField from '../../components/DateField';
 import { type CreateForm, genPassword } from './helpers';

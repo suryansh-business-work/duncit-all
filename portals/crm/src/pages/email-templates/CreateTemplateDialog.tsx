@@ -18,7 +18,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import GroupsIcon from '@mui/icons-material/Groups';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { CREATE, STARTER_MJML, type EmailTemplateTarget } from '../../api/emailTemplates.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import MjmlAiButton from './MjmlAiButton';
 
 interface Props {

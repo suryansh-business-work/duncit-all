@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { BackButton } from '@duncit/ui';
 import { useEmailTemplateEditor } from './useEmailTemplateEditor';
 import TemplateEditorPanel from './TemplateEditorPanel';
 import SendTestDialog from './SendTestDialog';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 
 /** CRM → Email Templates → editor (MJML source + live preview) for one template. */
 export default function EmailTemplateEditorPage() {
@@ -23,7 +23,7 @@ export default function EmailTemplateEditorPage() {
   if (!editor.draft) {
     return (
       <Stack spacing={2}>
-        <Button startIcon={<ArrowBackIcon />} onClick={back} size="small" sx={{ alignSelf: 'flex-start' }}>Back to templates</Button>
+        <BackButton onClick={back} sx={{ alignSelf: 'flex-start' }}>Back to templates</BackButton>
         <Alert severity="info">Template not found.</Alert>
       </Stack>
     );
@@ -32,7 +32,7 @@ export default function EmailTemplateEditorPage() {
   return (
     <Stack spacing={2} sx={{ minHeight: 0 }}>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
-        <Button startIcon={<ArrowBackIcon />} onClick={back} size="small">Back to templates</Button>
+        <BackButton onClick={back}>Back to templates</BackButton>
         <Box sx={{ flex: 1 }} />
         <Typography variant="body2" color="text.secondary">
           <code>{editor.draft.slug}</code>
@@ -73,6 +73,8 @@ export default function EmailTemplateEditorPage() {
         title="Delete template"
         message={`Delete "${editor.draft.name}"? This cannot be undone.`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={editor.deleting}
         onConfirm={async () => { await editor.remove(); setConfirmDelete(false); back(); }}
         onClose={() => setConfirmDelete(false)}

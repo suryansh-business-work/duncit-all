@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { zodRules } from '../../../forms/validation/zodRules';
+import { zodRules } from '@duncit/forms';
 import type { CreateForm } from '../helpers';
 
 const isValidPastDate = (value: string) => {

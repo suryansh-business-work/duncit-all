@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Stack, Typography } from '@mui/material';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { useApolloTableFetch } from '@duncit/table';
+import { ConfirmDialog } from '@duncit/dialogs';
 import HostRequestsTable from './HostRequestsTable';
 import ContactDetailsDialog from './ContactDetailsDialog';
 import DecisionDialog, { type DecisionMode } from './DecisionDialog';
@@ -31,20 +31,7 @@ export default function HostRequestsPage() {
 
   const busy = acking || approving || rejecting || deleting;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: HOST_REQUESTS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.hostRequestsTable.rows as HostRequest[],
-        total: data.hostRequestsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<HostRequest>(client, HOST_REQUESTS_TABLE, 'hostRequestsTable');
 
   const run = async (work: Promise<unknown>, fallback: string) => {
     setActionError(null);
@@ -124,6 +111,7 @@ export default function HostRequestsPage() {
         confirmLabel="Delete"
         confirmColor="error"
         loading={deleting}
+        busyLabel="Working…"
         onClose={() => setDeleteFor(null)}
         onConfirm={confirmDelete}
       />

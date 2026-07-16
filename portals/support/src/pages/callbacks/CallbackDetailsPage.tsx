@@ -8,26 +8,20 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  IconButton,
   Link,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { formatDistanceToNow } from 'date-fns';
+import { BackHeader, StatusChip } from '@duncit/ui';
 import {
   BOUNCER_CALLBACK_REQUEST,
   CLOSE_CALLBACK,
   MARK_CALLBACK_CONTACTED,
   type CallbackRequest,
 } from '../../graphql/bouncer';
-
-const STATUS_COLOR: Record<CallbackRequest['status'], 'warning' | 'primary' | 'default'> = {
-  PENDING: 'warning',
-  CONTACTED: 'primary',
-  CLOSED: 'default',
-};
+import { CALLBACK_STATUS_COLORS } from '../../lib/statusMaps';
 
 export default function CallbackDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -80,7 +74,7 @@ export default function CallbackDetailsPage() {
                   {req.user.name}
                 </Typography>
                 <Chip size="small" variant="outlined" label={req.ticket_no} />
-                <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
+                <StatusChip status={req.status} colorMap={CALLBACK_STATUS_COLORS} />
               </Stack>
               <Typography variant="caption" color="text.secondary">
                 {formatDistanceToNow(new Date(req.created_at), { addSuffix: true })}
@@ -162,14 +156,7 @@ export default function CallbackDetailsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/callbacks')} aria-label="Back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Callback Request
-        </Typography>
-      </Stack>
+      <BackHeader onBack={() => navigate('/callbacks')} title="Callback Request" titleWeight={800} />
 
       {content}
     </Stack>

@@ -4,12 +4,12 @@ import { Card, CardContent, Stack, Typography } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import {
   DuncitTable,
-  tableQueryToGql,
+  useApolloTableFetch,
   type DuncitColumn,
   type TableFetch,
   type TableQueryState,
 } from '@duncit/table';
-import { notifyError } from '../../components/notify';
+import { notifyError } from '@duncit/dialogs';
 import {
   ReviewCell,
   TYPE_LABELS,
@@ -87,20 +87,16 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
   const refetchRef = useRef<(() => void) | null>(null);
   const [review, { loading: saving }] = useMutation(REVIEW);
 
+  const fetchTable = useApolloTableFetch<VerificationItem>(
+    client,
+    USER_VERIFICATIONS_TABLE,
+    'userVerificationsTable',
+    { extraVariables: { user_id: userId } },
+    [userId],
+  );
   const fetchRows: TableFetch<VerificationItem> = useCallback(
-    async (q: TableQueryState) => {
-      if (!userId) return { rows: [], total: 0 };
-      const { data } = await client.query({
-        query: USER_VERIFICATIONS_TABLE,
-        variables: { user_id: userId, ...tableQueryToGql(q) },
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.userVerificationsTable.rows as VerificationItem[],
-        total: data.userVerificationsTable.total as number,
-      };
-    },
-    [client, userId],
+    async (q: TableQueryState) => (userId ? fetchTable(q) : { rows: [], total: 0 }),
+    [userId, fetchTable],
   );
 
   const onAct = useCallback(

@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Button, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';
 import { TICKETS, type TicketPage } from '../../../graphql/tickets';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
@@ -41,14 +42,10 @@ export default function TicketsListPage() {
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Tickets
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Support tickets from users. Open one to reply, or raise a new ticket.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Tickets"
+        subtitle="Support tickets from users. Open one to reply, or raise a new ticket."
+      />
 
       <TicketsTable
         fetchRows={fetchRows}

@@ -1,17 +1,17 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_ECOMM_LEAD, ECOMM_LEADS_TABLE } from '../../api/crm.gql';
 import type { EcommLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
 import { useSuperCategories } from '../../api/useSuperCategories';
 import LeadsToolbar from '../../components/LeadsToolbar';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import { CrmLeadsTable } from '../../components/lead-table';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 export default function EcommLeadsPage() {
   const navigate = useNavigate();
@@ -26,17 +26,7 @@ export default function EcommLeadsPage() {
 
   const [deleteLead, { loading: deleting }] = useMutation(DELETE_ECOMM_LEAD);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: ECOMM_LEADS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.ecommLeadsTable.rows as EcommLead[], total: data.ecommLeadsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<EcommLead>(client, ECOMM_LEADS_TABLE, 'ecommLeadsTable');
 
   const statusOptions = useMemo(
     () => (config.host_lead_statuses ?? []).map((value) => ({ label: value, value })),
@@ -96,6 +86,8 @@ export default function EcommLeadsPage() {
         title="Delete ecomm lead"
         message={`Delete "${toDelete?.seller_name}"? This cannot be undone.`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

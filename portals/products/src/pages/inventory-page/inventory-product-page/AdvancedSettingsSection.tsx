@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import QrPreview from './QrPreview';
 import { STATUS_OPTIONS, VISIBILITY_OPTIONS } from './constants';
 import { GENERATE_INVENTORY_SKU } from './productQueries';

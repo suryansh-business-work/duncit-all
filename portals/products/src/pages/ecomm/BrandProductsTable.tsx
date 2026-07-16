@@ -1,20 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Avatar, Chip } from '@mui/material';
-import {
-  DuncitTable,
-  tableQueryToGql,
-  type DuncitColumn,
-  type TableQueryState,
-} from '@duncit/table';
-import { useDateFormat } from '../../utils/dateFormat';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { formatMoney } from '@duncit/utils';
+import { useDateFormat } from '@duncit/app-settings';
 import { MARKETPLACE_BRAND_PRODUCTS_TABLE, type BrandProductRow } from './queries';
 
 interface Props {
   brandId: string;
 }
-
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
 
 const getRowId = (p: BrandProductRow) => p.id;
 
@@ -24,7 +18,7 @@ const renderCover = (p: BrandProductRow) => (
   </Avatar>
 );
 
-const priceValue = (p: BrandProductRow) => money.format(p.selling_price || p.unit_cost);
+const priceValue = (p: BrandProductRow) => formatMoney(p.selling_price || p.unit_cost, { decimals: 2 });
 
 const dimensionsLabel = (p: BrandProductRow) =>
   `${p.length_cm}×${p.breadth_cm}×${p.height_cm} cm · ${p.weight_kg}kg`;
@@ -38,19 +32,12 @@ export default function BrandProductsTable({ brandId }: Readonly<Props>) {
   const refetchRef = useRef<(() => void) | null>(null);
   const { formatDate } = useDateFormat();
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MARKETPLACE_BRAND_PRODUCTS_TABLE,
-        variables: { brand_doc_id: brandId, ...tableQueryToGql(q) },
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.marketplaceBrandProductsTable.rows as BrandProductRow[],
-        total: data.marketplaceBrandProductsTable.total as number,
-      };
-    },
-    [client, brandId],
+  const fetchRows = useApolloTableFetch<BrandProductRow>(
+    client,
+    MARKETPLACE_BRAND_PRODUCTS_TABLE,
+    'marketplaceBrandProductsTable',
+    { extraVariables: { brand_doc_id: brandId } },
+    [brandId],
   );
 
   // Same route pattern → the component stays mounted when the brand param

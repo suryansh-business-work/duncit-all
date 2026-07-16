@@ -1,9 +1,13 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Box, Chip, Tooltip, Typography } from '@mui/material';
+import {
+  DuncitTable,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import type { AiPrompt } from './queries';
 
 interface Props {
@@ -43,12 +47,6 @@ const renderTokens = (p: AiPrompt) => (
   </Tooltip>
 );
 
-const renderStatus = (p: AiPrompt) => (
-  <Chip size="small" color={p.is_active ? 'success' : 'default'} label={p.is_active ? 'Active' : 'Inactive'} />
-);
-
-const createdValue = (p: AiPrompt) => (p.created_at ? format(new Date(p.created_at), 'd MMM yyyy') : '—');
-
 /** Prompt Library table — name/category/model/token size/status with row actions. */
 export default function PromptsTable({
   fetchRows,
@@ -57,22 +55,8 @@ export default function PromptsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
-  const columns = useMemo<DuncitColumn<AiPrompt>[]>(() => {
-    const renderActions = (p: AiPrompt) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(p)} aria-label={`Edit ${p.name}`}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" color="error" onClick={() => onDelete(p)} aria-label={`Delete ${p.name}`}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
-    );
-    return [
+  const columns = useMemo<DuncitColumn<AiPrompt>[]>(
+    () => [
       {
         field: 'name',
         headerName: 'Name',
@@ -104,25 +88,17 @@ export default function PromptsTable({
         cellRenderer: renderTokens,
         valueGetter: (p) => p.token_count,
       },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        width: 110,
-        filter: { type: 'boolean' },
-        cellRenderer: renderStatus,
-        valueGetter: (p) => (p.is_active ? 'Active' : 'Inactive'),
-      },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        hide: true,
-        width: 130,
-        filter: { type: 'date' },
-        valueGetter: createdValue,
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
-    ];
-  }, [onEdit, onDelete]);
+      activeChipColumn<AiPrompt>(),
+      dateColumn<AiPrompt>(),
+      actionsColumn<AiPrompt>({
+        onEdit,
+        onDelete,
+        edit: { ariaLabel: (p) => `Edit ${p.name}` },
+        delete: { ariaLabel: (p) => `Delete ${p.name}` },
+      }),
+    ],
+    [onEdit, onDelete],
+  );
 
   return (
     <DuncitTable<AiPrompt>

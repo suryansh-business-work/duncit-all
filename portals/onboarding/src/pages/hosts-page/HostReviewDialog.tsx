@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -14,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 
 interface Props {
   active: any;
@@ -28,21 +28,12 @@ interface Props {
   savingCommission: boolean;
 }
 
-const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
+const STATUS_COLOR: StatusColorMap = {
   DRAFT: 'warning',
   SUBMITTED: 'info',
   APPROVED: 'success',
   REJECTED: 'error',
 };
-
-function InfoRow({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>{label}</Typography>
-      <Typography variant="body2" fontWeight={600} sx={{ wordBreak: 'break-word' }}>{value}</Typography>
-    </Stack>
-  );
-}
 
 function DocButton({ href, label }: Readonly<{ href: string; label: string }>) {
   return (
@@ -96,17 +87,17 @@ export default function HostReviewDialog({
             {active?.full_name || 'Host'}
           </Typography>
           {active?.status && (
-            <Chip size="small" color={STATUS_COLOR[active.status] ?? 'default'} label={active.status} sx={{ fontWeight: 800 }} />
+            <StatusChip status={active.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
           )}
         </Stack>
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <Stack spacing={0.75}>
-            <InfoRow label="Aadhar" value={active?.aadhar_number || '—'} />
-            <InfoRow label="PAN" value={active?.pan_number || '—'} />
-            <InfoRow label="DOB" value={active?.dob?.slice(0, 10) || '—'} />
-            <InfoRow label="Address" value={active?.full_address || '—'} />
+            <InfoRow variant="inline" labelWidth={80} label="Aadhar" value={active?.aadhar_number || '—'} />
+            <InfoRow variant="inline" labelWidth={80} label="PAN" value={active?.pan_number || '—'} />
+            <InfoRow variant="inline" labelWidth={80} label="DOB" value={active?.dob?.slice(0, 10) || '—'} />
+            <InfoRow variant="inline" labelWidth={80} label="Address" value={active?.full_address || '—'} />
           </Stack>
 
           {hasDocs && (

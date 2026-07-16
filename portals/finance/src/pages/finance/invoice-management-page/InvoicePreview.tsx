@@ -1,4 +1,6 @@
 import { Box, Divider, Stack, Typography } from '@mui/material';
+import { formatMoney } from '@duncit/utils';
+import { InfoRow } from '@duncit/ui';
 import type { InvoiceSettingsForm } from './types';
 
 const ACCENT = '#ff4f73';
@@ -10,7 +12,7 @@ const SAMPLE = { subtotal: 847.46, gst: 152.54, total: 1000 };
  * effect of their edits live — uses sample figures, real branding values. */
 export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSettingsForm }>) {
   const c = value.currency_symbol || '₹';
-  const money = (n: number) => `${c}${n.toFixed(2)}`;
+  const money = (n: number) => formatMoney(n, { symbol: c, decimals: 2, grouping: false });
 
   return (
     <Box sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider', bgcolor: '#fff', color: '#111827' }}>
@@ -52,10 +54,10 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
         </Stack>
 
         <Stack spacing={0.4} sx={{ mt: 1.5, ml: 'auto', maxWidth: 240 }}>
-          <Row label="Taxable value" value={money(SAMPLE.subtotal)} />
-          <Row label="GST (18%)" value={money(SAMPLE.gst)} />
+          <InfoRow variant="split" label="Taxable value" value={money(SAMPLE.subtotal)} labelWeight={500} valueWeight={500} />
+          <InfoRow variant="split" label="GST (18%)" value={money(SAMPLE.gst)} labelWeight={500} valueWeight={500} />
           <Divider />
-          <Row label="Total Paid" value={money(SAMPLE.total)} bold />
+          <InfoRow variant="split" bold boldColor={ACCENT} label="Total Paid" value={money(SAMPLE.total)} />
         </Stack>
 
         <Box sx={{ mt: 2 }}>
@@ -75,14 +77,5 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
         </Box>
       </Box>
     </Box>
-  );
-}
-
-function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
-  return (
-    <Stack direction="row" justifyContent="space-between">
-      <Typography variant="body2" fontWeight={bold ? 900 : 500} color={bold ? 'text.primary' : 'text.secondary'}>{label}</Typography>
-      <Typography variant="body2" fontWeight={bold ? 900 : 500} sx={{ color: bold ? ACCENT : 'inherit' }}>{value}</Typography>
-    </Stack>
   );
 }

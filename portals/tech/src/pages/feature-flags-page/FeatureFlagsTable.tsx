@@ -1,8 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, IconButton, Stack, Switch, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Chip, Switch, Typography } from '@mui/material';
+import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { FeatureFlagRow } from './queries';
 
 const getFlagRowId = (f: FeatureFlagRow) => f.id;
@@ -42,22 +40,6 @@ export default function FeatureFlagsTable({
     const renderEnabled = (f: FeatureFlagRow) => (
       <Switch size="small" checked={f.enabled} onChange={() => onToggle(f)} />
     );
-    const renderActions = (f: FeatureFlagRow) => (
-      <Stack direction="row" justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(f)}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title={f.is_system ? 'System (locked)' : 'Delete'}>
-          <span>
-            <IconButton size="small" disabled={f.is_system} onClick={() => onRemove(f)}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </Stack>
-    );
     return [
       {
         field: 'enabled',
@@ -84,7 +66,12 @@ export default function FeatureFlagsTable({
         cellRenderer: renderType,
         valueGetter: typeValue,
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 120, cellRenderer: renderActions },
+      actionsColumn<FeatureFlagRow>({
+        width: 120,
+        onEdit,
+        onDelete: onRemove,
+        delete: { color: 'default', disabled: (f) => f.is_system, disabledTitle: 'System (locked)' },
+      }),
     ];
   }, [onEdit, onRemove, onToggle]);
 

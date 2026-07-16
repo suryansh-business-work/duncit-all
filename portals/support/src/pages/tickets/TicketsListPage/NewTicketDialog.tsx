@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { CREATE_TICKET, type TicketCategory } from '../../../graphql/tickets';
 import RichTextEditor, { htmlToText } from '../../../components/RichTextEditor';
-import UploadField from '../../../components/UploadField';
+import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 
 const CATEGORIES: TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
@@ -76,7 +76,14 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
             </Typography>
             <RichTextEditor value={bodyHtml} onChange={setBodyHtml} placeholder="Describe the issue…" />
           </Box>
-          <UploadField value={attachments} onChange={setAttachments} folder="/support/tickets" />
+          <AttachmentUploadField
+            value={attachments}
+            onChange={setAttachments}
+            folder="/support/tickets"
+            accept={ATTACHMENT_ACCEPT_ALL}
+            maxBytes={100 * 1024 * 1024}
+            allowDocuments
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

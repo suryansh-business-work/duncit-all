@@ -3,8 +3,9 @@ import { Avatar, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
 import { BRAND_STATUS_COLOR, BRAND_STATUS_OPTIONS } from './brandStatus';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import type { EcommBrandRow } from './queries';
 
 interface Props {
@@ -46,7 +47,7 @@ const pickupValue = (b: EcommBrandRow) =>
   b.default_pickup_location_id ? 'Registered' : 'No default';
 
 const renderStatus = (b: EcommBrandRow) => (
-  <Chip size="small" label={b.status} color={BRAND_STATUS_COLOR[b.status] ?? 'default'} />
+  <StatusChip status={b.status} colorMap={BRAND_STATUS_COLOR} />
 );
 
 export default function EcommBrandsTable({ fetchRows, refetchRef, onView }: Readonly<Props>) {

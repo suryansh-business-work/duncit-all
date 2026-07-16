@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
+import { useDebouncedValue } from '@duncit/ui';
 import {
   Alert,
   Box,
@@ -34,17 +35,15 @@ export default function WhatsAppBrowser() {
   const [community, setCommunity] = useState<GroupRef | null>(null);
   const [members, setMembers] = useState<GroupRef | null>(null);
   const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
+  const search = useDebouncedValue(searchInput.trim(), 350);
 
+  // Reset paging once the debounced search settles (was previously done
+  // inside the debounce timeout — equivalent ordering).
   useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(0);
-    }, 350);
-    return () => clearTimeout(t);
-  }, [searchInput]);
+    setPage(0);
+  }, [search]);
 
   // Reset paging/search when switching tabs or drilling into a community.
   useEffect(() => {

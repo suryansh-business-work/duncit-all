@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   CardContent,
-  CircularProgress,
   Divider,
   FormControlLabel,
   MenuItem,
@@ -16,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { QueryGuard } from '@duncit/ui';
 
 const APP_SETTINGS = gql`
   query AppSettingsExpiry {
@@ -103,15 +103,8 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
     }
   };
 
-  let body: ReactNode;
-  if (loading && !data) {
-    body = (
-      <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-    );
-  } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
-  } else {
-    body = (
+  const body = (
+    <QueryGuard loading={loading && !data} error={error} errorText={error?.message} spinnerSx={{ py: 4 }}>
       <Stack spacing={2}>
         <FormControlLabel
           control={<Switch checked={noExpire} onChange={(_, v) => setNoExpire(v)} color="warning" />}
@@ -160,8 +153,8 @@ export default function JwtExpirySection({ onToast }: Readonly<Props>) {
           </Typography>
         )}
       </Stack>
-    );
-  }
+    </QueryGuard>
+  );
 
   return (
     <Card>

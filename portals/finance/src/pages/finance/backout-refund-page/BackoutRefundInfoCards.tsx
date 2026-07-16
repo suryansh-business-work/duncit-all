@@ -1,15 +1,7 @@
 import type { ReactNode } from 'react';
-import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { InfoRow, StatusChip } from '@duncit/ui';
 import { fmtDate, money, REFUND_STATUS_COLORS, type BackoutRefundDetail } from './queries';
-
-function InfoRow({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Stack direction="row" justifyContent="space-between" spacing={2}>
-      <Typography variant="body2" color="text.secondary">{label}</Typography>
-      <Typography variant="body2" fontWeight={600} sx={{ textAlign: 'right' }}>{value}</Typography>
-    </Stack>
-  );
-}
 
 function InfoCard({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
   return (
@@ -45,39 +37,39 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
             sx={{ width: '100%', borderRadius: 2, mb: 1, maxHeight: 180, objectFit: 'cover' }}
           />
         )}
-        <InfoRow label="Title" value={pod?.pod_title ?? '—'} />
-        <InfoRow label="Date" value={fmtDate(pod?.pod_date_time)} />
-        <InfoRow label="Type" value={pod?.pod_type ?? '—'} />
-        <InfoRow label="Spots" value={pod ? String(pod.no_of_spots) : '—'} />
+        <InfoRow variant="split" label="Title" value={pod?.pod_title ?? '—'} />
+        <InfoRow variant="split" label="Date" value={fmtDate(pod?.pod_date_time)} />
+        <InfoRow variant="split" label="Type" value={pod?.pod_type ?? '—'} />
+        <InfoRow variant="split" label="Spots" value={pod ? String(pod.no_of_spots) : '—'} />
       </InfoCard>
 
       <InfoCard title="Host & Club">
-        <InfoRow label="Hosts" value={hosts} />
-        <InfoRow label="Club" value={pod?.club?.club_name ?? '—'} />
-        <InfoRow label="Club slug" value={pod?.club_slug ?? '—'} />
-        {pod?.venue_id ? <InfoRow label="Venue" value={pod.venue_id} /> : null}
+        <InfoRow variant="split" label="Hosts" value={hosts} />
+        <InfoRow variant="split" label="Club" value={pod?.club?.club_name ?? '—'} />
+        <InfoRow variant="split" label="Club slug" value={pod?.club_slug ?? '—'} />
+        {pod?.venue_id ? <InfoRow variant="split" label="Venue" value={pod.venue_id} /> : null}
       </InfoCard>
 
       <InfoCard title="Member">
-        <InfoRow label="Name" value={request.user_name ?? '—'} />
-        <InfoRow label="Email" value={request.user_email ?? '—'} />
-        <InfoRow label="Joined" value={fmtDate(request.joined_at)} />
-        <InfoRow label="Backed out" value={fmtDate(request.backed_out_at)} />
+        <InfoRow variant="split" label="Name" value={request.user_name ?? '—'} />
+        <InfoRow variant="split" label="Email" value={request.user_email ?? '—'} />
+        <InfoRow variant="split" label="Joined" value={fmtDate(request.joined_at)} />
+        <InfoRow variant="split" label="Backed out" value={fmtDate(request.backed_out_at)} />
       </InfoCard>
 
       <InfoCard title="Payment">
-        <InfoRow label="Amount" value={money(sym, Number(request.payment_amount ?? 0))} />
-        <InfoRow label="Currency" value={request.payment_currency ?? '—'} />
-        <InfoRow label="Status" value={request.payment_status ?? '—'} />
-        <InfoRow label="Payment ID" value={request.payment_id ?? '—'} />
+        <InfoRow variant="split" label="Amount" value={money(sym, Number(request.payment_amount ?? 0))} />
+        <InfoRow variant="split" label="Currency" value={request.payment_currency ?? '—'} />
+        <InfoRow variant="split" label="Status" value={request.payment_status ?? '—'} />
+        <InfoRow variant="split" label="Payment ID" value={request.payment_id ?? '—'} />
       </InfoCard>
 
       <InfoCard title="Refund">
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="body2" color="text.secondary">Refund status</Typography>
-          <Chip size="small" color={REFUND_STATUS_COLORS[request.refund_status]} label={request.refund_status} />
+          <StatusChip status={request.refund_status} colorMap={REFUND_STATUS_COLORS} />
         </Stack>
-        <InfoRow label="Refund threshold" value={`${request.refund_threshold_pct}%`} />
+        <InfoRow variant="split" label="Refund threshold" value={`${request.refund_threshold_pct}%`} />
       </InfoCard>
     </Stack>
   );

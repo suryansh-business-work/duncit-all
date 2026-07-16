@@ -4,7 +4,7 @@ import {
   Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Tab, Tabs, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import NavItemDialog, { type NavItemValues } from './NavItemDialog';
 import NavigationTable from './NavigationTable';
 import {
@@ -27,24 +27,13 @@ export default function NavigationPage() {
   const [editing, setEditing] = useState<WebsiteNavItem | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<WebsiteNavItem | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      // Scope the shared websiteNavTable query to the active site tab.
-      const scoped: TableQueryState = {
-        ...q,
-        filters: [...q.filters, { field: 'site', op: 'eq', value: site }],
-      };
-      const { data } = await client.query({
-        query: WEBSITE_NAV_TABLE,
-        variables: tableQueryToGql(scoped),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.websiteNavTable.rows as WebsiteNavItem[],
-        total: data.websiteNavTable.total as number,
-      };
-    },
-    [client, site],
+  // Scope the shared websiteNavTable query to the active site tab.
+  const fetchRows = useApolloTableFetch<WebsiteNavItem>(
+    client,
+    WEBSITE_NAV_TABLE,
+    'websiteNavTable',
+    { extraFilters: [{ field: 'site', op: 'eq', value: site }] },
+    [site],
   );
 
   const openEdit = useCallback((item: WebsiteNavItem) => {

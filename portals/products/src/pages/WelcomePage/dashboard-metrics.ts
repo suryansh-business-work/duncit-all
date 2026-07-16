@@ -70,8 +70,3 @@ export function computeDashboard(
     brandProducts,
   };
 }
-
-/** Rupee-format a whole number, e.g. 125000 → "₹1,25,000". */
-export function formatMoney(amount: number): string {
-  return `₹${Math.round(amount).toLocaleString('en-IN')}`;
-}

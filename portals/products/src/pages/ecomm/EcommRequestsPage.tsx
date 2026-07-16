@@ -1,5 +1,5 @@
 import { useApolloClient } from '@apollo/client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Box,
@@ -8,7 +8,7 @@ import {
   ToggleButtonGroup,
   Typography,
 } from '@mui/material';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import EcommRequestsTable from './EcommRequestsTable';
 import ReviewListingDialog from './ReviewListingDialog';
 import { PRODUCT_LISTING_REQUESTS_TABLE, type ProductListingRow } from './requestsQueries';
@@ -22,26 +22,15 @@ export default function EcommRequestsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [reviewTarget, setReviewTarget] = useState<ProductListingRow | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const variables = tableQueryToGql(q);
-      if (status !== 'ALL') {
-        variables.query.filters = [
-          ...variables.query.filters,
-          { field: 'listing_review_status', op: 'eq', value: status, values: null },
-        ];
-      }
-      const { data } = await client.query({
-        query: PRODUCT_LISTING_REQUESTS_TABLE,
-        variables,
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.productListingRequestsTable.rows as ProductListingRow[],
-        total: data.productListingRequestsTable.total as number,
-      };
+  const fetchRows = useApolloTableFetch<ProductListingRow>(
+    client,
+    PRODUCT_LISTING_REQUESTS_TABLE,
+    'productListingRequestsTable',
+    {
+      extraFilters:
+        status === 'ALL' ? [] : [{ field: 'listing_review_status', op: 'eq', value: status }],
     },
-    [client, status],
+    [status],
   );
 
   // Reload the table when the status toggle changes (skip the mount fetch —

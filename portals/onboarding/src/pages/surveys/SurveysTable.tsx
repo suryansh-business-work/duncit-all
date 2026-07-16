@@ -1,8 +1,6 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Chip, IconButton, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Chip } from '@mui/material';
+import { DuncitTable, actionsColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { SurveyRow } from './queries';
 
 const scopeLabel = (r: SurveyRow) =>
@@ -30,16 +28,6 @@ const updatedValue = (r: SurveyRow) =>
 
 export default function SurveysTable({ fetchRows, refetchRef, onOpen, onDelete }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<SurveyRow>[]>(() => {
-    const renderActions = (r: SurveyRow) => (
-      <>
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onOpen(r)}><EditIcon fontSize="small" /></IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" color="error" onClick={() => onDelete(r)}><DeleteIcon fontSize="small" /></IconButton>
-        </Tooltip>
-      </>
-    );
     return [
       {
         field: 'title',
@@ -80,7 +68,7 @@ export default function SurveysTable({ fetchRows, refetchRef, onOpen, onDelete }
         filter: { type: 'date' },
         valueGetter: updatedValue,
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      actionsColumn<SurveyRow>({ onEdit: onOpen, onDelete }),
     ];
   }, [onOpen, onDelete]);
 

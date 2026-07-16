@@ -16,8 +16,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { SingleImageUploadField } from '@duncit/media-picker';
 import { ADD_REFUND, CREATE_EXPENSE, DELETE_EXPENSE, EXPENSE_CATEGORIES, PAYMENT_METHODS, REMOVE_REFUND, UPDATE_EXPENSE, labelize } from './queries';
-import AttachmentField from './AttachmentField';
 import RefundTimeline from './RefundTimeline';
 
 const BLANK = { category: 'RENT', amount: '', vendor_name: '', payment_method: 'BANK_TRANSFER', reference: '', description: '', attachment_url: '' };
@@ -116,7 +116,16 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
         </TextField>
         <TextField label="Reference / txn id" value={form.reference} onChange={(e) => set('reference')(e.target.value)} fullWidth />
         <TextField label="Description" value={form.description} onChange={(e) => set('description')(e.target.value)} multiline minRows={2} fullWidth />
-        <AttachmentField value={form.attachment_url} onChange={set('attachment_url')} />
+        <SingleImageUploadField
+          variant="url-button"
+          label="Receipt / attachment URL"
+          value={form.attachment_url}
+          onChange={set('attachment_url')}
+          folder="/expenses"
+          accept="image/*,.pdf"
+          maxBytes={null}
+          buttonLabel="Upload"
+        />
         <Button variant="contained" onClick={save} disabled={saving}>
           {saving ? 'Saving…' : saveLabel}
         </Button>

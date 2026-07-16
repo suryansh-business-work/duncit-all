@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,7 +10,8 @@ import {
   Typography,
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { PageHeader } from '@duncit/ui';
 import {
   LEGAL_DOCUMENT_STATS,
   LEGAL_DOCUMENT_STATS_TABLE,
@@ -38,31 +38,15 @@ export default function DashboardPage() {
   );
   const stats = data?.legalDocumentStats;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: LEGAL_DOCUMENT_STATS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.legalDocumentStatsTable.rows as LegalDocumentTypeCount[],
-        total: page.legalDocumentStatsTable.total as number,
-      };
-    },
-    [client]
+  const fetchRows = useApolloTableFetch<LegalDocumentTypeCount>(
+    client,
+    LEGAL_DOCUMENT_STATS_TABLE,
+    'legalDocumentStatsTable',
   );
 
   return (
     <Stack spacing={2.5}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Legal Dashboard
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          An overview of your legal documents by type.
-        </Typography>
-      </Box>
+      <PageHeader title="Legal Dashboard" subtitle="An overview of your legal documents by type." />
 
       {loading && !stats ? (
         <Box sx={{ p: 4, textAlign: 'center' }}>

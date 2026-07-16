@@ -14,8 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import { notifyError, notifySuccess } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { notifyError, notifySuccess, useConfirm } from '@duncit/dialogs';
 import { ADMINS, GRANT_ADMIN, REVOKE_ADMIN, SEARCH_USERS } from './queries';
 
 const ROOT_ADMIN_EMAIL = 'admin@duncit.com';

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
-import { useMutation } from '@apollo/client';
-import { UPLOAD_IMAGE } from './queries';
+import { useApolloClient } from '@apollo/client';
+import { uploadImageToImagekit } from './upload';
 import { validateFile } from './utils';
 import type { FilePolicy } from './types';
 
@@ -29,7 +29,7 @@ export function useDeviceUpload({
   const [uploadPct, setUploadPct] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const [uploadImageMut] = useMutation(UPLOAD_IMAGE);
+  const client = useApolloClient();
 
   useEffect(() => {
     if (!open) return;
@@ -67,25 +67,11 @@ export function useDeviceUpload({
     setUploadPct(10);
     setError(null);
     try {
-      const fileBase64: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () =>
-          resolve(typeof reader.result === 'string' ? reader.result : '');
-        reader.onerror = () => reject(new Error('Could not read selected file'));
-        reader.readAsDataURL(picked);
+      const { url } = await uploadImageToImagekit(client, picked, {
+        folder,
+        allowDocuments,
+        onProgress: setUploadPct,
       });
-      setUploadPct(55);
-      const res = await uploadImageMut({
-        variables: {
-          fileBase64,
-          fileName: picked.name,
-          mimeType: picked.type,
-          folder,
-          allowDocuments,
-        },
-      });
-      const url = res.data?.uploadImageToImagekit?.url;
-      if (!url) throw new Error('No URL returned from ImageKit upload');
       setUploadPct(100);
       onPicked(url);
       onClose();

@@ -1,5 +1,5 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -8,7 +8,8 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ShareIcon from '@mui/icons-material/Share';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { statusColor, statusIcon, type IdeaRow, type Status } from './queries';
+import { StatusChip } from '@duncit/ui';
+import { STATUS_COLOR_MAP, statusIcon, type IdeaRow, type Status } from './queries';
 
 interface Props {
   fetchRows: TableFetch<IdeaRow>;
@@ -73,7 +74,7 @@ const renderEngagement = (it: IdeaRow) => (
 );
 
 const renderStatus = (it: IdeaRow) => (
-  <Chip size="small" icon={statusIcon(it.status)} label={it.status} color={statusColor(it.status) as any} />
+  <StatusChip status={it.status} icon={statusIcon(it.status)} fallbackColor="warning" colorMap={STATUS_COLOR_MAP} />
 );
 
 export default function IdeasTable({ fetchRows, refetchRef, onView, onSetStatus, onDelete }: Readonly<Props>) {

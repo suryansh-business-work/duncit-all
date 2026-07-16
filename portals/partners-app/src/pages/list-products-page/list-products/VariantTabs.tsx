@@ -3,7 +3,7 @@ import { Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { useFieldArray, type Control, type Path } from 'react-hook-form';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
 
 const emptyVariant = {

@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/client';
 import { Alert, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import { CREATE_AI_PROMPT, UPDATE_AI_PROMPT, type AiPrompt } from './queries';
 import { PromptForm, type PromptFormValues } from '../../forms/prompt';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   open: boolean;

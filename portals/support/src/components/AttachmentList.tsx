@@ -1,7 +1,7 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
-import { describeAttachment, typeLabel, type AttachmentInfo } from '../lib/attachment';
+import { describeAttachment, typeLabel, type AttachmentInfo } from '@duncit/media-picker';
 
 interface DocCardProps {
   info: AttachmentInfo;

@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { InfoRow } from '@duncit/ui';
 import type { SlotRequestRow } from './queries';
 
 interface Props {
@@ -139,13 +140,12 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
 
 function Detail({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
-    <Box sx={{ minWidth: 0 }}>
-      <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600} component="div" sx={{ wordBreak: 'break-word' }}>
-        {value}
-      </Typography>
-    </Box>
+    <InfoRow
+      label={label}
+      value={value}
+      valueWeight={600}
+      valueSx={{ wordBreak: 'break-word' }}
+      sx={{ minWidth: 0 }}
+    />
   );
 }

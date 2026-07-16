@@ -1,19 +1,17 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
   Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Stack,
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { BackButton, QueryGuard } from '@duncit/ui';
 import EditIcon from '@mui/icons-material/Edit';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
@@ -26,7 +24,6 @@ import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs from '../../components/LeadTabs';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
-import { parseApiError } from '../../utils/parseApiError';
 import { buildEcommLeadTabs } from './ecommLeadTabs';
 
 const formatDate = (iso?: string | null) => {
@@ -45,15 +42,11 @@ export default function EcommLeadDetailPage() {
   });
   const lead = data?.ecommLead;
 
-  if (loading && !lead) {
+  if ((loading && !lead) || error || !lead) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
-        <CircularProgress />
-      </Stack>
+      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText="Ecomm lead not found." />
     );
   }
-  if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
-  if (!lead) return <Alert severity="info">Ecomm lead not found.</Alert>;
 
   const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
   const tabs = buildEcommLeadTabs(lead);
@@ -61,9 +54,7 @@ export default function EcommLeadDetailPage() {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/ecomm-leads')} size="small">
-          Back to Ecomm Leads
-        </Button>
+        <BackButton onClick={() => navigate('/ecomm-leads')}>Back to Ecomm Leads</BackButton>
       </Box>
 
       <Card

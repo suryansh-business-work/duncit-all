@@ -1,8 +1,8 @@
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { useDateFormat } from '@duncit/app-settings';
 import {
   NEWSLETTER_SOURCES,
   NEWSLETTER_SUBSCRIBERS,
@@ -33,20 +33,7 @@ export default function NewsletterPage() {
   const all = data?.newsletterSubscribers ?? [];
   const active = all.filter((r) => !r.unsubscribed_at).length;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: NEWSLETTER_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.newsletterSubscribersTable.rows as Subscriber[],
-        total: page.newsletterSubscribersTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<Subscriber>(client, NEWSLETTER_TABLE, 'newsletterSubscribersTable');
 
   const columns = useMemo<DuncitColumn<Subscriber>[]>(
     () => [

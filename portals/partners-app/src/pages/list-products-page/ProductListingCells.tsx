@@ -1,13 +1,10 @@
 import { useState } from 'react';
-import { Box, Button, Chip, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Stack, TextField, Typography } from '@mui/material';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import type { ProductListingRow } from './queries';
 
-/** Chip colour for a listing's review status. */
-const statusChipColor = (status: string): 'success' | 'error' | 'warning' => {
-  if (status === 'APPROVED') return 'success';
-  if (status === 'DENIED') return 'error';
-  return 'warning';
-};
+/** Only APPROVED/DENIED are mapped — everything else (incl. SUBMITTED) stays warning. */
+const LISTING_STATUS_COLORS: StatusColorMap = { APPROVED: 'success', DENIED: 'error' };
 
 export const renderProduct = (product: ProductListingRow) => (
   <Stack direction="row" spacing={1.25} alignItems="center">
@@ -29,10 +26,10 @@ export const renderProduct = (product: ProductListingRow) => (
 );
 
 export const renderListingStatus = (product: ProductListingRow) => (
-  <Chip
-    size="small"
-    label={product.listing_review_status}
-    color={statusChipColor(product.listing_review_status)}
+  <StatusChip
+    status={product.listing_review_status}
+    colorMap={LISTING_STATUS_COLORS}
+    fallbackColor="warning"
   />
 );
 

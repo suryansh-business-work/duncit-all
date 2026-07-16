@@ -1,12 +1,12 @@
-const inr = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
-const inrCompact = new Intl.NumberFormat('en-IN', { notation: 'compact', maximumFractionDigits: 1 });
+import { formatMoney } from '@duncit/utils';
+
 const num = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
 
 /** Format a metric value for display based on its unit. */
 export function formatMetricValue(value: number, unit: string): string {
   switch (unit) {
     case 'currency':
-      return `₹${Math.abs(value) >= 100000 ? inrCompact.format(value) : inr.format(value)}`;
+      return formatMoney(value, { compact: true });
     case 'percent':
       return `${value.toFixed(1)}%`;
     case 'months':

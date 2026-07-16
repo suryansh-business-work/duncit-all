@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { notifyError, notifySuccess } from '@duncit/dialogs';
 import BrandPickupRow from './BrandPickupRow';
 import {
   BRAND_PICKUP_LOCATIONS,
@@ -34,7 +35,6 @@ export default function BrandPickupPanel({ brandId }: Readonly<Props>) {
 
   const [editing, setEditing] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
 
   const busy = saving || removing || settingDefault || registering;
   const locations = data?.brandPickupLocations ?? [];
@@ -43,9 +43,9 @@ export default function BrandPickupPanel({ brandId }: Readonly<Props>) {
     try {
       await action();
       await refetch(variables);
-      setToast(label);
+      notifySuccess(label);
     } catch (actionError) {
-      setToast(actionError instanceof Error ? actionError.message : 'Action failed');
+      notifyError(actionError instanceof Error ? actionError.message : 'Action failed');
     }
   };
 
@@ -63,7 +63,7 @@ export default function BrandPickupPanel({ brandId }: Readonly<Props>) {
     await save({ variables: { id: editing?.id ?? null, input } });
     await refetch(variables);
     setDialogOpen(false);
-    setToast('Pickup location saved');
+    notifySuccess('Pickup location saved');
   };
 
   return (
@@ -114,7 +114,6 @@ export default function BrandPickupPanel({ brandId }: Readonly<Props>) {
         onClose={() => setDialogOpen(false)}
         onSubmit={submit}
       />
-      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast(null)} message={toast ?? ''} />
     </Stack>
   );
 }

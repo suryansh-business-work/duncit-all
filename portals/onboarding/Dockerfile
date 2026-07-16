@@ -47,6 +47,9 @@ COPY packages/club-form/package.json ./packages/club-form/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/table/package.json ./packages/table/
+COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/dialogs/package.json ./packages/dialogs/
+COPY packages/ui/package.json ./packages/ui/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

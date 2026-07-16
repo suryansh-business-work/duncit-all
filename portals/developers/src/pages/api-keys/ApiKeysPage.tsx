@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import CreateKeyDialog from './CreateKeyDialog';
 import ApiKeysTable from './ApiKeysTable';
 import { CREATE_API_KEY, MY_API_KEYS_TABLE, REVOKE_API_KEY, type ApiKeyRow } from './queries';
@@ -16,20 +16,7 @@ export default function ApiKeysPage() {
   const [rawKey, setRawKey] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MY_API_KEYS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myApiKeysTable.rows as ApiKeyRow[],
-        total: data.myApiKeysTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<ApiKeyRow>(client, MY_API_KEYS_TABLE, 'myApiKeysTable');
 
   const onCreate = async (name: string) => {
     setOpError(null);

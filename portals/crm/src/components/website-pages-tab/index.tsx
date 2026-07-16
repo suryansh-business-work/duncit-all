@@ -22,8 +22,8 @@ import {
   type CrmEntityType,
   type CrmWebsitePage,
 } from '../../api/websitePages.gql';
-import { parseApiError } from '../../utils/parseApiError';
-import ConfirmDialog from '../ConfirmDialog';
+import { parseApiError } from '@duncit/utils';
+import { ConfirmDialog } from '@duncit/dialogs';
 import ExternalLink from '../ExternalLink';
 import ScrapeDialog from './ScrapeDialog';
 import WebsitePagesTable from './WebsitePagesTable';
@@ -155,6 +155,8 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
         title="Delete page"
         message={`Remove "${removing?.url ?? ''}" from the saved pages?`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

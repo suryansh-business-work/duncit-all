@@ -1,10 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { notifyError } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useApolloTableFetch } from '@duncit/table';
+import { useConfirm, notifyError } from '@duncit/dialogs';
 import {
   CREATE_LOCATION,
   DELETE_LOCATION,
@@ -31,17 +30,7 @@ export default function LocationsPage() {
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: LOCATIONS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.locationsTable.rows as LocationRow[], total: data.locationsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<LocationRow>(client, LOCATIONS_TABLE, 'locationsTable');
 
   const openCreate = () => {
     setForm({ ...blankForm, zones: [{ zone_name: '', zone_code: '', pincode: '' }] });

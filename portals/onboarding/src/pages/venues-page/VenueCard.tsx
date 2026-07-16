@@ -7,13 +7,10 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 
-const statusColor = (s: string) => {
-  if (s === 'APPROVED') return 'success';
-  if (s === 'REJECTED') return 'error';
-  if (s === 'SUBMITTED') return 'warning';
-  return 'default';
-};
+// SUBMITTED intentionally stays 'warning' here (documented drift vs the shared default map).
+const STATUS_COLOR: StatusColorMap = { APPROVED: 'success', REJECTED: 'error', SUBMITTED: 'warning' };
 
 interface Props {
   venue: any;
@@ -28,7 +25,7 @@ export default function VenueCard({ venue, onReview }: Readonly<Props>) {
           <Typography variant="subtitle1" fontWeight={700}>
             {venue.venue_name || '(Unnamed venue)'}
           </Typography>
-          <Chip size="small" label={venue.status} color={statusColor(venue.status) as any} />
+          <StatusChip status={venue.status} colorMap={STATUS_COLOR} />
         </Stack>
         <Typography variant="body2" color="text.secondary">
           {venue.venue_type} · {[venue.locality, venue.city, venue.state].filter(Boolean).join(', ') || '—'} · cap {venue.capacity}

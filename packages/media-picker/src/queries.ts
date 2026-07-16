@@ -17,6 +17,24 @@ export const UPLOAD_IMAGE = gql`
     ) {
       url
       fileId
+      thumbnailUrl
+    }
+  }
+`;
+
+/**
+ * Short-lived signed auth so the browser can upload a file DIRECTLY to
+ * ImageKit, bypassing the API request-body size limit. The private key never
+ * leaves the server. Used by useImagekitDirectUpload (large support videos).
+ */
+export const GET_IMAGEKIT_AUTH = gql`
+  mutation GetImagekitAuth {
+    getImagekitAuth {
+      token
+      expire
+      signature
+      publicKey
+      urlEndpoint
     }
   }
 `;

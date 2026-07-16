@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
@@ -11,10 +10,9 @@ import {
   Typography,
 } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
-import { UPLOAD_IMAGE } from '../../api/crm.gql';
+import { useImagekitBase64Upload } from '@duncit/media-picker';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
-import { fileToBase64 } from '../../utils/fileToBase64';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   attachments: EmailAsset[];
@@ -26,7 +24,7 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [upload] = useMutation(UPLOAD_IMAGE);
+  const { upload } = useImagekitBase64Upload();
 
   const onFile = async (file: File | null) => {
     if (!file) return;
@@ -39,10 +37,7 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
     if (file.size > 25 * 1024 * 1024) { setError('Max 25MB per attachment.'); return; }
     setBusy(true);
     try {
-      const fileBase64 = await fileToBase64(file);
-      const res = await upload({ variables: { fileBase64, fileName: file.name, mimeType: mime, folder: 'crm/email-attachments' } });
-      const url = res.data?.uploadImageToImagekit?.url ?? '';
-      if (!url) throw new Error('Upload failed');
+      const { url } = await upload(file, { folder: 'crm/email-attachments' });
       onChange([...attachments, { url, name: file.name }]);
     } catch (e) {
       setError(parseApiError(e));

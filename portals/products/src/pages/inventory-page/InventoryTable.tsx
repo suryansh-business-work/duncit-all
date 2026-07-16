@@ -1,12 +1,14 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Avatar, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Avatar, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
+import { formatMoney } from '@duncit/utils';
 import StockColorChip from './inventory-product-page/StockColorChip';
 import { STATUS_CHIP_COLOR, STATUS_OPTIONS } from './inventory-product-page/constants';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import type { InventoryProductRow } from './queries';
 
 interface Props {
@@ -17,8 +19,6 @@ interface Props {
   onArchive: (p: InventoryProductRow) => void;
   onDelete: (p: InventoryProductRow) => void;
 }
-
-const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
 
 const getRowId = (p: InventoryProductRow) => p.id;
 
@@ -46,10 +46,11 @@ const renderStock = (p: InventoryProductRow) => (
 );
 
 const renderStatus = (p: InventoryProductRow) => (
-  <Chip size="small" label={p.status} color={STATUS_CHIP_COLOR[p.status] ?? 'default'} />
+  <StatusChip status={p.status} colorMap={STATUS_CHIP_COLOR} />
 );
 
-const priceValue = (p: InventoryProductRow) => money.format(p.selling_price || p.unit_cost);
+const priceValue = (p: InventoryProductRow) =>
+  formatMoney(p.selling_price || p.unit_cost, { decimals: 2 });
 
 export default function InventoryTable({
   fetchRows,

@@ -1,13 +1,12 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import ConstructionIcon from '@mui/icons-material/Construction';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { PORTAL_MODES_TABLE, SET_PORTAL_MODE, type PortalModeRow, type PortalModeState } from './queries';
 import PortalModesTable from './PortalModesTable';
-import { notify } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
-import { parseApiError } from '../../utils/parseApiError';
+import { notify, useConfirm } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 
 const MODE_VERB: Record<PortalModeState, string> = {
   LIVE: 'go live',
@@ -22,17 +21,7 @@ export default function PortalModesPage() {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [setModeMut] = useMutation(SET_PORTAL_MODE);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: PORTAL_MODES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.portalModesTable.rows as PortalModeRow[], total: data.portalModesTable.total as number };
-    },
-    [client]
-  );
+  const fetchRows = useApolloTableFetch<PortalModeRow>(client, PORTAL_MODES_TABLE, 'portalModesTable');
 
   const handleChange = async (row: PortalModeRow, mode: PortalModeState) => {
     if (mode !== 'LIVE') {

@@ -1,20 +1,22 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { DELETE_VENUE_LEAD, VENUE_LEADS_TABLE } from '../../api/crm.gql';
-import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
+import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE } from '../../api/excel.gql';
 import type { VenueLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
 import { useSuperCategories } from '../../api/useSuperCategories';
 import LeadsToolbar from '../../components/LeadsToolbar';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import { CrmLeadsTable } from '../../components/lead-table';
-import { parseApiError } from '../../utils/parseApiError';
+import { downloadBase64File, parseApiError } from '@duncit/utils';
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 export default function VenueLeadsPage() {
   const navigate = useNavigate();
@@ -31,17 +33,7 @@ export default function VenueLeadsPage() {
 
   const [deleteLead, { loading: deleting }] = useMutation(DELETE_VENUE_LEAD);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: VENUE_LEADS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.venueLeadsTable.rows as VenueLead[], total: data.venueLeadsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<VenueLead>(client, VENUE_LEADS_TABLE, 'venueLeadsTable');
 
   const statusOptions = useMemo(
     () => (config.venue_lead_statuses ?? []).map((value) => ({ label: value, value })),
@@ -78,7 +70,7 @@ export default function VenueLeadsPage() {
       });
       const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
       if (!payload) throw new Error('Empty response');
-      downloadBase64Xlsx(payload.filename, payload.content_base64);
+      downloadBase64File(payload.content_base64, payload.filename, XLSX_MIME);
       setToast(kind === 'template' ? 'Template downloaded' : 'Venue leads exported');
     } catch (err) {
       setError(parseApiError(err));
@@ -122,6 +114,8 @@ export default function VenueLeadsPage() {
         title="Delete venue lead"
         message={`Delete "${toDelete?.venue_name}"? This cannot be undone.`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button, Chip, Link, Stack, TextField, Typography } from '@mui/material';
+import { Button, Link, Stack, TextField, Typography } from '@mui/material';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 
 export interface VerificationAddress {
   line1?: string | null;
@@ -34,7 +35,7 @@ const STATUS_LABEL: Record<string, string> = {
   VERIFIED_BY_APP: 'Verified by the App',
 };
 
-const STATUS_COLOR: Record<string, 'default' | 'warning' | 'success' | 'error'> = {
+const STATUS_COLOR: StatusColorMap = {
   NOT_SUBMITTED: 'default',
   PENDING: 'warning',
   APPROVED: 'success',
@@ -45,7 +46,7 @@ const STATUS_COLOR: Record<string, 'default' | 'warning' | 'success' | 'error'> 
 export const statusLabel = (status: string) => STATUS_LABEL[status] ?? status;
 
 export const renderStatusCell = (item: VerificationItem) => (
-  <Chip size="small" label={statusLabel(item.status)} color={STATUS_COLOR[item.status] ?? 'default'} />
+  <StatusChip status={item.status} label={statusLabel(item.status)} colorMap={STATUS_COLOR} />
 );
 
 const addressLines = (address: VerificationAddress) =>

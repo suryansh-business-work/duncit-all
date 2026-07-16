@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { copyToClipboard, downloadFile, printHtml, safeFileName } from '../../src/lib/docActions';
+import { copyToClipboard, printHtml, safeFileName } from '../../src/lib/docActions';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -15,22 +15,6 @@ describe('safeFileName', () => {
   it('falls back to "document" for an empty name', () => {
     expect(safeFileName('')).toBe('document.html');
     expect(safeFileName('!!!')).toBe('document.html');
-  });
-});
-
-describe('downloadFile', () => {
-  it('creates an object URL, clicks an anchor and revokes the URL', () => {
-    const createObjectURL = vi.fn(() => 'blob:x');
-    const revokeObjectURL = vi.fn();
-    (URL as any).createObjectURL = createObjectURL;
-    (URL as any).revokeObjectURL = revokeObjectURL;
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-
-    downloadFile('doc.html', '<p>Hi</p>');
-
-    expect(createObjectURL).toHaveBeenCalledTimes(1);
-    expect(click).toHaveBeenCalledTimes(1);
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:x');
   });
 });
 

@@ -1,7 +1,8 @@
 import { Box, Button, Chip, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { StatusChip } from '@duncit/ui';
 import type { DuncitColumn } from '@duncit/table';
-import { humanizeType, STATUS_COLORS, type ApprovalRequest } from './helpers';
+import { humanizeType, type ApprovalRequest } from './helpers';
 
 const renderSubject = (row: ApprovalRequest) => (
   <Box sx={{ minWidth: 0, lineHeight: 1.2 }}>
@@ -25,9 +26,7 @@ const renderKind = (row: ApprovalRequest) => {
   return <Chip label={row.kind} size="small" variant="outlined" color="secondary" />;
 };
 
-const renderStatus = (row: ApprovalRequest) => (
-  <Chip label={row.status} size="small" color={STATUS_COLORS[row.status]} />
-);
+const renderStatus = (row: ApprovalRequest) => <StatusChip status={row.status} />;
 
 interface ColumnDeps {
   formatDateTime: (s: string) => string;

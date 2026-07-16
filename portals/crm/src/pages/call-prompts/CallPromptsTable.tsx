@@ -1,9 +1,13 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Stack, Typography } from '@mui/material';
+import {
+  DuncitTable,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import type { CrmCallPrompt } from '../../api/call.gql';
 
 interface Props {
@@ -29,13 +33,6 @@ const renderName = (p: CrmCallPrompt) => (
   </Stack>
 );
 
-const renderStatus = (p: CrmCallPrompt) => (
-  <Chip size="small" color={p.is_active ? 'success' : 'default'} label={p.is_active ? 'Active' : 'Inactive'} />
-);
-
-const createdValue = (p: CrmCallPrompt) =>
-  p.created_at ? format(new Date(p.created_at), 'd MMM yyyy') : '—';
-
 /** Static Content prompts on the shared server-driven table, with edit / delete actions. */
 export default function CallPromptsTable({
   fetchRows,
@@ -44,22 +41,8 @@ export default function CallPromptsTable({
   onEdit,
   onDelete,
 }: Readonly<Props>) {
-  const columns = useMemo<DuncitColumn<CrmCallPrompt>[]>(() => {
-    const renderActions = (p: CrmCallPrompt) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(p)} aria-label={`Edit ${p.name}`}>
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" color="error" onClick={() => onDelete(p)} aria-label={`Delete ${p.name}`}>
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
-    );
-    return [
+  const columns = useMemo<DuncitColumn<CrmCallPrompt>[]>(
+    () => [
       {
         field: 'name',
         headerName: 'Name',
@@ -69,25 +52,17 @@ export default function CallPromptsTable({
         valueGetter: (p) => p.name,
       },
       { field: 'language', headerName: 'Language', filter: { type: 'text' }, width: 130 },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        filter: { type: 'boolean' },
-        width: 110,
-        cellRenderer: renderStatus,
-        valueGetter: (p) => (p.is_active ? 'Active' : 'Inactive'),
-      },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: createdValue,
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
-    ];
-  }, [onEdit, onDelete]);
+      activeChipColumn<CrmCallPrompt>(),
+      dateColumn<CrmCallPrompt>(),
+      actionsColumn<CrmCallPrompt>({
+        onEdit,
+        onDelete,
+        edit: { ariaLabel: (p) => `Edit ${p.name}` },
+        delete: { ariaLabel: (p) => `Delete ${p.name}` },
+      }),
+    ],
+    [onEdit, onDelete],
+  );
 
   return (
     <DuncitTable<CrmCallPrompt>

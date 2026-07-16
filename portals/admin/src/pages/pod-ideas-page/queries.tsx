@@ -129,11 +129,8 @@ export const DELETE_COMMENT = gql`
 
 export type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export const statusColor = (s: Status) => {
-  if (s === 'APPROVED') return 'success';
-  if (s === 'REJECTED') return 'error';
-  return 'warning';
-};
+/** Per-domain color map for the shared `<StatusChip>` (else -> warning fallback). */
+export const STATUS_COLOR_MAP = { APPROVED: 'success', REJECTED: 'error' } as const;
 
 export const statusIcon = (s: Status) => {
   if (s === 'APPROVED') return <CheckCircleIcon fontSize="small" />;

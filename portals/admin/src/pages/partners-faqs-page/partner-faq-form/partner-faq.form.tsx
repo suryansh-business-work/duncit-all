@@ -14,7 +14,7 @@ import {
   Stack,
   Switch,
 } from '@mui/material';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import { PARTNER_FAQ_TOPICS, type PartnerFaqTopic } from './partner-faq.types';
 
 export interface PartnerFaqFormValues {

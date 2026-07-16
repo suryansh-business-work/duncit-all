@@ -1,15 +1,15 @@
 import { useQuery } from '@apollo/client';
-import { Box, Button, Chip, Divider, Drawer, IconButton, Link, Stack, Typography } from '@mui/material';
+import { Box, Button, Divider, Drawer, IconButton, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 import {
   USER_SURVEY_RESPONSES,
-  type MeetingStatus,
   type OnboardingMeeting,
   type SurveyKind,
   type UserSurveyResponse,
 } from './queries';
 
-const STATUS_COLOR: Record<MeetingStatus, 'default' | 'info' | 'success' | 'error'> = {
+const STATUS_COLOR: StatusColorMap = {
   REQUESTED: 'default',
   SCHEDULED: 'info',
   DONE: 'success',
@@ -23,15 +23,6 @@ interface Props {
   onClose: () => void;
   onEdit?: (meeting: OnboardingMeeting) => void;
   onCancel?: (meeting: OnboardingMeeting) => void;
-}
-
-function DetailRow({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>{label}</Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Box>
-  );
 }
 
 /** Read-only survey answers the applicant submitted for this kind. */
@@ -81,12 +72,12 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
             <IconButton size="small" onClick={onClose} aria-label="Close"><CloseIcon /></IconButton>
           </Stack>
 
-          <Chip size="small" color={STATUS_COLOR[meeting.status]} label={meeting.status} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
+          <StatusChip status={meeting.status} colorMap={STATUS_COLOR} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
 
-          {catPath && <DetailRow label="Category" value={catPath} />}
-          <DetailRow label="Requested for" value={fmt(meeting.requested_at)} />
-          <DetailRow label="Scheduled" value={fmt(meeting.scheduled_at)} />
-          <DetailRow label="Contact" value={[meeting.user_email, meeting.contact_phone].filter(Boolean).join(' · ') || '—'} />
+          {catPath && <InfoRow label="Category" value={catPath} />}
+          <InfoRow label="Requested for" value={fmt(meeting.requested_at)} />
+          <InfoRow label="Scheduled" value={fmt(meeting.scheduled_at)} />
+          <InfoRow label="Contact" value={[meeting.user_email, meeting.contact_phone].filter(Boolean).join(' · ') || '—'} />
 
           {meeting.meeting_link && !blocked && (
             <Box>
@@ -96,8 +87,8 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
               </Box>
             </Box>
           )}
-          {meeting.notes && <DetailRow label="Notes" value={meeting.notes} />}
-          {meeting.status === 'CANCELLED' && meeting.cancel_reason && <DetailRow label="Cancel reason" value={meeting.cancel_reason} />}
+          {meeting.notes && <InfoRow label="Notes" value={meeting.notes} />}
+          {meeting.status === 'CANCELLED' && meeting.cancel_reason && <InfoRow label="Cancel reason" value={meeting.cancel_reason} />}
 
           <Divider />
           {meeting.user_id && <SurveyAnswers userId={meeting.user_id} kind={meeting.kind} />}

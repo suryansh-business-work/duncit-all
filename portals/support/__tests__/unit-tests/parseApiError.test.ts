@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseApiError } from '../../src/utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 describe('parseApiError', () => {
   it('returns a generic message for nullish input', () => {

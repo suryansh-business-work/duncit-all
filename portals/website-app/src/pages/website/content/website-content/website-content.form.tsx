@@ -1,9 +1,9 @@
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, DialogActions, FormControlLabel, Stack, Switch } from '@mui/material';
+import { RhfTextField } from '@duncit/forms';
+import { SingleImageUploadField } from '@duncit/media-picker';
 import DateTimeField from '../../../../components/DateTimeField';
-import ImageField from '../../../../components/ImageField';
-import RhfTextField from '../../../../forms/components/RhfTextField';
 import type { WebsiteContentItem, WebsitePageType } from '../queries';
 import {
   blankValues,
@@ -68,10 +68,12 @@ export default function WebsiteContentForm({ type, item, submitting, errorMessag
           control={control}
           name="image_url"
           render={({ field, fieldState }) => (
-            <ImageField
+            <SingleImageUploadField
+              variant="url-adornment"
               label="Image"
               value={field.value ?? ''}
               onChange={field.onChange}
+              folder="/website"
               error={!!fieldState.error}
               helperText={fieldState.error?.message}
             />

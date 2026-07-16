@@ -1,10 +1,11 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import HostRequestRowActions from './HostRequestRowActions';
-import { STATUS_OPTIONS, type HostRequest, type HostRequestStatus } from './queries';
+import { STATUS_OPTIONS, type HostRequest } from './queries';
 
-const STATUS_COLORS: Record<HostRequestStatus, 'default' | 'info' | 'success' | 'error'> = {
+const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default',
   ACKNOWLEDGED: 'info',
   APPROVED: 'success',
@@ -35,7 +36,7 @@ const hostNameValue = (r: HostRequest) => r.host_name || '—';
 const requestedOnValue = (r: HostRequest) => new Date(r.created_at).toLocaleString();
 
 const renderStatus = (r: HostRequest) => (
-  <Chip size="small" color={STATUS_COLORS[r.status]} label={r.status} />
+  <StatusChip status={r.status} colorMap={STATUS_COLORS} />
 );
 
 export default function HostRequestsTable({

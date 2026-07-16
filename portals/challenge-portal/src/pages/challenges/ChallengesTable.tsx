@@ -1,10 +1,14 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { Box, Typography } from '@mui/material';
+import {
+  DuncitTable,
+  actionsColumn,
+  activeChipColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
 import { CATEGORY_OPTIONS, type CategoryOption, type Challenge } from '../../graphql/challenges';
 
 interface Props {
@@ -32,18 +36,6 @@ const renderName = (c: Challenge) => (
   </Box>
 );
 
-const renderStatus = (c: Challenge) => (
-  <Chip
-    size="small"
-    color={c.is_active ? 'success' : 'default'}
-    label={c.is_active ? 'Active' : 'Inactive'}
-    variant={c.is_active ? 'filled' : 'outlined'}
-  />
-);
-
-const createdValue = (c: Challenge) =>
-  c.created_at ? format(new Date(c.created_at), 'd MMM yyyy') : '—';
-
 /** id/name select-filter options for one category level. */
 function useLevelOptions(level: 'SUPER' | 'CATEGORY' | 'SUB') {
   const { data } = useQuery<{ categories: CategoryOption[] }>(CATEGORY_OPTIONS, {
@@ -67,20 +59,6 @@ export default function ChallengesTable({
   const subOptions = useLevelOptions('SUB');
 
   const columns = useMemo<DuncitColumn<Challenge>[]>(() => {
-    const renderActions = (c: Challenge) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
-        <Tooltip title="Edit">
-          <IconButton size="small" onClick={() => onEdit(c)} aria-label="Edit challenge">
-            <EditIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton size="small" color="error" onClick={() => onDelete(c)} aria-label="Delete challenge">
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
-    );
     return [
       {
         field: 'name',
@@ -111,23 +89,14 @@ export default function ChallengesTable({
         filter: { type: 'select', options: subOptions },
         valueGetter: (c) => dash(c.sub_category_name),
       },
-      {
-        field: 'is_active',
-        headerName: 'Status',
-        width: 120,
-        filter: { type: 'boolean' },
-        cellRenderer: renderStatus,
-        valueGetter: (c) => (c.is_active ? 'Active' : 'Inactive'),
-      },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        filter: { type: 'date' },
-        hide: true,
-        width: 130,
-        valueGetter: createdValue,
-      },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+      activeChipColumn<Challenge>({ width: 120, outlineInactive: true }),
+      dateColumn<Challenge>(),
+      actionsColumn<Challenge>({
+        onEdit,
+        onDelete,
+        edit: { ariaLabel: 'Edit challenge' },
+        delete: { ariaLabel: 'Delete challenge' },
+      }),
     ];
   }, [onEdit, onDelete, superOptions, categoryOptions, subOptions]);
 

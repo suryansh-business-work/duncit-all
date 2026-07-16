@@ -1,14 +1,10 @@
 import type { MutableRefObject } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
+import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { CallbackRequest } from '../../graphql/bouncer';
 import { relativeTime } from '../../lib/supportTable';
-
-const STATUS_COLOR: Record<CallbackRequest['status'], 'warning' | 'primary' | 'default'> = {
-  PENDING: 'warning',
-  CONTACTED: 'primary',
-  CLOSED: 'default',
-};
+import { CALLBACK_STATUS_COLORS } from '../../lib/statusMaps';
 
 // "Resolved" is the user-facing label for the backend CLOSED status.
 const STATUS_OPTIONS: ReadonlyArray<{ value: CallbackRequest['status']; label: string }> = [
@@ -32,7 +28,7 @@ const renderUser = (req: CallbackRequest) => (
 );
 
 const renderStatus = (req: CallbackRequest) => (
-  <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
+  <StatusChip status={req.status} colorMap={CALLBACK_STATUS_COLORS} />
 );
 
 // Only fields the server whitelists (BOUNCER_SORTABLE) are sortable; the status

@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Stack, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import type { DuncitColumn } from '@duncit/table';
+import { actionsColumn, dateColumn, type DuncitColumn } from '@duncit/table';
 import { PriorityChip, StatusChip } from '../StatusChips';
 
 /** Fields shared by host / venue / ecomm lead rows that the table touches. */
@@ -69,7 +67,9 @@ const renderStatus = (row: CrmLeadRowBase) => <StatusChip value={row.lead_status
 const renderPriority = (row: CrmLeadRowBase) => <PriorityChip value={row.priority} />;
 const superCategoryName = (row: CrmLeadRowBase) => row.super_category?.name ?? '—';
 const followUpValue = (row: CrmLeadRowBase) => fmtDate(row.next_follow_up_date);
-const createdValue = (row: CrmLeadRowBase) => fmtDate(row.created_at);
+/** NaN-guarded `dd MMM yyyy` formatter for the shared date column. */
+const fmtDateObj = (date: Date): string =>
+  Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
 
 export interface LeadColumnOptions<T extends CrmLeadRowBase> {
   entity: CrmLeadEntity;
@@ -96,21 +96,6 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       </Typography>
     </Stack>
   );
-  const renderActions = (row: T): ReactNode => (
-    <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
-      <Tooltip title="Edit">
-        <IconButton size="small" aria-label="Edit lead" onClick={() => options.onEdit(row)}>
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Delete">
-        <IconButton size="small" color="error" aria-label="Delete lead" onClick={() => options.onDelete(row)}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Stack>
-  );
-
   const columns: DuncitColumn<T>[] = [
     {
       field: meta.nameField,
@@ -157,8 +142,13 @@ export function buildLeadColumns<T extends CrmLeadRowBase>(
       valueGetter: superCategoryName,
     },
     { field: 'next_follow_up_date', headerName: 'Follow-up', minWidth: 140, filter: { type: 'date' }, valueGetter: followUpValue },
-    { field: 'created_at', headerName: 'Created', hide: true, width: 130, filter: { type: 'date' }, valueGetter: createdValue },
-    { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+    dateColumn<T>({ formatDate: fmtDateObj }),
+    actionsColumn<T>({
+      onEdit: options.onEdit,
+      onDelete: options.onDelete,
+      edit: { ariaLabel: 'Edit lead' },
+      delete: { ariaLabel: 'Delete lead' },
+    }),
   );
   return columns;
 }

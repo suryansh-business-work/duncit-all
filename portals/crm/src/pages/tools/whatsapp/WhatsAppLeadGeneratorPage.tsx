@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import { Box, Stack, Typography } from '@mui/material';
+import { QueryGuard } from '@duncit/ui';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
 import WhatsAppConnectCard from './WhatsAppConnectCard';
@@ -27,14 +28,8 @@ export default function WhatsAppLeadGeneratorPage() {
   };
 
   let body: ReactNode = null;
-  if (loading && !connection) {
-    body = (
-      <Stack alignItems="center" sx={{ py: 6 }}>
-        <CircularProgress />
-      </Stack>
-    );
-  } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
+  if ((loading && !connection) || error) {
+    body = <QueryGuard loading={loading && !connection} error={error} errorText={error?.message} />;
   } else if (connection) {
     body = (
       <Stack spacing={2}>

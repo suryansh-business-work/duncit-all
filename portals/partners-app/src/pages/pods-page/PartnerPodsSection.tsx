@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import { format } from 'date-fns';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
 import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
@@ -31,20 +31,7 @@ export default function PartnerPodsSection() {
   const clubName = (id: string) => clubs.find((club: any) => club.id === id)?.club_name ?? 'Club';
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: MY_HOST_PODS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.myHostPodsTable.rows as PartnerPodRow[],
-        total: page.myHostPodsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<PartnerPodRow>(client, MY_HOST_PODS_TABLE, 'myHostPodsTable');
 
   const submit = async (values: PodFormValues, options: { draft: boolean }) => {
     setOpError(null);

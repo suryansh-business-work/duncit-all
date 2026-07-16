@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
-import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { BackButton } from '@duncit/ui';
 import {
   RegisterVenueForm,
   type RegisterVenueMode,
@@ -107,15 +107,9 @@ export default function RegisterVenuePage() {
             />
           )}
         </Stack>
-        <Button
-          component={RouterLink}
-          to="/register-venue"
-          size="small"
-          startIcon={<ArrowBackIcon />}
-          sx={{ mt: 1.5, color: '#fff', fontWeight: 800 }}
-        >
+        <BackButton to="/register-venue" sx={{ mt: 1.5, color: '#fff', fontWeight: 800 }}>
           Your venue registrations
-        </Button>
+        </BackButton>
       </Box>
 
       <StatusAlerts status={status} notes={venue?.reviewer_notes} />

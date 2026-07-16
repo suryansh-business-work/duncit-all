@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReplayIcon from '@mui/icons-material/Replay';
-import ConfirmDialog from '../../../components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import TranscriptMenu from '../../../components/TranscriptMenu';
 import type { SupportChatSession, TranscriptFormat } from '../../../graphql/supportChat';
 
@@ -59,6 +59,7 @@ export default function ChatHeader({ session, onResolve, onReopen, onDownload, o
         message="The conversation will be closed and the user will be asked to leave feedback. You can re-open it later if needed."
         confirmLabel="Mark resolved"
         confirmColor="success"
+        titleSx={{ fontWeight: 800 }}
         onConfirm={() => {
           setConfirmResolve(false);
           onResolve();

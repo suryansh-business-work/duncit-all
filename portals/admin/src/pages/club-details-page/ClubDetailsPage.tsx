@@ -1,11 +1,11 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { BackButton, QueryGuard } from '@duncit/ui';
 import { CLUB_DETAIL } from './queries';
 import ClubOverviewCard from './ClubOverviewCard';
 import ClubContentSections from './ClubContentSections';
@@ -25,16 +25,16 @@ export default function ClubDetailsPage() {
   const club = data?.club as ClubDetail | undefined;
   const pods = (data?.pods ?? []) as ClubPodRow[];
 
-  if (loading && !club)
-    return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
-        <CircularProgress />
-      </Stack>
-    );
-  if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!club) return <Alert severity="warning">Club not found.</Alert>;
-
   return (
+    <QueryGuard
+      loading={loading && !club}
+      error={error}
+      errorText={error?.message}
+      notFound={!club}
+      notFoundText="Club not found."
+      notFoundSeverity="warning"
+    >
+      {() => club && (
     <Stack spacing={3}>
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
@@ -43,9 +43,7 @@ export default function ClubDetailsPage() {
         spacing={2}
       >
         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/clubs')} size="small">
-            Clubs
-          </Button>
+          <BackButton onClick={() => navigate('/clubs')}>Clubs</BackButton>
           <Box sx={{ minWidth: 0 }}>
             <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
               <Typography variant="h5" fontWeight={900} noWrap>
@@ -96,5 +94,7 @@ export default function ClubDetailsPage() {
         </Stack>
       </Box>
     </Stack>
+      )}
+    </QueryGuard>
   );
 }

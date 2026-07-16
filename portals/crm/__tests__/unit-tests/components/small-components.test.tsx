@@ -8,7 +8,7 @@ import LeadStatTile from '@/components/LeadStatTile';
 import MapEmbed from '@/components/MapEmbed';
 import LeadTabs from '@/components/LeadTabs';
 import ServicesGrid from '@/components/ServicesGrid';
-import ConfirmDialog from '@/components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import FormAccordion from '@/components/FormAccordion';
 import { LeadDetailCard, LeadDetailRow } from '@/components/LeadDetailCard';
 
@@ -160,7 +160,7 @@ describe('ConfirmDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
   it('shows the loading state on the confirm button', () => {
-    render(<ConfirmDialog open title="Delete" message="Sure?" loading onConfirm={() => undefined} onClose={() => undefined} />);
+    render(<ConfirmDialog open title="Delete" message="Sure?" loading busyLabel="Working…" onConfirm={() => undefined} onClose={() => undefined} />);
     expect(screen.getByRole('button', { name: /Working/i })).toBeTruthy();
   });
 });

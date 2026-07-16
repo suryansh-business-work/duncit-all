@@ -5,7 +5,7 @@ import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } fr
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SurveyStepper, { type SurveyAnswerInput } from '../../components/lead-survey/SurveyStepper';
 import { LEAD_SURVEY_BY_TOKEN, PUBLIC_BRANDING, SUBMIT_LEAD_SURVEY_BY_TOKEN, type PublicBranding, type PublicLeadSurvey } from './queries';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 /** Public, no-login survey fill page hosted by CRM (/s/:token). Open to anyone with the link. */
 export default function PublicSurveyPage() {

@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch, type TableQueryState } from '@duncit/table';
 import ReferralsTable from './ReferralsTable';
 import { REFERRALS_TABLE, REFERRAL_SETTINGS, UPDATE_GIFT, type ReferralRow } from './queries';
 
@@ -27,18 +27,14 @@ export default function ReferralsPage() {
     if (data?.referralSettings) setGift(data.referralSettings.gift_description ?? '');
   }, [data?.referralSettings]);
 
+  const fetchTable = useApolloTableFetch<ReferralRow>(client, REFERRALS_TABLE, 'referralsTable');
   const fetchRows = useCallback(
     async (q: TableQueryState) => {
-      const res = await client.query({
-        query: REFERRALS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      const page = res.data.referralsTable;
-      setTotal(page.total as number);
-      return { rows: page.rows as ReferralRow[], total: page.total as number };
+      const page = await fetchTable(q);
+      setTotal(page.total);
+      return page;
     },
-    [client],
+    [fetchTable],
   );
 
   const saveGift = async () => {

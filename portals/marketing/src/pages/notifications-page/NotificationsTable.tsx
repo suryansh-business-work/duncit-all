@@ -1,8 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { SCOPES } from './helpers';
 import type { NotificationRow } from './queries';
 
@@ -76,8 +75,6 @@ const renderFailed = (n: NotificationRow) => (
   <Chip size="small" color={n.failed_count ? 'warning' : 'default'} label={n.failed_count} />
 );
 
-const sentValue = (n: NotificationRow) => format(new Date(n.created_at), 'd MMM yyyy, HH:mm');
-
 export default function NotificationsTable({
   fetchRows,
   refetchRef,
@@ -136,13 +133,12 @@ export default function NotificationsTable({
         cellRenderer: renderFailed,
         valueGetter: (n) => n.failed_count,
       },
-      {
-        field: 'created_at',
+      dateColumn<NotificationRow>({
         headerName: 'Sent',
+        hide: false,
         width: 160,
-        filter: { type: 'date' },
-        valueGetter: sentValue,
-      },
+        format: 'd MMM yyyy, HH:mm',
+      }),
       {
         field: 'location_id',
         headerName: 'Location',

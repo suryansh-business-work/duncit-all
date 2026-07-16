@@ -3,7 +3,7 @@ import Editor from '@monaco-editor/react';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import MjmlAiButton from '../../../components/MjmlAiButton';
-import { formatMjml } from '../../../utils/mjmlFormat';
+import { formatMjml } from '@duncit/utils';
 
 interface Props {
   value: string;

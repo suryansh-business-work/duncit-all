@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
-  Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText,
+  Alert, Button, Dialog, DialogActions, DialogContent, DialogContentText,
   DialogTitle, Divider, MenuItem, Snackbar, Stack, TextField, Typography,
 } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import LinkIcon from '@mui/icons-material/Link';
+import { QueryGuard } from '@duncit/ui';
 import { LeadDetailCard } from '../LeadDetailCard';
 import {
   DELETE_LEAD_SURVEY_ENTRY,
@@ -21,7 +22,7 @@ import {
 } from './queries';
 import LeadSurveyFields from './LeadSurveyFields';
 import LeadSurveyEntriesTable from './LeadSurveyEntriesTable';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   entity: LeadSurveyEntity;
@@ -63,7 +64,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
     if (token) await navigator.clipboard?.writeText(surveyLinkUrl(token)).catch(() => undefined);
   }, 'Link generated & copied to clipboard');
 
-  if (loading && !data) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>;
+  if (loading && !data) return <QueryGuard loading spinnerSx={{ py: 4 }} />;
 
   const picker = showPicker && (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>

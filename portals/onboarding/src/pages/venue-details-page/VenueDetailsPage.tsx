@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Alert, Box, CircularProgress, IconButton, Stack, Tab, Tabs, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Stack, Tab, Tabs, Typography } from '@mui/material';
+import { BackHeader, QueryGuard } from '@duncit/ui';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenueHealthCard from './VenueHealthCard';
@@ -25,58 +25,57 @@ export default function VenueDetailsPage() {
     skip: !venueId,
   });
 
-  if (loading && !data) {
-    return (
-      <Stack alignItems="center" sx={{ p: 6 }}>
-        <CircularProgress />
-      </Stack>
-    );
-  }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!data?.venue) return <Alert severity="warning">Venue not found.</Alert>;
-
-  const venue = data.venue;
-
   return (
-    <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/venues')} aria-label="Back to venues" sx={{ bgcolor: 'action.hover' }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
-            Venue
-          </Typography>
-          <Typography variant="h5" fontWeight={950} sx={{ lineHeight: 1.1 }}>
-            {venue.venue_name || 'Untitled venue'}
-          </Typography>
-        </Box>
-      </Stack>
+    <QueryGuard
+      loading={loading && !data}
+      error={error}
+      errorText={error?.message}
+      notFound={!data?.venue}
+      notFoundText="Venue not found."
+      notFoundSeverity="warning"
+      spinnerSx={{ p: 6 }}
+    >
+      {() => {
+        const venue = data!.venue!;
+        return (
+          <Stack spacing={2.5}>
+            <BackHeader
+              onBack={() => navigate('/venues')}
+              backAriaLabel="Back to venues"
+              backSx={{ bgcolor: 'action.hover' }}
+              eyebrow="Venue"
+              title={venue.venue_name || 'Untitled venue'}
+              titleWeight={950}
+              titleSx={{ lineHeight: 1.1 }}
+            />
 
-      <Tabs value={tab} onChange={(_e, value) => setTab(value)} variant="scrollable" allowScrollButtonsMobile>
-        {TABS.map((label) => (
-          <Tab key={label} label={label} />
-        ))}
-      </Tabs>
+            <Tabs value={tab} onChange={(_e, value) => setTab(value)} variant="scrollable" allowScrollButtonsMobile>
+              {TABS.map((label) => (
+                <Tab key={label} label={label} />
+              ))}
+            </Tabs>
 
-      {tab === 0 && <VenueOverviewCard venue={venue} />}
+            {tab === 0 && <VenueOverviewCard venue={venue} />}
 
-      {tab === 1 && <VenuePodsTab venueId={venue.id} />}
+            {tab === 1 && <VenuePodsTab venueId={venue.id} />}
 
-      {tab === 2 && (
-        <Stack>
-          <Typography variant="h6" fontWeight={900}>
-            Account Health
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
-            Default score is 100. Use the Adjust action to decrease or increase it with a remark —
-            remarks are visible to the venue owner when they tap the meter.
-          </Typography>
-          <VenueHealthCard venueId={venue.id} />
-        </Stack>
-      )}
+            {tab === 2 && (
+              <Stack>
+                <Typography variant="h6" fontWeight={900}>
+                  Account Health
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
+                  Default score is 100. Use the Adjust action to decrease or increase it with a remark —
+                  remarks are visible to the venue owner when they tap the meter.
+                </Typography>
+                <VenueHealthCard venueId={venue.id} />
+              </Stack>
+            )}
 
-      {tab === 3 && <VenueSlotAvailabilityTab venueId={venue.id} />}
-    </Stack>
+            {tab === 3 && <VenueSlotAvailabilityTab venueId={venue.id} />}
+          </Stack>
+        );
+      }}
+    </QueryGuard>
   );
 }

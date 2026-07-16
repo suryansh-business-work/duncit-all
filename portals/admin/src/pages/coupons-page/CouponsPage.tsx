@@ -1,10 +1,9 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { notifyError, notifySuccess } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useApolloTableFetch } from '@duncit/table';
+import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 import CouponsTable from './CouponsTable';
 import CouponFormDialog from './CouponFormDialog';
 import { COUPONS_TABLE, DELETE_COUPON, type CouponRow } from './queries';
@@ -24,17 +23,7 @@ export default function CouponsPage() {
     [podsData]
   );
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: COUPONS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.couponsTable.rows as CouponRow[], total: data.couponsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<CouponRow>(client, COUPONS_TABLE, 'couponsTable');
 
   const openCreate = () => {
     setEditing(null);

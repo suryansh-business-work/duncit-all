@@ -21,6 +21,31 @@ export interface SearchItem {
   section?: string;
 }
 
+/** A "Coming soon" module card on the portal welcome dashboard. */
+export interface AppModule {
+  title: string;
+  description: string;
+  icon: string;
+}
+
+/**
+ * Superset of the per-portal `AppConfig` interfaces the 17 `app-config.ts`
+ * files re-declared. Extends `PortalBootConfig`, so an `appConfig` typed with
+ * this feeds `mountPortal`/`createSession` directly.
+ */
+export interface AppConfig extends PortalBootConfig {
+  fullName: string;
+  tagline: string;
+  promoTitle: string;
+  promoText: string;
+  portalLabel: string;
+  loginImage: string;
+  requiredRoles: string[];
+  nav: AppNavItem[];
+  /** Welcome-dashboard "Coming soon" cards (portals with a `WelcomeDashboard`). */
+  modules?: AppModule[];
+}
+
 /** Portal-specific values the shared Shell needs to boot the provider tree. */
 export interface PortalBootConfig {
   /** Stable portal key, e.g. `crm`. Drives the user-cache storage key + PortalModeGate. */

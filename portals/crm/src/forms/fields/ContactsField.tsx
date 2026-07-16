@@ -2,7 +2,7 @@ import { useFieldArray, useFormContext } from 'react-hook-form';
 import { Box, Button, Card, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FormField from '../FormField';
+import { FormField } from '@duncit/forms';
 import PhoneField from './PhoneField';
 import type { CrmContact } from '../../api/crm.types';
 

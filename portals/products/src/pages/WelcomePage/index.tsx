@@ -6,8 +6,9 @@ import { appConfig } from '../../config/app-config';
 import { INVENTORY_PRODUCTS } from '../inventory-page/queries';
 import { MARKETPLACE_BRANDS } from '../ecomm/queries';
 import { PRODUCT_ORDERS } from '../orders/queries';
+import { formatMoney } from '@duncit/utils';
 import StatTile from './StatTile';
-import { computeDashboard, formatMoney } from './dashboard-metrics';
+import { computeDashboard } from './dashboard-metrics';
 
 /** Products portal dashboard — real KPIs aggregated from inventory, orders and
  * brands, replacing the old "coming soon" placeholder (Task B item 5). */

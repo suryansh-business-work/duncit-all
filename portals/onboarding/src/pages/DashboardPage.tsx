@@ -1,9 +1,9 @@
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Avatar, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { parseApiError } from '@duncit/utils';
+import { AccountSummaryCard } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
-import { parseApiError } from '../utils/parseApiError';
-import AccountSummary from './dashboard/AccountSummary';
 import DashboardKpis from './dashboard/DashboardKpis';
 import MeetingScheduleStrip from './dashboard/MeetingScheduleStrip';
 import StatusBreakdownChart from './dashboard/StatusBreakdownChart';
@@ -132,7 +132,7 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <AccountSummary user={me} />
+      <AccountSummaryCard user={me} />
     </Stack>
   );
 }

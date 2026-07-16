@@ -1,5 +1,5 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { ProfilePage } from '@duncit/shell';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { ProfilePage, createAuthed } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import HostsPage from './pages/hosts-page/HostsPage';
@@ -15,22 +15,8 @@ import MeetingSchedulePage from './pages/meetings/MeetingSchedulePage';
 import MeetingAvailabilityPage from './pages/meetings/MeetingAvailabilityPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
-import { redirectPathFromLocation } from './utils/redirect';
 
-function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
-  const location = useLocation();
-  if (!getToken()) {
-    const redirect = encodeURIComponent(redirectPathFromLocation(location));
-    return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
-  }
-  return children;
-}
-
-const authed = (element: JSX.Element) => (
-  <RequireAuth>
-    <AppShell>{element}</AppShell>
-  </RequireAuth>
-);
+const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> });
 
 export default function App() {
   return (

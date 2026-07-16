@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Chip, Stack, Typography } from '@mui/material';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { Button, Stack, Typography } from '@mui/material';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
+import { useDateFormat } from '@duncit/app-settings';
 import {
   FAQ_STATUS_COLOR,
   FAQ_STATUSES,
@@ -17,7 +18,7 @@ const getFaqRowId = (row: FaqSubmission) => row.id;
 const STATUS_OPTIONS = FAQ_STATUSES.map((status) => ({ value: status, label: status }));
 
 const renderStatus = (row: FaqSubmission) => (
-  <Chip size="small" label={row.status} color={FAQ_STATUS_COLOR[row.status] || 'default'} />
+  <StatusChip status={row.status} colorMap={FAQ_STATUS_COLOR} />
 );
 
 export default function FaqSubmissionsPage() {
@@ -28,20 +29,7 @@ export default function FaqSubmissionsPage() {
   });
   const { formatDateTime } = useDateFormat();
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: FAQ_SUBMISSIONS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.faqSubmissionsTable.rows as FaqSubmission[],
-        total: data.faqSubmissionsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<FaqSubmission>(client, FAQ_SUBMISSIONS_TABLE, 'faqSubmissionsTable');
 
   const columns = useMemo<DuncitColumn<FaqSubmission>[]>(() => {
     const setStatus = (row: FaqSubmission, status: FaqSubmissionStatus) => {

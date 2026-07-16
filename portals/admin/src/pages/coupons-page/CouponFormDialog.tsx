@@ -14,7 +14,7 @@ import {
   Stack,
   Switch,
 } from '@mui/material';
-import RhfTextField from '../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import { couponFormDefaults, couponFormSchema, toCouponInput, type CouponFormValues } from './coupon';
 import { CREATE_COUPON, UPDATE_COUPON, type CouponRow } from './queries';
 

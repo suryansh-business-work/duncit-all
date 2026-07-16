@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useApolloTableFetch } from '@duncit/table';
+import { useDateFormat } from '@duncit/app-settings';
 import { APPROVAL_REQUESTS_TABLE, APPROVE_REQUEST, DENY_REQUEST } from './queries';
 import { type ApprovalRequest, type ApprovalStatus } from './helpers';
 import ApprovalsToolbar from './ApprovalsToolbar';
@@ -25,22 +25,12 @@ export default function ApprovalsPage() {
 
   // The status toggle lives outside the table (default PENDING), so it is pinned
   // into the query here rather than offered as a column filter.
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters = status
-        ? [...q.filters, { field: 'status', op: 'eq' as const, value: status }]
-        : q.filters;
-      const { data } = await client.query({
-        query: APPROVAL_REQUESTS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.approvalRequestsTable.rows as ApprovalRequest[],
-        total: data.approvalRequestsTable.total as number,
-      };
-    },
-    [client, status],
+  const fetchRows = useApolloTableFetch<ApprovalRequest>(
+    client,
+    APPROVAL_REQUESTS_TABLE,
+    'approvalRequestsTable',
+    { extraFilters: status ? [{ field: 'status', op: 'eq', value: status }] : undefined },
+    [status],
   );
 
   const prevStatusRef = useRef(status);

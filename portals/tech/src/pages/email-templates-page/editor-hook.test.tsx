@@ -50,8 +50,12 @@ describe('useEmailTemplateEditor — empty state', () => {
     await act(async () => { await result.current.save(); });
     await act(async () => { await result.current.onDelete(); });
     act(() => { result.current.importDetected(); });
+    // validateMjml with a null draft exercises renderPreview's early return.
+    await act(async () => { await result.current.validateMjml(); });
+    expect(result.current.snack).toEqual({ kind: 'success', msg: 'MJML looks good' });
     expect(m.run).not.toHaveBeenCalled();
     expect(m.confirmMock).not.toHaveBeenCalled();
+    expect(m.clientQuery).not.toHaveBeenCalled();
   });
 });
 

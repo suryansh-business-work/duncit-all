@@ -9,16 +9,20 @@ const m = vi.hoisted(() => ({
 }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => m.navigate }));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => m.userData }));
-vi.mock('@duncit/shell', () => ({
-  AppShell: (p: { children: React.ReactNode; hasAccess?: boolean; onLogout: () => void; onDenied: () => void }) => (
-    <div data-testid="shell">
-      <span>access:{String(p.hasAccess)}</span>
-      <button type="button" onClick={p.onLogout}>shell-logout</button>
-      <button type="button" onClick={p.onDenied}>shell-denied</button>
-      {p.children}
-    </div>
-  ),
-}));
+vi.mock('@duncit/shell', async (io) => {
+  const actual = await io<typeof import('@duncit/shell')>();
+  return {
+    ...actual,
+    AppShell: (p: { children: React.ReactNode; hasAccess?: boolean; onLogout: () => void; onDenied: () => void }) => (
+      <div data-testid="shell">
+        <span>access:{String(p.hasAccess)}</span>
+        <button type="button" onClick={p.onLogout}>shell-logout</button>
+        <button type="button" onClick={p.onDenied}>shell-denied</button>
+        {p.children}
+      </div>
+    ),
+  };
+});
 vi.mock('../lib/session', () => ({ clearToken: m.clearToken, hasAppAccess: m.hasAppAccess }));
 
 import AppShell from './AppShell';

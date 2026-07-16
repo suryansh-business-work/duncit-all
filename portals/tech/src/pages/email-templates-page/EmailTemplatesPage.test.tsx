@@ -27,11 +27,12 @@ vi.mock('./CreateTemplateDialog', () => ({
     ) : null,
 }));
 vi.mock('./SendTestDialog', () => ({
-  default: (p: { open: boolean; templateId: string | null; onResult: (k: 'success' | 'error', msg: string) => void }) =>
+  default: (p: { open: boolean; templateId: string | null; onClose: () => void; onResult: (k: 'success' | 'error', msg: string) => void }) =>
     p.open ? (
       <div data-testid="send-dialog">
         <span>tid:{p.templateId ?? 'none'}</span>
         <button type="button" onClick={() => p.onResult('success', 'sent')}>send-result</button>
+        <button type="button" onClick={p.onClose}>send-close</button>
       </div>
     ) : null,
 }));
@@ -74,6 +75,8 @@ describe('EmailTemplatesPage', () => {
     expect(screen.getByText('tid:t9')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'send-result' }));
     expect(m.editor.setSnack).toHaveBeenCalledWith({ kind: 'success', msg: 'sent' });
+    fireEvent.click(screen.getByRole('button', { name: 'send-close' }));
+    expect(screen.queryByTestId('send-dialog')).not.toBeInTheDocument();
   });
 
   it('passes a null template id to the send dialog when there is no draft', () => {

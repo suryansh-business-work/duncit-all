@@ -43,6 +43,20 @@ describe('productSchema', () => {
     expect(messages({ ...valid, unit_cost: Number.NaN })).toContain('Cost is required');
   });
 
+  it('defaults undefined order quantities to 0 in the cross-field refine', () => {
+    // max/min undefined exercise the `?? 0` fallbacks in the superRefine.
+    const result = productSchema.safeParse({
+      ...valid,
+      min_order_qty: undefined,
+      max_order_qty: undefined,
+    });
+    // Both coerce to 0, so 0 < 0 is false — the refine does not add its issue.
+    const refineIssue = result.success
+      ? undefined
+      : result.error.issues.find((i) => i.message.includes('Max order qty'));
+    expect(refineIssue).toBeUndefined();
+  });
+
   it('rejects more than 20 tags', () => {
     const tags = Array.from({ length: 21 }, (_v, i) => `t${i}`);
     expect(messages({ ...valid, tags })).toContain('At most 20 tags');

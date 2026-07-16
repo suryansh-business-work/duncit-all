@@ -123,6 +123,35 @@ describe('CreateUserDialog', () => {
     await waitFor(() => expect(screen.getByText(/email already registered/i)).toBeInTheDocument());
   });
 
+  it('falls back to an empty confirmation when the mutation returns no payload', async () => {
+    const mock = {
+      request: {
+        query: SUPPORT_CREATE_USER,
+        variables: {
+          input: {
+            first_name: 'Nia',
+            last_name: null,
+            email: 'nia@example.com',
+            phone_extension: null,
+            phone_number: null,
+            password: 'password1',
+          },
+        },
+      },
+      result: { data: { supportCreateUser: null } },
+    };
+    renderDialog([mock]);
+
+    fill(/first name/i, 'Nia');
+    fill(/^email/i, 'nia@example.com');
+    fill(/temporary password/i, 'password1');
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+
+    // No payload → done stays '' → no success alert, and the form resets.
+    await waitFor(() => expect(screen.getByLabelText(/first name/i)).toHaveValue(''));
+    expect(screen.queryByText(/account created/i)).not.toBeInTheDocument();
+  });
+
   it('clears the success alert and calls onClose on Close', async () => {
     const mock = {
       request: {

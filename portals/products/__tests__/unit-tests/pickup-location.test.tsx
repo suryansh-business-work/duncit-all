@@ -56,6 +56,14 @@ describe('pickup location mappers', () => {
     expect(values.country).toBe('India');
   });
 
+  it('defaults missing string fields to empty', () => {
+    // A partial object exercises the `?? ''` fallbacks (nickname, city, …).
+    const values = toFormValues({ contact_name: 'Only Contact' });
+    expect(values.nickname).toBe('');
+    expect(values.city).toBe('');
+    expect(values.contact_name).toBe('Only Contact');
+  });
+
   it('carries owner kind + brand id into the submit input', () => {
     expect(toSubmitInput(valid, { owner_kind: 'BRAND', brand_id: 'b1' })).toMatchObject({
       owner_kind: 'BRAND',
@@ -73,6 +81,14 @@ describe('PickupLocationForm', () => {
       <PickupLocationForm open={false} onClose={vi.fn()} onSubmit={vi.fn()} />,
     );
     expect(screen.queryByLabelText(/Nickname/)).not.toBeInTheDocument();
+  });
+
+  it('opens with the built-in defaults when no initial values are given', () => {
+    render(<PickupLocationForm open onClose={vi.fn()} onSubmit={vi.fn()} />);
+    // Country defaults to India from pickupLocationInitialValues.
+    expect(screen.getByDisplayValue('India')).toBeInTheDocument();
+    // Default dialog title is used.
+    expect(screen.getByText('Pickup location')).toBeInTheDocument();
   });
 
   it('renders seeded values and submits them', async () => {

@@ -86,6 +86,12 @@ describe('ProductPageHeader', () => {
     expect(screen.queryByText(/Last edited by/)).not.toBeInTheDocument();
   });
 
+  it('navigates back via the breadcrumb', () => {
+    renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: 'Inventory' }));
+    expect(nav.fn).toHaveBeenCalledWith('/inventory');
+  });
+
   it('reports a duplicate failure', async () => {
     fns.duplicate.mockRejectedValue(new Error('dup failed'));
     const props = renderHeader();
@@ -106,6 +112,27 @@ describe('ProductPageHeader', () => {
     const props = renderHeader();
     fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
     await waitFor(() => expect(props.onError).toHaveBeenCalledWith('archive failed'));
+  });
+
+  it('uses generic fallback messages when errors carry no message', async () => {
+    fns.duplicate.mockImplementation(() => Promise.reject({}));
+    const props = renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    await waitFor(() => expect(props.onError).toHaveBeenCalledWith('Duplicate failed'));
+  });
+
+  it('falls back to a generic archive message when the error has none', async () => {
+    fns.archive.mockImplementation(() => Promise.reject({}));
+    const props = renderHeader();
+    fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
+    await waitFor(() => expect(props.onError).toHaveBeenCalledWith('Archive failed'));
+  });
+
+  it('falls back to a generic restore message when the error has none', async () => {
+    fns.restore.mockImplementation(() => Promise.reject({}));
+    const props = renderHeader({ product: { ...activeProduct, status: 'ARCHIVED' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
+    await waitFor(() => expect(props.onError).toHaveBeenCalledWith('Restore failed'));
   });
 
   it('restores an archived product', async () => {

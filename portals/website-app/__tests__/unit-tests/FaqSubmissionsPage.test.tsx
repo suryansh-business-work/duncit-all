@@ -6,7 +6,7 @@ import {
   UPDATE_FAQ_SUBMISSION_STATUS,
   type FaqSubmission,
 } from '../../src/pages/website/faq-submissions/queries';
-import { renderWithProviders, tableMock } from './testkit';
+import { renderWithProviders, tableMock, flush } from './testkit';
 
 const faq = (over: Partial<FaqSubmission>): FaqSubmission => ({
   id: 'f1',
@@ -53,9 +53,12 @@ describe('FaqSubmissionsPage', () => {
       ],
     });
     await waitFor(() => expect(screen.getByText('New one')).toBeInTheDocument());
-    // First row (NEW) has both actions enabled.
+    // First row (NEW) has both actions enabled. Await each mutation so its
+    // onCompleted (refetchRef.current?.()) actually fires.
     fireEvent.click(screen.getAllByRole('button', { name: 'Mark Converted' })[0]);
+    await flush();
     fireEvent.click(screen.getAllByRole('button', { name: 'Ignore' })[0]);
+    await flush();
     // The mutations fire; the page stays rendered.
     expect(screen.getByText('FAQ Submission')).toBeInTheDocument();
   });

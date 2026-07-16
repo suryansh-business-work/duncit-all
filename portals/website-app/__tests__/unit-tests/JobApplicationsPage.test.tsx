@@ -52,4 +52,15 @@ describe('JobApplicationsPage', () => {
     fireEvent.click(screen.getByRole('option', { name: 'SHORTLISTED' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
+
+  it('closes the detail dialog via the Close button', async () => {
+    renderWithProviders(<JobApplicationsPage />, {
+      mocks: [tableMock(JOB_APPLICATIONS_TABLE, 'jobApplicationsTable', rows)],
+    });
+    await waitFor(() => expect(screen.getByText('Nia')).toBeInTheDocument());
+    fireEvent.click(screen.getAllByRole('button', { name: 'view' })[0]);
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
 });

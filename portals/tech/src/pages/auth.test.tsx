@@ -2,11 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 // ---- LoginPage ----------------------------------------------------------
-vi.mock('@duncit/shell', () => ({
-  PortalLoginPage: (p: { appConfig: { key: string }; session: unknown }) => (
-    <div data-testid="portal-login">login:{p.appConfig.key}</div>
-  ),
-}));
+vi.mock('@duncit/shell', async (io) => {
+  const actual = await io<typeof import('@duncit/shell')>();
+  return {
+    ...actual,
+    PortalLoginPage: (p: { appConfig: { key: string }; session: unknown }) => (
+      <div data-testid="portal-login">login:{p.appConfig.key}</div>
+    ),
+  };
+});
 
 // ---- JwtExpirySection deps ----------------------------------------------
 const m = vi.hoisted(() => ({
@@ -74,6 +78,12 @@ describe('JwtExpirySection', () => {
 
   it('falls back to 7 days for an unparseable expiry', () => {
     m.query = { data: { appSettings: { jwt_expires_in: 'weird', jwt_no_expiry: false, updated_at: null } }, loading: false, error: undefined, refetch: vi.fn() };
+    render(<JwtExpirySection onToast={vi.fn()} />);
+    expect(screen.getByText(/expire after 7d/)).toBeInTheDocument();
+  });
+
+  it('defaults to 7 days when the expiry is null', () => {
+    m.query = { data: { appSettings: { jwt_expires_in: null, jwt_no_expiry: false, updated_at: null } }, loading: false, error: undefined, refetch: vi.fn() };
     render(<JwtExpirySection onToast={vi.fn()} />);
     expect(screen.getByText(/expire after 7d/)).toBeInTheDocument();
   });

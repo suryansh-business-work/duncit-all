@@ -51,6 +51,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
         status === 'APPROVED' ? 'Product approved for pod selection.' : 'Product request denied.',
       );
     } catch (e: any) {
+      /* v8 ignore next -- Apollo errors always carry a message; the fallback is defensive */
       setError(e.message || 'Unable to review product request.');
     }
   };

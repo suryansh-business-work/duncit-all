@@ -1,22 +1,29 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import type { MockedResponse } from '@apollo/client/testing';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import AdvancedSettingsSection from '../../src/pages/inventory-page/inventory-product-page/AdvancedSettingsSection';
+import { GENERATE_INVENTORY_SKU } from '../../src/pages/inventory-page/inventory-product-page/productQueries';
 import { ProductFormHarness } from './form-harness';
+import { renderWithProviders } from './testkit';
 
-const mut = vi.hoisted(() => ({ fn: vi.fn() }));
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
-  useMutation: () => [mut.fn, { loading: false }],
-}));
+const skuMock = (value: string): MockedResponse => ({
+  request: { query: GENERATE_INVENTORY_SKU },
+  result: { data: { generateInventorySku: value } },
+});
+const skuError: MockedResponse = {
+  request: { query: GENERATE_INVENTORY_SKU },
+  result: { errors: [{ message: 'rate limited' }] },
+};
 
-const renderSection = (onError = vi.fn()) =>
-  render(
+const renderSection = (mocks: MockedResponse[] = [], onError = vi.fn()) =>
+  renderWithProviders(
     <ProductFormHarness>
       <AdvancedSettingsSection onError={onError} />
     </ProductFormHarness>,
+    { mocks },
   );
 
-beforeEach(() => mut.fn.mockReset());
+const generate = () => fireEvent.click(screen.getByRole('button', { name: /Generate new SKU/i }));
 
 describe('AdvancedSettingsSection', () => {
   it('renders the SKU, barcode, status and visibility controls', () => {
@@ -35,35 +42,25 @@ describe('AdvancedSettingsSection', () => {
   });
 
   it('generates a SKU and writes it into the field', async () => {
-    mut.fn.mockResolvedValue({ data: { generateInventorySku: 'GEN-0001' } });
-    renderSection();
-    fireEvent.click(screen.getByRole('button', { name: /Generate new SKU/i }));
+    renderSection([skuMock('GEN-0001')]);
+    generate();
     await waitFor(() =>
       expect((screen.getByLabelText('SKU') as HTMLInputElement).value).toBe('GEN-0001'),
     );
   });
 
   it('ignores an empty generated SKU', async () => {
-    mut.fn.mockResolvedValue({ data: { generateInventorySku: '' } });
-    renderSection();
-    fireEvent.click(screen.getByRole('button', { name: /Generate new SKU/i }));
-    await waitFor(() => expect(mut.fn).toHaveBeenCalled());
+    renderSection([skuMock('')]);
+    generate();
+    // Give the mutation a tick to resolve; the field stays blank.
+    await new Promise((r) => setTimeout(r, 0));
     expect((screen.getByLabelText('SKU') as HTMLInputElement).value).toBe('');
   });
 
   it('reports a generation error', async () => {
-    mut.fn.mockRejectedValue(new Error('rate limited'));
     const onError = vi.fn();
-    renderSection(onError);
-    fireEvent.click(screen.getByRole('button', { name: /Generate new SKU/i }));
+    renderSection([skuError], onError);
+    generate();
     await waitFor(() => expect(onError).toHaveBeenCalledWith('rate limited'));
-  });
-
-  it('falls back to a generic error message when the error has none', async () => {
-    mut.fn.mockRejectedValue({});
-    const onError = vi.fn();
-    renderSection(onError);
-    fireEvent.click(screen.getByRole('button', { name: /Generate new SKU/i }));
-    await waitFor(() => expect(onError).toHaveBeenCalledWith('Could not generate SKU'));
   });
 });

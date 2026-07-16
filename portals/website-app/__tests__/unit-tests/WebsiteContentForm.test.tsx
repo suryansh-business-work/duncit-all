@@ -4,12 +4,25 @@ import { WebsiteContentForm } from '../../src/pages/website/content/website-cont
 import type { WebsiteContentItem } from '../../src/pages/website/content/queries';
 import { renderWithProviders } from './testkit';
 
+const dtf = vi.hoisted(() => ({ onChange: null as unknown as (v: string | null) => void }));
+const img = vi.hoisted(() => ({ onChange: null as unknown as (v: string | null) => void }));
+
 // The MUI X picker needs a LocalizationProvider; stub DateTimeField (covered by
-// its own spec) so the form renders without one.
+// its own spec) so the form renders without one. Capture its onChange so a test
+// can push a null value (exercising the `field.value ?? ''` fallback).
 vi.mock('../../src/components/DateTimeField', () => ({
-  default: ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
-    <input aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />
-  ),
+  default: ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string;
+    value: string;
+    onChange: (v: string | null) => void;
+  }) => {
+    dtf.onChange = onChange;
+    return <input aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />;
+  },
 }));
 
 // SingleImageUploadField pulls in ImageKit upload wiring; stub it to a plain
@@ -19,11 +32,28 @@ vi.mock('@duncit/media-picker', () => ({
     label,
     value,
     onChange,
+    error,
+    helperText,
   }: {
     label: string;
     value: string;
-    onChange: (v: string) => void;
-  }) => <input aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />,
+    onChange: (v: string | null) => void;
+    error?: boolean;
+    helperText?: string;
+  }) => {
+    img.onChange = onChange;
+    return (
+      <div>
+        <input
+          aria-label={label}
+          aria-invalid={error}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {helperText ? <span>{helperText}</span> : null}
+      </div>
+    );
+  },
 }));
 
 const item: WebsiteContentItem = {
@@ -56,7 +86,7 @@ describe('WebsiteContentForm', () => {
         onCancel={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'New Role' } });
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'New Role' } });
     fireEvent.change(screen.getByLabelText('Image'), { target: { value: 'https://img/new.png' } });
     fireEvent.click(screen.getByLabelText('Published'));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -103,6 +133,29 @@ describe('WebsiteContentForm', () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.getByText('Title is required')).toBeInTheDocument());
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('handles a cleared (null) published date and an invalid image URL', async () => {
+    const onSubmit = vi.fn();
+    renderWithProviders(
+      <WebsiteContentForm
+        type="BLOG"
+        item={null}
+        submitting={false}
+        errorMessage={null}
+        onSubmit={onSubmit}
+        onCancel={vi.fn()}
+      />,
+    );
+    // Clearing the picker/image pushes null → the `field.value ?? ''` fallbacks run.
+    dtf.onChange(null);
+    img.onChange(null);
+    // An invalid link surfaces the image field's error/helperText branch on submit.
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Ok' } });
+    fireEvent.change(screen.getByLabelText('Image'), { target: { value: 'ftp://bad' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.getByText(/valid URL/i)).toBeInTheDocument());
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });

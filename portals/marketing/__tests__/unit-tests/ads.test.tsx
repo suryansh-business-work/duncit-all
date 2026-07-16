@@ -8,12 +8,12 @@ const tableMock = vi.hoisted(() => ({ rows: [] as any[] }));
 vi.mock('@duncit/table', () => ({
   useApolloTableFetch: () => vi.fn(),
   dateColumn: (opts: any = {}) => ({ field: opts.field ?? 'created_at', headerName: opts.headerName ?? 'Date', ...opts }),
-  DuncitTable: ({ columns, onRowClick, refetchRef }: any) => {
+  DuncitTable: ({ columns, onRowClick, refetchRef, getRowId }: any) => {
     if (refetchRef) refetchRef.current = vi.fn();
     return (
       <div data-testid="duncit-table">
         {tableMock.rows.map((row, ri) => (
-          <div key={ri} data-testid="table-row">
+          <div key={getRowId ? getRowId(row) : ri} data-testid="table-row">
             {columns.map((c: any, ci: number) => (
               <span key={ci}>
                 {c.valueGetter ? String(c.valueGetter(row)) : ''}
@@ -120,7 +120,9 @@ beforeEach(() => {
   apolloMock.refetch = vi.fn().mockResolvedValue({});
   apolloMock.mutations = {};
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 // ===========================================================================
 describe('AdsApprovalsToolbar', () => {
@@ -249,31 +251,64 @@ describe('ReviewDialog', () => {
 
 // ===========================================================================
 describe('AdsApprovalsPage', () => {
-  it('refetches when the status filter changes', async () => {
+  it('switches to the All filter (no pinned status) and back', async () => {
     tableMock.rows = [adRow];
     render(<AdsApprovalsPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'All' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'All' })).toHaveClass('Mui-selected'));
     fireEvent.click(screen.getByRole('button', { name: 'Approved' }));
-    // status effect fires refetch after the change
     await waitFor(() => expect(screen.getByRole('button', { name: 'Approved' })).toHaveClass('Mui-selected'));
   });
 
-  it('opens the review dialog and approves a request', async () => {
+  it('opens the review dialog and approves with remarks', async () => {
     tableMock.rows = [adRow];
     apolloMock.mutations.ReviewAdRequest = vi.fn().mockResolvedValue({ data: {} });
     render(<AdsApprovalsPage />);
     fireEvent.click(screen.getByText('rowclick-0'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }));
+    fireEvent.change(await screen.findByLabelText('Remarks'), { target: { value: 'All good' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Approve' }));
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Ad request approved'));
-    expect(apolloMock.mutations.ReviewAdRequest).toHaveBeenCalled();
+    expect(apolloMock.mutations.ReviewAdRequest).toHaveBeenCalledWith({
+      variables: { id: 'a1', approve: true, remarks: 'All good' },
+    });
   });
 
-  it('shows an error inside the dialog when the review fails', async () => {
+  it('rejects a pending request successfully', async () => {
+    tableMock.rows = [adRow];
+    apolloMock.mutations.ReviewAdRequest = vi.fn().mockResolvedValue({ data: {} });
+    render(<AdsApprovalsPage />);
+    fireEvent.click(screen.getByText('rowclick-0'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Reject' }));
+    await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Ad request rejected'));
+    expect(apolloMock.mutations.ReviewAdRequest).toHaveBeenCalledWith({
+      variables: { id: 'a1', approve: false, remarks: undefined },
+    });
+  });
+
+  it('closes the review dialog without acting', async () => {
+    tableMock.rows = [adRow];
+    render(<AdsApprovalsPage />);
+    fireEvent.click(screen.getByText('rowclick-0'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('shows an Error message inside the dialog when the review fails', async () => {
     tableMock.rows = [adRow];
     apolloMock.mutations.ReviewAdRequest = vi.fn().mockRejectedValue(new Error('Review broke'));
     render(<AdsApprovalsPage />);
     fireEvent.click(screen.getByText('rowclick-0'));
     fireEvent.click(await screen.findByRole('button', { name: 'Reject' }));
     await waitFor(() => expect(screen.getByText('Review broke')).toBeInTheDocument());
+  });
+
+  it('falls back to a generic message for a non-Error rejection', async () => {
+    tableMock.rows = [adRow];
+    apolloMock.mutations.ReviewAdRequest = vi.fn().mockRejectedValue('nope');
+    render(<AdsApprovalsPage />);
+    fireEvent.click(screen.getByText('rowclick-0'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Reject' }));
+    await waitFor(() => expect(screen.getByText('Failed to review ad request')).toBeInTheDocument());
   });
 });
 
@@ -341,5 +376,14 @@ describe('AdsSettingsPage', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Pricing' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Save Pricing' }));
     await waitFor(() => expect(screen.getByText('Update failed')).toBeInTheDocument());
+  });
+
+  it('falls back to a generic message for a non-Error save rejection', async () => {
+    apolloMock.queryData = { AdPricing: { adPricing: pricing } };
+    apolloMock.mutations.UpdateAdPricing = vi.fn().mockRejectedValue('boom');
+    render(<AdsSettingsPage />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Pricing' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Save Pricing' }));
+    await waitFor(() => expect(screen.getByText('Failed to update ad pricing')).toBeInTheDocument());
   });
 });

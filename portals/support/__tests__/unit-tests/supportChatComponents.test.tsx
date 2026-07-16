@@ -145,6 +145,14 @@ describe('TranscriptMenu', () => {
     fireEvent.click(screen.getByLabelText('Export transcript'));
     expect(screen.queryByText('Download .txt')).not.toBeInTheDocument();
   });
+
+  it('closes the email dialog via the backdrop/escape handler', async () => {
+    render(<TranscriptMenu onDownload={vi.fn()} onEmail={vi.fn()} />);
+    fireEvent.click(screen.getByLabelText('Export transcript'));
+    fireEvent.click(screen.getByText(/email transcript/i));
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByLabelText(/recipient email/i)).not.toBeInTheDocument());
+  });
 });
 
 describe('ConfirmDialog + FeedbackPanel defaults', () => {

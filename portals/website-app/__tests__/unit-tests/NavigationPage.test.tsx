@@ -98,6 +98,12 @@ describe('NavigationPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 
+    // Escape dismisses the confirm dialog (Dialog onClose → setConfirmDelete(null)).
+    fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
+    dialog = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
     // Confirm path.
     fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
     dialog = await screen.findByRole('dialog');

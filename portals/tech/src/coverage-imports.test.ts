@@ -8,6 +8,7 @@ import * as portalModeQueries from './pages/portal-modes/queries';
 import * as emailTplQueries from './pages/email-templates-page/queries';
 import * as emailTplCreateBarrel from './pages/email-templates-page/email-template-create';
 import * as emailTplTestBarrel from './pages/email-templates-page/email-template-test';
+import * as theme from './theme';
 
 /**
  * GraphQL document modules + barrels are pure module-level code; importing them
@@ -55,5 +56,10 @@ describe('module barrels & GraphQL documents', () => {
     expect(emailTplCreateBarrel.toCreateTemplateInput).toBeTypeOf('function');
     expect(emailTplTestBarrel.emailTemplateTestSchema).toBeDefined();
     expect(emailTplTestBarrel.toSendTestInput).toBeTypeOf('function');
+  });
+
+  it('re-exports the shared theme builder', () => {
+    expect(theme.buildTheme).toBeTypeOf('function');
+    expect(theme.tokens).toBeDefined();
   });
 });

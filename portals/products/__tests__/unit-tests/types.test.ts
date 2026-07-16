@@ -38,7 +38,9 @@ describe('inventory product form mappers', () => {
   });
 
   it('applies defaults for missing fields and non-array images/tags', () => {
-    const values = toFormValues({ product_name: 'X', images: 'not-array', tags: null });
+    // An object with no product_name exercises the `?? ''` string fallbacks.
+    const values = toFormValues({ images: 'not-array', tags: null });
+    expect(values.product_name).toBe('');
     expect(values.images).toEqual([]);
     expect(values.tags).toEqual([]);
     expect(values.min_order_qty).toBe(1);

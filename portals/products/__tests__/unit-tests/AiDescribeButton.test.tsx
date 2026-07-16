@@ -56,6 +56,26 @@ describe('AiDescribeButton', () => {
     );
   });
 
+  it('defaults an empty short_description when only a description is returned', async () => {
+    mut.fn.mockResolvedValue({
+      data: { aiDescribeInventoryProduct: JSON.stringify({ description: 'Only long' }) },
+    });
+    const onApply = vi.fn();
+    render(<AiDescribeButton values={values} onApply={onApply} onError={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Generate with AI/i }));
+    await waitFor(() =>
+      expect(onApply).toHaveBeenCalledWith({ short_description: '', description: 'Only long' }),
+    );
+  });
+
+  it('treats a null AI payload as an empty string (malformed JSON)', async () => {
+    mut.fn.mockResolvedValue({ data: { aiDescribeInventoryProduct: null } });
+    const onError = vi.fn();
+    render(<AiDescribeButton values={values} onApply={vi.fn()} onError={onError} />);
+    fireEvent.click(screen.getByRole('button', { name: /Generate with AI/i }));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith('AI returned malformed JSON'));
+  });
+
   it('reports malformed AI JSON', async () => {
     mut.fn.mockResolvedValue({ data: { aiDescribeInventoryProduct: 'not json' } });
     const onError = vi.fn();
@@ -65,7 +85,7 @@ describe('AiDescribeButton', () => {
   });
 
   it('reports a mutation failure', async () => {
-    mut.fn.mockRejectedValue(new Error('quota exceeded'));
+    mut.fn.mockImplementation(() => Promise.reject(new Error('quota exceeded')));
     const onError = vi.fn();
     render(<AiDescribeButton values={values} onApply={vi.fn()} onError={onError} />);
     fireEvent.click(screen.getByRole('button', { name: /Generate with AI/i }));
@@ -73,7 +93,7 @@ describe('AiDescribeButton', () => {
   });
 
   it('falls back to a generic message when the error has none', async () => {
-    mut.fn.mockRejectedValue({});
+    mut.fn.mockImplementation(() => Promise.reject({}));
     const onError = vi.fn();
     render(<AiDescribeButton values={values} onApply={vi.fn()} onError={onError} />);
     fireEvent.click(screen.getByRole('button', { name: /Generate with AI/i }));

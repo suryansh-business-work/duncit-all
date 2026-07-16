@@ -8,13 +8,13 @@ const tableMock = vi.hoisted(() => ({ rows: [] as any[] }));
 vi.mock('@duncit/table', () => ({
   useApolloTableFetch: () => vi.fn(),
   dateColumn: (opts: any = {}) => ({ field: opts.field ?? 'created_at', headerName: opts.headerName ?? 'Date', ...opts }),
-  DuncitTable: ({ columns, toolbarActions, refetchRef, onRowClick }: any) => {
+  DuncitTable: ({ columns, toolbarActions, refetchRef, onRowClick, getRowId }: any) => {
     if (refetchRef) refetchRef.current = vi.fn();
     return (
       <div data-testid="duncit-table">
         <div>{toolbarActions}</div>
         {tableMock.rows.map((row, ri) => (
-          <div key={ri} data-testid="table-row">
+          <div key={getRowId ? getRowId(row) : ri} data-testid="table-row">
             {columns.map((c: any, ci: number) => (
               <span key={ci} data-testid={`cell-${c.field ?? ci}`}>
                 {c.valueGetter ? String(c.valueGetter(row)) : ''}
@@ -101,16 +101,19 @@ beforeEach(() => {
   dialogsMock.confirmResult = true;
   dialogsMock.confirm = vi.fn().mockImplementation(() => Promise.resolve(dialogsMock.confirmResult));
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 // ===========================================================================
 describe('NotificationsTable', () => {
   it('renders scope, title, delivered and failed cells across every scope', () => {
     tableMock.rows = [
-      { ...rowBase, id: 'g', scope: 'GLOBAL', link_url: '/pods/1' },
+      { ...rowBase, id: 'g', scope: 'GLOBAL', link_url: '/pods/1', silent: true },
       { ...rowBase, id: 'l', scope: 'LOCATION', location_id: 'l1' },
       { ...rowBase, id: 'z', scope: 'ZONE', location_id: 'l1', zone_name: 'North' },
       { ...rowBase, id: 'u', scope: 'USER', target_user_ids: ['a', 'b'], failed_count: 3 },
+      { ...rowBase, id: 'u0', scope: 'USER', target_user_ids: undefined as any },
       { ...rowBase, id: 'x', scope: 'UNKNOWN' as any },
     ];
     const refetchRef = { current: null };
@@ -128,6 +131,9 @@ describe('NotificationsTable', () => {
     expect(screen.getAllByText(/Location · Mumbai/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Zone · Mumbai \/ North/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Users · 2/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Users · 0/).length).toBeGreaterThan(0);
+    // silent column renders Yes for the silent GLOBAL row
+    expect(screen.getAllByText('Yes').length).toBeGreaterThan(0);
     // link_url arrow shown for the GLOBAL row
     expect(screen.getByText(/\/pods\/1/)).toBeInTheDocument();
   });
@@ -166,9 +172,12 @@ describe('NotificationFormDialog', () => {
     render(<NotificationFormDialog {...baseProps} form={blankForm} onSubmit={onSubmit} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
+    // toggle the silent switch to exercise its change handler
+    fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0][0].scope).toBe('GLOBAL');
+    expect(onSubmit.mock.calls[0][0].silent).toBe(true);
   });
 
   it('reveals the location select for LOCATION scope', () => {
@@ -177,17 +186,51 @@ describe('NotificationFormDialog', () => {
     expect(screen.getByLabelText('Location')).toBeInTheDocument();
   });
 
-  it('reveals location + zone selects for ZONE scope', () => {
-    const form: NotifForm = { ...blankForm, scope: 'ZONE', location_id: 'l1' };
+  it('reveals location + zone selects for ZONE scope and picks a location', () => {
+    const form: NotifForm = { ...blankForm, scope: 'ZONE' };
     render(<NotificationFormDialog {...baseProps} form={form} />);
     expect(screen.getByRole('combobox', { name: 'Location' })).toBeInTheDocument();
+    // choose a location -> onChange fires and clears the zone
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Location' }));
+    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
     expect(screen.getByRole('combobox', { name: 'Zone' })).toBeInTheDocument();
   });
 
-  it('reveals the users select for USER scope', () => {
+  it('reveals the users select for USER scope and selects a user', () => {
     const form: NotifForm = { ...blankForm, scope: 'USER' };
-    render(<NotificationFormDialog {...baseProps} form={form} />);
-    expect(screen.getByLabelText('Users')).toBeInTheDocument();
+    const users = [
+      { user_id: 'u1', full_name: 'Alice' },
+      { user_id: 'u2', email: 'bob@example.com' },
+      { user_id: 'u3', phone_number: '9998887776' },
+    ];
+    render(<NotificationFormDialog {...baseProps} form={form} users={users} />);
+    const usersField = screen.getByLabelText('Users');
+    expect(usersField).toBeInTheDocument();
+    fireEvent.mouseDown(usersField);
+    const listbox = within(screen.getByRole('listbox'));
+    // label falls back to email then phone number when no full name
+    expect(listbox.getByText('bob@example.com')).toBeInTheDocument();
+    expect(listbox.getByText('9998887776')).toBeInTheDocument();
+    fireEvent.click(listbox.getByText('Alice'));
+    expect(screen.getAllByText('Alice').length).toBeGreaterThan(0);
+  });
+
+  it('shows the location-required error when a ZONE form is submitted without a location', async () => {
+    const form: NotifForm = { ...blankForm, scope: 'ZONE' };
+    render(<NotificationFormDialog {...baseProps} form={form} onSubmit={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
+    fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
+    fireEvent.submit(document.querySelector('form') as HTMLFormElement);
+    expect(await screen.findByText('Pick a location')).toBeInTheDocument();
+  });
+
+  it('shows the users-required error when a USER form is submitted with no users', async () => {
+    const form: NotifForm = { ...blankForm, scope: 'USER' };
+    render(<NotificationFormDialog {...baseProps} form={form} onSubmit={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
+    fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
+    fireEvent.submit(document.querySelector('form') as HTMLFormElement);
+    expect(await screen.findByText('Pick at least one user')).toBeInTheDocument();
   });
 
   it('shows the operation error and switches audience clearing dependent fields', () => {
@@ -223,7 +266,8 @@ describe('NotificationsPage', () => {
       LocationsForNotif: { locations: [{ id: 'l1', location_name: 'Mumbai', location_zones: [] }] },
       UsersForNotif: { users: [{ user_id: 'u1', full_name: 'Alice' }] },
     };
-    tableMock.rows = [rowBase];
+    // row carries a known location so locName resolves to a name (not the em-dash)
+    tableMock.rows = [{ ...rowBase, location_id: 'l1' }];
   });
 
   it('creates a notification and shows the delivery toast', async () => {
@@ -274,5 +318,54 @@ describe('NotificationsPage', () => {
     render(<NotificationsPage />);
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('nope'));
+  });
+
+  it('defaults the delivery counts to zero when the mutation returns no counts', async () => {
+    apolloMock.mutations.CreateNotification = vi
+      .fn()
+      .mockResolvedValue({ data: { createNotification: null } });
+    render(<NotificationsPage />);
+    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Launch' } });
+    fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'We are live' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+    await waitFor(() =>
+      expect(screen.getByText('Sent · delivered 0 · failed 0')).toBeInTheDocument(),
+    );
+  });
+
+  it('closes the create dialog from Cancel', async () => {
+    render(<NotificationsPage />);
+    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('auto-hides the toast after the timeout', async () => {
+    vi.useFakeTimers();
+    try {
+      apolloMock.mutations.DeleteNotification = vi.fn().mockResolvedValue({ data: {} });
+      dialogsMock.confirm = vi.fn().mockResolvedValue(true);
+      render(<NotificationsPage />);
+      fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+      await vi.runAllTimersAsync();
+      expect(screen.queryByText('Deleted')).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('NotificationsPage without reference data', () => {
+  it('falls back to empty locations, users and options', () => {
+    apolloMock.queryData = {};
+    tableMock.rows = [rowBase];
+    render(<NotificationsPage />);
+    // location column resolves to the em-dash when no locations are loaded
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+    // dialog still opens with an empty user/location list
+    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 });

@@ -51,6 +51,13 @@ describe('GoogleSignInButton', () => {
     expect(onCredential).not.toHaveBeenCalled();
   });
 
+  it('shows the loading overlay in the light theme', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-id');
+    render(<GoogleSignInButton onCredential={vi.fn()} loading />);
+    expect(screen.getByText('gl-theme:outline')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
   it('uses the dark Google theme and shows the loading overlay', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-id');
     render(

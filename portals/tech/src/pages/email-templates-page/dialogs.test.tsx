@@ -135,6 +135,14 @@ describe('SendTestDialog', () => {
     render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={vi.fn()} />);
     await typeEmail('not-an-email');
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(m.run).not.toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 0));
+    expect(m.run).not.toHaveBeenCalled();
+  });
+
+  it('shows the in-flight state (disabled close + Sending… button)', () => {
+    m.loading = true;
+    render(<SendTestDialog open templateId="t1" varsJson="{}" onClose={vi.fn()} onResult={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Sending…' })).toBeDisabled();
   });
 });

@@ -59,6 +59,17 @@ describe('GoogleSignInButton', () => {
     expect(screen.getByTestId('glogin')).toBeInTheDocument();
   });
 
+  it('renders the light Google theme and light loading overlay', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    const { container } = render(
+      <ThemeProvider theme={createTheme({ palette: { mode: 'light' } })}>
+        <GoogleSignInButton onCredential={vi.fn()} loading />
+      </ThemeProvider>,
+    );
+    expect(glogin.props.theme).toBe('outline');
+    expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
+  });
+
   it('renders the dark Google theme and dark loading overlay', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
     const { container } = render(

@@ -91,6 +91,15 @@ describe('EmailTestPanel', () => {
     // Button is disabled while loading and shows the sending label.
     expect(screen.getByRole('button', { name: 'Sending…' })).toBeDisabled();
   });
+
+  it('handles a send result with no payload (result stays null)', async () => {
+    h.run.mockResolvedValue({ data: {} });
+    render(<EmailTestPanel entry={entry()} />);
+    fireEvent.change(screen.getByLabelText('Recipient email'), { target: { value: 'a@b.c' } });
+    fireEvent.click(screen.getByRole('button', { name: /send test email/i }));
+    await waitFor(() => expect(h.run).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });
 
 describe('ImagekitTestPanel', () => {
@@ -125,6 +134,12 @@ describe('ImagekitTestPanel', () => {
     await waitFor(() => expect(h.run).toHaveBeenCalled());
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
+
+  it('shows the uploading label while loading', () => {
+    h.loading = true;
+    render(<ImagekitTestPanel entry={entry({ category: 'IMAGEKIT' })} />);
+    expect(screen.getByRole('button', { name: 'Uploading…' })).toBeDisabled();
+  });
 });
 
 describe('PexelsTestPanel', () => {
@@ -152,6 +167,13 @@ describe('PexelsTestPanel', () => {
     await waitFor(() => expect(h.run).toHaveBeenCalled());
     expect(screen.queryByText('empty')).not.toBeInTheDocument();
   });
+
+  it('edits the query and shows the loading label', () => {
+    h.loading = true;
+    render(<PexelsTestPanel entry={entry({ category: 'PEXELS' })} />);
+    fireEvent.change(screen.getByLabelText('Search query'), { target: { value: 'cats' } });
+    expect(screen.getByRole('button', { name: '…' })).toBeDisabled();
+  });
 });
 
 describe('AiTestPanel', () => {
@@ -171,6 +193,21 @@ describe('AiTestPanel', () => {
     rerender(<AiTestPanel entry={entry({ category: 'GEMINI' })} />);
     fireEvent.click(screen.getByRole('button', { name: /create gemini chat/i }));
     expect(await screen.findByText('quota')).toBeInTheDocument();
+  });
+
+  it('edits the prompt and handles a null payload', async () => {
+    h.run.mockResolvedValue({ data: {} });
+    render(<AiTestPanel entry={entry({ category: 'OPENAI' })} />);
+    fireEvent.change(screen.getByLabelText('Prompt'), { target: { value: 'Say hi' } });
+    fireEvent.click(screen.getByRole('button', { name: /create openai chat/i }));
+    await waitFor(() => expect(h.run).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows the creating label while loading', () => {
+    h.loading = true;
+    render(<AiTestPanel entry={entry({ category: 'OPENAI' })} />);
+    expect(screen.getByRole('button', { name: 'Creating…' })).toBeDisabled();
   });
 });
 
@@ -205,6 +242,23 @@ describe('CallTestPanel', () => {
     fireEvent.change(screen.getByLabelText('Number to call'), { target: { value: '+14155552671' } });
     fireEvent.click(screen.getByRole('button', { name: /place test call/i }));
     expect(await screen.findByText('no credits')).toBeInTheDocument();
+  });
+
+  it('handles a null call payload', async () => {
+    confirmMock.mockResolvedValue(true);
+    h.run.mockResolvedValue({ data: {} });
+    render(<CallTestPanel entry={entry({ category: 'TWILIO' })} />);
+    fireEvent.change(screen.getByLabelText('Number to call'), { target: { value: '+14155552671' } });
+    fireEvent.click(screen.getByRole('button', { name: /place test call/i }));
+    await waitFor(() => expect(h.run).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows the calling label while loading', () => {
+    h.loading = true;
+    render(<CallTestPanel entry={entry({ category: 'TWILIO' })} />);
+    fireEvent.change(screen.getByLabelText('Number to call'), { target: { value: '+14155552671' } });
+    expect(screen.getByRole('button', { name: 'Calling…' })).toBeDisabled();
   });
 });
 

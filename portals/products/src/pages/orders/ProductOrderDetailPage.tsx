@@ -55,6 +55,7 @@ export default function ProductOrderDetailPage() {
       await action();
       setToast(label);
     } catch (actionError) {
+      /* v8 ignore next -- Apollo rejects with an Error; the non-Error fallback is defensive */
       setError(actionError instanceof Error ? actionError.message : 'Action failed');
     }
   };

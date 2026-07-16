@@ -1,7 +1,17 @@
+import { useEffect } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useFormContext } from 'react-hook-form';
 import ProductFormBody from '../../src/pages/inventory-page/inventory-product-page/ProductFormBody';
 import { ProductFormHarness } from './form-harness';
+
+function Dirtier() {
+  const { setValue } = useFormContext();
+  useEffect(() => {
+    setValue('product_name', 'Changed', { shouldDirty: true });
+  }, [setValue]);
+  return null;
+}
 
 const footer = vi.hoisted(() => ({ props: null as null | Record<string, any> }));
 vi.mock('../../src/pages/inventory-page/inventory-product-page/ProductAccordion', () => ({
@@ -41,6 +51,28 @@ describe('ProductFormBody', () => {
     renderBody(true);
     expect(screen.getByTestId('accordion')).toBeInTheDocument();
     expect(screen.getByTestId('footer')).toBeInTheDocument();
+  });
+
+  it('registers the unsaved-changes guard when the form is dirty', async () => {
+    render(
+      <ProductFormHarness>
+        <Dirtier />
+        <ProductFormBody
+          isNew={false}
+          categories={[]}
+          logs={[]}
+          movements={[]}
+          analytics={[]}
+          activityLoading={false}
+          onCancel={vi.fn()}
+          onAfterSave={vi.fn()}
+          onSubmit={vi.fn()}
+          onError={vi.fn()}
+        />
+      </ProductFormHarness>,
+    );
+    // Dirty state flows into StickyFooter.
+    await waitFor(() => expect(footer.props?.dirty).toBe(true));
   });
 
   it('submits without closing on Save & continue', async () => {

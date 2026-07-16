@@ -72,6 +72,37 @@ describe('CallbackDetailsPage', () => {
     expect(screen.queryByRole('button', { name: /close/i })).not.toBeInTheDocument();
   });
 
+  it('records a call duration + conclusion when marking a pending request contacted', async () => {
+    renderAt([
+      queryMock(req('PENDING')),
+      {
+        request: {
+          query: MARK_CALLBACK_CONTACTED,
+          variables: { id: ID, duration_seconds: 300, conclusion: 'Called and resolved' },
+        },
+        result: {
+          data: {
+            markBouncerCallbackContacted: {
+              id: ID,
+              status: 'CONTACTED',
+              contacted_at: 'now',
+              duration_seconds: 300,
+              conclusion: 'Called and resolved',
+            },
+          },
+        },
+      },
+      queryMock(req('CONTACTED', { duration_seconds: 300, conclusion: 'Called and resolved' })),
+    ]);
+    await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText(/call duration/i), { target: { value: '5' } });
+    fireEvent.change(screen.getByLabelText(/conclusion/i), { target: { value: 'Called and resolved' } });
+    fireEvent.click(screen.getByRole('button', { name: /mark contacted/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /mark contacted/i })).not.toBeInTheDocument(),
+    );
+  });
+
   it('renders a recorded outcome with a call duration and conclusion', async () => {
     renderAt([queryMock(req('CLOSED', { duration_seconds: 120, conclusion: null }))]);
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());

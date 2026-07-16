@@ -287,6 +287,33 @@ describe('MjmlAiButton', () => {
     expect(screen.getByRole('button', { name: 'Working...' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
   });
+
+  it('closes the popover from the Cancel button when idle', async () => {
+    render(<MjmlAiButton currentMjml="" onApply={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Create\/Update with AI/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() =>
+      expect(screen.queryByText('Create/update MJML with AI')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('closes the popover on backdrop click when idle', async () => {
+    render(<MjmlAiButton currentMjml="" onApply={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Create\/Update with AI/i }));
+    expect(screen.getByText('Create/update MJML with AI')).toBeInTheDocument();
+    fireEvent.click(document.querySelector('.MuiBackdrop-root') as HTMLElement);
+    await waitFor(() =>
+      expect(screen.queryByText('Create/update MJML with AI')).not.toBeInTheDocument(),
+    );
+  });
+
+  it('keeps the popover open on backdrop click while loading', () => {
+    mjmlMock.loading = true;
+    render(<MjmlAiButton currentMjml="" onApply={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /Create\/Update with AI/i }));
+    fireEvent.click(document.querySelector('.MuiBackdrop-root') as HTMLElement);
+    expect(screen.getByText('Create/update MJML with AI')).toBeInTheDocument();
+  });
 });
 
 // ===========================================================================

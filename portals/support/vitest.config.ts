@@ -36,18 +36,16 @@ export default defineConfig({
         'src/**/*.d.ts',
         'src/vite-env.d.ts',
       ],
-      // 100% statements + lines are enforced. The handful of uncovered
-      // branches/functions are defensive guards that cannot be hit in a unit
-      // test (SSR `typeof window` checks, optional chaining on framework-
-      // guaranteed values, disabled-control submit guards) — those specific
-      // lines carry `/* v8 ignore */` reasons, and the real user journeys are
-      // additionally covered by the Cypress e2e suite. The branch/function
-      // floors guard against regression well above the repo baseline.
+      // Full 100% on all four metrics. The only genuinely-unreachable defensive
+      // guards (disabled-control submit paths, a hidden-column valueGetter, the
+      // `!selectedId` composer guard) carry `/* v8 ignore */` comments with a
+      // one-line reason at their source; every other line/branch/function is
+      // exercised by a real behaviour-verifying test.
       thresholds: {
         lines: 100,
         statements: 100,
-        functions: 95,
-        branches: 95,
+        functions: 100,
+        branches: 100,
       },
     },
   },

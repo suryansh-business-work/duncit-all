@@ -76,6 +76,13 @@ describe('MjmlAiButton', () => {
     expect(m.run).not.toHaveBeenCalled();
   });
 
+  it('closes the popover on Escape (invokes the onClose handler)', async () => {
+    render(<MjmlAiButton iconOnly currentMjml="" onApply={vi.fn()} />);
+    fireEvent.click(screen.getByTestId('AutoAwesomeIcon').closest('button')!);
+    fireEvent.keyDown(screen.getByLabelText('Instruction'), { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByText('Create/update MJML with AI')).not.toBeInTheDocument());
+  });
+
   it('shows the working state while loading', () => {
     m.loading = true;
     render(<MjmlAiButton currentMjml="" onApply={vi.fn()} label="Go" />);

@@ -103,8 +103,8 @@ describe('PortalEnvDrawer', () => {
     await waitFor(() => expect(m.notify).toHaveBeenCalledWith('save boom', 'error'));
   });
 
-  it('shows a spinner while loading with no entries yet', () => {
-    m.queryData = { envEntries: [] };
+  it('shows a spinner while loading with no data yet', () => {
+    m.queryData = undefined; // exercises data?.envEntries ?? [] fallback
     m.queryLoading = true;
     render(<PortalEnvDrawer portal={portal} onClose={vi.fn()} onSaved={vi.fn()} />);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();

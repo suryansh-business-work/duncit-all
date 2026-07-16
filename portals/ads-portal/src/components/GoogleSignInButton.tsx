@@ -57,8 +57,16 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
     );
   }
 
-  const googleTheme = isDark ? 'filled_black' : 'outline';
-  const overlayBg = isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)';
+  // Written as an `if` (not a `cond ? a : b`) because the v8 coverage provider
+  // in this vite/esbuild setup fails to instrument a `boolean ? literal :
+  // literal` ternary, leaving a phantom uncovered branch even when both modes
+  // are tested. An if-block is tracked correctly.
+  let googleTheme: 'filled_black' | 'outline' = 'outline';
+  let overlayBg = 'rgba(255,255,255,0.6)';
+  if (isDark) {
+    googleTheme = 'filled_black';
+    overlayBg = 'rgba(0,0,0,0.45)';
+  }
 
   return (
     <Stack id="google-signin-host" sx={{ width: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>

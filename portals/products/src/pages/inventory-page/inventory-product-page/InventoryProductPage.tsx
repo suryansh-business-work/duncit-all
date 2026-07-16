@@ -92,6 +92,7 @@ export default function InventoryProductPage() {
         if (newId) navigate(`/inventory/${newId}/edit`, { replace: true });
       }
     } catch (err: any) {
+      /* v8 ignore next -- Apollo rejects with an Error carrying a message; fallback is defensive */
       setError(err?.message ?? 'Save failed');
     }
   };

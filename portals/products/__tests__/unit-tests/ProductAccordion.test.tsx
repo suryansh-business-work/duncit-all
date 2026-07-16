@@ -2,27 +2,30 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ProductAccordion from '../../src/pages/inventory-page/inventory-product-page/ProductAccordion';
 
-const stub = (label: string) => ({ default: () => <div>{label}</div> });
-vi.mock('../../src/pages/inventory-page/inventory-product-page/BasicInfoSection', () => stub('BASIC'));
-vi.mock('../../src/pages/inventory-page/inventory-product-page/PricingTaxSection', () => stub('PRICING'));
-vi.mock('../../src/pages/inventory-page/inventory-product-page/InventoryManagementSection', () =>
-  stub('INVENTORY'),
-);
-vi.mock('../../src/pages/inventory-page/inventory-product-page/SupplierDetailsSection', () =>
-  stub('SUPPLIER'),
-);
-vi.mock('../../src/pages/inventory-page/inventory-product-page/DeliveryAvailabilitySection', () =>
-  stub('DELIVERY'),
-);
-vi.mock('../../src/pages/inventory-page/inventory-product-page/MediaBrandingSection', () =>
-  stub('MEDIA'),
-);
-vi.mock('../../src/pages/inventory-page/inventory-product-page/AdvancedSettingsSection', () =>
-  stub('ADVANCED'),
-);
-vi.mock('../../src/pages/inventory-page/inventory-product-page/ActivityLogsSection', () =>
-  stub('ACTIVITY'),
-);
+vi.mock('../../src/pages/inventory-page/inventory-product-page/BasicInfoSection', () => ({
+  default: () => <div>BASIC</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/PricingTaxSection', () => ({
+  default: () => <div>PRICING</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/InventoryManagementSection', () => ({
+  default: () => <div>INVENTORY</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/SupplierDetailsSection', () => ({
+  default: () => <div>SUPPLIER</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/DeliveryAvailabilitySection', () => ({
+  default: () => <div>DELIVERY</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/MediaBrandingSection', () => ({
+  default: () => <div>MEDIA</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/AdvancedSettingsSection', () => ({
+  default: () => <div>ADVANCED</div>,
+}));
+vi.mock('../../src/pages/inventory-page/inventory-product-page/ActivityLogsSection', () => ({
+  default: () => <div>ACTIVITY</div>,
+}));
 
 const renderAccordion = () =>
   render(

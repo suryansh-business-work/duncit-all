@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import LiveChatPage from '../../src/pages/live-chat/LiveChatPage';
 import {
   SUPPORT_CHAT_SESSIONS,
@@ -68,7 +68,12 @@ describe('SessionInbox interactions (via LiveChatPage)', () => {
 
     // Create-user launcher opens the dialog.
     fireEvent.click(screen.getByRole('button', { name: /create user account/i }));
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toBeInTheDocument();
     expect(screen.getByText(/create user account/i)).toBeInTheDocument();
+
+    // Closing it runs the parent's onClose handler.
+    fireEvent.click(within(dialog).getByRole('button', { name: /close/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

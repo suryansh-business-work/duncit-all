@@ -133,6 +133,9 @@ describe('TicketsListPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /new ticket/i }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText('Subject'), { target: { value: 'App crashes' } });
+    // Pick a category from the select (exercises the category onChange handler).
+    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Category' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'TECHNICAL' }));
     fireEvent.change(within(dialog).getByTestId('quill'), { target: { value: '<p>Steps to reproduce</p>' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(screen.getByText('TICKET DETAIL')).toBeInTheDocument());

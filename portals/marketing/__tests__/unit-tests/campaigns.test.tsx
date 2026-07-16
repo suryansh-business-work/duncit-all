@@ -8,12 +8,12 @@ const tableMock = vi.hoisted(() => ({ rows: [] as any[] }));
 vi.mock('@duncit/table', () => ({
   useApolloTableFetch: () => vi.fn(),
   dateColumn: (opts: any = {}) => ({ field: opts.field ?? 'created_at', headerName: opts.headerName ?? 'Date', ...opts }),
-  DuncitTable: ({ columns, refetchRef }: any) => {
+  DuncitTable: ({ columns, refetchRef, getRowId }: any) => {
     if (refetchRef) refetchRef.current = vi.fn();
     return (
       <div data-testid="duncit-table">
         {tableMock.rows.map((row, ri) => (
-          <div key={ri} data-testid="table-row">
+          <div key={getRowId ? getRowId(row) : ri} data-testid="table-row">
             {columns.map((c: any, ci: number) => (
               <span key={ci}>
                 {c.valueGetter ? String(c.valueGetter(row)) : ''}
@@ -29,7 +29,10 @@ vi.mock('@duncit/table', () => ({
 
 vi.mock('@monaco-editor/react', () => ({
   default: ({ value, onChange }: any) => (
-    <textarea aria-label="mjml-editor" value={value} onChange={(e) => onChange(e.target.value)} />
+    <div>
+      <textarea aria-label="mjml-editor" value={value} onChange={(e) => onChange(e.target.value)} />
+      <button type="button" onClick={() => onChange(undefined)}>editor-clear</button>
+    </div>
   ),
 }));
 
@@ -38,12 +41,15 @@ vi.mock('@duncit/app-settings', () => ({
 }));
 
 vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
-  DateTimePicker: ({ label, value, onChange }: any) => (
-    <input
-      aria-label={label}
-      value={value ? value.toISOString() : ''}
-      onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
-    />
+  DateTimePicker: ({ label, value, onChange, slotProps }: any) => (
+    <div>
+      <input
+        aria-label={label}
+        value={value ? value.toISOString() : ''}
+        onChange={(e) => onChange(e.target.value ? new Date(e.target.value) : null)}
+      />
+      <span>{slotProps?.textField?.helperText}</span>
+    </div>
   ),
 }));
 
@@ -93,7 +99,9 @@ beforeEach(() => {
   apolloMock.lazyFn = vi.fn();
   apolloMock.mutations = {};
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 // ===========================================================================
 describe('CampaignPreview', () => {
@@ -132,7 +140,7 @@ describe('CampaignTable', () => {
     tableMock.rows = [
       { ...row, error: 'Delivery failed' },
       { ...row, campaign_id: 'c2', channel: 'WHATSAPP', status: 'SENT', card: null },
-      { ...row, campaign_id: 'c3', channel: 'SMS' as any, audience: 'NEWSLETTER_SUBSCRIBERS', status: 'SENDING' },
+      { ...row, campaign_id: 'c3', channel: 'SMS' as any, audience: 'PARTNERS' as any, status: 'SENDING' },
     ];
     render(<CampaignTable fetchRows={vi.fn() as any} refetchRef={{ current: null } as any} sending={false} onSend={onSend} />);
     expect(screen.getByText('Delivery failed')).toBeInTheDocument();
@@ -168,6 +176,9 @@ describe('CampaignMjmlEditor', () => {
     expect(onVerify).toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText('mjml-editor'), { target: { value: '<mjml>new</mjml>' } });
     expect(onChange).toHaveBeenCalledWith('<mjml>new</mjml>');
+    // editor emits undefined -> component coerces to empty string
+    fireEvent.click(screen.getByRole('button', { name: 'editor-clear' }));
+    expect(onChange).toHaveBeenCalledWith('');
   });
 
   it('shows the error border state', () => {
@@ -201,6 +212,8 @@ describe('MarketingCampaignForm', () => {
     fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
+    // the editor's Verify button re-triggers mjml validation
+    fireEvent.click(screen.getByRole('button', { name: 'Verify' }));
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onValuesChange).toHaveBeenCalled();
@@ -226,6 +239,19 @@ describe('MarketingCampaignForm', () => {
       />,
     );
     expect(screen.getByRole('button', { name: 'Schedule Campaign' })).toBeInTheDocument();
+  });
+
+  it('surfaces field validation messages for the schedule and MJML', async () => {
+    const { container } = render(
+      <MarketingCampaignForm
+        {...baseProps}
+        initialValues={{ ...blankMarketingCampaignValues('EMAIL'), mjml: 'short', scheduled_at: 'xyz' }}
+      />,
+    );
+    // submitting the form validates every field, populating each field error
+    fireEvent.submit(container.querySelector('form') as HTMLFormElement);
+    expect(await screen.findByText(/MJML must be at least 20 characters/)).toBeInTheDocument();
+    expect(screen.getByText(/Schedule must be a valid date and time/)).toBeInTheDocument();
   });
 
   it('clears the card ref when the card type changes', () => {
@@ -265,6 +291,57 @@ describe('MarketingCampaignsPage', () => {
     }
   });
 
+  it('resolves POD preview cards when data is loaded', async () => {
+    apolloMock.queryData = {
+      MarketingCampaignPreviewCards: { marketingCampaignPreviewCards: [{ id: 'p1', title: 'Pod One', type: 'POD' }] },
+    };
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
+    fireEvent.click(screen.getByRole('option', { name: 'Pod card' }));
+    fireEvent.mouseDown(screen.getByLabelText('Card item'));
+    expect(await screen.findByRole('option', { name: 'Pod One' })).toBeInTheDocument();
+  });
+
+  it('resolves CLUB preview cards when data is loaded', async () => {
+    apolloMock.queryData = {
+      MarketingCampaignPreviewCards: { marketingCampaignPreviewCards: [{ id: 'c1', title: 'Club One', type: 'CLUB' }] },
+    };
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
+    fireEvent.click(screen.getByRole('option', { name: 'Club card' }));
+    fireEvent.mouseDown(screen.getByLabelText('Card item'));
+    expect(await screen.findByRole('option', { name: 'Club One' })).toBeInTheDocument();
+  });
+
+  it('falls back to empty POD cards when none are loaded', () => {
+    apolloMock.queryData = {};
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
+    fireEvent.click(screen.getByRole('option', { name: 'Pod card' }));
+    expect(screen.getByLabelText('Card item')).toBeInTheDocument();
+  });
+
+  it('falls back to empty CLUB cards when none are loaded', () => {
+    apolloMock.queryData = {};
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
+    fireEvent.click(screen.getByRole('option', { name: 'Club card' }));
+    expect(screen.getByLabelText('Card item')).toBeInTheDocument();
+  });
+
+  it('schedules a campaign and shows the scheduled toast', async () => {
+    apolloMock.mutations.CreateMarketingCampaign = vi
+      .fn()
+      .mockResolvedValue({ data: { createMarketingCampaign: { error: null } } });
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    fireEvent.change(screen.getByLabelText('Schedule at'), { target: { value: '2030-01-01T00:00:00.000Z' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Schedule Campaign' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Schedule Campaign' }));
+    await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign scheduled'));
+  });
+
   it('creates a campaign and shows a success toast', async () => {
     apolloMock.mutations.CreateMarketingCampaign = vi
       .fn()
@@ -299,6 +376,16 @@ describe('MarketingCampaignsPage', () => {
     await waitFor(() => expect(screen.getByText('Network down')).toBeInTheDocument());
   });
 
+  it('uses a generic message when the create error has no message', async () => {
+    apolloMock.mutations.CreateMarketingCampaign = vi.fn().mockRejectedValue(new Error());
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+    await waitFor(() => expect(screen.getByText('Campaign could not be saved')).toBeInTheDocument());
+  });
+
   it('sends an existing campaign from the history table', async () => {
     apolloMock.mutations.SendMarketingCampaign = vi
       .fn()
@@ -318,5 +405,31 @@ describe('MarketingCampaignsPage', () => {
     render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign sent'));
+  });
+
+  it('reports a server-side send error and a thrown send error', async () => {
+    const historyRow = {
+      campaign_id: 'c9',
+      name: 'Past',
+      channel: 'EMAIL',
+      audience: 'ALL_USERS',
+      subject: 'S',
+      status: 'DRAFT',
+      recipient_count: 0,
+      created_at: '2026-01-01T00:00:00.000Z',
+    };
+    tableMock.rows = [historyRow];
+    apolloMock.mutations.SendMarketingCampaign = vi
+      .fn()
+      .mockResolvedValueOnce({ data: { sendMarketingCampaign: { error: 'Rejected' } } })
+      .mockRejectedValueOnce(new Error('Send crashed'))
+      .mockRejectedValueOnce(new Error());
+    render(<MarketingCampaignsPage defaultChannel="EMAIL" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Rejected'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Send crashed'));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Campaign send failed'));
   });
 });

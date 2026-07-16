@@ -76,12 +76,24 @@ export const tableMock = <Row,>(
   query: unknown,
   resultKey: string,
   rows: Row[],
-): MockedResponse => ({
-  request: { query: query as MockedResponse['request']['query'] },
-  variableMatcher: () => true,
-  maxUsageCount: Number.POSITIVE_INFINITY,
-  result: { data: { [resultKey]: { total: rows.length, rows } } },
-});
+  /**
+   * Row GraphQL type name. Required when the table query selects rows through a
+   * named fragment (`...Fields on <Type>`): Apollo needs `__typename` on each
+   * row to match the fragment's type condition, else it drops the fragment
+   * fields and rows come back blank.
+   */
+  rowTypename?: string,
+): MockedResponse => {
+  const data = rowTypename
+    ? rows.map((row) => ({ __typename: rowTypename, ...row }))
+    : rows;
+  return {
+    request: { query: query as MockedResponse['request']['query'] },
+    variableMatcher: () => true,
+    maxUsageCount: Number.POSITIVE_INFINITY,
+    result: { data: { [resultKey]: { total: rows.length, rows: data } } },
+  };
+};
 
 /** Pre-seed a table's persisted column-visibility so declared-hidden columns render. */
 export const showHiddenColumns = (tableId: string, fields: string[]): void => {

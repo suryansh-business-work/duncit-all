@@ -63,7 +63,7 @@ describe('ActivityLogsSection', () => {
   it('renders a fallback when a log has neither fields nor notes', () => {
     render(
       <ActivityLogsSection
-        logs={[log({ changed_fields: [], notes: '' })]}
+        logs={[log({ changed_fields: [], notes: '', user_name: '' })]}
         movements={[]}
         analytics={[]}
         loading={false}

@@ -54,14 +54,21 @@ describe('NavItemDialog', () => {
     expect(onSave.mock.calls[0][0]).toMatchObject({ label: 'Careers', is_active: true });
   });
 
-  it('blocks saving and shows validation errors for empty label + url', async () => {
+  it('blocks saving and shows validation errors on every field', async () => {
     const onSave = vi.fn();
     renderWithProviders(
       <NavItemDialog open item={null} defaultSite="MAIN" onClose={vi.fn()} onSave={onSave} />,
     );
+    const dialog = screen.getByRole('dialog');
+    // Over-long group label and a negative sort order surface their own helper
+    // errors (the `fieldState.error?.message` branch on those fields).
+    fireEvent.change(within(dialog).getByLabelText(/Group/), { target: { value: 'x'.repeat(61) } });
+    fireEvent.change(within(dialog).getByLabelText(/Sort order/), { target: { value: '-1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('Label is required')).toBeInTheDocument();
     expect(screen.getByText('URL is required')).toBeInTheDocument();
+    expect(screen.getByText('Max 60 characters')).toBeInTheDocument();
+    expect(screen.getByText('Must be 0 or more')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });
 

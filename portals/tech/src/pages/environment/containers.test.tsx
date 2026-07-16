@@ -220,11 +220,26 @@ describe('EnvVariablesTab', () => {
     await waitFor(() => expect(notify).toHaveBeenCalledWith('SMTP One is now the default', 'success'));
   });
 
+  it('sets a default (assigned refetchRef branch) and notifies', async () => {
+    render(<EnvVariablesTab />); // assignRefetch stays true -> refetchRef.current invoked
+    fireEvent.click(screen.getByRole('button', { name: 'tbl-default' }));
+    await waitFor(() => expect(notify).toHaveBeenCalledWith('SMTP One is now the default', 'success'));
+    expect(refetchSpy).toHaveBeenCalled();
+  });
+
   it('notifies on a set-default error', async () => {
     a.run.mockRejectedValue(new Error('def boom'));
     render(<EnvVariablesTab />);
     fireEvent.click(screen.getByRole('button', { name: 'tbl-default' }));
     await waitFor(() => expect(notify).toHaveBeenCalledWith('def boom', 'error'));
+  });
+
+  it('switches the active category tab', () => {
+    render(<EnvVariablesTab />);
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.length).toBeGreaterThan(1);
+    fireEvent.click(tabs[1]); // exercises the Tabs onChange -> setCategory
+    expect(screen.getByTestId('env-table')).toBeInTheDocument();
   });
 
   it('opens the test drawer from the table and from the form, then closes it', () => {

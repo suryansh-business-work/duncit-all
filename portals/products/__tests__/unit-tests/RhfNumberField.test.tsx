@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { useForm } from 'react-hook-form';
@@ -11,6 +12,17 @@ function Harness({ hint }: Readonly<{ hint?: string }>) {
       <output data-testid="value">{String(watch('qty'))}</output>
     </>
   );
+}
+
+function ErrorHarness() {
+  const { control, setError } = useForm<{ qty?: number }>({ defaultValues: {} });
+  useEffect(() => {
+    setError('qty', { message: 'Number required' });
+  }, [setError]);
+  // `qty` starts undefined → covers `field.value ?? ''`; the error message
+  // covers the `fieldState.error?.message` branch; `fullWidth={false}` covers
+  // the `rest.fullWidth ?? true` left side.
+  return <RhfNumberField control={control} name="qty" label="Qty" fullWidth={false} />;
 }
 
 describe('RhfNumberField', () => {
@@ -33,5 +45,12 @@ describe('RhfNumberField', () => {
   it('falls back to a blank helper when no hint is given', () => {
     render(<Harness />);
     expect(screen.getByLabelText('Qty')).toBeInTheDocument();
+  });
+
+  it('shows the validation error and handles an undefined value', () => {
+    render(<ErrorHarness />);
+    const input = screen.getByLabelText('Qty') as HTMLInputElement;
+    expect(input.value).toBe('');
+    expect(screen.getByText('Number required')).toBeInTheDocument();
   });
 });

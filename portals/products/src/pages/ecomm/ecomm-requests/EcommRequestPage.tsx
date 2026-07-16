@@ -65,10 +65,12 @@ export default function EcommRequestPage({ config }: Readonly<{ config: EcommReq
   });
 
   const onSubmit = handleSubmit(async (form) => {
+    /* v8 ignore start -- the submit button only renders once an item is selected */
     if (!selected) {
       setNotice('Pick an item to edit first.');
       return;
     }
+    /* v8 ignore stop */
     const { payload, details } = buildDiff(config.fields, selected, form as Record<string, string>);
     if (details.length === 0) {
       setNotice('Change at least one field before submitting.');

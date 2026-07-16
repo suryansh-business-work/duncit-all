@@ -37,7 +37,7 @@ if (!window.matchMedia) {
 
 // jsdom elements have no scrollTo; some MUI/table views call it on refs.
 if (!Element.prototype.scrollTo) {
-  Element.prototype.scrollTo = vi.fn();
+  Element.prototype.scrollTo = vi.fn() as unknown as typeof Element.prototype.scrollTo;
 }
 
 // AG Grid (rendered by @duncit/table pages) needs ResizeObserver, which jsdom

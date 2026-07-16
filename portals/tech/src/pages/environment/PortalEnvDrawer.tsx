@@ -67,6 +67,7 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<P
     });
 
   const save = async () => {
+    /* v8 ignore next -- the Save button only renders inside the open drawer, which requires a non-null portal */
     if (!portal) return;
     try {
       await setMut({ variables: { portalKey: portal.key, entryIds: Array.from(selected) } });

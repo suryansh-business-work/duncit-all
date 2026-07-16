@@ -43,14 +43,15 @@ interface MockTableProps {
   emptyText?: string;
   toolbarActions?: ReactNode;
   defaultSort?: { field: string; dir: string };
+  refetchRef?: { current: (() => void) | null };
 }
 
 export function DuncitTable(props: Readonly<MockTableProps>) {
-  const { columns, fetchRows, getRowId, onRowClick, emptyText, toolbarActions, defaultSort } = props;
+  const { columns, fetchRows, getRowId, onRowClick, emptyText, toolbarActions, defaultSort, refetchRef } =
+    props;
   const [rows, setRows] = useState<unknown[]>([]);
 
-  useEffect(() => {
-    let live = true;
+  const load = () => {
     Promise.resolve(
       fetchRows({
         search: '',
@@ -60,12 +61,14 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
         sortDir: defaultSort?.dir ?? 'asc',
         filters: [],
       }),
-    ).then((res) => {
-      if (live) setRows(res?.rows ?? []);
-    });
-    return () => {
-      live = false;
-    };
+    ).then((res) => setRows(res?.rows ?? []));
+  };
+
+  useEffect(() => {
+    // Expose a real refetch so pages that call refetchRef.current?.() exercise
+    // the non-null branch (production DuncitTable wires this the same way).
+    if (refetchRef) refetchRef.current = load;
+    load();
     // Mount-only: fetchRows identity is unstable across renders in the pages.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -87,12 +90,16 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
           data-testid="table-row"
           onClick={onRowClick ? () => onRowClick(row) : undefined}
         >
-          {columns.map((c) => (
-            <span key={c.field} data-testid={`cell-${c.field}`}>
-              {c.valueGetter ? String(c.valueGetter(row) ?? '') : null}
-              {c.cellRenderer ? c.cellRenderer(row) : null}
-            </span>
-          ))}
+          {columns.map((c) => {
+            const plain = !c.valueGetter && !c.cellRenderer;
+            return (
+              <span key={c.field} data-testid={`cell-${c.field}`}>
+                {c.valueGetter ? String(c.valueGetter(row) ?? '') : null}
+                {c.cellRenderer ? c.cellRenderer(row) : null}
+                {plain ? String((row as Record<string, unknown>)[c.field] ?? '') : null}
+              </span>
+            );
+          })}
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent } from '@testing-library/react';
 import { useFormContext } from 'react-hook-form';
 import MediaBrandingSection from '../../src/pages/inventory-page/inventory-product-page/MediaBrandingSection';
 import { ProductFormHarness } from './form-harness';
@@ -38,7 +38,7 @@ const setup = () =>
 describe('MediaBrandingSection', () => {
   it('writes picked images and the cover into the form', () => {
     setup();
-    images.props?.onChange(['x.jpg', 'y.jpg'], 'y.jpg');
+    act(() => images.props?.onChange(['x.jpg', 'y.jpg'], 'y.jpg'));
     expect(screen.getByTestId('probe').textContent).toContain('y.jpg|');
   });
 

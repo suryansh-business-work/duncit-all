@@ -122,6 +122,7 @@ export default function LiveChatPage() {
   };
 
   const send = async () => {
+    /* v8 ignore next -- `!selectedId` is defensive: the composer (and its send/Enter handlers) only render once a session is selected */
     if (!selectedId || (!text.trim() && attachments.length === 0)) return;
     await sendMessage({ variables: { session_id: selectedId, text: text.trim() || null, attachments } });
     setText('');

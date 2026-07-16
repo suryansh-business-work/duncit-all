@@ -12,7 +12,7 @@ import type { Ticket } from '../../../graphql/tickets';
 /** The Admin portal's user-details URL, derived from the current support origin
  * (support.duncit.com → admin.duncit.com) with a prod fallback for dev. */
 function adminUserUrl(id: string): string {
-  const { origin } = window.location;
+  const { origin } = globalThis.location;
   const base = origin.includes('support.')
     ? origin.replace('support.', 'admin.')
     : 'https://admin.duncit.com';

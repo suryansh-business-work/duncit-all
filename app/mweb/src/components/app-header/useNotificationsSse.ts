@@ -15,7 +15,7 @@ export function useNotificationsSse(onEvent: () => void) {
   onEventRef.current = onEvent;
 
   useEffect(() => {
-    if (typeof globalThis.window === 'undefined') return;
+    if (globalThis.window === undefined) return;
     const token = localStorage.getItem('token');
     if (!token) return;
 

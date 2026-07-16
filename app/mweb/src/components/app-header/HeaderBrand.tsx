@@ -9,17 +9,17 @@ interface HeaderBrandProps {
 
 function scrollToTop() {
   const el = document.getElementById('main-scroll');
-  (el ?? window).scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  (el ?? globalThis).scrollTo({ top: 0, left: 0, behavior: 'smooth' });
 }
 
 export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandProps>) {
   const navigate = useNavigate();
 
   const goHome = () => {
-    const alreadyHome = window.location.pathname === '/';
+    const alreadyHome = globalThis.window.location.pathname === '/';
     navigate('/');
     scrollToTop();
-    if (alreadyHome) window.dispatchEvent(new Event(HOME_REFRESH_EVENT));
+    if (alreadyHome) globalThis.dispatchEvent(new Event(HOME_REFRESH_EVENT));
   };
 
   return (

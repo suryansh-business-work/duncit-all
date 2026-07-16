@@ -24,7 +24,7 @@ interface Props {
   onChange: (payload: EmailPayload) => void;
 }
 
-const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const escapeHtml = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const textToHtml = (s: string) => escapeHtml(s).replace(/\r?\n/g, '<br/>');
 
 /** Email body composer with a Template | Simple Text | Rich Text switch. */

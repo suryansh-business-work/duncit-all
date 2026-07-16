@@ -16,7 +16,7 @@ export async function displayLocalNotification(opts: {
   if (Platform.OS === 'web') return false;
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- lazy native-only module
-    const Notifications = require('expo-notifications') as typeof import('expo-notifications');
+    const Notifications: typeof import('expo-notifications') = require('expo-notifications');
     const { granted } = await Notifications.requestPermissionsAsync();
     if (!granted) return false;
     // No-op on iOS; sets the high-importance channel for heads-up alerts on Android.

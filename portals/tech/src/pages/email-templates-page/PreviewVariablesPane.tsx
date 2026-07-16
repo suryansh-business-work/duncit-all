@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import {
   Alert,
   Box,
@@ -40,6 +41,15 @@ export default function PreviewVariablesPane({
   setVarsJson,
   onImportDetected,
 }: Readonly<Props>) {
+  const rowKeys = useRef<{ keys: string[]; seq: number }>({ keys: [], seq: 0 });
+  if (rowKeys.current.keys.length !== draft.variables.length) {
+    const keys = rowKeys.current.keys.slice(0, draft.variables.length);
+    while (keys.length < draft.variables.length) {
+      rowKeys.current.seq += 1;
+      keys.push(`var-${rowKeys.current.seq}`);
+    }
+    rowKeys.current.keys = keys;
+  }
   return (
     <Box
       sx={{
@@ -136,8 +146,10 @@ export default function PreviewVariablesPane({
             </Typography>
           ) : (
             <Stack spacing={1}>
-              {draft.variables.map((v, i) => (
-                <Stack key={i} direction="row" spacing={1}>
+              {draft.variables.map((v, i) => {
+                const rowKey = rowKeys.current.keys[i];
+                return (
+                <Stack key={rowKey} direction="row" spacing={1}>
                   <TextField
                     size="small"
                     value={v.key}
@@ -172,7 +184,8 @@ export default function PreviewVariablesPane({
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Stack>
-              ))}
+                );
+              })}
             </Stack>
           )}
         </Box>

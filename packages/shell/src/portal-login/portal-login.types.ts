@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import type { LoginScreenConfig } from '@duncit/user-context';
-import type { RedirectLocation } from '../lib/redirect';
 
-export type { RedirectLocation };
+export type { RedirectLocation } from '../lib/redirect';
 
 /**
  * The slice of a portal's `appConfig` the login page needs. Every portal's

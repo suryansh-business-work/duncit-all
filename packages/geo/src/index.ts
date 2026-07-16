@@ -20,6 +20,10 @@ const byName = <T extends { name: string }>(items: T[]): T[] =>
 const flagForIso = (isoCode: string): string =>
   isoCode
     .toUpperCase()
+    // `codePointAt(0)` on a matched single [A-Z] char is always defined; the `?? 0`
+    // is a Sonar-required (S7758) guard for its number|undefined type whose fallback
+    // can never actually run, so v8 cannot cover that branch.
+    /* v8 ignore next */
     .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + (letter.codePointAt(0) ?? 0)));
 
 const countries: GeoCountry[] = byName(

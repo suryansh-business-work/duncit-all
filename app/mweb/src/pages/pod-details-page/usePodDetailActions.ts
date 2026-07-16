@@ -101,7 +101,7 @@ export function usePodDetailActions({
   };
 
   const onShare = async () => {
-    const url = window.location.href;
+    const url = globalThis.window.location.href;
     const title = pod?.pod_title ?? 'Duncit Pod';
     const text = buildPodShareText(pod);
     try {
@@ -149,7 +149,7 @@ export function usePodDetailActions({
 
   const onCopyReferral = (token: string) => {
     if (!pod) return;
-    const url = `${window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${token}`;
+    const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${token}`;
     navigator.clipboard?.writeText(url);
     setSnack('Referral link copied');
   };

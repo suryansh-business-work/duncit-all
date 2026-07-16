@@ -45,7 +45,7 @@ interface BodyProps {
   mrp: number;
   hasMrp: boolean;
   brandId: string | null;
-  specSource: Product;
+  selectedVariant: Variant | null;
   quantity: number;
   maxQuantity: number;
   primary: string;
@@ -211,7 +211,7 @@ function ProductBody({
   mrp,
   hasMrp,
   brandId,
-  specSource,
+  selectedVariant,
   quantity,
   maxQuantity,
   primary,
@@ -222,7 +222,8 @@ function ProductBody({
 }: Readonly<BodyProps>) {
   if (!product) return null;
   const description = product.description || product.short_description;
-  const specs = productSpecs(specSource);
+  // Specs reflect the selected variant's colour/size when one is chosen.
+  const specs = productSpecs(selectedVariant ? { ...product, ...selectedVariant } : product);
 
   return (
     <ScrollView paddingHorizontal={16}>
@@ -316,8 +317,6 @@ export function ProductDetailSheet({
   // Non-empty only when the product carries a brand link → the brand is tappable.
   const brandId = product?.brand_id ?? null;
   const stock = selectedVariant ? selectedVariant.inventory_count : maxQuantity;
-  // Specs reflect the selected variant's colour/size when one is chosen.
-  const specSource = (selectedVariant ? { ...product, ...selectedVariant } : product) as Product;
 
   // Body variants hoisted to consts so the render tree keeps flat (non-nested)
   // ternaries — identical branches, same scope.
@@ -336,7 +335,7 @@ export function ProductDetailSheet({
       mrp={mrp}
       hasMrp={hasMrp}
       brandId={brandId}
-      specSource={specSource}
+      selectedVariant={selectedVariant}
       quantity={quantity}
       maxQuantity={stock}
       primary={primary}

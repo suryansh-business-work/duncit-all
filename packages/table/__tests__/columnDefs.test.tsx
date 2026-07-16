@@ -84,4 +84,19 @@ describe('buildColDefs', () => {
     expect(defs[1].cellClass).toBeUndefined();
     expect(defs[1].tooltipValueGetter).toBeUndefined();
   });
+
+  it('tooltip reads a custom valueGetter, stringifies numbers, and drops non-primitives', () => {
+    const cols: DuncitColumn<Row>[] = [
+      { field: 'score', headerName: 'Score', valueGetter: (row) => row.score },
+      { field: 'meta', headerName: 'Meta', valueGetter: () => ({ nested: true }) },
+    ];
+    const defs = buildColDefs(cols, {}, null, 'asc');
+    const tooltipOf = (i: number) =>
+      defs[i].tooltipValueGetter as (p: ITooltipParams<Row>) => string | undefined;
+    const row: Row = { id: '1', name: 'Alice', score: 42 };
+    // valueGetter path + number -> String(raw)
+    expect(tooltipOf(0)({ data: row } as ITooltipParams<Row>)).toBe('42');
+    // valueGetter returning an object -> undefined (non-primitive)
+    expect(tooltipOf(1)({ data: row } as ITooltipParams<Row>)).toBeUndefined();
+  });
 });

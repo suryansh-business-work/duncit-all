@@ -30,7 +30,7 @@ export default function PoliciesPage() {
 
   const openNew = () => {
     setIsNew(true);
-    setEditing({} as Policy);
+    setEditing({ id: '', slug: '', title: '', content: '', is_active: true, sort_order: 0, updated_at: '' });
     setForm({ ...EMPTY_POLICY_FORM });
     setSlugTouched(false);
     setError(null);

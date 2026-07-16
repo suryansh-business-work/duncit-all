@@ -140,7 +140,7 @@ export const walletService = {
   async getMyWallet(userId: string) {
     const fs = await getFinanceSettings();
     const wallet = await ensureWallet(userId, fs.currency_symbol);
-    return walletPub(wallet!, fs);
+    return walletPub(wallet, fs);
   },
 
   async listTransactions(userId: string) {

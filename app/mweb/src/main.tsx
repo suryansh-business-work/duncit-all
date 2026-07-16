@@ -1,3 +1,6 @@
+// Self-hosted Quicksand (variable weight axis) — replaces the Google Fonts
+// <link> in index.html; same font, served from our own origin.
+import '@fontsource-variable/quicksand/wght.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider, gql } from '@apollo/client';

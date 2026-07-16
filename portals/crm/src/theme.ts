@@ -4,7 +4,7 @@
  * `extend` hook; every other colour, font, size and component style comes from
  * @duncit/theme.
  */
-import type {} from '@mui/x-data-grid/themeAugmentation';
+import '@mui/x-data-grid/themeAugmentation';
 import { alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
 import { createDuncitTheme, type AccentColors, type ThemeCtx } from '@duncit/theme';

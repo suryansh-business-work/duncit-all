@@ -58,7 +58,7 @@ export async function fetchBranding(): Promise<SiteBranding> {
       }
     }
   `);
-  return { ...BRANDING_FALLBACK, ...(data?.branding ?? {}) };
+  return { ...BRANDING_FALLBACK, ...data?.branding };
 }
 
 export interface SitePolicy {

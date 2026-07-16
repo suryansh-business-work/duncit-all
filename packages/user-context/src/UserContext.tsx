@@ -114,6 +114,9 @@ export function UserProvider({
       // cached user exists.
       setError(e instanceof Error ? e : new Error(String(e)));
       return null;
+      // The finally's exception-propagation entry is unreachable: the catch above
+      // handles every rejection and never rethrows, so v8 can't exercise that path.
+      /* v8 ignore next */
     } finally {
       setLoading(false);
       setLoadAttempted(true);
@@ -147,7 +150,7 @@ export function UserProvider({
   );
 
   const reloadApp = useCallback(() => {
-    if (typeof globalThis.window !== 'undefined') window.location.reload();
+    if (globalThis.window !== undefined) globalThis.window.location.reload();
   }, []);
 
   const logout = useCallback(() => {
@@ -156,8 +159,8 @@ export function UserProvider({
     setError(null);
     if (onLogoutRef.current) {
       onLogoutRef.current();
-    } else if (typeof globalThis.window !== 'undefined') {
-      window.location.href = '/login';
+    } else if (globalThis.window !== undefined) {
+      globalThis.window.location.href = '/login';
     }
   }, []);
 
@@ -245,5 +248,5 @@ export function useUserData<T = DuncitUser>(): UserDataContextValue<T> {
   if (!ctx) {
     throw new Error('useUserData must be used inside a <UserProvider>');
   }
-  return ctx as unknown as UserDataContextValue<T>;
+  return ctx as UserDataContextValue<T>;
 }

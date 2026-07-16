@@ -43,8 +43,11 @@ function buildTooltipValueGetter<T>(column: DuncitColumn<T>) {
     const raw = column.valueGetter
       ? column.valueGetter(data)
       : (data as Record<string, unknown>)[column.field];
-    if (raw == null || typeof raw === 'object') return undefined;
-    return String(raw);
+    if (typeof raw === 'string') return raw;
+    if (typeof raw === 'number' || typeof raw === 'boolean' || typeof raw === 'bigint') {
+      return String(raw);
+    }
+    return undefined;
   };
 }
 

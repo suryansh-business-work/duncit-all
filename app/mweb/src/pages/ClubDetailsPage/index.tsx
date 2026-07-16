@@ -82,7 +82,7 @@ export default function ClubDetailsPage() {
   };
 
   const shareClub = async () => {
-    const url = `${window.location.origin}/club/${club.club_id}`;
+    const url = `${globalThis.window.location.origin}/club/${club.club_id}`;
     try {
       if (navigator.share) {
         await navigator.share({ title: club.club_name, url });

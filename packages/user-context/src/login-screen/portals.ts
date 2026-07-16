@@ -39,7 +39,7 @@ export const PORTALS: PortalEntry[] = [
 
 /** Resolves a portal URL: localhost:<port> in dev, https://<sub>.duncit.com in prod. */
 export function resolvePortalUrl(p: PortalEntry): string {
-  const host = typeof globalThis.window === 'undefined' ? '' : window.location.hostname;
+  const host = globalThis.window === undefined ? '' : globalThis.window.location.hostname;
   const isLocal = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(host);
   return isLocal ? `http://localhost:${p.port}/` : `https://${p.subdomain}.duncit.com/`;
 }

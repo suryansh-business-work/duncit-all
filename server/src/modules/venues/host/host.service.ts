@@ -74,7 +74,8 @@ function shiftYears(date: Date, years: number) {
 
 function parseHostDob(value: unknown) {
   if (!value) return null;
-  const date = new Date(String(value as string));
+  const raw = value as string;
+  const date = new Date(String(raw));
   if (Number.isNaN(date.getTime())) {
     throw new GraphQLError('Enter a valid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
   }

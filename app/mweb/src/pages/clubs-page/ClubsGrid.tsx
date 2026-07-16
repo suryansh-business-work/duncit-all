@@ -32,7 +32,7 @@ export default function ClubsGrid({ clubs, podCounts, onOpen }: Readonly<ClubsGr
             </Box>
           );
         }
-        const club = entry as any;
+        const club = entry;
         return (
           <ClubListCard
             key={club.id}

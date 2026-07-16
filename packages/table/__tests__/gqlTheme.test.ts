@@ -66,4 +66,28 @@ describe('buildAgTheme', () => {
       wrapperBorderRadius: dark.shape.borderRadius,
     });
   });
+
+  it('compact density tightens the horizontal padding scale', async () => {
+    const { buildAgTheme } = await import('../src/theme');
+    const light = createTheme({ palette: { mode: 'light' } });
+    const compact = buildAgTheme(light, 'compact') as unknown as { params: Record<string, unknown> };
+    const standard = buildAgTheme(light, 'standard') as unknown as {
+      params: Record<string, unknown>;
+    };
+    expect(compact.params.cellHorizontalPaddingScale).toBe(0.8);
+    expect(standard.params.cellHorizontalPaddingScale).toBe(1);
+  });
+
+  it('falls back to inherit when the theme has no fontFamily', async () => {
+    const { buildAgTheme } = await import('../src/theme');
+    const base = createTheme();
+    const noFont = {
+      ...base,
+      typography: { ...base.typography, fontFamily: undefined },
+    } as unknown as Parameters<typeof buildAgTheme>[0];
+    const result = buildAgTheme(noFont, 'standard') as unknown as {
+      params: Record<string, unknown>;
+    };
+    expect(result.params.fontFamily).toBe('inherit');
+  });
 });

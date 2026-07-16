@@ -67,7 +67,7 @@ export default function PodDetailsPage() {
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Chip label={isFree ? 'Free' : `₹${pod.pod_amount}`} color="primary" />
               <Chip label={isVirtual ? 'Virtual' : 'Physical'} variant="outlined" />
-              <Chip label={(pod.pod_occurrence ?? '').replace(/_/g, ' ') || 'ONE TIME'} variant="outlined" />
+              <Chip label={(pod.pod_occurrence ?? '').replaceAll('_', ' ') || 'ONE TIME'} variant="outlined" />
               <Chip label={pod.is_active ? 'Active' : 'Inactive'} color={pod.is_active ? 'success' : 'default'} />
             </Stack>
 

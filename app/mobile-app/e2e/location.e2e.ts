@@ -28,6 +28,7 @@ describe('Location flow', () => {
     await waitFor(element(by.id('api-response')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('api-response'))).toBeVisible();
   });
 
   it('Scenario 4: shows an error when permission is denied', async () => {
@@ -36,6 +37,7 @@ describe('Location flow', () => {
     await waitFor(element(by.id('error-state')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('error-state'))).toBeVisible();
   });
 
   it('Scenario 5: shows an error when the API call fails', async () => {
@@ -48,5 +50,6 @@ describe('Location flow', () => {
     await waitFor(element(by.id('error-state')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('error-state'))).toBeVisible();
   });
 });

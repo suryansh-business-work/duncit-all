@@ -39,11 +39,11 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
   const { fetchRows, defaultSort, defaultPageSize } = options;
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [page, setPageState] = useState(1);
-  const [pageSize, setPageSizeState] = useState(defaultPageSize ?? 25);
+  const [pageState, setPageState] = useState(1);
+  const [pageSizeState, setPageSizeState] = useState(defaultPageSize ?? 25);
   const [sortBy, setSortBy] = useState<string | null>(defaultSort?.field ?? null);
   const [sortDir, setSortDir] = useState<TableSortDir>(defaultSort?.dir ?? 'asc');
-  const [filters, setFiltersState] = useState<TableFilterValue[]>([]);
+  const [filtersState, setFiltersState] = useState<TableFilterValue[]>([]);
   const [rows, setRows] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -81,8 +81,15 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
   }, [searchInput]);
 
   const query = useMemo<TableQueryState>(
-    () => ({ search, page, pageSize, sortBy, sortDir, filters }),
-    [search, page, pageSize, sortBy, sortDir, filters],
+    () => ({
+      search,
+      page: pageState,
+      pageSize: pageSizeState,
+      sortBy,
+      sortDir,
+      filters: filtersState,
+    }),
+    [search, pageState, pageSizeState, sortBy, sortDir, filtersState],
   );
 
   // What fetchRows actually receives: the visible query plus the pinned external

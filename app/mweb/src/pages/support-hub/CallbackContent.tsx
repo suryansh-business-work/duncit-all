@@ -24,7 +24,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
 
   const handleCallNow = () => {
     if (!target?.available) return;
-    window.location.href = `tel:${target.phone}`;
+    globalThis.window.location.href = `tel:${target.phone}`;
   };
 
   const handleRequest = async () => {

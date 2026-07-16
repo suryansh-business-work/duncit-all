@@ -4,7 +4,8 @@
  * Falls back to the portal's default roles when the env value yields nothing.
  */
 export function parseEnvRoles(raw: unknown, fallback: string[] = []): string[] {
-  const roles = String(raw ?? '')
+  const source = typeof raw === 'string' ? raw : '';
+  const roles = source
     .split(',')
     .map((role) => role.trim())
     .filter(Boolean);

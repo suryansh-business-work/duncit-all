@@ -177,9 +177,7 @@ export function useSupportChat() {
           { sessionId, text: text.trim() || null, attachments },
           { auth: true },
         );
-        setMessages((prev) =>
-          mergeReal(prev, tempId, sent.sendSupportChatMessage as SupportChatMessage),
-        );
+        setMessages((prev) => mergeReal(prev, tempId, sent.sendSupportChatMessage));
       } catch (e) {
         setMessages((prev) =>
           prev.map((m) => (m.id === tempId ? { ...m, pending: false, failed: true } : m)),

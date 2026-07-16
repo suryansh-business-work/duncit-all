@@ -13,8 +13,9 @@ const DIAL_CODE = /^\+?\d{1,4}$/;
 const PINCODE = /^[1-9]\d{5}$/;
 /** 6-digit numeric OTP. */
 const OTP_6 = /^\d{6}$/;
-/** Pragmatic email pattern (no spaces, one `@`, a dotted domain). */
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** Pragmatic email pattern (no spaces, one `@`, a dotted domain). Domain labels
+ * exclude `.` so the `\.` separator never overlaps a label — linear, no ReDoS. */
+const EMAIL = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/;
 /** One or more digits, nothing else. */
 const DIGITS = /^\d+$/;
 

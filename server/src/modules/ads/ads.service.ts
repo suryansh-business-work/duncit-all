@@ -136,7 +136,7 @@ export const adsService = {
     const pricing = await getAdPricing();
     const editable = [...Object.values(POSITION_PRICE_FIELD), 'currency_symbol'] as const;
     for (const field of editable) {
-      const value = input[field];
+      const value = input[field] as string | number | null | undefined;
       if (value === undefined || value === null) continue;
       if (field === 'currency_symbol') {
         const symbol = String(value).trim();

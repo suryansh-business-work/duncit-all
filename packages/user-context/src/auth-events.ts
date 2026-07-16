@@ -14,7 +14,7 @@ export const AUTH_CHANGED_EVENT = 'duncit:auth-changed';
 
 /** Notify this tab that the auth token was set or cleared (login / logout). */
 export function emitAuthChanged(): void {
-  if (typeof globalThis.window !== 'undefined') {
+  if (globalThis.window !== undefined) {
     globalThis.window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
   }
 }

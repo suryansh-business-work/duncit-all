@@ -14,7 +14,9 @@ function MediaPreview({ request }: Readonly<{ request: AdRequestRow }>) {
         controls
         preload="metadata"
         style={{ width: '100%', maxHeight: 260, borderRadius: 8, background: '#000' }}
-      />
+      >
+        <track kind="captions" />
+      </video>
     );
   }
   return (

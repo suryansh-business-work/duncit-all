@@ -10,7 +10,7 @@ export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean 
         </Typography>
       </DialogContent>
       <DialogActions>
-        <Button variant="contained" onClick={() => window.location.reload()}>
+        <Button variant="contained" onClick={() => globalThis.window.location.reload()}>
           Reload application
         </Button>
       </DialogActions>

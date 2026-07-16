@@ -4,9 +4,6 @@ import { AD_POSITIONS, type AdPricingPriceField } from '../../../lib/ad-position
 /** Server `AdPricing` shape — 9 per-day prices + the currency symbol. */
 export type AdPricing = Record<AdPricingPriceField, number> & { currency_symbol: string };
 
-/** Mutation input shape (all numeric prices, validated ≥ 0). */
-export type UpdateAdPricingInput = AdPricing;
-
 /**
  * Prices are kept as text in the form (RHF + MUI number TextField) and converted
  * on submit; the schema rejects empties, non-numbers and negatives per field.
@@ -48,11 +45,11 @@ export function fromAdPricing(pricing: AdPricing): AdsPricingFormValues {
   return { ...prices, currency_symbol: pricing.currency_symbol } as AdsPricingFormValues;
 }
 
-/** Validated form values → UpdateAdPricingInput (prices back to numbers). */
-export function toUpdateAdPricingInput(values: AdsPricingFormValues): UpdateAdPricingInput {
+/** Validated form values → AdPricing (prices back to numbers). */
+export function toUpdateAdPricingInput(values: AdsPricingFormValues): AdPricing {
   const cast = adsPricingSchema.parse(values);
   const prices = Object.fromEntries(AD_POSITIONS.map((p) => [p.priceField, Number(cast[p.priceField])]));
-  return { ...prices, currency_symbol: cast.currency_symbol } as UpdateAdPricingInput;
+  return { ...prices, currency_symbol: cast.currency_symbol } as AdPricing;
 }
 
 export interface AdsPricingFormProps {

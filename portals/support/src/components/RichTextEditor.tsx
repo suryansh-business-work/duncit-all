@@ -38,5 +38,5 @@ export function htmlToText(html: string): string {
   if (!html) return '';
   const el = document.createElement('div');
   el.innerHTML = html;
-  return (el.textContent || el.innerText || '').replace(/ /g, ' ').trim();
+  return (el.textContent || el.innerText || '').replaceAll('\u00A0', ' ').trim();
 }

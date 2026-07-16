@@ -39,7 +39,7 @@ function applyFavicon(url: string): void {
 /** Loads the admin-picked Google Font and applies it console-wide. Returns the
  * cleanup that removes both injected tags. */
 function applyPortalFont(family: string): () => void {
-  const enc = family.trim().replace(/ /g, '+');
+  const enc = family.trim().replaceAll(' ', '+');
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = `https://fonts.googleapis.com/css2?family=${enc}:wght@400;500;600;700;800;900&display=swap`;
@@ -80,7 +80,7 @@ export function PortalBranding(): React.ReactElement | null {
   const splashUrl: string = branding?.portals_splash_url || '';
   const isVideo = branding?.portals_splash_type === 'VIDEO';
   const [splashOpen, setSplashOpen] = useState(
-    () => typeof globalThis.window !== 'undefined' && !sessionStorage.getItem(SPLASH_SESSION_KEY),
+    () => globalThis.window !== undefined && !sessionStorage.getItem(SPLASH_SESSION_KEY),
   );
 
   useEffect(() => {

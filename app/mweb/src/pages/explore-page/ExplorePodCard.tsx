@@ -93,8 +93,8 @@ export default function ExplorePodCard({
 
   const share = async () => {
     const url = pod.club_slug && pod.pod_id
-      ? `${window.location.origin}/club/${pod.club_slug}/pod/${pod.pod_id}`
-      : `${window.location.origin}/explore`;
+      ? `${globalThis.window.location.origin}/club/${pod.club_slug}/pod/${pod.pod_id}`
+      : `${globalThis.window.location.origin}/explore`;
     const shareData = {
       title: pod.pod_title,
       text: pod.pod_description?.slice(0, 100) ?? pod.pod_title,

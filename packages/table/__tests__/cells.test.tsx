@@ -86,6 +86,11 @@ describe('activeChipColumn', () => {
     const { container } = render(<>{col.cellRenderer?.(activeRow)}</>);
     expect(container.querySelector('.MuiChip-outlined')).not.toBeNull();
   });
+
+  it('omits the boolean filter when filterable is false', () => {
+    const col = activeChipColumn<Row>({ filterable: false });
+    expect(col.filter).toBeUndefined();
+  });
 });
 
 describe('actionsColumn', () => {

@@ -13,7 +13,8 @@
     "@duncit/logs": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/user-context": "workspace:*",
-    "@duncit/utils": "workspace:*"
+    "@duncit/utils": "workspace:*",
+    "@fontsource/nunito": "^5.1.1"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
@@ -29,17 +30,28 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.10.4",
-    "date-fns": "^2.30.0",
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",
     "@mui/x-date-pickers": "^6.20.2",
     "@react-oauth/google": "^0.13.5",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "date-fns": "^2.30.0",
     "graphql": "^16.8.1",
+    "jsdom": "^25.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.23.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   }
 }

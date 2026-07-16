@@ -66,7 +66,10 @@ export default function PodFinanceDetailPage() {
       notFoundSeverity="warning"
       spinnerSx={{ p: 6 }}
     >
-      {() => <PodFinanceDetail breakdown={breakdown!} />}
+      {() => {
+        if (!breakdown) return null;
+        return <PodFinanceDetail breakdown={breakdown} />;
+      }}
     </QueryGuard>
   );
 }

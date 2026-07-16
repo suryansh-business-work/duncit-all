@@ -23,7 +23,7 @@ import MomentLightbox from '../../components/moments/MomentLightbox';
 import BrandDetailDialog from './BrandDetailDialog';
 import ProductQuantityBar from './ProductQuantityBar';
 import ProductReviews from './ProductReviews';
-import { formatRupees, productSpecs } from './product-specs';
+import { formatRupees, productSpecs, type ProductSpec } from './product-specs';
 import { PUBLIC_PRODUCT } from './queries';
 
 interface Props {
@@ -37,6 +37,53 @@ interface Props {
   onUpdateQuantity?: (quantity: number) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   viewOnly?: boolean;
+}
+
+/** Brand attribution — a tappable link that opens the brand dialog when the
+ * product carries a brand link, else a plain label. Renders nothing when the
+ * product has no brand name. */
+function BrandAttribution({
+  brandName,
+  brandId,
+  onOpenBrand,
+}: Readonly<{ brandName?: string | null; brandId: string | null; onOpenBrand: (id: string) => void }>) {
+  if (!brandName) return null;
+  if (brandId) {
+    return (
+      <Link
+        component="button"
+        type="button"
+        onClick={() => onOpenBrand(brandId)}
+        underline="hover"
+        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 800, width: 'fit-content' }}
+      >
+        <StorefrontIcon sx={{ fontSize: 16 }} />
+        by {brandName}
+        <ChevronRightIcon sx={{ fontSize: 16 }} />
+      </Link>
+    );
+  }
+  return (
+    <Stack direction="row" spacing={0.5} alignItems="center">
+      <StorefrontIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+        by {brandName}
+      </Typography>
+    </Stack>
+  );
+}
+
+/** Resolve the gallery images and spec rows for the active product/variant. */
+function deriveProductMedia(
+  product: any,
+  selectedVariant: any
+): { images: string[]; specs: ProductSpec[] } {
+  if (!product) return { images: [], specs: [] };
+  const variantImages: string[] = selectedVariant?.images ?? [];
+  const base = product.images?.length ? product.images : [product.image_url].filter(Boolean);
+  const images = variantImages.length ? variantImages : base;
+  const specSource = selectedVariant ? { ...product, ...selectedVariant } : product;
+  return { images, specs: productSpecs(specSource) };
 }
 
 /** Product-detail dialog opened from the Pod Shop info icon — image gallery
@@ -61,14 +108,8 @@ export default function ProductDetailDialog({
   const product = data?.publicInventoryProduct;
   const variants: any[] = product?.variants ?? [];
   const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
-  let images: string[] = [];
-  if (product) {
-    const variantImages: string[] = selectedVariant?.images ?? [];
-    const base = product.images?.length ? product.images : [product.image_url].filter(Boolean);
-    images = variantImages.length ? variantImages : base;
-  }
+  const { images, specs } = deriveProductMedia(product, selectedVariant);
   const description = product?.description || product?.short_description || '';
-  const specs = product ? productSpecs(selectedVariant ? { ...product, ...selectedVariant } : product) : [];
   const price = selectedVariant?.unit_cost ?? product?.unit_cost ?? 0;
   const mrp = product?.selling_price ?? 0;
   const brandId = product?.brand_id ?? null;
@@ -133,27 +174,7 @@ export default function ProductDetailDialog({
             ))}
           </Stack>
         )}
-        {product.brand_name &&
-          (brandId ? (
-            <Link
-              component="button"
-              type="button"
-              onClick={() => setBrandOpen(brandId)}
-              underline="hover"
-              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 800, width: 'fit-content' }}
-            >
-              <StorefrontIcon sx={{ fontSize: 16 }} />
-              by {product.brand_name}
-              <ChevronRightIcon sx={{ fontSize: 16 }} />
-            </Link>
-          ) : (
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <StorefrontIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
-                by {product.brand_name}
-              </Typography>
-            </Stack>
-          ))}
+        <BrandAttribution brandName={product.brand_name} brandId={brandId} onOpenBrand={setBrandOpen} />
         <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
           {description || 'No description provided.'}
         </Typography>

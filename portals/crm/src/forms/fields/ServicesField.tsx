@@ -121,7 +121,7 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
       ) : (
         <Stack spacing={1}>
           {fields.map((row, index) => {
-            const current = rows[index] ?? (row as unknown as CrmServiceOffered);
+            const current: CrmServiceOffered = rows[index] ?? row;
             const label = displayName(current) || 'Untitled service';
             return (
               <Card key={row.id} variant="outlined" sx={{ p: 1.5 }}>

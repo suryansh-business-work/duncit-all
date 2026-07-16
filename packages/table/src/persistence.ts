@@ -4,27 +4,27 @@ const COLS_PREFIX = 'duncit-table-cols:';
 const DENSITY_PREFIX = 'duncit-table-density:';
 
 function readItem(key: string): string | null {
-  if (typeof window === 'undefined') return null;
+  if (globalThis.window === undefined) return null;
   try {
-    return window.localStorage.getItem(key);
+    return globalThis.localStorage.getItem(key);
   } catch {
     return null;
   }
 }
 
 function writeItem(key: string, value: string): void {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
-    window.localStorage.setItem(key, value);
+    globalThis.localStorage.setItem(key, value);
   } catch {
     // storage full / blocked — prefs simply don't persist
   }
 }
 
 function removeItem(key: string): void {
-  if (typeof window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   try {
-    window.localStorage.removeItem(key);
+    globalThis.localStorage.removeItem(key);
   } catch {
     // ignore
   }

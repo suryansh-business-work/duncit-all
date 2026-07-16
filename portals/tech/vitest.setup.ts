@@ -24,12 +24,9 @@ class ResizeObserverStub {
   }
 }
 
-if (typeof globalThis.ResizeObserver === 'undefined') {
-  globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
-}
+globalThis.ResizeObserver ??= ResizeObserverStub;
 
-if (typeof globalThis.matchMedia === 'undefined') {
-  globalThis.matchMedia = ((query: string) => ({
+globalThis.matchMedia ??= (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -38,8 +35,7 @@ if (typeof globalThis.matchMedia === 'undefined') {
     addEventListener: () => undefined,
     removeEventListener: () => undefined,
     dispatchEvent: () => false,
-  })) as unknown as typeof globalThis.matchMedia;
-}
+  });
 
 // jsdom reports zero dimensions; AG Grid virtualises everything away at width 0,
 // so give every element a nominal size to make columns/rows render.

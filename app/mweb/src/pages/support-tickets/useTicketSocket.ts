@@ -7,7 +7,7 @@ function getSocketUrl() {
     const u = new URL(urlConfigs.graphqlUrl);
     return `${u.protocol}//${u.host}`;
   } catch {
-    return window.location.origin;
+    return globalThis.window.location.origin;
   }
 }
 

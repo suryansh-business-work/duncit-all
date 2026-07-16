@@ -11,6 +11,7 @@ import { CompletePodSettlementDocument } from '@/graphql/settlement';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { SettlementSummary } from './SettlementSummary';
 import {
   blankPodCompleteValues,
@@ -150,7 +151,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                   role="button"
                   aria-label="Submit for approval"
                   aria-disabled={busy}
-                  onPress={busy ? undefined : () => void submit()}
+                  onPress={busy ? undefined : () => fireAndForget(submit())}
                   flex={1}
                   height={46}
                   alignItems="center"

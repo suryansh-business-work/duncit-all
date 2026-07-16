@@ -20,7 +20,7 @@ jest.mock('@/hooks/useMyHostRequest', () => ({ useMyHostRequest: jest.fn() }));
 
 const mockedMe = useMe as jest.Mock;
 const mockedReq = useMyHostRequest as jest.Mock;
-const refetch = jest.fn();
+const refetch = jest.fn().mockResolvedValue(undefined);
 
 const setMe = (roles: string[]) => mockedMe.mockReturnValue({ data: { me: { roles } } });
 const setReq = (request: unknown) =>

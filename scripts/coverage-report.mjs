@@ -144,9 +144,15 @@ console.log(
     `${padL(pct(overallPct('branches')), 8)}${padL(pct(overallPct('functions')), 8)}${padL(pct(overallPct('lines')), 8)}`,
 );
 
+function noTestReason(r) {
+  if (r.runner === 'none') return '(no test runner)';
+  if (r.status === 'failed') return '(coverage run failed)';
+  return '(0 test files)';
+}
+
 console.log('\nProjects with NO tests / coverage:');
 for (const r of noTests) {
-  const reason = r.runner === 'none' ? '(no test runner)' : r.status === 'failed' ? '(coverage run failed)' : '(0 test files)';
+  const reason = noTestReason(r);
   console.log(`  • ${pad(r.name, 18)} ${reason}`);
 }
 console.log(

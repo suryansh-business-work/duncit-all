@@ -18,6 +18,7 @@ describe('Support hub', () => {
     await waitFor(element(by.id('support-screen')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('support-screen'))).toBeVisible();
   });
 
   it('Scenario 2: opens the SOS tool and returns', async () => {
@@ -42,5 +43,6 @@ describe('Support hub', () => {
     await waitFor(element(by.id('faqs-screen')))
       .toBeVisible()
       .withTimeout(10000);
+    await expect(element(by.id('faqs-screen'))).toBeVisible();
   });
 });

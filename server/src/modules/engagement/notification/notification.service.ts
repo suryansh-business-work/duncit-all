@@ -353,7 +353,7 @@ export const notificationService = {
     // Drop rows whose notification was deleted (null) or is content-less — a
     // notification with a blank title and body renders as an empty card client-side.
     return docs
-      .map((d) => toUserNotifPub(d as any))
+      .map((d) => toUserNotifPub(d))
       .filter((d) => d.notification && (d.notification.title.trim() !== '' || d.notification.body.trim() !== ''));
   },
 

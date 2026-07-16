@@ -74,7 +74,7 @@ async function loadTemplate(slug: string) {
   const created = await EmailTemplateModel.create({
     template_id: crypto.randomUUID(),
     slug,
-    name: slug.replaceAll(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    name: slug.replaceAll('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     subject: DEFAULT_TEMPLATE_SUBJECTS[slug] ?? `Duncit · ${slug}`,
     mjml,
     variables: detectVariables(mjml).map((key) => ({ key })),

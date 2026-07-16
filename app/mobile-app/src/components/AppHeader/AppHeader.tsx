@@ -100,7 +100,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
           setStudioMode(next);
           setSwitchOpen(false);
           // Jump straight to the selected role's dashboard (B3-2).
-          navigation.navigate(STUDIO_HOME_ROUTE[next] as never);
+          navigation.navigate(STUDIO_HOME_ROUTE[next]);
         }}
       />
     </XStack>

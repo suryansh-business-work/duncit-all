@@ -17,7 +17,7 @@ export interface UsePodEditorStateArgs {
   /** Optional deep-link (e.g. /pods?edit=<id>): resolve the pod to open on. */
   editId?: string;
   /** Fetches the deep-linked pod; resolve null (and self-report errors) to skip. */
-  resolveEditPod?: (id: string) => Promise<any | null>;
+  resolveEditPod?: (id: string) => Promise<any>;
 }
 
 /**

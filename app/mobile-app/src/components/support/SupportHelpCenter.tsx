@@ -32,7 +32,7 @@ export function SupportHelpCenter() {
 
   const startChat = () => navigation.navigate('ChatWithUs');
   const openTopic = () => navigation.navigate('Faqs');
-  const openMoreWay = (section: SupportSection) => navigation.navigate(section.route as 'Sos');
+  const openMoreWay = (section: SupportSection) => navigation.navigate(section.route);
   const answerFromModal = () => {
     setSelected(null);
     startChat();

@@ -179,8 +179,11 @@ const MY_ADMIN_CLUBS_TABLE_CONFIG: TableEntityConfig = {
 const firstImageUrl = (media: Array<{ url?: string; type?: string }> = []) =>
   media.find((m) => m.type === 'IMAGE')?.url ?? media[0]?.url ?? null;
 
-const nameOf = (names: Map<string, string>, id: unknown) =>
-  id ? (names.get(String(id)) ?? null) : null;
+const nameOf = (names: Map<string, string>, id: unknown) => {
+  if (!id) return null;
+  const key = id as string;
+  return names.get(String(key)) ?? null;
+};
 
 /** Per-club total/upcoming pod tallies (non-deleted pods; upcoming = active and
  * dated now or later, matching the dashboard's definition). */

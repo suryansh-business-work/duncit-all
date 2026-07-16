@@ -34,7 +34,7 @@ export default function App() {
   const showBottomNav = isAuthed && !isSignupSurvey;
 
   const [splashOpen, setSplashOpen] = useState(
-    () => typeof globalThis.window !== 'undefined' && !sessionStorage.getItem('duncit_splash_shown')
+    () => globalThis.window !== undefined && !sessionStorage.getItem('duncit_splash_shown')
   );
 
   useEffect(() => {

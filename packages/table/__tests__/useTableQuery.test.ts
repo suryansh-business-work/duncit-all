@@ -113,6 +113,33 @@ describe('useTableQuery', () => {
     expect(result.current.total).toBe(1);
   });
 
+  it('drops a stale error response via the seq guard', async () => {
+    let rejectFirst: (err: unknown) => void = () => undefined;
+    const first = new Promise<TablePage<Row>>((_resolve, reject) => {
+      rejectFirst = reject;
+    });
+    const second: TablePage<Row> = { rows: [{ id: '2', name: 'fast' }], total: 1 };
+    const fetchRows = vi
+      .fn<(q: TableQueryState) => Promise<TablePage<Row>>>()
+      .mockReturnValueOnce(first)
+      .mockResolvedValueOnce(second);
+
+    const { result } = renderHook(() => useTableQuery({ fetchRows }));
+    act(() => {
+      result.current.setPage(2); // fires the fast second fetch while the first hangs
+    });
+    await waitFor(() => expect(result.current.rows).toEqual(second.rows));
+
+    // The late-rejecting first fetch must be swallowed by the seq guard.
+    rejectFirst(new Error('late boom'));
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(result.current.error).toBeNull();
+    expect(result.current.rows).toEqual(second.rows);
+  });
+
   it('surfaces fetch errors without throwing; non-Error gets a generic message', async () => {
     const fetchRows = vi
       .fn<(q: TableQueryState) => Promise<TablePage<Row>>>()

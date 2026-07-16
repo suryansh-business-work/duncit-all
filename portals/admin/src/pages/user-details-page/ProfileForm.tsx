@@ -29,8 +29,8 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
   }, [form, reset]);
 
   const submit = handleSubmit((values) => onSave(values));
-  const setField = (field: string, value: string) =>
-    setValue(field as keyof EditForm, value, { shouldDirty: true, shouldValidate: true });
+  const setField = (field: keyof EditForm, value: string) =>
+    setValue(field, value, { shouldDirty: true, shouldValidate: true });
   const addressError = (key: keyof EditForm) => ({
     error: !!formState.errors[key],
     helperText: formState.errors[key]?.message ?? ' ',

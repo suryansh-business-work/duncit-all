@@ -84,7 +84,7 @@ const redirectIfAuthed = (element: JSX.Element) => <RedirectIfAuthed>{element}</
 
 function PartnerRedirect({ path }: Readonly<{ path: string }>) {
   useEffect(() => {
-    window.location.replace(`https://partners-app.duncit.com${path}`);
+    globalThis.window.location.replace(`https://partners-app.duncit.com${path}`);
   }, [path]);
   return null;
 }

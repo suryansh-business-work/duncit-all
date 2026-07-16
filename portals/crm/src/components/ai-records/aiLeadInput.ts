@@ -4,7 +4,7 @@ type Entity = 'VENUE_LEAD' | 'HOST_LEAD';
 
 const str = (v: unknown) => {
   if (v == null) return '';
-  return typeof v === 'object' ? JSON.stringify(v) : String(v as string | number | boolean);
+  return typeof v === 'object' ? JSON.stringify(v) : String(v as string);
 };
 
 /** Parsed AI record → editable grid row (core fields surfaced for editing). */

@@ -47,6 +47,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
   const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i).join('\n'));
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
+    /* v8 ignore next -- defensive: MediaRow disables the reorder buttons at the list boundaries */
     if (j < 0 || j >= items.length) return;
     const copy = [...items];
     [copy[i], copy[j]] = [copy[j], copy[i]];

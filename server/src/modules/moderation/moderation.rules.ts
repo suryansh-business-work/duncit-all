@@ -26,8 +26,17 @@ const EMAIL_GLOBAL_RE = /[a-z0-9._%+-]{1,64}@[a-z0-9.-]{1,253}\.[a-z]{2,24}/gi;
 // that are not common English words (dropping in/co/me/app/club avoids blocking
 // "fill.in", "join.me", "notes.app", "photography.club"; adding ai/tech/live
 // covers the modern off-platform vectors).
-const URL_RE =
-  /\b(?:https?:\/\/|www\.)\S+|\b[a-z0-9][a-z0-9-]+\.(?:com|net|org|io|xyz|gg|ly|shop|store|info|biz|online|site|dev|ai|tech|live)\b/i;
+// Split into two literals so neither trips the regex-complexity limit (S5843);
+// firstLink() keeps the original leftmost-match semantics of the single pattern.
+const URL_SCHEME_RE = /\b(?:https?:\/\/|www\.)\S+/i;
+const URL_BARE_RE =
+  /\b[a-z0-9][a-z0-9-]+\.(?:com|net|org|io|xyz|gg|ly|shop|store|info|biz|online|site|dev|ai|tech|live)\b/i;
+const firstLink = (text: string): RegExpExecArray | null => {
+  const scheme = URL_SCHEME_RE.exec(text);
+  const bare = URL_BARE_RE.exec(text);
+  if (scheme && bare) return scheme.index <= bare.index ? scheme : bare;
+  return scheme ?? bare;
+};
 // Digit runs (optionally with +, spaces, dashes, dots, brackets) that resolve
 // to a 10–15 digit phone number.
 const PHONE_CANDIDATE_RE = /\+?\d[\d\s().-]{7,}\d/g;
@@ -95,7 +104,7 @@ export function moderateText(field: string, raw: string): ModerationViolation[] 
   }
   // Strip emails first so an email domain is not double-flagged as a link.
   const withoutEmail = text.replace(EMAIL_GLOBAL_RE, ' ');
-  const url = URL_RE.exec(withoutEmail);
+  const url = firstLink(withoutEmail);
   if (url) {
     out.push(violation(field, 'LINK', 'Remove the link — external or payment links are not allowed.', url[0]));
   }

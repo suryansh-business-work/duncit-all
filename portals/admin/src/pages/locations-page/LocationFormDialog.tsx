@@ -55,6 +55,21 @@ export default function LocationFormDialog({
   const lastZoneRef = useRef<HTMLDivElement | null>(null);
   const [justAdded, setJustAdded] = useState(false);
 
+  // Stable per-row keys: zone rows have no id and their fields are edited in
+  // place, so a content-based key would remount the input and drop focus.
+  const rowKeys = useRef<number[]>([]);
+  const keySeq = useRef(0);
+  if (rowKeys.current.length !== form.zones.length) {
+    while (rowKeys.current.length < form.zones.length) rowKeys.current.push(keySeq.current++);
+    rowKeys.current.length = form.zones.length;
+  }
+  const zoneRows = form.zones.map((z, i) => ({
+    z,
+    index: i,
+    key: rowKeys.current[i],
+    isLast: i === form.zones.length - 1,
+  }));
+
   const handleAddZone = () => {
     addZone();
     setJustAdded(true);
@@ -153,10 +168,10 @@ export default function LocationFormDialog({
             </Stack>
             {aiError && <Alert severity="error" sx={{ mb: 1 }}>{aiError}</Alert>}
             <Stack spacing={1.5}>
-              {form.zones.map((z, i) => (
+              {zoneRows.map(({ z, index, key, isLast }) => (
                 <Stack
-                  key={i}
-                  ref={i === form.zones.length - 1 ? lastZoneRef : undefined}
+                  key={key}
+                  ref={isLast ? lastZoneRef : undefined}
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={1}
                   alignItems={{ xs: 'stretch', sm: 'center' }}
@@ -165,19 +180,19 @@ export default function LocationFormDialog({
                     size="small"
                     label="Locality / Area"
                     value={z.zone_name}
-                    onChange={(e) => updateZone(i, { zone_name: e.target.value })}
+                    onChange={(e) => updateZone(index, { zone_name: e.target.value })}
                     sx={{ flex: 1 }}
                   />
                   <TextField
                     size="small"
                     label="PIN code"
                     value={z.pincode}
-                    onChange={(e) => updateZone(i, { pincode: e.target.value })}
+                    onChange={(e) => updateZone(index, { pincode: e.target.value })}
                     sx={{ width: { xs: '100%', sm: 140 } }}
                   />
                   <IconButton
                     size="small"
-                    onClick={() => removeZone(i)}
+                    onClick={() => removeZone(index)}
                     disabled={form.zones.length === 1}
                   >
                     <RemoveCircleOutlineIcon />

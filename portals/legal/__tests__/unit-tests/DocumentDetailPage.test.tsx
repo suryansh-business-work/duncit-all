@@ -151,7 +151,11 @@ describe('DocumentDetailPage', () => {
   });
 
   it('prints, downloads and copies the document', async () => {
-    const win = { document: { write: vi.fn(), close: vi.fn() }, focus: vi.fn(), print: vi.fn() };
+    const win = {
+      document: { body: { innerHTML: '' }, close: vi.fn() },
+      focus: vi.fn(),
+      print: vi.fn(),
+    };
     vi.stubGlobal('open', vi.fn(() => win));
     (URL as any).createObjectURL = vi.fn(() => 'blob:x');
     (URL as any).revokeObjectURL = vi.fn();

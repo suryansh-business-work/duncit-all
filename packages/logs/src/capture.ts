@@ -63,10 +63,10 @@ export function captureConsole(target: LevelFns, options: CaptureOptions = {}): 
 
   if (
     (options.windowErrors ?? true) &&
-    typeof globalThis.window !== 'undefined' &&
-    typeof window.addEventListener === 'function'
+    globalThis.window !== undefined &&
+    typeof globalThis.window.addEventListener === 'function'
   ) {
-    window.addEventListener('error', (event: ErrorEvent) => {
+    globalThis.window.addEventListener('error', (event: ErrorEvent) => {
       try {
         target.error(currentPage(options.page), 'window.onerror', {
           message: event.message,
@@ -78,7 +78,7 @@ export function captureConsole(target: LevelFns, options: CaptureOptions = {}): 
         /* ignore */
       }
     });
-    window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
+    globalThis.window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
       try {
         target.error(currentPage(options.page), 'unhandledrejection', { reason: safeJson(event.reason) });
       } catch {

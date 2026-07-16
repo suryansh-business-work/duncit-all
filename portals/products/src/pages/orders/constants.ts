@@ -62,4 +62,4 @@ export const STATUS_COLOR: Record<FulfilmentStatus, 'default' | 'info' | 'succes
 };
 
 export const humaniseStatus = (status: string) =>
-  status.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
+  status.replaceAll('_', ' ').replaceAll(/\b\w/g, (character) => character.toUpperCase());

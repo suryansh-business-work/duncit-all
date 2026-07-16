@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.4.7",
+  "version": "1.4.9",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,13 +20,14 @@
     "@duncit/auth-tokens": "workspace:*",
     "@duncit/geo": "workspace:*",
     "@duncit/location": "workspace:*",
-    "@duncit/regex": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/regex": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@fontsource-variable/quicksand": "^5.1.1",
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@hookform/resolvers": "^3.9.1",

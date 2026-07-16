@@ -57,8 +57,8 @@ export function HeaderSearch({
       event.preventDefault();
       inputRef.current?.focus();
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    globalThis.window.addEventListener('keydown', onKey);
+    return () => globalThis.window.removeEventListener('keydown', onKey);
   }, [disableSlashShortcut]);
 
   return (

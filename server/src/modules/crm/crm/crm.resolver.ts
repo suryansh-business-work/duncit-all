@@ -4,7 +4,6 @@ import { CRM_RW } from './crm.constants';
 import { parseCrmLeadText, parseCrmLeadsText, leadAiChat, type CrmAiEntity, type ChatMessage } from './crm.ai';
 import { callService } from '@modules/crm/call/call.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
 import { buildTemplateBase64, exportLeadsBase64, importLeads, inspectImport, type CrmExcelEntity, type ImportColumnMapping } from './crm.excel';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';

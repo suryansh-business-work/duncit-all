@@ -58,10 +58,10 @@ function stripText(value?: string | null, max = 220) {
 
 function escapeXml(value?: string | null) {
   return String(value || '')
-    .replaceAll(/&/g, '&amp;')
-    .replaceAll(/</g, '&lt;')
-    .replaceAll(/>/g, '&gt;')
-    .replaceAll(/"/g, '&quot;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
 
 async function mwebUrl(pathname: string) {

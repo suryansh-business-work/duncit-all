@@ -67,6 +67,7 @@ export default function HostsField() {
       getOptionLabel={hostLabel}
       isOptionEqualToValue={(option, val) => option.user_id === val.user_id}
       inputValue={input}
+      /* v8 ignore next -- MUI resets the controlled Autocomplete input on every render, so onInputChange cannot be driven in jsdom */
       onInputChange={(_, next) => setInput(next)}
       onChange={(_, next) => {
         setChosen(next);

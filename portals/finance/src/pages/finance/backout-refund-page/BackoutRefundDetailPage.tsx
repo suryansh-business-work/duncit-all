@@ -32,24 +32,27 @@ export default function BackoutRefundDetailPage() {
       notFoundSeverity="warning"
       spinnerSx={{ p: 6 }}
     >
-      {() => (
-        <Box>
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-            <IconButton aria-label="Back to Backout Refunds" onClick={() => navigate('/backout-refunds')}>
-              <ArrowBackIcon />
-            </IconButton>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h5" fontWeight={700}>{request!.pod?.pod_title ?? 'Backout refund'}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {request!.user_name ?? '—'}
-                {request!.user_email ? ` · ${request!.user_email}` : ''}
-              </Typography>
-            </Box>
-          </Stack>
+      {() => {
+        if (!request) return null;
+        return (
+          <Box>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+              <IconButton aria-label="Back to Backout Refunds" onClick={() => navigate('/backout-refunds')}>
+                <ArrowBackIcon />
+              </IconButton>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h5" fontWeight={700}>{request.pod?.pod_title ?? 'Backout refund'}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {request.user_name ?? '—'}
+                  {request.user_email ? ` · ${request.user_email}` : ''}
+                </Typography>
+              </Box>
+            </Stack>
 
-          <BackoutRefundInfoCards request={request!} sym={sym} />
-        </Box>
-      )}
+            <BackoutRefundInfoCards request={request} sym={sym} />
+          </Box>
+        );
+      }}
     </QueryGuard>
   );
 }

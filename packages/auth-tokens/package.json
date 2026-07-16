@@ -18,5 +18,14 @@
     "tokens.cjs",
     "tokens.mjs",
     "tokens.d.ts"
-  ]
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  }
 }

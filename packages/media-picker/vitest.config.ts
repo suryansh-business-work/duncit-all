@@ -13,6 +13,7 @@ export default defineConfig({
       // Only the pure logic is unit-tested here; the MUI/Apollo dialog itself is
       // exercised end-to-end by the portals' Cypress flows.
       include: ['src/utils.ts'],
+      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },
 });

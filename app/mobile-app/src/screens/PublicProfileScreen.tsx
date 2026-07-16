@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -15,6 +16,43 @@ import { usePublicProfile } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 
+type IconName = ComponentProps<typeof MaterialIcons>['name'];
+
+/** Visual tokens for the two follow states, resolved once so FollowButton stays a
+ * flat, low-complexity render (avoids a token ternary per JSX prop). */
+type FollowView = Readonly<{
+  aria: string;
+  border: string;
+  background: string;
+  icon: IconName;
+  iconColor: string;
+  labelColor: string;
+  label: string;
+}>;
+
+function followView(following: boolean, onPrimary: string, ink: string): FollowView {
+  if (following) {
+    return {
+      aria: 'Unfollow user',
+      border: '$primary',
+      background: '$primary',
+      icon: 'how-to-reg',
+      iconColor: onPrimary,
+      labelColor: '$onPrimary',
+      label: 'Following',
+    };
+  }
+  return {
+    aria: 'Follow user',
+    border: '$borderColor',
+    background: 'transparent',
+    icon: 'person-add-alt',
+    iconColor: ink,
+    labelColor: '$color',
+    label: 'Follow',
+  };
+}
+
 /** Follow/unfollow pill shown on someone else's profile (B4-12) — inert while busy. */
 function FollowButton({
   following,
@@ -29,11 +67,12 @@ function FollowButton({
   ink: string;
   onToggle: () => Promise<void>;
 }>) {
+  const view = followView(following, onPrimary, ink);
   return (
     <XStack
       testID="public-profile-follow"
       role="button"
-      aria-label={following ? 'Unfollow user' : 'Follow user'}
+      aria-label={view.aria}
       aria-disabled={followBusy}
       onPress={followBusy ? undefined : () => void onToggle()}
       alignSelf="center"
@@ -43,18 +82,14 @@ function FollowButton({
       paddingVertical={10}
       borderRadius={999}
       borderWidth={1}
-      borderColor={following ? '$primary' : '$borderColor'}
-      backgroundColor={following ? '$primary' : 'transparent'}
+      borderColor={view.border}
+      backgroundColor={view.background}
       opacity={followBusy ? 0.7 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
-      <MaterialIcons
-        name={following ? 'how-to-reg' : 'person-add-alt'}
-        size={18}
-        color={following ? onPrimary : ink}
-      />
-      <Text fontSize={14} fontWeight="900" color={following ? '$onPrimary' : '$color'}>
-        {following ? 'Following' : 'Follow'}
+      <MaterialIcons name={view.icon} size={18} color={view.iconColor} />
+      <Text fontSize={14} fontWeight="900" color={view.labelColor}>
+        {view.label}
       </Text>
     </XStack>
   );

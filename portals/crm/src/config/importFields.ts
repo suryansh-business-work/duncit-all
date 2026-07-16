@@ -6,7 +6,7 @@ export interface ImportField {
 }
 
 const label = (field: string) =>
-  field.replace(/_/g, ' ').replace(/\bjson\b/i, '(JSON)').replace(/^\w/, (c) => c.toUpperCase());
+  field.replaceAll('_', ' ').replace(/\bjson\b/i, '(JSON)').replace(/^\w/, (c) => c.toUpperCase());
 
 const f = (field: string, required = false): ImportField => ({ field, label: label(field), required });
 

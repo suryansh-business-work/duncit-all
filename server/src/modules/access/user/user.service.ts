@@ -277,11 +277,11 @@ const CONTACT_ACTION_TABLE_CONFIG: TableEntityConfig = {
 
 const escapeTwiml = (value: string) =>
   value
-    .replaceAll(/&/g, '&amp;')
-    .replaceAll(/</g, '&lt;')
-    .replaceAll(/>/g, '&gt;')
-    .replaceAll(/"/g, '&quot;')
-    .replaceAll(/'/g, '&apos;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
 
 async function startTwilioRecordedBridge(actionId: string, target: string) {
   const [accountSid, authToken, fromNumber, agentNumber, webhookBaseUrl, recordingEnabled] =

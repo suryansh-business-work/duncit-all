@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
@@ -278,7 +279,7 @@ export function CreatePodStepper({
             testID="create-pod-submit"
             label={isLast ? submitLabel : 'Next'}
             loading={busy}
-            onPress={() => (isLast ? void submit() : void next())}
+            onPress={() => (isLast ? fireAndForget(submit()) : fireAndForget(next()))}
           />
         </YStack>
       </XStack>

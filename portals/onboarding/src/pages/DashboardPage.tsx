@@ -89,7 +89,7 @@ export default function DashboardPage() {
           </Typography>
           <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
             {(me?.roles ?? []).map((role: string) => (
-              <Chip key={role} label={role.replace(/_/g, ' ')} color="primary" variant="outlined" size="small" />
+              <Chip key={role} label={role.replaceAll('_', ' ')} color="primary" variant="outlined" size="small" />
             ))}
           </Stack>
         </Box>

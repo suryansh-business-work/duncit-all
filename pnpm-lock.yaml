@@ -806,9 +806,6 @@ importers:
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -966,42 +963,18 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
-      '@duncit/dialogs':
-        specifier: workspace:*
-        version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
-      '@duncit/table':
-        specifier: workspace:*
-        version: link:../../packages/table
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
-      '@duncit/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
-      '@duncit/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1084,24 +1057,15 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -1214,27 +1178,12 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/category':
         specifier: workspace:*
         version: link:../../packages/category
-      '@duncit/dialogs':
-        specifier: workspace:*
-        version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -1250,9 +1199,6 @@ importers:
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
-      '@duncit/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1353,9 +1299,6 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
@@ -1534,24 +1477,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
-      '@duncit/dialogs':
-        specifier: workspace:*
-        version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -1561,15 +1489,9 @@ importers:
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
-      '@duncit/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
-      '@duncit/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1670,42 +1592,18 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
-      '@duncit/dialogs':
-        specifier: workspace:*
-        version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
-      '@duncit/table':
-        specifier: workspace:*
-        version: link:../../packages/table
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
-      '@duncit/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
-      '@duncit/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1788,18 +1686,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -1924,42 +1813,18 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
-      '@duncit/dialogs':
-        specifier: workspace:*
-        version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
-      '@duncit/table':
-        specifier: workspace:*
-        version: link:../../packages/table
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
-      '@duncit/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context
-      '@duncit/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -2042,24 +1907,12 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -2187,9 +2040,6 @@ importers:
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -2323,9 +2173,6 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
       '@duncit/location':
         specifier: workspace:*
         version: link:../../packages/location
@@ -2453,9 +2300,6 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/availability-calendar':
         specifier: workspace:*
         version: link:../../packages/availability-calendar
@@ -2619,9 +2463,6 @@ importers:
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -2749,12 +2590,6 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
-      '@duncit/forms':
-        specifier: workspace:*
-        version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -2885,24 +2720,15 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/app-settings':
-        specifier: workspace:*
-        version: link:../../packages/app-settings
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
-      '@duncit/media-picker':
-        specifier: workspace:*
-        version: link:../../packages/media-picker
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
@@ -3024,9 +2850,6 @@ importers:
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms
-      '@duncit/location':
-        specifier: workspace:*
-        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

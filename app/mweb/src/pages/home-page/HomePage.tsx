@@ -13,6 +13,7 @@ import HomeFeaturedPods from './HomeFeaturedPods';
 import HomeVibeChips from './HomeVibeChips';
 import ClubSection from './ClubSection';
 import PreviousPodsRail from './PreviousPodsRail';
+import AdSlot from '../../components/ads/AdSlot';
 import { useHomeData } from './useHomeData';
 
 interface HomePageProps {
@@ -178,6 +179,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           ))
         )}
         <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} />
+        <AdSlot position="HOME_BOTTOM" variant="banner" />
         {isHost && (
           <Fab
             color="primary"

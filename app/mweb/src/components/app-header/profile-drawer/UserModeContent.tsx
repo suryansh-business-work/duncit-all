@@ -4,6 +4,7 @@ import QuickActionGrid from './QuickActionGrid';
 import ReferralCard from './ReferralCard';
 import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
+import AdSlot from '../../ads/AdSlot';
 import { buildManageItems } from './profileSections';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 
@@ -23,6 +24,7 @@ export default function UserModeContent({ me, showPodPlans, onNavigate }: Readon
       {percent < 100 && <IncompleteBanner percent={percent} onComplete={() => onNavigate('/account')} />}
       <QuickActionGrid onNavigate={onNavigate} />
       <VenuesCard onNavigate={onNavigate} />
+      <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.25 }} />
       <ReferralCard onNavigate={onNavigate} />
       <ManageAccountList items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
     </>

@@ -2,11 +2,14 @@ import { useMemo } from 'react';
 
 import { Reveal } from '@/animations/Reveal';
 import { FeedList } from '@/components/FeedList';
+import { AdCard } from '@/components/ads/AdCard';
+import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { ClubCard } from '@/components/home/ClubCard';
 import { ClubsLocationEmpty } from '@/components/home/ClubsLocationEmpty';
 import { ClubsLocationNote } from '@/components/home/ClubsLocationNote';
 import { ClubsSearchFilter } from '@/components/home/ClubsSearchFilter';
 import { TabScreen } from '@/components/TabScreen';
+import { useActiveAds } from '@/hooks/useActiveAds';
 import { useClubsFilter } from '@/hooks/useClubsFilter';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeData } from '@/hooks/useHomeFeed';
@@ -35,6 +38,9 @@ export function ClubsScreen() {
     categories,
     selectedSuperId,
   );
+  // A sponsored banner every 4 clubs (server returns [] when none are booked).
+  const { ads } = useActiveAds('CLUB_LIST');
+  const feed = useMemo(() => interleaveAds(filtered, ads, 4), [filtered, ads]);
   const isSearching = !!query || !!categoryId;
   // No club operates in the selected locality at all (vs. a search that matched nothing).
   const locationEmpty = !!selectedLocationId && locationClubs.length === 0;
@@ -57,11 +63,18 @@ export function ClubsScreen() {
         emptyText={emptyText}
         emptyComponent={locationEmpty ? <ClubsLocationEmpty /> : undefined}
         onRefresh={refetch}
-        data={filtered}
-        keyExtractor={(club) => club.id}
-        renderItem={(club, index) => (
+        data={feed}
+        keyExtractor={(entry) => (isAdEntry(entry) ? entry.key : entry.item.id)}
+        renderItem={(entry, index) => (
           <Reveal index={index} scale>
-            <ClubCard club={club} onPress={() => openClub(club.id, club.club_name)} />
+            {isAdEntry(entry) ? (
+              <AdCard ad={entry.ad} variant="banner" />
+            ) : (
+              <ClubCard
+                club={entry.item}
+                onPress={() => openClub(entry.item.id, entry.item.club_name)}
+              />
+            )}
           </Reveal>
         )}
       />

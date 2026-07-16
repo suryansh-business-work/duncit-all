@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import PodCard from './home-page/PodCard';
 import { useHomeData } from './home-page/useHomeData';
+import AdCard from '../components/ads/AdCard';
+import { interleaveAds, isAdEntry } from '../components/ads/AdSlot';
+import { useActiveAds } from '../components/ads/useActiveAds';
 import { podUrl } from '../utils/seoUrls';
 
 interface Props {
@@ -28,6 +31,7 @@ export default function HappeningNearbyPage({
     dateFilter: 'ALL',
     sortBy: 'DATE_ASC',
   });
+  const { ads } = useActiveAds('POD_LIST');
 
   let body: React.ReactNode;
   if (loading && activePods.length === 0) {
@@ -50,14 +54,20 @@ export default function HappeningNearbyPage({
           justifyContent: { xs: 'center', sm: 'flex-start' },
         }}
       >
-        {activePods.map((pod: any) => (
-          <PodCard
-            key={pod.id}
-            pod={pod}
-            hostName={hostNameOf(pod)}
-            onOpen={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
-          />
-        ))}
+        {interleaveAds(activePods, ads, 4).map((entry: any) =>
+          isAdEntry(entry) ? (
+            <Box key={entry.__ad.id} sx={{ width: '100%' }}>
+              <AdCard ad={entry.__ad} />
+            </Box>
+          ) : (
+            <PodCard
+              key={entry.id}
+              pod={entry}
+              hostName={hostNameOf(entry)}
+              onOpen={() => navigate(podUrl(entry.club_slug, entry.pod_id))}
+            />
+          ),
+        )}
       </Box>
     );
   }

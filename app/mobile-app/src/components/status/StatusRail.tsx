@@ -12,6 +12,7 @@ import { useStatusStore } from '@/stores/status.store';
 import { graphqlRequest } from '@/services/graphql.client';
 import { TogglePostLikeDocument } from '@/graphql/posts';
 import type { StatusGroup } from '@/hooks/useStatus';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusViewer } from '@/components/status/StatusViewer';
 import { StoryViewersSheet } from '@/components/status/StoryViewersSheet';
@@ -140,6 +141,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             onPress={() => openAt(mine ? itemIndex + 1 : itemIndex)}
           />
         ))}
+        <AdSlot position="STATUS" variant="tile" />
       </ScrollView>
       <StatusViewer
         status={active ?? null}

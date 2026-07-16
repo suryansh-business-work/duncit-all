@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import TuneIcon from '@mui/icons-material/Tune';
-import ClubListCard from './clubs-page/ClubListCard';
+import ClubsGrid from './clubs-page/ClubsGrid';
 import SearchFilterSheet from './search-page/SearchFilterSheet';
 import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
 import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
@@ -134,22 +134,11 @@ export default function ClubsPage({
     clubs.length === 0 ? (
       <Alert severity="info">No clubs found.</Alert>
     ) : (
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-          gap: 2,
-        }}
-      >
-        {clubs.map((club: any) => (
-          <ClubListCard
-            key={club.id}
-            club={club}
-            podCount={podCounts.get(club.id) ?? 0}
-            onOpen={() => club.club_id && navigate(`/club/${club.club_id}`)}
-          />
-        ))}
-      </Box>
+      <ClubsGrid
+        clubs={clubs}
+        podCounts={podCounts}
+        onOpen={(club) => club.club_id && navigate(`/club/${club.club_id}`)}
+      />
     );
 
   return (

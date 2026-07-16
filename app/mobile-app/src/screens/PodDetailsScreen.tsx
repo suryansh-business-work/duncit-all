@@ -6,6 +6,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { useGoBack } from '@/hooks/useGoBack';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { AppBackground } from '@/components/AppBackground';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
@@ -172,6 +173,11 @@ export function PodDetailsScreen() {
             }
             onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
           />
+        </Reveal>
+        <Reveal index={5}>
+          <YStack paddingHorizontal={16}>
+            <AdSlot position="POD_DETAILS" variant="banner" />
+          </YStack>
         </Reveal>
         <XStack
           testID="pod-contact-support"

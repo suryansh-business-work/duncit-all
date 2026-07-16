@@ -11,6 +11,10 @@ jest.mock('@react-navigation/native', () => ({
 }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 
 const opName = (doc: { definitions?: { name?: { value?: string } }[] }) =>
   doc?.definitions?.[0]?.name?.value;
@@ -74,6 +78,7 @@ const venuesCalls = () => mockRequest.mock.calls.filter((c) => opName(c[0]) === 
 beforeEach(() => {
   mockRequest.mockReset();
   mockNavigate.mockReset();
+  mockAds = [];
   useLocationStore.setState({ selectedId: 'loc1', cityLabel: 'Pune' });
 });
 
@@ -93,6 +98,32 @@ describe('VenuesScreen', () => {
     expect(venuesCalls()[0][1]).toMatchObject({ location_id: 'loc1', search: null });
     fireEvent.press(screen.getByTestId('venue-card-v1'));
     expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
+  });
+
+  it('interleaves a sponsored banner after every 4 venues', async () => {
+    mockAds = [
+      {
+        id: 'ad1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn/ad.jpg',
+        redirect_url: null,
+        ad_title: 'Sponsored Turf',
+        position: 'VENUE_LIST',
+      },
+    ];
+    route([
+      venue('v1', 'Turf One'),
+      venue('v2', 'Turf Two'),
+      venue('v3', 'Turf Three'),
+      venue('v4', 'Turf Four'),
+      venue('v5', 'Turf Five'),
+    ]);
+    renderWithProviders(<VenuesScreen />);
+    expect(await screen.findByTestId('ad-card-ad1')).toBeOnTheScreen();
+    expect(screen.getByText('Sponsored Turf')).toBeOnTheScreen();
+    // Venues still render around the woven banner.
+    expect(screen.getByTestId('venue-card-v4')).toBeOnTheScreen();
+    expect(screen.getByTestId('venue-card-v5')).toBeOnTheScreen();
   });
 
   it('debounces typing into one server-side search', async () => {

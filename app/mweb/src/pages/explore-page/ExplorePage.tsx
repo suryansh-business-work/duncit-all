@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Stack } from '@mui/material';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-import ExplorePodCard from './ExplorePodCard';
+import ExploreReels from './ExploreReels';
 import ExploreHeader from './ExploreHeader';
 import ExploreFilterSheet from './ExploreFilterSheet';
 import { EXPLORE_PODS, TOGGLE_SAVED_POD } from './queries';
@@ -156,32 +153,15 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
           <Alert severity="info">No pods match these filters.</Alert>
         </Stack>
       ) : (
-        <Slider
-          vertical
-          verticalSwiping
-          slidesToShow={1}
-          slidesToScroll={1}
-          arrows={false}
-          infinite={false}
-          speed={450}
-          swipeToSlide
-          touchThreshold={12}
-          adaptiveHeight={false}
-        >
-          {pods.map((p: any) => (
-            <Box key={p.id} sx={{ height: '100%' }}>
-              <ExplorePodCard
-                pod={p}
-                club={clubsById.get(p.club_id)}
-                location={locById.get(p.location_id)}
-                saved={isSaved(p.id)}
-                savePending={pendingSave.has(p.id)}
-                onToggleSave={() => toggleSave(p.id)}
-                viewerId={data?.me?.user_id ?? null}
-              />
-            </Box>
-          ))}
-        </Slider>
+        <ExploreReels
+          pods={pods}
+          clubsById={clubsById}
+          locById={locById}
+          viewerId={data?.me?.user_id ?? null}
+          isSaved={isSaved}
+          pendingSave={pendingSave}
+          onToggleSave={toggleSave}
+        />
       )}
       <ExploreFilterSheet
         open={filtersOpen}

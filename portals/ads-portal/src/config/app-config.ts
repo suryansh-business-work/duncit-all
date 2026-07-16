@@ -24,11 +24,19 @@ export const appConfig = {
   tokenKey: 'ads_token',
   colorModeKey: 'ads_color_mode',
   accent: { light: '#ff9e9e', main: '#ff5757', hover: '#f03e3e', active: '#d92d2d' },
-  nav: [{ label: 'Dashboard', to: '/', icon: 'dashboard' }],
+  nav: [
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    {
+      label: 'Create Ads',
+      icon: 'campaign',
+      children: [
+        { label: 'My Ads', to: '/ads', icon: 'article' },
+        { label: 'Create Ad', to: '/ads/new', icon: 'image' },
+      ],
+    },
+  ],
   modules: [
-    { title: 'Campaigns', description: 'Create, schedule and manage ad campaigns across placements.', icon: 'campaign' },
-    { title: 'Creatives', description: 'Upload and organise banners, media and creative variants.', icon: 'image' },
-    { title: 'Performance', description: 'Monitor impressions, clicks, CTR and spend in real time.', icon: 'insights' },
-    { title: 'Audiences', description: 'Build, segment and target reusable audience lists.', icon: 'groups' },
+    { title: 'My Ads', description: 'Track your submitted ad requests, quotes and live status.', icon: 'campaign' },
+    { title: 'Create Ad', description: 'Submit a new ad with media, placement, schedule and a live cost estimate.', icon: 'image' },
   ],
 } satisfies AppConfig;

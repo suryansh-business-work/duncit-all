@@ -13,6 +13,9 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => mockLogout }));
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: [], loading: false }),
+}));
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({
     data: {

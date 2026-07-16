@@ -10,6 +10,9 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useStoryRail');
 jest.mock('@/hooks/useStatusUpload');
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: [], loading: false }),
+}));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),

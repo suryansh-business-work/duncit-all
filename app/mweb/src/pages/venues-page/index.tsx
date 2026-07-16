@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import VenueExploreCard, { type ExploreVenue } from './VenueExploreCard';
+import AdCard from '../../components/ads/AdCard';
+import { interleaveAds, isAdEntry } from '../../components/ads/AdSlot';
+import { useActiveAds } from '../../components/ads/useActiveAds';
 
 export const VENUES_EXPLORE = gql`
   query VenuesExplore($location_id: ID, $search: String, $super_category_id: ID) {
@@ -63,6 +66,7 @@ export default function VenuesPage({ locationId, cityLabel }: Readonly<Props>) {
     },
     fetchPolicy: 'cache-and-network',
   });
+  const { ads } = useActiveAds('VENUE_LIST');
   const venues: ExploreVenue[] = data?.publicVenues ?? [];
 
   return (
@@ -119,9 +123,13 @@ export default function VenuesPage({ locationId, cityLabel }: Readonly<Props>) {
           No venues found here yet — try another search or category.
         </Typography>
       )}
-      {venues.map((v) => (
-        <VenueExploreCard key={v.id} venue={v} onOpen={() => navigate(`/venue/${v.id}`)} />
-      ))}
+      {interleaveAds(venues, ads, 4).map((entry) =>
+        isAdEntry(entry) ? (
+          <AdCard key={entry.__ad.id} ad={entry.__ad} />
+        ) : (
+          <VenueExploreCard key={entry.id} venue={entry} onOpen={() => navigate(`/venue/${entry.id}`)} />
+        ),
+      )}
     </Stack>
   );
 }

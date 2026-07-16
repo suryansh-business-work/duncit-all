@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -11,6 +11,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, YStack } from 'tamagui';
 
 import { DetailSkeleton } from '@/components/Skeleton';
+import { ExploreAdCard } from '@/components/ads/ExploreAdCard';
+import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
+import { useActiveAds } from '@/hooks/useActiveAds';
 import { useExplore } from '@/hooks/useExplore';
 import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
@@ -46,6 +49,9 @@ export function ExploreReels() {
     toggleLike,
     refetch,
   } = useExplore();
+  // Sponsored reels woven into the feed — one full-screen ad every 5 pods.
+  const { ads } = useActiveAds('EXPLORE_SCROLL');
+  const feed = useMemo(() => interleaveAds(pods, ads, 5), [pods, ads]);
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
   // FlatList requires a stable identity for the viewability pair across renders.
@@ -86,8 +92,8 @@ export function ExploreReels() {
     } else {
       reelsBody = (
         <FlatList
-          data={pods}
-          keyExtractor={(pod) => pod.id}
+          data={feed}
+          keyExtractor={(entry) => (isAdEntry(entry) ? entry.key : entry.item.id)}
           pagingEnabled
           showsVerticalScrollIndicator={false}
           snapToInterval={height}
@@ -109,7 +115,18 @@ export function ExploreReels() {
               testID="explore-refresh"
             />
           }
-          renderItem={({ item, index }) => {
+          renderItem={({ item: entry, index }) => {
+            if (isAdEntry(entry)) {
+              return (
+                <ExploreAdCard
+                  ad={entry.ad}
+                  width={width}
+                  height={height}
+                  isActive={index === activeIndex}
+                />
+              );
+            }
+            const item = entry.item;
             const like = likeStateFor(item);
             const saved = isSaved(item.id);
             return (

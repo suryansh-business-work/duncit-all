@@ -8,6 +8,10 @@ import { useExplore } from '@/hooks/useExplore';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useExplore');
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
@@ -449,6 +453,7 @@ describe('ExploreReels', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     bumpComment.mockClear();
+    mockAds = [];
     mockedExplore.mockReturnValue(base);
   });
 
@@ -558,6 +563,67 @@ describe('ExploreReels', () => {
     expect(screen.getByTestId('explore-likes-count')).toHaveTextContent('2');
     fireEvent.press(screen.getByTestId('explore-likes-close'));
     expect(screen.queryByTestId('explore-likes-sheet')).toBeNull();
+  });
+
+  it('interleaves a sponsored reel after every 5 pods with stable keys', () => {
+    mockAds = [
+      {
+        id: 'ax',
+        ad_type: 'VIDEO',
+        media_url: 'https://cdn/ad.mp4',
+        redirect_url: null,
+        ad_title: 'Sponsored Reel',
+        position: 'EXPLORE_SCROLL',
+      },
+    ];
+    mockedExplore.mockReturnValue({
+      ...base,
+      pods: [pod('1'), pod('2'), pod('3'), pod('4'), pod('5')],
+    });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    const list = screen.UNSAFE_getByType(FlatList);
+    // 5 pods + 1 woven ad, uniform full-height pages either way.
+    expect(list.props.data).toHaveLength(6);
+    expect(list.props.getItemLayout(null, 5)).toEqual({ length: 700, offset: 3500, index: 5 });
+    expect(list.props.keyExtractor(list.props.data[0])).toBe('1');
+    expect(list.props.keyExtractor(list.props.data[5])).toBe('ad-ax-4');
+
+    // The ad renders through the ExploreAdCard branch, video gated on activeIndex.
+    renderWithProviders(list.props.renderItem({ item: list.props.data[5], index: 5 }));
+    expect(screen.getByTestId('ad-reel-ax')).toBeOnTheScreen();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.pause).toHaveBeenCalled(); // index 5 ≠ activeIndex 0 → paused
+  });
+
+  it('plays the sponsored reel once it becomes the visible page', () => {
+    mockAds = [
+      {
+        id: 'ax',
+        ad_type: 'VIDEO',
+        media_url: 'https://cdn/ad.mp4',
+        redirect_url: null,
+        ad_title: 'Sponsored Reel',
+        position: 'EXPLORE_SCROLL',
+      },
+    ];
+    mockedExplore.mockReturnValue({
+      ...base,
+      pods: [pod('1'), pod('2'), pod('3'), pod('4'), pod('5')],
+    });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    act(() =>
+      screen
+        .UNSAFE_getByType(FlatList)
+        .props.onViewableItemsChanged({ viewableItems: [{ index: 5 }] }),
+    );
+    // Re-read the list so renderItem closes over the updated activeIndex.
+    const list = screen.UNSAFE_getByType(FlatList);
+    renderWithProviders(list.props.renderItem({ item: list.props.data[5], index: 5 }));
+    expect(screen.getByTestId('ad-reel-ax')).toBeOnTheScreen();
+    const player = mockUseVideoPlayer.mock.results.at(-1)?.value;
+    expect(player.play).toHaveBeenCalled();
   });
 
   it('falls back to a generic club title when the club is unknown (item 14)', () => {

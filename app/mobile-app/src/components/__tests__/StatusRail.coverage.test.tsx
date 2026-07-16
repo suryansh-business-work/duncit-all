@@ -28,6 +28,10 @@ const mockGraphql = jest.fn().mockResolvedValue({ storyViewers: [] });
 jest.mock('@/services/graphql.client', () => ({
   graphqlRequest: (...args: unknown[]) => mockGraphql(...args),
 }));
+let mockAds: unknown[] = [];
+jest.mock('@/hooks/useActiveAds', () => ({
+  useActiveAds: () => ({ ads: mockAds, loading: false }),
+}));
 
 const slide = {
   id: 's1',
@@ -47,6 +51,7 @@ const mineGroup = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockAds = [];
   mockSeenIds = new Set<string>();
   // Deterministic rail order (Fisher–Yates with random=0 is stable per input).
   jest.spyOn(Math, 'random').mockReturnValue(0);
@@ -81,6 +86,23 @@ describe('StatusRail', () => {
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('status-viewer-close'));
     expect(screen.queryByTestId('status-viewer')).toBeNull();
+  });
+
+  it('appends a sponsored tile after the followed stories when a STATUS ad is live', () => {
+    mockAds = [
+      {
+        id: 'ad1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn/ad.jpg',
+        redirect_url: null,
+        ad_title: 'Sponsored Story',
+        position: 'STATUS',
+      },
+    ];
+    renderWithProviders(<StatusRail userName="You" />);
+    expect(screen.getByTestId('ad-slot-STATUS')).toBeOnTheScreen();
+    expect(screen.getByTestId('ad-slot-STATUS-sponsored')).toBeOnTheScreen();
+    expect(screen.getByText('Sponsored Story')).toBeOnTheScreen();
   });
 
   it('shows the posting label and skips re-upload while uploading', () => {

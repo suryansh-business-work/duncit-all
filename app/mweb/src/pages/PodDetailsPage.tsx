@@ -19,6 +19,7 @@ import StickyPodActionPanel from './pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
 import PodSocialBar from './pod-details-page/PodSocialBar';
+import AdSlot from '../components/ads/AdSlot';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
 import { usePodProductSelection } from './pod-details-page/usePodProductSelection';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
@@ -143,6 +144,8 @@ export default function PodDetailsPage() {
         initialCommentCount={pod.comment_count ?? 0}
         viewerId={data?.me?.user_id ?? null}
       />
+
+      <AdSlot position="POD_DETAILS" variant="banner" />
 
       {showProducts && pod.product_requests?.some((item: any) => item?.product_name) && (
         <PodCommercePreview

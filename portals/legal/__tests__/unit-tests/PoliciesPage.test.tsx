@@ -143,6 +143,30 @@ describe('PoliciesPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('edits a policy that has no stored content and closes via the backdrop', async () => {
+    const noContent = { ...policy('p1', 'Privacy Policy', 'privacy-policy'), content: null as unknown as string };
+    renderWithProviders(<PoliciesPage />, { mocks: [tableMock([noContent])] });
+    await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    const dialog = await screen.findByRole('dialog');
+    // `p.content || ''` fed the editor an empty string for the null content.
+    expect(within(dialog).getByTestId('quill')).toHaveValue('');
+    // Escape fires the form dialog's own onClose (guarded by `!saving`).
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('cancels a pending delete via the confirm dialog', async () => {
+    renderWithProviders(<PoliciesPage />, {
+      mocks: [tableMock([policy('p1', 'Privacy Policy', 'privacy-policy')])],
+    });
+    await waitFor(() => expect(screen.getByText('Privacy Policy')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('deletes a policy from the row action', async () => {
     renderWithProviders(<PoliciesPage />, {
       mocks: [

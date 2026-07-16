@@ -129,6 +129,18 @@ describe('expense queries logic', () => {
     } as any);
     expect(filter).toBeUndefined();
   });
+
+  it('handles date gte (open-ended to) and an empty category value', () => {
+    const filter = tableStateToExpenseFilter({
+      search: '',
+      filters: [
+        { field: 'date', op: 'gte', value: '2020-01-01' },
+        { field: 'category', op: 'eq', value: '' },
+        { field: 'amount', op: 'gte', value: '' },
+      ],
+    } as any);
+    expect(filter).toEqual({ from: '2020-01-01' });
+  });
 });
 
 describe('pod-finance queries logic', () => {

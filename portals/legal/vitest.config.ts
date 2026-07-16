@@ -31,19 +31,15 @@ export default defineConfig({
         'src/**/*.d.ts',
         'src/vite-env.d.ts',
       ],
-      // 100% statements + lines are enforced. The few uncovered branches/
-      // functions are defensive guards that can't be hit in a unit test (SSR
-      // `typeof window`, optional chaining on framework-guaranteed values),
-      // marked with `/* v8 ignore */`. The Cypress e2e suite covers the real
-      // journeys end-to-end.
+      // Full 100% is enforced on every metric. The only remaining uncovered
+      // lines are defensive guards that cannot be hit in a unit test (SSR
+      // `typeof window`, disabled-submit early returns) and are marked inline
+      // with `/* v8 ignore */` next to a one-line reason.
       thresholds: {
         lines: 100,
         statements: 100,
-        // The remaining uncovered functions are inline UI handlers that can't
-        // fire in jsdom (snackbar auto-hide onClose, MUI dialog backdrop-close,
-        // mobile-drawer navigation) — exercised by the Cypress e2e suite.
-        functions: 88,
-        branches: 95,
+        functions: 100,
+        branches: 100,
       },
     },
   },

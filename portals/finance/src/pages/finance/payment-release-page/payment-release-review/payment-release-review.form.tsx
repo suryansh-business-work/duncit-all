@@ -95,7 +95,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
               render={({ field, fieldState }) => (
                 <TextField
                   {...field}
-                  value={field.value ?? ''}
+                  value={field.value}
                   onChange={(event) => field.onChange(event.target.value === '' ? '' : Number(event.target.value))}
                   label="Approved amount"
                   type="number"

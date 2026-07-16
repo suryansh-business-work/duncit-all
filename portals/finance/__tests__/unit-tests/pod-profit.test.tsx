@@ -86,6 +86,14 @@ describe('PodProfitCalculatorPage', () => {
     fireEvent.change(venue, { target: { value: '-1' } });
     expect(venue.value).toBe('0');
 
+    // Venue & host commission sliders (VenueHostCard)
+    const venueCommission = screen.getAllByLabelText('Venue commission — Duncit income')[0] as HTMLInputElement;
+    fireEvent.change(venueCommission, { target: { value: '12' } });
+    expect(venueCommission.value).toBe('12');
+    const hostCommission = screen.getAllByLabelText('Host commission — Duncit income')[0] as HTMLInputElement;
+    fireEvent.change(hostCommission, { target: { value: '8' } });
+    expect(hostCommission.value).toBe('8');
+
     // Reset restores defaults
     fireEvent.click(screen.getByRole('button', { name: /reset/i }));
     expect((screen.getByLabelText('Ticket price per spot (GST-inclusive)') as HTMLInputElement).value).toBe('1000');

@@ -41,6 +41,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
 
   const submit = async () => {
     const bodyText = htmlToText(bodyHtml);
+    /* v8 ignore next -- defensive: the Create button is disabled unless subject and htmlToText(bodyHtml) are both non-empty */
     if (!subject.trim() || !bodyText) return;
     const res = await createTicket({
       variables: {

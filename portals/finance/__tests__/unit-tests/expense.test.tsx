@@ -96,6 +96,7 @@ describe('ExpenseManagementPage', () => {
     expect(screen.getByText(/greater than 0/i)).toBeInTheDocument();
 
     // fill every field (each inline onChange must run)
+    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '' } }); // clears date → currentDate() falls back to now
     fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '250' } });
     fireEvent.change(screen.getByLabelText(/vendor/i), { target: { value: 'Acme' } });
     fireEvent.change(screen.getByLabelText(/reference/i), { target: { value: 'txn-9' } });
@@ -108,11 +109,15 @@ describe('ExpenseManagementPage', () => {
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'New expense' })).not.toBeInTheDocument());
   });
 
+  const refundedExpense = {
+    ...rowFull,
+    refunds: [
+      { refund_id: 'rf1', date: 'bad-date', amount: 20, note: 'partial' },
+      { refund_id: 'rf2', date: '2024-02-01', amount: 5, note: '' }, // no note → "Refund received"
+    ],
+  };
+
   it('edits an existing expense: refund add/guard/remove and delete', async () => {
-    const refundedExpense = {
-      ...rowFull,
-      refunds: [{ refund_id: 'rf1', date: '2024-01-02', amount: 20, note: 'partial' }],
-    };
     const mutate = vi.fn().mockResolvedValue({
       data: { addExpenseRefund: { ...refundedExpense, net_amount: 60 }, removeExpenseRefund: { ...refundedExpense, net_amount: 100 } },
     });
@@ -136,15 +141,57 @@ describe('ExpenseManagementPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
     await waitFor(() => expect(mutate).toHaveBeenCalled());
 
-    // remove the existing refund
-    fireEvent.click(screen.getByRole('button', { name: /remove refund/i }));
+    // remove the first existing refund
+    fireEvent.click(screen.getAllByRole('button', { name: /remove refund/i })[0]);
     // delete the expense
     fireEvent.click(screen.getByRole('button', { name: /delete expense/i }));
     await waitFor(() => expect(screen.queryByText('Expense details')).not.toBeInTheDocument());
   });
 
+  it('saves changes to an existing expense (update path, no refunds)', async () => {
+    const mutate = vi.fn().mockResolvedValue({ data: {} });
+    mockedUseQuery.mockReturnValue({ data: summary, refetch: vi.fn().mockResolvedValue({}) } as any);
+    mockedUseMutation.mockReturnValue([mutate, { loading: false }] as any);
+    // refunds is null → RefundTimeline falls back to an empty list
+    mockedUseApolloClient.mockReturnValue(resolveClient([{ ...refundedExpense, refunds: null }]) as any);
+
+    renderUI(<ExpenseManagementPage />);
+    await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('row-open'));
+    expect(await screen.findByRole('button', { name: /save changes/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+    await waitFor(() => expect(mutate).toHaveBeenCalled());
+  });
+
+  it('keeps the current expense when a refund mutation returns no data', async () => {
+    const mutate = vi.fn().mockResolvedValue({ data: {} });
+    mockedUseQuery.mockReturnValue({ data: summary, refetch: vi.fn().mockResolvedValue({}) } as any);
+    mockedUseMutation.mockReturnValue([mutate, { loading: false }] as any);
+    mockedUseApolloClient.mockReturnValue(resolveClient([refundedExpense]) as any);
+
+    renderUI(<ExpenseManagementPage />);
+    await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
+    fireEvent.click(screen.getByTestId('row-open'));
+    await screen.findByText('Refunds & timeline');
+    fireEvent.change(screen.getAllByLabelText('Amount')[1], { target: { value: '10' } });
+    fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
+    await waitFor(() => expect(mutate).toHaveBeenCalled());
+    fireEvent.click(screen.getAllByRole('button', { name: /remove refund/i })[0]);
+  });
+
+  it('pluralises the expense count', async () => {
+    mockedUseQuery.mockReturnValue({
+      data: { expenseSummary: { ...summary.expenseSummary, count: 3, by_category: [] } },
+      refetch: vi.fn(),
+    } as any);
+    mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
+    mockedUseApolloClient.mockReturnValue(resolveClient([]) as any);
+    renderUI(<ExpenseManagementPage />);
+    expect(await screen.findByText('3 expenses')).toBeInTheDocument();
+  });
+
   it('renders without a summary card', async () => {
-    mockedUseQuery.mockReturnValue({ data: undefined, refetch: vi.fn() } as any);
+    mockedUseQuery.mockReturnValue({ data: undefined, refetch: vi.fn().mockResolvedValue({}) } as any);
     mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
     mockedUseApolloClient.mockReturnValue(resolveClient([]) as any);
     renderUI(<ExpenseManagementPage />);
@@ -153,7 +200,7 @@ describe('ExpenseManagementPage', () => {
   });
 
   it('surfaces a create error', async () => {
-    mockedUseQuery.mockReturnValue({ data: summary, refetch: vi.fn() } as any);
+    mockedUseQuery.mockReturnValue({ data: summary, refetch: vi.fn().mockResolvedValue({}) } as any);
     mockedUseMutation.mockReturnValue([vi.fn().mockRejectedValue(new Error('create failed')), { loading: false }] as any);
     mockedUseApolloClient.mockReturnValue(resolveClient([]) as any);
     renderUI(<ExpenseManagementPage />);
@@ -164,7 +211,7 @@ describe('ExpenseManagementPage', () => {
   });
 
   it('shows the saving state in the drawer', async () => {
-    mockedUseQuery.mockReturnValue({ data: summary, refetch: vi.fn() } as any);
+    mockedUseQuery.mockReturnValue({ data: summary, refetch: vi.fn().mockResolvedValue({}) } as any);
     mockedUseMutation.mockReturnValue([vi.fn(), { loading: true }] as any);
     mockedUseApolloClient.mockReturnValue(resolveClient([]) as any);
     renderUI(<ExpenseManagementPage />);

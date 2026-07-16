@@ -73,7 +73,7 @@ describe('PayoutCyclesPage', () => {
 
   it('switches to a MONTH_END schedule (scheduled, not weekly)', () => {
     mockedUseQuery.mockReturnValue({
-      data: fs({ venue_payout_mode: 'IMMEDIATE', host_payout_mode: 'IMMEDIATE' }),
+      data: fs({ venue_payout_mode: 'IMMEDIATE', host_payout_mode: 'IMMEDIATE', payout_time: '00:15' }),
       loading: false,
       refetch: vi.fn(),
     } as any);
@@ -84,6 +84,9 @@ describe('PayoutCyclesPage', () => {
     expect(screen.queryByRole('combobox', { name: /payout day/i })).not.toBeInTheDocument();
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Host payout' }));
     fireEvent.click(within(screen.getByRole('listbox')).getByText('Weekly'));
+    // Clear the time then save → dateToTime falls back to the default when time is null
+    fireEvent.change(screen.getByLabelText('Payout time'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /save cycle/i }));
   });
 
   it('renders without settings (effect no-op)', () => {

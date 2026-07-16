@@ -94,6 +94,18 @@ describe('InvoicePreview', () => {
     expect(screen.getByText(/computer-generated invoice/i)).toBeInTheDocument();
   });
 
+  it('falls back to hard defaults when the symbol/label/prefix are blank', () => {
+    renderUI(
+      <InvoicePreview
+        value={{ ...EMPTY_INVOICE_SETTINGS, currency_symbol: '', invoice_label: '', invoice_prefix: '' }}
+      />,
+    );
+    // default label "TAX INVOICE" appears (header)
+    expect(screen.getAllByText('TAX INVOICE').length).toBeGreaterThan(0);
+    // default invoice prefix "DUN" appears in the invoice number
+    expect(screen.getByText(/DUN\/2526/)).toBeInTheDocument();
+  });
+
   it('renders every populated branding value', () => {
     renderUI(
       <InvoicePreview

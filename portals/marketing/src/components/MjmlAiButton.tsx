@@ -35,6 +35,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
 
   const generate = async () => {
     const instruction = prompt.trim();
+    /* v8 ignore next -- Apply is disabled unless prompt.trim() is truthy, so this guard never fires */
     if (!instruction) return;
     setError(null);
     try {

@@ -112,6 +112,19 @@ describe('DocumentsListPage', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
+  it('edits the description and closes via the dialog backdrop handler', async () => {
+    renderWithProviders(<DocumentsListPage />, { mocks: [tableMock([])] });
+    await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /new document/i }));
+    const dialog = await screen.findByRole('dialog');
+    // Exercise the Description change handler.
+    fireEvent.change(within(dialog).getByLabelText('Description'), { target: { value: 'A short summary' } });
+    expect(within(dialog).getByLabelText('Description')).toHaveValue('A short summary');
+    // Escape fires the Dialog onClose handler.
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
   it('refetches the table when create returns no id', async () => {
     renderWithProviders(<DocumentsListPage />, {
       mocks: [

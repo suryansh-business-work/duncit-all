@@ -28,22 +28,19 @@ export default defineConfig({
         'src/apollo.ts',
         // Runtime URL config — branches switch on the build-time `DEV` flag.
         'src/config/url-configs.ts',
+        // GraphQL documents + row interface only — no logic to unit-test.
+        'src/pages/api-keys/queries.ts',
         'src/**/*.d.ts',
         'src/vite-env.d.ts',
       ],
-      // 100% statements + lines are enforced. The few uncovered branches/
-      // functions are defensive guards that can't be hit in a unit test (SSR
-      // `typeof window`, optional chaining on framework-guaranteed values),
-      // marked with `/* v8 ignore */`. The Cypress e2e suite covers the real
-      // journeys end-to-end.
+      // Full 100% on all four metrics. The single genuinely-unreachable
+      // defensive branch (CreateKeyDialog copy guard) is marked with a
+      // `/* v8 ignore */` comment explaining why it can't fire from the UI.
       thresholds: {
         lines: 100,
         statements: 100,
-        // The remaining uncovered functions are inline UI handlers that can't
-        // fire in jsdom (snackbar auto-hide onClose, MUI dialog backdrop-close,
-        // mobile-drawer navigation) — exercised by the Cypress e2e suite.
-        functions: 88,
-        branches: 95,
+        functions: 100,
+        branches: 100,
       },
     },
   },

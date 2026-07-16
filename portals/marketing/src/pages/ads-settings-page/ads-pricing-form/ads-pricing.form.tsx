@@ -19,6 +19,7 @@ function AdsPricingExample({ values }: Readonly<{ values: AdsPricingFormValues }
   const [position, setPosition] = useState<AdPosition>('HOME_BOTTOM');
   const [days, setDays] = useState('7');
 
+  /* v8 ignore next -- `position` is always a valid AdPosition from the constrained select, so the `?? AD_POSITIONS[0]` fallback is unreachable */
   const meta = AD_POSITIONS.find((p) => p.position === position) ?? AD_POSITIONS[0];
   const perDay = Number(values[meta.priceField]);
   const dayCount = Number(days);

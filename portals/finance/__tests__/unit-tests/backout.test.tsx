@@ -141,6 +141,37 @@ describe('BackoutRefundDetailPage', () => {
     expect(screen.getByTestId('list-probe')).toBeInTheDocument();
   });
 
+  it('renders a pod with an image but all other fields null', () => {
+    mockedUseQuery.mockReturnValue({
+      data: {
+        backoutRefundRequest: {
+          ...detailRequest,
+          user_name: null,
+          user_email: null,
+          payment_amount: null,
+          payment_currency: null,
+          payment_status: null,
+          payment_id: null,
+          pod: {
+            ...detailRequest.pod,
+            pod_title: null,
+            club_slug: null,
+            host_names: [],
+            venue_id: null,
+            club: null,
+            pod_images_and_videos: [{ url: 'https://img/x.jpg', type: 'IMAGE' }],
+          },
+        },
+        publicFinanceSettings: { currency_symbol: '₹' },
+      },
+      loading: false,
+      error: undefined,
+    } as any);
+    renderDetail();
+    // pod_title null → the img alt falls back to "Pod"
+    expect(screen.getByAltText('Pod')).toBeInTheDocument();
+  });
+
   it('renders the detail when the pod is missing entirely', () => {
     mockedUseQuery.mockReturnValue({
       data: {

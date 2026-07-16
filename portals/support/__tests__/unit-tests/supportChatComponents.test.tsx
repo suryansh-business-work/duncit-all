@@ -112,6 +112,39 @@ describe('TranscriptMenu', () => {
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     await waitFor(() => expect(screen.queryByLabelText(/recipient email/i)).not.toBeInTheDocument());
   });
+
+  it('downloads .txt and .docx transcripts', async () => {
+    const onDownload = vi.fn();
+    render(<TranscriptMenu onDownload={onDownload} onEmail={vi.fn()} />);
+
+    fireEvent.click(screen.getByLabelText('Export transcript'));
+    fireEvent.click(screen.getByText('Download .txt'));
+    expect(onDownload).toHaveBeenCalledWith('TXT');
+    await waitFor(() => expect(screen.queryByText('Download .txt')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByLabelText('Export transcript'));
+    fireEvent.click(screen.getByText('Download .docx'));
+    expect(onDownload).toHaveBeenCalledWith('DOCX');
+  });
+
+  it('emails a trimmed recipient and resets the field', async () => {
+    const onEmail = vi.fn();
+    render(<TranscriptMenu onDownload={vi.fn()} onEmail={onEmail} />);
+    fireEvent.click(screen.getByLabelText('Export transcript'));
+    fireEvent.click(screen.getByText(/email transcript/i));
+    // Empty email keeps Send disabled.
+    expect(screen.getByRole('button', { name: /^send$/i })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/recipient email/i), { target: { value: '  q@e.com  ' } });
+    fireEvent.click(screen.getByRole('button', { name: /^send$/i }));
+    expect(onEmail).toHaveBeenCalledWith('q@e.com');
+    await waitFor(() => expect(screen.queryByLabelText(/recipient email/i)).not.toBeInTheDocument());
+  });
+
+  it('does not open the menu while busy', () => {
+    render(<TranscriptMenu onDownload={vi.fn()} onEmail={vi.fn()} busy />);
+    fireEvent.click(screen.getByLabelText('Export transcript'));
+    expect(screen.queryByText('Download .txt')).not.toBeInTheDocument();
+  });
 });
 
 describe('ConfirmDialog + FeedbackPanel defaults', () => {

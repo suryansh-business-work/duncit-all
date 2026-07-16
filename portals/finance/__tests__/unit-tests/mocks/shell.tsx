@@ -30,7 +30,7 @@ export const ProfilePage = () => <div data-testid="profile-page">Profile</div>;
 
 export const PortalLoginPage = (_props: any) => <div data-testid="portal-login">Login</div>;
 
-export const createAuthed = (_opts: any) => (el: any) => el;
+export const createAuthed = (opts: any) => (el: any) => (opts?.wrap ? opts.wrap(el) : el);
 
 export const createSession = (_tokenKey: string, _roles: unknown, _fullName: string) => ({
   getToken: vi.fn(() => 'token'),

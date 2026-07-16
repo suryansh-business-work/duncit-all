@@ -62,10 +62,11 @@ describe('GoogleSignInButton', () => {
     unmount(); // removes the resize listener
   });
 
-  it('uses the dark Google theme in dark mode', () => {
+  it('uses the dark Google theme and dark loading overlay in dark mode', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
-    renderBtn({ text: 'continue_with' }, 'dark');
+    renderBtn({ text: 'continue_with', loading: true }, 'dark');
     expect(screen.getByTestId('google-login')).toHaveAttribute('data-theme', 'filled_black');
     expect(screen.getByTestId('google-login')).toHaveAttribute('data-text', 'continue_with');
+    expect(document.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
   });
 });

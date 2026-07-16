@@ -11,6 +11,13 @@ vi.mock('@apollo/client', async (orig) => {
   return { ...actual, useQuery: vi.fn(), useMutation: vi.fn(), useApolloClient: vi.fn() };
 });
 
+// The real downloadBase64File builds an <a> and clicks it, which jsdom can't
+// navigate — stub only that helper, keep the rest of @duncit/utils real.
+vi.mock('@duncit/utils', async (orig) => {
+  const actual = await orig<Record<string, unknown>>();
+  return { ...actual, downloadBase64File: vi.fn() };
+});
+
 const mockedUseQuery = vi.mocked(useQuery);
 const mockedUseMutation = vi.mocked(useMutation);
 const mockedUseApolloClient = vi.mocked(useApolloClient);
@@ -104,6 +111,40 @@ describe('PaymentLogsPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: /confirm refund/i }));
     expect(await within(dialog).findByText('refund failed')).toBeInTheDocument();
     fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+  });
+
+  it('falls back to a generic message when the invoice query rejects without one', async () => {
+    tableControls.rows = [paySuccess];
+    mockedUseApolloClient.mockReturnValue({
+      query: vi.fn(({ query }: any) =>
+        query === INVOICE_PDF ? Promise.reject({}) : Promise.resolve({ data: { paymentsTable: { rows: tableControls.rows, total: 1 } } }),
+      ),
+    } as any);
+    renderUI(<PaymentLogsPage />);
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+    fireEvent.click(enabledButtonFor('DownloadIcon'));
+    expect(await screen.findByText('Could not download invoice')).toBeInTheDocument();
+  });
+
+  it('falls back to a generic message when the refund rejects without one', async () => {
+    mockedUseMutation.mockReturnValue([vi.fn().mockRejectedValue({}), { loading: false }] as any);
+    tableControls.rows = [paySuccess];
+    mockedUseApolloClient.mockReturnValue(makeClient() as any);
+    renderUI(<PaymentLogsPage />);
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+    fireEvent.click(enabledButtonFor('UndoIcon'));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /confirm refund/i }));
+    expect(await within(dialog).findByText('Refund failed')).toBeInTheDocument();
+  });
+
+  it('renders with no payments data (empty totals)', async () => {
+    mockedUseQuery.mockReturnValue({ data: undefined, refetch: vi.fn() } as any);
+    tableControls.rows = [];
+    mockedUseApolloClient.mockReturnValue(makeClient() as any);
+    renderUI(<PaymentLogsPage />);
+    await waitFor(() => expect(screen.getByText('No payments yet.')).toBeInTheDocument());
+    expect(screen.getByText('Successful Payments')).toBeInTheDocument();
   });
 
   it('shows the refund loading label', async () => {

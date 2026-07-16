@@ -48,6 +48,9 @@ describe('Sparkline', () => {
     expect(container.querySelector('polyline')).toBeNull();
     rerender(<Sparkline points={[{ label: 'a', value: 1 }, { label: 'b', value: 2 }]} color="#f00" />);
     expect(container.querySelector('polyline')).not.toBeNull();
+    // equal points → zero span falls back to 1 (default stroke colour)
+    rerender(<Sparkline points={[{ label: 'a', value: 5 }, { label: 'b', value: 5 }]} />);
+    expect(container.querySelector('polyline')).not.toBeNull();
   });
 });
 
@@ -110,6 +113,11 @@ describe('MetricDrawer', () => {
     expect(screen.getByText(/nothing to configure/i)).toBeInTheDocument();
   });
 
+  it('shows the saving state', () => {
+    renderUI(<MetricDrawer metric={metric()} mode="settings" settings={{ a: 1, b: 2 }} saving onClose={noop} onSave={noop} />);
+    expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
+  });
+
   it('edits a manual metric and saves only finite values', () => {
     const onSave = vi.fn();
     renderUI(<MetricDrawer metric={metric({ source: 'manual', setting_keys: ['a', 'a'] })} mode="settings" settings={{ a: 5 }} saving={false} onClose={noop} onSave={onSave} />);
@@ -147,6 +155,10 @@ describe('StartupDashboardPage', () => {
     expect(screen.getByText('Founder Overview')).toBeInTheDocument();
     expect(screen.getByText('Ops')).toBeInTheDocument();
 
+    // Clearing the date range drives the null branch of the query variables
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '' } });
+
     // open the settings drawer for MRR and save
     fireEvent.click(screen.getAllByRole('button', { name: /settings for mrr/i })[0]);
     fireEvent.click(await screen.findByRole('button', { name: 'Save' }));
@@ -154,10 +166,12 @@ describe('StartupDashboardPage', () => {
     expect(refetch).toHaveBeenCalled();
   });
 
-  it('opens the info drawer', () => {
+  it('opens and closes the info drawer', () => {
     mockedUseQuery.mockReturnValue({ data: dashboard, loading: false, error: undefined, refetch: vi.fn() } as any);
     renderUI(<StartupDashboardPage />);
     fireEvent.click(screen.getAllByRole('button', { name: /about mrr/i })[0]);
     expect(screen.getAllByText('Monthly recurring revenue').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByText('Monthly recurring revenue')).not.toBeInTheDocument();
   });
 });

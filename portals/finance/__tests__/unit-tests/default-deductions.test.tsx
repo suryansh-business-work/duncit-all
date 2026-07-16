@@ -16,10 +16,20 @@ const mockedUseMutation = vi.mocked(useMutation);
 const settings = {
   gst_pct: 18,
   platform_fee_pct: 5,
-  default_host_commission_pct: null,
+  default_host_commission_pct: 10,
   default_venue_commission_pct: 10,
-  default_product_commission_pct: null,
+  default_product_commission_pct: 12,
   default_club_admin_pct: 3,
+  default_backout_deduction_pct: 20,
+};
+
+const nullSettings = {
+  gst_pct: null,
+  platform_fee_pct: null,
+  default_host_commission_pct: null,
+  default_venue_commission_pct: null,
+  default_product_commission_pct: null,
+  default_club_admin_pct: null,
   default_backout_deduction_pct: null,
 };
 
@@ -42,6 +52,13 @@ describe('DefaultDeductionsPage', () => {
     mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
     renderUI(<DefaultDeductionsPage />);
     expect(screen.getByText('Default Deductions')).toBeInTheDocument();
+  });
+
+  it('defaults every null deduction field to zero', () => {
+    mockedUseQuery.mockReturnValue({ data: { financeSettings: nullSettings }, loading: false, refetch: vi.fn() } as any);
+    mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
+    renderUI(<DefaultDeductionsPage />);
+    expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
   });
 
   it('maps settings, edits a slider and saves', async () => {

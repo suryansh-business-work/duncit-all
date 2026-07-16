@@ -34,6 +34,15 @@ describe('DashboardPage', () => {
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
   });
 
+  it('falls back to a zero total when the server omits it', async () => {
+    // total is nullish → the `?? 0` fallback renders 0 in the card.
+    renderWithProviders(<DashboardPage />, {
+      mocks: [statsMock(null as unknown as number, []), statsTableMock([])],
+    });
+    await waitFor(() => expect(screen.getByText('Total documents')).toBeInTheDocument());
+    expect(screen.getByText('0')).toBeInTheDocument();
+  });
+
   it('navigates to documents from the total card', async () => {
     const byType = [{ document_type: 'NDA', count: 2 }];
     renderWithProviders(<></>, {

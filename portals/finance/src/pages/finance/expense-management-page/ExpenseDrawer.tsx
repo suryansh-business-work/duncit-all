@@ -54,7 +54,8 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
   }, [expense, open]);
 
   const set = (key: keyof typeof BLANK) => (value: string) => setForm((p) => ({ ...p, [key]: value }));
-  const input = () => ({ ...form, amount: Number(form.amount), date: (date ?? new Date()).toISOString() });
+  const currentDate = () => date ?? new Date();
+  const input = () => ({ ...form, amount: Number(form.amount), date: currentDate().toISOString() });
 
   const save = async () => {
     setError(null);

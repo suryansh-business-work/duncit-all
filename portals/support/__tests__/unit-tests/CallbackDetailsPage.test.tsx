@@ -72,6 +72,20 @@ describe('CallbackDetailsPage', () => {
     expect(screen.queryByRole('button', { name: /close/i })).not.toBeInTheDocument();
   });
 
+  it('renders a recorded outcome with a call duration and conclusion', async () => {
+    renderAt([queryMock(req('CLOSED', { duration_seconds: 120, conclusion: null }))]);
+    await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+    // duration → "2 min · " with an em-dash conclusion fallback.
+    expect(screen.getByText(/Outcome:/i)).toBeInTheDocument();
+    expect(screen.getByText(/2 min ·/)).toBeInTheDocument();
+  });
+
+  it('renders an outcome with only a conclusion (no duration)', async () => {
+    renderAt([queryMock(req('CLOSED', { duration_seconds: null, conclusion: 'Left a voicemail' }))]);
+    await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+    expect(screen.getByText(/Left a voicemail/)).toBeInTheDocument();
+  });
+
   it('navigates back to the list', async () => {
     renderAt([queryMock(req('PENDING'))]);
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());

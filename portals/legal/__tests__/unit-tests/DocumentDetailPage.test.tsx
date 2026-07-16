@@ -192,4 +192,28 @@ describe('DocumentDetailPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
+
+  it('falls back to an em-dash when the document has no last editor', async () => {
+    renderAt([docMock(detail({ updated_by_name: '' }))]);
+    await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
+    // `doc.updated_by_name || '—'` renders the dash for an empty editor name.
+    expect(screen.getByText(/Updated by —/)).toBeInTheDocument();
+  });
+
+  it('dismisses the delete dialog and the toast via their close handlers', async () => {
+    renderAt([docMock(detail())]);
+    await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
+    // Backdrop/Escape close on the confirm dialog fires the Dialog onClose.
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Trigger a toast, then let its Snackbar onClose fire via Escape.
+    (navigator as any).clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
+    fireEvent.click(screen.getByRole('button', { name: /copy/i }));
+    await waitFor(() => expect(screen.getByText(/copied to clipboard/i)).toBeInTheDocument());
+    fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByText(/copied to clipboard/i)).not.toBeInTheDocument());
+  });
 });

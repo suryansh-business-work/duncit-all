@@ -42,7 +42,7 @@ describe('InvoiceTemplatePage', () => {
     const refetch = vi.fn().mockResolvedValue({});
     const updateMut = vi.fn().mockResolvedValue({});
     mockedUseQuery.mockReturnValue({
-      data: { financeSettings: { invoice_templates: { host: { label: 'HOST BILL', terms: null, footer: 'ty', note: null } } } },
+      data: { financeSettings: { invoice_templates: { host: { label: 'HOST BILL', terms: 'net 30', footer: 'ty', note: 'covering' } } } },
       loading: false,
       refetch,
     } as any);
@@ -63,7 +63,7 @@ describe('InvoiceTemplatePage', () => {
 
   it('surfaces a save error', async () => {
     mockedUseQuery.mockReturnValue({
-      data: { financeSettings: { invoice_templates: { product: { label: 'P' } } } },
+      data: { financeSettings: { invoice_templates: { product: {} } } },
       loading: false,
       refetch: vi.fn(),
     } as any);

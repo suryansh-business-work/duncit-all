@@ -53,13 +53,21 @@ describe('WithdrawalsPage', () => {
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Withdrawal rejected'));
   });
 
-  it('cancels the reject dialog', async () => {
+  it('cancels the reject dialog via the button and via Escape', async () => {
     tableControls.rows = [w1];
     renderUI(<WithdrawalsPage />);
     await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
+
+    // Cancel button
     fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Escape (Dialog onClose)
+    fireEvent.click(screen.getByRole('button', { name: 'Reject' }));
+    const dialog2 = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog2, { key: 'Escape', code: 'Escape' });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
@@ -70,6 +78,15 @@ describe('WithdrawalsPage', () => {
     await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /mark paid/i }));
     await waitFor(() => expect(notifyError).toHaveBeenCalledWith('review failed'));
+  });
+
+  it('falls back to a generic toast when the error has no message', async () => {
+    mockedUseMutation.mockReturnValue([vi.fn().mockRejectedValue({}), { loading: false }] as any);
+    tableControls.rows = [w1];
+    renderUI(<WithdrawalsPage />);
+    await waitFor(() => expect(screen.getByText('Host A')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /mark paid/i }));
+    await waitFor(() => expect(notifyError).toHaveBeenCalledWith('Could not review withdrawal'));
   });
 
   it('disables the actions while a review is in flight', async () => {

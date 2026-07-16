@@ -64,6 +64,14 @@ describe('PodFinancePage', () => {
     fireEvent.click(screen.getAllByTestId('row-open')[0]);
     expect(screen.getByTestId('detail-probe')).toBeInTheDocument();
   });
+
+  it('renders an empty table when the query returns no data', async () => {
+    mockedUseApolloClient.mockReturnValue({
+      query: vi.fn().mockResolvedValue({ data: { paymentReleaseRequests: null, publicFinanceSettings: null } }),
+    } as any);
+    renderRoute(<PodFinancePage />);
+    await waitFor(() => expect(screen.getByText('No pods with payment activity yet.')).toBeInTheDocument());
+  });
 });
 
 describe('PodFinanceDetailPage', () => {

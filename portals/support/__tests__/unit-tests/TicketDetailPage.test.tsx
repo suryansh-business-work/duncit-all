@@ -89,10 +89,20 @@ const renderAt = (mocks: any[]) =>
   });
 
 describe('TicketDetailPage', () => {
-  it('shows a not-found message (with a back button)', async () => {
+  it('shows a not-found message and navigates back from the fallback header', async () => {
     renderAt([ticketMock(null)]);
     await waitFor(() => expect(screen.getByText(/could not be found/i)).toBeInTheDocument());
-    expect(screen.getByLabelText('Back')).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Back'));
+    expect(screen.getByText('TICKET LIST')).toBeInTheDocument();
+  });
+
+  it('flips the agent bubble ticks to Seen once the user has read the thread', async () => {
+    const readTime = new Date(Date.now() + 60_000).toISOString();
+    renderAt([ticketMock(td({ user_last_read_at: readTime } as any))]);
+    await waitFor(() => expect(screen.getByText('My card fails')).toBeInTheDocument());
+    // The agent's own message carries the blue double-tick (Seen) icon.
+    expect(screen.getByText('Looking into it')).toBeInTheDocument();
+    expect(document.querySelector('[data-testid="DoneAllIcon"]')).toBeInTheDocument();
   });
 
   it('renders the thread incl. a SYSTEM timeline line', async () => {

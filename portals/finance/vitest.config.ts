@@ -19,6 +19,12 @@ export default defineConfig({
       '@duncit/shell': mock('shell.tsx'),
       '@duncit/user-context': mock('user-context.tsx'),
       '@duncit/media-picker': mock('media-picker.tsx'),
+      // MUI X pickers → controllable stubs (the real sectioned fields can't be
+      // cleared via fireEvent, which blocks the null-date branches).
+      '@mui/x-date-pickers/DatePicker': mock('mui-x.tsx'),
+      '@mui/x-date-pickers/TimePicker': mock('mui-x.tsx'),
+      '@mui/x-date-pickers/LocalizationProvider': mock('mui-x.tsx'),
+      '@mui/x-date-pickers/AdapterDateFns': mock('mui-x.tsx'),
     },
   },
   test: {

@@ -26,9 +26,12 @@ const pending = {
 };
 const approved = {
   id: 'rel2', release_id: 'REL-2', kind: 'HOST_PAYMENT', status: 'APPROVED', pod_id: 'pod2', pod_title: 'Chess',
-  beneficiary_name: 'Host', beneficiary_email: 'h@x.com', amount_requested: 500,
+  beneficiary_name: 'Host', beneficiary_email: 'h@x.com', amount_requested: 0,
   bill_url: null, evidence_media: null, notes: null, requested_at: 'bad-date', breakdown: v1,
 };
+
+const zeroBreakdownV2 = { version: 2, collected_total: 1000, gst_pct: 0, gst_amount: 0, platform_fee_pct: 0, platform_fee_amount: 0, pool_amount: 1000, share_amount: 500, commission_pct: 0, commission_amount: 0, payout_amount: 500, duncit_revenue: 0 };
+const zeroBreakdownV1 = { version: 1, collected_total: 1000, venue_bill: 400, gst_pct: 0, gst_amount: 0, duncit_pct: 0, duncit_amount: 0, payout_pct: 0, payout_amount: 500 };
 
 beforeEach(() => {
   mockedUseQuery.mockReset().mockReturnValue({ data: { publicFinanceSettings: { currency_symbol: '₹' } } } as any);
@@ -56,6 +59,14 @@ describe('ReleaseBreakdownLines', () => {
     renderUI(<ReleaseBreakdownLines request={{ kind: 'HOST_PAYMENT', breakdown: v2 }} />);
     expect(screen.getByText('Host amount (pool remainder)')).toBeInTheDocument();
     renderUI(<ReleaseBreakdownLines request={{ kind: 'VENUE_BILLING', breakdown: v1 }} />);
+    expect(screen.getByText('Venue bill')).toBeInTheDocument();
+  });
+
+  it('handles zero percentages and a missing currency symbol', () => {
+    mockedUseQuery.mockReturnValue({ data: undefined } as any); // no settings → sym ''
+    renderUI(<ReleaseBreakdownLines request={{ kind: 'VENUE_BILLING', breakdown: zeroBreakdownV2 }} />);
+    expect(screen.getByText('Venue amount (booked slot price)')).toBeInTheDocument();
+    renderUI(<ReleaseBreakdownLines request={{ kind: 'HOST_PAYMENT', breakdown: zeroBreakdownV1 }} />);
     expect(screen.getByText('Venue bill')).toBeInTheDocument();
   });
 });
@@ -109,10 +120,60 @@ describe('PaymentReleasePage', () => {
     // Partial release enables the amount field and requires a reason
     fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Release type' }));
     fireEvent.click(screen.getByRole('option', { name: 'Partial Release' }));
-    fireEvent.change(within(dialog).getByLabelText('Approved amount'), { target: { value: '250' } });
+    const amount = within(dialog).getByLabelText('Approved amount');
+    fireEvent.change(amount, { target: { value: '' } }); // clear → '' branch
+    fireEvent.change(amount, { target: { value: '250' } });
     fireEvent.change(within(dialog).getByLabelText('Reason'), { target: { value: 'partial payout' } });
     fireEvent.click(within(dialog).getByRole('button', { name: /submit review/i }));
     expect(await within(dialog).findByText('review failed')).toBeInTheDocument();
+  });
+
+  it('submits successfully even when the table has no refetch handle', async () => {
+    tableControls.rows = [pending];
+    tableControls.setRefetch = false; // refetchRef.current stays null
+    renderUI(<PaymentReleasePage />);
+    await waitFor(() => expect(screen.getByText('Yoga')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /review/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /submit review/i }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('resets the amount when switching the release type back to Full', async () => {
+    tableControls.rows = [pending];
+    renderUI(<PaymentReleasePage />);
+    await waitFor(() => expect(screen.getByText('Yoga')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /review/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Release type' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Partial Release' }));
+    expect(within(dialog).getByLabelText('Approved amount')).not.toBeDisabled();
+    fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Release type' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Full Release' }));
+    expect(within(dialog).getByLabelText('Approved amount')).toBeDisabled();
+  });
+
+  it('shows a fallback error when the mutation rejects without a message', async () => {
+    mockedUseMutation.mockReturnValue([vi.fn().mockRejectedValue({}), { loading: false }] as any);
+    tableControls.rows = [pending];
+    renderUI(<PaymentReleasePage />);
+    await waitFor(() => expect(screen.getByText('Yoga')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /review/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /submit review/i }));
+    expect(await within(dialog).findByText('Could not review payment release')).toBeInTheDocument();
+  });
+
+  it('reviews a zero-amount request', async () => {
+    const reviewFn = vi.fn().mockResolvedValue({});
+    mockedUseMutation.mockReturnValue([reviewFn, { loading: false }] as any);
+    tableControls.rows = [{ ...pending, id: 'rel0', amount_requested: 0 }];
+    renderUI(<PaymentReleasePage />);
+    await waitFor(() => expect(screen.getByText('Yoga')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /review/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /submit review/i }));
+    await waitFor(() => expect(reviewFn).toHaveBeenCalled());
   });
 
   it('shows the busy state', async () => {

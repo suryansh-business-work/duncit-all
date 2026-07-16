@@ -5,8 +5,8 @@ import { fetchBranding } from '../api';
 
 vi.mock('../api', () => ({ fetchBranding: vi.fn() }));
 
-beforeEach(() => vi.clearAllMocks());
-afterEach(() => vi.restoreAllMocks());
+beforeEach(() => { vi.clearAllMocks(); });
+afterEach(() => { vi.restoreAllMocks(); });
 
 describe('useBranding', () => {
   it('keeps the bundled defaults and sets the document title when there is no remote brand', async () => {

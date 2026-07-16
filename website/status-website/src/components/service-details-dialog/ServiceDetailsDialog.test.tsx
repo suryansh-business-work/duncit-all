@@ -26,7 +26,7 @@ const details = (over: Partial<ServiceDetails> = {}): ServiceDetails => ({
   ...over,
 });
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => { vi.clearAllMocks(); });
 
 describe('ServiceDetailsDialog', () => {
   it('re-exports the dialog and hook from the index', () => {

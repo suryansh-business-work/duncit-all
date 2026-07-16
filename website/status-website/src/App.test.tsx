@@ -51,7 +51,7 @@ const data = (over: Partial<StatusData>): StatusData => ({
   ...over,
 });
 
-afterEach(() => vi.clearAllMocks());
+afterEach(() => { vi.clearAllMocks(); });
 
 const stubShell = () => {
   vi.mocked(useColorMode).mockReturnValue({ mode: 'light', toggleMode: vi.fn() });

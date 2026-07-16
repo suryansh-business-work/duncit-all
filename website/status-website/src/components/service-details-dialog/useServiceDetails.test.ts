@@ -23,8 +23,8 @@ const withHealth: StatusService = {
 };
 const noHealth: StatusService = { ...withHealth, health: undefined };
 
-beforeEach(() => vi.clearAllMocks());
-afterEach(() => vi.restoreAllMocks());
+beforeEach(() => { vi.clearAllMocks(); });
+afterEach(() => { vi.restoreAllMocks(); });
 
 describe('useServiceDetails', () => {
   it('stays empty and issues no requests when there is no service', () => {

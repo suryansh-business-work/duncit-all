@@ -18,7 +18,7 @@ const services = {
 const summary = { generated_at: 't', overall: {}, services: {}, global: [] } as unknown as SummaryResponse;
 const incidents = { generated_at: 't', incidents: [] } as IncidentsResponse;
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => { vi.clearAllMocks(); });
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();

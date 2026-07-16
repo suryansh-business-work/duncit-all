@@ -244,7 +244,7 @@ podSchema.pre('countDocuments', excludeDeleted);
 podSchema.pre('updateMany', excludeDeleted);
 podSchema.pre('updateOne', excludeDeleted);
 podSchema.pre('aggregate', function (next) {
-  if ((this as any).options?.includeDeleted) return next();
+  if ((this.options as { includeDeleted?: boolean } | undefined)?.includeDeleted) return next();
   this.pipeline().unshift({ $match: { deleted_at: null } });
   next();
 });

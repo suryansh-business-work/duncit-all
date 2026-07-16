@@ -27,11 +27,10 @@ userRoleSchema.index(
 );
 
 userRoleSchema.pre('validate', function (next) {
-  const doc = this;
-  if (doc.role === 'CITY_ADMIN' && !doc.scope?.city) {
+  if (this.role === 'CITY_ADMIN' && !this.scope?.city) {
     return next(new Error('CITY_ADMIN role requires scope.city'));
   }
-  if (doc.role === 'ZONAL_ADMIN' && !doc.scope?.zone) {
+  if (this.role === 'ZONAL_ADMIN' && !this.scope?.zone) {
     return next(new Error('ZONAL_ADMIN role requires scope.zone'));
   }
   next();

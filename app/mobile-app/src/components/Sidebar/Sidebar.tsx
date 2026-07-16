@@ -50,11 +50,13 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
 
   const [switchOpen, setSwitchOpen] = useState(false);
 
+  // MenuRoute is a union of param-less screens; RN v7's distributive `navigate`
+  // overload can't accept a union arg directly, so reshape the method to a
+  // single-arg signature (safe — none of these screens take required params).
+  const navigate: (screen: MenuRoute) => void = navigation.navigate;
   const go = (route: MenuRoute) => {
     onClose();
-    // MenuRoute is a union of param-less screens; RN's navigate overload can't
-    // narrow a dynamic union arg, so cast (safe — none take required params).
-    navigation.navigate(route as never);
+    navigate(route);
   };
 
   if (!open) return null;

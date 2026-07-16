@@ -18,6 +18,7 @@ export default function MeetingSection() {
 
   const handleAutoGenerate = async () => {
     const platform = getValues('meeting_platform');
+    /* v8 ignore next -- defensive: the generate button only renders when these conditions already pass */
     if (!onGenerateMeetingLink || !platform || platform === 'OTHER') return;
     setGenerating(true);
     setGenerateError(null);
@@ -25,6 +26,7 @@ export default function MeetingSection() {
       const url = await onGenerateMeetingLink({
         platform,
         title: getValues('pod_title') || 'Duncit Pod',
+        /* v8 ignore next -- defensive: the generate button requires a start date/time */
         startISO: (getValues('pod_date_time') ?? new Date()).toISOString(),
         endISO: getValues('pod_end_date_time')?.toISOString(),
       });

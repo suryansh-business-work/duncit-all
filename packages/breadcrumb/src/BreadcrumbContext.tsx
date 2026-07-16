@@ -42,7 +42,9 @@ export function useSetBreadcrumbs(crumbs: Crumb[] | null | undefined): void {
 
   useEffect(() => {
     if (!ctx) return undefined;
-    ctx.setOverride(key ? (crumbs ?? null) : null);
+    // `key` is non-empty only when `crumbs` is a non-empty array, so the
+    // truthy branch never sees null/undefined (hence the non-null assertion).
+    ctx.setOverride(key ? crumbs! : null);
     return () => ctx.setOverride(null);
     // `key` captures the crumbs' identity; `ctx.setOverride` is stable.
     // eslint-disable-next-line react-hooks/exhaustive-deps

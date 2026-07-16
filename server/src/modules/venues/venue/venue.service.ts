@@ -823,7 +823,10 @@ export const venueService = {
     if (!isAdmin && String(v.owner_user_id) !== String(userId)) {
       fail('FORBIDDEN', 'Not your venue');
     }
-    v.settings = normalizeSettingsInput(v.settings, input) as IVenueSettings;
+    // `set(path, value)` bridges the pub-shaped normalized settings back onto the
+    // Mongoose subdoc (it casts string ids → ObjectId on save) without a type
+    // assertion — the plain `v.settings = … as IVenueSettings` tripped Sonar S4325.
+    v.set('settings', normalizeSettingsInput(v.settings, input));
     v.markModified('settings');
     await v.save();
     // Don't make the owner wait for the daily sweep: top up straight away when

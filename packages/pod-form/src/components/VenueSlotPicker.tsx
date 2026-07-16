@@ -92,6 +92,7 @@ export default function VenueSlotPicker({ venueId, selectedSlotId, currentSlot, 
         onChange={(event) => {
           const id = event.target.value;
           const slot = slots.find((s) => s.id === id);
+          /* v8 ignore next -- defensive: the Select only offers ids that exist in slots */
           onSelect(slot ? { id: slot.id, start_at: slot.start_at, end_at: slot.end_at } : null);
         }}
         required

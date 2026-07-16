@@ -24,12 +24,9 @@ class ResizeObserverStub {
   }
 }
 
-if (globalThis.ResizeObserver === undefined) {
-  globalThis.ResizeObserver = ResizeObserverStub;
-}
+globalThis.ResizeObserver ??= ResizeObserverStub;
 
-if (globalThis.matchMedia === undefined) {
-  globalThis.matchMedia = (query: string) => ({
+globalThis.matchMedia ??= (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -39,7 +36,6 @@ if (globalThis.matchMedia === undefined) {
     removeEventListener: () => undefined,
     dispatchEvent: () => false,
   });
-}
 
 // jsdom reports zero dimensions; AG Grid virtualises everything away at width 0,
 // so give every element a size wide enough that no table column is skipped.

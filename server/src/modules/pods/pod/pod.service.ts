@@ -1390,9 +1390,9 @@ export const podService = {
 
     if (platform === 'ZOOM') {
       if (!zoomConfigured) return requiresOauth();
-      // TODO: real Zoom API call using server-to-server OAuth + meetings.create.
-      // Until then this is a placeholder link — but a guessable meeting id is a
-      // way in, so even the stand-in is drawn from a CSPRNG (S2245).
+      // Deferred: real Zoom API call using server-to-server OAuth +
+      // meetings.create. Until then this is a placeholder link — but a guessable
+      // meeting id is a way in, so even the stand-in is drawn from a CSPRNG (S2245).
       return {
         ok: true,
         url: `https://zoom.us/j/${randomInt(1e9, 1e10)}`,

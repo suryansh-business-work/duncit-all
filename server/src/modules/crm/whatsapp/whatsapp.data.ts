@@ -245,7 +245,7 @@ async function extractCore(
   const batch: ContactBatch = {
     counts,
     existingPhones: new Set<string>(
-      (await WaUserLeadModel.distinct('phone', { connection_key: KEY })) as unknown as string[]
+      (await WaUserLeadModel.distinct('phone', { connection_key: KEY })).map(String)
     ),
     seenJids: new Set<string>(),
     seenPhones: new Set<string>(),

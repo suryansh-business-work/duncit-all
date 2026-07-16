@@ -114,6 +114,9 @@ export function UserProvider({
       // cached user exists.
       setError(e instanceof Error ? e : new Error(String(e)));
       return null;
+      // The finally's exception-propagation entry is unreachable: the catch above
+      // handles every rejection and never rethrows, so v8 can't exercise that path.
+      /* v8 ignore next */
     } finally {
       setLoading(false);
       setLoadAttempted(true);

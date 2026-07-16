@@ -125,6 +125,27 @@ describe('filtersToDraft (round trip)', () => {
     const drafts = filtersToDraft(columns, [{ field: 'created', op: 'gte', value: 'garbage' }]);
     expect(drafts.created.from).toBeNull();
   });
+
+  it('fills the draft with empty fallbacks for value-less filters, is_true and lte', () => {
+    const drafts = filtersToDraft(columns, [
+      { field: 'name', op: 'contains' }, // no value -> text ''
+      { field: 'kind', op: 'eq' }, // no value -> selected []
+      { field: 'status', op: 'in' }, // no values -> selected []
+      { field: 'active', op: 'is_true' },
+      { field: 'age', op: 'lte', value: '9' },
+    ]);
+    expect(drafts.name.text).toBe('');
+    expect(drafts.kind.selected).toEqual([]);
+    expect(drafts.status.selected).toEqual([]);
+    expect(drafts.active.bool).toBe('true');
+    expect(drafts.age).toMatchObject({ min: '', max: '9' });
+  });
+
+  it('skips a column that has a draft but declares no filter', () => {
+    // Forces draftToFilter down its `!filter` guard for the non-filterable column.
+    const drafts = { ...draftsWith({}), plain: emptyDraft() };
+    expect(draftToFilters(columns, drafts)).toEqual([]);
+  });
 });
 
 describe('filterChipLabel', () => {
@@ -144,5 +165,15 @@ describe('filterChipLabel', () => {
     expect(filterChipLabel(columns, { field: 'unknown', op: 'eq', value: '1' })).toBe(
       'unknown = 1',
     );
+  });
+
+  it('falls back to empty value list and raw op when values/labels are missing', () => {
+    // `in` / `between` with no `values` array exercise the `?? []` fallbacks.
+    expect(filterChipLabel(columns, { field: 'status', op: 'in' })).toBe('Status: ');
+    expect(filterChipLabel(columns, { field: 'age', op: 'between' })).toBe('Age: ');
+    // An op outside OP_LABELS falls through to the raw op; missing value -> '' (trimmed).
+    expect(
+      filterChipLabel(columns, { field: 'age', op: 'starts_with' as TableFilterValue['op'] }),
+    ).toBe('Age starts_with');
   });
 });

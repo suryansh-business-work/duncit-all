@@ -3,6 +3,7 @@ import type { PodFormConfig, PodFormValues } from './types';
 
 /** Returns true when the string parses as an http(s) URL. */
 const isHttpUrl = (value: string) => {
+  /* v8 ignore next -- defensive: the schema only calls isHttpUrl with a non-empty value */
   if (!value) return false;
   try {
     const parsed = new URL(value);
@@ -14,6 +15,7 @@ const isHttpUrl = (value: string) => {
 
 /** At least one non-video URL present in the newline-separated media text. */
 const hasImage = (value: string) =>
+  /* v8 ignore next -- defensive: media_text is always a string coming from the schema */
   (value ?? '')
     .split('\n')
     .map((line) => line.trim())

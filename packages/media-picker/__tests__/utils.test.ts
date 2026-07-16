@@ -44,6 +44,10 @@ describe('pickBestVideoFile', () => {
     expect(pickBestVideoFile({ video_files: [] })).toBeNull();
   });
 
+  it('returns null when the video_files key is absent entirely', () => {
+    expect(pickBestVideoFile({})).toBeNull();
+  });
+
   it('prefers HD, then the widest, but stays at or below 1080p', () => {
     const best = pickBestVideoFile({
       video_files: [
@@ -53,5 +57,55 @@ describe('pickBestVideoFile', () => {
       ],
     });
     expect(best).toMatchObject({ width: 1920, height: 1080 });
+  });
+
+  it('falls back to the widest option when every file exceeds 1080p', () => {
+    const best = pickBestVideoFile({
+      video_files: [
+        { quality: 'sd', width: 1280, height: 2000 },
+        { quality: 'hd', width: 1920, height: 2160 },
+      ],
+    });
+    // No file is <= 1080p, so the sorted head (HD + widest) wins by fallback.
+    expect(best).toMatchObject({ quality: 'hd', width: 1920 });
+  });
+
+  // Both orderings are supplied so the sort comparator sees a width-less file in
+  // both its `a` and `b` argument slots, exercising both `|| 0` fallbacks.
+  it('treats missing width as zero with the widthless file listed first', () => {
+    const best = pickBestVideoFile({
+      video_files: [
+        { quality: 'hd', height: 400 },
+        { quality: 'hd', width: 1920, height: 400 },
+      ],
+    });
+    expect(best).toMatchObject({ width: 1920 });
+  });
+
+  it('treats missing width as zero with the widthless file listed last', () => {
+    const best = pickBestVideoFile({
+      video_files: [
+        { quality: 'hd', width: 1920, height: 400 },
+        { quality: 'hd', height: 400 },
+      ],
+    });
+    expect(best).toMatchObject({ width: 1920 });
+  });
+
+  // The HD file listed first forces a non-HD file into the comparator's `a`
+  // slot, covering the `: 0` side of the quality ternary.
+  it('ranks a non-HD file below an HD one regardless of input order', () => {
+    const best = pickBestVideoFile({
+      video_files: [
+        { quality: 'hd', width: 1280, height: 720 },
+        { quality: 'sd', width: 3840, height: 1000 },
+      ],
+    });
+    expect(best).toMatchObject({ quality: 'hd' });
+  });
+
+  it('treats missing height as zero (a heightless file counts as <= 1080p)', () => {
+    const best = pickBestVideoFile({ video_files: [{ quality: 'sd', width: 800 }] });
+    expect(best).toMatchObject({ width: 800 });
   });
 });

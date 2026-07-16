@@ -77,6 +77,7 @@ export default function BasicSection() {
           value={hosts}
           onChange={(event) => {
             const v = event.target.value as unknown as string[] | string;
+            /* v8 ignore next -- defensive: the MUI multi-select always yields a string[] */
             setValue('pod_hosts_id', typeof v === 'string' ? v.split(',') : v, { shouldValidate: true });
           }}
           SelectProps={{

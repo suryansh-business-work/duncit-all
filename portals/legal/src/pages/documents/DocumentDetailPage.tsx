@@ -12,14 +12,12 @@ import {
   DialogContentText,
   DialogTitle,
   Divider,
-  IconButton,
   Paper,
   Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -27,6 +25,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
+import { BackHeader } from '@duncit/ui';
+import { downloadTextFile } from '@duncit/utils';
 import {
   CLONE_LEGAL_DOCUMENT,
   DELETE_LEGAL_DOCUMENT,
@@ -36,7 +36,7 @@ import {
 } from '../../graphql/documents';
 import DocumentTypeSelect from '../../components/DocumentTypeSelect';
 import RichTextEditor, { htmlToText, toPrintableHtml } from '../../components/RichTextEditor';
-import { copyToClipboard, downloadFile, printHtml, safeFileName } from '../../lib/docActions';
+import { copyToClipboard, printHtml, safeFileName } from '../../lib/docActions';
 
 export default function DocumentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -82,7 +82,7 @@ export default function DocumentDetailPage() {
     if (doc) printHtml(toPrintableHtml(doc.name, doc.content));
   };
   const onDownload = () => {
-    if (doc) downloadFile(safeFileName(doc.name), toPrintableHtml(doc.name, doc.content));
+    if (doc) downloadTextFile(toPrintableHtml(doc.name, doc.content), safeFileName(doc.name));
   };
   const onCopy = async () => {
     if (doc) setToast((await copyToClipboard(htmlToText(doc.content))) ? 'Copied to clipboard' : 'Could not copy');
@@ -179,26 +179,28 @@ export default function DocumentDetailPage() {
     );
   };
 
+  const headerActions =
+    doc && !editing ? (
+      <Stack direction="row" spacing={0.5} flexWrap="wrap">
+        <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>Edit</Button>
+        <Button size="small" startIcon={<PrintIcon />} onClick={onPrint}>Print</Button>
+        <Button size="small" startIcon={<DownloadIcon />} onClick={onDownload}>Download</Button>
+        <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>Copy</Button>
+        <Button size="small" startIcon={<FileCopyIcon />} onClick={onClone}>Clone</Button>
+        <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)}>Delete</Button>
+      </Stack>
+    ) : undefined;
+
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-        <IconButton size="small" onClick={() => navigate('/documents')} aria-label="Back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 800, flex: 1, minWidth: 160 }} noWrap>
-          {doc?.name ?? 'Document'}
-        </Typography>
-        {doc && !editing && (
-          <Stack direction="row" spacing={0.5} flexWrap="wrap">
-            <Button size="small" startIcon={<EditIcon />} onClick={() => setEditing(true)}>Edit</Button>
-            <Button size="small" startIcon={<PrintIcon />} onClick={onPrint}>Print</Button>
-            <Button size="small" startIcon={<DownloadIcon />} onClick={onDownload}>Download</Button>
-            <Button size="small" startIcon={<ContentCopyIcon />} onClick={onCopy}>Copy</Button>
-            <Button size="small" startIcon={<FileCopyIcon />} onClick={onClone}>Clone</Button>
-            <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => setConfirmDelete(true)}>Delete</Button>
-          </Stack>
-        )}
-      </Stack>
+      <BackHeader
+        onBack={() => navigate('/documents')}
+        title={doc?.name ?? 'Document'}
+        titleWeight={800}
+        titleNoWrap
+        actions={headerActions}
+        sx={{ flexWrap: 'wrap' }}
+      />
 
       {renderBody()}
 

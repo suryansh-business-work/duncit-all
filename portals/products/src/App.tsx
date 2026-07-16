@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { ProfilePage } from '@duncit/shell';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { createAuthed, ProfilePage } from '@duncit/shell';
+import { useFeatureFlag } from '@duncit/app-settings';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import InventoryPage from './pages/inventory-page/InventoryPage';
@@ -13,17 +14,6 @@ import ProductOrdersPage from './pages/orders/ProductOrdersPage';
 import ProductOrderDetailPage from './pages/orders/ProductOrderDetailPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
-import { redirectPathFromLocation } from './utils/redirect';
-import { useFeatureFlag } from './hooks/useFeatureFlag';
-
-function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
-  const location = useLocation();
-  if (!getToken()) {
-    const redirect = encodeURIComponent(redirectPathFromLocation(location));
-    return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
-  }
-  return children;
-}
 
 /** Gates the product routes: when products are hidden they redirect home. */
 function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
@@ -32,11 +22,7 @@ function RequireProducts({ children }: Readonly<{ children: JSX.Element }>) {
   return children;
 }
 
-const authed = (element: JSX.Element) => (
-  <RequireAuth>
-    <AppShell>{element}</AppShell>
-  </RequireAuth>
-);
+const authed = createAuthed({ getToken, wrap: (element) => <AppShell>{element}</AppShell> });
 
 const products = (element: JSX.Element) => authed(<RequireProducts>{element}</RequireProducts>);
 

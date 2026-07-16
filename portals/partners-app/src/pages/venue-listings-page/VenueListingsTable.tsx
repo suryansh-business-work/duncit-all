@@ -1,23 +1,16 @@
-import { useCallback } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
-import { Avatar, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { format } from 'date-fns';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
 import { MY_VENUES_TABLE, type VenueListingRow } from './queries';
 
 const rowAction = (status: string) => {
   if (status === 'APPROVED' || status === 'SUBMITTED') return 'View';
   if (status === 'REJECTED') return 'Edit & resubmit';
   return 'Edit';
-};
-
-const statusColor = (status: string): 'success' | 'error' | 'info' | 'warning' => {
-  if (status === 'APPROVED') return 'success';
-  if (status === 'REJECTED') return 'error';
-  if (status === 'SUBMITTED') return 'info';
-  return 'warning';
 };
 
 const STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value) => ({
@@ -50,7 +43,7 @@ const renderVenue = (venue: VenueListingRow) => (
 );
 
 const renderStatus = (venue: VenueListingRow) => (
-  <Chip size="small" label={venue.status} color={statusColor(venue.status)} />
+  <StatusChip status={venue.status} fallbackColor="warning" />
 );
 
 const renderActions = (venue: VenueListingRow) => (
@@ -118,20 +111,7 @@ const COLUMNS: DuncitColumn<VenueListingRow>[] = [
 export default function VenueListingsTable() {
   const client = useApolloClient();
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MY_VENUES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myVenuesTable.rows as VenueListingRow[],
-        total: data.myVenuesTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<VenueListingRow>(client, MY_VENUES_TABLE, 'myVenuesTable');
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>

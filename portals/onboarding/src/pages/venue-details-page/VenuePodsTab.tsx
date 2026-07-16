@@ -1,26 +1,20 @@
-import { useCallback } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Stack, Typography } from '@mui/material';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import PodsTable from '../../components/pods-table/PodsTable';
 import { PODS_TABLE, type PodRow } from '../../components/pods-table/queries';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 
 export default function VenuePodsTab({ venueId }: Readonly<{ venueId: string }>) {
   const { formatDateTime } = useDateFormat();
   const client = useApolloClient();
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters = [...q.filters, { field: 'venue_id', op: 'eq' as const, value: venueId }];
-      const { data } = await client.query({
-        query: PODS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.podsTable.rows as PodRow[], total: data.podsTable.total as number };
-    },
-    [client, venueId],
+  const fetchRows = useApolloTableFetch<PodRow>(
+    client,
+    PODS_TABLE,
+    'podsTable',
+    { extraFilters: [{ field: 'venue_id', op: 'eq', value: venueId }] },
+    [venueId],
   );
 
   if (!venueId) return null;

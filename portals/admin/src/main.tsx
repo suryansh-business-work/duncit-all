@@ -3,17 +3,14 @@ import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
 import { appConfig } from './config/app-config';
 import { apolloClient } from './apollo';
-import { ConfirmProvider } from './components/useConfirm';
-import { NotifyHost } from './components/notify';
+import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
+import { createSessionUserLoader } from '@duncit/user-context';
 import { ADMIN_ME } from './adminSession';
 import App from './App';
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
 
-const loadUser = async () => {
-  const { data } = await apolloClient.query({ query: ADMIN_ME, fetchPolicy: 'network-only' });
-  return data?.me ?? null;
-};
+const loadUser = createSessionUserLoader(apolloClient, { query: ADMIN_ME });
 
 mountPortal({
   config: {

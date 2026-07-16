@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { formatMoney } from '@duncit/utils';
 
 export const BACKOUT_REFUND_REQUESTS = gql`
   query BackoutRefundRequests {
@@ -145,7 +146,8 @@ export const REFUND_STATUS_COLORS: Record<RefundStatus, ChipColor> = {
   NOT_ELIGIBLE: 'error',
 };
 
-export const money = (symbol: string, value: number) => `${symbol}${Number(value || 0).toFixed(2)}`;
+export const money = (symbol: string, value: number) =>
+  formatMoney(value, { symbol, decimals: 2, grouping: false });
 
 export const fmtDate = (iso?: string | null) => {
   if (!iso) return '—';

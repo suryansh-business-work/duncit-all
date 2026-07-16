@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Card, CardContent, Stack, Step, StepLabel, Stepper } from '@mui/material';
 import type { Path } from 'react-hook-form';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
-import { parseApiError } from '../../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import type { ProductListingValues } from './list-products.types';
 import { productListingSchema } from './list-products.schema';
 import { StepBody } from './list-products.form-ui';

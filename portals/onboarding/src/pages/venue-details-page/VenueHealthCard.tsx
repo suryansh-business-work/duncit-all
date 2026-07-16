@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, CircularProgress, Stack } from '@mui/material';
+import { QueryGuard } from '@duncit/ui';
 import HealthScoreCard from '../user-details-page/UserHealthSection/HealthScoreCard';
 import {
   VENUE_HEALTH,
@@ -23,15 +23,9 @@ export default function VenueHealthCard({ venueId }: Readonly<Props>) {
   const [override, setOverride] = useState<AdminHealthScore | null>(null);
   const score = override ?? data?.venueHealth;
 
-  if (loading && !data) {
-    return (
-      <Stack alignItems="center" sx={{ py: 4 }}>
-        <CircularProgress size={24} />
-      </Stack>
-    );
-  }
-  if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!score) return null;
-
-  return <HealthScoreCard score={score} onUpdated={setOverride} />;
+  return (
+    <QueryGuard loading={loading && !data} error={error} errorText={error?.message} spinnerSize={24} spinnerSx={{ py: 4 }}>
+      {() => (score ? <HealthScoreCard score={score} onUpdated={setOverride} /> : null)}
+    </QueryGuard>
+  );
 }

@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Grid, MenuItem, Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import DateTimeField from '../../../components/DateTimeField';
 import CampaignMjmlEditor from './CampaignMjmlEditor';
 import {

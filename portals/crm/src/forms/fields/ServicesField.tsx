@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FormField from '../FormField';
+import { FormField } from '@duncit/forms';
 import type { CrmServiceOffered } from '../../api/crm.types';
 
 export const emptyService: CrmServiceOffered = {

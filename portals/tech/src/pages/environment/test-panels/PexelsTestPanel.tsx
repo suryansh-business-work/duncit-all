@@ -4,7 +4,7 @@ import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { TEST_ENV_PEXELS, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
-import { parseApiError } from '../../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [query, setQuery] = useState('nature');

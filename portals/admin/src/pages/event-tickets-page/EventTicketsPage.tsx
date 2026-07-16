@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
@@ -11,8 +11,9 @@ import {
   Typography,
 } from '@mui/material';
 import QrCodeScannerIcon from '@mui/icons-material/QrCodeScanner';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { notifyError, notifySuccess } from '../../components/notify';
+import { useApolloTableFetch } from '@duncit/table';
+import { downloadBase64File } from '@duncit/utils';
+import { notifyError, notifySuccess } from '@duncit/dialogs';
 import EventTicketsTable from './EventTicketsTable';
 import {
   CHECK_IN_EVENT_TICKET,
@@ -22,18 +23,6 @@ import {
   type EventTicketRow,
 } from './queries';
 
-function downloadPdf(base64: string, filename: string) {
-  const bytes = atob(base64);
-  const arr = new Uint8Array(bytes.length);
-  for (let i = 0; i < bytes.length; i += 1) arr[i] = bytes.codePointAt(i) ?? 0;
-  const url = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 export default function EventTicketsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -42,25 +31,12 @@ export default function EventTicketsPage() {
   const [verifyQr] = useMutation(VERIFY_EVENT_TICKET);
   const [checkIn] = useMutation(CHECK_IN_EVENT_TICKET);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: EVENT_TICKETS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.eventTicketsTable.rows as EventTicketRow[],
-        total: data.eventTicketsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<EventTicketRow>(client, EVENT_TICKETS_TABLE, 'eventTicketsTable');
 
   const onDownload = async (t: EventTicketRow) => {
     try {
       const res = await client.query({ query: EVENT_TICKET_PDF, variables: { id: t.id }, fetchPolicy: 'no-cache' });
-      downloadPdf(res.data.eventTicketPdfBase64, `ticket-${t.ticket_code}.pdf`);
+      downloadBase64File(res.data.eventTicketPdfBase64, `ticket-${t.ticket_code}.pdf`, 'application/pdf');
     } catch (e: any) {
       notifyError(e.message ?? 'Could not download ticket');
     }

@@ -19,7 +19,7 @@ import {
 } from './queries';
 import BadgeCard from './BadgeCard';
 import BadgeFormDialog from './BadgeFormDialog';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm } from '@duncit/dialogs';
 
 export default function BadgesPage() {
   const { data, loading, error, refetch } = useQuery(BADGES);

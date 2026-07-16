@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { StatusChip } from '@duncit/ui';
 import BrandProductsTable from './BrandProductsTable';
 import BrandPickupPanel from './BrandPickupPanel';
 import { BRAND_STATUS_COLOR } from './brandStatus';
@@ -58,11 +59,7 @@ export default function EcommBrandDetailPage() {
                     <Typography variant="h5" fontWeight={800}>
                       {brand.brand_name}
                     </Typography>
-                    <Chip
-                      size="small"
-                      label={brand.status}
-                      color={BRAND_STATUS_COLOR[brand.status] ?? 'default'}
-                    />
+                    <StatusChip status={brand.status} colorMap={BRAND_STATUS_COLOR} />
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
                     {[brand.city, brand.state].filter(Boolean).join(', ') || '—'} ·{' '}

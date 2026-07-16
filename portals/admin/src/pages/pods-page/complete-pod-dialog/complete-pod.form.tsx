@@ -13,7 +13,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import MediaPickerField from '../../../components/MediaPickerField';
 import MediaListField from '../../../components/MediaListField';
 import SettlementPreview from './SettlementPreview';

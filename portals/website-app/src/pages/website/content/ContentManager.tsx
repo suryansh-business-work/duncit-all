@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { useConfirm } from '../../../components/useConfirm';
-import { parseApiError } from '../../../utils/parseApiError';
+import { useApolloTableFetch } from '@duncit/table';
+import { useConfirm } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import ContentTable from './ContentTable';
 import ContentDialog from './ContentDialog';
 import {
@@ -34,24 +34,13 @@ export default function ContentManager({ type }: Readonly<{ type: WebsitePageTyp
   const [formError, setFormError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      // Scope the shared websiteContentTable query to this page's type.
-      const scoped: TableQueryState = {
-        ...q,
-        filters: [...q.filters, { field: 'type', op: 'eq', value: type }],
-      };
-      const { data } = await client.query({
-        query: CONTENT_TABLE,
-        variables: tableQueryToGql(scoped),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.websiteContentTable.rows as WebsiteContentItem[],
-        total: data.websiteContentTable.total as number,
-      };
-    },
-    [client, type],
+  // Scope the shared websiteContentTable query to this page's type.
+  const fetchRows = useApolloTableFetch<WebsiteContentItem>(
+    client,
+    CONTENT_TABLE,
+    'websiteContentTable',
+    { extraFilters: [{ field: 'type', op: 'eq', value: type }] },
+    [type],
   );
 
   const openCreate = () => {

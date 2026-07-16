@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 
 interface Props {
   events: any[];

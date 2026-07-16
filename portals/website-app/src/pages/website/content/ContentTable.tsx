@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import ImageIcon from '@mui/icons-material/Image';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import type { WebsiteContentItem } from './queries';
 
 interface Props {

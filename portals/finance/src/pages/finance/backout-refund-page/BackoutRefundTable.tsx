@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Button, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
 import { fmtDate, REFUND_STATUS_COLORS, money, type BackoutRefundRequest } from './queries';
 
 const REFUND_STATUS_OPTIONS = [
@@ -24,7 +25,7 @@ const renderMember = (row: BackoutRefundRequest) => (
 );
 
 const renderRefundStatus = (row: BackoutRefundRequest) => (
-  <Chip size="small" color={REFUND_STATUS_COLORS[row.refund_status]} label={row.refund_status} />
+  <StatusChip status={row.refund_status} colorMap={REFUND_STATUS_COLORS} />
 );
 
 interface Props {

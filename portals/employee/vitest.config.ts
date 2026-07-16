@@ -33,9 +33,8 @@ export default defineConfig({
         // Runtime URL/DUID config tied to env + cross-console redirects.
         'src/config/url-configs.ts',
         'src/duid.ts',
-        // Apollo error link + the login page (renders @duncit/user-context's
-        // LoginScreen + drives the auth mutation/redirect) — covered by e2e.
-        'src/utils/apolloErrorLink.ts',
+        // The login page (renders the shared PortalLoginPage which drives the
+        // auth mutation/redirect) — covered by e2e.
         'src/pages/LoginPage.tsx',
       ],
       // Honest floors (match the established portals): 100% line coverage on a

@@ -24,7 +24,7 @@ import {
 } from '../../api/reminders.gql';
 import { LeadDetailCard } from '../LeadDetailCard';
 import ConfirmDialog from '../ConfirmDialog';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import ReminderFormDialog from './ReminderFormDialog';
 
 interface Props {

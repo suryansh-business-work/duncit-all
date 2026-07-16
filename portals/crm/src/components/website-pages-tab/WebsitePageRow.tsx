@@ -9,7 +9,7 @@ import {
   FETCH_CRM_WEBSITE_PAGE_CONTENT,
   type CrmWebsitePage,
 } from '../../api/websitePages.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 const STATUS_COLOR: Record<CrmWebsitePage['status'], 'default' | 'success' | 'error'> = {
   DISCOVERED: 'default',

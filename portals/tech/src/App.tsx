@@ -1,5 +1,6 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { ProfilePage } from '@duncit/shell';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { createAuthed, ProfilePage } from '@duncit/shell';
+import { NotifyHost } from '@duncit/dialogs';
 import LoginPage from './pages/LoginPage';
 import EnvironmentPage from './pages/environment';
 import PortalModesPage from './pages/portal-modes';
@@ -9,24 +10,9 @@ import EmailTemplatesPage from './pages/email-templates-page/EmailTemplatesPage'
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import AppShell from './components/AppShell';
-import { NotifyHost } from './components/notify';
 import { getToken } from './lib/session';
-import { redirectPathFromLocation } from './utils/redirect';
 
-function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
-  const location = useLocation();
-  if (!getToken()) {
-    const redirect = encodeURIComponent(redirectPathFromLocation(location));
-    return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
-  }
-  return children;
-}
-
-const authed = (element: JSX.Element) => (
-  <RequireAuth>
-    <AppShell>{element}</AppShell>
-  </RequireAuth>
-);
+const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> });
 
 export default function App() {
   return (

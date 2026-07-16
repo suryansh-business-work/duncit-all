@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import TagsInput from './TagsInput';
 import { PRODUCT_TYPE_OPTIONS, UNIT_TYPE_OPTIONS } from './constants';
 import type { InventoryProductFormValues } from './types';

@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { Alert, Stack } from '@mui/material';
-import { parseApiError } from '../../../utils/parseApiError';
-import StatCard from './StatCard';
+import { parseApiError } from '@duncit/utils';
+import { StatCard } from '@duncit/ui';
+import { AppIcon } from '@duncit/shell';
 import {
   FINANCE_DASHBOARD_STATS,
   type FinanceDashboardStats,
@@ -51,11 +52,11 @@ export default function FinanceKpis() {
             key={card.key}
             label={card.label}
             value={`${sym}${(stat?.total ?? 0).toFixed(2)}`}
-            icon={card.icon}
-            color={card.color}
+            icon={<AppIcon name={card.icon} fontSize="small" color={card.color} />}
             loading={loading && !stat}
             hint={trendLabel(stat)}
             hintColor={trendColor(stat)}
+            sx={{ borderRadius: 3, flex: '1 1 220px', minWidth: 220 }}
           />
         );
       })}

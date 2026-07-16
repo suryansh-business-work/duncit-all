@@ -13,7 +13,7 @@ import { AgGridReact } from 'ag-grid-react';
 import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
-import type { DuncitColumn, TableFetch, TableSortDir } from './types';
+import type { DuncitColumn, TableFetch, TableFilterValue, TableSortDir } from './types';
 import { useTablePrefs } from './useTablePrefs';
 import { useTableQuery } from './useTableQuery';
 
@@ -65,6 +65,9 @@ interface DuncitTableProps<T> {
   defaultPageSize?: 10 | 25 | 50 | 100; // default 25
   searchPlaceholder?: string;
   refetchRef?: MutableRefObject<(() => void) | null>; // parent-triggered reload after mutations
+  // Page-level filters from controls outside the table (tabs/selects/URL params).
+  // Compared by value; a change resets to page 1 and refetches. Not shown as chips.
+  externalFilters?: ReadonlyArray<TableFilterValue>;
 }
 
 /** Server-driven table: MUI chrome (toolbar/progress/error/pagination), AG Grid rows only. */
@@ -81,8 +84,9 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     defaultPageSize,
     searchPlaceholder,
     refetchRef,
+    externalFilters,
   } = props;
-  const table = useTableQuery({ fetchRows, defaultSort, defaultPageSize });
+  const table = useTableQuery({ fetchRows, defaultSort, defaultPageSize, externalFilters });
   const prefs = useTablePrefs(tableId);
   const muiTheme = useTheme();
   const gridRef = useRef<AgGridReact<T>>(null);

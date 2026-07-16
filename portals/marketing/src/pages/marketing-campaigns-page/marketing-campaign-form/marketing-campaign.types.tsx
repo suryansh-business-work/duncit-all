@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { requiredText } from '../../../forms/validation/zodRules';
+import { requiredText } from '@duncit/forms';
 import type { CampaignPreviewCard } from '../queries';
 
 export type CampaignChannel = 'EMAIL' | 'WHATSAPP';

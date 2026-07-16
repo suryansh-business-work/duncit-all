@@ -1,7 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Button, Chip, Stack, Typography } from '@mui/material';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, formatDateCell, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { ApiKeyRow } from './queries';
 
 interface Props {
@@ -13,7 +12,7 @@ interface Props {
 
 const getApiKeyRowId = (k: ApiKeyRow) => k.id;
 
-const fmtDate = (iso: string | null) => (iso ? format(new Date(iso), 'd MMM yyyy, h:mm a') : '—');
+const fmtDate = (iso: string | null) => formatDateCell(iso, 'd MMM yyyy, h:mm a');
 
 const createdValue = (k: ApiKeyRow) => fmtDate(k.created_at);
 const lastUsedValue = (k: ApiKeyRow) => fmtDate(k.last_used_at);

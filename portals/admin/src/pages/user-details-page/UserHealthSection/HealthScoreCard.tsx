@@ -4,7 +4,7 @@ import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '
 import EditIcon from '@mui/icons-material/Edit';
 import AdjustHealthDialog from './AdjustHealthDialog';
 import AdjustmentRow from './AdjustmentRow';
-import { useConfirm } from '../../../components/useConfirm';
+import { useConfirm } from '@duncit/dialogs';
 import {
   DELETE_ADJUSTMENT,
   type AdminHealthAdjustment,

@@ -11,8 +11,8 @@ import {
   UPDATE_CRM_DYNAMIC_FIELD,
 } from '../../api/crm.gql';
 import type { CrmDynamicField } from '../../api/crm.types';
-import ConfirmDialog from '../../components/ConfirmDialog';
-import { parseApiError } from '../../utils/parseApiError';
+import { ConfirmDialog } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import DynamicFieldForm from './DynamicFieldForm';
 import DynamicFieldsTable from './DynamicFieldsTable';
 import { blankDraft, buildDynamicFieldInput, draftFromRow, type DraftState } from './dynamicFieldDraft';
@@ -168,6 +168,8 @@ export default function ManageDynamicFieldsPage() {
             : ''
         }
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleteState.loading}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

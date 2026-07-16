@@ -8,6 +8,8 @@
  * that persist only a `location_id`.
  */
 export { AdminLocationSelect, type AdminLocationSelectProps } from './AdminLocationSelect';
+export { MapEmbedCard, type MapEmbedCardProps } from './MapEmbedCard';
+export { buildMapQuery, mapEmbedUrl, mapSearchUrl, type MapQueryPart } from './mapEmbed';
 export { RhfAdminLocation } from './RhfAdminLocation';
 export { Fieldset, type FieldsetProps } from './Fieldset';
 export { useAdminLocations, ADMIN_LOCATIONS } from './queries';

@@ -3,8 +3,7 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import { Button, Snackbar, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { notifyError } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm, notifyError } from '@duncit/dialogs';
 import {
   CREATE_LOCATION,
   DELETE_LOCATION,

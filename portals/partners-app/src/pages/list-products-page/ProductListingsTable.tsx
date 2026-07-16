@@ -2,8 +2,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Button, Card, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
-import { parseApiError } from '../../utils/parseApiError';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { parseApiError } from '@duncit/utils';
 import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
 
@@ -32,19 +32,12 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
   const [deleteTarget, setDeleteTarget] = useState<ProductListingRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MY_PRODUCT_LISTINGS_TABLE,
-        variables: { brand_id: brandId, ...tableQueryToGql(q) },
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myProductListingsTable.rows as ProductListingRow[],
-        total: data.myProductListingsTable.total as number,
-      };
-    },
-    [client, brandId],
+  const fetchRows = useApolloTableFetch<ProductListingRow>(
+    client,
+    MY_PRODUCT_LISTINGS_TABLE,
+    'myProductListingsTable',
+    { extraVariables: { brand_id: brandId } },
+    [brandId],
   );
 
   const saveQuantity = useCallback(

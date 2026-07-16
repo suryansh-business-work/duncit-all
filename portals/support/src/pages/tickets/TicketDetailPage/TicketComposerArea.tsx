@@ -3,8 +3,8 @@ import { Alert, Box, Button, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import RichTextEditor, { htmlToText } from '../../../components/RichTextEditor';
-import UploadField from '../../../components/UploadField';
-import ConfirmDialog from '../../../components/ConfirmDialog';
+import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
+import { ConfirmDialog } from '@duncit/dialogs';
 import type { TicketStatus } from '../../../graphql/tickets';
 
 interface Props {
@@ -60,6 +60,7 @@ export default function TicketComposerArea({
           message="Are you sure you want to close this support ticket? It will become permanently read-only — the user can reopen it within the allowed window."
           confirmLabel="Close ticket"
           confirmColor="error"
+          titleSx={{ fontWeight: 800 }}
           onConfirm={() => {
             setConfirmClose(false);
             onClose();
@@ -74,7 +75,15 @@ export default function TicketComposerArea({
     <Box>
       <RichTextEditor value={bodyHtml} onChange={onBodyHtml} placeholder="Write a reply…" minHeight={110} />
       <Stack direction="row" alignItems="flex-end" justifyContent="space-between" sx={{ mt: 1 }} spacing={1}>
-        <UploadField value={attachments} onChange={onAttachments} folder="/support/tickets" label="Attach" />
+        <AttachmentUploadField
+          value={attachments}
+          onChange={onAttachments}
+          folder="/support/tickets"
+          label="Attach"
+          accept={ATTACHMENT_ACCEPT_ALL}
+          maxBytes={100 * 1024 * 1024}
+          allowDocuments
+        />
         <Button variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={onSend}>
           Send
         </Button>

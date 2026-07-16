@@ -3,8 +3,8 @@ import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { notifyError } from '../../components/notify';
+import { useApolloTableFetch } from '@duncit/table';
+import { notifyError, useConfirm } from '@duncit/dialogs';
 import {
   CREATE_NOTIFICATION,
   DELETE_NOTIFICATION,
@@ -16,7 +16,6 @@ import {
 import { blankForm, type NotifForm } from './helpers';
 import NotificationsTable from './NotificationsTable';
 import NotificationFormDialog from './NotificationFormDialog';
-import { useConfirm } from '../../components/useConfirm';
 import { notificationFormSchema, toCreateNotificationInput } from './notification.form';
 
 export default function NotificationsPage() {
@@ -51,20 +50,7 @@ export default function NotificationsPage() {
     [locsData],
   );
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: NOTIFS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.notificationsTable.rows as NotificationRow[],
-        total: data.notificationsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<NotificationRow>(client, NOTIFS_TABLE, 'notificationsTable');
 
   const openCreate = () => {
     setForm(blankForm);

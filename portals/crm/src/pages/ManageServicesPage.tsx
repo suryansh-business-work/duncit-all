@@ -34,8 +34,8 @@ import {
   UPDATE_CRM_SERVICE,
 } from '../api/crm.gql';
 import type { CrmService, CrmServiceKind } from '../api/crm.types';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { parseApiError } from '../utils/parseApiError';
+import { ConfirmDialog } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   /** Catalogue this page edits — `VENUE` for /venue-leads/services, `HOST` for /host-leads/services. */
@@ -385,6 +385,8 @@ export default function ManageServicesPage({
             : ''
         }
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleteState.loading}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

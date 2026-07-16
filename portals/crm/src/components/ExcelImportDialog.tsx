@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { parseApiError } from '../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import { autoMatch, importFieldsFor } from '../config/importFields';
 import ColumnMappingStep from './import/ColumnMappingStep';
 import ImportResultView, { type ImportResult } from './import/ImportResultView';

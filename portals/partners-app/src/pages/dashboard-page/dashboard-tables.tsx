@@ -1,6 +1,8 @@
-import { Box, Chip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import type { DuncitColumn } from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
+import { formatINR } from '@duncit/utils';
 
 /* Column sets + row shapes for the three "Partner performance" tab tables.
  * Everything here is prop-independent, so it lives at module scope. */
@@ -38,16 +40,9 @@ export interface DashboardProductRow {
 
 export const getDashboardRowId = (row: { id: string }) => row.id;
 
-function statusChipColor(status: string): 'success' | 'error' | 'info' | 'warning' {
-  if (status === 'APPROVED') return 'success';
-  if (status === 'REJECTED' || status === 'DENIED') return 'error';
-  if (status === 'SUBMITTED') return 'info';
-  return 'warning';
-}
-
-function StatusChip({ status }: Readonly<{ status: string }>) {
-  return <Chip size="small" label={status || 'PENDING'} color={statusChipColor(status)} />;
-}
+const renderStatusChip = (status: string) => (
+  <StatusChip status={status} label={status || 'PENDING'} fallbackColor="warning" />
+);
 
 function formatDate(value?: string | null) {
   return value ? format(new Date(value), 'dd MMM yyyy') : 'Not available';
@@ -55,10 +50,6 @@ function formatDate(value?: string | null) {
 
 function formatDateTime(value?: string | null) {
   return value ? format(new Date(value), 'dd MMM yyyy, h:mm a') : 'Not scheduled';
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
 }
 
 const VENUE_STATUS_OPTIONS = ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'].map((value) => ({
@@ -103,7 +94,7 @@ export const DASHBOARD_VENUE_COLUMNS: DuncitColumn<DashboardVenueRow>[] = [
     headerName: 'Status',
     width: 140,
     filter: { type: 'select', options: VENUE_STATUS_OPTIONS },
-    cellRenderer: (venue) => <StatusChip status={venue.status} />,
+    cellRenderer: (venue) => renderStatusChip(venue.status),
     valueGetter: (venue) => venue.status,
   },
   {
@@ -140,7 +131,7 @@ export const DASHBOARD_HOST_POD_COLUMNS: DuncitColumn<DashboardHostPodRow>[] = [
     headerName: 'Pod earning',
     sortable: false,
     width: 130,
-    valueGetter: (pod) => formatMoney(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0)),
+    valueGetter: (pod) => formatINR(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0)),
   },
   {
     field: 'pod_amount',
@@ -171,14 +162,14 @@ export const DASHBOARD_PRODUCT_COLUMNS: DuncitColumn<DashboardProductRow>[] = [
     field: 'unit_cost',
     headerName: 'Price',
     width: 110,
-    valueGetter: (product) => formatMoney(Number(product.unit_cost ?? 0)),
+    valueGetter: (product) => formatINR(Number(product.unit_cost ?? 0)),
   },
   {
     field: 'listing_review_status',
     headerName: 'Status',
     width: 130,
     filter: { type: 'select', options: LISTING_STATUS_OPTIONS },
-    cellRenderer: (product) => <StatusChip status={product.listing_review_status} />,
+    cellRenderer: (product) => renderStatusChip(product.listing_review_status),
     valueGetter: (product) => product.listing_review_status,
   },
 ];

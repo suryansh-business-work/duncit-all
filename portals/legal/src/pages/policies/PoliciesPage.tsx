@@ -1,19 +1,10 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  Snackbar,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Button, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
+import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
+import { PageHeader } from '@duncit/ui';
 import { CREATE_POLICY, DELETE_POLICY, POLICIES_TABLE, UPDATE_POLICY, type Policy } from '../../graphql/policies';
 import { slugify } from '../../lib/slug';
 import PoliciesTable from './PoliciesTable';
@@ -23,17 +14,7 @@ export default function PoliciesPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: POLICIES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.policiesTable.rows as Policy[], total: data.policiesTable.total as number };
-    },
-    [client]
-  );
+  const fetchRows = useApolloTableFetch<Policy>(client, POLICIES_TABLE, 'policiesTable');
 
   const [editing, setEditing] = useState<Policy | null>(null);
   const [isNew, setIsNew] = useState(false);
@@ -41,7 +22,6 @@ export default function PoliciesPage() {
   const [slugTouched, setSlugTouched] = useState(false);
   const [delTarget, setDelTarget] = useState<Policy | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   const [createMut, { loading: creating }] = useMutation(CREATE_POLICY);
   const [updateMut, { loading: updating }] = useMutation(UPDATE_POLICY);
@@ -87,10 +67,10 @@ export default function PoliciesPage() {
     try {
       if (isNew) {
         await createMut({ variables: { input } });
-        setToast('Policy created');
+        notifySuccess('Policy created');
       } else {
         await updateMut({ variables: { id: editing!.id, input } });
-        setToast('Policy updated');
+        notifySuccess('Policy updated');
       }
       setEditing(null);
       refetchRef.current?.();
@@ -103,21 +83,14 @@ export default function PoliciesPage() {
     /* v8 ignore next -- the confirm dialog only opens once a target is set */
     if (!delTarget) return;
     await deleteMut({ variables: { id: delTarget.id } });
-    setToast('Policy deleted');
+    notifySuccess('Policy deleted');
     setDelTarget(null);
     refetchRef.current?.();
   };
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Policies
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Website &amp; app policies — managed in one place.
-        </Typography>
-      </Box>
+      <PageHeader title="Policies" subtitle="Website & app policies — managed in one place." />
 
       <PoliciesTable
         fetchRows={fetchRows}
@@ -144,18 +117,15 @@ export default function PoliciesPage() {
         onSubmit={submit}
       />
 
-      <Dialog open={!!delTarget} onClose={() => setDelTarget(null)}>
-        <DialogTitle>Delete policy?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>This permanently deletes “{delTarget?.title}”.</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDelTarget(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>Delete</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast(null)} message={toast ?? ''} />
+      <ConfirmDialog
+        open={!!delTarget}
+        title="Delete policy?"
+        message={`This permanently deletes “${delTarget?.title}”.`}
+        confirmLabel="Delete"
+        destructive
+        onConfirm={doDelete}
+        onClose={() => setDelTarget(null)}
+      />
     </Stack>
   );
 }

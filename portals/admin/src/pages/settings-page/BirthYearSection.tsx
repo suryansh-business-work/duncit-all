@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import { PUBLIC_APP_SETTINGS } from '../../utils/dateFormat';
+import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 
 const APP_SETTINGS_BIRTH_YEAR = gql`
   query AppSettingsBirthYear {

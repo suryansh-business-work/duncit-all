@@ -1,5 +1,5 @@
 import { Stack } from '@mui/material';
-import FormField from '../../FormField';
+import { FormField } from '@duncit/forms';
 import MediaUploadField from '../../fields/MediaUploadField';
 
 export default function VenueMediaSection() {

@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { formatMoney } from '@duncit/utils';
 import type { TableQueryState } from '@duncit/table';
 
 export const POD_FINANCE_RELEASES = gql`
@@ -54,7 +55,8 @@ export const POD_FINANCE_BREAKDOWN = gql`
   }
 `;
 
-export const money = (symbol: string, value: number) => `${symbol}${Number(value || 0).toFixed(2)}`;
+export const money = (symbol: string, value: number) =>
+  formatMoney(value, { symbol, decimals: 2, grouping: false });
 
 export type PodSettlementStatus = 'LIVE' | 'PENDING_APPROVAL' | 'SETTLED';
 

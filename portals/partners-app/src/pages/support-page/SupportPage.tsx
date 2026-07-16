@@ -3,7 +3,7 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import SupportForm, { toContactInput, type SupportFormValues } from '../../forms/support';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 const SUPPORT_PAGE = gql`
   query PartnerSupportPage {

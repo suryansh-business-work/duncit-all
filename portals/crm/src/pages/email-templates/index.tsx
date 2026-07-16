@@ -1,13 +1,13 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { DELETE, TEMPLATES, TEMPLATES_TABLE, type EmailTemplateRow } from '../../api/emailTemplates.gql';
-import { parseApiError } from '../../utils/parseApiError';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { parseApiError } from '@duncit/utils';
+import { ConfirmDialog } from '@duncit/dialogs';
 import TemplatesTable from './TemplatesTable';
 import CreateTemplateDialog from './CreateTemplateDialog';
 
@@ -22,20 +22,7 @@ export default function EmailTemplatesPage() {
   const [removing, setRemoving] = useState<EmailTemplateRow | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: TEMPLATES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.crmEmailTemplatesTable.rows as EmailTemplateRow[],
-        total: data.crmEmailTemplatesTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<EmailTemplateRow>(client, TEMPLATES_TABLE, 'crmEmailTemplatesTable');
 
   const confirmDelete = async () => {
     if (!removing) return;
@@ -88,6 +75,8 @@ export default function EmailTemplatesPage() {
         title="Delete template"
         message={`Delete "${removing?.name ?? ''}"? This cannot be undone.`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setRemoving(null)}

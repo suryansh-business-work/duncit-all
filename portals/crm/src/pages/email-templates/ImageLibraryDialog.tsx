@@ -21,7 +21,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { UPLOAD_IMAGE } from '../../api/crm.gql';
 import { ADD_TEMPLATE_IMAGE, REMOVE_TEMPLATE_IMAGE, type EmailAsset } from '../../api/emailTemplates.gql';
 import { fileToBase64 } from '../../utils/fileToBase64';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   open: boolean;

@@ -1,16 +1,17 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Chip, Link, Typography } from '@mui/material';
+import { Link, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import MeetingRowActions from './MeetingRowActions';
-import type { MeetingApprovalStatus, MeetingStatus, OnboardingMeeting } from './queries';
+import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
 
-const STATUS_COLORS: Record<MeetingStatus, 'default' | 'info' | 'success' | 'error'> = {
+const STATUS_COLORS: StatusColorMap = {
   REQUESTED: 'default', SCHEDULED: 'info', DONE: 'success', CANCELLED: 'error',
 };
 const APPROVAL_LABELS: Record<MeetingApprovalStatus, string> = {
   NONE: '—', PENDING: 'Pending', APPROVED: 'Approved', DENIED: 'Denied',
 };
-const APPROVAL_COLORS: Record<MeetingApprovalStatus, 'default' | 'warning' | 'success' | 'error'> = {
+const APPROVAL_COLORS: StatusColorMap = {
   NONE: 'default', PENDING: 'warning', APPROVED: 'success', DENIED: 'error',
 };
 const APPROVAL_OPTIONS = (['PENDING', 'APPROVED', 'DENIED'] as const).map((s) => ({
@@ -26,7 +27,7 @@ const catPath = (m: OnboardingMeeting) =>
 function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | null }>) {
   const value = status ?? 'NONE';
   if (value === 'NONE') return <Typography variant="body2" color="text.secondary">—</Typography>;
-  return <Chip size="small" color={APPROVAL_COLORS[value]} label={APPROVAL_LABELS[value]} />;
+  return <StatusChip status={value} label={APPROVAL_LABELS[value]} colorMap={APPROVAL_COLORS} />;
 }
 
 /** Join link is hidden once a meeting is cancelled or admin-denied. */
@@ -59,7 +60,7 @@ const renderJoin = (m: OnboardingMeeting) => <JoinCell meeting={m} />;
 
 const renderMeetingStatus = (m: OnboardingMeeting) => (
   <>
-    <Chip size="small" color={STATUS_COLORS[m.status]} label={m.status} />
+    <StatusChip status={m.status} colorMap={STATUS_COLORS} />
     {m.status === 'CANCELLED' && m.cancel_reason && (
       <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
     )}

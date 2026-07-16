@@ -10,7 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import { tableQueryToGql, type TableFilterValue, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
 import CancelMeetingDialog from './CancelMeetingDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
 import MeetingsTable from './MeetingsTable';
@@ -50,21 +50,14 @@ export default function MeetingSchedulePage() {
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters: TableFilterValue[] = [...q.filters, { field: 'kind', op: 'eq', value: kind }];
-      if (statusFilter) filters.push({ field: 'status', op: 'eq', value: statusFilter });
-      const { data } = await client.query({
-        query: ONBOARDING_MEETINGS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.onboardingMeetingsTable.rows as OnboardingMeeting[],
-        total: data.onboardingMeetingsTable.total as number,
-      };
-    },
-    [client, kind, statusFilter],
+  const pinnedFilters: TableFilterValue[] = [{ field: 'kind', op: 'eq', value: kind }];
+  if (statusFilter) pinnedFilters.push({ field: 'status', op: 'eq', value: statusFilter });
+  const fetchRows = useApolloTableFetch<OnboardingMeeting>(
+    client,
+    ONBOARDING_MEETINGS_TABLE,
+    'onboardingMeetingsTable',
+    { extraFilters: pinnedFilters },
+    [kind, statusFilter],
   );
 
   if (!valid) return <Alert severity="error">Unknown meeting kind.</Alert>;

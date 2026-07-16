@@ -1,11 +1,11 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import { CRM_CALL_PROMPTS_TABLE, DELETE_CRM_CALL_PROMPT, type CrmCallPrompt } from '../../api/call.gql';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { ConfirmDialog } from '@duncit/dialogs';
 import CallPromptsTable from './CallPromptsTable';
 import CallPromptDialog from './CallPromptDialog';
 
@@ -22,20 +22,7 @@ export default function CallPromptsPage() {
   const [toDelete, setToDelete] = useState<CrmCallPrompt | null>(null);
   const [deletePrompt, { loading: deleting }] = useMutation(DELETE_CRM_CALL_PROMPT);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: CRM_CALL_PROMPTS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.crmCallPromptsTable.rows as CrmCallPrompt[],
-        total: data.crmCallPromptsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<CrmCallPrompt>(client, CRM_CALL_PROMPTS_TABLE, 'crmCallPromptsTable');
 
   const openCreate = () => {
     setEditing(null);
@@ -89,6 +76,8 @@ export default function CallPromptsPage() {
         title="Delete Static Content"
         message={`Delete "${toDelete?.name ?? ''}"? This cannot be undone.`}
         confirmLabel="Delete"
+        destructive
+        busyLabel="Working…"
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}

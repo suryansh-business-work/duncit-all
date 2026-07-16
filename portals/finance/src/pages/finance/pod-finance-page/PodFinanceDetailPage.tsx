@@ -1,43 +1,15 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Card, CardContent, IconButton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { parseApiError } from '../../../utils/parseApiError';
+import { QueryGuard } from '@duncit/ui';
 import HostEarningsCard from './HostEarningsCard';
 import SettlementStatusChip, { FrozenBadge } from './SettlementStatusChip';
 import WaterfallAccordions from './WaterfallAccordions';
 import { POD_FINANCE_BREAKDOWN, money, type PodFinanceBreakdown } from './queries';
 
-export default function PodFinanceDetailPage() {
-  const { podId } = useParams<{ podId: string }>();
+function PodFinanceDetail({ breakdown }: Readonly<{ breakdown: PodFinanceBreakdown }>) {
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery<{ podFinanceBreakdown: PodFinanceBreakdown }>(
-    POD_FINANCE_BREAKDOWN,
-    { variables: { podId }, fetchPolicy: 'cache-and-network', skip: !podId },
-  );
-
-  const breakdown = data?.podFinanceBreakdown;
-
-  if (loading && !breakdown) {
-    return (
-      <Box sx={{ p: 6, textAlign: 'center' }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
-  if (!breakdown) return <Alert severity="warning">Pod finance breakdown not found.</Alert>;
-
   const sym = breakdown.currency_symbol;
 
   return (
@@ -73,5 +45,28 @@ export default function PodFinanceDetailPage() {
         </Box>
       </Stack>
     </Box>
+  );
+}
+
+export default function PodFinanceDetailPage() {
+  const { podId } = useParams<{ podId: string }>();
+  const { data, loading, error } = useQuery<{ podFinanceBreakdown: PodFinanceBreakdown }>(
+    POD_FINANCE_BREAKDOWN,
+    { variables: { podId }, fetchPolicy: 'cache-and-network', skip: !podId },
+  );
+
+  const breakdown = data?.podFinanceBreakdown;
+
+  return (
+    <QueryGuard
+      loading={loading && !breakdown}
+      error={error}
+      notFound={!breakdown}
+      notFoundText="Pod finance breakdown not found."
+      notFoundSeverity="warning"
+      spinnerSx={{ p: 6 }}
+    >
+      {() => <PodFinanceDetail breakdown={breakdown!} />}
+    </QueryGuard>
   );
 }

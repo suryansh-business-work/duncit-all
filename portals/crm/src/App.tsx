@@ -1,5 +1,5 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { ProfilePage } from '@duncit/shell';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { createAuthed, ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard';
 import VenueLeadsPage from './pages/venue-leads/VenueLeadsPage';
@@ -28,24 +28,15 @@ import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
 import { getToken } from './lib/session';
-import { redirectPathFromLocation } from './utils/redirect';
 
-function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
-  const location = useLocation();
-  if (!getToken()) {
-    const redirect = encodeURIComponent(redirectPathFromLocation(location));
-    return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
-  }
-  return children;
-}
-
-const authed = (element: JSX.Element) => (
-  <RequireAuth>
+const authed = createAuthed({
+  getToken,
+  wrap: (el) => (
     <AppShell>
-      <ErrorBoundary>{element}</ErrorBoundary>
+      <ErrorBoundary>{el}</ErrorBoundary>
     </AppShell>
-  </RequireAuth>
-);
+  ),
+});
 
 export default function App() {
   return (

@@ -6,8 +6,8 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import type { TableQueryState } from '@duncit/table';
 import { AI_PROMPTS, DELETE_AI_PROMPT, type AiPrompt } from './queries';
 import { applyPromptTableState } from './promptTableRows';
-import { parseApiError } from '../../utils/parseApiError';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { parseApiError } from '@duncit/utils';
+import { ConfirmDialog } from '@duncit/dialogs';
 import PromptsTable from './PromptsTable';
 import PromptDialog from './PromptDialog';
 
@@ -101,7 +101,9 @@ export default function PromptLibraryPage() {
         title="Delete prompt"
         message={`Delete "${toDelete?.name ?? ''}"? This cannot be undone.`}
         confirmLabel="Delete"
+        destructive
         loading={deleting}
+        busyLabel="Working…"
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
       />

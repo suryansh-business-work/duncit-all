@@ -1,6 +1,5 @@
 import {
   Avatar,
-  Box,
   Card,
   CardContent,
   Divider,
@@ -13,6 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { InfoRow } from '@duncit/ui';
 
 interface Props {
   order: any;
@@ -20,16 +20,7 @@ interface Props {
 }
 
 function Field({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600}>
-        {value || '—'}
-      </Typography>
-    </Box>
-  );
+  return <InfoRow label={label} value={value || '—'} labelWeight={400} valueWeight={600} />;
 }
 
 export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>) {

@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { Box, Divider, Stack, Typography } from '@mui/material';
+import { formatMoney } from '@duncit/utils';
 import { PUBLIC_FINANCE_SETTINGS } from '../queries';
 
 interface BreakdownLine {
@@ -10,7 +11,7 @@ interface BreakdownLine {
 }
 
 const buildV2Lines = (b: any, kind: string, sym: string): BreakdownLine[] => {
-  const money = (n: number) => `${sym}${Number(n || 0).toFixed(2)}`;
+  const money = (n: number) => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
   const isHost = kind === 'HOST_PAYMENT';
   const partyLabel = isHost ? 'Host amount (pool remainder)' : 'Venue amount (booked slot price)';
   return [
@@ -26,7 +27,7 @@ const buildV2Lines = (b: any, kind: string, sym: string): BreakdownLine[] => {
 };
 
 const buildV1Lines = (b: any, sym: string): BreakdownLine[] => {
-  const money = (n: number) => `${sym}${Number(n || 0).toFixed(2)}`;
+  const money = (n: number) => formatMoney(n, { symbol: sym, decimals: 2, grouping: false });
   return [
     { key: 'collected', label: 'Customer collected', value: money(b.collected_total) },
     { key: 'venue-bill', label: 'Venue bill', value: money(b.venue_bill) },

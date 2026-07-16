@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -7,7 +7,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import { tableQueryToGql, type TableFilterValue, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
 import { CATEGORIES, DELETE_SURVEY, SURVEYS_TABLE, type CategoryOption, type SurveyKind, type SurveyRow } from './queries';
 import ScopePicker, { type Scope } from './ScopePicker';
 import DefaultSurveysSection from './DefaultSurveysSection';
@@ -34,22 +34,18 @@ export default function SurveysListPage() {
   const superIds = (supersData?.categories ?? []).map((c) => c.id);
   const superIdsKey = superIds.join(',');
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const filters: TableFilterValue[] = [...q.filters];
-      if (kind) filters.push({ field: 'kind', op: 'eq', value: kind });
-      if (scope.super_category_id) filters.push({ field: 'super_category_id', op: 'eq', value: scope.super_category_id });
-      else filters.push({ field: 'super_category_id', op: 'in', values: superIdsKey.split(',') });
-      if (scope.category_id) filters.push({ field: 'category_id', op: 'eq', value: scope.category_id });
-      if (scope.sub_category_id) filters.push({ field: 'sub_category_id', op: 'eq', value: scope.sub_category_id });
-      const { data } = await client.query({
-        query: SURVEYS_TABLE,
-        variables: tableQueryToGql({ ...q, filters }),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.surveysTable.rows as SurveyRow[], total: data.surveysTable.total as number };
-    },
-    [client, kind, scope, superIdsKey],
+  const pinnedFilters: TableFilterValue[] = [];
+  if (kind) pinnedFilters.push({ field: 'kind', op: 'eq', value: kind });
+  if (scope.super_category_id) pinnedFilters.push({ field: 'super_category_id', op: 'eq', value: scope.super_category_id });
+  else pinnedFilters.push({ field: 'super_category_id', op: 'in', values: superIdsKey.split(',') });
+  if (scope.category_id) pinnedFilters.push({ field: 'category_id', op: 'eq', value: scope.category_id });
+  if (scope.sub_category_id) pinnedFilters.push({ field: 'sub_category_id', op: 'eq', value: scope.sub_category_id });
+  const fetchRows = useApolloTableFetch<SurveyRow>(
+    client,
+    SURVEYS_TABLE,
+    'surveysTable',
+    { extraFilters: pinnedFilters },
+    [kind, scope, superIdsKey],
   );
 
   const onDelete = async () => {

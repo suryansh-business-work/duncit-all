@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import ConfirmDialog from '../../components/ConfirmDialog';
+import { useApolloTableFetch } from '@duncit/table';
+import { ConfirmDialog } from '@duncit/dialogs';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
 import {
@@ -31,17 +31,7 @@ export default function EcommBrandsPage() {
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: ECOMM_BRANDS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return { rows: data.ecommBrandsTable.rows as EcommBrandRow[], total: data.ecommBrandsTable.total as number };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<EcommBrandRow>(client, ECOMM_BRANDS_TABLE, 'ecommBrandsTable');
 
   const openReview = (brand: any) => {
     setActive(brand);
@@ -104,6 +94,7 @@ export default function EcommBrandsPage() {
         confirmLabel={lifecycle.toggleTarget?.is_active === false ? 'Activate' : 'Deactivate'}
         confirmColor={lifecycle.toggleTarget?.is_active === false ? 'success' : 'warning'}
         loading={lifecycle.toggling}
+        busyLabel="Working…"
         onClose={() => lifecycle.setToggleTarget(null)}
         onConfirm={lifecycle.confirmToggle}
       />

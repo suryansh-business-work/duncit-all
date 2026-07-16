@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Button, Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import UploadField from '../../components/UploadField';
+import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
 
 interface Props {
   text: string;
@@ -27,7 +27,16 @@ export default function ChatComposer({ text, attachments, sending, onText, onAtt
   };
   return (
     <Stack spacing={1} sx={{ p: 1.5 }}>
-      <UploadField value={attachments} onChange={onAttachments} folder="/support/chat" label="Attach" max={3} />
+      <AttachmentUploadField
+        value={attachments}
+        onChange={onAttachments}
+        folder="/support/chat"
+        label="Attach"
+        max={3}
+        accept={ATTACHMENT_ACCEPT_ALL}
+        maxBytes={100 * 1024 * 1024}
+        allowDocuments
+      />
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField
           size="small"

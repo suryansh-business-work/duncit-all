@@ -7,11 +7,11 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
 import PercentIcon from '@mui/icons-material/Percent';
+import { notifySuccess } from '@duncit/dialogs';
 import { DEDUCTION_SETTINGS, UPDATE_DEDUCTIONS } from './queries';
 import DeductionSlider from './DeductionSlider';
 
@@ -63,7 +63,6 @@ export default function DefaultDeductionsPage() {
   const { data, loading, refetch } = useQuery(DEDUCTION_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [updateMut, { loading: saving }] = useMutation(UPDATE_DEDUCTIONS);
   const [form, setForm] = useState<Deductions>(BLANK);
-  const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,7 +87,7 @@ export default function DefaultDeductionsPage() {
     setError(null);
     try {
       await updateMut({ variables: { input: form } });
-      setToast('Default deductions saved');
+      notifySuccess('Default deductions saved');
       await refetch();
     } catch (e: any) {
       setError(e.message);
@@ -173,8 +172,6 @@ export default function DefaultDeductionsPage() {
           </Button>
         </Box>
       </Stack>
-
-      <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
     </Box>
   );
 }

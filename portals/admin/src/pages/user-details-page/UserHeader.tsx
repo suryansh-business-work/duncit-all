@@ -1,6 +1,6 @@
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, Button, IconButton, Link, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Button, Link, Stack, Typography } from '@mui/material';
+import { BackHeader } from '@duncit/ui';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
@@ -30,20 +30,21 @@ export default function UserHeader({
 }: Readonly<Props>) {
   const navigate = useNavigate();
   return (
-    <Stack direction="row" alignItems="center" spacing={1}>
-      <IconButton onClick={() => navigate('/users')} aria-label="back">
-        <ArrowBackIcon />
-      </IconButton>
-      <Box sx={{ flex: 1 }}>
+    <BackHeader
+      onBack={() => navigate('/users')}
+      backAriaLabel="back"
+      backSize="medium"
+      eyebrow={
         <Typography variant="caption" color="text.secondary">
           <Link component={RouterLink} to="/users" underline="hover" color="inherit">
             Users
           </Link>{' '}
           / Details
         </Typography>
-        <Typography variant="h5">{user.full_name || user.email || user.user_id}</Typography>
-      </Box>
-      <Stack direction="row" spacing={1}>
+      }
+      title={user.full_name || user.email || user.user_id}
+      actions={
+        <Stack direction="row" spacing={1}>
         <Button size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick}>
           Call
         </Button>
@@ -106,7 +107,8 @@ export default function UserHeader({
         >
           Delete
         </Button>
-      </Stack>
-    </Stack>
+        </Stack>
+      }
+    />
   );
 }

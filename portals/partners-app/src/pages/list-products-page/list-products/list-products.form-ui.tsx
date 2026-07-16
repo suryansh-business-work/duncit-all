@@ -16,7 +16,7 @@ import {
 import { Controller, type Control, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
 import CategoryCascade, { type CategoryErrors } from './CategoryCascade';
 import VariantTabs from './VariantTabs';

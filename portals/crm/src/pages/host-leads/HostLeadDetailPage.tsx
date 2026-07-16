@@ -2,20 +2,18 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
   Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Divider,
   Stack,
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { BackButton, QueryGuard } from '@duncit/ui';
 import EditIcon from '@mui/icons-material/Edit';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -48,7 +46,6 @@ import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
-import { parseApiError } from '../../utils/parseApiError';
 import { hostVariableValues } from '../../config/leadVariables';
 
 const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
@@ -70,15 +67,11 @@ export default function HostLeadDetailPage() {
   });
   const lead = data?.hostLead;
 
-  if (loading && !lead) {
+  if ((loading && !lead) || error || !lead) {
     return (
-      <Stack alignItems="center" sx={{ py: 6 }}>
-        <CircularProgress />
-      </Stack>
+      <QueryGuard loading={loading && !lead} error={error} notFound={!lead} notFoundText="Host lead not found." />
     );
   }
-  if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
-  if (!lead) return <Alert severity="info">Host lead not found.</Alert>;
 
   const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
   const preferredDate = formatDate(lead.preferred_event_date);
@@ -256,9 +249,7 @@ export default function HostLeadDetailPage() {
     <Stack spacing={2.5} sx={{ transition: 'margin 0.2s ease', mr: aiOpen ? { xs: 0, sm: `${ASK_AI_WIDTH}px` } : 0 }}>
       {/* Back action above the title (per design spec). */}
       <Box>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/host-leads')} size="small">
-          Back to Host Leads
-        </Button>
+        <BackButton onClick={() => navigate('/host-leads')}>Back to Host Leads</BackButton>
       </Box>
 
       <Card

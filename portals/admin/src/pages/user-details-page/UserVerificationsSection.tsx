@@ -9,7 +9,7 @@ import {
   type TableFetch,
   type TableQueryState,
 } from '@duncit/table';
-import { notifyError } from '../../components/notify';
+import { notifyError } from '@duncit/dialogs';
 import {
   ReviewCell,
   TYPE_LABELS,

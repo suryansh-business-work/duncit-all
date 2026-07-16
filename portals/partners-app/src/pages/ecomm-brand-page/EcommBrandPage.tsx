@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import EcommBrandForm from './EcommBrandForm';
 import PartnerBrandsTable from './PartnerBrandsTable';
@@ -37,20 +37,7 @@ export default function EcommBrandPage() {
   const existingBrandTitle = locked ? 'Brand details' : 'Edit brand';
   const dialogTitle = editing === 'new' ? 'New brand' : existingBrandTitle;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: MY_BRANDS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.myEcommBrandsTable.rows as EcommBrandRow[],
-        total: page.myEcommBrandsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<EcommBrandRow>(client, MY_BRANDS_TABLE, 'myEcommBrandsTable');
 
   const pickImage = () =>
     new Promise<string | null>((resolve) => {

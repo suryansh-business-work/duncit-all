@@ -4,15 +4,7 @@ import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import { TEST_ENV_IMAGEKIT, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
-import { parseApiError } from '../../../utils/parseApiError';
-
-const toBase64 = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+import { fileToDataUrl, parseApiError } from '@duncit/utils';
 
 export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [fileName, setFileName] = useState('');
@@ -24,7 +16,7 @@ export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry 
     if (!file) return;
     setResult(null);
     setFileName(file.name);
-    setBase64(await toBase64(file));
+    setBase64(await fileToDataUrl(file));
   };
 
   const upload = async () => {

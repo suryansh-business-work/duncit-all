@@ -1,5 +1,6 @@
 import { Alert, Chip, Divider, Stack, Typography } from '@mui/material';
-import { STATUS_COLORS, type ApprovalRequest } from './helpers';
+import { StatusChip } from '@duncit/ui';
+import type { ApprovalRequest } from './helpers';
 
 interface Props {
   request: ApprovalRequest;
@@ -11,7 +12,7 @@ export default function ReviewDetails({ request, formatDateTime }: Readonly<Prop
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-        <Chip size="small" label={request.status} color={STATUS_COLORS[request.status]} />
+        <StatusChip status={request.status} />
         {request.kind && <Chip size="small" variant="outlined" color="secondary" label={request.kind} />}
         {request.source_portal && (
           <Chip size="small" variant="outlined" label={request.source_portal} />

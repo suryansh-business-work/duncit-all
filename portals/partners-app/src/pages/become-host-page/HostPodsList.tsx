@@ -1,8 +1,8 @@
-import { useCallback } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import { DuncitTable, tableQueryToGql, type DuncitColumn, type TableQueryState } from '@duncit/table';
+import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
+import { formatINR } from '@duncit/utils';
 import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';
 
 function podStatusLabel(pod: PartnerPodRow) {
@@ -19,10 +19,6 @@ function formatDate(value?: string | null) {
   return value ? format(new Date(value), 'dd MMM yyyy, h:mm a') : 'Not scheduled';
 }
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
-}
-
 const getPodRowId = (pod: PartnerPodRow) => pod.id;
 
 const renderStatus = (pod: PartnerPodRow) => (
@@ -30,7 +26,7 @@ const renderStatus = (pod: PartnerPodRow) => (
 );
 
 const earningValue = (pod: PartnerPodRow) =>
-  formatMoney(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0));
+  formatINR(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0));
 
 const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
   {
@@ -76,20 +72,7 @@ const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
 export default function HostPodsList() {
   const client = useApolloClient();
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MY_HOST_PODS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.myHostPodsTable.rows as PartnerPodRow[],
-        total: data.myHostPodsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<PartnerPodRow>(client, MY_HOST_PODS_TABLE, 'myHostPodsTable');
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>

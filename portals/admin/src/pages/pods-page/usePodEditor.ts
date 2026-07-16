@@ -7,8 +7,7 @@ import {
   type PodFormConfig,
   type PodFormValues,
 } from '@duncit/pod-form';
-import { notifyError } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm, notifyError } from '@duncit/dialogs';
 import { CREATE, UPDATE, DELETE, POD_FOR_EDIT, type PodRow } from './queries';
 
 interface Args {

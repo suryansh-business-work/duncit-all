@@ -1,7 +1,7 @@
 import { Alert, Grid, InputAdornment } from '@mui/material';
 import { useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import type { InventoryProductFormValues } from './types';
 
 const rupee = <InputAdornment position="start">₹</InputAdornment>;

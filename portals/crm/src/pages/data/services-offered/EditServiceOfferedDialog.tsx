@@ -18,7 +18,7 @@ import {
   UPDATE_CRM_SERVICE_OFFERED,
   type CrmServiceOffered,
 } from '../../../api/data.gql';
-import { parseApiError } from '../../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import ServiceTargetSwitches from './ServiceTargetSwitches';
 
 interface Props {

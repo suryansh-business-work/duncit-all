@@ -1,7 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { EventTicketRow } from './queries';
 
@@ -12,7 +13,7 @@ interface Props {
   onCheckIn: (t: EventTicketRow) => void;
 }
 
-const STATUS_COLOR: Record<string, 'success' | 'warning' | 'default'> = {
+const STATUS_COLOR: StatusColorMap = {
   VALID: 'warning',
   CHECKED_IN: 'success',
   CANCELLED: 'default',
@@ -62,7 +63,7 @@ const renderAttendee = (t: EventTicketRow) => (
 
 const renderStatus = (t: EventTicketRow) => (
   <Box sx={{ lineHeight: 1.2 }} component="span">
-    <Chip size="small" color={STATUS_COLOR[t.status] ?? 'default'} label={t.status.replace('_', ' ')} />
+    <StatusChip status={t.status} label={t.status.replace('_', ' ')} colorMap={STATUS_COLOR} />
     {t.checked_in_at && (
       <Typography variant="caption" color="text.secondary" component="span" display="block">
         {fmt(t.checked_in_at)}

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import AccountSummary from './AccountSummary';
+import { AccountSummaryCard as AccountSummary } from '@duncit/shell';
 
 describe('AccountSummary', () => {
   it('renders the full name, email, phone and member-since date', () => {

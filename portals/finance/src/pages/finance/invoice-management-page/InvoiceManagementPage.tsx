@@ -8,12 +8,12 @@ import {
   CardContent,
   CircularProgress,
   FormControlLabel,
-  Snackbar,
   Stack,
   Switch,
   Typography,
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
+import { notifySuccess } from '@duncit/dialogs';
 import { INVOICE_SETTINGS, UPDATE_INVOICE_SETTINGS } from './queries';
 import { EMPTY_INVOICE_SETTINGS, type InvoiceField, type InvoiceSettingsForm } from './types';
 import InvoiceBrandingForm from './InvoiceBrandingForm';
@@ -28,7 +28,6 @@ export default function InvoiceManagementPage() {
   const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_SETTINGS);
   const [form, setForm] = useState<InvoiceSettingsForm>(EMPTY_INVOICE_SETTINGS);
   const [dummyMode, setDummyMode] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,7 +64,7 @@ export default function InvoiceManagementPage() {
     }
     try {
       await updateMut({ variables: { input: { ...form, dummy_mode: dummyMode } } });
-      setToast('Invoice settings saved');
+      notifySuccess('Invoice settings saved');
       await refetch();
     } catch (e: any) {
       setError(e.message);
@@ -119,8 +118,6 @@ export default function InvoiceManagementPage() {
           <InvoicePreview value={form} />
         </Box>
       </Stack>
-
-      <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
     </Box>
   );
 }

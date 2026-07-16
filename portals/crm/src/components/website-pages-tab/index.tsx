@@ -22,7 +22,7 @@ import {
   type CrmEntityType,
   type CrmWebsitePage,
 } from '../../api/websitePages.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import ConfirmDialog from '../ConfirmDialog';
 import ExternalLink from '../ExternalLink';
 import ScrapeDialog from './ScrapeDialog';

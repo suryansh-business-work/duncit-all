@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { CREATE_HOST_LEAD, CREATE_VENUE_LEAD } from '../api/crm.gql';
-import { parseApiError } from '../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import AiRecordsTable, { type AiRow } from './ai-records/AiRecordsTable';
 import { recordToRow, rowError, rowToInput } from './ai-records/aiLeadInput';
 

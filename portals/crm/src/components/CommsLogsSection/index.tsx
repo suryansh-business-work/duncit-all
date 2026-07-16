@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ForumIcon from '@mui/icons-material/Forum';
 import { COMMUNICATION_LOGS, REQUEST_COMMUNICATION_TRANSCRIPT, type CommunicationLogItem } from '../../api/comms.gql';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import { useCallSocket } from '../../hooks/useCallSocket';
 import LogRow from './LogRow';
 

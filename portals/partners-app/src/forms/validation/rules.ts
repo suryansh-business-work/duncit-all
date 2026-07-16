@@ -1,11 +1,10 @@
 import * as yup from 'yup';
-import { z } from 'zod';
-
-export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
-export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
-export const PHONE_EXTENSION_PATTERN = /^\+?\d{1,5}$/;
-export const OTP_PATTERN = /^\d{4,8}$/;
-export const POSTAL_CODE_PATTERN = /^[\dA-Za-z -]{3,12}$/;
+import {
+  OTP_PATTERN,
+  PERSON_NAME_PATTERN,
+  PHONE_EXTENSION_PATTERN,
+  PHONE_NUMBER_PATTERN,
+} from '@duncit/forms';
 
 const optionalText = (label: string, max: number) =>
   yup.string().trim().max(max, `${label} must be ${max} characters or fewer`).default('');
@@ -65,32 +64,4 @@ export const validationRules = {
   otp: () => yup.string().trim().matches(OTP_PATTERN, 'Enter the OTP we sent').required('OTP is required'),
   birthDate,
   optionalUrl,
-};
-
-/**
- * Zod equivalents of the shared field rules for React Hook Form forms.
- * `.trim()` transforms keep parity with the yup `.trim()` casts so the same
- * payloads validate identically across the migrated forms.
- */
-export const zodRules = {
-  personName: (label: string) =>
-    z
-      .string()
-      .trim()
-      .min(1, `${label} is required`)
-      .regex(PERSON_NAME_PATTERN, `${label} can use letters, spaces, apostrophes, periods and hyphens only`),
-  email: (label = 'Email') =>
-    z
-      .string()
-      .trim()
-      .toLowerCase()
-      .min(1, `${label} is required`)
-      .max(254)
-      .email(`Enter a valid ${label.toLowerCase()}`),
-  requiredText: (label: string, min: number, max: number) =>
-    z
-      .string()
-      .trim()
-      .min(min, `${label} must be at least ${min} characters`)
-      .max(max, `${label} must be ${max} characters or fewer`),
 };

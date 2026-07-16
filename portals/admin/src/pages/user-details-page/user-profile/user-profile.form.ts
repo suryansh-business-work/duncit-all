@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { zodRules } from '../../../forms/validation/zodRules';
+import { zodRules } from '@duncit/forms';
 import type { EditForm } from '../queries';
 
 const PINCODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;

@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/client';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import { SAVE_LEAD_SURVEY_RESPONSE, type LeadSurveyAnswer, type LeadSurveyDef, type LeadSurveyEntity } from './queries';
 import SurveyStepper, { type SurveyAnswerInput } from './SurveyStepper';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   entity: LeadSurveyEntity;

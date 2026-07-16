@@ -4,7 +4,7 @@ import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import { TEST_ENV_GEMINI, TEST_ENV_OPENAI, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
-import { parseApiError } from '../../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 /** AI chat test. The provider is fixed by the entry category (OPENAI | GEMINI). */
 export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {

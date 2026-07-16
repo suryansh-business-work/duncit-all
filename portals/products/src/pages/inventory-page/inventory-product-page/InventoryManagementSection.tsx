@@ -1,7 +1,7 @@
 import { Box, Grid, Stack } from '@mui/material';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import StockColorChip from './StockColorChip';
 import DateField from '../../../components/DateField';
 import type { InventoryProductFormValues } from './types';

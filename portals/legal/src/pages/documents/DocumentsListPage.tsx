@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -13,7 +13,8 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
+import { PageHeader } from '@duncit/ui';
 import {
   CREATE_LEGAL_DOCUMENT,
   LEGAL_DOCUMENTS_TABLE,
@@ -28,19 +29,10 @@ export default function DocumentsListPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: LEGAL_DOCUMENTS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.legalDocumentsTable.rows as LegalDocumentListItem[],
-        total: data.legalDocumentsTable.total as number,
-      };
-    },
-    [client]
+  const fetchRows = useApolloTableFetch<LegalDocumentListItem>(
+    client,
+    LEGAL_DOCUMENTS_TABLE,
+    'legalDocumentsTable',
   );
 
   const [open, setOpen] = useState(false);
@@ -72,14 +64,7 @@ export default function DocumentsListPage() {
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Documents
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Create, version and manage legal documents.
-        </Typography>
-      </Box>
+      <PageHeader title="Documents" subtitle="Create, version and manage legal documents." />
 
       <DocumentsTable
         fetchRows={fetchRows}

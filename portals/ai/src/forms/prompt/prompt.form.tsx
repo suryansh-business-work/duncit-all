@@ -1,7 +1,7 @@
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Chip, FormControlLabel, Stack, Switch } from '@mui/material';
-import RhfTextField from '../components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import { estimateTokens } from '../../utils/estimate-tokens';
 import { promptInitialValues, promptSchema, type PromptFormProps, type PromptFormValues } from './prompt.types';
 

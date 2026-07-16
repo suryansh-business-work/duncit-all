@@ -1,5 +1,5 @@
-import { Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Stack } from '@mui/material';
+import { StatCard } from '@duncit/ui';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import GroupsIcon from '@mui/icons-material/Groups';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
@@ -63,35 +63,24 @@ export default function KpiCards({
       sx={{ width: '100%' }}
     >
       {tiles.map((tile) => (
-        <Card key={tile.label} sx={{ flex: 1 }}>
-          <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-            <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.75 }}>
-              <Stack
-                alignItems="center"
-                justifyContent="center"
-                sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 1,
-                  bgcolor: alpha(TILE_BG[tile.color], 0.16),
-                  color: TILE_BG[tile.color],
-                }}
-              >
-                {tile.icon}
-              </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
-                {tile.label.toUpperCase()}
-              </Typography>
-            </Stack>
-            {loading ? (
-              <Skeleton variant="rounded" height={28} width={64} />
-            ) : (
-              <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                {tile.value}
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
+        <StatCard
+          key={tile.label}
+          layout="default"
+          iconPlacement="start"
+          icon={tile.icon}
+          iconBox={{ color: TILE_BG[tile.color], size: 28, radius: 1 }}
+          label={tile.label.toUpperCase()}
+          labelVariant="caption"
+          labelWeight={700}
+          labelSx={{ letterSpacing: 0.4 }}
+          value={tile.value}
+          loading={loading}
+          skeletonProps={{ variant: 'rounded', height: 28, width: 64 }}
+          cardVariant="elevation"
+          headerSx={{ mb: 0.75, gap: 1.25 }}
+          sx={{ flex: 1 }}
+          contentSx={{ p: 2, '&:last-child': { pb: 2 } }}
+        />
       ))}
     </Stack>
   );

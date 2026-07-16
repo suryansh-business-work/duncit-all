@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeAttachment, typeLabel } from '../../src/lib/attachment';
+import { describeAttachment, typeLabel } from '@duncit/media-picker';
 
 describe('describeAttachment', () => {
   it('classifies an image URL as an image with a decoded name', () => {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
+import { formatINR } from '@duncit/utils';
 import DashboardDateRange from './DashboardDateRange';
 import DashboardMetricCards, { emptyMetrics } from './DashboardMetricCards';
 import DashboardPanels from './DashboardPanels';
@@ -89,7 +90,7 @@ export default function PartnerDashboardPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
               <Box>
                 <Typography variant="h6" fontWeight={950}>Partner performance</Typography>
-                <Typography variant="caption" color="text.secondary" fontWeight={800}>Summary total: {formatMoney(summaryTotal)}</Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={800}>Summary total: {formatINR(summaryTotal)}</Typography>
               </Box>
               {loading && <CircularProgress size={22} />}
             </Stack>
@@ -107,8 +108,4 @@ export default function PartnerDashboardPage() {
       </Card>
     </Stack>
   );
-}
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value || 0);
 }

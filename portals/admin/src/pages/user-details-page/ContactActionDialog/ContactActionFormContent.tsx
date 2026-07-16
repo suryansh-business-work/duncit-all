@@ -2,7 +2,7 @@ import { Alert, Button, DialogActions, DialogContent, DialogTitle, MenuItem, Sta
 import CallIcon from '@mui/icons-material/Call';
 import EmailIcon from '@mui/icons-material/Email';
 import type { Control } from 'react-hook-form';
-import RhfTextField from '../../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import type { ContactActionValues, ContactType } from '../contact-action.form';
 
 interface Props {

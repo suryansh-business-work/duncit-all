@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, CircularProgress, Grid, Pagination, Stack, Typography } from '@mui/material';
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+import { useDebouncedValue } from '@duncit/ui';
 import { MY_ADMIN_CLUBS_PAGE, type AdminClub } from './queries';
 import ClubAdminClubsFilters from './ClubAdminClubsFilters';
 import ClubAdminClubCard from './ClubAdminClubCard';
@@ -10,15 +11,11 @@ const PAGE_SIZE = 12;
 
 export default function ClubAdminClubsPage() {
   const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
   const [category, setCategory] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
   const [page, setPage] = useState(0);
 
   // Debounce the typed term into the server query.
-  useEffect(() => {
-    const id = setTimeout(() => setSearch(searchInput.trim()), 300);
-    return () => clearTimeout(id);
-  }, [searchInput]);
+  const search = useDebouncedValue(searchInput.trim(), 300);
 
   // Any filter change resets to the first page.
   useEffect(() => {
@@ -48,7 +45,6 @@ export default function ClubAdminClubsPage() {
 
   const clear = () => {
     setSearchInput('');
-    setSearch('');
     setCategory(EMPTY_CATEGORY);
   };
 

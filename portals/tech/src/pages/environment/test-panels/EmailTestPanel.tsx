@@ -4,7 +4,7 @@ import { Button, Stack, TextField, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { TEST_ENV_EMAIL, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
-import { parseApiError } from '../../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [to, setTo] = useState('');

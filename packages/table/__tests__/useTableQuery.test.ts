@@ -141,6 +141,54 @@ describe('useTableQuery', () => {
     expect(fetchRows.mock.calls[1][0]).toEqual(fetchRows.mock.calls[0][0]);
   });
 
+  it('externalFilters reach the fetch (after user filters) but never the visible query', async () => {
+    const fetchRows = okFetch();
+    const external = [{ field: 'club_id', op: 'eq' as const, value: 'c1' }];
+    const { result } = renderHook(() => useTableQuery({ fetchRows, externalFilters: external }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(fetchRows).toHaveBeenCalledWith(expect.objectContaining({ filters: external }));
+    expect(result.current.query.filters).toEqual([]); // no chip pollution
+
+    act(() => {
+      result.current.setFilters([{ field: 'name', op: 'contains', value: 'a' }]);
+    });
+    await waitFor(() => expect(fetchRows).toHaveBeenCalledTimes(2));
+    expect(fetchRows.mock.calls[1][0].filters).toEqual([
+      { field: 'name', op: 'contains', value: 'a' },
+      { field: 'club_id', op: 'eq', value: 'c1' },
+    ]);
+  });
+
+  it('externalFilters change (by value) resets to page 1 and refetches exactly once', async () => {
+    const fetchRows = okFetch();
+    const { result, rerender } = renderHook(
+      ({ club }: { club: string }) =>
+        useTableQuery({
+          fetchRows,
+          externalFilters: [{ field: 'club_id', op: 'eq', value: club }],
+        }),
+      { initialProps: { club: 'c1' } },
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    act(() => {
+      result.current.setPage(3);
+    });
+    await waitFor(() => expect(fetchRows).toHaveBeenCalledTimes(2));
+
+    // Same value, new array identity — no refetch.
+    rerender({ club: 'c1' });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(fetchRows).toHaveBeenCalledTimes(2);
+
+    rerender({ club: 'c2' });
+    await waitFor(() => expect(fetchRows).toHaveBeenCalledTimes(3));
+    expect(fetchRows.mock.calls[2][0]).toMatchObject({
+      page: 1,
+      filters: [{ field: 'club_id', op: 'eq', value: 'c2' }],
+    });
+  });
+
   it('honours defaultSort and defaultPageSize', async () => {
     const fetchRows = okFetch();
     const { result } = renderHook(() =>

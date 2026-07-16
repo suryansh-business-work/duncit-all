@@ -2,7 +2,7 @@ import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { BackButton } from '@duncit/ui';
 import ProductListingsTable from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
 
@@ -15,9 +15,9 @@ export default function ListProductsPage() {
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
-        <Button onClick={() => navigate('/ecomm-brand')} startIcon={<ArrowBackIcon />} size="small" sx={{ color: 'inherit', mb: 1 }}>
+        <BackButton onClick={() => navigate('/ecomm-brand')} sx={{ color: 'inherit', mb: 1 }}>
           Back to brands
-        </Button>
+        </BackButton>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
           <Box>
             <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>Product management</Typography>

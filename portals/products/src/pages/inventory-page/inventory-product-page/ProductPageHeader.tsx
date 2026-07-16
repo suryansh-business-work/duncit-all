@@ -9,16 +9,15 @@ import {
   Typography,
 } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import UnarchiveIcon from '@mui/icons-material/Unarchive';
+import { BackButton, StatusChip } from '@duncit/ui';
 import {
   ARCHIVE_INVENTORY_PRODUCT,
   DUPLICATE_INVENTORY_PRODUCT,
   RESTORE_INVENTORY_PRODUCT,
 } from './productQueries';
 import { STATUS_CHIP_COLOR } from './constants';
-import type { InventoryStatus } from './types';
 
 interface ProductPageHeaderProps {
   isNew: boolean;
@@ -41,20 +40,11 @@ export default function ProductPageHeader({
   const [duplicateProduct] = useMutation(DUPLICATE_INVENTORY_PRODUCT);
 
   const isArchived = product?.status === 'ARCHIVED';
-  const statusColor = product
-    ? STATUS_CHIP_COLOR[product.status as InventoryStatus]
-    : 'default';
 
   return (
     <Stack spacing={2} sx={{ mb: 2 }}>
       <Breadcrumbs>
-        <Button
-          size="small"
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/inventory')}
-        >
-          Inventory
-        </Button>
+        <BackButton onClick={() => navigate('/inventory')}>Inventory</BackButton>
         <Typography color="text.primary">
           {isNew ? 'Add product' : product?.product_name || 'Edit product'}
         </Typography>
@@ -67,7 +57,7 @@ export default function ProductPageHeader({
           {product && (
             <Stack direction="row" spacing={1} sx={{ mt: 0.5 }} alignItems="center">
               <Chip size="small" label={product.sku} variant="outlined" />
-              <Chip size="small" label={product.status} color={statusColor} />
+              <StatusChip status={product.status} colorMap={STATUS_CHIP_COLOR} />
               {product.last_updated_by_name && (
                 <Typography variant="caption" color="text.secondary">
                   Last edited by {product.last_updated_by_name} ·{' '}

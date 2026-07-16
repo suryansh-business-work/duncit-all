@@ -7,13 +7,13 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import PaymentsIcon from '@mui/icons-material/Payments';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
+import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { REVIEW_WITHDRAWAL, WITHDRAWALS_TABLE, type WithdrawalRow } from './queries';
 import WithdrawalsTable from './WithdrawalsTable';
 
@@ -22,23 +22,9 @@ export default function WithdrawalsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [reject, setReject] = useState<{ id: string; name: string } | null>(null);
   const [reason, setReason] = useState('');
-  const [toast, setToast] = useState<string | null>(null);
   const [review, { loading: reviewing }] = useMutation(REVIEW_WITHDRAWAL);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: WITHDRAWALS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.withdrawalRequestsTable.rows as WithdrawalRow[],
-        total: data.withdrawalRequestsTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<WithdrawalRow>(client, WITHDRAWALS_TABLE, 'withdrawalRequestsTable');
 
   // Never rejects — errors surface via the toast, so callers can fire-and-forget.
   const submit = useCallback(
@@ -47,10 +33,10 @@ export default function WithdrawalsPage() {
         await review({ variables: { id, input: { status: nextStatus, reason: why } } });
         setReject(null);
         setReason('');
-        setToast(nextStatus === 'PAID' ? 'Marked as paid' : 'Withdrawal rejected');
+        notifySuccess(nextStatus === 'PAID' ? 'Marked as paid' : 'Withdrawal rejected');
         refetchRef.current?.();
       } catch (e: any) {
-        setToast(e.message ?? 'Could not review withdrawal');
+        notifyError(e.message ?? 'Could not review withdrawal');
       }
     },
     [review],
@@ -104,8 +90,6 @@ export default function WithdrawalsPage() {
           </Button>
         </DialogActions>
       </Dialog>
-
-      <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
     </Box>
   );
 }

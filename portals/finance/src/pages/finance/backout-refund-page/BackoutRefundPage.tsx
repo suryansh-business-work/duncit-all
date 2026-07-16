@@ -1,10 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { parseApiError } from '../../../utils/parseApiError';
+import { useApolloTableFetch } from '@duncit/table';
+import { notifySuccess } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import BackoutRefundTable from './BackoutRefundTable';
 import RefundBreakupDialog from './RefundBreakupDialog';
 import {
@@ -24,30 +25,20 @@ export default function BackoutRefundPage() {
   const { data, error } = useQuery<SettingsData>(BACKOUT_FINANCE_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [toast, setToast] = useState<string | null>(null);
   const [refundFor, setRefundFor] = useState<BackoutRefundRequest | null>(null);
 
   const sym = data?.publicFinanceSettings?.currency_symbol ?? '';
   const deductionPct = data?.publicFinanceSettings?.default_backout_deduction_pct ?? 0;
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data: page } = await client.query({
-        query: BACKOUT_REFUNDS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: page.backoutRefundRequestsTable.rows as BackoutRefundRequest[],
-        total: page.backoutRefundRequestsTable.total as number,
-      };
-    },
-    [client],
+  const fetchRows = useApolloTableFetch<BackoutRefundRequest>(
+    client,
+    BACKOUT_REFUNDS_TABLE,
+    'backoutRefundRequestsTable',
   );
 
   const confirmRefund = () => {
     setRefundFor(null);
-    setToast('Refund successful');
+    notifySuccess('Refund successful');
   };
 
   const openDetail = useCallback(
@@ -84,8 +75,6 @@ export default function BackoutRefundPage() {
         onClose={() => setRefundFor(null)}
         onConfirm={confirmRefund}
       />
-
-      <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
     </Box>
   );
 }

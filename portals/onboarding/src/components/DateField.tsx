@@ -1,5 +1,5 @@
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { useDateFormat } from '../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 
 interface Props {
   label: string;

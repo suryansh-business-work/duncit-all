@@ -8,12 +8,12 @@ import {
   CardContent,
   CircularProgress,
   MenuItem,
-  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { notifySuccess } from '@duncit/dialogs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -35,7 +35,6 @@ export default function PayoutCyclesPage() {
   const [hostMode, setHostMode] = useState('IMMEDIATE');
   const [day, setDay] = useState(1);
   const [time, setTime] = useState<Date | null>(timeToDate('18:00'));
-  const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,7 +62,7 @@ export default function PayoutCyclesPage() {
           },
         },
       });
-      setToast('Payout cycle saved');
+      notifySuccess('Payout cycle saved');
       await refetch();
     } catch (e: any) {
       setError(e.message);
@@ -146,8 +145,6 @@ export default function PayoutCyclesPage() {
             </Button>
           </Box>
         </Stack>
-
-        <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
       </Box>
     </LocalizationProvider>
   );

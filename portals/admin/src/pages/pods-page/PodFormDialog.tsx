@@ -5,7 +5,7 @@ import { PodForm, type PodFormConfig, type PodFormValues } from '@duncit/pod-for
 import AiFillButton from '../../components/AiFillButton';
 import { applyAiFillToForm } from './podFormAi';
 import { MEETING_PLATFORMS, generateMeetingLink } from './meeting-platforms';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 
 interface Props {
   open: boolean;

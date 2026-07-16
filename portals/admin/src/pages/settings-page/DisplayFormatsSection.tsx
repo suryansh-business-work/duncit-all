@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
 import { format } from 'date-fns';
-import { PUBLIC_APP_SETTINGS } from '../../utils/dateFormat';
+import { PUBLIC_APP_SETTINGS } from '@duncit/app-settings';
 
 const APP_SETTINGS_FORMATS = gql`
   query AppSettingsFormats {

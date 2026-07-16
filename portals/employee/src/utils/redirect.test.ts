@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getSafeRedirectPath, redirectPathFromLocation } from './redirect';
+import { getSafeRedirectPath, redirectPathFromLocation } from '@duncit/shell';
 
 describe('redirect helpers', () => {
   it('joins pathname + search + hash', () => {

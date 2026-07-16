@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitTable, tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import { CREATE_USER, ROLES, USERS_TABLE, type UserRow } from './queries';
 import { blankForm, genPassword, type CreateForm } from './helpers';
 import { getUsersColumns } from './columns';

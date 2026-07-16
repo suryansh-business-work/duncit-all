@@ -5,8 +5,8 @@ import CallIcon from '@mui/icons-material/Call';
 import { TEST_ENV_TWILIO, type EnvEntry, type RichTestResult } from '../queries';
 import { PHONE_RE } from '../env-entry/env-entry.types';
 import ResultAlert from './ResultAlert';
-import { useConfirm } from '../../../components/useConfirm';
-import { parseApiError } from '../../../utils/parseApiError';
+import { useConfirm } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 
 /** Digits-only extension dialed after the call connects (optional). */
 const EXT_RE = /^\d{1,6}$/;

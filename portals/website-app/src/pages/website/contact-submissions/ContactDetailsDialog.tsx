@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useDateFormat } from '../../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import { CONTACT_STATUSES, type ContactStatus, type ContactSubmission } from './queries';
 
 interface Props {

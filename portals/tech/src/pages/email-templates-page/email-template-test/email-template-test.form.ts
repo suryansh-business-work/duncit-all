@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { validationRules } from '../../../forms/validation/rules';
+import { validationRules } from '@duncit/forms';
 
 export const emailTemplateTestSchema = z.object({
   to: validationRules.email('Recipient email'),

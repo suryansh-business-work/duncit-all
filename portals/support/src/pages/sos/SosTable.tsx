@@ -1,14 +1,10 @@
 import type { MutableRefObject } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
+import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import type { SosAlert } from '../../graphql/bouncer';
 import { relativeTime } from '../../lib/supportTable';
-
-const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> = {
-  ACTIVE: 'error',
-  ACKNOWLEDGED: 'warning',
-  RESOLVED: 'success',
-};
+import { SOS_STATUS_COLORS } from '../../lib/statusMaps';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: SosAlert['status']; label: string }> = [
   { value: 'ACTIVE', label: 'Active' },
@@ -30,9 +26,7 @@ const renderUser = (a: SosAlert) => (
   </Typography>
 );
 
-const renderStatus = (a: SosAlert) => (
-  <Chip size="small" color={STATUS_COLOR[a.status]} label={a.status} />
-);
+const renderStatus = (a: SosAlert) => <StatusChip status={a.status} colorMap={SOS_STATUS_COLORS} />;
 
 const podValue = (a: SosAlert) =>
   a.pod.venue_name ? `${a.pod.title} · ${a.pod.venue_name}` : a.pod.title;

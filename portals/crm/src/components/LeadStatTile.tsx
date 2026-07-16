@@ -1,6 +1,5 @@
-import { Card, CardContent, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import type { ReactNode } from 'react';
+import { StatCard } from '@duncit/ui';
 
 interface Props {
   label: string;
@@ -29,43 +28,32 @@ const ACCENTS: Record<NonNullable<Props['accent']>, string> = {
 export default function LeadStatTile({ label, value, hint, icon, accent = 'primary' }: Readonly<Props>) {
   const colour = ACCENTS[accent];
   return (
-    <Card sx={{ flex: 1, minWidth: 0 }}>
-      <CardContent sx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}>
-        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 0.5 }}>
-          {icon && (
-            <Stack
-              alignItems="center"
-              justifyContent="center"
-              sx={{
-                width: 30,
-                height: 30,
-                borderRadius: 1,
-                bgcolor: alpha(colour, 0.16),
-                color: colour,
-                flexShrink: 0,
-              }}
-            >
-              {icon}
-            </Stack>
-          )}
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', lineHeight: 1.2 }}
-            noWrap
-          >
-            {label}
-          </Typography>
-        </Stack>
-        <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.2 }} noWrap>
-          {value}
-        </Typography>
-        {hint && (
-          <Typography variant="caption" color="text.secondary" noWrap>
-            {hint}
-          </Typography>
-        )}
-      </CardContent>
-    </Card>
+    <StatCard
+      layout="default"
+      iconPlacement="start"
+      icon={icon}
+      iconBox={icon ? { color: colour, size: 30, radius: 1 } : undefined}
+      label={label}
+      labelVariant="caption"
+      labelWeight={700}
+      labelSx={{
+        letterSpacing: 0.4,
+        textTransform: 'uppercase',
+        lineHeight: 1.2,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+      value={value}
+      valueVariant="h6"
+      valueNoWrap
+      valueSx={{ lineHeight: 1.2 }}
+      hint={hint}
+      hintSx={{ whiteSpace: 'nowrap' }}
+      cardVariant="elevation"
+      headerSx={{ mb: 0.5, gap: 1.25 }}
+      sx={{ flex: 1, minWidth: 0 }}
+      contentSx={{ p: 1.75, '&:last-child': { pb: 1.75 } }}
+    />
   );
 }

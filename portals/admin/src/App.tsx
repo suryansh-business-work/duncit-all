@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ProfilePage } from '@duncit/shell';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { ProfilePage, RequireAuth } from '@duncit/shell';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
@@ -27,16 +27,6 @@ import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
 import { getToken } from './lib/session';
-import { redirectPathFromLocation } from './utils/redirect';
-
-function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
-  const location = useLocation();
-  if (!getToken()) {
-    const redirect = encodeURIComponent(redirectPathFromLocation(location));
-    return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
-  }
-  return children;
-}
 
 export default function App() {
   return (
@@ -45,7 +35,7 @@ export default function App() {
       <Route
         path="*"
         element={
-          <RequireAuth>
+          <RequireAuth getToken={getToken}>
             <AppShell>
               <Routes>
                 <Route path="/hub" element={<HubPage />} />

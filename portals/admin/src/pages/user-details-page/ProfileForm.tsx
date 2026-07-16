@@ -3,7 +3,7 @@ import { Alert, Button, CardContent, Grid, MenuItem, Stack, Typography } from '@
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import SaveIcon from '@mui/icons-material/Save';
-import RhfTextField from '../../forms/components/RhfTextField';
+import { RhfTextField } from '@duncit/forms';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
 import MediaPickerField from '../../components/MediaPickerField';
 import AddressFields from './AddressFields';

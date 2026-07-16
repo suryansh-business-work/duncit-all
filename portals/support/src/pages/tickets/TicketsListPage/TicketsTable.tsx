@@ -1,21 +1,10 @@
 import type { MutableRefObject, ReactNode } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
+import { StatusChip } from '@duncit/ui';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import type { Ticket, TicketPriority, TicketStatus } from '../../../graphql/tickets';
+import type { Ticket, TicketStatus } from '../../../graphql/tickets';
 import { relativeTime } from '../../../lib/supportTable';
-
-const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
-  OPEN: 'primary',
-  PENDING: 'warning',
-  RESOLVED: 'success',
-  CLOSED: 'default',
-};
-
-const PRIORITY_COLOR: Record<TicketPriority, 'error' | 'warning' | 'default'> = {
-  HIGH: 'error',
-  MEDIUM: 'warning',
-  LOW: 'default',
-};
+import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: TicketStatus; label: string }> = [
   { value: 'OPEN', label: 'OPEN' },
@@ -42,13 +31,9 @@ const renderSubject = (t: Ticket) => (
   </Typography>
 );
 
-const renderStatus = (t: Ticket) => (
-  <Chip size="small" color={STATUS_COLOR[t.status]} label={t.status} />
-);
+const renderStatus = (t: Ticket) => <StatusChip status={t.status} colorMap={TICKET_STATUS_COLORS} />;
 
-const renderPriority = (t: Ticket) => (
-  <Chip size="small" color={PRIORITY_COLOR[t.priority]} label={t.priority} />
-);
+const renderPriority = (t: Ticket) => <StatusChip status={t.priority} colorMap={TICKET_PRIORITY_COLORS} />;
 
 // Only fields the server whitelists (TICKET_SORTABLE) are sortable; the status
 // filter maps onto the tickets query's `status` arg.

@@ -6,7 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import { type PodFormConfig } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
-import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { useFeatureFlag } from '@duncit/app-settings';
 import { PODS_TABLE, type PodRow } from './queries';
 import CompletePodDialog from './complete-pod-dialog';
 import ReleaseSummaryDialog from './ReleaseSummaryDialog';

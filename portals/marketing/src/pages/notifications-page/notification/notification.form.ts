@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalUrl, requiredText } from '../../../forms/validation/zodRules';
+import { optionalUrl, requiredText } from '@duncit/forms';
 import type { NotifForm } from '../helpers';
 
 const scopes = ['GLOBAL', 'LOCATION', 'ZONE', 'USER'] as const;
@@ -14,8 +14,8 @@ export const notificationFormSchema = z
   .object({
     title: requiredText('Title', 3, 120),
     body: requiredText('Body', 5, 1000),
-    image_url: optionalUrl('Image URL'),
-    link_url: optionalUrl('Link URL', true),
+    image_url: optionalUrl('Image URL', false, { defaultEmpty: true }),
+    link_url: optionalUrl('Link URL', true, { defaultEmpty: true }),
     scope: z.enum(scopes, { required_error: 'Audience is required' }),
     silent: z.boolean(),
     location_id: z.string().default(''),

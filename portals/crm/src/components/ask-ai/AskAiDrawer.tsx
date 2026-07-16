@@ -16,7 +16,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import { tokens } from '@duncit/theme';
 import RichTextField from '../../forms/fields/RichTextField';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 const HEADER_HEIGHT = tokens.size.headerHeight;
 

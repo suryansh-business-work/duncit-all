@@ -8,26 +8,20 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  IconButton,
   Link,
   Stack,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { formatDistanceToNow } from 'date-fns';
+import { BackHeader, StatusChip } from '@duncit/ui';
 import {
   ACK_SOS,
   BOUNCER_SOS_ALERT,
   RESOLVE_SOS,
   type SosAlert,
 } from '../../graphql/bouncer';
-
-const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> = {
-  ACTIVE: 'error',
-  ACKNOWLEDGED: 'warning',
-  RESOLVED: 'success',
-};
+import { SOS_STATUS_COLORS } from '../../lib/statusMaps';
 
 type SosAlertContactsProps = {
   alert: SosAlert;
@@ -105,7 +99,7 @@ function SosAlertCard({ alert, busy, onAck, onResolve }: Readonly<SosAlertCardPr
                 {alert.user.name}
               </Typography>
               <Chip size="small" variant="outlined" label={alert.ticket_no} />
-              <Chip size="small" color={STATUS_COLOR[alert.status]} label={alert.status} />
+              <StatusChip status={alert.status} colorMap={SOS_STATUS_COLORS} />
             </Stack>
             <Typography variant="caption" color="text.secondary">
               {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
@@ -186,14 +180,7 @@ export default function SosDetailsPage() {
 
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/sos')} aria-label="Back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          SOS Alert
-        </Typography>
-      </Stack>
+      <BackHeader onBack={() => navigate('/sos')} title="SOS Alert" titleWeight={800} />
 
       {content}
     </Stack>

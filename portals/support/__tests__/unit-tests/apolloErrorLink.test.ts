@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ApolloLink, Observable, execute, gql } from '@apollo/client';
-import { apolloErrorLink } from '../../src/utils/apolloErrorLink';
+import { apolloErrorLink } from '@duncit/shell';
 
 const QUERY = gql`
   query Probe {

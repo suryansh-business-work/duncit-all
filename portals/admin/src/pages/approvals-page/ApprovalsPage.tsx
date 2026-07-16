@@ -3,7 +3,7 @@ import { useApolloClient, useMutation } from '@apollo/client';
 import { Alert, Box, Snackbar, Stack, Typography } from '@mui/material';
 import FactCheckIcon from '@mui/icons-material/FactCheck';
 import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import { APPROVAL_REQUESTS_TABLE, APPROVE_REQUEST, DENY_REQUEST } from './queries';
 import { type ApprovalRequest, type ApprovalStatus } from './helpers';
 import ApprovalsToolbar from './ApprovalsToolbar';

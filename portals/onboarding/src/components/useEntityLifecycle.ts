@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import type { DocumentNode } from 'graphql';
 import { useUserData } from '@duncit/user-context';
-import { parseApiError } from '../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 /** Shared deactivate/activate + developer hard-delete wiring for the onboarded
  * Venues / Hosts / Brands tables. Row objects are the pages' loosely-typed

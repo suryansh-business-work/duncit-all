@@ -1,17 +1,4 @@
-/** Document toolbar actions (print, download, copy) kept pure + testable. */
-
-/** Triggers a browser download of `contents` as a file. */
-export function downloadFile(filename: string, contents: string, mime = 'text/html'): void {
-  const blob = new Blob([contents], { type: mime });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+/** Document toolbar actions (print, copy) kept pure + testable. */
 
 /** Opens a print window for the given HTML. Returns false if the popup is blocked. */
 export function printHtml(html: string): boolean {

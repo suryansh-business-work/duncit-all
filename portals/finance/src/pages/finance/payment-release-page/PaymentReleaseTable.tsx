@@ -3,7 +3,8 @@ import { Button, Link, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import ReleaseStatusChip, { ReleaseKindChip } from './ReleaseStatusChip';
+import { StatusChip } from '@duncit/ui';
+import { ReleaseKindChip } from './ReleaseStatusChip';
 import type { PaymentReleaseRow } from './queries';
 
 const KIND_OPTIONS = [
@@ -72,7 +73,7 @@ const proofValue = (row: PaymentReleaseRow) =>
     .filter(Boolean)
     .join(' · ');
 
-const renderStatus = (row: PaymentReleaseRow) => <ReleaseStatusChip status={row.status} />;
+const renderStatus = (row: PaymentReleaseRow) => <StatusChip status={row.status} fallbackColor="warning" />;
 
 interface Props {
   fetchRows: TableFetch<PaymentReleaseRow>;

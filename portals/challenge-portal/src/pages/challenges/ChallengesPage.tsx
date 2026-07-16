@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import {
   Button,
@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import {
   CHALLENGES_TABLE,
   CHALLENGE_STATS,
@@ -33,20 +33,7 @@ export default function ChallengesPage() {
     refetchQueries: [{ query: CHALLENGE_STATS }],
   });
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: CHALLENGES_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.challengesTable.rows as Challenge[],
-        total: data.challengesTable.total as number,
-      };
-    },
-    [client],
-  );
+  const fetchRows = useApolloTableFetch<Challenge>(client, CHALLENGES_TABLE, 'challengesTable');
 
   const openNew = () => {
     setEditing(null);

@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+// Preload the module graph (@duncit/shell is heavy) during collection so the
+// dynamic re-imports below only re-evaluate cached transforms.
+import './app-config';
 
 describe('appConfig', () => {
   afterEach(() => {

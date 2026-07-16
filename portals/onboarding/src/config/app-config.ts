@@ -2,33 +2,9 @@
  * Per-app configuration for the Duncit Onboarding console. Reusable configuration only —
  * no dynamic business data. `requiredRoles` is overridable via `VITE_REQUIRED_ROLES`.
  */
-export interface AppNavItem { label: string; to?: string; icon: string; children?: AppNavItem[]; }
-export interface AppModule { title: string; description: string; icon: string; }
-export interface AccentColors { light: string; main: string; hover: string; active: string; }
+import { parseEnvRoles, type AppConfig } from '@duncit/shell';
 
-export interface AppConfig {
-  key: string;
-  name: string;
-  fullName: string;
-  tagline: string;
-  promoTitle: string;
-  promoText: string;
-  portalLabel: string;
-  loginImage: string;
-  requiredRoles: string[];
-  tokenKey: string;
-  colorModeKey: string;
-  accent: AccentColors;
-  nav: AppNavItem[];
-  modules: AppModule[];
-}
-
-const envRoles = String(import.meta.env.VITE_REQUIRED_ROLES ?? '')
-  .split(',')
-  .map((role: string) => role.trim())
-  .filter(Boolean);
-
-export const appConfig: AppConfig = {
+export const appConfig = {
   key: 'onboarding',
   name: 'Onboarding',
   fullName: 'Duncit Onboarding',
@@ -39,7 +15,7 @@ export const appConfig: AppConfig = {
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/7857197/pexels-photo-7857197.jpeg',
-  requiredRoles: envRoles.length ? envRoles : ['ONBOARDING_MANAGER'],
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['ONBOARDING_MANAGER']),
   tokenKey: 'onboarding_token',
   colorModeKey: 'onboarding_color_mode',
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
@@ -70,4 +46,4 @@ export const appConfig: AppConfig = {
     },
   ],
   modules: [],
-};
+} satisfies AppConfig;

@@ -1,8 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import PaymentsIcon from '@mui/icons-material/Payments';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
+import { useApolloTableFetch } from '@duncit/table';
 import PaymentReleaseReviewForm, { toReviewInput, type PaymentReleaseReviewValues } from './payment-release-review';
 import PaymentReleaseTable from './PaymentReleaseTable';
 import { PAYMENT_RELEASE_REQUESTS_TABLE, REVIEW_PAYMENT_RELEASE, type PaymentReleaseRow } from './queries';
@@ -14,19 +14,10 @@ export default function PaymentReleasePage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [review, reviewState] = useMutation(REVIEW_PAYMENT_RELEASE);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: PAYMENT_RELEASE_REQUESTS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.paymentReleaseRequestsTable.rows as PaymentReleaseRow[],
-        total: data.paymentReleaseRequestsTable.total as number,
-      };
-    },
-    [client],
+  const fetchRows = useApolloTableFetch<PaymentReleaseRow>(
+    client,
+    PAYMENT_RELEASE_REQUESTS_TABLE,
+    'paymentReleaseRequestsTable',
   );
 
   const submitReview = async (values: PaymentReleaseReviewValues) => {

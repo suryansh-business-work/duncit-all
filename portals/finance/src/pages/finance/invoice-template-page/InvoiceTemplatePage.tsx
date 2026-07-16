@@ -7,12 +7,12 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import { notifySuccess } from '@duncit/dialogs';
 import { INVOICE_TEMPLATES, KIND_META, UPDATE_INVOICE_TEMPLATE, type InvoiceKind } from './queries';
 
 interface Props {
@@ -25,7 +25,6 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
   const { data, loading, refetch } = useQuery(INVOICE_TEMPLATES, { fetchPolicy: 'cache-and-network' });
   const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_TEMPLATE);
   const [form, setForm] = useState(BLANK);
-  const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const meta = KIND_META[kind];
 
@@ -40,7 +39,7 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
     setError(null);
     try {
       await updateMut({ variables: { input: { invoice_templates: { [kind]: form } } } });
-      setToast('Invoice template saved');
+      notifySuccess('Invoice template saved');
       await refetch();
     } catch (e: any) {
       setError(e.message);
@@ -87,8 +86,6 @@ export default function InvoiceTemplatePage({ kind }: Readonly<Props>) {
           </Typography>
         </CardContent>
       </Card>
-
-      <Snackbar open={!!toast} autoHideDuration={2500} onClose={() => setToast(null)} message={toast || ''} />
     </Box>
   );
 }

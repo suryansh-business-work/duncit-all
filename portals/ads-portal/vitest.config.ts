@@ -14,5 +14,8 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
+    // The portal's only local test (the dead login form's suite) moved into the
+    // shared packages during the dedup migration.
+    passWithNoTests: true,
   },
 });

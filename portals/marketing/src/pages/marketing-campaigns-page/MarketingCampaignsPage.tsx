@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { Box, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import { tableQueryToGql, type TableQueryState } from '@duncit/table';
-import { notifyError, notifySuccess } from '../../components/notify';
+import { useApolloTableFetch } from '@duncit/table';
+import { notifyError, notifySuccess } from '@duncit/dialogs';
 import CampaignPreview from './CampaignPreview';
 import CampaignTable from './CampaignTable';
 import MarketingCampaignForm, {
@@ -36,19 +36,10 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
   const [createCampaign, { loading: saving }] = useMutation(CREATE_MARKETING_CAMPAIGN);
   const [sendCampaign, { loading: sending }] = useMutation(SEND_MARKETING_CAMPAIGN);
 
-  const fetchRows = useCallback(
-    async (q: TableQueryState) => {
-      const { data } = await client.query({
-        query: MARKETING_CAMPAIGNS_TABLE,
-        variables: tableQueryToGql(q),
-        fetchPolicy: 'network-only',
-      });
-      return {
-        rows: data.marketingCampaignsTable.rows as MarketingCampaignRow[],
-        total: data.marketingCampaignsTable.total as number,
-      };
-    },
-    [client],
+  const fetchRows = useApolloTableFetch<MarketingCampaignRow>(
+    client,
+    MARKETING_CAMPAIGNS_TABLE,
+    'marketingCampaignsTable',
   );
 
   useEffect(() => {

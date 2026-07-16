@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material';
 import type { UseFormReturn } from 'react-hook-form';
+import { InfoRow } from '@duncit/ui';
 import type { RegisterVenueValues } from '../register-venue';
 
 const CATEGORY_NAMES = gql`
@@ -36,14 +37,14 @@ function useCategoryPath(values: RegisterVenueValues) {
 
 function Row({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="caption" color="text.secondary" sx={{ minWidth: 130, fontWeight: 700 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-        {value || '—'}
-      </Typography>
-    </Stack>
+    <InfoRow
+      variant="inline"
+      labelWidth={130}
+      labelVariant="caption"
+      labelWeight={700}
+      label={label}
+      value={value || '—'}
+    />
   );
 }
 

@@ -15,6 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
 
 interface Props {
   active: any;
@@ -29,23 +30,12 @@ interface Props {
   savingCommission: boolean;
 }
 
-const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
+const STATUS_COLOR: StatusColorMap = {
   DRAFT: 'warning',
   SUBMITTED: 'info',
   APPROVED: 'success',
   REJECTED: 'error',
 };
-
-function DetailRow({ label, value }: Readonly<{ label: string; value: string }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-        {label}
-      </Typography>
-      <Typography variant="body2">{value || '—'}</Typography>
-    </Box>
-  );
-}
 
 export default function EcommBrandReviewDialog({
   active,
@@ -104,7 +94,7 @@ export default function EcommBrandReviewDialog({
             {active?.brand_name || 'Brand'}
           </Typography>
           {active?.status && (
-            <Chip size="small" color={STATUS_COLOR[active.status] ?? 'default'} label={active.status} sx={{ fontWeight: 800 }} />
+            <StatusChip status={active.status} colorMap={STATUS_COLOR} sx={{ fontWeight: 800 }} />
           )}
         </Stack>
       </DialogTitle>
@@ -119,18 +109,18 @@ export default function EcommBrandReviewDialog({
             />
           )}
           {active?.tagline && <Typography variant="body2" fontStyle="italic">{active.tagline}</Typography>}
-          <DetailRow label="Description" value={active?.description ?? ''} />
-          <DetailRow label="Categories" value={(active?.product_categories ?? []).join(', ')} />
-          <DetailRow label="Owner" value={[active?.contact_person, active?.contact_email, active?.contact_phone].filter(Boolean).join(' · ')} />
-          <DetailRow label="Business & legal" value={business} />
-          <DetailRow label="Address" value={address} />
+          <InfoRow label="Description" value={active?.description || '—'} />
+          <InfoRow label="Categories" value={(active?.product_categories ?? []).join(', ') || '—'} />
+          <InfoRow label="Owner" value={[active?.contact_person, active?.contact_email, active?.contact_phone].filter(Boolean).join(' · ') || '—'} />
+          <InfoRow label="Business & legal" value={business || '—'} />
+          <InfoRow label="Address" value={address || '—'} />
           {(active?.website_url || active?.instagram_url) && (
             <Stack direction="row" spacing={2} flexWrap="wrap">
               {active?.website_url && <Link href={active.website_url} target="_blank" rel="noreferrer" variant="body2">Website</Link>}
               {active?.instagram_url && <Link href={active.instagram_url} target="_blank" rel="noreferrer" variant="body2">Instagram</Link>}
             </Stack>
           )}
-          {bank && <DetailRow label="Payout" value={bank} />}
+          {bank && <InfoRow label="Payout" value={bank} />}
           {documents.length > 0 && (
             <Box>
               <Typography variant="caption" color="text.secondary" fontWeight={700}>Documents</Typography>

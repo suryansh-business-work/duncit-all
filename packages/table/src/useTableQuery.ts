@@ -7,6 +7,12 @@ export interface UseTableQueryOptions<T> {
   fetchRows: TableFetch<T>;
   defaultSort?: { field: string; dir: TableSortDir };
   defaultPageSize?: number;
+  /**
+   * Page-level filters owned by controls OUTSIDE the table (tabs, selects, URL
+   * params). Compared by value: a change resets the page to 1 and refetches.
+   * They are appended to the fetch query's filters but never shown as chips.
+   */
+  externalFilters?: ReadonlyArray<TableFilterValue>;
 }
 
 export interface UseTableQueryResult<T> {
@@ -44,6 +50,20 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
   const [error, setError] = useState<string | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
 
+  // External filters are compared by VALUE (callers rebuild the array every render);
+  // a change resets paging synchronously (derived-state pattern) so the fetch
+  // effect below runs exactly once with the new filters + page 1.
+  const externalKey = JSON.stringify(options.externalFilters ?? []);
+  const [prevExternalKey, setPrevExternalKey] = useState(externalKey);
+  if (prevExternalKey !== externalKey) {
+    setPrevExternalKey(externalKey);
+    setPageState(1);
+  }
+  const externalFilters = useMemo(
+    () => JSON.parse(externalKey) as TableFilterValue[],
+    [externalKey],
+  );
+
   const seqRef = useRef(0);
   const fetchRef = useRef(fetchRows);
   fetchRef.current = fetchRows;
@@ -65,13 +85,21 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
     [search, page, pageSize, sortBy, sortDir, filters],
   );
 
+  // What fetchRows actually receives: the visible query plus the pinned external
+  // filters. `query` itself stays external-free so toolbar chips only show the
+  // user's own filters.
+  const fetchQuery = useMemo<TableQueryState>(() => {
+    if (!externalFilters.length) return query;
+    return { ...query, filters: [...query.filters, ...externalFilters] };
+  }, [query, externalFilters]);
+
   useEffect(() => {
     seqRef.current += 1;
     const seq = seqRef.current;
     setLoading(true);
     setError(null);
     fetchRef
-      .current(query)
+      .current(fetchQuery)
       .then((result) => {
         if (seq !== seqRef.current) return; // stale response — drop it
         setRows(result.rows);
@@ -83,7 +111,7 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
         setError(err instanceof Error ? err.message : 'Failed to load data');
         setLoading(false);
       });
-  }, [query, reloadTick]);
+  }, [fetchQuery, reloadTick]);
 
   const setPage = useCallback((next: number) => {
     setPageState(next);

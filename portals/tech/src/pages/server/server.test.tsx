@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { formatBytes, formatDate, formatDateTime, formatUptime } from './format';
-import StatCard, { usageColor } from './StatCard';
 import InfoList from './InfoList';
 import ServerInfoDetails from './ServerInfoDetails';
 import { SERVER_INFO, DOCKER_INFO, apiHost, hostFromUrl, type ServerInfo } from './queries';
@@ -42,30 +41,6 @@ describe('queries host helpers', () => {
     expect(apiHost()).toBeTruthy();
     expect(SERVER_INFO).toBeDefined();
     expect(DOCKER_INFO).toBeDefined();
-  });
-});
-
-describe('usageColor', () => {
-  it('maps usage to a severity color', () => {
-    expect(usageColor(95)).toBe('error');
-    expect(usageColor(80)).toBe('warning');
-    expect(usageColor(40)).toBe('success');
-  });
-});
-
-describe('StatCard', () => {
-  it('renders with a sub-label and a usage bar', () => {
-    render(<StatCard label="MEMORY" value="4 GB" sub="/ 8 GB" percent={50} />);
-    expect(screen.getByText('MEMORY')).toBeInTheDocument();
-    expect(screen.getByText('4 GB')).toBeInTheDocument();
-    expect(screen.getByText('/ 8 GB')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
-  });
-
-  it('renders without sub-label or bar', () => {
-    render(<StatCard label="UPTIME" value="3d" />);
-    expect(screen.getByText('UPTIME')).toBeInTheDocument();
-    expect(screen.queryByRole('progressbar')).toBeNull();
   });
 });
 

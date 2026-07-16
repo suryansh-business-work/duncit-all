@@ -1,36 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Chip, CircularProgress, Divider, IconButton, Snackbar, Stack, Typography } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { Box, Chip, CircularProgress, Divider, Snackbar, Stack, Typography } from '@mui/material';
+import { BackHeader, StatusChip } from '@duncit/ui';
 import {
   MARK_TICKET_READ,
   REPLY_TO_TICKET,
   TICKET,
   type Ticket,
-  type TicketPriority,
-  type TicketStatus,
 } from '../../../graphql/tickets';
 import { htmlToText } from '../../../components/RichTextEditor';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
+import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
 import TicketHeader from './TicketHeader';
 import TicketThread from './TicketThread';
 import TicketComposerArea from './TicketComposerArea';
 import TicketUserDetails from './TicketUserDetails';
 import { useTicketActions } from './useTicketActions';
-
-const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
-  OPEN: 'primary',
-  PENDING: 'warning',
-  RESOLVED: 'success',
-  CLOSED: 'default',
-};
-
-const PRIORITY_COLOR: Record<TicketPriority, 'error' | 'warning' | 'default'> = {
-  HIGH: 'error',
-  MEDIUM: 'warning',
-  LOW: 'default',
-};
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -86,8 +72,12 @@ export default function TicketDetailPage() {
     return (
       <>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-          <Chip size="small" color={STATUS_COLOR[ticket.status]} label={ticket.status} />
-          <Chip size="small" color={PRIORITY_COLOR[ticket.priority]} label={`${ticket.priority} priority`} />
+          <StatusChip status={ticket.status} colorMap={TICKET_STATUS_COLORS} />
+          <StatusChip
+            status={ticket.priority}
+            colorMap={TICKET_PRIORITY_COLORS}
+            label={`${ticket.priority} priority`}
+          />
           <Chip size="small" variant="outlined" label={ticket.category} />
         </Stack>
 
@@ -125,14 +115,7 @@ export default function TicketDetailPage() {
           onEmail={actions.email}
         />
       ) : (
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <IconButton size="small" onClick={() => navigate('/tickets')} aria-label="Back">
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
-            Ticket
-          </Typography>
-        </Stack>
+        <BackHeader onBack={() => navigate('/tickets')} title="Ticket" titleWeight={800} />
       )}
       {renderBody()}
       <Snackbar open={Boolean(actions.notice)} autoHideDuration={4000} onClose={actions.clearNotice} message={actions.notice} />

@@ -1,6 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { DuncitTable, type TableFetch } from '@duncit/table';
-import { useFeatureFlag } from '../../hooks/useFeatureFlag';
+import { useFeatureFlag } from '@duncit/app-settings';
 import { buildPodsColumns } from './podsColumns';
 import type { PodRow } from './queries';
 

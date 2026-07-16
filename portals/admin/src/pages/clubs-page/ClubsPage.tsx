@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { notifyError } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm, notifyError } from '@duncit/dialogs';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Snackbar, Stack } from '@mui/material';

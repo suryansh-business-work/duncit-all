@@ -1,31 +1,20 @@
-import type { ReactNode } from 'react';
-import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
   Box,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Divider,
-  IconButton,
   Stack,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { useQuery } from '@apollo/client';
+import { useNavigate, useParams } from 'react-router-dom';
+import { BackHeader, InfoRow, QueryGuard } from '@duncit/ui';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_USER_LEAD } from '../tools/whatsapp/whatsappQueries';
 
 function Field({ label, value }: Readonly<{ label: string; value?: string | null }>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-        {label}
-      </Typography>
-      <Typography variant="body2">{value || '—'}</Typography>
-    </Box>
-  );
+  return <InfoRow label={label} value={value || '—'} />;
 }
 
 /** User Lead detail — mirrors the Venue/Host detail layout. Shows the imported
@@ -36,17 +25,16 @@ export default function UserLeadDetailPage() {
   const { data, loading, error } = useQuery(WA_USER_LEAD, { variables: { id } });
   const lead = data?.waUserLead;
 
-  let body: ReactNode;
-  if (loading && !lead) {
-    body = (
-      <Stack alignItems="center" sx={{ py: 6 }}>
-        <CircularProgress />
-      </Stack>
-    );
-  } else if (error) {
-    body = <Alert severity="error">{error.message}</Alert>;
-  } else if (lead) {
-    body = (
+  const body = (
+    <QueryGuard
+      loading={loading && !lead}
+      error={error}
+      errorText={error?.message}
+      notFound={!lead}
+      notFoundText="Lead not found."
+      notFoundSeverity="warning"
+    >
+      {() => (
       <Stack spacing={2}>
         <Card variant="outlined" sx={{ borderRadius: 3 }}>
           <CardContent>
@@ -100,21 +88,21 @@ export default function UserLeadDetailPage() {
           </CardContent>
         </Card>
       </Stack>
-    );
-  } else {
-    body = <Alert severity="warning">Lead not found.</Alert>;
-  }
+      )}
+    </QueryGuard>
+  );
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 760, mx: 'auto' }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-        <IconButton onClick={() => navigate(-1)} aria-label="Go back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h6" fontWeight={800}>
-          WhatsApp Lead
-        </Typography>
-      </Stack>
+      <BackHeader
+        onBack={() => navigate(-1)}
+        backAriaLabel="Go back"
+        backSize="medium"
+        title="WhatsApp Lead"
+        titleVariant="h6"
+        titleWeight={800}
+        sx={{ mb: 2 }}
+      />
 
       {body}
     </Box>

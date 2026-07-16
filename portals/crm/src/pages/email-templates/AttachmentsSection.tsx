@@ -14,7 +14,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { UPLOAD_IMAGE } from '../../api/crm.gql';
 import type { EmailAsset } from '../../api/emailTemplates.gql';
 import { fileToBase64 } from '../../utils/fileToBase64';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 
 interface Props {
   attachments: EmailAsset[];

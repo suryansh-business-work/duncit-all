@@ -1,8 +1,9 @@
 import { useMemo, type MutableRefObject } from 'react';
 import { Chip, Stack, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { ALL_STATUSES, STATUS_COLOR, humaniseStatus, type FulfilmentStatus } from './constants';
-import { useDateFormat } from '../../utils/dateFormat';
+import { StatusChip } from '@duncit/ui';
+import { ALL_STATUSES, STATUS_COLOR, humaniseStatus } from './constants';
+import { useDateFormat } from '@duncit/app-settings';
 import type { ProductOrderRow } from './queries';
 
 interface Props {
@@ -36,10 +37,10 @@ const renderMethod = (o: ProductOrderRow) => (
 );
 
 const renderStatus = (o: ProductOrderRow) => (
-  <Chip
-    size="small"
+  <StatusChip
+    status={o.fulfilment_status}
     label={humaniseStatus(o.fulfilment_status)}
-    color={STATUS_COLOR[o.fulfilment_status as FulfilmentStatus] ?? 'default'}
+    colorMap={STATUS_COLOR}
   />
 );
 

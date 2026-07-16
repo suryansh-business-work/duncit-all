@@ -25,14 +25,6 @@ export interface ApprovalRequest {
 
 export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'DENIED';
 
-export type StatusChipColor = 'default' | 'warning' | 'success' | 'error';
-
-export const STATUS_COLORS: Record<ApprovalStatus, StatusChipColor> = {
-  PENDING: 'warning',
-  APPROVED: 'success',
-  DENIED: 'error',
-};
-
 /** Filter options: status value ('' = All) plus a human label. */
 export const STATUS_FILTERS: ReadonlyArray<{ value: '' | ApprovalStatus; label: string }> = [
   { value: 'PENDING', label: 'Pending' },

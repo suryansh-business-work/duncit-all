@@ -1,8 +1,8 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, Button, Chip, Tooltip, Typography, type ChipProps } from '@mui/material';
+import { Box, Button, Chip, Tooltip, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { format } from 'date-fns';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import type { MarketingCampaignRow } from './queries';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 const getCampaignRowId = (row: MarketingCampaignRow) => row.campaign_id;
 
-const STATUS_COLORS: Record<string, ChipProps['color']> = {
+const STATUS_COLORS: StatusColorMap = {
   SENT: 'success',
   FAILED: 'error',
   SCHEDULED: 'info',
@@ -40,8 +40,7 @@ const AUDIENCE_LABELS: Record<string, string> = {
 
 const AUDIENCE_OPTIONS = Object.entries(AUDIENCE_LABELS).map(([value, label]) => ({ value, label }));
 
-const formatDate = (value?: string | null) =>
-  value ? format(new Date(value), 'd MMM yyyy, HH:mm') : '—';
+const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 
 const renderCampaign = (row: MarketingCampaignRow) => (
   <Box sx={{ lineHeight: 1.2 }}>
@@ -64,7 +63,7 @@ const renderChannel = (row: MarketingCampaignRow) => (
 );
 
 const renderStatus = (row: MarketingCampaignRow) => (
-  <Chip size="small" color={STATUS_COLORS[row.status] ?? 'default'} label={row.status} />
+  <StatusChip status={row.status} colorMap={STATUS_COLORS} />
 );
 
 export default function CampaignTable({
@@ -120,20 +119,20 @@ export default function CampaignTable({
         minWidth: 140,
         valueGetter: (row) => row.card?.title ?? '—',
       },
-      {
+      dateColumn<MarketingCampaignRow>({
         field: 'scheduled_at',
         headerName: 'Schedule',
+        hide: false,
         width: 160,
-        filter: { type: 'date' },
-        valueGetter: (row) => formatDate(row.scheduled_at),
-      },
-      {
+        format: DATE_TIME_FORMAT,
+      }),
+      dateColumn<MarketingCampaignRow>({
         field: 'sent_at',
         headerName: 'Sent',
+        hide: false,
         width: 160,
-        filter: { type: 'date' },
-        valueGetter: (row) => formatDate(row.sent_at),
-      },
+        format: DATE_TIME_FORMAT,
+      }),
       { field: 'recipient_count', headerName: 'Recipients', width: 120 },
       {
         field: 'audience',
@@ -143,14 +142,7 @@ export default function CampaignTable({
         filter: { type: 'select', options: AUDIENCE_OPTIONS },
         valueGetter: (row) => AUDIENCE_LABELS[row.audience] ?? row.audience,
       },
-      {
-        field: 'created_at',
-        headerName: 'Created',
-        hide: true,
-        width: 160,
-        filter: { type: 'date' },
-        valueGetter: (row) => formatDate(row.created_at),
-      },
+      dateColumn<MarketingCampaignRow>({ width: 160, format: DATE_TIME_FORMAT }),
       {
         field: 'actions',
         headerName: 'Actions',

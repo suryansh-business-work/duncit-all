@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
-import { useDateFormat } from '../../src/lib/useDateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 import { publicAppSettingsMock } from './testkit';
 
 const wrapper =
@@ -14,7 +14,7 @@ const wrapper =
 
 describe('useDateFormat', () => {
   it('formats time in the configured zone and labels relative days', async () => {
-    const { result } = renderHook(() => useDateFormat(), { wrapper: wrapper() });
+    const { result } = renderHook(() => useDateFormat({ timeZoneAware: true }), { wrapper: wrapper() });
     await waitFor(() => expect(result.current.timeZone).toBe('Asia/Kolkata'));
 
     const today = new Date();
@@ -30,7 +30,7 @@ describe('useDateFormat', () => {
   });
 
   it('returns empty strings for missing or invalid input (fallback settings)', () => {
-    const { result } = renderHook(() => useDateFormat(), { wrapper: wrapper([]) });
+    const { result } = renderHook(() => useDateFormat({ timeZoneAware: true }), { wrapper: wrapper([]) });
     // No settings resolved yet → uses fallbacks, still safe for bad input.
     expect(result.current.formatTime(null)).toBe('');
     expect(result.current.dayLabel(undefined)).toBe('');
@@ -39,7 +39,7 @@ describe('useDateFormat', () => {
 
   it('falls back when an invalid time zone is configured (catch path)', async () => {
     const bad = publicAppSettingsMock({ time_zone: 'Not/AZone' });
-    const { result } = renderHook(() => useDateFormat(), { wrapper: wrapper([bad]) });
+    const { result } = renderHook(() => useDateFormat({ timeZoneAware: true }), { wrapper: wrapper([bad]) });
     await waitFor(() => expect(result.current.timeZone).toBe('Not/AZone'));
     expect(result.current.formatTime(new Date().toISOString())).toBe('');
   });

@@ -1,7 +1,8 @@
 import { useCallback, useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
+import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';
 import { BOUNCER_CALLBACK_REQUESTS, type CallbackRequestPage } from '../../graphql/bouncer';
 import { useSupportSocket } from '../../lib/useSupportSocket';
@@ -32,14 +33,10 @@ export default function CallbacksListPage() {
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Callback Requests
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Users who asked for a call back. Open one to mark it contacted or close it.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Callback Requests"
+        subtitle="Users who asked for a call back. Open one to mark it contacted or close it."
+      />
       <CallbacksTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}

@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Grid,
   Snackbar,
@@ -14,11 +13,12 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { StatusChip } from '@duncit/ui';
 import OrderSummaryCard from './OrderSummaryCard';
 import OrderFulfilmentPanel from './OrderFulfilmentPanel';
 import OrderTrackingTimeline from './OrderTrackingTimeline';
 import OrderShipmentDialog from './OrderShipmentDialog';
-import { STATUS_COLOR, humaniseStatus, type FulfilmentStatus } from './constants';
+import { STATUS_COLOR, humaniseStatus } from './constants';
 import {
   ADVANCE_PRODUCT_ORDER_STATUS,
   CREATE_PRODUCT_ORDER_SHIPMENT,
@@ -26,7 +26,7 @@ import {
   REFRESH_PRODUCT_ORDER_TRACKING,
   SET_PRODUCT_ORDER_FULFILMENT_METHOD,
 } from './queries';
-import { useDateFormat } from '../../utils/dateFormat';
+import { useDateFormat } from '@duncit/app-settings';
 
 export default function ProductOrderDetailPage() {
   const navigate = useNavigate();
@@ -95,9 +95,11 @@ export default function ProductOrderDetailPage() {
         <Typography variant="h5" fontWeight={800}>
           {order.order_no}
         </Typography>
-        <Chip
+        <StatusChip
+          size="medium"
+          status={order.fulfilment_status}
           label={humaniseStatus(order.fulfilment_status)}
-          color={STATUS_COLOR[order.fulfilment_status as FulfilmentStatus] ?? 'default'}
+          colorMap={STATUS_COLOR}
         />
       </Stack>
 

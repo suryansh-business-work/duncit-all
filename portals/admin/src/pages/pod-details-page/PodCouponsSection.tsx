@@ -7,8 +7,7 @@ import { tableQueryToGql, type TableQueryState } from '@duncit/table';
 import CouponsTable from '../coupons-page/CouponsTable';
 import CouponFormDialog from '../coupons-page/CouponFormDialog';
 import { COUPONS_FOR_POD_TABLE, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';
-import { notifyError, notifySuccess } from '../../components/notify';
-import { useConfirm } from '../../components/useConfirm';
+import { useConfirm, notifyError, notifySuccess } from '@duncit/dialogs';
 
 interface Props {
   podId: string;

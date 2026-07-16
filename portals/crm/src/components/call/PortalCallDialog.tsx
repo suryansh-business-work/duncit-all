@@ -15,7 +15,7 @@ import { START_CRM_PORTAL_CALL, CRM_CALL_FROM_NUMBER, type CrmAiCallResult } fro
 import { useCallSocket } from '../../hooks/useCallSocket';
 import { useCallReconcile } from '../../hooks/useCallReconcile';
 import { isTerminalCallStatus, type CallStatus } from '../../lib/callSocket';
-import { parseApiError } from '../../utils/parseApiError';
+import { parseApiError } from '@duncit/utils';
 import { callStatusView } from './callStatusView';
 import CallStage from './CallStage';
 

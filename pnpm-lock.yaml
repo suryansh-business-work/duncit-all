@@ -539,6 +539,12 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
 
+  packages/gql-types:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   packages/location:
     devDependencies:
       '@apollo/client':
@@ -1232,6 +1238,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1350,6 +1359,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1465,6 +1477,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1583,6 +1598,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1749,6 +1767,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@playwright/test':
         specifier: 1.60.0
         version: 1.60.0
@@ -1876,6 +1897,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -1979,6 +2003,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2094,6 +2121,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@playwright/test':
         specifier: 1.60.0
         version: 1.60.0
@@ -2200,6 +2230,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2315,6 +2348,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2448,6 +2484,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2590,6 +2629,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2747,6 +2789,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -2871,6 +2916,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -3004,6 +3052,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -3131,6 +3182,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1
@@ -3258,6 +3312,9 @@ importers:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@duncit/gql-types':
+        specifier: workspace:*
+        version: link:../../packages/gql-types
       '@testing-library/jest-dom':
         specifier: ^6.9.1
         version: 6.9.1

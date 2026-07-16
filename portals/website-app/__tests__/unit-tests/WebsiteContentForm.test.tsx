@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { WebsiteContentForm } from '../../src/pages/website/content/website-content';
-import type { WebsiteContentItem } from '../../src/pages/website/content/queries';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { makeContentItem } from '../mocks';
 
 const dtf = vi.hoisted(() => ({ onChange: null as unknown as (v: string | null) => void }));
 const img = vi.hoisted(() => ({ onChange: null as unknown as (v: string | null) => void }));
@@ -56,7 +56,7 @@ vi.mock('@duncit/media-picker', () => ({
   },
 }));
 
-const item: WebsiteContentItem = {
+const item = makeContentItem({
   id: '1',
   type: 'BLOG',
   title: 'Existing',
@@ -71,7 +71,7 @@ const item: WebsiteContentItem = {
   is_published: true,
   sort_order: 2,
   updated_at: '2026-01-16T00:00:00.000Z',
-};
+});
 
 describe('WebsiteContentForm', () => {
   it('submits a new entry with the bound page type', async () => {

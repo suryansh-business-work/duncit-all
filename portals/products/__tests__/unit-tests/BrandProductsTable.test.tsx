@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import BrandProductsTable from '../../src/pages/ecomm/BrandProductsTable';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { makeBrandProductRow } from '../mocks/ecommBrand.mock';
 import { __setTableRows } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
@@ -11,11 +12,10 @@ vi.mock('@duncit/app-settings', () => ({ useDateFormat: () => ({ formatDate: () 
 describe('BrandProductsTable', () => {
   it('renders brand product cells including dimensions and commission', async () => {
     __setTableRows([
-      {
+      makeBrandProductRow({
         id: 'p1',
         product_name: 'Widget',
         sku: 'WD-1',
-        image_url: '',
         selling_price: 200,
         unit_cost: 150,
         available_count: 8,
@@ -25,10 +25,9 @@ describe('BrandProductsTable', () => {
         breadth_cm: 5,
         height_cm: 3,
         weight_kg: 1,
-        created_at: '2026-01-01T00:00:00.000Z',
-      },
+      }),
       // avatar image branch + empty-name initial
-      {
+      makeBrandProductRow({
         id: 'p3',
         product_name: '',
         sku: 'X',
@@ -43,7 +42,7 @@ describe('BrandProductsTable', () => {
         height_cm: 1,
         weight_kg: 1,
         created_at: null,
-      },
+      }),
     ]);
     renderWithProviders(<BrandProductsTable brandId="b1" />);
     await waitFor(() => expect(screen.getAllByText('Widget').length).toBeGreaterThan(0));
@@ -54,11 +53,10 @@ describe('BrandProductsTable', () => {
 
   it('falls back to inventory count and a dash date when unset', async () => {
     __setTableRows([
-      {
+      makeBrandProductRow({
         id: 'p2',
         product_name: 'Gadget',
         sku: 'GD-1',
-        image_url: '',
         selling_price: 0,
         unit_cost: 50,
         available_count: null,
@@ -69,7 +67,7 @@ describe('BrandProductsTable', () => {
         height_cm: 1,
         weight_kg: 2,
         created_at: null,
-      },
+      }),
     ]);
     renderWithProviders(<BrandProductsTable brandId="b1" />);
     await waitFor(() => expect(screen.getAllByText('Gadget').length).toBeGreaterThan(0));

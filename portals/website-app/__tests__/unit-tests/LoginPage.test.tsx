@@ -1,35 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { gql } from '@apollo/client';
 import type { MockedResponse } from '@apollo/client/testing';
 import { Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from '../../src/pages/LoginPage';
 import { appConfig } from '../../src/config/app-config';
 import { getToken } from '../../src/lib/session';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { loginResultMock } from '../mocks';
 
 const ROLE = appConfig.requiredRoles[0];
-
-const LOGIN = gql`
-  mutation ConsoleLogin($input: LoginInput!) {
-    login(input: $input) {
-      token
-      user { user_id first_name last_name email roles }
-    }
-  }
-`;
-
-const loginResult = (token: string | null, roles: string[]): MockedResponse => ({
-  request: { query: LOGIN },
-  variableMatcher: () => true,
-  result: {
-    data: {
-      login: token
-        ? { token, user: { user_id: 'u1', first_name: 'A', last_name: 'B', email: 'a@b.com', roles } }
-        : { token: null, user: null },
-    },
-  },
-});
 
 const renderLogin = (mocks: MockedResponse[], initialEntries: string[] = ['/login']) =>
   renderWithProviders(<></>, {
@@ -71,7 +50,7 @@ describe('LoginPage', () => {
   });
 
   it('logs in and navigates to the default route', async () => {
-    renderLogin([loginResult('tok', [ROLE])]);
+    renderLogin([loginResultMock('tok', [ROLE])]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText('HOME')).toBeInTheDocument());
@@ -79,21 +58,21 @@ describe('LoginPage', () => {
   });
 
   it('honours a safe redirect query param', async () => {
-    renderLogin([loginResult('tok', [ROLE])], ['/login?redirect=%2Fnavigation']);
+    renderLogin([loginResultMock('tok', [ROLE])], ['/login?redirect=%2Fnavigation']);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText('NAV HOME')).toBeInTheDocument());
   });
 
   it('shows an access-denied error for an unauthorised role', async () => {
-    renderLogin([loginResult('tok', ['SOMETHING_ELSE'])]);
+    renderLogin([loginResultMock('tok', ['SOMETHING_ELSE'])]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText(/do not have access/i)).toBeInTheDocument());
   });
 
   it('shows an error when the server returns no token', async () => {
-    renderLogin([loginResult(null, [])]);
+    renderLogin([loginResultMock(null, [])]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText(/login failed/i)).toBeInTheDocument());

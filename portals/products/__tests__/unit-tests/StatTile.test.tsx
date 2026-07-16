@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import StatTile from '../../src/pages/WelcomePage/StatTile';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 describe('StatTile', () => {
   it('renders the label, value and hint', () => {

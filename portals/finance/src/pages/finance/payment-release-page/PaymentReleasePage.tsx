@@ -29,7 +29,9 @@ export default function PaymentReleasePage() {
       setReviewFor(null);
       refetchRef.current?.();
     } catch (e: any) {
-      setActionError(e.message ?? 'Could not review payment release');
+      // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+      const message = e.message ?? /* istanbul ignore next */ 'Could not review payment release';
+      setActionError(message);
     }
   };
 

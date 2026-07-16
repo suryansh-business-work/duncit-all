@@ -6,18 +6,18 @@ import AppShell from '../../src/components/AppShell';
 import LoginPage from '../../src/pages/LoginPage';
 import { clearToken } from '../../src/lib/session';
 import { resetUserContext, userContextControls } from './mocks/user-context';
-import { renderUI, renderRoute } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 describe('App routing', () => {
   it('mounts the login route and constructs every authed route', () => {
-    renderUI(<App />, ['/login']);
+    renderWithProviders(<App />, { initialEntries: ['/login'] });
     expect(screen.getByTestId('portal-login')).toBeInTheDocument();
   });
 });
 
 describe('LoginPage', () => {
   it('renders the shared portal login page', () => {
-    renderUI(<LoginPage />);
+    renderWithProviders(<LoginPage />);
     expect(screen.getByTestId('portal-login')).toBeInTheDocument();
   });
 });
@@ -31,7 +31,7 @@ describe('AppShell adapter', () => {
   it('passes an authenticated user + access flag through the shared shell', () => {
     userContextControls.user = { name: 'Fin Manager', roles: ['FINANCE_MANAGER'] };
     userContextControls.loading = false;
-    renderUI(<AppShell>content</AppShell>);
+    renderWithProviders(<AppShell>content</AppShell>);
     expect(screen.getByTestId('shell-user')).toHaveTextContent('Fin Manager');
     expect(screen.getByTestId('shell-access')).toHaveTextContent('true');
     expect(screen.getByText('content')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('AppShell adapter', () => {
   it('leaves access undefined while no user is present', () => {
     userContextControls.user = null;
     userContextControls.loading = true;
-    renderUI(<AppShell>content</AppShell>);
+    renderWithProviders(<AppShell>content</AppShell>);
     expect(screen.getByTestId('shell-user')).toHaveTextContent('nouser');
     expect(screen.getByTestId('shell-access')).toHaveTextContent('undefined');
     expect(screen.getByTestId('shell-loading')).toHaveTextContent('true');
@@ -48,7 +48,7 @@ describe('AppShell adapter', () => {
 
   it('logs out: clears the token, calls context logout and navigates to /login', () => {
     userContextControls.user = { name: 'Fin', roles: [] };
-    renderRoute(<AppShell>home</AppShell>, {
+    renderWithProviders(<AppShell>home</AppShell>, {
       path: '/',
       entry: '/',
       extra: <Route path="/login" element={<div data-testid="login-probe">login</div>} />,

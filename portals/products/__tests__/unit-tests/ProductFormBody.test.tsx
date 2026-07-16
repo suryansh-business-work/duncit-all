@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useFormContext } from 'react-hook-form';
@@ -6,11 +5,8 @@ import ProductFormBody from '../../src/pages/inventory-page/inventory-product-pa
 import { ProductFormHarness } from './form-harness';
 
 function Dirtier() {
-  const { setValue } = useFormContext();
-  useEffect(() => {
-    setValue('product_name', 'Changed', { shouldDirty: true });
-  }, [setValue]);
-  return null;
+  const { register } = useFormContext();
+  return <input aria-label="dirty-me" {...register('product_name')} />;
 }
 
 const footer = vi.hoisted(() => ({ props: null as null | Record<string, any> }));
@@ -71,7 +67,8 @@ describe('ProductFormBody', () => {
         />
       </ProductFormHarness>,
     );
-    // Dirty state flows into StickyFooter.
+    // Typing into a registered field dirties the form → StickyFooter reflects it.
+    fireEvent.change(screen.getByLabelText('dirty-me'), { target: { value: 'Changed' } });
     await waitFor(() => expect(footer.props?.dirty).toBe(true));
   });
 

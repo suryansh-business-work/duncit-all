@@ -1,43 +1,30 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { renderWithProviders } from '../testkit';
+import {
+  createNotificationMock,
+  deleteNotificationMock,
+  locationsMock,
+  makeNotificationRow,
+  makeUser,
+  usersMock,
+} from '../mocks';
+import { __setTableRows, fetchRowsFrom } from './table-mock';
 
 // ---------------------------------------------------------------------------
-// Mocks
+// Module mocks — shared table, media picker + toast/confirm host. GraphQL flows
+// through the real Apollo `MockedProvider`.
 // ---------------------------------------------------------------------------
-const tableMock = vi.hoisted(() => ({ rows: [] as any[] }));
-vi.mock('@duncit/table', () => ({
-  useApolloTableFetch: () => vi.fn(),
-  dateColumn: (opts: any = {}) => ({ field: opts.field ?? 'created_at', headerName: opts.headerName ?? 'Date', ...opts }),
-  DuncitTable: ({ columns, toolbarActions, refetchRef, onRowClick, getRowId }: any) => {
-    if (refetchRef) refetchRef.current = vi.fn();
-    return (
-      <div data-testid="duncit-table">
-        <div>{toolbarActions}</div>
-        {tableMock.rows.map((row, ri) => (
-          <div key={getRowId ? getRowId(row) : ri} data-testid="table-row">
-            {columns.map((c: any, ci: number) => (
-              <span key={ci} data-testid={`cell-${c.field ?? ci}`}>
-                {c.valueGetter ? String(c.valueGetter(row)) : ''}
-                {c.cellRenderer ? c.cellRenderer(row) : null}
-              </span>
-            ))}
-            {onRowClick ? (
-              <button type="button" onClick={() => onRowClick(row)}>{`rowclick-${ri}`}</button>
-            ) : null}
-          </div>
-        ))}
-      </div>
-    );
-  },
-}));
-
+vi.mock('@duncit/table', () => import('./table-mock'));
 vi.mock('@duncit/media-picker', () => ({
-  default: ({ open, onPicked }: any) =>
-    open ? <button type="button" onClick={() => onPicked('https://cdn/x.png')}>pick</button> : null,
+  default: ({ open, onPicked }: { open: boolean; onPicked: (url: string) => void }) =>
+    open ? (
+      <button type="button" onClick={() => onPicked('https://cdn/x.png')}>
+        pick
+      </button>
+    ) : null,
 }));
-
 const dialogsMock = vi.hoisted(() => ({
-  confirmResult: true,
   confirm: vi.fn(),
   notifyError: vi.fn(),
   notifySuccess: vi.fn(),
@@ -49,57 +36,19 @@ vi.mock('@duncit/dialogs', () => ({
   NotifyHost: () => null,
 }));
 
-const apolloMock = vi.hoisted(() => ({
-  queryData: {} as Record<string, any>,
-  mutations: {} as Record<string, any>,
-}));
-const opName = (doc: any) =>
-  doc?.definitions?.find((d: any) => d.kind === 'OperationDefinition')?.name?.value ?? '';
-vi.mock('@apollo/client', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@apollo/client')>();
-  return {
-    ...actual,
-    useApolloClient: () => ({}),
-    useQuery: (doc: any) => ({ data: apolloMock.queryData[opName(doc)], loading: false, error: undefined }),
-    useMutation: (doc: any) => {
-      const name = opName(doc);
-      apolloMock.mutations[name] ??= vi.fn().mockResolvedValue({ data: {} });
-      return [apolloMock.mutations[name], { loading: false }];
-    },
-  };
-});
-
 import NotificationsTable from '../../src/pages/notifications-page/NotificationsTable';
 import NotificationFormDialog from '../../src/pages/notifications-page/NotificationFormDialog';
 import NotificationsPage from '../../src/pages/notifications-page/NotificationsPage';
 import { blankForm, type NotifForm } from '../../src/pages/notifications-page/helpers';
 import type { NotificationRow } from '../../src/pages/notifications-page/queries';
 
-const rowBase: NotificationRow = {
-  id: 'n1',
-  title: 'Hello',
-  body: 'Body text',
-  image_url: null,
-  link_url: null,
-  scope: 'GLOBAL',
-  silent: false,
-  location_id: null,
-  zone_name: null,
-  target_user_ids: [],
-  delivered_count: 10,
-  failed_count: 0,
-  created_at: '2026-01-01T00:00:00.000Z',
-};
-
+const rowBase = makeNotificationRow();
 const locName = (id?: string | null) => (id === 'l1' ? 'Mumbai' : '—');
 const locationOptions = [{ value: 'l1', label: 'Mumbai' }];
 
 beforeEach(() => {
-  tableMock.rows = [];
-  apolloMock.queryData = {};
-  apolloMock.mutations = {};
-  dialogsMock.confirmResult = true;
-  dialogsMock.confirm = vi.fn().mockImplementation(() => Promise.resolve(dialogsMock.confirmResult));
+  __setTableRows([]);
+  dialogsMock.confirm = vi.fn().mockResolvedValue(true);
 });
 afterEach(() => {
   vi.clearAllMocks();
@@ -107,50 +56,46 @@ afterEach(() => {
 
 // ===========================================================================
 describe('NotificationsTable', () => {
-  it('renders scope, title, delivered and failed cells across every scope', () => {
-    tableMock.rows = [
-      { ...rowBase, id: 'g', scope: 'GLOBAL', link_url: '/pods/1', silent: true },
-      { ...rowBase, id: 'l', scope: 'LOCATION', location_id: 'l1' },
-      { ...rowBase, id: 'z', scope: 'ZONE', location_id: 'l1', zone_name: 'North' },
-      { ...rowBase, id: 'u', scope: 'USER', target_user_ids: ['a', 'b'], failed_count: 3 },
-      { ...rowBase, id: 'u0', scope: 'USER', target_user_ids: undefined as any },
-      { ...rowBase, id: 'x', scope: 'UNKNOWN' as any },
+  it('renders scope, title, delivered and failed cells across every scope', async () => {
+    const rows = [
+      makeNotificationRow({ id: 'g', scope: 'GLOBAL', link_url: '/pods/1', silent: true }),
+      makeNotificationRow({ id: 'l', scope: 'LOCATION', location_id: 'l1' }),
+      makeNotificationRow({ id: 'z', scope: 'ZONE', location_id: 'l1', zone_name: 'North' }),
+      makeNotificationRow({ id: 'u', scope: 'USER', target_user_ids: ['a', 'b'], failed_count: 3 }),
+      makeNotificationRow({ id: 'u0', scope: 'USER', target_user_ids: undefined as unknown as string[] }),
+      makeNotificationRow({ id: 'x', scope: 'UNKNOWN' as NotificationRow['scope'] }),
     ];
-    const refetchRef = { current: null };
-    render(
+    renderWithProviders(
       <NotificationsTable
-        fetchRows={vi.fn() as any}
-        refetchRef={refetchRef as any}
+        fetchRows={fetchRowsFrom(rows)}
+        refetchRef={{ current: null }}
         locName={locName}
         locationOptions={locationOptions}
         toolbarActions={<span>toolbar</span>}
         onDelete={vi.fn()}
       />,
     );
-    expect(screen.getByText('toolbar')).toBeInTheDocument();
+    expect(await screen.findByText('toolbar')).toBeInTheDocument();
     expect(screen.getAllByText(/Location · Mumbai/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Zone · Mumbai \/ North/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Users · 2/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Users · 0/).length).toBeGreaterThan(0);
-    // silent column renders Yes for the silent GLOBAL row
     expect(screen.getAllByText('Yes').length).toBeGreaterThan(0);
-    // link_url arrow shown for the GLOBAL row
     expect(screen.getByText(/\/pods\/1/)).toBeInTheDocument();
   });
 
-  it('invokes onDelete from the action button', () => {
+  it('invokes onDelete from the action button', async () => {
     const onDelete = vi.fn();
-    tableMock.rows = [rowBase];
-    render(
+    renderWithProviders(
       <NotificationsTable
-        fetchRows={vi.fn() as any}
-        refetchRef={{ current: null } as any}
+        fetchRows={fetchRowsFrom([rowBase])}
+        refetchRef={{ current: null }}
         locName={locName}
         locationOptions={locationOptions}
         onDelete={onDelete}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
     expect(onDelete).toHaveBeenCalledWith(rowBase);
   });
 });
@@ -169,10 +114,9 @@ describe('NotificationFormDialog', () => {
 
   it('submits a valid GLOBAL notification', async () => {
     const onSubmit = vi.fn();
-    render(<NotificationFormDialog {...baseProps} form={blankForm} onSubmit={onSubmit} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={blankForm} onSubmit={onSubmit} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
-    // toggle the silent switch to exercise its change handler
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -182,15 +126,14 @@ describe('NotificationFormDialog', () => {
 
   it('reveals the location select for LOCATION scope', () => {
     const form: NotifForm = { ...blankForm, scope: 'LOCATION' };
-    render(<NotificationFormDialog {...baseProps} form={form} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={form} />);
     expect(screen.getByLabelText('Location')).toBeInTheDocument();
   });
 
   it('reveals location + zone selects for ZONE scope and picks a location', () => {
     const form: NotifForm = { ...blankForm, scope: 'ZONE' };
-    render(<NotificationFormDialog {...baseProps} form={form} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={form} />);
     expect(screen.getByRole('combobox', { name: 'Location' })).toBeInTheDocument();
-    // choose a location -> onChange fires and clears the zone
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Location' }));
     fireEvent.click(within(screen.getByRole('listbox')).getByText('Mumbai'));
     expect(screen.getByRole('combobox', { name: 'Zone' })).toBeInTheDocument();
@@ -203,12 +146,11 @@ describe('NotificationFormDialog', () => {
       { user_id: 'u2', email: 'bob@example.com' },
       { user_id: 'u3', phone_number: '9998887776' },
     ];
-    render(<NotificationFormDialog {...baseProps} form={form} users={users} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={form} users={users} />);
     const usersField = screen.getByLabelText('Users');
     expect(usersField).toBeInTheDocument();
     fireEvent.mouseDown(usersField);
     const listbox = within(screen.getByRole('listbox'));
-    // label falls back to email then phone number when no full name
     expect(listbox.getByText('bob@example.com')).toBeInTheDocument();
     expect(listbox.getByText('9998887776')).toBeInTheDocument();
     fireEvent.click(listbox.getByText('Alice'));
@@ -217,7 +159,7 @@ describe('NotificationFormDialog', () => {
 
   it('shows the location-required error when a ZONE form is submitted without a location', async () => {
     const form: NotifForm = { ...blankForm, scope: 'ZONE' };
-    render(<NotificationFormDialog {...baseProps} form={form} onSubmit={vi.fn()} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={form} onSubmit={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
     fireEvent.submit(document.querySelector('form') as HTMLFormElement);
@@ -226,7 +168,7 @@ describe('NotificationFormDialog', () => {
 
   it('shows the users-required error when a USER form is submitted with no users', async () => {
     const form: NotifForm = { ...blankForm, scope: 'USER' };
-    render(<NotificationFormDialog {...baseProps} form={form} onSubmit={vi.fn()} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={form} onSubmit={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
     fireEvent.submit(document.querySelector('form') as HTMLFormElement);
@@ -235,9 +177,8 @@ describe('NotificationFormDialog', () => {
 
   it('shows the operation error and switches audience clearing dependent fields', () => {
     const form: NotifForm = { ...blankForm, scope: 'ZONE', location_id: 'l1', zone_name: 'North' };
-    render(<NotificationFormDialog {...baseProps} form={form} opError="Boom" />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={form} opError="Boom" />);
     expect(screen.getByText('Boom')).toBeInTheDocument();
-    // change audience back to GLOBAL -> location/zone selects disappear
     const audience = screen.getByLabelText('Audience');
     fireEvent.mouseDown(audience);
     const listbox = within(screen.getByRole('listbox'));
@@ -246,14 +187,14 @@ describe('NotificationFormDialog', () => {
   });
 
   it('disables actions and blocks close while busy', () => {
-    render(<NotificationFormDialog {...baseProps} form={blankForm} busy />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={blankForm} busy />);
     expect(screen.getByRole('button', { name: 'Sending…' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   });
 
   it('calls onClose from Cancel', () => {
     const onClose = vi.fn();
-    render(<NotificationFormDialog {...baseProps} form={blankForm} onClose={onClose} />);
+    renderWithProviders(<NotificationFormDialog {...baseProps} form={blankForm} onClose={onClose} />);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onClose).toHaveBeenCalled();
   });
@@ -261,34 +202,30 @@ describe('NotificationFormDialog', () => {
 
 // ===========================================================================
 describe('NotificationsPage', () => {
+  const refDataMocks = () => [locationsMock(), usersMock([makeUser()])];
+
   beforeEach(() => {
-    apolloMock.queryData = {
-      LocationsForNotif: { locations: [{ id: 'l1', location_name: 'Mumbai', location_zones: [] }] },
-      UsersForNotif: { users: [{ user_id: 'u1', full_name: 'Alice' }] },
-    };
-    // row carries a known location so locName resolves to a name (not the em-dash)
-    tableMock.rows = [{ ...rowBase, location_id: 'l1' }];
+    __setTableRows([makeNotificationRow({ location_id: 'l1' })]);
   });
 
   it('creates a notification and shows the delivery toast', async () => {
-    apolloMock.mutations.CreateNotification = vi
-      .fn()
-      .mockResolvedValue({ data: { createNotification: { delivered_count: 5, failed_count: 2 } } });
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    renderWithProviders(<NotificationsPage />, {
+      mocks: [...refDataMocks(), createNotificationMock({ delivered: 5, failed: 2 })],
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /New Notification/ }));
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Launch' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'We are live' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() =>
       expect(screen.getByText('Sent · delivered 5 · failed 2')).toBeInTheDocument(),
     );
-    expect(apolloMock.mutations.CreateNotification).toHaveBeenCalled();
   });
 
   it('surfaces a create error inside the dialog', async () => {
-    apolloMock.mutations.CreateNotification = vi.fn().mockRejectedValue(new Error('Send failed'));
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    renderWithProviders(<NotificationsPage />, {
+      mocks: [...refDataMocks(), createNotificationMock({ throwMessage: 'Send failed' })],
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /New Notification/ }));
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Launch' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'We are live' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
@@ -296,36 +233,36 @@ describe('NotificationsPage', () => {
   });
 
   it('deletes after confirmation and toasts', async () => {
-    apolloMock.mutations.DeleteNotification = vi.fn().mockResolvedValue({ data: {} });
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(apolloMock.mutations.DeleteNotification).toHaveBeenCalledWith({ variables: { id: 'n1' } }));
+    renderWithProviders(<NotificationsPage />, {
+      mocks: [...refDataMocks(), deleteNotificationMock()],
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('Deleted')).toBeInTheDocument();
   });
 
   it('does nothing when the delete confirmation is declined', async () => {
-    dialogsMock.confirmResult = false;
     dialogsMock.confirm = vi.fn().mockResolvedValue(false);
-    apolloMock.mutations.DeleteNotification = vi.fn().mockResolvedValue({ data: {} });
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    renderWithProviders(<NotificationsPage />, {
+      mocks: [...refDataMocks(), deleteNotificationMock()],
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(dialogsMock.confirm).toHaveBeenCalled());
-    expect(apolloMock.mutations.DeleteNotification).not.toHaveBeenCalled();
+    expect(screen.queryByText('Deleted')).not.toBeInTheDocument();
   });
 
   it('reports a delete failure through notifyError', async () => {
-    apolloMock.mutations.DeleteNotification = vi.fn().mockRejectedValue(new Error('nope'));
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    renderWithProviders(<NotificationsPage />, {
+      mocks: [...refDataMocks(), deleteNotificationMock({ throwMessage: 'nope' })],
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('nope'));
   });
 
   it('defaults the delivery counts to zero when the mutation returns no counts', async () => {
-    apolloMock.mutations.CreateNotification = vi
-      .fn()
-      .mockResolvedValue({ data: { createNotification: null } });
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    renderWithProviders(<NotificationsPage />, {
+      mocks: [...refDataMocks(), createNotificationMock({ empty: true })],
+    });
+    fireEvent.click(await screen.findByRole('button', { name: /New Notification/ }));
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Launch' } });
     fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'We are live' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
@@ -335,20 +272,23 @@ describe('NotificationsPage', () => {
   });
 
   it('closes the create dialog from Cancel', async () => {
-    render(<NotificationsPage />);
-    fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
+    renderWithProviders(<NotificationsPage />, { mocks: refDataMocks() });
+    fireEvent.click(await screen.findByRole('button', { name: /New Notification/ }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('auto-hides the toast after the timeout', async () => {
+  it('auto-hides the delivery toast after the timeout', async () => {
     vi.useFakeTimers();
     try {
-      apolloMock.mutations.DeleteNotification = vi.fn().mockResolvedValue({ data: {} });
-      dialogsMock.confirm = vi.fn().mockResolvedValue(true);
-      render(<NotificationsPage />);
+      renderWithProviders(<NotificationsPage />, {
+        mocks: [...refDataMocks(), deleteNotificationMock()],
+      });
+      // flush the table load + reference-data queries so the Delete row renders
+      await vi.runAllTimersAsync();
       fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+      // confirm -> delete -> toast, then the Snackbar autoHide fires onClose
       await vi.runAllTimersAsync();
       expect(screen.queryByText('Deleted')).not.toBeInTheDocument();
     } finally {
@@ -358,13 +298,11 @@ describe('NotificationsPage', () => {
 });
 
 describe('NotificationsPage without reference data', () => {
-  it('falls back to empty locations, users and options', () => {
-    apolloMock.queryData = {};
-    tableMock.rows = [rowBase];
-    render(<NotificationsPage />);
+  it('falls back to empty locations, users and options', async () => {
+    __setTableRows([rowBase]);
+    renderWithProviders(<NotificationsPage />, { mocks: [locationsMock([]), usersMock([])] });
     // location column resolves to the em-dash when no locations are loaded
-    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
-    // dialog still opens with an empty user/location list
+    expect(await screen.findAllByText('—')).not.toHaveLength(0);
     fireEvent.click(screen.getByRole('button', { name: /New Notification/ }));
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });

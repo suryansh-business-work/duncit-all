@@ -1,38 +1,35 @@
 import { describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { FaqSubmissionsPage } from '../../src/pages/website';
+import { renderWithProviders, flush } from '../testkit';
 import {
-  FAQ_SUBMISSIONS_TABLE,
-  UPDATE_FAQ_SUBMISSION_STATUS,
-  type FaqSubmission,
-} from '../../src/pages/website/faq-submissions/queries';
-import { renderWithProviders, tableMock, flush } from './testkit';
-
-const faq = (over: Partial<FaqSubmission>): FaqSubmission => ({
-  id: 'f1',
-  question: 'How do I join?',
-  email: 'q@duncit.com',
-  super_category_slug: 'events',
-  status: 'NEW',
-  created_at: '2026-01-01T10:00:00.000Z',
-  ...over,
-});
+  faqSubmissionsTableMock,
+  makeFaqSubmission,
+  updateFaqSubmissionStatusMock,
+} from '../mocks';
 
 const rows = [
-  faq({ id: 'a', question: 'New one', status: 'NEW', email: 'q@duncit.com', super_category_slug: 'events' }),
-  faq({ id: 'b', question: 'Converted one', status: 'CONVERTED', email: null, super_category_slug: null }),
-  faq({ id: 'c', question: 'Ignored one', status: 'IGNORED' }),
+  makeFaqSubmission({
+    id: 'a',
+    question: 'New one',
+    status: 'NEW',
+    email: 'q@duncit.com',
+    super_category_slug: 'events',
+  }),
+  makeFaqSubmission({
+    id: 'b',
+    question: 'Converted one',
+    status: 'CONVERTED',
+    email: null,
+    super_category_slug: null,
+  }),
+  makeFaqSubmission({ id: 'c', question: 'Ignored one', status: 'IGNORED' }),
 ];
-
-const updateMock = (id: string, status: 'CONVERTED' | 'IGNORED') => ({
-  request: { query: UPDATE_FAQ_SUBMISSION_STATUS, variables: { id, status } },
-  result: { data: { updateFaqSubmissionStatus: { id, status } } },
-});
 
 describe('FaqSubmissionsPage', () => {
   it('renders rows with placeholders and disabled actions per status', async () => {
     renderWithProviders(<FaqSubmissionsPage />, {
-      mocks: [tableMock(FAQ_SUBMISSIONS_TABLE, 'faqSubmissionsTable', rows)],
+      mocks: [faqSubmissionsTableMock(rows)],
     });
     expect(await screen.findByText('FAQ Submission')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('New one')).toBeInTheDocument());
@@ -47,9 +44,9 @@ describe('FaqSubmissionsPage', () => {
   it('marks a submission converted and ignores another', async () => {
     renderWithProviders(<FaqSubmissionsPage />, {
       mocks: [
-        tableMock(FAQ_SUBMISSIONS_TABLE, 'faqSubmissionsTable', rows),
-        updateMock('a', 'CONVERTED'),
-        updateMock('a', 'IGNORED'),
+        faqSubmissionsTableMock(rows),
+        updateFaqSubmissionStatusMock('a', 'CONVERTED'),
+        updateFaqSubmissionStatusMock('a', 'IGNORED'),
       ],
     });
     await waitFor(() => expect(screen.getByText('New one')).toBeInTheDocument());

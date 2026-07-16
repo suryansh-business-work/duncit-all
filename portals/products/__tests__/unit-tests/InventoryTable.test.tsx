@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InventoryTable from '../../src/pages/inventory-page/InventoryTable';
+import { makeInventoryProductRow } from '../mocks/inventory.mock';
 import type { InventoryProductRow } from '../../src/pages/inventory-page/queries';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
@@ -11,42 +12,24 @@ vi.mock('@duncit/ui', () => ({
   StatusChip: ({ status }: { status: string }) => <span>{status}</span>,
 }));
 
-const row = (over: Partial<InventoryProductRow> = {}): InventoryProductRow =>
-  ({
-    id: 'i1',
-    product_name: 'Cold Brew',
-    brand_name: 'Duncit',
-    sku: 'CB-1',
-    selling_price: 120,
-    unit_cost: 90,
-    inventory_count: 3,
-    low_stock_alert: 5,
-    available_count: 2,
-    status: 'ACTIVE',
-    image_url: '',
-    created_at: '2026-01-01T00:00:00.000Z',
-    ...over,
-  }) as InventoryProductRow;
-
-const renderTable = (over: Partial<Record<string, any>> = {}, rows = [row()]) => {
+const renderTable = (rows: InventoryProductRow[] = [makeInventoryProductRow()]) => {
   const props = {
     fetchRows: async () => ({ rows, total: rows.length }),
     refetchRef: { current: null },
     onEdit: vi.fn(),
     onArchive: vi.fn(),
     onDelete: vi.fn(),
-    ...over,
   };
-  render(<InventoryTable {...(props as any)} />);
+  render(<InventoryTable {...props} />);
   return props;
 };
 
 describe('InventoryTable', () => {
   it('renders product, price, stock and status cells', async () => {
-    renderTable({}, [
-      row(),
+    renderTable([
+      makeInventoryProductRow(),
       // Second row exercises the avatar image branch + the empty-name initial.
-      row({ id: 'i3', image_url: 'http://img/x.png', product_name: '' } as any),
+      makeInventoryProductRow({ id: 'i3', image_url: 'http://img/x.png', product_name: '' }),
     ]);
     await waitFor(() => expect(screen.getAllByText('Cold Brew').length).toBeGreaterThan(0));
     expect(screen.getAllByText('Duncit').length).toBeGreaterThan(0);
@@ -56,8 +39,14 @@ describe('InventoryTable', () => {
   });
 
   it('falls back to the unit cost and a dash date when fields are missing', async () => {
-    renderTable({}, [
-      row({ id: 'i2', selling_price: 0, brand_name: '', created_at: null, low_stock_alert: null } as any),
+    renderTable([
+      makeInventoryProductRow({
+        id: 'i2',
+        selling_price: 0,
+        brand_name: '',
+        created_at: null,
+        low_stock_alert: null,
+      }),
     ]);
     await waitFor(() => expect(screen.getAllByText('Cold Brew').length).toBeGreaterThan(0));
     expect(screen.getByText('—')).toBeInTheDocument();

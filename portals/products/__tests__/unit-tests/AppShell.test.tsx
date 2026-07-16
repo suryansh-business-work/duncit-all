@@ -4,7 +4,7 @@ import { screen, fireEvent } from '@testing-library/react';
 import AppShell from '../../src/components/AppShell';
 import { appConfig } from '../../src/config/app-config';
 import { getToken, setToken, clearToken } from '../../src/lib/session';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const userMock = vi.hoisted(() => ({
   value: { user: null as unknown, loading: false, logout: vi.fn() },

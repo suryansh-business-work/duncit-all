@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import InventoryPage from '../../src/pages/inventory-page/InventoryPage';
+import { renderWithProviders } from '../testkit';
 import {
-  ARCHIVE_INVENTORY_PRODUCT,
-  INVENTORY_LINKED_PODS,
-} from '../../src/pages/inventory-page/inventory-product-page/productQueries';
-import { renderWithProviders } from './testkit';
+  archiveProductMock,
+  inventoryLinkedPodsMock,
+  makeInventoryProductRow,
+} from '../mocks/inventory.mock';
 import { __setTableRows } from './table-mock';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
@@ -22,20 +22,7 @@ vi.mock('@duncit/ui', () => ({
   StatusChip: ({ status }: { status: string }) => <span>{status}</span>,
 }));
 
-const seedRow = {
-  id: 'i1',
-  product_name: 'Cold Brew',
-  brand_name: 'Duncit',
-  sku: 'CB-1',
-  selling_price: 120,
-  unit_cost: 90,
-  inventory_count: 3,
-  low_stock_alert: 5,
-  available_count: 2,
-  status: 'ACTIVE',
-  image_url: '',
-  created_at: null,
-};
+const seedRow = makeInventoryProductRow({ created_at: null });
 
 describe('InventoryPage', () => {
   it('renders the heading and adds a product via the toolbar', () => {
@@ -65,11 +52,7 @@ describe('InventoryPage', () => {
 
   it('opens the delete dialog and cancels it', async () => {
     __setTableRows([seedRow]);
-    const linkedPods: MockedResponse = {
-      request: { query: INVENTORY_LINKED_PODS, variables: { id: 'i1' } },
-      result: { data: { inventoryProductLinkedPods: [] } },
-    };
-    renderWithProviders(<InventoryPage />, { mocks: [linkedPods] } as any);
+    renderWithProviders(<InventoryPage />, { mocks: [inventoryLinkedPodsMock([], 'i1')] });
     await waitFor(() => expect(screen.getAllByText('Cold Brew').length).toBeGreaterThan(0));
     fireEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
     const dialog = await screen.findByRole('dialog');
@@ -80,11 +63,7 @@ describe('InventoryPage', () => {
 
   it('completes an archive and refreshes the table', async () => {
     __setTableRows([seedRow]);
-    const archiveOk: MockedResponse = {
-      request: { query: ARCHIVE_INVENTORY_PRODUCT, variables: { id: 'i1' } },
-      result: { data: { archiveInventoryProduct: { id: 'i1', status: 'ARCHIVED', is_active: false } } },
-    };
-    renderWithProviders(<InventoryPage />, { mocks: [archiveOk] } as any);
+    renderWithProviders(<InventoryPage />, { mocks: [archiveProductMock({ id: 'i1' })] });
     await waitFor(() => expect(screen.getAllByText('Cold Brew').length).toBeGreaterThan(0));
     fireEvent.click(screen.getByRole('button', { name: 'Archive' }));
     const dialog = await screen.findByRole('dialog');

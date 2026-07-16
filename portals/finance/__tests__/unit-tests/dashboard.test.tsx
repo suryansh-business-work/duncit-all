@@ -1,65 +1,41 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
-import { useQuery } from '@apollo/client';
+import { describe, expect, it } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
 import DashboardPage from '../../src/pages/DashboardPage';
 import FinanceKpis from '../../src/pages/finance/dashboard/FinanceKpis';
-import { renderUI } from './testkit';
-
-vi.mock('@apollo/client', async (orig) => {
-  const actual = await orig<Record<string, unknown>>();
-  return { ...actual, useQuery: vi.fn() };
-});
-
-const mockedUseQuery = vi.mocked(useQuery);
-
-const stat = (total: number, mom: number) => ({ total, this_month: 0, last_month: 0, mom_change_pct: mom });
+import { renderWithProviders } from '../testkit';
+import {
+  financeDashboardErrorMock,
+  financeDashboardLoadingMock,
+  financeDashboardStatsMock,
+} from '../mocks/dashboard.mock';
 
 describe('FinanceKpis', () => {
-  beforeEach(() => mockedUseQuery.mockReset());
-
-  it('renders an error alert', () => {
-    mockedUseQuery.mockReturnValue({ data: undefined, loading: false, error: new Error('boom') } as any);
-    renderUI(<FinanceKpis />);
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+  it('renders an error alert', async () => {
+    renderWithProviders(<FinanceKpis />, { mocks: [financeDashboardErrorMock()] });
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 
-  it('renders KPI cards with up/down trends and handles missing stats', () => {
-    mockedUseQuery.mockReturnValue({
-      loading: true,
-      error: undefined,
-      data: {
-        financeDashboardStats: {
-          currency_symbol: '₹',
-          total_revenue: stat(1000, 5),
-          duncit_revenue: stat(500, -3),
-          gst_collected: stat(100, 0),
-          // pending_payouts + completed_payouts intentionally missing → undefined stat
-        },
-      },
-    } as any);
-    renderUI(<FinanceKpis />);
-    expect(screen.getByText('Total Collected (GMV)')).toBeInTheDocument();
-    expect(screen.getByText('+5.0% vs last month')).toBeInTheDocument();
-    expect(screen.getByText('-3.0% vs last month')).toBeInTheDocument();
-    // missing stat → value defaults to ₹0.00 and shows a loading placeholder
-    expect(screen.getAllByText('₹0.00').length).toBeGreaterThan(0);
-    expect(screen.getAllByTestId('stat-loading').length).toBeGreaterThan(0);
-  });
-
-  it('renders with no data (empty currency symbol)', () => {
-    mockedUseQuery.mockReturnValue({ loading: false, error: undefined, data: undefined } as any);
-    renderUI(<FinanceKpis />);
+  it('shows loading placeholders and a blank currency while fetching', () => {
+    renderWithProviders(<FinanceKpis />, { mocks: [financeDashboardLoadingMock()] });
+    // Pending query: no data yet → each card shows the loading placeholder and 0.00.
     expect(screen.getByText('Duncit Revenue')).toBeInTheDocument();
+    expect(screen.getAllByTestId('stat-loading').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('0.00').length).toBeGreaterThan(0);
+  });
+
+  it('renders KPI cards with up and down trends once loaded', async () => {
+    renderWithProviders(<FinanceKpis />, { mocks: [financeDashboardStatsMock()] });
+    expect(await screen.findByText('+5.0% vs last month')).toBeInTheDocument();
+    expect(screen.getByText('-3.0% vs last month')).toBeInTheDocument();
+    expect(screen.getByText('Total Collected (GMV)')).toBeInTheDocument();
   });
 });
 
 describe('DashboardPage', () => {
-  beforeEach(() => mockedUseQuery.mockReset());
-
-  it('renders the welcome dashboard with the KPI section', () => {
-    mockedUseQuery.mockReturnValue({ loading: false, error: undefined, data: undefined } as any);
-    renderUI(<DashboardPage />);
+  it('renders the welcome dashboard with the KPI section', async () => {
+    renderWithProviders(<DashboardPage />, { mocks: [financeDashboardStatsMock()] });
     expect(screen.getByTestId('welcome-dashboard')).toBeInTheDocument();
     expect(screen.getByText('Finance overview')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Total Collected (GMV)')).toBeInTheDocument());
   });
 });

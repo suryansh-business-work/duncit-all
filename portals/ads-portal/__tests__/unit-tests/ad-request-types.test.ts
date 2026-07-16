@@ -1,15 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import {
-  adRequestSchema,
-  blankAdRequestValues,
-} from '../../src/pages/create-ad-page/ad-request/ad-request.types';
+import { adRequestSchema } from '../../src/pages/create-ad-page/ad-request/ad-request.types';
+import { makeAdRequestFormValues } from '../mocks';
 
-const valid = {
-  ...blankAdRequestValues(),
-  ad_title: 'Weekend Mega Sale',
-  ad_description: 'Flat discounts on every listing this weekend only.',
-  media_url: 'https://ik.imagekit.io/duncit/ads/banner.png',
-};
+const valid = makeAdRequestFormValues();
 
 describe('ad-request.types edge branches', () => {
   it('rejects a redirect URL the URL constructor cannot parse (catch branch)', () => {

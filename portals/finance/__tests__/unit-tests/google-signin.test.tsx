@@ -27,7 +27,9 @@ const renderBtn = (props: Partial<Parameters<typeof GoogleSignInButton>[0]> = {}
     </ThemeProvider>,
   );
 
-afterEach(() => vi.unstubAllEnvs());
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('GoogleSignInButton', () => {
   it('renders the not-configured fallback when no client id is set', () => {

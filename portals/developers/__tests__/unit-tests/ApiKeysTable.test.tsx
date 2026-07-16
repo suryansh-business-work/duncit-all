@@ -1,107 +1,64 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { createRef } from 'react';
-import type { ApiKeyRow } from '../../src/pages/api-keys/queries';
-
-const captured = vi.hoisted(() => ({ props: null as Record<string, any> | null }));
-
-vi.mock('@duncit/table', () => ({
-  DuncitTable: (props: Record<string, unknown>) => {
-    captured.props = props;
-    return <div data-testid="duncit-table" />;
-  },
-  formatDateCell: (iso: string | null, _fmt: string) => (iso ? `fmt:${iso}` : '—'),
-}));
-
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ApiKeysTable from '../../src/pages/api-keys/ApiKeysTable';
+import type { ApiKeyRow } from '../../src/pages/api-keys/queries';
+import { makeApiKeyRow, makeRevokedApiKeyRow } from '../mocks';
 
-const activeRow: ApiKeyRow = {
-  id: 'k1',
-  name: 'Staging',
-  key_prefix: 'dk_abc',
-  scopes: ['venues:read', 'slots:read'],
-  last_used_at: '2026-02-02',
-  revoked_at: null,
-  created_at: '2026-01-01',
-};
+// The table page renders through the shared @duncit/table; the stand-in runs
+// every column's valueGetter + cellRenderer against the fetched rows for real.
+vi.mock('@duncit/table', () => import('./table-mock'));
 
-const revokedRow: ApiKeyRow = { ...activeRow, id: 'k2', revoked_at: '2026-03-03', last_used_at: null };
-
-const onRevoke = vi.fn();
-
-const renderTable = () =>
+const renderTable = (rows: ApiKeyRow[], onRevoke = vi.fn()) => {
   render(
     <ApiKeysTable
-      fetchRows={vi.fn() as never}
+      fetchRows={async () => ({ rows, total: rows.length })}
       refetchRef={createRef()}
       toolbarActions={<button type="button">tb</button>}
       onRevoke={onRevoke}
     />,
   );
-
-const cols = () => captured.props?.columns as Array<Record<string, any>>;
-const col = (field: string) => cols().find((c) => c.field === field)!;
+  return onRevoke;
+};
 
 describe('ApiKeysTable', () => {
-  beforeEach(() => {
-    captured.props = null;
-    onRevoke.mockReset();
+  it('renders name, monospace key, scope chips, dates and Active/Revoked status', async () => {
+    renderTable([makeApiKeyRow(), makeRevokedApiKeyRow()]);
+
+    await waitFor(() => expect(screen.getAllByText('Staging').length).toBe(2));
+    // Monospace key cell (cellRenderer) + prefix value (valueGetter) both render.
+    expect(screen.getAllByText('dk_abc…').length).toBe(2);
+    expect(screen.getAllByText('dk_abc').length).toBe(2);
+    // Scope chips + the joined scope value.
+    expect(screen.getAllByText('venues:read').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('slots:read').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('venues:read, slots:read').length).toBe(2);
+    // Dates: created (both), last-used (active only), revoked (revoked only).
+    expect(screen.getAllByText('fmt:2026-01-01').length).toBe(2);
+    expect(screen.getByText('fmt:2026-02-02')).toBeInTheDocument();
+    expect(screen.getByText('fmt:2026-03-03')).toBeInTheDocument();
+    // Null dates dash out (revoked's last-used + active's revoked-at).
+    expect(screen.getAllByText('—').length).toBe(2);
+    // Status value + chip, both variants.
+    expect(screen.getAllByText('Active').length).toBe(2);
+    expect(screen.getAllByText('Revoked').length).toBe(2);
   });
 
-  it('wires the shared DuncitTable with the portal config', () => {
-    renderTable();
-    expect(screen.getByTestId('duncit-table')).toBeInTheDocument();
-    expect(captured.props?.tableId).toBe('developers-api-keys');
-    expect(captured.props?.emptyText).toMatch(/No API keys yet/);
-    expect(captured.props?.defaultSort).toEqual({ field: 'created_at', dir: 'desc' });
-    expect(captured.props?.searchPlaceholder).toMatch(/Search name or key prefix/);
-    expect((captured.props?.getRowId as (k: ApiKeyRow) => string)(activeRow)).toBe('k1');
-    expect(cols()).toHaveLength(8);
+  it('renders a Revoke action only for active keys and forwards the row', async () => {
+    const onRevoke = renderTable([makeApiKeyRow(), makeRevokedApiKeyRow()]);
+    await waitFor(() => expect(screen.getAllByText('Staging').length).toBe(2));
+
+    // Exactly one Revoke button — the active row; the revoked row renders none.
+    const revokeButtons = screen.getAllByRole('button', { name: 'Revoke' });
+    expect(revokeButtons).toHaveLength(1);
+    fireEvent.click(revokeButtons[0]);
+    expect(onRevoke).toHaveBeenCalledWith(expect.objectContaining({ id: 'k1' }));
   });
 
-  it('renders the monospace key cell and returns the prefix as its value', () => {
-    renderTable();
-    render(col('key_prefix').cellRenderer(activeRow));
-    expect(screen.getByText('dk_abc…')).toBeInTheDocument();
-    expect(col('key_prefix').valueGetter(activeRow)).toBe('dk_abc');
-  });
-
-  it('renders one chip per scope and joins scopes for the value', () => {
-    renderTable();
-    render(col('scopes').cellRenderer(activeRow));
-    expect(screen.getByText('venues:read')).toBeInTheDocument();
-    expect(screen.getByText('slots:read')).toBeInTheDocument();
-    expect(col('scopes').valueGetter(activeRow)).toBe('venues:read, slots:read');
-  });
-
-  it('formats the date columns and dashes null dates', () => {
-    renderTable();
-    expect(col('created_at').valueGetter(activeRow)).toBe('fmt:2026-01-01');
-    expect(col('last_used_at').valueGetter(activeRow)).toBe('fmt:2026-02-02');
-    expect(col('last_used_at').valueGetter(revokedRow)).toBe('—');
-    expect(col('revoked_at').valueGetter(activeRow)).toBe('—');
-    expect(col('revoked_at').valueGetter(revokedRow)).toBe('fmt:2026-03-03');
-  });
-
-  it('shows Active vs Revoked status via value + chip renderer', () => {
-    renderTable();
-    expect(col('status').valueGetter(activeRow)).toBe('Active');
-    expect(col('status').valueGetter(revokedRow)).toBe('Revoked');
-    const { rerender } = render(col('status').cellRenderer(activeRow));
-    expect(screen.getByText('Active')).toBeInTheDocument();
-    rerender(col('status').cellRenderer(revokedRow));
-    expect(screen.getByText('Revoked')).toBeInTheDocument();
-  });
-
-  it('renders a Revoke action for active keys that calls onRevoke, and nothing for revoked keys', () => {
-    renderTable();
-    const actions = col('actions');
-    const { container } = render(actions.cellRenderer(activeRow));
-    fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
-    expect(onRevoke).toHaveBeenCalledWith(activeRow);
-
-    const empty = render(actions.cellRenderer(revokedRow));
-    expect(empty.container.querySelector('button')).toBeNull();
-    expect(container).toBeTruthy();
+  it('shows the empty state when there are no keys', async () => {
+    renderTable([]);
+    await waitFor(() =>
+      expect(screen.getByTestId('table-empty')).toHaveTextContent(/No API keys yet/),
+    );
   });
 });

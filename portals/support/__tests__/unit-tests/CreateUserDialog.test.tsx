@@ -1,20 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { type MockedResponse } from '@apollo/client/testing';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import CreateUserDialog from '../../src/pages/live-chat/CreateUserDialog';
-import { SUPPORT_CREATE_USER } from '../../src/graphql/supportChat';
+import { renderWithProviders } from '../testkit';
+import { createUserMock } from '../mocks/supportChat.mock';
 
 // Required fields carry a trailing "*" in their accessible name, so match on a
 // start-anchored prefix rather than an exact string.
 const fill = (label: RegExp | string, value: string) =>
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
-const renderDialog = (mocks: any[], onClose = vi.fn()) => {
-  render(
-    <MockedProvider mocks={mocks} addTypename={false}>
-      <CreateUserDialog open onClose={onClose} />
-    </MockedProvider>,
-  );
+const renderDialog = (mocks: MockedResponse[], onClose = vi.fn()) => {
+  renderWithProviders(<CreateUserDialog open onClose={onClose} />, { mocks });
   return onClose;
 };
 
@@ -34,23 +31,19 @@ describe('CreateUserDialog', () => {
   });
 
   it('creates a user, trims optional fields to null and shows the success alert', async () => {
-    const mock = {
-      request: {
-        query: SUPPORT_CREATE_USER,
-        variables: {
-          input: {
-            first_name: 'Riya',
-            last_name: null,
-            email: 'riya@example.com',
-            phone_extension: null,
-            phone_number: null,
-            password: 'longenough',
-          },
+    renderDialog([
+      createUserMock({
+        input: {
+          first_name: 'Riya',
+          last_name: null,
+          email: 'riya@example.com',
+          phone_extension: null,
+          phone_number: null,
+          password: 'longenough',
         },
-      },
-      result: { data: { supportCreateUser: { user_id: 'u1', full_name: 'Riya', email: 'riya@example.com' } } },
-    };
-    renderDialog([mock]);
+        result: { user_id: 'u1', full_name: 'Riya', email: 'riya@example.com' },
+      }),
+    ]);
 
     fill(/first name/i, 'Riya');
     fill(/^email/i, 'riya@example.com');
@@ -65,23 +58,19 @@ describe('CreateUserDialog', () => {
   });
 
   it('sends the optional last name / phone fields when provided', async () => {
-    const mock = {
-      request: {
-        query: SUPPORT_CREATE_USER,
-        variables: {
-          input: {
-            first_name: 'Aman',
-            last_name: 'Kumar',
-            email: 'aman@example.com',
-            phone_extension: '+91',
-            phone_number: '9800000000',
-            password: 'password1',
-          },
+    renderDialog([
+      createUserMock({
+        input: {
+          first_name: 'Aman',
+          last_name: 'Kumar',
+          email: 'aman@example.com',
+          phone_extension: '+91',
+          phone_number: '9800000000',
+          password: 'password1',
         },
-      },
-      result: { data: { supportCreateUser: { user_id: 'u2', full_name: 'Aman Kumar', email: 'aman@example.com' } } },
-    };
-    renderDialog([mock]);
+        result: { user_id: 'u2', full_name: 'Aman Kumar', email: 'aman@example.com' },
+      }),
+    ]);
 
     fill(/first name/i, 'Aman');
     fill(/last name/i, 'Kumar');
@@ -97,23 +86,19 @@ describe('CreateUserDialog', () => {
   });
 
   it('surfaces a mutation error', async () => {
-    const mock = {
-      request: {
-        query: SUPPORT_CREATE_USER,
-        variables: {
-          input: {
-            first_name: 'Dev',
-            last_name: null,
-            email: 'dev@example.com',
-            phone_extension: null,
-            phone_number: null,
-            password: 'password1',
-          },
+    renderDialog([
+      createUserMock({
+        input: {
+          first_name: 'Dev',
+          last_name: null,
+          email: 'dev@example.com',
+          phone_extension: null,
+          phone_number: null,
+          password: 'password1',
         },
-      },
-      error: new Error('Email already registered'),
-    };
-    renderDialog([mock]);
+        error: 'Email already registered',
+      }),
+    ]);
 
     fill(/first name/i, 'Dev');
     fill(/^email/i, 'dev@example.com');
@@ -124,23 +109,19 @@ describe('CreateUserDialog', () => {
   });
 
   it('falls back to an empty confirmation when the mutation returns no payload', async () => {
-    const mock = {
-      request: {
-        query: SUPPORT_CREATE_USER,
-        variables: {
-          input: {
-            first_name: 'Nia',
-            last_name: null,
-            email: 'nia@example.com',
-            phone_extension: null,
-            phone_number: null,
-            password: 'password1',
-          },
+    renderDialog([
+      createUserMock({
+        input: {
+          first_name: 'Nia',
+          last_name: null,
+          email: 'nia@example.com',
+          phone_extension: null,
+          phone_number: null,
+          password: 'password1',
         },
-      },
-      result: { data: { supportCreateUser: null } },
-    };
-    renderDialog([mock]);
+        result: null,
+      }),
+    ]);
 
     fill(/first name/i, 'Nia');
     fill(/^email/i, 'nia@example.com');
@@ -153,23 +134,19 @@ describe('CreateUserDialog', () => {
   });
 
   it('clears the success alert and calls onClose on Close', async () => {
-    const mock = {
-      request: {
-        query: SUPPORT_CREATE_USER,
-        variables: {
-          input: {
-            first_name: 'Sam',
-            last_name: null,
-            email: 'sam@example.com',
-            phone_extension: null,
-            phone_number: null,
-            password: 'password1',
-          },
+    const onClose = renderDialog([
+      createUserMock({
+        input: {
+          first_name: 'Sam',
+          last_name: null,
+          email: 'sam@example.com',
+          phone_extension: null,
+          phone_number: null,
+          password: 'password1',
         },
-      },
-      result: { data: { supportCreateUser: { user_id: 'u3', full_name: 'Sam', email: 'sam@example.com' } } },
-    };
-    const onClose = renderDialog([mock]);
+        result: { user_id: 'u3', full_name: 'Sam', email: 'sam@example.com' },
+      }),
+    ]);
 
     fill(/first name/i, 'Sam');
     fill(/^email/i, 'sam@example.com');

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProductOrdersTable from '../../src/pages/orders/ProductOrdersTable';
-import type { ProductOrderRow } from '../../src/pages/orders/queries';
+import { makeProductOrderRow } from '../mocks/order.mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
 vi.mock('@duncit/app-settings', () => ({
@@ -11,27 +11,11 @@ vi.mock('@duncit/ui', () => ({
   StatusChip: ({ label }: { label: string }) => <span>{label}</span>,
 }));
 
-const row = (over: Partial<ProductOrderRow> = {}): ProductOrderRow =>
-  ({
-    id: 'o1',
-    order_no: 'PO-1',
-    buyer_name: 'Asha',
-    buyer_email: 'asha@x.com',
-    pod: { id: 'p', pod_title: 'Sunset Pod' },
-    currency_symbol: '₹',
-    total: 500,
-    fulfilment_method: 'SHIP',
-    fulfilment_status: 'OUT_FOR_DELIVERY',
-    shiprocket: { awb: 'AWB9' },
-    created_at: '2026-01-01T00:00:00.000Z',
-    ...over,
-  }) as ProductOrderRow;
-
 describe('ProductOrdersTable', () => {
   it('renders order columns and cell content', async () => {
     render(
       <ProductOrdersTable
-        fetchRows={async () => ({ rows: [row()], total: 1 })}
+        fetchRows={async () => ({ rows: [makeProductOrderRow()], total: 1 })}
         refetchRef={{ current: null }}
         onView={vi.fn()}
       />,
@@ -49,7 +33,7 @@ describe('ProductOrdersTable', () => {
     render(
       <ProductOrdersTable
         fetchRows={async () => ({
-          rows: [row({ id: 'o2', pod: null, shiprocket: null, created_at: null } as any)],
+          rows: [makeProductOrderRow({ id: 'o2', pod: null, shiprocket: null, created_at: null })],
           total: 1,
         })}
         refetchRef={{ current: null }}
@@ -64,7 +48,7 @@ describe('ProductOrdersTable', () => {
     const onView = vi.fn();
     render(
       <ProductOrdersTable
-        fetchRows={async () => ({ rows: [row()], total: 1 })}
+        fetchRows={async () => ({ rows: [makeProductOrderRow()], total: 1 })}
         refetchRef={{ current: null }}
         onView={onView}
       />,

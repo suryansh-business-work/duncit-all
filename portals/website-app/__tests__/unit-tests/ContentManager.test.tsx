@@ -3,14 +3,14 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { BlogPage, CareersPage, NewsroomPage } from '../../src/pages/website';
 import ContentManager from '../../src/pages/website/content/ContentManager';
+import { renderWithProviders } from '../testkit';
 import {
-  CONTENT_TABLE,
-  CREATE_CONTENT,
-  DELETE_CONTENT,
-  UPDATE_CONTENT,
-  type WebsiteContentItem,
-} from '../../src/pages/website/content/queries';
-import { renderWithProviders, tableMock } from './testkit';
+  createContentMock,
+  deleteContentMock,
+  makeContentItem,
+  updateContentMock,
+  websiteContentTableMock,
+} from '../mocks';
 
 vi.mock('../../src/components/DateTimeField', () => ({
   default: ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
@@ -29,50 +29,19 @@ vi.mock('@duncit/media-picker', () => ({
   }) => <input aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />,
 }));
 
-const entry = (over: Partial<WebsiteContentItem>): WebsiteContentItem => ({
-  id: '1',
-  type: 'BLOG',
-  title: 'First',
-  slug: 'first',
-  summary: '',
-  body: '',
-  category: 'Eng',
-  image_url: 'https://img/a.png',
-  cta_label: '',
-  cta_url: '',
-  published_at: '2026-01-01T00:00:00.000Z',
-  is_published: true,
-  sort_order: 1,
-  created_at: '2026-01-02T00:00:00.000Z',
-  updated_at: '2026-01-03T00:00:00.000Z',
-  ...over,
-});
-
 const rows = [
-  entry({ id: 'a', title: 'First' }),
-  entry({
+  makeContentItem({ id: 'a', title: 'First' }),
+  makeContentItem({
     id: 'b',
     title: 'Second',
     image_url: '',
     category: '',
     is_published: false,
     published_at: null,
-    created_at: undefined,
+    created_at: '', // falsy → the "—" created-at valueGetter branch
     sort_order: 2,
   }),
 ];
-
-const okMutation = (query: unknown, key: string): MockedResponse => ({
-  request: { query: query as MockedResponse['request']['query'] },
-  variableMatcher: () => true,
-  result: { data: { [key]: { id: 'a' } } },
-});
-
-const errMutation = (query: unknown): MockedResponse => ({
-  request: { query: query as MockedResponse['request']['query'] },
-  variableMatcher: () => true,
-  result: { errors: [{ message: 'Boom failed' }] },
-});
 
 beforeEach(() => {
   localStorage.setItem(
@@ -83,7 +52,7 @@ beforeEach(() => {
 
 const renderBlog = (mocks: MockedResponse[]) =>
   renderWithProviders(<ContentManager type="BLOG" />, {
-    mocks: [tableMock(CONTENT_TABLE, 'websiteContentTable', rows, 'WebsiteContentItem'), ...mocks],
+    mocks: [websiteContentTableMock(rows), ...mocks],
   });
 
 describe('ContentManager', () => {
@@ -98,7 +67,7 @@ describe('ContentManager', () => {
   });
 
   it('creates a new entry, toasts success and auto-dismisses the toast', async () => {
-    renderBlog([okMutation(CREATE_CONTENT, 'createWebsiteContent')]);
+    renderBlog([createContentMock()]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new entry/i }));
     const dialog = await screen.findByRole('dialog');
@@ -121,7 +90,7 @@ describe('ContentManager', () => {
   });
 
   it('edits an existing entry seeded from the row', async () => {
-    renderBlog([okMutation(UPDATE_CONTENT, 'updateWebsiteContent')]);
+    renderBlog([updateContentMock()]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
     fireEvent.click(screen.getAllByRole('button', { name: 'edit' })[0]);
     const dialog = await screen.findByRole('dialog');
@@ -132,7 +101,7 @@ describe('ContentManager', () => {
   });
 
   it('surfaces a save error in the form', async () => {
-    renderBlog([errMutation(CREATE_CONTENT)]);
+    renderBlog([createContentMock({ fail: true })]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new entry/i }));
     const dialog = await screen.findByRole('dialog');
@@ -142,7 +111,7 @@ describe('ContentManager', () => {
   });
 
   it('deletes an entry after confirmation', async () => {
-    renderBlog([okMutation(DELETE_CONTENT, 'deleteWebsiteContent')]);
+    renderBlog([deleteContentMock()]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
     fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
     const dialog = await screen.findByRole('dialog');
@@ -162,7 +131,7 @@ describe('ContentManager', () => {
   });
 
   it('toasts a delete error', async () => {
-    renderBlog([errMutation(DELETE_CONTENT)]);
+    renderBlog([deleteContentMock({ fail: true })]);
     await waitFor(() => expect(screen.getByText('First')).toBeInTheDocument());
     fireEvent.click(screen.getAllByRole('button', { name: 'delete' })[0]);
     const dialog = await screen.findByRole('dialog');
@@ -172,7 +141,7 @@ describe('ContentManager', () => {
 });
 
 describe('content page wrappers', () => {
-  const emptyTable = () => [tableMock(CONTENT_TABLE, 'websiteContentTable', [], 'WebsiteContentItem')];
+  const emptyTable = () => [websiteContentTableMock([])];
 
   it('renders the Blog manager', async () => {
     renderWithProviders(<BlogPage />, { mocks: emptyTable() });

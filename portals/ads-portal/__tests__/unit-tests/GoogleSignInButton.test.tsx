@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const glogin = vi.hoisted(() => ({ props: null as unknown as Record<string, any> }));
 

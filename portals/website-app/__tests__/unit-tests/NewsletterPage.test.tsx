@@ -1,33 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { NewsletterPage } from '../../src/pages/website';
+import { renderWithProviders, showHiddenColumns } from '../testkit';
 import {
-  NEWSLETTER_SUBSCRIBERS,
-  NEWSLETTER_TABLE,
-  type Subscriber,
-} from '../../src/pages/website/newsletter/queries';
-import { renderWithProviders, tableMock, showHiddenColumns } from './testkit';
-
-const sub = (over: Partial<Subscriber>): Subscriber => ({
-  id: 's1',
-  email: 'a@duncit.com',
-  source: 'WEBSITE_FOOTER',
-  unsubscribed_at: null,
-  created_at: '2026-01-01T00:00:00.000Z',
-  ...over,
-});
+  makeSubscriber,
+  newsletterSubscribersListMock,
+  newsletterSubscribersTableMock,
+} from '../mocks';
 
 const rows = [
-  sub({ id: 'a', email: 'active@duncit.com', unsubscribed_at: null }),
-  sub({ id: 'u', email: 'gone@duncit.com', unsubscribed_at: '2026-02-01T00:00:00.000Z' }),
+  makeSubscriber({ id: 'a', email: 'active@duncit.com', unsubscribed_at: null }),
+  makeSubscriber({ id: 'u', email: 'gone@duncit.com', unsubscribed_at: '2026-02-01T00:00:00.000Z' }),
 ];
-
-const listMock = (data: Subscriber[]) => ({
-  request: { query: NEWSLETTER_SUBSCRIBERS },
-  variableMatcher: () => true,
-  maxUsageCount: Number.POSITIVE_INFINITY,
-  result: { data: { newsletterSubscribers: data } },
-});
 
 beforeEach(() => {
   // Reveal the declared-hidden "Unsubscribed" column so its valueGetter runs.
@@ -37,7 +21,7 @@ beforeEach(() => {
 describe('NewsletterPage', () => {
   it('shows KPI totals and renders active + unsubscribed rows', async () => {
     renderWithProviders(<NewsletterPage />, {
-      mocks: [listMock(rows), tableMock(NEWSLETTER_TABLE, 'newsletterSubscribersTable', rows)],
+      mocks: [newsletterSubscribersListMock(rows), newsletterSubscribersTableMock(rows)],
     });
     expect(await screen.findByText('Newsletter Submission')).toBeInTheDocument();
     // KPI cards: total 2, active 1.
@@ -51,7 +35,7 @@ describe('NewsletterPage', () => {
 
   it('falls back to empty KPI totals and an empty table with no data', async () => {
     renderWithProviders(<NewsletterPage />, {
-      mocks: [tableMock(NEWSLETTER_TABLE, 'newsletterSubscribersTable', [])],
+      mocks: [newsletterSubscribersListMock([]), newsletterSubscribersTableMock([])],
     });
     expect(await screen.findByText('Newsletter Submission')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('No subscribers yet.')).toBeInTheDocument());

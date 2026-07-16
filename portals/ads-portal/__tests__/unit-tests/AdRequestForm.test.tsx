@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import AdRequestForm from '../../src/pages/create-ad-page/ad-request/ad-request.form';
-import { blankAdRequestValues } from '../../src/pages/create-ad-page/ad-request/ad-request.types';
 import type { AdRequestFormValues } from '../../src/pages/create-ad-page/ad-request/ad-request.types';
-import { renderWithProviders } from './testkit';
+import { makeAdRequestFormValues } from '../mocks';
+import { renderWithProviders } from '../testkit';
 
 // Mock the MUIX DatePicker so no LocalizationProvider is required and both the
 // date-selected and date-cleared onChange branches can be driven directly.
@@ -31,12 +31,7 @@ vi.mock('../../src/pages/create-ad-page/ad-request/AdMediaField', () => ({
   ),
 }));
 
-const validValues = (): AdRequestFormValues => ({
-  ...blankAdRequestValues(),
-  ad_title: 'Weekend Mega Sale',
-  ad_description: 'Flat discounts across every listing this weekend only.',
-  media_url: 'https://ik.imagekit.io/duncit/ads/banner.png',
-});
+const validValues = (): AdRequestFormValues => makeAdRequestFormValues();
 
 interface Overrides {
   initialValues?: AdRequestFormValues;

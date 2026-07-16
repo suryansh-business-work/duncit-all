@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import StatGrid from '../../src/pages/dashboard/StatGrid';
-import type { AdsDashboardStats } from '../../src/pages/dashboard/queries';
-import { renderWithProviders } from './testkit';
+import { makeAdsDashboard } from '../mocks';
+import { renderWithProviders } from '../testkit';
 
-const stats: AdsDashboardStats = {
+const stats = makeAdsDashboard({
   total: 12,
   pending: 3,
   approved: 2,
@@ -16,8 +16,7 @@ const stats: AdsDashboardStats = {
   live_spend: 15000,
   next_start_at: null,
   next_start_title: null,
-  currency_symbol: '₹',
-};
+});
 
 describe('StatGrid', () => {
   it('renders a tile per bucket, formatting money buckets with the currency symbol', () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EcommBrandsTable from '../../src/pages/ecomm/EcommBrandsTable';
-import type { EcommBrandRow } from '../../src/pages/ecomm/queries';
+import { makeEcommBrandRow } from '../mocks/ecommBrand.mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
 vi.mock('@duncit/app-settings', () => ({
@@ -11,28 +11,15 @@ vi.mock('@duncit/ui', () => ({
   StatusChip: ({ status }: { status: string }) => <span>{status}</span>,
 }));
 
-const row = (over: Partial<EcommBrandRow> = {}): EcommBrandRow =>
-  ({
-    id: 'b1',
-    brand_name: 'Acme',
-    logo_url: '',
-    status: 'APPROVED',
-    approved_product_count: 7,
-    default_pickup_location_id: 'loc1',
-    city: 'Pune',
-    state: 'MH',
-    contact_email: 'sales@acme.com',
-    contact_phone: '',
-    created_at: '2026-01-01T00:00:00.000Z',
-    ...over,
-  }) as EcommBrandRow;
-
 describe('EcommBrandsTable', () => {
   it('renders brand, contact, location and pickup-registered cells', async () => {
     render(
       <EcommBrandsTable
         fetchRows={async () => ({
-          rows: [row(), row({ id: 'b3', logo_url: 'http://img/l.png', brand_name: '' } as any)],
+          rows: [
+            makeEcommBrandRow(),
+            makeEcommBrandRow({ id: 'b3', logo_url: 'http://img/l.png', brand_name: '' }),
+          ],
           total: 2,
         })}
         refetchRef={{ current: null }}
@@ -50,14 +37,14 @@ describe('EcommBrandsTable', () => {
       <EcommBrandsTable
         fetchRows={async () => ({
           rows: [
-            row({
+            makeEcommBrandRow({
               id: 'b2',
               default_pickup_location_id: null,
               city: '',
               state: '',
               contact_email: '',
               contact_phone: '',
-            } as any),
+            }),
           ],
           total: 1,
         })}
@@ -73,7 +60,7 @@ describe('EcommBrandsTable', () => {
     const onView = vi.fn();
     render(
       <EcommBrandsTable
-        fetchRows={async () => ({ rows: [row()], total: 1 })}
+        fetchRows={async () => ({ rows: [makeEcommBrandRow()], total: 1 })}
         refetchRef={{ current: null }}
         onView={onView}
       />,

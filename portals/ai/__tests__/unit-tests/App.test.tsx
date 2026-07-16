@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import App from '../../src/App';
 import { setToken, clearToken } from '../../src/lib/session';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div data-testid="shell">{children}</div>,

@@ -1,0 +1,17 @@
+{
+  "name": "@duncit/gql-types",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TypeScript types generated from the server GraphQL schema (codegen). One shared, always-in-sync source for typing test mocks across every portal.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src"],
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

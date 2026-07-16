@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
 import { act, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import TicketsListPage from '../../src/pages/tickets/TicketsListPage';
-import { CREATE_TICKET, TICKETS, type Ticket } from '../../src/graphql/tickets';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { createTicketMock, makeTicket, ticketsListMock } from '../mocks/ticket.mock';
 
 const sockMock = vi.hoisted(() => ({ events: {} as Record<string, () => void> }));
 vi.mock('../../src/lib/useSupportSocket', () => ({
@@ -14,56 +14,21 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
 }));
 
 vi.mock('react-quill', () => ({
-  default: ({ value, onChange, placeholder }: any) => (
+  default: ({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) => (
     <textarea data-testid="quill" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
   ),
 }));
 
-const ticket = (id: string, subject: string): any => ({
-  __typename: 'Ticket',
-  id,
-  ticket_no: `ST-${id.slice(-6).toUpperCase()}`,
-  subject,
-  category: 'GENERAL',
-  status: 'OPEN',
-  priority: 'MEDIUM',
-  assignee_id: null,
-  assignee_name: null,
-  last_message_at: new Date().toISOString(),
-  message_count: 1,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  user: {
-    id: 'u1', name: 'Riya', email: null, phone: null, avatar_url: null,
-    city: null, state: null, country: null, joined_at: null,
-    is_email_verified: false, is_phone_verified: false,
-  },
-});
-
-const listMock = (status: string | null, tickets: Ticket[], search: string | null = null) => ({
-  request: {
-    query: TICKETS,
-    variables: {
-      status,
-      search,
-      page: 1,
-      page_size: 25,
-      sort_by: 'last_message_at',
-      sort_dir: 'desc',
-    },
-  },
-  result: { data: { tickets: { items: tickets, total: tickets.length, page: 1, page_size: 25 } } },
-});
-
 describe('TicketsListPage', () => {
   it('shows an empty state', async () => {
-    renderWithProviders(<TicketsListPage />, { mocks: [listMock(null, [])] });
+    renderWithProviders(<TicketsListPage />, { mocks: [ticketsListMock([])] });
     await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());
   });
 
   it('lists tickets, refetches on live events and opens a row', async () => {
+    const row = makeTicket({ id: 't1', subject: 'Cannot pay' });
     renderWithProviders(<></>, {
-      mocks: [listMock(null, [ticket('t1', 'Cannot pay')]), listMock(null, [ticket('t1', 'Cannot pay')]), listMock(null, [ticket('t1', 'Cannot pay')])],
+      mocks: [ticketsListMock([row]), ticketsListMock([row]), ticketsListMock([row])],
       initialEntries: ['/tickets'],
       routes: (
         <>
@@ -84,7 +49,10 @@ describe('TicketsListPage', () => {
 
   it('filters by status from the table filter popover', async () => {
     renderWithProviders(<TicketsListPage />, {
-      mocks: [listMock(null, [ticket('t1', 'Open one')]), listMock('RESOLVED', [ticket('t2', 'Resolved one')])],
+      mocks: [
+        ticketsListMock([makeTicket({ id: 't1', subject: 'Open one' })]),
+        ticketsListMock([makeTicket({ id: 't2', subject: 'Resolved one' })], { status: 'RESOLVED' }),
+      ],
     });
     await waitFor(() => expect(screen.getByText('Open one')).toBeInTheDocument());
 
@@ -101,8 +69,8 @@ describe('TicketsListPage', () => {
   it('searches on the server (a debounced query keyed on the search variable)', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
-        listMock(null, [ticket('t1', 'Cannot pay'), ticket('t2', 'Refund please')]),
-        listMock(null, [ticket('t2', 'Refund please')], 'Refund'),
+        ticketsListMock([makeTicket({ id: 't1', subject: 'Cannot pay' }), makeTicket({ id: 't2', subject: 'Refund please' })]),
+        ticketsListMock([makeTicket({ id: 't2', subject: 'Refund please' })], { search: 'Refund' }),
       ],
     });
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
@@ -117,10 +85,7 @@ describe('TicketsListPage', () => {
 
   it('creates a ticket from the dialog and navigates to it', async () => {
     renderWithProviders(<></>, {
-      mocks: [
-        listMock(null, []),
-        { request: { query: CREATE_TICKET }, variableMatcher: () => true, result: { data: { createTicket: { id: 'new-1' } } } },
-      ],
+      mocks: [ticketsListMock([]), createTicketMock('new-1')],
       initialEntries: ['/tickets'],
       routes: (
         <>
@@ -142,7 +107,7 @@ describe('TicketsListPage', () => {
   });
 
   it('cancels the new-ticket dialog', async () => {
-    renderWithProviders(<TicketsListPage />, { mocks: [listMock(null, [])] });
+    renderWithProviders(<TicketsListPage />, { mocks: [ticketsListMock([])] });
     await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new ticket/i }));
     const dialog = await screen.findByRole('dialog');
@@ -153,9 +118,9 @@ describe('TicketsListPage', () => {
   it('refetches the list when create returns no id', async () => {
     renderWithProviders(<TicketsListPage />, {
       mocks: [
-        listMock(null, []),
-        { request: { query: CREATE_TICKET }, variableMatcher: () => true, result: { data: { createTicket: { id: null } } } },
-        listMock(null, [ticket('t9', 'Created elsewhere')]),
+        ticketsListMock([]),
+        createTicketMock(null),
+        ticketsListMock([makeTicket({ id: 't9', subject: 'Created elsewhere' })]),
       ],
     });
     await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());

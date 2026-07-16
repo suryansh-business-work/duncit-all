@@ -1,26 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import DashboardPage from '../../src/pages/DashboardPage';
-import { LEGAL_DOCUMENT_STATS, LEGAL_DOCUMENT_STATS_TABLE } from '../../src/graphql/documents';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { legalDocumentStatsMock, makeLegalDocumentStats, makeLegalDocumentTypeCount } from '../mocks';
+import { __setTableRows } from './table-mock';
 
-const statsMock = (total: number, byType: { document_type: string; count: number }[]) => ({
-  request: { query: LEGAL_DOCUMENT_STATS },
-  result: { data: { legalDocumentStats: { total, by_type: byType } } },
-});
-
-const statsTableMock = (rows: { document_type: string; count: number }[]) => ({
-  request: { query: LEGAL_DOCUMENT_STATS_TABLE },
-  variableMatcher: () => true,
-  result: { data: { legalDocumentStatsTable: { total: rows.length, rows } } },
-});
+vi.mock('@duncit/table', () => import('./table-mock'));
 
 describe('DashboardPage', () => {
   it('renders totals and the by-type breakdown', async () => {
-    const byType = [{ document_type: 'Privacy Policy', count: 3 }, { document_type: 'NDA', count: 2 }];
+    __setTableRows([
+      makeLegalDocumentTypeCount({ document_type: 'Privacy Policy', count: 3 }),
+      makeLegalDocumentTypeCount({ document_type: 'NDA', count: 2 }),
+    ]);
     renderWithProviders(<DashboardPage />, {
-      mocks: [statsMock(5, byType), statsTableMock(byType)],
+      mocks: [legalDocumentStatsMock(makeLegalDocumentStats({ total: 5 }))],
     });
     await waitFor(() => expect(screen.getByText('Legal Dashboard')).toBeInTheDocument());
     expect(screen.getByText('5')).toBeInTheDocument();
@@ -30,23 +25,27 @@ describe('DashboardPage', () => {
   });
 
   it('shows an empty hint when there are no documents', async () => {
-    renderWithProviders(<DashboardPage />, { mocks: [statsMock(0, []), statsTableMock([])] });
+    __setTableRows([]);
+    renderWithProviders(<DashboardPage />, {
+      mocks: [legalDocumentStatsMock(makeLegalDocumentStats({ total: 0, by_type: [] }))],
+    });
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
   });
 
   it('falls back to a zero total when the server omits it', async () => {
     // total is nullish → the `?? 0` fallback renders 0 in the card.
+    __setTableRows([]);
     renderWithProviders(<DashboardPage />, {
-      mocks: [statsMock(null as unknown as number, []), statsTableMock([])],
+      mocks: [legalDocumentStatsMock(makeLegalDocumentStats({ total: null as unknown as number, by_type: [] }))],
     });
     await waitFor(() => expect(screen.getByText('Total documents')).toBeInTheDocument());
     expect(screen.getByText('0')).toBeInTheDocument();
   });
 
   it('navigates to documents from the total card', async () => {
-    const byType = [{ document_type: 'NDA', count: 2 }];
+    __setTableRows([makeLegalDocumentTypeCount({ document_type: 'NDA', count: 2 })]);
     renderWithProviders(<></>, {
-      mocks: [statsMock(2, byType), statsTableMock(byType)],
+      mocks: [legalDocumentStatsMock(makeLegalDocumentStats({ total: 2 }))],
       initialEntries: ['/'],
       routes: (
         <>

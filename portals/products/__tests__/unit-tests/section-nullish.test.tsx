@@ -6,7 +6,7 @@ import PricingTaxSection from '../../src/pages/inventory-page/inventory-product-
 import BasicInfoSection from '../../src/pages/inventory-page/inventory-product-page/BasicInfoSection';
 import InventoryManagementSection from '../../src/pages/inventory-page/inventory-product-page/InventoryManagementSection';
 import MediaBrandingSection from '../../src/pages/inventory-page/inventory-product-page/MediaBrandingSection';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 vi.mock('@duncit/app-settings', () => ({
   useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }),

@@ -1,20 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import ContactDetailsDialog from '../../src/pages/website/contact-submissions/ContactDetailsDialog';
-import type { ContactSubmission } from '../../src/pages/website/contact-submissions/queries';
-import { renderWithProviders } from './testkit';
-
-const submission = (over: Partial<ContactSubmission> = {}): ContactSubmission => ({
-  id: 'c1',
-  name: 'Asha',
-  email: 'asha@example.com',
-  subject: 'Need help',
-  message: 'Hello there',
-  attachments: [],
-  status: 'NEW',
-  created_at: '2026-01-01T10:00:00.000Z',
-  ...over,
-});
+import { renderWithProviders } from '../testkit';
+import { makeContactSubmission } from '../mocks';
 
 describe('ContactDetailsDialog', () => {
   it('renders nothing when there is no submission', () => {
@@ -29,7 +17,7 @@ describe('ContactDetailsDialog', () => {
     const onClose = vi.fn();
     renderWithProviders(
       <ContactDetailsDialog
-        submission={submission({
+        submission={makeContactSubmission({
           attachments: ['https://img/one.png', 'https://img/two.png'],
         })}
         onClose={onClose}
@@ -52,7 +40,7 @@ describe('ContactDetailsDialog', () => {
     const onClose = vi.fn();
     renderWithProviders(
       <ContactDetailsDialog
-        submission={submission({ subject: '', attachments: [] })}
+        submission={makeContactSubmission({ subject: '', attachments: [] })}
         onClose={onClose}
         onUpdateStatus={vi.fn()}
       />,

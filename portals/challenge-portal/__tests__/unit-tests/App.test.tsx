@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
+import { renderWithProviders } from '../testkit';
 
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),
@@ -24,12 +24,7 @@ vi.mock('../../src/pages/challenges/ChallengesPage', () => ({
 
 import App from '../../src/App';
 
-const renderAt = (path: string) =>
-  render(
-    <MemoryRouter initialEntries={[path]}>
-      <App />
-    </MemoryRouter>,
-  );
+const renderAt = (path: string) => renderWithProviders(<App />, { initialEntries: [path] });
 
 describe('App routing', () => {
   it('renders the dashboard (in the shell) at /', () => {

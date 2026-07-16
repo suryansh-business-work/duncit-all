@@ -1,45 +1,31 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import NavigationPage from '../../src/pages/website/navigation';
+import { renderWithProviders } from '../testkit';
 import {
-  CREATE_NAV_ITEM,
-  DELETE_NAV_ITEM,
-  UPDATE_NAV_ITEM,
-  WEBSITE_NAV_TABLE,
-  type WebsiteNavItem,
-} from '../../src/pages/website/navigation/queries';
-import { renderWithProviders, tableMock } from './testkit';
-
-const nav = (over: Partial<WebsiteNavItem>): WebsiteNavItem => ({
-  id: 'n1',
-  site: 'MAIN',
-  area: 'FOOTER',
-  group_label: 'About',
-  label: 'Careers',
-  url: '/careers',
-  sort_order: 1,
-  is_active: true,
-  created_at: '2026-01-01T00:00:00.000Z',
-  ...over,
-});
+  createNavItemMock,
+  deleteNavItemMock,
+  makeNavItem,
+  updateNavItemMock,
+  websiteNavTableMock,
+} from '../mocks';
 
 const rows = [
-  nav({ id: 'a', label: 'Careers', group_label: 'About', is_active: true, created_at: '2026-01-01T00:00:00.000Z' }),
-  nav({ id: 'b', label: 'Hidden Link', group_label: '', is_active: false, created_at: undefined }),
+  makeNavItem({
+    id: 'a',
+    label: 'Careers',
+    group_label: 'About',
+    is_active: true,
+    created_at: '2026-01-01T00:00:00.000Z',
+  }),
+  makeNavItem({ id: 'b', label: 'Hidden Link', group_label: '', is_active: false, created_at: '' }),
 ];
 
-const mutate = (query: unknown, key: string) => ({
-  request: { query: query as never },
-  variableMatcher: () => true,
-  maxUsageCount: Number.POSITIVE_INFINITY,
-  result: { data: { [key]: { id: 'a' } } },
-});
-
 const allMocks = [
-  tableMock(WEBSITE_NAV_TABLE, 'websiteNavTable', rows),
-  mutate(CREATE_NAV_ITEM, 'createWebsiteNavItem'),
-  mutate(UPDATE_NAV_ITEM, 'updateWebsiteNavItem'),
-  { ...mutate(DELETE_NAV_ITEM, 'deleteWebsiteNavItem'), result: { data: { deleteWebsiteNavItem: true } } },
+  websiteNavTableMock(rows),
+  createNavItemMock(),
+  updateNavItemMock(),
+  deleteNavItemMock(),
 ];
 
 beforeEach(() => {

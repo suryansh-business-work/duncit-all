@@ -1,39 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import JobApplicationsPage from '../../src/pages/website/job-applications';
+import { renderWithProviders } from '../testkit';
 import {
-  JOB_APPLICATIONS_TABLE,
-  UPDATE_JOB_APPLICATION_STATUS,
-  type JobApplication,
-} from '../../src/pages/website/job-applications/queries';
-import { renderWithProviders, tableMock } from './testkit';
+  jobApplicationsTableMock,
+  makeJobApplication,
+  updateJobApplicationStatusMock,
+} from '../mocks';
 
-const row = (over: Partial<JobApplication>): JobApplication => ({
-  id: 'j1',
-  role_content_id: 'r1',
-  role_title: 'Engineer',
-  name: 'Nia',
-  email: 'nia@example.com',
-  phone: '+91999',
-  resume_url: 'https://cv/nia.pdf',
-  portfolio_url: 'https://port/nia',
-  cover_note: 'Note',
-  status: 'NEW',
-  created_at: '2026-01-01T00:00:00.000Z',
-  ...over,
-});
-
-const rows = [row({ id: 'a', name: 'Nia' }), row({ id: 'b', name: 'Omar', status: 'HIRED' })];
-
-const updateMock = {
-  request: { query: UPDATE_JOB_APPLICATION_STATUS, variables: { id: 'a', status: 'SHORTLISTED' as const } },
-  result: { data: { updateJobApplicationStatus: { id: 'a', status: 'SHORTLISTED' } } },
-};
+const rows = [
+  makeJobApplication({ id: 'a', name: 'Nia' }),
+  makeJobApplication({ id: 'b', name: 'Omar', status: 'HIRED' }),
+];
 
 describe('JobApplicationsPage', () => {
   it('lists applications and opens the detail dialog from the row action', async () => {
     renderWithProviders(<JobApplicationsPage />, {
-      mocks: [tableMock(JOB_APPLICATIONS_TABLE, 'jobApplicationsTable', rows)],
+      mocks: [jobApplicationsTableMock(rows)],
     });
     expect(await screen.findByText('Job Applications')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText('Nia')).toBeInTheDocument());
@@ -43,7 +26,7 @@ describe('JobApplicationsPage', () => {
 
   it('updates status from the dialog then closes it', async () => {
     renderWithProviders(<JobApplicationsPage />, {
-      mocks: [tableMock(JOB_APPLICATIONS_TABLE, 'jobApplicationsTable', rows), updateMock],
+      mocks: [jobApplicationsTableMock(rows), updateJobApplicationStatusMock('a', 'SHORTLISTED')],
     });
     await waitFor(() => expect(screen.getByText('Nia')).toBeInTheDocument());
     fireEvent.click(screen.getByText('Nia'));
@@ -55,7 +38,7 @@ describe('JobApplicationsPage', () => {
 
   it('closes the detail dialog via the Close button', async () => {
     renderWithProviders(<JobApplicationsPage />, {
-      mocks: [tableMock(JOB_APPLICATIONS_TABLE, 'jobApplicationsTable', rows)],
+      mocks: [jobApplicationsTableMock(rows)],
     });
     await waitFor(() => expect(screen.getByText('Nia')).toBeInTheDocument());
     fireEvent.click(screen.getAllByRole('button', { name: 'view' })[0]);

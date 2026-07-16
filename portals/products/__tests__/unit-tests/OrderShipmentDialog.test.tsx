@@ -1,26 +1,28 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MockedResponse } from '@apollo/client/testing';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import OrderShipmentDialog from '../../src/pages/orders/OrderShipmentDialog';
-import { BRAND_PICKUP_LOCATIONS } from '../../src/pages/ecomm/queries';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pickup.mock';
 
-const locationsMock = (rows: unknown[]): MockedResponse => ({
-  request: { query: BRAND_PICKUP_LOCATIONS },
-  variableMatcher: () => true,
-  result: { data: { brandPickupLocations: rows } },
-  maxUsageCount: 10,
-});
-
+// Component-prop fixtures (not GraphQL responses): the shipment dialog only
+// reads line-item ownership + the order's pickup_location_id.
 const duncitOrder = { line_items: [{ ownership: 'DUNCIT' }], pickup_location_id: null };
-const brandOrder = {
-  line_items: [{ ownership: 'BRAND', brand_id: 'br1' }],
-  pickup_location_id: null,
-};
+const brandOrder = { line_items: [{ ownership: 'BRAND', brand_id: 'br1' }], pickup_location_id: null };
 
-const registered = { id: 'loc1', nickname: 'Main', city: 'Pune', is_default: true, shiprocket_registered: true };
-const unregistered = { id: 'loc2', nickname: 'Second', city: 'Delhi', is_default: false, shiprocket_registered: false };
-const unregisteredDefault = { id: 'loc2', nickname: 'Second', city: 'Delhi', is_default: true, shiprocket_registered: false };
+const registered = makeBrandPickupLocation({
+  id: 'loc1',
+  nickname: 'Main',
+  city: 'Pune',
+  is_default: true,
+  shiprocket_registered: true,
+});
+const unregistered = makeBrandPickupLocation({ id: 'loc2', nickname: 'Second', city: 'Delhi' });
+const unregisteredDefault = makeBrandPickupLocation({
+  id: 'loc2',
+  nickname: 'Second',
+  city: 'Delhi',
+  is_default: true,
+});
 
 describe('OrderShipmentDialog', () => {
   it('is not queried while closed', () => {
@@ -34,7 +36,7 @@ describe('OrderShipmentDialog', () => {
     const onConfirm = vi.fn();
     renderWithProviders(
       <OrderShipmentDialog open order={duncitOrder} onClose={vi.fn()} onConfirm={onConfirm} />,
-      { mocks: [locationsMock([registered])] },
+      { mocks: [brandPickupLocationsMock([registered])] },
     );
     await waitFor(() => expect(screen.getByText(/Main — Pune/)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /Create shipment/i }));
@@ -44,7 +46,7 @@ describe('OrderShipmentDialog', () => {
   it('warns and blocks confirm when the chosen location is not registered', async () => {
     renderWithProviders(
       <OrderShipmentDialog open order={brandOrder} onClose={vi.fn()} onConfirm={vi.fn()} />,
-      { mocks: [locationsMock([unregisteredDefault])] },
+      { mocks: [brandPickupLocationsMock([unregisteredDefault])] },
     );
     await waitFor(() =>
       expect(screen.getByText(/not registered with ShipRocket yet/i)).toBeInTheDocument(),
@@ -61,7 +63,7 @@ describe('OrderShipmentDialog', () => {
         onClose={vi.fn()}
         onConfirm={onConfirm}
       />,
-      { mocks: [locationsMock([registered, unregistered])] },
+      { mocks: [brandPickupLocationsMock([registered, unregistered])] },
     );
     // loc2 is preselected (from the order) but unregistered → confirm is blocked.
     await waitFor(() =>
@@ -73,7 +75,7 @@ describe('OrderShipmentDialog', () => {
   it('shows a helper when there are no locations', async () => {
     renderWithProviders(
       <OrderShipmentDialog open order={duncitOrder} onClose={vi.fn()} onConfirm={vi.fn()} />,
-      { mocks: [locationsMock([])] },
+      { mocks: [brandPickupLocationsMock([])] },
     );
     await waitFor(() =>
       expect(screen.getByText(/No pickup locations found for this owner/i)).toBeInTheDocument(),
@@ -89,17 +91,39 @@ describe('OrderShipmentDialog', () => {
         onClose={vi.fn()}
         onConfirm={vi.fn()}
       />,
-      { mocks: [locationsMock([registered])] },
+      { mocks: [brandPickupLocationsMock([registered])] },
     );
     await waitFor(() => expect(screen.getByText(/Main — Pune/)).toBeInTheDocument());
     expect(screen.getByRole('button', { name: /Creating/i })).toBeInTheDocument();
+  });
+
+  it('lets the operator choose a different pickup location', async () => {
+    const onConfirm = vi.fn();
+    const locA = makeBrandPickupLocation({ id: 'a', nickname: 'A', city: 'Pune', shiprocket_registered: true });
+    const locB = makeBrandPickupLocation({ id: 'b', nickname: 'B', city: 'Delhi', shiprocket_registered: true });
+    renderWithProviders(
+      <OrderShipmentDialog
+        open
+        order={{ line_items: [{ ownership: 'DUNCIT' }], pickup_location_id: null }}
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+      />,
+      { mocks: [brandPickupLocationsMock([locA, locB])] },
+    );
+    // No default and no order location → nothing preselected; open and pick B.
+    await waitFor(() => expect(screen.getByLabelText('Pickup location')).toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByLabelText('Pickup location'));
+    const listbox = await screen.findByRole('listbox');
+    fireEvent.click(within(listbox).getByRole('option', { name: /B — Delhi/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Create shipment/i }));
+    expect(onConfirm).toHaveBeenCalledWith('b');
   });
 
   it('closes on cancel', async () => {
     const onClose = vi.fn();
     renderWithProviders(
       <OrderShipmentDialog open order={duncitOrder} onClose={onClose} onConfirm={vi.fn()} />,
-      { mocks: [locationsMock([registered])] },
+      { mocks: [brandPickupLocationsMock([registered])] },
     );
     await waitFor(() => expect(screen.getByText(/Main — Pune/)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

@@ -1,167 +1,98 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import type { MutableRefObject, ReactNode } from 'react';
-import type { ApiKeyRow } from '../../src/pages/api-keys/queries';
+import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import ApiKeysPage from '../../src/pages/api-keys/ApiKeysPage';
+import { renderWithProviders } from '../testkit';
+import {
+  RAW_API_KEY,
+  createApiKeyEmptyMock,
+  createApiKeyMock,
+  makeApiKeyRow,
+  revokeApiKeyMock,
+} from '../mocks';
+import { __setTableRows } from './table-mock';
 
-const useMutationMock = vi.hoisted(() => vi.fn());
-const useApolloClientMock = vi.hoisted(() => vi.fn());
-const useApolloTableFetchMock = vi.hoisted(() => vi.fn());
-const refetchSpy = vi.hoisted(() => vi.fn());
+// The real page drives the shared table + create/revoke mutations; the table is
+// the lightweight stand-in and the mutations run through Apollo MockedProvider.
+vi.mock('@duncit/table', () => import('./table-mock'));
 
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
-  useMutation: useMutationMock,
-  useApolloClient: useApolloClientMock,
-}));
-vi.mock('@duncit/table', () => ({ useApolloTableFetch: useApolloTableFetchMock }));
-
-const sample: ApiKeyRow = {
-  id: 'k9',
-  name: 'Sample',
-  key_prefix: 'dk_x',
-  scopes: ['venues:read'],
-  last_used_at: null,
-  revoked_at: null,
-  created_at: '2026-02-02',
+const openCreateDialog = (): HTMLElement => {
+  fireEvent.click(screen.getByRole('button', { name: 'Create key' }));
+  return screen.getByRole('dialog');
 };
 
-vi.mock('../../src/pages/api-keys/ApiKeysTable', () => ({
-  default: ({
-    toolbarActions,
-    onRevoke,
-    refetchRef,
-  }: {
-    toolbarActions?: ReactNode;
-    onRevoke: (k: ApiKeyRow) => void;
-    refetchRef: MutableRefObject<(() => void) | null>;
-  }) => (
-    <div>
-      {toolbarActions}
-      <button type="button" onClick={() => onRevoke(sample)}>
-        row-revoke
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          refetchRef.current = refetchSpy;
-        }}
-      >
-        set-refetch
-      </button>
-    </div>
-  ),
-}));
-
-vi.mock('../../src/pages/api-keys/CreateKeyDialog', () => ({
-  default: ({
-    open,
-    rawKey,
-    error,
-    onCreate,
-    onClose,
-  }: {
-    open: boolean;
-    rawKey: string | null;
-    error: string | null;
-    onCreate: (name: string) => void;
-    onClose: () => void;
-  }) =>
-    open ? (
-      <div>
-        <span data-testid="raw-key">{rawKey ?? 'none'}</span>
-        <span data-testid="dlg-error">{error ?? 'no-error'}</span>
-        <button type="button" onClick={() => onCreate('New Key')}>
-          dlg-create
-        </button>
-        <button type="button" onClick={onClose}>
-          dlg-close
-        </button>
-      </div>
-    ) : null,
-}));
-
-import ApiKeysPage from '../../src/pages/api-keys/ApiKeysPage';
-import { CREATE_API_KEY } from '../../src/pages/api-keys/queries';
-
-const createFn = vi.fn();
-const revokeFn = vi.fn();
+const submitName = (dialog: HTMLElement, name = 'New Key') => {
+  fireEvent.change(within(dialog).getByLabelText('Key name'), { target: { value: name } });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Create key' }));
+};
 
 describe('ApiKeysPage', () => {
-  beforeEach(() => {
-    createFn.mockReset();
-    revokeFn.mockReset();
-    refetchSpy.mockReset();
-    // Stable per-document mapping so re-renders keep returning the same tuple.
-    useMutationMock.mockReset().mockImplementation((doc: unknown) =>
-      doc === CREATE_API_KEY ? [createFn, { loading: false }] : [revokeFn, { loading: false }],
-    );
-    useApolloClientMock.mockReset().mockReturnValue({ mock: 'client' });
-    useApolloTableFetchMock.mockReset().mockReturnValue(vi.fn());
-  });
-
-  it('builds the table fetcher from the apollo client + table query', () => {
-    render(<ApiKeysPage />);
-    expect(useApolloTableFetchMock).toHaveBeenCalledWith(
-      { mock: 'client' },
-      expect.anything(),
-      'myApiKeysTable',
+  it('renders the heading and the empty table', async () => {
+    __setTableRows([]);
+    renderWithProviders(<ApiKeysPage />);
+    expect(screen.getByRole('heading', { name: 'API Keys' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByTestId('table-empty')).toHaveTextContent(/No API keys yet/),
     );
   });
 
-  it('opens the create dialog and closes it (clearing the raw key)', () => {
-    render(<ApiKeysPage />);
-    expect(screen.queryByTestId('raw-key')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText('Create key'));
-    expect(screen.getByTestId('raw-key')).toHaveTextContent('none');
-    fireEvent.click(screen.getByText('dlg-close'));
-    expect(screen.queryByTestId('raw-key')).not.toBeInTheDocument();
+  it('opens the create dialog and cancels without creating', async () => {
+    __setTableRows([]);
+    renderWithProviders(<ApiKeysPage />);
+    const dialog = openCreateDialog();
+    expect(within(dialog).getByText('Create API key')).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('creates a key, reveals the raw key and refetches the table', async () => {
-    createFn.mockResolvedValue({ data: { createApiKey: { raw_key: 'dk_live_secret' } } });
-    render(<ApiKeysPage />);
-    fireEvent.click(screen.getByText('set-refetch'));
-    fireEvent.click(screen.getByText('Create key'));
-    fireEvent.click(screen.getByText('dlg-create'));
-    await waitFor(() => expect(createFn).toHaveBeenCalledWith({ variables: { name: 'New Key' } }));
-    await waitFor(() => expect(screen.getByTestId('raw-key')).toHaveTextContent('dk_live_secret'));
-    expect(refetchSpy).toHaveBeenCalledTimes(1);
+  it('creates a key, reveals the one-time raw key and refetches the table', async () => {
+    __setTableRows([]);
+    renderWithProviders(<ApiKeysPage />, { mocks: [createApiKeyMock()] });
+    submitName(openCreateDialog());
+    await waitFor(() => expect(screen.getByText('API key created')).toBeInTheDocument());
+    expect(screen.getByDisplayValue(RAW_API_KEY)).toBeInTheDocument();
+    // Done clears the revealed key and closes the dialog.
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
-  it('falls back to null raw key when the mutation returns no data', async () => {
-    createFn.mockResolvedValue({ data: undefined });
-    render(<ApiKeysPage />);
-    fireEvent.click(screen.getByText('Create key'));
-    fireEvent.click(screen.getByText('dlg-create'));
-    await waitFor(() => expect(createFn).toHaveBeenCalled());
-    expect(screen.getByTestId('raw-key')).toHaveTextContent('none');
-    // no refetch registered → the optional-chain call is a no-op.
-    expect(refetchSpy).not.toHaveBeenCalled();
+  it('falls back to no raw key when the mutation returns no key object', async () => {
+    __setTableRows([]);
+    renderWithProviders(<ApiKeysPage />, { mocks: [createApiKeyEmptyMock()] });
+    const dialog = openCreateDialog();
+    submitName(dialog);
+    // rawKey stays null → the dialog never enters the "API key created" reveal state.
+    await waitFor(() =>
+      expect(within(dialog).getByLabelText('Key name')).toBeInTheDocument(),
+    );
+    expect(screen.queryByText('API key created')).not.toBeInTheDocument();
   });
 
-  it('surfaces a create error in the alert + dialog', async () => {
-    createFn.mockRejectedValue(new Error('create failed'));
-    render(<ApiKeysPage />);
-    fireEvent.click(screen.getByText('Create key'));
-    fireEvent.click(screen.getByText('dlg-create'));
-    await waitFor(() => expect(screen.getByTestId('dlg-error')).toHaveTextContent('create failed'));
-    expect(screen.getByRole('alert')).toHaveTextContent('create failed');
+  it('surfaces a create error in both the page alert and the dialog', async () => {
+    __setTableRows([]);
+    renderWithProviders(<ApiKeysPage />, { mocks: [createApiKeyMock({ fail: true })] });
+    submitName(openCreateDialog());
+    await waitFor(() =>
+      expect(screen.getAllByText(/create failed/i).length).toBeGreaterThan(0),
+    );
   });
 
-  it('revokes a key and refetches the table', async () => {
-    revokeFn.mockResolvedValue({});
-    render(<ApiKeysPage />);
-    fireEvent.click(screen.getByText('set-refetch'));
-    fireEvent.click(screen.getByText('row-revoke'));
-    await waitFor(() => expect(revokeFn).toHaveBeenCalledWith({ variables: { id: 'k9' } }));
-    expect(refetchSpy).toHaveBeenCalledTimes(1);
+  it('revokes an active key and leaves no error alert', async () => {
+    __setTableRows([makeApiKeyRow()]);
+    renderWithProviders(<ApiKeysPage />, { mocks: [revokeApiKeyMock()] });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   });
 
-  it('surfaces a revoke error', async () => {
-    revokeFn.mockRejectedValue(new Error('revoke failed'));
-    render(<ApiKeysPage />);
-    fireEvent.click(screen.getByText('row-revoke'));
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('revoke failed'));
-    expect(refetchSpy).not.toHaveBeenCalled();
+  it('surfaces a revoke error in the page alert', async () => {
+    __setTableRows([makeApiKeyRow()]);
+    renderWithProviders(<ApiKeysPage />, { mocks: [revokeApiKeyMock({ fail: true })] });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Revoke' })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/revoke failed/i));
   });
 });

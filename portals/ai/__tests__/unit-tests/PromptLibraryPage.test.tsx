@@ -1,56 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import type { MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import PromptLibraryPage from '../../src/pages/prompt-library';
+import { renderWithProviders } from '../testkit';
 import {
-  AI_PROMPTS,
-  CREATE_AI_PROMPT,
-  DELETE_AI_PROMPT,
-  type AiPrompt,
-} from '../../src/pages/prompt-library/queries';
-import { renderWithProviders } from './testkit';
-
-const prompt = (over: Partial<AiPrompt>): AiPrompt => ({
-  id: 'p1',
-  name: 'Prompt',
-  description: 'A prompt',
-  content: 'content that is long enough',
-  category: 'General',
-  target_model: 'gpt-4o-mini',
-  token_count: 10,
-  is_active: true,
-  created_at: '2026-01-01T00:00:00.000Z',
-  updated_at: null,
-  ...over,
-});
-
-const listMock = (prompts: AiPrompt[]): MockedResponse => ({
-  request: { query: AI_PROMPTS, variables: { filter: { search: null } } },
-  maxUsageCount: 20,
-  result: { data: { aiPrompts: prompts } },
-});
-
-const deleteMock = (id: string, fail = false): MockedResponse => ({
-  request: { query: DELETE_AI_PROMPT, variables: { id } },
-  ...(fail
-    ? { result: { errors: [{ message: 'Cannot delete this prompt' }] } }
-    : { result: { data: { deleteAiPrompt: true } } }),
-});
+  aiPromptsListMock,
+  createPromptMock,
+  deletePromptMock,
+  makeAiPrompt,
+} from '../mocks';
 
 const rows = [
-  prompt({ id: 'a', name: 'Alpha', target_model: '' }),
-  prompt({ id: 'b', name: 'Beta' }),
+  makeAiPrompt({ id: 'a', name: 'Alpha', target_model: '' }),
+  makeAiPrompt({ id: 'b', name: 'Beta' }),
 ];
 
 describe('PromptLibraryPage', () => {
   it('shows the empty state when there are no prompts', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock([])] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock([])] });
     expect(await screen.findByText('Prompt Library')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText(/no prompts yet/i)).toBeInTheDocument());
   });
 
   it('lists prompts and renders a placeholder for a missing model', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock(rows)] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock(rows)] });
     await waitFor(() => expect(screen.getByText('Alpha')).toBeInTheDocument());
     expect(screen.getByText('Beta')).toBeInTheDocument();
     // Alpha has no target_model → the em-dash placeholder renders.
@@ -58,7 +30,7 @@ describe('PromptLibraryPage', () => {
   });
 
   it('opens and cancels the create dialog', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock(rows)] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock(rows)] });
     await waitFor(() => expect(screen.getByText('Alpha')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /add prompt/i }));
     const dialog = await screen.findByRole('dialog');
@@ -68,7 +40,7 @@ describe('PromptLibraryPage', () => {
   });
 
   it('opens the edit dialog seeded from a row', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock(rows)] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock(rows)] });
     await waitFor(() => expect(screen.getByText('Alpha')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Edit Alpha' }));
     const dialog = await screen.findByRole('dialog');
@@ -77,24 +49,15 @@ describe('PromptLibraryPage', () => {
   });
 
   it('creates a prompt from the dialog and refetches the list on save', async () => {
-    const createMock: MockedResponse = {
-      request: { query: CREATE_AI_PROMPT },
-      variableMatcher: () => true,
-      result: { data: { createAiPrompt: { id: 'new-1' } } },
-    };
     // Single-use, ordered mocks: first list is empty, then create, then the
-    // refetch returns the freshly-created row (no maxUsageCount so the refetch
-    // isn't swallowed by the empty list mock).
-    const emptyOnce: MockedResponse = {
-      request: { query: AI_PROMPTS, variables: { filter: { search: null } } },
-      result: { data: { aiPrompts: [] } },
-    };
-    const refetchWithRow: MockedResponse = {
-      request: { query: AI_PROMPTS, variables: { filter: { search: null } } },
-      result: { data: { aiPrompts: [prompt({ id: 'new-1', name: 'Freshly Made' })] } },
-    };
+    // refetch returns the freshly-created row (both list mocks are `once` so the
+    // refetch isn't swallowed by the empty list mock).
     renderWithProviders(<PromptLibraryPage />, {
-      mocks: [emptyOnce, createMock, refetchWithRow],
+      mocks: [
+        aiPromptsListMock([], { once: true }),
+        createPromptMock(),
+        aiPromptsListMock([makeAiPrompt({ id: 'new-1', name: 'Freshly Made' })], { once: true }),
+      ],
     });
     await waitFor(() => expect(screen.getByText(/no prompts yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /add prompt/i }));
@@ -110,7 +73,7 @@ describe('PromptLibraryPage', () => {
   });
 
   it('deletes a prompt through the confirmation dialog', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock(rows), deleteMock('a')] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock(rows), deletePromptMock('a')] });
     await waitFor(() => expect(screen.getByText('Alpha')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Delete Alpha' }));
     const dialog = await screen.findByRole('dialog');
@@ -120,7 +83,7 @@ describe('PromptLibraryPage', () => {
   });
 
   it('cancels the delete confirmation without deleting', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock(rows)] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock(rows)] });
     await waitFor(() => expect(screen.getByText('Alpha')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Delete Alpha' }));
     const dialog = await screen.findByRole('dialog');
@@ -130,7 +93,7 @@ describe('PromptLibraryPage', () => {
   });
 
   it('surfaces a delete error and dismisses it', async () => {
-    renderWithProviders(<PromptLibraryPage />, { mocks: [listMock(rows), deleteMock('a', true)] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock(rows), deletePromptMock('a', { fail: true })] });
     await waitFor(() => expect(screen.getByText('Alpha')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Delete Alpha' }));
     const dialog = await screen.findByRole('dialog');

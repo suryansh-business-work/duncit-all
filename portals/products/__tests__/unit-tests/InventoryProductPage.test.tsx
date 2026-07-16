@@ -3,16 +3,15 @@ import type { MockedResponse } from '@apollo/client/testing';
 import { Route } from 'react-router-dom';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import InventoryProductPage from '../../src/pages/inventory-page/inventory-product-page/InventoryProductPage';
-import {
-  INVENTORY_ACTIVITY_LOGS,
-  INVENTORY_ANALYTICS,
-  INVENTORY_CATEGORIES,
-  INVENTORY_PRODUCT_DETAIL,
-  INVENTORY_STOCK_MOVEMENTS,
-} from '../../src/pages/inventory-page/inventory-product-page/productQueries';
-import { CREATE_PRODUCT, UPDATE_PRODUCT } from '../../src/pages/inventory-page/queries';
 import { blankProductForm } from '../../src/pages/inventory-page/inventory-product-page/types';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import {
+  createProductMock,
+  inventoryCategoriesMock,
+  inventoryEditQueryMocks,
+  makeInventoryProduct,
+  updateProductMock,
+} from '../mocks/inventory.mock';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
 vi.mock('react-router-dom', async (importOriginal) => ({
@@ -31,36 +30,6 @@ vi.mock('../../src/pages/inventory-page/inventory-product-page/ProductPageHeader
   default: ({ isNew }: { isNew: boolean }) => <div>{isNew ? 'NEW HEADER' : 'EDIT HEADER'}</div>,
 }));
 
-const categoriesMock: MockedResponse = {
-  request: { query: INVENTORY_CATEGORIES },
-  result: {
-    data: {
-      categories: [
-        { id: 'c1', name: 'Beverages', level: 'CATEGORY' },
-        { id: 'super', name: 'All', level: 'SUPER' },
-      ],
-    },
-  },
-  maxUsageCount: 20,
-};
-const idQuery = (query: any, key: string, rows: unknown): MockedResponse => ({
-  request: { query, variables: { id: 'p1' } },
-  result: { data: { [key]: rows } },
-  maxUsageCount: 20,
-});
-const detailMock = (product: unknown): MockedResponse => ({
-  request: { query: INVENTORY_PRODUCT_DETAIL, variables: { id: 'p1' } },
-  result: { data: { inventoryProduct: product } },
-  maxUsageCount: 20,
-});
-const editQueryMocks = (product: unknown) => [
-  detailMock(product),
-  categoriesMock,
-  idQuery(INVENTORY_ACTIVITY_LOGS, 'inventoryActivityLogs', []),
-  idQuery(INVENTORY_STOCK_MOVEMENTS, 'inventoryStockMovements', []),
-  idQuery(INVENTORY_ANALYTICS, 'inventoryAnalytics', []),
-];
-
 const renderNew = (mocks: MockedResponse[]) =>
   renderWithProviders(<></>, {
     mocks,
@@ -74,50 +43,45 @@ const renderEdit = (mocks: MockedResponse[]) =>
     routes: <Route path="/inventory/:id/edit" element={<InventoryProductPage />} />,
   });
 
-const savedProduct = { id: 'p1', product_name: 'Cold Brew', sku: 'CB1', status: 'ACTIVE' };
+const savedProduct = makeInventoryProduct({ id: 'p1', product_name: 'Cold Brew', sku: 'CB1', status: 'ACTIVE' });
 
 describe('InventoryProductPage', () => {
   it('creates a product and routes to its editor', async () => {
-    const createMock: MockedResponse = {
-      request: { query: CREATE_PRODUCT },
-      variableMatcher: () => true,
-      result: { data: { createInventoryProduct: { id: 'new-1' } } },
-    };
-    renderNew([categoriesMock, createMock]);
+    renderNew([inventoryCategoriesMock(), createProductMock()]);
     expect(screen.getByText('NEW HEADER')).toBeInTheDocument();
     await body.props?.onSubmit({ ...blankProductForm, product_name: 'New', sku: 'nw1' });
     await waitFor(() =>
       expect(nav.fn).toHaveBeenCalledWith('/inventory/new-1/edit', { replace: true }),
     );
     // SUPER-level categories are filtered out before reaching the form.
-    expect(body.props?.categories).toEqual([{ id: 'c1', name: 'Beverages', level: 'CATEGORY' }]);
+    expect(body.props?.categories).toHaveLength(1);
+    expect(body.props?.categories[0]).toMatchObject({ id: 'c1', name: 'Beverages', level: 'CATEGORY' });
   });
 
   it('shows a loading spinner while an existing product loads', () => {
-    const { container } = renderEdit(editQueryMocks(savedProduct));
+    const { container } = renderEdit(inventoryEditQueryMocks(savedProduct));
     expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
   });
 
   it('loads an existing product and saves an update', async () => {
-    const updateMock: MockedResponse = {
-      request: { query: UPDATE_PRODUCT },
-      variableMatcher: () => true,
-      result: { data: { updateInventoryProduct: { id: 'p1' } } },
-      maxUsageCount: 20,
-    };
-    renderEdit([...editQueryMocks(savedProduct), updateMock]);
+    renderEdit([...inventoryEditQueryMocks(savedProduct), updateProductMock()]);
     await waitFor(() => expect(screen.getByText('EDIT HEADER')).toBeInTheDocument());
     await body.props?.onSubmit({ ...blankProductForm, id: 'p1', product_name: 'Cold Brew', sku: 'cb1' });
     await waitFor(() => expect(screen.getByText('Saved')).toBeInTheDocument());
+    // Dismiss the toast (covers the Snackbar onClose handler).
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByText('Saved')).not.toBeInTheDocument());
   });
 
-  it('shows a not-found message for a missing product', async () => {
-    renderEdit(editQueryMocks(null));
+  it('shows a not-found message for a missing product and navigates back', async () => {
+    renderEdit(inventoryEditQueryMocks(null));
     await waitFor(() => expect(screen.getByText('Product not found.')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /Back to inventory/i }));
+    expect(nav.fn).toHaveBeenCalledWith('/inventory');
   });
 
   it('wires cancel, after-save and the dismissable error alert', async () => {
-    renderNew([categoriesMock]);
+    renderNew([inventoryCategoriesMock()]);
     expect(screen.getByText('NEW HEADER')).toBeInTheDocument();
     act(() => body.props?.onCancel());
     expect(nav.fn).toHaveBeenCalledWith('/inventory');
@@ -133,12 +97,7 @@ describe('InventoryProductPage', () => {
   });
 
   it('surfaces a save error', async () => {
-    const failMock: MockedResponse = {
-      request: { query: CREATE_PRODUCT },
-      variableMatcher: () => true,
-      result: { errors: [{ message: 'save failed' }] },
-    };
-    renderNew([categoriesMock, failMock]);
+    renderNew([inventoryCategoriesMock(), createProductMock({ fail: true })]);
     await body.props?.onSubmit({ ...blankProductForm, product_name: 'New', sku: 'nw1' });
     await waitFor(() => expect(screen.getByText('save failed')).toBeInTheDocument());
   });

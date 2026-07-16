@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import LoginPage from '../../src/pages/LoginPage';
 import { appConfig } from '../../src/config/app-config';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const captured = vi.hoisted(() => ({ props: null as unknown as Record<string, any> }));
 

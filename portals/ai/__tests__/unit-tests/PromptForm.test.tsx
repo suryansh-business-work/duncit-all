@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { PromptForm, type PromptFormValues } from '../../src/forms/prompt';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const fillValid = () => {
   fireEvent.change(screen.getByLabelText(/Name/i), { target: { value: 'Summarizer' } });

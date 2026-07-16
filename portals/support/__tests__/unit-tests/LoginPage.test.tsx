@@ -1,39 +1,19 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { gql } from '@apollo/client';
+import { type MockedResponse } from '@apollo/client/testing';
 import { Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import LoginPage from '../../src/pages/LoginPage';
 import { appConfig } from '../../src/config/app-config';
 import { getToken } from '../../src/lib/session';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { loginErrorMock, loginMock } from '../mocks/auth.mock';
 
 const ROLE = appConfig.requiredRoles[0];
 
-const LOGIN = gql`
-  mutation ConsoleLogin($input: LoginInput!) {
-    login(input: $input) {
-      token
-      user { user_id first_name last_name email roles }
-    }
-  }
-`;
-
-const loginResult = (token: string | null, roles: string[]) => ({
-  request: { query: LOGIN },
-  variableMatcher: () => true,
-  result: {
-    data: {
-      login: token
-        ? { token, user: { user_id: 'u1', first_name: 'A', last_name: 'B', email: 'a@b.com', roles } }
-        : { token: null, user: null },
-    },
-  },
-});
-
-const renderLogin = (mocks: any[], initialEntries: any[] = ['/login']) =>
+const renderLogin = (mocks: MockedResponse[], initialEntries: unknown[] = ['/login']) =>
   renderWithProviders(<></>, {
     mocks,
-    initialEntries,
+    initialEntries: initialEntries as string[],
     routes: (
       <>
         <Route path="/login" element={<LoginPage />} />
@@ -82,7 +62,7 @@ describe('LoginPage', () => {
   });
 
   it('logs in and navigates to the default route', async () => {
-    renderLogin([loginResult('tok', [ROLE])]);
+    renderLogin([loginMock('tok', [ROLE])]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText('HOME')).toBeInTheDocument());
@@ -90,7 +70,7 @@ describe('LoginPage', () => {
   });
 
   it('honours a safe redirect query param', async () => {
-    renderLogin([loginResult('tok', [ROLE])], ['/login?redirect=%2Ftickets']);
+    renderLogin([loginMock('tok', [ROLE])], ['/login?redirect=%2Ftickets']);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText('TICKETS HOME')).toBeInTheDocument());
@@ -98,8 +78,8 @@ describe('LoginPage', () => {
 
   it('falls back to the originating location from router state', async () => {
     renderLogin(
-      [loginResult('tok', [ROLE])],
-      [{ pathname: '/login', search: '', state: { from: { pathname: '/tickets', search: '', hash: '' } } } as any],
+      [loginMock('tok', [ROLE])],
+      [{ pathname: '/login', search: '', state: { from: { pathname: '/tickets', search: '', hash: '' } } }],
     );
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
@@ -107,23 +87,21 @@ describe('LoginPage', () => {
   });
 
   it('shows an access-denied error for an unauthorised role', async () => {
-    renderLogin([loginResult('tok', ['SOMETHING_ELSE'])]);
+    renderLogin([loginMock('tok', ['SOMETHING_ELSE'])]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText(/do not have access/i)).toBeInTheDocument());
   });
 
   it('shows an error when the server returns no token', async () => {
-    renderLogin([loginResult(null, [])]);
+    renderLogin([loginMock(null, [])]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText(/login failed/i)).toBeInTheDocument());
   });
 
   it('surfaces a GraphQL login error', async () => {
-    renderLogin([
-      { request: { query: LOGIN }, variableMatcher: () => true, result: { errors: [{ message: 'Invalid email or password' }] } },
-    ]);
+    renderLogin([loginErrorMock('Invalid email or password')]);
     await screen.findByRole('heading', { name: /log in/i });
     submitLogin();
     await waitFor(() => expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument());

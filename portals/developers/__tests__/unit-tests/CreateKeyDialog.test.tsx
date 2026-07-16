@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import CreateKeyDialog from '../../src/pages/api-keys/CreateKeyDialog';
+import { RAW_API_KEY } from '../mocks';
 
 const baseProps = {
   open: true,
@@ -64,13 +65,13 @@ describe('CreateKeyDialog', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });
 
-    render(<CreateKeyDialog {...baseProps} rawKey="dk_live_secret" />);
+    render(<CreateKeyDialog {...baseProps} rawKey={RAW_API_KEY} />);
     expect(screen.getByText('API key created')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('dk_live_secret')).toBeInTheDocument();
+    expect(screen.getByDisplayValue(RAW_API_KEY)).toBeInTheDocument();
     expect(screen.queryByText('Copied to clipboard')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByLabelText('Copy API key'));
-    await waitFor(() => expect(writeText).toHaveBeenCalledWith('dk_live_secret'));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(RAW_API_KEY));
     await waitFor(() => expect(screen.getByText('Copied to clipboard')).toBeInTheDocument());
 
     // Done button uses the reveal-state label and closes.

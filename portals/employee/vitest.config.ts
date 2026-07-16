@@ -6,13 +6,17 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
+    setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // Vitest specs live under __tests__/unit-tests; Cypress e2e specs (if any)
+    // are discovered separately by Cypress, never by vitest.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     css: false,
     server: { deps: { inline: [/@mui/] } },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary', 'lcov'],
+      all: true,
+      reporter: ['text', 'text-summary', 'json-summary', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         // App bootstrap — mounts the portal into the DOM (window.google + live frame).

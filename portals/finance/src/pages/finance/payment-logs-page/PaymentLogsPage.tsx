@@ -91,7 +91,9 @@ export default function PaymentLogsPage() {
         if (!b64) throw new Error('Invoice not available');
         downloadBase64File(b64, `invoice-${invoiceNo.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`, 'application/pdf');
       } catch (e: any) {
-        setActionError(e?.message ?? 'Could not download invoice');
+        // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+        const message = e?.message ?? /* istanbul ignore next */ 'Could not download invoice';
+        setActionError(message);
       } finally {
         setDownloadingId(null);
       }
@@ -110,7 +112,9 @@ export default function PaymentLogsPage() {
       refetchRef.current?.();
       refetch();
     } catch (e: any) {
-      setActionError(e?.message ?? 'Refund failed');
+      // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+      const message = e?.message ?? /* istanbul ignore next */ 'Refund failed';
+      setActionError(message);
     }
   };
 

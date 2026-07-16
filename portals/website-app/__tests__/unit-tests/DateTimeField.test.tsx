@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import DateTimeField from '../../src/components/DateTimeField';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const picker = vi.hoisted(() => ({ props: null as unknown as Record<string, any> }));
 

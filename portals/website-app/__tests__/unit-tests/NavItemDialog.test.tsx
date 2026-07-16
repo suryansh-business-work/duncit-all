@@ -1,19 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import NavItemDialog from '../../src/pages/website/navigation/NavItemDialog';
-import type { WebsiteNavItem } from '../../src/pages/website/navigation/queries';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { makeNavItem } from '../mocks';
 
-const item: WebsiteNavItem = {
-  id: 'n1',
+const item = makeNavItem({
   site: 'PARTNERS',
   area: 'HEADER',
-  group_label: 'About',
   label: 'Careers',
   url: '/careers',
   sort_order: 3,
   is_active: false,
-};
+});
 
 describe('NavItemDialog', () => {
   it('is closed (renders no dialog) when open is false', () => {

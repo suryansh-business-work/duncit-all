@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import DashboardPage from '../../src/pages/DashboardPage';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 vi.mock('../../src/pages/dashboard', () => ({ default: () => <div>ADS OVERVIEW</div> }));
 vi.mock('@duncit/shell', async (importOriginal) => ({

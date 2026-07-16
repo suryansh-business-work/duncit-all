@@ -7,6 +7,7 @@ import {
   type WebsiteContentFormValues,
 } from '../../src/pages/website/content/website-content';
 import type { WebsiteContentItem } from '../../src/pages/website/content/queries';
+import { makeContentItem } from '../mocks';
 
 const valid: WebsiteContentFormValues = {
   title: 'Title',
@@ -44,7 +45,7 @@ describe('websiteContentSchema link validation', () => {
 
 describe('toFormValues', () => {
   it('maps a fully-populated item, serialising published_at to ISO', () => {
-    const item: WebsiteContentItem = {
+    const item = makeContentItem({
       id: '1',
       type: 'BLOG',
       title: 'Hello',
@@ -59,7 +60,7 @@ describe('toFormValues', () => {
       is_published: false,
       sort_order: 4,
       updated_at: '2026-01-16T00:00:00.000Z',
-    };
+    });
     const values = toFormValues(item);
     expect(values.title).toBe('Hello');
     expect(values.is_published).toBe(false);

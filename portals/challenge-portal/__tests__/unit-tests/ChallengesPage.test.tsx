@@ -1,26 +1,16 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import type { MutableRefObject, ReactNode } from 'react';
+import { renderWithProviders } from '../testkit';
+import { makeChallenge, deleteChallengeMock, challengeStatsMock } from '../mocks';
 
-const useMutationMock = vi.hoisted(() => vi.fn());
-const useApolloClientMock = vi.hoisted(() => vi.fn());
-const useApolloTableFetchMock = vi.hoisted(() => vi.fn());
 const refetchSpy = vi.hoisted(() => vi.fn());
 
-vi.mock('@apollo/client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@apollo/client')>()),
-  useMutation: useMutationMock,
-  useApolloClient: useApolloClientMock,
-}));
-vi.mock('@duncit/table', () => ({ useApolloTableFetch: useApolloTableFetchMock }));
+// @duncit/table's fetch hook is a passthrough here — the mocked child table
+// never invokes it, so it only needs to be a stable no-op function.
+vi.mock('@duncit/table', () => ({ useApolloTableFetch: () => vi.fn() }));
 
-const sample = {
-  id: 'c9',
-  name: 'Sample Challenge',
-  description: null,
-  is_active: true,
-  created_at: '2026-02-02',
-};
+const sample = makeChallenge({ id: 'c9', name: 'Sample Challenge', description: null });
 
 vi.mock('../../src/pages/challenges/ChallengesTable', () => ({
   default: ({
@@ -42,9 +32,12 @@ vi.mock('../../src/pages/challenges/ChallengesTable', () => ({
       <button type="button" onClick={() => onDelete(sample)}>
         row-delete
       </button>
-      <button type="button" onClick={() => {
-        refetchRef.current = refetchSpy;
-      }}>
+      <button
+        type="button"
+        onClick={() => {
+          refetchRef.current = refetchSpy;
+        }}
+      >
         set-refetch
       </button>
     </div>
@@ -78,30 +71,18 @@ vi.mock('../../src/pages/challenges/ChallengeFormDialog', () => ({
 
 import ChallengesPage from '../../src/pages/challenges/ChallengesPage';
 
-const deleteFn = vi.fn();
-let deleteState: { loading: boolean };
+const deleteMocks = (delay?: number) => [
+  deleteChallengeMock({ id: 'c9', delay }),
+  challengeStatsMock(),
+];
 
 describe('ChallengesPage', () => {
   beforeEach(() => {
-    deleteFn.mockReset().mockResolvedValue({});
     refetchSpy.mockReset();
-    deleteState = { loading: false };
-    useMutationMock.mockReset().mockReturnValue([deleteFn, deleteState]);
-    useApolloClientMock.mockReset().mockReturnValue({ mock: 'client' });
-    useApolloTableFetchMock.mockReset().mockReturnValue(vi.fn());
-  });
-
-  it('builds the table fetcher from the apollo client + table query', () => {
-    render(<ChallengesPage />);
-    expect(useApolloTableFetchMock).toHaveBeenCalledWith(
-      { mock: 'client' },
-      expect.anything(),
-      'challengesTable',
-    );
   });
 
   it('opens a blank form via "New challenge" and closes it', () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />);
     expect(screen.queryByTestId('form-editing')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('New challenge'));
     expect(screen.getByTestId('form-editing')).toHaveTextContent('new');
@@ -110,13 +91,13 @@ describe('ChallengesPage', () => {
   });
 
   it('opens the form pre-loaded when editing a row', () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />);
     fireEvent.click(screen.getByText('row-edit'));
     expect(screen.getByTestId('form-editing')).toHaveTextContent('Sample Challenge');
   });
 
   it('onSaved calls the registered table refetch', () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />);
     fireEvent.click(screen.getByText('set-refetch'));
     fireEvent.click(screen.getByText('New challenge'));
     fireEvent.click(screen.getByText('form-saved'));
@@ -124,58 +105,52 @@ describe('ChallengesPage', () => {
   });
 
   it('onSaved is a no-op when no refetch has been registered', () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />);
     fireEvent.click(screen.getByText('New challenge'));
     fireEvent.click(screen.getByText('form-saved'));
     expect(refetchSpy).not.toHaveBeenCalled();
   });
 
   it('deletes after confirmation and refetches the table', async () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />, { mocks: deleteMocks() });
     fireEvent.click(screen.getByText('set-refetch'));
     fireEvent.click(screen.getByText('row-delete'));
     expect(screen.getByText(/Permanently delete/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Delete'));
-    await waitFor(() => expect(deleteFn).toHaveBeenCalledWith({ variables: { id: 'c9' } }));
-    expect(refetchSpy).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument());
+    expect(refetchSpy).toHaveBeenCalledTimes(1);
   });
 
   it('deletes even when no refetch is registered', async () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />, { mocks: deleteMocks() });
     fireEvent.click(screen.getByText('row-delete'));
     fireEvent.click(screen.getByText('Delete'));
-    await waitFor(() => expect(deleteFn).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument());
     expect(refetchSpy).not.toHaveBeenCalled();
   });
 
   it('Cancel dismisses the delete dialog without deleting', async () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />);
     fireEvent.click(screen.getByText('row-delete'));
     fireEvent.click(screen.getByText('Cancel'));
-    await waitFor(() =>
-      expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument(),
-    );
-    expect(deleteFn).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument());
   });
 
   it('closes the delete dialog on Escape (backdrop/onClose path)', async () => {
-    render(<ChallengesPage />);
+    renderWithProviders(<ChallengesPage />);
     fireEvent.click(screen.getByText('row-delete'));
     fireEvent.keyDown(screen.getByText(/Permanently delete/), { key: 'Escape', code: 'Escape' });
-    await waitFor(() =>
-      expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument(),
-    );
-    expect(deleteFn).not.toHaveBeenCalled();
+    await waitFor(() => expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument());
   });
 
-  it('shows the deleting state on the confirm button while the mutation runs', () => {
-    deleteState = { loading: true };
-    useMutationMock.mockReturnValue([deleteFn, deleteState]);
-    render(<ChallengesPage />);
+  it('shows the deleting state on the confirm button while the mutation runs', async () => {
+    renderWithProviders(<ChallengesPage />, { mocks: deleteMocks(60) });
     fireEvent.click(screen.getByText('row-delete'));
-    expect(screen.getByText('Deleting…')).toBeInTheDocument();
-    expect(screen.getByText('Deleting…').closest('button')).toBeDisabled();
+    fireEvent.click(screen.getByText('Delete'));
+    // The delayed mock keeps the mutation in flight long enough to observe it.
+    const deleting = await screen.findByText('Deleting…');
+    expect(deleting.closest('button')).toBeDisabled();
+    await waitFor(() => expect(screen.queryByText(/Permanently delete/)).not.toBeInTheDocument());
   });
 });

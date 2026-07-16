@@ -1,36 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import type { MockedResponse } from '@apollo/client/testing';
 import EcommRequestsPage from '../../src/pages/ecomm/EcommRequestsPage';
-import { REVIEW_PRODUCT_LISTING } from '../../src/pages/ecomm/requestsQueries';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { makeProductListingRow, reviewProductListingMock } from '../mocks/productListing.mock';
 import { __setTableRows } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
 vi.mock('@duncit/app-settings', () => ({ useDateFormat: () => ({ formatDate: () => 'D' }) }));
 vi.mock('@duncit/ui', () => ({ StatusChip: ({ status }: { status: string }) => <span>{status}</span> }));
 
-const listingRow = {
-  id: 'r1',
-  product_name: 'Mug',
-  image_url: '',
-  inventory_count: 30,
-  unit_cost: 200,
-  commission_pct: 15,
-  delivery_target: 'HOST',
-  listing_review_status: 'PENDING',
-  listing_submitted_by_name: 'Ravi',
-  is_duncit_delivery_partner: true,
-  size_label: 'L',
-  height_cm: 10,
-  weight_kg: 1,
-  color: 'Blue',
-  created_at: null,
-};
-
 describe('EcommRequestsPage', () => {
   it('renders the header, status tabs and opens the review dialog', async () => {
-    __setTableRows([listingRow]);
+    __setTableRows([makeProductListingRow({ created_at: null })]);
     renderWithProviders(<EcommRequestsPage />);
     expect(screen.getByText('Ecomm Requests')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'APPROVED' })).toBeInTheDocument();
@@ -38,16 +19,14 @@ describe('EcommRequestsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText(/Review/)).toBeInTheDocument();
+    // Cancelling runs the page's dialog onClose handler.
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
   it('shows a success message and reloads after a review', async () => {
-    __setTableRows([listingRow]);
-    const reviewMock: MockedResponse = {
-      request: { query: REVIEW_PRODUCT_LISTING },
-      variableMatcher: () => true,
-      result: { data: { reviewProductListing: { id: 'r1', listing_review_status: 'APPROVED' } } },
-    };
-    renderWithProviders(<EcommRequestsPage />, { mocks: [reviewMock] });
+    __setTableRows([makeProductListingRow({ created_at: null })]);
+    renderWithProviders(<EcommRequestsPage />, { mocks: [reviewProductListingMock({ status: 'APPROVED' })] });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Review' })).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: 'Review' }));
     await screen.findByRole('dialog');

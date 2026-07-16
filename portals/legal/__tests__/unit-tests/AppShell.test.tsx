@@ -4,7 +4,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import AppShell from '../../src/components/AppShell';
 import { appConfig } from '../../src/config/app-config';
 import { getToken } from '../../src/lib/session';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 // Capture the props the adapter forwards to the shared shell chrome, and expose
 // a logout trigger so we can drive the adapter's `onLogout` callback.

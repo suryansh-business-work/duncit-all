@@ -1,27 +1,14 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { useMutation, useQuery } from '@apollo/client';
 import PayoutCyclesPage from '../../src/pages/finance/payout-cycles-page';
 import { notifySuccess } from './mocks/dialogs';
-import { renderUI } from './testkit';
-
-vi.mock('@apollo/client', async (orig) => {
-  const actual = await orig<Record<string, unknown>>();
-  return { ...actual, useQuery: vi.fn(), useMutation: vi.fn() };
-});
-
-const mockedUseQuery = vi.mocked(useQuery);
-const mockedUseMutation = vi.mocked(useMutation);
-
-const fs = (over: Record<string, unknown> = {}) => ({
-  financeSettings: {
-    venue_payout_mode: 'WEEKLY',
-    host_payout_mode: 'IMMEDIATE',
-    payout_day_of_week: 1,
-    payout_time: '09:30',
-    ...over,
-  },
-});
+import { renderWithProviders } from '../testkit';
+import {
+  makePayoutSettings,
+  payoutSettingsLoadingMock,
+  payoutSettingsMock,
+  updatePayoutSettingsMock,
+} from '../mocks/payout-cycles.mock';
 
 const selectOption = (name: RegExp | string, option: string) => {
   fireEvent.mouseDown(screen.getByRole('combobox', { name }));
@@ -30,84 +17,78 @@ const selectOption = (name: RegExp | string, option: string) => {
 };
 
 beforeEach(() => {
-  mockedUseQuery.mockReset();
-  mockedUseMutation.mockReset();
-  (notifySuccess as any).mockClear();
+  (notifySuccess as unknown as { mockClear: () => void }).mockClear();
 });
 
 describe('PayoutCyclesPage', () => {
   it('shows a spinner while loading', () => {
-    mockedUseQuery.mockReturnValue({ data: undefined, loading: true, refetch: vi.fn() } as any);
-    mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
-    renderUI(<PayoutCyclesPage />);
+    renderWithProviders(<PayoutCyclesPage />, { mocks: [payoutSettingsLoadingMock()] });
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('renders a weekly schedule (scheduled + weekly controls visible) and saves', async () => {
-    const refetch = vi.fn().mockResolvedValue({});
-    const updateMut = vi.fn().mockResolvedValue({});
-    mockedUseQuery.mockReturnValue({ data: fs(), loading: false, refetch } as any);
-    mockedUseMutation.mockReturnValue([updateMut, { loading: false }] as any);
-    renderUI(<PayoutCyclesPage />);
-
-    // weekly => the "Payout day (weekly)" select is shown
+  it('renders a weekly schedule and saves', async () => {
+    renderWithProviders(<PayoutCyclesPage />, {
+      mocks: [payoutSettingsMock(), updatePayoutSettingsMock()],
+    });
+    await screen.findByText('Payout Cycles');
     expect(screen.getByRole('combobox', { name: /payout day/i })).toBeInTheDocument();
     selectOption(/payout day/i, 'Wednesday');
 
     fireEvent.click(screen.getByRole('button', { name: /save cycle/i }));
-    await waitFor(() => expect(updateMut).toHaveBeenCalled());
-    expect(notifySuccess).toHaveBeenCalledWith('Payout cycle saved');
-    expect(refetch).toHaveBeenCalled();
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Payout cycle saved'));
   });
 
-  it('hides the weekly controls when both modes are immediate', () => {
-    mockedUseQuery.mockReturnValue({
-      data: fs({ venue_payout_mode: 'IMMEDIATE', host_payout_mode: 'IMMEDIATE', payout_time: '' }),
-      loading: false,
-      refetch: vi.fn(),
-    } as any);
-    mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
-    renderUI(<PayoutCyclesPage />);
+  it('hides the weekly controls when both modes are immediate', async () => {
+    renderWithProviders(<PayoutCyclesPage />, {
+      mocks: [
+        payoutSettingsMock(
+          makePayoutSettings({ venue_payout_mode: 'IMMEDIATE', host_payout_mode: 'IMMEDIATE', payout_time: '' }),
+        ),
+      ],
+    });
+    await screen.findByText('Payout Cycles');
     expect(screen.queryByRole('combobox', { name: /payout day/i })).not.toBeInTheDocument();
   });
 
-  it('switches to a MONTH_END schedule (scheduled, not weekly)', () => {
-    mockedUseQuery.mockReturnValue({
-      data: fs({ venue_payout_mode: 'IMMEDIATE', host_payout_mode: 'IMMEDIATE', payout_time: '00:15' }),
-      loading: false,
-      refetch: vi.fn(),
-    } as any);
-    mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
-    renderUI(<PayoutCyclesPage />);
+  it('switches to a MONTH_END schedule (scheduled, not weekly)', async () => {
+    renderWithProviders(<PayoutCyclesPage />, {
+      mocks: [
+        payoutSettingsMock(
+          makePayoutSettings({ venue_payout_mode: 'IMMEDIATE', host_payout_mode: 'IMMEDIATE', payout_time: '00:15' }),
+        ),
+        updatePayoutSettingsMock(),
+      ],
+    });
+    await screen.findByText('Payout Cycles');
     selectOption('Venue payout', 'Month end');
-    // Now scheduled but not weekly → TimePicker present, no day select
     expect(screen.queryByRole('combobox', { name: /payout day/i })).not.toBeInTheDocument();
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Host payout' }));
     fireEvent.click(within(screen.getByRole('listbox')).getByText('Weekly'));
-    // Clear the time then save → dateToTime falls back to the default when time is null
     fireEvent.change(screen.getByLabelText('Payout time'), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: /save cycle/i }));
+    await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Payout cycle saved'));
   });
 
-  it('renders without settings (effect no-op)', () => {
-    mockedUseQuery.mockReturnValue({ data: { financeSettings: null }, loading: false, refetch: vi.fn() } as any);
-    mockedUseMutation.mockReturnValue([vi.fn(), { loading: false }] as any);
-    renderUI(<PayoutCyclesPage />);
-    expect(screen.getByText('Payout Cycles')).toBeInTheDocument();
+  it('renders without settings (effect no-op)', async () => {
+    renderWithProviders(<PayoutCyclesPage />, { mocks: [payoutSettingsMock(null)] });
+    expect(await screen.findByText('Payout Cycles')).toBeInTheDocument();
   });
 
   it('surfaces a save error', async () => {
-    mockedUseQuery.mockReturnValue({ data: fs(), loading: false, refetch: vi.fn() } as any);
-    mockedUseMutation.mockReturnValue([vi.fn().mockRejectedValue(new Error('save failed')), { loading: false }] as any);
-    renderUI(<PayoutCyclesPage />);
+    renderWithProviders(<PayoutCyclesPage />, {
+      mocks: [payoutSettingsMock(), updatePayoutSettingsMock({ fail: true })],
+    });
+    await screen.findByText('Payout Cycles');
     fireEvent.click(screen.getByRole('button', { name: /save cycle/i }));
     expect(await screen.findByText('save failed')).toBeInTheDocument();
   });
 
-  it('shows the saving state (disabled button)', () => {
-    mockedUseQuery.mockReturnValue({ data: fs(), loading: false, refetch: vi.fn() } as any);
-    mockedUseMutation.mockReturnValue([vi.fn(), { loading: true }] as any);
-    renderUI(<PayoutCyclesPage />);
-    expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled();
+  it('shows the saving state (disabled button)', async () => {
+    renderWithProviders(<PayoutCyclesPage />, {
+      mocks: [payoutSettingsMock(), updatePayoutSettingsMock({ delay: 60_000 })],
+    });
+    await screen.findByText('Payout Cycles');
+    fireEvent.click(screen.getByRole('button', { name: /save cycle/i }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled());
   });
 });

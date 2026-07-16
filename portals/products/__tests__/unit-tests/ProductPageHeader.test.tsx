@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import ProductPageHeader from '../../src/pages/inventory-page/inventory-product-page/ProductPageHeader';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
 vi.mock('react-router-dom', async (importOriginal) => ({
@@ -147,5 +147,11 @@ describe('ProductPageHeader', () => {
     const props = renderHeader({ product: { ...activeProduct, status: 'ARCHIVED' } });
     fireEvent.click(screen.getByRole('button', { name: 'Restore' }));
     await waitFor(() => expect(props.onError).toHaveBeenCalledWith('restore failed'));
+  });
+
+  it('falls back to a generic breadcrumb label when the product has no name', () => {
+    renderHeader({ product: { ...activeProduct, product_name: '' } });
+    // Breadcrumb uses `product_name || 'Edit product'` when the name is blank.
+    expect(screen.getByText('Edit product')).toBeInTheDocument();
   });
 });

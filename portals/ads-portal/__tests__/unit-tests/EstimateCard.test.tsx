@@ -1,21 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import EstimateCard from '../../src/pages/create-ad-page/EstimateCard';
-import type { AdPricing } from '../../src/pages/ads/queries';
-import { renderWithProviders } from './testkit';
+import { makeAdPricing } from '../mocks';
+import { renderWithProviders } from '../testkit';
 
-const pricing: AdPricing = {
-  auto_per_day: 900,
-  home_bottom_per_day: 500,
-  sidebar_per_day: 400,
-  explore_scroll_per_day: 600,
-  status_per_day: 700,
-  venue_list_per_day: 300,
-  club_list_per_day: 300,
-  pod_list_per_day: 350,
-  pod_details_per_day: 450,
-  currency_symbol: '₹',
-};
+const pricing = makeAdPricing();
 
 describe('EstimateCard', () => {
   it('shows skeletons while pricing is loading', () => {

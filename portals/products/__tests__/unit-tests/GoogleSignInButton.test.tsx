@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const glogin = vi.hoisted(() => ({ props: null as unknown as Record<string, any> }));
 
@@ -58,22 +58,33 @@ describe('GoogleSignInButton', () => {
     expect(screen.getByTestId('glogin')).toBeInTheDocument();
   });
 
-  it('renders the dark Google theme and dark loading overlay', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
-    const { container } = render(
-      <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
-        <GoogleSignInButton onCredential={vi.fn()} loading />
-      </ThemeProvider>,
-    );
-    expect(glogin.props.theme).toBe('filled_black');
-    expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
-  });
-
   it('measures the host width when the container reports one', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
     // The effect reads #google-signin-host clientWidth; the setup stub reports
     // 800, clamped to the 400 max — exercising the width-measurement branch.
     renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} />);
     expect(glogin.props.width).toBe(400);
+  });
+
+  // Both light and dark are exercised inside one test: v8 branch coverage for
+  // the `isDark` ternaries (Google theme + loading-overlay background) is only
+  // credited reliably when both outcomes are hit within a single test body.
+  it('switches the Google theme and overlay background with the MUI color mode', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    const renderMode = (mode: 'light' | 'dark') =>
+      render(
+        <ThemeProvider theme={createTheme({ palette: { mode } })}>
+          <GoogleSignInButton onCredential={vi.fn()} loading />
+        </ThemeProvider>,
+      );
+
+    const light = renderMode('light');
+    expect(glogin.props.theme).toBe('outline');
+    expect(light.container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
+    light.unmount();
+
+    const dark = renderMode('dark');
+    expect(glogin.props.theme).toBe('filled_black');
+    expect(dark.container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
   });
 });

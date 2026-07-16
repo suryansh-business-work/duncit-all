@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import ContentDialog from '../../src/pages/website/content/ContentDialog';
-import type { WebsiteContentItem } from '../../src/pages/website/content/queries';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { makeContentItem } from '../mocks';
 
 vi.mock('../../src/components/DateTimeField', () => ({
   default: ({ label }: { label: string }) => <input aria-label={label} readOnly />,
@@ -11,7 +11,7 @@ vi.mock('@duncit/media-picker', () => ({
   SingleImageUploadField: ({ label }: { label: string }) => <input aria-label={label} readOnly />,
 }));
 
-const item = { id: '1', type: 'BLOG', title: 'Existing' } as unknown as WebsiteContentItem;
+const item = makeContentItem({ id: '1', type: 'BLOG', title: 'Existing' });
 
 describe('ContentDialog', () => {
   it('renders no form body when closed', () => {

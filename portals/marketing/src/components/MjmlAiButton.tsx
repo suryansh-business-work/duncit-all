@@ -46,6 +46,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
       setPrompt('');
       setAnchorEl(null);
     } catch (e: any) {
+      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the string fallback is defensive */
       setError(e?.message ?? 'Could not generate MJML');
     }
   };

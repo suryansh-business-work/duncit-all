@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
 import OrderFulfilmentPanel from '../../src/pages/orders/OrderFulfilmentPanel';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const shipOrder = (over: Record<string, unknown> = {}) => ({
   fulfilment_method: 'SHIP',

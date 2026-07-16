@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen } from '@testing-library/react';
 import OrderSummaryCard from '../../src/pages/orders/OrderSummaryCard';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const baseOrder = {
   buyer_name: 'Asha',

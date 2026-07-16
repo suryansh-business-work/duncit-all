@@ -17,7 +17,9 @@ vi.mock('../../src/config/app-config', () => ({
   appConfig: { name: 'HR', tagline: 'A tagline' },
 }));
 
-afterEach(() => vi.resetModules());
+afterEach(() => {
+  vi.resetModules();
+});
 
 describe('DashboardPage modules fallback', () => {
   it('passes an empty array when the config omits modules', async () => {

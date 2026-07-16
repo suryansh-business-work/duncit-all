@@ -6,7 +6,7 @@ import PricingTaxSection from '../../src/pages/inventory-page/inventory-product-
 import InventoryManagementSection from '../../src/pages/inventory-page/inventory-product-page/InventoryManagementSection';
 import DeliveryAvailabilitySection from '../../src/pages/inventory-page/inventory-product-page/DeliveryAvailabilitySection';
 import { ProductFormHarness } from './form-harness';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 vi.mock('@duncit/app-settings', () => ({
   useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }),

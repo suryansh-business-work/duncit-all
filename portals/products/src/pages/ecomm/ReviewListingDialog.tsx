@@ -35,6 +35,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
   }, [row]);
 
   const submit = async (status: 'APPROVED' | 'DENIED') => {
+    /* v8 ignore next -- the Approve/Deny buttons only render while a row is set */
     if (!row) return;
     setError(null);
     try {

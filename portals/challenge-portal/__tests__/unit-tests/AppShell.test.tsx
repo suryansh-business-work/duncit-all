@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
+import { renderWithProviders } from '../testkit';
 
 const navigateSpy = vi.hoisted(() => vi.fn());
 const clearTokenSpy = vi.hoisted(() => vi.fn());
@@ -50,7 +51,7 @@ describe('AppShell adapter', () => {
       logout: vi.fn(),
     });
 
-    render(
+    renderWithProviders(
       <AppShell>
         <div>child-content</div>
       </AppShell>,
@@ -67,7 +68,7 @@ describe('AppShell adapter', () => {
     hasAppAccessSpy.mockReturnValue(false);
     useUserDataMock.mockReturnValue({ user: { roles: [] }, loading: false, logout: ctxLogout });
 
-    render(<AppShell>x</AppShell>);
+    renderWithProviders(<AppShell>x</AppShell>);
     fireEvent.click(screen.getByText('logout'));
 
     expect(clearTokenSpy).toHaveBeenCalledTimes(1);
@@ -78,7 +79,7 @@ describe('AppShell adapter', () => {
   it('leaves access undefined when there is no user', () => {
     useUserDataMock.mockReturnValue({ user: null, loading: true, logout: vi.fn() });
 
-    render(<AppShell>x</AppShell>);
+    renderWithProviders(<AppShell>x</AppShell>);
 
     expect(screen.getByTestId('has-access')).toHaveTextContent('undefined');
     expect(hasAppAccessSpy).not.toHaveBeenCalled();

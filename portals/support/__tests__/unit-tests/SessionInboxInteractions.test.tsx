@@ -1,41 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import LiveChatPage from '../../src/pages/live-chat/LiveChatPage';
-import {
-  SUPPORT_CHAT_SESSIONS,
-  type SupportChatSession,
-} from '../../src/graphql/supportChat';
-import { renderWithProviders, publicAppSettingsMock } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { publicAppSettingsMock } from '../mocks/common.mock';
+import { anySessionsMock, session } from '../mocks/supportChat.mock';
 
 vi.mock('../../src/lib/useSupportSocket', () => ({
   useSupportSocket: () => ({ current: { emit: vi.fn() } }),
 }));
-
-const session = (id: string, name: string, over: Partial<SupportChatSession> = {}): SupportChatSession => ({
-  id,
-  ticket_no: `CH-${id}`,
-  status: 'OPEN',
-  last_message_at: new Date().toISOString(),
-  last_message_preview: 'hi',
-  unread_for_agent: 0,
-  agent_id: 'a1',
-  user_last_read_at: null,
-  rating: null,
-  feedback_comment: null,
-  feedback_at: null,
-  resolved_at: null,
-  user: { id: `u-${id}`, name, phone: null, avatar_url: null },
-  ...over,
-});
-
-// A single mock that answers every SUPPORT_CHAT_SESSIONS request regardless of
-// the page/search/page_size variables the inbox mutates.
-const anySessionsMock = (items: SupportChatSession[], total: number) => ({
-  request: { query: SUPPORT_CHAT_SESSIONS },
-  variableMatcher: () => true,
-  result: { data: { supportChatSessions: { items, total, page: 1, page_size: 25 } } },
-  maxUsageCount: 50,
-});
 
 describe('SessionInbox interactions (via LiveChatPage)', () => {
   it('drives search, pagination, page-size and the create-user launcher', async () => {

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import WelcomePage from '../../src/pages/WelcomePage';
 import { appConfig } from '../../src/config/app-config';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const userMock = vi.hoisted(() => ({ value: {} as { user: unknown } }));
 vi.mock('@duncit/user-context', async (importOriginal) => ({

@@ -1,23 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, within } from '@testing-library/react';
 import ApplicationDetailsDialog from '../../src/pages/website/job-applications/ApplicationDetailsDialog';
-import type { JobApplication } from '../../src/pages/website/job-applications/queries';
-import { renderWithProviders } from './testkit';
-
-const application = (over: Partial<JobApplication> = {}): JobApplication => ({
-  id: 'j1',
-  role_content_id: 'r1',
-  role_title: 'Engineer',
-  name: 'Nia',
-  email: 'nia@example.com',
-  phone: '+91999',
-  resume_url: 'https://cv/nia.pdf',
-  portfolio_url: 'https://port/nia',
-  cover_note: 'Excited to apply',
-  status: 'NEW',
-  created_at: '2026-01-01T00:00:00.000Z',
-  ...over,
-});
+import { renderWithProviders } from '../testkit';
+import { makeJobApplication } from '../mocks';
 
 describe('ApplicationDetailsDialog', () => {
   it('renders nothing without an application', () => {
@@ -31,7 +16,7 @@ describe('ApplicationDetailsDialog', () => {
     const onUpdateStatus = vi.fn();
     renderWithProviders(
       <ApplicationDetailsDialog
-        application={application()}
+        application={makeJobApplication()}
         onClose={vi.fn()}
         onUpdateStatus={onUpdateStatus}
       />,
@@ -51,7 +36,7 @@ describe('ApplicationDetailsDialog', () => {
     const onClose = vi.fn();
     renderWithProviders(
       <ApplicationDetailsDialog
-        application={application({ phone: '', resume_url: '', portfolio_url: '', cover_note: '' })}
+        application={makeJobApplication({ phone: '', resume_url: '', portfolio_url: '', cover_note: '' })}
         onClose={onClose}
         onUpdateStatus={vi.fn()}
       />,

@@ -1,21 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import type { TableQueryState } from '@duncit/table';
+import type { AiPrompt } from '@duncit/gql-types';
 import { applyPromptTableState } from '../../src/pages/prompt-library/promptTableRows';
-import type { AiPrompt } from '../../src/pages/prompt-library/queries';
-
-const prompt = (over: Partial<AiPrompt>): AiPrompt => ({
-  id: 'p1',
-  name: 'Prompt',
-  description: '',
-  content: 'content',
-  category: 'General',
-  target_model: '',
-  token_count: 10,
-  is_active: true,
-  created_at: '2026-01-01T00:00:00.000Z',
-  updated_at: null,
-  ...over,
-});
+import { makeAiPrompt as prompt, makeTableQuery as query } from '../mocks';
 
 // Server order of aiPrompts: is_active desc, then name asc.
 const rows: AiPrompt[] = [
@@ -24,16 +10,6 @@ const rows: AiPrompt[] = [
   prompt({ id: 'c', name: 'Gamma', category: 'Support Ops', token_count: 90, created_at: '2026-03-10T00:00:00.000Z' }),
   prompt({ id: 'd', name: 'Delta', category: 'General', token_count: 50, is_active: false, created_at: null }),
 ];
-
-const query = (over: Partial<TableQueryState>): TableQueryState => ({
-  search: '',
-  page: 1,
-  pageSize: 25,
-  sortBy: null,
-  sortDir: 'asc',
-  filters: [],
-  ...over,
-});
 
 describe('applyPromptTableState', () => {
   it('keeps the server order and returns the full total when untouched', () => {

@@ -10,19 +10,23 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
+    setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // Vitest specs live under __tests__/unit-tests; form/entity mocks live under
+    // __tests__/mocks and the shared render helper is __tests__/testkit.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
       // Always collect coverage on `vitest run` so CI's form-test job enforces
       // the thresholds below without needing a separate --coverage flag.
       enabled: true,
       provider: 'v8',
       all: true,
-      reporter: ['text', 'json-summary', 'html', 'lcov'],
+      // lcov is what SonarQube reads (sonar.javascript.lcov.reportPaths).
+      reporter: ['text', 'text-summary', 'json-summary', 'html', 'lcov'],
       reportsDirectory: path.resolve(projectRoot, 'coverage'),
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        // Test files themselves + type-only declarations.
+        // Test/cypress specs + type-only declarations.
         'src/**/*.{cy,test,spec}.{ts,tsx}',
         'src/**/*.d.ts',
         // React root bootstrap — mountPortal render side-effect, no unit logic.
@@ -31,6 +35,14 @@ export default defineConfig({
         'src/apollo.ts',
         // Static URL config gated on Vite's build-time import.meta.env.DEV.
         'src/config/url-configs.ts',
+        // GraphQL document modules: gql tags + generated-shape interfaces + static
+        // catalogues only, no runtime logic. (server/queries.ts is NOT listed — it
+        // holds host-parsing helpers, so it stays covered.)
+        'src/pages/feature-flags-page/queries.ts',
+        'src/pages/portal-modes/queries.ts',
+        'src/pages/email-templates-page/queries.ts',
+        'src/pages/environment/queries.ts',
+        'src/pages/environment/portal-env-queries.ts',
       ],
       thresholds: {
         lines: 100,

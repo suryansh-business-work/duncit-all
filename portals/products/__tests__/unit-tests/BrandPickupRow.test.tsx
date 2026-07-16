@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent } from '@testing-library/react';
 import BrandPickupRow from '../../src/pages/ecomm/BrandPickupRow';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const location = (over: Record<string, unknown> = {}) => ({
   id: 'l1',

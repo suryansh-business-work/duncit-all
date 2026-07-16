@@ -1,41 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import PromptDialog from '../../src/pages/prompt-library/PromptDialog';
-import { CREATE_AI_PROMPT, UPDATE_AI_PROMPT, type AiPrompt } from '../../src/pages/prompt-library/queries';
-import { renderWithProviders } from './testkit';
-
-const basePrompt = (over: Partial<AiPrompt> = {}): AiPrompt => ({
-  id: 'p1',
-  name: 'Summariser',
-  description: 'Turns text into bullets',
-  content: 'Summarize the following article in three bullets.',
-  category: 'Summarization',
-  target_model: 'gpt-4o-mini',
-  token_count: 12,
-  is_active: true,
-  created_at: '2026-01-01T00:00:00.000Z',
-  updated_at: null,
-  ...over,
-});
-
-const createMock = (): MockedResponse => ({
-  request: { query: CREATE_AI_PROMPT },
-  variableMatcher: () => true,
-  result: { data: { createAiPrompt: { id: 'new-1' } } },
-});
-
-const updateMock = (): MockedResponse => ({
-  request: { query: UPDATE_AI_PROMPT },
-  variableMatcher: () => true,
-  result: { data: { updateAiPrompt: { id: 'p1' } } },
-});
-
-const errorMock = (): MockedResponse => ({
-  request: { query: CREATE_AI_PROMPT },
-  variableMatcher: () => true,
-  result: { errors: [{ message: 'Name already exists' }] },
-});
+import { renderWithProviders } from '../testkit';
+import { createPromptMock, makeAiPrompt, updatePromptMock } from '../mocks';
 
 describe('PromptDialog', () => {
   it('renders nothing interactive when closed', () => {
@@ -50,7 +17,7 @@ describe('PromptDialog', () => {
     const onSaved = vi.fn();
     renderWithProviders(
       <PromptDialog open prompt={null} onClose={onClose} onSaved={onSaved} />,
-      { mocks: [createMock()] },
+      { mocks: [createPromptMock()] },
     );
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Add prompt')).toBeInTheDocument();
@@ -69,8 +36,8 @@ describe('PromptDialog', () => {
     const onClose = vi.fn();
     const onSaved = vi.fn();
     renderWithProviders(
-      <PromptDialog open prompt={basePrompt({ description: null })} onClose={onClose} onSaved={onSaved} />,
-      { mocks: [updateMock()] },
+      <PromptDialog open prompt={makeAiPrompt({ description: null })} onClose={onClose} onSaved={onSaved} />,
+      { mocks: [updatePromptMock()] },
     );
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Edit prompt')).toBeInTheDocument();
@@ -85,7 +52,7 @@ describe('PromptDialog', () => {
     const onClose = vi.fn();
     renderWithProviders(
       <PromptDialog open prompt={null} onClose={onClose} onSaved={vi.fn()} />,
-      { mocks: [errorMock()] },
+      { mocks: [createPromptMock({ fail: true })] },
     );
     const dialog = await screen.findByRole('dialog');
     fireEvent.change(within(dialog).getByLabelText(/Name/i), { target: { value: 'Dupe' } });

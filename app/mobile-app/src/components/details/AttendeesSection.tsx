@@ -25,6 +25,27 @@ export function buildAttendeePeople(
   return [...list.filter((p) => p.is_host), ...list.filter((p) => !p.is_host)];
 }
 
+/** A pod host's public profile — name + photo, keyed by user id for navigation. */
+export interface HostPerson {
+  user_id: string;
+  full_name?: string | null;
+  profile_photo?: string | null;
+}
+
+/** Resolve the pod's host ids to their public profiles, in host order. Missing
+ * profiles keep the id (so the row stays tappable) with null name/photo. */
+export function buildHostPeople(people: PodPerson[], hostIds: string[]): HostPerson[] {
+  const byId = new Map(people.map((p) => [p.user_id, p]));
+  return (hostIds ?? []).map((id) => {
+    const person = byId.get(id);
+    return {
+      user_id: id,
+      full_name: person?.full_name ?? null,
+      profile_photo: person?.profile_photo ?? null,
+    };
+  });
+}
+
 const MAX_AVATAR_PREVIEW = 8;
 
 /** One avatar bubble in the overlapping preview row (hosts get a primary ring). */

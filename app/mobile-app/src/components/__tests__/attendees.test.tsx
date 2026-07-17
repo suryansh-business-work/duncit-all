@@ -1,7 +1,11 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { AttendeesDialog, type AttendeePerson } from '@/components/details/AttendeesDialog';
-import { AttendeesSection, buildAttendeePeople } from '@/components/details/AttendeesSection';
+import {
+  AttendeesSection,
+  buildAttendeePeople,
+  buildHostPeople,
+} from '@/components/details/AttendeesSection';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const person = (id: string, over: Partial<AttendeePerson> = {}): AttendeePerson => ({
@@ -31,6 +35,20 @@ describe('buildAttendeePeople', () => {
       is_host: false,
     });
     expect(buildAttendeePeople([], undefined as never, [])).toEqual([]);
+  });
+});
+
+describe('buildHostPeople', () => {
+  it('resolves host ids to profiles in order, filling missing ones with nulls', () => {
+    const hosts = buildHostPeople(
+      [{ user_id: 'h1', full_name: 'Asha', profile_photo: 'https://x/p.jpg' }],
+      ['h1', 'h2'],
+    );
+    expect(hosts).toEqual([
+      { user_id: 'h1', full_name: 'Asha', profile_photo: 'https://x/p.jpg' },
+      { user_id: 'h2', full_name: null, profile_photo: null },
+    ]);
+    expect(buildHostPeople([], undefined as never)).toEqual([]);
   });
 });
 

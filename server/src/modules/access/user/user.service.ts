@@ -1092,7 +1092,10 @@ export const userService = {
   async requestPasswordResetOtp(input: RequestPasswordResetDTO) {
     const email = String(input.email || '').trim().toLowerCase();
     const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
-    if (!user?.auth?.password) return { ok: true, dev_otp: null };
+    // Only a registered account with a password can receive a reset OTP. An
+    // unregistered email gets no OTP and is reported back so the UI can prompt
+    // the visitor to create an account instead.
+    if (!user?.auth?.password) return { ok: false, registered: false, dev_otp: null };
     const otp = String(crypto.randomInt(100000, 1000000));
     await UserModel.updateOne(
       { _id: user._id },
@@ -1109,7 +1112,7 @@ export const userService = {
       otp,
       expiresMinutes: String(EMAIL_OTP_MINUTES),
     });
-    return { ok: true, dev_otp: isDev ? otp : null };
+    return { ok: true, registered: true, dev_otp: isDev ? otp : null };
   },
 
   // Public: verify the OTP and set a new password. Generic errors prevent email

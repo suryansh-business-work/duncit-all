@@ -64,10 +64,14 @@ export async function login(values: LoginValues): Promise<AuthOutcome> {
   return { token: data.login.token, surveyCompleted: data.login.user.onboarding_survey_completed };
 }
 
-/** Request a password-reset OTP by email (mirrors mWeb). The server always
- * reports ok to avoid email enumeration. */
-export async function requestPasswordResetOtp(email: string): Promise<void> {
-  await graphqlRequest(RequestPasswordResetOtpDocument, { email: email.trim().toLowerCase() });
+/** Request a password-reset OTP by email (mirrors mWeb). Returns whether the
+ * email is a registered account — an OTP is only sent when `registered` is true;
+ * an unregistered email is reported back so the UI can prompt sign-up. */
+export async function requestPasswordResetOtp(email: string): Promise<{ registered: boolean }> {
+  const data = await graphqlRequest(RequestPasswordResetOtpDocument, {
+    email: email.trim().toLowerCase(),
+  });
+  return { registered: data.requestPasswordResetOtp.registered ?? false };
 }
 
 export interface ResetPasswordValues {

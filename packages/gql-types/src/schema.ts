@@ -6860,6 +6860,8 @@ export type OtpRequestResult = {
   __typename?: 'OtpRequestResult';
   dev_otp?: Maybe<Scalars['String']['output']>;
   ok: Scalars['Boolean']['output'];
+  /** Password-reset only: false when the email is not a registered account (no OTP is sent). */
+  registered?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export type PartnerDashboard = {

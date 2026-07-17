@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, InputAdornment, Stack } from '@mui/material';
+import { Alert, Button, FormHelperText, InputAdornment, Stack } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import RhfTextField from '../components/RhfTextField';
@@ -15,10 +15,12 @@ interface Props {
   loading?: boolean;
   initialValues?: ForgotPasswordValues;
   errorMessage?: string | null;
+  /** Server-side validation shown directly below the email field (e.g. "Unregistered User"). */
+  emailError?: string | null;
   onSubmit: (values: ForgotPasswordValues) => Promise<void> | void;
 }
 
-export default function ForgotPasswordForm({ loading, initialValues, errorMessage, onSubmit }: Readonly<Props>) {
+export default function ForgotPasswordForm({ loading, initialValues, errorMessage, emailError, onSubmit }: Readonly<Props>) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<ForgotPasswordValues>({
     defaultValues: initialValues ?? forgotPasswordDefaults,
@@ -54,6 +56,11 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
             ),
           }}
         />
+        {emailError && (
+          <FormHelperText error role="alert" sx={{ mt: -1, mx: 1.75 }}>
+            {emailError}
+          </FormHelperText>
+        )}
         <Button
           type="submit"
           variant="contained"

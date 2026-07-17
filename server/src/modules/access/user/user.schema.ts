@@ -376,6 +376,8 @@ export const userTypeDefs = gql`
   type OtpRequestResult {
     ok: Boolean!
     dev_otp: String
+    "Password-reset only: false when the email is not a registered account (no OTP is sent)."
+    registered: Boolean
   }
 
   extend type Mutation {

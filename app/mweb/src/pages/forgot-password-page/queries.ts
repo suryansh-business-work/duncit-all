@@ -5,6 +5,7 @@ export const REQUEST_PASSWORD_RESET_OTP = gql`
     requestPasswordResetOtp(email: $email) {
       ok
       dev_otp
+      registered
     }
   }
 `;

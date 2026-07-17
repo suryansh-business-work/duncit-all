@@ -25,7 +25,7 @@ const mockedReset = resetPasswordWithOtp as jest.Mock;
 beforeEach(() => {
   jest.clearAllMocks();
   mockRouteParams = { email: 'riya@duncit.com' };
-  mockedRequest.mockResolvedValue(undefined);
+  mockedRequest.mockResolvedValue({ registered: true });
   mockedReset.mockResolvedValue(true);
 });
 
@@ -48,6 +48,20 @@ describe('ForgotPasswordScreen', () => {
     await waitFor(() =>
       expect(screen.getByTestId('forgot-password-error')).toHaveTextContent('server down'),
     );
+  });
+
+  it('flags an unregistered email and offers Create Account instead of the reset step', async () => {
+    mockedRequest.mockResolvedValueOnce({ registered: false });
+    renderWithProviders(<ForgotPasswordScreen />);
+    fireEvent.changeText(screen.getByTestId('field-email'), 'ghost@duncit.com');
+    fireEvent.press(screen.getByTestId('forgot-password-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('forgot-email-error')).toHaveTextContent('Unregistered User'),
+    );
+    expect(screen.getByText('New to Duncit?')).toBeOnTheScreen();
+    expect(mockNavigate).not.toHaveBeenCalledWith('ResetPassword', expect.anything());
+    fireEvent.press(screen.getByTestId('forgot-create-account'));
+    expect(mockNavigate).toHaveBeenCalledWith('Signup');
   });
 
   it('links back to login', () => {

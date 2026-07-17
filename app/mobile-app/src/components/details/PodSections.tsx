@@ -1,10 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AppImage } from '@/components/AppImage';
 import type { PodDetail } from '@/hooks/useDetails';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { type HostPerson } from './AttendeesSection';
 
-export { AttendeesSection, buildAttendeePeople } from './AttendeesSection';
+export { AttendeesSection, buildAttendeePeople, buildHostPeople } from './AttendeesSection';
 
 /** A wrapped list of pill chips, or an empty hint. */
 export function ChipList({
@@ -56,9 +57,58 @@ export function AboutSection({ pod }: Readonly<{ pod: PodDetail }>) {
   );
 }
 
-/** Hosts — one row per host name. */
-export function HostsSection({ hosts }: Readonly<{ hosts: string[] }>) {
-  const { primary } = useThemeColors();
+/** One tappable host row — avatar + name → opens the host's public profile. */
+function HostRow({
+  host,
+  onOpenProfile,
+}: Readonly<{ host: HostPerson; onOpenProfile: (userId: string) => void }>) {
+  const name = host.full_name || 'Host';
+  return (
+    <XStack
+      testID={`host-row-${host.user_id}`}
+      role="button"
+      aria-label={`View ${name}'s profile`}
+      onPress={() => onOpenProfile(host.user_id)}
+      alignItems="center"
+      gap={10}
+      paddingVertical={6}
+      pressStyle={{ opacity: 0.7 }}
+    >
+      <YStack
+        width={40}
+        height={40}
+        borderRadius={20}
+        overflow="hidden"
+        backgroundColor="$primary"
+        alignItems="center"
+        justifyContent="center"
+      >
+        {host.profile_photo ? (
+          <AppImage source={{ uri: host.profile_photo }} style={{ width: 40, height: 40 }} />
+        ) : (
+          <Text fontSize={15} fontWeight="800" color="$onPrimary">
+            {(host.full_name?.[0] ?? 'H').toUpperCase()}
+          </Text>
+        )}
+      </YStack>
+      <YStack flex={1}>
+        <Text fontSize={14} fontWeight="700" color="$color">
+          {name}
+        </Text>
+        <Text fontSize={11.5} color="$muted">
+          Host
+        </Text>
+      </YStack>
+      <MaterialIcons name="chevron-right" size={20} color="#9aa0a6" />
+    </XStack>
+  );
+}
+
+/** Hosts — one tappable row per host (name + photo) opening their profile. */
+export function HostsSection({
+  hosts,
+  onOpenProfile,
+}: Readonly<{ hosts: HostPerson[]; onOpenProfile: (userId: string) => void }>) {
   if (hosts.length === 0)
     return (
       <Text fontSize={13} color="$muted">
@@ -66,14 +116,9 @@ export function HostsSection({ hosts }: Readonly<{ hosts: string[] }>) {
       </Text>
     );
   return (
-    <YStack gap={8}>
-      {hosts.map((name) => (
-        <XStack key={name} alignItems="center" gap={8}>
-          <MaterialIcons name="person" size={16} color={primary} />
-          <Text fontSize={13.5} fontWeight="700" color="$color">
-            {name}
-          </Text>
-        </XStack>
+    <YStack gap={6}>
+      {hosts.map((host) => (
+        <HostRow key={host.user_id} host={host} onOpenProfile={onOpenProfile} />
       ))}
     </YStack>
   );

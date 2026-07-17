@@ -12,6 +12,7 @@ import {
   AboutSection,
   AttendeesSection,
   buildAttendeePeople,
+  buildHostPeople,
   ChargesSection,
   ChipList,
   HostsSection,
@@ -94,6 +95,7 @@ export function PodAccordions({
     const charges = pod.place_charges ?? [];
     const terms = pod.payment_terms?.trim();
     const attendeePeople = buildAttendeePeople(people, pod.pod_attendees, pod.pod_hosts_id);
+    const hostPeople = buildHostPeople(people, pod.pod_hosts_id);
     const list: Section[] = [
       { id: 'about', title: 'About this pod', icon: 'info', content: <AboutSection pod={pod} /> },
       {
@@ -135,7 +137,7 @@ export function PodAccordions({
         id: 'hosts',
         title: 'Hosts',
         icon: 'person',
-        content: <HostsSection hosts={pod.host_names} />,
+        content: <HostsSection hosts={hostPeople} onOpenProfile={onOpenProfile} />,
       },
       {
         id: 'attendees',

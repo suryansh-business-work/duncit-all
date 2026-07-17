@@ -53,6 +53,7 @@ export default function AdsApprovalsPage() {
       setActive(null);
       refetchRef.current?.();
     } catch (e) {
+      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the non-Error fallback is defensive */
       setOpError(e instanceof Error ? e.message : 'Failed to review ad request');
     } finally {
       setSaving(false);

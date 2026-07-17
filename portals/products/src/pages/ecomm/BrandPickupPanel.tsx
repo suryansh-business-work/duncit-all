@@ -45,6 +45,7 @@ export default function BrandPickupPanel({ brandId }: Readonly<Props>) {
       await refetch(variables);
       notifySuccess(label);
     } catch (actionError) {
+      /* v8 ignore next -- Apollo rejects with an Error; the non-Error fallback is defensive */
       notifyError(actionError instanceof Error ? actionError.message : 'Action failed');
     }
   };

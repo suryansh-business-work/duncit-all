@@ -1,26 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import ChatThread from '../../src/pages/live-chat/LiveChatPage/ChatThread';
 import TicketThread from '../../src/pages/tickets/TicketDetailPage/TicketThread';
-import type { SupportChatSession, SupportChatMessage } from '../../src/graphql/supportChat';
-import type { Ticket } from '../../src/graphql/tickets';
-import { publicAppSettingsMock } from './testkit';
+import { renderWithProviders } from '../testkit';
+import { publicAppSettingsMock } from '../mocks/common.mock';
+import { chatMessage, makeSupportChatSession } from '../mocks/supportChat.mock';
+import { makeTicket, makeTicketMessage } from '../mocks/ticket.mock';
 
 const withProvider = (ui: React.ReactElement) =>
-  render(<MockedProvider mocks={[publicAppSettingsMock()]} addTypename={false}>{ui}</MockedProvider>);
-
-const session = (over: Partial<SupportChatSession> = {}): SupportChatSession => ({
-  id: 's', ticket_no: 'CH-S', status: 'OPEN', last_message_at: '', last_message_preview: '',
-  unread_for_agent: 0, agent_id: null, user_last_read_at: null, rating: null,
-  feedback_comment: null, feedback_at: null, resolved_at: null,
-  user: { id: 'u', name: 'Riya', phone: null, avatar_url: null }, ...over,
-});
-
-const cmsg = (id: string, role: SupportChatMessage['sender_role'], text: string): SupportChatMessage => ({
-  id, session_id: 's', sender_id: 'x', sender_role: role, sender_name: 'X', sender_photo: null,
-  text, attachments: [], is_ai: false, created_at: '2026-06-26T10:00:00Z',
-});
+  renderWithProviders(ui, { mocks: [publicAppSettingsMock()] });
 
 /** Forces the next scroll read to report "not at bottom" so the FAB appears. */
 function scrollAway(el: HTMLElement) {
@@ -33,7 +21,11 @@ function scrollAway(el: HTMLElement) {
 describe('ChatThread', () => {
   it('shows the jump-to-latest FAB after scrolling up, hides it at the bottom', async () => {
     withProvider(
-      <ChatThread session={session()} messages={[cmsg('m1', 'USER', 'Hi')]} typingLabel="Riya is typing…" />,
+      <ChatThread
+        session={makeSupportChatSession()}
+        messages={[chatMessage('m1', 's', 'USER', 'Hi')]}
+        typingLabel="Riya is typing…"
+      />,
     );
     await waitFor(() => expect(screen.getByText('Hi')).toBeInTheDocument());
     expect(screen.getByText('Riya is typing…')).toBeInTheDocument();
@@ -52,8 +44,8 @@ describe('ChatThread', () => {
   it('renders the resolved banner + feedback for a closed session', async () => {
     withProvider(
       <ChatThread
-        session={session({ status: 'CLOSED', rating: 3, feedback_comment: 'ok' })}
-        messages={[cmsg('m1', 'AGENT', 'done')]}
+        session={makeSupportChatSession({ status: 'CLOSED', rating: 3, feedback_comment: 'ok' })}
+        messages={[chatMessage('m1', 's', 'AGENT', 'done')]}
         typingLabel={null}
       />,
     );
@@ -62,21 +54,17 @@ describe('ChatThread', () => {
   });
 });
 
-const ticket = (over: Partial<Ticket> = {}): Ticket => ({
-  id: 't', subject: 'S', category: 'GENERAL', status: 'OPEN', priority: 'LOW',
-  assignee_id: null, assignee_name: null, last_message_at: '', message_count: 1,
-  resolved_at: null, reopen_deadline: null, rating: null, feedback_comment: null, feedback_at: null,
-  created_at: '', updated_at: '', user: { id: 'u', name: 'Riya', phone: null, avatar_url: null },
-  messages: [
-    { id: 'm1', author_id: 'u', author_role: 'USER', author_name: 'Riya', author_photo: null, body_html: '', body_text: 'help', attachments: [], created_at: '2026-06-26T10:00:00Z' },
-  ],
-  ...over,
-});
-
 describe('TicketThread', () => {
   it('shows the FAB on scroll and feedback when resolved', async () => {
     const { container } = withProvider(
-      <TicketThread ticket={ticket({ status: 'RESOLVED', rating: 2, feedback_comment: 'meh' })} />,
+      <TicketThread
+        ticket={makeTicket({
+          status: 'RESOLVED',
+          rating: 2,
+          feedback_comment: 'meh',
+          messages: [makeTicketMessage()],
+        })}
+      />,
     );
     await waitFor(() => expect(screen.getByText('help')).toBeInTheDocument());
     expect(within(container).getByText(/Dissatisfied/i)).toBeInTheDocument();

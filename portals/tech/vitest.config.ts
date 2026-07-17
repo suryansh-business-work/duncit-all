@@ -10,69 +10,39 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: false,
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
+    setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // Vitest specs live under __tests__/unit-tests; form/entity mocks live under
+    // __tests__/mocks and the shared render helper is __tests__/testkit.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
       // Always collect coverage on `vitest run` so CI's form-test job enforces
       // the thresholds below without needing a separate --coverage flag.
       enabled: true,
       provider: 'v8',
       all: true,
-      reporter: ['text', 'json-summary', 'html', 'lcov'],
+      // lcov is what SonarQube reads (sonar.javascript.lcov.reportPaths).
+      reporter: ['text', 'text-summary', 'json-summary', 'html', 'lcov'],
       reportsDirectory: path.resolve(projectRoot, 'coverage'),
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        // Test files themselves + type-only declarations.
+        // Test/cypress specs + type-only declarations.
         'src/**/*.{cy,test,spec}.{ts,tsx}',
         'src/**/*.d.ts',
-        // App bootstrap, Apollo client/link wiring, MUI theme and device-id —
-        // pure glue with no unit-testable logic; booted by the e2e flows.
+        // React root bootstrap — mountPortal render side-effect, no unit logic.
         'src/main.tsx',
-        'src/App.tsx',
+        // Thin Apollo client factory (delegates to @duncit/shell).
         'src/apollo.ts',
-        'src/theme.ts',
-        'src/duid.ts',
+        // Static URL config gated on Vite's build-time import.meta.env.DEV.
         'src/config/url-configs.ts',
-        'src/utils/apolloErrorLink.ts',
-        // Auth + Google Identity + the routed app shell need window.google,
-        // OAuth redirects and a live router — covered end-to-end, not in jsdom.
-        'src/components/AppShell.tsx',
-        'src/components/AppBreadcrumbs.tsx',
-        'src/components/AuthSplitLayout.tsx',
-        'src/components/GoogleSignInButton.tsx',
-        'src/pages/LoginPage.tsx',
-        'src/pages/AuthenticationPage.tsx',
-        'src/pages/JwtExpirySection.tsx',
-        // Apollo CRUD containers (queries + mutations + drawers) — their
-        // presentational children (tables, dialogs, forms) ARE unit-tested
-        // here; the containers are validated by the console e2e suite.
-        'src/pages/environment/index.tsx',
-        'src/pages/environment/EnvVariablesTab.tsx',
-        'src/pages/environment/PortalMappingTab.tsx',
-        'src/pages/environment/PortalEnvDrawer.tsx',
-        'src/pages/feature-flags-page/FeatureFlagsPage.tsx',
-        'src/pages/portal-modes/index.tsx',
-        // Server > Info / Docker are Apollo query containers; their
-        // presentational children (StatCard, InfoList, ServerInfoDetails) and
-        // helpers (format, queries) ARE unit-tested.
-        'src/pages/server/ServerInfoPage.tsx',
-        'src/pages/server/DockerPage.tsx',
-        // Interactive test panels: real Apollo mutations, Google OAuth/Maps
-        // SDKs and <script> injection — exercised by the e2e console flows.
-        'src/pages/environment/test-panels/**',
-        // Email Templates: Apollo CRUD container + editor hook + mutation
-        // dialogs, plus the Monaco-editor pane and its AI button (real browser
-        // editor + Apollo mutation) — exercised by the e2e console flows. The
-        // presentational children (TemplateList, EditorActionsBar,
-        // CreateTemplateForm, PreviewVariablesPane) and helpers (mjmlFormat,
-        // queries, form schemas) ARE unit-tested here.
-        'src/pages/email-templates-page/EmailTemplatesPage.tsx',
-        'src/pages/email-templates-page/useEmailTemplateEditor.ts',
-        'src/pages/email-templates-page/CreateTemplateDialog.tsx',
-        'src/pages/email-templates-page/SendTestDialog.tsx',
-        'src/pages/email-templates-page/MjmlEditorPane.tsx',
-        'src/pages/email-templates-page/TemplateEditorPanel.tsx',
-        'src/components/MjmlAiButton.tsx',
+        // GraphQL document modules: gql tags + generated-shape interfaces + static
+        // catalogues only, no runtime logic. (server/queries.ts is NOT listed — it
+        // holds host-parsing helpers, so it stays covered.)
+        'src/pages/feature-flags-page/queries.ts',
+        'src/pages/portal-modes/queries.ts',
+        'src/pages/email-templates-page/queries.ts',
+        'src/pages/environment/queries.ts',
+        'src/pages/environment/portal-env-queries.ts',
       ],
       thresholds: {
         lines: 100,

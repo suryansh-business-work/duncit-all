@@ -46,6 +46,7 @@ export default function PromptLibraryPage() {
     setDialogOpen(true);
   };
   const confirmDelete = async () => {
+    /* v8 ignore next -- defensive guard: ConfirmDialog onConfirm only fires while toDelete is set */
     if (!toDelete) return;
     setDeleteError(null);
     try {

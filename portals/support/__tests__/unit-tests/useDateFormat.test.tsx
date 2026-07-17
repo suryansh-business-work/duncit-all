@@ -1,15 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import { useDateFormat } from '@duncit/app-settings';
-import { publicAppSettingsMock } from './testkit';
+import { publicAppSettingsMock, publicAppSettingsNullMock } from '../mocks/common.mock';
 
 const wrapper =
-  (mocks: any[] = [publicAppSettingsMock()]) =>
+  (mocks: MockedResponse[] = [publicAppSettingsMock()]) =>
   ({ children }: { children: React.ReactNode }) => (
-    <MockedProvider mocks={mocks} addTypename={false}>
-      {children}
-    </MockedProvider>
+    <MockedProvider mocks={mocks}>{children}</MockedProvider>
   );
 
 describe('useDateFormat', () => {
@@ -30,8 +28,10 @@ describe('useDateFormat', () => {
   });
 
   it('returns empty strings for missing or invalid input (fallback settings)', () => {
-    const { result } = renderHook(() => useDateFormat({ timeZoneAware: true }), { wrapper: wrapper([]) });
-    // No settings resolved yet → uses fallbacks, still safe for bad input.
+    const { result } = renderHook(() => useDateFormat({ timeZoneAware: true }), {
+      wrapper: wrapper([publicAppSettingsNullMock()]),
+    });
+    // Settings resolve to null → uses fallbacks, still safe for bad input.
     expect(result.current.formatTime(null)).toBe('');
     expect(result.current.dayLabel(undefined)).toBe('');
     expect(result.current.dayKey('not-a-date')).toBe('');

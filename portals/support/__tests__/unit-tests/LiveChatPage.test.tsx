@@ -1,89 +1,32 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import LiveChatPage from '../../src/pages/live-chat/LiveChatPage';
+import { renderWithProviders } from '../testkit';
+import { publicAppSettingsMock } from '../mocks/common.mock';
 import {
-  CLOSE_SUPPORT_CHAT,
-  EMAIL_SUPPORT_CHAT_TRANSCRIPT,
-  MARK_SUPPORT_CHAT_READ,
-  REOPEN_SUPPORT_CHAT,
-  SEND_SUPPORT_CHAT_MESSAGE,
-  SUPPORT_CHAT_MESSAGES,
-  SUPPORT_CHAT_SESSIONS,
-  SUPPORT_CHAT_TRANSCRIPT,
-  type SupportChatMessage,
-  type SupportChatSession,
-} from '../../src/graphql/supportChat';
-import { renderWithProviders, publicAppSettingsMock } from './testkit';
+  chatMessage,
+  claimChatMock,
+  closeChatMock,
+  emailChatTranscriptMock,
+  chatTranscriptMock,
+  markReadMock,
+  messagesMock,
+  reopenChatMock,
+  sendMessageMock,
+  session,
+  sessionsMock,
+} from '../mocks/supportChat.mock';
 
 const sockMock = vi.hoisted(() => ({
-  events: {} as Record<string, (p: any) => void>,
-  ref: { current: { emit: vi.fn() } as any },
+  events: {} as Record<string, (...args: unknown[]) => void>,
+  ref: { current: { emit: vi.fn() } as { emit: ReturnType<typeof vi.fn> } },
 }));
 vi.mock('../../src/lib/useSupportSocket', () => ({
-  useSupportSocket: (events: Record<string, (p: any) => void>) => {
+  useSupportSocket: (events: Record<string, (...args: unknown[]) => void>) => {
     sockMock.events = events;
     return sockMock.ref;
   },
 }));
-
-const session = (id: string, name: string, over: Partial<SupportChatSession> = {}): SupportChatSession => ({
-  id,
-  ticket_no: `CH-${id.toUpperCase()}`,
-  status: 'OPEN',
-  last_message_at: new Date().toISOString(),
-  last_message_preview: 'hi',
-  unread_for_agent: 2,
-  agent_id: null,
-  user_last_read_at: null,
-  rating: null,
-  feedback_comment: null,
-  feedback_at: null,
-  resolved_at: null,
-  user: { id: `u-${id}`, name, phone: '+919800000000', avatar_url: null },
-  ...over,
-});
-
-const msg = (
-  id: string,
-  sessionId: string,
-  role: SupportChatMessage['sender_role'],
-  text: string,
-  over: Partial<SupportChatMessage> = {},
-): SupportChatMessage => ({
-  id,
-  session_id: sessionId,
-  sender_id: 'x',
-  sender_role: role,
-  sender_name: 'X',
-  sender_photo: null,
-  text,
-  attachments: [],
-  is_ai: false,
-  created_at: new Date().toISOString(),
-  ...over,
-});
-
-const sessionsMock = (sessions: SupportChatSession[], status = 'OPEN') => ({
-  request: {
-    query: SUPPORT_CHAT_SESSIONS,
-    variables: { status, search: null, page: 1, page_size: 25 },
-  },
-  result: {
-    data: { supportChatSessions: { items: sessions, total: sessions.length, page: 1, page_size: 25 } },
-  },
-  maxUsageCount: 30,
-});
-const messagesMock = (sessionId: string, messages: SupportChatMessage[]) => ({
-  request: { query: SUPPORT_CHAT_MESSAGES, variables: { session_id: sessionId, limit: 100 } },
-  result: { data: { supportChatMessages: messages } },
-  maxUsageCount: 10,
-});
-const markReadMock = (sessionId: string) => ({
-  request: { query: MARK_SUPPORT_CHAT_READ, variables: { session_id: sessionId } },
-  result: { data: { markSupportChatRead: { id: sessionId, unread_for_agent: 0 } } },
-  maxUsageCount: 10,
-});
-const repeat = (m: any, n: number) => Array.from({ length: n }, () => ({ ...m }));
 
 describe('LiveChatPage', () => {
   it('shows empty states and switches the OPEN/RESOLVED filter', async () => {
@@ -99,25 +42,25 @@ describe('LiveChatPage', () => {
   });
 
   it('selects a session, renders AI badge + ticks, sends, receives live, resolves', async () => {
-    const A = session('sess-a', 'Riya');
-    const B = session('sess-b', 'Aman');
+    const A = session('sess-a', 'Riya', { unread_for_agent: 2 });
+    const B = session('sess-b', 'Aman', { unread_for_agent: 2 });
     renderWithProviders(<LiveChatPage />, {
       mocks: [
         publicAppSettingsMock(),
-        ...repeat(sessionsMock([A, B]), 8),
-        ...repeat(
-          messagesMock('sess-a', [
-            msg('m1', 'sess-a', 'USER', 'Hello there'),
-            msg('ai1', 'sess-a', 'AGENT', 'AI reply', { is_ai: true }),
-            msg('sys1', 'sess-a', 'SYSTEM', 'Support executive Sam will be assisting you now.'),
-          ]),
-          2,
-        ),
-        ...repeat(messagesMock('sess-b', []), 2),
-        ...repeat(markReadMock('sess-a'), 3),
-        ...repeat(markReadMock('sess-b'), 2),
-        ...repeat({ request: { query: SEND_SUPPORT_CHAT_MESSAGE }, variableMatcher: () => true, result: { data: { sendSupportChatMessage: msg('echo', 'sess-a', 'AGENT', 'Reply') } } }, 4),
-        { request: { query: CLOSE_SUPPORT_CHAT, variables: { session_id: 'sess-a' } }, result: { data: { closeSupportChat: { id: 'sess-a', status: 'CLOSED', resolved_at: new Date().toISOString() } } } },
+        sessionsMock([A, B]),
+        messagesMock('sess-a', [
+          chatMessage('m1', 'sess-a', 'USER', 'Hello there'),
+          chatMessage('ai1', 'sess-a', 'AGENT', 'AI reply', { is_ai: true }),
+          chatMessage('sys1', 'sess-a', 'SYSTEM', 'Support executive Sam will be assisting you now.'),
+        ]),
+        messagesMock('sess-b', []),
+        markReadMock('sess-a'),
+        markReadMock('sess-b'),
+        // sess-a / sess-b start unclaimed (agent_id null) → selecting them claims.
+        claimChatMock('sess-a'),
+        claimChatMock('sess-b'),
+        sendMessageMock({ message: chatMessage('echo', 'sess-a', 'AGENT', 'Reply') }),
+        closeChatMock({ id: 'sess-a' }),
       ],
     });
 
@@ -142,10 +85,10 @@ describe('LiveChatPage', () => {
     fireEvent.change(screen.getByPlaceholderText('Type a message…'), { target: { value: 'Reply' } });
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
 
-    sockMock.events.onChatMessage(msg('live-1', 'sess-a', 'AGENT', 'Live reply'));
-    sockMock.events.onChatMessage(msg('live-1', 'sess-a', 'AGENT', 'Live reply'));
-    sockMock.events.onChatMessage(msg('live-2', 'other', 'AGENT', 'Ignored'));
-    sockMock.events.onChatMessage({ ...msg('live-3', 'sess-a', 'USER', ''), attachments: ['https://img/c.png'] });
+    sockMock.events.onChatMessage(chatMessage('live-1', 'sess-a', 'AGENT', 'Live reply'));
+    sockMock.events.onChatMessage(chatMessage('live-1', 'sess-a', 'AGENT', 'Live reply'));
+    sockMock.events.onChatMessage(chatMessage('live-2', 'other', 'AGENT', 'Ignored'));
+    sockMock.events.onChatMessage(chatMessage('live-3', 'sess-a', 'USER', '', { attachments: ['https://img/c.png'] }));
     await waitFor(() => expect(screen.getByText('Live reply')).toBeInTheDocument());
     expect(screen.queryByText('Ignored')).not.toBeInTheDocument();
 
@@ -180,11 +123,11 @@ describe('LiveChatPage', () => {
         publicAppSettingsMock(),
         sessionsMock([], 'OPEN'),
         sessionsMock([resolved], 'CLOSED'),
-        messagesMock('sess-c', [msg('m1', 'sess-c', 'AGENT', 'All sorted')]),
+        messagesMock('sess-c', [chatMessage('m1', 'sess-c', 'AGENT', 'All sorted')]),
         markReadMock('sess-c'),
-        { request: { query: REOPEN_SUPPORT_CHAT, variables: { session_id: 'sess-c', reason: null } }, result: { data: { reopenSupportChat: { id: 'sess-c', status: 'OPEN', resolved_at: null } } } },
-        { request: { query: SUPPORT_CHAT_TRANSCRIPT, variables: { session_id: 'sess-c', format: 'TXT' } }, result: { data: { supportChatTranscript: { filename: 'support-CH-C.txt', text: 'hi', content_base64: 'aGk=' } } } },
-        { request: { query: EMAIL_SUPPORT_CHAT_TRANSCRIPT, variables: { session_id: 'sess-c', email: 'q@e.com', format: 'DOCX' } }, result: { data: { emailSupportChatTranscript: true } } },
+        reopenChatMock({ id: 'sess-c' }),
+        chatTranscriptMock({ id: 'sess-c', format: 'TXT' }),
+        emailChatTranscriptMock({ id: 'sess-c', email: 'q@e.com' }),
       ],
     });
 
@@ -216,16 +159,16 @@ describe('LiveChatPage', () => {
   });
 
   it('surfaces resolve + transcript errors in a snackbar', async () => {
-    const open = session('sess-e', 'Dev');
+    const open = session('sess-e', 'Dev', { agent_id: 'a1' });
     renderWithProviders(<LiveChatPage />, {
       mocks: [
         publicAppSettingsMock(),
         sessionsMock([open], 'OPEN'),
         messagesMock('sess-e', []),
         markReadMock('sess-e'),
-        { request: { query: CLOSE_SUPPORT_CHAT, variables: { session_id: 'sess-e' } }, error: new Error('Resolve failed') },
-        { request: { query: SUPPORT_CHAT_TRANSCRIPT, variables: { session_id: 'sess-e', format: 'TXT' } }, error: new Error('Export failed') },
-        { request: { query: EMAIL_SUPPORT_CHAT_TRANSCRIPT, variables: { session_id: 'sess-e', email: 'x@e.com', format: 'DOCX' } }, error: new Error('Email failed') },
+        closeChatMock({ id: 'sess-e', error: 'Resolve failed' }),
+        chatTranscriptMock({ id: 'sess-e', format: 'TXT', error: 'Export failed' }),
+        emailChatTranscriptMock({ id: 'sess-e', email: 'x@e.com', error: 'Email failed' }),
       ],
     });
     await waitFor(() => expect(screen.getByText('Dev')).toBeInTheDocument());

@@ -9,10 +9,14 @@ export default defineConfig({
       // lcov is what SonarQube reads (sonar.javascript.lcov.reportPaths).
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
+      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts'],
+      // main.tsx is the bootstrap entry (DOM mount + font/side-effect imports);
+      // it carries no unit-testable logic and is coverage-excluded in Sonar too.
+      exclude: ['src/**/*.d.ts', 'src/vite-env.d.ts', 'src/main.tsx'],
     },
     environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 });

@@ -1,23 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL, UPLOAD_IMAGE } from '@duncit/media-picker';
-
-const uploadMock = (url: string | null): MockedResponse => ({
-  request: { query: UPLOAD_IMAGE },
-  variableMatcher: () => true,
-  result: {
-    data: {
-      uploadImageToImagekit: url === null ? null : { url, fileId: null, thumbnailUrl: null },
-    },
-  },
-});
-
-const errorMock: MockedResponse = {
-  request: { query: UPLOAD_IMAGE },
-  variableMatcher: () => true,
-  error: new Error('network down'),
-};
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { type MockedResponse } from '@apollo/client/testing';
+import { AttachmentUploadField, ATTACHMENT_ACCEPT_ALL } from '@duncit/media-picker';
+import { renderWithProviders } from '../testkit';
+import { uploadErrorMock, uploadMock } from '../mocks/upload.mock';
 
 // The support-portal configuration of the shared field (images, videos and
 // documents, capped at 100 MB per file — support spec).
@@ -32,10 +18,9 @@ function setup(
   mocks: MockedResponse[] = [],
 ) {
   const onChange = props.onChange ?? vi.fn();
-  const utils = render(
-    <MockedProvider mocks={mocks} addTypename={false}>
-      <AttachmentUploadField {...supportProps} value={props.value ?? []} onChange={onChange} {...props} />
-    </MockedProvider>
+  const utils = renderWithProviders(
+    <AttachmentUploadField {...supportProps} value={props.value ?? []} onChange={onChange} {...props} />,
+    { mocks },
   );
   const input = utils.container.querySelector('input[type="file"]') as HTMLInputElement;
   return { ...utils, onChange, input };
@@ -43,7 +28,9 @@ function setup(
 
 const pngFile = (name = 'a.png') => new File(['hello'], name, { type: 'image/png' });
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 describe('UploadField (shared AttachmentUploadField, support config)', () => {
   it('shows the count and a custom label', () => {
@@ -94,7 +81,7 @@ describe('UploadField (shared AttachmentUploadField, support config)', () => {
   });
 
   it('surfaces an upload failure', async () => {
-    const { input } = setup({}, [errorMock]);
+    const { input } = setup({}, [uploadErrorMock()]);
     fireEvent.change(input, { target: { files: [pngFile()] } });
     await waitFor(() => expect(screen.getByText(/network error/i)).toBeInTheDocument());
   });
@@ -120,14 +107,13 @@ describe('UploadField (shared AttachmentUploadField, support config)', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('disables the Add button at the max and when disabled', () => {
-    const { rerender } = setup({ value: ['1', '2', '3', '4', '5'] });
+  it('disables the Add button at the max', () => {
+    setup({ value: ['1', '2', '3', '4', '5'] });
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
-    rerender(
-      <MockedProvider mocks={[]} addTypename={false}>
-        <AttachmentUploadField {...supportProps} value={[]} onChange={vi.fn()} disabled />
-      </MockedProvider>
-    );
+  });
+
+  it('disables the Add button when disabled', () => {
+    setup({ value: [], disabled: true });
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
   });
 });

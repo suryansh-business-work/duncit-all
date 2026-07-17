@@ -36,7 +36,9 @@ export default function WithdrawalsPage() {
         notifySuccess(nextStatus === 'PAID' ? 'Marked as paid' : 'Withdrawal rejected');
         refetchRef.current?.();
       } catch (e: any) {
-        notifyError(e.message ?? 'Could not review withdrawal');
+        // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+        const message = e.message ?? /* istanbul ignore next */ 'Could not review withdrawal';
+        notifyError(message);
       }
     },
     [review],

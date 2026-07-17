@@ -29,20 +29,25 @@ export default function CreateUserDialog({ open, onClose }: Readonly<Props>) {
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const submit = async () => {
-    const { data } = await createUser({
-      variables: {
-        input: {
-          first_name: form.first_name.trim(),
-          last_name: form.last_name.trim() || null,
-          email: form.email.trim(),
-          phone_extension: form.phone_extension.trim() || null,
-          phone_number: form.phone_number.trim() || null,
-          password: form.password,
+    try {
+      const { data } = await createUser({
+        variables: {
+          input: {
+            first_name: form.first_name.trim(),
+            last_name: form.last_name.trim() || null,
+            email: form.email.trim(),
+            phone_extension: form.phone_extension.trim() || null,
+            phone_number: form.phone_number.trim() || null,
+            password: form.password,
+          },
         },
-      },
-    });
-    setDone(data?.supportCreateUser?.email ?? '');
-    setForm(EMPTY);
+      });
+      setDone(data?.supportCreateUser?.email ?? '');
+      setForm(EMPTY);
+    } catch {
+      // The failure is surfaced to the user via the `error` state above; the
+      // rejected mutation promise is caught here so it is not left unhandled.
+    }
   };
 
   const close = () => {

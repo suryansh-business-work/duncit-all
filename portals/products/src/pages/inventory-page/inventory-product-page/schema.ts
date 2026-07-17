@@ -90,6 +90,7 @@ export const productSchema = z
     weight_kg: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
   })
   .superRefine((values, ctx) => {
+    /* v8 ignore next -- min/max always parse to numbers before this runs; the `?? 0` guards are defensive */
     if (Number(values.max_order_qty ?? 0) < Number(values.min_order_qty ?? 0)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

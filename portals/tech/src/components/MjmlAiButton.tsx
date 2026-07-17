@@ -35,6 +35,7 @@ export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: 
 
   const generate = async () => {
     const instruction = prompt.trim();
+    /* v8 ignore next -- Apply is disabled while the prompt is empty, so this guard is unreachable via UI */
     if (!instruction) return;
     setError(null);
     try {

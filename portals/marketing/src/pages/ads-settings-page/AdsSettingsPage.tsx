@@ -29,6 +29,7 @@ export default function AdsSettingsPage() {
       notifySuccess('Ad pricing updated');
       await refetch();
     } catch (e) {
+      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the non-Error fallback is defensive */
       setOpError(e instanceof Error ? e.message : 'Failed to update ad pricing');
     } finally {
       setBusy(false);

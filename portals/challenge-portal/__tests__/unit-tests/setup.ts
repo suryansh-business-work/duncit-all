@@ -1,6 +1,10 @@
-import '@testing-library/jest-dom/vitest';
-import { afterEach, vi } from 'vitest';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { afterEach, expect, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+
+// The '@testing-library/jest-dom/vitest' auto-extend does not register here, so
+// wire the matchers onto vitest's expect explicitly (repo-proven pattern).
+expect.extend(matchers);
 
 // React Testing Library: unmount and clean the DOM between tests.
 afterEach(() => {

@@ -2,8 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
 import { act, screen, fireEvent, waitFor } from '@testing-library/react';
 import CallbacksListPage from '../../src/pages/callbacks/CallbacksListPage';
-import { BOUNCER_CALLBACK_REQUESTS, type CallbackRequest } from '../../src/graphql/bouncer';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
+import {
+  callbackRequestsMock,
+  makeCallbackActor,
+  makeCallbackPod,
+  makeCallbackRequest,
+} from '../mocks/callback.mock';
 
 const sockMock = vi.hoisted(() => ({ events: {} as Record<string, () => void> }));
 vi.mock('../../src/lib/useSupportSocket', () => ({
@@ -13,47 +18,27 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
   },
 }));
 
-const req: CallbackRequest = {
-  id: 'cb-1',
-  ticket_no: 'CB-AAA111',
-  status: 'PENDING',
-  reason: 'call me',
-  contact_phone: '+919800000000',
-  contacted_at: null,
-  duration_seconds: null,
-  conclusion: null,
-  created_at: new Date().toISOString(),
-  user: { id: 'u1', name: 'Aman', phone: '+919800000000' },
-  pod: null,
-};
+const req = makeCallbackRequest({ reason: 'call me', pod: null });
 
 // No phone + a present pod exercises the opposite optional-field branches.
-const bareReq: CallbackRequest = {
-  ...req,
+const bareReq = makeCallbackRequest({
   id: 'cb-2',
   ticket_no: 'CB-BBB222',
+  reason: 'call me',
   contact_phone: '',
-  user: { id: 'u2', name: 'Dev', phone: null },
-  pod: { id: 'p2', title: 'Sunday Brunch' },
-};
-
-const queryMock = (items: CallbackRequest[], status: string | null = null, search: string | null = null) => ({
-  request: {
-    query: BOUNCER_CALLBACK_REQUESTS,
-    variables: { status, search, page: 1, page_size: 25, sort_by: 'created_at', sort_dir: 'desc' },
-  },
-  result: { data: { bouncerCallbackRequests: { items, total: items.length, page: 1, page_size: 25 } } },
+  user: makeCallbackActor({ id: 'u2', name: 'Dev', phone: null }),
+  pod: makeCallbackPod({ id: 'p2', title: 'Sunday Brunch' }),
 });
 
 describe('CallbacksListPage', () => {
   it('shows an empty state', async () => {
-    renderWithProviders(<CallbacksListPage />, { mocks: [queryMock([])] });
+    renderWithProviders(<CallbacksListPage />, { mocks: [callbackRequestsMock([])] });
     await waitFor(() => expect(screen.getByText(/no callback requests found/i)).toBeInTheDocument());
   });
 
   it('lists requests (with the ID column), refetches on live events and opens a detail row', async () => {
     renderWithProviders(<></>, {
-      mocks: [queryMock([req, bareReq]), queryMock([req, bareReq]), queryMock([req, bareReq])],
+      mocks: [callbackRequestsMock([req, bareReq]), callbackRequestsMock([req, bareReq]), callbackRequestsMock([req, bareReq])],
       initialEntries: ['/callbacks'],
       routes: (
         <>
@@ -77,7 +62,7 @@ describe('CallbacksListPage', () => {
 
   it('filters by status (Resolved sends CLOSED) from the filter popover', async () => {
     renderWithProviders(<CallbacksListPage />, {
-      mocks: [queryMock([req]), queryMock([], 'CLOSED')],
+      mocks: [callbackRequestsMock([req]), callbackRequestsMock([], { status: 'CLOSED' })],
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 
@@ -92,7 +77,7 @@ describe('CallbacksListPage', () => {
 
   it('searches on the server (a debounced query keyed on the search variable)', async () => {
     renderWithProviders(<CallbacksListPage />, {
-      mocks: [queryMock([req]), queryMock([bareReq], null, 'Brunch')],
+      mocks: [callbackRequestsMock([req]), callbackRequestsMock([bareReq], { search: 'Brunch' })],
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 

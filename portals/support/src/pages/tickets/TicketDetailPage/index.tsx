@@ -48,6 +48,7 @@ export default function TicketDetailPage() {
 
   const send = async () => {
     const bodyText = htmlToText(bodyHtml);
+    /* v8 ignore next -- defensive: the Send button is disabled whenever htmlToText(bodyHtml) is empty */
     if (!bodyText) return;
     await reply({ variables: { ticket_id: id, body_html: bodyHtml, body_text: bodyText, attachments } });
     setBodyHtml('');

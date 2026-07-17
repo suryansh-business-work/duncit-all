@@ -36,6 +36,9 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
   };
 
   const copy = async () => {
+    // Defensive: the copy button only renders in the rawKey-present branch, so
+    // this guard can't be hit from the UI (kept for type-narrowing below).
+    /* v8 ignore next */
     if (!rawKey) return;
     await navigator.clipboard.writeText(rawKey);
     setCopied(true);

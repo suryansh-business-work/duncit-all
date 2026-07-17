@@ -30,9 +30,10 @@ if (!window.matchMedia) {
   })) as unknown as typeof window.matchMedia;
 }
 
-// jsdom elements have no scrollTo; chat/ticket views call it on refs.
+// jsdom elements have no scrollTo; chat/ticket views call it on refs. The mock
+// is cast to the DOM overloads (options | x,y) the browser type declares.
 if (!Element.prototype.scrollTo) {
-  Element.prototype.scrollTo = vi.fn();
+  Element.prototype.scrollTo = vi.fn() as unknown as typeof Element.prototype.scrollTo;
 }
 
 // jsdom doesn't implement Blob URLs; the transcript downloader creates one.

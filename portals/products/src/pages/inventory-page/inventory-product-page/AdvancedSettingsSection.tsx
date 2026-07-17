@@ -32,6 +32,7 @@ export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSe
       const next = res.data?.generateInventorySku;
       if (next) setValue('sku', next, { shouldDirty: true, shouldValidate: true });
     } catch (err: any) {
+      /* v8 ignore next -- Apollo rejects with a message; the string fallback is defensive */
       onError(err?.message ?? 'Could not generate SKU');
     }
   };

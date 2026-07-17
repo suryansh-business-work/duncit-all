@@ -26,4 +26,8 @@ describe('labelizeKey', () => {
     expect(labelizeKey('cash_in_bank')).toBe('Cash In Bank');
     expect(labelizeKey('ad_spend')).toBe('Ad Spend');
   });
+
+  it('handles empty segments from doubled underscores', () => {
+    expect(labelizeKey('a__b')).toBe('A  B');
+  });
 });

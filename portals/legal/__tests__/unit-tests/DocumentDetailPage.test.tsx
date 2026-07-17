@@ -1,14 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Route } from 'react-router-dom';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import type { MockedResponse } from '@apollo/client/testing';
 import DocumentDetailPage from '../../src/pages/documents/DocumentDetailPage';
+import { renderWithProviders } from '../testkit';
 import {
-  CLONE_LEGAL_DOCUMENT,
-  DELETE_LEGAL_DOCUMENT,
-  LEGAL_DOCUMENT,
-  UPDATE_LEGAL_DOCUMENT,
-} from '../../src/graphql/documents';
-import { renderWithProviders } from './testkit';
+  cloneLegalDocumentMock,
+  deleteLegalDocumentMock,
+  legalDocumentMock,
+  makeLegalDocumentDetail,
+  updateLegalDocumentMock,
+} from '../mocks';
 
 vi.mock('react-quill', () => ({
   default: ({ value, onChange }: any) => (
@@ -18,47 +20,7 @@ vi.mock('react-quill', () => ({
 
 const ID = 'doc-1';
 
-const detail = (overrides: Record<string, unknown> = {}) => ({
-  __typename: 'LegalDocument',
-  id: ID,
-  name: 'Privacy Policy',
-  document_type: 'Privacy Policy',
-  description: 'Our privacy policy',
-  content: '<p>Body text</p>',
-  created_by_name: 'Sam',
-  updated_by_name: 'Sam',
-  version_count: 1,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  versions: [
-    {
-      id: 'v1',
-      name: 'Privacy Policy',
-      document_type: 'Privacy Policy',
-      description: '',
-      content: '<p>old</p>',
-      updated_by_name: 'Sam',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'v2',
-      name: 'Privacy Policy',
-      document_type: 'Privacy Policy',
-      description: '',
-      content: '<p>older</p>',
-      updated_by_name: '',
-      created_at: new Date().toISOString(),
-    },
-  ],
-  ...overrides,
-});
-
-const docMock = (doc: any) => ({
-  request: { query: LEGAL_DOCUMENT, variables: { id: ID } },
-  result: { data: { legalDocument: doc } },
-});
-
-const renderAt = (mocks: any[]) =>
+const renderAt = (mocks: MockedResponse[]) =>
   renderWithProviders(<></>, {
     mocks,
     initialEntries: [`/documents/${ID}`],
@@ -78,25 +40,25 @@ afterEach(() => {
 
 describe('DocumentDetailPage', () => {
   it('shows a not-found message', async () => {
-    renderAt([docMock(null)]);
+    renderAt([legalDocumentMock(null)]);
     await waitFor(() => expect(screen.getByText(/could not be found/i)).toBeInTheDocument());
   });
 
   it('renders the read view with content and update history', async () => {
-    renderAt([docMock(detail())]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     expect(screen.getByText('Update history')).toBeInTheDocument();
     expect(screen.getByText('Sam')).toBeInTheDocument();
   });
 
   it('renders empty-content + empty-history hints', async () => {
-    renderAt([docMock(detail({ content: '', description: '', versions: [] }))]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail({ content: '', description: '', versions: [] }))]);
     await waitFor(() => expect(screen.getByText(/no content yet/i)).toBeInTheDocument());
     expect(screen.getByText(/no edits yet/i)).toBeInTheDocument();
   });
 
   it('navigates back to the documents list', async () => {
-    renderAt([docMock(detail())]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByLabelText('Back'));
     expect(screen.getByText('DOC LIST')).toBeInTheDocument();
@@ -104,9 +66,9 @@ describe('DocumentDetailPage', () => {
 
   it('edits and saves the document', async () => {
     renderAt([
-      docMock(detail()),
-      { request: { query: UPDATE_LEGAL_DOCUMENT }, variableMatcher: () => true, result: { data: { updateLegalDocument: { id: ID, version_count: 2, updated_at: 'now' } } } },
-      docMock(detail({ content: '<p>Updated body</p>', version_count: 2 })),
+      legalDocumentMock(makeLegalDocumentDetail()),
+      updateLegalDocumentMock(ID),
+      legalDocumentMock(makeLegalDocumentDetail({ content: '<p>Updated body</p>', version_count: 2 })),
     ]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /edit/i }));
@@ -121,7 +83,7 @@ describe('DocumentDetailPage', () => {
   });
 
   it('cancels an edit', async () => {
-    renderAt([docMock(detail())]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /edit/i }));
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
@@ -129,10 +91,7 @@ describe('DocumentDetailPage', () => {
   });
 
   it('deletes the document', async () => {
-    renderAt([
-      docMock(detail()),
-      { request: { query: DELETE_LEGAL_DOCUMENT, variables: { id: ID } }, result: { data: { deleteLegalDocument: true } } },
-    ]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail()), deleteLegalDocumentMock(ID)]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const dialog = await screen.findByRole('dialog');
@@ -141,10 +100,7 @@ describe('DocumentDetailPage', () => {
   });
 
   it('clones the document', async () => {
-    renderAt([
-      docMock(detail()),
-      { request: { query: CLONE_LEGAL_DOCUMENT, variables: { id: ID } }, result: { data: { cloneLegalDocument: { id: 'new-1' } } } },
-    ]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail()), cloneLegalDocumentMock({ id: 'new-1' }, ID)]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /clone/i }));
     await waitFor(() => expect(screen.getByText('CLONED DOC')).toBeInTheDocument());
@@ -163,7 +119,7 @@ describe('DocumentDetailPage', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     (navigator as any).clipboard = { writeText };
 
-    renderAt([docMock(detail())]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /print/i }));
@@ -178,18 +134,42 @@ describe('DocumentDetailPage', () => {
 
   it('reports when copying fails', async () => {
     (navigator as any).clipboard = { writeText: vi.fn().mockRejectedValue(new Error('denied')) };
-    renderAt([docMock(detail())]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /copy/i }));
     await waitFor(() => expect(screen.getByText(/could not copy/i)).toBeInTheDocument());
   });
 
   it('cancels a pending delete', async () => {
-    renderAt([docMock(detail())]);
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: /cancel/i }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('falls back to an em-dash when the document has no last editor', async () => {
+    renderAt([legalDocumentMock(makeLegalDocumentDetail({ updated_by_name: '' }))]);
+    await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
+    // `doc.updated_by_name || '—'` renders the dash for an empty editor name.
+    expect(screen.getByText(/Updated by —/)).toBeInTheDocument();
+  });
+
+  it('dismisses the delete dialog and the toast via their close handlers', async () => {
+    renderAt([legalDocumentMock(makeLegalDocumentDetail())]);
+    await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
+    // Backdrop/Escape close on the confirm dialog fires the Dialog onClose.
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    // Trigger a toast, then let its Snackbar onClose fire via Escape.
+    (navigator as any).clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
+    fireEvent.click(screen.getByRole('button', { name: /copy/i }));
+    await waitFor(() => expect(screen.getByText(/copied to clipboard/i)).toBeInTheDocument());
+    fireEvent.keyDown(document.body, { key: 'Escape', code: 'Escape' });
+    await waitFor(() => expect(screen.queryByText(/copied to clipboard/i)).not.toBeInTheDocument());
   });
 });

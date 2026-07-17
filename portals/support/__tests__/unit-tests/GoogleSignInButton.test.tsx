@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
-import { appConfig } from '../../src/config/app-config';
-import { renderWithProviders } from './testkit';
+import { renderWithProviders } from '../testkit';
 
 const glogin = vi.hoisted(() => ({ props: null as any }));
 
@@ -51,12 +51,31 @@ describe('GoogleSignInButton', () => {
     expect(onCredential).not.toHaveBeenCalled();
   });
 
-  it('shows a loading overlay in dark mode and recomputes width on resize', () => {
+  it('uses the light Google theme + overlay and recomputes width on resize', () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
-    localStorage.setItem(appConfig.colorModeKey, 'dark');
-    const { container } = renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} loading />);
+    const light = createTheme({ palette: { mode: 'light' } });
+    const { container } = render(
+      <ThemeProvider theme={light}>
+        <GoogleSignInButton onCredential={vi.fn()} loading />
+      </ThemeProvider>,
+    );
+    // Light branch of the theme prop (line 68) + light overlay background (line 83).
+    expect(glogin.props.theme).toBe('outline');
     expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
     fireEvent(window, new Event('resize'));
     expect(screen.getByTestId('glogin')).toBeInTheDocument();
+  });
+
+  it('uses the dark Google theme + overlay when the MUI palette is dark', () => {
+    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    const dark = createTheme({ palette: { mode: 'dark' } });
+    const { container } = render(
+      <ThemeProvider theme={dark}>
+        <GoogleSignInButton onCredential={vi.fn()} loading />
+      </ThemeProvider>,
+    );
+    // Dark branch of the theme prop (line 68) + dark overlay background (line 83).
+    expect(glogin.props.theme).toBe('filled_black');
+    expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
   });
 });

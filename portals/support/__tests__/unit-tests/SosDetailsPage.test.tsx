@@ -1,53 +1,42 @@
 import { describe, expect, it } from 'vitest';
 import { Route } from 'react-router-dom';
+import { type MockedResponse } from '@apollo/client/testing';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import SosDetailsPage from '../../src/pages/sos/SosDetailsPage';
+import { renderWithProviders } from '../testkit';
 import {
-  ACK_SOS,
-  BOUNCER_SOS_ALERT,
-  RESOLVE_SOS,
-  type SosAlert,
-} from '../../src/graphql/bouncer';
-import { renderWithProviders } from './testkit';
+  ackSosMock,
+  makeBouncerActor,
+  makeBouncerGeo,
+  makeBouncerPod,
+  makeSosAlert,
+  resolveSosMock,
+  sosAlertMock,
+  type SosAlertMock,
+} from '../mocks/sos.mock';
 
 const ID = 'sos-1';
 
-const fullAlert = (status: SosAlert['status']): SosAlert => ({
-  id: ID,
-  ticket_no: 'SOS-AAA111',
-  status,
-  message: 'Help, feeling unsafe',
-  contact_phone: '+919800000000',
-  acknowledged_at: null,
-  resolved_at: null,
-  created_at: new Date().toISOString(),
-  location: { lat: 19.07, lng: 72.87, accuracy: 12 },
-  user: { id: 'u1', name: 'Riya', phone: '+919800000000', avatar_url: null },
-  host: { id: 'h1', name: 'Sam', phone: '+919811111111' },
-  pod: { id: 'p1', title: 'Saturday Run', venue_name: 'Park', club_name: 'Runners', starts_at: null },
-});
+const fullAlert = (status: SosAlertMock['status']): SosAlertMock =>
+  makeSosAlert({
+    status,
+    message: 'Help, feeling unsafe',
+    location: makeBouncerGeo(),
+    user: makeBouncerActor({ name: 'Riya', phone: '+919800000000' }),
+    host: makeBouncerActor({ id: 'h1', name: 'Sam', phone: '+919811111111' }),
+    pod: makeBouncerPod({ club_name: 'Runners' }),
+  });
 
-const minimalResolved: SosAlert = {
-  id: ID,
+const minimalResolved: SosAlertMock = makeSosAlert({
   ticket_no: 'SOS-BBB222',
   status: 'RESOLVED',
   message: '',
   contact_phone: '',
-  acknowledged_at: null,
   resolved_at: new Date().toISOString(),
-  created_at: new Date().toISOString(),
-  location: null,
-  user: { id: 'u1', name: 'Riya', phone: null, avatar_url: null },
-  host: null,
-  pod: { id: 'p1', title: 'Saturday Run', venue_name: null, club_name: null, starts_at: null },
-};
-
-const queryMock = (alert: SosAlert | null) => ({
-  request: { query: BOUNCER_SOS_ALERT, variables: { id: ID } },
-  result: { data: { bouncerSosAlert: alert } },
+  pod: makeBouncerPod({ venue_name: null }),
 });
 
-const renderAt = (mocks: any[]) =>
+const renderAt = (mocks: MockedResponse[]) =>
   renderWithProviders(<></>, {
     mocks,
     initialEntries: [`/sos/${ID}`],
@@ -61,17 +50,17 @@ const renderAt = (mocks: any[]) =>
 
 describe('SosDetailsPage', () => {
   it('shows a not-found message when the alert is missing', async () => {
-    renderAt([queryMock(null)]);
+    renderAt([sosAlertMock(null)]);
     await waitFor(() => expect(screen.getByText(/could not be found/i)).toBeInTheDocument());
   });
 
   it('acknowledges then resolves an active alert', async () => {
     renderAt([
-      queryMock(fullAlert('ACTIVE')),
-      { request: { query: ACK_SOS, variables: { id: ID } }, result: { data: { acknowledgeBouncerSos: { id: ID, status: 'ACKNOWLEDGED', acknowledged_at: 'now' } } } },
-      queryMock(fullAlert('ACKNOWLEDGED')),
-      { request: { query: RESOLVE_SOS, variables: { id: ID } }, result: { data: { resolveBouncerSos: { id: ID, status: 'RESOLVED', resolved_at: 'now' } } } },
-      queryMock(fullAlert('RESOLVED')),
+      sosAlertMock(fullAlert('ACTIVE')),
+      ackSosMock(),
+      sosAlertMock(fullAlert('ACKNOWLEDGED')),
+      resolveSosMock(),
+      sosAlertMock(fullAlert('RESOLVED')),
     ]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     expect(screen.getByText('SOS-AAA111')).toBeInTheDocument();
@@ -86,21 +75,24 @@ describe('SosDetailsPage', () => {
   });
 
   it('renders a resolved alert with no optional details and no actions', async () => {
-    renderAt([queryMock(minimalResolved)]);
+    renderAt([sosAlertMock(minimalResolved)]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     expect(screen.queryByText('Open in Maps')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /mark resolved/i })).not.toBeInTheDocument();
   });
 
   it('renders an acknowledged alert whose host has no phone', async () => {
-    const ack = { ...fullAlert('ACKNOWLEDGED'), host: { id: 'h1', name: 'Sam', phone: null } };
-    renderAt([queryMock(ack)]);
+    const ack = makeSosAlert({
+      ...fullAlert('ACKNOWLEDGED'),
+      host: makeBouncerActor({ id: 'h1', name: 'Sam', phone: null }),
+    });
+    renderAt([sosAlertMock(ack)]);
     await waitFor(() => expect(screen.getByText(/Sam/)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /acknowledge/i })).not.toBeInTheDocument();
   });
 
   it('navigates back to the list', async () => {
-    renderAt([queryMock(fullAlert('ACTIVE'))]);
+    renderAt([sosAlertMock(fullAlert('ACTIVE'))]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     fireEvent.click(screen.getByLabelText('Back'));
     expect(screen.getByText('SOS LIST')).toBeInTheDocument();

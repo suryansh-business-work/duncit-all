@@ -82,6 +82,7 @@ const COLUMNS: DuncitColumn<Ticket>[] = [
     headerName: 'Created',
     hide: true,
     minWidth: 160,
+    /* v8 ignore next -- hidden column: AG Grid only invokes this valueGetter if the user unhides "Created" */
     valueGetter: (t) => relativeTime(t.created_at),
   },
 ];

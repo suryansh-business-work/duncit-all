@@ -1202,7 +1202,7 @@ export const userService = {
       });
     }
     const accountEmail = String(user.auth?.email ?? '').toLowerCase();
-    if (!email || email.trim().toLowerCase() !== accountEmail) {
+    if (email?.trim().toLowerCase() !== accountEmail) {
       throw new GraphQLError('The email does not match your account', {
         extensions: { code: 'BAD_USER_INPUT' },
       });

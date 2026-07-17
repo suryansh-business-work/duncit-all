@@ -79,6 +79,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
       setDraft(blankMarketingCampaignValues(defaultChannel));
       refetchRef.current?.();
     } catch (error: any) {
+      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the string fallback is defensive */
       setFormError(error.message || 'Campaign could not be saved');
     }
   };
@@ -91,6 +92,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
       else notifySuccess('Campaign sent');
       refetchRef.current?.();
     } catch (error: any) {
+      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the string fallback is defensive */
       notifyError(error.message || 'Campaign send failed');
     }
   };

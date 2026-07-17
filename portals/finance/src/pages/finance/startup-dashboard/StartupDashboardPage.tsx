@@ -19,8 +19,9 @@ export default function StartupDashboardPage() {
   const [to, setTo] = useState<Date | null>(new Date());
   const [active, setActive] = useState<{ metric: FounderMetric; mode: DrawerMode } | null>(null);
 
+  const isoRange = { from: from ? from.toISOString() : null, to: to ? to.toISOString() : null };
   const { data, loading, error, refetch } = useQuery<FounderDashboardData>(FOUNDER_DASHBOARD, {
-    variables: { from: from?.toISOString() ?? null, to: to?.toISOString() ?? null },
+    variables: isoRange,
     fetchPolicy: 'cache-and-network',
   });
   const [saveSetting, { loading: saving }] = useMutation(SAVE_FOUNDER_SETTING);

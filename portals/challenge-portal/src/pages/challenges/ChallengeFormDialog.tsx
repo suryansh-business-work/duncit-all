@@ -53,6 +53,7 @@ export default function ChallengeFormDialog({ open, editing, onClose, onSaved }:
   }, [open, editing]);
 
   const submit = async () => {
+    /* v8 ignore next -- defensive: the Save button is disabled while name is empty, so this never fires via the UI */
     if (!name.trim()) return;
     const input = {
       name: name.trim(),

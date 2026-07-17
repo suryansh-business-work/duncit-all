@@ -161,6 +161,7 @@ export default function NotificationFormDialog({
                     helperText={fieldState.error?.message ?? ' '}
                     onChange={(event) => {
                       const next = event.target.value;
+                      /* v8 ignore next -- a multiple Select always emits an array, so the string-split branch is only a defensive autofill guard */
                       field.onChange(typeof next === 'string' ? next.split(',') : next);
                     }}
                   >

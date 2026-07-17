@@ -35,6 +35,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
   }, [row]);
 
   const submit = async (status: 'APPROVED' | 'DENIED') => {
+    /* v8 ignore next -- the Approve/Deny buttons only render while a row is set */
     if (!row) return;
     setError(null);
     try {
@@ -51,6 +52,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
         status === 'APPROVED' ? 'Product approved for pod selection.' : 'Product request denied.',
       );
     } catch (e: any) {
+      /* v8 ignore next -- Apollo errors always carry a message; the fallback is defensive */
       setError(e.message || 'Unable to review product request.');
     }
   };

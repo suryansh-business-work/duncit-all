@@ -6,45 +6,38 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
+    setupFiles: ['./__tests__/unit-tests/setup.ts'],
+    // Vitest specs live under __tests__/unit-tests; Cypress e2e specs (if any)
+    // are discovered separately by Cypress, never by vitest.
+    include: ['__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     css: false,
     server: { deps: { inline: [/@mui/] } },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary', 'lcov'],
+      all: true,
+      reporter: ['text', 'text-summary', 'json-summary', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
-        // Bootstrap + theme + apollo glue — exercised end-to-end, not in jsdom.
+        // App bootstrap — mounts the portal into the DOM (window.google + live frame).
         'src/main.tsx',
-        'src/App.tsx',
+        // Thin Apollo client factory (graphqlUrl + getToken wiring only).
         'src/apollo.ts',
-        'src/theme.ts',
-        'src/ColorModeContext.tsx',
-        // Type-only files + test files themselves.
-        'src/**/*.d.ts',
-        'src/**/*.types.tsx',
-        'src/**/*.{cy,test,spec}.{ts,tsx}',
-        // Shell / sidebar / Google-Identity glue needs window.google + the live
-        // app frame — validated by the console e2e flows, not unit-rendered here.
-        'src/components/AppShell.tsx',
-        'src/components/AppSidebar.tsx',
-        'src/components/GoogleSignInButton.tsx',
-        // Runtime URL/DUID config tied to env + cross-console redirects.
+        // Runtime URL config tied to import.meta.env.DEV — no unit-testable logic.
         'src/config/url-configs.ts',
-        'src/duid.ts',
-        // The login page (renders the shared PortalLoginPage which drives the
-        // auth mutation/redirect) — covered by e2e.
-        'src/pages/LoginPage.tsx',
+        // Static per-portal config data (no business logic).
+        'src/config/app-config.ts',
+        // Ambient type-declaration + type-only files.
+        'src/**/*.d.ts',
+        'src/**/*.types.{ts,tsx}',
+        // Test files themselves.
+        'src/**/*.{cy,test,spec}.{ts,tsx}',
       ],
-      // Honest floors (match the established portals): 100% line coverage on a
-      // React + Apollo + MUI codebase needs dishonest tests; these guard real
-      // coverage on the testable surface and fail CI on regressions.
       thresholds: {
-        lines: 80,
-        statements: 80,
-        functions: 60,
-        branches: 72,
+        lines: 100,
+        statements: 100,
+        functions: 100,
+        branches: 100,
       },
     },
   },

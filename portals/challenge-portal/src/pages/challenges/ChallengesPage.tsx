@@ -44,6 +44,7 @@ export default function ChallengesPage() {
     setFormOpen(true);
   };
   const confirmDelete = async () => {
+    /* v8 ignore next -- defensive: the Delete button only exists inside the open dialog, so deleting is always set here */
     if (!deleting) return;
     await deleteChallenge({ variables: { id: deleting.id } });
     setDeleting(null);

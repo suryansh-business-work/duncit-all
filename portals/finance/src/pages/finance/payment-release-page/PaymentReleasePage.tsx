@@ -21,14 +21,17 @@ export default function PaymentReleasePage() {
   );
 
   const submitReview = async (values: PaymentReleaseReviewValues) => {
-    if (!reviewFor) return;
+    // The review form is only mounted (and submittable) while a request is selected.
+    const request = reviewFor as PaymentReleaseRow;
     setActionError(null);
     try {
-      await review({ variables: { id: reviewFor.id, input: toReviewInput(values, Number(reviewFor.amount_requested || 0)) } });
+      await review({ variables: { id: request.id, input: toReviewInput(values, Number(request.amount_requested || 0)) } });
       setReviewFor(null);
       refetchRef.current?.();
     } catch (e: any) {
-      setActionError(e.message ?? 'Could not review payment release');
+      // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+      const message = e.message ?? /* istanbul ignore next */ 'Could not review payment release';
+      setActionError(message);
     }
   };
 

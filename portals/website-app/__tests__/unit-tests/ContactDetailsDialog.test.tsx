@@ -1,0 +1,53 @@
+import { describe, expect, it, vi } from 'vitest';
+import { screen, fireEvent } from '@testing-library/react';
+import ContactDetailsDialog from '../../src/pages/website/contact-submissions/ContactDetailsDialog';
+import { renderWithProviders } from '../testkit';
+import { makeContactSubmission } from '../mocks';
+
+describe('ContactDetailsDialog', () => {
+  it('renders nothing when there is no submission', () => {
+    renderWithProviders(
+      <ContactDetailsDialog submission={null} onClose={vi.fn()} onUpdateStatus={vi.fn()} />,
+    );
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('shows subject, message and attachments, then saves a new status', () => {
+    const onUpdateStatus = vi.fn();
+    const onClose = vi.fn();
+    renderWithProviders(
+      <ContactDetailsDialog
+        submission={makeContactSubmission({
+          attachments: ['https://img/one.png', 'https://img/two.png'],
+        })}
+        onClose={onClose}
+        onUpdateStatus={onUpdateStatus}
+      />,
+    );
+    expect(screen.getByText('Need help')).toBeInTheDocument();
+    expect(screen.getByText('Hello there')).toBeInTheDocument();
+    expect(screen.getByText(/Attachments \(2\)/)).toBeInTheDocument();
+    expect(screen.getByAltText('attachment-1')).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByRole('option', { name: 'RESOLVED' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(onUpdateStatus).toHaveBeenCalledWith('c1', 'RESOLVED');
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to a placeholder title, hides attachments and closes', () => {
+    const onClose = vi.fn();
+    renderWithProviders(
+      <ContactDetailsDialog
+        submission={makeContactSubmission({ subject: '', attachments: [] })}
+        onClose={onClose}
+        onUpdateStatus={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('(no subject)')).toBeInTheDocument();
+    expect(screen.queryByText(/Attachments \(/)).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

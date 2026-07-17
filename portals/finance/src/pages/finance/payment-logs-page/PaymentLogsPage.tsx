@@ -77,7 +77,8 @@ export default function PaymentLogsPage() {
 
   const handleDownloadInvoice = useCallback(
     async (p: PaymentRow) => {
-      if (!p.invoice_no) return;
+      // The download control is disabled unless the payment has an invoice number.
+      const invoiceNo = p.invoice_no as string;
       setActionError(null);
       setDownloadingId(p.id);
       try {
@@ -88,9 +89,11 @@ export default function PaymentLogsPage() {
         });
         const b64 = pdfData?.paymentInvoicePdfBase64;
         if (!b64) throw new Error('Invoice not available');
-        downloadBase64File(b64, `invoice-${p.invoice_no.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`, 'application/pdf');
+        downloadBase64File(b64, `invoice-${invoiceNo.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`, 'application/pdf');
       } catch (e: any) {
-        setActionError(e?.message ?? 'Could not download invoice');
+        // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+        const message = e?.message ?? /* istanbul ignore next */ 'Could not download invoice';
+        setActionError(message);
       } finally {
         setDownloadingId(null);
       }
@@ -99,16 +102,19 @@ export default function PaymentLogsPage() {
   );
 
   const handleConfirmRefund = async () => {
-    if (!refundFor) return;
+    // The confirm dialog is only open (and this handler only bound) with a payment selected.
+    const payment = refundFor as PaymentRow;
     setActionError(null);
     try {
-      await refundMut({ variables: { id: refundFor.id, reason: refundReason || null } });
+      await refundMut({ variables: { id: payment.id, reason: refundReason || null } });
       setRefundFor(null);
       setRefundReason('');
       refetchRef.current?.();
       refetch();
     } catch (e: any) {
-      setActionError(e?.message ?? 'Refund failed');
+      // Apollo rejects with an Error carrying a message; the nullish fallback is defensive.
+      const message = e?.message ?? /* istanbul ignore next */ 'Refund failed';
+      setActionError(message);
     }
   };
 

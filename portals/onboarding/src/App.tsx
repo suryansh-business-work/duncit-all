@@ -8,7 +8,9 @@ import HostRequestsPage from './pages/host-requests/HostRequestsPage';
 import VenuesPage from './pages/venues-page/VenuesPage';
 import VenueDetailsPage from './pages/venue-details-page/VenueDetailsPage';
 import EcommBrandsPage from './pages/ecomm-brands-page/EcommBrandsPage';
+import ClubAdminsPage from './pages/club-admins-page/ClubAdminsPage';
 import SurveyBuilderPage from './pages/surveys/SurveyBuilderPage';
+import SurveysHubPage from './pages/surveys/SurveysHubPage';
 import SurveysListPage from './pages/surveys/SurveysListPage';
 import MeetingCalendarPage from './pages/meetings/MeetingCalendarPage';
 import MeetingSchedulePage from './pages/meetings/MeetingSchedulePage';
@@ -30,7 +32,9 @@ export default function App() {
       <Route path="/venues" element={authed(<VenuesPage />)} />
       <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
       <Route path="/ecomm-brands" element={authed(<EcommBrandsPage />)} />
-      <Route path="/surveys" element={authed(<SurveysListPage />)} />
+      <Route path="/club-admins" element={authed(<ClubAdminsPage />)} />
+      <Route path="/surveys" element={authed(<SurveysHubPage />)} />
+      <Route path="/surveys/kind/:kind" element={authed(<SurveysListPage />)} />
       <Route path="/surveys/new" element={authed(<SurveyBuilderPage />)} />
       <Route path="/surveys/:id/edit" element={authed(<SurveyBuilderPage />)} />
       <Route path="/meetings/calendar" element={authed(<MeetingCalendarPage />)} />

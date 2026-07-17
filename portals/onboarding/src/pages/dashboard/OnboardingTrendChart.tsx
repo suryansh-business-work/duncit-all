@@ -19,7 +19,9 @@ interface Props {
 
 export default function OnboardingTrendChart({ buckets }: Readonly<Props>) {
   const theme = useTheme();
-  const hasData = buckets.some((bucket) => bucket.hosts > 0 || bucket.venues > 0);
+  const hasData = buckets.some(
+    (bucket) => bucket.hosts > 0 || bucket.venues > 0 || bucket.brands > 0 || bucket.club_admins > 0,
+  );
 
   if (!hasData) {
     return <Typography color="text.secondary">No submissions in this period yet.</Typography>;
@@ -39,6 +41,20 @@ export default function OnboardingTrendChart({ buckets }: Readonly<Props>) {
         label: 'Venues',
         data: buckets.map((bucket) => bucket.venues),
         backgroundColor: '#0f766e',
+        borderRadius: 6,
+        maxBarThickness: 22,
+      },
+      {
+        label: 'Brands',
+        data: buckets.map((bucket) => bucket.brands),
+        backgroundColor: '#d97706',
+        borderRadius: 6,
+        maxBarThickness: 22,
+      },
+      {
+        label: 'Club Admins',
+        data: buckets.map((bucket) => bucket.club_admins),
+        backgroundColor: '#9333ea',
         borderRadius: 6,
         maxBarThickness: 22,
       },

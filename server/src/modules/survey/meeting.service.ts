@@ -1,11 +1,9 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, nextMeetingRequestNo, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus, type MeetingApprovalStatus } from './meeting.model';
+import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, nextMeetingRequestNo, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { leadSurveyService } from './leadSurvey.service';
-import { surveyService } from './survey.service';
-import { approvalService } from '@modules/approval/approval.service';
 import type { SurveyKind } from './survey.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -404,6 +402,45 @@ function applyStaffFields(doc: any, input: MeetingStaffInput, by?: string | null
   doc.created_by = doc.created_by ?? by ?? null;
 }
 
+/** On approval of an onboarding meeting, draft the matching onboarded entity so
+ * it surfaces in the portal's Onboarded {Hosts,Venues,Brands} list — or, for
+ * Club Admin, grant the CLUB_ADMIN role (no drafted entity). The Super →
+ * Category → Sub the applicant chose in the gate (kept on the meeting) rides
+ * into the drafted entity so its Edit dialog prefills it. Best-effort per kind. */
+async function draftFromMeeting(doc: any, who?: { name: string; email: string }) {
+  const userId = String(doc.user_id);
+  const hasCategory = doc.super_category_id && doc.category_id && doc.sub_category_id;
+  const category = hasCategory
+    ? {
+        super_category_id: String(doc.super_category_id),
+        category_id: String(doc.category_id),
+        sub_category_id: String(doc.sub_category_id),
+      }
+    : null;
+  const prefill = {
+    userId,
+    name: who?.name ?? doc.contact_name ?? '',
+    email: who?.email ?? '',
+    phone: doc.contact_phone ?? '',
+    category,
+  };
+  if (doc.kind === 'HOST') {
+    const { hostService } = await import('@modules/venues/host/host.service');
+    await hostService.createDraftFromApproval(prefill);
+  } else if (doc.kind === 'VENUE') {
+    const { venueService } = await import('@modules/venues/venue/venue.service');
+    await venueService.createDraftFromApproval(prefill);
+  } else if (doc.kind === 'ECOMM') {
+    const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
+    await ecommBrandService.createDraftFromApproval(prefill);
+  } else if (doc.kind === 'CLUB_ADMIN') {
+    // Club Admin has no drafted entity — approval grants the CLUB_ADMIN role so
+    // the user gets the club-admin dashboard in the Partners portal.
+    const { userService } = await import('@modules/access/user/user.service');
+    await userService.addRole(userId, 'CLUB_ADMIN');
+  }
+}
+
 export const meetingService = {
   /** Global slot-availability config (singleton; created with defaults on first read). */
   async availability() {
@@ -667,69 +704,36 @@ export const meetingService = {
     return pub(doc);
   },
 
-  /** Onboarding staff send post-meeting feedback + the applicant's survey
-   * answers to the Admin console for approval. Only a DONE meeting can be sent;
-   * a DENIED meeting can be re-sent. */
-  async sendFeedback(id: string, feedback: string, by: { id?: string | null; name?: string | null }) {
+  /** Onboarding staff approve or deny a DONE meeting themselves — no admin
+   * round-trip. Approval drafts the onboarded host/venue/seller (or grants the
+   * club-admin role) and both decisions record the interviewer's feedback and
+   * notify the applicant (in-app + email). Only a DONE meeting that has not yet
+   * been decided can be decided; a DENIED meeting re-opens when the user re-applies. */
+  async decide(id: string, decision: 'APPROVED' | 'DENIED', feedback: string) {
     if (!feedback?.trim()) {
-      throw new GraphQLError('Add your feedback before sending', { extensions: { code: 'BAD_USER_INPUT' } });
+      throw new GraphQLError('Add your feedback before deciding', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const doc = await MeetingModel.findById(id);
     if (!doc) throw notFound();
     if (doc.status !== 'DONE') {
-      throw new GraphQLError('Mark the meeting as done before sending feedback', { extensions: { code: 'BAD_USER_INPUT' } });
+      throw new GraphQLError('Mark the meeting as done before approving it', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     if (doc.approval_status !== 'NONE') {
-      throw new GraphQLError('Feedback has already been sent for this meeting', { extensions: { code: 'BAD_USER_INPUT' } });
+      throw new GraphQLError('This meeting has already been decided', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const [names, responses] = await Promise.all([
-      userMap([String(doc.user_id)]),
-      surveyService.userResponses(String(doc.user_id)),
-    ]);
-    const who = names.get(String(doc.user_id));
-    const kindLabel = MEETING_KIND_LABELS[doc.kind] ?? 'Host';
-    // Survey answers for this kind become the approval request's detail rows.
-    const surveyDetails = responses
-      .filter((r: any) => r.kind === doc.kind)
-      .flatMap((r: any) => (r.items ?? []).map((it: any) => ({ label: it.label, value: it.answer })));
-    const details = [...surveyDetails, { label: 'Interviewer feedback', value: feedback.trim() }];
-    await approvalService.create({
-      type: 'ONBOARDING_MEETING_FEEDBACK',
-      source_portal: 'onboarding',
-      title: `${kindLabel} onboarding — ${who?.name ?? 'Applicant'}`,
-      summary: `Approve to draft this ${kindLabel.toLowerCase()} into the onboarded list.`,
-      details,
-      kind: doc.kind,
-      subject_user_id: String(doc.user_id),
-      subject_name: who?.name ?? null,
-      subject_email: who?.email ?? null,
-      subject_phone: doc.contact_phone ?? null,
-      meeting_id: String(doc._id),
-      requested_by: by.id ?? null,
-      requested_by_name: by.name ?? null,
-    });
     doc.feedback = feedback.trim();
     doc.feedback_sent_at = new Date();
-    doc.approval_status = 'PENDING';
+    doc.approval_status = decision;
     await doc.save();
-    return pub(doc);
-  },
-
-  /** Set by the Admin console's approve/deny actions (via approvalService).
-   * Notifies the applicant (in-app + email) of the onboarding decision. */
-  async setApprovalStatus(id: string, status: MeetingApprovalStatus) {
-    const doc = await MeetingModel.findById(id);
-    if (!doc) return null;
-    const prev = doc.approval_status;
-    doc.approval_status = status;
-    await doc.save();
-    if (status !== prev && (status === 'APPROVED' || status === 'DENIED')) {
-      try {
-        await notifyMeetingEvent(doc, status === 'APPROVED' ? 'approved' : 'rejected');
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[meeting.setApprovalStatus] notify failed:', err);
-      }
+    if (decision === 'APPROVED') {
+      const names = await userMap([String(doc.user_id)]);
+      await draftFromMeeting(doc, names.get(String(doc.user_id)));
+    }
+    try {
+      await notifyMeetingEvent(doc, decision === 'APPROVED' ? 'approved' : 'rejected');
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[meeting.decide] notify failed:', err);
     }
     return pub(doc);
   },

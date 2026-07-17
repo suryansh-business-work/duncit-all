@@ -12,10 +12,10 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
 import CancelMeetingDialog from './CancelMeetingDialog';
+import DecisionDialog from './DecisionDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
 import MeetingsTable from './MeetingsTable';
 import ScheduleMeetingDialog from './ScheduleMeetingDialog';
-import SendFeedbackDialog from './SendFeedbackDialog';
 import {
   ONBOARDING_MEETINGS_TABLE,
   UPDATE_MEETING,
@@ -46,7 +46,7 @@ export default function MeetingSchedulePage() {
   const [updateMeeting, { loading: marking }] = useMutation(UPDATE_MEETING);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
-  const [feedbackFor, setFeedbackFor] = useState<OnboardingMeeting | null>(null);
+  const [deciding, setDeciding] = useState<OnboardingMeeting | null>(null);
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -97,13 +97,13 @@ export default function MeetingSchedulePage() {
         onSelect={setSelected}
         onSchedule={setEditing}
         onMarkDone={markDone}
-        onSendFeedback={setFeedbackFor}
+        onDecide={setDeciding}
         onReject={setCancelling}
       />
 
       <ScheduleMeetingDialog meeting={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />
       <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={refresh} />
-      <SendFeedbackDialog meeting={feedbackFor} onClose={() => setFeedbackFor(null)} onSent={refresh} />
+      <DecisionDialog meeting={deciding} onClose={() => setDeciding(null)} onDecided={refresh} />
       <MeetingDetailsDrawer
         meeting={selected}
         onClose={() => setSelected(null)}

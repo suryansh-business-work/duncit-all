@@ -1,7 +1,12 @@
 import { Types } from 'mongoose';
 import { generateSlots, meetingService } from '../../meeting.service';
 import { MeetingModel } from '../../meeting.model';
+import type { SurveyKind } from '../../survey.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { userService } from '@modules/access/user/user.service';
+import { HostModel } from '@modules/venues/host/host.model';
+import { VenueModel } from '@modules/venues/venue/venue.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import {
   sendMeetingScheduledEmail,
   sendMeetingScheduledAdminEmail,
@@ -22,6 +27,24 @@ jest.mock('@services/email/email.service', () => ({
 }));
 
 const userId = new Types.ObjectId().toString();
+
+let phoneSeq = 9300000000;
+const nextPhone = () => String(++phoneSeq);
+
+/** Create a fresh user, raise a meeting for a kind, and mark it DONE — the state
+ * onboarding staff need before they can approve/deny it. */
+async function doneMeeting(kind: SurveyKind, requestedAt: string, name = 'Appy Test') {
+  const user = new Types.ObjectId();
+  await UserModel.collection.insertOne({
+    _id: user,
+    auth: { email: `${user.toString()}@example.com` },
+    profile: { first_name: name },
+  } as never);
+  await meetingService.request(user.toString(), kind, { requested_at: requestedAt, contact_phone: nextPhone() });
+  const m = await meetingService.myMeeting(user.toString(), kind);
+  await meetingService.update(m!.id, { status: 'DONE' });
+  return { userId: user.toString(), meetingId: m!.id };
+}
 
 describe('meetingService integration', () => {
   it('requests once per user/kind (upsert), then lets staff schedule it with a link', async () => {
@@ -506,22 +529,74 @@ describe('meeting notifications + cross-flow slot picker (batch)', () => {
     expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ change: 'updated' }));
   });
 
-  it('emails the applicant on the onboarding approve / deny decision', async () => {
-    const applicant = new Types.ObjectId();
-    await UserModel.collection.insertOne({
-      _id: applicant,
-      auth: { email: 'dec@example.com' },
-      profile: { first_name: 'Dec' },
-    } as never);
-    await meetingService.request(applicant.toString(), 'VENUE', { requested_at: '2028-03-01T05:00:00.000Z', contact_phone: '9200000001' });
-    const m = await meetingService.myMeeting(applicant.toString(), 'VENUE');
+});
 
+describe('meeting decide (onboarding self-approve)', () => {
+  it('approves a DONE meeting: drafts the onboarded host, marks it approved, emails the applicant', async () => {
     (sendMeetingApprovedEmail as jest.Mock).mockClear();
-    await meetingService.setApprovalStatus(m!.id, 'APPROVED');
-    expect(sendMeetingApprovedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'dec@example.com' }));
+    const { userId: uid, meetingId } = await doneMeeting('HOST', '2029-01-01T05:00:00.000Z', 'Drafty');
 
+    // Feedback is required.
+    await expect(meetingService.decide(meetingId, 'APPROVED', '  ')).rejects.toThrow(/feedback/i);
+
+    const approved = await meetingService.decide(meetingId, 'APPROVED', 'Strong candidate');
+    expect(approved!.approval_status).toBe('APPROVED');
+    expect(approved!.feedback).toBe('Strong candidate');
+
+    const host: any = await HostModel.findOne({ user_id: new Types.ObjectId(uid) });
+    expect(host?.status).toBe('DRAFT');
+    expect(host?.full_name).toBe('Drafty');
+    expect(sendMeetingApprovedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: `${uid}@example.com` }));
+
+    // A decided meeting can't be decided again.
+    await expect(meetingService.decide(meetingId, 'APPROVED', 'again')).rejects.toThrow(/already/i);
+  });
+
+  it('drafts a venue and a seller brand on approval by kind', async () => {
+    const venue = await doneMeeting('VENUE', '2029-02-01T05:00:00.000Z', 'Venue Owner');
+    await meetingService.decide(venue.meetingId, 'APPROVED', 'ok');
+    const v: any = await VenueModel.findOne({ owner_user_id: new Types.ObjectId(venue.userId) });
+    expect(v?.status).toBe('DRAFT');
+    expect(v?.owner_name).toBe('Venue Owner');
+
+    const seller = await doneMeeting('ECOMM', '2029-03-01T05:00:00.000Z', 'Seller Person');
+    await meetingService.decide(seller.meetingId, 'APPROVED', 'ok');
+    const b: any = await EcommBrandModel.findOne({ owner_user_id: new Types.ObjectId(seller.userId) });
+    expect(b?.status).toBe('DRAFT');
+    expect(b?.contact_person).toBe('Seller Person');
+  });
+
+  it('grants the CLUB_ADMIN role on approval (no drafted entity)', async () => {
+    // Role assignment uses a transaction (real replica set in prod); the standalone
+    // test mongo can't run it, so spy on addRole to assert the branch wiring.
+    const spy = jest.spyOn(userService, 'addRole').mockResolvedValue(undefined as never);
+    const club = await doneMeeting('CLUB_ADMIN', '2029-04-01T05:00:00.000Z', 'Club Boss');
+    const approved = await meetingService.decide(club.meetingId, 'APPROVED', 'ok');
+    expect(approved!.approval_status).toBe('APPROVED');
+    expect(spy).toHaveBeenCalledWith(club.userId, 'CLUB_ADMIN');
+    spy.mockRestore();
+  });
+
+  it('denies a DONE meeting: marks it denied, drafts nothing, emails the applicant, and blocks a re-decide', async () => {
     (sendMeetingRejectedEmail as jest.Mock).mockClear();
-    await meetingService.setApprovalStatus(m!.id, 'DENIED');
-    expect(sendMeetingRejectedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'dec@example.com' }));
+    const { userId: uid, meetingId } = await doneMeeting('HOST', '2029-05-01T05:00:00.000Z', 'Rejy');
+    const denied = await meetingService.decide(meetingId, 'DENIED', 'Not a fit');
+    expect(denied!.approval_status).toBe('DENIED');
+    expect(await HostModel.findOne({ user_id: new Types.ObjectId(uid) })).toBeNull();
+    expect(sendMeetingRejectedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: `${uid}@example.com` }));
+    await expect(meetingService.decide(meetingId, 'APPROVED', 'reconsider')).rejects.toThrow(/already/i);
+  });
+
+  it('refuses to decide a meeting that is not DONE, and 404s an unknown id', async () => {
+    const user = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: user,
+      auth: { email: `${user.toString()}@example.com` },
+      profile: { first_name: 'NotDone' },
+    } as never);
+    await meetingService.request(user.toString(), 'HOST', { requested_at: '2029-06-01T05:00:00.000Z', contact_phone: nextPhone() });
+    const m = await meetingService.myMeeting(user.toString(), 'HOST');
+    await expect(meetingService.decide(m!.id, 'APPROVED', 'ok')).rejects.toThrow(/done/i);
+    await expect(meetingService.decide(new Types.ObjectId().toString(), 'APPROVED', 'ok')).rejects.toThrow(/not found/i);
   });
 });

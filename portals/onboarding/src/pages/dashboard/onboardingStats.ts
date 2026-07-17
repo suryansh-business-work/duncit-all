@@ -32,12 +32,16 @@ export interface MonthBucket {
   label: string;
   hosts: number;
   venues: number;
+  brands: number;
+  club_admins: number;
 }
 
 export interface DashboardKpi {
   label: string;
   value: number;
   tone: 'default' | 'success' | 'warning';
+  /** Route to open when the KPI card is clicked; omit for cross-entity totals. */
+  to?: string;
 }
 
 const STATUS_SET = new Set<string>(ONBOARDING_STATUSES);
@@ -69,26 +73,38 @@ export function countByKind(meetings: MeetingItem[]): MeetingCounts {
 const sumCounts = (counts: StatusCounts): number =>
   ONBOARDING_STATUSES.reduce((acc, key) => acc + counts[key], 0);
 
-/** Header KPIs: totals (hosts, venues, surveys) plus pending review + approved. */
+/** Header KPIs: totals (hosts, venues, brands, surveys) plus pending review + approved. */
 export function buildKpis(
   hostCounts: StatusCounts,
   venueCounts: StatusCounts,
+  brandCounts: StatusCounts,
   surveyCount: number,
 ): DashboardKpi[] {
   return [
-    { label: 'Total hosts', value: sumCounts(hostCounts), tone: 'default' },
-    { label: 'Total venues', value: sumCounts(venueCounts), tone: 'default' },
-    { label: 'Total surveys', value: surveyCount, tone: 'default' },
-    { label: 'Pending review', value: hostCounts.SUBMITTED + venueCounts.SUBMITTED, tone: 'warning' },
-    { label: 'Approved', value: hostCounts.APPROVED + venueCounts.APPROVED, tone: 'success' },
+    { label: 'Total hosts', value: sumCounts(hostCounts), tone: 'default', to: '/hosts' },
+    { label: 'Total venues', value: sumCounts(venueCounts), tone: 'default', to: '/venues' },
+    { label: 'Total brands', value: sumCounts(brandCounts), tone: 'default', to: '/ecomm-brands' },
+    { label: 'Total surveys', value: surveyCount, tone: 'default', to: '/surveys' },
+    {
+      label: 'Pending review',
+      value: hostCounts.SUBMITTED + venueCounts.SUBMITTED + brandCounts.SUBMITTED,
+      tone: 'warning',
+    },
+    {
+      label: 'Approved',
+      value: hostCounts.APPROVED + venueCounts.APPROVED + brandCounts.APPROVED,
+      tone: 'success',
+    },
   ];
 }
 
 const monthKey = (date: Date): string => `${date.getFullYear()}-${date.getMonth()}`;
 
+type TrendField = 'hosts' | 'venues' | 'brands' | 'club_admins';
+
 function addToBuckets(
   items: StatusItem[],
-  field: 'hosts' | 'venues',
+  field: TrendField,
   buckets: MonthBucket[],
   indexByKey: Map<string, number>,
 ): void {
@@ -101,10 +117,14 @@ function addToBuckets(
   }
 }
 
-/** Submissions per calendar month for the trailing `monthsBack` months. */
+/** Submissions per calendar month for the trailing `monthsBack` months. Hosts /
+ * venues / brands use their own `submitted_at`; Club Admins have no entity so
+ * callers pass their approval-meeting timestamp shaped as `{ submitted_at }`. */
 export function monthlyOnboarding(
   hosts: StatusItem[],
   venues: StatusItem[],
+  brands: StatusItem[],
+  clubAdmins: StatusItem[],
   monthsBack = 6,
   now: Date = new Date(),
 ): MonthBucket[] {
@@ -113,9 +133,17 @@ export function monthlyOnboarding(
   for (let offset = monthsBack - 1; offset >= 0; offset -= 1) {
     const date = new Date(now.getFullYear(), now.getMonth() - offset, 1);
     indexByKey.set(monthKey(date), buckets.length);
-    buckets.push({ label: date.toLocaleString('en-US', { month: 'short' }), hosts: 0, venues: 0 });
+    buckets.push({
+      label: date.toLocaleString('en-US', { month: 'short' }),
+      hosts: 0,
+      venues: 0,
+      brands: 0,
+      club_admins: 0,
+    });
   }
   addToBuckets(hosts, 'hosts', buckets, indexByKey);
   addToBuckets(venues, 'venues', buckets, indexByKey);
+  addToBuckets(brands, 'brands', buckets, indexByKey);
+  addToBuckets(clubAdmins, 'club_admins', buckets, indexByKey);
   return buckets;
 }

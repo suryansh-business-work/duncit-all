@@ -5,10 +5,11 @@ import { Schema, model, InferSchemaType, Types } from 'mongoose';
  * Admin console reviews from the "Approve/Deny Requests" inbox. The `type`
  * discriminates the use-case; `details` is a portal-agnostic list of
  * label → value rows the inbox renders, so new request types need no schema
- * change. The first use-case is onboarding meeting feedback.
+ * change. Current use-case: ecomm brand/product change requests from the
+ * Products portal. (Onboarding meetings are decided in the Onboarding console
+ * itself, not through this inbox.)
  */
 export const APPROVAL_TYPES = [
-  'ONBOARDING_MEETING_FEEDBACK',
   'ECOMM_BRAND_CHANGE',
   'ECOMM_PRODUCT_CHANGE',
 ] as const;

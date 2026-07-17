@@ -128,9 +128,11 @@ export const DISMISS_MEETING = gql`
   }
 `;
 
-export const SEND_MEETING_FEEDBACK = gql`
-  mutation SendMeetingFeedback($id: ID!, $feedback: String!) {
-    sendMeetingFeedback(id: $id, feedback: $feedback) { ${FIELDS} }
+export type MeetingDecision = 'APPROVED' | 'DENIED';
+
+export const DECIDE_MEETING = gql`
+  mutation DecideMeeting($id: ID!, $decision: MeetingDecision!, $feedback: String!) {
+    decideMeeting(id: $id, decision: $decision, feedback: $feedback) { ${FIELDS} }
   }
 `;
 

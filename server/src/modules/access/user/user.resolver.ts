@@ -26,6 +26,9 @@ const ROLE_ASSIGN_ROLES = ['SUPER_ADMIN'];
 // The user directory is also read by the Marketing portal to target
 // per-user push notifications (read-only — no other user ops are granted).
 const DIRECTORY_ROLES = [...ADMIN_ROLES, 'MARKETING_MANAGER'];
+// Onboarding managers browse the partner directory to see Club Admins onboarded
+// via the approval flow (Club Admin has no drafted entity of its own).
+const PARTNERS_TABLE_ROLES = [...DIRECTORY_ROLES, 'ONBOARDING_MANAGER'];
 
 // A stable @handle for follow lists. There is no real username field yet, so we
 // derive one from the name plus a short id suffix (kept deterministic + unique).
@@ -113,7 +116,7 @@ export const userResolvers = {
       return userService.table(args.query);
     },
     partnersTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, DIRECTORY_ROLES);
+      requireRole(ctx, PARTNERS_TABLE_ROLES);
       return userService.partnersTable(args.query);
     },
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {

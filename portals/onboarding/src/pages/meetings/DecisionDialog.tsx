@@ -15,8 +15,9 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  SEND_MEETING_FEEDBACK,
+  DECIDE_MEETING,
   USER_SURVEY_RESPONSES,
+  type MeetingDecision,
   type OnboardingMeeting,
   type UserSurveyResponse,
 } from './queries';
@@ -24,14 +25,16 @@ import {
 interface Props {
   meeting: OnboardingMeeting | null;
   onClose: () => void;
-  /** Called after feedback is sent so the table can refetch. */
-  onSent: () => Promise<unknown> | void;
+  /** Called after a decision is saved so the table can refetch. */
+  onDecided: () => Promise<unknown> | void;
 }
 
-/** After a meeting is marked Done, staff review the applicant's survey answers
- * and submit feedback — this raises an approval request to the Admin console. */
-export default function SendFeedbackDialog({ meeting, onClose, onSent }: Readonly<Props>) {
-  const [sendFeedback, { loading }] = useMutation(SEND_MEETING_FEEDBACK);
+/** After a meeting is marked Done, onboarding staff review the applicant's survey
+ * answers, record their feedback, and Approve or Deny the applicant themselves —
+ * approval drafts the onboarded entity (or grants the club-admin role); there is
+ * no admin round-trip. */
+export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly<Props>) {
+  const [decideMeeting, { loading }] = useMutation(DECIDE_MEETING);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -50,31 +53,31 @@ export default function SendFeedbackDialog({ meeting, onClose, onSent }: Readonl
     onClose();
   };
 
-  const submit = async () => {
+  const decide = async (decision: MeetingDecision) => {
     if (!meeting) return;
     if (!feedback.trim()) {
-      setError('Add your feedback before sending it to the Admin.');
+      setError('Add your feedback before deciding.');
       return;
     }
     setError(null);
     try {
-      await sendFeedback({ variables: { id: meeting.id, feedback: feedback.trim() } });
+      await decideMeeting({ variables: { id: meeting.id, decision, feedback: feedback.trim() } });
       setFeedback('');
       onClose();
-      await onSent();
+      await onDecided();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send the feedback');
+      setError(e instanceof Error ? e.message : 'Could not save the decision');
     }
   };
 
   return (
     <Dialog open={!!meeting} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Send feedback to Admin</DialogTitle>
+      <DialogTitle>Approve or deny onboarding</DialogTitle>
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          Review {meeting?.user_name || meeting?.contact_name || 'the applicant'}'s survey answers, then
-          add your feedback. On Admin approval they appear as a draft in the Onboarded list.
+          Review {meeting?.user_name || meeting?.contact_name || 'the applicant'}'s survey answers and add your
+          feedback. Approving drafts them into the Onboarded list; denying asks them to re-apply.
         </Typography>
         <Typography variant="subtitle2" sx={{ mb: 1 }}>Survey answers</Typography>
         {loadingSurvey && items.length === 0 && (
@@ -108,8 +111,11 @@ export default function SendFeedbackDialog({ meeting, onClose, onSent }: Readonl
       </DialogContent>
       <DialogActions>
         <Button onClick={close}>Cancel</Button>
-        <Button variant="contained" onClick={submit} disabled={loading}>
-          {loading ? 'Sending…' : 'Send to Admin'}
+        <Button color="error" onClick={() => decide('DENIED')} disabled={loading}>
+          {loading ? 'Saving…' : 'Deny'}
+        </Button>
+        <Button variant="contained" onClick={() => decide('APPROVED')} disabled={loading}>
+          {loading ? 'Saving…' : 'Approve'}
         </Button>
       </DialogActions>
     </Dialog>

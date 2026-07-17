@@ -3748,6 +3748,11 @@ export type MeetingAvailabilityInput = {
   week_days?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
+/** Onboarding staff's decision on a DONE meeting. */
+export type MeetingDecision =
+  | 'APPROVED'
+  | 'DENIED';
+
 export type MeetingFilter = {
   from?: InputMaybe<Scalars['String']['input']>;
   kind?: InputMaybe<SurveyKind>;
@@ -3979,6 +3984,8 @@ export type Mutation = {
   crmLeadAiChat: Scalars['String']['output'];
   /** Discover up to `limit` pages from the lead's website and save them. */
   crmScrapeWebsitePages: CrmWebsiteScrapeResult;
+  /** Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip. */
+  decideMeeting: OnboardingMeeting;
   /** Owner declines a pending booking request — the slot frees up again. */
   declineVenueSlotRequest: VenueSlot;
   /**  Admin-only: delete an adjustment. Returns the recomputed score.  */
@@ -4191,8 +4198,6 @@ export type Mutation = {
   seedSuperAdmin: SeedAdminResult;
   sendCrmTestEmail: CrmEmailTestResult;
   sendMarketingCampaign: MarketingCampaign;
-  /** Onboarding staff send post-meeting feedback (with the applicant's survey answers) to the Admin console for approval. Requires the meeting to be DONE. */
-  sendMeetingFeedback: OnboardingMeeting;
   sendPodMessage: PodMessage;
   sendSupportChatMessage: SupportChatMessage;
   sendTestEmail: EmailTestResult;
@@ -5001,6 +5006,13 @@ export type MutationCrmScrapeWebsitePagesArgs = {
   entity_type: CrmEntityType;
   lead_id: Scalars['ID']['input'];
   limit: Scalars['Int']['input'];
+};
+
+
+export type MutationDecideMeetingArgs = {
+  decision: MeetingDecision;
+  feedback: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
 };
 
 
@@ -5852,12 +5864,6 @@ export type MutationSendCrmTestEmailArgs = {
 
 export type MutationSendMarketingCampaignArgs = {
   campaign_id: Scalars['ID']['input'];
-};
-
-
-export type MutationSendMeetingFeedbackArgs = {
-  feedback: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
 };
 
 
@@ -6744,7 +6750,7 @@ export type NotificationTablePage = {
 
 export type OnboardingMeeting = {
   __typename?: 'OnboardingMeeting';
-  /** Admin-approval state of the interviewer's feedback: NONE | PENDING | APPROVED | DENIED. */
+  /** Onboarding decision on the interviewer's feedback: NONE (not yet decided) | APPROVED | DENIED. */
   approval_status?: Maybe<Scalars['String']['output']>;
   /** Why onboarding staff cancelled it (null for self-cancels). */
   cancel_reason?: Maybe<Scalars['String']['output']>;
@@ -6754,7 +6760,7 @@ export type OnboardingMeeting = {
   created_at?: Maybe<Scalars['String']['output']>;
   /** Hidden from the onboarding calendar (cancelled meeting removed by staff). */
   dismissed?: Maybe<Scalars['Boolean']['output']>;
-  /** The interviewer's post-meeting feedback (set when 'Send feedback' is submitted). */
+  /** The interviewer's post-meeting feedback (set when the meeting is approved / denied). */
   feedback?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   kind: SurveyKind;

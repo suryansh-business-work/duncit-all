@@ -1,45 +1,46 @@
 import { useRef, useState } from 'react';
-import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useApolloClient, useMutation } from '@apollo/client';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import {
   Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, Stack, ToggleButton, ToggleButtonGroup, Typography,
+  DialogContentText, DialogTitle, Stack, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import AssignmentIcon from '@mui/icons-material/Assignment';
+import { BackButton } from '@duncit/ui';
+import { useAdminCategories } from '@duncit/category';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
-import { CATEGORIES, DELETE_SURVEY, SURVEYS_TABLE, type CategoryOption, type SurveyKind, type SurveyRow } from './queries';
-import ScopePicker, { type Scope } from './ScopePicker';
-import DefaultSurveysSection from './DefaultSurveysSection';
+import { DELETE_SURVEY, SURVEYS_TABLE, type SurveyRow } from './queries';
+import ScopePicker, { emptyScope, type Scope } from './ScopePicker';
+import DefaultSurveyButton from './DefaultSurveyButton';
 import SurveysTable from './SurveysTable';
+import { kindMetaBySlug } from './surveyKinds';
 
-const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
-
-/** List + manage onboarding surveys across the Super → Category → Sub taxonomy. */
+/** Category-specific surveys for a single audience (kind). Reached from a hub card. */
 export default function SurveysListPage() {
+  const { kind: slug } = useParams<{ kind: string }>();
+  const meta = kindMetaBySlug(slug);
+  const kind = meta?.kind ?? 'VENUE';
+
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [kind, setKind] = useState<SurveyKind | ''>('');
   const [scope, setScope] = useState<Scope>(emptyScope);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [deleteSurvey, { loading: deleting }] = useMutation(DELETE_SURVEY);
 
-  // Kind-default (unscoped) surveys are managed via the Default Survey menu and
+  // Kind-default (unscoped) surveys are managed via the Default Survey button and
   // must never surface in this table. The server cannot filter on "scoped", so
   // when no Super category is picked we filter on super_category_id IN <all supers>.
-  const { data: supersData } = useQuery<{ categories: CategoryOption[] }>(CATEGORIES, {
-    variables: { level: 'SUPER', parent_id: null },
-  });
-  const superIds = (supersData?.categories ?? []).map((c) => c.id);
+  const { categories, loading: catsLoading } = useAdminCategories();
+  const superIds = categories.filter((c) => c.level === 'SUPER').map((c) => c.id);
   const superIdsKey = superIds.join(',');
 
-  const pinnedFilters: TableFilterValue[] = [];
-  if (kind) pinnedFilters.push({ field: 'kind', op: 'eq', value: kind });
+  const pinnedFilters: TableFilterValue[] = [{ field: 'kind', op: 'eq', value: kind }];
   if (scope.super_category_id) pinnedFilters.push({ field: 'super_category_id', op: 'eq', value: scope.super_category_id });
   else pinnedFilters.push({ field: 'super_category_id', op: 'in', values: superIdsKey.split(',') });
   if (scope.category_id) pinnedFilters.push({ field: 'category_id', op: 'eq', value: scope.category_id });
   if (scope.sub_category_id) pinnedFilters.push({ field: 'sub_category_id', op: 'eq', value: scope.sub_category_id });
+
   const fetchRows = useApolloTableFetch<SurveyRow>(
     client,
     SURVEYS_TABLE,
@@ -59,35 +60,34 @@ export default function SurveysListPage() {
     }
   };
 
+  if (!meta) return <Navigate to="/surveys" replace />;
+  const { Icon } = meta;
+
   return (
     <Stack spacing={2.5}>
+      <Box><BackButton onClick={() => navigate('/surveys')}>Back to Surveys</BackButton></Box>
+
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
-        <AssignmentIcon color="primary" />
+        <Icon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={800}>Surveys</Typography>
-          <Typography variant="body2" color="text.secondary">Build category-specific onboarding surveys shown before users register a venue / become a host.</Typography>
+          <Typography variant="h5" fontWeight={800}>{meta.title}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Category-specific {meta.label} surveys shown before onboarding. Manage the fallback with Default Survey.
+          </Typography>
         </Box>
-        <DefaultSurveysSection />
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/surveys/new')}>New survey</Button>
+        <DefaultSurveyButton kind={meta.kind} />
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate(`/surveys/new?kind=${meta.kind}`)}>New survey</Button>
       </Stack>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
-        <ToggleButtonGroup size="small" exclusive value={kind} onChange={(_, v) => setKind(v ?? '')}>
-          <ToggleButton value="">All</ToggleButton>
-          <ToggleButton value="VENUE">Venue</ToggleButton>
-          <ToggleButton value="HOST">Host</ToggleButton>
-          <ToggleButton value="ECOMM">Ecomm</ToggleButton>
-        </ToggleButtonGroup>
-        <ScopePicker value={scope} onChange={setScope} emptyLabel="All" />
-      </Stack>
+      <ScopePicker value={scope} onChange={setScope} />
 
-      {!supersData && (
+      {catsLoading && superIds.length === 0 && (
         <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
       )}
-      {supersData && superIds.length === 0 && (
+      {!catsLoading && superIds.length === 0 && (
         <Alert severity="info">No category-specific surveys yet. The Default Survey (button above) is used as the fallback. Create one with “New survey”.</Alert>
       )}
-      {supersData && superIds.length > 0 && (
+      {superIds.length > 0 && (
         <SurveysTable
           key={`${kind}|${scope.super_category_id}|${scope.category_id}|${scope.sub_category_id}`}
           fetchRows={fetchRows}

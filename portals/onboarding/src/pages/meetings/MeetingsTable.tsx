@@ -14,7 +14,7 @@ const APPROVAL_LABELS: Record<MeetingApprovalStatus, string> = {
 const APPROVAL_COLORS: StatusColorMap = {
   NONE: 'default', PENDING: 'warning', APPROVED: 'success', DENIED: 'error',
 };
-const APPROVAL_OPTIONS = (['PENDING', 'APPROVED', 'DENIED'] as const).map((s) => ({
+const APPROVAL_OPTIONS = (['APPROVED', 'DENIED'] as const).map((s) => ({
   value: s,
   label: APPROVAL_LABELS[s],
 }));
@@ -23,7 +23,7 @@ const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '�
 const catPath = (m: OnboardingMeeting) =>
   [m.super_category_name, m.category_name, m.sub_category_name].filter(Boolean).join(' › ') || '—';
 
-/** Admin-approval state of the interviewer's feedback. */
+/** Onboarding decision on the interviewer's feedback. */
 function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | null }>) {
   const value = status ?? 'NONE';
   if (value === 'NONE') return <Typography variant="body2" color="text.secondary">—</Typography>;
@@ -76,7 +76,7 @@ interface Props {
   onSelect: (m: OnboardingMeeting) => void;
   onSchedule: (m: OnboardingMeeting) => void;
   onMarkDone: (m: OnboardingMeeting) => void;
-  onSendFeedback: (m: OnboardingMeeting) => void;
+  onDecide: (m: OnboardingMeeting) => void;
   onReject: (m: OnboardingMeeting) => void;
 }
 
@@ -87,7 +87,7 @@ export default function MeetingsTable({
   onSelect,
   onSchedule,
   onMarkDone,
-  onSendFeedback,
+  onDecide,
   onReject,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<OnboardingMeeting>[]>(() => {
@@ -97,7 +97,7 @@ export default function MeetingsTable({
         marking={marking}
         onSchedule={onSchedule}
         onMarkDone={onMarkDone}
-        onSendFeedback={onSendFeedback}
+        onDecide={onDecide}
         onReject={onReject}
       />
     );
@@ -143,7 +143,7 @@ export default function MeetingsTable({
       },
       {
         field: 'approval_status',
-        headerName: 'Admin approval',
+        headerName: 'Approval',
         width: 150,
         filter: { type: 'select', options: APPROVAL_OPTIONS },
         cellRenderer: renderApproval,
@@ -151,7 +151,7 @@ export default function MeetingsTable({
       },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 90, cellRenderer: renderActions },
     ];
-  }, [marking, onSchedule, onMarkDone, onSendFeedback, onReject]);
+  }, [marking, onSchedule, onMarkDone, onDecide, onReject]);
 
   return (
     <DuncitTable<OnboardingMeeting>

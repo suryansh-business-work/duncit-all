@@ -8,6 +8,12 @@ export const meetingTypeDefs = gql`
     CANCELLED
   }
 
+  "Onboarding staff's decision on a DONE meeting."
+  enum MeetingDecision {
+    APPROVED
+    DENIED
+  }
+
   type OnboardingMeeting {
     id: ID!
     "Human-readable request id, e.g. DUN-VEN-000001."
@@ -33,9 +39,9 @@ export const meetingTypeDefs = gql`
     notes: String
     contact_name: String
     contact_phone: String
-    "Admin-approval state of the interviewer's feedback: NONE | PENDING | APPROVED | DENIED."
+    "Onboarding decision on the interviewer's feedback: NONE (not yet decided) | APPROVED | DENIED."
     approval_status: String
-    "The interviewer's post-meeting feedback (set when 'Send feedback' is submitted)."
+    "The interviewer's post-meeting feedback (set when the meeting is approved / denied)."
     feedback: String
     created_at: String
     updated_at: String
@@ -148,8 +154,8 @@ export const meetingTypeDefs = gql`
     cancelMeeting(id: ID!, reason: String!): OnboardingMeeting!
     "Onboarding staff remove a cancelled meeting from the calendar (kept for audit)."
     dismissMeeting(id: ID!): OnboardingMeeting!
-    "Onboarding staff send post-meeting feedback (with the applicant's survey answers) to the Admin console for approval. Requires the meeting to be DONE."
-    sendMeetingFeedback(id: ID!, feedback: String!): OnboardingMeeting!
+    "Onboarding staff approve or deny a DONE meeting themselves — approval drafts the onboarded host/venue/seller (or grants the club-admin role). No admin round-trip."
+    decideMeeting(id: ID!, decision: MeetingDecision!, feedback: String!): OnboardingMeeting!
     updateMeetingAvailability(input: MeetingAvailabilityInput!): MeetingAvailability!
     "Onboarding staff add (or update) a holiday / leave day."
     addMeetingHoliday(input: AddMeetingHolidayInput!): MeetingHoliday!

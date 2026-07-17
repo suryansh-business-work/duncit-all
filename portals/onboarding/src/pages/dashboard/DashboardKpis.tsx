@@ -18,7 +18,7 @@ export default function DashboardKpis({ kpis }: Readonly<{ kpis: DashboardKpi[] 
       sx={{
         display: 'grid',
         gap: 2,
-        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(5, 1fr)' },
+        gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
       }}
     >
       {kpis.map((kpi) => (
@@ -30,6 +30,7 @@ export default function DashboardKpis({ kpis }: Readonly<{ kpis: DashboardKpi[] 
           valueVariant="h4"
           valueWeight={900}
           valueColor={TONE_COLOR[kpi.tone]}
+          to={kpi.to}
           sx={{ height: '100%' }}
         />
       ))}

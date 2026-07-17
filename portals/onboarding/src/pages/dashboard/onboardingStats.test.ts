@@ -44,15 +44,17 @@ describe('countByKind', () => {
 });
 
 describe('buildKpis', () => {
-  it('sums totals (hosts, venues, surveys) and surfaces pending + approved', () => {
+  it('sums totals (hosts, venues, brands, surveys) and surfaces pending + approved', () => {
     const hosts = { DRAFT: 1, SUBMITTED: 2, APPROVED: 3, REJECTED: 0 };
     const venues = { DRAFT: 0, SUBMITTED: 1, APPROVED: 4, REJECTED: 2 };
-    expect(buildKpis(hosts, venues, 5)).toEqual([
-      { label: 'Total hosts', value: 6, tone: 'default' },
-      { label: 'Total venues', value: 7, tone: 'default' },
-      { label: 'Total surveys', value: 5, tone: 'default' },
-      { label: 'Pending review', value: 3, tone: 'warning' },
-      { label: 'Approved', value: 7, tone: 'success' },
+    const brands = { DRAFT: 2, SUBMITTED: 3, APPROVED: 1, REJECTED: 1 };
+    expect(buildKpis(hosts, venues, brands, 5)).toEqual([
+      { label: 'Total hosts', value: 6, tone: 'default', to: '/hosts' },
+      { label: 'Total venues', value: 7, tone: 'default', to: '/venues' },
+      { label: 'Total brands', value: 7, tone: 'default', to: '/ecomm-brands' },
+      { label: 'Total surveys', value: 5, tone: 'default', to: '/surveys' },
+      { label: 'Pending review', value: 6, tone: 'warning' },
+      { label: 'Approved', value: 8, tone: 'success' },
     ]);
   });
 });
@@ -69,16 +71,18 @@ describe('monthlyOnboarding', () => {
       { submitted_at: 'not-a-date' }, // invalid -> skipped
     ];
     const venues: StatusItem[] = [{ submitted_at: '2026-06-10' }];
+    const brands: StatusItem[] = [{ submitted_at: '2026-05-05' }, { submitted_at: '2026-06-15' }];
+    const clubAdmins: StatusItem[] = [{ submitted_at: '2026-04-11' }, { submitted_at: '2026-06-01' }];
 
-    const buckets = monthlyOnboarding(hosts, venues, 3, now);
+    const buckets = monthlyOnboarding(hosts, venues, brands, clubAdmins, 3, now);
     expect(buckets).toHaveLength(3);
     expect(buckets.map((b) => b.label)).toEqual(['Apr', 'May', 'Jun']);
-    expect(buckets[2]).toEqual({ label: 'Jun', hosts: 1, venues: 1 });
-    expect(buckets[1]).toEqual({ label: 'May', hosts: 1, venues: 0 });
-    expect(buckets[0]).toEqual({ label: 'Apr', hosts: 0, venues: 0 });
+    expect(buckets[2]).toEqual({ label: 'Jun', hosts: 1, venues: 1, brands: 1, club_admins: 1 });
+    expect(buckets[1]).toEqual({ label: 'May', hosts: 1, venues: 0, brands: 1, club_admins: 0 });
+    expect(buckets[0]).toEqual({ label: 'Apr', hosts: 0, venues: 0, brands: 0, club_admins: 1 });
   });
 
   it('defaults to a 6-month window when no range is given', () => {
-    expect(monthlyOnboarding([], [])).toHaveLength(6);
+    expect(monthlyOnboarding([], [], [], [])).toHaveLength(6);
   });
 });

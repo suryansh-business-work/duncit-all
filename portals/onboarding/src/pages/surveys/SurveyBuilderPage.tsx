@@ -13,10 +13,10 @@ import {
   type QuestionType, type Survey, type SurveyKind,
 } from './queries';
 import QuestionCard, { type DraftQuestion } from './QuestionCard';
-import ScopePicker, { type Scope } from './ScopePicker';
+import ScopePicker, { emptyScope, type Scope } from './ScopePicker';
+import { kindMetaByKind } from './surveyKinds';
 
 const blankByType = (type: QuestionType): DraftQuestion => ({ type, label: '', help: '', required: false, multi: false, options: type === 'MCQ' ? [''] : [] });
-const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
 const KINDS = new Set<SurveyKind>(['VENUE', 'HOST', 'ECOMM', 'CLUB_ADMIN']);
 const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
 const initialKind = (raw: string | null): SurveyKind => (raw && KINDS.has(raw as SurveyKind) ? (raw as SurveyKind) : 'VENUE');
@@ -87,6 +87,15 @@ export default function SurveyBuilderPage() {
     }
   };
 
+  // The Back button must point at the right kind list even before `kind` state
+  // catches up. For a new survey the kind comes from `?kind`; for an edit it is
+  // only known once the survey loads, so read it straight off `data`.
+  const loadedKind = data?.surveyById?.kind;
+  const backKindKnown = isNew || !!loadedKind;
+  const backMeta = kindMetaByKind(loadedKind ?? kind);
+  const backTo = backKindKnown ? `/surveys/kind/${backMeta.slug}` : '/surveys';
+  const backLabel = backKindKnown ? `Back to ${backMeta.label} Surveys` : 'Back to Surveys';
+
   const saving = creating || updating;
   const verb = isNew ? 'New' : 'Edit';
   const heading = isDefaultMode ? `${verb} ${KIND_LABELS[kind]} default survey` : `${verb} survey`;
@@ -97,7 +106,7 @@ export default function SurveyBuilderPage() {
   return (
     <Stack spacing={2.5}>
       <Box>
-        <BackButton onClick={() => navigate('/surveys')}>Back to Surveys</BackButton>
+        <BackButton onClick={() => navigate(backTo)}>{backLabel}</BackButton>
       </Box>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
         <Box sx={{ flex: 1 }}>
@@ -127,7 +136,14 @@ export default function SurveyBuilderPage() {
                 <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
                 <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label="Active" />
               </Stack>
-              {!isDefaultMode && <ScopePicker value={scope} onChange={setScope} emptyLabel="— Kind default —" />}
+              {!isDefaultMode && (
+                <ScopePicker
+                  value={scope}
+                  onChange={setScope}
+                  legend="Survey scope"
+                  hint="Pick a Super → Category → Sub. Leave every level empty for the kind-level default."
+                />
+              )}
             </Stack>
           </CardContent></Card>
 

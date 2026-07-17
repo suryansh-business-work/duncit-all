@@ -1,8 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { ApprovalRequestModel, type ApprovalStatus, type ApprovalType } from './approval.model';
-import { hostService } from '@modules/venues/host/host.service';
-import { venueService } from '@modules/venues/venue/venue.service';
-import { ecommBrandService } from '@modules/venues/ecommBrand/ecommBrand.service';
+import { ApprovalRequestModel, type ApprovalStatus } from './approval.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
@@ -61,22 +58,6 @@ const APPROVAL_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { created_at: -1 },
 };
 
-export interface CreateApprovalInput {
-  type: ApprovalType;
-  source_portal?: string;
-  title?: string;
-  summary?: string;
-  details?: { label: string; value?: string | null }[];
-  kind?: string | null;
-  subject_user_id?: string | null;
-  subject_name?: string | null;
-  subject_email?: string | null;
-  subject_phone?: string | null;
-  meeting_id?: string | null;
-  requested_by?: string | null;
-  requested_by_name?: string | null;
-}
-
 export interface EcommChangeInput {
   kind: string;
   target_id: string;
@@ -89,46 +70,6 @@ export interface EcommChangeInput {
 interface Reviewer {
   id?: string | null;
   name?: string | null;
-}
-
-/** The Super → Category → Sub the applicant picked in the onboarding gate, read
- * off the source meeting so the drafted entity carries it into its Edit dialog.
- * Best-effort: returns null when the meeting has no (complete) category. */
-async function loadMeetingCategory(meetingId: any) {
-  if (!meetingId) return null;
-  const { MeetingModel } = await import('@modules/survey/meeting.model');
-  const m = await MeetingModel.findById(meetingId).select(
-    'super_category_id category_id sub_category_id'
-  );
-  if (!m?.super_category_id || !m.category_id || !m.sub_category_id) return null;
-  return {
-    super_category_id: String(m.super_category_id),
-    category_id: String(m.category_id),
-    sub_category_id: String(m.sub_category_id),
-  };
-}
-
-/** On approval of an onboarding-meeting request, draft the matching onboarded
- * entity so it surfaces in the portal's Onboarded {Hosts,Venues,Brands} list. */
-async function draftOnboardedEntity(doc: any) {
-  if (!doc.subject_user_id) return;
-  const category = await loadMeetingCategory(doc.meeting_id);
-  const prefill = {
-    userId: String(doc.subject_user_id),
-    name: doc.subject_name ?? '',
-    email: doc.subject_email ?? '',
-    phone: doc.subject_phone ?? '',
-    category,
-  };
-  if (doc.kind === 'HOST') await hostService.createDraftFromApproval(prefill);
-  else if (doc.kind === 'VENUE') await venueService.createDraftFromApproval(prefill);
-  else if (doc.kind === 'ECOMM') await ecommBrandService.createDraftFromApproval(prefill);
-  else if (doc.kind === 'CLUB_ADMIN') {
-    // Club Admin has no drafted entity — approval grants the CLUB_ADMIN role so the
-    // user gets the club-admin dashboard in the Partners portal.
-    const { userService } = await import('@modules/access/user/user.service');
-    await userService.addRole(String(doc.subject_user_id), 'CLUB_ADMIN');
-  }
 }
 
 /** Apply an approved ecomm change-request's payload to its brand/product. The
@@ -152,25 +93,6 @@ async function applyEcommChange(doc: any) {
   }
 }
 
-/** Reflect the decision back onto the source meeting's approval column. */
-async function syncMeetingStatus(doc: any, status: 'APPROVED' | 'DENIED') {
-  if (!doc.meeting_id) return;
-  const { meetingService } = await import('@modules/survey/meeting.service');
-  await meetingService.setApprovalStatus(String(doc.meeting_id), status);
-}
-
-/** Best-effort in-app notification to the request's subject. */
-async function notifySubject(doc: any, title: string, body: string) {
-  if (!doc.subject_user_id) return;
-  try {
-    const { notificationService } = await import('@modules/engagement/notification/notification.service');
-    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [String(doc.subject_user_id)], silent: false });
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[approval] subject notification failed:', err);
-  }
-}
-
 export const approvalService = {
   async list(filter: { status?: ApprovalStatus | null; type?: string | null } = {}) {
     const q: any = {};
@@ -189,26 +111,6 @@ export const approvalService = {
       APPROVAL_TABLE_CONFIG
     );
     return { rows: docs.map(pub), total, page, page_size };
-  },
-
-  /** Generic creation — used by the onboarding meeting-feedback flow. */
-  async create(input: CreateApprovalInput) {
-    const doc = await ApprovalRequestModel.create({
-      type: input.type,
-      source_portal: input.source_portal ?? '',
-      title: input.title ?? '',
-      summary: input.summary ?? '',
-      details: (input.details ?? []).map((d) => ({ label: d.label, value: d.value ?? '' })),
-      kind: input.kind ?? null,
-      subject_user_id: input.subject_user_id ?? null,
-      subject_name: input.subject_name ?? null,
-      subject_email: input.subject_email ?? null,
-      subject_phone: input.subject_phone ?? null,
-      meeting_id: input.meeting_id ?? null,
-      requested_by: input.requested_by ?? null,
-      requested_by_name: input.requested_by_name ?? null,
-    });
-    return pub(doc);
   },
 
   /** Products portal: list brand/product change requests (optionally by kind). */
@@ -252,11 +154,7 @@ export const approvalService = {
     doc.reviewed_at = new Date();
     doc.review_notes = notes ?? null;
     await doc.save();
-    if (doc.type === 'ONBOARDING_MEETING_FEEDBACK') {
-      await draftOnboardedEntity(doc);
-      await syncMeetingStatus(doc, 'APPROVED');
-      await notifySubject(doc, 'Onboarding approved', 'Your onboarding has been approved. Our team will help you complete the remaining steps.');
-    } else if (doc.type === 'ECOMM_BRAND_CHANGE' || doc.type === 'ECOMM_PRODUCT_CHANGE') {
+    if (doc.type === 'ECOMM_BRAND_CHANGE' || doc.type === 'ECOMM_PRODUCT_CHANGE') {
       await applyEcommChange(doc);
     }
     return pub(doc);
@@ -274,11 +172,6 @@ export const approvalService = {
     doc.reviewed_at = new Date();
     doc.review_notes = notes ?? null;
     await doc.save();
-    if (doc.type === 'ONBOARDING_MEETING_FEEDBACK') {
-      await syncMeetingStatus(doc, 'DENIED');
-      const tail = notes?.trim() ? ` ${notes.trim()}` : '';
-      await notifySubject(doc, 'Onboarding update', `Your onboarding request was not approved.${tail}`);
-    }
     return pub(doc);
   },
 };

@@ -3,7 +3,8 @@ import type { ApprovalStatus } from './approval.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-// The Admin console reviews requests from any portal.
+// The Admin console reviews cross-portal requests (e.g. ecomm change requests).
+// Onboarding-meeting approvals are decided in the Onboarding console itself.
 const APPROVAL_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 // The Products portal raises + views ecomm change requests.
 const ECOMM_PORTAL = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];

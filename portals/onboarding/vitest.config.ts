@@ -78,6 +78,9 @@ export default defineConfig({
         'src/pages/ecomm-brands-page/EcommBrandReviewDialog.tsx',
         'src/pages/ecomm-brands-page/EcommBrandEditDialog.tsx',
         'src/pages/ecomm-brands-page/EcommBrandEditFields.tsx',
+        // Club Admins list: Apollo container (partnersTable query) — same class
+        // as the excluded partners/list pages in admin. Validated end-to-end.
+        'src/pages/club-admins-page/**',
         'src/pages/venue-details-page/VenueDetailsPage.tsx',
         'src/pages/venue-details-page/VenueHealthCard.tsx',
         // Apollo slot-availability container: reuses the shared calendar package

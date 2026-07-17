@@ -61,9 +61,9 @@ export const meetingResolvers = {
       requireRole(ctx, ONBOARDING_RW);
       return meetingService.dismiss(args.id);
     },
-    sendMeetingFeedback: (_p: unknown, args: { id: string; feedback: string }, ctx: GraphQLContext) => {
-      const user = requireRole(ctx, ONBOARDING_RW);
-      return meetingService.sendFeedback(args.id, args.feedback, { id: user.id, name: user.email ?? null });
+    decideMeeting: (_p: unknown, args: { id: string; decision: 'APPROVED' | 'DENIED'; feedback: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.decide(args.id, args.decision, args.feedback);
     },
     updateMeetingAvailability: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);

@@ -12,7 +12,7 @@ interface Action {
 interface Handlers {
   onSchedule: (m: OnboardingMeeting) => void;
   onMarkDone: (m: OnboardingMeeting) => void;
-  onSendFeedback: (m: OnboardingMeeting) => void;
+  onDecide: (m: OnboardingMeeting) => void;
   onReject: (m: OnboardingMeeting) => void;
 }
 
@@ -21,7 +21,7 @@ interface Props extends Handlers {
   marking: boolean;
 }
 
-/** Status-driven action list. Cancelled or admin-denied meetings get no actions. */
+/** Status-driven action list. Cancelled or denied meetings get no actions. */
 function buildActions(meeting: OnboardingMeeting, h: Handlers): Action[] {
   const approval = meeting.approval_status ?? 'NONE';
   if (approval === 'DENIED' || meeting.status === 'CANCELLED') return [];
@@ -39,15 +39,15 @@ function buildActions(meeting: OnboardingMeeting, h: Handlers): Action[] {
     ];
   }
   if (meeting.status === 'DONE' && approval === 'NONE') {
-    return [{ label: 'Send feedback', onClick: () => h.onSendFeedback(meeting) }];
+    return [{ label: 'Approve / Deny', onClick: () => h.onDecide(meeting) }];
   }
   return [];
 }
 
 /** Actions dropdown on a meeting row — options change with the meeting status. */
-export default function MeetingRowActions({ meeting, marking, onSchedule, onMarkDone, onSendFeedback, onReject }: Readonly<Props>) {
+export default function MeetingRowActions({ meeting, marking, onSchedule, onMarkDone, onDecide, onReject }: Readonly<Props>) {
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
-  const actions = buildActions(meeting, { onSchedule, onMarkDone, onSendFeedback, onReject });
+  const actions = buildActions(meeting, { onSchedule, onMarkDone, onDecide, onReject });
   if (actions.length === 0) {
     return <Typography variant="caption" color="text.secondary">—</Typography>;
   }

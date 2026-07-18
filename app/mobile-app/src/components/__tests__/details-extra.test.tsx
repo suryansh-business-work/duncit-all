@@ -135,8 +135,11 @@ describe('PodSections', () => {
       <>
         <ChipList items={['A']} emptyText="none" tint="#ffffff" />
         <ChipList items={[]} emptyText="none-empty" tint="#ffffff" />
-        <HostsSection hosts={['Asha']} />
-        <HostsSection hosts={[]} />
+        <HostsSection
+          hosts={[{ user_id: 'h1', full_name: 'Asha', profile_photo: null }]}
+          onOpenProfile={jest.fn()}
+        />
+        <HostsSection hosts={[]} onOpenProfile={jest.fn()} />
         <AttendeesSection
           people={[
             { user_id: 'u1', full_name: 'Asha H', profile_photo: null, is_host: true },
@@ -152,5 +155,31 @@ describe('PodSections', () => {
     expect(screen.getByText('none-empty')).toBeOnTheScreen();
     expect(screen.getByText('Asha')).toBeOnTheScreen();
     expect(screen.getByText('Entry')).toBeOnTheScreen();
+  });
+});
+
+describe('HostsSection host navigation', () => {
+  it('renders a host photo and opens the profile when the row is tapped', () => {
+    const onOpenProfile = jest.fn();
+    renderWithProviders(
+      <HostsSection
+        hosts={[{ user_id: 'h9', full_name: 'Rhea', profile_photo: 'https://cdn/r.jpg' }]}
+        onOpenProfile={onOpenProfile}
+      />,
+    );
+    expect(screen.getByText('Rhea')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('host-row-h9'));
+    expect(onOpenProfile).toHaveBeenCalledWith('h9');
+  });
+
+  it('falls back to a "Host" label and an "H" avatar initial for a nameless host', () => {
+    renderWithProviders(
+      <HostsSection
+        hosts={[{ user_id: 'h0', full_name: null, profile_photo: null }]}
+        onOpenProfile={jest.fn()}
+      />,
+    );
+    // Avatar initial fallback when there is no name and no photo.
+    expect(screen.getByText('H')).toBeOnTheScreen();
   });
 });

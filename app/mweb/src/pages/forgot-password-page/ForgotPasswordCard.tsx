@@ -1,5 +1,5 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Link, Stack, Typography } from '@mui/material';
+import { Box, Button, Link, Stack, Typography } from '@mui/material';
 import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import { ForgotPasswordForm, type ForgotPasswordValues } from '../../forms/forgot-password';
@@ -7,10 +7,13 @@ import { ForgotPasswordForm, type ForgotPasswordValues } from '../../forms/forgo
 interface Props {
   loading: boolean;
   errorMessage: string | null;
+  /** True when the entered email is not a registered account — swaps the footer
+   * to a Create-Account CTA and flags the email field. */
+  unregistered: boolean;
   onSubmit: (values: ForgotPasswordValues) => Promise<void>;
 }
 
-export default function ForgotPasswordCard({ loading, errorMessage, onSubmit }: Readonly<Props>) {
+export default function ForgotPasswordCard({ loading, errorMessage, unregistered, onSubmit }: Readonly<Props>) {
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>
@@ -24,14 +27,35 @@ export default function ForgotPasswordCard({ loading, errorMessage, onSubmit }: 
           </Typography>
         </Stack>
 
-        <ForgotPasswordForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
+        <ForgotPasswordForm
+          loading={loading}
+          errorMessage={errorMessage}
+          emailError={unregistered ? 'Unregistered User' : null}
+          onSubmit={onSubmit}
+        />
 
-        <Typography variant="body2" textAlign="center" color="text.secondary">
-          Remembered it?{' '}
-          <Link component={RouterLink} to="/login" underline="hover">
-            Back to login
-          </Link>
-        </Typography>
+        {unregistered ? (
+          <Stack alignItems="center" spacing={1}>
+            <Typography variant="body2" color="text.secondary">
+              New to Duncit?
+            </Typography>
+            <Button
+              component={RouterLink}
+              to="/register"
+              variant="contained"
+              sx={{ borderRadius: 2, px: 3, fontWeight: 700, textTransform: 'none' }}
+            >
+              Create Account
+            </Button>
+          </Stack>
+        ) : (
+          <Typography variant="body2" textAlign="center" color="text.secondary">
+            Remembered it?{' '}
+            <Link component={RouterLink} to="/login" underline="hover">
+              Back to login
+            </Link>
+          </Typography>
+        )}
       </Stack>
     </AuthScreenFrame>
   );

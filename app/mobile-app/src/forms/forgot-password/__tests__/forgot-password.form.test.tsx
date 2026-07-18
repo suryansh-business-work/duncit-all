@@ -34,6 +34,11 @@ describe('ForgotPasswordForm', () => {
     expect(screen.getByTestId('forgot-password-error')).toHaveTextContent('No account');
   });
 
+  it('shows a server-side email error below the field', () => {
+    renderWithProviders(<ForgotPasswordForm onSubmit={jest.fn()} emailError="Unregistered User" />);
+    expect(screen.getByTestId('forgot-email-error')).toHaveTextContent('Unregistered User');
+  });
+
   it('renders the submit button in a loading state', () => {
     renderWithProviders(<ForgotPasswordForm onSubmit={jest.fn()} loading />);
     expect(screen.getByTestId('forgot-password-submit')).toBeOnTheScreen();

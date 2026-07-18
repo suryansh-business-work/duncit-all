@@ -38,6 +38,7 @@ export const RequestPasswordResetOtpDocument = gql(`
     requestPasswordResetOtp(email: $email) {
       ok
       dev_otp
+      registered
     }
   }
 `);

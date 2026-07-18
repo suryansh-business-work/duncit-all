@@ -13,6 +13,8 @@ import {
 export interface ForgotPasswordFormProps {
   loading?: boolean;
   errorMessage?: string | null;
+  /** Server-side validation shown directly below the email field (e.g. "Unregistered User"). */
+  emailError?: string | null;
   onSubmit: (values: ForgotPasswordValues) => void | Promise<void>;
 }
 
@@ -20,6 +22,7 @@ export interface ForgotPasswordFormProps {
 export function ForgotPasswordForm({
   loading,
   errorMessage,
+  emailError,
   onSubmit,
 }: Readonly<ForgotPasswordFormProps>) {
   const { control, handleSubmit } = useForm<ForgotPasswordValues>({
@@ -40,6 +43,12 @@ export function ForgotPasswordForm({
         autoComplete="email"
         textContentType="emailAddress"
       />
+
+      {emailError ? (
+        <Text fontSize={13} color="$danger" testID="forgot-email-error" marginTop={-8}>
+          {emailError}
+        </Text>
+      ) : null}
 
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="forgot-password-error">

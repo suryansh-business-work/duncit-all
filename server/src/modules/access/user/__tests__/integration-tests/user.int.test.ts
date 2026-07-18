@@ -189,6 +189,7 @@ describe("userService integration", () => {
 
       const req = await userService.requestPasswordResetOtp({ email: "reset-ok@duncit.com" } as any);
       expect(req.ok).toBe(true);
+      expect(req.registered).toBe(true);
       expect(req.dev_otp).toMatch(/^\d{6}$/);
 
       const done = await userService.resetPasswordWithOtp({
@@ -208,9 +209,9 @@ describe("userService integration", () => {
       ).rejects.toThrow(/invalid credentials/i);
     });
 
-    it("returns ok without an OTP for an unknown email (no enumeration)", async () => {
+    it("reports an unregistered email and sends no OTP", async () => {
       const req = await userService.requestPasswordResetOtp({ email: "ghost@duncit.com" } as any);
-      expect(req).toEqual({ ok: true, dev_otp: null });
+      expect(req).toEqual({ ok: false, registered: false, dev_otp: null });
     });
 
     it("rejects a wrong OTP", async () => {

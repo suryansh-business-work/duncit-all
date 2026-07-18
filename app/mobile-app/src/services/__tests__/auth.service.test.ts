@@ -117,13 +117,21 @@ describe('auth.service mutations', () => {
     expect(mockedClearToken).toHaveBeenCalledTimes(1);
   });
 
-  it('requestPasswordResetOtp lowercases the email (no token persisted)', async () => {
+  it('requestPasswordResetOtp lowercases the email and returns the registered flag', async () => {
     mockedRequest.mockResolvedValue({
-      requestPasswordResetOtp: { ok: true, dev_otp: null },
+      requestPasswordResetOtp: { ok: true, dev_otp: null, registered: true },
     } as never);
-    await requestPasswordResetOtp('  Hello@Duncit.com ');
+    const res = await requestPasswordResetOtp('  Hello@Duncit.com ');
     expect(mockedRequest.mock.calls[0]?.[1]).toEqual({ email: 'hello@duncit.com' });
+    expect(res).toEqual({ registered: true });
     expect(mockedSetToken).not.toHaveBeenCalled();
+  });
+
+  it('requestPasswordResetOtp defaults an absent registered flag to false (unregistered)', async () => {
+    mockedRequest.mockResolvedValue({
+      requestPasswordResetOtp: { ok: false, dev_otp: null, registered: null },
+    } as never);
+    expect(await requestPasswordResetOtp('ghost@duncit.com')).toEqual({ registered: false });
   });
 
   it('resetPasswordWithOtp maps the input and returns the boolean result', async () => {

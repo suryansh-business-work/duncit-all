@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    globals: true,
+    globals: false,
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.{cy,test,spec}.{ts,tsx}'],
     coverage: {

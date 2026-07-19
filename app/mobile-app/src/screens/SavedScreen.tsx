@@ -83,7 +83,7 @@ export function SavedScreen() {
             pods={pods}
             isLoading={isLoading}
             emptyText="No saved pods yet. Tap the bookmark on a pod to save it."
-            onOpen={(pod) => openPod(pod.id, pod.pod_title)}
+            onOpen={(pod) => openPod(pod.club_slug, pod.pod_id)}
           />
         )}
       </YStack>

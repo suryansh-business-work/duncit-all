@@ -462,7 +462,7 @@ describe('ExploreReels', () => {
     layout();
     expect(screen.getByTestId('reel-p-1')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('reel-go-p-1'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: '1', title: 'Pod 1' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'p-1' });
   });
 
   it('wires the per-reel save/like handlers and item layout', () => {
@@ -548,7 +548,7 @@ describe('ExploreReels', () => {
     renderWithProviders(<ExploreReels />);
     layout();
     fireEvent.press(screen.getByTestId('explore-club-link'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Paws Club' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 's' });
   });
 
   it('opens and closes the likers sheet from a reel (item 8)', () => {
@@ -626,12 +626,12 @@ describe('ExploreReels', () => {
     expect(player.play).toHaveBeenCalled();
   });
 
-  it('falls back to a generic club title when the club is unknown (item 14)', () => {
+  it('opens the club by slug even when it is missing from the map (item 14)', () => {
     mockedExplore.mockReturnValue({ ...base, clubsById: new Map() });
     renderWithProviders(<ExploreReels />);
     layout();
     // The link itself only renders with a name, so exercise the resolver directly.
     screen.UNSAFE_getByType(ExplorePodCard).props.onOpenClub();
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Club' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 's' });
   });
 });

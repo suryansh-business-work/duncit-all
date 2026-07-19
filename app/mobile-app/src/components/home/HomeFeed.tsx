@@ -111,7 +111,7 @@ export function HomeFeed() {
             <Reveal index={3}>
               <HomeFeaturedPods
                 pods={featuredPods}
-                onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+                onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
               />
             </Reveal>
             {isEmpty ? (
@@ -133,8 +133,8 @@ export function HomeFeed() {
                   <ClubSection
                     club={club}
                     pods={pods}
-                    onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
-                    onOpenClub={(c) => openClub(c.id, c.club_name)}
+                    onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                    onOpenClub={(c) => openClub(c.club_id)}
                   />
                 </Reveal>
               ))
@@ -143,7 +143,7 @@ export function HomeFeed() {
               <PreviousPodsRail
                 pods={previousPods}
                 onSeeAll={openPreviousPods}
-                onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+                onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
               />
             </Reveal>
             <Reveal index={6}>

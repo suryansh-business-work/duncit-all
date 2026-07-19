@@ -129,7 +129,7 @@ describe('PodHistoryDetailsScreen actions', () => {
     renderWithProviders(<PodHistoryDetailsScreen />);
 
     fireEvent.press(screen.getByTestId('ph-pod-details'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'pod1', title: 'Sunset Pod' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 'club', podSlug: 'p1' });
 
     fireEvent.press(screen.getByTestId('ph-support'));
     expect(mockNavigate).toHaveBeenCalledWith('SupportTickets', {

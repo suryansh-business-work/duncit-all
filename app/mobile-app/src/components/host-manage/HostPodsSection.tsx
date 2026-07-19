@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
-import { useHostPods, type HostPod } from '@/hooks/useHostPods';
+import { useDetailNav } from '@/hooks/useDetailNav';
+import { useHostPods } from '@/hooks/useHostPods';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   DEFAULT_HOST_PODS_FILTERS,
@@ -12,7 +11,6 @@ import {
   filterHostPods,
   type HostPodsFilters,
 } from '@/utils/host-pods-filters';
-import type { RootStackParamList } from '@/navigation/types';
 import { HostPodRow } from './HostPodRow';
 import { HostPodsFilterSheet } from './HostPodsFilterSheet';
 import { PodDeleteDialog } from './PodDeleteDialog';
@@ -30,7 +28,7 @@ function formatWhen(value?: string | null) {
 /** "Your pods" — every pod this host runs, with a Type/Time/Price filter and the
  * host's self-service Complete/Edit/Delete actions (2). */
 export function HostPodsSection() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openPod } = useDetailNav();
   const { color: ink, onPrimary } = useThemeColors();
   const { pods, isLoading, refetch } = useHostPods();
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
@@ -42,9 +40,6 @@ export function HostPodsSection() {
   const visible = filterHostPods(pods, filters);
   const filterActive = activeHostFilterCount(filters) > 0;
   const filterLabel = filterActive ? `Filter (${activeHostFilterCount(filters)})` : 'Filter';
-
-  const openPod = (pod: HostPod) =>
-    navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
 
   return (
     <YStack gap={12} testID="host-pods-section">
@@ -92,7 +87,7 @@ export function HostPodsSection() {
           when={formatWhen(pod.pod_date_time)}
           zoneName={pod.zone_name}
           typeLabel={pod.pod_type.replaceAll('_', ' ')}
-          onOpen={() => openPod(pod)}
+          onOpen={() => openPod(pod.club_slug, pod.pod_id)}
           onComplete={() =>
             setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id })
           }

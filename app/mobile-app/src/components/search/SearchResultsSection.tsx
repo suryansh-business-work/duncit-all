@@ -11,7 +11,7 @@ interface Props {
   subheading: string;
   results: SearchClubResult[];
   categoryNameOf: (club: SearchClubResult['club']) => string | null;
-  onOpenClub: (clubId: string, title: string) => void;
+  onOpenClub: (clubSlug: string) => void;
   onOpenPod: (pod: SearchPod) => void;
   testID: string;
 }

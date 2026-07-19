@@ -10,6 +10,7 @@ import {
   RejoinConfirmDialog,
 } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
+import { useDetailNav } from '@/hooks/useDetailNav';
 import {
   usePodBackout,
   usePodBackoutDeduction,
@@ -29,6 +30,7 @@ const GENERAL_TERMS_URL = 'https://duncit.com/terms';
  * support), terms links and timeline. RN twin of mWeb's PodHistoryDetailsPage. */
 export function PodHistoryDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openPod } = useDetailNav();
   const route = useRoute<RouteProp<RootStackParamList, 'PodHistoryDetails'>>();
   const membershipId = route.params?.membershipId ?? '';
   const { items, isLoading, error, refetch } = usePodHistory();
@@ -116,13 +118,7 @@ export function PodHistoryDetailsScreen() {
           deductionPct={deductionPct}
           productOrders={productOrders}
           ordersLoading={ordersLoading}
-          onPodDetails={() =>
-            selected.pod?.id &&
-            navigation.navigate('PodDetails', {
-              podId: selected.pod.id,
-              title: selected.pod.pod_title,
-            })
-          }
+          onPodDetails={() => openPod(selected.pod?.club_slug, selected.pod?.pod_id)}
           onBackout={() => setBackoutOpen(true)}
           onRejoin={() => setRejoinOpen(true)}
           onRefundStatus={() => setNotice(`Refund status: ${refundLabel(selected.refund_status)}`)}

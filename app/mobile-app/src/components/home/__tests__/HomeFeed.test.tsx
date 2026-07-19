@@ -80,14 +80,14 @@ describe('HomeFeed', () => {
     expect(screen.getByText('Runners')).toBeOnTheScreen();
 
     fireEvent.press(screen.getByTestId('club-section-cl-1'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Runners' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'cl-1' });
 
     fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[0]);
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-1' });
 
     // The club-section pod row uses its own onOpenPod handler.
     fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[1]);
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-1' });
   });
 
   it('opens the Happening Nearby page from the header title and the See all chip', () => {
@@ -107,7 +107,7 @@ describe('HomeFeed', () => {
     fireEvent.press(screen.getByTestId('previous-pods-see-all'));
     expect(mockNavigate).toHaveBeenCalledWith('PreviousPods');
     fireEvent.press(screen.getByTestId('pod-card-pod-old'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'old', title: 'Old Jam' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-old' });
   });
 
   it('shows the pull-to-refresh spinner while refetching loaded data', () => {

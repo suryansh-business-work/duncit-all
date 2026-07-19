@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack } from 'tamagui';
@@ -7,6 +7,8 @@ import { FeedList } from '@/components/FeedList';
 import { FeedPostCard } from '@/components/following/FeedPostCard';
 import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
 import { TabScreen } from '@/components/TabScreen';
+import { useDetailNav } from '@/hooks/useDetailNav';
+import { useFollowing } from '@/hooks/useFollowing';
 import { useFollowingFeed, type FeedPost, type FeedSource } from '@/hooks/useFollowingFeed';
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
@@ -24,6 +26,8 @@ const EMPTY_TEXT: Record<FeedSource, string> = {
  * mWeb FollowPage parity. */
 export function FollowingScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openClub } = useDetailNav();
+  const { followedClubs } = useFollowing();
   const { data: meData } = useMe();
   const meId = meData?.me?.user_id;
   const [tab, setTab] = useState<FeedSource>('PEOPLE');
@@ -32,9 +36,16 @@ export function FollowingScreen() {
   const feed = tab === 'PEOPLE' ? people : clubs;
   const [viewerPostId, setViewerPostId] = useState<string | null>(null);
 
+  // Feed posts carry the club's doc id, not its slug — resolve it against the
+  // followed clubs so the club link opens the same /club/:clubSlug URL as mWeb.
+  const clubSlugByDocId = useMemo(
+    () => new Map(followedClubs.map((club) => [club.id, club.club_id])),
+    [followedClubs],
+  );
+
   const openAuthor = (post: FeedPost) => {
     if (post.club_id) {
-      navigation.navigate('ClubDetails', { clubId: post.club_id, title: 'Club' });
+      openClub(clubSlugByDocId.get(post.club_id));
     } else {
       navigation.navigate('PublicProfile', { userId: post.author_id });
     }

@@ -23,7 +23,7 @@ interface Props {
   categoryId: string;
   onCategoryChange: (next: string) => void;
   categoryNameOf: (club: SearchClubResult['club']) => string | null;
-  onOpenClub: (clubId: string, title: string) => void;
+  onOpenClub: (clubSlug: string) => void;
   onOpenPod: (pod: SearchPod) => void;
   onShareIdea: () => void;
   onEarn: () => void;

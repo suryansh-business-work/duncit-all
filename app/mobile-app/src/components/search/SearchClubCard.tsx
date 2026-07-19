@@ -15,7 +15,7 @@ type SearchPod = SearchClubResult['upcoming_pods'][number];
 interface Props {
   result: SearchClubResult;
   categoryName: string | null;
-  onOpenClub: (clubId: string, title: string) => void;
+  onOpenClub: (clubSlug: string) => void;
   onOpenPod: (pod: SearchPod) => void;
 }
 
@@ -60,7 +60,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
       <XStack alignItems="center" gap={12}>
         <PressScale
           accessibilityLabel={club.club_name}
-          onPress={() => onOpenClub(club.id, club.club_name)}
+          onPress={() => onOpenClub(club.club_id)}
           style={{ flex: 1, minWidth: 0 }}
         >
           <XStack alignItems="center" gap={12} flex={1} minWidth={0}>

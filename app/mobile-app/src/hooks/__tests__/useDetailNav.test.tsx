@@ -10,27 +10,41 @@ jest.mock('@react-navigation/native', () => ({
 describe('useDetailNav', () => {
   afterEach(() => mockNavigate.mockClear());
 
-  it('navigates to PodDetails with the pod id and title', () => {
+  it('navigates to PodDetails with the slug pair (mWeb URL grammar)', () => {
     const { result } = renderHook(() => useDetailNav());
 
-    result.current.openPod('pod-1', 'Sunrise Run');
+    result.current.openPod('cricket-hub', 'weekend-match');
 
     expect(mockNavigate).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', {
-      podId: 'pod-1',
-      title: 'Sunrise Run',
+      clubSlug: 'cricket-hub',
+      podSlug: 'weekend-match',
     });
   });
 
-  it('navigates to ClubDetails with the club id and title', () => {
+  it('skips pod navigation when either slug is missing (never /club/undefined)', () => {
     const { result } = renderHook(() => useDetailNav());
 
-    result.current.openClub('club-9', 'Runners');
+    result.current.openPod(undefined, 'weekend-match');
+    result.current.openPod('cricket-hub', null);
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('navigates to ClubDetails with the club slug', () => {
+    const { result } = renderHook(() => useDetailNav());
+
+    result.current.openClub('runners-club');
 
     expect(mockNavigate).toHaveBeenCalledTimes(1);
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', {
-      clubId: 'club-9',
-      title: 'Runners',
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'runners-club' });
+  });
+
+  it('skips club navigation without a slug', () => {
+    const { result } = renderHook(() => useDetailNav());
+
+    result.current.openClub(undefined);
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

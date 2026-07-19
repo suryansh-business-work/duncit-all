@@ -93,7 +93,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
 
   const openTarget = (target: StoryTarget) => {
     setActiveIndex(null);
-    if (target.kind === 'club') openClub(target.id, target.title);
+    if (target.kind === 'club') openClub(target.clubSlug);
     else navigation.navigate('PublicProfile', { userId: target.id });
   };
 

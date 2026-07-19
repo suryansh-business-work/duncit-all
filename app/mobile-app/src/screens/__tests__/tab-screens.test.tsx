@@ -4,6 +4,7 @@ import { ChatsScreen } from '@/screens/ChatsScreen';
 import { ClubsScreen } from '@/screens/ClubsScreen';
 import { FollowingScreen } from '@/screens/FollowingScreen';
 import { useChatRooms } from '@/hooks/useChat';
+import { useFollowing } from '@/hooks/useFollowing';
 import { useFollowingFeed } from '@/hooks/useFollowingFeed';
 import { useHomeData } from '@/hooks/useHomeFeed';
 import { useLocations } from '@/hooks/useLocations';
@@ -14,6 +15,7 @@ jest.mock('@/components/home/ClubsLocationNote', () => ({ ClubsLocationNote: () 
 jest.mock('@/components/LocationDialog', () => ({ LocationDialog: () => null }));
 jest.mock('@/hooks/useHomeFeed');
 jest.mock('@/hooks/useFollowingFeed', () => ({ useFollowingFeed: jest.fn() }));
+jest.mock('@/hooks/useFollowing', () => ({ useFollowing: jest.fn() }));
 jest.mock('@/hooks/useChat');
 jest.mock('@/hooks/useLocations', () => ({ useLocations: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({
@@ -35,6 +37,7 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockedHomeData = useHomeData as jest.Mock;
 const mockedFeed = useFollowingFeed as jest.Mock;
+const mockedFollowing = useFollowing as jest.Mock;
 const mockedChatRooms = useChatRooms as jest.Mock;
 const mockedLocations = useLocations as jest.Mock;
 
@@ -85,6 +88,8 @@ beforeEach(() => {
     refetch: jest.fn(),
   });
   mockedFeed.mockImplementation(() => emptyFeed());
+  // The Clubs feed resolves a post's club doc id → slug via the followed clubs.
+  mockedFollowing.mockReturnValue({ followedClubs: [{ id: 'c9', club_id: 'club-nine' }] });
   mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
   mockedLocations.mockReturnValue({ selectedId: '', cityLabel: '', zoneName: '' });
 });
@@ -101,7 +106,7 @@ describe('ClubsScreen', () => {
     renderWithProviders(<ClubsScreen />);
     expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('club-card-cl-1'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: '1', title: 'Club 1' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'cl-1' });
   });
 
   it('filters clubs by search query and category, then shows an empty message', () => {
@@ -232,7 +237,7 @@ describe('FollowingScreen', () => {
     renderWithProviders(<FollowingScreen />);
     fireEvent.press(screen.getByTestId('following-tab-clubs'));
     fireEvent.press(screen.getByTestId('feed-author-p2'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c9', title: 'Club' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'club-nine' });
   });
 
   it('comment press opens the post viewer; onDeleted refetches and closes', () => {

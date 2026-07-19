@@ -9,6 +9,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { DetailSkeleton } from '@/components/Skeleton';
+import { useDetailNav } from '@/hooks/useDetailNav';
 import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { RootStackParamList } from '@/navigation/types';
@@ -30,6 +31,7 @@ export function ClubDetailsScreen() {
     busy: followBusy,
     toggle: toggleFollow,
   } = useClubFollow(clubId, followingInitially);
+  const { openPod } = useDetailNav();
 
   const handleShare = async () => {
     /* istanbul ignore next */
@@ -53,9 +55,7 @@ export function ClubDetailsScreen() {
           following={following}
           followBusy={followBusy}
           onToggleFollow={() => void toggleFollow()}
-          onOpenPod={(pod) =>
-            navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
-          }
+          onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
           onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
           onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
         />

@@ -6,18 +6,16 @@ import {
   type LayoutChangeEvent,
   type ViewToken,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, YStack } from 'tamagui';
 
 import { DetailSkeleton } from '@/components/Skeleton';
 import { ExploreAdCard } from '@/components/ads/ExploreAdCard';
 import { interleaveAds, isAdEntry } from '@/components/ads/interleaveAds';
 import { useActiveAds } from '@/hooks/useActiveAds';
+import { useDetailNav } from '@/hooks/useDetailNav';
 import { useExplore } from '@/hooks/useExplore';
 import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
-import type { RootStackParamList } from '@/navigation/types';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { LikesListSheet } from '@/components/explore/LikesListSheet';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
@@ -32,7 +30,7 @@ export function ExploreReels() {
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openPod: navOpenPod, openClub: navOpenClub } = useDetailNav();
   const {
     pods,
     clubsById,
@@ -60,13 +58,10 @@ export function ExploreReels() {
     const index = viewableItems[0]?.index;
     if (index != null) setActiveIndex(index);
   }).current;
-  const openPod = (pod: ExplorePod) =>
-    navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
-  const openClub = (pod: ExplorePod) =>
-    navigation.navigate('ClubDetails', {
-      clubId: pod.club_id,
-      title: clubsById.get(pod.club_id)?.club_name ?? 'Club',
-    });
+  // Slug-based nav (mirrors mWeb's /club/:clubSlug/pod/:podSlug); the pod carries
+  // its parent club's slug, so opening the club needs no clubsById lookup.
+  const openPod = (pod: ExplorePod) => navOpenPod(pod.club_slug, pod.pod_id);
+  const openClub = (pod: ExplorePod) => navOpenClub(pod.club_slug);
   // Pull-to-refresh: reload the feed without duplicate entries (item 12).
   const onRefresh = async () => {
     setRefreshing(true);

@@ -43,8 +43,8 @@ describe('VenuePodsSection', () => {
     expect(mockRequest).toHaveBeenCalledWith(expect.anything(), { venueId: 'v1' }, { auth: true });
     fireEvent.press(screen.getByText('Evening Match'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', {
-      podId: 'p1',
-      title: 'Evening Match',
+      clubSlug: 'club-1',
+      podSlug: 'POD-1',
     });
   });
 

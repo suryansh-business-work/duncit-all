@@ -50,11 +50,12 @@ export type RootStackParamList = {
   SupportTickets: { podId?: string; podTitle?: string } | undefined;
   Policy: { slug: string };
   ChatRoom: { podId: string; title: string };
-  // podId (doc id) for in-app navigation; clubSlug + podSlug when opened from a
-  // shared mWeb deep link (/club/:clubSlug/pod/:podSlug), resolved via podBySlugs.
+  // Always the slug pair (/club/:clubSlug/pod/:podSlug) — both in-app taps and
+  // shared mWeb deep links — so the web URL matches mWeb exactly; resolved to a
+  // doc id via podBySlugs. podId/title stay for back-compat with older links.
   PodDetails: { podId?: string; clubSlug?: string; podSlug?: string; title?: string };
-  // clubId (doc id) for in-app navigation; clubSlug from a shared /club/:clubSlug
-  // deep link, resolved via clubBySlug.
+  // Always the club slug (/club/:clubSlug) — in-app taps and shared deep links —
+  // resolved to a doc id via clubBySlug. clubId/title stay for back-compat.
   ClubDetails: { clubId?: string; clubSlug?: string; title?: string };
   PreviousPods: undefined;
   HappeningNearby: undefined;

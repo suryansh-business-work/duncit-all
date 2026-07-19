@@ -18,6 +18,7 @@ import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
+import { useDetailNav } from '@/hooks/useDetailNav';
 import { usePodActions, usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
@@ -59,6 +60,7 @@ export function PodDetailsScreen() {
   );
   const showProducts = useFeatureFlag('is_product_visible');
   const finance = usePublicFinance();
+  const { openClub } = useDetailNav();
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
@@ -169,9 +171,7 @@ export function PodDetailsScreen() {
             isFree={isFree}
             gstPct={finance.gstPct}
             currency={finance.currency}
-            onOpenClub={() =>
-              navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
-            }
+            onOpenClub={() => openClub(pod.club_slug)}
             onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
           />
         </Reveal>

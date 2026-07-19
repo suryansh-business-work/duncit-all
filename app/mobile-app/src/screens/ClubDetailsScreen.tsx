@@ -9,7 +9,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { DetailSkeleton } from '@/components/Skeleton';
-import { useClubDetails } from '@/hooks/useDetails';
+import { useClubDetails, useResolvedClubId } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -21,7 +21,8 @@ export function ClubDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
-  const { clubId } = route.params;
+  // Doc id from in-app nav, or resolved from a shared /club/:clubSlug link.
+  const clubId = useResolvedClubId(route.params);
   const { club, pods, members, followingUserIds, categoryCrumbs, isLoading, followingInitially } =
     useClubDetails(clubId);
   const {

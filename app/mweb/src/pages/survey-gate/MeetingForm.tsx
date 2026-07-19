@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import SlotPicker from './SlotPicker';
@@ -35,6 +36,7 @@ interface Props {
 /** Final gate step: pick an open onboarding slot (booked ones — including the
  * user's own bookings in other onboarding flows — are disabled). */
 export default function MeetingForm({ kind, submitting, error: submitError, onSubmit }: Readonly<Props>) {
+  const navigate = useNavigate();
   const { data, loading, error } = useQuery<{ meetingSlots: MeetingSlot[] }>(MEETING_SLOTS, {
     variables: { kind },
     fetchPolicy: 'network-only',
@@ -51,6 +53,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
   const me = meData?.me;
   const contactExt = me?.phone_extension?.trim() || '';
   const contactPhone = me?.phone_number?.trim() || '';
+  const phoneMissing = !!me && !contactPhone;
   useEffect(() => {
     if (me?.full_name) setName(me.full_name);
     // Prefill the name once when the profile lands.
@@ -61,7 +64,9 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
 
   const submit = () => {
     if (!slot) { setFormError('Pick an available slot.'); return; }
-    if (!contactPhone) { setFormError('Add a phone number to your profile so our team can reach you.'); return; }
+    // Phone is required. The phone-missing notice below already shows the Go To
+    // Profile CTA, so just block the submission here.
+    if (!contactPhone) { setFormError(null); return; }
     setFormError(null);
     onSubmit({
       requested_at: slot,
@@ -116,6 +121,18 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         />
       </Stack>
       <TextField size="small" label="Anything we should know? (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
+      {phoneMissing && (
+        <Alert
+          severity="warning"
+          action={
+            <Button color="inherit" size="small" onClick={() => navigate('/account')} sx={{ fontWeight: 800 }}>
+              Go To Profile
+            </Button>
+          }
+        >
+          Phone number is required so our team can reach you. Please add your Phone number from Profile to proceed.
+        </Alert>
+      )}
       {(formError || submitError) && <Alert severity="warning">{formError ?? submitError}</Alert>}
       <Button variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 900 }}>
         {submitting ? 'Booking…' : 'Book this slot'}

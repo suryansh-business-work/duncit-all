@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.4.19",
+  "version": "1.4.20",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -37,8 +37,8 @@
   "dependencies": {
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
     "@duncit/geo": "file:../../packages/geo",
-    "@duncit/regex": "file:../../packages/regex",
     "@duncit/logs": "file:../../packages/logs",
+    "@duncit/regex": "file:../../packages/regex",
     "@expo/vector-icons": "^15.0.3",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@hookform/resolvers": "^3.9.1",
@@ -80,6 +80,7 @@
     "react-hook-form": "^7.54.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
+    "react-native-gifted-charts": "^1.4.77",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",

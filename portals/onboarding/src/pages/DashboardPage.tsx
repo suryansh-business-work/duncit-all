@@ -115,7 +115,10 @@ export default function DashboardPage() {
         <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>
           Meeting schedule
         </Typography>
-        <MeetingScheduleStrip counts={meetingCounts} onOpen={() => navigate('/meetings/calendar')} />
+        <MeetingScheduleStrip
+          counts={meetingCounts}
+          onOpen={(kind) => navigate(`/meetings/${kind.toLowerCase()}?status=REQUESTED`)}
+        />
       </Box>
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' } }}>

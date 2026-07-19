@@ -4,6 +4,7 @@ import {
   blankBankAccount,
   type IBankAccountVerification,
 } from '@modules/finance/finance/bankAccount';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 export type HostStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -18,6 +19,8 @@ export interface IHostCategory {
 }
 
 export interface IHost extends Document {
+  /** Permanent human id (HOST-000001) shown in the Onboarded Hosts table. */
+  host_no: string | null;
   user_id: Types.ObjectId;
   // Step 1: Personal
   full_name: string;
@@ -63,6 +66,7 @@ const hostCategorySchema = new Schema<IHostCategory>(
 
 const hostSchema = new Schema<IHost>(
   {
+    host_no: { type: String, default: null, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
     full_name: { type: String, default: '' },
     email: { type: String, default: '' },
@@ -86,5 +90,11 @@ const hostSchema = new Schema<IHost>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Assign a permanent human id on creation (unique, sequential) — surfaced in the
+// Onboarded Hosts table for tracking / search / reporting.
+hostSchema.pre('save', async function assignHostNo(this: IHost) {
+  if (this.isNew && !this.host_no) this.host_no = await nextEntityNo('HOST', 'host');
+});
 
 export const HostModel = model<IHost>('Host', hostSchema);

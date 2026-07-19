@@ -49,6 +49,8 @@ export const ecommBrandTypeDefs = gql`
     upi_id: String!
     documents: [EcommBrandDocument!]!
     tags: [String!]!
+    "Permanent human id (BRD-000001) — Onboarded Brands table."
+    brand_no: String
     status: EcommBrandStatus!
     is_active: Boolean!
     reviewer_notes: String!

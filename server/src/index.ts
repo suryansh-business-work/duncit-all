@@ -3,6 +3,7 @@ import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPO
 import { logs, ingestRemoteLog } from './observability/log';
 import { buildStatusProbeRouter } from './observability/statusProbe';
 import { startStatusScheduler } from './observability/statusScheduler';
+import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
 import http from 'node:http';
@@ -105,6 +106,9 @@ async function bootstrap() {
   if (process.env.NODE_ENV !== 'test' && process.env.STATUS_PROBES_DISABLED !== '1') {
     startStatusScheduler();
   }
+
+  // Draft-pod retention: delete drafts past the admin-configured window daily.
+  startPodDraftCleanupScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);

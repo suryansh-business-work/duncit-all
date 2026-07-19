@@ -4,6 +4,7 @@ import {
   blankBankAccount,
   type IBankAccountVerification,
 } from '@modules/finance/finance/bankAccount';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -73,6 +74,8 @@ export interface IVenueSettings {
 }
 
 export interface IVenue extends Document {
+  /** Permanent human id (VEN-000001) shown in the Onboarded Venues table. */
+  venue_no: string | null;
   owner_user_id: Types.ObjectId;
   // Step 1: Venue details
   venue_name: string;
@@ -206,6 +209,7 @@ const venueSettingsSchema = new Schema<IVenueSettings>(
 
 const venueSchema = new Schema<IVenue>(
   {
+    venue_no: { type: String, default: null, index: true },
     owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     venue_name: { type: String, default: '' },
     venue_type: { type: String, default: '' },
@@ -253,5 +257,11 @@ const venueSchema = new Schema<IVenue>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Assign a permanent human id on creation (unique, sequential) — surfaced in the
+// Onboarded Venues table for tracking / search / reporting.
+venueSchema.pre('save', async function assignVenueNo(this: IVenue) {
+  if (this.isNew && !this.venue_no) this.venue_no = await nextEntityNo('VEN', 'venue');
+});
 
 export const VenueModel = model<IVenue>('Venue', venueSchema);

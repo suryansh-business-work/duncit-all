@@ -49,10 +49,8 @@ export default function VenueReviewDialog({
   onSaveDeductions,
   savingDeductions,
 }: Readonly<Props>) {
-  const [share, setShare] = useState('0');
   const [commission, setCommission] = useState('0');
   useEffect(() => {
-    setShare(String(active?.venue_share_pct ?? 0));
     setCommission(String(active?.venue_commission_pct ?? 0));
   }, [active]);
 
@@ -61,7 +59,9 @@ export default function VenueReviewDialog({
     return Number.isFinite(n) && n >= 0 && n <= 100;
   };
   const saveDeductions = () => {
-    if (valid(share) && valid(commission)) onSaveDeductions(Number(share), Number(commission));
+    // Venue share is no longer edited here — keep whatever the venue already has
+    // and only override the per-venue commission (the default-deduction override).
+    if (valid(commission)) onSaveDeductions(Number(active?.venue_share_pct ?? 0), Number(commission));
   };
 
   const documents = active?.documents ?? [];
@@ -157,21 +157,10 @@ export default function VenueReviewDialog({
               Venue deductions
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              The venue&apos;s share, and the commission Duncit takes from the venue payout (after GST). Leave
-              at 0 to use the global Default Deductions.
+              The commission Duncit takes from the venue payout (after GST) — an override of the global
+              Default Deduction for this venue only. Leave at 0 to use the global default.
             </Typography>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 1.5 }}>
-              <TextField
-                label="Venue share"
-                type="number"
-                size="small"
-                value={share}
-                onChange={(e) => setShare(e.target.value)}
-                error={!valid(share)}
-                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Venue share percentage' }}
-                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-                fullWidth
-              />
               <TextField
                 label="Commission from venue"
                 type="number"
@@ -188,7 +177,7 @@ export default function VenueReviewDialog({
               variant="outlined"
               size="small"
               onClick={saveDeductions}
-              disabled={savingDeductions || !valid(share) || !valid(commission)}
+              disabled={savingDeductions || !valid(commission)}
               sx={{ mt: 1.5 }}
             >
               {savingDeductions ? 'Saving…' : 'Save deductions'}

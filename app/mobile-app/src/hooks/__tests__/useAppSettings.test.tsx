@@ -15,14 +15,21 @@ beforeEach(() => {
 describe('useAppSettings', () => {
   it('serves fallbacks until the server formats arrive, then the admin values', async () => {
     mockRequest.mockResolvedValue({
-      publicAppSettings: { date_format: 'yyyy/MM/dd', time_format: 'HH:mm', time_zone: 'UTC' },
+      publicAppSettings: {
+        date_format: 'yyyy/MM/dd',
+        time_format: 'HH:mm',
+        time_zone: 'UTC',
+        draft_retention_days: 5,
+      },
     });
     const { result } = renderHook(() => useAppSettings());
     expect(result.current.dateFormat).toBe('dd MMM yyyy');
     expect(result.current.timeZone).toBe('Asia/Kolkata');
+    expect(result.current.draftRetentionDays).toBe(3);
     await waitFor(() => expect(result.current.dateFormat).toBe('yyyy/MM/dd'));
     expect(result.current.timeFormat).toBe('HH:mm');
     expect(result.current.timeZone).toBe('UTC');
+    expect(result.current.draftRetentionDays).toBe(5);
   });
 
   it('keeps the fallbacks when the server returns blanks', async () => {

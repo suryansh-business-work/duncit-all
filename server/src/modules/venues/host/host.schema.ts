@@ -32,6 +32,8 @@ export const hostTypeDefs = /* GraphQL */ `
     tags: [String!]!
     host_categories: [HostCategory!]!
     step_completed: Int!
+    "Permanent human id (HOST-000001) — Onboarded Hosts table."
+    host_no: String
     status: HostStatus!
     is_active: Boolean!
     reviewer_notes: String!

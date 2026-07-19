@@ -3,8 +3,10 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   AddPodCommentDocument,
+  ClubBySlugDocument,
   ClubDetailsDocument,
   DeletePodCommentDocument,
+  PodBySlugsDocument,
   PodCommentsDocument,
   PodDetailsDocument,
   PodPeopleDocument,
@@ -24,6 +26,53 @@ export type PodPerson = ResultOf<typeof PodPeopleDocument>['publicUsersByIds'][n
 type ClubDetailsResult = ResultOf<typeof ClubDetailsDocument>;
 export type ClubDetail = NonNullable<ClubDetailsResult['club']>;
 export type ClubPod = ClubDetailsResult['pods'][number];
+
+/** Resolve a pod's doc id: use the id from in-app navigation, else resolve the
+ * shared (mWeb) slug URL (/club/:clubSlug/pod/:podSlug) via podBySlugs so a
+ * shared link opens the right pod. Returns '' until resolved. */
+export function useResolvedPodId(params: {
+  podId?: string;
+  clubSlug?: string;
+  podSlug?: string;
+}): string {
+  const { podId, clubSlug, podSlug } = params;
+  const [resolved, setResolved] = useState(podId ?? '');
+  useEffect(() => {
+    if (podId || !clubSlug || !podSlug) {
+      setResolved(podId ?? '');
+      return;
+    }
+    let active = true;
+    graphqlRequest(PodBySlugsDocument, { clubSlug, podSlug }, { auth: true })
+      .then((r) => active && setResolved(r.podBySlugs?.id ?? ''))
+      .catch(() => active && setResolved(''));
+    return () => {
+      active = false;
+    };
+  }, [podId, clubSlug, podSlug]);
+  return resolved;
+}
+
+/** Resolve a club's doc id: use the id from in-app navigation, else resolve the
+ * shared (mWeb) slug URL (/club/:clubSlug) via clubBySlug. Returns '' until resolved. */
+export function useResolvedClubId(params: { clubId?: string; clubSlug?: string }): string {
+  const { clubId, clubSlug } = params;
+  const [resolved, setResolved] = useState(clubId ?? '');
+  useEffect(() => {
+    if (clubId || !clubSlug) {
+      setResolved(clubId ?? '');
+      return;
+    }
+    let active = true;
+    graphqlRequest(ClubBySlugDocument, { clubSlug }, { auth: true })
+      .then((r) => active && setResolved(r.clubBySlug?.id ?? ''))
+      .catch(() => active && setResolved(''));
+    return () => {
+      active = false;
+    };
+  }, [clubId, clubSlug]);
+  return resolved;
+}
 
 /** Fetches a single pod (auth) plus the venue/location it resolves to (for the
  * map + "Where") and the viewer id (for comments). Saved set rides along too. */

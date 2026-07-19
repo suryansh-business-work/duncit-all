@@ -21,6 +21,7 @@ export const PublicAppSettingsDocument = gql(`
       time_zone
       min_birth_year
       max_birth_year
+      draft_retention_days
     }
   }
 `);

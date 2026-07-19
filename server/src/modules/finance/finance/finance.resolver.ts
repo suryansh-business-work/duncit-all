@@ -169,6 +169,10 @@ export const financeResolvers = {
       const user = requireAuth(ctx);
       return breakdownService.hostEarningsSummary(user.id);
     },
+    hostInsights: async (_p: unknown, args: { months?: number | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return breakdownService.hostInsights(user.id, args.months ?? 12);
+    },
     myVenueEarningsSummary: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return breakdownService.venueEarningsSummary(user.id);

@@ -62,6 +62,12 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
 
   useEffect(() => {
     if (!venue) return;
+    // Pre-fill categories from the venue's own taxonomy; when it has none, fall
+    // back to what the owner picked in the venue onboarding survey (item 1).
+    const ownCategory = hydrateCategory(venue.venue_category);
+    const seededCategory = isCompleteCategory(ownCategory)
+      ? ownCategory
+      : hydrateCategory(venue.survey_category);
     setS1({
       venue_name: venue.venue_name ?? '',
       venue_type: venue.venue_type ?? 'Cafe',
@@ -82,7 +88,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
       state_code: venue.state_code ?? '',
       locality: venue.locality ?? '',
       postal_code: venue.postal_code ?? '',
-      venue_category: hydrateCategory(venue.venue_category),
+      venue_category: seededCategory,
       tags: venue.tags ?? [],
     });
     setDocs((venue.documents ?? []).map((doc: any) => ({ type: doc.type, url: doc.url })));

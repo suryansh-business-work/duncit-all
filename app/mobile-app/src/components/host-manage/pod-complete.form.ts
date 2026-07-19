@@ -38,7 +38,7 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
     .object({
       venue_bill_amount: z.string().trim(),
       bill_url: z.string().trim(),
-      media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video URL'),
+      media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video'),
     })
     .superRefine((values, ctx) => {
       if (!hasVenue) return;
@@ -54,7 +54,7 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['bill_url'],
-          message: 'Add the venue bill upload URL',
+          message: 'Upload the venue bill',
         });
       }
     });

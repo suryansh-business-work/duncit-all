@@ -122,6 +122,21 @@ export function useOnboardingFlow(kind: SurveyKind) {
 
   const goToCategory = () => setPhase('category');
 
+  /** Step back one phase (meeting → survey/category, survey → category),
+   * preserving the survey answers + category scope (the draft effect keeps
+   * them). Returns false at the first phase so the caller can leave the flow. */
+  const stepBack = (): boolean => {
+    if (phase === 'meeting') {
+      setPhase(survey ? 'survey' : 'category');
+      return true;
+    }
+    if (phase === 'survey') {
+      setPhase('category');
+      return true;
+    }
+    return false;
+  };
+
   const chooseCategory = async (chosen: Scope, chosenLabels: CategoryLabels) => {
     setError(null);
     setBusy(true);
@@ -248,6 +263,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
     busy,
     error,
     goToCategory,
+    stepBack,
     chooseCategory,
     submitSurvey,
     submitMeeting,

@@ -11,6 +11,7 @@ let mockLiked = false;
 let mockLikeCount = 3;
 jest.mock('@/hooks/useDetails', () => ({
   usePodDetails: jest.fn(),
+  useResolvedPodId: (p: { podId?: string }) => p?.podId ?? '',
   usePodActions: () => ({
     liked: mockLiked,
     likeCount: mockLikeCount,

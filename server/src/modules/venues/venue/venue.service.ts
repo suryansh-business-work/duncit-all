@@ -169,6 +169,7 @@ const toVenueCategoryPub = (c?: IVenue['venue_category'] | null) => ({
 
 const toPub = (v: IVenue) => ({
   id: String(v._id),
+  venue_no: v.venue_no ?? null,
   owner_user_id: String(v.owner_user_id),
   venue_name: v.venue_name ?? '',
   venue_type: v.venue_type ?? '',
@@ -227,7 +228,7 @@ const toPub = (v: IVenue) => ({
 /** Shared allowlists for the table engine (venuesTable / myVenuesTable —
  * DUNCIT TABLE CONTRACT v1). Only defaultSort differs per query. */
 const VENUE_TABLE_FIELDS: Omit<TableEntityConfig, 'defaultSort'> = {
-  searchFields: ['venue_name', 'venue_type', 'city', 'locality', 'owner_name', 'owner_email'],
+  searchFields: ['venue_no', 'venue_name', 'venue_type', 'city', 'locality', 'owner_name', 'owner_email'],
   sortFields: {
     venue_name: 'venue_name',
     venue_type: 'venue_type',

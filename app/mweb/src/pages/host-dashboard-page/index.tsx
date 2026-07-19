@@ -2,10 +2,10 @@ import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
-import SimpleBarChart, { buildMonthlyCounts } from '../../components/SimpleBarChart';
 import HealthMeter, { type HealthBand } from '../../components/health/HealthMeter';
 import EarningsCard from './EarningsCard';
 import QuickActions from './QuickActions';
+import HostInsights from './HostInsights';
 import { HOST_DASHBOARD_ME, HOST_DASHBOARD_PODS } from './queries';
 
 const bandHint = (band?: HealthBand) => {
@@ -89,14 +89,7 @@ export default function HostDashboardPage() {
 
       <QuickActions />
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
-        <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
-            Pods by month
-          </Typography>
-          <SimpleBarChart data={buildMonthlyCounts(pods.map((p: any) => p.pod_date_time))} />
-        </CardContent>
-      </Card>
+      <HostInsights pods={pods} currency={wallet?.currency_symbol ?? '₹'} />
 
       {health && (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>

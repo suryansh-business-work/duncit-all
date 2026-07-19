@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
-  Box,
+  Badge,
   Card,
   CardContent,
   Chip,
@@ -14,19 +13,18 @@ import {
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import HostPodRow from './HostPodRow';
+import HostPodsFilterSheet from './HostPodsFilterSheet';
+import {
+  DEFAULT_HOST_PODS_FILTERS,
+  activeHostFilterCount,
+  filterHostPods,
+  type HostPodsFilters,
+} from './hostPodsFilters';
 import { PodEditForm, type HostPodSummary } from './pod-edit';
 import { PodDeleteForm } from './pod-delete';
 import { PodCompleteForm, type HostPodForComplete } from './pod-complete';
-
-function formatDate(value?: string | null) {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString();
-}
 
 interface HostPodsCardProps {
   pods: any[];
@@ -35,67 +33,8 @@ interface HostPodsCardProps {
   onChanged: () => void;
 }
 
-/** One hosted pod row — link to the pod + the host's Complete/Edit/Delete actions. */
-function HostPodRow({
-  pod,
-  onComplete,
-  onEdit,
-  onDelete,
-}: Readonly<{ pod: any; onComplete: () => void; onEdit: () => void; onDelete: () => void }>) {
-  return (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={0.5}
-      sx={{
-        p: 1.25,
-        borderRadius: 3,
-        border: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-        transition: 'all 160ms ease',
-        '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-      }}
-    >
-      <Box
-        component={RouterLink}
-        to={pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : '#'}
-        sx={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
-      >
-        <Typography variant="subtitle2" fontWeight={700} noWrap>
-          {pod.pod_title}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" noWrap display="block">
-          {formatDate(pod.pod_date_time)}
-          {pod.zone_name ? ` · ${pod.zone_name}` : ''}
-        </Typography>
-      </Box>
-      <Chip
-        size="small"
-        label={pod.pod_type?.replace(/_/g, ' ')}
-        color={pod.pod_type?.includes('FREE') ? 'success' : 'primary'}
-        variant="outlined"
-      />
-      <Tooltip title="Complete pod">
-        <IconButton size="small" color="success" aria-label="Complete pod" onClick={onComplete}>
-          <TaskAltIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Edit pod">
-        <IconButton size="small" aria-label="Edit pod" onClick={onEdit}>
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-      <Tooltip title="Delete pod">
-        <IconButton size="small" color="error" aria-label="Delete pod" onClick={onDelete}>
-          <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
-    </Stack>
-  );
-}
-
-/** "Your pods" — every pod this host runs, with self-service Edit + Delete (2). */
+/** "Your pods" — every pod this host runs, with a Type/Time/Price filter and the
+ * host's self-service Complete/Edit/Delete actions (2). */
 export default function HostPodsCard({
   pods,
   loading,
@@ -105,6 +44,11 @@ export default function HostPodsCard({
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
   const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
+  const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
+
+  const visible = filterHostPods(pods, filters);
+  const activeCount = activeHostFilterCount(filters);
 
   let body;
   if (loading) {
@@ -119,10 +63,12 @@ export default function HostPodsCard({
     body = (
       <Alert severity="info">You don't host any pods yet. New pods you host will show up here.</Alert>
     );
+  } else if (visible.length === 0) {
+    body = <Alert severity="info">No pods match these filters. Try adjusting or resetting them.</Alert>;
   } else {
     body = (
       <Stack spacing={1}>
-        {pods.map((p: any) => (
+        {visible.map((p: any) => (
           <HostPodRow
             key={p.id}
             pod={p}
@@ -143,11 +89,27 @@ export default function HostPodsCard({
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
             Your pods
           </Typography>
-          <Chip size="small" label={pods.length} />
+          <Tooltip title="Filter pods">
+            <IconButton size="small" aria-label="Filter pods" onClick={() => setFilterOpen(true)}>
+              <Badge badgeContent={activeCount} color="primary">
+                <FilterListIcon fontSize="small" />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+          <Chip size="small" label={visible.length} />
         </Stack>
         <Divider sx={{ mb: 1.5 }} />
         {body}
       </CardContent>
+      <HostPodsFilterSheet
+        open={filterOpen}
+        initial={filters}
+        onApply={(next) => {
+          setFilters(next);
+          setFilterOpen(false);
+        }}
+        onClose={() => setFilterOpen(false)}
+      />
       <PodEditForm
         pod={editPod}
         onClose={() => setEditPod(null)}

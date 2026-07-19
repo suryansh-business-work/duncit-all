@@ -46,10 +46,13 @@ const renderOwner = (b: EcommBrandRow) => (
 
 const renderStatus = (b: EcommBrandRow) => <Chip size="small" label={b.status} />;
 
-const activeValue = (b: EcommBrandRow) => (b.is_active === false ? 'Inactive' : 'Active');
+// Active only reflects a live, Approved brand — Draft/Submitted/Rejected all
+// read as Inactive regardless of the is_active flag.
+const isActiveBrand = (b: EcommBrandRow) => b.status === 'APPROVED' && b.is_active !== false;
+const activeValue = (b: EcommBrandRow) => (isActiveBrand(b) ? 'Active' : 'Inactive');
 
 const renderActive = (b: EcommBrandRow) => (
-  <Chip size="small" variant="outlined" color={b.is_active === false ? 'default' : 'success'} label={activeValue(b)} />
+  <Chip size="small" variant="outlined" color={isActiveBrand(b) ? 'success' : 'default'} label={activeValue(b)} />
 );
 
 const renderCommission = (b: EcommBrandRow) => (
@@ -87,6 +90,13 @@ export default function EcommBrandsTable({
       </>
     );
     return [
+      {
+        field: 'brand_no',
+        headerName: 'Brand ID',
+        width: 130,
+        sortable: false,
+        valueGetter: (b) => b.brand_no || '—',
+      },
       {
         field: 'brand_name',
         headerName: 'Brand',

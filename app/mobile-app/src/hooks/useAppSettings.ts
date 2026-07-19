@@ -7,6 +7,7 @@ const FALLBACK_TIME = 'hh:mm a';
 const FALLBACK_ZONE = 'Asia/Kolkata';
 const FALLBACK_MIN_BIRTH_YEAR = 1940;
 const FALLBACK_MAX_BIRTH_YEAR = 2012;
+const FALLBACK_DRAFT_RETENTION_DAYS = 3;
 
 /** Admin-configured date/time display formats + IANA time zone with safe
  * fallbacks — the RN twin of mWeb's useDateFormat (rule 11). */
@@ -24,5 +25,7 @@ export function useAppSettings() {
     timeZone: data?.publicAppSettings?.time_zone || FALLBACK_ZONE,
     minBirthYear: data?.publicAppSettings?.min_birth_year ?? FALLBACK_MIN_BIRTH_YEAR,
     maxBirthYear: data?.publicAppSettings?.max_birth_year ?? FALLBACK_MAX_BIRTH_YEAR,
+    draftRetentionDays:
+      data?.publicAppSettings?.draft_retention_days ?? FALLBACK_DRAFT_RETENTION_DAYS,
   };
 }

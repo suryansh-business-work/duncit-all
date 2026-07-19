@@ -60,5 +60,5 @@ export function useHostDashboard() {
     paid: pods.filter((p) => !p.pod_type?.includes('FREE')).length,
   };
 
-  return { me, wallet, earnings, health, stats, isLoading, error };
+  return { me, wallet, earnings, health, stats, pods, isLoading, error };
 }

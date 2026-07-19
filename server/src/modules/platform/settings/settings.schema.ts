@@ -12,6 +12,8 @@ export const settingsTypeDefs = gql`
     min_birth_year: Int!
     "Latest allowed signup birth year (inclusive)."
     max_birth_year: Int!
+    "Days a Create-Pod draft is kept (from last save) before auto-deletion."
+    draft_retention_days: Int!
     updated_at: String
   }
 
@@ -22,6 +24,8 @@ export const settingsTypeDefs = gql`
     time_zone: String!
     min_birth_year: Int!
     max_birth_year: Int!
+    "Days a Create-Pod draft is kept (from last save) before auto-deletion."
+    draft_retention_days: Int!
   }
 
   type PublicClientConfig {
@@ -37,6 +41,8 @@ export const settingsTypeDefs = gql`
     time_zone: String
     min_birth_year: Int
     max_birth_year: Int
+    "Days a Create-Pod draft is kept before auto-deletion (min 1)."
+    draft_retention_days: Int
   }
 
   type FeatureFlag {

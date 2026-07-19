@@ -124,6 +124,8 @@ export const venueTypeDefs = /* GraphQL */ `
     capacity: Int!
     capacity_items: [VenueCapacityItem!]!
     venue_category: VenueCategory!
+    "Super/Category/Sub the owner picked in the venue onboarding survey (from their OnboardingMeeting). Pre-fills Edit Venue when the venue has none; null when there is no survey scope."
+    survey_category: VenueCategory
     description: String!
     amenities: [String!]!
     facilities: [String!]!
@@ -156,6 +158,8 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_commission_pct: Float!
     settings: VenueSettings!
     step_completed: Int!
+    "Permanent human id (VEN-000001) — Onboarded Venues table."
+    venue_no: String
     status: VenueStatus!
     is_active: Boolean!
     "Count of live (non-deleted) pods hosted at this venue (resolved)."

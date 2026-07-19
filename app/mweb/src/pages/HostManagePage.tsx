@@ -3,6 +3,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
+import InsightsIcon from '@mui/icons-material/Insights';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodsCard from './host-manage-page/HostPodsCard';
 import HostShareCard from './host-manage-page/HostShareCard';
@@ -17,6 +18,7 @@ const HOST_PODS = gql`
       pod_id
       club_slug
       pod_date_time
+      pod_end_date_time
       pod_description
       pod_images_and_videos {
         url
@@ -24,6 +26,7 @@ const HOST_PODS = gql`
       }
       pod_amount
       pod_type
+      pod_mode
       no_of_spots
       location_id
       venue_id
@@ -70,6 +73,9 @@ export default function HostManagePage() {
             Manage the pods you host
           </Typography>
         </Box>
+        <Button component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+          Insights
+        </Button>
         <Button component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
           Create
         </Button>

@@ -68,4 +68,12 @@ describe('MediaUploadField', () => {
     expect(screen.getByTestId('media-upload-add')).toBeOnTheScreen();
     expect(screen.queryByTestId('field-media_text')).toBeNull();
   });
+
+  it('renders a custom label + folder when provided', () => {
+    mockedUpload.mockReturnValue(api());
+    renderWithProviders(
+      <MediaUploadField value="" onChange={jest.fn()} label="Pod Media" folder="/pod-completion" />,
+    );
+    expect(screen.getByText('Pod Media')).toBeOnTheScreen();
+  });
 });

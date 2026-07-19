@@ -5,6 +5,12 @@ import { useHostDashboard } from '@/hooks/useHostDashboard';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useHostDashboard', () => ({ useHostDashboard: jest.fn() }));
+// The insights section (charts + its own queries) is unit-tested on its own.
+jest.mock('@/components/host-manage/host-insights', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { HostInsightsSection: () => <V testID="mock-host-insights" /> };
+});
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -25,6 +31,7 @@ const base = {
   },
   health: { total_score: 82, band: 'GREEN' },
   stats: { total: 3, upcoming: 2, paid: 1 },
+  pods: [],
   isLoading: false,
 };
 

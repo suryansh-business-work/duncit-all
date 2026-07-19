@@ -11,6 +11,7 @@ const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 const toPub = (b: IEcommBrand) => ({
   id: String(b._id),
+  brand_no: b.brand_no ?? null,
   owner_user_id: String(b.owner_user_id),
   brand_name: b.brand_name ?? '',
   logo_url: b.logo_url ?? '',
@@ -79,7 +80,7 @@ function applyInput(brand: IEcommBrand, input: any) {
 
 /** ecommBrandsTable + marketplaceBrandsTable — onboarding/products brand lists. */
 const ECOMM_BRAND_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['brand_name', 'contact_person', 'contact_email', 'contact_phone', 'city'],
+  searchFields: ['brand_no', 'brand_name', 'contact_person', 'contact_email', 'contact_phone', 'city'],
   sortFields: {
     brand_name: 'brand_name',
     city: 'city',

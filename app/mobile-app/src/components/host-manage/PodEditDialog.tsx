@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostUpdatePodDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -97,11 +98,17 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                     label="Description"
                     multiline
                   />
-                  <FormTextField
+                  <Controller
                     control={control}
                     name="media_text"
-                    label="Media URLs (one per line, at least one image)"
-                    multiline
+                    render={({ field, fieldState }) => (
+                      <MediaUploadField
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={fieldState.error?.message}
+                        label="Media"
+                      />
+                    )}
                   />
                   {error ? (
                     <Text testID="pod-edit-error" fontSize={12.5} color="$danger">

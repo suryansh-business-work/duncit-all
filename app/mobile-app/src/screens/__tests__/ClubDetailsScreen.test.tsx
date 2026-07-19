@@ -5,7 +5,10 @@ import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { useClubDetails } from '@/hooks/useDetails';
 import { renderWithProviders } from '@/utils/test-utils';
 
-jest.mock('@/hooks/useDetails', () => ({ useClubDetails: jest.fn() }));
+jest.mock('@/hooks/useDetails', () => ({
+  useClubDetails: jest.fn(),
+  useResolvedClubId: (p: { clubId?: string }) => p?.clubId ?? '',
+}));
 
 const mockClubToggle = jest.fn();
 jest.mock('@/hooks/useFollow', () => ({

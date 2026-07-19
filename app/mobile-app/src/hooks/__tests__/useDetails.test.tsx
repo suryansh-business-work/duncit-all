@@ -1,12 +1,100 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
-import { useClubDetails, usePodActions, usePodComments, usePodDetails } from '@/hooks/useDetails';
+import {
+  useClubDetails,
+  usePodActions,
+  usePodComments,
+  usePodDetails,
+  useResolvedClubId,
+  useResolvedPodId,
+} from '@/hooks/useDetails';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 
 const mockRequest = graphqlRequest as jest.Mock;
 beforeEach(() => mockRequest.mockReset());
+
+describe('useResolvedPodId / useResolvedClubId', () => {
+  it('returns the doc id from in-app params (or empty) without a request', () => {
+    expect(renderHook(() => useResolvedPodId({ podId: 'p1' })).result.current).toBe('p1');
+    expect(renderHook(() => useResolvedClubId({ clubId: 'c1' })).result.current).toBe('c1');
+    expect(renderHook(() => useResolvedPodId({})).result.current).toBe('');
+    expect(renderHook(() => useResolvedPodId({ clubSlug: 'x' })).result.current).toBe('');
+    expect(renderHook(() => useResolvedClubId({})).result.current).toBe('');
+    expect(mockRequest).not.toHaveBeenCalled();
+  });
+
+  it('resolves a pod + club from a shared slug link', async () => {
+    mockRequest.mockResolvedValueOnce({ podBySlugs: { id: 'p9' } });
+    const pod = renderHook(() => useResolvedPodId({ clubSlug: 'jazz', podSlug: 'sunset' }));
+    await waitFor(() => expect(pod.result.current).toBe('p9'));
+    mockRequest.mockResolvedValueOnce({ clubBySlug: { id: 'c9' } });
+    const club = renderHook(() => useResolvedClubId({ clubSlug: 'jazz' }));
+    await waitFor(() => expect(club.result.current).toBe('c9'));
+  });
+
+  it('falls back to empty on a missing match or a failed lookup', async () => {
+    // Pod: a resolved-but-missing match, then a rejected lookup.
+    mockRequest.mockResolvedValueOnce({ podBySlugs: null });
+    const podMissing = renderHook(() => useResolvedPodId({ clubSlug: 'x', podSlug: 'y' }));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(podMissing.result.current).toBe('');
+    mockRequest.mockRejectedValueOnce(new Error('down'));
+    const podFailed = renderHook(() => useResolvedPodId({ clubSlug: 'a', podSlug: 'b' }));
+    await waitFor(() => expect(podFailed.result.current).toBe(''));
+
+    // Club: a resolved-but-missing match, then a rejected lookup.
+    mockRequest.mockResolvedValueOnce({ clubBySlug: null });
+    const clubMissing = renderHook(() => useResolvedClubId({ clubSlug: 'w' }));
+    await waitFor(() => expect(clubMissing.result.current).toBe(''));
+    mockRequest.mockRejectedValueOnce(new Error('down'));
+    const clubFailed = renderHook(() => useResolvedClubId({ clubSlug: 'z' }));
+    await waitFor(() => expect(clubFailed.result.current).toBe(''));
+  });
+
+  it('ignores a slug resolve or reject that lands after unmount', async () => {
+    const settleAfterUnmount = async (
+      hook: () => string,
+      settle: (control: { resolve: (v: unknown) => void; reject: (e: unknown) => void }) => void,
+    ) => {
+      let resolve!: (v: unknown) => void;
+      let reject!: (e: unknown) => void;
+      mockRequest.mockReturnValueOnce(
+        new Promise((res, rej) => {
+          resolve = res;
+          reject = rej;
+        }),
+      );
+      const { unmount } = renderHook(hook);
+      unmount();
+      await act(async () => {
+        settle({ resolve, reject });
+        // Drain every pending microtask so the .then→.catch chain runs while
+        // `active` is already false (the post-unmount guard branch).
+        await new Promise((r) => setImmediate(r));
+      });
+    };
+
+    await settleAfterUnmount(
+      () => useResolvedPodId({ clubSlug: 'x', podSlug: 'y' }),
+      (c) => c.resolve({ podBySlugs: { id: 'late' } }),
+    );
+    await settleAfterUnmount(
+      () => useResolvedPodId({ clubSlug: 'x', podSlug: 'y' }),
+      (c) => c.reject(new Error('late')),
+    );
+    await settleAfterUnmount(
+      () => useResolvedClubId({ clubSlug: 'x' }),
+      (c) => c.resolve({ clubBySlug: { id: 'late' } }),
+    );
+    await settleAfterUnmount(
+      () => useResolvedClubId({ clubSlug: 'x' }),
+      (c) => c.reject(new Error('late')),
+    );
+    expect(mockRequest).toHaveBeenCalledTimes(4);
+  });
+});
 
 describe('usePodDetails / useClubDetails', () => {
   it('loads the pod, the viewer + the resolved venue/location', async () => {

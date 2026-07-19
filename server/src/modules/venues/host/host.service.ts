@@ -121,6 +121,7 @@ const redactForPublic = (h: ReturnType<typeof toPub>) => ({
 
 const toPub = (h: IHost) => ({
   id: String(h._id),
+  host_no: h.host_no ?? null,
   user_id: String(h.user_id),
   full_name: h.full_name ?? '',
   email: h.email ?? '',
@@ -157,8 +158,9 @@ const toPub = (h: IHost) => ({
 /** Allowlists for the shared table engine (hostsTable — DUNCIT TABLE CONTRACT
  * v1). Onboarded Hosts defaults to newest-first, mirroring list(). */
 const HOST_TABLE_CONFIG: TableEntityConfig = {
-  searchFields: ['full_name', 'email', 'phone'],
+  searchFields: ['host_no', 'full_name', 'email', 'phone'],
   sortFields: {
+    host_no: 'host_no',
     full_name: 'full_name',
     email: 'email',
     status: 'status',

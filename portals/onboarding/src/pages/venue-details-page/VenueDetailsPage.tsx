@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Stack, Tab, Tabs } from '@mui/material';
 import { BackHeader, QueryGuard } from '@duncit/ui';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
-import VenueHealthCard from './VenueHealthCard';
-import VenueSlotAvailabilityTab from './VenueSlotAvailabilityTab';
 import VenuePodsTab from './VenuePodsTab';
 
-const TABS = ['Overview', 'Pods', 'Account Health', 'Slot Availability'] as const;
+// Slot Availability + Account Health are not applicable to onboarded venue
+// details and are intentionally not shown here.
+const TABS = ['Overview', 'Pods'] as const;
 
 export default function VenueDetailsPage() {
   const { venueId = '' } = useParams<{ venueId: string }>();
@@ -58,21 +58,6 @@ export default function VenueDetailsPage() {
             {tab === 0 && <VenueOverviewCard venue={venue} />}
 
             {tab === 1 && <VenuePodsTab venueId={venue.id} />}
-
-            {tab === 2 && (
-              <Stack>
-                <Typography variant="h6" fontWeight={900}>
-                  Account Health
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
-                  Default score is 100. Use the Adjust action to decrease or increase it with a remark —
-                  remarks are visible to the venue owner when they tap the meter.
-                </Typography>
-                <VenueHealthCard venueId={venue.id} />
-              </Stack>
-            )}
-
-            {tab === 3 && <VenueSlotAvailabilityTab venueId={venue.id} />}
           </Stack>
         );
       }}

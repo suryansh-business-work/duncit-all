@@ -63,7 +63,8 @@ describe('EcommBrandsTable', () => {
     expect(screen.getAllByText('0 live').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
-    expect(screen.getByText('Inactive')).toBeInTheDocument();
+    // A non-APPROVED brand (SUBMITTED/DRAFT) is Inactive, so more than one shows.
+    expect(screen.getAllByText('Inactive').length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
     expect(onEdit).toHaveBeenCalledWith(full);
     fireEvent.click(screen.getAllByRole('button', { name: 'Review' })[0]);

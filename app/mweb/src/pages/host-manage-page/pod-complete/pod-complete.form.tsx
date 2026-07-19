@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { gql, useMutation } from '@apollo/client';
 import {
@@ -15,6 +15,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import MediaUrlsField from '../../create-pod-page/create-pod/fields/MediaUrlsField';
+import BillUploadField from './BillUploadField';
 import SettlementPreview from './SettlementPreview';
 import { blankPodCompleteValues, type HostPodForComplete, type PodCompleteValues } from './pod-complete.types';
 
@@ -48,7 +50,7 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
     .object({
       venue_bill_amount: z.string().trim(),
       bill_url: z.string().trim(),
-      media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video URL'),
+      media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video'),
     })
     .superRefine((values, ctx) => {
       if (!hasVenue) return;
@@ -57,7 +59,7 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_bill_amount'], message: 'Enter the venue bill amount' });
       }
       if (!values.bill_url.trim()) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['bill_url'], message: 'Add the venue bill upload URL' });
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['bill_url'], message: 'Upload the venue bill' });
       }
     });
 
@@ -86,6 +88,7 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
   const hasVenue = !!pod?.venue_id;
   const {
     register,
+    control,
     handleSubmit,
     reset,
     watch,
@@ -120,7 +123,7 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
           {hasVenue && (
             <>
               <TextField
-                label="Venue bill amount"
+                label="Venue Bill Amount"
                 required
                 type="number"
                 fullWidth
@@ -129,25 +132,31 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
                 helperText={errors.venue_bill_amount?.message}
                 InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
               />
-              <TextField
-                label="Venue bill upload URL"
-                required
-                fullWidth
-                {...register('bill_url')}
-                error={!!errors.bill_url}
-                helperText={errors.bill_url?.message ?? 'Link to the uploaded venue bill (image or PDF).'}
+              <Controller
+                control={control}
+                name="bill_url"
+                render={({ field, fieldState }) => (
+                  <BillUploadField
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={fieldState.error?.message}
+                  />
+                )}
               />
             </>
           )}
-          <TextField
-            label="Party photos & videos"
-            required
-            fullWidth
-            multiline
-            minRows={2}
-            {...register('media_text')}
-            error={!!errors.media_text}
-            helperText={errors.media_text?.message ?? 'One image or video URL per line.'}
+          <Controller
+            control={control}
+            name="media_text"
+            render={({ field, fieldState }) => (
+              <MediaUrlsField
+                value={field.value}
+                onChange={field.onChange}
+                error={fieldState.error?.message}
+                label="Pod Media"
+                folder="/pod-completion"
+              />
+            )}
           />
           {pod && <SettlementPreview podId={pod.id} venueBillAmount={billAmount} />}
           {completeState.error && <Alert severity="error">{completeState.error.message}</Alert>}

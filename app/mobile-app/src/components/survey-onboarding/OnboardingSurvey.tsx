@@ -1,12 +1,15 @@
 import { type ComponentProps } from 'react';
 import { AppImage } from '@/components/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useGoBack } from '@/hooks/useGoBack';
+import type { RootStackParamList } from '@/navigation/types';
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useBranding } from '@/hooks/useBranding';
@@ -29,6 +32,7 @@ interface Props {
 /** Category → survey → meeting gate before host/venue registration. */
 export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props>) {
   const goBack = useGoBack();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { color: ink } = useThemeColors();
   const { data: brandingData } = useBranding();
   const logoUrl = brandingData?.branding?.logo_url;
@@ -95,7 +99,11 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           <XStack
             role="button"
             aria-label="Go back"
-            onPress={goBack}
+            onPress={() => {
+              // Step back a phase (preserving answers) instead of leaving the
+              // whole flow; only exit when already at the first phase.
+              if (!flow.stepBack()) goBack();
+            }}
             width={40}
             height={40}
             alignItems="center"
@@ -144,6 +152,8 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
               lockName={flow.lockName}
               ext={flow.ext}
               phone={flow.phone}
+              hasProfilePhone={flow.hasProfilePhone}
+              onGoToProfile={() => navigation.navigate('Account')}
               notes={flow.notes}
               setNotes={flow.setNotes}
               busy={flow.busy}

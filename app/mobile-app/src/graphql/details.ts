@@ -1,5 +1,24 @@
 import { gql } from '@/generated/graphql';
 
+/** Resolve a pod's doc id from the shared (mWeb) slug URL so a deep link like
+ * /club/:clubSlug/pod/:podSlug opens the right pod. */
+export const PodBySlugsDocument = gql(`
+  query MobilePodBySlugs($clubSlug: String!, $podSlug: String!) {
+    podBySlugs(club_slug: $clubSlug, pod_slug: $podSlug) {
+      id
+    }
+  }
+`);
+
+/** Resolve a club's doc id from the shared (mWeb) slug URL (/club/:clubSlug). */
+export const ClubBySlugDocument = gql(`
+  query MobileClubBySlug($clubSlug: String!) {
+    clubBySlug(club_slug: $clubSlug) {
+      id
+    }
+  }
+`);
+
 /** Full pod for the details screen — mirrors mWeb's POD_DETAILS so the mobile
  * screen reaches feature parity (mode, meeting, products, venue/location). */
 export const PodDetailsDocument = gql(`

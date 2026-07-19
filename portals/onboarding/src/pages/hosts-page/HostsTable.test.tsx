@@ -71,7 +71,8 @@ describe('HostsTable', () => {
     expect(screen.getByText('Default')).toBeInTheDocument();
     // 'Active' matches the column header + the active chip.
     expect(screen.getAllByText('Active').length).toBeGreaterThan(1);
-    expect(screen.getByText('Inactive')).toBeInTheDocument();
+    // A non-APPROVED host (SUBMITTED/DRAFT) is Inactive, so more than one shows.
+    expect(screen.getAllByText('Inactive').length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
     fireEvent.click(screen.getAllByRole('button', { name: 'Review' })[0]);
     expect(onEdit).toHaveBeenCalledWith(full);

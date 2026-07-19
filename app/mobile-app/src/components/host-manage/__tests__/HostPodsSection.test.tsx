@@ -70,11 +70,15 @@ jest.mock('@/components/host-manage/PodCompleteDialog', () => {
 
 const mockedUse = useHostPods as jest.Mock;
 
+// All three resolve to "Upcoming" (future / unparseable / missing date), so the
+// default Upcoming filter keeps every row visible.
 const pods = [
   {
     id: 'p1',
     pod_title: 'Hike',
-    pod_date_time: '2026-07-01T10:00:00Z',
+    pod_date_time: '2030-01-01T10:00:00Z',
+    pod_end_date_time: null,
+    pod_mode: 'PHYSICAL',
     zone_name: 'HSR',
     pod_type: 'NATIVE_FREE',
   },
@@ -82,10 +86,20 @@ const pods = [
     id: 'p2',
     pod_title: 'Jam',
     pod_date_time: 'bad-date',
+    pod_end_date_time: null,
+    pod_mode: 'VIRTUAL',
     zone_name: null,
     pod_type: 'NATIVE_PAID',
   },
-  { id: 'p3', pod_title: 'Run', pod_date_time: null, zone_name: null, pod_type: 'NATIVE_PAID' },
+  {
+    id: 'p3',
+    pod_title: 'Run',
+    pod_date_time: null,
+    pod_end_date_time: null,
+    pod_mode: 'PHYSICAL',
+    zone_name: null,
+    pod_type: 'NATIVE_PAID',
+  },
 ];
 
 const api = (over: Record<string, unknown> = {}) => ({
@@ -155,6 +169,41 @@ describe('HostPodsSection', () => {
     fireEvent.press(screen.getByTestId('host-pod-complete-p2'));
     fireEvent(screen.getByTestId('mock-complete-close'), 'touchEnd');
     expect(screen.queryByTestId('mock-complete-dialog')).toBeNull();
+  });
+
+  it('stages type/time/price choices and resets them before applying the default', () => {
+    mockedUse.mockReturnValue(api());
+    renderWithProviders(<HostPodsSection />);
+    fireEvent.press(screen.getByTestId('host-pods-filter-open'));
+    expect(screen.getByTestId('host-pods-filter-sheet')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('host-filter-type-VIRTUAL'));
+    fireEvent.press(screen.getByTestId('host-filter-time-PAST'));
+    fireEvent.press(screen.getByTestId('host-filter-price-FREE'));
+    fireEvent.press(screen.getByTestId('host-filter-reset'));
+    fireEvent.press(screen.getByTestId('host-filter-apply'));
+    // Default (Upcoming) keeps every upcoming pod visible.
+    expect(screen.getByTestId('host-pod-open-p1')).toBeOnTheScreen();
+  });
+
+  it('applies a Past filter to an all-upcoming list → filtered-empty + active pill', () => {
+    mockedUse.mockReturnValue(api());
+    renderWithProviders(<HostPodsSection />);
+    fireEvent.press(screen.getByTestId('host-pods-filter-open'));
+    fireEvent.press(screen.getByTestId('host-filter-time-PAST'));
+    fireEvent.press(screen.getByTestId('host-filter-apply'));
+    expect(screen.getByTestId('host-pods-filtered-empty')).toBeOnTheScreen();
+    expect(screen.getByText('Filter (1)')).toBeOnTheScreen();
+    expect(screen.queryByTestId('host-pod-open-p1')).toBeNull();
+  });
+
+  it('closes the filter sheet without applying the staged change', () => {
+    mockedUse.mockReturnValue(api());
+    renderWithProviders(<HostPodsSection />);
+    fireEvent.press(screen.getByTestId('host-pods-filter-open'));
+    fireEvent.press(screen.getByTestId('host-filter-time-PAST'));
+    fireEvent.press(screen.getByTestId('host-filter-close'));
+    // Discarded — the default Upcoming view is unchanged.
+    expect(screen.getByTestId('host-pod-open-p1')).toBeOnTheScreen();
   });
 
   it('keeps the section visible when a refetch fails', () => {

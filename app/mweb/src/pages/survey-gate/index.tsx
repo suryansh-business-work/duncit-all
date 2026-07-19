@@ -72,6 +72,21 @@ export default function SurveyGatePage() {
 
   const afterSurvey = () => setStep('meeting');
 
+  // Back steps one phase (meeting → survey/category, survey → category) with the
+  // survey answers + category selection intact (kept in state + the draft cache);
+  // only leaves the gate when already at the first phase.
+  const goBackStep = () => {
+    if (step === 'meeting') {
+      setStep(survey ? 'survey' : 'category');
+      return;
+    }
+    if (step === 'survey') {
+      setStep('category');
+      return;
+    }
+    navigate(-1);
+  };
+
   const onCategory = async (picked: CategoryScope, pickedLabels: CategoryLabels) => {
     setScope(picked);
     setLabels(pickedLabels);
@@ -142,7 +157,7 @@ export default function SurveyGatePage() {
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
       <Box sx={{ mb: 1 }}>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
+        <Button startIcon={<ArrowBackIcon />} onClick={goBackStep} size="small">
           Back
         </Button>
       </Box>

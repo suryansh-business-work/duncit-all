@@ -230,6 +230,26 @@ export const financeTypeDefs = /* GraphQL */ `
     this_month_earnings: Float!
   }
 
+  "Host Studio pod-status distribution (donut) — cancelled = soft-deleted pods."
+  type HostStatusCounts {
+    upcoming: Int!
+    ongoing: Int!
+    completed: Int!
+    cancelled: Int!
+  }
+
+  "One month's host payout total (bucket = 'YYYY-MM')."
+  type HostMonthlyEarning {
+    month: String!
+    total: Float!
+  }
+
+  "Host Studio insights: pod-status distribution + monthly payout series."
+  type HostInsights {
+    status_counts: HostStatusCounts!
+    monthly_earnings: [HostMonthlyEarning!]!
+  }
+
   type FinanceStat {
     total: Float!
     this_month: Float!
@@ -364,6 +384,9 @@ export const financeTypeDefs = /* GraphQL */ `
     potentialPodEarnings(amount: Float!, venue_id: ID, venue_amount: Float): PodFinanceWaterfall!
     # Host Studio dashboard earnings summary (signed-in host).
     myHostEarningsSummary: EarningsSummary!
+    # Host Studio insights charts (signed-in host): status distribution
+    # (incl. cancelled/soft-deleted) + monthly payout series (default 12 months).
+    hostInsights(months: Int): HostInsights!
     # Venue Earnings dashboard summary (signed-in venue owner).
     myVenueEarningsSummary: EarningsSummary!
     # Finance portal dashboard KPI cards (finance roles only).

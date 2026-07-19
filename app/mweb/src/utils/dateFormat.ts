@@ -10,9 +10,19 @@ export const PUBLIC_APP_SETTINGS = gql`
       time_zone
       min_birth_year
       max_birth_year
+      draft_retention_days
     }
   }
 `;
+
+const FALLBACK_DRAFT_RETENTION_DAYS = 3;
+
+/** Admin-configured draft-pod retention window in days (Admin > Pods > Pod
+ * Settings), with a safe fallback. Drives the Host Studio draft-expiry note. */
+export function useDraftRetentionDays(): number {
+  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
+  return (data?.publicAppSettings?.draft_retention_days as number) ?? FALLBACK_DRAFT_RETENTION_DAYS;
+}
 
 const FALLBACK_DATE = 'dd MMM yyyy';
 const FALLBACK_TIME = 'hh:mm a';

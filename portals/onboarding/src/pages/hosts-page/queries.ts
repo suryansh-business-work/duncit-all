@@ -52,6 +52,7 @@ export interface HostCategoryRow {
  * HostRowFields selection so the Edit/Review dialogs can reuse the row object. */
 export interface HostRow {
   id: string;
+  host_no?: string | null;
   user_id: string;
   full_name?: string | null;
   email?: string | null;
@@ -70,6 +71,7 @@ export interface HostRow {
 const HOST_ROW_FIELDS = gql`
   fragment HostRowFields on Host {
     id
+    host_no
     user_id
     full_name
     email

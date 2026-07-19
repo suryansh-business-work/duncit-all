@@ -40,6 +40,29 @@ export interface EarningsSummary {
   this_month_earnings: number;
 }
 
+// When a pod has no explicit end time, treat it as live for this long after
+// start (mirrors the client's podStatus tail so the donut lines up with the
+// per-pod status shown elsewhere).
+const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
+
+export interface HostStatusCounts {
+  upcoming: number;
+  ongoing: number;
+  completed: number;
+  cancelled: number;
+}
+
+export interface HostMonthlyEarning {
+  /** "YYYY-MM" bucket key. */
+  month: string;
+  total: number;
+}
+
+export interface HostInsights {
+  status_counts: HostStatusCounts;
+  monthly_earnings: HostMonthlyEarning[];
+}
+
 export interface FinanceStat {
   total: number;
   this_month: number;
@@ -211,6 +234,18 @@ export const breakdownService = {
     return summaryFor(fs.currency_symbol, { kind: 'HOST_PAYMENT', host_user_id: new Types.ObjectId(userId) });
   },
 
+  /** Host Insights charts (Host Studio dashboard): the pod-status distribution
+   * — including CANCELLED (soft-deleted) pods that every other host read hides —
+   * plus the host's monthly payout totals for the last `months` months. */
+  async hostInsights(userId: string, months: number): Promise<HostInsights> {
+    const uid = new Types.ObjectId(userId);
+    const [status_counts, monthly_earnings] = await Promise.all([
+      hostStatusCounts(uid),
+      hostMonthlyEarnings(uid, months),
+    ]);
+    return { status_counts, monthly_earnings };
+  },
+
   /** Venue Earnings dashboard summary across every venue the user owns. */
   async venueEarningsSummary(userId: string): Promise<EarningsSummary> {
     const fs = await getFinanceSettings();
@@ -308,6 +343,77 @@ export const breakdownService = {
     };
   },
 };
+
+const monthKey = (year: number, month: number): string => `${year}-${String(month).padStart(2, '0')}`;
+
+/** Classifies one pod into a donut bucket. Cancelled = soft-deleted; Completed =
+ * finance-settled OR past its end time; then Ongoing vs Upcoming by start time. */
+function bucketForPod(
+  pod: {
+    pod_date_time?: Date | null;
+    pod_end_date_time?: Date | null;
+    completed_at?: Date | null;
+    deleted_at?: Date | null;
+  },
+  now: number
+): keyof HostStatusCounts {
+  if (pod.deleted_at) return 'cancelled';
+  const start = pod.pod_date_time ? new Date(pod.pod_date_time).getTime() : Number.NaN;
+  if (Number.isNaN(start)) return 'upcoming';
+  const end = pod.pod_end_date_time ? new Date(pod.pod_end_date_time).getTime() : start + POD_LIVE_TAIL_MS;
+  if (pod.completed_at || now > end) return 'completed';
+  if (now >= start) return 'ongoing';
+  return 'upcoming';
+}
+
+/** Pod-status distribution for a host, INCLUDING soft-deleted (cancelled) pods —
+ * opts into includeDeleted since every normal host read strips them. */
+async function hostStatusCounts(uid: Types.ObjectId): Promise<HostStatusCounts> {
+  const pods = await PodModel.find({ pod_hosts_id: uid })
+    .select('pod_date_time pod_end_date_time completed_at deleted_at')
+    .setOptions({ includeDeleted: true })
+    .lean();
+  const now = Date.now();
+  const counts: HostStatusCounts = { upcoming: 0, ongoing: 0, completed: 0, cancelled: 0 };
+  for (const pod of pods) {
+    counts[bucketForPod(pod, now)] += 1;
+  }
+  return counts;
+}
+
+/** The host's approved HOST_PAYMENT payouts bucketed by review month, as a dense
+ * series over the last `months` months (missing months are 0 so bars stay
+ * continuous). Local-month bucketing keeps it aligned with the summary windows. */
+async function hostMonthlyEarnings(uid: Types.ObjectId, months: number): Promise<HostMonthlyEarning[]> {
+  const n = Math.min(36, Math.max(1, Math.floor(months) || 12));
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() - (n - 1), 1);
+  const releases = await PaymentReleaseModel.find({
+    kind: 'HOST_PAYMENT',
+    status: 'APPROVED',
+    host_user_id: uid,
+    reviewed_at: { $gte: start },
+  })
+    .select('approved_amount amount_requested reviewed_at')
+    .lean();
+
+  const byKey = new Map<string, number>();
+  for (const r of releases) {
+    if (!r.reviewed_at) continue;
+    const d = new Date(r.reviewed_at);
+    const key = monthKey(d.getFullYear(), d.getMonth() + 1);
+    const amount = r.approved_amount ?? r.amount_requested ?? 0;
+    byKey.set(key, (byKey.get(key) ?? 0) + amount);
+  }
+
+  const out: HostMonthlyEarning[] = [];
+  for (let i = 0; i < n; i += 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - (n - 1) + i, 1);
+    const key = monthKey(d.getFullYear(), d.getMonth() + 1);
+    out.push({ month: key, total: round2(byKey.get(key) ?? 0) });
+  }
+  return out;
+}
 
 /** Shared aggregation for host/venue earnings summaries. */
 async function summaryFor(currencySymbol: string, releaseMatch: Record<string, unknown>): Promise<EarningsSummary> {

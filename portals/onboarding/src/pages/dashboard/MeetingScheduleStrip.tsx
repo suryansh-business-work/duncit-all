@@ -8,13 +8,13 @@ const KIND_LABEL: Record<MeetingKind, string> = {
   ECOMM: 'Seller',
 };
 
-// Venue / Host / Seller meeting counts. Every card is a single click into the
-// onboarding meeting calendar (the parent supplies the navigation). A CSS grid
-// keeps the cards flush-left with the page headings and the KPI strip above.
+// Venue / Host / Seller meeting counts. Each card opens that kind's Meeting
+// Schedule filtered to the pending "Requested" requests (the parent supplies
+// the navigation). A CSS grid keeps the cards flush-left with the headings.
 export default function MeetingScheduleStrip({
   counts,
   onOpen,
-}: Readonly<{ counts: MeetingCounts; onOpen: () => void }>) {
+}: Readonly<{ counts: MeetingCounts; onOpen: (kind: MeetingKind) => void }>) {
   return (
     <Box
       sx={{
@@ -25,7 +25,7 @@ export default function MeetingScheduleStrip({
     >
       {MEETING_KINDS.map((kind) => (
         <Card key={kind} variant="outlined" sx={{ height: '100%' }}>
-          <CardActionArea onClick={onOpen} sx={{ height: '100%' }}>
+          <CardActionArea onClick={() => onOpen(kind)} sx={{ height: '100%' }}>
             <CardContent>
               <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
                 <EventIcon fontSize="small" color="primary" />
@@ -37,7 +37,7 @@ export default function MeetingScheduleStrip({
                 {counts[kind]}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Open calendar
+                View requests
               </Typography>
             </CardContent>
           </CardActionArea>

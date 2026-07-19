@@ -15,7 +15,10 @@
       "LS(*)",
       "MultiEdit(*)",
       "NotebookEdit(*)",
-      "WebFetch(*)"
+      "WebFetch(*)",
+      "Bash(./node_modules/.bin/vitest run *)",
+      "Bash(mkdir -p C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/approvals-page)",
+      "Bash(cp C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/admin/src/pages/approvals-page/*.tsx C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/admin/src/pages/approvals-page/*.ts C:/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/approvals-page/)"
     ],
     "deny": []
   }

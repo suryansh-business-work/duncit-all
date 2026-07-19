@@ -1,7 +1,10 @@
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { venueService } from './venue.service';
 import { userService } from '@modules/access/user/user.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { MeetingModel } from '@modules/survey/meeting.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
 
@@ -22,6 +25,33 @@ export const venueResolvers = {
     pod_count: (parent: { id?: string }) => {
       if (!parent.id) return 0;
       return PodModel.countDocuments({ venue_id: parent.id, deleted_at: null }).exec();
+    },
+    // The Super/Category/Sub the owner chose in the venue onboarding survey,
+    // resolved from their OnboardingMeeting (kind VENUE). Names are looked up
+    // from the Category catalogue (the meeting stores only ids). Used to
+    // pre-fill Edit Venue when the venue itself has no category yet.
+    survey_category: async (parent: { owner_user_id?: string | null }) => {
+      if (!parent.owner_user_id || !Types.ObjectId.isValid(parent.owner_user_id)) return null;
+      const meeting = await MeetingModel.findOne({
+        user_id: new Types.ObjectId(parent.owner_user_id),
+        kind: 'VENUE',
+      }).select('super_category_id category_id sub_category_id');
+      const superId = meeting?.super_category_id ?? null;
+      const catId = meeting?.category_id ?? null;
+      const subId = meeting?.sub_category_id ?? null;
+      if (!superId && !catId && !subId) return null;
+      const ids = [superId, catId, subId].filter(Boolean) as Types.ObjectId[];
+      const cats = await CategoryModel.find({ _id: { $in: ids } }).select('name');
+      const nameOf = (id: Types.ObjectId | null) =>
+        id ? (cats.find((c) => String(c._id) === String(id))?.name ?? '') : '';
+      return {
+        super_category_id: superId ? String(superId) : null,
+        category_id: catId ? String(catId) : null,
+        sub_category_id: subId ? String(subId) : null,
+        super_category_name: nameOf(superId),
+        category_name: nameOf(catId),
+        sub_category_name: nameOf(subId),
+      };
     },
   },
   Query: {

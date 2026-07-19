@@ -15,6 +15,9 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
 }));
 jest.mock('@/hooks/useHostDrafts', () => ({ useHostDrafts: jest.fn() }));
+jest.mock('@/hooks/useAppSettings', () => ({
+  useAppSettings: () => ({ draftRetentionDays: 3 }),
+}));
 // The hosted-pods section is unit-tested on its own; keep this screen test focused.
 jest.mock('@/components/host-manage/HostPodsSection', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -68,6 +71,13 @@ describe('HostManageScreen', () => {
     expect(screen.getByTestId('host-manage-empty')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('host-manage-create'));
     expect(mockNavigate).toHaveBeenCalledWith('CreatePod');
+  });
+
+  it('opens the host dashboard & insights', () => {
+    mockedUse.mockReturnValue(api({ drafts: [] }));
+    renderWithProviders(<HostManageScreen />);
+    fireEvent.press(screen.getByTestId('host-manage-insights'));
+    expect(mockNavigate).toHaveBeenCalledWith('HostDashboard');
   });
 
   it('groups the categories card + apply banner above the hosted-pods section', () => {

@@ -67,10 +67,13 @@ const renderOwner = (v: VenueRow) => (
 
 const renderStatus = (v: VenueRow) => <Chip size="small" label={v.status} />;
 
-const activeValue = (v: VenueRow) => (v.is_active === false ? 'Inactive' : 'Active');
+// Active only reflects a live, Approved venue — Draft/Submitted/Rejected all
+// read as Inactive regardless of the is_active flag.
+const isActiveVenue = (v: VenueRow) => v.status === 'APPROVED' && v.is_active !== false;
+const activeValue = (v: VenueRow) => (isActiveVenue(v) ? 'Active' : 'Inactive');
 
 const renderActive = (v: VenueRow) => (
-  <Chip size="small" variant="outlined" color={v.is_active === false ? 'default' : 'success'} label={activeValue(v)} />
+  <Chip size="small" variant="outlined" color={isActiveVenue(v) ? 'success' : 'default'} label={activeValue(v)} />
 );
 
 const renderPods = (v: VenueRow) => (
@@ -128,6 +131,7 @@ export default function VenuesTable({
       </>
     );
     return [
+      { field: 'venue_no', headerName: 'Venue ID', width: 130, sortable: false, valueGetter: (v) => v.venue_no || '—' },
       { field: 'venue_name', headerName: 'Venue', flex: 1, minWidth: 180, cellRenderer: renderVenue, valueGetter: (v) => v.venue_name },
       { field: 'locality', headerName: 'Location', minWidth: 160, filter: { type: 'text' }, cellRenderer: renderLocation, valueGetter: locationValue },
       { field: 'city', headerName: 'City', hide: true, minWidth: 130, filter: { type: 'text' } },

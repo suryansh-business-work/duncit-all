@@ -17,13 +17,21 @@ interface Props {
   value: string;
   onChange: (text: string) => void;
   error?: string;
+  label?: string;
+  folder?: string;
 }
 
 /** Pod media — upload from the library into a thumbnail list (URLs serialize
  * into media_text). Upload-only (no raw URL box). Mirrors mWeb's MediaUrlsField. */
-export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
+export function MediaUploadField({
+  value,
+  onChange,
+  error,
+  label = 'Cover image (at least one image)',
+  folder = '/pods',
+}: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
-  const upload = useMediaUpload('/pods');
+  const upload = useMediaUpload(folder);
   const urls = splitLines(value ?? '');
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
 
@@ -35,7 +43,7 @@ export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
   return (
     <YStack gap={8}>
       <Text fontSize={14} fontWeight="500" color="$color">
-        Cover image (at least one image)
+        {label}
       </Text>
       {urls.length > 0 ? (
         <XStack gap={8} flexWrap="wrap">

@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
+import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { CompletePodSettlementDocument } from '@/graphql/settlement';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { BillUploadField } from './BillUploadField';
 import { SettlementSummary } from './SettlementSummary';
 import {
   blankPodCompleteValues,
@@ -101,21 +103,34 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                       <FormTextField
                         control={control}
                         name="venue_bill_amount"
-                        label="Venue bill amount"
+                        label="Venue Bill Amount"
                         keyboardType="numeric"
                       />
-                      <FormTextField
+                      <Controller
                         control={control}
                         name="bill_url"
-                        label="Venue bill upload URL"
+                        render={({ field, fieldState }) => (
+                          <BillUploadField
+                            value={field.value}
+                            onChange={field.onChange}
+                            error={fieldState.error?.message}
+                          />
+                        )}
                       />
                     </>
                   ) : null}
-                  <FormTextField
+                  <Controller
                     control={control}
                     name="media_text"
-                    label="Party photos & videos (one URL per line)"
-                    multiline
+                    render={({ field, fieldState }) => (
+                      <MediaUploadField
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={fieldState.error?.message}
+                        label="Pod Media"
+                        folder="/pod-completion"
+                      />
+                    )}
                   />
                   <SettlementSummary settlement={settlement} isLoading={isLoading} />
                   {error ? (

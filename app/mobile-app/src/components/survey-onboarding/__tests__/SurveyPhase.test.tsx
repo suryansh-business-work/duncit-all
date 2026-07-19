@@ -141,6 +141,8 @@ const meetingProps = {
   lockName: false,
   ext: '+91',
   phone: '',
+  hasProfilePhone: true,
+  onGoToProfile: jest.fn(),
   notes: '',
   setNotes: jest.fn(),
   busy: false,
@@ -190,5 +192,15 @@ describe('MeetingPhase slot picker', () => {
     expect(screen.getByTestId('slots-loading')).toBeOnTheScreen();
     rerender(<MeetingPhase {...meetingProps} slots={[]} slotsLoading={false} />);
     expect(screen.getByTestId('slots-empty')).toBeOnTheScreen();
+  });
+
+  it('prompts to add a missing phone with a Go To Profile action', () => {
+    const onGoToProfile = jest.fn();
+    renderWithProviders(
+      <MeetingPhase {...meetingProps} hasProfilePhone={false} onGoToProfile={onGoToProfile} />,
+    );
+    expect(screen.getByTestId('meeting-phone-missing')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('meeting-go-to-profile'));
+    expect(onGoToProfile).toHaveBeenCalled();
   });
 });

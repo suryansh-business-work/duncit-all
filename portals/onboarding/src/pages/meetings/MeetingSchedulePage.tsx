@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -32,13 +32,28 @@ const STATUS_FILTERS: { value: MeetingStatus | ''; label: string }[] = [
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
+const MEETING_STATUS_VALUES = new Set<MeetingStatus>(['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED']);
 
 /** Onboarding → Meeting → Venue/Host/Seller Meeting Schedule: requests + scheduling. */
 export default function MeetingSchedulePage() {
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
   const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM' || kind === 'CLUB_ADMIN';
-  const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Seed the status filter from ?status= (e.g. the Dashboard meeting cards link
+  // to ?status=REQUESTED) and keep the URL in sync so the view is shareable.
+  const urlStatus = (searchParams.get('status') || '').toUpperCase() as MeetingStatus;
+  const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>(
+    MEETING_STATUS_VALUES.has(urlStatus) ? urlStatus : '',
+  );
+
+  const onStatusChange = (next: MeetingStatus | '') => {
+    setStatusFilter(next);
+    const params2 = new URLSearchParams(searchParams);
+    if (next) params2.set('status', next);
+    else params2.delete('status');
+    setSearchParams(params2, { replace: true });
+  };
 
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -82,7 +97,7 @@ export default function MeetingSchedulePage() {
         </Box>
       </Stack>
 
-      <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => setStatusFilter(v ?? '')}>
+      <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => onStatusChange(v ?? '')}>
         {STATUS_FILTERS.map((f) => <ToggleButton key={f.label} value={f.value}>{f.label}</ToggleButton>)}
       </ToggleButtonGroup>
 

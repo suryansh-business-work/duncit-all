@@ -50,6 +50,7 @@ export const appConfig = {
         { label: 'Pod Ideas', to: '/pod-ideas', icon: 'insights' },
         { label: 'Pod Plans', to: '/pod-plans', icon: 'description' },
         { label: 'Event Tickets', to: '/event-tickets', icon: 'ticket' },
+        { label: 'Pod Settings', to: '/pod-settings', icon: 'tune' },
       ],
     },
     {
@@ -103,6 +104,7 @@ export const appConfig = {
     { label: 'Pod Ideas', to: '/pod-ideas', section: 'Pods' },
     { label: 'Pod Plans', to: '/pod-plans', section: 'Pods' },
     { label: 'Event Tickets', to: '/event-tickets', section: 'Pods', keywords: ['qr', 'check-in'] },
+    { label: 'Pod Settings', to: '/pod-settings', section: 'Pods', keywords: ['draft', 'retention', 'config'] },
     { label: 'Coupons', to: '/coupons', section: 'Marketing', keywords: ['discount', 'promo'] },
     { label: 'Referrals', to: '/referrals', section: 'Marketing', keywords: ['invite', 'growth'] },
     { label: 'Categories', to: '/categories', section: 'Catalog' },

@@ -12,6 +12,7 @@ import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard'
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { STEP_TITLES } from '@/components/create-pod';
+import { useAppSettings } from '@/hooks/useAppSettings';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
@@ -25,7 +26,8 @@ function formatWhen(value?: string | null) {
 /** Hosts Management — start a new pod and resume/delete in-progress drafts. */
 export function HostManageScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { danger } = useThemeColors();
+  const { danger, color: ink } = useThemeColors();
+  const { draftRetentionDays } = useAppSettings();
   const { drafts, isLoading, remove } = useHostDrafts();
   const [target, setTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -52,6 +54,27 @@ export function HostManageScreen() {
             onPress={() => navigation.navigate('CreatePod')}
           />
 
+          <XStack
+            testID="host-manage-insights"
+            role="button"
+            aria-label="Host dashboard and insights"
+            onPress={() => navigation.navigate('HostDashboard')}
+            alignItems="center"
+            justifyContent="center"
+            gap={8}
+            height={44}
+            borderRadius={12}
+            borderWidth={1}
+            borderColor="$borderColor"
+            backgroundColor="$surface"
+            pressStyle={{ opacity: 0.85 }}
+          >
+            <MaterialIcons name="insights" size={18} color={ink} />
+            <Text fontSize={14} fontWeight="800" color="$color">
+              Dashboard & Insights
+            </Text>
+          </XStack>
+
           <HostCategoriesCard />
 
           <HostApplyBanner />
@@ -63,6 +86,24 @@ export function HostManageScreen() {
           <Text fontSize={16} fontWeight="900" color="$color">
             Draft pods
           </Text>
+          {drafts.length > 0 ? (
+            <XStack
+              testID="draft-retention-note"
+              gap={8}
+              padding={12}
+              borderRadius={12}
+              borderWidth={1}
+              borderColor="$borderColor"
+              backgroundColor="$surface"
+              alignItems="flex-start"
+            >
+              <MaterialIcons name="schedule" size={16} color="#f59e0b" />
+              <Text flex={1} fontSize={12.5} color="$muted">
+                Draft Pods are automatically deleted after {draftRetentionDays} days of being saved.
+                Please publish your Pod before it expires.
+              </Text>
+            </XStack>
+          ) : null}
           {isLoading ? <Spinner testID="host-manage-loading" color="$primary" /> : null}
           {!isLoading && drafts.length === 0 ? (
             <Text testID="host-manage-empty" fontSize={13} color="$muted">

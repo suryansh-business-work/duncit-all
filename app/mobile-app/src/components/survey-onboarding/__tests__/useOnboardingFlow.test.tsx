@@ -82,6 +82,49 @@ function route({
 
 beforeEach(() => mockRequest.mockReset());
 
+describe('useOnboardingFlow stepBack', () => {
+  const seed = (kind: 'HOST' | 'VENUE', survey: unknown) =>
+    useOnboardingDraftStore.getState().setDraft(kind, {
+      phase: 'meeting',
+      scope: FULL_SCOPE,
+      labels: LABELS,
+      survey: survey as never,
+      answers: {},
+    });
+
+  it('steps meeting → survey → category, then reports it cannot go further', () => {
+    route();
+    seed('HOST', SURVEY);
+    const { result } = renderHook(() => useOnboardingFlow('HOST'));
+    expect(result.current.phase).toBe('meeting');
+    let stepped: boolean | undefined;
+    act(() => {
+      stepped = result.current.stepBack();
+    });
+    expect(stepped).toBe(true);
+    expect(result.current.phase).toBe('survey');
+    act(() => {
+      result.current.stepBack();
+    });
+    expect(result.current.phase).toBe('category');
+    let atStart: boolean | undefined;
+    act(() => {
+      atStart = result.current.stepBack();
+    });
+    expect(atStart).toBe(false);
+  });
+
+  it('steps meeting → category when there is no survey', () => {
+    route();
+    seed('VENUE', null);
+    const { result } = renderHook(() => useOnboardingFlow('VENUE'));
+    act(() => {
+      result.current.stepBack();
+    });
+    expect(result.current.phase).toBe('category');
+  });
+});
+
 describe('useOnboardingFlow', () => {
   it('prefills name, phone and extension from the signed-in profile', async () => {
     route({ meeting: null, survey: null });

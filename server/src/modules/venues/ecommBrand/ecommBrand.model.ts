@@ -1,4 +1,5 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 
 export type EcommBrandStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -9,6 +10,8 @@ export interface IEcommBrandDocument {
 }
 
 export interface IEcommBrand extends Document {
+  /** Permanent human id (BRD-000001) shown in the Onboarded Brands table. */
+  brand_no: string | null;
   owner_user_id: Types.ObjectId;
   // Brand identity
   brand_name: string;
@@ -70,6 +73,7 @@ const brandDocumentSchema = new Schema<IEcommBrandDocument>(
 
 const ecommBrandSchema = new Schema<IEcommBrand>(
   {
+    brand_no: { type: String, default: null, index: true },
     owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     brand_name: { type: String, default: '' },
     logo_url: { type: String, default: '' },
@@ -108,5 +112,11 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// Assign a permanent human id on creation (unique, sequential) — surfaced in the
+// Onboarded Brands table for tracking / search / reporting.
+ecommBrandSchema.pre('save', async function assignBrandNo(this: IEcommBrand) {
+  if (this.isNew && !this.brand_no) this.brand_no = await nextEntityNo('BRD', 'brand');
+});
 
 export const EcommBrandModel = model<IEcommBrand>('EcommBrand', ecommBrandSchema);

@@ -78,10 +78,13 @@ const categoriesValue = (h: HostRow) => (h.host_categories ?? []).map(catPath).j
 
 const renderStatus = (h: HostRow) => <Chip size="small" label={h.status} />;
 
-const activeValue = (h: HostRow) => (h.is_active === false ? 'Inactive' : 'Active');
+// Active only reflects a live, Approved host — Draft/Submitted/Rejected all
+// read as Inactive regardless of the is_active flag.
+const isActiveHost = (h: HostRow) => h.status === 'APPROVED' && h.is_active !== false;
+const activeValue = (h: HostRow) => (isActiveHost(h) ? 'Active' : 'Inactive');
 
 const renderActive = (h: HostRow) => (
-  <Chip size="small" variant="outlined" color={h.is_active === false ? 'default' : 'success'} label={activeValue(h)} />
+  <Chip size="small" variant="outlined" color={isActiveHost(h) ? 'success' : 'default'} label={activeValue(h)} />
 );
 
 const renderCommission = (h: HostRow) => (
@@ -124,6 +127,7 @@ export default function HostsTable({
       </>
     );
     return [
+      { field: 'host_no', headerName: 'Host ID', width: 130, sortable: false, valueGetter: (h) => h.host_no || '—' },
       { field: 'full_name', headerName: 'Host', flex: 1, minWidth: 170, cellRenderer: renderHost, valueGetter: (h) => h.full_name || '—' },
       { field: 'email', headerName: 'Contact', minWidth: 180, cellRenderer: renderContact, valueGetter: (h) => h.email || '—' },
       { field: 'documents', headerName: 'Documents', sortable: false, minWidth: 170, cellRenderer: renderDocuments, valueGetter: documentsValue },

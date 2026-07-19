@@ -77,14 +77,25 @@ export function podOccurrenceLabel(occurrence?: string | null): string {
 // When a pod has no explicit end time, treat it as live for this long after start.
 const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
 
+export type PodStatus = 'LIVE' | 'UPCOMING' | 'ENDED';
+
+/** Derives a pod's status from its start (and optional end) timestamp relative
+ * to now. Mirrors mWeb's podStatus. */
+export function podStatus(start?: string | null, end?: string | null): PodStatus {
+  if (!start) return 'UPCOMING';
+  const startMs = new Date(start).getTime();
+  if (Number.isNaN(startMs)) return 'UPCOMING';
+  const endMs = end ? new Date(end).getTime() : startMs + POD_LIVE_TAIL_MS;
+  const now = Date.now();
+  if (now < startMs) return 'UPCOMING';
+  if (now <= endMs) return 'LIVE';
+  return 'ENDED';
+}
+
 /** True while a pod has not ended yet (live or upcoming) — used to hide past
  * pods from "Upcoming" lists. Mirrors mWeb's podStatus/isPodActive. */
 export function isPodActive(start?: string | null, end?: string | null): boolean {
-  if (!start) return true;
-  const startMs = new Date(start).getTime();
-  if (Number.isNaN(startMs)) return true;
-  const endMs = end ? new Date(end).getTime() : startMs + POD_LIVE_TAIL_MS;
-  return Date.now() <= endMs;
+  return podStatus(start, end) !== 'ENDED';
 }
 
 /** True once the pod's start time has passed — the canonical "expired" test used

@@ -289,8 +289,10 @@ describe('meeting slot booking', () => {
     expect(again!.status).toBe('REQUESTED');
     expect(again!.scheduled_at).toBeNull();
     expect(again!.cancel_reason).toBeNull();
-    // The request id is assigned once and kept across the re-request.
-    expect(again!.request_no).toBe(first!.request_no);
+    // A cancelled cycle is closed: re-requesting mints a fresh request id
+    // rather than resurrecting the old one.
+    expect(again!.request_no).toMatch(/^DUN-VEN-\d{6}$/);
+    expect(again!.request_no).not.toBe(first!.request_no);
     const mine = await meetingService.myMeetings(me);
     expect(mine.filter((m) => m!.kind === 'VENUE')).toHaveLength(1);
   });

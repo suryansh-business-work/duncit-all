@@ -19,8 +19,9 @@ export type MeetingApprovalStatus = (typeof MEETING_APPROVAL_STATUSES)[number];
 const meetingSchema = new Schema(
   {
     /** Human-readable request id shown in the apps + onboarding tables
-     * (DUN-VEN-/DUN-HOST-/DUN-BRAND-000001). Assigned once on first request;
-     * kept across re-requests of the same user+kind. */
+     * (DUN-VEN-/DUN-HOST-/DUN-BRAND-000001). Minted fresh for every new request
+     * cycle — a re-request after Cancelled/Denied gets a NEW id (never reused);
+     * only reused while the current request is still active (Requested/Scheduled). */
     request_no: { type: String, default: null, index: true },
     kind: { type: String, enum: SURVEY_KINDS, required: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },

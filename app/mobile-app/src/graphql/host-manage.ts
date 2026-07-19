@@ -10,6 +10,7 @@ export const HostPodsDocument = gql(`
       pod_id
       club_slug
       pod_date_time
+      pod_end_date_time
       pod_description
       pod_images_and_videos {
         url
@@ -17,6 +18,7 @@ export const HostPodsDocument = gql(`
       }
       pod_amount
       pod_type
+      pod_mode
       no_of_spots
       location_id
       venue_id

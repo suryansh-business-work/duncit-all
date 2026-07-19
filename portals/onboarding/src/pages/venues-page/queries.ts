@@ -70,6 +70,7 @@ export const VENUES = gql`
  * VenueRowFields selection so the Edit/Review dialogs can reuse the row object. */
 export interface VenueRow {
   id: string;
+  venue_no?: string | null;
   venue_name: string;
   venue_type?: string | null;
   city?: string | null;
@@ -96,6 +97,7 @@ export interface VenueRow {
 const VENUE_ROW_FIELDS = gql`
   fragment VenueRowFields on Venue {
     id
+    venue_no
     venue_name
     venue_type
     description
@@ -120,6 +122,14 @@ const VENUE_ROW_FIELDS = gql`
       capacity
     }
     venue_category {
+      super_category_id
+      category_id
+      sub_category_id
+      super_category_name
+      category_name
+      sub_category_name
+    }
+    survey_category {
       super_category_id
       category_id
       sub_category_id

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { gql, useMutation } from '@apollo/client';
 import {
@@ -14,6 +14,7 @@ import {
   TextField,
 } from '@mui/material';
 import { hasImageLine } from '../../create-pod-page/create-pod/create-pod.form';
+import MediaUrlsField from '../../create-pod-page/create-pod/fields/MediaUrlsField';
 import { blankPodEditValues, type HostPodSummary, type PodEditValues } from './pod-edit.types';
 
 export const HOST_UPDATE_POD = gql`
@@ -76,6 +77,7 @@ interface PodEditFormProps {
 export default function PodEditForm({ pod, onClose, onSaved }: Readonly<PodEditFormProps>) {
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -119,18 +121,17 @@ export default function PodEditForm({ pod, onClose, onSaved }: Readonly<PodEditF
             error={!!errors.pod_description}
             helperText={errors.pod_description?.message}
           />
-          <TextField
-            label="Media URLs"
-            required
-            fullWidth
-            multiline
-            minRows={2}
-            {...register('media_text')}
-            error={!!errors.media_text}
-            helperText={
-              errors.media_text?.message ??
-              'One image or video URL per line. At least one image is required.'
-            }
+          <Controller
+            control={control}
+            name="media_text"
+            render={({ field, fieldState }) => (
+              <MediaUrlsField
+                value={field.value}
+                onChange={field.onChange}
+                error={fieldState.error?.message}
+                label="Media"
+              />
+            )}
           />
           {saveState.error && <Alert severity="error">{saveState.error.message}</Alert>}
         </Stack>

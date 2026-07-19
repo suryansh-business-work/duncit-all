@@ -9,6 +9,7 @@ export const STATUS_OPTIONS = STATUSES.filter(Boolean).map((s) => ({ value: s, l
  * EcommBrandRowFields selection so the Edit/Review dialogs can reuse the row object. */
 export interface EcommBrandRow {
   id: string;
+  brand_no?: string | null;
   brand_name?: string | null;
   logo_url?: string | null;
   tagline?: string | null;
@@ -70,6 +71,7 @@ export const ECOMM_BRANDS = gql`
 const ECOMM_BRAND_ROW_FIELDS = gql`
   fragment EcommBrandRowFields on EcommBrand {
     id
+    brand_no
     brand_name
     logo_url
     cover_image_url

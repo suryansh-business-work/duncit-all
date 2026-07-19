@@ -18,6 +18,8 @@ interface Props {
   lockName: boolean;
   ext: string;
   phone: string;
+  hasProfilePhone: boolean;
+  onGoToProfile: () => void;
   notes: string;
   setNotes: (v: string) => void;
   busy: boolean;
@@ -39,6 +41,8 @@ export function MeetingPhase({
   lockName,
   ext,
   phone,
+  hasProfilePhone,
+  onGoToProfile,
   notes,
   setNotes,
   busy,
@@ -132,9 +136,34 @@ export function MeetingPhase({
             flex={1}
           />
         </XStack>
-        <Text fontSize={11.5} color={ink} opacity={0.55}>
-          From your profile.
-        </Text>
+        {hasProfilePhone ? (
+          <Text fontSize={11.5} color={ink} opacity={0.55}>
+            From your profile.
+          </Text>
+        ) : (
+          <YStack gap={8} padding={12} borderRadius={12} backgroundColor="$color2">
+            <Text testID="meeting-phone-missing" fontSize={12.5} color={ink}>
+              Phone number is required so our team can reach you. Please add your Phone number from
+              Profile to proceed.
+            </Text>
+            <XStack
+              testID="meeting-go-to-profile"
+              role="button"
+              aria-label="Go To Profile"
+              onPress={onGoToProfile}
+              alignSelf="flex-start"
+              paddingHorizontal={16}
+              paddingVertical={8}
+              borderRadius={999}
+              backgroundColor={primary}
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <Text fontSize={13} fontWeight="900" color="white">
+                Go To Profile
+              </Text>
+            </XStack>
+          </YStack>
+        )}
         <Text fontSize={14} fontWeight="700" color={ink}>
           Notes (optional)
         </Text>

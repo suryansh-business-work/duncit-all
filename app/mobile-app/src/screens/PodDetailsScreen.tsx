@@ -18,7 +18,7 @@ import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
-import { usePodActions, usePodDetails } from '@/hooks/useDetails';
+import { usePodActions, usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
 import { usePodBackout } from '@/hooks/usePodHistory';
@@ -33,7 +33,8 @@ export function PodDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
-  const { podId } = route.params;
+  // Doc id from in-app nav, or resolved from a shared /club/:clubSlug/pod/:podSlug link.
+  const podId = useResolvedPodId(route.params);
   const {
     pod,
     venue,

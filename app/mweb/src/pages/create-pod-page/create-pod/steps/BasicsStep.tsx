@@ -43,7 +43,17 @@ export default function BasicsStep({ form }: Readonly<Props>) {
         error={!!errors.pod_description}
         helperText={errors.pod_description?.message ?? 'Tell people what to expect — agenda, vibe, who it is for'}
       />
-      <MediaUrlsField form={form} />
+      <Controller
+        control={control}
+        name="media_text"
+        render={({ field, fieldState }) => (
+          <MediaUrlsField
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
+        )}
+      />
       <Controller
         control={control}
         name="what_this_pod_offers"

@@ -5,6 +5,9 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+jest.mock('@/hooks/useMediaUpload', () => ({
+  useMediaUpload: () => ({ uploading: false, error: undefined, pickAndUpload: jest.fn() }),
+}));
 const mockRequest = graphqlRequest as jest.Mock;
 
 const pod = {
@@ -45,7 +48,8 @@ describe('PodEditDialog', () => {
   it('blocks an invalid submit with field errors', async () => {
     renderWithProviders(<PodEditDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
     fireEvent.changeText(screen.getByTestId('field-pod_title'), 'x');
-    fireEvent.changeText(screen.getByTestId('field-media_text'), 'https://cdn/clip.mp4');
+    // Removing the only prefilled image leaves media_text empty → media validation fails.
+    fireEvent.press(screen.getByTestId('media-remove-https://cdn/img.jpg'));
     fireEvent.press(screen.getByTestId('pod-edit-save'));
     await waitFor(() => expect(screen.getByTestId('pod_title-error')).toBeOnTheScreen());
     expect(screen.getByTestId('media_text-error')).toBeOnTheScreen();

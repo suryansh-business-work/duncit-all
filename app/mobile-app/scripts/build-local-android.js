@@ -4,8 +4,14 @@
  * <repo-root>/build/.  No Android SDK / NDK needed on the host.
  *
  * Usage:
- *   node scripts/build-local-android.js        →  build/duncit-release.apk
- *   node scripts/build-local-android.js --aab  →  build/duncit-release.aab
+ *   node scripts/build-local-android.js        →  build/duncit-<date>-build-<n> V<version>.apk
+ *   node scripts/build-local-android.js --aab  →  build/duncit-<date>-build-<n> V<version>.aab
+ *
+ *   e.g.  build/duncit-18-july-2026-build-1 V1.4.18.apk
+ *   <date>    local build date, e.g. 18-july-2026
+ *   <n>       that day's build counter (persisted in build/.build-number.json,
+ *             resets to 1 when the day rolls over)
+ *   <version> app.json expo.version
  *
  * The build is throttled + monitored so it cannot take the PC down:
  *   - Gradle runs with --build-arg GRADLE_WORKERS / GRADLE_HEAP (defaults 4 / 3g,
@@ -28,6 +34,7 @@ const { spawn, execFile } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
+const { notifyReleaseSafe } = require('./release-notify');
 
 const isAab = process.argv.includes('--aab');
 const buildType = isAab ? 'aab' : 'apk';
@@ -128,6 +135,61 @@ function run(cmd, args) {
   });
 }
 
+/* ── Artifact naming ──────────────────────────────────────────────────────── */
+
+const MONTHS = [
+  'january', 'february', 'march', 'april', 'may', 'june',
+  'july', 'august', 'september', 'october', 'november', 'december',
+];
+
+/** Local build date as `18-july-2026` (no leading zero on the day). */
+function buildDateStamp(now) {
+  return `${now.getDate()}-${MONTHS[now.getMonth()]}-${now.getFullYear()}`;
+}
+
+/** App marketing version (e.g. `1.4.18`) from app.json. */
+function readAppVersion() {
+  const appJson = JSON.parse(fs.readFileSync(path.join(appDir, 'app.json'), 'utf8'));
+  return appJson.expo.version;
+}
+
+/**
+ * Next per-day build number, persisted in build/.build-number.json. Resets to 1
+ * when the day rolls over, and skips past any number whose file already exists
+ * (so a lost/stale state file can never overwrite a previous artifact).
+ */
+function nextBuildNumber(stateFile, dateStamp, pathForNumber) {
+  let n = 1;
+  try {
+    const prev = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    if (prev.date === dateStamp) {
+      n = Number(prev.n) + 1;
+    }
+  } catch {
+    // No (or unreadable) state yet → start today's numbering at 1.
+  }
+  while (fs.existsSync(pathForNumber(n))) {
+    n += 1;
+  }
+  fs.writeFileSync(stateFile, JSON.stringify({ date: dateStamp, n }));
+  return n;
+}
+
+/**
+ * Rename build/duncit-release.<ext> to the dated, versioned, numbered name and
+ * return the final absolute path.
+ */
+function renameArtifact(genericPath) {
+  const version = readAppVersion();
+  const dateStamp = buildDateStamp(new Date());
+  const pathForNumber = (n) =>
+    path.join(outputDir, `duncit-${dateStamp}-build-${n} V${version}.${buildType}`);
+  const stateFile = path.join(outputDir, '.build-number.json');
+  const finalPath = pathForNumber(nextBuildNumber(stateFile, dateStamp, pathForNumber));
+  fs.renameSync(genericPath, finalPath);
+  return finalPath;
+}
+
 async function main() {
   console.log(`\nBuilding Android ${buildType.toUpperCase()} via Docker…`);
   console.log(`  Dockerfile : ${dockerfile}`);
@@ -159,18 +221,33 @@ async function main() {
   ]);
 
   const artifact = path.join(outputDir, `duncit-release.${buildType}`);
-  if (fs.existsSync(artifact)) {
-    const size = (fs.statSync(artifact).size / 1024 / 1024).toFixed(1);
-    console.log(`\n✓  Done!  ${artifact}  (${size} MB)`);
-  } else {
+  if (!fs.existsSync(artifact)) {
     console.error(`\n✗  Artifact not found at ${artifact} — check Docker logs above.`);
     process.exit(1);
   }
+
+  const finalPath = renameArtifact(artifact);
+  const size = (fs.statSync(finalPath).size / 1024 / 1024).toFixed(1);
+  console.log(`\n✓  Done!  ${finalPath}  (${size} MB)`);
+
+  // Email the release list a changelog + APK download link. APK-only, best-effort
+  // (never fails the build) and skippable with --no-notify.
+  if (!isAab && !process.argv.includes('--no-notify')) {
+    await notifyReleaseSafe({
+      apkPath: finalPath,
+      version: readAppVersion(),
+      buildName: path.basename(finalPath).replace(/\.apk$/i, ''),
+    });
+  }
 }
 
-main().catch((err) => {
-  // Killing the docker CLI disconnects the client, which cancels the BuildKit
-  // job server-side — completed layers stay cached for the next attempt.
-  console.error(`\n✗  ${err.message}`);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    // Killing the docker CLI disconnects the client, which cancels the BuildKit
+    // job server-side — completed layers stay cached for the next attempt.
+    console.error(`\n✗  ${err.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = { buildDateStamp, readAppVersion, nextBuildNumber };

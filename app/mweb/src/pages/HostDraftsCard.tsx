@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -15,6 +16,7 @@ import {
 import EditNoteIcon from '@mui/icons-material/EditNote';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { useDraftRetentionDays } from '../utils/dateFormat';
 import { STEP_TITLES } from './create-pod-page/create-pod';
 
 const MY_POD_DRAFTS = gql`
@@ -39,6 +41,7 @@ export default function HostDraftsCard() {
   const { data, loading, refetch } = useQuery(MY_POD_DRAFTS, { fetchPolicy: 'cache-and-network' });
   const [deleteMut, { loading: deleting }] = useMutation(DELETE_POD_DRAFT);
   const [target, setTarget] = useState<string | null>(null);
+  const retentionDays = useDraftRetentionDays();
   const drafts = data?.myPodDrafts ?? [];
 
   if (loading && !data) return null;
@@ -62,6 +65,10 @@ export default function HostDraftsCard() {
           <Chip size="small" label={drafts.length} />
         </Stack>
         <Divider sx={{ mb: 1.5 }} />
+        <Alert severity="warning" sx={{ mb: 1.5 }}>
+          Draft Pods are automatically deleted after {retentionDays} days of being saved. Please
+          publish your Pod before it expires.
+        </Alert>
         <Stack spacing={1}>
           {drafts.map((draft: any) => {
             const stepLabel = STEP_TITLES[Math.min(draft.step ?? 0, STEP_TITLES.length - 1)];

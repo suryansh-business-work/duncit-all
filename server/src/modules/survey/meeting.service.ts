@@ -575,9 +575,13 @@ export const meetingService = {
     if (await isHolidayInstant(input.requested_at)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
-    // Assign a request id once and keep it across re-requests of the same
-    // user+kind (also back-fills legacy rows that predate the field).
-    const requestNo = own?.request_no ?? (await nextMeetingRequestNo(kind));
+    // Reuse the request id only while the current request is still in an active
+    // cycle (Requested / Scheduled — e.g. the user just changes their slot). A
+    // previously Cancelled, or Done-and-Denied/Approved, meeting is a genuinely
+    // NEW request and always mints a fresh id — request ids are never reused
+    // (spec: unique per new request for accurate tracking/auditing).
+    const activeCycle = own?.status === 'REQUESTED' || own?.status === 'SCHEDULED';
+    const requestNo = activeCycle && own?.request_no ? own.request_no : await nextMeetingRequestNo(kind);
     // A fresh booking restarts the request — a previously CANCELLED meeting (or a
     // DONE one the admin DENIED) comes back as REQUESTED so the Earn card locks
     // again. A DONE meeting still awaiting approval was already blocked above.

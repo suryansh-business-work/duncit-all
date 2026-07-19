@@ -11,6 +11,9 @@ export interface IAppSettings extends Document {
   /** Signup birth-year bounds (inclusive), configurable from Admin > Settings. */
   min_birth_year: number;
   max_birth_year: number;
+  /** Days a Create-Pod draft is retained (from its last save) before the
+   * background cleanup permanently deletes it. Admin > Pods > Pod Settings. */
+  draft_retention_days: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -30,6 +33,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     time_zone: { type: String, default: "Asia/Kolkata" },
     min_birth_year: { type: Number, default: 1940 },
     max_birth_year: { type: Number, default: 2012 },
+    draft_retention_days: { type: Number, default: 3, min: 1 },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

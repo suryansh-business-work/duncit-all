@@ -9,7 +9,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    globals: false,
+    globals: true,
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
     // Vitest specs live under __tests__/unit-tests; Cypress e2e specs under
     // __tests__/e2e are discovered separately by Cypress.

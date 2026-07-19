@@ -177,8 +177,17 @@ async function notifyRelease({ apkPath, version, buildName }) {
   }
   const token = await resolveToken();
   if (!token) {
-    console.log(
-      'ℹ  release-notify: no credentials set (DUNCIT_RELEASE_TOKEN or DUNCIT_RELEASE_EMAIL/PASSWORD) — skipping release email.',
+    console.warn(
+      [
+        '',
+        '⚠  release-notify: NO RELEASE EMAIL SENT — release credentials are not set.',
+        '   The APK built fine, but sending the changelog mail needs a SUPER_ADMIN / TECH_MANAGER login.',
+        '   Set ONE of these (then re-build, or re-send standalone with the command below):',
+        '     • DUNCIT_RELEASE_TOKEN=<jwt>',
+        '     • DUNCIT_RELEASE_EMAIL=<email> DUNCIT_RELEASE_PASSWORD=<password> [DUNCIT_RELEASE_PORTAL_KEY=<key>]',
+        `   Re-send this build:  node scripts/release-notify.js --file "${apkPath}"`,
+        '',
+      ].join('\n'),
     );
     return;
   }

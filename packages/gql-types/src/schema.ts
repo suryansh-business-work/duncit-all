@@ -285,9 +285,26 @@ export type AppAnalyticsEventType =
   | 'PAGE_VIEW'
   | 'TOUCH';
 
+export type AppReleaseCommitInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  hash: Scalars['String']['input'];
+  subject: Scalars['String']['input'];
+};
+
+export type AppReleaseEmailResult = {
+  __typename?: 'AppReleaseEmailResult';
+  changelog_html?: Maybe<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  message_id?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
+  recipients: Array<Scalars['String']['output']>;
+};
+
 export type AppSettings = {
   __typename?: 'AppSettings';
   date_format: Scalars['String']['output'];
+  /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
+  draft_retention_days: Scalars['Int']['output'];
   jwt_expires_in?: Maybe<Scalars['String']['output']>;
   jwt_no_expiry: Scalars['Boolean']['output'];
   /** Latest allowed signup birth year (inclusive). */
@@ -2194,6 +2211,8 @@ export type EcommBrand = {
   approved_at?: Maybe<Scalars['String']['output']>;
   approved_product_count: Scalars['Int']['output'];
   brand_name: Scalars['String']['output'];
+  /** Permanent human id (BRD-000001) — Onboarded Brands table. */
+  brand_no?: Maybe<Scalars['String']['output']>;
   city: Scalars['String']['output'];
   contact_email: Scalars['String']['output'];
   contact_person: Scalars['String']['output'];
@@ -2916,6 +2935,8 @@ export type Host = {
   full_name: Scalars['String']['output'];
   host_categories: Array<HostCategory>;
   host_commission_pct?: Maybe<Scalars['Float']['output']>;
+  /** Permanent human id (HOST-000001) — Onboarded Hosts table. */
+  host_no?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
   pan_number: Scalars['String']['output'];
@@ -2948,6 +2969,13 @@ export type HostCategoryInput = {
   category_id: Scalars['ID']['input'];
   sub_category_id: Scalars['ID']['input'];
   super_category_id: Scalars['ID']['input'];
+};
+
+/** Host Studio insights: pod-status distribution + monthly payout series. */
+export type HostInsights = {
+  __typename?: 'HostInsights';
+  monthly_earnings: Array<HostMonthlyEarning>;
+  status_counts: HostStatusCounts;
 };
 
 export type HostLead = {
@@ -3044,6 +3072,13 @@ export type HostLeadTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** One month's host payout total (bucket = 'YYYY-MM'). */
+export type HostMonthlyEarning = {
+  __typename?: 'HostMonthlyEarning';
+  month: Scalars['String']['output'];
+  total: Scalars['Float']['output'];
+};
+
 /** What deleting a pod means for its audience — shown in the host's delete dialog. */
 export type HostPodDeleteImpact = {
   __typename?: 'HostPodDeleteImpact';
@@ -3112,6 +3147,15 @@ export type HostStatus =
   | 'DRAFT'
   | 'REJECTED'
   | 'SUBMITTED';
+
+/** Host Studio pod-status distribution (donut) — cancelled = soft-deleted pods. */
+export type HostStatusCounts = {
+  __typename?: 'HostStatusCounts';
+  cancelled: Scalars['Int']['output'];
+  completed: Scalars['Int']['output'];
+  ongoing: Scalars['Int']['output'];
+  upcoming: Scalars['Int']['output'];
+};
 
 export type HostStep1Input = {
   dob?: InputMaybe<Scalars['String']['input']>;
@@ -3253,6 +3297,7 @@ export type InventoryProduct = {
   brand_id?: Maybe<Scalars['ID']['output']>;
   brand_name: Scalars['String']['output'];
   breadth_cm: Scalars['Float']['output'];
+  categories: Array<ProductCategory>;
   category_id?: Maybe<Scalars['ID']['output']>;
   color: Scalars['String']['output'];
   commission_pct: Scalars['Float']['output'];
@@ -4196,6 +4241,12 @@ export type Mutation = {
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   seedSuperAdmin: SeedAdminResult;
+  /**
+   * Emails the mobile-app release distribution list an APK download link plus an
+   * OpenAI-summarised changelog built from the supplied git commits. Tech/Super
+   * admin only; SMTP + OpenAI credentials come from the Tech portal env entries.
+   */
+  sendAppReleaseEmail: AppReleaseEmailResult;
   sendCrmTestEmail: CrmEmailTestResult;
   sendMarketingCampaign: MarketingCampaign;
   sendPodMessage: PodMessage;
@@ -5852,6 +5903,11 @@ export type MutationSavePodDraftArgs = {
 
 export type MutationSavePushSubscriptionArgs = {
   input: PushSubscriptionInput;
+};
+
+
+export type MutationSendAppReleaseEmailArgs = {
+  input: SendAppReleaseEmailInput;
 };
 
 
@@ -7677,13 +7733,36 @@ export type PostalAddressInput = {
   state?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** One Super/Category/Sub taxonomy row a product is sold in (a product may have several). */
+export type ProductCategory = {
+  __typename?: 'ProductCategory';
+  category_id?: Maybe<Scalars['ID']['output']>;
+  category_name: Scalars['String']['output'];
+  sub_category_id?: Maybe<Scalars['ID']['output']>;
+  sub_category_name: Scalars['String']['output'];
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+  super_category_name: Scalars['String']['output'];
+};
+
+export type ProductCategoryInput = {
+  category_id: Scalars['ID']['input'];
+  category_name?: InputMaybe<Scalars['String']['input']>;
+  sub_category_id: Scalars['ID']['input'];
+  sub_category_name?: InputMaybe<Scalars['String']['input']>;
+  super_category_id: Scalars['ID']['input'];
+  super_category_name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ProductListingDeliveryTarget =
   | 'HOST'
+  | 'SHIPROCKET'
   | 'VENUE';
 
 export type ProductListingInput = {
   brand_id: Scalars['ID']['input'];
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
+  /** Full list of Super/Category/Sub rows the product is sold in. When present, categories[0] backfills the single fields above. */
+  categories?: InputMaybe<Array<ProductCategoryInput>>;
   category_id: Scalars['ID']['input'];
   color?: InputMaybe<Scalars['String']['input']>;
   commission_pct: Scalars['Float']['input'];
@@ -7699,6 +7778,7 @@ export type ProductListingInput = {
   product_name: Scalars['String']['input'];
   size_label?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
+  /** Primary category triple (kept for back-compat; mirrors categories[0]). */
   super_category_id: Scalars['ID']['input'];
   unit_cost: Scalars['Float']['input'];
   /** Optional per-variant rows (colour/size/etc.). The flat fields above stay the product default/primary variant. */
@@ -7796,6 +7876,7 @@ export type ProductVariant = {
   __typename?: 'ProductVariant';
   breadth_cm: Scalars['Float']['output'];
   color: Scalars['String']['output'];
+  description: Scalars['String']['output'];
   height_cm: Scalars['Float']['output'];
   id: Scalars['ID']['output'];
   images: Array<Scalars['String']['output']>;
@@ -7811,6 +7892,7 @@ export type ProductVariant = {
 export type ProductVariantInput = {
   breadth_cm?: InputMaybe<Scalars['Float']['input']>;
   color?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
   images?: InputMaybe<Array<Scalars['String']['input']>>;
   inventory_count?: InputMaybe<Scalars['Int']['input']>;
@@ -7851,6 +7933,8 @@ export type PublicAd = {
 export type PublicAppSettings = {
   __typename?: 'PublicAppSettings';
   date_format: Scalars['String']['output'];
+  /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
+  draft_retention_days: Scalars['Int']['output'];
   max_birth_year: Scalars['Int']['output'];
   min_birth_year: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -8090,6 +8174,7 @@ export type Query = {
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
   host?: Maybe<Host>;
+  hostInsights: HostInsights;
   hostLead?: Maybe<HostLead>;
   hostLeads: Array<HostLead>;
   hostLeadsTable: HostLeadTablePage;
@@ -8960,6 +9045,11 @@ export type QueryFounderDashboardArgs = {
 
 export type QueryHostArgs = {
   host_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryHostInsightsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -10159,6 +10249,20 @@ export type SeedAdminResult = {
   emailed: Scalars['Boolean']['output'];
 };
 
+export type SendAppReleaseEmailInput = {
+  apk_size_mb: Scalars['Float']['input'];
+  apk_url: Scalars['String']['input'];
+  build_name: Scalars['String']['input'];
+  commits: Array<AppReleaseCommitInput>;
+  deletions?: InputMaybe<Scalars['Int']['input']>;
+  files_changed?: InputMaybe<Scalars['Int']['input']>;
+  insertions?: InputMaybe<Scalars['Int']['input']>;
+  range_label?: InputMaybe<Scalars['String']['input']>;
+  /** Optional override; defaults to the built-in release distribution list. */
+  recipients?: InputMaybe<Array<Scalars['String']['input']>>;
+  version: Scalars['String']['input'];
+};
+
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
   awb: Scalars['String']['output'];
@@ -10776,6 +10880,8 @@ export type UpdateAiPromptInput = {
 
 export type UpdateAppSettingsInput = {
   date_format?: InputMaybe<Scalars['String']['input']>;
+  /** Days a Create-Pod draft is kept before auto-deletion (min 1). */
+  draft_retention_days?: InputMaybe<Scalars['Int']['input']>;
   jwt_expires_in?: InputMaybe<Scalars['String']['input']>;
   jwt_no_expiry?: InputMaybe<Scalars['Boolean']['input']>;
   max_birth_year?: InputMaybe<Scalars['Int']['input']>;
@@ -11393,11 +11499,15 @@ export type Venue = {
   status: VenueStatus;
   step_completed: Scalars['Int']['output'];
   submitted_at?: Maybe<Scalars['String']['output']>;
+  /** Super/Category/Sub the owner picked in the venue onboarding survey (from their OnboardingMeeting). Pre-fills Edit Venue when the venue has none; null when there is no survey scope. */
+  survey_category?: Maybe<VenueCategory>;
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
   venue_category: VenueCategory;
   venue_commission_pct: Scalars['Float']['output'];
   venue_name: Scalars['String']['output'];
+  /** Permanent human id (VEN-000001) — Onboarded Venues table. */
+  venue_no?: Maybe<Scalars['String']['output']>;
   venue_share_pct: Scalars['Float']['output'];
   venue_type: Scalars['String']['output'];
 };

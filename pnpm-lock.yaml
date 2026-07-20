@@ -668,6 +668,10 @@ importers:
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
 
   packages/pod-form:
+    dependencies:
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../utils
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4

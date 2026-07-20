@@ -1,68 +1,100 @@
 import { describe, expect, it } from 'vitest';
 import { productListingSchema } from './list-products.form';
 
-const validListing = {
-  super_category_id: '507f1f77bcf86cd799439011',
+const validCategory = {
+  super_id: '507f1f77bcf86cd799439011',
+  super_name: 'Beverages',
   category_id: '507f1f77bcf86cd799439012',
-  sub_category_id: '507f1f77bcf86cd799439013',
-  product_name: 'Cold brew kit',
-  image_urls: ['https://cdn.example.com/product.jpg'],
-  description: 'A complete cold brew kit for hosts to add to their pods.',
+  category_name: 'Coffee',
+  sub_id: '507f1f77bcf86cd799439013',
+  sub_name: 'Cold brew',
+};
+
+const validVariant = {
+  option_label: 'Default / Medium',
+  color: '#000000',
   size_label: 'Medium box',
+  description: 'A complete cold brew kit for hosts to add to their pods.',
+  image_urls: ['https://cdn.example.com/product.jpg'],
   height_cm: 24,
   weight_kg: 1.2,
-  color: 'Black',
-  inventory_count: 12,
+  length_cm: 20,
+  breadth_cm: 15,
   unit_cost: 499,
+  inventory_count: 12,
+};
+
+const validListing = {
+  categories: [validCategory],
+  product_name: 'Cold brew kit',
+  variants: [validVariant],
   commission_pct: 15,
-  delivery_target: 'HOST',
+  delivery_target: 'SHIPROCKET' as const,
 };
 
 const messages = (result: ReturnType<typeof productListingSchema.safeParse>) =>
   result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
 
 describe('productListingSchema', () => {
-  it('rejects missing required product details', () => {
-    const result = productListingSchema.safeParse({ ...validListing, product_name: '', image_urls: [] });
-    expect(messages(result)).toMatch(/product title/i);
-    expect(messages(result)).toMatch(/image/i);
+  it('accepts a complete per-variant, multi-category listing', () => {
+    expect(productListingSchema.safeParse(validListing).success).toBe(true);
   });
 
-  it('requires commission in allowed range', () => {
+  it('rejects a missing product title', () => {
+    const result = productListingSchema.safeParse({ ...validListing, product_name: '' });
+    expect(messages(result)).toMatch(/product title/i);
+  });
+
+  it('requires at least one category row with a full Super/Category/Sub', () => {
+    const empty = productListingSchema.safeParse({ ...validListing, categories: [] });
+    expect(messages(empty)).toMatch(/at least one category/i);
+
+    const partial = productListingSchema.safeParse({
+      ...validListing,
+      categories: [{ ...validCategory, sub_id: '' }],
+    });
+    expect(messages(partial)).toMatch(/super category, category and sub category/i);
+  });
+
+  it('requires each variant to carry an image and a long-enough description', () => {
+    const noImage = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, image_urls: [] }],
+    });
+    expect(messages(noImage)).toMatch(/at least one image/i);
+
+    const shortDesc = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, description: 'too short' }],
+    });
+    expect(messages(shortDesc)).toMatch(/at least 20 characters/i);
+  });
+
+  it('requires per-variant dimensions and price', () => {
+    const result = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, height_cm: '', length_cm: '', unit_cost: 0 }],
+    });
+    expect(messages(result)).toMatch(/height/i);
+    expect(messages(result)).toMatch(/length/i);
+    expect(messages(result)).toMatch(/price/i);
+  });
+
+  it('requires total stock across variants to be at least 1', () => {
+    const result = productListingSchema.safeParse({
+      ...validListing,
+      variants: [{ ...validVariant, inventory_count: 0 }],
+    });
+    expect(messages(result)).toMatch(/total stock/i);
+  });
+
+  it('requires commission within the allowed range', () => {
     const result = productListingSchema.safeParse({ ...validListing, commission_pct: 3 });
     expect(messages(result)).toMatch(/commission/i);
   });
 
-  it('requires the super, category and sub category', () => {
-    const result = productListingSchema.safeParse({ ...validListing, super_category_id: '', category_id: '', sub_category_id: '' });
-    expect(messages(result)).toMatch(/super category/i);
-    expect(messages(result)).toMatch(/sub category/i);
-  });
-
-  it('rejects zero or negative inventory and price', () => {
-    const result = productListingSchema.safeParse({ ...validListing, inventory_count: 0, unit_cost: 0 });
-    expect(messages(result)).toMatch(/unit/i);
-    expect(messages(result)).toMatch(/price/i);
-  });
-
-  it('accepts a complete product listing (variants optional, defaulting to [])', () => {
-    const parsed = productListingSchema.safeParse(validListing);
-    expect(parsed.success).toBe(true);
-    if (parsed.success) expect(parsed.data.variants).toEqual([]);
-  });
-
-  it('accepts extra variants and validates their price/stock/name', () => {
-    const ok = productListingSchema.safeParse({
-      ...validListing,
-      variants: [{ option_label: 'Red / L', color: '#ff0000', size_label: 'L', unit_cost: 599, inventory_count: 4, image_urls: [] }],
-    });
-    expect(ok.success).toBe(true);
-
-    const bad = productListingSchema.safeParse({
-      ...validListing,
-      variants: [{ option_label: '', color: '#000000', size_label: '', unit_cost: 0, inventory_count: -1, image_urls: [] }],
-    });
-    expect(messages(bad)).toMatch(/variant name/i);
-    expect(messages(bad)).toMatch(/price/i);
+  it('only accepts ShipRocket as the delivery option', () => {
+    const result = productListingSchema.safeParse({ ...validListing, delivery_target: 'HOST' });
+    expect(result.success).toBe(false);
   });
 });

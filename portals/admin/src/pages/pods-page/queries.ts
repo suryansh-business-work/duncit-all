@@ -160,6 +160,8 @@ export const CLUBS = gql`
       id
       club_id
       club_name
+      super_category_id
+      category_id
       matched_venues {
         id
       }
@@ -219,6 +221,14 @@ export const INVENTORY_PRODUCTS = gql`
       is_active
       listing_review_status
       listing_submitted_by_name
+      super_category_id
+      category_id
+      sub_category_id
+      categories {
+        super_category_id
+        category_id
+        sub_category_id
+      }
     }
   }
 `;

@@ -54,6 +54,61 @@ describe('inventoryService integration', () => {
     expect(pub?.variants?.[0].images).toEqual(['https://cdn/r.jpg']);
     expect(pub?.variants?.[1].images).toEqual([]);
   });
+
+  it('serializes category rows + per-variant description and filters pod products by category', async () => {
+    const superId = new Types.ObjectId();
+    const catId = new Types.ObjectId();
+    const subId = new Types.ObjectId();
+    const otherSub = new Types.ObjectId();
+    const approved = { is_active: true, status: 'ACTIVE', pod_available: true, listing_review_status: 'APPROVED' };
+
+    const matchId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: matchId,
+      product_name: 'Matching kit',
+      sku: 'MATCH1',
+      unit_cost: 100,
+      inventory_count: 5,
+      super_category_id: superId,
+      category_id: catId,
+      sub_category_id: subId,
+      categories: [
+        { super_category_id: superId, category_id: catId, sub_category_id: subId, super_category_name: 'S', category_name: 'C', sub_category_name: 'Cold brew' },
+      ],
+      variants: [
+        { _id: new Types.ObjectId(), option_label: 'Default', sku: 'MATCH1-D', color: 'Black', size_label: 'M', description: 'Full per-variant description text', unit_cost: 100, inventory_count: 5, images: ['https://cdn/m.jpg'], height_cm: 10, breadth_cm: 5, length_cm: 8, weight_kg: 1 },
+      ],
+      ...approved,
+    } as never);
+    await InventoryProductModel.collection.insertOne({
+      _id: new Types.ObjectId(),
+      product_name: 'Other kit',
+      sku: 'OTHER1',
+      unit_cost: 100,
+      inventory_count: 5,
+      super_category_id: superId,
+      category_id: catId,
+      sub_category_id: otherSub,
+      ...approved,
+    } as never);
+
+    // The category filter surfaces only the exactly-matching product.
+    const matched = await inventoryService.listAvailablePodProducts({
+      super_category_id: String(superId),
+      category_id: String(catId),
+      sub_category_id: String(subId),
+    });
+    expect(matched.map((p) => p.product_name)).toEqual(['Matching kit']);
+
+    // Pub shape carries the new category rows + per-variant description.
+    const pub = await inventoryService.getById(String(matchId));
+    expect(pub?.categories?.[0]).toMatchObject({
+      super_category_id: String(superId),
+      sub_category_id: String(subId),
+      sub_category_name: 'Cold brew',
+    });
+    expect(pub?.variants?.[0].description).toBe('Full per-variant description text');
+  });
 });
 
 describe('inventory table queries (shared table engine)', () => {

@@ -22,9 +22,10 @@ interface Props {
   brandId: string;
   canManageProducts?: boolean;
   onEdit: (product: ProductListingRow) => void;
+  onView?: (product: ProductListingRow) => void;
 }
 
-export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit }: Readonly<Props>) {
+export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit, onView }: Readonly<Props>) {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
@@ -140,6 +141,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
             columns={columns}
             fetchRows={fetchRows}
             getRowId={getProductRowId}
+            onRowClick={onView}
             emptyText="No product listings yet."
             defaultSort={{ field: 'updated_at', dir: 'desc' }}
             searchPlaceholder="Search product, size, color"

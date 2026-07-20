@@ -10,6 +10,7 @@
   },
   "peerDependencies": {
     "@apollo/client": ">=3",
+    "@duncit/utils": "workspace:*",
     "@hookform/resolvers": ">=3",
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",

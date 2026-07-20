@@ -34,6 +34,7 @@ import LocationClubStep from './steps/LocationClubStep';
 import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
 import PricingStep from './steps/PricingStep';
 import { useQuery } from '@apollo/client';
+import { filterProductsForClub } from '@duncit/utils';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
@@ -212,6 +213,8 @@ export default function CreatePodStepper({
   const clubId = form.watch('club_id');
   const selectedClub = clubs.find((club) => club.id === clubId) ?? null;
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
+  // Only offer products whose category matches the selected club (Super + Sub).
+  const availableProducts = filterProductsForClub(products, selectedClub) as CreatePodProduct[];
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const venueId = form.watch('venue_id');
@@ -227,7 +230,7 @@ export default function CreatePodStepper({
     <BasicsStep key="basics" form={form} />,
     <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} hostCategories={hostCategories} />,
     <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} />,
-    <PricingStep key="pricing" form={form} products={products} showProducts={showProducts} selectedSlot={selectedSlot} />,
+    <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} selectedSlot={selectedSlot} />,
   ];
 
   return (

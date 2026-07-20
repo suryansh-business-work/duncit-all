@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { podService } from '../../pod.service';
 import { PodModel } from '../../pod.model';
+import { ClubModel } from '@modules/pods/club/club.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 
 const makePod = (over: Record<string, unknown> = {}) => ({
@@ -110,6 +112,54 @@ describe('podService integration', () => {
     const hostId = new Types.ObjectId();
     const pod = await podService.create(makeVirtualInput(hostId));
     expect(pod?.pod_images_and_videos).toEqual([IMG]);
+  });
+
+  it('gates pod products by the club category (Super + Sub); a mismatch is rejected', async () => {
+    const hostId = new Types.ObjectId();
+    const superId = new Types.ObjectId();
+    const clubSub = new Types.ObjectId();
+    const otherSub = new Types.ObjectId();
+    // A club stores its Sub-category in `category_id`.
+    const club = await ClubModel.create({
+      club_id: `club-${Math.random().toString(36).slice(2)}`,
+      club_name: 'Category Club',
+      super_category_id: superId,
+      category_id: clubSub,
+    });
+    const seedProduct = (name: string, sub: Types.ObjectId) =>
+      InventoryProductModel.create({
+        product_name: name,
+        sku: `CAT-${Math.random().toString(36).slice(2)}`.toUpperCase(),
+        unit_cost: 100,
+        inventory_count: 5,
+        is_active: true,
+        super_category_id: superId,
+        sub_category_id: sub,
+        categories: [{ super_category_id: superId, category_id: new Types.ObjectId(), sub_category_id: sub }],
+      });
+
+    const mismatch = await seedProduct('Mismatch kit', otherSub);
+    await expect(
+      podService.create(
+        makeVirtualInput(hostId, {
+          club_id: String(club._id),
+          products_enabled: true,
+          product_requests: [{ product_id: String(mismatch._id), quantity: 1 }],
+        })
+      )
+    ).rejects.toThrow(/does not belong to this pod/i);
+
+    // A product in the club's Super + Sub is accepted.
+    const match = await seedProduct('Matching kit', clubSub);
+    const pod = await podService.create(
+      makeVirtualInput(hostId, {
+        club_id: String(club._id),
+        products_enabled: true,
+        product_requests: [{ product_id: String(match._id), quantity: 1 }],
+      })
+    );
+    expect(pod?.products_enabled).toBe(true);
+    expect(pod?.product_requests).toHaveLength(1);
   });
 
   // update() carries the pod edit path (amount, meeting details, window). It had

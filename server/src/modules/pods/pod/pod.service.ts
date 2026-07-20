@@ -526,7 +526,51 @@ function buildPodDateRange(range?: { from?: string | null; to?: string | null })
   return Object.keys(dateRange).length > 0 ? dateRange : null;
 }
 
-async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
+type ClubCategory = {
+  super_category_id: string | null;
+  // A club stores its Sub-category in `category_id` (2-level Super + Sub model;
+  // the middle Category level is not persisted on a club).
+  sub_category_id: string | null;
+};
+
+/** The pod's category is its club's Super + Sub. Null when the club has no full
+ * pair yet (legacy clubs) — which imposes no product constraint. */
+async function resolveClubCategory(clubId: unknown): Promise<ClubCategory | null> {
+  if (!clubId || !Types.ObjectId.isValid(String(clubId))) return null;
+  const club = await ClubModel.findById(String(clubId))
+    .select('super_category_id category_id')
+    .lean();
+  if (!club) return null;
+  return {
+    super_category_id: club.super_category_id ? String(club.super_category_id) : null,
+    sub_category_id: club.category_id ? String(club.category_id) : null,
+  };
+}
+
+/** A product may attach to a pod only when one of its category rows (or its flat
+ * legacy fields) matches the pod's club at the Super + Sub level. When the club
+ * has no full pair, no constraint applies (graceful for legacy clubs). */
+function productMatchesClubCategory(product: any, clubCategory: ClubCategory | null): boolean {
+  if (!clubCategory?.super_category_id || !clubCategory?.sub_category_id) {
+    return true;
+  }
+  const target = `${clubCategory.super_category_id}|${clubCategory.sub_category_id}`;
+  const rows = Array.isArray(product.categories) && product.categories.length > 0
+    ? product.categories
+    : [{ super_category_id: product.super_category_id, sub_category_id: product.sub_category_id }];
+  return rows.some(
+    (row: any) =>
+      row.super_category_id &&
+      row.sub_category_id &&
+      `${String(row.super_category_id)}|${String(row.sub_category_id)}` === target
+  );
+}
+
+async function buildProductRequests(
+  enabled: boolean,
+  rawItems: any[] = [],
+  clubCategory: ClubCategory | null = null
+) {
   if (!enabled) return [];
   const compact = Array.from(requestMap(rawItems).entries())
     .map(([productId, quantity]) => ({ productId, quantity }))
@@ -536,6 +580,11 @@ async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
     const product = await InventoryProductModel.findById(item.productId);
     if (!product?.is_active) {
       throw new GraphQLError('Selected product is not available', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (!productMatchesClubCategory(product, clubCategory)) {
+      throw new GraphQLError(`${product.product_name} does not belong to this pod's category`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
     }
     next.push({
       product_id: product._id,
@@ -735,9 +784,11 @@ async function applyPlaceForUpdate(doc: any, input: any, nextMode: PodMode) {
 async function applyProductsForUpdate(doc: any, input: any) {
   if (input.products_enabled === undefined && input.product_requests === undefined) return;
   const productsEnabled = input.products_enabled ?? doc.products_enabled;
+  const clubCategory = await resolveClubCategory(input.club_id ?? doc.club_id);
   const nextRequests = await buildProductRequests(
     !!productsEnabled,
-    input.product_requests ?? doc.product_requests ?? []
+    input.product_requests ?? doc.product_requests ?? [],
+    clubCategory
   );
   await applyProductDeltas(doc.product_requests ?? [], nextRequests);
   doc.products_enabled = !!productsEnabled;
@@ -899,9 +950,11 @@ export const podService = {
     const venueLocation = podMode === 'PHYSICAL'
       ? await resolveVenueLocation(input)
       : { venue_id: null, location_id: null, zone_name: null };
+    const clubCategory = await resolveClubCategory(input.club_id);
     const productRequests = await buildProductRequests(
       !!input.products_enabled,
-      input.product_requests ?? []
+      input.product_requests ?? [],
+      clubCategory
     );
     await applyProductDeltas([], productRequests);
 

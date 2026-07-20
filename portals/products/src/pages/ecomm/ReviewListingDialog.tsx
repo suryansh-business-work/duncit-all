@@ -12,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { REVIEW_PRODUCT_LISTING, type ProductListingRow } from './requestsQueries';
+import { deliveryTargetLabel } from './deliveryTarget';
 
 interface Props {
   row: ProductListingRow | null;
@@ -70,8 +71,7 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
             {detailLine}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {row?.inventory_count} units · ₹{row?.unit_cost} ·{' '}
-            {row?.delivery_target === 'HOST' ? 'Host delivery' : 'Venue delivery'}
+            {row?.inventory_count} units · ₹{row?.unit_cost} · {deliveryTargetLabel(row?.delivery_target)}
           </Typography>
           {error && <Alert severity="error">{error}</Alert>}
           <TextField

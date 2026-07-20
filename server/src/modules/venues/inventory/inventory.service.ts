@@ -99,6 +99,7 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
           sku: v.sku ?? '',
           color: v.color ?? '',
           size_label: v.size_label ?? '',
+          description: v.description ?? '',
           unit_cost: v.unit_cost ?? 0,
           inventory_count: v.inventory_count ?? 0,
           images: Array.isArray(v.images) ? v.images : [],
@@ -106,6 +107,16 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
           breadth_cm: v.breadth_cm ?? 0,
           length_cm: v.length_cm ?? 0,
           weight_kg: v.weight_kg ?? 0,
+        }))
+      : [],
+    categories: Array.isArray(product.categories)
+      ? product.categories.map((c) => ({
+          super_category_id: c.super_category_id ? String(c.super_category_id) : null,
+          category_id: c.category_id ? String(c.category_id) : null,
+          sub_category_id: c.sub_category_id ? String(c.sub_category_id) : null,
+          super_category_name: c.super_category_name ?? '',
+          category_name: c.category_name ?? '',
+          sub_category_name: c.sub_category_name ?? '',
         }))
       : [],
     barcode: product.barcode ?? '',
@@ -329,6 +340,56 @@ async function requireEcommManager(user: AuthUser | null) {
 
 const toOid = (v: any) => (v && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null);
 
+/** Normalize the listing input's category rows to full, valid Super/Category/Sub
+ * triples. Falls back to the flat single-triple for single-select/legacy clients
+ * so `categories` is always populated with at least the primary row. */
+function toCategoryRows(input: any) {
+  const rawRows = Array.isArray(input.categories) ? input.categories : [];
+  const isFullTriple = (c: any) =>
+    c &&
+    Types.ObjectId.isValid(c.super_category_id) &&
+    Types.ObjectId.isValid(c.category_id) &&
+    Types.ObjectId.isValid(c.sub_category_id);
+  const rows = rawRows.filter(isFullTriple).map((c: any) => ({
+    super_category_id: toOid(c.super_category_id),
+    category_id: toOid(c.category_id),
+    sub_category_id: toOid(c.sub_category_id),
+    super_category_name: cleanText(c.super_category_name, 120),
+    category_name: cleanText(c.category_name, 120),
+    sub_category_name: cleanText(c.sub_category_name, 120),
+  }));
+  if (rows.length > 0) return rows;
+  if (isFullTriple(input)) {
+    return [
+      {
+        super_category_id: toOid(input.super_category_id),
+        category_id: toOid(input.category_id),
+        sub_category_id: toOid(input.sub_category_id),
+        super_category_name: '',
+        category_name: '',
+        sub_category_name: '',
+      },
+    ];
+  }
+  return [];
+}
+
+/** Persist the category rows and mirror the primary row into the flat single
+ * fields so category-unaware consumers (pod gate, finance, legacy reads) keep
+ * working. */
+function applyCategories(doc: IInventoryProduct, input: any) {
+  const rows = toCategoryRows(input);
+  if (rows.length === 0) return;
+  doc.categories = rows as any;
+  doc.super_category_id = rows[0].super_category_id;
+  doc.category_id = rows[0].category_id;
+  doc.sub_category_id = rows[0].sub_category_id;
+}
+
+const DELIVERY_TARGETS = new Set(['HOST', 'VENUE', 'SHIPROCKET']);
+const resolveDeliveryTarget = (value: unknown) =>
+  (DELIVERY_TARGETS.has(value as string) ? value : 'HOST') as IInventoryProduct['delivery_target'];
+
 /** Persist per-variant rows and mirror the first variant into the product's flat
  * fields (price/stock/color/size/images) so variant-unaware consumers — buyer
  * pages, orders, stock — keep working. Total stock = sum of variant stock. */
@@ -339,6 +400,7 @@ function applyVariants(doc: IInventoryProduct, input: any) {
     sku: (cleanText(v.sku, 60) || randomSku()).toUpperCase(),
     color: cleanText(v.color, 80),
     size_label: cleanText(v.size_label, 120),
+    description: cleanText(v.description, 4000),
     unit_cost: Number(v.unit_cost) || 0,
     inventory_count: Number(v.inventory_count) || 0,
     images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
@@ -356,6 +418,8 @@ function applyVariants(doc: IInventoryProduct, input: any) {
   doc.color = primary.color;
   doc.size_label = primary.size_label;
   doc.height_cm = primary.height_cm;
+  doc.breadth_cm = primary.breadth_cm;
+  doc.length_cm = primary.length_cm;
   doc.weight_kg = primary.weight_kg;
   if (primary.images.length) {
     doc.images = primary.images;
@@ -366,9 +430,7 @@ function applyVariants(doc: IInventoryProduct, input: any) {
 function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser | null) {
   const images = listingImages(input);
   if (input.brand_id !== undefined) doc.brand_id = toOid(input.brand_id);
-  if (input.super_category_id !== undefined) doc.super_category_id = toOid(input.super_category_id);
-  if (input.category_id !== undefined) doc.category_id = toOid(input.category_id);
-  if (input.sub_category_id !== undefined) doc.sub_category_id = toOid(input.sub_category_id);
+  applyCategories(doc, input);
   doc.product_name = cleanText(input.product_name, 200);
   doc.short_description = cleanText(input.description, 220);
   doc.description = cleanText(input.description);
@@ -385,7 +447,7 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   doc.color = cleanText(input.color, 80);
   applyVariants(doc, input);
   doc.commission_pct = Number(input.commission_pct) || 5;
-  doc.delivery_target = input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST';
+  doc.delivery_target = resolveDeliveryTarget(input.delivery_target);
   const info = userInfo(user);
   doc.last_updated_by_id = info.id;
   doc.last_updated_by_name = info.name;
@@ -624,7 +686,9 @@ export const inventoryService = {
       pod_available: true,
       listing_review_status: 'APPROVED',
     };
-    // Approved products only surface in pods of a matching category level.
+    // Approved products only surface in pods of a matching category level. The
+    // pod editors additionally filter the picker client-side by the club's
+    // Super + Sub (see @duncit/pod-form productMatchesClub).
     for (const key of ['super_category_id', 'category_id', 'sub_category_id'] as const) {
       const value = filter?.[key];
       if (value && Types.ObjectId.isValid(value)) q[key] = new Types.ObjectId(value);
@@ -652,13 +716,16 @@ export const inventoryService = {
     const info = userInfo(actor);
     const sku = await generateUniqueSku();
     const images = listingImages(input);
+    const categoryRows = toCategoryRows(input);
+    const primaryCategory = categoryRows[0] ?? {};
     const doc = await InventoryProductModel.create({
       product_name: cleanText(input.product_name, 200),
       sku,
       brand_id: toOid(input.brand_id),
-      super_category_id: toOid(input.super_category_id),
-      category_id: toOid(input.category_id),
-      sub_category_id: toOid(input.sub_category_id),
+      categories: categoryRows,
+      super_category_id: primaryCategory.super_category_id ?? null,
+      category_id: primaryCategory.category_id ?? null,
+      sub_category_id: primaryCategory.sub_category_id ?? null,
       short_description: cleanText(input.description, 220),
       description: cleanText(input.description),
       image_url: images[0] ?? '',
@@ -687,7 +754,7 @@ export const inventoryService = {
       weight_kg: Number(input.weight_kg) || 0,
       color: cleanText(input.color, 80),
       commission_pct: Number(input.commission_pct) || 5,
-      delivery_target: input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST',
+      delivery_target: resolveDeliveryTarget(input.delivery_target),
       last_updated_by_id: info.id,
       last_updated_by_name: info.name,
     });

@@ -17,6 +17,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
   enum ProductListingDeliveryTarget {
     HOST
     VENUE
+    SHIPROCKET
   }
   enum ProductType {
     CONSUMABLE
@@ -56,6 +57,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     sku: String!
     color: String!
     size_label: String!
+    description: String!
     unit_cost: Float!
     inventory_count: Int!
     images: [String!]!
@@ -70,6 +72,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     sku: String
     color: String
     size_label: String
+    description: String
     unit_cost: Float
     inventory_count: Int
     images: [String!]
@@ -79,11 +82,31 @@ export const inventoryTypeDefs = /* GraphQL */ `
     weight_kg: Float
   }
 
+  "One Super/Category/Sub taxonomy row a product is sold in (a product may have several)."
+  type ProductCategory {
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    super_category_name: String!
+    category_name: String!
+    sub_category_name: String!
+  }
+
+  input ProductCategoryInput {
+    super_category_id: ID!
+    category_id: ID!
+    sub_category_id: ID!
+    super_category_name: String
+    category_name: String
+    sub_category_name: String
+  }
+
   type InventoryProduct {
     id: ID!
     product_name: String!
     sku: String!
     variants: [ProductVariant!]!
+    categories: [ProductCategory!]!
     barcode: String!
     short_description: String!
     description: String!
@@ -302,9 +325,12 @@ export const inventoryTypeDefs = /* GraphQL */ `
     "Legacy delivery-partner flag. No longer collected from brands (defaults to false); kept optional for backward compatibility."
     is_duncit_delivery_partner: Boolean
     brand_id: ID!
+    "Primary category triple (kept for back-compat; mirrors categories[0])."
     super_category_id: ID!
     category_id: ID!
     sub_category_id: ID!
+    "Full list of Super/Category/Sub rows the product is sold in. When present, categories[0] backfills the single fields above."
+    categories: [ProductCategoryInput!]
     product_name: String!
     image_url: String!
     images: [String!]

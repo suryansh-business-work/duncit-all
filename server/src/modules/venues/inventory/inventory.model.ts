@@ -4,7 +4,7 @@ export type InventoryStatus = 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED';
 export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
 export type ProductType = 'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT';
 export type ProductListingReviewStatus = 'PENDING' | 'APPROVED' | 'DENIED';
-export type ProductListingDeliveryTarget = 'HOST' | 'VENUE';
+export type ProductListingDeliveryTarget = 'HOST' | 'VENUE' | 'SHIPROCKET';
 export type ProductOwnership = 'DUNCIT' | 'BRAND';
 export type UnitType =
   | 'BOTTLE'
@@ -25,6 +25,7 @@ export interface IProductVariant {
   sku: string;
   color: string;
   size_label: string;
+  description: string;
   unit_cost: number;
   inventory_count: number;
   images: string[];
@@ -34,10 +35,23 @@ export interface IProductVariant {
   weight_kg: number;
 }
 
+/** One Super → Category → Sub taxonomy row a product is sold in. A product may
+ * carry several; it surfaces in a pod when any row matches the pod's category.
+ * Mirrors Host.host_categories so the two stay structurally identical. */
+export interface IProductCategory {
+  super_category_id: Types.ObjectId | null;
+  category_id: Types.ObjectId | null;
+  sub_category_id: Types.ObjectId | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
+
 export interface IInventoryProduct extends Document {
   product_name: string;
   sku: string;
   variants: IProductVariant[];
+  categories: IProductCategory[];
   barcode: string;
   short_description: string;
   description: string;
@@ -119,6 +133,7 @@ const variantSchema = new Schema<IProductVariant>(
     sku: { type: String, default: '', uppercase: true, trim: true, maxlength: 60 },
     color: { type: String, default: '', trim: true, maxlength: 80 },
     size_label: { type: String, default: '', trim: true, maxlength: 120 },
+    description: { type: String, default: '', trim: true, maxlength: 4000 },
     unit_cost: { type: Number, default: 0, min: 0, max: 1000000 },
     inventory_count: { type: Number, default: 0, min: 0 },
     images: { type: [String], default: [] },
@@ -130,11 +145,24 @@ const variantSchema = new Schema<IProductVariant>(
   { _id: true }
 );
 
+const productCategorySchema = new Schema<IProductCategory>(
+  {
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    super_category_name: { type: String, default: '' },
+    category_name: { type: String, default: '' },
+    sub_category_name: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 const productSchema = new Schema<IInventoryProduct>(
   {
     product_name: { type: String, required: true, trim: true, maxlength: 200 },
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true, maxlength: 50 },
     variants: { type: [variantSchema], default: [] },
+    categories: { type: [productCategorySchema], default: [] },
     barcode: { type: String, default: '', trim: true, maxlength: 80 },
     short_description: { type: String, default: '', trim: true, maxlength: 280 },
     description: { type: String, default: '', trim: true, maxlength: 4000 },
@@ -220,7 +248,7 @@ const productSchema = new Schema<IInventoryProduct>(
     weight_kg: { type: Number, default: 0, min: 0 },
     color: { type: String, default: '', trim: true, maxlength: 80 },
     commission_pct: { type: Number, default: 5, min: 5, max: 50 },
-    delivery_target: { type: String, enum: ['HOST', 'VENUE'], default: 'HOST' },
+    delivery_target: { type: String, enum: ['HOST', 'VENUE', 'SHIPROCKET'], default: 'HOST' },
 
     is_active: { type: Boolean, default: true },
 
@@ -233,6 +261,12 @@ const productSchema = new Schema<IInventoryProduct>(
 productSchema.index({ product_name: 1 });
 productSchema.index({ status: 1, visibility: 1 });
 productSchema.index({ tags: 1 });
+// Pod product matching by any of the product's category rows (Super/Category/Sub).
+productSchema.index({
+  'categories.super_category_id': 1,
+  'categories.category_id': 1,
+  'categories.sub_category_id': 1,
+});
 
 export const InventoryProductModel = model<IInventoryProduct>(
   'InventoryProduct',

@@ -69,6 +69,22 @@ describe('productOrderService.createFromPayment', () => {
     expect(pickup.line_items[0].ownership).toBe('BRAND');
   });
 
+  it('routes a SHIPROCKET-delivery product to a SHIP order regardless of the checkout method', async () => {
+    const product = await seedProduct({ product_name: 'Boxed kit', delivery_target: 'SHIPROCKET' });
+    const payment = await seedPayment(
+      [{ product_id: String(product._id), name: 'Boxed kit', quantity: 1, unit_cost: 300, gross: 300 }],
+      {
+        fulfilment_method: 'PICKUP',
+        shipping_address: { name: 'Buyer', line1: '1 A Rd', city: 'Pune', state: 'MH', pincode: '411001', phone: '9000000000' },
+      }
+    );
+
+    const orders = await productOrderService.createFromPayment(payment);
+    expect(orders).toHaveLength(1);
+    expect(orders[0].fulfilment_method).toBe('SHIP');
+    expect(orders[0].fulfilment_status).toBe('AWAITING_SHIPMENT');
+  });
+
   it('is idempotent on (payment, method)', async () => {
     const p1 = await seedProduct();
     const payment = await seedPayment(

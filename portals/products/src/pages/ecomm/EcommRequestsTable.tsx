@@ -4,6 +4,7 @@ import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
 import { REQUEST_STATUS_COLOR, type ProductListingRow } from './requestsQueries';
+import { DELIVERY_TARGET_OPTIONS, deliveryTargetLabel } from './deliveryTarget';
 
 interface Props {
   fetchRows: TableFetch<ProductListingRow>;
@@ -11,10 +12,7 @@ interface Props {
   onReview: (row: ProductListingRow) => void;
 }
 
-const DELIVERY_OPTIONS = [
-  { value: 'HOST', label: 'Host delivery' },
-  { value: 'VENUE', label: 'Venue delivery' },
-];
+const DELIVERY_OPTIONS = DELIVERY_TARGET_OPTIONS;
 
 const getRowId = (r: ProductListingRow) => r.id;
 
@@ -37,11 +35,8 @@ const renderProduct = (r: ProductListingRow) => (
   </Stack>
 );
 
-const deliveryLabel = (r: ProductListingRow) =>
-  r.delivery_target === 'HOST' ? 'Host delivery' : 'Venue delivery';
-
 const renderDelivery = (r: ProductListingRow) => (
-  <Chip size="small" variant="outlined" label={deliveryLabel(r)} />
+  <Chip size="small" variant="outlined" label={deliveryTargetLabel(r.delivery_target)} />
 );
 
 const inventoryValue = (r: ProductListingRow) => `${r.inventory_count} units · ₹${r.unit_cost}`;
@@ -88,7 +83,7 @@ export default function EcommRequestsTable({
         filter: { type: 'select', options: DELIVERY_OPTIONS },
         width: 140,
         cellRenderer: renderDelivery,
-        valueGetter: deliveryLabel,
+        valueGetter: (r) => deliveryTargetLabel(r.delivery_target),
       },
       {
         field: 'inventory_count',

@@ -1,0 +1,155 @@
+import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+import type { ProductListingValues, ProductVariantValues } from './list-products.types';
+
+export const emptyVariant: ProductVariantValues = {
+  option_label: '',
+  color: '#000000',
+  size_label: '',
+  description: '',
+  image_urls: [],
+  height_cm: '',
+  weight_kg: '',
+  length_cm: '',
+  breadth_cm: '',
+  unit_cost: '',
+  inventory_count: '',
+};
+
+export const emptyValues: ProductListingValues = {
+  categories: [{ ...EMPTY_CATEGORY }],
+  product_name: '',
+  variants: [{ ...emptyVariant }],
+  commission_pct: 15,
+  delivery_target: 'SHIPROCKET',
+};
+
+const toNumberOrEmpty = (value: unknown): number | string =>
+  value === null || value === undefined || value === '' ? '' : Number(value);
+
+const mapServerVariant = (variant: any): ProductVariantValues => ({
+  option_label: variant.option_label ?? '',
+  color: variant.color || '#000000',
+  size_label: variant.size_label ?? '',
+  description: variant.description ?? '',
+  image_urls: Array.isArray(variant.images) ? variant.images : [],
+  height_cm: toNumberOrEmpty(variant.height_cm),
+  weight_kg: toNumberOrEmpty(variant.weight_kg),
+  length_cm: toNumberOrEmpty(variant.length_cm),
+  breadth_cm: toNumberOrEmpty(variant.breadth_cm),
+  unit_cost: toNumberOrEmpty(variant.unit_cost),
+  inventory_count: toNumberOrEmpty(variant.inventory_count),
+});
+
+/** Legacy products stored their single variant in the flat product fields. */
+const variantFromFlat = (product: any): ProductVariantValues => {
+  const images = Array.from(new Set([product.image_url, ...(product.images ?? [])].filter(Boolean)));
+  return {
+    option_label: product.size_label || product.color || 'Default',
+    color: product.color || '#000000',
+    size_label: product.size_label ?? '',
+    description: product.description ?? '',
+    image_urls: images as string[],
+    height_cm: toNumberOrEmpty(product.height_cm),
+    weight_kg: toNumberOrEmpty(product.weight_kg),
+    length_cm: toNumberOrEmpty(product.length_cm),
+    breadth_cm: toNumberOrEmpty(product.breadth_cm),
+    unit_cost: toNumberOrEmpty(product.unit_cost),
+    inventory_count: toNumberOrEmpty(product.inventory_count),
+  };
+};
+
+const mapServerCategory = (category: any): AdminCategoryValue => ({
+  super_id: category.super_category_id ? String(category.super_category_id) : '',
+  super_name: category.super_category_name ?? '',
+  category_id: category.category_id ? String(category.category_id) : '',
+  category_name: category.category_name ?? '',
+  sub_id: category.sub_category_id ? String(category.sub_category_id) : '',
+  sub_name: category.sub_category_name ?? '',
+});
+
+const categoriesFromProduct = (product: any): AdminCategoryValue[] => {
+  if (Array.isArray(product.categories) && product.categories.length > 0) {
+    return product.categories.map(mapServerCategory);
+  }
+  if (product.super_category_id && product.category_id && product.sub_category_id) {
+    return [
+      {
+        super_id: String(product.super_category_id),
+        super_name: '',
+        category_id: String(product.category_id),
+        category_name: '',
+        sub_id: String(product.sub_category_id),
+        sub_name: '',
+      },
+    ];
+  }
+  return [{ ...EMPTY_CATEGORY }];
+};
+
+export function productToValues(product?: any): ProductListingValues {
+  if (!product) {
+    return { ...emptyValues, categories: [{ ...EMPTY_CATEGORY }], variants: [{ ...emptyVariant }] };
+  }
+  const variants =
+    Array.isArray(product.variants) && product.variants.length > 0
+      ? product.variants.map(mapServerVariant)
+      : [variantFromFlat(product)];
+  return {
+    categories: categoriesFromProduct(product),
+    product_name: product.product_name ?? '',
+    variants,
+    commission_pct: product.commission_pct ?? 15,
+    delivery_target: 'SHIPROCKET',
+  };
+}
+
+const toVariantInput = (variant: ProductVariantValues) => ({
+  option_label: variant.option_label,
+  color: variant.color,
+  size_label: variant.size_label,
+  description: variant.description,
+  images: variant.image_urls,
+  height_cm: Number(variant.height_cm) || 0,
+  weight_kg: Number(variant.weight_kg) || 0,
+  length_cm: Number(variant.length_cm) || 0,
+  breadth_cm: Number(variant.breadth_cm) || 0,
+  unit_cost: Number(variant.unit_cost) || 0,
+  inventory_count: Number(variant.inventory_count) || 0,
+});
+
+/** Build the ProductListingInput. The first variant backfills the flat product
+ * fields (the server also mirrors them) and the single category triple. */
+export function toSubmitInput(values: ProductListingValues, brandId: string) {
+  const primary = values.variants[0];
+  const totalStock = values.variants.reduce((sum, variant) => sum + (Number(variant.inventory_count) || 0), 0);
+  const categories = values.categories.map((category) => ({
+    super_category_id: category.super_id,
+    category_id: category.category_id,
+    sub_category_id: category.sub_id,
+    super_category_name: category.super_name,
+    category_name: category.category_name,
+    sub_category_name: category.sub_name,
+  }));
+  return {
+    brand_id: brandId,
+    categories,
+    super_category_id: categories[0]?.super_category_id ?? '',
+    category_id: categories[0]?.category_id ?? '',
+    sub_category_id: categories[0]?.sub_category_id ?? '',
+    product_name: values.product_name,
+    image_url: primary.image_urls[0] ?? '',
+    images: primary.image_urls,
+    description: primary.description,
+    size_label: primary.size_label,
+    height_cm: Number(primary.height_cm) || 0,
+    weight_kg: Number(primary.weight_kg) || 0,
+    length_cm: Number(primary.length_cm) || 0,
+    breadth_cm: Number(primary.breadth_cm) || 0,
+    color: primary.color,
+    inventory_count: totalStock,
+    unit_cost: Number(primary.unit_cost) || 0,
+    variants: values.variants.map(toVariantInput),
+    commission_pct: values.commission_pct,
+    delivery_target: values.delivery_target,
+  };
+}

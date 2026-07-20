@@ -310,8 +310,16 @@ export function ProductDetailSheet({
       .finally(() => active && setIsLoading(false));
     // Forward-only engagement tracking: a view + product click each time the
     // detail opens (mirrors the mWeb pod-shop product dialog, rule 27).
-    fireAndForget(graphqlRequest(RecordProductViewDocument, { productDocId: productId }, { auth: true }));
-    fireAndForget(graphqlRequest(RecordProductClickDocument, { productDocId: productId, variantId: null }, { auth: true }));
+    fireAndForget(
+      graphqlRequest(RecordProductViewDocument, { productDocId: productId }, { auth: true }),
+    );
+    fireAndForget(
+      graphqlRequest(
+        RecordProductClickDocument,
+        { productDocId: productId, variantId: null },
+        { auth: true },
+      ),
+    );
     return () => {
       active = false;
     };
@@ -320,7 +328,11 @@ export function ProductDetailSheet({
   const pickVariant = (id: string) => {
     setVariantId(id);
     fireAndForget(
-      graphqlRequest(RecordProductClickDocument, { productDocId: productId as string, variantId: id }, { auth: true }),
+      graphqlRequest(
+        RecordProductClickDocument,
+        { productDocId: productId as string, variantId: id },
+        { auth: true },
+      ),
     );
   };
 

@@ -22,4 +22,4 @@ case "$BUMP" in
   *) echo "pre-commit: '$BUMP' is not major/minor/patch — defaulting to patch"; BUMP="patch" ;;
 esac
 node scripts/bump-version.mjs "$BUMP" || exit 1
-git add app/mobile-app/app.json app/mobile-app/package.json app/mweb/package.json
+git add app/mobile-app/app.json app/mobile-app/package.json app/mobile-app/package-lock.json app/mweb/package.json

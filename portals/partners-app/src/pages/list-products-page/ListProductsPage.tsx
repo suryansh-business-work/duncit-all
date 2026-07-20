@@ -46,6 +46,7 @@ export default function ListProductsPage() {
         canManageProducts={canManageProducts}
         onEdit={(product) => navigate(`/ecomm-brand/${brandId}/products/${product.id}`, { state: { product } })}
         onView={(product) => navigate(`/ecomm-brand/${brandId}/products/${product.id}/view`, { state: { product } })}
+        onSettings={(product) => navigate(`/ecomm-brand/${brandId}/products/${product.id}/settings`, { state: { product } })}
       />
     </Stack>
   );

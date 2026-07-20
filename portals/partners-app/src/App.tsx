@@ -13,6 +13,7 @@ import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
 import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import ProductListingEditorPage from './pages/list-products-page/ProductListingEditorPage';
 import ProductDetailPage from './pages/list-products-page/ProductDetailPage';
+import ProductSettingsPage from './pages/list-products-page/ProductSettingsPage';
 import PartnerPoliciesPage from './pages/policies-page/PartnerPoliciesPage';
 import SupportPage from './pages/support-page/SupportPage';
 import ClubAdminDashboardPage from './pages/club-admin-dashboard-page/ClubAdminDashboardPage';
@@ -44,6 +45,7 @@ export default function App() {
       <Route path="/ecomm-brand/:brandId/products" element={authed(<ListProductsPage />)} />
       <Route path="/ecomm-brand/:brandId/products/new" element={authed(<ProductListingEditorPage />)} />
       <Route path="/ecomm-brand/:brandId/products/:productId/view" element={authed(<ProductDetailPage />)} />
+      <Route path="/ecomm-brand/:brandId/products/:productId/settings" element={authed(<ProductSettingsPage />)} />
       <Route path="/ecomm-brand/:brandId/products/:productId" element={authed(<ProductListingEditorPage />)} />
       <Route path="/list-products" element={<Navigate to="/ecomm-brand" replace />} />
       <Route path="/club-admin" element={authed(<Navigate to="/club-admin/dashboard" replace />)} />

@@ -7,6 +7,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { moderationService } from '@modules/moderation/moderation.service';
+import { notificationService } from '@modules/engagement/notification/notification.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -135,6 +136,7 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     min_order_qty: product.min_order_qty ?? 1,
     max_order_qty: product.max_order_qty ?? 100,
     low_stock_alert: product.low_stock_alert ?? 5,
+    notify_low_stock: !!product.notify_low_stock,
     inventory_count: inventory,
     reserved_count: reserved,
     damaged_count: product.damaged_count ?? 0,
@@ -584,6 +586,31 @@ function applyInput(target: any, input: any) {
   }
 }
 
+const availableOf = (doc: { inventory_count?: number; requested_count?: number; reserved_count?: number }) =>
+  Math.max(0, (doc.inventory_count ?? 0) - (doc.requested_count ?? 0) - (doc.reserved_count ?? 0));
+
+/** Notify the listing owner once available stock crosses from above to at/below
+ * the low-stock threshold (opt-in per product). Best-effort — a notify hiccup
+ * never fails the stock update. */
+async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: number) {
+  if (!doc.notify_low_stock || !doc.listing_submitted_by_id) return;
+  const afterAvailable = availableOf(doc);
+  const threshold = doc.low_stock_alert ?? 0;
+  if (!(beforeAvailable > threshold && afterAvailable <= threshold)) return;
+  await notificationService
+    .create({
+      scope: 'USER',
+      target_user_ids: [String(doc.listing_submitted_by_id)],
+      title: 'Low stock alert',
+      body: `${doc.product_name} is low on stock — ${afterAvailable} left (alert at ${threshold}).`,
+      silent: false,
+    })
+    .catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error('[inventory] low-stock notify failed', error);
+    });
+}
+
 export const inventoryService = {
   async generateSku() {
     return generateUniqueSku();
@@ -830,12 +857,37 @@ export const inventoryService = {
     if (inventoryCount < committedCount) {
       throw new GraphQLError(`Quantity cannot be less than ${committedCount} committed units`, { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    const beforeAvailable = availableOf(doc);
     doc.inventory_count = inventoryCount;
     doc.last_updated_by_id = info.id;
     doc.last_updated_by_name = info.name;
     await doc.save();
     await logActivity(doc._id, user, 'UPDATE', ['inventory_count'], 'Partner quantity updated');
     await recordStockChanges(doc, beforeStock, user);
+    await notifyLowStockIfCrossed(doc, beforeAvailable);
+    return inventoryProductToPub(doc);
+  },
+
+  /** Update a listing's low-stock threshold + notify toggle without re-triggering
+   * approval (unlike updateMyProductListing, which resets to PENDING). */
+  async updateMyProductSettings(
+    id: string,
+    lowStockAlert: number,
+    notifyLowStock: boolean,
+    user: AuthUser | null
+  ) {
+    await requireEcommManager(user);
+    if (!Number.isInteger(lowStockAlert) || lowStockAlert < 0) {
+      throw new GraphQLError('Low-stock threshold must be a whole number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await ownedListing(id, user);
+    const info = userInfo(user);
+    doc.low_stock_alert = lowStockAlert;
+    doc.notify_low_stock = !!notifyLowStock;
+    doc.last_updated_by_id = info.id;
+    doc.last_updated_by_name = info.name;
+    await doc.save();
+    await logActivity(doc._id, user, 'UPDATE', ['low_stock_alert', 'notify_low_stock'], 'Product settings updated');
     return inventoryProductToPub(doc);
   },
 

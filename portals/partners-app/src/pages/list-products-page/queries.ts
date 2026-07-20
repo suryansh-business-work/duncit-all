@@ -14,6 +14,8 @@ const PRODUCT_FIELDS = `
   color
   inventory_count
   available_count
+  low_stock_alert
+  notify_low_stock
   unit_cost
   commission_pct
   delivery_target
@@ -73,6 +75,14 @@ export const DELETE_LISTING = gql`
   }
 `;
 
+export const UPDATE_PRODUCT_SETTINGS = gql`
+  mutation UpdateMyProductSettings($product_doc_id: ID!, $low_stock_alert: Int!, $notify_low_stock: Boolean!) {
+    updateMyProductSettings(product_doc_id: $product_doc_id, low_stock_alert: $low_stock_alert, notify_low_stock: $notify_low_stock) {
+      ${PRODUCT_FIELDS}
+    }
+  }
+`;
+
 /** Row shape for the "Your listed products" table (myProductListingsTable rows). */
 export interface ProductListingRow {
   id: string;
@@ -84,6 +94,8 @@ export interface ProductListingRow {
   color?: string | null;
   inventory_count?: number | null;
   available_count?: number | null;
+  low_stock_alert?: number | null;
+  notify_low_stock?: boolean | null;
   unit_cost?: number | null;
   delivery_target?: string | null;
   listing_review_status: string;

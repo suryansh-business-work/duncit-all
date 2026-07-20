@@ -125,6 +125,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     min_order_qty: Int!
     max_order_qty: Int!
     low_stock_alert: Int!
+    notify_low_stock: Boolean!
     inventory_count: Int!
     reserved_count: Int!
     damaged_count: Int!
@@ -378,6 +379,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     submitProductListing(input: ProductListingInput!): InventoryProduct!
     updateMyProductListing(product_doc_id: ID!, input: ProductListingInput!): InventoryProduct!
     updateMyProductListingQuantity(product_doc_id: ID!, inventory_count: Int!): InventoryProduct!
+    "Update a listing's low-stock threshold + notify toggle without re-triggering approval."
+    updateMyProductSettings(product_doc_id: ID!, low_stock_alert: Int!, notify_low_stock: Boolean!): InventoryProduct!
     deleteMyProductListing(product_doc_id: ID!): Boolean!
     reviewProductListing(
       product_doc_id: ID!

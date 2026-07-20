@@ -138,6 +138,19 @@ export const inventoryResolvers = {
       requireAuth(ctx);
       return inventoryService.updateMyProductListingQuantity(args.product_doc_id, args.inventory_count, ctx.user);
     },
+    updateMyProductSettings: async (
+      _p: unknown,
+      args: { product_doc_id: string; low_stock_alert: number; notify_low_stock: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.updateMyProductSettings(
+        args.product_doc_id,
+        args.low_stock_alert,
+        args.notify_low_stock,
+        ctx.user
+      );
+    },
     deleteMyProductListing: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return inventoryService.deleteMyProductListing(args.product_doc_id, ctx.user);

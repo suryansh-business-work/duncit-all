@@ -5,7 +5,13 @@ import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { parseApiError } from '@duncit/utils';
 import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';
+import ProductRowActions from './ProductRowActions';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
+
+/** Available stock at/below the product's low-stock threshold (opt-in per product). */
+const isLowStock = (product: ProductListingRow) =>
+  Boolean(product.notify_low_stock) &&
+  Number(product.available_count ?? product.inventory_count ?? 0) <= Number(product.low_stock_alert ?? 0);
 
 // Legacy full-list doc kept here so ProductListingEditorPage's import keeps working.
 export { MY_PRODUCT_LISTINGS } from './queries';
@@ -23,9 +29,10 @@ interface Props {
   canManageProducts?: boolean;
   onEdit: (product: ProductListingRow) => void;
   onView?: (product: ProductListingRow) => void;
+  onSettings?: (product: ProductListingRow) => void;
 }
 
-export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit, onView }: Readonly<Props>) {
+export default function ProductListingsTable({ brandId, canManageProducts = false, onEdit, onView, onSettings }: Readonly<Props>) {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
@@ -74,10 +81,13 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       <QuantityCell product={product} disabled={quantityDisabled} onSave={saveQuantity} />
     );
     const renderActions = (product: ProductListingRow) => (
-      <Stack direction="row" spacing={0.5} justifyContent="flex-end" component="span">
-        <Button size="small" disabled={!canManageProducts} onClick={() => onEdit(product)}>Edit</Button>
-        <Button size="small" color="error" disabled={!canManageProducts} onClick={() => setDeleteTarget(product)}>Delete</Button>
-      </Stack>
+      <ProductRowActions
+        actions={[
+          { key: 'edit', label: 'Edit', icon: 'edit', disabled: !canManageProducts, onClick: () => onEdit(product) },
+          { key: 'settings', label: 'Settings', icon: 'settings', disabled: !canManageProducts, onClick: () => onSettings?.(product) },
+          { key: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
+        ]}
+      />
     );
     return [
       {
@@ -126,9 +136,9 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         valueGetter: (product) =>
           product.updated_at ? format(new Date(product.updated_at), 'dd MMM yyyy') : '—',
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 160, cellRenderer: renderActions },
+      { field: 'actions', headerName: '', sortable: false, width: 72, cellRenderer: renderActions },
     ];
-  }, [canManageProducts, quantityState.loading, saveQuantity, onEdit]);
+  }, [canManageProducts, quantityState.loading, saveQuantity, onEdit, onSettings]);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -142,6 +152,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
             fetchRows={fetchRows}
             getRowId={getProductRowId}
             onRowClick={onView}
+            getRowStyle={(product) => (isLowStock(product) ? { backgroundColor: 'rgba(237, 108, 2, 0.10)' } : undefined)}
             emptyText="No product listings yet."
             defaultSort={{ field: 'updated_at', dir: 'desc' }}
             searchPlaceholder="Search product, size, color"

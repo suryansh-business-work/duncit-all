@@ -72,6 +72,8 @@ export interface IInventoryProduct extends Document {
   min_order_qty: number;
   max_order_qty: number;
   low_stock_alert: number;
+  /** When true, notify the listing owner once available stock drops to/below low_stock_alert. */
+  notify_low_stock: boolean;
   inventory_count: number;
   reserved_count: number;
   damaged_count: number;
@@ -189,6 +191,7 @@ const productSchema = new Schema<IInventoryProduct>(
     min_order_qty: { type: Number, default: 1, min: 0 },
     max_order_qty: { type: Number, default: 100, min: 0 },
     low_stock_alert: { type: Number, default: 5, min: 0 },
+    notify_low_stock: { type: Boolean, default: false },
     inventory_count: { type: Number, required: true, min: 0, default: 0 },
     reserved_count: { type: Number, default: 0, min: 0 },
     damaged_count: { type: Number, default: 0, min: 0 },

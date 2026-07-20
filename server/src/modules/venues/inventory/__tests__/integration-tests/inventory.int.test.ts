@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { inventoryService } from '../../inventory.service';
 import { InventoryProductModel } from '../../inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { UserModel } from '@modules/access/user/user.model';
 
 describe('inventoryService integration', () => {
   it('lists no products / requests on an empty dataset', async () => {
@@ -108,6 +109,36 @@ describe('inventoryService integration', () => {
       sub_category_name: 'Cold brew',
     });
     expect(pub?.variants?.[0].description).toBe('Full per-variant description text');
+  });
+
+  it('updateMyProductSettings persists the low-stock threshold + notify flag without re-review', async () => {
+    const userId = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      auth: { email: 'seller@example.com' },
+      metadata: { role_keys: ['ECOMM_MANAGER'], status: 'ACTIVE' },
+    } as never);
+    const productId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: productId,
+      product_name: 'Threshold kit',
+      sku: 'THR-1',
+      unit_cost: 10,
+      inventory_count: 20,
+      low_stock_alert: 5,
+      notify_low_stock: false,
+      listing_submitted_by_id: String(userId),
+      listing_review_status: 'APPROVED',
+    } as never);
+
+    const updated = await inventoryService.updateMyProductSettings(String(productId), 8, true, {
+      id: String(userId),
+      email: 'seller@example.com',
+    } as never);
+    expect(updated.low_stock_alert).toBe(8);
+    expect(updated.notify_low_stock).toBe(true);
+    // Settings changes must NOT push the listing back into review.
+    expect(updated.listing_review_status).toBe('APPROVED');
   });
 });
 

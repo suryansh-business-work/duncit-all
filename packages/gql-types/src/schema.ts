@@ -3330,6 +3330,7 @@ export type InventoryProduct = {
   manufacturing_date?: Maybe<Scalars['String']['output']>;
   max_order_qty: Scalars['Int']['output'];
   min_order_qty: Scalars['Int']['output'];
+  notify_low_stock: Scalars['Boolean']['output'];
   ownership: ProductOwnership;
   pod_available: Scalars['Boolean']['output'];
   product_name: Scalars['String']['output'];
@@ -4395,6 +4396,8 @@ export type Mutation = {
   updateMyPetProfile: User;
   updateMyProductListing: InventoryProduct;
   updateMyProductListingQuantity: InventoryProduct;
+  /** Update a listing's low-stock threshold + notify toggle without re-triggering approval. */
+  updateMyProductSettings: InventoryProduct;
   updateMyProfile: User;
   updateMyProfileVisibility: User;
   updatePod: Pod;
@@ -6556,6 +6559,13 @@ export type MutationUpdateMyProductListingArgs = {
 
 export type MutationUpdateMyProductListingQuantityArgs = {
   inventory_count: Scalars['Int']['input'];
+  product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateMyProductSettingsArgs = {
+  low_stock_alert: Scalars['Int']['input'];
+  notify_low_stock: Scalars['Boolean']['input'];
   product_doc_id: Scalars['ID']['input'];
 };
 

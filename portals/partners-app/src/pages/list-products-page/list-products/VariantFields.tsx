@@ -1,10 +1,10 @@
-import { Box, Button, IconButton, Stack } from '@mui/material';
+import { Box, Button, Chip, IconButton, Stack } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
-import type { ProductListingValues } from './list-products.types';
+import type { ProductListingValues, VariantOptionValue } from './list-products.types';
 
 interface VariantImagesProps {
   images: string[];
@@ -58,15 +58,24 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
   const nm = (fieldName: string) => `variants.${index}.${fieldName}` as Path<ProductListingValues>;
   const imagePath = `variants.${index}.image_urls` as Path<ProductListingValues>;
   const images = (watch(imagePath) as string[] | undefined) ?? [];
+  const optionValues = (watch(`variants.${index}.option_values` as Path<ProductListingValues>) as
+    | VariantOptionValue[]
+    | undefined) ?? [];
   const removeImage = (url: string) =>
     setValue(imagePath, images.filter((item) => item !== url) as never, { shouldValidate: true });
 
   return (
     <Stack spacing={2}>
+      {optionValues.length > 0 ? (
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          {optionValues.map((option) => (
+            <Chip key={`${option.name}-${option.value}`} label={`${option.name}: ${option.value}`} size="small" color="primary" variant="outlined" />
+          ))}
+        </Stack>
+      ) : (
+        <RhfTextField control={control} name={nm('option_label')} label="Variant name (e.g. Default)" />
+      )}
       <VariantImages images={images} onAdd={() => onPickImage(index)} onRemove={removeImage} />
-      <RhfTextField control={control} name={nm('option_label')} label="Variant name (e.g. Red / L)" />
-      <RhfTextField control={control} name={nm('color')} label="Colour" type="color" InputLabelProps={{ shrink: true }} sx={{ maxWidth: 160 }} />
-      <RhfTextField control={control} name={nm('size_label')} label="Size" />
       <RhfTextField
         control={control}
         name={nm('description')}

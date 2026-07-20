@@ -19,9 +19,23 @@ export type UnitType =
 /** A purchasable variant of a product (e.g. by colour / size), each with its own
  * price, stock, SKU and images. A product with no variants behaves as before —
  * the flat fields act as its single implicit variant. */
+/** One resolved option value on a variant, e.g. { name: 'Size', value: 'M' }. */
+export interface IVariantOptionValue {
+  name: string;
+  value: string;
+}
+
+/** A product-level option definition, e.g. { name: 'Size', values: ['S','M','L'] }.
+ * Variants are the cartesian product of every option's values. */
+export interface IProductOption {
+  name: string;
+  values: string[];
+}
+
 export interface IProductVariant {
   _id?: Types.ObjectId;
   option_label: string;
+  option_values: IVariantOptionValue[];
   sku: string;
   color: string;
   size_label: string;
@@ -50,6 +64,7 @@ export interface IProductCategory {
 export interface IInventoryProduct extends Document {
   product_name: string;
   sku: string;
+  options: IProductOption[];
   variants: IProductVariant[];
   categories: IProductCategory[];
   barcode: string;
@@ -132,6 +147,15 @@ export interface IInventoryProduct extends Document {
 const variantSchema = new Schema<IProductVariant>(
   {
     option_label: { type: String, default: '', trim: true, maxlength: 120 },
+    option_values: {
+      type: [
+        new Schema<IVariantOptionValue>(
+          { name: { type: String, default: '', trim: true, maxlength: 60 }, value: { type: String, default: '', trim: true, maxlength: 120 } },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     sku: { type: String, default: '', uppercase: true, trim: true, maxlength: 60 },
     color: { type: String, default: '', trim: true, maxlength: 80 },
     size_label: { type: String, default: '', trim: true, maxlength: 120 },
@@ -145,6 +169,14 @@ const variantSchema = new Schema<IProductVariant>(
     weight_kg: { type: Number, default: 0, min: 0 },
   },
   { _id: true }
+);
+
+const productOptionSchema = new Schema<IProductOption>(
+  {
+    name: { type: String, default: '', trim: true, maxlength: 60 },
+    values: { type: [String], default: [] },
+  },
+  { _id: false }
 );
 
 const productCategorySchema = new Schema<IProductCategory>(
@@ -163,6 +195,7 @@ const productSchema = new Schema<IInventoryProduct>(
   {
     product_name: { type: String, required: true, trim: true, maxlength: 200 },
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true, maxlength: 50 },
+    options: { type: [productOptionSchema], default: [] },
     variants: { type: [variantSchema], default: [] },
     categories: { type: [productCategorySchema], default: [] },
     barcode: { type: String, default: '', trim: true, maxlength: 80 },

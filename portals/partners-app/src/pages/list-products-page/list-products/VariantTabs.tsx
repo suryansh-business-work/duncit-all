@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useFieldArray, type Control, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
+import { useFieldArray, type Control, type Path, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import type { ProductListingValues } from './list-products.types';
 import { emptyVariant } from './list-products.map';
 import VariantFields from './VariantFields';
@@ -38,9 +38,10 @@ export default function VariantTabs({ control, watch, setValue, onPickImage }: R
         Each variant carries its own images, description, size, dimensions, price and stock.
       </Typography>
       <Tabs value={current} onChange={(_, value) => setActive(value)} variant="scrollable" scrollButtons="auto">
-        {fields.map((field, index) => (
-          <Tab key={field.id} label={`Variant ${index + 1}`} />
-        ))}
+        {fields.map((field, index) => {
+          const label = (watch(`variants.${index}.option_label` as Path<ProductListingValues>) as string) || `Variant ${index + 1}`;
+          return <Tab key={field.id} label={label} />;
+        })}
       </Tabs>
       {fields.map((field, index) => (
         <Box key={field.id} hidden={current !== index}>

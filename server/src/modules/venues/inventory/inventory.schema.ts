@@ -51,9 +51,32 @@ export const inventoryTypeDefs = /* GraphQL */ `
     DELETE
   }
 
+  "One resolved option value on a variant, e.g. { name: 'Size', value: 'M' }."
+  type VariantOptionValue {
+    name: String!
+    value: String!
+  }
+
+  input VariantOptionValueInput {
+    name: String!
+    value: String!
+  }
+
+  "A product-level option definition, e.g. { name: 'Size', values: ['S','M','L'] }."
+  type ProductOption {
+    name: String!
+    values: [String!]!
+  }
+
+  input ProductOptionInput {
+    name: String!
+    values: [String!]!
+  }
+
   type ProductVariant {
     id: ID!
     option_label: String!
+    option_values: [VariantOptionValue!]!
     sku: String!
     color: String!
     size_label: String!
@@ -69,6 +92,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
 
   input ProductVariantInput {
     option_label: String
+    option_values: [VariantOptionValueInput!]
     sku: String
     color: String
     size_label: String
@@ -105,6 +129,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     id: ID!
     product_name: String!
     sku: String!
+    options: [ProductOption!]!
     variants: [ProductVariant!]!
     categories: [ProductCategory!]!
     barcode: String!
@@ -344,6 +369,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     color: String
     inventory_count: Int!
     unit_cost: Float!
+    "Product-level option definitions (e.g. Size, Colour); variants are their combinations."
+    options: [ProductOptionInput!]
     "Optional per-variant rows (colour/size/etc.). The flat fields above stay the product default/primary variant."
     variants: [ProductVariantInput!]
     commission_pct: Float!

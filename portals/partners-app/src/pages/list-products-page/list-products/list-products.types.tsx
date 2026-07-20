@@ -4,11 +4,24 @@ import type { AdminCategoryValue } from '@duncit/category';
  * self-delivery was removed). The server enum still accepts the legacy values. */
 export type ProductListingDeliveryTarget = 'SHIPROCKET';
 
-/** A purchasable variant with its own media, copy, dimensions, price and stock.
- * In the per-variant model every variant (including the first) carries full
- * detail — nothing is entered at the product level before the variants. */
+/** One resolved option value on a variant, e.g. { name: 'Size', value: 'M' }. */
+export interface VariantOptionValue {
+  name: string;
+  value: string;
+}
+
+/** A product-level option definition, e.g. { name: 'Size', values: ['S','M','L'] }.
+ * Variants are the cartesian product of every option's values. */
+export interface ProductOptionValues {
+  name: string;
+  values: string[];
+}
+
+/** A purchasable variant (an option combination) with its own media, copy,
+ * dimensions, price and stock. */
 export interface ProductVariantValues {
   option_label: string;
+  option_values: VariantOptionValue[];
   color: string;
   size_label: string;
   description: string;
@@ -25,6 +38,8 @@ export interface ProductListingValues {
   /** One or more Super → Category → Sub rows the product is sold in. */
   categories: AdminCategoryValue[];
   product_name: string;
+  /** Product-level option definitions; variants are their combinations. */
+  options: ProductOptionValues[];
   variants: ProductVariantValues[];
   commission_pct: number;
   delivery_target: ProductListingDeliveryTarget;

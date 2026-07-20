@@ -1,8 +1,14 @@
 import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
-import type { ProductListingValues, ProductVariantValues } from './list-products.types';
+import type {
+  ProductListingValues,
+  ProductOptionValues,
+  ProductVariantValues,
+  VariantOptionValue,
+} from './list-products.types';
 
 export const emptyVariant: ProductVariantValues = {
   option_label: '',
+  option_values: [],
   color: '#000000',
   size_label: '',
   description: '',
@@ -18,16 +24,52 @@ export const emptyVariant: ProductVariantValues = {
 export const emptyValues: ProductListingValues = {
   categories: [{ ...EMPTY_CATEGORY }],
   product_name: '',
+  options: [],
   variants: [{ ...emptyVariant }],
   commission_pct: 15,
   delivery_target: 'SHIPROCKET',
 };
+
+const comboKey = (values: VariantOptionValue[]) =>
+  values.map((value) => `${value.name}=${value.value}`).join('|');
+
+const sizeFromValues = (values: VariantOptionValue[]) =>
+  values.find((value) => value.name.trim().toLowerCase() === 'size')?.value ?? '';
+
+/** Regenerate the variant list as the cartesian product of the product options,
+ * preserving any already-entered detail for combinations that still exist. When
+ * there are no options, keep the current variants (or one default). */
+export function generateVariants(
+  options: ProductOptionValues[],
+  existing: ProductVariantValues[],
+): ProductVariantValues[] {
+  const active = options.filter((option) => option.name.trim() && option.values.length > 0);
+  if (active.length === 0) {
+    return existing.length > 0 ? existing : [{ ...emptyVariant }];
+  }
+  let combos: VariantOptionValue[][] = [[]];
+  for (const option of active) {
+    combos = combos.flatMap((combo) =>
+      option.values.map((value) => [...combo, { name: option.name.trim(), value }]),
+    );
+  }
+  const byKey = new Map(existing.map((variant) => [comboKey(variant.option_values ?? []), variant]));
+  return combos.map((option_values) => {
+    const label = option_values.map((value) => value.value).join(' / ');
+    const previous = byKey.get(comboKey(option_values));
+    if (previous) return { ...previous, option_values, option_label: label };
+    return { ...emptyVariant, option_values, option_label: label, size_label: sizeFromValues(option_values) };
+  });
+}
 
 const toNumberOrEmpty = (value: unknown): number | string =>
   value === null || value === undefined || value === '' ? '' : Number(value);
 
 const mapServerVariant = (variant: any): ProductVariantValues => ({
   option_label: variant.option_label ?? '',
+  option_values: Array.isArray(variant.option_values)
+    ? variant.option_values.map((o: any) => ({ name: o.name ?? '', value: o.value ?? '' }))
+    : [],
   color: variant.color || '#000000',
   size_label: variant.size_label ?? '',
   description: variant.description ?? '',
@@ -45,6 +87,7 @@ const variantFromFlat = (product: any): ProductVariantValues => {
   const images = Array.from(new Set([product.image_url, ...(product.images ?? [])].filter(Boolean)));
   return {
     option_label: product.size_label || product.color || 'Default',
+    option_values: [],
     color: product.color || '#000000',
     size_label: product.size_label ?? '',
     description: product.description ?? '',
@@ -97,6 +140,12 @@ export function productToValues(product?: any): ProductListingValues {
   return {
     categories: categoriesFromProduct(product),
     product_name: product.product_name ?? '',
+    options: Array.isArray(product.options)
+      ? product.options.map((option: any) => ({
+          name: option.name ?? '',
+          values: Array.isArray(option.values) ? option.values : [],
+        }))
+      : [],
     variants,
     commission_pct: product.commission_pct ?? 15,
     delivery_target: 'SHIPROCKET',
@@ -105,6 +154,7 @@ export function productToValues(product?: any): ProductListingValues {
 
 const toVariantInput = (variant: ProductVariantValues) => ({
   option_label: variant.option_label,
+  option_values: variant.option_values.map((value) => ({ name: value.name, value: value.value })),
   color: variant.color,
   size_label: variant.size_label,
   description: variant.description,
@@ -161,6 +211,9 @@ export function toSubmitInput(values: ProductListingValues, brandId: string) {
     category_id: categories[0]?.category_id ?? '',
     sub_category_id: categories[0]?.sub_category_id ?? '',
     product_name: values.product_name,
+    options: values.options
+      .filter((option) => option.name.trim() && option.values.length > 0)
+      .map((option) => ({ name: option.name.trim(), values: option.values })),
     image_url: primary.image_urls[0] ?? '',
     images: primary.image_urls,
     description: primary.description,

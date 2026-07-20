@@ -30,8 +30,16 @@ const PRODUCT_FIELDS = `
     category_name
     sub_category_name
   }
+  options {
+    name
+    values
+  }
   variants {
     option_label
+    option_values {
+      name
+      value
+    }
     color
     size_label
     description

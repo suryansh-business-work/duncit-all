@@ -14,6 +14,7 @@ import { Controller, type Control, type UseFormSetValue, type UseFormWatch } fro
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
 import CategoryRows from './CategoryRows';
+import OptionsEditor from './OptionsEditor';
 import VariantTabs from './VariantTabs';
 
 interface StepProps {
@@ -22,9 +23,10 @@ interface StepProps {
   watch: UseFormWatch<ProductListingValues>;
   setValue: UseFormSetValue<ProductListingValues>;
   onPickImage: (index: number) => void;
+  onGenerateVariants: () => void;
 }
 
-export function StepBody({ step, control, watch, setValue, onPickImage }: Readonly<StepProps>) {
+export function StepBody({ step, control, watch, setValue, onPickImage, onGenerateVariants }: Readonly<StepProps>) {
   if (step === 0) {
     return <CategoryRows control={control} />;
   }
@@ -41,7 +43,12 @@ export function StepBody({ step, control, watch, setValue, onPickImage }: Readon
     );
   }
   if (step === 2) {
-    return <VariantTabs control={control} watch={watch} setValue={setValue} onPickImage={onPickImage} />;
+    return (
+      <Stack spacing={2.5}>
+        <OptionsEditor control={control} onGenerate={onGenerateVariants} />
+        <VariantTabs control={control} watch={watch} setValue={setValue} onPickImage={onPickImage} />
+      </Stack>
+    );
   }
   if (step === 3) {
     return <CommissionField control={control} />;

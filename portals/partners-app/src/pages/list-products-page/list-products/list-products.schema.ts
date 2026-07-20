@@ -9,10 +9,18 @@ const requiredNumber = (message: string) =>
 const positiveDimension = (message: string) =>
   requiredNumber(message).pipe(z.number().positive(message).max(1000, 'Value cannot exceed 1000'));
 
+const optionSchema = z.object({
+  name: z.string().trim().min(1, 'Option name is required').max(60, 'Option name is too long'),
+  values: z.array(z.string().trim().min(1)).min(1, 'Add at least one value'),
+});
+
 const variantSchema = z.object({
-  option_label: z.string().trim().min(1, 'Variant name is required').max(120, 'Variant name is too long'),
-  color: z.string().trim().max(80),
-  size_label: z.string().trim().min(1, 'Size is required').max(120, 'Size label is too long'),
+  option_label: z.string().trim().max(120, 'Variant name is too long').default(''),
+  option_values: z
+    .array(z.object({ name: z.string(), value: z.string() }))
+    .default([]),
+  color: z.string().trim().max(80).default(''),
+  size_label: z.string().trim().max(120, 'Size label is too long').default(''),
   description: z.string().trim().min(20, 'Description must be at least 20 characters').max(2000),
   image_urls: z.array(z.string().trim().url('Use valid image URLs')).min(1, 'Add at least one image'),
   height_cm: positiveDimension('Enter a valid height in cm'),
@@ -46,6 +54,7 @@ const hasStock = (variants: { inventory_count: number }[]) =>
 export const productListingSchema = z.object({
   categories: z.array(categoryRowSchema).min(1, 'Add at least one category'),
   product_name: z.string().trim().min(3, 'Product title is too short').max(160).min(1, 'Product title is required'),
+  options: z.array(optionSchema).default([]),
   variants: z
     .array(variantSchema)
     .min(1, 'Add at least one variant')

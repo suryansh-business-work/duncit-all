@@ -3343,6 +3343,7 @@ export type InventoryProduct = {
   max_order_qty: Scalars['Int']['output'];
   min_order_qty: Scalars['Int']['output'];
   notify_low_stock: Scalars['Boolean']['output'];
+  options: Array<ProductOption>;
   ownership: ProductOwnership;
   pod_available: Scalars['Boolean']['output'];
   product_name: Scalars['String']['output'];
@@ -7818,6 +7819,8 @@ export type ProductListingInput = {
   /** Legacy delivery-partner flag. No longer collected from brands (defaults to false); kept optional for backward compatibility. */
   is_duncit_delivery_partner?: InputMaybe<Scalars['Boolean']['input']>;
   length_cm?: InputMaybe<Scalars['Float']['input']>;
+  /** Product-level option definitions (e.g. Size, Colour); variants are their combinations. */
+  options?: InputMaybe<Array<ProductOptionInput>>;
   product_name: Scalars['String']['input'];
   size_label?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
@@ -7833,6 +7836,18 @@ export type ProductListingReviewStatus =
   | 'APPROVED'
   | 'DENIED'
   | 'PENDING';
+
+/** A product-level option definition, e.g. { name: 'Size', values: ['S','M','L'] }. */
+export type ProductOption = {
+  __typename?: 'ProductOption';
+  name: Scalars['String']['output'];
+  values: Array<Scalars['String']['output']>;
+};
+
+export type ProductOptionInput = {
+  name: Scalars['String']['input'];
+  values: Array<Scalars['String']['input']>;
+};
 
 export type ProductOrder = {
   __typename?: 'ProductOrder';
@@ -7926,6 +7941,7 @@ export type ProductVariant = {
   inventory_count: Scalars['Int']['output'];
   length_cm: Scalars['Float']['output'];
   option_label: Scalars['String']['output'];
+  option_values: Array<VariantOptionValue>;
   size_label: Scalars['String']['output'];
   sku: Scalars['String']['output'];
   unit_cost: Scalars['Float']['output'];
@@ -7941,6 +7957,7 @@ export type ProductVariantInput = {
   inventory_count?: InputMaybe<Scalars['Int']['input']>;
   length_cm?: InputMaybe<Scalars['Float']['input']>;
   option_label?: InputMaybe<Scalars['String']['input']>;
+  option_values?: InputMaybe<Array<VariantOptionValueInput>>;
   size_label?: InputMaybe<Scalars['String']['input']>;
   sku?: InputMaybe<Scalars['String']['input']>;
   unit_cost?: InputMaybe<Scalars['Float']['input']>;
@@ -11500,6 +11517,18 @@ export type UsersFilter = {
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<UserStatus>;
   zone?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One resolved option value on a variant, e.g. { name: 'Size', value: 'M' }. */
+export type VariantOptionValue = {
+  __typename?: 'VariantOptionValue';
+  name: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type VariantOptionValueInput = {
+  name: Scalars['String']['input'];
+  value: Scalars['String']['input'];
 };
 
 export type Venue = {

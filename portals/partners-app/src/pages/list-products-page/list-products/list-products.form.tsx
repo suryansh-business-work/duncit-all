@@ -8,7 +8,7 @@ import { parseApiError } from '@duncit/utils';
 import { ModerationBlockedDialog } from '@duncit/ui';
 import type { ProductListingValues } from './list-products.types';
 import { productListingSchema } from './list-products.schema';
-import { emptyValues, productToValues, toSubmitInput } from './list-products.map';
+import { generateVariants, productToValues, toSubmitInput } from './list-products.map';
 import { StepBody } from './list-products.form-ui';
 import { useProductModeration } from './useProductModeration';
 
@@ -108,6 +108,10 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
     setPickerIndex(null);
   };
 
+  const onGenerateVariants = () => {
+    setValue('variants', generateVariants(watch('options'), watch('variants')), { shouldValidate: false });
+  };
+
   const saveLabel = editing ? 'Update listing' : 'Submit for approval';
   const submitLabel = loading ? 'Saving...' : saveLabel;
 
@@ -129,7 +133,14 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
             </Alert>
           )}
           {apiError && <Alert severity="error">{apiError}</Alert>}
-          <StepBody step={activeStep} control={control} watch={watch} setValue={setValue} onPickImage={setPickerIndex} />
+          <StepBody
+            step={activeStep}
+            control={control}
+            watch={watch}
+            setValue={setValue}
+            onPickImage={setPickerIndex}
+            onGenerateVariants={onGenerateVariants}
+          />
           <Stack direction="row" spacing={1} justifyContent="space-between">
             <Button disabled={activeStep === 0 || loading} onClick={() => setActiveStep((step) => step - 1)}>
               Back

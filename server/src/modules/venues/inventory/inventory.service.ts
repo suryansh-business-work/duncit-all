@@ -94,10 +94,16 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     id: String(product._id),
     product_name: product.product_name ?? '',
     sku: product.sku ?? '',
+    options: Array.isArray(product.options)
+      ? product.options.map((o) => ({ name: o.name ?? '', values: Array.isArray(o.values) ? o.values : [] }))
+      : [],
     variants: Array.isArray(product.variants)
       ? product.variants.map((v) => ({
           id: String(v._id),
           option_label: v.option_label ?? '',
+          option_values: Array.isArray(v.option_values)
+            ? v.option_values.map((o) => ({ name: o.name ?? '', value: o.value ?? '' }))
+            : [],
           sku: v.sku ?? '',
           color: v.color ?? '',
           size_label: v.size_label ?? '',
@@ -417,10 +423,30 @@ const resolveDeliveryTarget = (value: unknown) =>
 /** Persist per-variant rows and mirror the first variant into the product's flat
  * fields (price/stock/color/size/images) so variant-unaware consumers — buyer
  * pages, orders, stock — keep working. Total stock = sum of variant stock. */
+/** Product-level option definitions (e.g. Size → [S,M,L]); variants are their
+ * combinations. Drops options without a name and blank values. */
+function toProductOptions(input: any) {
+  const raw = Array.isArray(input.options) ? input.options : [];
+  return raw
+    .filter((option: any) => option && cleanText(option.name, 60))
+    .map((option: any) => ({
+      name: cleanText(option.name, 60),
+      values: (Array.isArray(option.values) ? option.values : [])
+        .map((value: any) => cleanText(value, 120))
+        .filter(Boolean),
+    }));
+}
+
 function applyVariants(doc: IInventoryProduct, input: any) {
+  doc.options = toProductOptions(input) as IInventoryProduct['options'];
   if (!Array.isArray(input.variants) || input.variants.length === 0) return;
   const variants = input.variants.map((v: any) => ({
     option_label: cleanText(v.option_label, 120),
+    option_values: Array.isArray(v.option_values)
+      ? v.option_values
+          .filter((o: any) => o && (o.name || o.value))
+          .map((o: any) => ({ name: cleanText(o.name, 60), value: cleanText(o.value, 120) }))
+      : [],
     sku: (cleanText(v.sku, 60) || randomSku()).toUpperCase(),
     color: cleanText(v.color, 80),
     size_label: cleanText(v.size_label, 120),

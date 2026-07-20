@@ -56,6 +56,43 @@ describe('inventoryService integration', () => {
     expect(pub?.variants?.[1].images).toEqual([]);
   });
 
+  it('serializes product options + per-variant option values (the variant matrix)', async () => {
+    const id = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: id,
+      product_name: 'Option Tee',
+      sku: 'OPT1',
+      unit_cost: 10,
+      options: [
+        { name: 'Size', values: ['S', 'M'] },
+        { name: 'Colour', values: ['Red'] },
+      ],
+      variants: [
+        {
+          _id: new Types.ObjectId(),
+          option_label: 'M / Red',
+          option_values: [
+            { name: 'Size', value: 'M' },
+            { name: 'Colour', value: 'Red' },
+          ],
+          sku: 'OPT1-MR',
+          unit_cost: 12,
+          inventory_count: 4,
+          images: [],
+        },
+      ],
+    } as never);
+    const pub = await inventoryService.getById(String(id));
+    expect(pub?.options).toEqual([
+      { name: 'Size', values: ['S', 'M'] },
+      { name: 'Colour', values: ['Red'] },
+    ]);
+    expect(pub?.variants?.[0].option_values).toEqual([
+      { name: 'Size', value: 'M' },
+      { name: 'Colour', value: 'Red' },
+    ]);
+  });
+
   it('serializes category rows + per-variant description and filters pod products by category', async () => {
     const superId = new Types.ObjectId();
     const catId = new Types.ObjectId();

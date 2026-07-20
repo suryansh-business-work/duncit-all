@@ -6869,6 +6869,8 @@ export type OnboardingMeeting = {
   approval_status?: Maybe<Scalars['String']['output']>;
   /** Why onboarding staff cancelled it (null for self-cancels). */
   cancel_reason?: Maybe<Scalars['String']['output']>;
+  /** True when a CANCELLED row was rejected by onboarding staff (display as 'Rejected' vs a user 'Cancelled'). */
+  cancelled_by_staff?: Maybe<Scalars['Boolean']['output']>;
   category_name?: Maybe<Scalars['String']['output']>;
   contact_name?: Maybe<Scalars['String']['output']>;
   contact_phone?: Maybe<Scalars['String']['output']>;
@@ -6881,6 +6883,8 @@ export type OnboardingMeeting = {
   kind: SurveyKind;
   meeting_link?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
+  /** Status of the linked onboarded record (DRAFT|SUBMITTED|APPROVED|REJECTED) for HOST/VENUE/ECOMM once the meeting is approved; null for CLUB_ADMIN or before an onboarded record exists. Drives the Earn re-application block. */
+  onboarded_status?: Maybe<Scalars['String']['output']>;
   /** Human-readable request id, e.g. DUN-VEN-000001. */
   request_no?: Maybe<Scalars['String']['output']>;
   requested_at: Scalars['String']['output'];

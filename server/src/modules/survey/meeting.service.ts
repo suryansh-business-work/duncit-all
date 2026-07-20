@@ -44,6 +44,7 @@ const pub = (doc: any, names?: Map<string, { name: string; email: string }>, cat
     meeting_link: o.meeting_link ?? null,
     status: o.status ?? 'REQUESTED',
     cancel_reason: o.cancel_reason ?? null,
+    cancelled_by_staff: !!o.cancelled_by_staff,
     dismissed: !!o.dismissed,
     notes: o.notes ?? null,
     contact_name: o.contact_name ?? null,
@@ -125,7 +126,7 @@ function slotLabelTz(value: string | null | undefined, offsetMin: number): strin
   return `${formatted} ${gmtLabel(offsetMin)}`;
 }
 
-const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
+const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
 
 type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'approved' | 'rejected';
 
@@ -525,7 +526,9 @@ export const meetingService = {
     if (opts.excludeMeetingId) {
       occupy = { excludeMeetingId: opts.excludeMeetingId };
     } else if (opts.kind) {
-      const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind: opts.kind }).select('_id');
+      const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind: opts.kind, status: { $in: ['REQUESTED', 'SCHEDULED'] } })
+        .select('_id')
+        .sort({ created_at: -1 });
       occupy = own ? { excludeMeetingId: String(own._id) } : {};
     } else {
       occupy = { excludeUserId: userId };
@@ -539,7 +542,50 @@ export const meetingService = {
     }));
   },
 
-  /** User raises (or updates) their meeting request for a kind. */
+  /** Status of the caller's linked onboarded record for a kind (latest row), or
+   * null for CLUB_ADMIN (no onboarded entity) / before any record exists. Backs
+   * the OnboardingMeeting.onboarded_status field and the re-apply block. */
+  async onboardedStatusFor(userId: string, kind: SurveyKind): Promise<string | null> {
+    const uid = new Types.ObjectId(userId);
+    if (kind === 'HOST') {
+      const { HostModel } = await import('@modules/venues/host/host.model');
+      const h = await HostModel.findOne({ user_id: uid }).select('status').sort({ created_at: -1 });
+      return (h?.status as string) ?? null;
+    }
+    if (kind === 'VENUE') {
+      const { VenueModel } = await import('@modules/venues/venue/venue.model');
+      const v = await VenueModel.findOne({ owner_user_id: uid }).select('status').sort({ created_at: -1 });
+      return (v?.status as string) ?? null;
+    }
+    if (kind === 'ECOMM') {
+      const { EcommBrandModel } = await import('@modules/venues/ecommBrand/ecommBrand.model');
+      const b = await EcommBrandModel.findOne({ owner_user_id: uid }).select('status').sort({ created_at: -1 });
+      return (b?.status as string) ?? null;
+    }
+    return null;
+  },
+
+  /** Whether the user may raise a NEW request for this kind, given their LATEST
+   * row. Returns a block message, or null when re-application is allowed. */
+  async reapplyBlockReason(latest: any, kind: SurveyKind): Promise<string | null> {
+    if (!latest) return null;
+    if (latest.status === 'REQUESTED' || latest.status === 'SCHEDULED') {
+      return 'You already have an active meeting request — reschedule or cancel it first.';
+    }
+    if (latest.status !== 'DONE') return null; // CANCELLED → re-apply allowed
+    if (latest.approval_status === 'NONE' || latest.approval_status === 'PENDING') {
+      return 'Onboarding in process.';
+    }
+    if (latest.approval_status !== 'APPROVED') return null; // DENIED → re-apply allowed
+    // Meeting approved: check the onboarded record — under review, live, or rejected.
+    const onboarded = await meetingService.onboardedStatusFor(String(latest.user_id), kind);
+    if (onboarded === 'DRAFT' || onboarded === 'SUBMITTED') return 'Onboarding in process.';
+    if (onboarded === 'APPROVED') return 'You are already onboarded.';
+    if (kind === 'CLUB_ADMIN') return 'You are already onboarded.'; // role granted on approval
+    return null; // REJECTED (or missing) → re-apply allowed
+  },
+
+  /** User raises a NEW meeting request for a kind (a fresh history record). */
   async request(
     userId: string,
     kind: SurveyKind,
@@ -557,59 +603,38 @@ export const meetingService = {
     if (!input.contact_phone?.trim()) {
       throw new GraphQLError('Phone number is required so our onboarding team can reach you', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    // Slot race: block other users AND this user's other-kind meetings at the
-    // same instant — only the caller's own meeting for THIS kind is excluded.
-    const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).select('_id request_no status approval_status');
-    // Onboarding still in process: the interview happened (DONE) but the admin has
-    // not yet approved/denied the feedback — the user must not re-apply until then.
-    if (own?.status === 'DONE' && (own.approval_status === 'NONE' || own.approval_status === 'PENDING')) {
-      throw new GraphQLError('Onboarding in process.', { extensions: { code: 'CONFLICT' } });
-    }
-    const [busy, slotMs] = await Promise.all([
-      occupiedInstants(own ? { excludeMeetingId: String(own._id) } : {}),
-      slotWindowMs(),
-    ]);
+    const uid = new Types.ObjectId(userId);
+    // History model (Item 1): the user's LATEST row for this kind decides whether
+    // a NEW request is allowed — never overwrite. An active request, an undecided
+    // DONE meeting, or an onboarded record still under review all block
+    // re-application (Item 2); a Cancelled/Denied/Rejected chain re-opens.
+    const latest = await MeetingModel.findOne({ user_id: uid, kind }).sort({ created_at: -1 });
+    const blocked = await meetingService.reapplyBlockReason(latest, kind);
+    if (blocked) throw new GraphQLError(blocked, { extensions: { code: 'CONFLICT' } });
+    // Slot race: block instants held by any other active meeting (this user has
+    // no active meeting for THIS kind — that would have blocked above).
+    const [busy, slotMs] = await Promise.all([occupiedInstants({}), slotWindowMs()]);
     if (isTaken(new Date(input.requested_at).getTime(), busy, slotMs)) {
       throw new GraphQLError('That slot is already booked — please pick another one', { extensions: { code: 'CONFLICT' } });
     }
     if (await isHolidayInstant(input.requested_at)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
-    // Reuse the request id only while the current request is still in an active
-    // cycle (Requested / Scheduled — e.g. the user just changes their slot). A
-    // previously Cancelled, or Done-and-Denied/Approved, meeting is a genuinely
-    // NEW request and always mints a fresh id — request ids are never reused
-    // (spec: unique per new request for accurate tracking/auditing).
-    const activeCycle = own?.status === 'REQUESTED' || own?.status === 'SCHEDULED';
-    const requestNo = activeCycle && own?.request_no ? own.request_no : await nextMeetingRequestNo(kind);
-    // A fresh booking restarts the request — a previously CANCELLED meeting (or a
-    // DONE one the admin DENIED) comes back as REQUESTED so the Earn card locks
-    // again. A DONE meeting still awaiting approval was already blocked above.
-    const doc = await MeetingModel.findOneAndUpdate(
-      { user_id: new Types.ObjectId(userId), kind },
-      {
-        $set: {
-          request_no: requestNo,
-          requested_at: new Date(input.requested_at),
-          notes: input.notes ?? null,
-          contact_name: input.contact_name ?? null,
-          contact_phone: input.contact_phone ?? null,
-          super_category_id: oid(input.super_category_id),
-          category_id: oid(input.category_id),
-          sub_category_id: oid(input.sub_category_id),
-          status: 'REQUESTED',
-          scheduled_at: null,
-          meeting_link: null,
-          cancel_reason: null,
-          reschedule_count: 0,
-          reschedule_reason: null,
-          approval_status: 'NONE',
-          feedback: null,
-          dismissed: false,
-        },
-      },
-      { new: true, upsert: true, setDefaultsOnInsert: true },
-    );
+    // Every submission is a brand-new immutable record with a fresh request id —
+    // prior rows are kept forever for audit/history (never overwritten).
+    const doc = await MeetingModel.create({
+      request_no: await nextMeetingRequestNo(kind),
+      kind,
+      user_id: uid,
+      requested_at: new Date(input.requested_at),
+      notes: input.notes ?? null,
+      contact_name: input.contact_name ?? null,
+      contact_phone: input.contact_phone ?? null,
+      super_category_id: oid(input.super_category_id),
+      category_id: oid(input.category_id),
+      sub_category_id: oid(input.sub_category_id),
+      status: 'REQUESTED',
+    });
     // Completing the gate (meeting requested) is what pushes the survey data
     // into CRM as a lead. Best-effort — a sync failure must not block the
     // user's meeting request.
@@ -623,17 +648,16 @@ export const meetingService = {
     return pub(doc);
   },
 
-  /** User moves their own meeting to a new open slot. Contact details are kept;
-   * any staff scheduling is reset since the time changed. */
+  /** User moves their meeting to a new open slot. Per the history model this
+   * SUPERSEDES the current active row (kept as a Cancelled audit entry) and
+   * raises a fresh REQUESTED record — contact details + taxonomy carry over. */
   async rescheduleMyMeeting(userId: string, kind: SurveyKind, requestedAt: string, reason?: string | null) {
     if (!requestedAt) throw new GraphQLError('A new date & time is required', { extensions: { code: 'BAD_USER_INPUT' } });
-    const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
+    const uid = new Types.ObjectId(userId);
+    const doc = await MeetingModel.findOne({ user_id: uid, kind, status: { $in: ['REQUESTED', 'SCHEDULED'] } }).sort({ created_at: -1 });
     if (!doc) throw notFound();
-    // Reschedule is a one-time option.
-    if ((doc.reschedule_count ?? 0) >= 1) {
-      throw new GraphQLError('You have already used your one-time reschedule option', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    // Block other users' slots and the user's own other-kind meetings.
+    // Block other users' slots and the user's own other-kind meetings (the row
+    // being superseded is excluded so its current slot doesn't block itself).
     const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: String(doc._id) }), slotWindowMs()]);
     // A reschedule must move to a DIFFERENT slot — the current one is shown for
     // reference only and cannot be re-picked.
@@ -647,23 +671,38 @@ export const meetingService = {
     if (await isHolidayInstant(requestedAt)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
-    doc.requested_at = new Date(requestedAt);
-    doc.scheduled_at = null;
-    doc.meeting_link = null;
-    doc.status = 'REQUESTED';
-    doc.reschedule_count = (doc.reschedule_count ?? 0) + 1;
-    doc.reschedule_reason = reason?.trim() || null;
+    // Supersede the current row (kept for audit), then raise a fresh request.
+    doc.status = 'CANCELLED';
+    doc.cancel_reason = 'Superseded by reschedule';
+    doc.cancelled_by_staff = false;
     await doc.save();
-    await notifyApplicant(doc, 'booked');
-    return pub(doc);
+    const fresh = await MeetingModel.create({
+      request_no: await nextMeetingRequestNo(kind),
+      kind,
+      user_id: uid,
+      requested_at: new Date(requestedAt),
+      notes: doc.notes ?? null,
+      contact_name: doc.contact_name ?? null,
+      contact_phone: doc.contact_phone ?? null,
+      super_category_id: doc.super_category_id ?? null,
+      category_id: doc.category_id ?? null,
+      sub_category_id: doc.sub_category_id ?? null,
+      status: 'REQUESTED',
+      reschedule_count: (doc.reschedule_count ?? 0) + 1,
+      reschedule_reason: reason?.trim() || null,
+    });
+    await notifyApplicant(fresh, 'booked');
+    return pub(fresh);
   },
 
-  /** User cancels their own meeting — frees the slot and unlocks the Earn card. */
+  /** User cancels their own active meeting — frees the slot and unlocks the Earn
+   * card (kept as a 'Cancelled' history row, distinct from a staff 'Rejected'). */
   async cancelMyMeeting(userId: string, kind: SurveyKind, reason?: string | null) {
-    const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
+    const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind, status: { $in: ['REQUESTED', 'SCHEDULED'] } }).sort({ created_at: -1 });
     if (!doc) throw notFound();
     doc.status = 'CANCELLED';
     doc.cancel_reason = reason?.trim() || null;
+    doc.cancelled_by_staff = false;
     await doc.save();
     await notifyApplicant(doc, 'cancelled');
     return pub(doc);
@@ -680,6 +719,8 @@ export const meetingService = {
     if (!doc) throw notFound();
     doc.status = 'CANCELLED';
     doc.cancel_reason = reason.trim();
+    // Staff rejection — surfaced as "Rejected" (vs a user self-cancel "Cancelled").
+    doc.cancelled_by_staff = true;
     await doc.save();
     await notifyApplicant(
       doc,
@@ -742,14 +783,20 @@ export const meetingService = {
     return pub(doc);
   },
 
+  /** The user's LATEST request for a kind (history model → newest row wins). */
   async myMeeting(userId: string, kind: SurveyKind) {
-    return pub(await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }));
+    return pub(await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).sort({ created_at: -1 }));
   },
 
-  /** All of the user's meetings (one per kind) — drives the Earn page cards. */
+  /** The user's LATEST meeting per kind — drives the Earn page cards. Older
+   * history rows are excluded here (they surface only in the portal tables). */
   async myMeetings(userId: string) {
-    const docs = await MeetingModel.find({ user_id: new Types.ObjectId(userId) }).sort({ kind: 1 });
-    return docs.map((d) => pub(d));
+    const docs = await MeetingModel.find({ user_id: new Types.ObjectId(userId) }).sort({ created_at: -1 });
+    const latestByKind = new Map<string, (typeof docs)[number]>();
+    for (const d of docs) {
+      if (!latestByKind.has(d.kind)) latestByKind.set(d.kind, d);
+    }
+    return [...latestByKind.values()].map((d) => pub(d));
   },
 
   /** Onboarding list — calendar uses (from,to); tables use kind. */

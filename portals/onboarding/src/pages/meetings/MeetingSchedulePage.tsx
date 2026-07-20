@@ -15,6 +15,7 @@ import CancelMeetingDialog from './CancelMeetingDialog';
 import DecisionDialog from './DecisionDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
 import MeetingsTable from './MeetingsTable';
+import RequesterDialog from './RequesterDialog';
 import ScheduleMeetingDialog from './ScheduleMeetingDialog';
 import {
   ONBOARDING_MEETINGS_TABLE,
@@ -31,7 +32,7 @@ const STATUS_FILTERS: { value: MeetingStatus | ''; label: string }[] = [
   { value: 'DONE', label: 'Done' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
-const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
 const MEETING_STATUS_VALUES = new Set<MeetingStatus>(['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED']);
 
 /** Onboarding → Meeting → Venue/Host/Seller Meeting Schedule: requests + scheduling. */
@@ -63,6 +64,7 @@ export default function MeetingSchedulePage() {
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
   const [deciding, setDeciding] = useState<OnboardingMeeting | null>(null);
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
+  const [requesterOf, setRequesterOf] = useState<OnboardingMeeting | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const pinnedFilters: TableFilterValue[] = [{ field: 'kind', op: 'eq', value: kind }];
@@ -114,8 +116,10 @@ export default function MeetingSchedulePage() {
         onMarkDone={markDone}
         onDecide={setDeciding}
         onReject={setCancelling}
+        onRequester={setRequesterOf}
       />
 
+      <RequesterDialog meeting={requesterOf} onClose={() => setRequesterOf(null)} />
       <ScheduleMeetingDialog meeting={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />
       <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={refresh} />
       <DecisionDialog meeting={deciding} onClose={() => setDeciding(null)} onDecided={refresh} />

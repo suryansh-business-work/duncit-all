@@ -34,6 +34,10 @@ export const meetingTypeDefs = gql`
     status: MeetingStatus!
     "Why onboarding staff cancelled it (null for self-cancels)."
     cancel_reason: String
+    "True when a CANCELLED row was rejected by onboarding staff (display as 'Rejected' vs a user 'Cancelled')."
+    cancelled_by_staff: Boolean
+    "Status of the linked onboarded record (DRAFT|SUBMITTED|APPROVED|REJECTED) for HOST/VENUE/ECOMM once the meeting is approved; null for CLUB_ADMIN or before an onboarded record exists. Drives the Earn re-application block."
+    onboarded_status: String
     "Hidden from the onboarding calendar (cancelled meeting removed by staff)."
     dismissed: Boolean
     notes: String

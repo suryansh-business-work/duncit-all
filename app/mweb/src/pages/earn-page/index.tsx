@@ -21,6 +21,7 @@ const EARN_ME = gql`
       kind
       status
       approval_status
+      onboarded_status
       scheduled_at
       requested_at
       reschedule_count
@@ -69,6 +70,7 @@ interface EarnMeeting {
   kind: string;
   status: string;
   approval_status?: string | null;
+  onboarded_status?: string | null;
   scheduled_at?: string | null;
   requested_at?: string | null;
   reschedule_count?: number | null;
@@ -88,6 +90,9 @@ const PENDING = new Set(['REQUESTED', 'SCHEDULED']);
 // stays blocked until an admin approves (or denies) the post-meeting feedback.
 const APPROVAL_IN_PROGRESS = new Set(['NONE', 'PENDING']);
 const IN_PROCESS_LABEL = 'Onboarding in process.';
+// Meeting approved but the onboarded record is still under review (Draft/
+// Submitted) → the option stays locked (Item 2); a Rejected record re-opens it.
+const ONBOARDED_UNDER_REVIEW = new Set(['DRAFT', 'SUBMITTED']);
 
 const meetingNotice = (meeting: EarnMeeting) => {
   const at = meeting.scheduled_at ?? meeting.requested_at;
@@ -125,6 +130,17 @@ const earnBoxState = (
     };
   }
   if (meeting?.status === 'DONE' && APPROVAL_IN_PROGRESS.has(meeting.approval_status ?? 'NONE')) {
+    return {
+      disabled: true,
+      disabledLabel: IN_PROCESS_LABEL,
+      description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+    };
+  }
+  if (
+    meeting?.status === 'DONE' &&
+    meeting.approval_status === 'APPROVED' &&
+    ONBOARDED_UNDER_REVIEW.has(meeting.onboarded_status ?? '')
+  ) {
     return {
       disabled: true,
       disabledLabel: IN_PROCESS_LABEL,

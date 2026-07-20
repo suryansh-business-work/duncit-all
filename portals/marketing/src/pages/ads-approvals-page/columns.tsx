@@ -12,6 +12,18 @@ const AD_TYPE_OPTIONS = [
   { value: 'VIDEO', label: 'Video' },
 ];
 
+const AD_KIND_OPTIONS = [
+  { value: 'PLACEMENT', label: 'Placement' },
+  { value: 'PRODUCT_AD', label: 'Product Ad' },
+  { value: 'BRAND_AD', label: 'Brand Ad' },
+];
+
+const adKindLabel = (row: AdRequestRow): string => {
+  if (row.ad_kind === 'PRODUCT_AD') return row.product_name ? `Product · ${row.product_name}` : 'Product Ad';
+  if (row.ad_kind === 'BRAND_AD') return row.brand_name ? `Brand · ${row.brand_name}` : 'Brand Ad';
+  return 'Placement';
+};
+
 const renderAdType = (row: AdRequestRow) => (
   <Chip label={row.ad_type} size="small" variant="outlined" color="secondary" />
 );
@@ -36,6 +48,13 @@ export function getAdColumns({ onReview }: Readonly<ColumnDeps>): DuncitColumn<A
       headerName: 'Trace ID',
       width: 130,
       valueGetter: (row) => row.trace_id,
+    },
+    {
+      field: 'ad_kind',
+      headerName: 'Kind',
+      filter: { type: 'select', options: AD_KIND_OPTIONS },
+      minWidth: 170,
+      valueGetter: adKindLabel,
     },
     {
       field: 'ad_title',

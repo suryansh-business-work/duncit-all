@@ -26,6 +26,7 @@
     "@duncit/shell": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/theme": "workspace:*",
+    "@duncit/ad-request-form": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",

@@ -1,9 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen, fireEvent, waitFor, within } from '@testing-library/react';
-import AdRequestForm from '../../src/pages/create-ad-page/ad-request/ad-request.form';
-import type { AdRequestFormValues } from '../../src/pages/create-ad-page/ad-request/ad-request.types';
-import { makeAdRequestFormValues } from '../mocks';
-import { renderWithProviders } from '../testkit';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import AdRequestForm from '../src/AdRequestForm';
+import type { AdRequestFormValues } from '../src/ad-request.types';
+import { makeAdRequestFormValues } from './factories';
 
 // Mock the MUIX DatePicker so no LocalizationProvider is required and both the
 // date-selected and date-cleared onChange branches can be driven directly.
@@ -19,9 +18,9 @@ vi.mock('@mui/x-date-pickers/DatePicker', () => ({
   ),
 }));
 
-// Probe for the media field: exposes the props the Controller passes and lets
-// us fire its onChange.
-vi.mock('../../src/pages/create-ad-page/ad-request/AdMediaField', () => ({
+// Probe for the media field: exposes the props the Controller passes and lets us
+// fire its onChange.
+vi.mock('../src/AdMediaField', () => ({
   default: (props: Record<string, any>) => (
     <div data-testid="media-field">
       <span data-testid="media-type">{props.adType}</span>
@@ -44,7 +43,7 @@ interface Overrides {
 const renderForm = (overrides: Overrides = {}) => {
   const onSubmit = overrides.onSubmit ?? vi.fn();
   const onValuesChange = overrides.onValuesChange ?? vi.fn();
-  const utils = renderWithProviders(
+  const utils = render(
     <AdRequestForm
       initialValues={overrides.initialValues ?? validValues()}
       busy={overrides.busy ?? false}
@@ -87,17 +86,13 @@ describe('AdRequestForm', () => {
   it('accepts a picked media url through the media field', async () => {
     renderForm();
     fireEvent.click(screen.getByRole('button', { name: 'pick-media' }));
-    await waitFor(() =>
-      expect(screen.getByTestId('media-value')).toHaveTextContent('picked-media-url'),
-    );
+    await waitFor(() => expect(screen.getByTestId('media-value')).toHaveTextContent('picked-media-url'));
   });
 
   it('updates the start date, then flags an error when cleared', async () => {
     renderForm();
     fireEvent.click(screen.getByRole('button', { name: 'set-date' }));
-    await waitFor(() =>
-      expect(screen.getByTestId('date-value')).toHaveTextContent('2026-09-01T00:00:00.000Z'),
-    );
+    await waitFor(() => expect(screen.getByTestId('date-value')).toHaveTextContent('2026-09-01T00:00:00.000Z'));
     fireEvent.click(screen.getByRole('button', { name: 'clear-date' }));
     await waitFor(() => expect(screen.getByTestId('date-error')).toHaveTextContent('true'));
     expect(screen.getByTestId('date-helper')).toHaveTextContent(/required/i);

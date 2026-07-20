@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/ad-request-form": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",

@@ -31,6 +31,12 @@ export type ActiveUserStats = {
   total_unique_users: Scalars['Int']['output'];
 };
 
+/** PLACEMENT = generic advertiser slot; PRODUCT_AD / BRAND_AD = brand promotes a product / storefront. */
+export type AdKind =
+  | 'BRAND_AD'
+  | 'PLACEMENT'
+  | 'PRODUCT_AD';
+
 export type AdMediaType =
   | 'IMAGE'
   | 'VIDEO';
@@ -65,9 +71,12 @@ export type AdPricing = {
 export type AdRequest = {
   __typename?: 'AdRequest';
   ad_description: Scalars['String']['output'];
+  ad_kind: AdKind;
   ad_title: Scalars['String']['output'];
   ad_type: AdMediaType;
   approved_cost?: Maybe<Scalars['Float']['output']>;
+  brand_id?: Maybe<Scalars['ID']['output']>;
+  brand_name?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['String']['output'];
   currency_symbol: Scalars['String']['output'];
   duration_days: Scalars['Int']['output'];
@@ -77,6 +86,9 @@ export type AdRequest = {
   marketing_remarks?: Maybe<Scalars['String']['output']>;
   media_url: Scalars['String']['output'];
   position: AdPosition;
+  product_id?: Maybe<Scalars['ID']['output']>;
+  product_image?: Maybe<Scalars['String']['output']>;
+  product_name?: Maybe<Scalars['String']['output']>;
   redirect_url?: Maybe<Scalars['String']['output']>;
   reviewed_at?: Maybe<Scalars['String']['output']>;
   start_at: Scalars['String']['output'];
@@ -10387,12 +10399,16 @@ export type StoryView = {
 
 export type SubmitAdRequestInput = {
   ad_description: Scalars['String']['input'];
+  /** PLACEMENT (default) for the Ads portal; PRODUCT_AD / BRAND_AD from the Partner portal (requires product_id). */
+  ad_kind?: InputMaybe<AdKind>;
   ad_title: Scalars['String']['input'];
   ad_type: AdMediaType;
   /** 1 day to 1 month. */
   duration_days: Scalars['Int']['input'];
   media_url: Scalars['String']['input'];
   position: AdPosition;
+  /** The brand's product this ad promotes (required for PRODUCT_AD / BRAND_AD). Brand + names + image are derived server-side. */
+  product_id?: InputMaybe<Scalars['ID']['input']>;
   redirect_url?: InputMaybe<Scalars['String']['input']>;
   /** ISO date-time; today or later. */
   start_at: Scalars['String']['input'];

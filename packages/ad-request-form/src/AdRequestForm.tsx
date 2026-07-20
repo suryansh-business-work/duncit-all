@@ -5,28 +5,24 @@ import { Alert, Box, Button, Grid, MenuItem, Slider, Stack, TextField, Typograph
 import SendIcon from '@mui/icons-material/Send';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { RhfTextField } from '@duncit/forms';
-import { AD_MEDIA_TYPE_OPTIONS, AD_POSITION_OPTIONS } from '../../ads/ad-options';
+import { AD_MEDIA_TYPE_OPTIONS, AD_POSITION_OPTIONS } from './ad-options';
 import AdMediaField from './AdMediaField';
-import {
-  adRequestSchema,
-  type AdRequestFormProps,
-  type AdRequestFormValues,
-} from './ad-request.types';
-
-export { blankAdRequestValues, toSubmitAdRequestInput } from './ad-request.types';
-export { adRequestSchema };
+import { adRequestSchema, type AdRequestFormProps, type AdRequestFormValues } from './ad-request.types';
 
 const DURATION_MARKS = [
   { value: 1, label: '1 day' },
   { value: 30, label: '1 month' },
 ];
 
+/** The shared ad-request form (RHF + Zod), used by the Ads portal Create Ad page
+ * and the Partner portal's "Run ad" dialog. */
 export default function AdRequestForm({
   initialValues,
   busy,
   errorMessage,
   onValuesChange,
   onSubmit,
+  submitLabel = 'Submit Ad Request',
 }: Readonly<AdRequestFormProps>) {
   const { control, handleSubmit, setValue, watch, formState } = useForm<AdRequestFormValues>({
     defaultValues: initialValues,
@@ -85,13 +81,7 @@ export default function AdRequestForm({
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <RhfTextField
-            control={control}
-            name="position"
-            label="Ad Position"
-            select
-            hint="Auto shows the ad across every placement"
-          >
+          <RhfTextField control={control} name="position" label="Ad Position" select hint="Auto shows the ad across every placement">
             {AD_POSITION_OPTIONS.map((option) => (
               <MenuItem key={option.value} value={option.value}>
                 {option.label}
@@ -159,22 +149,10 @@ export default function AdRequestForm({
           />
         </Grid>
         <Grid item xs={12}>
-          <RhfTextField
-            control={control}
-            name="redirect_url"
-            label="Redirect URL"
-            hint="Optional — where the ad opens; must be an http(s) link"
-          />
+          <RhfTextField control={control} name="redirect_url" label="Redirect URL" hint="Optional — where the ad opens; must be an http(s) link" />
         </Grid>
         <Grid item xs={12}>
-          <RhfTextField
-            control={control}
-            name="target_audience"
-            label="Target Audience"
-            multiline
-            minRows={2}
-            hint="Optional — describe who the ad should reach"
-          />
+          <RhfTextField control={control} name="target_audience" label="Target Audience" multiline minRows={2} hint="Optional — describe who the ad should reach" />
         </Grid>
         {errorMessage && (
           <Grid item xs={12}>
@@ -183,13 +161,8 @@ export default function AdRequestForm({
         )}
         <Grid item xs={12}>
           <Stack direction="row" justifyContent="flex-end">
-            <Button
-              type="submit"
-              variant="contained"
-              startIcon={<SendIcon />}
-              disabled={busy || !formState.isValid}
-            >
-              Submit Ad Request
+            <Button type="submit" variant="contained" startIcon={<SendIcon />} disabled={busy || !formState.isValid}>
+              {submitLabel}
             </Button>
           </Stack>
         </Grid>

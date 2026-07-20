@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { adsService, deriveAdStatus } from '../../ads.service';
 import { AdPricingModel, AdRequestModel, nextAdTraceId } from '../../ads.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 
 const DAY = 86_400_000;
 const tomorrow = () => new Date(Date.now() + DAY);
@@ -60,6 +62,39 @@ describe('ads integration', () => {
       expect(ad.redirect_url).toBeNull();
       expect(ad.approved_cost).toBeNull();
       expect(ad.submitted_by).toBe(userId);
+    });
+
+    it('runs a PRODUCT_AD: verifies ownership and denormalises product + brand context', async () => {
+      const owner = String(new Types.ObjectId());
+      const brandId = new Types.ObjectId();
+      const productId = new Types.ObjectId();
+      await EcommBrandModel.collection.insertOne({ _id: brandId, brand_name: 'Acme' } as never);
+      await InventoryProductModel.collection.insertOne({
+        _id: productId,
+        product_name: 'Cold Brew Kit',
+        image_url: 'https://cdn/x.jpg',
+        brand_id: brandId,
+        listing_submitted_by_id: owner,
+      } as never);
+
+      const ad = await adsService.submit(owner, makeSubmission({ ad_kind: 'PRODUCT_AD', product_id: String(productId) }));
+      expect(ad.ad_kind).toBe('PRODUCT_AD');
+      expect(ad.product_id).toBe(String(productId));
+      expect(ad.product_name).toBe('Cold Brew Kit');
+      expect(ad.brand_name).toBe('Acme');
+      expect(ad.product_image).toBe('https://cdn/x.jpg');
+    });
+
+    it('rejects a product/brand ad for a product the submitter does not own', async () => {
+      const productId = new Types.ObjectId();
+      await InventoryProductModel.collection.insertOne({
+        _id: productId,
+        product_name: 'X',
+        listing_submitted_by_id: 'someone-else',
+      } as never);
+      await expect(
+        adsService.submit(String(new Types.ObjectId()), makeSubmission({ ad_kind: 'PRODUCT_AD', product_id: String(productId) }))
+      ).rejects.toThrow(/your own products/i);
     });
 
     it('rejects an unknown position', async () => {

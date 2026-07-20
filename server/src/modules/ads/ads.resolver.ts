@@ -5,6 +5,9 @@ import type { AdPosition } from './ads.model';
 
 /** Advertisers submit from ads.duncit.com. */
 const ADS_SUBMIT = ['SUPER_ADMIN', 'ADS_MANAGER'];
+/** Who may submit a request: advertisers PLUS brand managers running a product/brand ad
+ * from the Partner portal (ownership is enforced per-product in the service). */
+const ADS_SUBMIT_ANY = [...ADS_SUBMIT, 'ECOMM_MANAGER'];
 /** Marketing reviews, prices and approves — requests go to Marketing, not Admin. */
 const MARKETING_REVIEW = ['SUPER_ADMIN', 'MARKETING_MANAGER'];
 
@@ -34,7 +37,7 @@ export const adsResolvers = {
   },
   Mutation: {
     submitAdRequest: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      const user = requireRole(ctx, ADS_SUBMIT);
+      const user = requireRole(ctx, ADS_SUBMIT_ANY);
       return adsService.submit(user.id, args.input);
     },
     reviewAdRequest: (

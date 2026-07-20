@@ -2,6 +2,10 @@ import { Document, Schema, Types, model } from 'mongoose';
 
 export type AdMediaType = 'IMAGE' | 'VIDEO';
 export type AdStoredStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+/** PLACEMENT = a generic advertiser slot; PRODUCT_AD / BRAND_AD = a brand promoting
+ * one of its products / its storefront from the Partner portal. */
+export type AdKind = 'PLACEMENT' | 'PRODUCT_AD' | 'BRAND_AD';
+export const AD_KINDS: AdKind[] = ['PLACEMENT', 'PRODUCT_AD', 'BRAND_AD'];
 export type AdPosition =
   | 'AUTO'
   | 'HOME_BOTTOM'
@@ -27,6 +31,12 @@ export const AD_POSITIONS: AdPosition[] = [
 
 export interface IAdRequest extends Document {
   trace_id: string;
+  ad_kind: AdKind;
+  brand_id?: Types.ObjectId | null;
+  product_id?: Types.ObjectId | null;
+  brand_name?: string | null;
+  product_name?: string | null;
+  product_image?: string | null;
   ad_title: string;
   ad_description: string;
   ad_type: AdMediaType;
@@ -55,6 +65,12 @@ export interface IAdRequest extends Document {
 const adRequestSchema = new Schema<IAdRequest>(
   {
     trace_id: { type: String, required: true, unique: true, index: true },
+    ad_kind: { type: String, enum: AD_KINDS, default: 'PLACEMENT', index: true },
+    brand_id: { type: Schema.Types.ObjectId, ref: 'EcommBrand', default: null, index: true },
+    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', default: null, index: true },
+    brand_name: { type: String, default: null, trim: true, maxlength: 160 },
+    product_name: { type: String, default: null, trim: true, maxlength: 200 },
+    product_image: { type: String, default: null, trim: true, maxlength: 1000 },
     ad_title: { type: String, required: true, trim: true, maxlength: 120 },
     ad_description: { type: String, required: true, trim: true, maxlength: 2000 },
     ad_type: { type: String, enum: ['IMAGE', 'VIDEO'], required: true },

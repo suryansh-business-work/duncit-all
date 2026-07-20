@@ -6,6 +6,7 @@ import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/tab
 import { parseApiError } from '@duncit/utils';
 import { QuantityCell, renderListingStatus, renderProduct } from './ProductListingCells';
 import ProductRowActions from './ProductRowActions';
+import RunAdDialog, { type AdKind } from './RunAdDialog';
 import { DELETE_LISTING, MY_PRODUCT_LISTINGS_TABLE, UPDATE_QUANTITY, type ProductListingRow } from './queries';
 
 /** Available stock at/below the product's low-stock threshold (opt-in per product). */
@@ -38,6 +39,7 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
   const [deleteListing, deleteState] = useMutation(DELETE_LISTING);
   const [deleteTarget, setDeleteTarget] = useState<ProductListingRow | null>(null);
+  const [adTarget, setAdTarget] = useState<{ product: ProductListingRow; kind: AdKind } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const fetchRows = useApolloTableFetch<ProductListingRow>(
@@ -85,6 +87,8 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         actions={[
           { key: 'edit', label: 'Edit', icon: 'edit', disabled: !canManageProducts, onClick: () => onEdit(product) },
           { key: 'settings', label: 'Settings', icon: 'settings', disabled: !canManageProducts, onClick: () => onSettings?.(product) },
+          { key: 'product-ad', label: 'Run Product Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'PRODUCT_AD' }) },
+          { key: 'brand-ad', label: 'Run Brand Ad', icon: 'ad', disabled: !canManageProducts, onClick: () => setAdTarget({ product, kind: 'BRAND_AD' }) },
           { key: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: !canManageProducts, onClick: () => setDeleteTarget(product) },
         ]}
       />
@@ -145,7 +149,9 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
       <CardContent>
         <Stack spacing={1.5}>
           <Typography variant="h6" fontWeight={950}>Your listed products</Typography>
-          {message && <Alert severity={message.includes('deleted') || message.includes('updated') ? 'success' : 'error'}>{message}</Alert>}
+          {message && (
+            <Alert severity={/deleted|updated|submitted/.test(message) ? 'success' : 'error'}>{message}</Alert>
+          )}
           <DuncitTable<ProductListingRow>
             tableId="partners-app-product-listings"
             columns={columns}
@@ -168,6 +174,16 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
           <Button color="error" variant="contained" disabled={deleteState.loading} onClick={confirmDelete}>Delete</Button>
         </DialogActions>
       </Dialog>
+      <RunAdDialog
+        product={adTarget?.product ?? null}
+        adKind={adTarget?.kind ?? 'PRODUCT_AD'}
+        open={Boolean(adTarget)}
+        onClose={() => setAdTarget(null)}
+        onSubmitted={(traceId) => {
+          setAdTarget(null);
+          setMessage(`Ad request submitted${traceId ? ` · ${traceId}` : ''}. Marketing will review it.`);
+        }}
+      />
     </Card>
   );
 }

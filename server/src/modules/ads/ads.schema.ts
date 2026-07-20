@@ -6,6 +6,13 @@ export const adsTypeDefs = gql`
     VIDEO
   }
 
+  "PLACEMENT = generic advertiser slot; PRODUCT_AD / BRAND_AD = brand promotes a product / storefront."
+  enum AdKind {
+    PLACEMENT
+    PRODUCT_AD
+    BRAND_AD
+  }
+
   "Where the ad renders in the apps. AUTO is eligible for every position."
   enum AdPosition {
     AUTO
@@ -31,6 +38,12 @@ export const adsTypeDefs = gql`
   type AdRequest {
     id: ID!
     trace_id: String!
+    ad_kind: AdKind!
+    brand_id: ID
+    product_id: ID
+    brand_name: String
+    product_name: String
+    product_image: String
     ad_title: String!
     ad_description: String!
     ad_type: AdMediaType!
@@ -88,6 +101,10 @@ export const adsTypeDefs = gql`
   }
 
   input SubmitAdRequestInput {
+    "PLACEMENT (default) for the Ads portal; PRODUCT_AD / BRAND_AD from the Partner portal (requires product_id)."
+    ad_kind: AdKind
+    "The brand's product this ad promotes (required for PRODUCT_AD / BRAND_AD). Brand + names + image are derived server-side."
+    product_id: ID
     ad_title: String!
     ad_description: String!
     ad_type: AdMediaType!

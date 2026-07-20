@@ -19,3 +19,5 @@ export { QueryGuard } from './QueryGuard';
 export type { QueryGuardProps } from './QueryGuard';
 export { useDebouncedValue } from './useDebouncedValue';
 export { mergeSx } from './mergeSx';
+export { ModerationBlockedDialog } from './ModerationBlockedDialog';
+export type { BlockedViolation, ModerationBlockedDialogProps } from './ModerationBlockedDialog';

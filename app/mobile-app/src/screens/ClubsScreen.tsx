@@ -70,10 +70,7 @@ export function ClubsScreen() {
             {isAdEntry(entry) ? (
               <AdCard ad={entry.ad} variant="banner" />
             ) : (
-              <ClubCard
-                club={entry.item}
-                onPress={() => openClub(entry.item.id, entry.item.club_name)}
-              />
+              <ClubCard club={entry.item} onPress={() => openClub(entry.item.club_id)} />
             )}
           </Reveal>
         )}

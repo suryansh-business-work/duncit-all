@@ -120,7 +120,7 @@ describe('ClubDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('club-follow'));
     expect(mockClubToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Morning Run' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { clubSlug: 's', podSlug: 'pod-1' });
     // Members rail → full profile (B4-12).
     fireEvent.press(screen.getByTestId('attendees-avatar-group'));
     fireEvent.press(screen.getByTestId('attendee-row-m1'));

@@ -32,8 +32,24 @@ export const moderationTypeDefs = /* GraphQL */ `
     image_urls: [String!]
   }
 
+  "One variant's moderatable text (labels + description)."
+  input ModerateProductVariantInput {
+    option_label: String
+    size_label: String
+    description: String
+  }
+
+  input ModerateProductContentInput {
+    product_name: String!
+    variants: [ModerateProductVariantInput!]
+    "Union of every variant's image URLs, screened by GPT-4o."
+    image_urls: [String!]
+  }
+
   extend type Mutation {
     "Deep-analyses a pod's content against community guidelines before publishing."
     moderatePodContent(input: ModeratePodContentInput!): ModerationResult!
+    "Deep-analyses a product listing's content against community guidelines before submit."
+    moderateProductContent(input: ModerateProductContentInput!): ModerationResult!
   }
 `;

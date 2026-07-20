@@ -43,6 +43,6 @@ describe('PreviousPodsScreen', () => {
     renderWithProviders(<PreviousPodsScreen />);
     expect(screen.getByTestId('previous-pods-screen')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-old'));
-    expect(mockOpenPod).toHaveBeenCalledWith('old', 'Old Jam');
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-old');
   });
 });

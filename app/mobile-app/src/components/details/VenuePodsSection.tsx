@@ -1,19 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { ClubPodsSchedule } from '@/components/details/club/ClubPodsSchedule';
 import { MobileVenuePodsDocument } from '@/graphql/hosts-venues';
+import { useDetailNav } from '@/hooks/useDetailNav';
 import type { ClubPod } from '@/hooks/useDetails';
 import { graphqlRequest } from '@/services/graphql.client';
-import type { RootStackParamList } from '@/navigation/types';
 
 /** "Pods at this venue" — every live pod hosted at the venue, in the same
  * Happening soon / Upcoming / Previous rails as the club page. mWeb twin:
  * VenueDetailsPage's pods section. */
 export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openPod } = useDetailNav();
   const [pods, setPods] = useState<ClubPod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,12 +38,7 @@ export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
         </Text>
       ) : null}
       {!isLoading && pods.length > 0 ? (
-        <ClubPodsSchedule
-          pods={pods}
-          onOpenPod={(pod) =>
-            navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
-          }
-        />
+        <ClubPodsSchedule pods={pods} onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)} />
       ) : null}
     </YStack>
   );

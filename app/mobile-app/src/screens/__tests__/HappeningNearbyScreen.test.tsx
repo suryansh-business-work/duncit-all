@@ -50,7 +50,7 @@ describe('HappeningNearbyScreen', () => {
     renderWithProviders(<HappeningNearbyScreen />);
     expect(screen.getByTestId('happening-nearby-screen')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-live'));
-    expect(mockOpenPod).toHaveBeenCalledWith('live', 'Live Jam');
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-live');
   });
 
   it('interleaves a full-width sponsored banner after every 4 pods', () => {

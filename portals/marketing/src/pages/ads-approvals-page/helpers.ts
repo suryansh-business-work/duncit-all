@@ -2,6 +2,7 @@ import type { StatusColorMap } from '@duncit/ui';
 import type { AdPosition } from '../../lib/ad-positions';
 
 export type AdMediaType = 'IMAGE' | 'VIDEO';
+export type AdKind = 'PLACEMENT' | 'PRODUCT_AD' | 'BRAND_AD';
 
 /** Stored review states. LIVE/EXPIRED are derived display windows of APPROVED. */
 export type AdStoredStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -11,6 +12,10 @@ export type AdDisplayStatus = AdStoredStatus | 'LIVE' | 'EXPIRED';
 export interface AdRequestRow {
   id: string;
   trace_id: string;
+  ad_kind: AdKind;
+  brand_name: string | null;
+  product_name: string | null;
+  product_image: string | null;
   ad_title: string;
   ad_description: string;
   ad_type: AdMediaType;

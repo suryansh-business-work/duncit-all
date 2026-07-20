@@ -18,6 +18,7 @@ import { dirname, join } from 'node:path';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP_JSON = join(ROOT, 'app/mobile-app/app.json');
 const MOBILE_PKG = join(ROOT, 'app/mobile-app/package.json');
+const MOBILE_LOCK = join(ROOT, 'app/mobile-app/package-lock.json');
 const MWEB_PKG = join(ROOT, 'app/mweb/package.json');
 
 const kind = (process.argv[2] ?? '').toLowerCase();
@@ -49,5 +50,17 @@ for (const pkgPath of [MOBILE_PKG, MWEB_PKG]) {
   pkg.version = next;
   writeJson(pkgPath, pkg);
 }
+
+// Keep the mobile npm lockfile's version in lockstep. The mobile CI job runs
+// `npm ci`, which refuses to install when package-lock.json's version disagrees
+// with package.json. Rewrite ONLY the two version fields (root + packages[""])
+// so the large, CRLF-terminated lockfile is not reformatted line-by-line.
+const mobileName = readJson(MOBILE_PKG).name;
+let lockText = readFileSync(MOBILE_LOCK, 'utf8');
+for (const indent of [2, 6]) {
+  const re = new RegExp(`("name": "${mobileName}",\\r?\\n {${indent}}"version": ")[^"]+(")`);
+  lockText = lockText.replace(re, `$1${next}$2`);
+}
+writeFileSync(MOBILE_LOCK, lockText);
 
 console.log(`Version bumped (${kind}): ${current} -> ${next}`);

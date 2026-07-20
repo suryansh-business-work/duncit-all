@@ -2,7 +2,13 @@ import { gql } from '@apollo/client';
 
 export const CLUB_ADMIN_POD_LOOKUPS = gql`
   query ClubAdminPodLookups {
-    myAdminClubs { id club_name meetup_venues_id }
+    myAdminClubs {
+      id
+      club_name
+      meetup_venues_id
+      super_category_id
+      category_id
+    }
     myVenues { id venue_name city locality status is_active }
     availablePodProducts {
       id
@@ -10,6 +16,14 @@ export const CLUB_ADMIN_POD_LOOKUPS = gql`
       unit_cost
       available_count
       listing_review_status
+      super_category_id
+      category_id
+      sub_category_id
+      categories {
+        super_category_id
+        category_id
+        sub_category_id
+      }
     }
   }
 `;

@@ -86,3 +86,34 @@ describe('moderationService.assertCleanOrThrow', () => {
     ).toThrow();
   });
 });
+
+describe('moderationService.assertProductCleanOrThrow', () => {
+  it('throws PRODUCT_CONTENT_REJECTED and points the violation at the variant field', () => {
+    try {
+      moderationService.assertProductCleanOrThrow({
+        product_name: 'Clean name',
+        variants: [{ option_label: 'Red', size_label: 'M', description: 'mail me a@b.com' }],
+      });
+      throw new Error('should have thrown');
+    } catch (err: any) {
+      expect(err.extensions?.code).toBe('PRODUCT_CONTENT_REJECTED');
+      const fields = (err.extensions?.violations ?? []).map((v: any) => v.field);
+      expect(fields).toContain('variants.0.description');
+    }
+  });
+
+  it('flags the product name too', () => {
+    expect(() =>
+      moderationService.assertProductCleanOrThrow({ product_name: 'buy at mysite.shop', variants: [] })
+    ).toThrow();
+  });
+
+  it('passes a clean product', () => {
+    expect(() =>
+      moderationService.assertProductCleanOrThrow({
+        product_name: 'Cold brew kit',
+        variants: [{ option_label: 'Default', size_label: 'M', description: 'A complete cold brew kit for hosts.' }],
+      })
+    ).not.toThrow();
+  });
+});

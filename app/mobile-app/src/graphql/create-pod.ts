@@ -84,6 +84,12 @@ export const CreatePodOptionsDocument = gql(`
       product_name
       unit_cost
       available_count
+      super_category_id
+      sub_category_id
+      categories {
+        super_category_id
+        sub_category_id
+      }
     }
     publicFinanceSettings {
       platform_fee_pct

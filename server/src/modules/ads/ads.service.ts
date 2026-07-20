@@ -1,12 +1,16 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from '@modules/access/user/user.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
+  AD_KINDS,
   AD_POSITIONS,
   AdRequestModel,
   getAdPricing,
   nextAdTraceId,
+  type AdKind,
   type AdPosition,
   type IAdPricing,
   type IAdRequest,
@@ -46,6 +50,12 @@ function toPub(doc: IAdRequest, currencySymbol: string) {
   return {
     id: String(doc._id),
     trace_id: doc.trace_id,
+    ad_kind: doc.ad_kind ?? 'PLACEMENT',
+    brand_id: doc.brand_id ? String(doc.brand_id) : null,
+    product_id: doc.product_id ? String(doc.product_id) : null,
+    brand_name: doc.brand_name ?? null,
+    product_name: doc.product_name ?? null,
+    product_image: doc.product_image ?? null,
     ad_title: doc.ad_title,
     ad_description: doc.ad_description,
     ad_type: doc.ad_type,
@@ -87,6 +97,7 @@ const AD_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['trace_id', 'ad_title'],
   sortFields: {
     trace_id: 'trace_id',
+    ad_kind: 'ad_kind',
     ad_title: 'ad_title',
     position: 'position',
     status: 'status',
@@ -96,6 +107,7 @@ const AD_TABLE_CONFIG: TableEntityConfig = {
     created_at: 'created_at',
   },
   filterFields: {
+    ad_kind: { type: 'enum' },
     status: { type: 'enum' },
     position: { type: 'enum' },
     ad_type: { type: 'enum' },
@@ -127,6 +139,43 @@ function validateSubmission(input: any): { startAt: Date; endAt: Date } {
   return { startAt, endAt: new Date(startAt.getTime() + days * DAY_MS) };
 }
 
+type AdProductContext = {
+  brand_id: Types.ObjectId | null;
+  product_id: Types.ObjectId | null;
+  brand_name: string | null;
+  product_name: string | null;
+  product_image: string | null;
+};
+
+const EMPTY_CONTEXT: AdProductContext = {
+  brand_id: null,
+  product_id: null,
+  brand_name: null,
+  product_name: null,
+  product_image: null,
+};
+
+/** For a PRODUCT_AD / BRAND_AD the submitter must own the product; brand + names
+ * + image are derived server-side so the request carries display context. */
+async function resolveAdProductContext(adKind: AdKind, productId: unknown, userId: string): Promise<AdProductContext> {
+  if (adKind === 'PLACEMENT') return EMPTY_CONTEXT;
+  if (!productId || !Types.ObjectId.isValid(String(productId))) {
+    fail('A product is required for a product or brand ad');
+  }
+  const product = await InventoryProductModel.findById(String(productId));
+  if (!product || String(product.listing_submitted_by_id ?? '') !== userId) {
+    fail('You can only run ads for your own products', 'FORBIDDEN');
+  }
+  const brand = product.brand_id ? await EcommBrandModel.findById(product.brand_id).select('brand_name') : null;
+  return {
+    brand_id: product.brand_id ?? null,
+    product_id: product._id,
+    brand_name: (brand as any)?.brand_name ?? product.brand_name ?? null,
+    product_name: product.product_name ?? null,
+    product_image: product.image_url || product.images?.[0] || null,
+  };
+}
+
 export const adsService = {
   async pricing() {
     return pricingToPub(await getAdPricing());
@@ -154,10 +203,18 @@ export const adsService = {
 
   async submit(userId: string, input: any) {
     const { startAt, endAt } = validateSubmission(input);
+    const adKind: AdKind = AD_KINDS.includes(input.ad_kind) ? input.ad_kind : 'PLACEMENT';
+    const context = await resolveAdProductContext(adKind, input.product_id, userId);
     const pricing = await getAdPricing();
     const estimated = pricePerDayFor(pricing, input.position) * Number(input.duration_days);
     const doc = await AdRequestModel.create({
       trace_id: await nextAdTraceId(),
+      ad_kind: adKind,
+      brand_id: context.brand_id,
+      product_id: context.product_id,
+      brand_name: context.brand_name,
+      product_name: context.product_name,
+      product_image: context.product_image,
       ad_title: String(input.ad_title).trim(),
       ad_description: String(input.ad_description).trim(),
       ad_type: input.ad_type === 'VIDEO' ? 'VIDEO' : 'IMAGE',

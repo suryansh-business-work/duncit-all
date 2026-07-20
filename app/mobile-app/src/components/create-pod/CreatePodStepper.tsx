@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
+import { filterProductsForClub } from '@/utils/pod-product-category';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
@@ -211,6 +212,8 @@ export function CreatePodStepper({
   // Step 3 venues are scoped to the selected club's auto-matched venues.
   const selectedClub = clubs.find((club) => club.id === form.watch('club_id')) ?? null;
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
+  // Only offer products whose category matches the selected club (Super + Sub).
+  const availableProducts = filterProductsForClub(products, selectedClub);
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const podMode = form.watch('pod_mode');
@@ -237,7 +240,7 @@ export function CreatePodStepper({
     <PricingStep
       key="pricing"
       form={form}
-      products={products}
+      products={availableProducts}
       showProducts={showProducts}
       selectedSlot={selectedSlot}
       finance={finance}

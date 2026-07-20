@@ -341,13 +341,13 @@ describe('StatusRail (bug 3 composite)', () => {
     const clubItem = {
       ...userItem2,
       key: 'club-c1',
-      target: { kind: 'club' as const, id: 'c1', title: 'Runners' },
+      target: { kind: 'club' as const, id: 'c1', clubSlug: 'runners', title: 'Runners' },
     };
     mockedRail.mockReturnValue({ mine: null, items: [clubItem], isLoading: false });
     renderWithProviders(<StatusRail userName="Sam" />);
     fireEvent.press(screen.getByTestId('status-club-c1'));
     fireEvent.press(screen.getByTestId('status-open-target'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Runners' });
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubSlug: 'runners' });
   });
 
   it('uses the avatar fallback when my latest story is a video', () => {

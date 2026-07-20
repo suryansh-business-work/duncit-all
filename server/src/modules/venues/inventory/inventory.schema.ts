@@ -17,6 +17,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
   enum ProductListingDeliveryTarget {
     HOST
     VENUE
+    SHIPROCKET
   }
   enum ProductType {
     CONSUMABLE
@@ -50,12 +51,36 @@ export const inventoryTypeDefs = /* GraphQL */ `
     DELETE
   }
 
+  "One resolved option value on a variant, e.g. { name: 'Size', value: 'M' }."
+  type VariantOptionValue {
+    name: String!
+    value: String!
+  }
+
+  input VariantOptionValueInput {
+    name: String!
+    value: String!
+  }
+
+  "A product-level option definition, e.g. { name: 'Size', values: ['S','M','L'] }."
+  type ProductOption {
+    name: String!
+    values: [String!]!
+  }
+
+  input ProductOptionInput {
+    name: String!
+    values: [String!]!
+  }
+
   type ProductVariant {
     id: ID!
     option_label: String!
+    option_values: [VariantOptionValue!]!
     sku: String!
     color: String!
     size_label: String!
+    description: String!
     unit_cost: Float!
     inventory_count: Int!
     images: [String!]!
@@ -67,9 +92,11 @@ export const inventoryTypeDefs = /* GraphQL */ `
 
   input ProductVariantInput {
     option_label: String
+    option_values: [VariantOptionValueInput!]
     sku: String
     color: String
     size_label: String
+    description: String
     unit_cost: Float
     inventory_count: Int
     images: [String!]
@@ -79,11 +106,32 @@ export const inventoryTypeDefs = /* GraphQL */ `
     weight_kg: Float
   }
 
+  "One Super/Category/Sub taxonomy row a product is sold in (a product may have several)."
+  type ProductCategory {
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    super_category_name: String!
+    category_name: String!
+    sub_category_name: String!
+  }
+
+  input ProductCategoryInput {
+    super_category_id: ID!
+    category_id: ID!
+    sub_category_id: ID!
+    super_category_name: String
+    category_name: String
+    sub_category_name: String
+  }
+
   type InventoryProduct {
     id: ID!
     product_name: String!
     sku: String!
+    options: [ProductOption!]!
     variants: [ProductVariant!]!
+    categories: [ProductCategory!]!
     barcode: String!
     short_description: String!
     description: String!
@@ -102,6 +150,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     min_order_qty: Int!
     max_order_qty: Int!
     low_stock_alert: Int!
+    notify_low_stock: Boolean!
     inventory_count: Int!
     reserved_count: Int!
     damaged_count: Int!
@@ -194,6 +243,37 @@ export const inventoryTypeDefs = /* GraphQL */ `
     pod_title: String!
     club_id: String!
     is_active: Boolean!
+  }
+
+  type ProductAnalyticsLocation {
+    location: String!
+    units_sold: Int!
+    orders: Int!
+  }
+
+  type ProductVariantStat {
+    variant_id: String!
+    variant_label: String!
+    units_sold: Int!
+    orders: Int!
+    views: Int!
+    clicks: Int!
+  }
+
+  "Brand-admin analytics for one product: orders/units/earnings (from order data) + views/clicks (tracked forward)."
+  type ProductAnalytics {
+    product_id: ID!
+    total_views: Int!
+    total_clicks: Int!
+    orders: Int!
+    units_sold: Int!
+    gross_revenue: Float!
+    "Gross minus Duncit commission — the brand's estimated net."
+    total_earning: Float!
+    currency_symbol: String!
+    linked_pods: Int!
+    locations: [ProductAnalyticsLocation!]!
+    variants: [ProductVariantStat!]!
   }
 
   input InventoryProductInput {
@@ -302,9 +382,12 @@ export const inventoryTypeDefs = /* GraphQL */ `
     "Legacy delivery-partner flag. No longer collected from brands (defaults to false); kept optional for backward compatibility."
     is_duncit_delivery_partner: Boolean
     brand_id: ID!
+    "Primary category triple (kept for back-compat; mirrors categories[0])."
     super_category_id: ID!
     category_id: ID!
     sub_category_id: ID!
+    "Full list of Super/Category/Sub rows the product is sold in. When present, categories[0] backfills the single fields above."
+    categories: [ProductCategoryInput!]
     product_name: String!
     image_url: String!
     images: [String!]
@@ -317,6 +400,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     color: String
     inventory_count: Int!
     unit_cost: Float!
+    "Product-level option definitions (e.g. Size, Colour); variants are their combinations."
+    options: [ProductOptionInput!]
     "Optional per-variant rows (colour/size/etc.). The flat fields above stay the product default/primary variant."
     variants: [ProductVariantInput!]
     commission_pct: Float!
@@ -337,6 +422,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     myProductListings(brand_id: ID): [InventoryProduct!]!
     "Server-side table sibling of myProductListings — always scoped to the caller's own listings."
     myProductListingsTable(brand_id: ID, query: TableQueryInput): InventoryProductTablePage!
+    "Brand-admin analytics for one of the caller's own products."
+    myProductAnalytics(product_doc_id: ID!): ProductAnalytics!
     availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     "Public read of a single product (any signed-in user) — powers the product-detail view on a pod's shop."
@@ -352,7 +439,13 @@ export const inventoryTypeDefs = /* GraphQL */ `
     submitProductListing(input: ProductListingInput!): InventoryProduct!
     updateMyProductListing(product_doc_id: ID!, input: ProductListingInput!): InventoryProduct!
     updateMyProductListingQuantity(product_doc_id: ID!, inventory_count: Int!): InventoryProduct!
+    "Update a listing's low-stock threshold + notify toggle without re-triggering approval."
+    updateMyProductSettings(product_doc_id: ID!, low_stock_alert: Int!, notify_low_stock: Boolean!): InventoryProduct!
     deleteMyProductListing(product_doc_id: ID!): Boolean!
+    "Record a buyer view of a product (forward-only engagement tracking)."
+    recordProductView(product_doc_id: ID!): Boolean!
+    "Record a buyer click on a product (optionally a specific variant)."
+    recordProductClick(product_doc_id: ID!, variant_id: String): Boolean!
     reviewProductListing(
       product_doc_id: ID!
       status: ProductListingReviewStatus!

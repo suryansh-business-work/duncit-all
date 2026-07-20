@@ -8,10 +8,7 @@ import {
   type AdRequestDetail,
   type AdRequestRow,
 } from '../../src/pages/ads/queries';
-import {
-  blankAdRequestValues,
-  type AdRequestFormValues,
-} from '../../src/pages/create-ad-page/ad-request/ad-request.types';
+import { blankAdRequestValues, type AdRequestFormValues } from '@duncit/ad-request-form';
 
 /**
  * Ad-request mocks. The `adRequest` detail query and the `myAdRequestsTable`

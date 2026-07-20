@@ -8,7 +8,7 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import { useTheme } from '@mui/material/styles';
-import type { GetRowIdParams, RowClickedEvent, SortChangedEvent } from 'ag-grid-community';
+import type { GetRowIdParams, RowClassParams, RowClickedEvent, RowStyle, SortChangedEvent } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
 import { buildAgTheme } from './theme';
@@ -59,6 +59,8 @@ interface DuncitTableProps<T> {
   fetchRows: TableFetch<T>; // THE server bridge — the only data path
   getRowId: (row: T) => string;
   onRowClick?: (row: T) => void;
+  // Optional per-row inline style (e.g. tint a low-stock row). Backward-compatible.
+  getRowStyle?: (row: T) => RowStyle | undefined;
   toolbarActions?: ReactNode; // right-aligned extras (e.g. "+ Create" button)
   emptyText?: string;
   defaultSort?: { field: string; dir: TableSortDir };
@@ -78,6 +80,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     fetchRows,
     getRowId,
     onRowClick,
+    getRowStyle,
     toolbarActions,
     emptyText,
     defaultSort,
@@ -148,6 +151,10 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
   );
 
   const agGetRowId = useCallback((params: GetRowIdParams<T>) => getRowId(params.data), [getRowId]);
+  const agGetRowStyle = useCallback(
+    (params: RowClassParams<T>) => (getRowStyle && params.data ? getRowStyle(params.data) : undefined),
+    [getRowStyle]
+  );
 
   const handleExportCsv = useCallback(() => {
     gridRef.current?.api?.exportDataAsCsv({ fileName: `${tableId}.csv` });
@@ -204,6 +211,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             defaultColDef={defaultColDef}
             rowData={table.rows}
             getRowId={agGetRowId}
+            getRowStyle={agGetRowStyle}
             domLayout="autoHeight"
             headerHeight={HEADER_HEIGHT[prefs.density]}
             suppressCellFocus

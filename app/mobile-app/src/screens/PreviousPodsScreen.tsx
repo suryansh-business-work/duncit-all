@@ -28,7 +28,7 @@ export function PreviousPodsScreen() {
                 <PodCard
                   pod={pod}
                   width={width - 32}
-                  onPress={() => openPod(pod.id, pod.pod_title)}
+                  onPress={() => openPod(pod.club_slug, pod.pod_id)}
                 />
               </Reveal>
             ))}

@@ -3,7 +3,13 @@ import { gql } from '@apollo/client';
 export const PARTNER_PODS_PAGE = gql`
   query PartnerPodsPage {
     myHost { id status }
-    clubs(filter: { is_active: true }) { id club_name meetup_venues_id }
+    clubs(filter: { is_active: true }) {
+      id
+      club_name
+      meetup_venues_id
+      super_category_id
+      category_id
+    }
     myVenues { id venue_name city locality status is_active }
     availablePodProducts {
       id
@@ -11,6 +17,14 @@ export const PARTNER_PODS_PAGE = gql`
       unit_cost
       available_count
       listing_review_status
+      super_category_id
+      category_id
+      sub_category_id
+      categories {
+        super_category_id
+        category_id
+        sub_category_id
+      }
     }
     myHostPods {
       id
@@ -33,7 +47,13 @@ export const PARTNER_PODS_PAGE = gql`
 export const PARTNER_POD_LOOKUPS = gql`
   query PartnerPodLookups {
     myHost { id status }
-    clubs(filter: { is_active: true }) { id club_name meetup_venues_id }
+    clubs(filter: { is_active: true }) {
+      id
+      club_name
+      meetup_venues_id
+      super_category_id
+      category_id
+    }
     myVenues { id venue_name city locality status is_active }
     availablePodProducts {
       id
@@ -41,6 +61,14 @@ export const PARTNER_POD_LOOKUPS = gql`
       unit_cost
       available_count
       listing_review_status
+      super_category_id
+      category_id
+      sub_category_id
+      categories {
+        super_category_id
+        category_id
+        sub_category_id
+      }
     }
   }
 `;

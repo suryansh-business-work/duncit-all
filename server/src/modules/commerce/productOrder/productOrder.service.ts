@@ -141,6 +141,29 @@ async function buildLineItem(line: any) {
   };
 }
 
+/** Force ShipRocket-delivery products onto the SHIP fulfilment path so a paid
+ * checkout of such a product always creates a ShipRocket shipment — regardless
+ * of the checkout-level method. Mutates each matching line in place. This is the
+ * bridge from a product's `delivery_target` to the order's `fulfilment_method`. */
+async function applyProductDeliveryOverrides(lines: any[]) {
+  const ids = Array.from(
+    new Set(lines.map((l) => String(l.product_id || '')).filter((id) => Types.ObjectId.isValid(id)))
+  );
+  if (ids.length === 0) return;
+  const products = await InventoryProductModel.find({ _id: { $in: ids } })
+    .select('delivery_target')
+    .lean();
+  const shiprocketIds = new Set(
+    products
+      .filter((p: any) => p.delivery_target === 'SHIPROCKET')
+      .map((p: any) => String(p._id))
+  );
+  if (shiprocketIds.size === 0) return;
+  for (const line of lines) {
+    if (shiprocketIds.has(String(line.product_id))) line.fulfilment_method = 'SHIP';
+  }
+}
+
 /** Bucket the snapshot lines by their effective fulfilment method (per-line
  * override, else the checkout-level one). */
 function groupLinesByMethod(lines: any[], topMethod: FulfilmentMethod) {
@@ -201,6 +224,7 @@ export const productOrderService = {
     const lines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
     if (lines.length === 0) return [];
 
+    await applyProductDeliveryOverrides(lines);
     const groups = groupLinesByMethod(lines, asMethod(meta.fulfilment_method ?? 'PICKUP'));
 
     const pod = payment.pod_id ? await PodModel.findById(payment.pod_id) : null;

@@ -1,12 +1,7 @@
 import { z } from 'zod';
 import { startOfDay } from 'date-fns';
 import { optionalText, requiredText } from '@duncit/forms';
-import {
-  AD_MEDIA_TYPE_VALUES,
-  AD_POSITION_VALUES,
-  type AdMediaType,
-  type AdPosition,
-} from '../../ads/ad-options';
+import { AD_MEDIA_TYPE_VALUES, AD_POSITION_VALUES, type AdMediaType, type AdPosition } from './ad-options';
 
 export type { AdMediaType, AdPosition };
 
@@ -104,4 +99,6 @@ export interface AdRequestFormProps {
   errorMessage?: string | null;
   onValuesChange: (values: AdRequestFormValues) => void;
   onSubmit: (values: AdRequestFormValues) => Promise<void> | void;
+  /** Optional override for the submit button label (e.g. "Submit Product Ad"). */
+  submitLabel?: string;
 }

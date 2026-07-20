@@ -2,6 +2,8 @@ import { Types } from 'mongoose';
 import { inventoryService } from '../../inventory.service';
 import { InventoryProductModel } from '../../inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { UserModel } from '@modules/access/user/user.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 
 describe('inventoryService integration', () => {
   it('lists no products / requests on an empty dataset', async () => {
@@ -53,6 +55,179 @@ describe('inventoryService integration', () => {
     expect(pub?.variants?.[0]).toMatchObject({ option_label: 'Red / M', color: 'Red', unit_cost: 12, inventory_count: 5 });
     expect(pub?.variants?.[0].images).toEqual(['https://cdn/r.jpg']);
     expect(pub?.variants?.[1].images).toEqual([]);
+  });
+
+  it('serializes product options + per-variant option values (the variant matrix)', async () => {
+    const id = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: id,
+      product_name: 'Option Tee',
+      sku: 'OPT1',
+      unit_cost: 10,
+      options: [
+        { name: 'Size', values: ['S', 'M'] },
+        { name: 'Colour', values: ['Red'] },
+      ],
+      variants: [
+        {
+          _id: new Types.ObjectId(),
+          option_label: 'M / Red',
+          option_values: [
+            { name: 'Size', value: 'M' },
+            { name: 'Colour', value: 'Red' },
+          ],
+          sku: 'OPT1-MR',
+          unit_cost: 12,
+          inventory_count: 4,
+          images: [],
+        },
+      ],
+    } as never);
+    const pub = await inventoryService.getById(String(id));
+    expect(pub?.options).toEqual([
+      { name: 'Size', values: ['S', 'M'] },
+      { name: 'Colour', values: ['Red'] },
+    ]);
+    expect(pub?.variants?.[0].option_values).toEqual([
+      { name: 'Size', value: 'M' },
+      { name: 'Colour', value: 'Red' },
+    ]);
+  });
+
+  it('serializes category rows + per-variant description and filters pod products by category', async () => {
+    const superId = new Types.ObjectId();
+    const catId = new Types.ObjectId();
+    const subId = new Types.ObjectId();
+    const otherSub = new Types.ObjectId();
+    const approved = { is_active: true, status: 'ACTIVE', pod_available: true, listing_review_status: 'APPROVED' };
+
+    const matchId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: matchId,
+      product_name: 'Matching kit',
+      sku: 'MATCH1',
+      unit_cost: 100,
+      inventory_count: 5,
+      super_category_id: superId,
+      category_id: catId,
+      sub_category_id: subId,
+      categories: [
+        { super_category_id: superId, category_id: catId, sub_category_id: subId, super_category_name: 'S', category_name: 'C', sub_category_name: 'Cold brew' },
+      ],
+      variants: [
+        { _id: new Types.ObjectId(), option_label: 'Default', sku: 'MATCH1-D', color: 'Black', size_label: 'M', description: 'Full per-variant description text', unit_cost: 100, inventory_count: 5, images: ['https://cdn/m.jpg'], height_cm: 10, breadth_cm: 5, length_cm: 8, weight_kg: 1 },
+      ],
+      ...approved,
+    } as never);
+    await InventoryProductModel.collection.insertOne({
+      _id: new Types.ObjectId(),
+      product_name: 'Other kit',
+      sku: 'OTHER1',
+      unit_cost: 100,
+      inventory_count: 5,
+      super_category_id: superId,
+      category_id: catId,
+      sub_category_id: otherSub,
+      ...approved,
+    } as never);
+
+    // The category filter surfaces only the exactly-matching product.
+    const matched = await inventoryService.listAvailablePodProducts({
+      super_category_id: String(superId),
+      category_id: String(catId),
+      sub_category_id: String(subId),
+    });
+    expect(matched.map((p) => p.product_name)).toEqual(['Matching kit']);
+
+    // Pub shape carries the new category rows + per-variant description.
+    const pub = await inventoryService.getById(String(matchId));
+    expect(pub?.categories?.[0]).toMatchObject({
+      super_category_id: String(superId),
+      sub_category_id: String(subId),
+      sub_category_name: 'Cold brew',
+    });
+    expect(pub?.variants?.[0].description).toBe('Full per-variant description text');
+  });
+
+  it('updateMyProductSettings persists the low-stock threshold + notify flag without re-review', async () => {
+    const userId = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      auth: { email: 'seller@example.com' },
+      metadata: { role_keys: ['ECOMM_MANAGER'], status: 'ACTIVE' },
+    } as never);
+    const productId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: productId,
+      product_name: 'Threshold kit',
+      sku: 'THR-1',
+      unit_cost: 10,
+      inventory_count: 20,
+      low_stock_alert: 5,
+      notify_low_stock: false,
+      listing_submitted_by_id: String(userId),
+      listing_review_status: 'APPROVED',
+    } as never);
+
+    const updated = await inventoryService.updateMyProductSettings(String(productId), 8, true, {
+      id: String(userId),
+      email: 'seller@example.com',
+    } as never);
+    expect(updated.low_stock_alert).toBe(8);
+    expect(updated.notify_low_stock).toBe(true);
+    // Settings changes must NOT push the listing back into review.
+    expect(updated.listing_review_status).toBe('APPROVED');
+  });
+
+  it('myProductAnalytics aggregates orders/units/earnings + records views and clicks', async () => {
+    const owner = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: owner,
+      auth: { email: 'analytics@example.com' },
+      metadata: { role_keys: ['ECOMM_MANAGER'], status: 'ACTIVE' },
+    } as never);
+    const productId = new Types.ObjectId();
+    const variantId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: productId,
+      product_name: 'Analytics Kit',
+      sku: 'AN-1',
+      unit_cost: 100,
+      commission_pct: 10,
+      listing_submitted_by_id: String(owner),
+      listing_review_status: 'APPROVED',
+      variants: [{ _id: variantId, option_label: 'M', unit_cost: 100, inventory_count: 5, images: [] }],
+      view_count: 0,
+      click_count: 0,
+    } as never);
+    await ProductOrderModel.collection.insertOne({
+      order_no: 'ord-an-1',
+      buyer_id: new Types.ObjectId(),
+      payment_id: new Types.ObjectId(),
+      items_total: 200,
+      total: 200,
+      fulfilment_method: 'SHIP',
+      line_items: [
+        { product_id: productId, variant_id: String(variantId), variant_label: 'M', qty: 2, unit_cost: 100, gross: 200 },
+      ],
+      shipping_address: { city: 'Pune' },
+    } as never);
+
+    const user = { id: String(owner), email: 'analytics@example.com' } as never;
+    await inventoryService.recordProductView(String(productId));
+    await inventoryService.recordProductClick(String(productId), String(variantId));
+
+    const analytics = await inventoryService.myProductAnalytics(String(productId), user);
+    expect(analytics.orders).toBe(1);
+    expect(analytics.units_sold).toBe(2);
+    expect(analytics.gross_revenue).toBe(200);
+    // 200 gross, 10% Duncit commission → 180 net.
+    expect(analytics.total_earning).toBe(180);
+    expect(analytics.total_views).toBe(1);
+    expect(analytics.total_clicks).toBe(1);
+    expect(analytics.locations).toEqual([{ location: 'Pune', units_sold: 2, orders: 1 }]);
+    const variantStat = analytics.variants.find((v: any) => v.variant_id === String(variantId));
+    expect(variantStat).toMatchObject({ units_sold: 2, orders: 1, clicks: 1 });
   });
 });
 

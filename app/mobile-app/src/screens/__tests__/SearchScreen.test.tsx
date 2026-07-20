@@ -108,9 +108,9 @@ describe('SearchScreen', () => {
     renderWithProviders(<SearchScreen />);
     expect(screen.getByTestId('search-happening')).toBeOnTheScreen();
     fireEvent.press(screen.getByLabelText('Club 1'));
-    expect(mockOpenClub).toHaveBeenCalledWith('c1', 'Club 1');
+    expect(mockOpenClub).toHaveBeenCalledWith('club-1');
     fireEvent.press(screen.getByTestId('pod-card-pod-p1'));
-    expect(mockOpenPod).toHaveBeenCalledWith('p1', 'Sunset Yoga');
+    expect(mockOpenPod).toHaveBeenCalledWith('s', 'pod-p1');
   });
 
   it('routes the empty-state CTAs to Pod Ideas and Earn', () => {

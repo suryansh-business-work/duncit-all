@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Button, FormHelperText, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { MediaPickerDialog } from '@duncit/media-picker';
-import type { AdMediaType } from '../../ads/ad-options';
+import type { AdMediaType } from './ad-options';
 
 interface AdMediaFieldProps {
   adType: AdMediaType;
@@ -25,19 +25,11 @@ const PREVIEW_SX = {
  * Ad creative upload: opens the shared MediaPickerDialog (device upload to
  * ImageKit or Pexels) scoped to the selected ad type, with an inline preview.
  */
-export default function AdMediaField({
-  adType,
-  value,
-  onChange,
-  error,
-  helperText,
-}: Readonly<AdMediaFieldProps>) {
+export default function AdMediaField({ adType, value, onChange, error, helperText }: Readonly<AdMediaFieldProps>) {
   const [open, setOpen] = useState(false);
   const isVideo = adType === 'VIDEO';
   const mediaLabel = isVideo ? 'video' : 'image';
-  const defaultHint = isVideo
-    ? 'Upload the ad video (up to 100MB)'
-    : 'Upload the ad image';
+  const defaultHint = isVideo ? 'Upload the ad video (up to 100MB)' : 'Upload the ad image';
 
   const handlePicked = (url: string) => {
     onChange(url);

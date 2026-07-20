@@ -77,7 +77,7 @@ describe('SearchClubCard', () => {
     fireEvent.press(screen.getByTestId('search-follow-club-1'));
     expect(toggle).toHaveBeenCalled();
     fireEvent.press(screen.getByLabelText('Badminton Club'));
-    expect(onOpenClub).toHaveBeenCalledWith('c1', 'Badminton Club');
+    expect(onOpenClub).toHaveBeenCalledWith('club-1');
     fireEvent.press(screen.getByTestId('pod-card-pod-p1'));
     expect(onOpenPod).toHaveBeenCalled();
   });

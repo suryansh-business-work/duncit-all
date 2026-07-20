@@ -3,9 +3,12 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { moderationService } from '@modules/moderation/moderation.service';
+import { notificationService } from '@modules/engagement/notification/notification.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -92,13 +95,20 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     id: String(product._id),
     product_name: product.product_name ?? '',
     sku: product.sku ?? '',
+    options: Array.isArray(product.options)
+      ? product.options.map((o) => ({ name: o.name ?? '', values: Array.isArray(o.values) ? o.values : [] }))
+      : [],
     variants: Array.isArray(product.variants)
       ? product.variants.map((v) => ({
           id: String(v._id),
           option_label: v.option_label ?? '',
+          option_values: Array.isArray(v.option_values)
+            ? v.option_values.map((o) => ({ name: o.name ?? '', value: o.value ?? '' }))
+            : [],
           sku: v.sku ?? '',
           color: v.color ?? '',
           size_label: v.size_label ?? '',
+          description: v.description ?? '',
           unit_cost: v.unit_cost ?? 0,
           inventory_count: v.inventory_count ?? 0,
           images: Array.isArray(v.images) ? v.images : [],
@@ -106,6 +116,16 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
           breadth_cm: v.breadth_cm ?? 0,
           length_cm: v.length_cm ?? 0,
           weight_kg: v.weight_kg ?? 0,
+        }))
+      : [],
+    categories: Array.isArray(product.categories)
+      ? product.categories.map((c) => ({
+          super_category_id: c.super_category_id ? String(c.super_category_id) : null,
+          category_id: c.category_id ? String(c.category_id) : null,
+          sub_category_id: c.sub_category_id ? String(c.sub_category_id) : null,
+          super_category_name: c.super_category_name ?? '',
+          category_name: c.category_name ?? '',
+          sub_category_name: c.sub_category_name ?? '',
         }))
       : [],
     barcode: product.barcode ?? '',
@@ -123,6 +143,7 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     min_order_qty: product.min_order_qty ?? 1,
     max_order_qty: product.max_order_qty ?? 100,
     low_stock_alert: product.low_stock_alert ?? 5,
+    notify_low_stock: !!product.notify_low_stock,
     inventory_count: inventory,
     reserved_count: reserved,
     damaged_count: product.damaged_count ?? 0,
@@ -270,6 +291,27 @@ function listingImages(input: any) {
     .filter((value) => /^https?:\/\//i.test(value))));
 }
 
+/** Shape the listing input into the moderation service's product input:
+ * product name + every variant's labels/description + the union of all images. */
+function productModerationInput(input: any) {
+  const variants = Array.isArray(input.variants) ? input.variants : [];
+  const image_urls = Array.from(
+    new Set([
+      ...listingImages(input),
+      ...variants.flatMap((v: any) => (Array.isArray(v.images) ? v.images : [])),
+    ])
+  );
+  return {
+    product_name: cleanText(input.product_name, 200),
+    variants: variants.map((v: any) => ({
+      option_label: v.option_label ?? '',
+      size_label: v.size_label ?? '',
+      description: v.description ?? '',
+    })),
+    image_urls,
+  };
+}
+
 function validateProductListingInput(input: any) {
   if (!cleanText(input.product_name, 200)) {
     throw new GraphQLError('Product title is required', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -329,16 +371,87 @@ async function requireEcommManager(user: AuthUser | null) {
 
 const toOid = (v: any) => (v && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null);
 
+/** Normalize the listing input's category rows to full, valid Super/Category/Sub
+ * triples. Falls back to the flat single-triple for single-select/legacy clients
+ * so `categories` is always populated with at least the primary row. */
+function toCategoryRows(input: any) {
+  const rawRows = Array.isArray(input.categories) ? input.categories : [];
+  const isFullTriple = (c: any) =>
+    c &&
+    Types.ObjectId.isValid(c.super_category_id) &&
+    Types.ObjectId.isValid(c.category_id) &&
+    Types.ObjectId.isValid(c.sub_category_id);
+  const rows = rawRows.filter(isFullTriple).map((c: any) => ({
+    super_category_id: toOid(c.super_category_id),
+    category_id: toOid(c.category_id),
+    sub_category_id: toOid(c.sub_category_id),
+    super_category_name: cleanText(c.super_category_name, 120),
+    category_name: cleanText(c.category_name, 120),
+    sub_category_name: cleanText(c.sub_category_name, 120),
+  }));
+  if (rows.length > 0) return rows;
+  if (isFullTriple(input)) {
+    return [
+      {
+        super_category_id: toOid(input.super_category_id),
+        category_id: toOid(input.category_id),
+        sub_category_id: toOid(input.sub_category_id),
+        super_category_name: '',
+        category_name: '',
+        sub_category_name: '',
+      },
+    ];
+  }
+  return [];
+}
+
+/** Persist the category rows and mirror the primary row into the flat single
+ * fields so category-unaware consumers (pod gate, finance, legacy reads) keep
+ * working. */
+function applyCategories(doc: IInventoryProduct, input: any) {
+  const rows = toCategoryRows(input);
+  if (rows.length === 0) return;
+  doc.categories = rows as any;
+  doc.super_category_id = rows[0].super_category_id;
+  doc.category_id = rows[0].category_id;
+  doc.sub_category_id = rows[0].sub_category_id;
+}
+
+const DELIVERY_TARGETS = new Set(['HOST', 'VENUE', 'SHIPROCKET']);
+const resolveDeliveryTarget = (value: unknown) =>
+  (DELIVERY_TARGETS.has(value as string) ? value : 'HOST') as IInventoryProduct['delivery_target'];
+
 /** Persist per-variant rows and mirror the first variant into the product's flat
  * fields (price/stock/color/size/images) so variant-unaware consumers — buyer
  * pages, orders, stock — keep working. Total stock = sum of variant stock. */
+/** Product-level option definitions (e.g. Size → [S,M,L]); variants are their
+ * combinations. Drops options without a name and blank values. */
+function toProductOptions(input: any) {
+  const raw = Array.isArray(input.options) ? input.options : [];
+  return raw
+    .filter((option: any) => option && cleanText(option.name, 60))
+    .map((option: any) => ({
+      name: cleanText(option.name, 60),
+      values: (Array.isArray(option.values) ? option.values : [])
+        .map((value: any) => cleanText(value, 120))
+        .filter(Boolean),
+    }));
+}
+
 function applyVariants(doc: IInventoryProduct, input: any) {
+  doc.options = toProductOptions(input) as IInventoryProduct['options'];
   if (!Array.isArray(input.variants) || input.variants.length === 0) return;
   const variants = input.variants.map((v: any) => ({
     option_label: cleanText(v.option_label, 120),
+    option_values: Array.isArray(v.option_values)
+      ? v.option_values
+          .filter((o: any) => o && (o.name || o.value))
+          .map((o: any) => ({ name: cleanText(o.name, 60), value: cleanText(o.value, 120) }))
+      : [],
     sku: (cleanText(v.sku, 60) || randomSku()).toUpperCase(),
     color: cleanText(v.color, 80),
     size_label: cleanText(v.size_label, 120),
+    description: cleanText(v.description, 4000),
     unit_cost: Number(v.unit_cost) || 0,
     inventory_count: Number(v.inventory_count) || 0,
     images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
@@ -356,6 +469,8 @@ function applyVariants(doc: IInventoryProduct, input: any) {
   doc.color = primary.color;
   doc.size_label = primary.size_label;
   doc.height_cm = primary.height_cm;
+  doc.breadth_cm = primary.breadth_cm;
+  doc.length_cm = primary.length_cm;
   doc.weight_kg = primary.weight_kg;
   if (primary.images.length) {
     doc.images = primary.images;
@@ -366,9 +481,7 @@ function applyVariants(doc: IInventoryProduct, input: any) {
 function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser | null) {
   const images = listingImages(input);
   if (input.brand_id !== undefined) doc.brand_id = toOid(input.brand_id);
-  if (input.super_category_id !== undefined) doc.super_category_id = toOid(input.super_category_id);
-  if (input.category_id !== undefined) doc.category_id = toOid(input.category_id);
-  if (input.sub_category_id !== undefined) doc.sub_category_id = toOid(input.sub_category_id);
+  applyCategories(doc, input);
   doc.product_name = cleanText(input.product_name, 200);
   doc.short_description = cleanText(input.description, 220);
   doc.description = cleanText(input.description);
@@ -385,7 +498,7 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   doc.color = cleanText(input.color, 80);
   applyVariants(doc, input);
   doc.commission_pct = Number(input.commission_pct) || 5;
-  doc.delivery_target = input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST';
+  doc.delivery_target = resolveDeliveryTarget(input.delivery_target);
   const info = userInfo(user);
   doc.last_updated_by_id = info.id;
   doc.last_updated_by_name = info.name;
@@ -498,6 +611,31 @@ function applyInput(target: any, input: any) {
       target[field] = input[field];
     }
   }
+}
+
+const availableOf = (doc: { inventory_count?: number; requested_count?: number; reserved_count?: number }) =>
+  Math.max(0, (doc.inventory_count ?? 0) - (doc.requested_count ?? 0) - (doc.reserved_count ?? 0));
+
+/** Notify the listing owner once available stock crosses from above to at/below
+ * the low-stock threshold (opt-in per product). Best-effort — a notify hiccup
+ * never fails the stock update. */
+async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: number) {
+  if (!doc.notify_low_stock || !doc.listing_submitted_by_id) return;
+  const afterAvailable = availableOf(doc);
+  const threshold = doc.low_stock_alert ?? 0;
+  if (!(beforeAvailable > threshold && afterAvailable <= threshold)) return;
+  await notificationService
+    .create({
+      scope: 'USER',
+      target_user_ids: [String(doc.listing_submitted_by_id)],
+      title: 'Low stock alert',
+      body: `${doc.product_name} is low on stock — ${afterAvailable} left (alert at ${threshold}).`,
+      silent: false,
+    })
+    .catch((error) => {
+      // eslint-disable-next-line no-console
+      console.error('[inventory] low-stock notify failed', error);
+    });
 }
 
 export const inventoryService = {
@@ -624,7 +762,9 @@ export const inventoryService = {
       pod_available: true,
       listing_review_status: 'APPROVED',
     };
-    // Approved products only surface in pods of a matching category level.
+    // Approved products only surface in pods of a matching category level. The
+    // pod editors additionally filter the picker client-side by the club's
+    // Super + Sub (see @duncit/pod-form productMatchesClub).
     for (const key of ['super_category_id', 'category_id', 'sub_category_id'] as const) {
       const value = filter?.[key];
       if (value && Types.ObjectId.isValid(value)) q[key] = new Types.ObjectId(value);
@@ -645,20 +785,110 @@ export const inventoryService = {
     return doc ? inventoryProductToPub(doc) : null;
   },
 
+  /** Increment a product's buyer-view counter (best-effort, forward-only). */
+  async recordProductView(id: string) {
+    if (!Types.ObjectId.isValid(id)) return false;
+    await InventoryProductModel.updateOne({ _id: id }, { $inc: { view_count: 1 } });
+    return true;
+  },
+
+  /** Increment a product's click counter (+ the specific variant's, when given). */
+  async recordProductClick(id: string, variantId?: string | null) {
+    if (!Types.ObjectId.isValid(id)) return false;
+    const inc: Record<string, number> = { click_count: 1 };
+    const options: Record<string, unknown> = {};
+    if (variantId && Types.ObjectId.isValid(variantId)) {
+      inc['variants.$[v].click_count'] = 1;
+      options.arrayFilters = [{ 'v._id': new Types.ObjectId(variantId) }];
+    }
+    await InventoryProductModel.updateOne({ _id: id }, { $inc: inc }, options);
+    return true;
+  },
+
+  /** Brand-admin analytics for one owned product: orders/units/earnings +
+   * purchase locations + per-variant purchases, from order data; plus the
+   * forward-tracked view/click counters. */
+  async myProductAnalytics(id: string, user: AuthUser | null) {
+    await requireEcommManager(user);
+    const doc = await ownedListing(id, user);
+    const productId = String(doc._id);
+    const orders = await ProductOrderModel.find({ 'line_items.product_id': doc._id })
+      .select('line_items shipping_address')
+      .lean();
+
+    let unitsSold = 0;
+    let gross = 0;
+    let orderCount = 0;
+    const variantStats = new Map<string, any>();
+    const locationStats = new Map<string, any>();
+
+    for (const order of orders) {
+      const lines = (order.line_items ?? []).filter((line: any) => String(line.product_id) === productId);
+      if (lines.length === 0) continue;
+      orderCount += 1;
+      const addr = order.shipping_address as any;
+      const location = addr?.city || addr?.state || 'Unknown';
+      const locBucket = locationStats.get(location) ?? { location, units_sold: 0, orders: 0 };
+      locBucket.orders += 1;
+      for (const line of lines) {
+        unitsSold += line.qty;
+        gross += line.gross;
+        locBucket.units_sold += line.qty;
+        const vid = String(line.variant_id ?? '');
+        const vStat = variantStats.get(vid) ?? { variant_id: vid, variant_label: line.variant_label || 'Default', units_sold: 0, orders: 0, views: 0, clicks: 0 };
+        vStat.units_sold += line.qty;
+        vStat.orders += 1;
+        variantStats.set(vid, vStat);
+      }
+      locationStats.set(location, locBucket);
+    }
+
+    // Merge per-variant view/click counters from the product's variant subdocs.
+    for (const variant of doc.variants ?? []) {
+      const vid = String(variant._id);
+      const vStat = variantStats.get(vid) ?? { variant_id: vid, variant_label: variant.option_label || 'Default', units_sold: 0, orders: 0, views: 0, clicks: 0 };
+      vStat.views = variant.view_count ?? 0;
+      vStat.clicks = variant.click_count ?? 0;
+      variantStats.set(vid, vStat);
+    }
+
+    const commissionPct = Math.min(100, Math.max(0, Number(doc.commission_pct) || 0));
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const linkedPods = await PodModel.countDocuments({ 'product_requests.product_id': doc._id });
+
+    return {
+      product_id: productId,
+      total_views: doc.view_count ?? 0,
+      total_clicks: doc.click_count ?? 0,
+      orders: orderCount,
+      units_sold: unitsSold,
+      gross_revenue: round2(gross),
+      total_earning: round2(gross * (1 - commissionPct / 100)),
+      currency_symbol: '₹',
+      linked_pods: linkedPods,
+      locations: [...locationStats.values()],
+      variants: [...variantStats.values()],
+    };
+  },
+
   async submitProductListing(input: any, user: AuthUser | null) {
     const actor = await requireEcommManager(user);
     validateProductListingInput(input);
+    moderationService.assertProductCleanOrThrow(productModerationInput(input));
     await assertBrandActive(input.brand_id);
     const info = userInfo(actor);
     const sku = await generateUniqueSku();
     const images = listingImages(input);
+    const categoryRows = toCategoryRows(input);
+    const primaryCategory = categoryRows[0] ?? {};
     const doc = await InventoryProductModel.create({
       product_name: cleanText(input.product_name, 200),
       sku,
       brand_id: toOid(input.brand_id),
-      super_category_id: toOid(input.super_category_id),
-      category_id: toOid(input.category_id),
-      sub_category_id: toOid(input.sub_category_id),
+      categories: categoryRows,
+      super_category_id: primaryCategory.super_category_id ?? null,
+      category_id: primaryCategory.category_id ?? null,
+      sub_category_id: primaryCategory.sub_category_id ?? null,
       short_description: cleanText(input.description, 220),
       description: cleanText(input.description),
       image_url: images[0] ?? '',
@@ -687,7 +917,7 @@ export const inventoryService = {
       weight_kg: Number(input.weight_kg) || 0,
       color: cleanText(input.color, 80),
       commission_pct: Number(input.commission_pct) || 5,
-      delivery_target: input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST',
+      delivery_target: resolveDeliveryTarget(input.delivery_target),
       last_updated_by_id: info.id,
       last_updated_by_name: info.name,
     });
@@ -702,6 +932,7 @@ export const inventoryService = {
   async updateMyProductListing(id: string, input: any, user: AuthUser | null) {
     await requireEcommManager(user);
     validateProductListingInput(input);
+    moderationService.assertProductCleanOrThrow(productModerationInput(input));
     const doc = await ownedListing(id, user);
     const before = doc.toObject();
     const beforeStock = {
@@ -739,12 +970,37 @@ export const inventoryService = {
     if (inventoryCount < committedCount) {
       throw new GraphQLError(`Quantity cannot be less than ${committedCount} committed units`, { extensions: { code: 'BAD_USER_INPUT' } });
     }
+    const beforeAvailable = availableOf(doc);
     doc.inventory_count = inventoryCount;
     doc.last_updated_by_id = info.id;
     doc.last_updated_by_name = info.name;
     await doc.save();
     await logActivity(doc._id, user, 'UPDATE', ['inventory_count'], 'Partner quantity updated');
     await recordStockChanges(doc, beforeStock, user);
+    await notifyLowStockIfCrossed(doc, beforeAvailable);
+    return inventoryProductToPub(doc);
+  },
+
+  /** Update a listing's low-stock threshold + notify toggle without re-triggering
+   * approval (unlike updateMyProductListing, which resets to PENDING). */
+  async updateMyProductSettings(
+    id: string,
+    lowStockAlert: number,
+    notifyLowStock: boolean,
+    user: AuthUser | null
+  ) {
+    await requireEcommManager(user);
+    if (!Number.isInteger(lowStockAlert) || lowStockAlert < 0) {
+      throw new GraphQLError('Low-stock threshold must be a whole number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await ownedListing(id, user);
+    const info = userInfo(user);
+    doc.low_stock_alert = lowStockAlert;
+    doc.notify_low_stock = !!notifyLowStock;
+    doc.last_updated_by_id = info.id;
+    doc.last_updated_by_name = info.name;
+    await doc.save();
+    await logActivity(doc._id, user, 'UPDATE', ['low_stock_alert', 'notify_low_stock'], 'Product settings updated');
     return inventoryProductToPub(doc);
   },
 

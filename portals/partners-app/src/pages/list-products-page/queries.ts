@@ -9,12 +9,48 @@ const PRODUCT_FIELDS = `
   size_label
   height_cm
   weight_kg
+  length_cm
+  breadth_cm
   color
   inventory_count
   available_count
+  low_stock_alert
+  notify_low_stock
   unit_cost
   commission_pct
   delivery_target
+  super_category_id
+  category_id
+  sub_category_id
+  categories {
+    super_category_id
+    category_id
+    sub_category_id
+    super_category_name
+    category_name
+    sub_category_name
+  }
+  options {
+    name
+    values
+  }
+  variants {
+    option_label
+    option_values {
+      name
+      value
+    }
+    color
+    size_label
+    description
+    unit_cost
+    inventory_count
+    images
+    height_cm
+    breadth_cm
+    length_cm
+    weight_kg
+  }
   listing_review_status
   listing_review_notes
   is_duncit_delivery_partner
@@ -47,6 +83,42 @@ export const DELETE_LISTING = gql`
   }
 `;
 
+export const MY_PRODUCT_ANALYTICS = gql`
+  query MyProductAnalytics($product_doc_id: ID!) {
+    myProductAnalytics(product_doc_id: $product_doc_id) {
+      total_views
+      total_clicks
+      orders
+      units_sold
+      gross_revenue
+      total_earning
+      currency_symbol
+      linked_pods
+      locations {
+        location
+        units_sold
+        orders
+      }
+      variants {
+        variant_id
+        variant_label
+        units_sold
+        orders
+        views
+        clicks
+      }
+    }
+  }
+`;
+
+export const UPDATE_PRODUCT_SETTINGS = gql`
+  mutation UpdateMyProductSettings($product_doc_id: ID!, $low_stock_alert: Int!, $notify_low_stock: Boolean!) {
+    updateMyProductSettings(product_doc_id: $product_doc_id, low_stock_alert: $low_stock_alert, notify_low_stock: $notify_low_stock) {
+      ${PRODUCT_FIELDS}
+    }
+  }
+`;
+
 /** Row shape for the "Your listed products" table (myProductListingsTable rows). */
 export interface ProductListingRow {
   id: string;
@@ -58,6 +130,8 @@ export interface ProductListingRow {
   color?: string | null;
   inventory_count?: number | null;
   available_count?: number | null;
+  low_stock_alert?: number | null;
+  notify_low_stock?: boolean | null;
   unit_cost?: number | null;
   delivery_target?: string | null;
   listing_review_status: string;

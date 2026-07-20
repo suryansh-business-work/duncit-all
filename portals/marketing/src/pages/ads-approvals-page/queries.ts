@@ -5,6 +5,10 @@ const AD_REQUEST_ROW_FIELDS = gql`
   fragment AdRequestRowFields on AdRequest {
     id
     trace_id
+    ad_kind
+    brand_name
+    product_name
+    product_image
     ad_title
     ad_description
     ad_type

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
@@ -24,7 +24,7 @@ import BrandDetailDialog from './BrandDetailDialog';
 import ProductQuantityBar from './ProductQuantityBar';
 import ProductReviews from './ProductReviews';
 import { formatRupees, productSpecs, type ProductSpec } from './product-specs';
-import { PUBLIC_PRODUCT } from './queries';
+import { PUBLIC_PRODUCT, RECORD_PRODUCT_CLICK, RECORD_PRODUCT_VIEW } from './queries';
 
 interface Props {
   productId: string | null;
@@ -100,11 +100,26 @@ export default function ProductDetailDialog({
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const [variantId, setVariantId] = useState<string | null>(null);
+  const [recordView] = useMutation(RECORD_PRODUCT_VIEW);
+  const [recordClick] = useMutation(RECORD_PRODUCT_CLICK);
   const { data, loading, error } = useQuery(PUBLIC_PRODUCT, {
     variables: { id: productId },
     skip: !productId,
     fetchPolicy: 'cache-first',
   });
+
+  // Forward-only engagement tracking: a view (+ product click) each time the
+  // detail opens for a product; a per-variant click when a variant is picked.
+  useEffect(() => {
+    if (!productId) return;
+    recordView({ variables: { id: productId } }).catch(() => {});
+    recordClick({ variables: { id: productId } }).catch(() => {});
+  }, [productId, recordView, recordClick]);
+
+  const pickVariant = (id: string) => {
+    setVariantId(id);
+    if (productId) recordClick({ variables: { id: productId, variant_id: id } }).catch(() => {});
+  };
   const product = data?.publicInventoryProduct;
   const variants: any[] = product?.variants ?? [];
   const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
@@ -165,7 +180,7 @@ export default function ProductDetailDialog({
               <Chip
                 key={v.id}
                 label={v.option_label || v.color || v.size_label || 'Variant'}
-                onClick={() => setVariantId(v.id)}
+                onClick={() => pickVariant(v.id)}
                 color={selectedVariant?.id === v.id ? 'primary' : 'default'}
                 variant={selectedVariant?.id === v.id ? 'filled' : 'outlined'}
                 size="small"

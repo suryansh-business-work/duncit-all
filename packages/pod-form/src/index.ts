@@ -11,6 +11,8 @@ export type { PodSchema } from './schema';
 export { makeNativeParityPodConfig } from './configs';
 export { buildPodInput, podToFormValues, linesToMedia, getProductRequestTotal } from './build-input';
 export type { BuildPodInputOptions } from './build-input';
+export { clubCategoryKey, productMatchesClub, filterProductsForClub } from './product-category';
+export type { ClubCategoryKey } from './product-category';
 export {
   POD_TYPES,
   OCCURRENCES,

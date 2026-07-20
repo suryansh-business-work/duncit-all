@@ -75,6 +75,8 @@ const mockedUse = useHostPods as jest.Mock;
 const pods = [
   {
     id: 'p1',
+    pod_id: 'pod-1',
+    club_slug: 'hikers',
     pod_title: 'Hike',
     pod_date_time: '2030-01-01T10:00:00Z',
     pod_end_date_time: null,
@@ -84,6 +86,8 @@ const pods = [
   },
   {
     id: 'p2',
+    pod_id: 'pod-2',
+    club_slug: 'jammers',
     pod_title: 'Jam',
     pod_date_time: 'bad-date',
     pod_end_date_time: null,
@@ -93,6 +97,8 @@ const pods = [
   },
   {
     id: 'p3',
+    pod_id: 'pod-3',
+    club_slug: 'runners',
     pod_title: 'Run',
     pod_date_time: null,
     pod_end_date_time: null,
@@ -125,7 +131,10 @@ describe('HostPodsSection', () => {
     mockedUse.mockReturnValue(api());
     renderWithProviders(<HostPodsSection />);
     fireEvent.press(screen.getByTestId('host-pod-open-p1'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Hike' });
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', {
+      clubSlug: 'hikers',
+      podSlug: 'pod-1',
+    });
   });
 
   it('edits a pod, then closes or refetches on save', () => {

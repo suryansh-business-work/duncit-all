@@ -3,9 +3,10 @@ import { useMemo } from 'react';
 import { useFollowing } from '@/hooks/useFollowing';
 import { useStatus, type StatusGroup, type StatusSlide } from '@/hooks/useStatus';
 
-/** Where the viewer's "Open details" button navigates for a rail item. */
+/** Where the viewer's "Open details" button navigates for a rail item. Clubs carry
+ * their URL slug (clubSlug) so the deep link matches mWeb's /club/:clubSlug. */
 export type StoryTarget =
-  | { kind: 'club'; id: string; title: string }
+  | { kind: 'club'; id: string; clubSlug: string; title: string }
   | { kind: 'user'; id: string };
 
 export interface StoryRailItem extends StatusGroup {
@@ -64,7 +65,7 @@ export function useStoryRail() {
           club.club_name,
           mediaToSlides(`club-${club.id}`, club.club_feature_images_and_videos ?? []),
           'Club status',
-          { kind: 'club', id: club.id, title: club.club_name },
+          { kind: 'club', id: club.id, clubSlug: club.club_id, title: club.club_name },
         ),
       )
       .filter((item): item is StoryRailItem => item !== null);

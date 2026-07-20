@@ -75,7 +75,16 @@ const CREATE_POD_OPTIONS = gql`
         sub_category_name
       }
     }
-    availablePodProducts { id product_name unit_cost available_count image_url }
+    availablePodProducts {
+      id
+      product_name
+      unit_cost
+      available_count
+      image_url
+      super_category_id
+      sub_category_id
+      categories { super_category_id sub_category_id }
+    }
   }
 `;
 const MY_POD_DRAFT = gql`

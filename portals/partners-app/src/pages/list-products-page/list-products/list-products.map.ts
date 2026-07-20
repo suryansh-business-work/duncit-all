@@ -117,6 +117,30 @@ const toVariantInput = (variant: ProductVariantValues) => ({
   inventory_count: Number(variant.inventory_count) || 0,
 });
 
+/** Build the moderateProductContent input from the form values — product name +
+ * every variant's labels/description + the union of all variant images. */
+export function buildProductModerationInput(values: ProductListingValues) {
+  const image_urls = Array.from(new Set(values.variants.flatMap((variant) => variant.image_urls)));
+  return {
+    product_name: values.product_name,
+    variants: values.variants.map((variant) => ({
+      option_label: variant.option_label,
+      size_label: variant.size_label,
+      description: variant.description,
+    })),
+    image_urls,
+  };
+}
+
+/** Resolve a moderation violation's field to the wizard step (Product=1,
+ * Variants=2) and, when it maps to a concrete RHF field, its form path. */
+export function productViolationTarget(field: string): { stepIndex: number; path: string | null } {
+  if (field === 'product_name') return { stepIndex: 1, path: 'product_name' };
+  if (field.startsWith('variants.')) return { stepIndex: 2, path: field };
+  if (field === 'description' || field === 'image') return { stepIndex: 2, path: null };
+  return { stepIndex: 1, path: null };
+}
+
 /** Build the ProductListingInput. The first variant backfills the flat product
  * fields (the server also mirrors them) and the single category triple. */
 export function toSubmitInput(values: ProductListingValues, brandId: string) {

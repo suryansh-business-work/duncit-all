@@ -57,6 +57,9 @@ importers:
       '@duncit/regex':
         specifier: workspace:*
         version: link:../../packages/regex
+      '@duncit/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../../packages/user-context

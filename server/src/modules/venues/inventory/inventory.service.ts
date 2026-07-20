@@ -6,6 +6,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { moderationService } from '@modules/moderation/moderation.service';
 import { InventoryProductModel, type IInventoryProduct, type IProductVariant } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -279,6 +280,27 @@ function listingImages(input: any) {
   return Array.from(new Set([input.image_url, ...rawImages]
     .map((value) => cleanText(value))
     .filter((value) => /^https?:\/\//i.test(value))));
+}
+
+/** Shape the listing input into the moderation service's product input:
+ * product name + every variant's labels/description + the union of all images. */
+function productModerationInput(input: any) {
+  const variants = Array.isArray(input.variants) ? input.variants : [];
+  const image_urls = Array.from(
+    new Set([
+      ...listingImages(input),
+      ...variants.flatMap((v: any) => (Array.isArray(v.images) ? v.images : [])),
+    ])
+  );
+  return {
+    product_name: cleanText(input.product_name, 200),
+    variants: variants.map((v: any) => ({
+      option_label: v.option_label ?? '',
+      size_label: v.size_label ?? '',
+      description: v.description ?? '',
+    })),
+    image_urls,
+  };
 }
 
 function validateProductListingInput(input: any) {
@@ -712,6 +734,7 @@ export const inventoryService = {
   async submitProductListing(input: any, user: AuthUser | null) {
     const actor = await requireEcommManager(user);
     validateProductListingInput(input);
+    moderationService.assertProductCleanOrThrow(productModerationInput(input));
     await assertBrandActive(input.brand_id);
     const info = userInfo(actor);
     const sku = await generateUniqueSku();
@@ -769,6 +792,7 @@ export const inventoryService = {
   async updateMyProductListing(id: string, input: any, user: AuthUser | null) {
     await requireEcommManager(user);
     validateProductListingInput(input);
+    moderationService.assertProductCleanOrThrow(productModerationInput(input));
     const doc = await ownedListing(id, user);
     const before = doc.toObject();
     const beforeStock = {

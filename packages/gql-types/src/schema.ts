@@ -3850,6 +3850,20 @@ export type ModeratePodContentInput = {
   pod_title: Scalars['String']['input'];
 };
 
+export type ModerateProductContentInput = {
+  /** Union of every variant's image URLs, screened by GPT-4o. */
+  image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  product_name: Scalars['String']['input'];
+  variants?: InputMaybe<Array<ModerateProductVariantInput>>;
+};
+
+/** One variant's moderatable text (labels + description). */
+export type ModerateProductVariantInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  option_label?: InputMaybe<Scalars['String']['input']>;
+  size_label?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ModerationResult = {
   __typename?: 'ModerationResult';
   /** True only when the pod is clean and safe to publish. */
@@ -4152,6 +4166,8 @@ export type Mutation = {
   markTicketRead: Ticket;
   /** Deep-analyses a pod's content against community guidelines before publishing. */
   moderatePodContent: ModerationResult;
+  /** Deep-analyses a product listing's content against community guidelines before submit. */
+  moderateProductContent: ModerationResult;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
   publishPodDraft: Pod;
   raiseBouncerSos: BouncerSosAlert;
@@ -5562,6 +5578,11 @@ export type MutationMarkTicketReadArgs = {
 
 export type MutationModeratePodContentArgs = {
   input: ModeratePodContentInput;
+};
+
+
+export type MutationModerateProductContentArgs = {
+  input: ModerateProductContentInput;
 };
 
 

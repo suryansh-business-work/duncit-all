@@ -54,13 +54,13 @@ function parseAiViolations(content: string): ModerationViolation[] {
 }
 
 /**
- * Deep GPT-4o analysis of the pod (text + images). Best-effort: returns [] when
- * the OpenAI key is not configured or the call fails, so an AI outage never
- * blocks pod creation — the deterministic regex layer still catches the obvious
- * violations. Uses the 'gpt-4o' model explicitly (NOT the OPENAI_MODEL default,
- * which is gpt-4o-mini) for the deepest analysis and vision support.
+ * Deep GPT-4o analysis of arbitrary content (text + images). Best-effort:
+ * returns [] when the OpenAI key is not configured or the call fails, so an AI
+ * outage never blocks creation — the deterministic regex layer still catches the
+ * obvious violations. Uses the 'gpt-4o' model explicitly (NOT the OPENAI_MODEL
+ * default, which is gpt-4o-mini) for the deepest analysis and vision support.
  */
-export async function aiModeratePod(input: ModeratePodInput): Promise<ModerationViolation[]> {
+async function callAiModeration(systemPrompt: string, userContent: unknown[]): Promise<ModerationViolation[]> {
   try {
     const [apiKey, baseUrl] = await Promise.all([
       getRuntimeEnvValue('OPENAI_API_KEY'),
@@ -77,8 +77,8 @@ export async function aiModeratePod(input: ModeratePodInput): Promise<Moderation
         max_tokens: 800,
         response_format: { type: 'json_object' as const },
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: buildUserContent(input) },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
         ],
       }),
     });
@@ -89,3 +89,46 @@ export async function aiModeratePod(input: ModeratePodInput): Promise<Moderation
     return [];
   }
 }
+
+export const aiModeratePod = (input: ModeratePodInput): Promise<ModerationViolation[]> =>
+  callAiModeration(SYSTEM_PROMPT, buildUserContent(input));
+
+/** One variant's moderatable text (labels + description). */
+export interface ModerateProductVariant {
+  option_label?: string | null;
+  size_label?: string | null;
+  description?: string | null;
+}
+
+/** Product content submitted for moderation. `image_urls` are the union of every
+ * variant's images so GPT-4o can screen them. */
+export interface ModerateProductInput {
+  product_name: string;
+  variants?: ModerateProductVariant[] | null;
+  image_urls?: string[] | null;
+}
+
+const PRODUCT_SYSTEM_PROMPT = [
+  'You are the content-safety reviewer for Duncit, a marketplace where brands list products for sale.',
+  'Review the product a brand wants to submit for approval and flag anything that breaks community guidelines.',
+  'Disallowed in ANY text field (product name, variant labels, descriptions): phone numbers, email addresses, external or payment links/URLs, payment handles (UPI, Paytm, GPay, PhonePe, bank/IFSC/QR), requests to contact off-platform, sexual/explicit/adult wording, hate speech, harassment, abusive or offensive language, scams, counterfeit or illegal goods, and clearly misleading claims.',
+  'Disallowed in images: nudity, sexual content, gore/graphic violence, or otherwise unsafe/unwanted imagery.',
+  'Return STRICT JSON only, no markdown, of shape: {"violations":[{"field":string,"type":string,"message":string,"evidence":string}]}.',
+  '"field" is one of: product_name, description, image. "type" is a short SCREAMING_SNAKE code (e.g. PHONE, EMAIL, LINK, PAYMENT, ABUSE, NUDITY, HATE, SCAM, COUNTERFEIT). "message" tells the brand in one sentence what to fix. "evidence" is the offending snippet (or image URL). Return an empty array when everything is clean.',
+].join('\n');
+
+function buildProductUserContent(input: ModerateProductInput): unknown[] {
+  const variantLines = (input.variants ?? []).flatMap((variant, index) => {
+    const bits = [variant.option_label, variant.size_label, variant.description].filter(Boolean);
+    return bits.length > 0 ? [`Variant ${index + 1}: ${bits.join(' — ')}`] : [];
+  });
+  const lines = [`Product name: ${input.product_name}`, ...variantLines];
+  const parts: unknown[] = [{ type: 'text', text: `Review this product:\n${lines.join('\n')}` }];
+  for (const url of (input.image_urls ?? []).slice(0, 4)) {
+    if (/^https?:\/\//i.test(url)) parts.push({ type: 'image_url', image_url: { url } });
+  }
+  return parts;
+}
+
+export const aiModerateProduct = (input: ModerateProductInput): Promise<ModerationViolation[]> =>
+  callAiModeration(PRODUCT_SYSTEM_PROMPT, buildProductUserContent(input));

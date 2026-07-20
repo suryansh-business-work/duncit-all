@@ -5,10 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Card, CardContent, Stack, Step, StepLabel, Stepper } from '@mui/material';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { parseApiError } from '@duncit/utils';
+import { ModerationBlockedDialog } from '@duncit/ui';
 import type { ProductListingValues } from './list-products.types';
 import { productListingSchema } from './list-products.schema';
 import { emptyValues, productToValues, toSubmitInput } from './list-products.map';
 import { StepBody } from './list-products.form-ui';
+import { useProductModeration } from './useProductModeration';
 
 export { productListingSchema } from './list-products.schema';
 
@@ -61,10 +63,11 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const loading = submitState.loading || updateState.loading;
+  const moderation = useProductModeration(steps);
+  const loading = submitState.loading || updateState.loading || moderation.moderating;
   const editing = Boolean(product?.id);
 
-  const { control, handleSubmit, reset, trigger, watch, setValue } = useForm<ProductListingValues>({
+  const { control, handleSubmit, reset, trigger, watch, setValue, setError } = useForm<ProductListingValues>({
     resolver: zodResolver(productListingSchema),
     defaultValues: productToValues(product),
     mode: 'onBlur',
@@ -78,6 +81,8 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const onSubmit = handleSubmit(async (values) => {
     setApiError(null);
     try {
+      const clean = await moderation.check({ values, setError, onJumpToStep: setActiveStep });
+      if (!clean) return;
       const input = toSubmitInput(values, brandId);
       const variables = editing ? { product_doc_id: product.id, input } : { input };
       await (editing ? updateProduct : submitProduct)({ variables });
@@ -148,6 +153,15 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
         folder="/partner-products"
         title="Upload variant image"
         accept="image/*"
+      />
+      <ModerationBlockedDialog
+        violations={moderation.blocked}
+        onJump={(step) => {
+          setActiveStep(step);
+          moderation.closeBlocked();
+        }}
+        onClose={moderation.closeBlocked}
+        description="Our AI check found content that breaks the community guidelines, so the product was not submitted. Fix the items below and try again."
       />
     </Card>
   );

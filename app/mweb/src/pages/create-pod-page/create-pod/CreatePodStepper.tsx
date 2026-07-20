@@ -17,7 +17,7 @@ import {
 } from './create-pod.form';
 import StepHero from './StepHero';
 import StepFooterBar from './StepFooterBar';
-import ModerationBlockedDialog, { type BlockedViolation } from './ModerationBlockedDialog';
+import { ModerationBlockedDialog, type BlockedViolation } from '@duncit/ui';
 import type {
   CreatePodClub,
   CreatePodFormValues,
@@ -257,7 +257,12 @@ export default function CreatePodStepper({
           submit().catch(() => undefined);
         }}
       />
-      <ModerationBlockedDialog violations={blocked} onJump={jumpToStep} onClose={() => setBlocked([])} />
+      <ModerationBlockedDialog
+        violations={blocked}
+        onJump={jumpToStep}
+        onClose={() => setBlocked([])}
+        description="Our AI check found content that breaks the community guidelines, so the pod was not created. Fix the items below and try again."
+      />
     </Stack>
   );
 }

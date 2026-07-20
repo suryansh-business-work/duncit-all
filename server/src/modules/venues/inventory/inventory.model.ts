@@ -47,6 +47,8 @@ export interface IProductVariant {
   breadth_cm: number;
   length_cm: number;
   weight_kg: number;
+  view_count: number;
+  click_count: number;
 }
 
 /** One Super → Category → Sub taxonomy row a product is sold in. A product may
@@ -126,6 +128,9 @@ export interface IInventoryProduct extends Document {
   listing_reviewed_by_name: string;
   is_duncit_delivery_partner: boolean;
   ownership: ProductOwnership;
+  /** Buyer engagement counters (forward-only; incremented from the apps). */
+  view_count: number;
+  click_count: number;
   size_label: string;
   height_cm: number;
   length_cm: number;
@@ -167,6 +172,8 @@ const variantSchema = new Schema<IProductVariant>(
     breadth_cm: { type: Number, default: 0, min: 0 },
     length_cm: { type: Number, default: 0, min: 0 },
     weight_kg: { type: Number, default: 0, min: 0 },
+    view_count: { type: Number, default: 0, min: 0 },
+    click_count: { type: Number, default: 0, min: 0 },
   },
   { _id: true }
 );
@@ -277,6 +284,8 @@ const productSchema = new Schema<IInventoryProduct>(
     is_duncit_delivery_partner: { type: Boolean, default: false },
     // Duncit's own catalogue product vs an external partner brand's listing.
     ownership: { type: String, enum: ['DUNCIT', 'BRAND'], default: 'DUNCIT', index: true },
+    view_count: { type: Number, default: 0, min: 0 },
+    click_count: { type: Number, default: 0, min: 0 },
     size_label: { type: String, default: '', trim: true, maxlength: 120 },
     height_cm: { type: Number, default: 0, min: 0 },
     length_cm: { type: Number, default: 0, min: 0 },

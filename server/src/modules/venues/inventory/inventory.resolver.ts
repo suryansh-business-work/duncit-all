@@ -58,6 +58,10 @@ export const inventoryResolvers = {
       requireAuth(ctx);
       return inventoryService.myProductListingsTable(ctx.user, args.brand_id, args.query);
     },
+    myProductAnalytics: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return inventoryService.myProductAnalytics(args.product_doc_id, ctx.user);
+    },
     availablePodProducts: async (
       _p: unknown,
       args: { super_category_id?: string | null; category_id?: string | null; sub_category_id?: string | null },
@@ -154,6 +158,18 @@ export const inventoryResolvers = {
     deleteMyProductListing: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireAuth(ctx);
       return inventoryService.deleteMyProductListing(args.product_doc_id, ctx.user);
+    },
+    recordProductView: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return inventoryService.recordProductView(args.product_doc_id);
+    },
+    recordProductClick: async (
+      _p: unknown,
+      args: { product_doc_id: string; variant_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.recordProductClick(args.product_doc_id, args.variant_id);
     },
     reviewProductListing: async (
       _p: unknown,

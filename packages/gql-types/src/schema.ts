@@ -4191,6 +4191,10 @@ export type Mutation = {
   recordActivePing: Scalars['Boolean']['output'];
   recordAppEvent: Scalars['Boolean']['output'];
   recordInventoryStockMovement: InventoryProduct;
+  /** Record a buyer click on a product (optionally a specific variant). */
+  recordProductClick: Scalars['Boolean']['output'];
+  /** Record a buyer view of a product (forward-only engagement tracking). */
+  recordProductView: Scalars['Boolean']['output'];
   /** Record that the signed-in viewer opened this story; idempotent (Bugs 2 & 4). */
   recordStoryView: Post;
   recordUserContactAction: UserContactAction;
@@ -5641,6 +5645,17 @@ export type MutationRecordAppEventArgs = {
 
 export type MutationRecordInventoryStockMovementArgs = {
   input: StockMovementInput;
+  product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecordProductClickArgs = {
+  product_doc_id: Scalars['ID']['input'];
+  variant_id?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationRecordProductViewArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
 
@@ -7777,6 +7792,30 @@ export type PostalAddressInput = {
   state?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Brand-admin analytics for one product: orders/units/earnings (from order data) + views/clicks (tracked forward). */
+export type ProductAnalytics = {
+  __typename?: 'ProductAnalytics';
+  currency_symbol: Scalars['String']['output'];
+  gross_revenue: Scalars['Float']['output'];
+  linked_pods: Scalars['Int']['output'];
+  locations: Array<ProductAnalyticsLocation>;
+  orders: Scalars['Int']['output'];
+  product_id: Scalars['ID']['output'];
+  total_clicks: Scalars['Int']['output'];
+  /** Gross minus Duncit commission — the brand's estimated net. */
+  total_earning: Scalars['Float']['output'];
+  total_views: Scalars['Int']['output'];
+  units_sold: Scalars['Int']['output'];
+  variants: Array<ProductVariantStat>;
+};
+
+export type ProductAnalyticsLocation = {
+  __typename?: 'ProductAnalyticsLocation';
+  location: Scalars['String']['output'];
+  orders: Scalars['Int']['output'];
+  units_sold: Scalars['Int']['output'];
+};
+
 /** One Super/Category/Sub taxonomy row a product is sold in (a product may have several). */
 export type ProductCategory = {
   __typename?: 'ProductCategory';
@@ -7962,6 +8001,16 @@ export type ProductVariantInput = {
   sku?: InputMaybe<Scalars['String']['input']>;
   unit_cost?: InputMaybe<Scalars['Float']['input']>;
   weight_kg?: InputMaybe<Scalars['Float']['input']>;
+};
+
+export type ProductVariantStat = {
+  __typename?: 'ProductVariantStat';
+  clicks: Scalars['Int']['output'];
+  orders: Scalars['Int']['output'];
+  units_sold: Scalars['Int']['output'];
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+  views: Scalars['Int']['output'];
 };
 
 export type ProfileLink = {
@@ -8345,6 +8394,8 @@ export type Query = {
   /** My own pods that carry at least one co-host. */
   myPodsWithCoHosts: Array<Pod>;
   myPosts: Array<Post>;
+  /** Brand-admin analytics for one of the caller's own products. */
+  myProductAnalytics: ProductAnalytics;
   myProductListings: Array<InventoryProduct>;
   /** Server-side table sibling of myProductListings — always scoped to the caller's own listings. */
   myProductListingsTable: InventoryProductTablePage;
@@ -9398,6 +9449,11 @@ export type QueryMyPodDraftArgs = {
 
 export type QueryMyPodMembershipsArgs = {
   status?: InputMaybe<MembershipStatus>;
+};
+
+
+export type QueryMyProductAnalyticsArgs = {
+  product_doc_id: Scalars['ID']['input'];
 };
 
 

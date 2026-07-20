@@ -245,6 +245,37 @@ export const inventoryTypeDefs = /* GraphQL */ `
     is_active: Boolean!
   }
 
+  type ProductAnalyticsLocation {
+    location: String!
+    units_sold: Int!
+    orders: Int!
+  }
+
+  type ProductVariantStat {
+    variant_id: String!
+    variant_label: String!
+    units_sold: Int!
+    orders: Int!
+    views: Int!
+    clicks: Int!
+  }
+
+  "Brand-admin analytics for one product: orders/units/earnings (from order data) + views/clicks (tracked forward)."
+  type ProductAnalytics {
+    product_id: ID!
+    total_views: Int!
+    total_clicks: Int!
+    orders: Int!
+    units_sold: Int!
+    gross_revenue: Float!
+    "Gross minus Duncit commission — the brand's estimated net."
+    total_earning: Float!
+    currency_symbol: String!
+    linked_pods: Int!
+    locations: [ProductAnalyticsLocation!]!
+    variants: [ProductVariantStat!]!
+  }
+
   input InventoryProductInput {
     product_name: String!
     sku: String
@@ -391,6 +422,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     myProductListings(brand_id: ID): [InventoryProduct!]!
     "Server-side table sibling of myProductListings — always scoped to the caller's own listings."
     myProductListingsTable(brand_id: ID, query: TableQueryInput): InventoryProductTablePage!
+    "Brand-admin analytics for one of the caller's own products."
+    myProductAnalytics(product_doc_id: ID!): ProductAnalytics!
     availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     "Public read of a single product (any signed-in user) — powers the product-detail view on a pod's shop."
@@ -409,6 +442,10 @@ export const inventoryTypeDefs = /* GraphQL */ `
     "Update a listing's low-stock threshold + notify toggle without re-triggering approval."
     updateMyProductSettings(product_doc_id: ID!, low_stock_alert: Int!, notify_low_stock: Boolean!): InventoryProduct!
     deleteMyProductListing(product_doc_id: ID!): Boolean!
+    "Record a buyer view of a product (forward-only engagement tracking)."
+    recordProductView(product_doc_id: ID!): Boolean!
+    "Record a buyer click on a product (optionally a specific variant)."
+    recordProductClick(product_doc_id: ID!, variant_id: String): Boolean!
     reviewProductListing(
       product_doc_id: ID!
       status: ProductListingReviewStatus!

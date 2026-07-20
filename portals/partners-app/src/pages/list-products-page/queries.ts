@@ -83,6 +83,34 @@ export const DELETE_LISTING = gql`
   }
 `;
 
+export const MY_PRODUCT_ANALYTICS = gql`
+  query MyProductAnalytics($product_doc_id: ID!) {
+    myProductAnalytics(product_doc_id: $product_doc_id) {
+      total_views
+      total_clicks
+      orders
+      units_sold
+      gross_revenue
+      total_earning
+      currency_symbol
+      linked_pods
+      locations {
+        location
+        units_sold
+        orders
+      }
+      variants {
+        variant_id
+        variant_label
+        units_sold
+        orders
+        views
+        clicks
+      }
+    }
+  }
+`;
+
 export const UPDATE_PRODUCT_SETTINGS = gql`
   mutation UpdateMyProductSettings($product_doc_id: ID!, $low_stock_alert: Int!, $notify_low_stock: Boolean!) {
     updateMyProductSettings(product_doc_id: $product_doc_id, low_stock_alert: $low_stock_alert, notify_low_stock: $notify_low_stock) {

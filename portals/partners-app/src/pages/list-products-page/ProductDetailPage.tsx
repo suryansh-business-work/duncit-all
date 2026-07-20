@@ -4,6 +4,7 @@ import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/ma
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import ProductDetailView from './ProductDetailView';
+import ProductAnalyticsPanel from './ProductAnalyticsPanel';
 import ProductReviewsPanel from './ProductReviewsPanel';
 import { MY_PRODUCT_LISTINGS } from './ProductListingsTable';
 import { PRODUCT_ACCESS_MESSAGE, PRODUCT_LISTING_ACCESS, canManageProductListings } from './productAccess';
@@ -85,6 +86,7 @@ export default function ProductDetailPage() {
       {canManageProducts && product && (
         <>
           <ProductDetailView product={product} />
+          <ProductAnalyticsPanel productId={product.id} />
           <ProductReviewsPanel productId={product.id} />
         </>
       )}

@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -782,6 +783,92 @@ export const inventoryService = {
   async getById(id: string) {
     const doc = await InventoryProductModel.findById(id);
     return doc ? inventoryProductToPub(doc) : null;
+  },
+
+  /** Increment a product's buyer-view counter (best-effort, forward-only). */
+  async recordProductView(id: string) {
+    if (!Types.ObjectId.isValid(id)) return false;
+    await InventoryProductModel.updateOne({ _id: id }, { $inc: { view_count: 1 } });
+    return true;
+  },
+
+  /** Increment a product's click counter (+ the specific variant's, when given). */
+  async recordProductClick(id: string, variantId?: string | null) {
+    if (!Types.ObjectId.isValid(id)) return false;
+    const inc: Record<string, number> = { click_count: 1 };
+    const options: Record<string, unknown> = {};
+    if (variantId && Types.ObjectId.isValid(variantId)) {
+      inc['variants.$[v].click_count'] = 1;
+      options.arrayFilters = [{ 'v._id': new Types.ObjectId(variantId) }];
+    }
+    await InventoryProductModel.updateOne({ _id: id }, { $inc: inc }, options);
+    return true;
+  },
+
+  /** Brand-admin analytics for one owned product: orders/units/earnings +
+   * purchase locations + per-variant purchases, from order data; plus the
+   * forward-tracked view/click counters. */
+  async myProductAnalytics(id: string, user: AuthUser | null) {
+    await requireEcommManager(user);
+    const doc = await ownedListing(id, user);
+    const productId = String(doc._id);
+    const orders = await ProductOrderModel.find({ 'line_items.product_id': doc._id })
+      .select('line_items shipping_address')
+      .lean();
+
+    let unitsSold = 0;
+    let gross = 0;
+    let orderCount = 0;
+    const variantStats = new Map<string, any>();
+    const locationStats = new Map<string, any>();
+
+    for (const order of orders) {
+      const lines = (order.line_items ?? []).filter((line: any) => String(line.product_id) === productId);
+      if (lines.length === 0) continue;
+      orderCount += 1;
+      const addr = order.shipping_address as any;
+      const location = addr?.city || addr?.state || 'Unknown';
+      const locBucket = locationStats.get(location) ?? { location, units_sold: 0, orders: 0 };
+      locBucket.orders += 1;
+      for (const line of lines) {
+        unitsSold += line.qty;
+        gross += line.gross;
+        locBucket.units_sold += line.qty;
+        const vid = String(line.variant_id ?? '');
+        const vStat = variantStats.get(vid) ?? { variant_id: vid, variant_label: line.variant_label || 'Default', units_sold: 0, orders: 0, views: 0, clicks: 0 };
+        vStat.units_sold += line.qty;
+        vStat.orders += 1;
+        variantStats.set(vid, vStat);
+      }
+      locationStats.set(location, locBucket);
+    }
+
+    // Merge per-variant view/click counters from the product's variant subdocs.
+    for (const variant of doc.variants ?? []) {
+      const vid = String(variant._id);
+      const vStat = variantStats.get(vid) ?? { variant_id: vid, variant_label: variant.option_label || 'Default', units_sold: 0, orders: 0, views: 0, clicks: 0 };
+      vStat.views = variant.view_count ?? 0;
+      vStat.clicks = variant.click_count ?? 0;
+      variantStats.set(vid, vStat);
+    }
+
+    const commissionPct = Math.min(100, Math.max(0, Number(doc.commission_pct) || 0));
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const linkedPods = await PodModel.countDocuments({ 'product_requests.product_id': doc._id });
+
+    return {
+      product_id: productId,
+      total_views: doc.view_count ?? 0,
+      total_clicks: doc.click_count ?? 0,
+      orders: orderCount,
+      units_sold: unitsSold,
+      gross_revenue: round2(gross),
+      total_earning: round2(gross * (1 - commissionPct / 100)),
+      currency_symbol: '₹',
+      linked_pods: linkedPods,
+      locations: [...locationStats.values()],
+      variants: [...variantStats.values()],
+    };
   },
 
   async submitProductListing(input: any, user: AuthUser | null) {

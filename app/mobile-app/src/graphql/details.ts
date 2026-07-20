@@ -208,6 +208,18 @@ export const VoteProductReviewDocument = gql(`
   }
 `);
 
+export const RecordProductViewDocument = gql(`
+  mutation MobileRecordProductView($productDocId: ID!) {
+    recordProductView(product_doc_id: $productDocId)
+  }
+`);
+
+export const RecordProductClickDocument = gql(`
+  mutation MobileRecordProductClick($productDocId: ID!, $variantId: String) {
+    recordProductClick(product_doc_id: $productDocId, variant_id: $variantId)
+  }
+`);
+
 /** Public brand card (any signed-in user) for the product-detail brand dialog. */
 export const PublicEcommBrandDocument = gql(`
   query MobilePublicEcommBrand($brandDocId: ID!) {

@@ -11,8 +11,13 @@ import { BrandDetailSheet } from '@/components/details/BrandDetailSheet';
 import { ZoomableImageModal } from '@/components/details/ZoomableImageModal';
 import { ProductQuantityBar } from '@/components/details/ProductQuantityBar';
 import { ProductReviews } from '@/components/details/ProductReviews';
-import { PublicInventoryProductDocument } from '@/graphql/details';
+import {
+  PublicInventoryProductDocument,
+  RecordProductClickDocument,
+  RecordProductViewDocument,
+} from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRupees, productSpecs, type ProductSpec } from '@/utils/product-specs';
 import { toErrorMessage } from '@/utils/errors';
@@ -303,10 +308,21 @@ export function ProductDetailSheet({
       .then((data) => active && setProduct(data.publicInventoryProduct ?? null))
       .catch((e) => active && setError(toErrorMessage(e, 'Could not load product.')))
       .finally(() => active && setIsLoading(false));
+    // Forward-only engagement tracking: a view + product click each time the
+    // detail opens (mirrors the mWeb pod-shop product dialog, rule 27).
+    fireAndForget(graphqlRequest(RecordProductViewDocument, { productDocId: productId }, { auth: true }));
+    fireAndForget(graphqlRequest(RecordProductClickDocument, { productDocId: productId, variantId: null }, { auth: true }));
     return () => {
       active = false;
     };
   }, [productId]);
+
+  const pickVariant = (id: string) => {
+    setVariantId(id);
+    fireAndForget(
+      graphqlRequest(RecordProductClickDocument, { productDocId: productId as string, variantId: id }, { auth: true }),
+    );
+  };
 
   const variants = product?.variants ?? [];
   const selectedVariant = variants.find((v) => v.id === variantId) ?? variants[0] ?? null;
@@ -329,7 +345,7 @@ export function ProductDetailSheet({
       product={product}
       variants={variants}
       selectedVariantId={selectedVariant?.id ?? null}
-      onSelectVariant={setVariantId}
+      onSelectVariant={pickVariant}
       images={images}
       price={price}
       mrp={mrp}

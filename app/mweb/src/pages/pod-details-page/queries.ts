@@ -230,6 +230,18 @@ export const INC_HITS = gql`
   }
 `;
 
+export const RECORD_PRODUCT_VIEW = gql`
+  mutation RecordProductView($id: ID!) {
+    recordProductView(product_doc_id: $id)
+  }
+`;
+
+export const RECORD_PRODUCT_CLICK = gql`
+  mutation RecordProductClick($id: ID!, $variant_id: String) {
+    recordProductClick(product_doc_id: $id, variant_id: $variant_id)
+  }
+`;
+
 export const JOIN_FREE = gql`
   mutation JoinFreePod($id: ID!, $referral: String) {
     joinFreePod(pod_doc_id: $id, referral_token: $referral) { id status }

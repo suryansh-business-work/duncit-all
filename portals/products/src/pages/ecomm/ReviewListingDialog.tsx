@@ -9,10 +9,9 @@ import {
   DialogTitle,
   Stack,
   TextField,
-  Typography,
 } from '@mui/material';
 import { REVIEW_PRODUCT_LISTING, type ProductListingRow } from './requestsQueries';
-import { deliveryTargetLabel } from './deliveryTarget';
+import ListingReviewDetails from './ListingReviewDetails';
 
 interface Props {
   row: ProductListingRow | null;
@@ -58,21 +57,12 @@ export default function ReviewListingDialog({ row, onClose, onDone }: Readonly<P
     }
   };
 
-  const detailLine = row
-    ? `${row.listing_submitted_by_name || 'Partner'} · ${row.size_label} · ${row.color} · ${row.height_cm}cm · ${row.weight_kg}kg`
-    : '';
-
   return (
-    <Dialog open={!!row} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={!!row} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Review “{row?.product_name}”</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
-          <Typography variant="body2" color="text.secondary">
-            {detailLine}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {row?.inventory_count} units · ₹{row?.unit_cost} · {deliveryTargetLabel(row?.delivery_target)}
-          </Typography>
+          {row && <ListingReviewDetails row={row} />}
           {error && <Alert severity="error">{error}</Alert>}
           <TextField
             size="small"

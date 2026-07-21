@@ -85,7 +85,16 @@ async function applyEcommChange(doc: any) {
       await InventoryProductModel.findByIdAndUpdate(doc.target_id, { $set: changes });
     } else if (doc.type === 'ECOMM_BRAND_CHANGE') {
       const { EcommBrandModel } = await import('@modules/venues/ecommBrand/ecommBrand.model');
-      await EcommBrandModel.findByIdAndUpdate(doc.target_id, { $set: changes });
+      // A payload may not silently flip the review status: brand approval must
+      // run the real approve path so the owner also gets the e-commerce role.
+      const { status, ...rest } = changes as Record<string, unknown>;
+      if (Object.keys(rest).length > 0) {
+        await EcommBrandModel.findByIdAndUpdate(doc.target_id, { $set: rest });
+      }
+      if (status === 'APPROVED') {
+        const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
+        await ecommBrandService.approve(String(doc.target_id));
+      }
     }
   } catch (err) {
     // eslint-disable-next-line no-console

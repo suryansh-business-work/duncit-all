@@ -32,6 +32,9 @@ const toPub = (d: IProductOrder) => ({
   payment_ref: d.payment_ref,
   line_items: (d.line_items ?? []).map((l) => ({
     product_id: String(l.product_id),
+    variant_id: l.variant_id ?? '',
+    variant_label: l.variant_label ?? '',
+    variant_sku: l.variant_sku ?? '',
     name: l.name,
     sku: l.sku,
     image_url: l.image_url,
@@ -116,7 +119,8 @@ const PRODUCT_ORDER_TABLE_CONFIG: TableEntityConfig = {
 
 /** Enrich a snapshot line from Payment.metadata with the live product's
  * ownership/dimensions so the order carries everything ShipRocket needs even if
- * the product is later edited or deleted. */
+ * the product is later edited or deleted. When the buyer chose a variant, the
+ * variant's sku/image/dimensions win (correct parcel data per combination). */
 async function buildLineItem(line: any) {
   const productId = String(line.product_id || '');
   const qty = Number(line.quantity ?? line.qty) || 0;
@@ -124,21 +128,67 @@ async function buildLineItem(line: any) {
   const product = Types.ObjectId.isValid(productId)
     ? await InventoryProductModel.findById(productId)
     : null;
+  const variantId = line.variant_id ? String(line.variant_id) : '';
+  const variant = variantId
+    ? ((product as any)?.variants ?? []).find((v: any) => String(v._id) === variantId)
+    : null;
   return {
     product_id: new Types.ObjectId(productId),
+    variant_id: variantId,
+    variant_label: String(line.variant_label ?? variant?.option_label ?? ''),
+    variant_sku: String(line.variant_sku ?? variant?.sku ?? ''),
     name: line.name || product?.product_name || 'Product',
-    sku: product?.sku ?? '',
-    image_url: (product as any)?.images?.[0] ?? (product as any)?.image_url ?? '',
+    sku: variant?.sku || (product?.sku ?? ''),
+    image_url:
+      variant?.images?.[0] ?? (product as any)?.images?.[0] ?? (product as any)?.image_url ?? '',
     qty,
     unit_cost,
     gross: round2(Number(line.gross) || unit_cost * qty),
     ownership: ((product as any)?.ownership ?? 'DUNCIT') as 'DUNCIT' | 'BRAND',
     brand_id: (product as any)?.brand_id ?? null,
-    weight_kg: Number((product as any)?.weight_kg ?? 0),
-    length_cm: Number((product as any)?.length_cm ?? 0),
-    breadth_cm: Number((product as any)?.breadth_cm ?? 0),
-    height_cm: Number((product as any)?.height_cm ?? 0),
+    weight_kg: Number(variant?.weight_kg || (product as any)?.weight_kg || 0),
+    length_cm: Number(variant?.length_cm || (product as any)?.length_cm || 0),
+    breadth_cm: Number(variant?.breadth_cm || (product as any)?.breadth_cm || 0),
+    height_cm: Number(variant?.height_cm || (product as any)?.height_cm || 0),
   };
+}
+
+/**
+ * Point-of-sale stock movement for a freshly created order: decrement the
+ * product's inventory (and the bought variant's own count), and step the pod
+ * row's sold_count so the pod's available_count reflects real sales. Runs only
+ * when the order doc is newly created (idempotency comes from createFromPayment
+ * skipping existing docs); best-effort — a counter failure never voids a paid
+ * order.
+ */
+async function recordStockForOrder(order: IProductOrder) {
+  for (const item of order.line_items) {
+    const qty = Number(item.qty) || 0;
+    if (qty <= 0) continue;
+    try {
+      const inc: Record<string, number> = { inventory_count: -qty };
+      const options: Record<string, unknown> = {};
+      if (item.variant_id && Types.ObjectId.isValid(item.variant_id)) {
+        inc['variants.$[v].inventory_count'] = -qty;
+        options.arrayFilters = [{ 'v._id': new Types.ObjectId(item.variant_id) }];
+      }
+      if (order.pod_id) {
+        // Pod-channel sales consume units the pod had reserved — release that
+        // share of the reservation so available stock stays truthful.
+        inc.requested_count = -qty;
+      }
+      await InventoryProductModel.updateOne({ _id: item.product_id }, { $inc: inc }, options);
+      if (order.pod_id) {
+        await PodModel.updateOne(
+          { _id: order.pod_id, 'product_requests.product_id': item.product_id },
+          { $inc: { 'product_requests.$.sold_count': qty } }
+        );
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[productOrder] stock decrement failed:', err);
+    }
+  }
 }
 
 /** Force ShipRocket-delivery products onto the SHIP fulfilment path so a paid
@@ -243,6 +293,8 @@ export const productOrderService = {
       }
       const doc = await createOrderForGroup(payment, method, groupLines, shippingAddress, pickupVenueId);
       created.push(doc);
+      // Point of sale: stock moves only when this order doc is first created.
+      await recordStockForOrder(doc);
       if (method === 'SHIP') await this.tryCreateShipment(doc);
     }
     return created.map(toPub);

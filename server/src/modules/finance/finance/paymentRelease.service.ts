@@ -268,7 +268,17 @@ async function sendProductInvoices(doc: IPaymentRelease) {
 // Side effects of an APPROVED review.
 async function applyApproval(doc: IPaymentRelease) {
   // Finance approval is the moment the pod is officially completed.
-  await PodModel.updateOne({ _id: doc.pod_id, completed_at: null }, { $set: { completed_at: new Date() } });
+  const stamped = await PodModel.updateOne(
+    { _id: doc.pod_id, completed_at: null },
+    { $set: { completed_at: new Date() } }
+  );
+  if (stamped.modifiedCount > 0) {
+    // Completion frees the pod's unsold reserved stock back to the brand.
+    const { podService } = await import('@modules/pods/pod/pod.service');
+    await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
+      console.warn('[paymentRelease] stock release failed:', e.message);
+    });
+  }
   if (doc.kind !== 'HOST_PAYMENT') return;
   // The host's commission is credited to their wallet to withdraw later.
   if (doc.host_user_id) {
@@ -344,6 +354,11 @@ export const paymentReleaseService = {
     if (!(pod as any).completed_at) {
       (pod as any).completed_at = new Date();
       await pod.save();
+      // Completion frees the pod's unsold reserved stock back to the brand.
+      const { podService } = await import('@modules/pods/pod/pod.service');
+      await podService.releaseCompletedPodStock(pod._id).catch((e: Error) => {
+        console.warn('[paymentRelease] stock release failed:', e.message);
+      });
       // AI-monitored audit trail: completion is a critical pod action.
       const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
       await podAuditService.record({

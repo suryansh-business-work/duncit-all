@@ -871,6 +871,8 @@ export type CheckoutProductSelectionInput = {
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   product_id: Scalars['ID']['input'];
   quantity: Scalars['Int']['input'];
+  /** Chosen variant for products with a variant matrix — price and stock resolve from it. */
+  variant_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type CheckoutQuote = {
@@ -4193,6 +4195,7 @@ export type Mutation = {
   deleteLocation: Scalars['Boolean']['output'];
   /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
   deleteMyAccount: Scalars['Boolean']['output'];
+  deleteMyAddress: Scalars['Boolean']['output'];
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deletePod: Scalars['Boolean']['output'];
@@ -4369,6 +4372,8 @@ export type Mutation = {
   /** Save a founder setting (constant / manual metric value). */
   saveFounderSetting: FounderSettingKv;
   saveLeadSurveyResponse: LeadSurveyEntry;
+  /** Create (no id) or update (with id) one of my saved addresses. */
+  saveMyAddress: UserAddress;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   seedSuperAdmin: SeedAdminResult;
@@ -4388,6 +4393,7 @@ export type Mutation = {
   setDefaultBrandPickupLocation: BrandPickupLocation;
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
+  setDefaultMyAddress: UserAddress;
   setDefaultSlotTemplate: SlotTemplate;
   /** Onboarding/admin: deactivate/reactivate a brand — hides it + its products from the marketplace and pod product picker (reversible). */
   setEcommBrandActive: EcommBrand;
@@ -5394,6 +5400,11 @@ export type MutationDeleteMyAccountArgs = {
 };
 
 
+export type MutationDeleteMyAddressArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMyProductListingArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -6069,6 +6080,12 @@ export type MutationSaveLeadSurveyResponseArgs = {
 };
 
 
+export type MutationSaveMyAddressArgs = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: UserAddressInput;
+};
+
+
 export type MutationSavePodDraftArgs = {
   draft_id?: InputMaybe<Scalars['ID']['input']>;
   input: PodDraftInput;
@@ -6136,6 +6153,11 @@ export type MutationSetDefaultCommsProviderArgs = {
 
 
 export type MutationSetDefaultEnvEntryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDefaultMyAddressArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -7064,6 +7086,10 @@ export type OrderLineItem = {
   qty: Scalars['Int']['output'];
   sku: Scalars['String']['output'];
   unit_cost: Scalars['Float']['output'];
+  /** Which variant of the product was bought — empty for variant-less products. */
+  variant_id: Scalars['String']['output'];
+  variant_label: Scalars['String']['output'];
+  variant_sku: Scalars['String']['output'];
   weight_kg: Scalars['Float']['output'];
 };
 
@@ -8573,6 +8599,8 @@ export type Query = {
   myActiveBouncerSos?: Maybe<BouncerSosAlert>;
   /** The signed-in advertiser's own requests (Ads portal). */
   myAdRequestsTable: AdRequestTablePage;
+  /** The signed-in user's saved addresses (default first, then newest). */
+  myAddresses: Array<UserAddress>;
   /** Clubs the signed-in user administers (CLUB_ADMIN scope). */
   myAdminClubs: Array<Club>;
   /** Paginated + filtered 'Your Clubs' list for the signed-in Club Admin. */
@@ -11833,6 +11861,41 @@ export type UserActivityYear = {
   total_visits: Scalars['Int']['output'];
   user_id: Scalars['ID']['output'];
   year: Scalars['Int']['output'];
+};
+
+/** A saved address in the user's address book (Profile Settings › Addresses). */
+export type UserAddress = {
+  __typename?: 'UserAddress';
+  city: Scalars['String']['output'];
+  country: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_default: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  landmark: Scalars['String']['output'];
+  line1: Scalars['String']['output'];
+  line2: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+};
+
+export type UserAddressInput = {
+  city: Scalars['String']['input'];
+  country?: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  landmark?: InputMaybe<Scalars['String']['input']>;
+  line1: Scalars['String']['input'];
+  line2?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  pincode: Scalars['String']['input'];
+  state: Scalars['String']['input'];
 };
 
 export type UserBadge = {

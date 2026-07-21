@@ -27,7 +27,9 @@ export interface DashboardStats {
 }
 
 // A fulfilment is "done" (not pending) once it reaches one of these states.
-const SETTLED = new Set(['DELIVERED', 'CANCELLED', 'RETURNED', 'REFUNDED']);
+// The model's actual terminal fulfilment statuses — PICKED_UP ends a pickup
+// order, RTO/FAILED end a shipment ('RETURNED'/'REFUNDED' never occur).
+const SETTLED = new Set(['DELIVERED', 'PICKED_UP', 'CANCELLED', 'RTO', 'FAILED']);
 
 const num = (value?: number | null) => (typeof value === 'number' ? value : 0);
 

@@ -436,6 +436,10 @@ async function draftFromMeeting(doc: any, who?: { name: string; email: string })
   } else if (doc.kind === 'ECOMM') {
     const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
     await ecommBrandService.createDraftFromApproval(prefill);
+    // Approval also grants the e-commerce role right away (mirrors CLUB_ADMIN)
+    // so the applicant can open the ECOMM studio and finish their brand —
+    // product listing itself stays gated on the brand's own approval.
+    await ecommBrandService.grantEcommRole(userId);
   } else if (doc.kind === 'CLUB_ADMIN') {
     // Club Admin has no drafted entity — approval grants the CLUB_ADMIN role so
     // the user gets the club-admin dashboard in the Partners portal.

@@ -26,6 +26,10 @@ export const productOrderTypeDefs = /* GraphQL */ `
 
   type OrderLineItem {
     product_id: ID!
+    "Which variant of the product was bought — empty for variant-less products."
+    variant_id: String!
+    variant_label: String!
+    variant_sku: String!
     name: String!
     sku: String!
     image_url: String!

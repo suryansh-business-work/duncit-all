@@ -148,7 +148,9 @@ export function productToValues(product?: any): ProductListingValues {
       : [],
     variants,
     commission_pct: product.commission_pct ?? 15,
-    delivery_target: 'SHIPROCKET',
+    // Keep the product's own delivery target on edit — resetting it silently
+    // converted PICKUP-style listings into ShipRocket ones.
+    delivery_target: product.delivery_target ?? 'SHIPROCKET',
   };
 }
 

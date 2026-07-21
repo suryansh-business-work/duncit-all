@@ -79,6 +79,41 @@ describe('approval — ecomm change requests', () => {
     expect(approved!.status).toBe('APPROVED');
   });
 
+  it('routes a brand-change payload that flips status to APPROVED through the real approve path', async () => {
+    // The generic $set path must never grant approval silently — the real
+    // approve() also grants the owner the e-commerce role.
+    const { userService } = await import('@modules/access/user/user.service');
+    const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
+    const ownerId = new Types.ObjectId();
+    const brandId = new Types.ObjectId();
+    await EcommBrandModel.collection.insertOne({
+      _id: brandId,
+      brand_name: 'Sneaky',
+      status: 'SUBMITTED',
+      owner_user_id: ownerId,
+    } as never);
+    const req = await approvalService.submitEcommChange(
+      {
+        kind: 'BRAND',
+        target_id: brandId.toString(),
+        target_name: 'Sneaky',
+        details: [{ label: 'Status', value: 'APPROVED' }],
+        payload: JSON.stringify({ status: 'APPROVED', tagline: 'now live' }),
+      },
+      ADMIN,
+    );
+    await approvalService.approve(req!.id, ADMIN);
+    const brand: any = await EcommBrandModel.findById(brandId);
+    expect(brand.status).toBe('APPROVED');
+    expect(brand.approved_at).toBeTruthy();
+    expect(brand.tagline).toBe('now live');
+    expect(assignSpy).toHaveBeenCalledWith(
+      ownerId.toString(),
+      expect.arrayContaining(['USER', 'ECOMM_MANAGER']),
+    );
+    assignSpy.mockRestore();
+  });
+
   it('denies a request and blocks a second decision', async () => {
     const req = await approvalService.submitEcommChange(
       {

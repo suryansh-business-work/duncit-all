@@ -27,6 +27,25 @@ const baseOrder = {
   ],
 };
 
+const variantOrder = {
+  ...baseOrder,
+  line_items: [
+    {
+      product_id: 'p3',
+      variant_id: 'v1',
+      variant_label: 'L / Blue',
+      variant_sku: 'HD-L-BLUE',
+      name: 'Hoodie',
+      sku: 'HD-1',
+      ownership: 'BRAND',
+      qty: 1,
+      unit_cost: 650,
+      gross: 650,
+      image_url: '',
+    },
+  ],
+};
+
 describe('OrderSummaryCard', () => {
   it('renders buyer, contact with phone, address and line items', () => {
     renderWithProviders(<OrderSummaryCard order={baseOrder} podDateTime="1 Jan" />);
@@ -36,6 +55,12 @@ describe('OrderSummaryCard', () => {
     expect(screen.getByText('Mug')).toBeInTheDocument();
     expect(screen.getByText('Total: ₹440')).toBeInTheDocument();
     expect(screen.getByText('1 Jan')).toBeInTheDocument();
+  });
+
+  it('shows which variant was bought (label + variant SKU)', () => {
+    renderWithProviders(<OrderSummaryCard order={variantOrder} podDateTime="1 Jan" />);
+    expect(screen.getByText('Hoodie — L / Blue')).toBeInTheDocument();
+    expect(screen.getByText(/HD-L-BLUE · Brand/)).toBeInTheDocument();
   });
 
   it('handles a pickup order with no address, no phone and no pod', () => {

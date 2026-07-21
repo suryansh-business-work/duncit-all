@@ -2,6 +2,11 @@ import type { MutableRefObject, ChangeEvent } from 'react';
 import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import FileDetails, { useMediaDimensions } from './FileDetails';
+import ImageCropStep from './ImageCropStep';
+import { suggestPresetKey } from './cropUtils';
+import type { UploadStage } from './useDeviceUpload';
+import type { CropRect, UploadSettings } from './types';
 
 interface Props {
   accept: string;
@@ -10,19 +15,38 @@ interface Props {
   previewUrl: string | null;
   uploadPct: number | null;
   uploading: boolean;
+  stage: UploadStage;
+  settings: UploadSettings | null;
+  cropKey: string;
+  onSelectCropKey: (key: string) => void;
+  onCropComplete: (rect: CropRect | null) => void;
   onPickFile: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 // Copy + hint derived from the accepted MIME list so a PDF-only picker never
-// claims "image".
-function dropHints(accept: string): { label: string; hint: string } {
+// claims "image" and a video-only picker (pod reels) never claims "image".
+function dropHints(accept: string, settings: UploadSettings | null): { label: string; hint: string } {
+  const imageMb = settings?.max_image_mb ?? 15;
+  const videoMb = settings?.max_video_mb ?? 100;
   if (/pdf/i.test(accept) && !/image\//i.test(accept)) {
     return { label: 'Click to choose a PDF', hint: 'PDF only · max 50 MB · uploads to ImageKit' };
   }
+  if (/video\//i.test(accept) && !/image\//i.test(accept)) {
+    return {
+      label: 'Click to choose a video',
+      hint: `MP4, MOV or WebM · max ${videoMb} MB · uploads to ImageKit`,
+    };
+  }
   return {
     label: 'Click to choose an image',
-    hint: 'PNG, JPG, WebP, GIF · max 15 MB · uploads to ImageKit',
+    hint: `PNG, JPG, WebP, GIF · max ${imageMb} MB · uploads to ImageKit`,
   };
+}
+
+function mediaKind(picked: File | null): 'image' | 'video' | 'other' {
+  if (picked?.type.startsWith('image/')) return 'image';
+  if (picked?.type.startsWith('video/')) return 'video';
+  return 'other';
 }
 
 export default function DeviceUploadTab({
@@ -32,11 +56,22 @@ export default function DeviceUploadTab({
   previewUrl,
   uploadPct,
   uploading,
+  stage,
+  settings,
+  cropKey,
+  onSelectCropKey,
+  onCropComplete,
   onPickFile,
 }: Readonly<Props>) {
   const isPdf = picked?.type === 'application/pdf';
-  const isVideo = picked?.type.startsWith('video/') ?? false;
-  const { label, hint } = dropHints(accept);
+  const kind = mediaKind(picked);
+  const { label, hint } = dropHints(accept, settings);
+  const dims = useMediaDimensions(previewUrl, kind);
+  const suggestedKey =
+    kind === 'image' && dims
+      ? suggestPresetKey(dims.width, dims.height, settings?.crop_presets ?? [])
+      : null;
+  const stageLabel = stage === 'compressing' ? 'Compressing' : 'Uploading';
 
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>
@@ -45,13 +80,7 @@ export default function DeviceUploadTab({
         <Stack
           alignItems="center"
           spacing={1}
-          sx={{
-            width: '100%',
-            maxWidth: 480,
-            p: 4,
-            borderRadius: 2,
-            bgcolor: 'action.hover',
-          }}
+          sx={{ width: '100%', maxWidth: 480, p: 4, borderRadius: 2, bgcolor: 'action.hover' }}
         >
           <PictureAsPdfIcon color="error" sx={{ fontSize: 56 }} />
           <Typography variant="body2" fontWeight={700} noWrap sx={{ maxWidth: '100%' }}>
@@ -59,38 +88,32 @@ export default function DeviceUploadTab({
           </Typography>
         </Stack>
       )}
-      {previewUrl && !isPdf && (
-        <Box
-          sx={{
-            width: '100%',
-            maxWidth: 480,
-            borderRadius: 2,
-            overflow: 'hidden',
-            bgcolor: 'action.hover',
-          }}
-        >
-          {isVideo ? (
-            <video
-              src={previewUrl}
-              controls
-              style={{
-                width: '100%',
-                display: 'block',
-                maxHeight: 360,
-                objectFit: 'contain',
-                background: '#000',
-              }}
-            >
-              <track kind="captions" />
-            </video>
-          ) : (
-            <img
-              src={previewUrl}
-              alt="preview"
-              style={{ width: '100%', display: 'block', maxHeight: 360, objectFit: 'contain' }}
-            />
-          )}
+      {previewUrl && kind === 'video' && (
+        <Box sx={{ width: '100%', maxWidth: 480, borderRadius: 2, overflow: 'hidden', bgcolor: 'action.hover' }}>
+          <video
+            src={previewUrl}
+            controls
+            style={{
+              width: '100%',
+              display: 'block',
+              maxHeight: 360,
+              objectFit: 'contain',
+              background: '#000',
+            }}
+          >
+            <track kind="captions" />
+          </video>
         </Box>
+      )}
+      {previewUrl && kind === 'image' && (
+        <ImageCropStep
+          previewUrl={previewUrl}
+          presets={settings?.crop_presets ?? []}
+          selectedKey={cropKey}
+          suggestedKey={suggestedKey}
+          onSelectKey={onSelectCropKey}
+          onCropComplete={onCropComplete}
+        />
       )}
       {!previewUrl && (
         <Box
@@ -118,10 +141,8 @@ export default function DeviceUploadTab({
         </Box>
       )}
       {picked && (
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Typography variant="body2" color="text.secondary">
-            {picked.name} · {(picked.size / 1024).toFixed(0)} KB
-          </Typography>
+        <Stack spacing={1} alignItems="center" sx={{ width: '100%' }}>
+          <FileDetails file={picked} dims={dims} />
           <Button size="small" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
             Change
           </Button>
@@ -131,7 +152,7 @@ export default function DeviceUploadTab({
         <Box sx={{ width: '100%', maxWidth: 480 }}>
           <LinearProgress variant="determinate" value={uploadPct} />
           <Typography variant="caption" color="text.secondary">
-            Uploading… {uploadPct}%
+            {stageLabel}… {uploadPct}%
           </Typography>
         </Box>
       )}

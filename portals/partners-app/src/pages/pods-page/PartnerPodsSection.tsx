@@ -6,7 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { format } from 'date-fns';
 import { useApolloTableFetch } from '@duncit/table';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
-import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
+import { PodForm, blankPodFormValues, buildPodInput, useMediaPickerBridge, type PodFormValues } from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import PodsTable from '../../components/PodsTable';
 import { CREATE_PARTNER_POD, HOST_UPDATE_POD, MY_HOST_PODS_TABLE, PARTNER_POD_LOOKUPS, type PartnerPodRow } from './queries';
@@ -22,8 +22,7 @@ export default function PartnerPodsSection() {
   const [editPod, setEditPod] = useState<PartnerPodRow | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const pickerResolve = useRef<((url: string | null) => void) | null>(null);
+  const picker = useMediaPickerBridge();
   const clubs = data?.clubs ?? [];
   const venues = (data?.myVenues ?? []).filter((venue: any) => venue.status === 'APPROVED' && venue.is_active);
   const products = data?.availablePodProducts ?? [];
@@ -43,18 +42,6 @@ export default function PartnerPodsSection() {
     } catch (submitError: any) {
       setOpError(submitError.message);
     }
-  };
-
-  // Bridge the URL-callback MediaPickerDialog to the package's promise-based picker.
-  const pickImage = () =>
-    new Promise<string | null>((resolve) => {
-      pickerResolve.current = resolve;
-      setPickerOpen(true);
-    });
-  const settlePicker = (url: string | null) => {
-    pickerResolve.current?.(url);
-    pickerResolve.current = null;
-    setPickerOpen(false);
   };
 
   const saveEdit = async (values: PodContentValues) => {
@@ -130,6 +117,8 @@ export default function PartnerPodsSection() {
             error={opError}
             onCancel={() => setOpen(false)}
             onSubmit={submit}
+            onPickImage={picker.pickImage}
+            onPickVideo={picker.pickVideo}
           />
         </DialogContent>
       </Dialog>
@@ -153,16 +142,17 @@ export default function PartnerPodsSection() {
           error={opError}
           onClose={() => setEditPod(null)}
           onSubmit={saveEdit}
-          onPickImage={pickImage}
+          onPickImage={picker.pickImage}
         />
       )}
 
       <MediaPickerDialog
-        open={pickerOpen}
-        onClose={() => settlePicker(null)}
-        onPicked={(url) => settlePicker(url)}
+        open={picker.pickerOpen}
+        onClose={() => picker.settlePicker(null)}
+        onPicked={(url) => picker.settlePicker(url)}
         folder="/pods/media"
-        title="Add pod image"
+        title={picker.title}
+        accept={picker.accept}
       />
       <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />
     </Card>

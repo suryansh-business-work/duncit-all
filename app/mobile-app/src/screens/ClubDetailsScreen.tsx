@@ -1,4 +1,5 @@
 import { Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -77,7 +78,11 @@ export function ClubDetailsScreen() {
   return (
     <YStack flex={1} testID="club-details-screen">
       <AppBackground />
-      {isLoading && !club ? <DetailSkeleton testID="club-details-loading" /> : content}
+      {/* Top safe-area: page content must never overlap the device's
+          notification/status bar (matches the StackScreen scaffold). */}
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        {isLoading && !club ? <DetailSkeleton testID="club-details-loading" /> : content}
+      </SafeAreaView>
     </YStack>
   );
 }

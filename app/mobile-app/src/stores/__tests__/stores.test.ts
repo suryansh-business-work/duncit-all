@@ -1,4 +1,6 @@
 import { graphqlRequest } from '@/services/graphql.client';
+import { uploadToImagekitDirect } from '@/services/imagekit-upload';
+import { compressUploadedVideo } from '@/services/video-compression';
 import { useChatStore } from '@/stores/chat.store';
 import { useExploreStore } from '@/stores/explore.store';
 import { useFollowingStore } from '@/stores/following.store';
@@ -6,9 +8,17 @@ import { useHomeStore } from '@/stores/home.store';
 import { useStatusStore } from '@/stores/status.store';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+jest.mock('@/services/imagekit-upload', () => ({ uploadToImagekitDirect: jest.fn() }));
+jest.mock('@/services/video-compression', () => ({ compressUploadedVideo: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+const mockDirect = uploadToImagekitDirect as jest.Mock;
+const mockCompress = compressUploadedVideo as jest.Mock;
 
-beforeEach(() => mockRequest.mockReset());
+beforeEach(() => {
+  mockRequest.mockReset();
+  mockDirect.mockReset();
+  mockCompress.mockReset();
+});
 
 describe('home / following / chat stores', () => {
   it('home: fetches, skips when cached, captures errors', async () => {
@@ -163,15 +173,17 @@ describe('status store', () => {
     });
   });
 
-  it('publish uploads a video story with a derived mp4 name', async () => {
+  it('publish streams a video story from its URI with a derived mp4 name', async () => {
+    mockDirect.mockResolvedValue('https://img/raw.mp4');
+    mockCompress.mockResolvedValue('https://img/c.mp4');
     mockRequest
-      .mockResolvedValueOnce({ uploadImageToImagekit: { url: 'https://img/c.mp4', fileId: 'f2' } })
       .mockResolvedValueOnce({ createPost: { id: 'po2' } })
       .mockResolvedValueOnce({ stories: [], myStories: [] });
-    await useStatusStore.getState().publish({ base64: 'vid', mediaType: 'VIDEO' });
-    expect(mockRequest.mock.calls[0]?.[1]).toMatchObject({ mimeType: 'video/mp4' });
-    expect(mockRequest.mock.calls[1]?.[1]).toMatchObject({
-      input: { kind: 'STORY', media_type: 'VIDEO' },
+    await useStatusStore.getState().publish({ uri: 'file://vid', mediaType: 'VIDEO' });
+    expect(mockDirect.mock.calls[0]?.[0]).toMatchObject({ type: 'video/mp4' });
+    expect(mockDirect.mock.calls[0]?.[0].name).toMatch(/^story-\d+\.mp4$/);
+    expect(mockRequest.mock.calls[0]?.[1]).toMatchObject({
+      input: { kind: 'STORY', media_type: 'VIDEO', image_url: 'https://img/c.mp4' },
     });
   });
 

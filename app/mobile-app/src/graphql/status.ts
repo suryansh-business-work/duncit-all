@@ -67,7 +67,9 @@ export const StoryViewersDocument = gql(`
 `);
 
 /** Uploads a base64 image/document to ImageKit (server holds the private key) → url.
- * Pass `allowDocuments: true` with the real mimeType to upload PDFs/Office/txt/csv. */
+ * Pass `allowDocuments: true` with the real mimeType to upload PDFs/Office/txt/csv.
+ * `surface` opts the upload into the admin Upload Settings pipeline (sharp
+ * compression, crop presets, AI image monitoring). */
 export const UploadImageDocument = gql(`
   mutation MobileUploadImage(
     $fileBase64: String!
@@ -75,6 +77,9 @@ export const UploadImageDocument = gql(`
     $mimeType: String
     $folder: String
     $allowDocuments: Boolean
+    $surface: String
+    $crop: UploadCropRectInput
+    $cropPreset: String
   ) {
     uploadImageToImagekit(
       fileBase64: $fileBase64
@@ -82,9 +87,38 @@ export const UploadImageDocument = gql(`
       mimeType: $mimeType
       folder: $folder
       allow_documents: $allowDocuments
+      surface: $surface
+      crop: $crop
+      crop_preset: $cropPreset
     ) {
       url
       fileId
+    }
+  }
+`);
+
+/** Starts the server-side FFmpeg compression of an already direct-uploaded
+ * ImageKit video; poll MobileVideoCompressionJob for the real percentage. */
+export const StartVideoCompressionDocument = gql(`
+  mutation MobileStartVideoCompression($remoteUrl: String!, $folder: String) {
+    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: "MOBILE_MWEB") {
+      job_id
+      status
+      pct
+      url
+      error
+    }
+  }
+`);
+
+export const VideoCompressionJobDocument = gql(`
+  query MobileVideoCompressionJob($jobId: String!) {
+    videoCompressionJob(job_id: $jobId) {
+      job_id
+      status
+      pct
+      url
+      error
     }
   }
 `);

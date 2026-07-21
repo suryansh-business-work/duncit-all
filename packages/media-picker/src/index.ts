@@ -1,13 +1,28 @@
 export { default } from './MediaPickerDialog';
 export { default as MediaPickerDialog } from './MediaPickerDialog';
 export { pickBestVideoFile, validateFile } from './utils';
-export type { MediaPickerDialogProps, Orientation, FilePolicy } from './types';
+export type { FileCaps } from './utils';
+export type {
+  CropRect,
+  FilePolicy,
+  MediaPickerDialogProps,
+  Orientation,
+  UploadCropPreset,
+  UploadSettings,
+  UploadSurface,
+} from './types';
 
 // ImageKit upload plumbing (shared by all portals — do not hand-roll the gql doc).
-export { UPLOAD_IMAGE, GET_IMAGEKIT_AUTH } from './queries';
+export { UPLOAD_IMAGE, GET_IMAGEKIT_AUTH, UPLOAD_SETTINGS } from './queries';
 export { uploadImageToImagekit, useImagekitBase64Upload } from './upload';
 export type { ImagekitUploadResult, UploadImageOptions } from './upload';
-export { useImagekitDirectUpload } from './useImagekitDirectUpload';
+export { directUploadToImagekit, useImagekitDirectUpload } from './useImagekitDirectUpload';
+export type { UploadProgress } from './useImagekitDirectUpload';
+export { compressUploadedVideo } from './videoCompression';
+export { useUploadSettings } from './useUploadSettings';
+export { croppablePresets, formatBytes, formatDuration, presetAspect, suggestPresetKey } from './cropUtils';
+export { default as ImageCropStep } from './ImageCropStep';
+export { default as FileDetails, useMediaDimensions } from './FileDetails';
 
 // Attachment classification helpers (URL → kind/name/ext).
 export {

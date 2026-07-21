@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ReelUploadField } from '@/components/create-pod/ReelUploadField';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
+import { compressUploadedVideo } from '@/services/video-compression';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('expo-image-picker', () => ({
@@ -11,10 +12,12 @@ jest.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: jest.fn(),
 }));
 jest.mock('@/services/imagekit-upload', () => ({ uploadToImagekitDirect: jest.fn() }));
+jest.mock('@/services/video-compression', () => ({ compressUploadedVideo: jest.fn() }));
 
 const mockPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
 const mockLaunch = ImagePicker.launchImageLibraryAsync as jest.Mock;
 const mockUpload = uploadToImagekitDirect as jest.Mock;
+const mockCompress = compressUploadedVideo as jest.Mock;
 
 const picked = (over: Record<string, unknown> = {}) => ({
   canceled: false,
@@ -39,6 +42,8 @@ beforeEach(() => {
   mockPermission.mockResolvedValue({ granted: true });
   mockLaunch.mockResolvedValue(picked());
   mockUpload.mockResolvedValue('https://cdn/pods/reels/reel.mp4');
+  // The FFmpeg pass is a passthrough by default (compression off server-side).
+  mockCompress.mockImplementation(async (url: string) => url);
 });
 
 const openPanel = () => fireEvent.press(screen.getByTestId('optional-reel'));
@@ -64,6 +69,13 @@ describe('ReelUploadField', () => {
     expect(mockUpload).toHaveBeenCalledWith(
       { uri: 'file://reel.mp4', name: 'reel.mp4', type: 'video/mp4' },
       '/pods/reels',
+      expect.any(Function),
+    );
+    // The uploaded URL then goes through the server-side FFmpeg pass.
+    expect(mockCompress).toHaveBeenCalledWith(
+      'https://cdn/pods/reels/reel.mp4',
+      '/pods/reels',
+      expect.any(Function),
     );
     // The preview row shows the hosted file name; the header reads "Added".
     expect(screen.getByText('reel.mp4')).toBeOnTheScreen();
@@ -139,6 +151,39 @@ describe('ReelUploadField', () => {
     expect(mockLaunch).toHaveBeenCalledTimes(1);
     release('https://cdn/pods/reels/reel.mp4');
     await screen.findByTestId('reel-preview');
+  });
+
+  it('shows the real upload percentage, then the compression percentage', async () => {
+    let releaseUpload: (url: string) => void = () => undefined;
+    let uploadPct: ((pct: number) => void) | undefined;
+    mockUpload.mockImplementation((_file, _folder, onPct) => {
+      uploadPct = onPct;
+      return new Promise<string>((resolve) => {
+        releaseUpload = resolve;
+      });
+    });
+    let releaseCompress: (url: string) => void = () => undefined;
+    let compressPct: ((pct: number) => void) | undefined;
+    mockCompress.mockImplementation((_url, _folder, onPct) => {
+      compressPct = onPct;
+      return new Promise<string>((resolve) => {
+        releaseCompress = resolve;
+      });
+    });
+
+    renderWithProviders(<Harness />);
+    openPanel();
+    fireEvent.press(screen.getByTestId('reel-upload-add'));
+    await screen.findByText('Uploading…');
+    act(() => uploadPct?.(40));
+    await screen.findByText('Uploading… 40%');
+    act(() => releaseUpload('https://cdn/pods/reels/raw.mp4'));
+    await screen.findByText('Compressing… 0%');
+    act(() => compressPct?.(15));
+    await screen.findByText('Compressing… 15%');
+    act(() => releaseCompress('https://cdn/pods/reels/small.mp4'));
+    await screen.findByTestId('reel-preview');
+    expect(screen.getByText('small.mp4')).toBeOnTheScreen();
   });
 
   it('reports Error and non-Error upload failures', async () => {

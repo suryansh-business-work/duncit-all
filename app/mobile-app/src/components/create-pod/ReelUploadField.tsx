@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
+import { compressUploadedVideo } from '@/services/video-compression';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ReelPanelBody } from './ReelPanelBody';
 
@@ -23,6 +24,7 @@ interface Props {
 export function ReelUploadField({ value, onChange }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<{ stage: string; pct: number } | null>(null);
   const [error, setError] = useState<string | undefined>();
   const { color, onPrimary } = useThemeColors();
 
@@ -44,19 +46,27 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
     }
     setUploading(true);
     try {
-      const url = await uploadToImagekitDirect(
+      // Real byte progress while uploading, then the server-side FFmpeg pass
+      // (no-op when the admin has video compression off) with its real % too.
+      const rawUrl = await uploadToImagekitDirect(
         {
           uri: asset.uri,
           name: asset.fileName ?? `reel-${Date.now()}.mp4`,
           type: asset.mimeType ?? 'video/mp4',
         },
         REEL_FOLDER,
+        (pct) => setProgress({ stage: 'Uploading', pct }),
+      );
+      setProgress({ stage: 'Compressing', pct: 0 });
+      const url = await compressUploadedVideo(rawUrl, REEL_FOLDER, (pct) =>
+        setProgress({ stage: 'Compressing', pct }),
       );
       onChange(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
+      setProgress(null);
     }
   };
 
@@ -109,6 +119,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
           <ReelPanelBody
             value={value}
             uploading={uploading}
+            busyLabel={progress ? `${progress.stage}… ${progress.pct}%` : 'Uploading…'}
             error={error}
             onPick={() => void pickAndUpload()}
             onRemove={removeReel}

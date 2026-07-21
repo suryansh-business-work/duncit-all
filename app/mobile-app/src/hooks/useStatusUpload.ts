@@ -49,6 +49,7 @@ export function useStatusUpload() {
     try {
       await publish({
         base64: asset.base64,
+        uri: asset.uri,
         fileName: asset.fileName,
         mimeType: asset.mimeType,
         mediaType: isVideo ? 'VIDEO' : 'IMAGE',

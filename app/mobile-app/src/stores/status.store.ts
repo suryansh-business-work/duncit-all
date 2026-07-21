@@ -9,11 +9,15 @@ import {
 } from '@/graphql/status';
 import { DeletePostDocument } from '@/graphql/posts';
 import { graphqlRequest } from '@/services/graphql.client';
+import { uploadToImagekitDirect } from '@/services/imagekit-upload';
+import { compressUploadedVideo } from '@/services/video-compression';
 
 export type StatusFeed = ResultOf<typeof StatusFeedDocument>;
 
 export interface StatusUploadAsset {
   base64?: string | null;
+  /** Picker URI — videos stream from it directly (no base64). */
+  uri?: string | null;
   fileName?: string | null;
   mimeType?: string | null;
   mediaType?: 'IMAGE' | 'VIDEO';
@@ -54,26 +58,48 @@ export const useStatusStore = create<StatusState>((set, get) => ({
     }
   },
   publish: async (asset) => {
-    if (!asset.base64) throw new Error('No media selected.');
     const isVideo = asset.mediaType === 'VIDEO';
     const mimeType = asset.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
     const fileName = asset.fileName ?? `story-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
-    const fileBase64 = `data:${mimeType};base64,${asset.base64}`;
-    // Coarse, monotonic progress: base64-over-GraphQL can't report byte-level
-    // upload, so we advance through the pipeline's stages (Bug 1).
-    set({ progress: 10 });
+    set({ progress: isVideo ? 2 : 10 });
     try {
-      const uploaded = await graphqlRequest(
-        UploadImageDocument,
-        { fileBase64, fileName, mimeType, folder: '/posts' },
-        { auth: true },
-      );
+      let url: string;
+      if (isVideo) {
+        if (!asset.uri) throw new Error('No media selected.');
+        // Videos stream from their URI with REAL byte progress (2–55), then the
+        // server-side FFmpeg pass fills 55–70 — the old base64 path silently
+        // sent corrupt bytes (the picker returns no base64 for videos).
+        const rawUrl = await uploadToImagekitDirect(
+          { uri: asset.uri, name: fileName, type: mimeType },
+          '/posts',
+          (pct) => set({ progress: 2 + Math.round(pct * 0.53) }),
+        );
+        url = await compressUploadedVideo(rawUrl, '/posts', (pct) =>
+          set({ progress: 55 + Math.round(pct * 0.15) }),
+        );
+      } else {
+        if (!asset.base64) throw new Error('No media selected.');
+        // Images go through the server so the admin Upload Settings apply
+        // (sharp compression + AI image monitoring).
+        const uploaded = await graphqlRequest(
+          UploadImageDocument,
+          {
+            fileBase64: `data:${mimeType};base64,${asset.base64}`,
+            fileName,
+            mimeType,
+            folder: '/posts',
+            surface: 'MOBILE_MWEB',
+          },
+          { auth: true },
+        );
+        url = uploaded.uploadImageToImagekit.url;
+      }
       set({ progress: 70 });
       await graphqlRequest(
         CreatePostDocument,
         {
           input: {
-            image_url: uploaded.uploadImageToImagekit.url,
+            image_url: url,
             caption: '',
             kind: 'STORY',
             media_type: isVideo ? 'VIDEO' : 'IMAGE',

@@ -20,6 +20,12 @@ describe('pod unit', () => {
     ).rejects.toThrow(/not authenticated/i);
   });
 
+  it('hostResubmitPod requires authentication', async () => {
+    await expect(
+      (async () => (podResolvers.Mutation as any).hostResubmitPod({}, { pod_doc_id: 'x', input: {} }, makeContext()))()
+    ).rejects.toThrow(/not authenticated/i);
+  });
+
   it('hostDeletePod requires authentication', async () => {
     await expect(
       (async () => (podResolvers.Mutation as any).hostDeletePod({}, { pod_doc_id: 'x', reason_subject: 'Other' }, makeContext()))()

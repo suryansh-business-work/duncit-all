@@ -3191,6 +3191,37 @@ export type HostRequestTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed. */
+export type HostResubmitPodInput = {
+  available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  location_id?: InputMaybe<Scalars['ID']['input']>;
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url?: InputMaybe<Scalars['String']['input']>;
+  no_of_spots?: InputMaybe<Scalars['Int']['input']>;
+  payment_terms?: InputMaybe<Scalars['String']['input']>;
+  place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
+  pod_amount?: InputMaybe<Scalars['Int']['input']>;
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
+  pod_description?: InputMaybe<Scalars['String']['input']>;
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
+  pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
+  pod_images_and_videos?: InputMaybe<Array<PodMediaInput>>;
+  pod_info?: InputMaybe<Scalars['String']['input']>;
+  pod_mode?: InputMaybe<PodMode>;
+  pod_occurrence?: InputMaybe<PodOccurrence>;
+  pod_title?: InputMaybe<Scalars['String']['input']>;
+  pod_type?: InputMaybe<PodType>;
+  product_requests?: InputMaybe<Array<PodProductRequestInput>>;
+  products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  reel_url?: InputMaybe<Scalars['String']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /** A fresh slot to request — re-enters the venue's approval queue. */
+  venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
+  what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
+  zone_name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type HostStatus =
   | 'APPROVED'
   | 'DRAFT'
@@ -4196,6 +4227,8 @@ export type Mutation = {
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
   hostDeletePod: Scalars['Boolean']['output'];
+  /** Host fully edits a venue-rejected pod and resubmits the booking request (no new pod). */
+  hostResubmitPod: Pod;
   hostUpdatePod: Pod;
   /**
    * Server-side import of a remote image (e.g. a Pexels stock photo) into our
@@ -5572,6 +5605,12 @@ export type MutationHostDeletePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
   reason_note?: InputMaybe<Scalars['String']['input']>;
   reason_subject: Scalars['String']['input'];
+};
+
+
+export type MutationHostResubmitPodArgs = {
+  input: HostResubmitPodInput;
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 

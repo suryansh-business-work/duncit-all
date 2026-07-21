@@ -3,12 +3,13 @@ import type { BackoutRefundRequest } from '@duncit/gql-types';
 import {
   BACKOUT_FINANCE_SETTINGS,
   BACKOUT_REFUND_DETAIL,
+  PROCESS_BACKOUT_REFUND,
 } from '../../src/pages/finance/backout-refund-page/queries';
 
 /**
  * Backout-refund mocks. Table rows feed the stubbed `@duncit/table` via
- * `tableControls` (not Apollo); the detail + settings objects flow through
- * `MockedProvider` and carry `__typename` on every nested node.
+ * `tableControls` (not Apollo); the detail + settings + mutation objects flow
+ * through `MockedProvider` and carry `__typename` on every nested node.
  */
 interface PodRowMock {
   __typename?: 'Pod';
@@ -18,33 +19,60 @@ interface PodRowMock {
 
 export type BackoutRowMock = { __typename?: 'BackoutRefundRequest' } & Pick<
   BackoutRefundRequest,
-  'id' | 'user_name' | 'user_email' | 'backed_out_at' | 'joined_at' | 'payment_amount' | 'refund_status'
+  | 'id'
+  | 'backout_no'
+  | 'user_name'
+  | 'user_email'
+  | 'backout_status'
+  | 'replacement_confirmed'
+  | 'backed_out_at'
+  | 'joined_at'
+  | 'payment_id'
+  | 'payment_amount'
+  | 'deduction_pct'
+  | 'refund_amount'
+  | 'refund_processed_at'
+  | 'refund_status'
 > & { pod: PodRowMock | null };
 
+/** A refund-eligible request: replacement booked the seat (Spot Filled). */
 export const makeBackoutRow = (over: Partial<BackoutRowMock> = {}): BackoutRowMock => ({
   __typename: 'BackoutRefundRequest',
   id: 'b1',
+  backout_no: 'DUN-BKO-000001',
   user_name: 'Riya',
   user_email: 'riya@x.com',
+  backout_status: 'SPOT_FILLED',
+  replacement_confirmed: true,
   pod: { __typename: 'Pod', pod_title: 'Yoga', pod_type: 'PHYSICAL' },
   backed_out_at: '2024-01-01T10:00:00Z',
   joined_at: '2024-01-01T09:00:00Z',
+  payment_id: 'pay_1',
   payment_amount: 1000,
+  deduction_pct: 10,
+  refund_amount: 900,
+  refund_processed_at: null,
   refund_status: 'PENDING',
   ...over,
 });
 
-/** An anonymous row: no name/email/pod, unparseable joined_at. */
+/** An anonymous, still-in-process row: no name/email/pod, no refund action. */
 export const makeAnonymousBackoutRow = (): BackoutRowMock =>
   makeBackoutRow({
     id: 'b2',
+    backout_no: 'DUN-BKO-000002',
     user_name: null,
     user_email: null,
+    backout_status: 'IN_PROCESS',
+    replacement_confirmed: false,
     pod: null,
     backed_out_at: null,
     joined_at: 'bad-date',
+    payment_id: null,
     payment_amount: null,
-    refund_status: 'PROCESSED',
+    deduction_pct: 0,
+    refund_amount: null,
+    refund_status: 'NONE',
   });
 
 const publicSettings = (over: { currency_symbol?: string; default_backout_deduction_pct?: number } = {}) => ({
@@ -62,6 +90,40 @@ export const backoutFinanceSettingsMock = (): MockedResponse => ({
 export const backoutFinanceSettingsErrorMock = (): MockedResponse => ({
   request: { query: BACKOUT_FINANCE_SETTINGS },
   error: new Error('load fail'),
+});
+
+/** processBackoutRefund success — echoes the (now processed) row. */
+export const processBackoutRefundMock = (id = 'b1'): MockedResponse => ({
+  request: { query: PROCESS_BACKOUT_REFUND, variables: { id } },
+  result: {
+    data: {
+      processBackoutRefund: {
+        ...makeBackoutRow({ id, refund_processed_at: '2024-01-03T10:00:00Z', refund_status: 'PROCESSED' }),
+        status: 'BACKED_OUT',
+        pod_id: 'POD-1',
+        user_id: 'u1',
+        attempt_no: 1,
+        backout_attempts_used: 1,
+        max_backout_attempts: 3,
+        payment_currency: 'INR',
+        payment_status: 'REFUNDED',
+        created_at: '2024-01-02T09:00:00Z',
+        pod: {
+          __typename: 'Pod',
+          id: 'pod-doc-1',
+          pod_id: 'POD-1',
+          pod_title: 'Yoga',
+          pod_date_time: '2024-01-05T09:00:00Z',
+          pod_type: 'PHYSICAL',
+        },
+      },
+    },
+  },
+});
+
+export const processBackoutRefundErrorMock = (id = 'b1'): MockedResponse => ({
+  request: { query: PROCESS_BACKOUT_REFUND, variables: { id } },
+  error: new Error('This Backout request has already been refunded'),
 });
 
 /* ---- Detail ---- */
@@ -99,14 +161,27 @@ interface DetailPodMock {
   club: DetailClubMock | null;
 }
 
+interface DetailEventMock {
+  __typename?: 'BackoutEvent';
+  status: string;
+  backout_count: number;
+  at: string;
+}
+
 interface DetailRequestMock {
   __typename?: 'BackoutRefundRequest';
   id: string;
+  backout_no: string;
   pod_id: string;
   user_id: string;
   user_name: string | null;
   user_email: string | null;
   status: string;
+  backout_status: string;
+  attempt_no: number;
+  backout_attempts_used: number;
+  max_backout_attempts: number;
+  replacement_confirmed: boolean;
   joined_at: string;
   backed_out_at: string | null;
   refund_status: string;
@@ -114,7 +189,10 @@ interface DetailRequestMock {
   payment_amount: number | null;
   payment_currency: string | null;
   payment_status: string | null;
-  refund_threshold_pct: number;
+  deduction_pct: number;
+  refund_amount: number | null;
+  refund_processed_at: string | null;
+  events: DetailEventMock[];
   created_at: string;
   pod: DetailPodMock | null;
 }
@@ -142,11 +220,17 @@ const makeDetailPod = (over: Partial<DetailPodMock> = {}): DetailPodMock => ({
 export const makeBackoutDetail = (over: Partial<DetailRequestMock> = {}): DetailRequestMock => ({
   __typename: 'BackoutRefundRequest',
   id: 'b1',
+  backout_no: 'DUN-BKO-000001',
   pod_id: 'POD-1',
   user_id: 'u1',
   user_name: 'Riya',
   user_email: 'riya@x.com',
   status: 'BACKED_OUT',
+  backout_status: 'SPOT_FILLED',
+  attempt_no: 1,
+  backout_attempts_used: 1,
+  max_backout_attempts: 3,
+  replacement_confirmed: true,
   joined_at: '2024-01-01T09:00:00Z',
   backed_out_at: '2024-01-02T09:00:00Z',
   refund_status: 'PENDING',
@@ -154,7 +238,13 @@ export const makeBackoutDetail = (over: Partial<DetailRequestMock> = {}): Detail
   payment_amount: 1000,
   payment_currency: 'INR',
   payment_status: 'PAID',
-  refund_threshold_pct: 50,
+  deduction_pct: 10,
+  refund_amount: 900,
+  refund_processed_at: null,
+  events: [
+    { __typename: 'BackoutEvent', status: 'IN_PROCESS', backout_count: 1, at: '2024-01-02T09:00:00Z' },
+    { __typename: 'BackoutEvent', status: 'SPOT_FILLED', backout_count: 1, at: '2024-01-03T09:00:00Z' },
+  ],
   created_at: '2024-01-02T09:00:00Z',
   pod: makeDetailPod(),
   ...over,

@@ -34,15 +34,13 @@ describe('useHostPods', () => {
 
   it('loads the host pods once the user id arrives', async () => {
     mockUseMe.mockReturnValue({ data: { me: { user_id: 'u1' } } });
-    mockRequest.mockResolvedValue({ pods: [{ id: 'p1', pod_title: 'Hike' }] });
+    mockRequest.mockResolvedValue({
+      myHostPods: [{ id: 'p1', pod_title: 'Hike', venue_approval_status: 'DECLINED' }],
+    });
     const { result } = renderHook(() => useHostPods());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.pods).toHaveLength(1);
-    expect(mockRequest).toHaveBeenCalledWith(
-      expect.anything(),
-      { host_user_id: 'u1' },
-      { auth: true },
-    );
+    expect(mockRequest).toHaveBeenCalledWith(expect.anything(), undefined, { auth: true });
   });
 
   it('swallows a load failure (list stays empty)', async () => {
@@ -64,7 +62,7 @@ describe('useHostPods', () => {
     const { unmount } = renderHook(() => useHostPods());
     unmount();
     await act(async () => {
-      resolve({ pods: [] });
+      resolve({ myHostPods: [] });
     });
     expect(mockRequest).toHaveBeenCalledTimes(1);
   });

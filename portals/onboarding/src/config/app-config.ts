@@ -29,7 +29,7 @@ export const appConfig = {
         { label: 'Calendar', to: '/meetings/calendar', icon: 'calendar' },
         { label: 'Venue Meetings', to: '/meetings/venue', icon: 'storefront' },
         { label: 'Host Meetings', to: '/meetings/host', icon: 'people' },
-        { label: 'Seller Meetings', to: '/meetings/ecomm', icon: 'inventory' },
+        { label: 'E-Commerce Brand Meetings', to: '/meetings/ecomm', icon: 'inventory' },
         { label: 'Club Admin Meetings', to: '/meetings/club_admin', icon: 'groups' },
         { label: 'Meeting Availability', to: '/meetings/availability', icon: 'settings' },
       ],

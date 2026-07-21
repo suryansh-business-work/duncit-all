@@ -47,15 +47,17 @@ async function doneMeeting(kind: SurveyKind, requestedAt: string, name = 'Appy T
 }
 
 describe('meetingService integration', () => {
-  it('requests once per user/kind (upsert), then lets staff schedule it with a link', async () => {
+  it('raises a request, blocks a second while active, then lets staff schedule it with a link', async () => {
     const a = await meetingService.request(userId, 'VENUE', { requested_at: '2026-07-01T10:00:00.000Z', notes: 'morning', contact_phone: '9000000001' });
     expect(a!.status).toBe('REQUESTED');
     // Every raised request carries a human-readable, kind-prefixed id.
     expect(a!.request_no).toMatch(/^DUN-VEN-\d{6}$/);
-    // Re-request updates the same row (still one).
-    await meetingService.request(userId, 'VENUE', { requested_at: '2026-07-02T10:00:00.000Z', contact_phone: '9000000001' });
+    // A second request while one is still active is blocked — never overwrites.
+    await expect(
+      meetingService.request(userId, 'VENUE', { requested_at: '2026-07-02T10:00:00.000Z', contact_phone: '9000000001' }),
+    ).rejects.toThrow(/active meeting request/i);
     const mine = await meetingService.myMeeting(userId, 'VENUE');
-    expect(mine!.requested_at).toBe('2026-07-02T10:00:00.000Z');
+    expect(mine!.requested_at).toBe('2026-07-01T10:00:00.000Z');
 
     const updated = await meetingService.update(mine!.id, {
       status: 'SCHEDULED',
@@ -450,14 +452,22 @@ describe('meeting slot booking', () => {
     expect(ok!.kind).toBe('VENUE');
   });
 
-  it('allows the user to reschedule only once and records the reason', async () => {
+  it('reschedules repeatedly, superseding each prior row as a new history record', async () => {
     const u = new Types.ObjectId().toString();
     await meetingService.request(u, 'HOST', { requested_at: '2027-09-02T05:00:00.000Z', contact_phone: '9150000001' });
     const moved = await meetingService.rescheduleMyMeeting(u, 'HOST', '2027-09-02T06:00:00.000Z', 'Clashing work call');
+    expect(moved!.status).toBe('REQUESTED');
     expect(moved!.reschedule_count).toBe(1);
-    await expect(
-      meetingService.rescheduleMyMeeting(u, 'HOST', '2027-09-02T07:00:00.000Z', 'again'),
-    ).rejects.toThrow(/one-time reschedule/i);
+    // Reschedule is no longer one-time — each creates a fresh record (Item 1).
+    const again = await meetingService.rescheduleMyMeeting(u, 'HOST', '2027-09-02T07:00:00.000Z', 'again');
+    expect(again!.reschedule_count).toBe(2);
+    // The prior rows are retained as superseded (Cancelled) history — 3 rows total.
+    const rows = await MeetingModel.find({ user_id: new Types.ObjectId(u), kind: 'HOST' });
+    expect(rows).toHaveLength(3);
+    expect(rows.filter((r) => r.status === 'CANCELLED')).toHaveLength(2);
+    expect(rows.filter((r) => r.status === 'REQUESTED')).toHaveLength(1);
+    // The latest row drives myMeeting; older history stays put.
+    expect((await meetingService.myMeeting(u, 'HOST'))!.id).toBe(again!.id);
   });
 
   it('records the self-cancel reason and shows the chosen category in the listing', async () => {
@@ -600,5 +610,63 @@ describe('meeting decide (onboarding self-approve)', () => {
     const m = await meetingService.myMeeting(user.toString(), 'HOST');
     await expect(meetingService.decide(m!.id, 'APPROVED', 'ok')).rejects.toThrow(/done/i);
     await expect(meetingService.decide(new Types.ObjectId().toString(), 'APPROVED', 'ok')).rejects.toThrow(/not found/i);
+  });
+});
+
+describe('meeting request history + re-application blocking (Batch 3)', () => {
+  it('keeps every submission as its own history row; latest drives myMeeting', async () => {
+    const u = new Types.ObjectId().toString();
+    const first = await meetingService.request(u, 'HOST', { requested_at: '2030-01-01T05:00:00.000Z', contact_phone: '9200000001' });
+    await meetingService.cancelMyMeeting(u, 'HOST', 'changed mind');
+    const second = await meetingService.request(u, 'HOST', { requested_at: '2030-01-02T05:00:00.000Z', contact_phone: '9200000001' });
+    // Both rows retained (history), never overwritten.
+    const rows = await MeetingModel.find({ user_id: new Types.ObjectId(u), kind: 'HOST' }).sort({ created_at: 1 });
+    expect(rows.map((r) => String(r._id))).toEqual([first!.id, second!.id]);
+    expect(rows[0].status).toBe('CANCELLED');
+    expect(rows[1].status).toBe('REQUESTED');
+    // Distinct request ids per submission (never reused).
+    expect(second!.request_no).not.toBe(first!.request_no);
+    // myMeeting / myMeetings expose only the latest.
+    expect((await meetingService.myMeeting(u, 'HOST'))!.id).toBe(second!.id);
+    expect((await meetingService.myMeetings(u)).filter((m) => m!.kind === 'HOST')).toHaveLength(1);
+  });
+
+  it('flags a staff rejection (Rejected) distinctly from a user self-cancel (Cancelled)', async () => {
+    const u = new Types.ObjectId().toString();
+    await meetingService.request(u, 'VENUE', { requested_at: '2030-02-01T05:00:00.000Z', contact_phone: '9210000001' });
+    const self = await meetingService.cancelMyMeeting(u, 'VENUE', 'no longer interested');
+    expect(self!.status).toBe('CANCELLED');
+    expect(self!.cancelled_by_staff).toBe(false);
+
+    await meetingService.request(u, 'VENUE', { requested_at: '2030-02-02T05:00:00.000Z', contact_phone: '9210000001' });
+    const mine = await meetingService.myMeeting(u, 'VENUE');
+    const rejected = await meetingService.cancelByStaff(mine!.id, 'Survey incomplete');
+    expect(rejected!.status).toBe('CANCELLED');
+    expect(rejected!.cancelled_by_staff).toBe(true);
+  });
+
+  it('blocks re-application while the onboarded record is under review, re-opens on rejection (Item 2)', async () => {
+    const u = new Types.ObjectId().toString();
+    await UserModel.collection.insertOne({
+      _id: new Types.ObjectId(u),
+      auth: { email: `${u}@example.com` },
+      profile: { first_name: 'Reviewy' },
+    } as never);
+    await meetingService.request(u, 'HOST', { requested_at: '2030-03-01T05:00:00.000Z', contact_phone: '9220000001' });
+    const m = await meetingService.myMeeting(u, 'HOST');
+    await meetingService.update(m!.id, { status: 'DONE' });
+    await meetingService.decide(m!.id, 'APPROVED', 'great'); // drafts a DRAFT host
+
+    // onboarded_status surfaces the linked record's state (backs the Earn block).
+    expect(await meetingService.onboardedStatusFor(u, 'HOST')).toBe('DRAFT');
+    await expect(
+      meetingService.request(u, 'HOST', { requested_at: '2030-03-02T05:00:00.000Z', contact_phone: '9220000001' }),
+    ).rejects.toThrow(/onboarding in process/i);
+
+    // Once the onboarded record is REJECTED, re-application re-opens.
+    await HostModel.updateOne({ user_id: new Types.ObjectId(u) }, { $set: { status: 'REJECTED' } });
+    expect(await meetingService.onboardedStatusFor(u, 'HOST')).toBe('REJECTED');
+    const again = await meetingService.request(u, 'HOST', { requested_at: '2030-03-03T05:00:00.000Z', contact_phone: '9220000001' });
+    expect(again!.status).toBe('REQUESTED');
   });
 });

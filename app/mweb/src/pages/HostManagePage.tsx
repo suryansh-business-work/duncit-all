@@ -10,9 +10,12 @@ import HostShareCard from './host-manage-page/HostShareCard';
 import HostApplyBanner from './host-apply-page/HostApplyBanner';
 import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
 
+// Host-scoped list: unlike the public \`pods\` query this ALSO returns pods that
+// are offline while awaiting/refused venue approval, so a "Venue Rejected" pod
+// stays visible and fully editable in Your Pods (it never silently vanishes).
 const HOST_PODS = gql`
-  query MyHostedPods($host_user_id: ID!) {
-    pods(filter: { host_user_id: $host_user_id, is_active: true }) {
+  query MyHostedPods {
+    myHostPods {
       id
       pod_title
       pod_id
@@ -31,6 +34,8 @@ const HOST_PODS = gql`
       location_id
       venue_id
       zone_name
+      venue_approval_status
+      is_active
     }
   }
 `;
@@ -52,11 +57,10 @@ export default function HostManagePage() {
   const userId = meQ.data?.me?.user_id;
   const isHost = (meQ.data?.me?.roles ?? []).includes('HOST');
   const { data, loading, error, refetch } = useQuery(HOST_PODS, {
-    variables: { host_user_id: userId },
     skip: !userId,
     fetchPolicy: 'cache-and-network',
   });
-  const pods = data?.pods ?? [];
+  const pods = data?.myHostPods ?? [];
   const bootLoading = (meQ.loading && !meQ.data) || (!!userId && loading && !data);
 
   return (

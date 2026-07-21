@@ -319,6 +319,8 @@ export type AppSettings = {
   draft_retention_days: Scalars['Int']['output'];
   jwt_expires_in?: Maybe<Scalars['String']['output']>;
   jwt_no_expiry: Scalars['Boolean']['output'];
+  /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
+  max_backout_attempts: Scalars['Int']['output'];
   /** Latest allowed signup birth year (inclusive). */
   max_birth_year: Scalars['Int']['output'];
   /** Earliest allowed signup birth year (inclusive). */
@@ -400,21 +402,50 @@ export type AuthProvider =
   | 'EMAIL'
   | 'GOOGLE';
 
-/** A member who has backed out of a pod — powers the Finance 'Backout Refunds' list + detail. */
+/** One recorded Backout lifecycle event (immutable, chronological). */
+export type BackoutEvent = {
+  __typename?: 'BackoutEvent';
+  at: Scalars['String']['output'];
+  /** The user's backout-attempt count for this pod when the event happened. */
+  backout_count: Scalars['Int']['output'];
+  status: BackoutStatus;
+};
+
+/** A Backout request — powers the Finance 'Backout Refunds' list + detail. */
 export type BackoutRefundRequest = {
   __typename?: 'BackoutRefundRequest';
+  /** 1-based backout attempt this request represents for the user+pod. */
+  attempt_no: Scalars['Int']['output'];
   backed_out_at?: Maybe<Scalars['String']['output']>;
+  /** Backout attempts the user has used for this pod so far. */
+  backout_attempts_used: Scalars['Int']['output'];
+  /** Permanent, globally unique Backout ID (DUN-BKO-000001). */
+  backout_no: Scalars['String']['output'];
+  /** Lifecycle status of this Backout request. */
+  backout_status: BackoutStatus;
   created_at: Scalars['String']['output'];
+  /** Backouts deduction % snapshotted when the request was created. */
+  deduction_pct: Scalars['Float']['output'];
+  /** Immutable, chronological Backout lifecycle timeline. */
+  events: Array<BackoutEvent>;
   id: Scalars['ID']['output'];
   joined_at: Scalars['String']['output'];
+  /** Max Backout attempts per user per pod (Admin > Pods > Pod Settings). */
+  max_backout_attempts: Scalars['Int']['output'];
   payment_amount?: Maybe<Scalars['Float']['output']>;
   payment_currency?: Maybe<Scalars['String']['output']>;
   payment_id?: Maybe<Scalars['ID']['output']>;
   payment_status?: Maybe<Scalars['String']['output']>;
   pod?: Maybe<Pod>;
   pod_id: Scalars['ID']['output'];
+  /** Estimated refund after deduction (null for free bookings). */
+  refund_amount?: Maybe<Scalars['Float']['output']>;
+  /** Set once Finance processed the refund (one refund per request). */
+  refund_processed_at?: Maybe<Scalars['String']['output']>;
   refund_status: RefundStatus;
   refund_threshold_pct: Scalars['Int']['output'];
+  /** True once a replacement booked the released seat (Spot Filled). */
+  replacement_confirmed: Scalars['Boolean']['output'];
   status: MembershipStatus;
   user_email?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
@@ -429,6 +460,12 @@ export type BackoutRefundRequestTablePage = {
   rows: Array<BackoutRefundRequest>;
   total: Scalars['Int']['output'];
 };
+
+/** Lifecycle of a single Backout request (one per Confirm Backout). */
+export type BackoutStatus =
+  | 'CANCELLED'
+  | 'IN_PROCESS'
+  | 'SPOT_FILLED';
 
 export type Badge = {
   __typename?: 'Badge';
@@ -3154,6 +3191,37 @@ export type HostRequestTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed. */
+export type HostResubmitPodInput = {
+  available_perks?: InputMaybe<Array<Scalars['String']['input']>>;
+  location_id?: InputMaybe<Scalars['ID']['input']>;
+  meeting_notes?: InputMaybe<Scalars['String']['input']>;
+  meeting_platform?: InputMaybe<Scalars['String']['input']>;
+  meeting_url?: InputMaybe<Scalars['String']['input']>;
+  no_of_spots?: InputMaybe<Scalars['Int']['input']>;
+  payment_terms?: InputMaybe<Scalars['String']['input']>;
+  place_charges?: InputMaybe<Array<PodPlaceChargeInput>>;
+  pod_amount?: InputMaybe<Scalars['Int']['input']>;
+  pod_date_time?: InputMaybe<Scalars['String']['input']>;
+  pod_description?: InputMaybe<Scalars['String']['input']>;
+  pod_end_date_time?: InputMaybe<Scalars['String']['input']>;
+  pod_hashtag?: InputMaybe<Array<Scalars['String']['input']>>;
+  pod_images_and_videos?: InputMaybe<Array<PodMediaInput>>;
+  pod_info?: InputMaybe<Scalars['String']['input']>;
+  pod_mode?: InputMaybe<PodMode>;
+  pod_occurrence?: InputMaybe<PodOccurrence>;
+  pod_title?: InputMaybe<Scalars['String']['input']>;
+  pod_type?: InputMaybe<PodType>;
+  product_requests?: InputMaybe<Array<PodProductRequestInput>>;
+  products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  reel_url?: InputMaybe<Scalars['String']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /** A fresh slot to request — re-enters the venue's approval queue. */
+  venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
+  what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
+  zone_name?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type HostStatus =
   | 'APPROVED'
   | 'DRAFT'
@@ -3853,6 +3921,7 @@ export type MeetingStatus =
 
 export type MembershipStatus =
   | 'BACKED_OUT'
+  | 'BACKOUT_IN_PROCESS'
   | 'JOINED';
 
 export type ModeratePodContentInput = {
@@ -3972,6 +4041,7 @@ export type Mutation = {
   assignTicket: Ticket;
   assignUserRoles: User;
   awardBadgeManually: UserBadge;
+  /** Confirm Backout — booking moves to 'Backout in process' and the seat is released. */
   backoutPod: PodMember;
   /** Bulk-manage a venue's upcoming non-booked slots (owner-scoped). */
   bulkDeleteVenueSlots: BulkSlotResult;
@@ -3979,6 +4049,8 @@ export type Mutation = {
   callEcommLeadContact: LeadContactActionResult;
   callHostLeadContact: LeadContactActionResult;
   callVenueLeadContact: LeadContactActionResult;
+  /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
+  cancelBackoutPod: PodMember;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
   /** Cancel the caller's own pending meeting (with a reason). */
@@ -4155,6 +4227,8 @@ export type Mutation = {
   getImagekitAuth: ImagekitAuth;
   grantAdminAccess: User;
   hostDeletePod: Scalars['Boolean']['output'];
+  /** Host fully edits a venue-rejected pod and resubmits the booking request (no new pod). */
+  hostResubmitPod: Pod;
   hostUpdatePod: Pod;
   /**
    * Server-side import of a remote image (e.g. a Pexels stock photo) into our
@@ -4183,6 +4257,8 @@ export type Mutation = {
   /** Deep-analyses a product listing's content against community guidelines before submit. */
   moderateProductContent: ModerationResult;
   permanentlyDeleteInventoryProduct: Scalars['Boolean']['output'];
+  /** Finance-only: process the refund for a Spot Filled Backout request (one refund per request). */
+  processBackoutRefund: BackoutRefundRequest;
   publishPodDraft: Pod;
   raiseBouncerSos: BouncerSosAlert;
   reactToPodMessage: PodMessage;
@@ -4755,6 +4831,11 @@ export type MutationCallVenueLeadContactArgs = {
   contact_number: Scalars['String']['input'];
   id: Scalars['ID']['input'];
   provider_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type MutationCancelBackoutPodArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -5527,6 +5608,12 @@ export type MutationHostDeletePodArgs = {
 };
 
 
+export type MutationHostResubmitPodArgs = {
+  input: HostResubmitPodInput;
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type MutationHostUpdatePodArgs = {
   input: HostUpdatePodInput;
   pod_doc_id: Scalars['ID']['input'];
@@ -5608,6 +5695,11 @@ export type MutationModerateProductContentArgs = {
 
 export type MutationPermanentlyDeleteInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationProcessBackoutRefundArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6869,6 +6961,8 @@ export type OnboardingMeeting = {
   approval_status?: Maybe<Scalars['String']['output']>;
   /** Why onboarding staff cancelled it (null for self-cancels). */
   cancel_reason?: Maybe<Scalars['String']['output']>;
+  /** True when a CANCELLED row was rejected by onboarding staff (display as 'Rejected' vs a user 'Cancelled'). */
+  cancelled_by_staff?: Maybe<Scalars['Boolean']['output']>;
   category_name?: Maybe<Scalars['String']['output']>;
   contact_name?: Maybe<Scalars['String']['output']>;
   contact_phone?: Maybe<Scalars['String']['output']>;
@@ -6881,6 +6975,8 @@ export type OnboardingMeeting = {
   kind: SurveyKind;
   meeting_link?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
+  /** Status of the linked onboarded record (DRAFT|SUBMITTED|APPROVED|REJECTED) for HOST/VENUE/ECOMM once the meeting is approved; null for CLUB_ADMIN or before an onboarded record exists. Drives the Earn re-application block. */
+  onboarded_status?: Maybe<Scalars['String']['output']>;
   /** Human-readable request id, e.g. DUN-VEN-000001. */
   request_no?: Maybe<Scalars['String']['output']>;
   requested_at: Scalars['String']['output'];
@@ -7465,6 +7561,8 @@ export type PodMediaInput = {
 export type PodMember = {
   __typename?: 'PodMember';
   backed_out_at?: Maybe<Scalars['String']['output']>;
+  /** Backout attempts used for this pod (each Confirm Backout counts one). */
+  backout_count: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   joined_at: Scalars['String']['output'];
@@ -7483,7 +7581,19 @@ export type PodMember = {
 
 export type PodMembershipState = {
   __typename?: 'PodMembershipState';
+  /** Max Backout attempts per user per pod (Admin > Pods > Pod Settings). */
+  backout_attempts_max: Scalars['Int']['output'];
+  /** Backout attempts the caller has used for this pod. */
+  backout_attempts_used: Scalars['Int']['output'];
+  /** Global Backouts deduction % applied to a backout refund. */
+  backout_deduction_pct: Scalars['Float']['output'];
+  /** True while the caller's booking is in 'Backout in process'. */
+  backout_in_process: Scalars['Boolean']['output'];
+  /** Estimated refund after deduction for the caller's paid booking (null for free). */
+  backout_refund_amount?: Maybe<Scalars['Float']['output']>;
   can_backout: Scalars['Boolean']['output'];
+  /** True when the in-process backout can still be cancelled (seat not rebooked). */
+  can_cancel_backout: Scalars['Boolean']['output'];
   can_join: Scalars['Boolean']['output'];
   is_member: Scalars['Boolean']['output'];
   membership?: Maybe<PodMember>;
@@ -8044,6 +8154,8 @@ export type PublicAppSettings = {
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
+  /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
+  max_backout_attempts: Scalars['Int']['output'];
   max_birth_year: Scalars['Int']['output'];
   min_birth_year: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
@@ -8154,7 +8266,7 @@ export type Query = {
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
   backoutRefundRequest?: Maybe<BackoutRefundRequest>;
-  /** Finance-only: every currently backed-out member (rejoined members drop off). */
+  /** Finance-only: every Backout request ever raised (all statuses, for audit). */
   backoutRefundRequests: Array<BackoutRefundRequest>;
   backoutRefundRequestsTable: BackoutRefundRequestTablePage;
   badge?: Maybe<Badge>;
@@ -11004,6 +11116,8 @@ export type UpdateAppSettingsInput = {
   draft_retention_days?: InputMaybe<Scalars['Int']['input']>;
   jwt_expires_in?: InputMaybe<Scalars['String']['input']>;
   jwt_no_expiry?: InputMaybe<Scalars['Boolean']['input']>;
+  /** Max Backout attempts a user gets per pod (min 1). */
+  max_backout_attempts?: InputMaybe<Scalars['Int']['input']>;
   max_birth_year?: InputMaybe<Scalars['Int']['input']>;
   min_birth_year?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;

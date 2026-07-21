@@ -14,16 +14,22 @@ export interface BackoutConfirmDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   onViewTerms: () => void;
+  /** Estimated refund after the Backouts deduction (null for free bookings). */
+  refundAmount?: number | null;
+  /** Backouts deduction % applied to the refund estimate. */
+  deductionPct?: number;
 }
 
-/** Backout confirmation sheet — renders the live "backout-terms" policy inline,
- * RN twin of mWeb's BackoutConfirmDialog. */
+/** Backout confirmation sheet — spec copy + refund preview, and the live
+ * "backout-terms" policy inline. RN twin of mWeb's BackoutConfirmDialog. */
 export function BackoutConfirmDialog({
   open,
   busy,
   onClose,
   onConfirm,
   onViewTerms,
+  refundAmount = null,
+  deductionPct = 0,
 }: Readonly<BackoutConfirmDialogProps>) {
   const { color, onPrimary } = useThemeColors();
   const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
@@ -62,7 +68,7 @@ export function BackoutConfirmDialog({
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={18} fontWeight="900" color="$color">
-                  Backout from this pod?
+                  Backout from Pod?
                 </Text>
                 <XStack
                   testID="backout-close"
@@ -78,9 +84,26 @@ export function BackoutConfirmDialog({
                 </XStack>
               </XStack>
 
+              <YStack paddingHorizontal={16} gap={8}>
+                <Text fontSize={14} fontWeight="800" color="$color">
+                  You will get the refund only if someone fills your spot.
+                </Text>
+                {refundAmount != null ? (
+                  <Text
+                    testID="backout-refund-amount"
+                    fontSize={13.5}
+                    fontWeight="800"
+                    color="$primary"
+                  >
+                    If the refund is done, you will get ₹{refundAmount} (after the {deductionPct}%
+                    backout deduction).
+                  </Text>
+                ) : null}
+              </YStack>
+
               <ScrollView
-                style={{ maxHeight: 320 }}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
+                style={{ maxHeight: 280 }}
+                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}
               >
                 {isLoading ? (
                   <Spinner testID="backout-terms-loading" color="$primary" />
@@ -123,7 +146,7 @@ export function BackoutConfirmDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="800" color="$color">
-                    Cancel
+                    Close
                   </Text>
                 </XStack>
                 <XStack

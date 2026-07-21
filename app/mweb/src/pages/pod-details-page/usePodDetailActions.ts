@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import type { NavigateFunction } from 'react-router-dom';
 import {
   BACKOUT,
+  CANCEL_BACKOUT,
   INC_HITS,
   JOIN_FREE,
   REDEEM,
@@ -48,10 +49,13 @@ export function usePodDetailActions({
   const [incHits] = useMutation(INC_HITS);
   const [joinFree, joinState] = useMutation(JOIN_FREE);
   const [backout, backoutState] = useMutation(BACKOUT);
+  const [cancelBackout, cancelBackoutState] = useMutation(CANCEL_BACKOUT);
   const [redeem] = useMutation(REDEEM);
   const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD_DETAIL);
   const [snack, setSnack] = useState<string | null>(null);
   const [backoutOpen, setBackoutOpen] = useState(false);
+  const [keepSpotOpen, setKeepSpotOpen] = useState(false);
+  const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
   const [confettiOpen, setConfettiOpen] = useState(false);
   const [savePending, setSavePending] = useState(false);
   const [localSaved, setLocalSaved] = useState<boolean | null>(null);
@@ -159,7 +163,7 @@ export function usePodDetailActions({
     try {
       await backout({ variables: { id: pod.id } });
       setBackoutOpen(false);
-      setSnack('You have backed out.');
+      setSnack('Backout in process — your seat is now open for booking.');
       await refetch();
     } catch (e: any) {
       setBackoutOpen(false);
@@ -167,9 +171,36 @@ export function usePodDetailActions({
     }
   };
 
+  // "Keep My Spot" — cancel the in-process backout and restore the booking.
+  // A server refusal (replacement already confirmed) stays inside the dialog.
+  const onConfirmKeepSpot = async () => {
+    if (!pod) return;
+    setKeepSpotError(null);
+    try {
+      await cancelBackout({ variables: { id: pod.id } });
+      setKeepSpotOpen(false);
+      setSnack('Your booking is restored.');
+      await refetch();
+    } catch (e: any) {
+      setKeepSpotError(e.message);
+      await refetch();
+    }
+  };
+
+  const openKeepSpot = () => {
+    setKeepSpotError(null);
+    setKeepSpotOpen(true);
+  };
+
   return {
     backoutOpen,
     backoutState,
+    keepSpotOpen,
+    keepSpotError,
+    cancelBackoutState,
+    setKeepSpotOpen,
+    openKeepSpot,
+    onConfirmKeepSpot,
     displaySaved: localSaved ?? saved,
     joinState,
     savePending,

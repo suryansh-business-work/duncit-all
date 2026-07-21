@@ -10,9 +10,11 @@ interface Props {
   membershipState: any;
   joining: boolean;
   backingOut: boolean;
+  restoringSpot: boolean;
   selectedProductTotal: number;
   onJoinFree: () => void;
   onBackout: () => void;
+  onKeepSpot: () => void;
   onPaidCheckout: () => void;
   onCopyReferral: (token: string) => void;
 }

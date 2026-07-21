@@ -18,7 +18,7 @@ import { kindMetaByKind } from './surveyKinds';
 
 const blankByType = (type: QuestionType): DraftQuestion => ({ type, label: '', help: '', required: false, multi: false, options: type === 'MCQ' ? [''] : [] });
 const KINDS = new Set<SurveyKind>(['VENUE', 'HOST', 'ECOMM', 'CLUB_ADMIN']);
-const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
 const initialKind = (raw: string | null): SurveyKind => (raw && KINDS.has(raw as SurveyKind) ? (raw as SurveyKind) : 'VENUE');
 
 /** Create / edit a single onboarding survey scoped to a taxonomy slot. */
@@ -129,7 +129,7 @@ export default function SurveyBuilderPage() {
                   <TextField select size="small" label="Kind" value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
                     <MenuItem value="VENUE">Venue</MenuItem>
                     <MenuItem value="HOST">Host</MenuItem>
-                    <MenuItem value="ECOMM">Ecomm (Seller)</MenuItem>
+                    <MenuItem value="ECOMM">E-Commerce Brand</MenuItem>
                     <MenuItem value="CLUB_ADMIN">Club Admin</MenuItem>
                   </TextField>
                 )}

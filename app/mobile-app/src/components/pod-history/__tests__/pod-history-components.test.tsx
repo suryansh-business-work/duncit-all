@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import {
   BackoutConfirmDialog,
+  KeepSpotDialog,
   PodHistoryActions,
   PodHistoryCard,
   PodHistoryDetails,
@@ -107,6 +108,21 @@ describe('PodHistoryTimeline', () => {
       />,
     );
     expect(screen.getByText('Refund initiated')).toBeOnTheScreen();
+  });
+
+  it('treats an in-process backout as a recorded request that is still waiting', () => {
+    renderWithProviders(
+      <PodHistoryTimeline
+        item={membership({
+          status: 'BACKOUT_IN_PROCESS',
+          backed_out_at: '2026-06-05',
+          refund_status: 'PENDING',
+        })}
+      />,
+    );
+    expect(screen.getByText('Backout requested')).toBeOnTheScreen();
+    expect(screen.getByText('Waiting')).toBeOnTheScreen();
+    expect(screen.queryByText('Available')).toBeNull();
   });
 });
 
@@ -328,6 +344,24 @@ describe('PodHistoryDetails', () => {
     fireEvent.press(screen.getByTestId('ph-replacement-info'));
     expect(screen.getByTestId('ph-replacement-detail')).toHaveTextContent(/15% deduction/);
   });
+
+  it('labels an in-process backout and keeps the replacement notice visible', () => {
+    renderWithProviders(
+      <PodHistoryDetails
+        item={membership({ status: 'BACKOUT_IN_PROCESS', pod: endedPod })}
+        backingOut={false}
+        rejoining={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        notice={null}
+        deductionPct={10}
+        {...handlers()}
+      />,
+    );
+    expect(screen.getByText('Backout in process')).toBeOnTheScreen();
+    // Even for an ended pod (no rejoin) the in-process state shows the notice.
+    expect(screen.getByTestId('ph-replacement')).toBeOnTheScreen();
+  });
 });
 
 describe('ReplacementNotice', () => {
@@ -390,6 +424,66 @@ describe('BackoutConfirmDialog', () => {
     expect(h.onConfirm).not.toHaveBeenCalled();
     expect(h.onClose).not.toHaveBeenCalled();
     expect(screen.getByText('Review the backout terms before confirming.')).toBeOnTheScreen();
+  });
+
+  it('shows the refund estimate for a paid booking and hides it for free ones', () => {
+    renderWithProviders(
+      <BackoutConfirmDialog open busy={false} refundAmount={450} deductionPct={10} {...dlg()} />,
+    );
+    expect(screen.getByTestId('backout-refund-amount')).toHaveTextContent(/₹450/);
+    expect(screen.getByTestId('backout-refund-amount')).toHaveTextContent(/10%/);
+
+    renderWithProviders(<BackoutConfirmDialog open busy={false} refundAmount={null} {...dlg()} />);
+    expect(
+      screen.getAllByText('You will get the refund only if someone fills your spot.').length,
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe('KeepSpotDialog', () => {
+  const dlg = () => ({ onClose: jest.fn(), onConfirm: jest.fn() });
+
+  it('does not render its body when closed', () => {
+    renderWithProviders(<KeepSpotDialog open={false} busy={false} attemptsLeft={2} {...dlg()} />);
+    expect(screen.queryByTestId('keep-spot-confirm')).toBeNull();
+  });
+
+  it('shows the attempts-left note and confirms / closes when idle', () => {
+    const h = dlg();
+    renderWithProviders(<KeepSpotDialog open busy={false} attemptsLeft={2} {...h} />);
+    expect(screen.getByText(/up to 2 more times/)).toBeOnTheScreen();
+    expect(screen.queryByTestId('keep-spot-error')).toBeNull();
+    fireEvent.press(screen.getByTestId('keep-spot-close'));
+    fireEvent.press(screen.getByTestId('keep-spot-cancel'));
+    fireEvent.press(screen.getByTestId('keep-spot-confirm'));
+    expect(h.onClose).toHaveBeenCalledTimes(2);
+    expect(h.onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces a server error inside the sheet', () => {
+    renderWithProviders(
+      <KeepSpotDialog
+        open
+        busy={false}
+        attemptsLeft={0}
+        error="A replacement has been confirmed"
+        {...dlg()}
+      />,
+    );
+    expect(screen.getByTestId('keep-spot-error')).toHaveTextContent(
+      'A replacement has been confirmed',
+    );
+  });
+
+  it('blocks actions and shows a spinner while busy', () => {
+    const h = dlg();
+    renderWithProviders(<KeepSpotDialog open busy attemptsLeft={1} {...h} />);
+    expect(screen.getByText('Restoring…')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('keep-spot-confirm'));
+    fireEvent.press(screen.getByTestId('keep-spot-cancel'));
+    fireEvent.press(screen.getByTestId('keep-spot-close'));
+    expect(h.onConfirm).not.toHaveBeenCalled();
+    expect(h.onClose).not.toHaveBeenCalled();
   });
 });
 

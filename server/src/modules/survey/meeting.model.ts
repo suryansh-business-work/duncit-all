@@ -4,7 +4,9 @@ import { SURVEY_KINDS } from './survey.model';
 /**
  * Onboarding meeting request — raised by a user right after the venue/host
  * onboarding survey, then scheduled/tracked by onboarding staff (calendar +
- * tables in the Onboarding portal). One open meeting per user per kind.
+ * tables in the Onboarding portal). Every submission is a NEW immutable record
+ * (full request history per user/kind); the LATEST row drives the user's Earn
+ * card, while the Onboarding portal lists every row for audit.
  */
 export const MEETING_STATUSES = ['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED'] as const;
 export type MeetingStatus = (typeof MEETING_STATUSES)[number];
@@ -38,6 +40,10 @@ const meetingSchema = new Schema(
     status: { type: String, enum: MEETING_STATUSES, default: 'REQUESTED', index: true },
     /** Why onboarding staff cancelled it (e.g. survey not satisfying). */
     cancel_reason: { type: String, default: null },
+    /** True when a CANCELLED row was rejected by onboarding staff (shown as
+     * "Rejected"); false for a user self-cancel or a reschedule supersede
+     * (shown as "Cancelled"). Only meaningful when status === 'CANCELLED'. */
+    cancelled_by_staff: { type: Boolean, default: false },
     /** Soft-hidden from the onboarding calendar (Outlook "remove from my
      * calendar" on a cancelled meeting) — the record is kept for audit. */
     dismissed: { type: Boolean, default: false },
@@ -58,8 +64,9 @@ const meetingSchema = new Schema(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
-// One open request per user/kind — re-requesting updates the same row.
-meetingSchema.index({ user_id: 1, kind: 1 }, { unique: true });
+// Request HISTORY: many rows per user/kind (never overwritten). Non-unique
+// index optimised for "latest row for a user+kind" lookups (Earn card state).
+meetingSchema.index({ user_id: 1, kind: 1, created_at: -1 });
 
 export type MeetingDoc = InferSchemaType<typeof meetingSchema> & { _id: Types.ObjectId };
 export const MeetingModel = model('OnboardingMeeting', meetingSchema);

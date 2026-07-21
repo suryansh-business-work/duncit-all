@@ -16,6 +16,7 @@ export interface OnboardingMeeting {
   meeting_link?: string | null;
   status: MeetingStatus;
   cancel_reason?: string | null;
+  cancelled_by_staff?: boolean | null;
   dismissed?: boolean | null;
   notes?: string | null;
   contact_name?: string | null;
@@ -69,7 +70,7 @@ export const HOLIDAY_TYPE_LABELS: Record<HolidayType, string> = {
 };
 
 const FIELDS = `
-  id request_no kind user_id user_name user_email requested_at scheduled_at meeting_link status cancel_reason dismissed notes contact_name contact_phone approval_status feedback
+  id request_no kind user_id user_name user_email requested_at scheduled_at meeting_link status cancel_reason cancelled_by_staff dismissed notes contact_name contact_phone approval_status feedback
   super_category_name category_name sub_category_name reschedule_count
 `;
 

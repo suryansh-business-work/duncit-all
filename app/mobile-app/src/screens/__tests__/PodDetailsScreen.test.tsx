@@ -30,8 +30,10 @@ jest.mock('@/hooks/useDetails', () => ({
 }));
 
 const mockBackout = jest.fn().mockResolvedValue(undefined);
+const mockCancelBackout = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodBackout: () => ({ backout: mockBackout, busy: false }),
+  usePodCancelBackout: () => ({ cancelBackout: mockCancelBackout, busy: false }),
 }));
 
 // Products gated on by default so the Pod Shop renders; the off path has its
@@ -116,6 +118,8 @@ beforeEach(() => {
   mockGoBack.mockClear();
   mockNavigate.mockClear();
   mockBackout.mockClear();
+  mockCancelBackout.mockClear();
+  mockCancelBackout.mockResolvedValue(undefined);
   mockAds = [];
   mockFeatureFlag.mockReturnValue(true);
   mockSaved = false;
@@ -366,6 +370,68 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('backout-confirm'));
     await screen.findByTestId('backout-dialog');
     expect(mockBackout).toHaveBeenCalledWith('p1');
+  });
+
+  it('shows the refund estimate inside the backout dialog for a paid member', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: true,
+        can_join: false,
+        can_backout: true,
+        backout_refund_amount: 450,
+        backout_deduction_pct: 10,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-backout'));
+    expect(screen.getByTestId('backout-refund-amount')).toBeOnTheScreen();
+  });
+
+  it('restores the booking via Keep My Spot while a backout is in process', async () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: false,
+        can_join: false,
+        backout_in_process: true,
+        can_cancel_backout: true,
+        backout_attempts_used: 1,
+        backout_attempts_max: 3,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-keep-spot'));
+    expect(screen.getByTestId('keep-spot-dialog')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('keep-spot-confirm'));
+    await waitFor(() => expect(mockCancelBackout).toHaveBeenCalledWith('p1'));
+    expect(screen.queryByTestId('keep-spot-error')).toBeNull();
+  });
+
+  it('keeps the Keep-My-Spot dialog open with the server message on failure', async () => {
+    mockCancelBackout.mockRejectedValueOnce(new Error('A replacement has been confirmed'));
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: {
+        is_member: false,
+        can_join: false,
+        backout_in_process: true,
+        can_cancel_backout: true,
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-keep-spot'));
+    fireEvent.press(screen.getByTestId('keep-spot-confirm'));
+    await screen.findByTestId('keep-spot-error');
+    expect(screen.getByText('A replacement has been confirmed')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('keep-spot-cancel'));
+    expect(screen.getByTestId('pod-details-screen')).toBeOnTheScreen();
   });
 
   it('shares the pod', () => {

@@ -1,6 +1,6 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type MembershipStatus = 'JOINED' | 'BACKED_OUT';
+export type MembershipStatus = 'JOINED' | 'BACKOUT_IN_PROCESS' | 'BACKED_OUT';
 export type RefundStatus = 'NONE' | 'PENDING' | 'PROCESSED' | 'NOT_ELIGIBLE';
 export type JoinSource = 'DIRECT' | 'REFERRAL' | 'PAID' | 'FREE' | 'HOST_ADD';
 
@@ -16,6 +16,10 @@ export interface IPodMember extends Document {
   referred_by: Types.ObjectId | null;
   refund_status: RefundStatus;
   refund_payment_id: Types.ObjectId | null;
+  /** Backout attempts used for this pod (each Confirm Backout counts one). */
+  backout_count: number;
+  /** The IN_PROCESS BackoutRequest while status is BACKOUT_IN_PROCESS. */
+  active_backout_id: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,7 +28,7 @@ const podMemberSchema = new Schema<IPodMember>(
   {
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    status: { type: String, enum: ['JOINED', 'BACKED_OUT'], default: 'JOINED', index: true },
+    status: { type: String, enum: ['JOINED', 'BACKOUT_IN_PROCESS', 'BACKED_OUT'], default: 'JOINED', index: true },
     joined_at: { type: Date, default: () => new Date() },
     backed_out_at: { type: Date, default: null },
     payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
@@ -41,6 +45,8 @@ const podMemberSchema = new Schema<IPodMember>(
       default: 'NONE',
     },
     refund_payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
+    backout_count: { type: Number, default: 0 },
+    active_backout_id: { type: Schema.Types.ObjectId, ref: 'BackoutRequest', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

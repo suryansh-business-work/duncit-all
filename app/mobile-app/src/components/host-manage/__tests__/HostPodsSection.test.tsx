@@ -67,6 +67,20 @@ jest.mock('@/components/host-manage/PodCompleteDialog', () => {
       ) : null,
   };
 });
+jest.mock('@/components/host-manage/PodResubmitDialog', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return {
+    PodResubmitDialog: ({ pod, onClose, onSaved }: Readonly<MockEditProps>) =>
+      pod ? (
+        <>
+          <V testID="mock-resubmit-dialog" />
+          <V testID="mock-resubmit-close" onTouchEnd={onClose} />
+          <V testID="mock-resubmit-saved" onTouchEnd={onSaved} />
+        </>
+      ) : null,
+  };
+});
 
 const mockedUse = useHostPods as jest.Mock;
 
@@ -105,6 +119,32 @@ const pods = [
     pod_mode: 'PHYSICAL',
     zone_name: null,
     pod_type: 'NATIVE_PAID',
+  },
+  // A venue-rejected pod: shows the status + note and edits via resubmission.
+  {
+    id: 'p4',
+    pod_id: 'pod-4',
+    club_slug: 'poets',
+    pod_title: 'Poetry',
+    pod_date_time: '2030-02-01T10:00:00Z',
+    pod_end_date_time: null,
+    pod_mode: 'PHYSICAL',
+    zone_name: null,
+    pod_type: 'NATIVE_PAID',
+    venue_approval_status: 'DECLINED',
+  },
+  // A pod still awaiting the venue's decision: warning chip, normal edit.
+  {
+    id: 'p5',
+    pod_id: 'pod-5',
+    club_slug: 'chess',
+    pod_title: 'Blitz',
+    pod_date_time: '2030-03-01T10:00:00Z',
+    pod_end_date_time: null,
+    pod_mode: 'PHYSICAL',
+    zone_name: null,
+    pod_type: 'NATIVE_PAID',
+    venue_approval_status: 'PENDING',
   },
 ];
 
@@ -150,6 +190,31 @@ describe('HostPodsSection', () => {
     fireEvent.press(screen.getByTestId('host-pod-edit-p2'));
     fireEvent(screen.getByTestId('mock-edit-close'), 'touchEnd');
     expect(screen.queryByTestId('mock-edit-dialog')).toBeNull();
+  });
+
+  it('shows the Venue Rejected status + note and edits it via the resubmission flow', () => {
+    const hookApi = api();
+    mockedUse.mockReturnValue(hookApi);
+    renderWithProviders(<HostPodsSection />);
+    expect(screen.getByTestId('host-pod-approval-p4')).toHaveTextContent('Venue Rejected');
+    expect(screen.getByTestId('host-pod-rejected-note-p4')).toBeOnTheScreen();
+    // A pending pod shows the warning chip but no note; edit stays limited.
+    expect(screen.getByTestId('host-pod-approval-p5')).toHaveTextContent('Venue Approval Pending');
+    expect(screen.queryByTestId('host-pod-rejected-note-p5')).toBeNull();
+    // A normal pod carries neither the chip nor the note.
+    expect(screen.queryByTestId('host-pod-approval-p1')).toBeNull();
+    expect(screen.queryByTestId('host-pod-rejected-note-p1')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('host-pod-edit-p4'));
+    expect(screen.getByTestId('mock-resubmit-dialog')).toBeOnTheScreen();
+    expect(screen.queryByTestId('mock-edit-dialog')).toBeNull();
+    fireEvent(screen.getByTestId('mock-resubmit-saved'), 'touchEnd');
+    expect(hookApi.refetch).toHaveBeenCalled();
+    expect(screen.queryByTestId('mock-resubmit-dialog')).toBeNull();
+    // Reopen and dismiss without resubmitting.
+    fireEvent.press(screen.getByTestId('host-pod-edit-p4'));
+    fireEvent(screen.getByTestId('mock-resubmit-close'), 'touchEnd');
+    expect(screen.queryByTestId('mock-resubmit-dialog')).toBeNull();
   });
 
   it('deletes a pod, then closes or refetches on delete', () => {
@@ -225,6 +290,8 @@ describe('HostPodsSection', () => {
     fireEvent(screen.getByTestId('mock-delete-deleted'), 'touchEnd');
     fireEvent.press(screen.getByTestId('host-pod-complete-p3'));
     fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
+    fireEvent.press(screen.getByTestId('host-pod-edit-p4'));
+    fireEvent(screen.getByTestId('mock-resubmit-saved'), 'touchEnd');
     expect(screen.getByTestId('host-pods-section')).toBeOnTheScreen();
   });
 });

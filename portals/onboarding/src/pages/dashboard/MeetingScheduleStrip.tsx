@@ -5,10 +5,10 @@ import { MEETING_KINDS, type MeetingCounts, type MeetingKind } from './onboardin
 const KIND_LABEL: Record<MeetingKind, string> = {
   VENUE: 'Venue',
   HOST: 'Host',
-  ECOMM: 'Seller',
+  ECOMM: 'E-Commerce Brand',
 };
 
-// Venue / Host / Seller meeting counts. Each card opens that kind's Meeting
+// Venue / Host / E-Commerce Brand meeting counts. Each card opens that kind's Meeting
 // Schedule filtered to the pending "Requested" requests (the parent supplies
 // the navigation). A CSS grid keeps the cards flush-left with the headings.
 export default function MeetingScheduleStrip({

@@ -122,6 +122,40 @@ describe('EarnScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
   });
 
+  it("keeps the box locked while an approved meeting's onboarded record is under review, re-opens on rejection", async () => {
+    mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
+    mockRequest.mockResolvedValue({
+      myMeetings: [
+        {
+          id: 'm1',
+          kind: 'VENUE',
+          status: 'DONE',
+          approval_status: 'APPROVED',
+          onboarded_status: 'DRAFT',
+          requested_at: '2027-01-01T04:30:00.000Z',
+          scheduled_at: null,
+        },
+        {
+          id: 'm2',
+          kind: 'HOST',
+          status: 'DONE',
+          approval_status: 'APPROVED',
+          onboarded_status: 'REJECTED',
+          requested_at: '2027-01-01T04:30:00.000Z',
+          scheduled_at: null,
+        },
+      ],
+    });
+    renderWithProviders(<EarnScreen />);
+    // Approved venue whose onboarded record is still a Draft → stays locked (Item 2).
+    await waitFor(() => expect(screen.getByText('Onboarding in process.')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
+    expect(mockNavigate).not.toHaveBeenCalled();
+    // Rejected onboarded record → the host box re-opens for re-application.
+    fireEvent.press(screen.getByTestId('earn-box-HOST'));
+    expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
+  });
+
   it('shows the notice without a time when the meeting has no date', async () => {
     mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
     mockRequest.mockResolvedValue({

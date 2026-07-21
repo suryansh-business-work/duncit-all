@@ -1,48 +1,21 @@
 import { gql } from '@apollo/client';
 import { formatMoney } from '@duncit/utils';
 
-export const BACKOUT_REFUND_REQUESTS = gql`
-  query BackoutRefundRequests {
-    backoutRefundRequests {
-      id
-      pod_id
-      user_id
-      user_name
-      user_email
-      status
-      joined_at
-      backed_out_at
-      refund_status
-      payment_id
-      payment_amount
-      payment_currency
-      payment_status
-      refund_threshold_pct
-      created_at
-      pod {
-        id
-        pod_id
-        pod_title
-        pod_date_time
-        pod_type
-      }
-    }
-    publicFinanceSettings {
-      currency_symbol
-      default_backout_deduction_pct
-    }
-  }
-`;
-
-/** Same selection as BACKOUT_REFUND_REQUESTS rows, for the server-paged table query. */
+/** Same selection as the list rows — one row per Backout request. */
 const BACKOUT_REFUND_ROW_FIELDS = gql`
   fragment BackoutRefundRowFields on BackoutRefundRequest {
     id
+    backout_no
     pod_id
     user_id
     user_name
     user_email
     status
+    backout_status
+    attempt_no
+    backout_attempts_used
+    max_backout_attempts
+    replacement_confirmed
     joined_at
     backed_out_at
     refund_status
@@ -50,7 +23,9 @@ const BACKOUT_REFUND_ROW_FIELDS = gql`
     payment_amount
     payment_currency
     payment_status
-    refund_threshold_pct
+    deduction_pct
+    refund_amount
+    refund_processed_at
     created_at
     pod {
       id
@@ -60,6 +35,19 @@ const BACKOUT_REFUND_ROW_FIELDS = gql`
       pod_type
     }
   }
+`;
+
+export const BACKOUT_REFUND_REQUESTS = gql`
+  query BackoutRefundRequests {
+    backoutRefundRequests {
+      ...BackoutRefundRowFields
+    }
+    publicFinanceSettings {
+      currency_symbol
+      default_backout_deduction_pct
+    }
+  }
+  ${BACKOUT_REFUND_ROW_FIELDS}
 `;
 
 export const BACKOUT_REFUNDS_TABLE = gql`
@@ -88,11 +76,17 @@ export const BACKOUT_REFUND_DETAIL = gql`
   query BackoutRefundDetail($id: ID!) {
     backoutRefundRequest(id: $id) {
       id
+      backout_no
       pod_id
       user_id
       user_name
       user_email
       status
+      backout_status
+      attempt_no
+      backout_attempts_used
+      max_backout_attempts
+      replacement_confirmed
       joined_at
       backed_out_at
       refund_status
@@ -100,7 +94,14 @@ export const BACKOUT_REFUND_DETAIL = gql`
       payment_amount
       payment_currency
       payment_status
-      refund_threshold_pct
+      deduction_pct
+      refund_amount
+      refund_processed_at
+      events {
+        status
+        backout_count
+        at
+      }
       created_at
       pod {
         id
@@ -135,7 +136,18 @@ export const BACKOUT_REFUND_DETAIL = gql`
   }
 `;
 
+/** Finance processes the refund for a Spot Filled request (one per request). */
+export const PROCESS_BACKOUT_REFUND = gql`
+  mutation ProcessBackoutRefund($id: ID!) {
+    processBackoutRefund(id: $id) {
+      ...BackoutRefundRowFields
+    }
+  }
+  ${BACKOUT_REFUND_ROW_FIELDS}
+`;
+
 export type RefundStatus = 'NONE' | 'PENDING' | 'PROCESSED' | 'NOT_ELIGIBLE';
+export type BackoutStatus = 'IN_PROCESS' | 'CANCELLED' | 'SPOT_FILLED';
 
 export type ChipColor = 'default' | 'warning' | 'success' | 'error';
 
@@ -144,6 +156,19 @@ export const REFUND_STATUS_COLORS: Record<RefundStatus, ChipColor> = {
   PENDING: 'warning',
   PROCESSED: 'success',
   NOT_ELIGIBLE: 'error',
+};
+
+/** Display labels + chip colors for a Backout request's lifecycle status. */
+export const BACKOUT_STATUS_LABELS: Record<BackoutStatus, string> = {
+  IN_PROCESS: 'Backout In Process',
+  CANCELLED: 'Backout Cancelled',
+  SPOT_FILLED: 'Spot Filled',
+};
+
+export const BACKOUT_STATUS_COLORS: Record<BackoutStatus, ChipColor> = {
+  IN_PROCESS: 'warning',
+  CANCELLED: 'default',
+  SPOT_FILLED: 'success',
 };
 
 export const money = (symbol: string, value: number) =>
@@ -168,13 +193,25 @@ export interface BackoutRefundPod {
   pod_type: string;
 }
 
+export interface BackoutEvent {
+  status: BackoutStatus;
+  backout_count: number;
+  at: string;
+}
+
 export interface BackoutRefundRequest {
   id: string;
+  backout_no: string;
   pod_id: string;
   user_id: string;
   user_name: string | null;
   user_email: string | null;
   status: string;
+  backout_status: BackoutStatus;
+  attempt_no: number;
+  backout_attempts_used: number;
+  max_backout_attempts: number;
+  replacement_confirmed: boolean;
   joined_at: string;
   backed_out_at: string | null;
   refund_status: RefundStatus;
@@ -182,7 +219,9 @@ export interface BackoutRefundRequest {
   payment_amount: number | null;
   payment_currency: string | null;
   payment_status: string | null;
-  refund_threshold_pct: number;
+  deduction_pct: number;
+  refund_amount: number | null;
+  refund_processed_at: string | null;
   created_at: string;
   pod: BackoutRefundPod | null;
 }
@@ -213,8 +252,16 @@ export interface BackoutRefundDetailPod {
 }
 
 export interface BackoutRefundDetail extends Omit<BackoutRefundRequest, 'pod'> {
+  events: BackoutEvent[];
   pod: BackoutRefundDetailPod | null;
 }
+
+/**
+ * Refund eligibility is derived from the LATEST Backout status: only a Spot
+ * Filled request with a payment that has not yet been refunded is processable.
+ */
+export const canProcessRefund = (row: BackoutRefundRequest): boolean =>
+  row.backout_status === 'SPOT_FILLED' && !!row.payment_id && !row.refund_processed_at;
 
 export interface BreakupLine {
   key: string;
@@ -224,24 +271,24 @@ export interface BreakupLine {
 }
 
 /**
- * Builds the read-only refund "breakup" lines from a backed-out membership row.
- * The estimated refund applies the global Backouts deduction % (Default
- * Deductions → Backouts, `publicFinanceSettings.default_backout_deduction_pct`):
- * estimated refund = amount − amount × pct%.
+ * Builds the read-only refund "breakup" lines for a Backout request. The
+ * request carries a snapshot (deduction_pct / refund_amount) taken when the
+ * user confirmed the backout; the global Default Deductions Backouts % is only
+ * a fallback for legacy rows without one.
  */
 export function buildRefundBreakup(
   row: BackoutRefundRequest,
   symbol: string,
-  deductionPct: number
+  fallbackDeductionPct: number
 ): BreakupLine[] {
   const amount = Number(row.payment_amount ?? 0);
-  const pct = Math.max(0, Math.min(100, Number(deductionPct) || 0));
+  const pct = Math.max(0, Math.min(100, Number(row.deduction_pct ?? fallbackDeductionPct) || 0));
   const deduction = Math.round(amount * pct) / 100; // amount × pct%, 2dp
-  const net = Math.max(0, amount - deduction);
+  const net = row.refund_amount ?? Math.max(0, amount - deduction);
   return [
     { key: 'paid', label: 'Amount paid', value: money(symbol, amount) },
-    { key: 'refund-status', label: 'Refund status', value: row.refund_status },
+    { key: 'backout-status', label: 'Backout status', value: BACKOUT_STATUS_LABELS[row.backout_status] },
     { key: 'deduction', label: `Backout deduction (${pct}%)`, value: `- ${money(symbol, deduction)}` },
-    { key: 'estimate', label: 'Estimated refund', value: money(symbol, net), bold: true },
+    { key: 'refund', label: 'Refund payable', value: money(symbol, net), bold: true },
   ];
 }

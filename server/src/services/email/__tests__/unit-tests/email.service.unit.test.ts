@@ -126,4 +126,22 @@ describe('email.service dynamic logo', () => {
 
     expect(sendMailMock.mock.calls[0][0].html).toBe('<img src="https://cdn.test/brand.png"/>');
   });
+
+  it('sendBackoutSpotFilledEmail renders the pod-backout-spot-filled template', async () => {
+    getBrandingMock.mockResolvedValue({ logo_url: 'https://cdn.test/brand.png' });
+    renderMock.mockResolvedValue({ html: '<p>ok</p>' });
+
+    await loadService().sendBackoutSpotFilledEmail({
+      to: 'a@b.com',
+      name: 'Asha',
+      pod_title: 'Yoga',
+      refund_line: 'Your refund of ₹450 will be processed by our team shortly.',
+    });
+
+    expect(renderMock).toHaveBeenCalledWith(
+      'pod-backout-spot-filled',
+      expect.objectContaining({ name: 'Asha', pod_title: 'Yoga', refund_line: expect.stringContaining('₹450') })
+    );
+    expect(sendMailMock.mock.calls[0][0].subject).toBe('Your spot was filled — Yoga');
+  });
 });

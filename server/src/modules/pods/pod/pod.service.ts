@@ -773,6 +773,9 @@ async function applyPlaceForUpdate(doc: any, input: any, nextMode: PodMode) {
       location_id: input.location_id ?? (doc.location_id ? String(doc.location_id) : null),
       club_id: input.club_id ?? String(doc.club_id),
       zone_name: input.zone_name ?? doc.zone_name,
+      // Slot bookings may target ANY approved partner venue (same rule as
+      // create) — forwarded so the club-match check is skipped for them.
+      venue_slot_id: input.venue_slot_id,
     });
     doc.venue_id = venueLocation.venue_id;
     doc.location_id = venueLocation.location_id;
@@ -816,6 +819,78 @@ function applyDatesForUpdate(doc: any, input: any) {
   }
   if (input.pod_end_date_time !== undefined) {
     doc.pod_end_date_time = input.pod_end_date_time ? new Date(input.pod_end_date_time) : null;
+  }
+}
+
+/** Shared full-edit core (admin/club-admin update + host resubmit): validates
+ * and writes the incoming fields onto the loaded doc. The caller saves. */
+async function applyPodEditCore(doc: any, input: any) {
+  if (input.pod_type !== undefined || input.pod_amount !== undefined) {
+    validateAmount(input.pod_type ?? doc.pod_type, input.pod_amount ?? doc.pod_amount);
+  }
+  const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
+  validateMeetingDetails(nextMode, input, doc);
+  validatePodDatesForUpdate(input, doc);
+  if (input.reel_url !== undefined) input.reel_url = normalizeReelUrl(input.reel_url);
+
+  await applyPlaceForUpdate(doc, input, nextMode);
+
+  await applyProductsForUpdate(doc, input);
+
+  const fields = [
+    'pod_title',
+    'pod_hosts_id',
+    'club_id',
+    'pod_mode',
+    'meeting_platform',
+    'meeting_url',
+    'meeting_notes',
+    'pod_hashtag',
+    'pod_images_and_videos',
+    'reel_url',
+    'pod_attendees',
+    'pod_description',
+    'pod_type',
+    'pod_amount',
+    'pod_occurrence',
+    'no_of_spots',
+    'pod_info',
+    'what_this_pod_offers',
+    'available_perks',
+    'payment_terms',
+    'place_charges',
+    'is_active',
+  ];
+  for (const f of fields) {
+    if (input[f] !== undefined) (doc as any)[f] = input[f];
+  }
+  applyMeetingFieldsForUpdate(doc, input, nextMode);
+  applyDatesForUpdate(doc, input);
+}
+
+/** Booking state, membership and club are server-managed on a host
+ * resubmission — never taken from the form. */
+const HOST_RESUBMIT_BLOCKED_FIELDS = ['pod_hosts_id', 'pod_attendees', 'club_id', 'is_active'] as const;
+
+/** Re-enter the booking cycle for a resubmitted slot: a partner slot is held
+ * (PENDING approval, venue notified again); the host's own slot books
+ * instantly. A concurrent snatch reverts the pod to its rejected state —
+ * still fully editable — instead of deleting it. */
+async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueApproval: boolean) {
+  try {
+    if (needsVenueApproval) {
+      await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+      await notifyVenueSlotRequested(doc, slotDoc);
+      await emailVenueSlotRequested(doc, slotDoc);
+    } else {
+      await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+    }
+  } catch (e) {
+    doc.venue_slot_id = null;
+    doc.venue_approval_status = 'DECLINED';
+    doc.is_active = false;
+    await doc.save();
+    throw e;
   }
 }
 
@@ -1061,48 +1136,73 @@ export const podService = {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
 
-    if (input.pod_type !== undefined || input.pod_amount !== undefined) {
-      validateAmount(input.pod_type ?? doc!.pod_type, input.pod_amount ?? doc!.pod_amount);
-    }
-    const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
-    validateMeetingDetails(nextMode, input, doc);
-    validatePodDatesForUpdate(input, doc);
-    if (input.reel_url !== undefined) input.reel_url = normalizeReelUrl(input.reel_url);
-
-    await applyPlaceForUpdate(doc, input, nextMode);
-
-    await applyProductsForUpdate(doc, input);
-
-    const fields = [
-      'pod_title',
-      'pod_hosts_id',
-      'club_id',
-      'pod_mode',
-      'meeting_platform',
-      'meeting_url',
-      'meeting_notes',
-      'pod_hashtag',
-      'pod_images_and_videos',
-      'reel_url',
-      'pod_attendees',
-      'pod_description',
-      'pod_type',
-      'pod_amount',
-      'pod_occurrence',
-      'no_of_spots',
-      'pod_info',
-      'what_this_pod_offers',
-      'available_perks',
-      'payment_terms',
-      'place_charges',
-      'is_active',
-    ];
-    for (const f of fields) {
-      if (input[f] !== undefined) (doc as any)[f] = input[f];
-    }
-    applyMeetingFieldsForUpdate(doc, input, nextMode);
-    applyDatesForUpdate(doc, input);
+    await applyPodEditCore(doc, input);
     await doc.save();
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
+  },
+
+  /**
+   * Host fully edits a venue-DECLINED pod and resubmits the booking request —
+   * the SAME pod row is reused, never a new one. Picking another partner's
+   * slot re-enters PENDING approval (the venue is notified again); an own-venue
+   * slot books instantly and a virtual / no-venue resubmission goes live
+   * immediately. Only available while the pod is Venue Rejected.
+   */
+  async hostResubmit(id: string, userId: string, input: any) {
+    const doc = await findHostedPod(id, userId);
+    if (doc.venue_approval_status !== 'DECLINED') {
+      throw new GraphQLError('Only a pod whose venue request was rejected can be edited and resubmitted', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    // Same deterministic content guard as createForPartner — edited copy must
+    // stay clean (merged with the stored values for partial edits).
+    moderationService.assertCleanOrThrow({
+      pod_title: input.pod_title ?? doc.pod_title ?? '',
+      pod_description: input.pod_description ?? doc.pod_description ?? '',
+      pod_info: input.pod_info ?? doc.pod_info ?? '',
+      pod_hashtag: input.pod_hashtag ?? doc.pod_hashtag ?? [],
+    });
+    for (const field of HOST_RESUBMIT_BLOCKED_FIELDS) delete input[field];
+
+    const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
+    // Slot resolution mirrors create: the picked slot locks the pod window and
+    // decides whether the venue must approve again.
+    const slotInput: any = {
+      venue_slot_id: nextMode === 'PHYSICAL' ? input.venue_slot_id : undefined,
+      venue_id: input.venue_id,
+      pod_hosts_id: (doc.pod_hosts_id ?? []).map(String),
+    };
+    const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(slotInput, nextMode);
+    if (slotDoc) {
+      input.venue_id = slotInput.venue_id;
+      input.pod_date_time = slotInput.pod_date_time;
+      input.pod_end_date_time = slotInput.pod_end_date_time;
+    }
+    if (nextMode === 'PHYSICAL') {
+      // Without a fresh slot a partner venue cannot be kept: the rejected
+      // request must move to a new slot (or the host's own venue / a plain
+      // location). assertPartnerVenue enforces exactly that split.
+      const finalVenueId = input.venue_id !== undefined ? input.venue_id : (doc.venue_id ? String(doc.venue_id) : null);
+      if (finalVenueId) {
+        await assertPartnerVenue(
+          { venue_id: finalVenueId, venue_slot_id: slotDoc ? String(slotDoc._id) : undefined },
+          new Types.ObjectId(userId),
+        );
+        input.venue_id = finalVenueId;
+      }
+    }
+
+    await applyPodEditCore(doc, input);
+    // Resubmission state: a partner slot re-enters the approval queue;
+    // anything else goes live right away.
+    doc.venue_slot_id = slotDoc ? slotDoc._id : null;
+    doc.venue_approval_status = slotDoc && needsVenueApproval ? 'PENDING' : 'NONE';
+    doc.is_active = !(slotDoc && needsVenueApproval);
+    await doc.save();
+    if (slotDoc) await holdOrBookForResubmit(doc, slotDoc, needsVenueApproval);
+
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
   },

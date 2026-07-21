@@ -11,13 +11,16 @@ import {
   filterHostPods,
   type HostPodsFilters,
 } from '@/utils/host-pods-filters';
+import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
 import { HostPodRow } from './HostPodRow';
 import { HostPodsFilterSheet } from './HostPodsFilterSheet';
 import { PodDeleteDialog } from './PodDeleteDialog';
 import { PodEditDialog } from './PodEditDialog';
 import { PodCompleteDialog } from './PodCompleteDialog';
+import { PodResubmitDialog } from './PodResubmitDialog';
 import type { HostPodSummary } from './pod-edit.form';
 import type { HostPodForComplete } from './pod-complete.form';
+import type { HostPodForResubmit } from './pod-resubmit.form';
 
 function formatWhen(value?: string | null) {
   if (!value) return '—';
@@ -32,6 +35,7 @@ export function HostPodsSection() {
   const { color: ink, onPrimary } = useThemeColors();
   const { pods, isLoading, refetch } = useHostPods();
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
+  const [resubmitPod, setResubmitPod] = useState<HostPodForResubmit | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
   const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
@@ -79,22 +83,29 @@ export function HostPodsSection() {
           No pods match these filters. Try adjusting or resetting them.
         </Text>
       ) : null}
-      {visible.map((pod) => (
-        <HostPodRow
-          key={pod.id}
-          id={pod.id}
-          title={pod.pod_title}
-          when={formatWhen(pod.pod_date_time)}
-          zoneName={pod.zone_name}
-          typeLabel={pod.pod_type.replaceAll('_', ' ')}
-          onOpen={() => openPod(pod.club_slug, pod.pod_id)}
-          onComplete={() =>
-            setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id })
-          }
-          onEdit={() => setEditPod(pod)}
-          onDelete={() => setDeletePod({ id: pod.id, title: pod.pod_title })}
-        />
-      ))}
+      {visible.map((pod) => {
+        const rejected = isVenueRejected(pod.venue_approval_status);
+        return (
+          <HostPodRow
+            key={pod.id}
+            id={pod.id}
+            title={pod.pod_title}
+            when={formatWhen(pod.pod_date_time)}
+            zoneName={pod.zone_name}
+            typeLabel={pod.pod_type.replaceAll('_', ' ')}
+            approval={venueApprovalChip(pod.venue_approval_status)}
+            rejectedNote={rejected ? VENUE_REJECTED_NOTE : null}
+            onOpen={() => openPod(pod.club_slug, pod.pod_id)}
+            onComplete={() =>
+              setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id })
+            }
+            // A venue-rejected pod opens the FULL edit + resubmission flow; every
+            // other pod keeps the limited title/description/media edit.
+            onEdit={() => (rejected ? setResubmitPod(pod) : setEditPod(pod))}
+            onDelete={() => setDeletePod({ id: pod.id, title: pod.pod_title })}
+          />
+        );
+      })}
       <HostPodsFilterSheet
         open={filterOpen}
         initial={filters}
@@ -109,6 +120,14 @@ export function HostPodsSection() {
         onClose={() => setEditPod(null)}
         onSaved={() => {
           setEditPod(null);
+          refetch().catch(() => undefined);
+        }}
+      />
+      <PodResubmitDialog
+        pod={resubmitPod}
+        onClose={() => setResubmitPod(null)}
+        onSaved={() => {
+          setResubmitPod(null);
           refetch().catch(() => undefined);
         }}
       />

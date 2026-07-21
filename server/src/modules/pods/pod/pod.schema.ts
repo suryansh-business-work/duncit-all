@@ -267,6 +267,37 @@ export const podTypeDefs = /* GraphQL */ `
     reel_url: String
   }
 
+  "Full edit + resubmission of a venue-rejected (DECLINED) pod. Booking state, hosts and club stay server-managed."
+  input HostResubmitPodInput {
+    pod_title: String
+    location_id: ID
+    venue_id: ID
+    "A fresh slot to request — re-enters the venue's approval queue."
+    venue_slot_id: ID
+    zone_name: String
+    pod_mode: PodMode
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
+    pod_hashtag: [String!]
+    pod_images_and_videos: [PodMediaInput!]
+    reel_url: String
+    pod_description: String
+    pod_date_time: String
+    pod_end_date_time: String
+    pod_type: PodType
+    pod_amount: Int
+    pod_occurrence: PodOccurrence
+    no_of_spots: Int
+    pod_info: String
+    what_this_pod_offers: [String!]
+    available_perks: [String!]
+    payment_terms: String
+    place_charges: [PodPlaceChargeInput!]
+    products_enabled: Boolean
+    product_requests: [PodProductRequestInput!]
+  }
+
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
     podsTable(query: TableQueryInput): PodTablePage!
@@ -292,6 +323,8 @@ export const podTypeDefs = /* GraphQL */ `
     createPartnerPod(input: CreatePodInput!): Pod!
     updatePod(pod_doc_id: ID!, input: UpdatePodInput!): Pod!
     hostUpdatePod(pod_doc_id: ID!, input: HostUpdatePodInput!): Pod!
+    "Host fully edits a venue-rejected pod and resubmits the booking request (no new pod)."
+    hostResubmitPod(pod_doc_id: ID!, input: HostResubmitPodInput!): Pod!
     hostDeletePod(pod_doc_id: ID!, reason_subject: String!, reason_note: String): Boolean!
     addPodStatus(pod_doc_id: ID!, media: PodMediaInput!): Pod!
     deletePod(pod_doc_id: ID!): Boolean!

@@ -11,30 +11,32 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import { useApolloTableFetch, type TableFilterValue } from '@duncit/table';
+import { statusPinnedFilters, type StatusFilterKey } from './statusFilters';
 import CancelMeetingDialog from './CancelMeetingDialog';
 import DecisionDialog from './DecisionDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
 import MeetingsTable from './MeetingsTable';
+import RequesterDialog from './RequesterDialog';
 import ScheduleMeetingDialog from './ScheduleMeetingDialog';
 import {
   ONBOARDING_MEETINGS_TABLE,
   UPDATE_MEETING,
-  type MeetingStatus,
   type OnboardingMeeting,
   type SurveyKind,
 } from './queries';
 
-const STATUS_FILTERS: { value: MeetingStatus | ''; label: string }[] = [
+const STATUS_FILTERS: { value: StatusFilterKey | ''; label: string }[] = [
   { value: '', label: 'All' },
   { value: 'REQUESTED', label: 'Requested' },
   { value: 'SCHEDULED', label: 'Scheduled' },
   { value: 'DONE', label: 'Done' },
+  { value: 'REJECTED', label: 'Rejected' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
-const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
-const MEETING_STATUS_VALUES = new Set<MeetingStatus>(['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED']);
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
+const STATUS_FILTER_KEYS = new Set<StatusFilterKey>(['REQUESTED', 'SCHEDULED', 'DONE', 'REJECTED', 'CANCELLED']);
 
-/** Onboarding → Meeting → Venue/Host/Seller Meeting Schedule: requests + scheduling. */
+/** Onboarding → Meeting → Venue/Host/E-Commerce Brand Meeting Schedule: requests + scheduling. */
 export default function MeetingSchedulePage() {
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
@@ -42,12 +44,12 @@ export default function MeetingSchedulePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   // Seed the status filter from ?status= (e.g. the Dashboard meeting cards link
   // to ?status=REQUESTED) and keep the URL in sync so the view is shareable.
-  const urlStatus = (searchParams.get('status') || '').toUpperCase() as MeetingStatus;
-  const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>(
-    MEETING_STATUS_VALUES.has(urlStatus) ? urlStatus : '',
+  const urlStatus = (searchParams.get('status') || '').toUpperCase() as StatusFilterKey;
+  const [statusFilter, setStatusFilter] = useState<StatusFilterKey | ''>(
+    STATUS_FILTER_KEYS.has(urlStatus) ? urlStatus : '',
   );
 
-  const onStatusChange = (next: MeetingStatus | '') => {
+  const onStatusChange = (next: StatusFilterKey | '') => {
     setStatusFilter(next);
     const params2 = new URLSearchParams(searchParams);
     if (next) params2.set('status', next);
@@ -63,10 +65,13 @@ export default function MeetingSchedulePage() {
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
   const [deciding, setDeciding] = useState<OnboardingMeeting | null>(null);
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
+  const [requesterOf, setRequesterOf] = useState<OnboardingMeeting | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const pinnedFilters: TableFilterValue[] = [{ field: 'kind', op: 'eq', value: kind }];
-  if (statusFilter) pinnedFilters.push({ field: 'status', op: 'eq', value: statusFilter });
+  const pinnedFilters: TableFilterValue[] = [
+    { field: 'kind', op: 'eq', value: kind },
+    ...statusPinnedFilters(statusFilter),
+  ];
   const fetchRows = useApolloTableFetch<OnboardingMeeting>(
     client,
     ONBOARDING_MEETINGS_TABLE,
@@ -114,8 +119,10 @@ export default function MeetingSchedulePage() {
         onMarkDone={markDone}
         onDecide={setDeciding}
         onReject={setCancelling}
+        onRequester={setRequesterOf}
       />
 
+      <RequesterDialog meeting={requesterOf} onClose={() => setRequesterOf(null)} />
       <ScheduleMeetingDialog meeting={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />
       <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={refresh} />
       <DecisionDialog meeting={deciding} onClose={() => setDeciding(null)} onDecided={refresh} />

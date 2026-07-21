@@ -5,6 +5,7 @@ import * as Sharing from 'expo-sharing';
 import {
   BackoutDeductionDocument,
   BackoutPodDocument,
+  CancelBackoutPodDocument,
   EventTicketPdfDocument,
   MyEventTicketForPodDocument,
   MyPodMembershipsDocument,
@@ -96,6 +97,22 @@ export function usePodBackout() {
   }, []);
 
   return { backout, busy };
+}
+
+/** Keep My Spot — cancel an in-process backout, with a busy flag (mWeb's CANCEL_BACKOUT). */
+export function usePodCancelBackout() {
+  const [busy, setBusy] = useState(false);
+
+  const cancelBackout = useCallback(async (podDocId: string) => {
+    setBusy(true);
+    try {
+      await graphqlRequest(CancelBackoutPodDocument, { pod_doc_id: podDocId }, { auth: true });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  return { cancelBackout, busy };
 }
 
 /** Free rejoin mutation with a busy flag — mWeb's REJOIN_POD. */

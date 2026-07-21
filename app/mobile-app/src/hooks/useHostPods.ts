@@ -5,10 +5,11 @@ import { HostPodsDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMe } from '@/hooks/useMe';
 
-export type HostPod = ResultOf<typeof HostPodsDocument>['pods'][number];
+export type HostPod = ResultOf<typeof HostPodsDocument>['myHostPods'][number];
 
 /** Pods the signed-in host runs — powers the "Your pods" list on Hosts
- * Management (same query as mWeb's Host Studio). */
+ * Management (same host-scoped query as mWeb's Host Studio, including pods
+ * awaiting or refused venue approval). */
 export function useHostPods() {
   const me = useMe().data?.me;
   const userId = me?.user_id ?? null;
@@ -17,8 +18,8 @@ export function useHostPods() {
 
   const load = useCallback(async () => {
     if (!userId) return;
-    const res = await graphqlRequest(HostPodsDocument, { host_user_id: userId }, { auth: true });
-    setPods(res.pods);
+    const res = await graphqlRequest(HostPodsDocument, undefined, { auth: true });
+    setPods(res.myHostPods);
   }, [userId]);
 
   useEffect(() => {

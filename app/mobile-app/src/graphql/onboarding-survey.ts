@@ -81,7 +81,13 @@ export interface MeetingSlotsResult {
   meetingSlots: MeetingSlot[];
 }
 export interface MyMeetingsResult {
-  myMeetings: (MyMeeting & { kind: string })[];
+  myMeetings: (MyMeeting & {
+    kind: string;
+    /** Linked onboarded record status (DRAFT|SUBMITTED|APPROVED|REJECTED) once a
+     * Host/Venue/Seller meeting is approved; null for Club Admin / not yet drafted.
+     * Keeps the Earn card locked while the record is under review (Item 2). */
+    onboarded_status?: string | null;
+  })[];
 }
 export interface SurveyAnswerInput {
   qid: string;
@@ -175,6 +181,7 @@ export const MyMeetingsDocument = parse(`
       kind
       status
       approval_status
+      onboarded_status
       requested_at
       scheduled_at
       reschedule_count

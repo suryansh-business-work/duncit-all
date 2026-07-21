@@ -3,6 +3,7 @@ import { Link, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import MeetingRowActions from './MeetingRowActions';
+import { meetingStatusLabel } from './statusLabel';
 import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
 
 const STATUS_COLORS: StatusColorMap = {
@@ -49,18 +50,11 @@ const renderRequestNo = (m: OnboardingMeeting) => (
 
 const requesterValue = (m: OnboardingMeeting) => m.user_name || m.contact_name || '—';
 
-const renderRequester = (m: OnboardingMeeting) => (
-  <>
-    <Typography variant="body2" fontWeight={700}>{requesterValue(m)}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">{m.user_email || m.contact_phone || ''}</Typography>
-  </>
-);
-
 const renderJoin = (m: OnboardingMeeting) => <JoinCell meeting={m} />;
 
 const renderMeetingStatus = (m: OnboardingMeeting) => (
   <>
-    <StatusChip status={m.status} colorMap={STATUS_COLORS} />
+    <StatusChip status={m.status} colorMap={STATUS_COLORS} label={meetingStatusLabel(m)} />
     {m.status === 'CANCELLED' && m.cancel_reason && (
       <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
     )}
@@ -78,6 +72,7 @@ interface Props {
   onMarkDone: (m: OnboardingMeeting) => void;
   onDecide: (m: OnboardingMeeting) => void;
   onReject: (m: OnboardingMeeting) => void;
+  onRequester: (m: OnboardingMeeting) => void;
 }
 
 export default function MeetingsTable({
@@ -89,8 +84,27 @@ export default function MeetingsTable({
   onMarkDone,
   onDecide,
   onReject,
+  onRequester,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<OnboardingMeeting>[]>(() => {
+    const renderRequester = (m: OnboardingMeeting) => (
+      <>
+        <Link
+          component="button"
+          type="button"
+          variant="body2"
+          fontWeight={700}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRequester(m);
+          }}
+          sx={{ textAlign: 'left' }}
+        >
+          {requesterValue(m)}
+        </Link>
+        <Typography variant="caption" color="text.secondary" display="block">{m.user_email || m.contact_phone || ''}</Typography>
+      </>
+    );
     const renderActions = (m: OnboardingMeeting) => (
       <MeetingRowActions
         meeting={m}
@@ -151,7 +165,7 @@ export default function MeetingsTable({
       },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 90, cellRenderer: renderActions },
     ];
-  }, [marking, onSchedule, onMarkDone, onDecide, onReject]);
+  }, [marking, onSchedule, onMarkDone, onDecide, onReject, onRequester]);
 
   return (
     <DuncitTable<OnboardingMeeting>

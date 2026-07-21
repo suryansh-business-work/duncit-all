@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client';
 import { Box, Button, Divider, Drawer, IconButton, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
+import { meetingStatusLabel } from './statusLabel';
 import {
   USER_SURVEY_RESPONSES,
   type OnboardingMeeting,
@@ -15,7 +16,7 @@ const STATUS_COLOR: StatusColorMap = {
   DONE: 'success',
   CANCELLED: 'error',
 };
-const KIND_LABEL: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller', CLUB_ADMIN: 'Club Admin' };
+const KIND_LABEL: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'E-Commerce Brand', CLUB_ADMIN: 'Club Admin' };
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
 
 interface Props {
@@ -72,7 +73,7 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
             <IconButton size="small" onClick={onClose} aria-label="Close"><CloseIcon /></IconButton>
           </Stack>
 
-          <StatusChip status={meeting.status} colorMap={STATUS_COLOR} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
+          <StatusChip status={meeting.status} colorMap={STATUS_COLOR} label={meetingStatusLabel(meeting)} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
 
           {catPath && <InfoRow label="Category" value={catPath} />}
           <InfoRow label="Requested for" value={fmt(meeting.requested_at)} />

@@ -75,6 +75,12 @@ export const POD_DETAILS = gql`
       spots_taken
       spots_total
       refund_threshold_pct
+      backout_in_process
+      can_cancel_backout
+      backout_attempts_used
+      backout_attempts_max
+      backout_deduction_pct
+      backout_refund_amount
       membership {
         id
         status
@@ -251,6 +257,12 @@ export const JOIN_FREE = gql`
 export const BACKOUT = gql`
   mutation BackoutPod($id: ID!) {
     backoutPod(pod_doc_id: $id) { id status referral_token refund_status }
+  }
+`;
+
+export const CANCEL_BACKOUT = gql`
+  mutation CancelBackoutPod($id: ID!) {
+    cancelBackoutPod(pod_doc_id: $id) { id status refund_status }
   }
 `;
 

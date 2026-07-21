@@ -1,10 +1,13 @@
 import { gql } from '@/generated/graphql';
 
-/** Pods this host runs — same filter mWeb's Host Studio uses, so the two stay
- * identical. Carries description + media for the in-place edit form. */
+/** Pods this host runs — the host-scoped query mWeb's Host Studio uses, so the
+ * two stay identical. Unlike the public \`pods\` query it also returns pods
+ * that are offline awaiting/refused venue approval, so a "Venue Rejected" pod
+ * stays visible and fully editable. Carries description + media for the
+ * in-place edit form. */
 export const HostPodsDocument = gql(`
-  query MobileHostPods($host_user_id: ID!) {
-    pods(filter: { host_user_id: $host_user_id, is_active: true }) {
+  query MobileHostPods {
+    myHostPods {
       id
       pod_title
       pod_id
@@ -23,6 +26,31 @@ export const HostPodsDocument = gql(`
       location_id
       venue_id
       zone_name
+      venue_approval_status
+      is_active
+    }
+  }
+`);
+
+/** Approved partner venues a rejected pod can be resubmitted to. */
+export const ResubmitVenuesDocument = gql(`
+  query MobileResubmitVenues {
+    publicVenues {
+      id
+      venue_name
+      city
+    }
+  }
+`);
+
+/** Full edit + resubmission of a venue-rejected pod — the same pod is reused. */
+export const HostResubmitPodDocument = gql(`
+  mutation MobileHostResubmitPod($pod_doc_id: ID!, $input: HostResubmitPodInput!) {
+    hostResubmitPod(pod_doc_id: $pod_doc_id, input: $input) {
+      id
+      pod_title
+      venue_approval_status
+      is_active
     }
   }
 `);

@@ -20,9 +20,14 @@ const DEFAULT_MIN_BIRTH_YEAR = 1940;
 const DEFAULT_MAX_BIRTH_YEAR = 2012;
 /** Default draft-pod retention window (days) before auto-deletion. */
 const DEFAULT_DRAFT_RETENTION_DAYS = 3;
+/** Default max Backout attempts a user gets per pod. */
+const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
+
+const cleanMaxBackoutAttempts = (value: unknown) =>
+  Math.max(1, Math.floor(Number(value)) || DEFAULT_MAX_BACKOUT_ATTEMPTS);
 
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
@@ -33,6 +38,7 @@ const toAppPub = (d: any) => ({
   min_birth_year: d?.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
   max_birth_year: d?.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
   draft_retention_days: d?.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
+  max_backout_attempts: d?.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -214,7 +220,14 @@ export const settingsService = {
       min_birth_year: doc.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
       max_birth_year: doc.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
       draft_retention_days: doc.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
+      max_backout_attempts: doc.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
     };
+  },
+
+  /** Clamped max-backout-attempts setting for the backout flow (min 1, default 3). */
+  async getMaxBackoutAttempts(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return cleanMaxBackoutAttempts(doc?.max_backout_attempts);
   },
 
   /**
@@ -243,6 +256,7 @@ export const settingsService = {
     min_birth_year?: number;
     max_birth_year?: number;
     draft_retention_days?: number;
+    max_backout_attempts?: number;
   }) {
     const update: any = {};
     if (input.jwt_no_expiry !== undefined)
@@ -258,6 +272,8 @@ export const settingsService = {
       update.max_birth_year = input.max_birth_year;
     if (input.draft_retention_days !== undefined)
       update.draft_retention_days = cleanRetentionDays(input.draft_retention_days);
+    if (input.max_backout_attempts !== undefined)
+      update.max_backout_attempts = cleanMaxBackoutAttempts(input.max_backout_attempts);
     const doc = await AppSettingsModel.findOneAndUpdate(
       { singleton_key: "app" },
       { $set: update },

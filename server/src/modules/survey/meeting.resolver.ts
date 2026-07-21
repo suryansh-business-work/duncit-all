@@ -6,6 +6,12 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 const ONBOARDING_RW = ['SUPER_ADMIN', 'ONBOARDING_MANAGER'];
 
 export const meetingResolvers = {
+  // Lazily resolve the linked onboarded record's status — only hit when a query
+  // selects it (the Earn cards do; the portal table does not), so no N+1 there.
+  OnboardingMeeting: {
+    onboarded_status: (parent: { user_id: string; kind: SurveyKind }) =>
+      meetingService.onboardedStatusFor(parent.user_id, parent.kind),
+  },
   Query: {
     myMeeting: (_p: unknown, args: { kind: SurveyKind }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

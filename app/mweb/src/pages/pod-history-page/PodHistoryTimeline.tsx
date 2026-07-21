@@ -25,7 +25,7 @@ const iconFor = (event: TimelineEvent) => {
 };
 
 function buildTimeline(item: PodHistoryItem): TimelineEvent[] {
-  const backedOut = item.status === 'BACKED_OUT';
+  const backedOut = item.status === 'BACKED_OUT' || item.status === 'BACKOUT_IN_PROCESS';
   const refundProcessed = item.refund_status === 'PROCESSED';
   const refundPending = item.refund_status === 'PENDING';
   const events: TimelineEvent[] = [

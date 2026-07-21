@@ -11,6 +11,7 @@ import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import { usePricing } from '../hooks/usePricing';
 import { categoryPath } from '../utils/category-match';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
+import KeepSpotDialog from './pod-details-page/KeepSpotDialog';
 import PodHero from './pod-details-page/PodHero';
 import PodOverview from './pod-details-page/PodOverview';
 import PodCommercePreview from './pod-details-page/PodCommercePreview';
@@ -38,7 +39,7 @@ export default function PodDetailsPage() {
   const { openPodPicker } = useStatusUpload();
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
-  const { compute: priceCompute, format: priceFormat } = usePricing();
+  const { compute: priceCompute, format: priceFormat, currency: priceCurrency } = usePricing();
   const showProducts = useFeatureFlag('is_product_visible');
   const slugResolution = useQuery(POD_ID_BY_SLUGS, {
     variables: { clubSlug, podSlug },
@@ -115,6 +116,11 @@ export default function PodDetailsPage() {
   const isPodHost = (pod.pod_hosts_id ?? []).includes(data?.me?.user_id);
   const media = pod.pod_images_and_videos ?? [];
   const supportSubject = `Support - ${pod.pod_title}`;
+  const membershipState = data?.podMembershipState;
+  const backoutAttemptsLeft = Math.max(
+    0,
+    (membershipState?.backout_attempts_max ?? 0) - (membershipState?.backout_attempts_used ?? 0),
+  );
   return (
     <Stack
       spacing={3}
@@ -196,9 +202,11 @@ export default function PodDetailsPage() {
         membershipState={data?.podMembershipState}
         joining={actions.joinState.loading}
         backingOut={actions.backoutState.loading}
+        restoringSpot={actions.cancelBackoutState.loading}
         selectedProductTotal={productSelection.selectedProductTotal}
         onJoinFree={actions.onJoinFree}
         onBackout={() => actions.setBackoutOpen(true)}
+        onKeepSpot={actions.openKeepSpot}
         onPaidCheckout={actions.onPaidCheckout}
         onCopyReferral={actions.onCopyReferral}
       />
@@ -211,8 +219,18 @@ export default function PodDetailsPage() {
         open={actions.backoutOpen}
         onClose={() => actions.setBackoutOpen(false)}
         busy={actions.backoutState.loading}
-        refundThresholdPct={data?.podMembershipState?.refund_threshold_pct ?? null}
+        refundAmount={data?.podMembershipState?.backout_refund_amount ?? null}
+        currency={priceCurrency}
+        deductionPct={data?.podMembershipState?.backout_deduction_pct ?? 0}
         onConfirm={actions.onConfirmBackout}
+      />
+      <KeepSpotDialog
+        open={actions.keepSpotOpen}
+        onClose={() => actions.setKeepSpotOpen(false)}
+        busy={actions.cancelBackoutState.loading}
+        attemptsLeft={backoutAttemptsLeft}
+        error={actions.keepSpotError}
+        onConfirm={actions.onConfirmKeepSpot}
       />
       <ConfettiOverlay
         open={actions.confettiOpen}

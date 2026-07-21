@@ -99,7 +99,7 @@ export const POD_HISTORY_TICKET_PDF = gql`
 export interface PodHistoryItem {
   id: string;
   pod_id?: string | null;
-  status: 'JOINED' | 'BACKED_OUT';
+  status: 'JOINED' | 'BACKOUT_IN_PROCESS' | 'BACKED_OUT';
   joined_at: string;
   backed_out_at?: string | null;
   payment_id?: string | null;

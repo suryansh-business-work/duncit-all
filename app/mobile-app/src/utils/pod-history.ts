@@ -139,7 +139,7 @@ export interface TimelineEvent {
  * done; backout/refund steps depend on status + refund_status.
  */
 export function buildTimeline(item: PodMembership): TimelineEvent[] {
-  const backedOut = item.status === 'BACKED_OUT';
+  const backedOut = item.status === 'BACKED_OUT' || item.status === 'BACKOUT_IN_PROCESS';
   const refundProcessed = item.refund_status === 'PROCESSED';
   const refundPending = item.refund_status === 'PENDING';
 

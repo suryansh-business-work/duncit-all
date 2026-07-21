@@ -2,16 +2,28 @@ import { useMemo, type MutableRefObject } from 'react';
 import { Button, Stack, Tooltip, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
-import { fmtDate, REFUND_STATUS_COLORS, money, type BackoutRefundRequest } from './queries';
+import {
+  BACKOUT_STATUS_COLORS,
+  BACKOUT_STATUS_LABELS,
+  canProcessRefund,
+  fmtDate,
+  money,
+  REFUND_STATUS_COLORS,
+  type BackoutRefundRequest,
+} from './queries';
 
-const REFUND_STATUS_OPTIONS = [
-  { value: 'NONE', label: 'None' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'PROCESSED', label: 'Processed' },
-  { value: 'NOT_ELIGIBLE', label: 'Not eligible' },
-];
+const BACKOUT_STATUS_OPTIONS = (['IN_PROCESS', 'CANCELLED', 'SPOT_FILLED'] as const).map((s) => ({
+  value: s,
+  label: BACKOUT_STATUS_LABELS[s],
+}));
 
 const getBackoutRowId = (row: BackoutRefundRequest) => row.id;
+
+const renderBackoutNo = (row: BackoutRefundRequest) => (
+  <Typography variant="body2" fontWeight={800} component="span" sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+    {row.backout_no}
+  </Typography>
+);
 
 const renderMember = (row: BackoutRefundRequest) => (
   <Stack component="span" sx={{ lineHeight: 1.2 }}>
@@ -22,6 +34,14 @@ const renderMember = (row: BackoutRefundRequest) => (
       {row.user_email ?? ''}
     </Typography>
   </Stack>
+);
+
+const renderBackoutStatus = (row: BackoutRefundRequest) => (
+  <StatusChip
+    status={row.backout_status}
+    label={BACKOUT_STATUS_LABELS[row.backout_status]}
+    colorMap={BACKOUT_STATUS_COLORS}
+  />
 );
 
 const renderRefundStatus = (row: BackoutRefundRequest) => (
@@ -36,8 +56,8 @@ interface Props {
   onRefund: (row: BackoutRefundRequest) => void;
 }
 
-/** Server-paged table of backed-out members. Rows navigate to detail; the
- * per-row Refund button opens the breakup dialog (button clicks never row-click). */
+/** Server-paged table of Backout requests. Rows navigate to detail; the Refund
+ * button appears only for refund-eligible (Spot Filled) requests. */
 export default function BackoutRefundTable({
   fetchRows,
   refetchRef,
@@ -46,14 +66,33 @@ export default function BackoutRefundTable({
   onRefund,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<BackoutRefundRequest>[]>(() => {
-    const renderActions = (row: BackoutRefundRequest) => (
-      <Tooltip title="Process refund">
-        <Button size="small" color="warning" variant="outlined" onClick={() => onRefund(row)}>
-          Refund
-        </Button>
-      </Tooltip>
-    );
+    // Refund processing is enabled ONLY for Spot Filled requests (spec) —
+    // Backout In Process / Backout Cancelled rows render a plain dash.
+    const renderActions = (row: BackoutRefundRequest) => {
+      if (!canProcessRefund(row)) {
+        return (
+          <Typography variant="caption" color="text.secondary" component="span">
+            —
+          </Typography>
+        );
+      }
+      return (
+        <Tooltip title="Process refund">
+          <Button size="small" color="warning" variant="outlined" onClick={() => onRefund(row)}>
+            Refund
+          </Button>
+        </Tooltip>
+      );
+    };
     return [
+      {
+        field: 'backout_no',
+        headerName: 'Backout ID',
+        minWidth: 160,
+        filter: { type: 'text' },
+        cellRenderer: renderBackoutNo,
+        valueGetter: (row) => row.backout_no,
+      },
       {
         field: 'user_name',
         headerName: 'Member',
@@ -67,11 +106,19 @@ export default function BackoutRefundTable({
         field: 'pod_title',
         headerName: 'Pod',
         sortable: false,
-        minWidth: 180,
+        minWidth: 160,
         valueGetter: (row) => row.pod?.pod_title ?? '—',
       },
       {
-        field: 'backed_out_at',
+        field: 'backout_status',
+        headerName: 'Status',
+        width: 170,
+        filter: { type: 'select', options: BACKOUT_STATUS_OPTIONS },
+        cellRenderer: renderBackoutStatus,
+        valueGetter: (row) => BACKOUT_STATUS_LABELS[row.backout_status],
+      },
+      {
+        field: 'created_at',
         headerName: 'Backed out',
         width: 170,
         filter: { type: 'date' },
@@ -87,8 +134,8 @@ export default function BackoutRefundTable({
       {
         field: 'refund_status',
         headerName: 'Refund status',
+        sortable: false,
         width: 150,
-        filter: { type: 'select', options: REFUND_STATUS_OPTIONS },
         cellRenderer: renderRefundStatus,
         valueGetter: (row) => row.refund_status,
       },
@@ -96,8 +143,8 @@ export default function BackoutRefundTable({
         field: 'joined_at',
         headerName: 'Joined',
         hide: true,
+        sortable: false,
         width: 170,
-        filter: { type: 'date' },
         valueGetter: (row) => fmtDate(row.joined_at),
       },
       { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
@@ -112,7 +159,8 @@ export default function BackoutRefundTable({
       getRowId={getBackoutRowId}
       onRowClick={onRowClick}
       emptyText="No backout refund requests yet."
-      defaultSort={{ field: 'backed_out_at', dir: 'desc' }}
+      searchPlaceholder="Search by Backout ID"
+      defaultSort={{ field: 'created_at', dir: 'desc' }}
       refetchRef={refetchRef}
     />
   );

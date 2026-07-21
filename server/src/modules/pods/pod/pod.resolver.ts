@@ -298,6 +298,14 @@ export const podResolvers = {
       const user = requireAuth(ctx);
       return podService.hostUpdate(args.pod_doc_id, user.id, args.input);
     },
+    hostResubmitPod: async (
+      _p: unknown,
+      args: { pod_doc_id: string; input: any },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podService.hostResubmit(args.pod_doc_id, user.id, args.input);
+    },
     hostDeletePod: async (
       _p: unknown,
       args: { pod_doc_id: string; reason_subject: string; reason_note?: string | null },

@@ -34,6 +34,16 @@ export interface PodHistoryDetailsProps {
   onGeneralTerms: () => void;
 }
 
+type StatusTone = 'success' | 'warning';
+
+/** Booking-status chip copy — "Backout in process" is its own visible state
+ * (computed once here so children stay branch-free; mirrors mWeb). */
+const STATUS_CHIP: Record<PodMembership['status'], { label: string; tone: StatusTone }> = {
+  JOINED: { label: 'Joined', tone: 'success' },
+  BACKOUT_IN_PROCESS: { label: 'Backout in process', tone: 'warning' },
+  BACKED_OUT: { label: 'Backed out', tone: 'warning' },
+};
+
 function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warning' | 'muted' }>) {
   const bg = tone === 'success' ? '$primary' : '$surface';
   return (
@@ -113,10 +123,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           </YStack>
           <YStack flex={1} gap={6}>
             <XStack gap={6} flexWrap="wrap">
-              <Chip
-                label={item.status === 'BACKED_OUT' ? 'Backed out' : 'Joined'}
-                tone={item.status === 'BACKED_OUT' ? 'warning' : 'success'}
-              />
+              <Chip label={STATUS_CHIP[item.status].label} tone={STATUS_CHIP[item.status].tone} />
               <Chip label={`Refund: ${refundLabel(item.refund_status)}`} tone="muted" />
             </XStack>
             <Text fontSize={16} fontWeight="900" color="$color">
@@ -134,7 +141,9 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
 
       <Card title="Actions">
         <PodHistoryActions {...props} />
-        {canRejoin(item) ? <ReplacementNotice deductionPct={deductionPct} /> : null}
+        {canRejoin(item) || item.status === 'BACKOUT_IN_PROCESS' ? (
+          <ReplacementNotice deductionPct={deductionPct} />
+        ) : null}
         {item.status === 'BACKED_OUT' && item.refund_status === 'PENDING' ? (
           <Text testID="ph-refund-pending" fontSize={12} color="$muted">
             Refund is waiting for criteria completion. Support can help if the status looks wrong.

@@ -14,6 +14,8 @@ export const settingsTypeDefs = gql`
     max_birth_year: Int!
     "Days a Create-Pod draft is kept (from last save) before auto-deletion."
     draft_retention_days: Int!
+    "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
+    max_backout_attempts: Int!
     updated_at: String
   }
 
@@ -26,6 +28,8 @@ export const settingsTypeDefs = gql`
     max_birth_year: Int!
     "Days a Create-Pod draft is kept (from last save) before auto-deletion."
     draft_retention_days: Int!
+    "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
+    max_backout_attempts: Int!
   }
 
   type PublicClientConfig {
@@ -43,6 +47,8 @@ export const settingsTypeDefs = gql`
     max_birth_year: Int
     "Days a Create-Pod draft is kept before auto-deletion (min 1)."
     draft_retention_days: Int
+    "Max Backout attempts a user gets per pod (min 1)."
+    max_backout_attempts: Int
   }
 
   type FeatureFlag {

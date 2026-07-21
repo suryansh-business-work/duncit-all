@@ -82,4 +82,44 @@ describe('compressUploadedVideo', () => {
     await expect(pending).resolves.toBe(URL_RAW);
     expect(onProgress).toHaveBeenLastCalledWith(100);
   });
+
+  it('forwards the trim window to the server and returns the trimmed URL', async () => {
+    mockRequest.mockResolvedValueOnce(
+      startJob({ status: 'DONE', pct: 100, url: 'https://ik.io/trimmed.mp4' }),
+    );
+    await expect(
+      compressUploadedVideo(URL_RAW, '/posts', undefined, { start: 3, duration: 15 }),
+    ).resolves.toBe('https://ik.io/trimmed.mp4');
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { remoteUrl: URL_RAW, folder: '/posts', trimStart: 3, trimDuration: 15 },
+      { auth: true },
+    );
+  });
+
+  it('throws instead of falling back when a required trim fails', async () => {
+    // Job reports FAILED — an untrimmed over-length story must never publish.
+    mockRequest
+      .mockResolvedValueOnce(startJob())
+      .mockResolvedValueOnce(polledJob({ status: 'FAILED', error: 'ffmpeg exploded' }));
+    const failing = compressUploadedVideo(URL_RAW, '/posts', undefined, { start: 0, duration: 15 });
+    failing.catch(() => undefined); // avoid an unhandled rejection while timers advance
+    await jest.advanceTimersByTimeAsync(1000);
+    await expect(failing).rejects.toThrow('ffmpeg exploded');
+
+    // DONE without a URL carries no job error — the generic trim message fires.
+    mockRequest.mockReset();
+    mockRequest.mockResolvedValueOnce(startJob({ status: 'DONE', pct: 100, url: null }));
+    await expect(
+      compressUploadedVideo(URL_RAW, '/posts', undefined, { start: 0, duration: 15 }),
+    ).rejects.toThrow(/could not trim/i);
+  });
+
+  it('throws when a required trim loses its poll (no untrimmed fallback)', async () => {
+    mockRequest.mockResolvedValueOnce(startJob()).mockRejectedValueOnce(new Error('network down'));
+    const failing = compressUploadedVideo(URL_RAW, '/posts', undefined, { start: 0, duration: 15 });
+    failing.catch(() => undefined);
+    await jest.advanceTimersByTimeAsync(1000);
+    await expect(failing).rejects.toThrow(/could not trim/i);
+  });
 });

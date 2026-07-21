@@ -1,21 +1,30 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Button, Stack } from '@mui/material';
+import { Button, MenuItem, Stack, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { PageHeader } from '@duncit/ui';
 import type { TableQueryState } from '@duncit/table';
-import { TICKETS, type TicketPage } from '../../../graphql/tickets';
+import { TICKETS, type TicketPage, type TicketPriority } from '../../../graphql/tickets';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
 import { supportListVars } from '../../../lib/supportTable';
 import TicketsTable from './TicketsTable';
 import NewTicketDialog from './NewTicketDialog';
+
+const SORT_OPTIONS: ReadonlyArray<{ value: TicketPriority; label: string }> = [
+  { value: 'HIGH', label: 'High' },
+  { value: 'MEDIUM', label: 'Medium' },
+  { value: 'LOW', label: 'Low' },
+];
 
 export default function TicketsListPage() {
   const navigate = useNavigate();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
+  // Display order only — the selected priority lists first; ticket priorities
+  // are never modified. Threaded to the query via the table's externalFilters.
+  const [priorityFirst, setPriorityFirst] = useState<TicketPriority>('HIGH');
 
   const fetchRows = useCallback(
     async (q: TableQueryState) => {
@@ -50,10 +59,27 @@ export default function TicketsListPage() {
       <TicketsTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}
+        externalFilters={[{ field: 'priority_first', op: 'eq', value: priorityFirst }]}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
-            New Ticket
-          </Button>
+          <>
+            <TextField
+              select
+              size="small"
+              label="Sort"
+              value={priorityFirst}
+              onChange={(e) => setPriorityFirst(e.target.value as TicketPriority)}
+              sx={{ minWidth: 120 }}
+            >
+              {SORT_OPTIONS.map((o) => (
+                <MenuItem key={o.value} value={o.value}>
+                  {o.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={() => setOpen(true)}>
+              New Ticket
+            </Button>
+          </>
         }
         onRowClick={(t) => navigate(`/tickets/${t.id}`)}
       />

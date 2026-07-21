@@ -88,10 +88,21 @@ describe('StatusTile', () => {
     expect(screen.getByText('45%')).toBeOnTheScreen();
   });
 
-  it('hides the overlay once complete and drops the ring when seen (Bug 2)', () => {
+  it('hides the overlay once complete and greys the ring when seen (Bug 2)', () => {
     renderWithProviders(<StatusTile testID="dn" label="Me" progress={100} seen />);
     expect(screen.queryByTestId('dn-progress')).toBeNull();
+    expect(screen.getByTestId('dn-seen-ring')).toBeOnTheScreen();
     expect(screen.getByText('Me')).toBeOnTheScreen();
+  });
+
+  it('renders no grey seen-ring while a story is unseen', () => {
+    renderWithProviders(<StatusTile testID="un" label="Me" />);
+    expect(screen.queryByTestId('un-seen-ring')).toBeNull();
+  });
+
+  it('renders a seen tile without a testID (no seen-ring id emitted)', () => {
+    renderWithProviders(<StatusTile label="Anon" seen />);
+    expect(screen.getByText('Anon')).toBeOnTheScreen();
   });
 });
 
@@ -306,6 +317,28 @@ describe('StatusRail (bug 3 composite)', () => {
     renderWithProviders(<StatusRail userName="Sam" />);
     fireEvent.press(screen.getByTestId('status-mine'));
     expect(pickAndUpload).toHaveBeenCalled();
+  });
+
+  it('posts or discards a previewed story video from the trim sheet (Bug 3)', () => {
+    const confirmVideo = jest.fn().mockResolvedValue(undefined);
+    const cancelVideo = jest.fn();
+    mockedUpload.mockReturnValue({
+      uploading: false,
+      pickAndUpload: jest.fn().mockResolvedValue(undefined),
+      pendingVideo: {
+        uri: 'file://v.mp4',
+        durationSeconds: 20,
+        fileName: 'v.mp4',
+        mimeType: 'video/mp4',
+      },
+      confirmVideo,
+      cancelVideo,
+    });
+    renderWithProviders(<StatusRail userName="Sam" />);
+    fireEvent.press(screen.getByTestId('story-video-post'));
+    expect(confirmVideo).toHaveBeenCalledWith({ start: 0, duration: 15 });
+    fireEvent.press(screen.getByTestId('story-video-cancel'));
+    expect(cancelVideo).toHaveBeenCalled();
   });
 
   it('opens my own viewer when I already have a story, and adds via the badge', () => {

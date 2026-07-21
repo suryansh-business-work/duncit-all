@@ -115,6 +115,8 @@ export const ticketTypeDefs = /* GraphQL */ `
       page_size: Int
       sort_by: String
       sort_dir: String
+      "When set, tickets of this priority list first (display order only — priorities are never modified)."
+      priority_first: TicketPriority
     ): TicketPage!
     ticket(id: ID!): Ticket
     myTickets: [Ticket!]!

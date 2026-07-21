@@ -4,6 +4,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { usePodDetails } from '@/hooks/useDetails';
 import { useExploreStore } from '@/stores/explore.store';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 let mockSaved = false;
@@ -126,12 +127,14 @@ beforeEach(() => {
   mockLiked = false;
   mockLikeCount = 3;
   useExploreStore.setState({ likeOverride: {}, commentDelta: {} });
+  useStudioModeStore.setState({ mode: 'USER' });
 });
 
 describe('PodDetailsScreen', () => {
   it('shows the spinner while loading', () => {
     mockedPod.mockReturnValue({
       pod: null,
+      viewerId: 'me',
       savedInitially: false,
       isLoading: true,
       refetch: jest.fn().mockResolvedValue(undefined),
@@ -354,6 +357,20 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('Join')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-book'));
     expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', selectedProducts: [] });
+  });
+
+  it('sends the pod host to Host Studio instead of booking their own pod', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      pod: { ...pod, pod_hosts_id: ['me'] },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.queryByTestId('pod-book')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-go-dashboard'));
+    expect(useStudioModeStore.getState().mode).toBe('HOST');
+    expect(mockNavigate).toHaveBeenCalledWith('HostManage');
   });
 
   it('shows "Pod Booked" for an existing member and backs out instead of paying again', async () => {

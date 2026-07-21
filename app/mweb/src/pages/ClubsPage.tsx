@@ -5,7 +5,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   CircularProgress,
   InputAdornment,
   Link,
@@ -14,13 +13,12 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import TuneIcon from '@mui/icons-material/Tune';
 import ClubsGrid from './clubs-page/ClubsGrid';
-import SearchFilterSheet from './search-page/SearchFilterSheet';
+import ClubCategoryChips from './clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from './search-page/useSearchDiscovery';
 import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
 
-const ALL_CLUBS = gql`
+export const ALL_CLUBS = gql`
   query AllClubs($locationId: ID, $locality: String) {
     superCategories: categories(filter: { level: SUPER }) {
       id
@@ -67,7 +65,6 @@ export default function ClubsPage({
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const [filterOpen, setFilterOpen] = useState(false);
   const { all, buttons, matchesCategory } = useSearchCategories();
   const selectedSuperId = useMemo(
     () =>
@@ -81,7 +78,6 @@ export default function ClubsPage({
     () => scopeCategoryButtons(buttons, all, selectedSuperId),
     [buttons, all, selectedSuperId],
   );
-  const selectedCategory = categoryOptions.find((c) => c.id === categoryId) ?? null;
 
   // Clear the chosen chip when the super category changes so a now-hidden chip
   // isn't left selected.
@@ -188,25 +184,12 @@ export default function ClubsPage({
           }}
           sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
         />
-        <Button
-          variant="outlined"
-          startIcon={<TuneIcon />}
-          onClick={() => setFilterOpen(true)}
-          sx={{ flex: '0 0 auto', borderRadius: 999, fontWeight: 800, whiteSpace: 'nowrap' }}
-        >
-          Category
-        </Button>
       </Stack>
-      {selectedCategory && (
-        <Box>
-          <Chip
-            label={selectedCategory.name}
-            color="primary"
-            onDelete={() => setCategoryId('')}
-            sx={{ fontWeight: 800 }}
-          />
-        </Box>
-      )}
+      <ClubCategoryChips
+        categories={categoryOptions}
+        selectedId={categoryId}
+        onSelect={setCategoryId}
+      />
       {locationHasNoClubs ? (
         <Stack alignItems="center" spacing={1.5} sx={{ py: 6, textAlign: 'center' }}>
           <Typography variant="h6" fontWeight={800}>
@@ -223,13 +206,6 @@ export default function ClubsPage({
       ) : (
         clubsBody
       )}
-      <SearchFilterSheet
-        open={filterOpen}
-        categories={categoryOptions}
-        categoryId={categoryId}
-        onClose={() => setFilterOpen(false)}
-        onSelect={setCategoryId}
-      />
     </Stack>
   );
 }

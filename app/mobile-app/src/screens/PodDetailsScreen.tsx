@@ -28,6 +28,7 @@ import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { isPodExpired, podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -71,6 +72,9 @@ export function PodDetailsScreen() {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
   const isFree = pod?.pod_type?.includes('FREE') ?? false;
+  // The viewer hosts THIS pod (pod-specific, independent of their active studio
+  // role) — swaps the booking CTA for the Host Studio entry. Mirrors mWeb.
+  const isPodHost = !!viewerId && (pod?.pod_hosts_id ?? []).includes(viewerId);
   const commentCount = (pod?.comment_count ?? 0) + commentDelta;
   const backoutAttemptsLeft = Math.max(
     0,
@@ -255,6 +259,7 @@ export function PodDetailsScreen() {
         <PodBookingBar
           pod={pod}
           isFree={isFree}
+          isHost={isPodHost}
           membershipState={membershipState}
           onCheckout={() =>
             navigation.navigate('Checkout', {
@@ -264,6 +269,10 @@ export function PodDetailsScreen() {
           }
           onBackout={() => setBackoutOpen(true)}
           onKeepSpot={openKeepSpot}
+          onGoToDashboard={() => {
+            useStudioModeStore.getState().setMode('HOST');
+            navigation.navigate('HostManage');
+          }}
         />
       ) : null}
 

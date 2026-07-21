@@ -94,6 +94,31 @@ describe('ticketService integration', () => {
     expect(await TicketModel.countDocuments()).toBe(2);
   });
 
+  it('lists the selected priority first (display order only) via priority_first', async () => {
+    const mk = async (subject: string, priority: 'LOW' | 'MEDIUM' | 'HIGH') => {
+      const t = await ticketService.createTicket(userId, { subject, body_text: 'B' });
+      await ticketService.updatePriority(t.id, priority);
+    };
+    await mk('low one', 'LOW');
+    await mk('high one', 'HIGH');
+    await mk('medium one', 'MEDIUM');
+
+    const highFirst = await ticketService.list({ priority_first: 'HIGH' });
+    expect(highFirst.items.map((t) => t.priority)).toEqual(['HIGH', 'MEDIUM', 'LOW']);
+    expect(highFirst.total).toBe(3);
+
+    const lowFirst = await ticketService.list({ priority_first: 'LOW' });
+    expect(lowFirst.items.map((t) => t.priority)).toEqual(['LOW', 'MEDIUM', 'HIGH']);
+
+    const mediumFirst = await ticketService.list({ priority_first: 'MEDIUM' });
+    expect(mediumFirst.items.map((t) => t.priority)).toEqual(['MEDIUM', 'HIGH', 'LOW']);
+
+    // Composes with the status filter and never mutates stored priorities.
+    const openOnly = await ticketService.list({ status: 'OPEN', priority_first: 'HIGH' });
+    expect(openOnly.items).toHaveLength(3);
+    expect(openOnly.items[0].priority).toBe('HIGH');
+  });
+
   it('throws NOT_FOUND when updating a missing ticket', async () => {
     await expect(
       ticketService.updateStatus(new Types.ObjectId().toString(), 'CLOSED')

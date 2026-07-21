@@ -9,15 +9,19 @@ export interface SupportListVars {
   page_size: number;
   sort_by: string | null;
   sort_dir: 'asc' | 'desc';
+  /** Tickets only — set by the list page's Sort dropdown (external filter). */
+  priority_first?: string;
 }
 
 /**
  * Maps DuncitTable query state onto the existing support list-query args.
  * The only column filter with a server counterpart is the single-select
- * `status` (op `eq`); these tables never offer any other filter.
+ * `status` (op `eq`); `priority_first` arrives as an external filter from the
+ * tickets page's Sort dropdown and is omitted for the other list queries.
  */
 export function supportListVars(q: TableQueryState): SupportListVars {
   const status = q.filters.find((f) => f.field === 'status' && f.op === 'eq')?.value ?? null;
+  const priorityFirst = q.filters.find((f) => f.field === 'priority_first' && f.op === 'eq')?.value;
   return {
     status,
     search: q.search.trim() || null,
@@ -25,6 +29,7 @@ export function supportListVars(q: TableQueryState): SupportListVars {
     page_size: q.pageSize,
     sort_by: q.sortBy,
     sort_dir: q.sortDir,
+    ...(priorityFirst ? { priority_first: priorityFirst } : {}),
   };
 }
 

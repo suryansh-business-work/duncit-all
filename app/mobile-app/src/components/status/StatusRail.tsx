@@ -14,6 +14,7 @@ import { TogglePostLikeDocument } from '@/graphql/posts';
 import type { StatusGroup } from '@/hooks/useStatus';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { StatusTile } from '@/components/status/StatusTile';
+import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
 import { StatusViewer } from '@/components/status/StatusViewer';
 import { StoryViewersSheet } from '@/components/status/StoryViewersSheet';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -48,7 +49,8 @@ function shuffleStatus<T>(items: T[]): T[] {
  * (Bug 4) and delete (Bug 7). */
 export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const { mine, items } = useStoryRail();
-  const { uploading, progress, pickAndUpload } = useStatusUpload();
+  const { uploading, progress, pendingVideo, pickAndUpload, confirmVideo, cancelVideo } =
+    useStatusUpload();
   const { openClub } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const recordView = useStatusStore((s) => s.recordView);
@@ -153,6 +155,15 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         onViewers={activeIsMine ? setViewersStoryId : undefined}
         onToggleLike={activeIsPerson ? toggleLike : undefined}
         onSlideSeen={activeIsPerson ? recordView : undefined}
+      />
+      <StatusVideoPreviewSheet
+        video={
+          pendingVideo
+            ? { uri: pendingVideo.uri, durationSeconds: pendingVideo.durationSeconds }
+            : null
+        }
+        onCancel={cancelVideo}
+        onConfirm={(trim) => fireAndForget(confirmVideo(trim))}
       />
       <StoryViewersSheet storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
       <ConfirmDialog

@@ -37,4 +37,31 @@ describe('videoCompression unit', () => {
   it('throws NOT_FOUND for an unknown job id', () => {
     expect(() => getVideoCompressionJob('nope')).toThrow('Compression job not found');
   });
+
+  it('rejects an invalid trim window', async () => {
+    const remoteUrl = 'https://ik.imagekit.io/x/story.mp4';
+    await expect(
+      startVideoCompression({ remoteUrl, trimStartSeconds: -1, trimDurationSeconds: 15 }),
+    ).rejects.toThrow('Invalid trim window');
+    await expect(
+      startVideoCompression({ remoteUrl, trimStartSeconds: 0, trimDurationSeconds: 0 }),
+    ).rejects.toThrow('Invalid trim window');
+    await expect(
+      startVideoCompression({ remoteUrl, trimStartSeconds: 0, trimDurationSeconds: 999 }),
+    ).rejects.toThrow('Invalid trim window');
+  });
+
+  it('fails a trim job (never passes the untrimmed URL through) when settings are unavailable', async () => {
+    // Unit context has no DB connection → settings are null. A plain compression
+    // falls back to the original URL, but a trim must never silently skip.
+    const job = await startVideoCompression({
+      remoteUrl: 'https://ik.imagekit.io/x/story.mp4',
+      folder: '/posts',
+      trimStartSeconds: 2,
+      trimDurationSeconds: 15,
+    });
+    expect(job.status).toBe('FAILED');
+    expect(job.url).toBeNull();
+    expect(job.error).toMatch(/could not trim/i);
+  });
 });

@@ -51,6 +51,7 @@ describe('status.store publish (video vs image pipelines)', () => {
       'https://cdn/posts/raw.mp4',
       '/posts',
       expect.any(Function),
+      null,
     );
     // The compressed URL is what the story records.
     const createCall = mockRequest.mock.calls.find(([doc]) =>
@@ -70,6 +71,20 @@ describe('status.store publish (video vs image pipelines)', () => {
     expect(useStatusStore.getState().progress).toBe(55);
     compressPct(100);
     expect(useStatusStore.getState().progress).toBe(70);
+  });
+
+  it('forwards the story trim window into the compression pass (Bug 3)', async () => {
+    await useStatusStore.getState().publish({
+      uri: 'file://long.mp4',
+      mediaType: 'VIDEO',
+      trim: { start: 4, duration: 15 },
+    });
+    expect(mockCompress).toHaveBeenCalledWith(
+      'https://cdn/posts/raw.mp4',
+      '/posts',
+      expect.any(Function),
+      { start: 4, duration: 15 },
+    );
   });
 
   it('defaults the video name/type and requires a URI', async () => {

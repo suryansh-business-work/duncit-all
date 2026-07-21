@@ -6,6 +6,7 @@ import PodActionPanel from './PodActionPanel';
 interface Props {
   pod: any;
   isFree: boolean;
+  isHost: boolean;
   priceFormat: (amount: number) => string;
   membershipState: any;
   joining: boolean;
@@ -17,6 +18,7 @@ interface Props {
   onKeepSpot: () => void;
   onPaidCheckout: () => void;
   onCopyReferral: (token: string) => void;
+  onGoToDashboard: () => void;
 }
 
 export default function StickyPodActionPanel(props: Readonly<Props>) {

@@ -13,6 +13,7 @@ import { buildPodShareText } from './usePodDetailActions';
 interface Props {
   pod: any;
   isFree: boolean;
+  isHost: boolean;
   priceFormat: (n: number) => string;
   membershipState: any;
   joining: boolean;
@@ -24,6 +25,7 @@ interface Props {
   onKeepSpot: () => void;
   onPaidCheckout: () => void;
   onCopyReferral: (token: string) => void;
+  onGoToDashboard: () => void;
 }
 
 const compactButtonSx = {
@@ -47,6 +49,7 @@ const gradientButtonSx = {
 export default function PodActionPanel({
   pod,
   isFree,
+  isHost,
   priceFormat,
   membershipState,
   joining,
@@ -58,12 +61,29 @@ export default function PodActionPanel({
   onKeepSpot,
   onPaidCheckout,
   onCopyReferral,
+  onGoToDashboard,
 }: Readonly<Props>) {
   const ms = membershipState;
   const isMember = ms?.is_member;
   const inProcess = !!ms?.backout_in_process;
   const m = ms?.membership;
   const referralToken = m?.referral_token as string | null;
+
+  // The host is auto-enrolled as an attendee and must never book their own pod
+  // — replace the booking CTA with the Host Studio entry point.
+  if (isHost) {
+    return (
+      <Button
+        variant="contained"
+        size="large"
+        fullWidth
+        onClick={onGoToDashboard}
+        sx={gradientButtonSx}
+      >
+        Go to Dashboard
+      </Button>
+    );
+  }
 
   // Once the pod's date has passed, booking is closed — block checkout entirely
   // (the server enforces the same rule on joinFree + payment order creation).

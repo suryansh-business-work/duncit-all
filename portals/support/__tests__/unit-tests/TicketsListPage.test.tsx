@@ -83,6 +83,22 @@ describe('TicketsListPage', () => {
     expect(screen.getByText('Refund please')).toBeInTheDocument();
   });
 
+  it('reorders by priority via the Sort dropdown (display order only)', async () => {
+    renderWithProviders(<TicketsListPage />, {
+      mocks: [
+        ticketsListMock([makeTicket({ id: 't1', subject: 'High leads' })]),
+        ticketsListMock([makeTicket({ id: 't2', subject: 'Medium leads' })], { priority_first: 'MEDIUM' }),
+      ],
+    });
+    await waitFor(() => expect(screen.getByText('High leads')).toBeInTheDocument());
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Sort' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Medium' }));
+
+    await waitFor(() => expect(screen.getByText('Medium leads')).toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText('High leads')).not.toBeInTheDocument());
+  });
+
   it('creates a ticket from the dialog and navigates to it', async () => {
     renderWithProviders(<></>, {
       mocks: [ticketsListMock([]), createTicketMock('new-1')],

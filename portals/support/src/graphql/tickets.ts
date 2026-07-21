@@ -47,6 +47,7 @@ export const TICKETS = gql`
     $page_size: Int
     $sort_by: String
     $sort_dir: String
+    $priority_first: TicketPriority
   ) {
     tickets(
       status: $status
@@ -55,6 +56,7 @@ export const TICKETS = gql`
       page_size: $page_size
       sort_by: $sort_by
       sort_dir: $sort_dir
+      priority_first: $priority_first
     ) {
       items {
         ...TicketFields

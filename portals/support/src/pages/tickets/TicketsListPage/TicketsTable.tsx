@@ -1,7 +1,7 @@
 import type { MutableRefObject, ReactNode } from 'react';
 import { Typography } from '@mui/material';
 import { StatusChip } from '@duncit/ui';
-import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { DuncitTable, type DuncitColumn, type TableFetch, type TableFilterValue } from '@duncit/table';
 import type { Ticket, TicketStatus } from '../../../graphql/tickets';
 import { relativeTime } from '../../../lib/supportTable';
 import { TICKET_PRIORITY_COLORS, TICKET_STATUS_COLORS } from '../../../lib/statusMaps';
@@ -91,6 +91,7 @@ interface Props {
   fetchRows: TableFetch<Ticket>;
   refetchRef: MutableRefObject<(() => void) | null>;
   toolbarActions?: ReactNode;
+  externalFilters?: ReadonlyArray<TableFilterValue>;
   onRowClick: (t: Ticket) => void;
 }
 
@@ -98,6 +99,7 @@ export default function TicketsTable({
   fetchRows,
   refetchRef,
   toolbarActions,
+  externalFilters,
   onRowClick,
 }: Readonly<Props>) {
   return (
@@ -108,6 +110,7 @@ export default function TicketsTable({
       getRowId={getTicketRowId}
       onRowClick={onRowClick}
       toolbarActions={toolbarActions}
+      externalFilters={externalFilters}
       emptyText="No tickets here yet."
       defaultSort={{ field: 'last_message_at', dir: 'desc' }}
       searchPlaceholder="Search subject"

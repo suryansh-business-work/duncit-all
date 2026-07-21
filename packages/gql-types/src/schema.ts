@@ -4416,6 +4416,9 @@ export type Mutation = {
   /**
    * Compress an already direct-uploaded ImageKit video with FFmpeg and re-upload
    * the result. Poll videoCompressionJob(job_id) for the real percentage.
+   * An optional trim window (start + duration, seconds) cuts the video during
+   * the FFmpeg pass — used by 15s video stories; trim always re-encodes even
+   * when compression is disabled for the surface.
    */
   startVideoCompression: VideoCompressionJob;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
@@ -6252,6 +6255,8 @@ export type MutationStartVideoCompressionArgs = {
   folder?: InputMaybe<Scalars['String']['input']>;
   remote_url: Scalars['String']['input'];
   surface?: InputMaybe<Scalars['String']['input']>;
+  trim_duration_seconds?: InputMaybe<Scalars['Float']['input']>;
+  trim_start_seconds?: InputMaybe<Scalars['Float']['input']>;
 };
 
 
@@ -10185,6 +10190,7 @@ export type QueryTicketsArgs = {
   assignee_id?: InputMaybe<Scalars['ID']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
   page_size?: InputMaybe<Scalars['Int']['input']>;
+  priority_first?: InputMaybe<TicketPriority>;
   search?: InputMaybe<Scalars['String']['input']>;
   sort_by?: InputMaybe<Scalars['String']['input']>;
   sort_dir?: InputMaybe<Scalars['String']['input']>;

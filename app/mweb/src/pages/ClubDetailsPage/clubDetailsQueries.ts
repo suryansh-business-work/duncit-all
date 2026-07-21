@@ -88,6 +88,7 @@ export const CLUB_STORIES = gql`
       media_type
       caption
       created_at
+      seen_by_me
       author {
         user_id
         full_name

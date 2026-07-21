@@ -9,7 +9,12 @@ interface Props {
   pod: any;
   stateTitle?: string;
   breakup: any;
-  selectedProducts?: Array<{ product_id: string; quantity: number }>;
+  selectedProducts?: Array<{
+    product_id: string;
+    quantity: number;
+    variant_id?: string;
+    unit_cost?: number;
+  }>;
 }
 
 export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedProducts = [] }: Readonly<Props>) {
@@ -19,10 +24,21 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
   const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
-  const selectedMap = new Map(selectedProducts.map((item) => [item.product_id, item.quantity]));
-  const productItems = (pod?.product_requests ?? [])
-    .filter((item: any) => selectedMap.has(item.product_id))
-    .map((item: any) => ({ ...item, quantity: selectedMap.get(item.product_id) || 0, total_cost: Number(item.unit_cost || 0) * Number(selectedMap.get(item.product_id) || 0) }));
+  const rowById = new Map<string, any>((pod?.product_requests ?? []).map((item: any) => [item.product_id, item]));
+  // One summary row per selection line (a chosen variant is its own line and
+  // carries its own price; base lines price from the pod snapshot).
+  const productItems = selectedProducts
+    .filter((item) => rowById.has(item.product_id) && item.quantity > 0)
+    .map((item) => {
+      const row = rowById.get(item.product_id);
+      const unitCost = Number(item.unit_cost ?? row.unit_cost ?? 0);
+      return {
+        key: `${item.product_id}-${item.variant_id ?? 'base'}`,
+        product_name: row.product_name,
+        quantity: item.quantity,
+        total_cost: unitCost * Number(item.quantity || 0),
+      };
+    });
   const productTotal = productItems.reduce((sum: number, item: any) => sum + Number(item.total_cost || 0), 0);
   const ticketTotal = Math.max(0, Number(breakup.total) - productTotal);
   // Venue charges are paid directly at the venue — shown for transparency but
@@ -48,7 +64,7 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
         <Stack spacing={0.75}>
           <Row label="Ticket price" value={fmt(ticketTotal)} />
           {productItems.map((item: any) => (
-            <Row key={item.product_id} label={`${item.product_name} x${item.quantity}`} value={fmt(item.total_cost)} />
+            <Row key={item.key} label={`${item.product_name} x${item.quantity}`} value={fmt(item.total_cost)} />
           ))}
           {productTotal > 0 && <Row label="Product add-ons" value={fmt(productTotal)} />}
           <Divider sx={{ my: 1 }} />

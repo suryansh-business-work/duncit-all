@@ -52,6 +52,16 @@ COPY server/src/modules /repo/server/src/modules
 COPY app/mobile-app/ ./
 RUN npm run codegen
 
+# Generate the native android/ project (Expo Continuous Native Generation). It is
+# gitignored (regenerated from app.json + config plugins), so it must be created
+# here — this keeps the "no Android SDK / prebuild needed on the host" promise.
+# Prebuild is pure JS templating (no SDK/Gradle), so it belongs in this node-only
+# stage; stage 3 then copies the generated android/ over. Flags:
+#   --platform android  only the platform this image builds
+#   --no-install        deps are already installed by `npm ci` above
+#   --clean             deterministic regen, ignoring any stale host android/
+RUN CI=1 npx expo prebuild --platform android --no-install --clean
+
 # ── Stage 2: Android SDK (JDK 21 + Node 24 + SDK 35 + NDK 27) ────────────────
 # Depends only on the base image + its own RUNs, so it stays fully cached across
 # every app-source rebuild (it never sees the JS layers). The React Native Gradle

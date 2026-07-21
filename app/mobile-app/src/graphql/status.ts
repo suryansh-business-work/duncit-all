@@ -98,10 +98,11 @@ export const UploadImageDocument = gql(`
 `);
 
 /** Starts the server-side FFmpeg compression of an already direct-uploaded
- * ImageKit video; poll MobileVideoCompressionJob for the real percentage. */
+ * ImageKit video; poll MobileVideoCompressionJob for the real percentage.
+ * The optional trim window cuts story videos down to the 15s cap. */
 export const StartVideoCompressionDocument = gql(`
-  mutation MobileStartVideoCompression($remoteUrl: String!, $folder: String) {
-    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: "MOBILE_MWEB") {
+  mutation MobileStartVideoCompression($remoteUrl: String!, $folder: String, $trimStart: Float, $trimDuration: Float) {
+    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: "MOBILE_MWEB", trim_start_seconds: $trimStart, trim_duration_seconds: $trimDuration) {
       job_id
       status
       pct

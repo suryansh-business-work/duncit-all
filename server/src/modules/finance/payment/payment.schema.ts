@@ -100,6 +100,8 @@ export const paymentTypeDefs = /* GraphQL */ `
   input CheckoutProductSelectionInput {
     product_id: ID!
     quantity: Int!
+    "Chosen variant for products with a variant matrix — price and stock resolve from it."
+    variant_id: ID
     "Optional per-product fulfilment override; falls back to the checkout-level method."
     fulfilment_method: FulfilmentMethod
   }

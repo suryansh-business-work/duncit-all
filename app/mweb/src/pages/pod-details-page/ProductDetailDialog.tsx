@@ -25,16 +25,27 @@ import ProductQuantityBar from './ProductQuantityBar';
 import ProductReviews from './ProductReviews';
 import { formatRupees, productSpecs, type ProductSpec } from './product-specs';
 import { PUBLIC_PRODUCT, RECORD_PRODUCT_CLICK, RECORD_PRODUCT_VIEW } from './queries';
+import { selectionKey } from '../../utils/product-selection';
+
+/** The variant the buyer has picked in the dialog, with everything the cart
+ * line needs (label/price/image/stock cap). Null for variant-less products. */
+export interface VariantPick {
+  id: string;
+  label: string;
+  unit_cost: number;
+  image_url: string;
+  max: number;
+}
 
 interface Props {
   productId: string | null;
   onClose: () => void;
-  /** Current selected quantity of this product (from the pod's selection map). */
-  quantity?: number;
-  /** Available stock — the dialog's own query does not return it, so the pod row passes it. */
+  /** The pod's selection map (composite keys) — the dialog reads its own line. */
+  selection?: Record<string, number>;
+  /** Pod-level stock cap (stocked − sold) — bounds every variant of this product. */
   maxQuantity?: number;
-  /** Update the selection for this product; 0 removes it. */
-  onUpdateQuantity?: (quantity: number) => void;
+  /** Update the active line (base or picked variant); 0 removes it. */
+  onUpdateLine?: (quantity: number, variant: VariantPick | null) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   viewOnly?: boolean;
 }
@@ -92,9 +103,9 @@ function deriveProductMedia(
 export default function ProductDetailDialog({
   productId,
   onClose,
-  quantity = 0,
+  selection,
   maxQuantity = 0,
-  onUpdateQuantity,
+  onUpdateLine,
   viewOnly = false,
 }: Readonly<Props>) {
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
@@ -128,7 +139,24 @@ export default function ProductDetailDialog({
   const price = selectedVariant?.unit_cost ?? product?.unit_cost ?? 0;
   const mrp = product?.selling_price ?? 0;
   const brandId = product?.brand_id ?? null;
-  const stock = selectedVariant ? selectedVariant.inventory_count : maxQuantity;
+  // The pod cap (stocked − sold) bounds every purchase; a variant is further
+  // bounded by its own stock.
+  const stock = selectedVariant
+    ? Math.min(Number(selectedVariant.inventory_count ?? 0), maxQuantity)
+    : maxQuantity;
+  const activePick: VariantPick | null = selectedVariant
+    ? {
+        id: selectedVariant.id,
+        label:
+          selectedVariant.option_label || selectedVariant.color || selectedVariant.size_label || 'Variant',
+        unit_cost: Number(selectedVariant.unit_cost ?? product?.unit_cost ?? 0),
+        image_url: selectedVariant.images?.[0] ?? product?.image_url ?? '',
+        max: stock,
+      }
+    : null;
+  const lineQuantity = productId
+    ? (selection?.[selectionKey(productId, activePick?.id ?? null)] ?? 0)
+    : 0;
 
   let body: React.ReactNode = null;
   if (loading) {
@@ -225,9 +253,13 @@ export default function ProductDetailDialog({
           </IconButton>
         </DialogTitle>
         <DialogContent>{body}</DialogContent>
-        {product && !viewOnly && onUpdateQuantity ? (
+        {product && !viewOnly && onUpdateLine ? (
           <DialogActions sx={{ px: 3, pb: 2 }}>
-            <ProductQuantityBar quantity={quantity} maxQuantity={stock} onUpdate={onUpdateQuantity} />
+            <ProductQuantityBar
+              quantity={lineQuantity}
+              maxQuantity={stock}
+              onUpdate={(next) => onUpdateLine(next, activePick)}
+            />
           </DialogActions>
         ) : null}
       </Dialog>

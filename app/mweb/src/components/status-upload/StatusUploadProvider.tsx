@@ -1,9 +1,10 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { Alert, Box, Button, LinearProgress, Snackbar, Stack, Typography } from '@mui/material';
-import type { CropRect } from '@duncit/media-picker';
+import type { CropRect, VideoTrim } from '@duncit/media-picker';
 import { apolloClient } from '../../apollo';
 import { ADD_POD_STATUS, CREATE_STATUS_POST } from './queries';
 import StatusCropDialog from './StatusCropDialog';
+import StatusVideoPreviewDialog from './StatusVideoPreviewDialog';
 import { mediaTypeOf, uploadStatusMedia, type StatusUploadKind } from './statusPipeline';
 
 interface StatusUploadState {
@@ -31,32 +32,18 @@ const StatusUploadContext = createContext<StatusUploadContextValue | null>(null)
 const IDLE: StatusUploadState = { active: false, kind: null, progress: 0, message: '' };
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-// Stories are short clips — capped at 15s (Bug 3).
-const MAX_STORY_VIDEO_SECONDS = 15;
+// Story videos are capped at 50 MB; pod status keeps the general video cap.
+const MAX_STORY_VIDEO_BYTES = 50 * 1024 * 1024;
 
-function videoDurationSeconds(file: File) {
-  return new Promise<number>((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const video = document.createElement('video');
-    video.preload = 'metadata';
-    video.onloadedmetadata = () => {
-      URL.revokeObjectURL(url);
-      resolve(video.duration || 0);
-    };
-    video.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Could not read the selected video'));
-    };
-    video.src = url;
-  });
-}
-
-function validateFile(file: File, allowVideo: boolean) {
+function validateFile(file: File, kind: StatusUploadKind) {
   const isImage = file.type.startsWith('image/');
   const isVideo = file.type.startsWith('video/');
-  if (!isImage && (!allowVideo || !isVideo)) return 'Please choose a valid status media file';
+  if (!isImage && !isVideo) return 'Please choose a valid status media file';
   if (isImage && file.size > MAX_IMAGE_BYTES) return 'Image is too large (max 15 MB)';
-  if (isVideo && file.size > MAX_VIDEO_BYTES) return 'Video is too large (max 100 MB)';
+  if (isVideo) {
+    const cap = kind === 'pod' ? MAX_VIDEO_BYTES : MAX_STORY_VIDEO_BYTES;
+    if (file.size > cap) return `Video is too large (max ${Math.round(cap / (1024 * 1024))} MB)`;
+  }
   return null;
 }
 
@@ -66,8 +53,10 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
   const [accept, setAccept] = useState('image/*');
   const [upload, setUpload] = useState<StatusUploadState>(IDLE);
   const [notice, setNotice] = useState<string | null>(null);
-  // Image picks pause here for the crop step; videos upload immediately.
+  // Image picks pause here for the crop step.
   const [cropPick, setCropPick] = useState<{ file: File; pending: PendingPick } | null>(null);
+  // Story-video picks pause here for the preview / 15s-trim step.
+  const [videoPick, setVideoPick] = useState<{ file: File; pending: PendingPick } | null>(null);
 
   const openPicker = (pending: PendingPick) => {
     if (upload.active) return setNotice('Please wait, status upload is in progress.');
@@ -85,6 +74,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     pending: PendingPick,
     crop: CropRect | null,
     cropPreset: string | null,
+    trim: VideoTrim | null = null,
   ) => {
     const mediaType = mediaTypeOf(file);
     setUpload({ active: true, kind: pending.kind, progress: 0, message: 'Preparing status upload...' });
@@ -94,6 +84,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
         kind: pending.kind,
         crop,
         cropPreset,
+        trim,
         onStage: (stage) => setUpload((current) => ({ ...current, ...stage })),
       });
       setUpload((current) => ({ ...current, progress: 96, message: 'Saving status...' }));
@@ -122,25 +113,20 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     }
   };
 
-  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     const pending = pendingRef.current;
     pendingRef.current = null;
     if (!file || !pending) return;
-    const fileError = validateFile(file, true);
+    const fileError = validateFile(file, pending.kind);
     if (fileError) return setNotice(fileError);
 
     if (mediaTypeOf(file) === 'VIDEO') {
-      if (pending.kind !== 'pod') {
-        const seconds = await videoDurationSeconds(file).catch(() => 0);
-        if (seconds > MAX_STORY_VIDEO_SECONDS) {
-          return setNotice(
-            `Video is ${Math.round(seconds)}s — story videos must be ${MAX_STORY_VIDEO_SECONDS}s or less.`
-          );
-        }
-      }
-      return runUpload(file, pending, null, null);
+      // Pod status keeps the direct path; story videos pause on the preview
+      // step, where clips over 15s must be trimmed before posting (Bug 3).
+      if (pending.kind === 'pod') return runUpload(file, pending, null, null);
+      return setVideoPick({ file, pending });
     }
     // Images pause on the crop step (admin presets; No Crop default).
     setCropPick({ file, pending });
@@ -159,6 +145,15 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
           const pick = cropPick;
           setCropPick(null);
           if (pick) runUpload(pick.file, pick.pending, crop, cropPreset);
+        }}
+      />
+      <StatusVideoPreviewDialog
+        file={videoPick?.file ?? null}
+        onCancel={() => setVideoPick(null)}
+        onConfirm={(trim) => {
+          const pick = videoPick;
+          setVideoPick(null);
+          if (pick) runUpload(pick.file, pick.pending, null, null, trim);
         }}
       />
       {upload.active && (

@@ -58,8 +58,20 @@ export const UPLOAD_SETTINGS = gql`
 `;
 
 export const START_VIDEO_COMPRESSION = gql`
-  mutation StartVideoCompression($remoteUrl: String!, $folder: String, $surface: String) {
-    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: $surface) {
+  mutation StartVideoCompression(
+    $remoteUrl: String!
+    $folder: String
+    $surface: String
+    $trimStart: Float
+    $trimDuration: Float
+  ) {
+    startVideoCompression(
+      remote_url: $remoteUrl
+      folder: $folder
+      surface: $surface
+      trim_start_seconds: $trimStart
+      trim_duration_seconds: $trimDuration
+    ) {
       job_id
       status
       pct

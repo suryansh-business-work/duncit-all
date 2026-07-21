@@ -1,6 +1,10 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
+/** Vibrant "unseen story" ring shared by every story rail (home + club). */
+export const STORY_RING_GRADIENT =
+  'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)';
+
 interface HomeStatusTileProps {
   label: string;
   imageUrl?: string | null;
@@ -20,10 +24,12 @@ export default function HomeStatusTile({
   active = true,
   onClick,
 }: Readonly<HomeStatusTileProps>) {
-  // Only unseen tiles get the gradient ring; seen tiles show no ring (they also
-  // shift to the end of the rail).
+  // Unseen tiles get the vibrant gradient ring; seen tiles keep a grey
+  // (theme divider) ring so they stay recognisable as stories — they also
+  // shift to the end of the rail.
   const showRing = !add && active;
-  const ring = 'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)';
+  const showSeenRing = !add && !active;
+  const ring = STORY_RING_GRADIENT;
   const imageOrAvatar = imageUrl ? (
     <Box component="img" src={imageUrl} alt={label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   ) : (
@@ -59,7 +65,8 @@ export default function HomeStatusTile({
           height: 62,
           borderRadius: '50%',
           p: add ? 1.5 : 0.35,
-          background: showRing ? ring : 'transparent',
+          background: showRing ? ring : undefined,
+          bgcolor: showSeenRing ? 'divider' : undefined,
           border: add ? 1.5 : 0,
           borderStyle: add ? 'dashed' : 'solid',
           borderColor: 'divider',

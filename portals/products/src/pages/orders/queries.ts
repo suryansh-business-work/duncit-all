@@ -15,6 +15,9 @@ const ORDER_DETAIL_FIELDS = `
   payment_ref
   line_items {
     product_id
+    variant_id
+    variant_label
+    variant_sku
     name
     sku
     image_url

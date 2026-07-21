@@ -75,12 +75,14 @@ export function buildCheckoutContact(me: CheckoutMe): CheckoutContact | null {
 }
 
 /** Sum the picked products' line totals (unit_cost × qty) against the pod's
- * product catalogue. The server recomputes + validates this, so it is only for
+ * product catalogue. Variant lines carry their own price; base lines use the
+ * pod snapshot. The server recomputes + validates this, so it is only for
  * the displayed amount. Products missing from the catalogue contribute nothing. */
 export function sumSelectedProducts(pod: CheckoutPod, selectedProducts: SelectedProduct[]): number {
   const byId = new Map((pod?.product_requests ?? []).map((p) => [p.product_id, p]));
   return selectedProducts.reduce(
-    (sum, item) => sum + Number(byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity,
+    (sum, item) =>
+      sum + Number(item.unit_cost ?? byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity,
     0,
   );
 }
@@ -147,23 +149,41 @@ export function useCheckout(podId: string, selectedProducts: SelectedProduct[] =
   // Displayed add-on total for the picked products; the server is authoritative.
   const productTotal = sumSelectedProducts(pod, selectedProducts);
 
-  const contactInput = (
-    values: CheckoutFormValues,
-    amount: number,
-    couponCode?: string | null,
-  ) => ({
-    pod_id: podId || null,
-    amount,
-    description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
-    contact_name: values.full_name.trim(),
-    contact_email: values.email,
-    contact_phone_extension: values.phone_extension,
-    contact_phone_number: values.phone_number,
-    billing: buildCheckoutBilling(values, me?.address ?? null),
-    checkout_url: CHECKOUT_URL,
-    coupon_code: couponCode || null,
-    selected_products: selectedProducts,
-  });
+  const contactInput = (values: CheckoutFormValues, amount: number, couponCode?: string | null) => {
+    // Shipped products deliver to the billing address the buyer resolved here
+    // (the server rejects SHIP-bound products without one).
+    const addressSource = values.same_as_main && me?.address?.line1 ? me.address : values;
+    return {
+      pod_id: podId || null,
+      amount,
+      description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
+      contact_name: values.full_name.trim(),
+      contact_email: values.email,
+      contact_phone_extension: values.phone_extension,
+      contact_phone_number: values.phone_number,
+      billing: buildCheckoutBilling(values, me?.address ?? null),
+      shipping_address: {
+        name: values.full_name.trim(),
+        phone: `${values.phone_extension} ${values.phone_number}`.trim(),
+        email: values.email,
+        line1: addressSource.line1 ?? '',
+        line2: addressSource.line2 ?? '',
+        landmark: addressSource.landmark ?? '',
+        city: addressSource.city ?? '',
+        state: addressSource.state ?? '',
+        pincode: addressSource.pincode ?? '',
+        country: addressSource.country || 'India',
+      },
+      checkout_url: CHECKOUT_URL,
+      coupon_code: couponCode || null,
+      // Strip client-only fields (unit_cost) and pass the chosen variant.
+      selected_products: selectedProducts.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        ...(item.variant_id ? { variant_id: item.variant_id } : {}),
+      })),
+    };
+  };
 
   /** Persist the entered billing address as the main address when opted in. The
    * opt-in only applies when there is no saved main address yet. */

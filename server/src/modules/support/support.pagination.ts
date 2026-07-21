@@ -26,13 +26,17 @@ interface PaginableModel {
   countDocuments: (filter: Record<string, unknown>) => Promise<number>;
 }
 
-export async function paginateDocs<T>(
-  Model: PaginableModel,
-  filter: Record<string, unknown>,
+interface AggregatableModel extends PaginableModel {
+  aggregate: (pipeline: any[]) => any;
+}
+
+/** Clamped page/page_size plus the whitelisted (or default) sort — shared by
+ * the plain and ranked pagination paths. */
+function resolvePageSort(
   opts: SupportPageOpts | undefined,
   sortable: Set<string>,
   defaultSort: Record<string, 1 | -1>
-): Promise<{ docs: T[]; total: number; page: number; page_size: number }> {
+): { page: number; pageSize: number; chosen: Record<string, 1 | -1> } {
   const o = opts ?? {};
   const page = Math.max(1, Math.trunc(o.page ?? 1));
   const pageSize = Math.min(100, Math.max(1, Math.trunc(o.page_size ?? 25)));
@@ -40,6 +44,17 @@ export async function paginateDocs<T>(
     o.sort_by && sortable.has(o.sort_by)
       ? { [o.sort_by]: o.sort_dir === 'asc' ? 1 : -1 }
       : defaultSort;
+  return { page, pageSize, chosen };
+}
+
+export async function paginateDocs<T>(
+  Model: PaginableModel,
+  filter: Record<string, unknown>,
+  opts: SupportPageOpts | undefined,
+  sortable: Set<string>,
+  defaultSort: Record<string, 1 | -1>
+): Promise<{ docs: T[]; total: number; page: number; page_size: number }> {
+  const { page, pageSize, chosen } = resolvePageSort(opts, sortable, defaultSort);
   // Append _id as a unique tiebreaker so low-cardinality sort fields (status,
   // priority) yield a STABLE total order — without it, rows can shift between
   // pages and get duplicated on one page while dropping off another.
@@ -49,6 +64,53 @@ export async function paginateDocs<T>(
       .sort(sort)
       .skip((page - 1) * pageSize)
       .limit(pageSize),
+    Model.countDocuments(filter),
+  ]);
+  return { docs, total, page, page_size: pageSize };
+}
+
+/** Display-order rank for `paginateDocsRanked`: rows whose `field` value sits
+ * earlier in `order` come first; the regular sort applies within each rank. */
+export interface RankSpec {
+  field: string;
+  order: readonly string[];
+}
+
+/**
+ * Same envelope as `paginateDocs`, but with a computed rank (e.g. "HIGH
+ * priority first") as the primary sort key. Values missing from `order` sink
+ * to the bottom. Uses an aggregation because a plain `.sort()` cannot express
+ * a custom enum order; the returned docs are plain objects, which the `pub()`
+ * mappers read field-by-field.
+ */
+export async function paginateDocsRanked<T>(
+  Model: AggregatableModel,
+  filter: Record<string, unknown>,
+  opts: SupportPageOpts | undefined,
+  sortable: Set<string>,
+  defaultSort: Record<string, 1 | -1>,
+  rank: RankSpec
+): Promise<{ docs: T[]; total: number; page: number; page_size: number }> {
+  const { page, pageSize, chosen } = resolvePageSort(opts, sortable, defaultSort);
+  const sort: Record<string, 1 | -1> = { __rank: 1, ...chosen, _id: -1 };
+  const [docs, total] = await Promise.all([
+    Model.aggregate([
+      { $match: filter },
+      {
+        $addFields: {
+          __rank: {
+            $let: {
+              vars: { i: { $indexOfArray: [rank.order, `$${rank.field}`] } },
+              in: { $cond: [{ $eq: ['$$i', -1] }, rank.order.length, '$$i'] },
+            },
+          },
+        },
+      },
+      { $sort: sort },
+      { $skip: (page - 1) * pageSize },
+      { $limit: pageSize },
+      { $unset: '__rank' },
+    ]),
     Model.countDocuments(filter),
   ]);
   return { docs, total, page, page_size: pageSize };

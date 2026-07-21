@@ -36,10 +36,16 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
 
       <Stack spacing={0.75}>
         {order.line_items.map((li) => (
-          <Stack key={li.product_id} direction="row" spacing={1} alignItems="center">
+          <Stack
+            key={`${li.product_id}-${li.variant_id || 'base'}`}
+            direction="row"
+            spacing={1}
+            alignItems="center"
+          >
             <Avatar src={li.image_url || undefined} variant="rounded" sx={{ width: 34, height: 34, bgcolor: 'action.hover' }} />
             <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }} noWrap>
-              {li.name} × {li.qty}
+              {li.name}
+              {li.variant_label ? ` — ${li.variant_label}` : ''} × {li.qty}
             </Typography>
             <Typography variant="body2" fontWeight={700}>
               {formatMoney(order.currency_symbol, li.gross)}

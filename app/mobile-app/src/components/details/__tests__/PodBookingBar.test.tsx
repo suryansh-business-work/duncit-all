@@ -20,10 +20,12 @@ const renderBar = (props: Partial<Parameters<typeof PodBookingBar>[0]> = {}) =>
     <PodBookingBar
       pod={pod}
       isFree={false}
+      isHost={false}
       membershipState={ms({})}
       onCheckout={jest.fn()}
       onBackout={jest.fn()}
       onKeepSpot={jest.fn()}
+      onGoToDashboard={jest.fn()}
       {...props}
     />,
   );
@@ -128,5 +130,33 @@ describe('PodBookingBar', () => {
     });
     expect(screen.getByTestId('pod-booked-label')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
+  });
+
+  it('swaps the booking CTA for Go to Dashboard when the viewer hosts this pod', () => {
+    const onGoToDashboard = jest.fn();
+    const onCheckout = jest.fn();
+    renderBar({ isHost: true, onGoToDashboard, onCheckout });
+    expect(screen.getByText('Go to Dashboard')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-book')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-go-dashboard'));
+    expect(onGoToDashboard).toHaveBeenCalledTimes(1);
+    expect(onCheckout).not.toHaveBeenCalled();
+  });
+
+  it('keeps Go to Dashboard for the host even on a past-date or in-process pod', () => {
+    const expiredPod = {
+      id: 'p1',
+      pod_amount: 200,
+      pod_date_time: '2020-01-01T10:00:00Z',
+    } as unknown as PodDetail;
+    renderBar({
+      pod: expiredPod,
+      isHost: true,
+      membershipState: ms({ is_member: true, backout_in_process: true, can_cancel_backout: true }),
+    });
+    expect(screen.getByTestId('pod-go-dashboard')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
+    expect(screen.queryByTestId('pod-backout-in-process')).toBeNull();
+    expect(screen.queryByTestId('pod-booked-label')).toBeNull();
   });
 });

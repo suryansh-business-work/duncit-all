@@ -28,6 +28,7 @@ import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
 import { toErrorMessage } from '@/utils/errors';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { isPodExpired, podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -58,10 +59,13 @@ export function PodDetailsScreen() {
   );
   const { backout, busy: backingOut } = usePodBackout();
   const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
-  const { selectedProducts, selectedProductList, setSelectedProducts } = usePodProductSelection(
-    podId,
-    pod,
-  );
+  const {
+    selectedProducts,
+    selectedProductList,
+    selectedProductTotal,
+    setSelectedProducts,
+    setVariantQuantity,
+  } = usePodProductSelection(podId, pod);
   const showProducts = useFeatureFlag('is_product_visible');
   const finance = usePublicFinance();
   const { openClub } = useDetailNav();
@@ -71,6 +75,9 @@ export function PodDetailsScreen() {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
   const isFree = pod?.pod_type?.includes('FREE') ?? false;
+  // The viewer hosts THIS pod (pod-specific, independent of their active studio
+  // role) — swaps the booking CTA for the Host Studio entry. Mirrors mWeb.
+  const isPodHost = !!viewerId && (pod?.pod_hosts_id ?? []).includes(viewerId);
   const commentCount = (pod?.comment_count ?? 0) + commentDelta;
   const backoutAttemptsLeft = Math.max(
     0,
@@ -190,6 +197,24 @@ export function PodDetailsScreen() {
               pod={pod}
               selectedProducts={selectedProducts}
               onSelectionChange={setSelectedProducts}
+              selectedTotal={selectedProductTotal}
+              onVariantQuantity={(row, variant, quantity) =>
+                setVariantQuantity(
+                  {
+                    pod_id: pod.id,
+                    pod_title: pod.pod_title,
+                    club_slug: pod.club_slug,
+                    product_id: row.product_id,
+                    variant_id: variant.id,
+                    variant_label: variant.label,
+                    product_name: row.product_name,
+                    image_url: variant.image_url || row.image_url,
+                    unit_cost: variant.unit_cost,
+                    max_quantity: variant.max,
+                  },
+                  quantity,
+                )
+              }
               readOnly={!!membershipState?.is_member || isPodExpired(pod.pod_date_time)}
             />
           </Reveal>
@@ -255,6 +280,7 @@ export function PodDetailsScreen() {
         <PodBookingBar
           pod={pod}
           isFree={isFree}
+          isHost={isPodHost}
           membershipState={membershipState}
           onCheckout={() =>
             navigation.navigate('Checkout', {
@@ -264,6 +290,10 @@ export function PodDetailsScreen() {
           }
           onBackout={() => setBackoutOpen(true)}
           onKeepSpot={openKeepSpot}
+          onGoToDashboard={() => {
+            useStudioModeStore.getState().setMode('HOST');
+            navigation.navigate('HostManage');
+          }}
         />
       ) : null}
 

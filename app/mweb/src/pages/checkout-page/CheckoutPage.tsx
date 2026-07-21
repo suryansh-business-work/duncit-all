@@ -19,6 +19,7 @@ import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
+import SavedAddressPicker from './SavedAddressPicker';
 import {
   AVAILABLE_COUPONS,
   CHECKOUT_ME,
@@ -41,6 +42,7 @@ import {
   type RazorpaySignature,
 } from './razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
+import { useCart } from '../../components/cart/CartContext';
 
 /** The active payment-gateway badge — Razorpay when live, else Dummy when on. */
 function GatewayChip({ finance, isDark, theme }: Readonly<{ finance: any; isDark: boolean; theme: Theme }>) {
@@ -85,9 +87,15 @@ export default function CheckoutPage() {
     variables: { pod_id: checkoutPodId || null },
     fetchPolicy: 'cache-and-network',
   });
+  const { clearPod } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
+  // A successful payment consumes this pod's cart lines.
+  const finishSuccess = (payment: any) => {
+    if (checkoutPodId) clearPod(checkoutPodId);
+    setSuccess(payment);
+  };
   const [couponCode, setCouponCode] = useState('');
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
@@ -128,7 +136,7 @@ export default function CheckoutPage() {
         variables: { input: { payment_doc_id: paymentDocId, ...sig } },
       });
       const payment = res.data?.verifyRazorpayPayment;
-      if (payment?.status === 'SUCCESS') setSuccess(payment);
+      if (payment?.status === 'SUCCESS') finishSuccess(payment);
       else setError('Payment could not be verified.');
     } catch (e: any) {
       setError(parseApiError(e));
@@ -164,10 +172,29 @@ export default function CheckoutPage() {
     const input = {
       pod_id: checkoutPodId || null,
       amount,
-      selected_products: selectedProducts,
+      // Strip client-only fields (unit_cost) and pass the chosen variant.
+      selected_products: selectedProducts.map((item: any) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+        ...(item.variant_id ? { variant_id: item.variant_id } : {}),
+      })),
       description: state.description || `Pod booking · ${title}`,
       ...contact,
       billing,
+      // Shipped products deliver to the billing address the buyer entered here
+      // (the server rejects SHIP-bound products without one).
+      shipping_address: {
+        name: values.full_name,
+        phone: `${values.phone_extension} ${values.phone_number}`.trim(),
+        email: values.email,
+        line1: values.line1,
+        line2: values.line2 || '',
+        landmark: values.landmark || '',
+        city: values.city,
+        state: values.state,
+        pincode: values.pincode,
+        country: values.country || 'India',
+      },
       checkout_url: globalThis.window.location.href,
       coupon_code: coupon?.ok ? coupon.code : null,
     };
@@ -184,7 +211,7 @@ export default function CheckoutPage() {
         }
         // 100%-off coupon → already completed server-side, no gateway sheet.
         if (order.free && order.payment) {
-          setSuccess(order.payment);
+          finishSuccess(order.payment);
           return;
         }
         setSubmitting(false);
@@ -197,7 +224,7 @@ export default function CheckoutPage() {
       if (finance?.dummy_mode) {
         const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
         const payment = res.data?.dummyCheckout;
-        if (payment?.status === 'SUCCESS') setSuccess(payment);
+        if (payment?.status === 'SUCCESS') finishSuccess(payment);
         else setError('Payment failed. Please try again.');
         return;
       }
@@ -259,9 +286,10 @@ export default function CheckoutPage() {
     : null;
   const selectedProducts = state.selected_products ?? [];
   const baseAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
-  const productAmount = selectedProducts.reduce((sum, item) => {
+  const productAmount = selectedProducts.reduce((sum, item: any) => {
     const product = (pod?.product_requests ?? []).find((entry: any) => entry.product_id === item.product_id);
-    return sum + Number(product?.unit_cost ?? 0) * Number(item.quantity || 0);
+    // Variant lines carry their own price; base lines use the pod snapshot.
+    return sum + Number(item.unit_cost ?? product?.unit_cost ?? 0) * Number(item.quantity || 0);
   }, 0);
   const amount = baseAmount + productAmount;
   const breakup = useMemo(
@@ -289,6 +317,22 @@ export default function CheckoutPage() {
         <GatewayChip finance={financeData?.publicFinanceSettings} isDark={isDark} theme={theme} />
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
+      <SavedAddressPicker
+        onPick={(picked) =>
+          reset({
+            ...getValues(),
+            same_as_main: false,
+            full_name: picked.name || getValues().full_name,
+            line1: picked.line1,
+            line2: picked.line2,
+            landmark: picked.landmark,
+            city: picked.city,
+            state: picked.state,
+            pincode: picked.pincode,
+            country: picked.country || 'India',
+          })
+        }
+      />
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
         <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} selectedProducts={selectedProducts} />
         <PaymentDetailsCard

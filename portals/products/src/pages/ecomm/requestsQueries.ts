@@ -1,15 +1,34 @@
 import { gql } from '@apollo/client';
 
+export interface ProductListingOption {
+  name: string;
+  values: string[];
+}
+
+export interface ProductListingVariant {
+  id: string;
+  option_label: string;
+  sku: string;
+  unit_cost: number;
+  inventory_count: number;
+  images: string[];
+  color?: string | null;
+  size_label?: string | null;
+  weight_kg: number;
+}
+
 /** Row shape consumed by the product listing requests table + review dialog. */
 export interface ProductListingRow {
   id: string;
   product_name: string;
   image_url?: string | null;
+  images: string[];
   description?: string | null;
+  brand_name?: string | null;
   inventory_count: number;
   unit_cost: number;
   commission_pct: number;
-  delivery_target: 'HOST' | 'VENUE';
+  delivery_target: 'HOST' | 'VENUE' | 'SHIPROCKET';
   listing_review_status: 'PENDING' | 'APPROVED' | 'DENIED';
   listing_review_notes?: string | null;
   listing_submitted_by_name?: string | null;
@@ -18,6 +37,8 @@ export interface ProductListingRow {
   height_cm: number;
   weight_kg: number;
   color?: string | null;
+  options: ProductListingOption[];
+  variants: ProductListingVariant[];
   created_at?: string | null;
 }
 
@@ -32,7 +53,9 @@ const PRODUCT_LISTING_ROW_FIELDS = gql`
     id
     product_name
     image_url
+    images
     description
+    brand_name
     inventory_count
     unit_cost
     commission_pct
@@ -45,6 +68,21 @@ const PRODUCT_LISTING_ROW_FIELDS = gql`
     height_cm
     weight_kg
     color
+    options {
+      name
+      values
+    }
+    variants {
+      id
+      option_label
+      sku
+      unit_cost
+      inventory_count
+      images
+      color
+      size_label
+      weight_kg
+    }
     created_at
   }
 `;

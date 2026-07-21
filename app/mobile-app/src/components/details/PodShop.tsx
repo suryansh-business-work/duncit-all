@@ -5,12 +5,16 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PodShopProductRow } from './PodShopProductRow';
-import { ProductDetailSheet } from './ProductDetailSheet';
+import { ProductDetailSheet, type VariantPick } from './ProductDetailSheet';
 
 interface PodShopProps {
   pod: PodDetail;
   selectedProducts: Record<string, number>;
   onSelectionChange: (next: Record<string, number>) => void;
+  /** Variant-aware total for this pod's selection (base + variant lines). */
+  selectedTotal?: number;
+  /** A variant line change from the detail sheet (row + picked variant + qty). */
+  onVariantQuantity?: (row: any, variant: VariantPick, quantity: number) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   readOnly?: boolean;
 }
@@ -29,15 +33,19 @@ export function PodShop({
   pod,
   selectedProducts,
   onSelectionChange,
+  selectedTotal,
+  onVariantQuantity,
   readOnly = false,
 }: Readonly<PodShopProps>) {
   const { primary } = useThemeColors();
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const products = pod.product_requests ?? [];
-  const selectedTotal = products.reduce(
+  const baseTotal = products.reduce(
     (sum, item) => sum + (selectedProducts[item.product_id] ?? 0) * Number(item.unit_cost ?? 0),
     0,
   );
+  // The variant-aware total from the cart wins when provided.
+  const shownTotal = selectedTotal ?? baseTotal;
   const selectedCount = Object.values(selectedProducts).filter((qty) => qty > 0).length;
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -49,8 +57,14 @@ export function PodShop({
 
   const infoProduct = products.find((item) => item.product_id === infoProductId);
   const infoMax = Number(infoProduct?.available_count ?? infoProduct?.quantity ?? 0);
-  const onUpdateInfoQuantity = infoProductId
-    ? (quantity: number) => updateQuantity(infoProductId, quantity)
+  const onUpdateInfoLine = infoProductId
+    ? (quantity: number, variant: VariantPick | null) => {
+        if (variant && onVariantQuantity && infoProduct) {
+          onVariantQuantity(infoProduct, variant, quantity);
+          return;
+        }
+        updateQuantity(infoProductId, quantity);
+      }
     : undefined;
 
   return (
@@ -122,7 +136,7 @@ export function PodShop({
             {productCountLabel(selectedCount)}
           </Text>
           <Text fontSize={15} fontWeight="900" color="$color">
-            ₹{selectedTotal}
+            ₹{shownTotal}
           </Text>
         </XStack>
       ) : null}
@@ -130,10 +144,10 @@ export function PodShop({
       <ProductDetailSheet
         productId={infoProductId}
         onClose={() => setInfoProductId(null)}
-        quantity={infoProductId ? (selectedProducts[infoProductId] ?? 0) : 0}
+        selection={selectedProducts}
         maxQuantity={infoMax}
         readOnly={readOnly}
-        onUpdateQuantity={onUpdateInfoQuantity}
+        onUpdateLine={onUpdateInfoLine}
       />
     </YStack>
   );

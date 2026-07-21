@@ -57,7 +57,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
       </XStack>
 
       {order.line_items.map((li) => (
-        <XStack key={li.product_id} gap={8} alignItems="center">
+        <XStack key={`${li.product_id}-${li.variant_id || 'base'}`} gap={8} alignItems="center">
           {li.image_url ? (
             <AppImage
               source={{ uri: li.image_url }}
@@ -76,7 +76,8 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             </YStack>
           )}
           <Text flex={1} fontSize={13} color="$color" numberOfLines={1}>
-            {li.name} × {li.qty}
+            {li.name}
+            {li.variant_label ? ` — ${li.variant_label}` : ''} × {li.qty}
           </Text>
           <Text fontSize={13} fontWeight="800" color="$color">
             {formatMoney(order.currency_symbol, li.gross)}

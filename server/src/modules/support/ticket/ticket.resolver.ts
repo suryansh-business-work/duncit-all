@@ -29,6 +29,7 @@ export const ticketResolvers = {
         page_size?: number;
         sort_by?: string;
         sort_dir?: string;
+        priority_first?: any;
       },
       ctx: GraphQLContext
     ) => {
@@ -41,6 +42,7 @@ export const ticketResolvers = {
         page_size: args.page_size,
         sort_by: args.sort_by,
         sort_dir: args.sort_dir,
+        priority_first: args.priority_first,
       });
     },
     ticket: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {

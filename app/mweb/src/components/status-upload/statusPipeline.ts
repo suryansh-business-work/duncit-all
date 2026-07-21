@@ -1,5 +1,5 @@
 import { compressUploadedVideo, directUploadToImagekit } from '@duncit/media-picker';
-import type { CropRect } from '@duncit/media-picker';
+import type { CropRect, VideoTrim } from '@duncit/media-picker';
 import { apolloClient } from '../../apollo';
 import { UPLOAD_STATUS_MEDIA } from './queries';
 
@@ -41,6 +41,8 @@ export async function uploadStatusMedia(opts: {
   kind: StatusUploadKind;
   crop?: CropRect | null;
   cropPreset?: string | null;
+  /** Trim window (seconds) cut server-side — set when the picked video runs long. */
+  trim?: VideoTrim | null;
   onStage: (stage: StatusStage) => void;
 }): Promise<string> {
   const { file, kind, onStage } = opts;
@@ -53,8 +55,13 @@ export async function uploadStatusMedia(opts: {
       onStage({ progress: Math.round(pct * 0.7), message: 'Uploading status video...' }),
     );
     // …then the FFmpeg pass fills 70–95 with the real compression percentage.
-    return compressUploadedVideo(apolloClient, rawUrl, folder, 'MOBILE_MWEB', (pct) =>
-      onStage({ progress: 70 + Math.round(pct * 0.25), message: 'Compressing video...' }),
+    return compressUploadedVideo(
+      apolloClient,
+      rawUrl,
+      folder,
+      'MOBILE_MWEB',
+      (pct) => onStage({ progress: 70 + Math.round(pct * 0.25), message: 'Compressing video...' }),
+      opts.trim ?? null,
     );
   }
 

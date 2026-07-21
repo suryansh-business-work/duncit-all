@@ -10,7 +10,7 @@ import {
 import { DeletePostDocument } from '@/graphql/posts';
 import { graphqlRequest } from '@/services/graphql.client';
 import { uploadToImagekitDirect } from '@/services/imagekit-upload';
-import { compressUploadedVideo } from '@/services/video-compression';
+import { compressUploadedVideo, type VideoTrim } from '@/services/video-compression';
 
 export type StatusFeed = ResultOf<typeof StatusFeedDocument>;
 
@@ -21,6 +21,9 @@ export interface StatusUploadAsset {
   fileName?: string | null;
   mimeType?: string | null;
   mediaType?: 'IMAGE' | 'VIDEO';
+  /** Trim window (seconds) the server cuts during the FFmpeg pass — set when a
+   * picked video runs past the 15s story cap. */
+  trim?: VideoTrim | null;
 }
 
 interface StatusState {
@@ -74,8 +77,11 @@ export const useStatusStore = create<StatusState>((set, get) => ({
           '/posts',
           (pct) => set({ progress: 2 + Math.round(pct * 0.53) }),
         );
-        url = await compressUploadedVideo(rawUrl, '/posts', (pct) =>
-          set({ progress: 55 + Math.round(pct * 0.15) }),
+        url = await compressUploadedVideo(
+          rawUrl,
+          '/posts',
+          (pct) => set({ progress: 55 + Math.round(pct * 0.15) }),
+          asset.trim ?? null,
         );
       } else {
         if (!asset.base64) throw new Error('No media selected.');

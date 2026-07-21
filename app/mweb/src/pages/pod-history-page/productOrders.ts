@@ -17,6 +17,60 @@ export const MY_PRODUCT_ORDERS_FOR_POD = gql`
       created_at
       line_items {
         product_id
+        variant_id
+        variant_label
+        name
+        image_url
+        qty
+        unit_cost
+        gross
+      }
+      shipping_address {
+        name
+        line1
+        city
+        state
+        pincode
+      }
+      shiprocket {
+        awb
+        courier_name
+        tracking_status
+        label_url
+      }
+      tracking_events {
+        status
+        location
+        note
+        at
+      }
+    }
+  }
+`;
+
+/** Every product order the signed-in buyer has placed, across all pods —
+ * the "My Product Order History" page (newest first). */
+export const MY_PRODUCT_ORDERS = gql`
+  query MyProductOrders {
+    myProductOrders {
+      id
+      order_no
+      fulfilment_method
+      fulfilment_status
+      currency_symbol
+      items_total
+      total
+      pickup_ref
+      pickup_location_id
+      created_at
+      pod {
+        id
+        pod_title
+      }
+      line_items {
+        product_id
+        variant_id
+        variant_label
         name
         image_url
         qty
@@ -50,6 +104,8 @@ export type FulfilmentMethod = 'SHIP' | 'PICKUP';
 
 export interface ProductOrderLine {
   product_id: string;
+  variant_id?: string;
+  variant_label?: string;
   name: string;
   image_url: string;
   qty: number;
@@ -68,6 +124,8 @@ export interface ProductOrder {
   pickup_ref: string;
   pickup_location_id: string;
   created_at: string;
+  /** Present on the all-orders history query only. */
+  pod?: { id: string; pod_title: string } | null;
   line_items: ProductOrderLine[];
   shipping_address: { name: string; line1: string; city: string; state: string; pincode: string } | null;
   shiprocket: { awb: string; courier_name: string; tracking_status: string; label_url: string };

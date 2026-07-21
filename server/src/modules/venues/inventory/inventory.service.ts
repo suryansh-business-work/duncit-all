@@ -338,6 +338,29 @@ function validateProductListingInput(input: any) {
   if (commission < 5 || commission > 50) {
     throw new GraphQLError('Commission must be between 5% and 50%', { extensions: { code: 'BAD_USER_INPUT' } });
   }
+  validateVariantsInput(input);
+}
+
+/** Server-side mirror of the portal's per-variant rules: every variant needs a
+ * positive price and non-negative stock, and no two variants may share the same
+ * option combination (a duplicate would be unreachable at purchase time). */
+function validateVariantsInput(input: any) {
+  const variants = Array.isArray(input.variants) ? input.variants : [];
+  const seen = new Set<string>();
+  for (const v of variants) {
+    const label = cleanText(v?.option_label, 120) || 'variant';
+    if (!(Number(v?.unit_cost) > 0)) {
+      throw new GraphQLError(`Price for ${label} must be greater than 0`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (Number(v?.inventory_count) < 0) {
+      throw new GraphQLError(`Stock for ${label} cannot be negative`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const key = variantComboKey(v);
+    if (key && seen.has(key)) {
+      throw new GraphQLError(`Duplicate variant combination: ${label}`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (key) seen.add(key);
+  }
 }
 
 /** A deactivated brand cannot list new products (it is hidden everywhere). */
@@ -438,28 +461,51 @@ function toProductOptions(input: any) {
     }));
 }
 
+/** Stable identity for a variant across edits: its option combination (falling
+ * back to the label for legacy flat variants). */
+function variantComboKey(v: any): string {
+  const combo = (Array.isArray(v?.option_values) ? v.option_values : [])
+    .filter((o: any) => o && (o.name || o.value))
+    .map((o: any) => `${String(o.name ?? '').trim()}=${String(o.value ?? '').trim()}`.toLowerCase())
+    .sort()
+    .join('|');
+  return combo || String(v?.option_label ?? '').trim().toLowerCase();
+}
+
 function applyVariants(doc: IInventoryProduct, input: any) {
   doc.options = toProductOptions(input) as IInventoryProduct['options'];
   if (!Array.isArray(input.variants) || input.variants.length === 0) return;
-  const variants = input.variants.map((v: any) => ({
-    option_label: cleanText(v.option_label, 120),
-    option_values: Array.isArray(v.option_values)
-      ? v.option_values
-          .filter((o: any) => o && (o.name || o.value))
-          .map((o: any) => ({ name: cleanText(o.name, 60), value: cleanText(o.value, 120) }))
-      : [],
-    sku: (cleanText(v.sku, 60) || randomSku()).toUpperCase(),
-    color: cleanText(v.color, 80),
-    size_label: cleanText(v.size_label, 120),
-    description: cleanText(v.description, 4000),
-    unit_cost: Number(v.unit_cost) || 0,
-    inventory_count: Number(v.inventory_count) || 0,
-    images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
-    height_cm: Number(v.height_cm) || 0,
-    breadth_cm: Number(v.breadth_cm) || 0,
-    length_cm: Number(v.length_cm) || 0,
-    weight_kg: Number(v.weight_kg) || 0,
-  }));
+  // Preserve each variant's identity (_id + sku) and its forward counters
+  // across edits by matching on the option combination — otherwise every save
+  // would mint new ids and dangle any order/analytics references.
+  const existingByKey = new Map<string, any>(
+    ((doc.variants as any[]) ?? []).map((v: any) => [variantComboKey(v), v])
+  );
+  const variants = input.variants.map((v: any) => {
+    const previous = existingByKey.get(variantComboKey(v));
+    return {
+      ...(previous?._id ? { _id: previous._id } : {}),
+      option_label: cleanText(v.option_label, 120),
+      option_values: Array.isArray(v.option_values)
+        ? v.option_values
+            .filter((o: any) => o && (o.name || o.value))
+            .map((o: any) => ({ name: cleanText(o.name, 60), value: cleanText(o.value, 120) }))
+        : [],
+      sku: (cleanText(v.sku, 60) || previous?.sku || randomSku()).toUpperCase(),
+      color: cleanText(v.color, 80),
+      size_label: cleanText(v.size_label, 120),
+      description: cleanText(v.description, 4000),
+      unit_cost: Number(v.unit_cost) || 0,
+      inventory_count: Number(v.inventory_count) || 0,
+      images: Array.isArray(v.images) ? v.images.filter(Boolean) : [],
+      height_cm: Number(v.height_cm) || 0,
+      breadth_cm: Number(v.breadth_cm) || 0,
+      length_cm: Number(v.length_cm) || 0,
+      weight_kg: Number(v.weight_kg) || 0,
+      view_count: Number(previous?.view_count ?? 0),
+      click_count: Number(previous?.click_count ?? 0),
+    };
+  });
   doc.variants = variants as IProductVariant[];
   const primary = variants[0];
   doc.unit_cost = primary.unit_cost;
@@ -1023,8 +1069,16 @@ export const inventoryService = {
     user: AuthUser | null,
     commissionPct?: number | null
   ) {
+    if (status !== 'APPROVED' && status !== 'DENIED') {
+      throw new GraphQLError('Review decision must be APPROVED or DENIED', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
     const doc = await InventoryProductModel.findById(id);
     if (!doc) throw new GraphQLError('Product listing request not found', { extensions: { code: 'NOT_FOUND' } });
+    // Only partner-submitted listings go through review — the Duncit catalogue
+    // must never be archived/unpublished by this mutation.
+    if (!doc.listing_submitted_by_id) {
+      throw new GraphQLError('This product is not a partner listing', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
     const info = userInfo(user);
     if (commissionPct !== undefined && commissionPct !== null) {
       const commission = Number(commissionPct);
@@ -1033,19 +1087,37 @@ export const inventoryService = {
       }
       doc.commission_pct = commission;
     }
-    doc.listing_review_status = status === 'APPROVED' ? 'APPROVED' : 'DENIED';
+    const approved = status === 'APPROVED';
+    doc.listing_review_status = approved ? 'APPROVED' : 'DENIED';
     doc.listing_review_notes = cleanText(notes, 1000);
     doc.listing_reviewed_by_id = info.id;
     doc.listing_reviewed_by_name = info.name;
-    doc.status = status === 'APPROVED' ? 'ACTIVE' : 'ARCHIVED';
-    doc.visibility = status === 'APPROVED' ? 'PUBLIC' : 'INTERNAL';
-    doc.is_active = status === 'APPROVED';
-    doc.pod_available = status === 'APPROVED';
-    doc.host_request_allowed = status === 'APPROVED';
+    doc.status = approved ? 'ACTIVE' : 'ARCHIVED';
+    doc.visibility = approved ? 'PUBLIC' : 'INTERNAL';
+    doc.is_active = approved;
+    doc.pod_available = approved;
+    doc.host_request_allowed = approved;
     doc.last_updated_by_id = info.id;
     doc.last_updated_by_name = info.name;
     await doc.save();
-    await logActivity(doc._id, user, status === 'APPROVED' ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
+    await logActivity(doc._id, user, approved ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
+    // Tell the partner the outcome — they previously had to poll their table.
+    const reviewTitle = approved ? 'Product approved 🎉' : 'Product listing declined';
+    const reviewBody = approved
+      ? `${doc.product_name} is approved and can now be stocked into pods.`
+      : `${doc.product_name} was declined${doc.listing_review_notes ? ` — ${doc.listing_review_notes}` : '.'}`;
+    await notificationService
+      .create({
+        scope: 'USER',
+        target_user_ids: [String(doc.listing_submitted_by_id)],
+        title: reviewTitle,
+        body: reviewBody,
+        silent: false,
+      })
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('[inventory] review notify failed', error);
+      });
     return inventoryProductToPub(doc);
   },
 

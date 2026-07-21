@@ -18,7 +18,7 @@ export { uploadImageToImagekit, useImagekitBase64Upload } from './upload';
 export type { ImagekitUploadResult, UploadImageOptions } from './upload';
 export { directUploadToImagekit, useImagekitDirectUpload } from './useImagekitDirectUpload';
 export type { UploadProgress } from './useImagekitDirectUpload';
-export { compressUploadedVideo } from './videoCompression';
+export { compressUploadedVideo, type VideoTrim } from './videoCompression';
 export { useUploadSettings } from './useUploadSettings';
 export { croppablePresets, formatBytes, formatDuration, presetAspect, suggestPresetKey } from './cropUtils';
 export { default as ImageCropStep } from './ImageCropStep';

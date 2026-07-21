@@ -143,7 +143,16 @@ export const uploadTypeDefs = /* GraphQL */ `
     """
     Compress an already direct-uploaded ImageKit video with FFmpeg and re-upload
     the result. Poll videoCompressionJob(job_id) for the real percentage.
+    An optional trim window (start + duration, seconds) cuts the video during
+    the FFmpeg pass — used by 15s video stories; trim always re-encodes even
+    when compression is disabled for the surface.
     """
-    startVideoCompression(remote_url: String!, folder: String, surface: String): VideoCompressionJob!
+    startVideoCompression(
+      remote_url: String!
+      folder: String
+      surface: String
+      trim_start_seconds: Float
+      trim_duration_seconds: Float
+    ): VideoCompressionJob!
   }
 `;

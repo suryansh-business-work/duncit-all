@@ -53,9 +53,42 @@ function assertImagekitUrl(remoteUrl: string): URL {
   return parsed;
 }
 
-function runFfmpeg(job: VideoCompressionJob, inPath: string, outPath: string, setting: IUploadSetting) {
+export interface VideoTrim {
+  /** Seconds into the source to start from (>= 0). */
+  start: number;
+  /** Seconds to keep from `start` (e.g. 15 for a story). */
+  duration: number;
+}
+
+/** Longest trim window a client may request (stories use 15s). */
+const MAX_TRIM_DURATION_SECONDS = 60;
+
+function resolveTrim(start?: number | null, duration?: number | null): VideoTrim | null {
+  if (start == null && duration == null) return null;
+  const s = start ?? 0;
+  const d = duration ?? 0;
+  const valid =
+    Number.isFinite(s) && Number.isFinite(d) && s >= 0 && d > 0 && d <= MAX_TRIM_DURATION_SECONDS;
+  if (!valid) {
+    throw new GraphQLError('Invalid trim window', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return { start: s, duration: d };
+}
+
+function runFfmpeg(
+  job: VideoCompressionJob,
+  inPath: string,
+  outPath: string,
+  setting: IUploadSetting,
+  trim: VideoTrim | null
+) {
   return new Promise<void>((resolve, reject) => {
-    ffmpeg(inPath)
+    let command = ffmpeg(inPath);
+    if (trim) {
+      // Input-side seek (fast) + output duration — re-encode keeps frames exact.
+      command = command.seekInput(trim.start).duration(trim.duration);
+    }
+    command
       .videoCodec('libx264')
       .outputOptions([
         '-preset',
@@ -81,7 +114,13 @@ function runFfmpeg(job: VideoCompressionJob, inPath: string, outPath: string, se
   });
 }
 
-async function runJob(job: VideoCompressionJob, remoteUrl: string, folder: string | undefined, setting: IUploadSetting) {
+async function runJob(
+  job: VideoCompressionJob,
+  remoteUrl: string,
+  folder: string | undefined,
+  setting: IUploadSetting,
+  trim: VideoTrim | null
+) {
   const stamp = `${Date.now()}-${job.job_id}`;
   const inPath = path.join(os.tmpdir(), `duncit-vc-in-${stamp}.mp4`);
   const outPath = path.join(os.tmpdir(), `duncit-vc-out-${stamp}.mp4`);
@@ -90,7 +129,7 @@ async function runJob(job: VideoCompressionJob, remoteUrl: string, folder: strin
     if (!res.ok) throw new Error(`Could not download video (${res.status})`);
     await fs.promises.writeFile(inPath, Buffer.from(await res.arrayBuffer()));
 
-    await runFfmpeg(job, inPath, outPath, setting);
+    await runFfmpeg(job, inPath, outPath, setting, trim);
 
     const outBytes = await fs.promises.readFile(outPath);
     const uploaded = await uploadToImagekit({
@@ -112,14 +151,18 @@ async function runJob(job: VideoCompressionJob, remoteUrl: string, folder: strin
  * re-uploading the result to ImageKit. Returns immediately with a job the
  * client polls via videoCompressionJob for a real percentage loader. When
  * video compression is disabled for the surface, the job completes instantly
- * with the original URL.
+ * with the original URL — unless a trim window is requested, which always
+ * re-encodes (a story video longer than the cap must never publish untrimmed).
  */
 export async function startVideoCompression(opts: {
   remoteUrl: string;
   folder?: string;
   surface?: string;
+  trimStartSeconds?: number | null;
+  trimDurationSeconds?: number | null;
 }): Promise<VideoCompressionJob> {
   assertImagekitUrl(opts.remoteUrl);
+  const trim = resolveTrim(opts.trimStartSeconds, opts.trimDurationSeconds);
   pruneJobs();
   const job: VideoCompressionJob = {
     job_id: crypto.randomBytes(8).toString('hex'),
@@ -132,14 +175,25 @@ export async function startVideoCompression(opts: {
   jobs.set(job.job_id, job);
 
   const setting = await getUploadSettingsSafe(opts.surface);
-  if (!setting?.video_compression_enabled) {
+  if (!setting) {
+    if (trim) {
+      job.status = 'FAILED';
+      job.error = 'Upload settings unavailable — could not trim the video';
+      return job;
+    }
+    job.status = 'DONE';
+    job.pct = 100;
+    job.url = opts.remoteUrl;
+    return job;
+  }
+  if (!setting.video_compression_enabled && !trim) {
     job.status = 'DONE';
     job.pct = 100;
     job.url = opts.remoteUrl;
     return job;
   }
 
-  runJob(job, opts.remoteUrl, opts.folder, setting).catch((err: unknown) => {
+  runJob(job, opts.remoteUrl, opts.folder, setting, trim).catch((err: unknown) => {
     job.status = 'FAILED';
     job.error = err instanceof Error ? err.message : 'Video compression failed';
   });

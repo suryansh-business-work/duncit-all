@@ -10,10 +10,12 @@ import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
 interface Props {
   pod: PodDetail;
   isFree: boolean;
+  isHost: boolean;
   membershipState: PodMembershipState | null;
   onCheckout: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
+  onGoToDashboard: () => void;
 }
 
 /**
@@ -21,15 +23,18 @@ interface Props {
  * already booked shows "Pod Booked" (+ Backout) instead of offering to pay again
  * — matching mWeb's PodActionPanel. A booking in "Backout in process" offers
  * "Keep My Spot" until the released seat is rebooked. Full pods show a disabled
- * "Pod is full".
+ * "Pod is full". The pod's own host never books their pod — they get a
+ * "Go to Dashboard" CTA into Host Studio instead.
  */
 export function PodBookingBar({
   pod,
   isFree,
+  isHost,
   membershipState,
   onCheckout,
   onBackout,
   onKeepSpot,
+  onGoToDashboard,
 }: Readonly<Props>) {
   const isMember = !!membershipState?.is_member;
   const inProcess = !!membershipState?.backout_in_process;
@@ -40,8 +45,8 @@ export function PodBookingBar({
   // server enforces the same rule on joinFree + payment order creation, so we
   // replace the CTA with a notice (mirrors mWeb's PodActionPanel).
   const isExpired = !!pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
-  const showClosedNotice = isExpired && !isMember && !inProcess;
-  const showBookBar = !showClosedNotice && !isMember && !inProcess;
+  const showClosedNotice = !isHost && isExpired && !isMember && !inProcess;
+  const showBookBar = !isHost && !showClosedNotice && !isMember && !inProcess;
 
   return (
     <YStack
@@ -55,11 +60,12 @@ export function PodBookingBar({
     >
       <SafeAreaView edges={['bottom']}>
         <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
+          {isHost ? <HostBar onGoToDashboard={onGoToDashboard} /> : null}
           {showClosedNotice ? <ClosedNotice /> : null}
-          {inProcess ? (
+          {!isHost && inProcess ? (
             <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
           ) : null}
-          {!showClosedNotice && !inProcess && isMember ? (
+          {!isHost && !showClosedNotice && !inProcess && isMember ? (
             <MemberBar canBackout={canBackout} onBackout={onBackout} />
           ) : null}
           {showBookBar ? (
@@ -73,6 +79,41 @@ export function PodBookingBar({
         </XStack>
       </SafeAreaView>
     </YStack>
+  );
+}
+
+/** Host state: the host is auto-enrolled and never books their own pod — the
+ * CTA jumps into Host Studio instead (mirrors mWeb's PodActionPanel). */
+function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>) {
+  const { onPrimary } = useThemeColors();
+  return (
+    <>
+      <YStack flex={1}>
+        <Text fontSize={11} color="$muted">
+          You're hosting
+        </Text>
+        <Text fontSize={16} fontWeight="900" color="$color">
+          Your Pod
+        </Text>
+      </YStack>
+      <XStack
+        testID="pod-go-dashboard"
+        role="button"
+        aria-label="Go to Dashboard"
+        onPress={onGoToDashboard}
+        alignItems="center"
+        justifyContent="center"
+        paddingHorizontal={28}
+        height={48}
+        borderRadius={999}
+        backgroundColor="$primary"
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={15} fontWeight="900" color={onPrimary}>
+          Go to Dashboard
+        </Text>
+      </XStack>
+    </>
   );
 }
 

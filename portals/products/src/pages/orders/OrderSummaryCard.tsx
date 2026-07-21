@@ -72,7 +72,7 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
           </TableHead>
           <TableBody>
             {order.line_items.map((item: any) => (
-              <TableRow key={item.product_id}>
+              <TableRow key={`${item.product_id}-${item.variant_id || 'base'}`}>
                 <TableCell sx={{ width: 48 }}>
                   <Avatar src={item.image_url || undefined} variant="rounded" sx={{ width: 32, height: 32 }}>
                     {item.name?.[0]?.toUpperCase() ?? '?'}
@@ -81,9 +81,10 @@ export default function OrderSummaryCard({ order, podDateTime }: Readonly<Props>
                 <TableCell>
                   <Typography variant="body2" fontWeight={600}>
                     {item.name}
+                    {item.variant_label ? ` — ${item.variant_label}` : ''}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    {item.sku} · {item.ownership === 'DUNCIT' ? 'Duncit' : 'Brand'}
+                    {item.variant_sku || item.sku} · {item.ownership === 'DUNCIT' ? 'Duncit' : 'Brand'}
                   </Typography>
                 </TableCell>
                 <TableCell align="right">{item.qty}</TableCell>

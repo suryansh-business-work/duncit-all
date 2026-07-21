@@ -14,7 +14,9 @@ export type ProfileIconKey =
   | 'earn'
   | 'ideas'
   | 'plans'
-  | 'faqs';
+  | 'faqs'
+  | 'shop'
+  | 'orders';
 
 export interface ProfileTile {
   key: string;
@@ -46,12 +48,15 @@ export const REFERRAL_TILE: ProfileTile = {
 export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
   const items: ProfileTile[] = [
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
+    { key: 'shop', label: 'Pod Shop', caption: '', icon: 'shop', to: '/shop' },
+    { key: 'orders', label: 'My Product Order History', caption: '', icon: 'orders', to: '/orders' },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
     { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
     { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
   ];
   if (showPodPlans) {
-    items.splice(3, 0, { key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
+    // Pod Plans always slots in just before FAQs (the last row).
+    items.splice(items.length - 1, 0, { key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
   }
   return items;
 }

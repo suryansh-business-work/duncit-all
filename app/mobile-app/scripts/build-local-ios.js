@@ -2,7 +2,7 @@
 /**
  * iOS release build.
  *
- *   npm run build:local:ios
+ *   pnpm build:local:ios
  *
  * - On macOS: runs the build LOCALLY via `eas build --local` (needs Xcode).
  * - On Windows/Linux: a local iOS build is technically impossible (Apple only
@@ -12,7 +12,9 @@
 const { spawnSync } = require('node:child_process');
 
 const isMac = process.platform === 'darwin';
-const args = ['eas', 'build', '--platform', 'ios', '--profile', 'production'];
+// Resolve eas-cli via pnpm (no global npm install needed); `pnpm dlx` fetches
+// and runs its `eas` bin — the pnpm equivalent of `npx eas-cli`.
+const args = ['dlx', 'eas-cli', 'build', '--platform', 'ios', '--profile', 'production'];
 if (isMac) args.push('--local');
 
 if (isMac) {
@@ -23,7 +25,7 @@ if (isMac) {
   console.log('   Track progress + download the .ipa at https://expo.dev\n');
 }
 
-const result = spawnSync('npx', args, {
+const result = spawnSync('pnpm', args, {
   stdio: 'inherit',
   shell: process.platform === 'win32',
 });

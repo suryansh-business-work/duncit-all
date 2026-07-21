@@ -101,7 +101,8 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       images: Array.isArray(item.images) ? item.images : [],
       unit_cost: item.unit_cost ?? 0,
       quantity: item.quantity ?? 0,
-      available_count: item.quantity ?? 0,
+      // Units still buyable from this pod — sales decrement it (sold_count).
+      available_count: Math.max(0, (item.quantity ?? 0) - (item.sold_count ?? 0)),
       total_cost: item.total_cost ?? 0,
     })),
     product_cost_total: d.product_cost_total ?? 0,
@@ -571,9 +572,14 @@ function productMatchesClubCategory(product: any, clubCategory: ClubCategory | n
 async function buildProductRequests(
   enabled: boolean,
   rawItems: any[] = [],
-  clubCategory: ClubCategory | null = null
+  clubCategory: ClubCategory | null = null,
+  previousItems: any[] = []
 ) {
   if (!enabled) return [];
+  // Sales already made against this pod survive an edit — carry sold_count over.
+  const soldByProduct = new Map<string, number>(
+    (previousItems ?? []).map((row: any) => [String(row.product_id), Number(row.sold_count ?? 0)])
+  );
   const compact = Array.from(requestMap(rawItems).entries())
     .map(([productId, quantity]) => ({ productId, quantity }))
     .filter((item) => item.quantity > 0);
@@ -595,6 +601,7 @@ async function buildProductRequests(
       images: Array.isArray(product.images) ? product.images : [],
       unit_cost: product.unit_cost,
       quantity: item.quantity,
+      sold_count: soldByProduct.get(String(product._id)) ?? 0,
       total_cost: product.unit_cost * item.quantity,
     });
   }
@@ -793,7 +800,8 @@ async function applyProductsForUpdate(doc: any, input: any) {
   const nextRequests = await buildProductRequests(
     !!productsEnabled,
     input.product_requests ?? doc.product_requests ?? [],
-    clubCategory
+    clubCategory,
+    doc.product_requests ?? []
   );
   await applyProductDeltas(doc.product_requests ?? [], nextRequests);
   doc.products_enabled = !!productsEnabled;
@@ -1395,6 +1403,26 @@ export const podService = {
       actorUserId: audit?.actorUserId,
       note: audit?.note,
     });
+    return true;
+  },
+
+  /**
+   * When a pod completes (settlement submitted / finance approved), hand the
+   * UNSOLD stocked units back to the sellable pool: each row's reservation
+   * drops by (quantity − sold_count). Sold units already left inventory (and
+   * their reservation share) at order time. Callers must invoke this exactly
+   * once, at the moment completed_at transitions from null.
+   */
+  async releaseCompletedPodStock(podId: unknown) {
+    const pod = await PodModel.findById(podId).select('product_requests');
+    for (const row of (pod as any)?.product_requests ?? []) {
+      const unsold = Math.max(0, Number(row.quantity || 0) - Number(row.sold_count || 0));
+      if (!unsold) continue;
+      const product = await InventoryProductModel.findById(row.product_id);
+      if (!product) continue;
+      product.requested_count = Math.max(0, product.requested_count - unsold);
+      await product.save();
+    }
     return true;
   },
 

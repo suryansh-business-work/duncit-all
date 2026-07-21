@@ -97,7 +97,13 @@ export const uploadResolvers = {
     },
     startVideoCompression: (
       _p: unknown,
-      args: { remote_url: string; folder?: string; surface?: string },
+      args: {
+        remote_url: string;
+        folder?: string;
+        surface?: string;
+        trim_start_seconds?: number | null;
+        trim_duration_seconds?: number | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
@@ -105,6 +111,8 @@ export const uploadResolvers = {
         remoteUrl: args.remote_url,
         folder: args.folder,
         surface: args.surface,
+        trimStartSeconds: args.trim_start_seconds,
+        trimDurationSeconds: args.trim_duration_seconds,
       });
     },
   },

@@ -46,51 +46,110 @@ describe('useStatusUpload', () => {
     });
   });
 
-  it('publishes a short video as a VIDEO story', async () => {
+  it('pauses a picked video on the preview sheet, then publishes it on confirm', async () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValue({
       canceled: false,
       assets: [
-        { base64: 'vid', fileName: 'c.mp4', mimeType: 'video/mp4', type: 'video', duration: 12000 },
+        {
+          uri: 'file://c.mp4',
+          fileName: 'c.mp4',
+          mimeType: 'video/mp4',
+          type: 'video',
+          duration: 12000,
+          fileSize: 1024,
+        },
       ],
     });
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
       await result.current.pickAndUpload();
     });
+    expect(mockPublish).not.toHaveBeenCalled();
+    expect(result.current.pendingVideo).toEqual({
+      uri: 'file://c.mp4',
+      durationSeconds: 12,
+      fileName: 'c.mp4',
+      mimeType: 'video/mp4',
+    });
+
+    await act(async () => {
+      await result.current.confirmVideo(null);
+    });
+    expect(result.current.pendingVideo).toBeNull();
     expect(mockPublish).toHaveBeenCalledWith({
-      base64: 'vid',
+      uri: 'file://c.mp4',
       fileName: 'c.mp4',
       mimeType: 'video/mp4',
       mediaType: 'VIDEO',
+      trim: null,
     });
   });
 
-  it('publishes a video with no reported duration as a VIDEO story', async () => {
+  it('forwards the picked 15s trim window when confirming a long video (Bug 3)', async () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValue({
       canceled: false,
-      assets: [{ base64: 'vid', type: 'video', mimeType: 'video/mp4' }],
+      assets: [{ uri: 'file://long.mp4', type: 'video', duration: 40000 }],
     });
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
       await result.current.pickAndUpload();
     });
-    expect(mockPublish).toHaveBeenCalledWith(expect.objectContaining({ mediaType: 'VIDEO' }));
+    expect(result.current.error).toBeUndefined();
+    expect(result.current.pendingVideo?.durationSeconds).toBe(40);
+
+    await act(async () => {
+      await result.current.confirmVideo({ start: 5, duration: 15 });
+    });
+    expect(mockPublish).toHaveBeenCalledWith(
+      expect.objectContaining({ mediaType: 'VIDEO', trim: { start: 5, duration: 15 } }),
+    );
   });
 
-  it('rejects a video longer than the 15s story cap with a warning (Bug 3)', async () => {
+  it('keeps a video with no reported duration on the preview sheet', async () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValue({
       canceled: false,
-      assets: [{ base64: 'vid', type: 'video', duration: 20000 }],
+      assets: [{ uri: 'file://v.mp4', type: 'video', mimeType: 'video/mp4' }],
     });
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
       await result.current.pickAndUpload();
     });
-    expect(result.current.error).toContain('20s');
-    expect(result.current.error).toContain('15s');
+    expect(result.current.pendingVideo?.durationSeconds).toBe(0);
+  });
+
+  it('rejects a story video over the 50 MB cap (Bug 3)', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: 'file://big.mp4', type: 'video', fileSize: 51 * 1024 * 1024 }],
+    });
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(result.current.error).toContain('50 MB');
+    expect(result.current.pendingVideo).toBeNull();
+    expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  it('discards the pending video on cancel', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: 'file://v.mp4', type: 'video', duration: 5000 }],
+    });
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(result.current.pendingVideo).not.toBeNull();
+    act(() => {
+      result.current.cancelVideo();
+    });
+    expect(result.current.pendingVideo).toBeNull();
     expect(mockPublish).not.toHaveBeenCalled();
   });
 

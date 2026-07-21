@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { Avatar, Box, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
+import { STORY_RING_GRADIENT } from '../home-page/HomeStatusTile';
+import { RECORD_STORY_VIEW } from '../home-page/queries';
 import { CLUB_STORIES } from '../ClubDetailsPage/clubDetailsQueries';
 
 interface ClubStory {
@@ -12,6 +14,7 @@ interface ClubStory {
   image_url: string;
   media_type: string;
   caption: string;
+  seen_by_me?: boolean;
   author?: { user_id: string; full_name?: string | null; profile_photo?: string | null } | null;
 }
 
@@ -20,7 +23,9 @@ interface Props {
 }
 
 /** Ephemeral 24h club stories (Bug 6) — a rail of circular thumbnails the user
- *  can tap to view, plus an "Add" tile that posts a story to this club. */
+ *  can tap to view, plus an "Add" tile that posts a story to this club. The
+ *  ring is the vibrant gradient while unseen and grey once the viewer has seen
+ *  that story (viewing is recorded per user, per story). */
 export default function ClubStoriesSection({ clubId }: Readonly<Props>) {
   const { openClubPicker } = useStatusUpload();
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -29,8 +34,23 @@ export default function ClubStoriesSection({ clubId }: Readonly<Props>) {
     skip: !clubId,
     fetchPolicy: 'cache-and-network',
   });
+  const [recordView] = useMutation(RECORD_STORY_VIEW);
   const stories = data?.clubStories ?? [];
   const moments = stories.map((s) => ({ url: s.image_url, type: s.media_type }));
+
+  // Mark the story at `index` viewed (idempotent server-side; the mutation
+  // returns `seen_by_me`, so the ring greys out via the Apollo cache).
+  const markViewed = (index: number | null) => {
+    if (index === null) return;
+    const story = stories[index];
+    if (story && !story.seen_by_me) {
+      recordView({ variables: { id: story.id } }).catch(() => undefined);
+    }
+  };
+  const showStory = (index: number | null) => {
+    setLightbox(index);
+    markViewed(index);
+  };
 
   return (
     <Box>
@@ -61,13 +81,24 @@ export default function ClubStoriesSection({ clubId }: Readonly<Props>) {
             spacing={0.5}
             role="button"
             aria-label={`Story by ${story.author?.full_name ?? 'member'}`}
-            onClick={() => setLightbox(index)}
+            onClick={() => showStory(index)}
             sx={{ cursor: 'pointer', width: 66, flex: '0 0 auto' }}
           >
-            <Avatar
-              src={story.image_url}
-              sx={{ width: 58, height: 58, border: '2px solid', borderColor: 'primary.main' }}
-            />
+            <Box
+              sx={{
+                p: 0.35,
+                borderRadius: '50%',
+                background: story.seen_by_me ? undefined : STORY_RING_GRADIENT,
+                bgcolor: story.seen_by_me ? 'divider' : undefined,
+                display: 'grid',
+                placeItems: 'center',
+              }}
+            >
+              <Avatar
+                src={story.image_url}
+                sx={{ width: 58, height: 58, border: '2px solid', borderColor: 'background.paper' }}
+              />
+            </Box>
             <Typography variant="caption" sx={{ fontWeight: 700 }} noWrap>
               {story.author?.full_name?.split(' ')[0] ?? 'Member'}
             </Typography>
@@ -78,7 +109,7 @@ export default function ClubStoriesSection({ clubId }: Readonly<Props>) {
         moments={moments}
         index={lightbox}
         onClose={() => setLightbox(null)}
-        onIndexChange={setLightbox}
+        onIndexChange={showStory}
       />
     </Box>
   );

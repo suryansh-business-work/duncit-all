@@ -11,7 +11,7 @@ import {
   type TranscriptData,
   type TranscriptFormat,
 } from '@modules/support/transcript';
-import { paginateDocs, supportSearchRegex } from '@modules/support/support.pagination';
+import { paginateDocs, paginateDocsRanked, supportSearchRegex } from '@modules/support/support.pagination';
 
 const TICKET_SORTABLE = new Set([
   'last_message_at',
@@ -20,6 +20,14 @@ const TICKET_SORTABLE = new Set([
   'priority',
   'subject',
 ]);
+
+/** Display order for the agent list's priority-first sort: the selected
+ * priority leads, the rest follow by severity. */
+const PRIORITY_FIRST_ORDER: Record<TicketPriority, TicketPriority[]> = {
+  HIGH: ['HIGH', 'MEDIUM', 'LOW'],
+  MEDIUM: ['MEDIUM', 'HIGH', 'LOW'],
+  LOW: ['LOW', 'MEDIUM', 'HIGH'],
+};
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -437,6 +445,7 @@ export const ticketService = {
     page_size?: number | null;
     sort_by?: string | null;
     sort_dir?: string | null;
+    priority_first?: TicketPriority | null;
   }) {
     const q: any = {};
     if (opts.status) q.status = opts.status;
@@ -444,13 +453,10 @@ export const ticketService = {
       q.assignee_id = new Types.ObjectId(opts.assigneeId);
     }
     if (opts.search) q.subject = supportSearchRegex(opts.search);
-    const { docs, total, page, page_size } = await paginateDocs<ITicket>(
-      TicketModel,
-      q,
-      opts,
-      TICKET_SORTABLE,
-      { last_message_at: -1 }
-    );
+    const rankOrder = opts.priority_first ? PRIORITY_FIRST_ORDER[opts.priority_first] : null;
+    const { docs, total, page, page_size } = rankOrder
+      ? await paginateDocsRanked<ITicket>(TicketModel, q, opts, TICKET_SORTABLE, { last_message_at: -1 }, { field: 'priority', order: rankOrder })
+      : await paginateDocs<ITicket>(TicketModel, q, opts, TICKET_SORTABLE, { last_message_at: -1 });
     const items = await Promise.all(docs.map(toPub));
     return { items, total, page, page_size };
   },

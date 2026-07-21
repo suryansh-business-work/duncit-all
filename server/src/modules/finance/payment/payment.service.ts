@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import crypto from 'node:crypto';
 import { PaymentModel, type IPayment } from './payment.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/finance.model';
 import { sendEmail } from '@services/email/email.service';
@@ -139,27 +140,113 @@ export async function computeQuote(amount: number, opts?: { inclusive?: boolean 
 const newPaymentId = () =>
   `pay_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
-function selectedProductTotal(pod: any, selectedProducts: any[] = []) {
-  const allowed = new Map<string, any>((pod.product_requests ?? []).map((item: any) => [String(item.product_id), item]));
-  const selected = new Map<string, number>();
-  for (const item of selectedProducts) {
-    const productId = String(item?.product_id || '');
-    const quantity = Number(item?.quantity) || 0;
+/** One resolved, invoice-ready checkout line per product+variant selection. */
+interface ResolvedProductLine {
+  product_id: string;
+  variant_id: string;
+  variant_label: string;
+  variant_sku: string;
+  name: string;
+  quantity: number;
+  unit_cost: number;
+  gross: number;
+  fulfilment_method?: string;
+}
+
+interface ProductResolution {
+  lines: ResolvedProductLine[];
+  total: number;
+  /** True when any selected product delivers via ShipRocket (address needed). */
+  needs_shipping: boolean;
+}
+
+const EMPTY_PRODUCT_RESOLUTION: ProductResolution = { lines: [], total: 0, needs_shipping: false };
+
+/**
+ * Resolve the buyer's product selections against the pod's product_requests
+ * snapshot and — when a variant was chosen — the live product's variant subdoc,
+ * whose price and stock win. Gates every line: variant stock, and the pod's
+ * remaining (stocked − already sold) units per product. Throws on anything not
+ * buyable; returns invoice-ready lines plus the priced total.
+ */
+async function resolveProductLines(pod: any, selectedProducts: any[] = []): Promise<ProductResolution> {
+  const allowed = new Map<string, any>(
+    (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
+  );
+  // Merge duplicate selections of the same product+variant into one line.
+  const merged = new Map<string, { product_id: string; variant_id: string; quantity: number; fulfilment_method?: string }>();
+  for (const sel of selectedProducts) {
+    const productId = String(sel?.product_id || '');
+    const quantity = Number(sel?.quantity) || 0;
     if (!productId || quantity <= 0) continue;
-    selected.set(productId, (selected.get(productId) ?? 0) + quantity);
+    const variantId = sel?.variant_id ? String(sel.variant_id) : '';
+    const key = `${productId}|${variantId}`;
+    const row = merged.get(key) ?? {
+      product_id: productId,
+      variant_id: variantId,
+      quantity: 0,
+      fulfilment_method: sel?.fulfilment_method ? String(sel.fulfilment_method) : undefined,
+    };
+    row.quantity += quantity;
+    merged.set(key, row);
   }
-  let total = 0;
-  for (const [productId, quantity] of selected) {
-    const product = allowed.get(productId);
-    if (!product) {
+  if (merged.size === 0) return EMPTY_PRODUCT_RESOLUTION;
+
+  const productIds = Array.from(new Set(Array.from(merged.values(), (r) => r.product_id))).filter(
+    (id) => Types.ObjectId.isValid(id)
+  );
+  const products = await InventoryProductModel.find({ _id: { $in: productIds } })
+    .select('product_name variants delivery_target')
+    .lean();
+  const productMap = new Map<string, any>(products.map((p: any) => [String(p._id), p]));
+
+  const lines: ResolvedProductLine[] = [];
+  const perProductQty = new Map<string, number>();
+  let needsShipping = false;
+  for (const row of merged.values()) {
+    const snapshot = allowed.get(row.product_id);
+    if (!snapshot) {
       throw new GraphQLError('Selected product is not available for this pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    if (quantity > Number(product.quantity || 0)) {
-      throw new GraphQLError(`Only ${product.quantity} ${product.product_name} available`, { extensions: { code: 'BAD_USER_INPUT' } });
+    const product = productMap.get(row.product_id);
+    if (product?.delivery_target === 'SHIPROCKET') needsShipping = true;
+    let unitCost = Number(snapshot.unit_cost || 0);
+    let variant: any = null;
+    if (row.variant_id) {
+      variant = (product?.variants ?? []).find((v: any) => String(v._id) === row.variant_id) ?? null;
+      if (!variant) {
+        throw new GraphQLError('The selected product variant is no longer available', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      unitCost = Number(variant.unit_cost || 0);
+      if (row.quantity > Number(variant.inventory_count || 0)) {
+        throw new GraphQLError(
+          `Only ${variant.inventory_count} ${snapshot.product_name} (${variant.option_label}) in stock`,
+          { extensions: { code: 'BAD_USER_INPUT' } }
+        );
+      }
     }
-    total += Number(product.unit_cost || 0) * quantity;
+    perProductQty.set(row.product_id, (perProductQty.get(row.product_id) ?? 0) + row.quantity);
+    lines.push({
+      product_id: row.product_id,
+      variant_id: row.variant_id,
+      variant_label: variant?.option_label ?? '',
+      variant_sku: variant?.sku ?? '',
+      name: snapshot.product_name || 'Product',
+      quantity: row.quantity,
+      unit_cost: unitCost,
+      gross: round2(unitCost * row.quantity),
+      fulfilment_method: row.fulfilment_method,
+    });
   }
-  return round2(total);
+  // Pod-level gate: the pod's remaining stocked units, net of earlier sales.
+  for (const [productId, quantity] of perProductQty) {
+    const snapshot = allowed.get(productId);
+    const remaining = Math.max(0, Number(snapshot.quantity || 0) - Number(snapshot.sold_count || 0));
+    if (quantity > remaining) {
+      throw new GraphQLError(`Only ${remaining} ${snapshot.product_name} available`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+  }
+  return { lines, total: round2(lines.reduce((s, l) => s + l.gross, 0)), needs_shipping: needsShipping };
 }
 
 const userDisplayName = (user: any) =>
@@ -196,50 +283,17 @@ function buildBuyerFields(input: any, user: any) {
   return { user_name: name, user_email: email, user_phone: contactPhone, billing, billing_address };
 }
 
-/** Snapshot the selected products as invoice-ready lines (name/qty/unit/gross),
- * resolved against the pod's product_requests. Empty when nothing was selected. */
-function productLinesFor(pod: any, selectedProducts: any[] = []) {
-  const byId = new Map<string, any>(
-    (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
-  );
-  const lines: Array<{
-    product_id: string;
-    name: string;
-    quantity: number;
-    unit_cost: number;
-    gross: number;
-    fulfilment_method?: string;
-  }> = [];
-  for (const sel of selectedProducts) {
-    const productId = String(sel?.product_id || '');
-    const quantity = Number(sel?.quantity) || 0;
-    const product = byId.get(productId);
-    if (!productId || quantity <= 0 || !product) continue;
-    const unit_cost = Number(product.unit_cost || 0);
-    lines.push({
-      product_id: productId,
-      name: product.product_name || 'Product',
-      quantity,
-      unit_cost,
-      gross: round2(unit_cost * quantity),
-      // Optional per-line fulfilment override; falls back to the checkout-level
-      // fulfilment_method when building the order.
-      fulfilment_method: sel?.fulfilment_method ? String(sel.fulfilment_method) : undefined,
-    });
-  }
-  return lines;
-}
-
-/** The metadata blob recorded on every payment doc (source + pod breakdown). */
-const paymentMetadata = (input: any, pod: any) => ({
+/** The metadata blob recorded on every payment doc (source + pod breakdown).
+ * `products` is the checkout's resolved product selection (variant-aware). */
+const paymentMetadata = (input: any, pod: any, products: ProductResolution) => ({
   source: 'app_checkout',
   checkout_url: input.checkout_url,
   pod_id: input.pod_id || null,
   ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
-  product_cost_total: pod ? selectedProductTotal(pod, input.selected_products ?? []) : null,
+  product_cost_total: pod ? products.total : null,
   selected_products: input.selected_products ?? [],
-  // Invoice-ready product lines (name/qty/unit/gross) for itemization.
-  product_lines: pod ? productLinesFor(pod, input.selected_products ?? []) : [],
+  // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
+  product_lines: products.lines,
   // Fulfilment intent for the product order created on payment success.
   fulfilment_method: input.fulfilment_method ?? 'PICKUP',
   shipping_address: input.shipping_address ?? null,
@@ -279,6 +333,7 @@ async function resolvePayable(input: any) {
   let pod: any = null;
   let payableAmount = Number(input.amount) || 0;
   let description = input.description || 'Booking';
+  let products: ProductResolution = EMPTY_PRODUCT_RESOLUTION;
   if (input.pod_id) {
     pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -288,15 +343,21 @@ async function resolvePayable(input: any) {
       });
     }
     description = `Pod booking · ${pod.pod_title}`;
-    payableAmount = round2(
-      Number(pod.pod_amount || 0) + selectedProductTotal(pod, input.selected_products ?? [])
-    );
+    products = await resolveProductLines(pod, input.selected_products ?? []);
+    // A ShipRocket-delivered product cannot be ordered without somewhere to
+    // ship it — reject up-front instead of creating a doomed SHIP order.
+    if (products.needs_shipping && !input.shipping_address) {
+      throw new GraphQLError('A delivery address is required for shipped products', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    payableAmount = round2(Number(pod.pod_amount || 0) + products.total);
   }
   if (!payableAmount || payableAmount <= 0)
     throw new GraphQLError('Amount must be greater than 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  return { pod, payableAmount, description };
+  return { pod, payableAmount, description, products };
 }
 
 /** Books the slot + records the PodMember row + evaluates badges for a paid pod. */
@@ -499,7 +560,7 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description } = await resolvePayable(input);
+    const { pod, payableAmount, description, products } = await resolvePayable(input);
     const { quote, originalTotal, couponCode, couponDiscount } = await applyCoupon(
       input,
       payableAmount,
@@ -532,7 +593,7 @@ export const paymentService = {
       gateway: 'DUMMY',
       gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
       paid_at: paidAt,
-      metadata: { ...paymentMetadata(input, pod), original_total: originalTotal },
+      metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
     });
 
     if (status === 'SUCCESS') {
@@ -550,7 +611,7 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    const { pod, payableAmount, description } = await resolvePayable(input);
+    const { pod, payableAmount, description, products } = await resolvePayable(input);
     const { quote, originalTotal, couponCode, couponDiscount } = await applyCoupon(
       input,
       payableAmount,
@@ -585,7 +646,7 @@ export const paymentService = {
         gateway: 'COUPON',
         gateway_ref: `coupon_${Date.now()}`,
         paid_at: new Date(),
-        metadata: { ...paymentMetadata(input, pod), original_total: originalTotal },
+        metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
       });
       await finalizePaidPayment(freeDoc, fs, 'Coupon (100% off)');
       if (couponCode) await couponService.recordRedemption(couponCode);
@@ -621,7 +682,7 @@ export const paymentService = {
       gateway: 'RAZORPAY',
       gateway_ref: order.id,
       paid_at: null,
-      metadata: { ...paymentMetadata(input, pod), original_total: originalTotal, razorpay_order_id: order.id },
+      metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal, razorpay_order_id: order.id },
     });
 
     return {

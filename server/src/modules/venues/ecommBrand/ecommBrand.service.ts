@@ -154,6 +154,13 @@ async function removeUserRole(userId: string, role: string) {
 }
 
 export const ecommBrandService = {
+  /** Grant the e-commerce role directly (meeting-approval path). The drafted
+   * brand may still be DRAFT — product listing stays gated on the brand's own
+   * approval, so the early grant only unlocks the ECOMM studio + partner UI. */
+  async grantEcommRole(userId: string) {
+    await assignEcommRole(new Types.ObjectId(userId));
+  },
+
   // A partner may run several brands — list all of theirs.
   async listMine(userId: string) {
     const docs = await EcommBrandModel.find({ owner_user_id: new Types.ObjectId(userId) })

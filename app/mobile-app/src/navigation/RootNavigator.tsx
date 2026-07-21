@@ -14,6 +14,10 @@ import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { FollowListScreen } from '@/screens/FollowListScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
+import { CartScreen } from '@/screens/CartScreen';
+import { OrdersHistoryScreen } from '@/screens/OrdersHistoryScreen';
+import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
+import { ShopScreen } from '@/screens/ShopScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { CreatePodScreen } from '@/screens/CreatePodScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
@@ -129,6 +133,10 @@ export function RootNavigator() {
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Shop" component={ShopScreen} />
+      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="OrdersHistory" component={OrdersHistoryScreen} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} />
     </>
   ) : (

@@ -21,21 +21,33 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRupees, productSpecs, type ProductSpec } from '@/utils/product-specs';
 import { toErrorMessage } from '@/utils/errors';
+import { selectionKey } from '@/utils/product-selection';
 
 type Product = NonNullable<
   ResultOf<typeof PublicInventoryProductDocument>['publicInventoryProduct']
 >;
 type Variant = Product['variants'][number];
 
+/** The variant the buyer has picked in the sheet, with everything the cart
+ * line needs (label/price/image/stock cap). Null for variant-less products.
+ * RN twin of mWeb's VariantPick. */
+export interface VariantPick {
+  id: string;
+  label: string;
+  unit_cost: number;
+  image_url: string;
+  max: number;
+}
+
 interface Props {
   productId: string | null;
   onClose: () => void;
-  /** Current selected quantity of this product (from the pod's selection map). */
-  quantity?: number;
-  /** Available stock — the sheet's own query does not return it, so the pod row passes it. */
+  /** The pod's selection map (composite keys) — the sheet reads its own line. */
+  selection?: Record<string, number>;
+  /** Pod-level stock cap (stocked − sold) — bounds every variant of this product. */
   maxQuantity?: number;
-  /** Update the selection for this product; 0 removes it. */
-  onUpdateQuantity?: (quantity: number) => void;
+  /** Update the active line (base or picked variant); 0 removes it. */
+  onUpdateLine?: (quantity: number, variant: VariantPick | null) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   readOnly?: boolean;
 }
@@ -284,9 +296,9 @@ function ProductBody({
 export function ProductDetailSheet({
   productId,
   onClose,
-  quantity = 0,
+  selection,
   maxQuantity = 0,
-  onUpdateQuantity,
+  onUpdateLine,
   readOnly,
 }: Readonly<Props>) {
   const { primary } = useThemeColors();
@@ -344,7 +356,26 @@ export function ProductDetailSheet({
   const hasMrp = mrp > price;
   // Non-empty only when the product carries a brand link → the brand is tappable.
   const brandId = product?.brand_id ?? null;
-  const stock = selectedVariant ? selectedVariant.inventory_count : maxQuantity;
+  // The pod cap (stocked − sold) bounds every purchase; a variant is further
+  // bounded by its own stock.
+  const stock = selectedVariant
+    ? Math.min(Number(selectedVariant.inventory_count ?? 0), maxQuantity)
+    : maxQuantity;
+  const activePick: VariantPick | null = selectedVariant
+    ? {
+        id: selectedVariant.id,
+        label:
+          [selectedVariant.option_label, selectedVariant.color, selectedVariant.size_label].find(
+            Boolean,
+          ) ?? 'Variant',
+        unit_cost: Number(selectedVariant.unit_cost ?? product?.unit_cost ?? 0),
+        image_url: selectedVariant.images?.[0] ?? product?.image_url ?? '',
+        max: stock,
+      }
+    : null;
+  const lineQuantity = productId
+    ? (selection?.[selectionKey(productId, activePick?.id ?? null)] ?? 0)
+    : 0;
 
   // Body variants hoisted to consts so the render tree keeps flat (non-nested)
   // ternaries — identical branches, same scope.
@@ -364,11 +395,11 @@ export function ProductDetailSheet({
       hasMrp={hasMrp}
       brandId={brandId}
       selectedVariant={selectedVariant}
-      quantity={quantity}
+      quantity={lineQuantity}
       maxQuantity={stock}
       primary={primary}
       readOnly={readOnly}
-      onUpdateQuantity={onUpdateQuantity}
+      onUpdateQuantity={onUpdateLine ? (next) => onUpdateLine(next, activePick) : undefined}
       onZoom={setZoomIndex}
       onOpenBrand={setBrandOpen}
     />

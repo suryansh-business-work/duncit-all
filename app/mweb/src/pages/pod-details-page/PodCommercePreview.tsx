@@ -5,13 +5,17 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
-import ProductDetailDialog from './ProductDetailDialog';
+import ProductDetailDialog, { type VariantPick } from './ProductDetailDialog';
 
 interface Props {
   pod: any;
   priceFormat: (amount: number) => string;
   selectedProducts: Record<string, number>;
   onSelectionChange: (next: Record<string, number>) => void;
+  /** Variant-aware total for this pod's selection (base + variant lines). */
+  selectedTotal?: number;
+  /** A variant line change from the detail dialog (row + picked variant + qty). */
+  onVariantQuantity?: (row: any, variant: VariantPick, quantity: number) => void;
   /** View-only once the viewer has already booked this pod (no re-selecting). */
   viewOnly?: boolean;
 }
@@ -22,17 +26,19 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, viewOnly = false }: Readonly<Props>) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity, viewOnly = false }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
 
-  const selectedTotal = useMemo(
+  const baseTotal = useMemo(
     () => requests.reduce((sum: number, item: any) => sum + (selectedProducts[item.product_id] || 0) * Number(item.unit_cost || 0), 0),
     [requests, selectedProducts]
   );
+  // The variant-aware total from the cart wins when provided.
+  const shownTotal = selectedTotal ?? baseTotal;
   const selectedCount = Object.values(selectedProducts).filter((quantity) => quantity > 0).length;
   const textColor = isDark ? '#fff' : 'text.primary';
   const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : 'text.secondary';
@@ -49,9 +55,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
 
   const infoProduct = requests.find((item: any) => item.product_id === infoProductId);
   const infoMax = Number(infoProduct?.available_count ?? infoProduct?.quantity ?? 0);
-  const infoQuantity = infoProductId ? selectedProducts[infoProductId] || 0 : 0;
-  const updateInfoQuantity = (quantity: number) => {
-    if (infoProductId) updateQuantity(infoProductId, quantity);
+  const updateInfoLine = (quantity: number, variant: VariantPick | null) => {
+    if (!infoProductId) return;
+    if (variant && onVariantQuantity && infoProduct) {
+      onVariantQuantity(infoProduct, variant, quantity);
+      return;
+    }
+    updateQuantity(infoProductId, quantity);
   };
 
   return (
@@ -172,7 +182,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
             {productCountLabel(selectedCount)}
           </Typography>
           <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
-            {priceFormat(selectedTotal)}
+            {priceFormat(shownTotal)}
           </Typography>
         </Stack>
       )}
@@ -180,10 +190,10 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
       <ProductDetailDialog
         productId={infoProductId}
         onClose={() => setInfoProductId(null)}
-        quantity={infoQuantity}
+        selection={selectedProducts}
         maxQuantity={infoMax}
         viewOnly={viewOnly}
-        onUpdateQuantity={updateInfoQuantity}
+        onUpdateLine={updateInfoLine}
       />
     </Box>
   );

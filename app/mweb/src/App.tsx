@@ -19,6 +19,8 @@ import { useHapticFeedback } from './app/useHapticFeedback';
 import { useBrandingAssets } from './hooks/useBrandingAssets';
 import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 import { StatusUploadProvider } from './components/status-upload/StatusUploadProvider';
+import { CartProvider } from './components/cart/CartContext';
+import FloatingCartButton from './components/cart/FloatingCartButton';
 
 const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
 
@@ -59,6 +61,7 @@ export default function App() {
 
   return (
     <StatusUploadProvider>
+    <CartProvider>
     <Box
       sx={isAuthed ? {
         height: '100dvh',
@@ -119,11 +122,13 @@ export default function App() {
         </Box>
       </Container>
       {showBottomNav && <BottomNav />}
+      {isAuthed && <FloatingCartButton />}
       {isAuthed && <PodFeedbackPrompt />}
       <OpenInAppBanner />
       <BrandFontLoader />
       <NotifyHost />
     </Box>
+    </CartProvider>
     </StatusUploadProvider>
   );
 }

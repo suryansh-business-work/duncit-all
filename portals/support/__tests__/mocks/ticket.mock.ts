@@ -169,11 +169,16 @@ const TICKET_LIST_VARS = {
 
 export const ticketsListMock = (
   tickets: TicketMock[],
-  over: { status?: string | null; search?: string | null } = {},
+  over: { status?: string | null; search?: string | null; priority_first?: string } = {},
 ): MockedResponse => ({
   request: {
     query: TICKETS,
-    variables: { status: over.status ?? null, search: over.search ?? null, ...TICKET_LIST_VARS },
+    variables: {
+      status: over.status ?? null,
+      search: over.search ?? null,
+      priority_first: over.priority_first ?? 'HIGH',
+      ...TICKET_LIST_VARS,
+    },
   },
   result: {
     data: {

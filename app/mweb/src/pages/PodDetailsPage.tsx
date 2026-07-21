@@ -24,6 +24,8 @@ import AdSlot from '../components/ads/AdSlot';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
 import { usePodProductSelection } from './pod-details-page/usePodProductSelection';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
+import { useStudioMode } from '../StudioModeContext';
+import { STUDIO_HOME_PATH } from '../studio-mode';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import { useStatusUpload } from '../components/status-upload/StatusUploadProvider';
 import {
@@ -36,6 +38,7 @@ import {
 export default function PodDetailsPage() {
   const { clubSlug = '', podSlug = '' } = useParams();
   const navigate = useNavigate();
+  const { setMode } = useStudioMode();
   const { openPodPicker } = useStatusUpload();
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
@@ -159,6 +162,24 @@ export default function PodDetailsPage() {
           priceFormat={priceFormat}
           selectedProducts={productSelection.selectedProducts}
           onSelectionChange={productSelection.setSelectedProducts}
+          selectedTotal={productSelection.selectedProductTotal}
+          onVariantQuantity={(row, variant, quantity) =>
+            productSelection.setVariantQuantity(
+              {
+                pod_id: pod.id,
+                pod_title: pod.pod_title ?? '',
+                club_slug: pod.club_slug ?? '',
+                product_id: row.product_id,
+                variant_id: variant.id,
+                variant_label: variant.label,
+                product_name: row.product_name ?? 'Product',
+                image_url: variant.image_url || row.image_url || '',
+                unit_cost: variant.unit_cost,
+                max_quantity: variant.max,
+              },
+              quantity,
+            )
+          }
           viewOnly={!!data?.podMembershipState?.is_member || isPodExpired(pod.pod_date_time)}
         />
       )}
@@ -198,6 +219,7 @@ export default function PodDetailsPage() {
       <StickyPodActionPanel
         pod={pod}
         isFree={isFree}
+        isHost={isPodHost}
         priceFormat={priceFormat}
         membershipState={data?.podMembershipState}
         joining={actions.joinState.loading}
@@ -209,6 +231,10 @@ export default function PodDetailsPage() {
         onKeepSpot={actions.openKeepSpot}
         onPaidCheckout={actions.onPaidCheckout}
         onCopyReferral={actions.onCopyReferral}
+        onGoToDashboard={() => {
+          setMode('HOST');
+          navigate(STUDIO_HOME_PATH.HOST);
+        }}
       />
       {actions.snack && (
         <Alert severity="info" onClose={() => actions.setSnack(null)}>

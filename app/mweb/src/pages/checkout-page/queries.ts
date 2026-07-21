@@ -204,7 +204,14 @@ export interface CheckoutState {
   pod_id?: string;
   pod_title?: string;
   amount?: number;
-  selected_products?: Array<{ product_id: string; quantity: number }>;
+  selected_products?: Array<{
+    product_id: string;
+    quantity: number;
+    /** Chosen variant (products with a variant matrix). */
+    variant_id?: string;
+    /** Client-side display price for the line (variant-aware); never sent to the API. */
+    unit_cost?: number;
+  }>;
   description?: string;
 }
 

@@ -25,6 +25,8 @@ export interface IPodProductRequest {
   images: string[];
   unit_cost: number;
   quantity: number;
+  /** Units already bought from this pod — available = quantity - sold_count. */
+  sold_count: number;
   total_cost: number;
 }
 
@@ -130,6 +132,7 @@ const productRequestSchema = new Schema<IPodProductRequest>(
     images: { type: [String], default: [] },
     unit_cost: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
+    sold_count: { type: Number, default: 0, min: 0 },
     total_cost: { type: Number, required: true, min: 0 },
   },
   { _id: false }

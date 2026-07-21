@@ -572,10 +572,20 @@ describe('meeting decide (onboarding self-approve)', () => {
     expect(v?.owner_name).toBe('Venue Owner');
 
     const seller = await doneMeeting('ECOMM', '2029-03-01T05:00:00.000Z', 'Seller Person');
+    // Role assignment uses a transaction (real replica set in prod); the
+    // standalone test mongo can't run it, so spy on assignRoles (the grant
+    // helper adds USER + ECOMM_MANAGER) to assert the branch wiring.
+    const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
     await meetingService.decide(seller.meetingId, 'APPROVED', 'ok');
     const b: any = await EcommBrandModel.findOne({ owner_user_id: new Types.ObjectId(seller.userId) });
     expect(b?.status).toBe('DRAFT');
     expect(b?.contact_person).toBe('Seller Person');
+    // Approval grants the e-commerce role right away (mirrors CLUB_ADMIN).
+    expect(assignSpy).toHaveBeenCalledWith(
+      seller.userId,
+      expect.arrayContaining(['USER', 'ECOMM_MANAGER']),
+    );
+    assignSpy.mockRestore();
   });
 
   it('grants the CLUB_ADMIN role on approval (no drafted entity)', async () => {

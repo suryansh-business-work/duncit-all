@@ -66,6 +66,29 @@ describe('ecommBrandService integration', () => {
     expect(rejected.status).toBe('REJECTED');
     expect(rejected.reviewer_notes).toBe('Logo resolution too low');
   });
+
+  it('grants USER + ECOMM_MANAGER to the owner on approval (and via the direct grant helper)', async () => {
+    // Role assignment is transactional (replica set in prod); the standalone
+    // test mongo can't run it, so spy on assignRoles to assert the wiring.
+    const { userService } = await import('@modules/access/user/user.service');
+    const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
+    const owner = newOwner();
+    const draft = await ecommBrandService.save(owner, null, {
+      brand_name: 'Approvable',
+      description: 'ready for review now',
+      contact_email: 'ok@b.com',
+    });
+    await ecommBrandService.submit(owner, draft.id);
+    const approved = await ecommBrandService.approve(draft.id, 'Looks great');
+    expect(approved.status).toBe('APPROVED');
+    expect(assignSpy).toHaveBeenCalledWith(owner, expect.arrayContaining(['USER', 'ECOMM_MANAGER']));
+
+    // The meeting-approval path grants the same role set directly.
+    assignSpy.mockClear();
+    await ecommBrandService.grantEcommRole(owner);
+    expect(assignSpy).toHaveBeenCalledWith(owner, expect.arrayContaining(['USER', 'ECOMM_MANAGER']));
+    assignSpy.mockRestore();
+  });
 });
 
 describe('ecommBrand table queries (shared table engine)', () => {

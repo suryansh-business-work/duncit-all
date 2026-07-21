@@ -101,6 +101,79 @@ describe('productOrderService.createFromPayment', () => {
     const payment = await seedPayment([], { fulfilment_method: 'PICKUP' });
     expect(await productOrderService.createFromPayment(payment)).toEqual([]);
   });
+
+  it('captures the bought variant on the order line and uses its dims for the parcel', async () => {
+    const product = await seedProduct({
+      product_name: 'Hoodie',
+      inventory_count: 10,
+      variants: [
+        { option_label: 'S / Red', sku: 'VAR-S-RED', unit_cost: 500, inventory_count: 4, weight_kg: 0.4, length_cm: 30, breadth_cm: 25, height_cm: 4, images: ['http://x/red.jpg'] },
+        { option_label: 'L / Blue', sku: 'VAR-L-BLUE', unit_cost: 550, inventory_count: 6, weight_kg: 0.5, length_cm: 32, breadth_cm: 27, height_cm: 5, images: ['http://x/blue.jpg'] },
+      ],
+    });
+    const variant = (product as any).variants[1];
+    const payment = await seedPayment(
+      [
+        {
+          product_id: String(product._id),
+          variant_id: String(variant._id),
+          variant_label: 'L / Blue',
+          variant_sku: 'VAR-L-BLUE',
+          name: 'Hoodie',
+          quantity: 2,
+          unit_cost: 550,
+          gross: 1100,
+        },
+      ],
+      { fulfilment_method: 'PICKUP' }
+    );
+
+    const orders = await productOrderService.createFromPayment(payment);
+    expect(orders).toHaveLength(1);
+    const line = orders[0].line_items[0];
+    expect(line.variant_id).toBe(String(variant._id));
+    expect(line.variant_label).toBe('L / Blue');
+    expect(line.variant_sku).toBe('VAR-L-BLUE');
+    expect(line.unit_cost).toBe(550);
+    // Parcel data comes from the bought variant, not the flat mirror.
+    expect(line.weight_kg).toBe(0.5);
+    expect(line.image_url).toBe('http://x/blue.jpg');
+  });
+
+  it('decrements product + variant stock at order creation, exactly once', async () => {
+    const product = await seedProduct({
+      product_name: 'Cap',
+      inventory_count: 9,
+      variants: [
+        { option_label: 'Red', sku: 'CAP-RED', unit_cost: 200, inventory_count: 5 },
+        { option_label: 'Blue', sku: 'CAP-BLUE', unit_cost: 220, inventory_count: 4 },
+      ],
+    });
+    const variant = (product as any).variants[0];
+    const payment = await seedPayment(
+      [
+        {
+          product_id: String(product._id),
+          variant_id: String(variant._id),
+          variant_label: 'Red',
+          name: 'Cap',
+          quantity: 3,
+          unit_cost: 200,
+          gross: 600,
+        },
+      ],
+      { fulfilment_method: 'PICKUP' }
+    );
+
+    await productOrderService.createFromPayment(payment);
+    // Re-entrant finalize must not double-decrement (idempotent on the order).
+    await productOrderService.createFromPayment(payment);
+
+    const after: any = await InventoryProductModel.findById(product._id);
+    expect(after.inventory_count).toBe(6);
+    const afterVariant = after.variants.find((v: any) => String(v._id) === String(variant._id));
+    expect(afterVariant.inventory_count).toBe(2);
+  });
 });
 
 describe('productOrderService.table', () => {

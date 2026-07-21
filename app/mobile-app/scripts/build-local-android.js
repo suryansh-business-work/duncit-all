@@ -109,10 +109,24 @@ function startMonitor(onDanger) {
 
 /* ── Build steps ──────────────────────────────────────────────────────────── */
 
+/**
+ * Wrap an arg in double quotes when it contains whitespace. With `shell: true`
+ * Node does NOT quote args — it joins them with spaces and hands the string to
+ * the shell, which then re-splits on any space. Without this, a path in a home
+ * dir with a space ("C:\Users\First Last\…") fractures into two tokens and
+ * `docker buildx build` fails with "requires 1 argument". Paths here never
+ * contain literal double-quotes, so simple wrapping is sufficient for cmd.exe.
+ */
+function quoteForShell(arg) {
+  return /\s/.test(arg) ? `"${arg}"` : arg;
+}
+
 function run(cmd, args) {
   return new Promise((resolve, reject) => {
-    console.log(`\n▶  ${[cmd, ...args].join(' ')}\n`);
-    const child = spawn(cmd, args, { stdio: 'inherit', shell: process.platform === 'win32' });
+    const useShell = process.platform === 'win32';
+    const spawnArgs = useShell ? args.map(quoteForShell) : args;
+    console.log(`\n▶  ${[cmd, ...spawnArgs].join(' ')}\n`);
+    const child = spawn(cmd, spawnArgs, { stdio: 'inherit', shell: useShell });
     let aborted = false;
     const stopMonitor = startMonitor(() => {
       aborted = true;

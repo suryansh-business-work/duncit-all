@@ -17,12 +17,14 @@ import { PodSchedule } from '@/components/details/PodSchedule';
 import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
+import { KeepSpotDialog } from '@/components/pod-history/KeepSpotDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { usePodActions, usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePublicFinance } from '@/hooks/usePublicFinance';
-import { usePodBackout } from '@/hooks/usePodHistory';
+import { usePodBackout, usePodCancelBackout } from '@/hooks/usePodHistory';
+import { toErrorMessage } from '@/utils/errors';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
 import { isPodExpired, podShareMessage } from '@/utils/pod-format';
@@ -54,6 +56,7 @@ export function PodDetailsScreen() {
     savedInitially,
   );
   const { backout, busy: backingOut } = usePodBackout();
+  const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
   const { selectedProducts, selectedProductList, setSelectedProducts } = usePodProductSelection(
     podId,
     pod,
@@ -62,10 +65,16 @@ export function PodDetailsScreen() {
   const finance = usePublicFinance();
   const { openClub } = useDetailNav();
   const [backoutOpen, setBackoutOpen] = useState(false);
+  const [keepSpotOpen, setKeepSpotOpen] = useState(false);
+  const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
   const isFree = pod?.pod_type?.includes('FREE') ?? false;
   const commentCount = (pod?.comment_count ?? 0) + commentDelta;
+  const backoutAttemptsLeft = Math.max(
+    0,
+    (membershipState?.backout_attempts_max ?? 0) - (membershipState?.backout_attempts_used ?? 0),
+  );
 
   // Mirror like changes to the Explore feed banner so the two stay in sync
   // (bug 16). Skip the first settled render so we only push real user actions.
@@ -103,6 +112,27 @@ export function PodDetailsScreen() {
     } catch {
       setBackoutOpen(false);
     }
+  };
+
+  // "Keep My Spot" — a server refusal (replacement confirmed) stays inside the
+  // dialog so the user sees why the booking cannot be restored.
+  const onConfirmKeepSpot = async () => {
+    /* istanbul ignore next -- the dialog only mounts when `pod` exists */
+    if (!pod) return;
+    setKeepSpotError(null);
+    try {
+      await cancelBackout(pod.id);
+      setKeepSpotOpen(false);
+      await refetch();
+    } catch (err) {
+      setKeepSpotError(toErrorMessage(err));
+      await refetch();
+    }
+  };
+
+  const openKeepSpot = () => {
+    setKeepSpotError(null);
+    setKeepSpotOpen(true);
   };
 
   const share = async () => {
@@ -228,6 +258,7 @@ export function PodDetailsScreen() {
             })
           }
           onBackout={() => setBackoutOpen(true)}
+          onKeepSpot={openKeepSpot}
         />
       ) : null}
 
@@ -251,10 +282,23 @@ export function PodDetailsScreen() {
           busy={backingOut}
           onClose={() => setBackoutOpen(false)}
           onConfirm={onConfirmBackout}
+          refundAmount={membershipState?.backout_refund_amount ?? null}
+          deductionPct={membershipState?.backout_deduction_pct ?? 0}
           onViewTerms={() => {
             setBackoutOpen(false);
             navigation.navigate('Policy', { slug: 'backout-terms' });
           }}
+        />
+      ) : null}
+
+      {pod ? (
+        <KeepSpotDialog
+          open={keepSpotOpen}
+          busy={restoringSpot}
+          attemptsLeft={backoutAttemptsLeft}
+          error={keepSpotError}
+          onClose={() => setKeepSpotOpen(false)}
+          onConfirm={onConfirmKeepSpot}
         />
       ) : null}
     </YStack>

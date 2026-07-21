@@ -1,5 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
 import {
+  Alert,
   Box,
   Button,
   Dialog,
@@ -17,26 +18,47 @@ interface Props {
   onClose: () => void;
   onConfirm: () => void;
   busy?: boolean;
-  /** Reserved for future use — refund threshold is now sourced from the live policy. */
-  refundThresholdPct?: number | null;
+  /** Estimated refund after the Backouts deduction (null for free bookings). */
+  refundAmount?: number | null;
+  /** Currency symbol for the refund line (from public finance settings). */
+  currency?: string;
+  /** Backouts deduction % applied to the refund estimate. */
+  deductionPct?: number;
 }
 
 /**
- * Confirmation dialog shown before a user backs out of a pod.
- * Renders the admin-managed "backout-terms" policy inline so users
- * see the live, editable terms before confirming.
+ * Confirmation dialog shown before a user backs out of a pod. Confirming moves
+ * the booking to "Backout in process": the seat is released and the refund is
+ * paid only once someone fills the spot. Renders the admin-managed
+ * "backout-terms" policy inline so users see the live terms before confirming.
  */
 export default function BackoutConfirmDialog({
   open,
   onClose,
   onConfirm,
   busy,
+  refundAmount = null,
+  currency = '₹',
+  deductionPct = 0,
 }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ pr: 6 }}>Backout from this pod?</DialogTitle>
+      <DialogTitle sx={{ pr: 6 }}>Backout from Pod?</DialogTitle>
       <DialogContent dividers>
-        <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 1 }}>
+        <Typography variant="body2" sx={{ fontWeight: 700, mb: 1.5 }}>
+          You will get the refund only if someone fills your spot.
+        </Typography>
+        {refundAmount != null && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            If the refund is done, you will get{' '}
+            <b>
+              {currency}
+              {refundAmount}
+            </b>{' '}
+            (after the {deductionPct}% backout deduction).
+          </Alert>
+        )}
+        <Box sx={{ maxHeight: 280, overflowY: 'auto', pr: 1 }}>
           <PolicyRenderer slug="backout-terms" hideTitle hideUpdated />
         </Box>
 
@@ -56,7 +78,7 @@ export default function BackoutConfirmDialog({
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} disabled={busy}>
-          Cancel
+          Close
         </Button>
         <Button
           variant="contained"

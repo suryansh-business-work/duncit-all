@@ -6,6 +6,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import {
   usePodBackout,
   usePodBackoutDeduction,
+  usePodCancelBackout,
   usePodHistory,
   usePodHistoryCategories,
   usePodInvoice,
@@ -88,6 +89,31 @@ describe('usePodBackout', () => {
     const { result } = renderHook(() => usePodBackout());
     await act(async () => {
       await expect(result.current.backout('pod1')).rejects.toThrow('fail');
+    });
+    expect(result.current.busy).toBe(false);
+  });
+});
+
+describe('usePodCancelBackout', () => {
+  it('calls cancelBackoutPod with the pod doc id', async () => {
+    mockRequest.mockResolvedValueOnce({ cancelBackoutPod: { id: 'm1', status: 'JOINED' } });
+    const { result } = renderHook(() => usePodCancelBackout());
+    await act(async () => {
+      await result.current.cancelBackout('pod1');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { pod_doc_id: 'pod1' },
+      { auth: true },
+    );
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('clears busy even when the mutation fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('replacement confirmed'));
+    const { result } = renderHook(() => usePodCancelBackout());
+    await act(async () => {
+      await expect(result.current.cancelBackout('pod1')).rejects.toThrow('replacement confirmed');
     });
     expect(result.current.busy).toBe(false);
   });

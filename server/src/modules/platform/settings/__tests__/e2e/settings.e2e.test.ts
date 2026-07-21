@@ -88,4 +88,27 @@ describe('settings e2e', () => {
     const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
     await expect(admin.request(gql`query { environmentVariables { key } }`)).rejects.toThrow();
   });
+
+  it('configures max backout attempts (default 3, clamped to min 1, publicly readable)', async () => {
+    const pub = server.client();
+    const before: any = await pub.request(gql`query { publicAppSettings { max_backout_attempts } }`);
+    expect(before.publicAppSettings.max_backout_attempts).toBe(3);
+
+    const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
+    const updated: any = await admin.request(
+      gql`mutation ($i: UpdateAppSettingsInput!) { updateAppSettings(input: $i) { max_backout_attempts } }`,
+      { i: { max_backout_attempts: 5 } }
+    );
+    expect(updated.updateAppSettings.max_backout_attempts).toBe(5);
+
+    const after: any = await pub.request(gql`query { publicAppSettings { max_backout_attempts } }`);
+    expect(after.publicAppSettings.max_backout_attempts).toBe(5);
+
+    // Negative values clamp to the minimum of 1.
+    const clamped: any = await admin.request(
+      gql`mutation ($i: UpdateAppSettingsInput!) { updateAppSettings(input: $i) { max_backout_attempts } }`,
+      { i: { max_backout_attempts: -4 } }
+    );
+    expect(clamped.updateAppSettings.max_backout_attempts).toBe(1);
+  });
 });

@@ -1,39 +1,33 @@
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { usePolicy } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { stripHtml } from '@/utils/html';
 
-export interface BackoutConfirmDialogProps {
+export interface KeepSpotDialogProps {
   open: boolean;
   busy: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  onViewTerms: () => void;
-  /** Estimated refund after the Backouts deduction (null for free bookings). */
-  refundAmount?: number | null;
-  /** Backouts deduction % applied to the refund estimate. */
-  deductionPct?: number;
+  /** Backout attempts the user still has for this pod (max − used). */
+  attemptsLeft: number;
+  /** Server error (e.g. replacement already confirmed) shown inside the sheet. */
+  error?: string | null;
 }
 
-/** Backout confirmation sheet — spec copy + refund preview, and the live
- * "backout-terms" policy inline. RN twin of mWeb's BackoutConfirmDialog. */
-export function BackoutConfirmDialog({
+/** "Change of plans?" sheet — cancel an in-process backout and restore the
+ * booking. RN twin of mWeb's KeepSpotDialog. */
+export function KeepSpotDialog({
   open,
   busy,
   onClose,
   onConfirm,
-  onViewTerms,
-  refundAmount = null,
-  deductionPct = 0,
-}: Readonly<BackoutConfirmDialogProps>) {
+  attemptsLeft,
+  error = null,
+}: Readonly<KeepSpotDialogProps>) {
   const { color, onPrimary } = useThemeColors();
-  const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
-  const terms = stripHtml(data?.policyBySlug?.content);
 
   return (
     <Modal
@@ -43,7 +37,7 @@ export function BackoutConfirmDialog({
       onRequestClose={busy ? undefined : onClose}
     >
       <ModalThemeScope>
-        <YStack flex={1} testID="backout-dialog">
+        <YStack flex={1} testID="keep-spot-dialog">
           <YStack
             role="button"
             aria-label="Close"
@@ -68,10 +62,10 @@ export function BackoutConfirmDialog({
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={18} fontWeight="900" color="$color">
-                  Backout from Pod?
+                  Change of plans?
                 </Text>
                 <XStack
-                  testID="backout-close"
+                  testID="keep-spot-close"
                   role="button"
                   aria-label="Close"
                   onPress={busy ? undefined : onClose}
@@ -84,55 +78,24 @@ export function BackoutConfirmDialog({
                 </XStack>
               </XStack>
 
-              <YStack paddingHorizontal={16} gap={8}>
-                <Text fontSize={14} fontWeight="800" color="$color">
-                  You will get the refund only if someone fills your spot.
+              <YStack paddingHorizontal={16} gap={10}>
+                <Text fontSize={14} lineHeight={22} color="$color">
+                  Do you want us to stop searching for a replacement and keep this spot for you?
+                  (NOTE: If you wish you Backout from the Pod again, you can only do it for up to{' '}
+                  {attemptsLeft} more times)
                 </Text>
-                {refundAmount != null ? (
-                  <Text
-                    testID="backout-refund-amount"
-                    fontSize={13.5}
-                    fontWeight="800"
-                    color="$primary"
-                  >
-                    If the refund is done, you will get ₹{refundAmount} (after the {deductionPct}%
-                    backout deduction).
+                {error ? (
+                  <Text testID="keep-spot-error" fontSize={13} fontWeight="800" color="$danger">
+                    {error}
                   </Text>
                 ) : null}
               </YStack>
 
-              <ScrollView
-                style={{ maxHeight: 280 }}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8 }}
-              >
-                {isLoading ? (
-                  <Spinner testID="backout-terms-loading" color="$primary" />
-                ) : (
-                  <Text fontSize={14} lineHeight={22} color="$color">
-                    {terms || 'Review the backout terms before confirming.'}
-                  </Text>
-                )}
-              </ScrollView>
-
-              <XStack paddingHorizontal={16} paddingTop={8}>
-                <Text
-                  testID="backout-view-terms"
-                  role="button"
-                  aria-label="View backout terms"
-                  onPress={onViewTerms}
-                  fontSize={12}
-                  fontWeight="800"
-                  color="$primary"
-                >
-                  Read the full Backout Terms &amp; Conditions
-                </Text>
-              </XStack>
-
               <XStack padding={16} gap={12}>
                 <XStack
-                  testID="backout-cancel"
+                  testID="keep-spot-cancel"
                   role="button"
-                  aria-label="Cancel"
+                  aria-label="Close"
                   aria-disabled={busy}
                   onPress={busy ? undefined : onClose}
                   flex={1}
@@ -150,9 +113,9 @@ export function BackoutConfirmDialog({
                   </Text>
                 </XStack>
                 <XStack
-                  testID="backout-confirm"
+                  testID="keep-spot-confirm"
                   role="button"
-                  aria-label="Confirm backout"
+                  aria-label="Keep my spot"
                   aria-disabled={busy}
                   onPress={busy ? undefined : onConfirm}
                   flex={2}
@@ -161,13 +124,13 @@ export function BackoutConfirmDialog({
                   justifyContent="center"
                   gap={8}
                   borderRadius={12}
-                  backgroundColor="$danger"
+                  backgroundColor="$primary"
                   opacity={busy ? 0.7 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
                   <Text fontSize={14} fontWeight="900" color={onPrimary}>
-                    {busy ? 'Backing out…' : 'Confirm Backout'}
+                    {busy ? 'Restoring…' : 'Keep My Spot'}
                   </Text>
                 </XStack>
               </XStack>

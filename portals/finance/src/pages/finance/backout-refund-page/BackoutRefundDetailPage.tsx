@@ -4,6 +4,7 @@ import { Box, IconButton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { QueryGuard } from '@duncit/ui';
 import BackoutRefundInfoCards from './BackoutRefundInfoCards';
+import BackoutTimeline from './BackoutTimeline';
 import { BACKOUT_REFUND_DETAIL, type BackoutRefundDetail } from './queries';
 
 interface DetailData {
@@ -43,13 +44,19 @@ export default function BackoutRefundDetailPage() {
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h5" fontWeight={700}>{request.pod?.pod_title ?? 'Backout refund'}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {request.user_name ?? '—'}
+                  {request.backout_no}
+                  {request.user_name ? ` · ${request.user_name}` : ''}
                   {request.user_email ? ` · ${request.user_email}` : ''}
                 </Typography>
               </Box>
             </Stack>
 
             <BackoutRefundInfoCards request={request} sym={sym} />
+
+            {/* Complete Backout lifecycle, below the Refund section (spec). */}
+            <Box sx={{ mt: 2 }}>
+              <BackoutTimeline events={request.events} />
+            </Box>
           </Box>
         );
       }}

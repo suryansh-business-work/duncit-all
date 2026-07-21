@@ -7,6 +7,7 @@ import {
 import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { podUrl } from '../../utils/seoUrls';
+import BackoutInProcessPanel from './BackoutInProcessPanel';
 import { buildPodShareText } from './usePodDetailActions';
 
 interface Props {
@@ -16,9 +17,11 @@ interface Props {
   membershipState: any;
   joining: boolean;
   backingOut: boolean;
+  restoringSpot: boolean;
   selectedProductTotal: number;
   onJoinFree: () => void;
   onBackout: () => void;
+  onKeepSpot: () => void;
   onPaidCheckout: () => void;
   onCopyReferral: (token: string) => void;
 }
@@ -48,14 +51,17 @@ export default function PodActionPanel({
   membershipState,
   joining,
   backingOut,
+  restoringSpot,
   selectedProductTotal,
   onJoinFree,
   onBackout,
+  onKeepSpot,
   onPaidCheckout,
   onCopyReferral,
 }: Readonly<Props>) {
   const ms = membershipState;
   const isMember = ms?.is_member;
+  const inProcess = !!ms?.backout_in_process;
   const m = ms?.membership;
   const referralToken = m?.referral_token as string | null;
 
@@ -63,7 +69,7 @@ export default function PodActionPanel({
   // (the server enforces the same rule on joinFree + payment order creation).
   const isExpired =
     !!pod?.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
-  if (isExpired && !isMember) {
+  if (isExpired && !isMember && !inProcess) {
     return (
       <Alert severity="warning" sx={{ borderRadius: 2 }}>
         This pod has already taken place — booking is closed.
@@ -71,28 +77,47 @@ export default function PodActionPanel({
     );
   }
 
+  if (inProcess) {
+    return (
+      <BackoutInProcessPanel
+        canCancel={!!ms?.can_cancel_backout}
+        busy={restoringSpot}
+        onKeepSpot={onKeepSpot}
+      />
+    );
+  }
+
   if (isMember) {
+    const canBackout = !!ms?.can_backout;
     return (
       <Stack spacing={1}>
         <Stack direction="row" spacing={1}>
           <Button variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
             Joined
           </Button>
-          <Button
-            variant="outlined"
-            color="error"
-            onClick={onBackout}
-            disabled={backingOut}
-            fullWidth
-            sx={compactButtonSx}
-          >
-            Backout
-          </Button>
+          {canBackout && (
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={onBackout}
+              disabled={backingOut}
+              fullWidth
+              sx={compactButtonSx}
+            >
+              Backout
+            </Button>
+          )}
         </Stack>
-        <Typography variant="caption" color="text.secondary">
-          Refunds (paid pods) are processed once {ms?.refund_threshold_pct ?? 80}% of spots are
-          filled or someone joins via your referral link.
-        </Typography>
+        {canBackout ? (
+          <Typography variant="caption" color="text.secondary">
+            Backing out releases your seat — you will get the refund only if someone fills your
+            spot ({ms?.backout_deduction_pct ?? 0}% deduction applies on paid pods).
+          </Typography>
+        ) : (
+          <Alert severity="info">
+            You have reached the maximum number of Backout attempts allowed for this Pod.
+          </Alert>
+        )}
       </Stack>
     );
   }
@@ -104,7 +129,7 @@ export default function PodActionPanel({
           You have backed out. Refund status: <b>{m.refund_status}</b>
         </Alert>
         <Typography variant="body2">
-          Refer a friend to refill your spot — your refund processes immediately when they join.
+          Refer a friend to refill your spot — your refund is initiated once your spot is filled.
         </Typography>
         <Button
           variant="outlined"

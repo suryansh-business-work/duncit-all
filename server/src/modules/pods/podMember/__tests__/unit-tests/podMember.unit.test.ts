@@ -16,6 +16,24 @@ describe('podMember unit', () => {
     ).rejects.toThrow(/authentication required/i);
   });
 
+  it('cancelBackoutPod requires authentication', async () => {
+    await expect(
+      (async () =>
+        (podMemberResolvers.Mutation as any).cancelBackoutPod({}, { pod_doc_id: 'x' }, makeContext(null)))()
+    ).rejects.toThrow(/authentication required/i);
+  });
+
+  it('processBackoutRefund is finance/admin gated', async () => {
+    await expect(
+      (async () =>
+        (podMemberResolvers.Mutation as any).processBackoutRefund({}, { id: 'x' }, makeContext(null)))()
+    ).rejects.toThrow(/not authenticated/i);
+    await expect(
+      (async () =>
+        (podMemberResolvers.Mutation as any).processBackoutRefund({}, { id: 'x' }, makeContext({ roles: ['USER'] })))()
+    ).rejects.toThrow(/access denied/i);
+  });
+
   it('rejoinPod requires authentication', async () => {
     await expect(
       (async () => (podMemberResolvers.Mutation as any).rejoinPod({}, { pod_doc_id: 'x' }, makeContext(null)))()

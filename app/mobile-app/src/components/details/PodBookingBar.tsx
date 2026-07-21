@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
+import { BackoutInProcessBar } from '@/components/details/BackoutInProcessBar';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
 
@@ -12,12 +13,15 @@ interface Props {
   membershipState: PodMembershipState | null;
   onCheckout: () => void;
   onBackout: () => void;
+  onKeepSpot: () => void;
 }
 
 /**
  * Sticky bottom booking bar. Reflects the viewer's membership so a pod that is
  * already booked shows "Pod Booked" (+ Backout) instead of offering to pay again
- * — matching mWeb's PodActionPanel. Full pods show a disabled "Pod is full".
+ * — matching mWeb's PodActionPanel. A booking in "Backout in process" offers
+ * "Keep My Spot" until the released seat is rebooked. Full pods show a disabled
+ * "Pod is full".
  */
 export function PodBookingBar({
   pod,
@@ -25,15 +29,19 @@ export function PodBookingBar({
   membershipState,
   onCheckout,
   onBackout,
+  onKeepSpot,
 }: Readonly<Props>) {
   const isMember = !!membershipState?.is_member;
+  const inProcess = !!membershipState?.backout_in_process;
   const canBackout = !!membershipState?.can_backout;
-  const isFull = !isMember && membershipState?.can_join === false;
+  const canCancelBackout = !!membershipState?.can_cancel_backout;
+  const isFull = !isMember && !inProcess && membershipState?.can_join === false;
   // Once the pod's date has passed, booking is closed for non-members — the
   // server enforces the same rule on joinFree + payment order creation, so we
   // replace the CTA with a notice (mirrors mWeb's PodActionPanel).
   const isExpired = !!pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
-  const showClosedNotice = isExpired && !isMember;
+  const showClosedNotice = isExpired && !isMember && !inProcess;
+  const showBookBar = !showClosedNotice && !isMember && !inProcess;
 
   return (
     <YStack
@@ -48,10 +56,13 @@ export function PodBookingBar({
       <SafeAreaView edges={['bottom']}>
         <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
           {showClosedNotice ? <ClosedNotice /> : null}
-          {!showClosedNotice && isMember ? (
+          {inProcess ? (
+            <BackoutInProcessBar canCancel={canCancelBackout} onKeepSpot={onKeepSpot} />
+          ) : null}
+          {!showClosedNotice && !inProcess && isMember ? (
             <MemberBar canBackout={canBackout} onBackout={onBackout} />
           ) : null}
-          {!showClosedNotice && !isMember ? (
+          {showBookBar ? (
             <BookBar
               isFree={isFree}
               isFull={isFull}
@@ -86,13 +97,18 @@ function MemberBar({
     <>
       <XStack flex={1} alignItems="center" gap={8}>
         <MaterialIcons name="check-circle" size={22} color={semantic.success} />
-        <YStack>
+        <YStack flex={1}>
           <Text fontSize={11} color="$muted">
             You're going
           </Text>
           <Text fontSize={16} fontWeight="900" color="$color" testID="pod-booked-label">
             Pod Booked
           </Text>
+          {!canBackout ? (
+            <Text fontSize={10.5} color="$muted" testID="pod-backout-maxed">
+              You have reached the maximum number of Backout attempts allowed for this Pod.
+            </Text>
+          ) : null}
         </YStack>
       </XStack>
       {canBackout ? (

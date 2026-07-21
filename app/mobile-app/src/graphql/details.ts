@@ -101,6 +101,12 @@ export const PodDetailsDocument = gql(`
       spots_taken
       spots_total
       refund_threshold_pct
+      backout_in_process
+      can_cancel_backout
+      backout_attempts_used
+      backout_attempts_max
+      backout_deduction_pct
+      backout_refund_amount
       membership {
         id
         status

@@ -116,6 +116,24 @@ describe('buildTimeline', () => {
     expect(events[3]?.title).toBe('Refund not initiated');
   });
 
+  it('records the request as waiting while the backout is in process', () => {
+    const events = buildTimeline(
+      membership({
+        status: 'BACKOUT_IN_PROCESS',
+        backed_out_at: '2026-06-05',
+        refund_status: 'PENDING',
+      }),
+    );
+    expect(events.map((e) => e.title)).toEqual([
+      'Pod Joined',
+      'Backout requested',
+      'Refund criteria',
+      'Refund not initiated',
+    ]);
+    expect(events[1]?.tag).toBe('Completed');
+    expect(events[2]?.tag).toBe('Waiting');
+  });
+
   it('marks refund not initiated when backed out + NOT_ELIGIBLE', () => {
     const events = buildTimeline(
       membership({

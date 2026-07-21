@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { fmt, paymentTableFilter, STATUS_COLORS } from '../../src/pages/finance/payment-logs-page/helpers';
 import {
+  BACKOUT_STATUS_COLORS,
+  BACKOUT_STATUS_LABELS,
   buildRefundBreakup,
+  canProcessRefund,
   fmtDate,
   money as backoutMoney,
   REFUND_STATUS_COLORS,
@@ -62,25 +65,73 @@ describe('backout-refund queries logic', () => {
     expect(REFUND_STATUS_COLORS.NOT_ELIGIBLE).toBe('error');
   });
 
-  it('builds a refund breakup applying the deduction pct', () => {
-    const row = { payment_amount: 1000, refund_status: 'PENDING' } as BackoutRefundRequest;
-    const lines = buildRefundBreakup(row, '₹', 10);
+  it('exposes the backout status labels + colors', () => {
+    expect(BACKOUT_STATUS_LABELS.IN_PROCESS).toBe('Backout In Process');
+    expect(BACKOUT_STATUS_LABELS.CANCELLED).toBe('Backout Cancelled');
+    expect(BACKOUT_STATUS_LABELS.SPOT_FILLED).toBe('Spot Filled');
+    expect(BACKOUT_STATUS_COLORS.SPOT_FILLED).toBe('success');
+    expect(BACKOUT_STATUS_COLORS.IN_PROCESS).toBe('warning');
+  });
+
+  it('derives refund eligibility from the latest backout status', () => {
+    const base = {
+      backout_status: 'SPOT_FILLED',
+      payment_id: 'pay_1',
+      refund_processed_at: null,
+    } as BackoutRefundRequest;
+    expect(canProcessRefund(base)).toBe(true);
+    expect(canProcessRefund({ ...base, backout_status: 'IN_PROCESS' } as BackoutRefundRequest)).toBe(false);
+    expect(canProcessRefund({ ...base, backout_status: 'CANCELLED' } as BackoutRefundRequest)).toBe(false);
+    expect(canProcessRefund({ ...base, payment_id: null } as BackoutRefundRequest)).toBe(false);
+    expect(
+      canProcessRefund({ ...base, refund_processed_at: '2024-01-04T10:00:00Z' } as BackoutRefundRequest),
+    ).toBe(false);
+  });
+
+  it('builds a refund breakup preferring the request snapshot', () => {
+    const row = {
+      payment_amount: 1000,
+      backout_status: 'SPOT_FILLED',
+      deduction_pct: 10,
+      refund_amount: 900,
+    } as BackoutRefundRequest;
+    const lines = buildRefundBreakup(row, '₹', 25); // snapshot 10% wins over 25%
     expect(lines.find((l) => l.key === 'deduction')?.value).toBe('- ₹100.00');
-    expect(lines.find((l) => l.key === 'estimate')?.value).toBe('₹900.00');
+    expect(lines.find((l) => l.key === 'refund')?.value).toBe('₹900.00');
+    expect(lines.find((l) => l.key === 'backout-status')?.value).toBe('Spot Filled');
   });
 
   it('clamps deduction pct and defaults a null amount', () => {
-    const row = { payment_amount: null, refund_status: 'NONE' } as unknown as BackoutRefundRequest;
-    const lines = buildRefundBreakup(row, '₹', 200); // clamped to 100
+    const row = {
+      payment_amount: null,
+      backout_status: 'IN_PROCESS',
+      deduction_pct: 200, // clamped to 100
+      refund_amount: null,
+    } as unknown as BackoutRefundRequest;
+    const lines = buildRefundBreakup(row, '₹', 0);
     expect(lines[0].value).toBe('₹0.00');
     expect(lines.find((l) => l.key === 'deduction')?.label).toContain('100%');
-    // negative pct clamps to 0
-    const row2 = { payment_amount: 500, refund_status: 'NONE' } as BackoutRefundRequest;
-    const lines2 = buildRefundBreakup(row2, '₹', -5);
+    // negative pct clamps to 0; refund falls back to amount − deduction
+    const row2 = {
+      payment_amount: 500,
+      backout_status: 'CANCELLED',
+      deduction_pct: -5,
+      refund_amount: null,
+    } as unknown as BackoutRefundRequest;
+    const lines2 = buildRefundBreakup(row2, '₹', 0);
     expect(lines2.find((l) => l.key === 'deduction')?.label).toContain('0%');
-    // non-numeric pct → 0
-    const lines3 = buildRefundBreakup(row2, '₹', Number.NaN);
-    expect(lines3.find((l) => l.key === 'deduction')?.value).toBe('- ₹0.00');
+    expect(lines2.find((l) => l.key === 'refund')?.value).toBe('₹500.00');
+    // no snapshot pct → falls back to the global setting; NaN → 0
+    const row3 = {
+      payment_amount: 500,
+      backout_status: 'CANCELLED',
+      deduction_pct: null,
+      refund_amount: null,
+    } as unknown as BackoutRefundRequest;
+    expect(buildRefundBreakup(row3, '₹', 20).find((l) => l.key === 'deduction')?.label).toContain('20%');
+    expect(buildRefundBreakup(row3, '₹', Number.NaN).find((l) => l.key === 'deduction')?.value).toBe(
+      '- ₹0.00',
+    );
   });
 });
 

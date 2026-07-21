@@ -14,6 +14,9 @@ export interface IAppSettings extends Document {
   /** Days a Create-Pod draft is retained (from its last save) before the
    * background cleanup permanently deletes it. Admin > Pods > Pod Settings. */
   draft_retention_days: number;
+  /** Max Backout attempts a user gets per pod (Admin > Pods > Pod Settings).
+   * Each successful "Backout in process" counts one attempt. */
+  max_backout_attempts: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -34,6 +37,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     min_birth_year: { type: Number, default: 1940 },
     max_birth_year: { type: Number, default: 2012 },
     draft_retention_days: { type: Number, default: 3, min: 1 },
+    max_backout_attempts: { type: Number, default: 3, min: 1 },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

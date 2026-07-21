@@ -122,7 +122,7 @@ describe('EarnScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
   });
 
-  it('keeps the box locked while an approved meeting\'s onboarded record is under review, re-opens on rejection', async () => {
+  it("keeps the box locked while an approved meeting's onboarded record is under review, re-opens on rejection", async () => {
     mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
     mockRequest.mockResolvedValue({
       myMeetings: [

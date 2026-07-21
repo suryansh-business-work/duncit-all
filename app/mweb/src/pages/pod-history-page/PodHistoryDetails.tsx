@@ -18,6 +18,7 @@ import { useDateFormat } from '../../utils/dateFormat';
 import PodHistoryTimeline from './PodHistoryTimeline';
 import PodProductOrdersCard from './PodProductOrdersCard';
 import ReplacementNotice from './ReplacementNotice';
+import { STATUS_CHIP } from './statusChip';
 import {
   POD_HISTORY_INVOICE_PDF,
   POD_HISTORY_TICKET_FOR_POD,
@@ -111,7 +112,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75, flexWrap: 'wrap' }}>
-                <Chip size="small" color={item.status === 'BACKED_OUT' ? 'warning' : 'success'} label={item.status === 'BACKED_OUT' ? 'Backed out' : 'Joined'} />
+                <Chip size="small" color={STATUS_CHIP[item.status].color} label={STATUS_CHIP[item.status].label} />
                 <Chip size="small" variant="outlined" label={`Refund: ${refundLabel[item.refund_status]}`} />
               </Stack>
               <Typography variant="h6" fontWeight={950} sx={{ lineHeight: 1.1 }}>
@@ -167,7 +168,9 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
               Contact Support
             </Button>
           </Stack>
-          {canRejoin && <ReplacementNotice deductionPct={backoutDeductionPct} />}
+          {(canRejoin || item.status === 'BACKOUT_IN_PROCESS') && (
+            <ReplacementNotice deductionPct={backoutDeductionPct} />
+          )}
           {item.status === 'BACKED_OUT' && item.refund_status === 'PENDING' && (
             <Alert severity="info" sx={{ mt: 1.5 }}>
               Refund is waiting for criteria completion. Support can help if the status looks wrong.

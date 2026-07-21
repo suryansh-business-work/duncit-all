@@ -1,16 +1,17 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
 import { useApolloTableFetch } from '@duncit/table';
-import { notifySuccess } from '@duncit/dialogs';
+import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import BackoutRefundTable from './BackoutRefundTable';
 import RefundBreakupDialog from './RefundBreakupDialog';
 import {
   BACKOUT_FINANCE_SETTINGS,
   BACKOUT_REFUNDS_TABLE,
+  PROCESS_BACKOUT_REFUND,
   type BackoutRefundRequest,
 } from './queries';
 
@@ -25,6 +26,7 @@ export default function BackoutRefundPage() {
   const { data, error } = useQuery<SettingsData>(BACKOUT_FINANCE_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });
+  const [processRefund, { loading: refunding }] = useMutation(PROCESS_BACKOUT_REFUND);
   const [refundFor, setRefundFor] = useState<BackoutRefundRequest | null>(null);
 
   const sym = data?.publicFinanceSettings?.currency_symbol ?? '';
@@ -36,9 +38,18 @@ export default function BackoutRefundPage() {
     'backoutRefundRequestsTable',
   );
 
-  const confirmRefund = () => {
-    setRefundFor(null);
-    notifySuccess('Refund successful');
+  // Processes the refund for the selected Spot Filled request (one per request)
+  // and refreshes the table so its status flips to PROCESSED. The dialog passes
+  // its (non-null) row back, so no null guard is needed here.
+  const confirmRefund = async (row: BackoutRefundRequest) => {
+    try {
+      await processRefund({ variables: { id: row.id } });
+      setRefundFor(null);
+      notifySuccess('Refund processed');
+      refetchRef.current?.();
+    } catch (e) {
+      notifyError(parseApiError(e));
+    }
   };
 
   const openDetail = useCallback(
@@ -53,7 +64,7 @@ export default function BackoutRefundPage() {
         <Box>
           <Typography variant="h5" fontWeight={700}>Backout Refunds</Typography>
           <Typography variant="body2" color="text.secondary">
-            Members who backed out of a paid pod — review and process their refunds.
+            Every Backout request with its lifecycle status — refunds unlock once the spot is filled.
           </Typography>
         </Box>
       </Stack>
@@ -72,6 +83,7 @@ export default function BackoutRefundPage() {
         refundFor={refundFor}
         sym={sym}
         deductionPct={deductionPct}
+        busy={refunding}
         onClose={() => setRefundFor(null)}
         onConfirm={confirmRefund}
       />

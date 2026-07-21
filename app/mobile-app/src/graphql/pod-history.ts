@@ -82,6 +82,18 @@ export const RejoinPodDocument = gql(`
   }
 `);
 
+/** Keep My Spot — cancel an in-process backout and restore the booking. */
+export const CancelBackoutPodDocument = gql(`
+  mutation MobileCancelBackoutPod($pod_doc_id: ID!) {
+    cancelBackoutPod(pod_doc_id: $pod_doc_id) {
+      id
+      status
+      backed_out_at
+      refund_status
+    }
+  }
+`);
+
 /** Global backout deduction % (Finance → Default Deductions → Backouts) for the
  * "finding your replacement" refund note. Public settings. */
 export const BackoutDeductionDocument = gql(`

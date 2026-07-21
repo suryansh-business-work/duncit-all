@@ -158,10 +158,14 @@ export const policyService = {
           '<h3>Backout Terms &amp; Conditions</h3>' +
           '<p>By backing out of a pod you acknowledge:</p>' +
           '<ul>' +
-          '<li>For paid pods, refunds are processed only when the pod reaches the refund threshold ' +
-          '(by default 80% capacity) <em>or</em> a referral you share fills your spot.</li>' +
-          '<li>Until then, your spot will be held open and your refund stays pending.</li>' +
-          '<li>Repeated last-minute backouts may affect your standing on the platform.</li>' +
+          '<li>Your booking moves to <strong>Backout in process</strong> and your seat is released ' +
+          'for public booking immediately.</li>' +
+          '<li>You will get the refund only if someone fills your spot. For paid pods the refund is ' +
+          'processed after the configured Backouts deduction.</li>' +
+          '<li>Until the seat is rebooked you can cancel the backout ("Keep My Spot") and restore ' +
+          'your booking.</li>' +
+          '<li>Backout attempts are limited per pod; once the limit is reached you can no longer ' +
+          'back out of that pod.</li>' +
           '</ul>' +
           '<p>Edit this content from <strong>Admin &rsaquo; Policies &rsaquo; backout-terms</strong>.</p>',
         is_active: true,

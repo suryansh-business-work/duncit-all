@@ -9,6 +9,8 @@ import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import CategoryIcon from '@mui/icons-material/Category';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -22,6 +24,8 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   ideas: <LightbulbIcon />,
   plans: <CategoryIcon />,
   faqs: <HelpOutlineIcon />,
+  shop: <StorefrontIcon />,
+  orders: <LocalShippingIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

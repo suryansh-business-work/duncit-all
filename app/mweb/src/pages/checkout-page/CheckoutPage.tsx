@@ -19,6 +19,7 @@ import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
+import SavedAddressPicker from './SavedAddressPicker';
 import {
   AVAILABLE_COUPONS,
   CHECKOUT_ME,
@@ -316,6 +317,22 @@ export default function CheckoutPage() {
         <GatewayChip finance={financeData?.publicFinanceSettings} isDark={isDark} theme={theme} />
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
+      <SavedAddressPicker
+        onPick={(picked) =>
+          reset({
+            ...getValues(),
+            same_as_main: false,
+            full_name: picked.name || getValues().full_name,
+            line1: picked.line1,
+            line2: picked.line2,
+            landmark: picked.landmark,
+            city: picked.city,
+            state: picked.state,
+            pincode: picked.pincode,
+            country: picked.country || 'India',
+          })
+        }
+      />
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
         <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} selectedProducts={selectedProducts} />
         <PaymentDetailsCard

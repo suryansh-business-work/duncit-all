@@ -72,6 +72,14 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
       icon: 'manage-accounts',
       route: 'Account',
     },
+    { key: 'shop', label: 'Pod Shop', caption: '', icon: 'storefront', route: 'Shop' },
+    {
+      key: 'orders',
+      label: 'My Product Order History',
+      caption: '',
+      icon: 'local-shipping',
+      route: 'OrdersHistory',
+    },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'bookmark-border', route: 'Saved' },
     {
       key: 'verification',
@@ -83,7 +91,8 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
     { key: 'faqs', label: 'FAQs', caption: '', icon: 'help-outline', route: 'Faqs' },
   ];
   if (showPodPlans) {
-    items.splice(3, 0, {
+    // Pod Plans always slots in just before FAQs (the last row).
+    items.splice(items.length - 1, 0, {
       key: 'plans',
       label: 'Pod Plans',
       caption: '',

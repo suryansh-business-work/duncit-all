@@ -69,6 +69,9 @@ export type RootStackParamList = {
     }[];
   };
   Cart: undefined;
+  Shop: undefined;
+  OrdersHistory: undefined;
+  ProductDetail: { productId: string };
   HostsVenues: undefined;
   Venues: undefined;
   PublicProfile: { userId: string };
@@ -100,6 +103,7 @@ export type MenuRoute = Exclude<
   | 'Follow'
   | 'VenueDetails'
   | 'Checkout'
+  | 'ProductDetail'
 >;
 
 declare global {

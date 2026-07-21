@@ -7,6 +7,7 @@ import {
   AccountHealthCard,
   AccountInfoRow,
   AccountProfileHeader,
+  AddressBookSection,
   CompletionMeter,
   EditAccountDialog,
   HostsVenuesCard,
@@ -88,6 +89,8 @@ export function AccountScreen() {
           isPrivate={me.profile_visibility === ProfileVisibility.Private}
           onChange={updateVisibility}
         />
+
+        <AddressBookSection />
 
         {health ? (
           <AccountHealthCard health={health} onPress={() => navigation.navigate('AccountHealth')} />

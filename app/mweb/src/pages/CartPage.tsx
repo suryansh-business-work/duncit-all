@@ -47,8 +47,8 @@ export default function CartPage() {
         <Typography variant="body2" color="text.secondary">
           Add products from any Pod Shop and they will wait for you here.
         </Typography>
-        <Button variant="contained" onClick={() => navigate('/')} sx={{ borderRadius: 999, fontWeight: 800 }}>
-          Find a pod
+        <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 800 }}>
+          Browse the Pod Shop
         </Button>
       </Stack>
     );

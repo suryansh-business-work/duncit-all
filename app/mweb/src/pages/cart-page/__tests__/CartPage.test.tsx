@@ -45,7 +45,7 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
           <FloatingCartButton />
           <Routes>
             <Route path="/cart" element={<CartPage />} />
-            <Route path="/" element={<div>HOME</div>} />
+            <Route path="/shop" element={<div>SHOP</div>} />
             <Route path="/checkout/:podId" element={<CheckoutProbe />} />
           </Routes>
         </MemoryRouter>
@@ -56,11 +56,11 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
 beforeEach(() => localStorage.clear());
 
 describe('CartPage + CartContext', () => {
-  it('shows the empty state with a home CTA', () => {
+  it('shows the empty state with a Pod Shop CTA', () => {
     renderCart();
     expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /find a pod/i }));
-    expect(screen.getByText('HOME')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /browse the pod shop/i }));
+    expect(screen.getByText('SHOP')).toBeInTheDocument();
   });
 
   it('groups lines by pod with per-line steppers, remove, totals and clear', () => {

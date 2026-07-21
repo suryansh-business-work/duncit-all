@@ -4,6 +4,7 @@ export { AccountHealthCard } from './AccountHealthCard';
 export { CompletionMeter } from './CompletionMeter';
 export { HostsVenuesCard } from './HostsVenuesCard';
 export { EditAccountDialog } from './EditAccountDialog';
+export { AddressBookSection } from './AddressBookSection';
 export { PrivacyToggleCard } from './PrivacyToggleCard';
 export { SecuritySection } from './SecuritySection';
 export { ChangePasswordDialog } from './ChangePasswordDialog';

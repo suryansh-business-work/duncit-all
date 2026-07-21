@@ -1,10 +1,10 @@
 import { createContext, useContext, useMemo, useRef, useState } from 'react';
 import { Alert, Box, Button, LinearProgress, Snackbar, Stack, Typography } from '@mui/material';
+import type { CropRect } from '@duncit/media-picker';
 import { apolloClient } from '../../apollo';
-import { ADD_POD_STATUS, CREATE_STATUS_POST, UPLOAD_STATUS_MEDIA } from './queries';
-
-type StatusUploadKind = 'profile' | 'pod' | 'club';
-type MediaType = 'IMAGE' | 'VIDEO';
+import { ADD_POD_STATUS, CREATE_STATUS_POST } from './queries';
+import StatusCropDialog from './StatusCropDialog';
+import { mediaTypeOf, uploadStatusMedia, type StatusUploadKind } from './statusPipeline';
 
 interface StatusUploadState {
   active: boolean;
@@ -21,25 +21,18 @@ interface StatusUploadContextValue {
   openClubPicker: (clubId: string) => void;
 }
 
+interface PendingPick {
+  kind: StatusUploadKind;
+  podId?: string;
+  clubId?: string;
+}
+
 const StatusUploadContext = createContext<StatusUploadContextValue | null>(null);
 const IDLE: StatusUploadState = { active: false, kind: null, progress: 0, message: '' };
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
 // Stories are short clips — capped at 15s (Bug 3).
 const MAX_STORY_VIDEO_SECONDS = 15;
-
-function toBase64(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-    reader.onerror = () => reject(new Error('Could not read selected media'));
-    reader.readAsDataURL(file);
-  });
-}
-
-function mediaTypeOf(file: File): MediaType {
-  return file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
-}
 
 function videoDurationSeconds(file: File) {
   return new Promise<number>((resolve, reject) => {
@@ -69,64 +62,41 @@ function validateFile(file: File, allowVideo: boolean) {
 
 export function StatusUploadProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const pendingRef = useRef<{ kind: StatusUploadKind; podId?: string; clubId?: string } | null>(null);
+  const pendingRef = useRef<PendingPick | null>(null);
   const [accept, setAccept] = useState('image/*');
   const [upload, setUpload] = useState<StatusUploadState>(IDLE);
   const [notice, setNotice] = useState<string | null>(null);
+  // Image picks pause here for the crop step; videos upload immediately.
+  const [cropPick, setCropPick] = useState<{ file: File; pending: PendingPick } | null>(null);
 
-  const openProfilePicker = () => {
+  const openPicker = (pending: PendingPick) => {
     if (upload.active) return setNotice('Please wait, status upload is in progress.');
-    pendingRef.current = { kind: 'profile' };
+    pendingRef.current = pending;
     setAccept('image/*,video/*');
     inputRef.current?.click();
   };
 
-  const openPodPicker = (podId: string) => {
-    if (upload.active) return setNotice('Please wait, status upload is in progress.');
-    pendingRef.current = { kind: 'pod', podId };
-    setAccept('image/*,video/*');
-    inputRef.current?.click();
-  };
+  const openProfilePicker = () => openPicker({ kind: 'profile' });
+  const openPodPicker = (podId: string) => openPicker({ kind: 'pod', podId });
+  const openClubPicker = (clubId: string) => openPicker({ kind: 'club', clubId });
 
-  const openClubPicker = (clubId: string) => {
-    if (upload.active) return setNotice('Please wait, status upload is in progress.');
-    pendingRef.current = { kind: 'club', clubId };
-    setAccept('image/*,video/*');
-    inputRef.current?.click();
-  };
-
-  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    const pending = pendingRef.current;
-    pendingRef.current = null;
-    if (!file || !pending) return;
-    const fileError = validateFile(file, true);
-    if (fileError) return setNotice(fileError);
-
+  const runUpload = async (
+    file: File,
+    pending: PendingPick,
+    crop: CropRect | null,
+    cropPreset: string | null,
+  ) => {
     const mediaType = mediaTypeOf(file);
-    if (pending.kind !== 'pod' && mediaType === 'VIDEO') {
-      const seconds = await videoDurationSeconds(file).catch(() => 0);
-      if (seconds > MAX_STORY_VIDEO_SECONDS) {
-        return setNotice(
-          `Video is ${Math.round(seconds)}s — story videos must be ${MAX_STORY_VIDEO_SECONDS}s or less.`
-        );
-      }
-    }
-
-    setUpload({ active: true, kind: pending.kind, progress: 8, message: 'Preparing status upload...' });
+    setUpload({ active: true, kind: pending.kind, progress: 0, message: 'Preparing status upload...' });
     try {
-      const fileBase64 = await toBase64(file);
-      setUpload((current) => ({ ...current, progress: 45, message: 'Uploading status media...' }));
-      const folderByKind = { pod: '/pod-status', club: '/club-status', profile: '/posts' } as const;
-      const uploaded = await apolloClient.mutate({
-        mutation: UPLOAD_STATUS_MEDIA,
-        variables: { fileBase64, fileName: file.name, mimeType: file.type, folder: folderByKind[pending.kind] },
+      const url = await uploadStatusMedia({
+        file,
+        kind: pending.kind,
+        crop,
+        cropPreset,
+        onStage: (stage) => setUpload((current) => ({ ...current, ...stage })),
       });
-      const url = uploaded.data?.uploadImageToImagekit?.url;
-      if (!url) throw new Error('Upload failed');
-
-      setUpload((current) => ({ ...current, progress: 78, message: 'Saving status...' }));
+      setUpload((current) => ({ ...current, progress: 96, message: 'Saving status...' }));
       if (pending.kind === 'pod') {
         await apolloClient.mutate({ mutation: ADD_POD_STATUS, variables: { podId: pending.podId, media: { url, type: mediaType } } });
       } else {
@@ -152,12 +122,45 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     }
   };
 
+  const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    const pending = pendingRef.current;
+    pendingRef.current = null;
+    if (!file || !pending) return;
+    const fileError = validateFile(file, true);
+    if (fileError) return setNotice(fileError);
+
+    if (mediaTypeOf(file) === 'VIDEO') {
+      if (pending.kind !== 'pod') {
+        const seconds = await videoDurationSeconds(file).catch(() => 0);
+        if (seconds > MAX_STORY_VIDEO_SECONDS) {
+          return setNotice(
+            `Video is ${Math.round(seconds)}s — story videos must be ${MAX_STORY_VIDEO_SECONDS}s or less.`
+          );
+        }
+      }
+      return runUpload(file, pending, null, null);
+    }
+    // Images pause on the crop step (admin presets; No Crop default).
+    setCropPick({ file, pending });
+  };
+
   const value = useMemo(() => ({ upload, openProfilePicker, openPodPicker, openClubPicker }), [upload]);
 
   return (
     <StatusUploadContext.Provider value={value}>
       {children}
       <input ref={inputRef} type="file" accept={accept} hidden onChange={handleFile} />
+      <StatusCropDialog
+        file={cropPick?.file ?? null}
+        onCancel={() => setCropPick(null)}
+        onConfirm={(crop, cropPreset) => {
+          const pick = cropPick;
+          setCropPick(null);
+          if (pick) runUpload(pick.file, pick.pending, crop, cropPreset);
+        }}
+      />
       {upload.active && (
         <Box sx={{ position: 'fixed', left: 12, right: 12, bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 10px)', zIndex: 1400 }}>
           <Alert severity="info" variant="filled" sx={{ boxShadow: 6 }}>

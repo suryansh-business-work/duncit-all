@@ -17,11 +17,36 @@ export function pickBestVideoFile(v: any) {
   return reasonable;
 }
 
+/** Admin-managed overrides for the static package limits (Upload Settings). */
+export interface FileCaps {
+  maxImageMb?: number;
+  maxVideoMb?: number;
+  allowedImageFormats?: string[];
+  allowedVideoFormats?: string[];
+}
+
+const fileExt = (name: string) => {
+  const ext = /\.([a-z0-9]{2,5})$/i.exec(name)?.[1]?.toLowerCase() ?? '';
+  return ext === 'jpeg' ? 'jpg' : ext;
+};
+
+const formatAllowed = (name: string, formats?: string[]) => {
+  if (!formats?.length) return true;
+  const ext = fileExt(name);
+  if (!ext) return true;
+  return formats.map((f) => (f === 'jpeg' ? 'jpg' : f)).includes(ext);
+};
+
 /**
- * Gate a device-picked file against the picker's accept policy.
+ * Gate a device-picked file against the picker's accept policy and the
+ * admin-managed Upload Settings caps/formats (when loaded).
  * Returns an error message, or null when the file is acceptable.
  */
-export function validateFile(file: File, policy: Readonly<FilePolicy>): string | null {
+export function validateFile(
+  file: File,
+  policy: Readonly<FilePolicy>,
+  caps: Readonly<FileCaps> = {},
+): string | null {
   const isImage = file.type.startsWith('image/');
   const isVideo = file.type.startsWith('video/');
   const isPdf = file.type === 'application/pdf';
@@ -41,10 +66,18 @@ export function validateFile(file: File, policy: Readonly<FilePolicy>): string |
   }
 
   if (isVideo) {
-    return file.size > MAX_VIDEO_BYTES ? 'Video is too large (max 100 MB)' : null;
+    if (!formatAllowed(file.name, caps.allowedVideoFormats)) {
+      return `Video format not allowed (allowed: ${caps.allowedVideoFormats?.join(', ')})`;
+    }
+    const maxMb = caps.maxVideoMb ?? MAX_VIDEO_BYTES / (1024 * 1024);
+    return file.size > maxMb * 1024 * 1024 ? `Video is too large (max ${maxMb} MB)` : null;
   }
   if (isPdf) {
     return file.size > MAX_DOCUMENT_BYTES ? 'Document is too large (max 50 MB)' : null;
   }
-  return file.size > MAX_IMAGE_BYTES ? 'Image is too large (max 15 MB)' : null;
+  if (!formatAllowed(file.name, caps.allowedImageFormats)) {
+    return `Image format not allowed (allowed: ${caps.allowedImageFormats?.join(', ')})`;
+  }
+  const maxMb = caps.maxImageMb ?? MAX_IMAGE_BYTES / (1024 * 1024);
+  return file.size > maxMb * 1024 * 1024 ? `Image is too large (max ${maxMb} MB)` : null;
 }

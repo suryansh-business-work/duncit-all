@@ -28,6 +28,7 @@ export default function MediaPickerDialog({
   title = 'Select an image',
   accept = 'image/*,video/*',
   allowDocuments,
+  surface = 'PORTALS',
 }: Readonly<MediaPickerDialogProps>) {
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function MediaPickerDialog({
   const device = useDeviceUpload({
     open,
     folder,
+    surface,
     allowImage,
     allowVideo,
     allowDocuments: allowDocs,
@@ -94,6 +96,11 @@ export default function MediaPickerDialog({
             previewUrl={device.previewUrl}
             uploadPct={device.uploadPct}
             uploading={device.uploading}
+            stage={device.stage}
+            settings={device.settings}
+            cropKey={device.cropKey}
+            onSelectCropKey={device.setCropKey}
+            onCropComplete={device.setCropRect}
             onPickFile={device.onPickFile}
           />
         </Box>

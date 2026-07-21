@@ -6,6 +6,8 @@ import {
   pexelsSearch,
   pexelsSearchVideos,
 } from './upload.service';
+import { getVideoCompressionJob, startVideoCompression } from './videoCompression';
+import type { CropRect } from './mediaProcessing';
 import type { GraphQLContext } from '@context';
 import { requireAuth } from '@middleware/rbac';
 
@@ -36,6 +38,10 @@ export const uploadResolvers = {
         perPage: args.perPage,
         orientation: args.orientation,
       });
+    },
+    videoCompressionJob: (_p: unknown, args: { job_id: string }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return getVideoCompressionJob(args.job_id);
     },
   },
   Mutation: {
@@ -69,11 +75,37 @@ export const uploadResolvers = {
     },
     uploadImageToImagekit: (
       _p: unknown,
-      args: { fileBase64: string; fileName: string; mimeType?: string; folder?: string; allow_documents?: boolean },
+      args: {
+        fileBase64: string;
+        fileName: string;
+        mimeType?: string;
+        folder?: string;
+        allow_documents?: boolean;
+        surface?: string;
+        crop?: CropRect | null;
+        crop_preset?: string | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
-      return uploadBase64Image({ ...args, allowDocuments: args.allow_documents });
+      return uploadBase64Image({
+        ...args,
+        allowDocuments: args.allow_documents,
+        cropPresetKey: args.crop_preset,
+        userId: ctx.user?.id ?? null,
+      });
+    },
+    startVideoCompression: (
+      _p: unknown,
+      args: { remote_url: string; folder?: string; surface?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return startVideoCompression({
+        remoteUrl: args.remote_url,
+        folder: args.folder,
+        surface: args.surface,
+      });
     },
   },
 };

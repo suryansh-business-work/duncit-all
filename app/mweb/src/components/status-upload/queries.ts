@@ -6,12 +6,17 @@ export const UPLOAD_STATUS_MEDIA = gql`
     $fileName: String!
     $mimeType: String
     $folder: String
+    $crop: UploadCropRectInput
+    $cropPreset: String
   ) {
     uploadImageToImagekit(
       fileBase64: $fileBase64
       fileName: $fileName
       mimeType: $mimeType
       folder: $folder
+      surface: "MOBILE_MWEB"
+      crop: $crop
+      crop_preset: $cropPreset
     ) {
       url
       fileId

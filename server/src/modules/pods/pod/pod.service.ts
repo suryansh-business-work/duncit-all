@@ -24,6 +24,8 @@ import { getUrlConfigs } from '@config/url-configs';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { assertInvitable } from './coHost.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
+import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 
 const slugify = (s: string) =>
   s
@@ -1007,7 +1009,7 @@ export const podService = {
     return toPub(doc, slugMap);
   },
 
-  async create(input: any) {
+  async create(input: any, audit?: { actorUserId?: string | null; source: PodAuditSource }) {
     const pod_id = await resolvePodSlugForCreate(input);
     if (!input.pod_hosts_id?.length) {
       throw new GraphQLError('At least one host is required', {
@@ -1095,6 +1097,12 @@ export const podService = {
     });
 
     await bookOrHoldSlotForPod(doc, slotDoc, needsVenueApproval);
+    await podAuditService.record({
+      pod: doc,
+      action: 'CREATE',
+      source: audit?.source ?? 'ADMIN',
+      actorUserId: audit?.actorUserId,
+    });
 
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
@@ -1129,15 +1137,26 @@ export const podService = {
     if (podMode === 'PHYSICAL') {
       await assertPartnerVenue(input, userObjectId);
     }
-    return this.create({ ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] });
+    return this.create(
+      { ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] },
+      { actorUserId: userId, source: 'HOST' },
+    );
   },
 
-  async update(id: string, input: any) {
+  async update(id: string, input: any, audit?: { actorUserId?: string | null; source: PodAuditSource }) {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
 
+    const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);
     await doc.save();
+    await podAuditService.record({
+      pod: doc,
+      action: 'UPDATE',
+      source: audit?.source ?? 'SYSTEM',
+      actorUserId: audit?.actorUserId,
+      before,
+    });
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
   },
@@ -1194,6 +1213,7 @@ export const podService = {
       }
     }
 
+    const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);
     // Resubmission state: a partner slot re-enters the approval queue;
     // anything else goes live right away.
@@ -1202,6 +1222,14 @@ export const podService = {
     doc.is_active = !(slotDoc && needsVenueApproval);
     await doc.save();
     if (slotDoc) await holdOrBookForResubmit(doc, slotDoc, needsVenueApproval);
+    await podAuditService.record({
+      pod: doc,
+      action: 'RESUBMIT',
+      source: 'HOST',
+      actorUserId: userId,
+      before,
+      note: 'Venue-rejected pod edited and booking request resubmitted',
+    });
 
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
@@ -1210,6 +1238,7 @@ export const podService = {
   /** Host self-service edit — only title, description and media (2A). */
   async hostUpdate(id: string, userId: string, input: any) {
     const doc = await findHostedPod(id, userId);
+    const before = snapshotPod(doc);
     const title = (input.pod_title ?? '').trim();
     if (title.length < 3) {
       throw new GraphQLError('Title is too short', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -1229,6 +1258,7 @@ export const podService = {
     }));
     if (input.reel_url !== undefined) doc.reel_url = normalizeReelUrl(input.reel_url);
     await doc.save();
+    await podAuditService.record({ pod: doc, action: 'UPDATE', source: 'HOST', actorUserId: userId, before });
 
     // Best-effort: tell every attendee the pod changed.
     try {
@@ -1293,7 +1323,7 @@ export const podService = {
     }
 
     const audience = await podAudience(doc, userId);
-    await this.remove(id);
+    await this.remove(id, { actorUserId: userId, source: 'HOST', note: reason });
 
     // Best-effort after the delete commits: cancellation + refund emails.
     try {
@@ -1348,7 +1378,7 @@ export const podService = {
     return toPub(doc, slugMap);
   },
 
-  async remove(id: string) {
+  async remove(id: string, audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null }) {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
     // Soft delete: release the venue slot + reserved inventory, then mark the
@@ -1358,6 +1388,13 @@ export const podService = {
     doc!.deleted_at = new Date();
     doc!.is_active = false;
     await doc!.save();
+    await podAuditService.record({
+      pod: doc,
+      action: 'DELETE',
+      source: audit?.source ?? 'SYSTEM',
+      actorUserId: audit?.actorUserId,
+      note: audit?.note,
+    });
     return true;
   },
 

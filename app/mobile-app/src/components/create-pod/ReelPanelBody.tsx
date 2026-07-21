@@ -6,6 +6,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 interface Props {
   value: string;
   uploading: boolean;
+  /** Busy-state button copy, computed by the parent (e.g. "Uploading… 42%"). */
+  busyLabel: string;
   error?: string;
   onPick: () => void;
   onRemove: () => void;
@@ -13,7 +15,14 @@ interface Props {
 
 /** Expanded "Pod Reel" panel: helper copy + either the picked-reel preview row
  * or the pick-a-video upload button, with the inline upload/validation error. */
-export function ReelPanelBody({ value, uploading, error, onPick, onRemove }: Readonly<Props>) {
+export function ReelPanelBody({
+  value,
+  uploading,
+  busyLabel,
+  error,
+  onPick,
+  onRemove,
+}: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const fileName = value.slice(value.lastIndexOf('/') + 1);
   return (
@@ -87,7 +96,7 @@ export function ReelPanelBody({ value, uploading, error, onPick, onRemove }: Rea
             <MaterialIcons name="video-library" size={20} color={primary} />
           )}
           <Text fontSize={13.5} fontWeight="800" color="$color">
-            {uploading ? 'Uploading…' : 'Upload a video'}
+            {uploading ? busyLabel : 'Upload a video'}
           </Text>
         </XStack>
       )}

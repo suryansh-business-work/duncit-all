@@ -7,6 +7,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  LinearProgress,
   Stack,
   Typography,
 } from '@mui/material';
@@ -14,7 +15,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MovieOutlinedIcon from '@mui/icons-material/MovieOutlined';
 import VideocamOutlinedIcon from '@mui/icons-material/VideocamOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { useImagekitUpload } from '../../../../utils/imagekit';
+import { useApolloClient } from '@apollo/client';
+import { compressUploadedVideo, useImagekitDirectUpload } from '@duncit/media-picker';
 import type { CreatePodForm } from '../create-pod.types';
 
 const REEL_MAX_BYTES = 100 * 1024 * 1024; // Reel videos are capped at 100 MB.
@@ -31,7 +33,10 @@ interface Props {
  * ImageKit (folder /pods/reels); it plays in Explore while the pod is live. */
 export default function PodReelAccordion({ form }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
-  const { upload, uploading } = useImagekitUpload();
+  const [pct, setPct] = useState<number | null>(null);
+  const [stage, setStage] = useState<'Uploading' | 'Compressing'>('Uploading');
+  const client = useApolloClient();
+  const { upload, uploading } = useImagekitDirectUpload();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const reelUrl = form.watch('reel_url');
   const hasReel = !!reelUrl;
@@ -49,18 +54,28 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
       return;
     }
     setError(null);
+    setStage('Uploading');
+    setPct(0);
     try {
-      const url = await upload(file, '/pods/reels');
+      // Real byte progress, then the server-side FFmpeg pass (no-op when the
+      // admin has video compression off) with its real percentage too.
+      const rawUrl = await upload(file, '/pods/reels', setPct);
+      setStage('Compressing');
+      setPct(0);
+      const url = await compressUploadedVideo(client, rawUrl, '/pods/reels', 'MOBILE_MWEB', setPct);
       if (url) form.setValue('reel_url', url, { shouldDirty: true });
     } catch (err: any) {
       setError(err?.message || 'Upload failed');
+    } finally {
+      setPct(null);
     }
   };
 
   const removeReel = () => form.setValue('reel_url', '', { shouldDirty: true });
 
+  const busy = uploading || pct !== null;
   let uploadLabel = hasReel ? 'Replace video' : 'Upload video';
-  if (uploading) uploadLabel = 'Uploading…';
+  if (busy) uploadLabel = `${stage}…`;
 
   return (
     <Accordion
@@ -111,17 +126,25 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               sx={{ alignSelf: 'flex-start' }}
             />
           )}
+          {pct !== null && (
+            <Box>
+              <LinearProgress variant="determinate" value={pct} />
+              <Typography variant="caption" color="text.secondary">
+                {stage}… {pct}%
+              </Typography>
+            </Box>
+          )}
           <Stack direction="row" spacing={1}>
             <Button
               size="small"
               variant="outlined"
-              startIcon={uploading ? <CircularProgress size={16} /> : <VideocamOutlinedIcon />}
-              disabled={uploading}
+              startIcon={busy ? <CircularProgress size={16} /> : <VideocamOutlinedIcon />}
+              disabled={busy}
               onClick={() => fileRef.current?.click()}
             >
               {uploadLabel}
             </Button>
-            {hasReel && !uploading && (
+            {hasReel && !busy && (
               <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={removeReel}>
                 Remove
               </Button>

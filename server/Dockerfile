@@ -41,6 +41,12 @@ FROM public.ecr.aws/docker/library/node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Video compression (fluent-ffmpeg): the ffmpeg-static npm binary is glibc and
+# cannot run on this musl (alpine) image, so the real encoder comes from apk and
+# the service resolves it via FFMPEG_PATH (ffmpeg-static stays the local-dev path).
+RUN apk add --no-cache ffmpeg
+ENV FFMPEG_PATH=/usr/bin/ffmpeg
+
 COPY --from=builder /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml ./
 COPY --from=builder /repo/server/package.json ./server/
 COPY --from=builder /repo/app/mweb/package.json ./app/mweb/

@@ -1,6 +1,13 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
+import {
+  getUploadSettingsSafe,
+  isProcessableImage,
+  processImageBytes,
+  type CropRect,
+} from './mediaProcessing';
 
 const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 
@@ -55,7 +62,7 @@ export async function getImagekitAuth(expireSeconds = 30 * 60) {
  * stock photo) — the server fetches the image, then posts it to ImageKit so
  * the file ends up on our CDN rather than being hot-linked.
  */
-async function uploadToImagekit(opts: {
+export async function uploadToImagekit(opts: {
   fileBytes: Buffer;
   fileName: string;
   folder?: string;
@@ -133,6 +140,14 @@ export async function uploadBase64Image(opts: {
   folder?: string;
   mimeType?: string;
   allowDocuments?: boolean;
+  /** Upload Settings surface of the caller (PORTALS | MOBILE_MWEB). */
+  surface?: string;
+  /** Source-pixel crop rect from the client crop UI (images only). */
+  crop?: CropRect | null;
+  /** Crop preset key (16:9, Pod Feature, …) to resize the crop to. */
+  cropPresetKey?: string | null;
+  /** Uploader, recorded on the AI image-monitoring scan. */
+  userId?: string | null;
 }) {
   const mimeType = (opts.mimeType || '').trim() || 'image/jpeg';
   const fileName = opts.fileName || '';
@@ -154,21 +169,68 @@ export async function uploadBase64Image(opts: {
   const raw = opts.fileBase64.includes(',')
     ? opts.fileBase64.split(',').pop() || ''
     : opts.fileBase64;
-  const fileBytes = Buffer.from(raw, 'base64');
+  let fileBytes: Buffer = Buffer.from(raw, 'base64');
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
   assertUploadSize(fileBytes, isVideo, isDocument);
 
-  const safeName = (opts.fileName || `upload-${Date.now()}`)
+  let safeName = (opts.fileName || `upload-${Date.now()}`)
     .replace(/[^a-zA-Z0-9_.-]/g, '_')
     .slice(0, 120);
 
-  return uploadToImagekit({
+  // Admin Upload Settings (crop / compression / formats). Settings being
+  // unreadable (no DB) never blocks the upload — the file goes up as-is.
+  const setting = await getUploadSettingsSafe(opts.surface);
+  if (isVideo && setting) {
+    const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
+    if (ext && !setting.allowed_video_formats.includes(ext)) {
+      throw new GraphQLError(
+        `Video format .${ext} is not allowed (allowed: ${setting.allowed_video_formats.join(', ')})`,
+        { extensions: { code: 'BAD_USER_INPUT' } },
+      );
+    }
+  }
+  if (isImage && setting) {
+    try {
+      const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
+      const normalized = ext === 'jpeg' ? 'jpg' : ext;
+      const allowed = setting.allowed_image_formats.map((f) => (f === 'jpeg' ? 'jpg' : f));
+      const forceJpeg = !!normalized && !allowed.includes(normalized) && isProcessableImage(mimeType);
+      fileBytes = await processImageBytes({
+        fileBytes,
+        mimeType,
+        setting,
+        crop: opts.crop,
+        cropPresetKey: opts.cropPresetKey,
+        forceJpeg,
+      });
+      if (forceJpeg) safeName = safeName.replace(/\.[a-z0-9]{2,5}$/i, '.jpg');
+    } catch (err) {
+      // Processing is an enhancement, never a gate — keep the original bytes.
+      // eslint-disable-next-line no-console
+      console.error('[upload] image processing failed, uploading original:', err);
+    }
+  }
+
+  const uploaded = await uploadToImagekit({
     fileBytes,
     fileName: safeName,
     folder: opts.folder,
   });
+  if (isImage) {
+    // Best-effort AI image monitoring (images only) — never blocks the upload.
+    mediaScanService
+      .record({
+        url: uploaded.url,
+        fileName: safeName,
+        folder: opts.folder,
+        surface: opts.surface,
+        userId: opts.userId,
+      })
+      .catch(() => undefined);
+  }
+  return uploaded;
 }
 
 const ALLOWED_REMOTE_HOSTS = [

@@ -245,8 +245,8 @@ export const podResolvers = {
   },
   Mutation: {
     createPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
-      return podService.create(args.input);
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return podService.create(args.input, { actorUserId: user.id, source: 'ADMIN' });
     },
     createPartnerPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
@@ -257,8 +257,8 @@ export const podResolvers = {
       args: { pod_doc_id: string; input: any },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_WRITE);
-      return podService.update(args.pod_doc_id, args.input);
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return podService.update(args.pod_doc_id, args.input, { actorUserId: user.id, source: 'ADMIN' });
     },
     inviteCoHost: async (
       _p: unknown,
@@ -323,8 +323,8 @@ export const podResolvers = {
       return podService.addStatus(args.pod_doc_id, user.id, args.media, isAdminCtx(ctx));
     },
     deletePod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
-      return podService.remove(args.pod_doc_id);
+      const user = requireRole(ctx, ADMIN_WRITE);
+      return podService.remove(args.pod_doc_id, { actorUserId: user.id, source: 'ADMIN' });
     },
     incrementPodHits: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.incrementHits(args.pod_doc_id),

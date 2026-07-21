@@ -3,6 +3,7 @@ import { useApolloClient } from '@apollo/client';
 import type { ApolloClient } from '@apollo/client';
 import { fileToDataUrl } from '@duncit/utils';
 import { UPLOAD_IMAGE } from './queries';
+import type { CropRect, UploadSurface } from './types';
 
 export interface ImagekitUploadResult {
   url: string;
@@ -21,6 +22,12 @@ export interface UploadImageOptions {
   fallbackMimeType?: string;
   /** Cosmetic progress callback; fired with 55 once the file has been read. */
   onProgress?: (pct: number) => void;
+  /** Upload Settings surface driving server-side crop/compression rules. */
+  surface?: UploadSurface;
+  /** Source-pixel crop rect from the crop UI (images only). */
+  crop?: CropRect | null;
+  /** Crop preset key (NO_CROP / RATIO_16_9 / POD_FEATURE / …). */
+  cropPreset?: string | null;
 }
 
 interface UploadImageData {
@@ -48,6 +55,9 @@ export async function uploadImageToImagekit(
       mimeType: file.type || options.fallbackMimeType,
       folder: options.folder,
       allowDocuments: options.allowDocuments,
+      surface: options.surface,
+      crop: options.crop ?? undefined,
+      cropPreset: options.cropPreset ?? undefined,
     },
   });
   const uploaded = res.data?.uploadImageToImagekit;

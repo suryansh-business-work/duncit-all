@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Share } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -244,7 +245,11 @@ export function PodDetailsScreen() {
   return (
     <YStack flex={1} testID="pod-details-screen">
       <AppBackground />
-      {podBody}
+      {/* Top safe-area: page content must never overlap the device's
+          notification/status bar (matches the StackScreen scaffold). */}
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        {podBody}
+      </SafeAreaView>
 
       {pod ? (
         <PodBookingBar

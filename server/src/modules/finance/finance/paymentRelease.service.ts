@@ -344,6 +344,15 @@ export const paymentReleaseService = {
     if (!(pod as any).completed_at) {
       (pod as any).completed_at = new Date();
       await pod.save();
+      // AI-monitored audit trail: completion is a critical pod action.
+      const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
+      await podAuditService.record({
+        pod,
+        action: 'COMPLETE',
+        source: actorId ? 'HOST' : 'SYSTEM',
+        actorUserId: actorId,
+        note: 'Pod submitted for completion / settlement',
+      });
     }
     return toPub(doc);
   },

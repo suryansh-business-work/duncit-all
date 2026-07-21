@@ -3853,6 +3853,27 @@ export type MarketingCampaignTablePage = {
   total: Scalars['Int']['output'];
 };
 
+export type MediaScanLog = {
+  __typename?: 'MediaScanLog';
+  created_at: Scalars['String']['output'];
+  file_name: Scalars['String']['output'];
+  folder: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  risk: Scalars['String']['output'];
+  summary: Scalars['String']['output'];
+  surface: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+  user_id?: Maybe<Scalars['String']['output']>;
+};
+
+export type MediaScanLogsTableResult = {
+  __typename?: 'MediaScanLogsTableResult';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<MediaScanLog>;
+  total: Scalars['Int']['output'];
+};
+
 /** Global onboarding-meeting availability (edited from the Onboarding portal). */
 export type MeetingAvailability = {
   __typename?: 'MeetingAvailability';
@@ -4392,6 +4413,11 @@ export type Mutation = {
   startCrmPortalCall: CrmAiCallResult;
   startRecordedUserCall: UserContactAction;
   startSupportChat: SupportChatSession;
+  /**
+   * Compress an already direct-uploaded ImageKit video with FFmpeg and re-upload
+   * the result. Poll videoCompressionJob(job_id) for the real percentage.
+   */
+  startVideoCompression: VideoCompressionJob;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
@@ -4504,6 +4530,7 @@ export type Mutation = {
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
   updateTicketPriority: Ticket;
   updateTicketStatus: Ticket;
+  updateUploadSettings: UploadSetting;
   updateUser: User;
   updateVenueLead: VenueLead;
   /** Owner (or admin) updates operating hours, weekly-off, holidays + booking rules. */
@@ -6221,6 +6248,13 @@ export type MutationStartSupportChatArgs = {
 };
 
 
+export type MutationStartVideoCompressionArgs = {
+  folder?: InputMaybe<Scalars['String']['input']>;
+  remote_url: Scalars['String']['input'];
+  surface?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationSubmitAdRequestArgs = {
   input: SubmitAdRequestInput;
 };
@@ -6753,6 +6787,12 @@ export type MutationUpdateTicketStatusArgs = {
 };
 
 
+export type MutationUpdateUploadSettingsArgs = {
+  input: UpdateUploadSettingInput;
+  surface: UploadSurface;
+};
+
+
 export type MutationUpdateUserArgs = {
   input: UpdateUserInput;
   user_id: Scalars['ID']['input'];
@@ -6791,10 +6831,13 @@ export type MutationUpdateWebsiteNavItemArgs = {
 
 export type MutationUploadImageToImagekitArgs = {
   allow_documents?: InputMaybe<Scalars['Boolean']['input']>;
+  crop?: InputMaybe<UploadCropRectInput>;
+  crop_preset?: InputMaybe<Scalars['String']['input']>;
   fileBase64: Scalars['String']['input'];
   fileName: Scalars['String']['input'];
   folder?: InputMaybe<Scalars['String']['input']>;
   mimeType?: InputMaybe<Scalars['String']['input']>;
+  surface?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -7406,6 +7449,68 @@ export type Pod = {
   what_this_pod_offers: Array<Scalars['String']['output']>;
   zone_name?: Maybe<Scalars['String']['output']>;
 };
+
+/** What kind of pod action was recorded. */
+export type PodAuditAction =
+  | 'COMPLETE'
+  | 'CREATE'
+  | 'DELETE'
+  | 'RESUBMIT'
+  | 'UPDATE'
+  | 'VENUE_APPROVED'
+  | 'VENUE_DECLINED';
+
+/** One changed field of a recorded pod edit. */
+export type PodAuditChange = {
+  __typename?: 'PodAuditChange';
+  field: Scalars['String']['output'];
+  from: Scalars['String']['output'];
+  to: Scalars['String']['output'];
+};
+
+/** One immutable AI-monitored audit entry for a pod action. */
+export type PodAuditLog = {
+  __typename?: 'PodAuditLog';
+  action: PodAuditAction;
+  actor_name: Scalars['String']['output'];
+  actor_user_id?: Maybe<Scalars['ID']['output']>;
+  ai_reviewed_at?: Maybe<Scalars['String']['output']>;
+  ai_risk: PodAuditRisk;
+  ai_summary: Scalars['String']['output'];
+  changes: Array<PodAuditChange>;
+  club_id?: Maybe<Scalars['ID']['output']>;
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Free-text context (delete reason, venue decline reason, …). */
+  note: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  source: PodAuditSource;
+};
+
+/** Server-side table page for the shared table engine (podAuditLogsTable). */
+export type PodAuditLogTablePage = {
+  __typename?: 'PodAuditLogTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<PodAuditLog>;
+  total: Scalars['Int']['output'];
+};
+
+/** AI risk verdict for a recorded action (PENDING until the review lands). */
+export type PodAuditRisk =
+  | 'HIGH'
+  | 'LOW'
+  | 'MEDIUM'
+  | 'PENDING';
+
+/** Which surface performed the action. */
+export type PodAuditSource =
+  | 'ADMIN'
+  | 'CLUB_ADMIN'
+  | 'HOST'
+  | 'SYSTEM'
+  | 'VENUE_OWNER';
 
 /** A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected. */
 export type PodCoHost = {
@@ -8256,6 +8361,8 @@ export type Query = {
   adminVenueSlots: Array<VenueSlot>;
   aiPrompt?: Maybe<AiPrompt>;
   aiPrompts: Array<AiPrompt>;
+  /** Admin: both surfaces for the Upload Settings pages. */
+  allUploadSettings: Array<UploadSetting>;
   appSettings: AppSettings;
   appVersionInfo: AppVersionInfo;
   /** Admin inbox of approval requests (defaults to all; filter by status/type). */
@@ -8300,6 +8407,8 @@ export type Query = {
   clubAdminDashboardTable: ClubAdminClubRowTablePage;
   /** Approved hosts matching the search, for the assign-host picker. Club-admin scoped. */
   clubAdminHostSearch: Array<ClubAdminHostOption>;
+  /** Club admin: the same trail scoped to the clubs the caller administers. */
+  clubAdminPodAuditLogsTable: PodAuditLogTablePage;
   clubBySlug?: Maybe<Club>;
   clubRatings: Array<ClubRating>;
   /** Active (non-expired) stories attached to a club, newest first (Bug 6). */
@@ -8446,6 +8555,8 @@ export type Query = {
   /** APPROVED, active venues that auto-match a club by location (+ locality) + Super/Sub category (admin Club form). Empty when no location is given. */
   matchingVenues: Array<Venue>;
   me?: Maybe<User>;
+  /** Admin: AI image-monitoring scan log (server-side table). */
+  mediaScanLogsTable: MediaScanLogsTableResult;
   /** Global slot-availability config. */
   meetingAvailability: MeetingAvailability;
   /** Onboarding-team holidays / leave days (block slots; shown on the calendar). */
@@ -8563,6 +8674,10 @@ export type Query = {
   pexelsSearch: PexelsSearchResult;
   pexelsSearchVideos: PexelsVideoSearchResult;
   pod?: Maybe<Pod>;
+  /** Full trail of one pod, newest first (admin). */
+  podAuditLogs: Array<PodAuditLog>;
+  /** Admin: AI-monitored audit trail of every pod action. */
+  podAuditLogsTable: PodAuditLogTablePage;
   podBySlugs?: Maybe<Pod>;
   podComments: Array<PodComment>;
   podFinanceBreakdown: PodFinanceBreakdown;
@@ -8668,6 +8783,8 @@ export type Query = {
   /** Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent. */
   ticketTranscript: SupportChatTranscript;
   tickets: TicketPage;
+  /** Upload rules for the calling client's surface (any signed-in user). */
+  uploadSettings: UploadSetting;
   user?: Maybe<User>;
   /**  Admin-only: account health for any user.  */
   userAccountHealth: HealthScore;
@@ -8699,6 +8816,8 @@ export type Query = {
   venues: Array<Venue>;
   /** Admin/onboarding table page over all venues (shared table engine). */
   venuesTable: VenueTablePage;
+  /** Poll a running FFmpeg compression job for its real progress percentage. */
+  videoCompressionJob: VideoCompressionJob;
   /** Cached communities (paginated + searchable). */
   waCommunities: WaCommunityPage;
   /** Stored gateway config + last-known status (no network call). */
@@ -8918,6 +9037,11 @@ export type QueryClubAdminDashboardTableArgs = {
 
 export type QueryClubAdminHostSearchArgs = {
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryClubAdminPodAuditLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -9476,6 +9600,11 @@ export type QueryMatchingVenuesArgs = {
 };
 
 
+export type QueryMediaScanLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
 export type QueryMeetingSlotsArgs = {
   exclude_meeting_id?: InputMaybe<Scalars['ID']['input']>;
   kind?: InputMaybe<SurveyKind>;
@@ -9702,6 +9831,16 @@ export type QueryPexelsSearchVideosArgs = {
 
 export type QueryPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodAuditLogsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryPodAuditLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -10053,6 +10192,11 @@ export type QueryTicketsArgs = {
 };
 
 
+export type QueryUploadSettingsArgs = {
+  surface: UploadSurface;
+};
+
+
 export type QueryUserArgs = {
   user_id: Scalars['ID']['input'];
 };
@@ -10173,6 +10317,11 @@ export type QueryVenuesArgs = {
 
 export type QueryVenuesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryVideoCompressionJobArgs = {
+  job_id: Scalars['String']['input'];
 };
 
 
@@ -11510,6 +11659,22 @@ export type UpdateSurveyInput = {
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type UpdateUploadSettingInput = {
+  ai_image_monitoring_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  allowed_image_formats?: InputMaybe<Array<Scalars['String']['input']>>;
+  allowed_video_formats?: InputMaybe<Array<Scalars['String']['input']>>;
+  crop_presets?: InputMaybe<Array<UploadCropPresetInput>>;
+  default_crop_key?: InputMaybe<Scalars['String']['input']>;
+  image_compression_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  image_max_dimension?: InputMaybe<Scalars['Int']['input']>;
+  image_quality?: InputMaybe<Scalars['Int']['input']>;
+  max_image_mb?: InputMaybe<Scalars['Int']['input']>;
+  max_video_mb?: InputMaybe<Scalars['Int']['input']>;
+  video_compression_enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  video_crf?: InputMaybe<Scalars['Int']['input']>;
+  video_max_height?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type UpdateUserInput = {
   assigned_city?: InputMaybe<Scalars['String']['input']>;
   assigned_zones?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -11538,6 +11703,56 @@ export type UpdateVenueSlotInput = {
   price?: InputMaybe<Scalars['Int']['input']>;
   start_at?: InputMaybe<Scalars['String']['input']>;
 };
+
+export type UploadCropPreset = {
+  __typename?: 'UploadCropPreset';
+  enabled: Scalars['Boolean']['output'];
+  height: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  /** Target output resolution; 0×0 = keep the source resolution (No Crop). */
+  width: Scalars['Int']['output'];
+};
+
+export type UploadCropPresetInput = {
+  enabled?: InputMaybe<Scalars['Boolean']['input']>;
+  height?: InputMaybe<Scalars['Int']['input']>;
+  key: Scalars['String']['input'];
+  label?: InputMaybe<Scalars['String']['input']>;
+  width?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Source-pixel crop rectangle from the client crop UI (react-easy-crop). */
+export type UploadCropRectInput = {
+  height: Scalars['Float']['input'];
+  width: Scalars['Float']['input'];
+  x: Scalars['Float']['input'];
+  y: Scalars['Float']['input'];
+};
+
+export type UploadSetting = {
+  __typename?: 'UploadSetting';
+  ai_image_monitoring_enabled: Scalars['Boolean']['output'];
+  allowed_image_formats: Array<Scalars['String']['output']>;
+  allowed_video_formats: Array<Scalars['String']['output']>;
+  crop_presets: Array<UploadCropPreset>;
+  default_crop_key: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  image_compression_enabled: Scalars['Boolean']['output'];
+  image_max_dimension: Scalars['Int']['output'];
+  image_quality: Scalars['Int']['output'];
+  max_image_mb: Scalars['Int']['output'];
+  max_video_mb: Scalars['Int']['output'];
+  surface: UploadSurface;
+  updated_at?: Maybe<Scalars['String']['output']>;
+  video_compression_enabled: Scalars['Boolean']['output'];
+  video_crf: Scalars['Int']['output'];
+  video_max_height: Scalars['Int']['output'];
+};
+
+export type UploadSurface =
+  | 'MOBILE_MWEB'
+  | 'PORTALS';
 
 export type UploadedImage = {
   __typename?: 'UploadedImage';
@@ -12135,6 +12350,15 @@ export type VerifyRazorpayInput = {
   razorpay_order_id: Scalars['String']['input'];
   razorpay_payment_id: Scalars['String']['input'];
   razorpay_signature: Scalars['String']['input'];
+};
+
+export type VideoCompressionJob = {
+  __typename?: 'VideoCompressionJob';
+  error?: Maybe<Scalars['String']['output']>;
+  job_id: Scalars['String']['output'];
+  pct: Scalars['Int']['output'];
+  status: Scalars['String']['output'];
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 /** Result of a database-level cleanup. */

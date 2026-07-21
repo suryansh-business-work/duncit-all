@@ -7,6 +7,9 @@ export const UPLOAD_IMAGE = gql`
     $mimeType: String
     $folder: String
     $allowDocuments: Boolean
+    $surface: String
+    $crop: UploadCropRectInput
+    $cropPreset: String
   ) {
     uploadImageToImagekit(
       fileBase64: $fileBase64
@@ -14,10 +17,66 @@ export const UPLOAD_IMAGE = gql`
       mimeType: $mimeType
       folder: $folder
       allow_documents: $allowDocuments
+      surface: $surface
+      crop: $crop
+      crop_preset: $cropPreset
     ) {
       url
       fileId
       thumbnailUrl
+    }
+  }
+`;
+
+/** Admin-managed upload rules (sizes, formats, crop presets) per surface. */
+export const UPLOAD_SETTINGS = gql`
+  query UploadSettings($surface: UploadSurface!) {
+    uploadSettings(surface: $surface) {
+      id
+      surface
+      max_image_mb
+      max_video_mb
+      allowed_image_formats
+      allowed_video_formats
+      image_compression_enabled
+      image_quality
+      image_max_dimension
+      video_compression_enabled
+      video_crf
+      video_max_height
+      ai_image_monitoring_enabled
+      default_crop_key
+      crop_presets {
+        key
+        label
+        width
+        height
+        enabled
+      }
+    }
+  }
+`;
+
+export const START_VIDEO_COMPRESSION = gql`
+  mutation StartVideoCompression($remoteUrl: String!, $folder: String, $surface: String) {
+    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: $surface) {
+      job_id
+      status
+      pct
+      url
+      error
+    }
+  }
+`;
+
+export const VIDEO_COMPRESSION_JOB = gql`
+  query VideoCompressionJob($jobId: String!) {
+    videoCompressionJob(job_id: $jobId) {
+      job_id
+      status
+      pct
+      url
+      error
     }
   }
 `;

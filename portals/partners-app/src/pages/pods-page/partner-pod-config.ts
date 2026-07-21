@@ -8,6 +8,7 @@ import type { PodFormConfig } from '@duncit/pod-form';
 export const PARTNER_POD_CONFIG: PodFormConfig = {
   showVenueSlot: true,
   showProducts: true,
+  showReel: true,
   showHosts: false,
   showLocationZone: false,
   showPlaceCharges: false,

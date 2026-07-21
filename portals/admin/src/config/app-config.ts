@@ -51,6 +51,7 @@ export const appConfig = {
         { label: 'Pod Plans', to: '/pod-plans', icon: 'description' },
         { label: 'Event Tickets', to: '/event-tickets', icon: 'ticket' },
         { label: 'Pod Settings', to: '/pod-settings', icon: 'tune' },
+        { label: 'Pod Monitoring (AI)', to: '/pod-monitoring', icon: 'insights' },
       ],
     },
     {
@@ -80,6 +81,14 @@ export const appConfig = {
     },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
     {
+      label: 'Upload Settings',
+      icon: 'upload',
+      children: [
+        { label: 'Portals Upload Setting', to: '/upload-settings/portals', icon: 'tune' },
+        { label: 'Mobile App + mWeb Upload Setting', to: '/upload-settings/apps', icon: 'tune' },
+      ],
+    },
+    {
       label: 'System',
       icon: 'settings',
       children: [
@@ -105,6 +114,7 @@ export const appConfig = {
     { label: 'Pod Plans', to: '/pod-plans', section: 'Pods' },
     { label: 'Event Tickets', to: '/event-tickets', section: 'Pods', keywords: ['qr', 'check-in'] },
     { label: 'Pod Settings', to: '/pod-settings', section: 'Pods', keywords: ['draft', 'retention', 'config'] },
+    { label: 'Pod Monitoring (AI)', to: '/pod-monitoring', section: 'Pods', keywords: ['audit', 'ai', 'activity', 'risk', 'log'] },
     { label: 'Coupons', to: '/coupons', section: 'Marketing', keywords: ['discount', 'promo'] },
     { label: 'Referrals', to: '/referrals', section: 'Marketing', keywords: ['invite', 'growth'] },
     { label: 'Categories', to: '/categories', section: 'Catalog' },
@@ -113,6 +123,18 @@ export const appConfig = {
     { label: 'Partner FAQs', to: '/partners/faqs', section: 'Engagement', keywords: ['partner', 'help'] },
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
+    {
+      label: 'Portals Upload Setting',
+      to: '/upload-settings/portals',
+      section: 'Upload Settings',
+      keywords: ['upload', 'crop', 'compression', 'image', 'video', 'formats', 'ai'],
+    },
+    {
+      label: 'Mobile App + mWeb Upload Setting',
+      to: '/upload-settings/apps',
+      section: 'Upload Settings',
+      keywords: ['upload', 'crop', 'compression', 'reel', 'status', 'mobile', 'mweb'],
+    },
     { label: 'Branding', to: '/branding', section: 'System', keywords: ['logo', 'theme', 'identity'] },
     { label: 'Settings', to: '/settings', section: 'System', keywords: ['system', 'config', 'preferences'] },
   ],

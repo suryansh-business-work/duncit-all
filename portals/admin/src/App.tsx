@@ -17,6 +17,9 @@ import ClubDetailsPage from './pages/ClubDetailsPage';
 import PodsPage from './pages/PodsPage';
 import PodDetailsPage from './pages/PodDetailsPage';
 import PodSettingsPage from './pages/PodSettingsPage';
+import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
+import AppsUploadSettingPage from './pages/upload-settings/AppsUploadSettingPage';
+import PodMonitoringPage from './pages/pod-monitoring/PodMonitoringPage';
 import CouponsPage from './pages/CouponsPage';
 import ReferralsPage from './pages/referrals-page/ReferralsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
@@ -52,6 +55,7 @@ export default function App() {
                 <Route path="/pods" element={<PodsPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
                 <Route path="/pod-settings" element={<PodSettingsPage />} />
+                <Route path="/pod-monitoring" element={<PodMonitoringPage />} />
                 <Route path="/coupons" element={<CouponsPage />} />
                 <Route path="/referrals" element={<ReferralsPage />} />
                 <Route path="/event-tickets" element={<EventTicketsPage />} />
@@ -61,6 +65,8 @@ export default function App() {
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />
+                <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
+                <Route path="/upload-settings/apps" element={<AppsUploadSettingPage />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />

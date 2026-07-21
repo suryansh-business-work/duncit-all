@@ -5,6 +5,7 @@ import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
+import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -652,6 +653,8 @@ export const venueSlotService = {
     }
     slot.status = 'BOOKED';
     await (slot as any).save();
+    const beforePod = await PodModel.findById(slot.booked_by_pod_id);
+    const before = beforePod ? snapshotPod(beforePod) : null;
     const pod = await PodModel.findByIdAndUpdate(
       slot.booked_by_pod_id,
       { $set: { venue_approval_status: 'APPROVED', is_active: true } },
@@ -659,6 +662,14 @@ export const venueSlotService = {
     );
     if (pod) {
       await notifySlotDecision(pod, slot, true);
+      await podAuditService.record({
+        pod,
+        action: 'VENUE_APPROVED',
+        source: 'VENUE_OWNER',
+        actorUserId: userId,
+        before,
+        note: 'Venue owner approved the slot booking request',
+      });
     }
     return (await withVenueAndPod([slot]))[0];
   },
@@ -674,6 +685,8 @@ export const venueSlotService = {
     slot.status = 'AVAILABLE';
     slot.booked_by_pod_id = null;
     await (slot as any).save();
+    const beforePod = await PodModel.findById(podId);
+    const before = beforePod ? snapshotPod(beforePod) : null;
     const pod = await PodModel.findByIdAndUpdate(
       podId,
       { $set: { venue_approval_status: 'DECLINED', is_active: false, venue_slot_id: null } },
@@ -681,6 +694,14 @@ export const venueSlotService = {
     );
     if (pod) {
       await notifySlotDecision(pod, slot, false, reason);
+      await podAuditService.record({
+        pod,
+        action: 'VENUE_DECLINED',
+        source: 'VENUE_OWNER',
+        actorUserId: userId,
+        before,
+        note: reason?.trim() || 'Venue owner declined the slot booking request',
+      });
     }
     return (await withVenueAndPod([slot]))[0];
   },

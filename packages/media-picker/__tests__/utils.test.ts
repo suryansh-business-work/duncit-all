@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { pickBestVideoFile, validateFile } from '../src/utils';
 
-const file = (type: string, mb: number) =>
-  ({ type, size: mb * 1024 * 1024 }) as File;
+const file = (type: string, mb: number, name = '') =>
+  ({ type, size: mb * 1024 * 1024, name }) as File;
 
 const IMAGES_ONLY = { allowImage: true, allowVideo: false, allowDocuments: false };
 const IMAGES_AND_VIDEO = { allowImage: true, allowVideo: true, allowDocuments: false };
@@ -36,6 +36,36 @@ describe('validateFile', () => {
 
   it('asks for a PDF when a document picker gets something else', () => {
     expect(validateFile(file('text/plain', 1), IMAGES_AND_DOCS)).toMatch(/PDF document/);
+  });
+
+  // Admin Upload Settings overrides (caps + allowed formats).
+  it('honours admin max-size overrides for images and videos', () => {
+    expect(validateFile(file('image/png', 5), IMAGES_AND_VIDEO, { maxImageMb: 4 })).toMatch(/max 4 MB/);
+    expect(validateFile(file('image/png', 3), IMAGES_AND_VIDEO, { maxImageMb: 4 })).toBeNull();
+    expect(validateFile(file('video/mp4', 60), IMAGES_AND_VIDEO, { maxVideoMb: 50 })).toMatch(/max 50 MB/);
+    expect(validateFile(file('video/mp4', 40), IMAGES_AND_VIDEO, { maxVideoMb: 50 })).toBeNull();
+  });
+
+  it('enforces the allowed-format lists by extension (jpeg == jpg)', () => {
+    const caps = { allowedImageFormats: ['jpeg', 'png'], allowedVideoFormats: ['mp4'] };
+    expect(validateFile(file('image/bmp', 1, 'pic.bmp'), IMAGES_AND_VIDEO, caps)).toMatch(
+      /Image format not allowed/,
+    );
+    expect(validateFile(file('image/jpeg', 1, 'pic.JPG'), IMAGES_AND_VIDEO, caps)).toBeNull();
+    expect(validateFile(file('image/jpeg', 1, 'pic.jpeg'), IMAGES_AND_VIDEO, caps)).toBeNull();
+    expect(validateFile(file('video/avi', 1, 'clip.avi'), IMAGES_AND_VIDEO, caps)).toMatch(
+      /Video format not allowed/,
+    );
+    expect(validateFile(file('video/mp4', 1, 'clip.mp4'), IMAGES_AND_VIDEO, caps)).toBeNull();
+  });
+
+  it('skips format enforcement without an extension or without a list', () => {
+    expect(
+      validateFile(file('image/png', 1, 'no-extension'), IMAGES_AND_VIDEO, {
+        allowedImageFormats: ['jpg'],
+      }),
+    ).toBeNull();
+    expect(validateFile(file('image/png', 1, 'pic.png'), IMAGES_AND_VIDEO, {})).toBeNull();
   });
 });
 

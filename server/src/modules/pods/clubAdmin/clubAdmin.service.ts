@@ -398,7 +398,7 @@ export const clubAdminService = {
     const withHost = input?.pod_hosts_id?.length
       ? input
       : { ...input, pod_hosts_id: [actor.id] };
-    return podService.create(withHost);
+    return podService.create(withHost, { actorUserId: actor.id, source: 'CLUB_ADMIN' });
   },
 
   /** Full pod edit for a pod in the actor's clubs. Also guards the target club
@@ -412,13 +412,13 @@ export const clubAdminService = {
     if (Array.isArray(clean.pod_hosts_id) && clean.pod_hosts_id.length === 0) {
       delete clean.pod_hosts_id;
     }
-    return podService.update(podDocId, clean);
+    return podService.update(podDocId, clean, { actorUserId: actor.id, source: 'CLUB_ADMIN' });
   },
 
   /** Soft-delete a pod in the actor's clubs (same soft-delete as the admin path). */
   async deletePod(actor: Actor, podDocId: string) {
     await this.assertClubAdminForPod(actor, podDocId);
-    return podService.remove(podDocId);
+    return podService.remove(podDocId, { actorUserId: actor.id, source: 'CLUB_ADMIN' });
   },
 
   /** Edit a club the actor administers, from the Partners portal. Governance

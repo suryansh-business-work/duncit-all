@@ -52,6 +52,7 @@ const CLUB_ADMIN_NAV: AppNavItem = {
   children: [
     { label: 'Dashboard', to: '/club-admin/dashboard', icon: 'dashboard' },
     { label: 'Clubs', to: '/club-admin/clubs', icon: 'storefront' },
+    { label: 'Pod Monitoring (AI)', to: '/club-admin/monitoring', icon: 'insights' },
   ],
 };
 

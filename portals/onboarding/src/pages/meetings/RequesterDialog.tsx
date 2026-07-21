@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogTitle, IconButton, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { InfoRow } from '@duncit/ui';
+import { meetingStatusLabel } from './statusLabel';
 import type { OnboardingMeeting } from './queries';
 
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
@@ -33,7 +34,7 @@ export default function RequesterDialog({ meeting, onClose }: Readonly<Props>) {
           <InfoRow label="Category" value={catPath} />
           <InfoRow label="Requested for" value={fmt(meeting.requested_at)} />
           <InfoRow label="Scheduled" value={fmt(meeting.scheduled_at)} />
-          <InfoRow label="Status" value={meeting.status} />
+          <InfoRow label="Status" value={meetingStatusLabel(meeting)} />
         </Stack>
       </DialogContent>
     </Dialog>

@@ -42,8 +42,8 @@ export const KIND_META: Record<SurveyKind, SurveyKindMeta> = {
   ECOMM: {
     kind: 'ECOMM',
     slug: 'seller',
-    label: 'Seller',
-    title: 'Seller Surveys',
+    label: 'E-Commerce Brand',
+    title: 'E-Commerce Brand Surveys',
     subtitle: 'Questions for e-commerce brand onboarding.',
     Icon: Inventory2Icon,
   },

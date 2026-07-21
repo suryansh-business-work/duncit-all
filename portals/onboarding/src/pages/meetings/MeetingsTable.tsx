@@ -3,6 +3,7 @@ import { Link, Typography } from '@mui/material';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
 import MeetingRowActions from './MeetingRowActions';
+import { meetingStatusLabel } from './statusLabel';
 import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
 
 const STATUS_COLORS: StatusColorMap = {
@@ -51,18 +52,14 @@ const requesterValue = (m: OnboardingMeeting) => m.user_name || m.contact_name |
 
 const renderJoin = (m: OnboardingMeeting) => <JoinCell meeting={m} />;
 
-const renderMeetingStatus = (m: OnboardingMeeting) => {
-  // A staff rejection reads as "Rejected"; a user self-cancel keeps the default "Cancelled" label.
-  const rejectedByStaff = m.status === 'CANCELLED' && !!m.cancelled_by_staff;
-  return (
-    <>
-      <StatusChip status={m.status} colorMap={STATUS_COLORS} label={rejectedByStaff ? 'Rejected' : undefined} />
-      {m.status === 'CANCELLED' && m.cancel_reason && (
-        <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
-      )}
-    </>
-  );
-};
+const renderMeetingStatus = (m: OnboardingMeeting) => (
+  <>
+    <StatusChip status={m.status} colorMap={STATUS_COLORS} label={meetingStatusLabel(m)} />
+    {m.status === 'CANCELLED' && m.cancel_reason && (
+      <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
+    )}
+  </>
+);
 
 const renderApproval = (m: OnboardingMeeting) => <ApprovalCell status={m.approval_status} />;
 

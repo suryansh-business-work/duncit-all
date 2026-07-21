@@ -198,6 +198,8 @@ const MEETING_TABLE_CONFIG: TableEntityConfig = {
     kind: { type: 'enum' },
     status: { type: 'enum' },
     approval_status: { type: 'enum' },
+    // Splits the "Cancelled" (self-cancel) vs "Rejected" (staff) status toggle.
+    cancelled_by_staff: { type: 'boolean' },
     dismissed: { type: 'boolean' },
     requested_at: { type: 'date' },
     scheduled_at: { type: 'date' },

@@ -59,7 +59,16 @@ export type RootStackParamList = {
   ClubDetails: { clubId?: string; clubSlug?: string; title?: string };
   PreviousPods: undefined;
   HappeningNearby: undefined;
-  Checkout: { podId: string; selectedProducts?: { product_id: string; quantity: number }[] };
+  Checkout: {
+    podId: string;
+    selectedProducts?: {
+      product_id: string;
+      quantity: number;
+      variant_id?: string;
+      unit_cost?: number;
+    }[];
+  };
+  Cart: undefined;
   HostsVenues: undefined;
   Venues: undefined;
   PublicProfile: { userId: string };

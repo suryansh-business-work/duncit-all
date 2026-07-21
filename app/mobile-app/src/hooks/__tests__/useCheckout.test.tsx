@@ -473,6 +473,82 @@ describe('useCheckout', () => {
     );
   });
 
+  it('passes the chosen variant, strips client-only pricing, and ships to the entered address', async () => {
+    const selected = [
+      { product_id: 'pr1', variant_id: 'v1', quantity: 1, unit_cost: 240 },
+      { product_id: 'pr2', variant_id: '', quantity: 2, unit_cost: 100 },
+    ];
+    const { result } = renderHook(() => useCheckout('p1', selected));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay(values, 900);
+    });
+    const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
+    const input = call![1].input;
+    // variant_id rides along; unit_cost (display-only) and empty variant ids are stripped.
+    expect(input.selected_products).toEqual([
+      { product_id: 'pr1', variant_id: 'v1', quantity: 1 },
+      { product_id: 'pr2', quantity: 2 },
+    ]);
+    // The delivery address mirrors the entered billing fields + contact.
+    expect(input.shipping_address).toMatchObject({
+      name: values.full_name,
+      line1: values.line1,
+      city: values.city,
+      pincode: values.pincode,
+      country: values.country || 'India',
+    });
+
+    // Defensive: a missing entered line1 still ships a well-formed address.
+    await act(async () => {
+      await result.current.pay({ ...values, line1: undefined as unknown as string }, 900);
+    });
+    const last = mockRequest.mock.calls.filter((c) => c[0] === MobileDummyCheckoutDocument).pop();
+    expect(last![1].input.shipping_address.line1).toBe('');
+  });
+
+  it('ships to the saved main address when "same as main" is on', async () => {
+    mockRequest.mockReset().mockImplementation((doc: unknown) => {
+      if (doc === MobileCheckoutMeDocument)
+        return Promise.resolve({
+          me: {
+            user_id: 'u1',
+            email: 'r@d.com',
+            phone_number: '9876543210',
+            phone_extension: '+91',
+            // A sparse saved address exercises the per-field '' fallbacks too.
+            address: { line1: '9 Palm Road' },
+          },
+        });
+      return route(doc);
+    });
+    const { result } = renderHook(() => useCheckout('p1', [{ product_id: 'pr1', quantity: 1 }]));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay({ ...values, same_as_main: true }, 900);
+    });
+    const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
+    expect(call![1].input.shipping_address).toMatchObject({
+      line1: '9 Palm Road',
+      line2: '',
+      landmark: '',
+      city: '',
+      state: '',
+      pincode: '',
+      country: 'India',
+    });
+  });
+
+  it('falls back to the entered fields when "same as main" is on with no saved address', async () => {
+    const { result } = renderHook(() => useCheckout('p1', [{ product_id: 'pr1', quantity: 1 }]));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay({ ...values, same_as_main: true }, 900);
+    });
+    const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
+    expect(call![1].input.shipping_address.line1).toBe('12 Main Street');
+  });
+
   it('computes the product add-on total from the pod catalogue', async () => {
     mockRequest.mockReset().mockImplementation((doc: unknown) => {
       if (doc === MobileCheckoutPodDocument)

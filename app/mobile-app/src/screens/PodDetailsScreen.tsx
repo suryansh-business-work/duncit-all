@@ -59,10 +59,13 @@ export function PodDetailsScreen() {
   );
   const { backout, busy: backingOut } = usePodBackout();
   const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
-  const { selectedProducts, selectedProductList, setSelectedProducts } = usePodProductSelection(
-    podId,
-    pod,
-  );
+  const {
+    selectedProducts,
+    selectedProductList,
+    selectedProductTotal,
+    setSelectedProducts,
+    setVariantQuantity,
+  } = usePodProductSelection(podId, pod);
   const showProducts = useFeatureFlag('is_product_visible');
   const finance = usePublicFinance();
   const { openClub } = useDetailNav();
@@ -194,6 +197,24 @@ export function PodDetailsScreen() {
               pod={pod}
               selectedProducts={selectedProducts}
               onSelectionChange={setSelectedProducts}
+              selectedTotal={selectedProductTotal}
+              onVariantQuantity={(row, variant, quantity) =>
+                setVariantQuantity(
+                  {
+                    pod_id: pod.id,
+                    pod_title: pod.pod_title,
+                    club_slug: pod.club_slug,
+                    product_id: row.product_id,
+                    variant_id: variant.id,
+                    variant_label: variant.label,
+                    product_name: row.product_name,
+                    image_url: variant.image_url || row.image_url,
+                    unit_cost: variant.unit_cost,
+                    max_quantity: variant.max,
+                  },
+                  quantity,
+                )
+              }
               readOnly={!!membershipState?.is_member || isPodExpired(pod.pod_date_time)}
             />
           </Reveal>

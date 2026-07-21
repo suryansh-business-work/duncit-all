@@ -58,10 +58,14 @@ export function CartProvider({ children }: Readonly<{ children: React.ReactNode 
 
   const setLine = useCallback((meta: CartLineMeta, quantity: number) => {
     setLines((current) => {
-      const next = current.filter(
-        (l) => !(l.pod_id === meta.pod_id && lineKey(l) === lineKey(meta)),
+      // Update in place so quantity changes never reorder the cart.
+      const index = current.findIndex(
+        (l) => l.pod_id === meta.pod_id && lineKey(l) === lineKey(meta),
       );
-      if (quantity > 0) next.push({ ...meta, quantity });
+      if (quantity <= 0) return index === -1 ? current : current.filter((_, i) => i !== index);
+      if (index === -1) return [...current, { ...meta, quantity }];
+      const next = [...current];
+      next[index] = { ...meta, quantity };
       return next;
     });
   }, []);

@@ -3,9 +3,64 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { usePodDetails } from '@/hooks/useDetails';
+import { useCartStore } from '@/stores/cart.store';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
+
+jest.mock('@/services/cart', () => ({
+  getCartLines: jest.fn().mockResolvedValue([]),
+  setCartLines: jest.fn().mockResolvedValue(undefined),
+}));
+
+// The sheet's own behavior is covered in ProductDetailSheet.test — stub it here
+// with a button that reports a picked variant, so the screen's variant→cart
+// wiring is exercised without the sheet's data fetching.
+jest.mock('@/components/details/ProductDetailSheet', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Pressable, Text } = require('react-native');
+  return {
+    ProductDetailSheet: ({ onUpdateLine }: { onUpdateLine?: (q: number, v: unknown) => void }) =>
+      onUpdateLine
+        ? React.createElement(
+            React.Fragment,
+            null,
+            React.createElement(
+              Pressable,
+              {
+                testID: 'sheet-stub-add-variant',
+                onPress: () =>
+                  onUpdateLine(2, {
+                    id: 'v9',
+                    label: 'L / Blue',
+                    unit_cost: 240,
+                    image_url: 'http://x/v9.jpg',
+                    max: 3,
+                  }),
+              },
+              React.createElement(Text, null, 'stub'),
+            ),
+            React.createElement(
+              Pressable,
+              {
+                testID: 'sheet-stub-add-imageless-variant',
+                onPress: () =>
+                  onUpdateLine(1, {
+                    id: 'v10',
+                    label: 'S / Red',
+                    unit_cost: 220,
+                    image_url: '',
+                    max: 3,
+                  }),
+              },
+              React.createElement(Text, null, 'stub2'),
+            ),
+          )
+        : null,
+  };
+});
 
 let mockSaved = false;
 let mockLiked = false;
@@ -128,6 +183,7 @@ beforeEach(() => {
   mockLikeCount = 3;
   useExploreStore.setState({ likeOverride: {}, commentDelta: {} });
   useStudioModeStore.setState({ mode: 'USER' });
+  useCartStore.setState({ lines: [], hydrated: true });
 });
 
 describe('PodDetailsScreen', () => {
@@ -306,8 +362,46 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('pod-book'));
     expect(mockNavigate).toHaveBeenCalledWith('Checkout', {
       podId: 'p1',
-      selectedProducts: [{ product_id: 'pr1', quantity: 1 }],
+      selectedProducts: [{ product_id: 'pr1', variant_id: '', quantity: 1, unit_cost: 200 }],
     });
+  });
+
+  it('adds a picked variant line to the cart from the product detail sheet', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      pod: {
+        ...podData.pod,
+        product_requests: [
+          {
+            product_id: 'pr1',
+            product_name: 'Drum sticks',
+            available_count: 5,
+            unit_cost: 200,
+            image_url: '',
+            images: [],
+          },
+        ],
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-shop-info-pr1'));
+    fireEvent.press(screen.getByTestId('sheet-stub-add-variant'));
+    const line = useCartStore.getState().lines.find((l) => l.variant_id === 'v9');
+    expect(line).toMatchObject({
+      pod_id: 'p1',
+      product_id: 'pr1',
+      variant_label: 'L / Blue',
+      unit_cost: 240,
+      quantity: 2,
+      max_quantity: 3,
+      image_url: 'http://x/v9.jpg',
+    });
+    // A variant with no image of its own falls back to the pod row's image.
+    fireEvent.press(screen.getByTestId('sheet-stub-add-imageless-variant'));
+    const imageless = useCartStore.getState().lines.find((l) => l.variant_id === 'v10');
+    expect(imageless?.image_url).toBe('');
   });
 
   it('hides the Pod Shop when products are gated off, even with products', () => {

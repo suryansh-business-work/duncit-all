@@ -172,6 +172,116 @@ describe('ProductDetailSheet', () => {
     expect(screen.getByTestId('product-detail-price')).toHaveTextContent('₹300');
   });
 
+  it('manages the selected variant line: selection map read, bounded stock and the pick payload', async () => {
+    mockRequest.mockResolvedValue({
+      publicInventoryProduct: product({
+        unit_cost: 200,
+        variants: [
+          {
+            id: 'v1',
+            option_label: 'Red / M',
+            color: 'Red',
+            size_label: 'M',
+            unit_cost: 250,
+            inventory_count: 4,
+            images: ['https://cdn/r.jpg'],
+          },
+          {
+            id: 'v2',
+            option_label: '',
+            color: '',
+            size_label: '',
+            unit_cost: 320,
+            inventory_count: 9,
+            images: [],
+          },
+          // No own price → the product's price backs the line.
+          {
+            id: 'v3',
+            option_label: 'Base priced',
+            color: '',
+            size_label: '',
+            unit_cost: null,
+            inventory_count: 2,
+            images: [],
+          },
+        ],
+      }),
+    });
+    const onUpdateLine = jest.fn();
+    renderWithProviders(
+      <ProductDetailSheet
+        productId="pr1"
+        onClose={jest.fn()}
+        selection={{ 'pr1::v1': 2 }}
+        maxQuantity={5}
+        onUpdateLine={onUpdateLine}
+      />,
+    );
+    // The selection map already holds 2 of the default variant → stepper shows.
+    await waitFor(() => expect(screen.getByTestId('product-detail-qty')).toHaveTextContent('2'));
+    fireEvent.press(screen.getByTestId('product-detail-inc'));
+    expect(onUpdateLine).toHaveBeenCalledWith(3, {
+      id: 'v1',
+      label: 'Red / M',
+      unit_cost: 250,
+      image_url: 'https://cdn/r.jpg',
+      max: 4,
+    });
+
+    // v2 has no labels ('Variant' fallback), no images (product cover fallback)
+    // and more stock than the pod cap — the pod cap (5) wins.
+    fireEvent.press(screen.getByTestId('variant-v2'));
+    fireEvent.press(screen.getByTestId('product-detail-add'));
+    expect(onUpdateLine).toHaveBeenLastCalledWith(1, {
+      id: 'v2',
+      label: 'Variant',
+      unit_cost: 320,
+      image_url: 'https://cdn/img.jpg',
+      max: 5,
+    });
+
+    // v3 carries no price of its own — the product price backs the pick.
+    fireEvent.press(screen.getByTestId('variant-v3'));
+    fireEvent.press(screen.getByTestId('product-detail-add'));
+    expect(onUpdateLine).toHaveBeenLastCalledWith(
+      1,
+      expect.objectContaining({ id: 'v3', unit_cost: 200, max: 2 }),
+    );
+  });
+
+  it('bottoms out the pick price/image/stock for a bare variant row', async () => {
+    mockRequest.mockResolvedValue({
+      publicInventoryProduct: product({
+        unit_cost: null,
+        image_url: null,
+        images: [],
+        variants: [
+          {
+            id: 'vb',
+            option_label: 'Bare',
+            color: '',
+            size_label: '',
+            unit_cost: null,
+            inventory_count: null,
+            images: null,
+          },
+        ],
+      }),
+    });
+    renderWithProviders(
+      <ProductDetailSheet
+        productId="pr1"
+        onClose={jest.fn()}
+        selection={{}}
+        maxQuantity={5}
+        onUpdateLine={jest.fn()}
+      />,
+    );
+    // inventory_count null → stock 0 → the add CTA is inert "Out of stock".
+    await waitFor(() => expect(screen.getByText('Out of stock')).toBeOnTheScreen());
+  });
+
   it('surfaces a load error', async () => {
     mockRequest.mockRejectedValue(new Error('offline'));
     renderWithProviders(<ProductDetailSheet productId="pr1" onClose={jest.fn()} />);
@@ -262,6 +372,84 @@ describe('PodShop → ProductDetailSheet', () => {
     await waitFor(() => expect(screen.getByTestId('product-detail-add')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('product-detail-add'));
     expect(onSelectionChange).toHaveBeenCalledWith({ pr1: 1 });
+  });
+
+  it('routes a picked variant to onVariantQuantity, and to the base line without it', async () => {
+    const withVariants = product({
+      variants: [
+        {
+          id: 'v1',
+          option_label: 'Red / M',
+          color: 'Red',
+          size_label: 'M',
+          unit_cost: 250,
+          inventory_count: 4,
+          images: [],
+        },
+      ],
+    });
+    mockRequest.mockResolvedValue({ publicInventoryProduct: withVariants });
+    const onSelectionChange = jest.fn();
+    const onVariantQuantity = jest.fn();
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{}}
+        onSelectionChange={onSelectionChange}
+        onVariantQuantity={onVariantQuantity}
+      />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('pod-shop-info-pr1'));
+    });
+    await waitFor(() => expect(screen.getByTestId('product-detail-add')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('product-detail-add'));
+    expect(onVariantQuantity).toHaveBeenCalledWith(
+      expect.objectContaining({ product_id: 'pr1' }),
+      expect.objectContaining({ id: 'v1', unit_cost: 250 }),
+      1,
+    );
+    expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
+  it('falls back to the base line for a picked variant without an onVariantQuantity handler', async () => {
+    mockRequest.mockResolvedValue({
+      publicInventoryProduct: product({
+        variants: [
+          {
+            id: 'v1',
+            option_label: 'Red / M',
+            color: 'Red',
+            size_label: 'M',
+            unit_cost: 250,
+            inventory_count: 4,
+            images: [],
+          },
+        ],
+      }),
+    });
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={onSelectionChange} />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('pod-shop-info-pr1'));
+    });
+    await waitFor(() => expect(screen.getByTestId('product-detail-add')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('product-detail-add'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ pr1: 1 });
+  });
+
+  it('shows the variant-aware selectedTotal when provided', () => {
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{ pr1: 1 }}
+        onSelectionChange={jest.fn()}
+        selectedTotal={470}
+      />,
+    );
+    expect(screen.getByTestId('pod-shop-total')).toHaveTextContent(/₹470/);
   });
 
   it('hides the quantity bar when the pod is already booked (read-only)', async () => {

@@ -24,6 +24,8 @@ import { useAppVersionStore } from '@/stores/app-version.store';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { useCartStore } from '@/stores/cart.store';
+import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import config, { createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { config as appConfig } from '@/constants/config';
@@ -52,6 +54,7 @@ export default function App() {
   const scheme = useThemeStore((s) => s.scheme);
   const hydrateTheme = useThemeStore((s) => s.hydrate);
   const hydrateStudioMode = useStudioModeStore((s) => s.hydrate);
+  const hydrateCart = useCartStore((s) => s.hydrate);
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const ready = useAuthStore((s) => s.ready);
   const loadConfig = useConfigStore((s) => s.load);
@@ -73,6 +76,7 @@ export default function App() {
   useEffect(() => {
     hydrateTheme();
     hydrateStudioMode();
+    hydrateCart().catch(() => undefined);
     bootstrap();
     // Pull Google/Maps config from the server (Tech portal source); best-effort,
     // the env fallback applies until it resolves.
@@ -80,7 +84,7 @@ export default function App() {
     // Fetch the latest published app version for the force-update gate (public,
     // best-effort — a failure leaves the gate open, never locking users out).
     loadAppVersion();
-  }, [hydrateTheme, hydrateStudioMode, bootstrap, loadConfig, loadAppVersion]);
+  }, [hydrateTheme, hydrateStudioMode, hydrateCart, bootstrap, loadConfig, loadAppVersion]);
 
   if (!ready) return null;
 
@@ -95,6 +99,7 @@ export default function App() {
                 <NavigationContainer theme={navThemeFor(scheme === 'dark')} linking={linking}>
                   <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
                   <RootNavigator />
+                  <FloatingCartButton />
                 </NavigationContainer>
                 <SplashOverlay />
                 <ForceUpdateGate />

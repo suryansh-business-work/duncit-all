@@ -15,19 +15,19 @@ export default function CartPage() {
   const navigate = useNavigate();
 
   const groups = useMemo(() => {
-    const byPod = new Map<string, CartLine[]>();
+    const byPod = new Map<string, { title: string; lines: CartLine[] }>();
     for (const line of lines) {
-      const arr = byPod.get(line.pod_id) ?? [];
-      arr.push(line);
-      byPod.set(line.pod_id, arr);
+      const group = byPod.get(line.pod_id) ?? { title: line.pod_title, lines: [] };
+      group.lines.push(line);
+      byPod.set(line.pod_id, group);
     }
     return Array.from(byPod.entries());
   }, [lines]);
 
-  const checkoutPod = (podId: string, podLines: CartLine[]) => {
+  const checkoutPod = (podId: string, title: string, podLines: CartLine[]) => {
     navigate(`/checkout/${podId}`, {
       state: {
-        pod_title: podLines[0]?.pod_title ?? '',
+        pod_title: title,
         selected_products: podLines.map((line) => ({
           ...parseSelectionKey(cartLineKey(line)),
           quantity: line.quantity,
@@ -59,18 +59,16 @@ export default function CartPage() {
       <Typography variant="h5" sx={{ fontWeight: 950 }}>
         Cart
       </Typography>
-      {groups.map(([podId, podLines]) => (
+      {groups.map(([podId, group]) => (
         <CartPodGroup
           key={podId}
           podId={podId}
-          podTitle={podLines[0]?.pod_title ?? 'Pod'}
-          lines={podLines}
+          podTitle={group.title}
+          lines={group.lines}
           priceFormat={priceFormat}
-          onSetQuantity={(line, quantity) =>
-            setLine({ ...line }, quantity)
-          }
+          onSetQuantity={(line, quantity) => setLine(line, quantity)}
           onRemove={(line) => removeLine(podId, cartLineKey(line))}
-          onCheckout={() => checkoutPod(podId, podLines)}
+          onCheckout={() => checkoutPod(podId, group.title, group.lines)}
         />
       ))}
       <Button

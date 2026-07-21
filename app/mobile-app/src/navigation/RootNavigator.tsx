@@ -14,6 +14,7 @@ import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { PostDetailScreen } from '@/screens/PostDetailScreen';
 import { FollowListScreen } from '@/screens/FollowListScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
+import { CartScreen } from '@/screens/CartScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { CreatePodScreen } from '@/screens/CreatePodScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
@@ -129,6 +130,7 @@ export function RootNavigator() {
       <Stack.Screen name="Follow" component={FollowListScreen} />
       <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="NotFound" component={NotFoundScreen} />
     </>
   ) : (

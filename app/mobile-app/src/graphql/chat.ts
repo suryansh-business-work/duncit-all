@@ -6,12 +6,35 @@ export const ChatRoomsDocument = gql(`
     myChatRooms {
       id
       pod_id
+      pod_slug
       pod_title
       pod_date_time
+      pod_end_date_time
       no_of_spots
       pod_attendees
       cover_url
       club_id
+      club_slug
+      super_category_id
+    }
+  }
+`);
+
+/** Host(s) + participants of a chat room, for the detail people panel. */
+export const ChatParticipantsDocument = gql(`
+  query MobileChatParticipants($podId: ID!) {
+    chatParticipants(pod_id: $podId) {
+      participant_count
+      hosts {
+        user_id
+        full_name
+        profile_photo
+      }
+      participants {
+        user_id
+        full_name
+        profile_photo
+      }
     }
   }
 `);

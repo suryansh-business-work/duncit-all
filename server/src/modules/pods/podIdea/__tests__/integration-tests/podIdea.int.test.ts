@@ -4,16 +4,65 @@ import { PodIdeaModel } from '../../podIdea.model';
 
 const author = new Types.ObjectId().toString();
 
+// Every idea now carries a mandatory Super › Category › Sub hierarchy — a shared
+// fixture keeps the existing behavioural tests focused on what they assert.
+const superId = new Types.ObjectId().toString();
+const categoryId = new Types.ObjectId().toString();
+const subId = new Types.ObjectId().toString();
+const cats = {
+  super_category_id: superId,
+  category_id: categoryId,
+  sub_category_id: subId,
+  super_category_name: 'For You',
+  category_name: 'Sports',
+  sub_category_name: 'Badminton',
+};
+const create = (a: string, o: { title: string; description: string }) =>
+  podIdeaService.create(a, { ...o, ...cats });
+
 describe('podIdeaService integration', () => {
   it('creates an idea in PENDING with no likes', async () => {
-    const idea = await podIdeaService.create(author, { title: 'Rooftop yoga', description: 'Morning pod' });
+    const idea = await create(author, { title: 'Rooftop yoga', description: 'Morning pod' });
     expect(idea.status).toBe('PENDING');
     expect(idea.likes_count).toBe(0);
     expect(idea.author_id).toBe(author);
   });
 
+  it('stamps a unique idea_no and stores the category hierarchy', async () => {
+    const first = await create(author, { title: 'A', description: 'a' });
+    const second = await create(author, { title: 'B', description: 'b' });
+    expect(first.idea_no).toMatch(/^DUN-\d{6,}$/);
+    expect(second.idea_no).toMatch(/^DUN-\d{6,}$/);
+    expect(first.idea_no).not.toBe(second.idea_no);
+    expect(first.super_category_id).toBe(superId);
+    expect(first.category_id).toBe(categoryId);
+    expect(first.sub_category_id).toBe(subId);
+    expect(first.super_category_name).toBe('For You');
+    expect(first.category_name).toBe('Sports');
+    expect(first.sub_category_name).toBe('Badminton');
+  });
+
+  it('rejects a create missing any level of the hierarchy', async () => {
+    await expect(
+      podIdeaService.create(author, {
+        title: 'No cats',
+        description: 'x',
+        category_id: categoryId,
+        sub_category_id: subId,
+      })
+    ).rejects.toThrow(/select a super category/i);
+    await expect(
+      podIdeaService.create(author, {
+        title: 'No sub',
+        description: 'x',
+        super_category_id: superId,
+        category_id: categoryId,
+      })
+    ).rejects.toThrow(/select a sub category/i);
+  });
+
   it('toggles a like on and off', async () => {
-    const idea = await podIdeaService.create(author, { title: 'T', description: 'D' });
+    const idea = await create(author, { title: 'T', description: 'D' });
     const liker = new Types.ObjectId().toString();
 
     const liked = await podIdeaService.toggleLike(idea.id, liker);
@@ -24,24 +73,57 @@ describe('podIdeaService integration', () => {
     expect(unliked.likes_count).toBe(0);
   });
 
-  it('adds a comment', async () => {
-    const idea = await podIdeaService.create(author, { title: 'T', description: 'D' });
-    const commented = await podIdeaService.addComment(idea.id, new Types.ObjectId().toString(), 'Love this');
-    expect(commented.comments_count).toBe(1);
-    expect(commented.comments[0].text).toBe('Love this');
+  it('adds comments and returns them oldest-first', async () => {
+    const idea = await create(author, { title: 'T', description: 'D' });
+    const commenter = new Types.ObjectId().toString();
+    await podIdeaService.addComment(idea.id, commenter, 'First');
+    const commented = await podIdeaService.addComment(idea.id, commenter, 'Second');
+    expect(commented.comments_count).toBe(2);
+    expect(commented.comments.map((c) => c.text)).toEqual(['First', 'Second']);
   });
 
-  it('filters by status, author and search', async () => {
-    await podIdeaService.create(author, { title: 'Picnic', description: 'park' });
-    await podIdeaService.create(new Types.ObjectId().toString(), { title: 'Trek', description: 'hills' });
+  it('filters by status, author, search and category level', async () => {
+    await create(author, { title: 'Picnic', description: 'park' });
+    await podIdeaService.create(new Types.ObjectId().toString(), {
+      title: 'Trek',
+      description: 'hills',
+      super_category_id: new Types.ObjectId().toString(),
+      category_id: new Types.ObjectId().toString(),
+      sub_category_id: new Types.ObjectId().toString(),
+    });
 
     expect(await podIdeaService.list({ author_id: author })).toHaveLength(1);
     expect(await podIdeaService.list({ search: 'trek' })).toHaveLength(1);
     expect(await podIdeaService.list({ status: 'PENDING' })).toHaveLength(2);
+    // The shared fixture's Sub narrows to only the author's idea.
+    expect(await podIdeaService.list({ sub_category_id: subId })).toHaveLength(1);
+    expect(await podIdeaService.list({ super_category_id: superId })).toHaveLength(1);
+  });
+
+  it('maps a legacy idea (no idea_no / no categories) to safe empty defaults', async () => {
+    // A pre-feature idea written straight to the collection: idea_no defaults to
+    // '' and the category ids to null — the mapper must not choke on them.
+    const legacy = await PodIdeaModel.create({
+      author_id: new Types.ObjectId(author),
+      title: 'Old idea',
+      description: 'from before categories',
+    });
+    const mapped = await podIdeaService.getById(String(legacy._id));
+    expect(mapped?.idea_no).toBe('');
+    expect(mapped?.super_category_id).toBeNull();
+    expect(mapped?.category_id).toBeNull();
+    expect(mapped?.sub_category_id).toBeNull();
+    expect(mapped?.super_category_name).toBe('');
+  });
+
+  it('searches ideas by their idea_no', async () => {
+    const idea = await create(author, { title: 'Findable', description: 'by id' });
+    const [found] = await podIdeaService.list({ search: idea.idea_no });
+    expect(found.id).toBe(idea.id);
   });
 
   it('blocks a non-author non-admin from updating', async () => {
-    const idea = await podIdeaService.create(author, { title: 'T', description: 'D' });
+    const idea = await create(author, { title: 'T', description: 'D' });
     await expect(
       podIdeaService.update(idea.id, new Types.ObjectId().toString(), false, { title: 'Hacked' })
     ).rejects.toThrow(/not allowed/i);
@@ -51,16 +133,16 @@ describe('podIdeaService integration', () => {
   });
 
   it('lets an admin set the status', async () => {
-    const idea = await podIdeaService.create(author, { title: 'T', description: 'D' });
+    const idea = await create(author, { title: 'T', description: 'D' });
     const approved = await podIdeaService.setStatus(idea.id, 'APPROVED', new Types.ObjectId().toString());
     expect(approved.status).toBe('APPROVED');
     expect(await PodIdeaModel.countDocuments()).toBe(1);
   });
 
   it('serves the podIdeasTable page with search, status filter, sort and paging', async () => {
-    const rooftop = await podIdeaService.create(author, { title: 'Rooftop cinema', description: 'Movies' });
-    await podIdeaService.create(author, { title: 'Beach cleanup', description: 'Sunday drive' });
-    const chess = await podIdeaService.create(author, { title: 'Chess night', description: 'Blitz games' });
+    const rooftop = await create(author, { title: 'Rooftop cinema', description: 'Movies' });
+    await create(author, { title: 'Beach cleanup', description: 'Sunday drive' });
+    const chess = await create(author, { title: 'Chess night', description: 'Blitz games' });
     await podIdeaService.setStatus(chess.id, 'APPROVED');
 
     // Default envelope: newest first (created_at desc) with clamp defaults.

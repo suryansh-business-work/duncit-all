@@ -1,13 +1,21 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodIdeaModel, type IPodIdea } from './podIdea.model';
+import { nextEntityNo } from '@modules/venues/entityIdCounter';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const toPub = (p: IPodIdea, viewerId?: string | null) => ({
   id: String(p._id),
+  idea_no: p.idea_no || '',
   author_id: String(p.author_id),
   title: p.title,
   description: p.description,
+  super_category_id: p.super_category_id ? String(p.super_category_id) : null,
+  category_id: p.category_id ? String(p.category_id) : null,
+  sub_category_id: p.sub_category_id ? String(p.sub_category_id) : null,
+  super_category_name: p.super_category_name || '',
+  category_name: p.category_name || '',
+  sub_category_name: p.sub_category_name || '',
   likes: (p.likes || []).map(String),
   likes_count: p.likes?.length || 0,
   liked_by_me: viewerId
@@ -54,7 +62,14 @@ function assertId(id: string, label = 'id') {
 
 export const podIdeaService = {
   async list(
-    filter?: { status?: string; author_id?: string; search?: string },
+    filter?: {
+      status?: string;
+      author_id?: string;
+      search?: string;
+      super_category_id?: string;
+      category_id?: string;
+      sub_category_id?: string;
+    },
     viewerId?: string | null
   ) {
     const q: any = {};
@@ -63,9 +78,22 @@ export const podIdeaService = {
       assertId(filter.author_id, 'author_id');
       q.author_id = new Types.ObjectId(filter.author_id);
     }
+    // Category filters — the deepest supplied level wins (Sub narrows Category
+    // narrows Super), each stored on the idea so a single equality suffices.
+    for (const [key, label] of [
+      ['super_category_id', 'super_category_id'],
+      ['category_id', 'category_id'],
+      ['sub_category_id', 'sub_category_id'],
+    ] as const) {
+      const value = filter?.[key];
+      if (value) {
+        assertId(value, label);
+        q[key] = new Types.ObjectId(value);
+      }
+    }
     if (filter?.search) {
       const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
-      q.$or = [{ title: r }, { description: r }];
+      q.$or = [{ title: r }, { description: r }, { idea_no: r }];
     }
     const docs = await PodIdeaModel.find(q).sort({ created_at: -1 });
     return docs.map((d) => toPub(d, viewerId));
@@ -89,7 +117,19 @@ export const podIdeaService = {
     return doc ? toPub(doc, viewerId) : null;
   },
 
-  async create(authorId: string, input: { title: string; description: string }) {
+  async create(
+    authorId: string,
+    input: {
+      title: string;
+      description: string;
+      super_category_id?: string;
+      category_id?: string;
+      sub_category_id?: string;
+      super_category_name?: string;
+      category_name?: string;
+      sub_category_name?: string;
+    }
+  ) {
     const title = (input.title || '').trim();
     const description = (input.description || '').trim();
     if (!title)
@@ -106,10 +146,30 @@ export const podIdeaService = {
       throw new GraphQLError('Description too long (max 2001 chars)', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
+    // The full Super › Category › Sub hierarchy is mandatory for a new idea.
+    for (const [id, label] of [
+      [input.super_category_id, 'a Super category'],
+      [input.category_id, 'a Category'],
+      [input.sub_category_id, 'a Sub category'],
+    ] as const) {
+      if (!id)
+        throw new GraphQLError(`Please select ${label}`, {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      assertId(id, 'category');
+    }
+    const idea_no = await nextEntityNo('DUN', 'pod_idea');
     const doc = await PodIdeaModel.create({
       author_id: new Types.ObjectId(authorId),
+      idea_no,
       title,
       description,
+      super_category_id: new Types.ObjectId(input.super_category_id),
+      category_id: new Types.ObjectId(input.category_id),
+      sub_category_id: new Types.ObjectId(input.sub_category_id),
+      super_category_name: (input.super_category_name || '').trim(),
+      category_name: (input.category_name || '').trim(),
+      sub_category_name: (input.sub_category_name || '').trim(),
       likes: [],
       comments: [],
       shares_count: 0,

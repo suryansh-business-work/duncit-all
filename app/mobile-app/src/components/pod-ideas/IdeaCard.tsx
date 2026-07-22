@@ -5,6 +5,7 @@ import { semantic } from '@duncit/auth-tokens';
 import type { PodIdea } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { formatRelative } from '@/utils/date-format';
+import { categoryPathLabel } from '@/utils/idea-category';
 
 interface Props {
   idea: PodIdea;
@@ -38,6 +39,7 @@ export function IdeaCard({
   const author = idea.author;
   const isMine = !!myId && idea.author_id === myId;
   const initial = (author?.first_name?.[0] ?? author?.full_name?.[0] ?? 'U').toUpperCase();
+  const categoryPath = categoryPathLabel(idea);
 
   return (
     <YStack
@@ -110,6 +112,40 @@ export function IdeaCard({
           {idea.description}
         </Text>
       </YStack>
+
+      {idea.idea_no || categoryPath ? (
+        <XStack alignItems="center" gap={8} flexWrap="wrap">
+          {idea.idea_no ? (
+            <XStack
+              testID={`idea-no-${idea.id}`}
+              paddingHorizontal={8}
+              paddingVertical={3}
+              borderRadius={6}
+              backgroundColor="$background"
+            >
+              <Text fontSize={10.5} fontWeight="800" color="$muted">
+                {idea.idea_no}
+              </Text>
+            </XStack>
+          ) : null}
+          {categoryPath ? (
+            <XStack
+              testID={`idea-category-${idea.id}`}
+              alignItems="center"
+              gap={4}
+              paddingHorizontal={8}
+              paddingVertical={3}
+              borderRadius={999}
+              backgroundColor="$background"
+            >
+              <MaterialIcons name="local-offer" size={11} color={muted} />
+              <Text fontSize={10.5} fontWeight="700" color="$muted">
+                {categoryPath}
+              </Text>
+            </XStack>
+          ) : null}
+        </XStack>
+      ) : null}
 
       <XStack alignItems="center" gap={20}>
         <XStack

@@ -121,15 +121,55 @@ export const chatService = {
   },
 
   async listMyChatRooms(userId: string) {
-    // Pods I host or attend or am a podMember of
+    // Pods I host or attend or am a podMember of. The club is joined so each
+    // room carries its Super-category (classification) and slug (pod-detail nav).
     const uid = new mongoose.Types.ObjectId(userId);
     const pods = await PodModel.find({
       $or: [{ pod_hosts_id: uid }, { pod_attendees: uid }],
       is_active: true,
     })
-      .select('pod_title pod_date_time pod_attendees no_of_spots club_id pod_images_and_videos')
+      .select(
+        'pod_id pod_title pod_date_time pod_end_date_time pod_attendees no_of_spots club_id pod_images_and_videos'
+      )
+      .populate({ path: 'club_id', select: 'club_id super_category_id' })
       .sort({ pod_date_time: 1 })
       .lean();
     return pods;
+  },
+
+  /** Host(s) + participants of a pod's chat, for the detail people panel.
+   * Members only — mirrors the read gate on the messages. */
+  async chatParticipants(podId: string, userId: string) {
+    const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees').lean();
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    const hostIds = (pod.pod_hosts_id || []).map(String);
+    const attendeeIds = (pod.pod_attendees || []).map(String);
+    const uid = String(userId);
+    const member =
+      hostIds.includes(uid) ||
+      attendeeIds.includes(uid) ||
+      !!(await PodMemberModel.findOne({ pod_id: podId, user_id: userId, status: 'JOINED' }).lean());
+    if (!member) {
+      throw new GraphQLError('Not a pod member', { extensions: { code: 'FORBIDDEN' } });
+    }
+    const users = await UserModel.find({ _id: { $in: [...hostIds, ...attendeeIds] } })
+      .select('profile.first_name profile.last_name profile.profile_photo')
+      .lean();
+    const byId = new Map(users.map((u: any) => [String(u._id), u]));
+    const toChatUser = (id: string) => {
+      const u: any = byId.get(id);
+      const first = u?.profile?.first_name || '';
+      const last = u?.profile?.last_name || '';
+      return {
+        user_id: id,
+        full_name: `${first} ${last}`.trim() || 'Member',
+        profile_photo: u?.profile?.profile_photo || null,
+      };
+    };
+    return {
+      hosts: hostIds.map(toChatUser),
+      participants: attendeeIds.map(toChatUser),
+      participant_count: attendeeIds.length,
+    };
   },
 };

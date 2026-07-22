@@ -14,20 +14,36 @@ const CREATE = gql`
   mutation Create($input: CreatePodIdeaInput!) {
     createPodIdea(input: $input) {
       id
+      idea_no
       title
       status
       likes_count
+      sub_category_name
     }
   }
 `;
 
+// The Super › Category › Sub trio is mandatory on the input.
+const cats = {
+  super_category_id: new Types.ObjectId().toString(),
+  category_id: new Types.ObjectId().toString(),
+  sub_category_id: new Types.ObjectId().toString(),
+  super_category_name: 'For You',
+  category_name: 'Sports',
+  sub_category_name: 'Badminton',
+};
+
 describe('podIdea e2e', () => {
   it('lets a user post an idea, list it and like it', async () => {
     const user = server.client(signToken({ id: new Types.ObjectId().toString(), roles: ['USER'] }));
-    const created = await user.request<{ createPodIdea: { id: string; status: string } }>(CREATE, {
-      input: { title: 'Beach cleanup pod', description: 'Sunday morning' },
+    const created = await user.request<{
+      createPodIdea: { id: string; status: string; idea_no: string; sub_category_name: string };
+    }>(CREATE, {
+      input: { title: 'Beach cleanup pod', description: 'Sunday morning', ...cats },
     });
     expect(created.createPodIdea.status).toBe('PENDING');
+    expect(created.createPodIdea.idea_no).toMatch(/^DUN-\d{6,}$/);
+    expect(created.createPodIdea.sub_category_name).toBe('Badminton');
 
     const list = await user.request<{ podIdeas: unknown[] }>(gql`query { podIdeas { id title } }`);
     expect(list.podIdeas).toHaveLength(1);
@@ -48,14 +64,14 @@ describe('podIdea e2e', () => {
   it('rejects posting an idea without authentication', async () => {
     const anon = server.client();
     await expect(
-      anon.request(CREATE, { input: { title: 'x', description: 'y' } })
+      anon.request(CREATE, { input: { title: 'x', description: 'y', ...cats } })
     ).rejects.toThrow();
   });
 
   it('serves podIdeasTable: envelope, search and paging', async () => {
     const user = server.client(signToken({ id: new Types.ObjectId().toString(), roles: ['USER'] }));
-    await user.request(CREATE, { input: { title: 'Beach cleanup', description: 'Sunday' } });
-    await user.request(CREATE, { input: { title: 'Chess night', description: 'Blitz' } });
+    await user.request(CREATE, { input: { title: 'Beach cleanup', description: 'Sunday', ...cats } });
+    await user.request(CREATE, { input: { title: 'Chess night', description: 'Blitz', ...cats } });
 
     type Page = {
       podIdeasTable: { rows: { title: string }[]; total: number; page: number; page_size: number };

@@ -7,6 +7,7 @@ import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { MediaUploadField } from '@/components/create-pod/MediaUploadField';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { HostResubmitPodDocument, ResubmitVenuesDocument } from '@/graphql/host-manage';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -86,99 +87,102 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
   return (
     <Modal visible={!!pod} transparent animationType="fade" onRequestClose={dismiss}>
       <ModalThemeScope>
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-resubmit-dialog">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={dismiss}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            width="92%"
-            maxWidth={460}
-            maxHeight="88%"
-            backgroundColor="$background"
-            borderRadius={20}
-            padding={18}
-          >
-            <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={6}>
-                Edit & resubmit pod
-              </Text>
-              <Text fontSize={12.5} color="$muted" paddingBottom={10}>
-                Select a different venue or choose a different time slot — your booking request is
-                sent to the venue again when you resubmit. Your pod is kept, no new pod is created.
-              </Text>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <YStack gap={12} paddingBottom={6}>
-                  <FormTextField control={control} name="pod_title" label="Title" />
-                  <FormTextField
-                    control={control}
-                    name="pod_description"
-                    label="Description"
-                    multiline
-                  />
-                  <Controller
-                    control={control}
-                    name="venue_id"
-                    render={({ field, fieldState }) => (
-                      <VenuePickerField
-                        venues={venues}
-                        value={field.value}
-                        error={fieldState.error?.message}
-                        onChange={(next) => {
-                          field.onChange(next);
-                          setValue('venue_slot_id', '');
-                        }}
-                      />
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name="venue_slot_id"
-                    render={({ field, fieldState }) => (
-                      <SlotPickerField
-                        slots={slots}
-                        loading={slotsLoading}
-                        hasVenue={!!venueId}
-                        value={field.value}
-                        error={fieldState.error?.message}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name="media_text"
-                    render={({ field, fieldState }) => (
-                      <MediaUploadField
-                        value={field.value}
-                        onChange={field.onChange}
-                        error={fieldState.error?.message}
-                        label="Media"
-                      />
-                    )}
-                  />
-                  {error ? (
-                    <Text testID="pod-resubmit-error" fontSize={12.5} color="$danger">
-                      {error}
-                    </Text>
-                  ) : null}
-                </YStack>
-              </ScrollView>
-              <ResubmitFooter
-                busy={busy}
-                onCancel={dismiss}
-                onSubmit={() => fireAndForget(submit())}
-              />
-            </SafeAreaView>
+        <KeyboardScreen>
+          <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-resubmit-dialog">
+            <YStack
+              role="button"
+              aria-label="Close"
+              onPress={dismiss}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.5)"
+            />
+            <YStack
+              width="92%"
+              maxWidth={460}
+              maxHeight="88%"
+              backgroundColor="$background"
+              borderRadius={20}
+              padding={18}
+            >
+              <SafeAreaView edges={[]}>
+                <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={6}>
+                  Edit & resubmit pod
+                </Text>
+                <Text fontSize={12.5} color="$muted" paddingBottom={10}>
+                  Select a different venue or choose a different time slot — your booking request is
+                  sent to the venue again when you resubmit. Your pod is kept, no new pod is
+                  created.
+                </Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  <YStack gap={12} paddingBottom={6}>
+                    <FormTextField control={control} name="pod_title" label="Title" />
+                    <FormTextField
+                      control={control}
+                      name="pod_description"
+                      label="Description"
+                      multiline
+                    />
+                    <Controller
+                      control={control}
+                      name="venue_id"
+                      render={({ field, fieldState }) => (
+                        <VenuePickerField
+                          venues={venues}
+                          value={field.value}
+                          error={fieldState.error?.message}
+                          onChange={(next) => {
+                            field.onChange(next);
+                            setValue('venue_slot_id', '');
+                          }}
+                        />
+                      )}
+                    />
+                    <Controller
+                      control={control}
+                      name="venue_slot_id"
+                      render={({ field, fieldState }) => (
+                        <SlotPickerField
+                          slots={slots}
+                          loading={slotsLoading}
+                          hasVenue={!!venueId}
+                          value={field.value}
+                          error={fieldState.error?.message}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
+                    <Controller
+                      control={control}
+                      name="media_text"
+                      render={({ field, fieldState }) => (
+                        <MediaUploadField
+                          value={field.value}
+                          onChange={field.onChange}
+                          error={fieldState.error?.message}
+                          label="Media"
+                        />
+                      )}
+                    />
+                    {error ? (
+                      <Text testID="pod-resubmit-error" fontSize={12.5} color="$danger">
+                        {error}
+                      </Text>
+                    ) : null}
+                  </YStack>
+                </ScrollView>
+                <ResubmitFooter
+                  busy={busy}
+                  onCancel={dismiss}
+                  onSubmit={() => fireAndForget(submit())}
+                />
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

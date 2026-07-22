@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal } from 'react-native';
+import { Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
@@ -8,25 +8,42 @@ import { Field } from '@/components/Field';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import type { NewPodIdeaInput } from '@/hooks/usePodIdeas';
+import {
+  CategoryCascadeField,
+  EMPTY_CATEGORY_SCOPE,
+  type CategoryLabels,
+  type CategoryScope,
+} from './CategoryCascadeField';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSubmit: (title: string, description: string) => Promise<void>;
+  onSubmit: (input: NewPodIdeaInput) => Promise<void>;
 }
 
-/** Bottom sheet to share a new pod idea (title + description). Validates that
- * both are present, then submits and closes. RN port of mWeb's composer dialog. */
+const EMPTY_LABELS: CategoryLabels = {
+  super_category_name: '',
+  category_name: '',
+  sub_category_name: '',
+};
+
+/** Bottom sheet to share a new pod idea: title, description and the mandatory
+ * Super → Category → Sub hierarchy. RN port of mWeb's composer dialog. */
 export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) {
   const { color, onPrimary } = useThemeColors();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [scope, setScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
+  const [labels, setLabels] = useState<CategoryLabels>(EMPTY_LABELS);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setTitle('');
     setDescription('');
+    setScope(EMPTY_CATEGORY_SCOPE);
+    setLabels(EMPTY_LABELS);
     setError('');
   };
 
@@ -36,15 +53,24 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
     onClose();
   };
 
+  const onCategoryChange = (next: CategoryScope, nextLabels: CategoryLabels) => {
+    setScope(next);
+    setLabels(nextLabels);
+  };
+
   const submit = async () => {
     if (!title.trim() || !description.trim()) {
       setError('Title and description are both required.');
       return;
     }
+    if (!scope.super_category_id || !scope.category_id || !scope.sub_category_id) {
+      setError('Please select a Super Category, Category and Sub Category.');
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {
-      await onSubmit(title, description);
+      await onSubmit({ title, description, ...scope, ...labels });
       reset();
       onClose();
     } catch {
@@ -75,6 +101,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
               left={0}
               right={0}
               bottom={0}
+              maxHeight="88%"
               backgroundColor="$background"
               borderTopLeftRadius={20}
               borderTopRightRadius={20}
@@ -98,58 +125,65 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                   </XStack>
                 </XStack>
 
-                <YStack gap={10} paddingHorizontal={16} paddingBottom={16}>
-                  <Field label="Title" gap={4}>
-                    <Input
-                      testID="idea-title-input"
-                      aria-label="Title"
-                      value={title}
-                      onChangeText={(t) => setTitle(t.slice(0, 160))}
-                      placeholder="Title"
-                      placeholderTextColor="$muted"
-                      backgroundColor="$surface"
+                <ScrollView keyboardShouldPersistTaps="handled">
+                  <YStack gap={10} paddingHorizontal={16} paddingBottom={16}>
+                    <Field label="Title" gap={4}>
+                      <Input
+                        testID="idea-title-input"
+                        aria-label="Title"
+                        value={title}
+                        onChangeText={(t) => setTitle(t.slice(0, 160))}
+                        placeholder="Title"
+                        placeholderTextColor="$muted"
+                        backgroundColor="$surface"
+                      />
+                    </Field>
+                    <Field label="Description" gap={4}>
+                      <Input
+                        testID="idea-description-input"
+                        aria-label="Description"
+                        value={description}
+                        onChangeText={(t) => setDescription(t.slice(0, 2000))}
+                        placeholder="Describe the vibe, format, location, audience…"
+                        placeholderTextColor="$muted"
+                        backgroundColor="$surface"
+                        multiline
+                        numberOfLines={5}
+                        minHeight={120}
+                      />
+                    </Field>
+                    <CategoryCascadeField
+                      value={scope}
+                      onChange={onCategoryChange}
+                      idPrefix="idea-composer-cat"
                     />
-                  </Field>
-                  <Field label="Description" gap={4}>
-                    <Input
-                      testID="idea-description-input"
-                      aria-label="Description"
-                      value={description}
-                      onChangeText={(t) => setDescription(t.slice(0, 2000))}
-                      placeholder="Describe the vibe, format, location, audience…"
-                      placeholderTextColor="$muted"
-                      backgroundColor="$surface"
-                      multiline
-                      numberOfLines={5}
-                      minHeight={120}
-                    />
-                  </Field>
-                  {error ? (
-                    <Text testID="idea-composer-error" color="$danger" fontSize={12.5}>
-                      {error}
-                    </Text>
-                  ) : null}
-                  <XStack
-                    testID="idea-composer-submit"
-                    role="button"
-                    aria-label="Submit idea"
-                    aria-disabled={submitting}
-                    onPress={submit}
-                    height={48}
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={8}
-                    borderRadius={12}
-                    backgroundColor="$primary"
-                    opacity={submitting ? 0.7 : 1}
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    {submitting ? <Spinner size="small" color={onPrimary} /> : null}
-                    <Text fontSize={14} fontWeight="900" color={onPrimary}>
-                      {submitting ? 'Submitting…' : 'Submit'}
-                    </Text>
-                  </XStack>
-                </YStack>
+                    {error ? (
+                      <Text testID="idea-composer-error" color="$danger" fontSize={12.5}>
+                        {error}
+                      </Text>
+                    ) : null}
+                    <XStack
+                      testID="idea-composer-submit"
+                      role="button"
+                      aria-label="Submit idea"
+                      aria-disabled={submitting}
+                      onPress={submit}
+                      height={48}
+                      alignItems="center"
+                      justifyContent="center"
+                      gap={8}
+                      borderRadius={12}
+                      backgroundColor="$primary"
+                      opacity={submitting ? 0.7 : 1}
+                      pressStyle={{ opacity: 0.85 }}
+                    >
+                      {submitting ? <Spinner size="small" color={onPrimary} /> : null}
+                      <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                        {submitting ? 'Submitting…' : 'Submit'}
+                      </Text>
+                    </XStack>
+                  </YStack>
+                </ScrollView>
               </SafeAreaView>
             </YStack>
           </YStack>

@@ -9,6 +9,10 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import CategoryCascade, {
+  type CategoryLabels,
+  type CategoryScope,
+} from './CategoryCascade';
 
 interface IdeaComposerDialogProps {
   open: boolean;
@@ -16,6 +20,8 @@ interface IdeaComposerDialogProps {
   setTitle: (v: string) => void;
   description: string;
   setDescription: (v: string) => void;
+  scope: CategoryScope;
+  onCategoryChange: (scope: CategoryScope, labels: CategoryLabels) => void;
   error: string | null;
   creating: boolean;
   onClose: () => void;
@@ -28,6 +34,8 @@ export default function IdeaComposerDialog({
   setTitle,
   description,
   setDescription,
+  scope,
+  onCategoryChange,
   error,
   creating,
   onClose,
@@ -64,6 +72,7 @@ export default function IdeaComposerDialog({
             maxRows={10}
             helperText={`${description.length} / 2001 — describe the vibe, format, location, audience…`}
           />
+          <CategoryCascade value={scope} onChange={onCategoryChange} />
         </Stack>
       </DialogContent>
       <DialogActions>

@@ -4,29 +4,43 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, XStack } from 'tamagui';
 
+import { ChatPodFilter, type ChatPodFilterValue } from '@/components/chat/ChatPodFilter';
 import { ChatRoomCard } from '@/components/chat/ChatRoomCard';
 import { FeedList } from '@/components/FeedList';
 import { TabScreen } from '@/components/TabScreen';
 import { useChatRooms } from '@/hooks/useChat';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { isPodActive } from '@/utils/pod-format';
 
-/** Chats tab — the list of rooms (pods) the user is in, with a search box that
- * filters by pod title. Tapping opens a read-only room view. */
+/** Chats tab — the list of rooms (pods) the user is in. Rooms are classified by
+ * the header Super Category (For You / For Your Pet) and can be narrowed to
+ * Upcoming / Previous pods; the search box filters by pod title. Tapping opens
+ * the room. RN twin of mWeb's ChatsPage. */
 export function ChatsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { rooms, isLoading, refetch } = useChatRooms();
+  const { selectedSuperId } = useSuperCategories();
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
+  const [podFilter, setPodFilter] = useState<ChatPodFilterValue>('ALL');
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return rooms;
-    return rooms.filter((room) => (room.pod_title ?? '').toLowerCase().includes(needle));
-  }, [rooms, query]);
+    return rooms.filter((room) => {
+      if (selectedSuperId && room.super_category_id !== selectedSuperId) return false;
+      if (podFilter === 'UPCOMING' && !isPodActive(room.pod_date_time, room.pod_end_date_time))
+        return false;
+      if (podFilter === 'PREVIOUS' && isPodActive(room.pod_date_time, room.pod_end_date_time))
+        return false;
+      if (needle && !(room.pod_title ?? '').toLowerCase().includes(needle)) return false;
+      return true;
+    });
+  }, [rooms, query, selectedSuperId, podFilter]);
 
   const emptyText = rooms.length
-    ? 'No chats match your search.'
+    ? 'No chats match your filters.'
     : 'No chats yet. Join a pod to start chatting.';
 
   return (
@@ -58,6 +72,7 @@ export function ChatsScreen() {
           returnKeyType="search"
         />
       </XStack>
+      <ChatPodFilter value={podFilter} onChange={setPodFilter} />
       <FeedList
         testID="chats-list"
         isLoading={isLoading}

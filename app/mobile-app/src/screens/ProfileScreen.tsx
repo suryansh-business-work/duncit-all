@@ -11,7 +11,7 @@ import { ProfilePanels } from '@/components/profile/ProfilePanels';
 import { ProfilePostsGrid } from '@/components/profile/ProfilePostsGrid';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useProfile } from '@/hooks/useProfile';
-import { useStatusUpload } from '@/hooks/useStatusUpload';
+import { useProfilePostUpload } from '@/hooks/useProfilePostUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
@@ -23,12 +23,12 @@ export function ProfileScreen() {
   const goBack = useGoBack();
   const { me, posts, isLoading, refetch } = useProfile();
   const { color: ink } = useThemeColors();
-  const { uploading, pickAndUpload } = useStatusUpload();
+  const { uploading, pickAndPost } = useProfilePostUpload();
   const isHost = me?.roles.includes('HOST') ?? false;
   const isVenue = me?.roles.includes('VENUE_OWNER') ?? false;
 
   const addPost = async () => {
-    await pickAndUpload();
+    await pickAndPost();
     await refetch();
   };
 

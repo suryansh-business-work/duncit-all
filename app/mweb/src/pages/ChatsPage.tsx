@@ -18,9 +18,15 @@ import {
 import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import SearchIcon from '@mui/icons-material/Search';
-import { podStatus, podStatusChip } from '../utils/podStatus';
+import { isPodActive, podStatus, podStatusChip } from '../utils/podStatus';
 
-type ChatFilter = 'ALL' | 'PODS' | 'DMS' | 'HOSTS' | 'UNREAD';
+type ChatPodFilter = 'ALL' | 'UPCOMING' | 'PREVIOUS';
+
+const POD_FILTERS: Array<[ChatPodFilter, string]> = [
+  ['ALL', 'All'],
+  ['UPCOMING', 'Upcoming Pods'],
+  ['PREVIOUS', 'Previous Pods'],
+];
 
 const MY_CHAT_ROOMS = gql`
   query MyChatRooms {
@@ -28,13 +34,11 @@ const MY_CHAT_ROOMS = gql`
       id
       pod_title
       pod_date_time
+      pod_end_date_time
       pod_attendees
       no_of_spots
       cover_url
       club_id
-    }
-    clubs(filter: { is_active: true }) {
-      id
       super_category_id
     }
     superCategories: categories(filter: { level: SUPER }) {
@@ -51,9 +55,11 @@ interface ChatsPageProps {
 export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps>) {
   const { data, loading, error } = useQuery(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<ChatFilter>('ALL');
+  const [filter, setFilter] = useState<ChatPodFilter>('ALL');
   const [q, setQ] = useState('');
 
+  // Classify by the header's Super Category (For You / For Your Pet), resolving
+  // the slug to the club's super_category_id carried on each room.
   const rooms = useMemo(() => {
     const all = data?.myChatRooms ?? [];
     const supers = data?.superCategories ?? [];
@@ -61,22 +67,25 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       ? supers.find((s: any) => s.slug === superCategorySlug)?.id
       : null;
     if (!selectedSuperId) return all;
-    const clubsById = new Map<string, any>();
-    (data?.clubs ?? []).forEach((c: any) => clubsById.set(c.id, c));
-    return all.filter((r: any) => clubsById.get(r.club_id)?.super_category_id === selectedSuperId);
+    return all.filter((r: any) => r.super_category_id === selectedSuperId);
   }, [data, superCategorySlug]);
-  const filteredRooms = filter === 'ALL' || filter === 'PODS' ? rooms : [];
+
+  const byStatus = useMemo(() => {
+    if (filter === 'ALL') return rooms;
+    const wantActive = filter === 'UPCOMING';
+    return rooms.filter(
+      (r: any) => isPodActive(r.pod_date_time, r.pod_end_date_time) === wantActive
+    );
+  }, [rooms, filter]);
+
   const term = q.trim().toLowerCase();
   const visibleRooms = term
-    ? filteredRooms.filter((r: any) => (r.pod_title ?? '').toLowerCase().includes(term))
-    : filteredRooms;
-  const filters: Array<[ChatFilter, string, number]> = [['ALL', 'All', rooms.length], ['PODS', 'Pods', rooms.length], ['DMS', 'DMs', 0], ['HOSTS', 'Hosts', 0], ['UNREAD', 'Unread', 0]];
+    ? byStatus.filter((r: any) => (r.pod_title ?? '').toLowerCase().includes(term))
+    : byStatus;
 
-  let emptyMessage = 'No conversations in this filter yet.';
+  let emptyMessage = 'No chats match your filters.';
   if (rooms.length === 0) {
     emptyMessage = "You haven't joined any pods yet. Join or host a pod to start chatting with attendees.";
-  } else if (filteredRooms.length > 0) {
-    emptyMessage = 'No chats match your search.';
   }
 
   if (loading && !data)
@@ -123,11 +132,11 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
       />
       <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
-        {filters.map(([value, label, count]) => (
-          <Chip key={value} clickable label={count ? `${label} ${count}` : label} color={filter === value ? 'primary' : 'default'} variant={filter === value ? 'filled' : 'outlined'} onClick={() => setFilter(value)} sx={{ height: 34, fontWeight: 900 }} />
+        {POD_FILTERS.map(([value, label]) => (
+          <Chip key={value} clickable label={label} color={filter === value ? 'primary' : 'default'} variant={filter === value ? 'filled' : 'outlined'} onClick={() => setFilter(value)} sx={{ height: 34, fontWeight: 900 }} />
         ))}
       </Stack>
-      {(filter === 'ALL' || filter === 'PODS') && rooms.length > 0 && (
+      {filter === 'ALL' && rooms.length > 0 && (
         <Box sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
           <Typography variant="caption" color="success.main" sx={{ fontWeight: 950, letterSpacing: 0.6 }}>
             ACTIVE PODS · {rooms.length}
@@ -149,7 +158,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       ) : (
         <Stack spacing={1.25}>
           {visibleRooms.map((p: any) => {
-            const statusChip = podStatusChip(podStatus(p.pod_date_time));
+            const statusChip = podStatusChip(podStatus(p.pod_date_time, p.pod_end_date_time));
             return (
             <Card key={p.id} variant="outlined" sx={{ borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }}>
               <CardActionArea onClick={() => navigate(`/chats/${p.id}`)}>

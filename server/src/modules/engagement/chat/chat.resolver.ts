@@ -36,17 +36,30 @@ export const chatResolvers = {
     myChatRooms: async (_: any, __: any, ctx: GraphQLContext) => {
       const uid = requireAuth(ctx);
       const pods = await chatService.listMyChatRooms(uid);
-      return pods.map((p: any) => ({
-        id: String(p._id),
-        pod_id: String(p._id),
-        pod_title: p.pod_title,
-        pod_date_time: p.pod_date_time ? new Date(p.pod_date_time).toISOString() : null,
-        pod_attendees: (p.pod_attendees || []).map(String),
-        no_of_spots: p.no_of_spots,
-        club_id: p.club_id ? String(p.club_id) : null,
-        cover_url:
-          p.pod_images_and_videos?.find((m: any) => m.type !== 'VIDEO')?.url || null,
-      }));
+      return pods.map((p: any) => {
+        // club_id is populated to { _id, club_id (slug), super_category_id }.
+        const club = p.club_id && typeof p.club_id === 'object' ? p.club_id : null;
+        return {
+          id: String(p._id),
+          pod_id: String(p._id),
+          pod_slug: p.pod_id || null,
+          pod_title: p.pod_title,
+          pod_date_time: p.pod_date_time ? new Date(p.pod_date_time).toISOString() : null,
+          pod_end_date_time: p.pod_end_date_time
+            ? new Date(p.pod_end_date_time).toISOString()
+            : null,
+          pod_attendees: (p.pod_attendees || []).map(String),
+          no_of_spots: p.no_of_spots,
+          club_id: club ? String(club._id) : p.club_id ? String(p.club_id) : null,
+          club_slug: club?.club_id || null,
+          super_category_id: club?.super_category_id ? String(club.super_category_id) : null,
+          cover_url: p.pod_images_and_videos?.find((m: any) => m.type !== 'VIDEO')?.url || null,
+        };
+      });
+    },
+    chatParticipants: async (_: any, args: { pod_id: string }, ctx: GraphQLContext) => {
+      const uid = requireAuth(ctx);
+      return chatService.chatParticipants(args.pod_id, uid);
     },
     podMessages: async (
       _: any,

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Box, Snackbar } from '@mui/material';
+import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import {
   CREATE_IDEA,
   DELETE_IDEA,
@@ -9,16 +9,31 @@ import {
   TOGGLE_LIKE,
 } from './queries';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import CategoryCascade, {
+  EMPTY_CATEGORY_SCOPE,
+  type CategoryLabels,
+  type CategoryScope,
+} from './CategoryCascade';
 import IdeaComposerDialog from './IdeaComposerDialog';
 import IdeaDetailsDialog from './IdeaDetailsDialog';
 import IdeasList from './IdeasList';
 import PodIdeasHeader from './PodIdeasHeader';
+import { ideaMatchesScope } from '../../utils/ideaCategory';
+
+const EMPTY_LABELS: CategoryLabels = {
+  super_category_name: '',
+  category_name: '',
+  sub_category_name: '',
+};
 
 export default function PodIdeasPage() {
   const [search, setSearch] = useState('');
+  const [filterScope, setFilterScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
   const [composerOpen, setComposerOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [scope, setScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
+  const [labels, setLabels] = useState<CategoryLabels>(EMPTY_LABELS);
   const [composerErr, setComposerErr] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -48,6 +63,15 @@ export default function PodIdeasPage() {
     (i: any) => i.status !== 'APPROVED'
   );
 
+  const visibleIdeas = useMemo(
+    () => ideas.filter((i) => ideaMatchesScope(i, filterScope)),
+    [ideas, filterScope]
+  );
+  const visibleMyIdeas = useMemo(
+    () => myIdeas.filter((i) => ideaMatchesScope(i, filterScope)),
+    [myIdeas, filterScope]
+  );
+
   const [createMut, { loading: creating }] = useMutation(CREATE_IDEA);
   const [toggleLikeMut] = useMutation(TOGGLE_LIKE);
   const [shareMut] = useMutation(SHARE);
@@ -57,19 +81,37 @@ export default function PodIdeasPage() {
     await Promise.all([refetch(), myId ? refetchMine() : Promise.resolve()]);
   };
 
+  const onCategoryChange = (next: CategoryScope, nextLabels: CategoryLabels) => {
+    setScope(next);
+    setLabels(nextLabels);
+  };
+
   const submit = async () => {
     setComposerErr(null);
     if (!title.trim() || !description.trim()) {
       setComposerErr('Title and description are both required');
       return;
     }
+    if (!scope.super_category_id || !scope.category_id || !scope.sub_category_id) {
+      setComposerErr('Please select a Super Category, Category and Sub Category');
+      return;
+    }
     try {
       await createMut({
-        variables: { input: { title: title.trim(), description: description.trim() } },
+        variables: {
+          input: {
+            title: title.trim(),
+            description: description.trim(),
+            ...scope,
+            ...labels,
+          },
+        },
       });
       setComposerOpen(false);
       setTitle('');
       setDescription('');
+      setScope(EMPTY_CATEGORY_SCOPE);
+      setLabels(EMPTY_LABELS);
       setToast('Idea submitted! It will appear publicly once approved.');
       await refetchAll();
     } catch (e: any) {
@@ -130,11 +172,18 @@ export default function PodIdeasPage() {
         }}
       />
 
+      <Stack spacing={0.75} sx={{ mb: 2 }}>
+        <Typography variant="caption" color="text.secondary" fontWeight={700}>
+          Filter by category
+        </Typography>
+        <CategoryCascade value={filterScope} onChange={setFilterScope} allowAll />
+      </Stack>
+
       <IdeasList
         loading={loading}
         hasData={!!data}
-        ideas={ideas}
-        myIdeas={myIdeas}
+        ideas={visibleIdeas}
+        myIdeas={visibleMyIdeas}
         myId={myId}
         onOpen={setDetailsId}
         onLike={toggleLike}
@@ -148,6 +197,8 @@ export default function PodIdeasPage() {
         setTitle={setTitle}
         description={description}
         setDescription={setDescription}
+        scope={scope}
+        onCategoryChange={onCategoryChange}
         error={composerErr}
         creating={creating}
         onClose={() => setComposerOpen(false)}

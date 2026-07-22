@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
 import { Alert, Autocomplete, Button, Stack, TextField } from '@mui/material';
-import { CATEGORIES, type CategoryLevel, type CategoryOption } from './queries';
+import { type CategoryOption } from './queries';
+import { useCategoryLevel } from './useCategoryLevel';
 
 export interface CategoryScope {
   super_category_id: string;
@@ -28,19 +28,6 @@ interface Props {
   initialScope?: CategoryScope;
 }
 
-const useLevel = (level: CategoryLevel, parentId: string) => {
-  const skip = level !== 'SUPER' && !parentId;
-  const { data, loading } = useQuery<{ categories: CategoryOption[] }>(CATEGORIES, {
-    variables: { level, parent_id: level === 'SUPER' ? null : parentId },
-    skip,
-    fetchPolicy: 'cache-and-network',
-  });
-  const options = (data?.categories ?? [])
-    .filter((c) => c.is_active !== false)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0) || a.name.localeCompare(b.name));
-  return { options, loading };
-};
-
 /** Super → Category → Sub picker shown before the survey; resolves which survey to ask. */
 export default function CategoryStep({
   submitting,
@@ -51,9 +38,9 @@ export default function CategoryStep({
   const [scope, setScope] = useState<CategoryScope>(initialScope ?? EMPTY_SCOPE);
   const disabledSet = new Set(disabledIds ?? []);
   const [error, setError] = useState<string | null>(null);
-  const supers = useLevel('SUPER', '');
-  const cats = useLevel('CATEGORY', scope.super_category_id);
-  const subs = useLevel('SUB', scope.category_id);
+  const supers = useCategoryLevel('SUPER', '');
+  const cats = useCategoryLevel('CATEGORY', scope.super_category_id);
+  const subs = useCategoryLevel('SUB', scope.category_id);
 
   const pick = (level: keyof CategoryScope, id: string) => {
     setError(null);

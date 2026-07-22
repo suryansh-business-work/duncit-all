@@ -15,10 +15,18 @@ export const podIdeaTypeDefs = /* GraphQL */ `
 
   type PodIdea {
     id: ID!
+    "Human-readable permanent id (e.g. DUN-000001)."
+    idea_no: String!
     author_id: ID!
     author: User
     title: String!
     description: String!
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    super_category_name: String!
+    category_name: String!
+    sub_category_name: String!
     likes: [ID!]!
     likes_count: Int!
     liked_by_me: Boolean!
@@ -42,11 +50,21 @@ export const podIdeaTypeDefs = /* GraphQL */ `
     status: PodIdeaStatus
     author_id: ID
     search: String
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
   }
 
   input CreatePodIdeaInput {
     title: String!
     description: String!
+    "Mandatory Super/Category/Sub the idea maps to (For You › Sports › Badminton)."
+    super_category_id: ID!
+    category_id: ID!
+    sub_category_id: ID!
+    super_category_name: String
+    category_name: String
+    sub_category_name: String
   }
 
   input UpdatePodIdeaInput {

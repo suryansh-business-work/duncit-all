@@ -1,3 +1,9 @@
+export {
+  CategoryCascadeField,
+  EMPTY_CATEGORY_SCOPE,
+  type CategoryScope,
+  type CategoryLabels,
+} from './CategoryCascadeField';
 export { IdeaCard } from './IdeaCard';
 export { IdeaCommentRow } from './IdeaCommentRow';
 export { IdeaComposerSheet } from './IdeaComposerSheet';

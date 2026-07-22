@@ -14,4 +14,11 @@ describe('chat e2e', () => {
     const anon = server.client();
     await expect(anon.request(gql`query { myChatRooms { id } }`)).rejects.toThrow();
   });
+
+  it('requires authentication to read chat participants', async () => {
+    const anon = server.client();
+    await expect(
+      anon.request(gql`query { chatParticipants(pod_id: "x") { participant_count } }`)
+    ).rejects.toThrow();
+  });
 });

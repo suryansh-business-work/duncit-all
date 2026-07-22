@@ -59,10 +59,32 @@ describe('usePodIdeas', () => {
     const { result } = renderHook(() => usePodIdeas(''));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    await act(() => result.current.create('Title', 'Body'));
+    await act(() =>
+      result.current.create({
+        title: 'Title',
+        description: 'Body',
+        super_category_id: 's1',
+        category_id: 'c1',
+        sub_category_id: 'b1',
+        super_category_name: 'For You',
+        category_name: 'Sports',
+        sub_category_name: 'Badminton',
+      }),
+    );
     expect(mockRequest).toHaveBeenCalledWith(
       expect.anything(),
-      { input: { title: 'Title', description: 'Body' } },
+      {
+        input: {
+          title: 'Title',
+          description: 'Body',
+          super_category_id: 's1',
+          category_id: 'c1',
+          sub_category_id: 'b1',
+          super_category_name: 'For You',
+          category_name: 'Sports',
+          sub_category_name: 'Badminton',
+        },
+      },
       { auth: true },
     );
 

@@ -1,23 +1,28 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Share } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Text, XStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import {
+  CategoryCascadeField,
+  EMPTY_CATEGORY_SCOPE,
   IdeaComposerSheet,
   IdeaDeleteConfirm,
   IdeaDetailsSheet,
   IdeasList,
+  type CategoryScope,
 } from '@/components/pod-ideas';
 import { usePodIdeas, type PodIdea } from '@/hooks/usePodIdeas';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { ideaMatchesScope } from '@/utils/idea-category';
 
 /** Pod Ideas board — searchable community ideas with submit, like, share and a
  * comment thread. RN port of mWeb's PodIdeasPage. */
 export function PodIdeasScreen() {
   const { muted, onPrimary } = useThemeColors();
   const [search, setSearch] = useState('');
+  const [filterScope, setFilterScope] = useState<CategoryScope>(EMPTY_CATEGORY_SCOPE);
   const [composerOpen, setComposerOpen] = useState(false);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -34,6 +39,15 @@ export function PodIdeasScreen() {
     share,
     deleteIdea,
   } = usePodIdeas(search);
+
+  const visibleIdeas = useMemo(
+    () => ideas.filter((i) => ideaMatchesScope(i, filterScope)),
+    [ideas, filterScope],
+  );
+  const visibleMyIdeas = useMemo(
+    () => myIdeas.filter((i) => ideaMatchesScope(i, filterScope)),
+    [myIdeas, filterScope],
+  );
 
   const onShareIdea = async (idea: PodIdea) => {
     try {
@@ -109,11 +123,17 @@ export function PodIdeasScreen() {
       </XStack>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 12, paddingBottom: 32 }}>
+        <CategoryCascadeField
+          value={filterScope}
+          onChange={setFilterScope}
+          allowAll
+          idPrefix="idea-filter-cat"
+        />
         <IdeasList
           isLoading={isLoading}
           hasData={hasData}
-          ideas={ideas}
-          myIdeas={myIdeas}
+          ideas={visibleIdeas}
+          myIdeas={visibleMyIdeas}
           myId={myId}
           onOpen={setDetailsId}
           onLike={toggleLike}

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -30,60 +31,62 @@ export function SecuritySheet({
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} testID={testID}>
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={onClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            position="absolute"
-            left={0}
-            right={0}
-            bottom={0}
-            maxHeight="92%"
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
-          >
-            <SafeAreaView edges={['bottom']}>
-              <XStack
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={16}
-                paddingTop={16}
-                paddingBottom={8}
-              >
-                <Text fontSize={18} fontWeight="900" color="$color">
-                  {title}
-                </Text>
+        <KeyboardScreen>
+          <YStack flex={1} testID={testID}>
+            <YStack
+              role="button"
+              aria-label="Close"
+              onPress={onClose}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.5)"
+            />
+            <YStack
+              position="absolute"
+              left={0}
+              right={0}
+              bottom={0}
+              maxHeight="92%"
+              backgroundColor="$background"
+              borderTopLeftRadius={20}
+              borderTopRightRadius={20}
+            >
+              <SafeAreaView edges={['bottom']}>
                 <XStack
-                  testID={`${testID}-close`}
-                  role="button"
-                  aria-label="Close"
-                  onPress={onClose}
-                  width={32}
-                  height={32}
                   alignItems="center"
-                  justifyContent="center"
+                  justifyContent="space-between"
+                  paddingHorizontal={16}
+                  paddingTop={16}
+                  paddingBottom={8}
                 >
-                  <MaterialIcons name="close" size={20} color={color} />
+                  <Text fontSize={18} fontWeight="900" color="$color">
+                    {title}
+                  </Text>
+                  <XStack
+                    testID={`${testID}-close`}
+                    role="button"
+                    aria-label="Close"
+                    onPress={onClose}
+                    width={32}
+                    height={32}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <MaterialIcons name="close" size={20} color={color} />
+                  </XStack>
                 </XStack>
-              </XStack>
-              <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 520 }}>
-                <YStack paddingHorizontal={16} paddingBottom={16} gap={12}>
-                  {children}
-                </YStack>
-              </ScrollView>
-            </SafeAreaView>
+                <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 520 }}>
+                  <YStack paddingHorizontal={16} paddingBottom={16} gap={12}>
+                    {children}
+                  </YStack>
+                </ScrollView>
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

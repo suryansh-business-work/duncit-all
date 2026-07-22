@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { useProfile } from '@/hooks/useProfile';
-import { useStatusUpload } from '@/hooks/useStatusUpload';
+import { useProfilePostUpload } from '@/hooks/useProfilePostUpload';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useProfile', () => ({ useProfile: jest.fn() }));
@@ -17,7 +17,7 @@ jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => {
     ),
   };
 });
-jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: jest.fn() }));
+jest.mock('@/hooks/useProfilePostUpload', () => ({ useProfilePostUpload: jest.fn() }));
 // Avatar interactions are covered in profile-avatar.test; the stub exposes an
 // onChanged trigger so the header's refetch closure stays covered.
 jest.mock('@/components/profile/ProfileAvatar', () => {
@@ -36,9 +36,9 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedProfile = useProfile as jest.Mock;
-const mockedUpload = useStatusUpload as jest.Mock;
+const mockedUpload = useProfilePostUpload as jest.Mock;
 const refetch = jest.fn().mockResolvedValue(undefined);
-const pickAndUpload = jest.fn().mockResolvedValue(undefined);
+const pickAndPost = jest.fn().mockResolvedValue(undefined);
 
 const me = {
   user_id: 'u',
@@ -59,8 +59,8 @@ beforeEach(() => {
   mockNavigate.mockClear();
   mockGoBack.mockClear();
   refetch.mockClear();
-  pickAndUpload.mockClear();
-  mockedUpload.mockReturnValue({ uploading: false, pickAndUpload });
+  pickAndPost.mockClear();
+  mockedUpload.mockReturnValue({ uploading: false, pickAndPost });
 });
 
 describe('ProfileScreen', () => {
@@ -116,11 +116,11 @@ describe('ProfileScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('VenueManage');
   });
 
-  it('adds a post (pick + upload, then refetch)', async () => {
+  it('adds a Profile Post (pick + post as POST, then refetch — not a Story)', async () => {
     mockedProfile.mockReturnValue({ me, posts: [], isLoading: false, refetch });
     renderWithProviders(<ProfileScreen />);
     fireEvent.press(screen.getByTestId('profile-add-post'));
-    await waitFor(() => expect(pickAndUpload).toHaveBeenCalled());
+    await waitFor(() => expect(pickAndPost).toHaveBeenCalled());
     await waitFor(() => expect(refetch).toHaveBeenCalled());
   });
 

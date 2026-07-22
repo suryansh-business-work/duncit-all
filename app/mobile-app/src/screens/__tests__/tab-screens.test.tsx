@@ -8,6 +8,7 @@ import { useFollowing } from '@/hooks/useFollowing';
 import { useFollowingFeed } from '@/hooks/useFollowingFeed';
 import { useHomeData } from '@/hooks/useHomeFeed';
 import { useLocations } from '@/hooks/useLocations';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
@@ -17,6 +18,7 @@ jest.mock('@/hooks/useHomeFeed');
 jest.mock('@/hooks/useFollowingFeed', () => ({ useFollowingFeed: jest.fn() }));
 jest.mock('@/hooks/useFollowing', () => ({ useFollowing: jest.fn() }));
 jest.mock('@/hooks/useChat');
+jest.mock('@/hooks/useSuperCategories', () => ({ useSuperCategories: jest.fn() }));
 jest.mock('@/hooks/useLocations', () => ({ useLocations: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({ data: { me: { user_id: 'me1' } } }),
@@ -39,6 +41,7 @@ const mockedHomeData = useHomeData as jest.Mock;
 const mockedFeed = useFollowingFeed as jest.Mock;
 const mockedFollowing = useFollowing as jest.Mock;
 const mockedChatRooms = useChatRooms as jest.Mock;
+const mockedSuperCats = useSuperCategories as jest.Mock;
 const mockedLocations = useLocations as jest.Mock;
 
 const club = (id: string) =>
@@ -91,6 +94,13 @@ beforeEach(() => {
   // The Clubs feed resolves a post's club doc id → slug via the followed clubs.
   mockedFollowing.mockReturnValue({ followedClubs: [{ id: 'c9', club_id: 'club-nine' }] });
   mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
+  mockedSuperCats.mockReturnValue({
+    superCats: [],
+    selectedSuperId: null,
+    selectedSlug: '',
+    isLoading: false,
+    select: jest.fn(),
+  });
   mockedLocations.mockReturnValue({ selectedId: '', cityLabel: '', zoneName: '' });
 });
 
@@ -270,12 +280,26 @@ describe('FollowingScreen', () => {
 });
 
 describe('ChatsScreen', () => {
+  const FUTURE = '2099-01-01T10:00:00.000Z';
+  const PAST = '2000-01-01T10:00:00.000Z';
+  const room = (over: Record<string, unknown> = {}) => ({
+    id: 'r1',
+    pod_id: 'pod9',
+    pod_slug: 'pod-9',
+    pod_title: 'Coffee',
+    pod_date_time: FUTURE,
+    pod_end_date_time: null,
+    pod_attendees: ['u1'],
+    cover_url: null,
+    club_id: 'c1',
+    club_slug: 'club-1',
+    super_category_id: null,
+    ...over,
+  });
+
   it('navigates to a room on press', () => {
     mockedChatRooms.mockReturnValue({
-      rooms: [
-        { id: 'r1', pod_id: 'pod9', pod_title: 'Coffee', pod_attendees: ['u1'], cover_url: null },
-        { id: 'r2', pod_id: null, pod_title: 'Orphan', pod_attendees: [], cover_url: null },
-      ],
+      rooms: [room(), room({ id: 'r2', pod_id: null, pod_title: 'Orphan', pod_attendees: [] })],
       isLoading: false,
       refetch: jest.fn(),
     });
@@ -289,10 +313,10 @@ describe('ChatsScreen', () => {
   it('filters rooms by pod title and shows a no-match message', () => {
     mockedChatRooms.mockReturnValue({
       rooms: [
-        { id: 'r1', pod_id: 'pod9', pod_title: 'Coffee', pod_attendees: ['u1'], cover_url: null },
-        { id: 'r2', pod_id: 'pod8', pod_title: 'Painting', pod_attendees: [], cover_url: null },
+        room(),
+        room({ id: 'r2', pod_id: 'pod8', pod_title: 'Painting', pod_attendees: [] }),
         // A title-less room must not crash the filter and never matches.
-        { id: 'r3', pod_id: 'pod7', pod_title: null, pod_attendees: [], cover_url: null },
+        room({ id: 'r3', pod_id: 'pod7', pod_title: null, pod_attendees: [] }),
       ],
       isLoading: false,
       refetch: jest.fn(),
@@ -304,10 +328,50 @@ describe('ChatsScreen', () => {
     expect(screen.queryByTestId('chat-room-r3')).toBeNull();
     // A query that matches nothing falls back to the no-match message.
     fireEvent.changeText(screen.getByTestId('chats-search-input'), 'zzz');
-    expect(screen.getByText('No chats match your search.')).toBeOnTheScreen();
+    expect(screen.getByText('No chats match your filters.')).toBeOnTheScreen();
+  });
+
+  it('classifies rooms by the selected super category (For You / For Your Pet)', () => {
+    mockedSuperCats.mockReturnValue({
+      superCats: [],
+      selectedSuperId: 'human',
+      selectedSlug: 'for-you',
+      isLoading: false,
+      select: jest.fn(),
+    });
+    mockedChatRooms.mockReturnValue({
+      rooms: [
+        room({ id: 'r1', super_category_id: 'human' }),
+        room({ id: 'r2', pod_id: 'pod8', pod_title: 'Pet Walk', super_category_id: 'pet' }),
+      ],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ChatsScreen />);
+    expect(screen.getByTestId('chat-room-r1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-room-r2')).toBeNull();
+  });
+
+  it('narrows the list to Upcoming or Previous pods', () => {
+    mockedChatRooms.mockReturnValue({
+      rooms: [
+        room({ id: 'r1', pod_date_time: FUTURE }),
+        room({ id: 'r2', pod_id: 'pod8', pod_title: 'Old Pod', pod_date_time: PAST }),
+      ],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ChatsScreen />);
+    fireEvent.press(screen.getByTestId('chat-filter-UPCOMING'));
+    expect(screen.getByTestId('chat-room-r1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-room-r2')).toBeNull();
+    fireEvent.press(screen.getByTestId('chat-filter-PREVIOUS'));
+    expect(screen.queryByTestId('chat-room-r1')).toBeNull();
+    expect(screen.getByTestId('chat-room-r2')).toBeOnTheScreen();
   });
 
   it('shows the empty hint when there are no rooms at all', () => {
+    mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
     renderWithProviders(<ChatsScreen />);
     expect(screen.getByText(/No chats yet/)).toBeOnTheScreen();
   });

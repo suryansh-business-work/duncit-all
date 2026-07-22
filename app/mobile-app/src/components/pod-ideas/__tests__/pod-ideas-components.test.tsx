@@ -12,12 +12,35 @@ import { PodIdeaStatus } from '@/generated/graphql/graphql';
 import type { PodIdea, PodIdeaComment, PodIdeaDetail } from '@/hooks/usePodIdeas';
 import { renderWithProviders } from '@/utils/test-utils';
 
+// Canned taxonomy so the real CategoryCascadeField renders selectable chips.
+jest.mock('@/hooks/useCategoryLevel', () => ({
+  useCategoryLevel: (level: string, parentId: string, enabled: boolean) => {
+    if (!enabled) return [];
+    if (level === 'SUPER') return [{ id: 's1', name: 'For You', level, parent_id: null }];
+    if (level === 'CATEGORY') return [{ id: 'c1', name: 'Sports', level, parent_id: parentId }];
+    return [{ id: 'b1', name: 'Badminton', level, parent_id: parentId }];
+  },
+}));
+
+const pickCategories = (prefix: string) => {
+  fireEvent.press(screen.getByTestId(`${prefix}-super_category_id-s1`));
+  fireEvent.press(screen.getByTestId(`${prefix}-category_id-c1`));
+  fireEvent.press(screen.getByTestId(`${prefix}-sub_category_id-b1`));
+};
+
 const idea = (over: Partial<PodIdea> = {}): PodIdea =>
   ({
     id: '1',
+    idea_no: 'DUN-000001',
     author_id: 'u1',
     title: 'Board game night',
     description: 'A cosy evening of games.',
+    super_category_id: 's1',
+    category_id: 'c1',
+    sub_category_id: 'b1',
+    super_category_name: 'For You',
+    category_name: 'Sports',
+    sub_category_name: 'Badminton',
     likes_count: 3,
     liked_by_me: false,
     shares_count: 1,
@@ -48,6 +71,9 @@ describe('IdeaCard', () => {
     expect(h.onShare).toHaveBeenCalled();
     expect(h.onDelete).toHaveBeenCalled();
     expect(screen.getByText('APPROVED')).toBeOnTheScreen();
+    // IdeaID + category path are surfaced on the card.
+    expect(screen.getByTestId('idea-no-1')).toHaveTextContent('DUN-000001');
+    expect(screen.getByTestId('idea-category-1')).toHaveTextContent('For You › Sports › Badminton');
   });
 
   it('hides the delete affordance for other members and falls back to a U avatar', () => {
@@ -57,6 +83,39 @@ describe('IdeaCard', () => {
     expect(screen.queryByTestId('idea-delete-1')).toBeNull();
     expect(screen.getByText('U')).toBeOnTheScreen();
     expect(screen.getByText('Member')).toBeOnTheScreen();
+  });
+
+  it('omits the IdeaID / category chips when the idea has neither', () => {
+    renderWithProviders(
+      <IdeaCard
+        idea={idea({
+          idea_no: '',
+          super_category_name: '',
+          category_name: '',
+          sub_category_name: '',
+        })}
+        {...cardHandlers()}
+      />,
+    );
+    expect(screen.queryByTestId('idea-no-1')).toBeNull();
+    expect(screen.queryByTestId('idea-category-1')).toBeNull();
+  });
+
+  it('shows the IdeaID alone when the category path is empty', () => {
+    renderWithProviders(
+      <IdeaCard
+        idea={idea({ super_category_name: '', category_name: '', sub_category_name: '' })}
+        {...cardHandlers()}
+      />,
+    );
+    expect(screen.getByTestId('idea-no-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('idea-category-1')).toBeNull();
+  });
+
+  it('shows the category path alone when the IdeaID is empty', () => {
+    renderWithProviders(<IdeaCard idea={idea({ idea_no: '' })} {...cardHandlers()} />);
+    expect(screen.queryByTestId('idea-no-1')).toBeNull();
+    expect(screen.getByTestId('idea-category-1')).toBeOnTheScreen();
   });
 
   it('colours the chip for rejected and pending statuses', () => {
@@ -117,19 +176,41 @@ describe('IdeasList', () => {
 });
 
 describe('IdeaComposerSheet', () => {
-  it('validates, submits and closes on success', async () => {
+  const cat = 'idea-composer-cat';
+
+  it('requires text then the full category hierarchy before submitting', async () => {
     const onSubmit = jest.fn().mockResolvedValue(undefined);
     const onClose = jest.fn();
     renderWithProviders(<IdeaComposerSheet open onClose={onClose} onSubmit={onSubmit} />);
 
+    // Missing title/description first.
     fireEvent.press(screen.getByTestId('idea-composer-submit'));
-    expect(screen.getByTestId('idea-composer-error')).toBeOnTheScreen();
+    expect(screen.getByTestId('idea-composer-error')).toHaveTextContent(
+      'Title and description are both required.',
+    );
 
     fireEvent.changeText(screen.getByTestId('idea-title-input'), 'My idea');
     fireEvent.changeText(screen.getByTestId('idea-description-input'), 'Details here');
+    // Text present but no category yet → hierarchy error, no submit.
+    fireEvent.press(screen.getByTestId('idea-composer-submit'));
+    expect(screen.getByTestId('idea-composer-error')).toHaveTextContent(
+      'Please select a Super Category, Category and Sub Category.',
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    pickCategories(cat);
     fireEvent.press(screen.getByTestId('idea-composer-submit'));
     await waitFor(() => expect(onClose).toHaveBeenCalled());
-    expect(onSubmit).toHaveBeenCalledWith('My idea', 'Details here');
+    expect(onSubmit).toHaveBeenCalledWith({
+      title: 'My idea',
+      description: 'Details here',
+      super_category_id: 's1',
+      category_id: 'c1',
+      sub_category_id: 'b1',
+      super_category_name: 'For You',
+      category_name: 'Sports',
+      sub_category_name: 'Badminton',
+    });
   });
 
   it('shows an error when the submit fails', async () => {
@@ -137,6 +218,7 @@ describe('IdeaComposerSheet', () => {
     renderWithProviders(<IdeaComposerSheet open onClose={jest.fn()} onSubmit={onSubmit} />);
     fireEvent.changeText(screen.getByTestId('idea-title-input'), 'My idea');
     fireEvent.changeText(screen.getByTestId('idea-description-input'), 'Details here');
+    pickCategories(cat);
     fireEvent.press(screen.getByTestId('idea-composer-submit'));
     await waitFor(() =>
       expect(screen.getByTestId('idea-composer-error')).toHaveTextContent(
@@ -153,6 +235,7 @@ describe('IdeaComposerSheet', () => {
 
     fireEvent.changeText(screen.getByTestId('idea-title-input'), 'T');
     fireEvent.changeText(screen.getByTestId('idea-description-input'), 'D');
+    pickCategories(cat);
     fireEvent.press(screen.getByTestId('idea-composer-submit'));
     // While the submit promise is pending, close is a no-op.
     fireEvent.press(screen.getByTestId('idea-composer-close'));

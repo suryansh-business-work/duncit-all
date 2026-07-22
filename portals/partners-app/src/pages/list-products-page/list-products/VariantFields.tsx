@@ -62,7 +62,7 @@ export default function VariantFields({ control, index, watch, setValue, onPickI
     | VariantOptionValue[]
     | undefined) ?? [];
   const removeImage = (url: string) =>
-    setValue(imagePath, images.filter((item) => item !== url) as never, { shouldValidate: true });
+    setValue(imagePath, images.filter((item) => item !== url), { shouldValidate: true });
 
   return (
     <Stack spacing={2}>

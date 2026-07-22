@@ -23,9 +23,7 @@ export async function getCartLines(): Promise<CartLine[]> {
   try {
     const raw = await getItem(KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed)
-      ? parsed.filter((line) => line && line.pod_id && line.product_id)
-      : [];
+    return Array.isArray(parsed) ? parsed.filter((line) => line?.pod_id && line?.product_id) : [];
   } catch {
     return [];
   }

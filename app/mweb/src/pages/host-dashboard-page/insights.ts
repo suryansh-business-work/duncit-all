@@ -77,7 +77,7 @@ function rangeWindow(range: HostChartRange, valid: readonly Date[]): { start: Da
     return { start: new Date(now.getFullYear() - 1, 0, 1), end: new Date(now.getFullYear() - 1, 11, 1) };
   }
   if (valid.length === 0) return null;
-  const earliest = valid.reduce((a, b) => (a < b ? a : b));
+  const earliest = new Date(Math.min(...valid.map((d) => d.getTime())));
   return { start: new Date(earliest.getFullYear(), earliest.getMonth(), 1), end: now };
 }
 
@@ -166,5 +166,5 @@ export function buildEarningsBars(rows: readonly MonthlyEarning[]): ChartDatum[]
 
 /** True when a chart has no data to show (drives the empty state). */
 export function allZero(data: readonly { value: number }[]): boolean {
-  return data.length === 0 || data.every((d) => d.value === 0);
+  return data.every((d) => d.value === 0);
 }

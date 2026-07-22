@@ -37,7 +37,7 @@ export type PodAuditSnapshot = Record<string, string>;
 const asText = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return '';
   if (value instanceof Date) return value.toISOString();
-  return String(value);
+  return typeof value === 'object' ? (value as { toString(): string }).toString() : String(value);
 };
 
 /** Compact string snapshot of the tracked fields of a pod doc. */
@@ -113,7 +113,7 @@ function buildAiUserContent(log: IPodAuditLog): string {
 export function parseAiVerdict(content: string): { risk: PodAuditRisk; summary: string } | null {
   try {
     const parsed = JSON.parse(content) as { risk?: unknown; summary?: unknown };
-    const risk = String(parsed.risk ?? '').toUpperCase();
+    const risk = typeof parsed.risk === 'string' ? parsed.risk.toUpperCase() : '';
     if (risk !== 'LOW' && risk !== 'MEDIUM' && risk !== 'HIGH') return null;
     return { risk, summary: typeof parsed.summary === 'string' ? parsed.summary.slice(0, 1000) : '' };
   } catch {

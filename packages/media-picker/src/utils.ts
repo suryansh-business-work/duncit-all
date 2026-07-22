@@ -37,6 +37,22 @@ const formatAllowed = (name: string, formats?: string[]) => {
   return formats.map((f) => (f === 'jpeg' ? 'jpg' : f)).includes(ext);
 };
 
+const validateVideoFile = (file: File, caps: Readonly<FileCaps>): string | null => {
+  if (!formatAllowed(file.name, caps.allowedVideoFormats)) {
+    return `Video format not allowed (allowed: ${caps.allowedVideoFormats?.join(', ')})`;
+  }
+  const maxMb = caps.maxVideoMb ?? MAX_VIDEO_BYTES / (1024 * 1024);
+  return file.size > maxMb * 1024 * 1024 ? `Video is too large (max ${maxMb} MB)` : null;
+};
+
+const validateImageFile = (file: File, caps: Readonly<FileCaps>): string | null => {
+  if (!formatAllowed(file.name, caps.allowedImageFormats)) {
+    return `Image format not allowed (allowed: ${caps.allowedImageFormats?.join(', ')})`;
+  }
+  const maxMb = caps.maxImageMb ?? MAX_IMAGE_BYTES / (1024 * 1024);
+  return file.size > maxMb * 1024 * 1024 ? `Image is too large (max ${maxMb} MB)` : null;
+};
+
 /**
  * Gate a device-picked file against the picker's accept policy and the
  * admin-managed Upload Settings caps/formats (when loaded).
@@ -66,18 +82,10 @@ export function validateFile(
   }
 
   if (isVideo) {
-    if (!formatAllowed(file.name, caps.allowedVideoFormats)) {
-      return `Video format not allowed (allowed: ${caps.allowedVideoFormats?.join(', ')})`;
-    }
-    const maxMb = caps.maxVideoMb ?? MAX_VIDEO_BYTES / (1024 * 1024);
-    return file.size > maxMb * 1024 * 1024 ? `Video is too large (max ${maxMb} MB)` : null;
+    return validateVideoFile(file, caps);
   }
   if (isPdf) {
     return file.size > MAX_DOCUMENT_BYTES ? 'Document is too large (max 50 MB)' : null;
   }
-  if (!formatAllowed(file.name, caps.allowedImageFormats)) {
-    return `Image format not allowed (allowed: ${caps.allowedImageFormats?.join(', ')})`;
-  }
-  const maxMb = caps.maxImageMb ?? MAX_IMAGE_BYTES / (1024 * 1024);
-  return file.size > maxMb * 1024 * 1024 ? `Image is too large (max ${maxMb} MB)` : null;
+  return validateImageFile(file, caps);
 }

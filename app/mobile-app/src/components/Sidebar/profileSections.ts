@@ -92,7 +92,7 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
   ];
   if (showPodPlans) {
     // Pod Plans always slots in just before FAQs (the last row).
-    items.splice(items.length - 1, 0, {
+    items.splice(-1, 0, {
       key: 'plans',
       label: 'Pod Plans',
       caption: '',

@@ -129,9 +129,9 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
     ]);
     const sym = settings.currency_symbol ?? '₹';
     const refundLine =
-      request?.refund_amount != null
-        ? `Your refund of ${sym}${request.refund_amount} will be processed by our team shortly.`
-        : '';
+      request?.refund_amount == null
+        ? ''
+        : `Your refund of ${sym}${request.refund_amount} will be processed by our team shortly.`;
     const tail = refundLine || 'You can book the pod again anytime.';
     await notifyUserInApp(
       String(member.user_id),
@@ -188,7 +188,7 @@ async function markSpotFilled(pod: any, member: IPodMember) {
   member.status = 'BACKED_OUT';
   member.active_backout_id = null;
   await member.save();
-  if (request && request.status === 'IN_PROCESS') {
+  if (request?.status === 'IN_PROCESS') {
     request.status = 'SPOT_FILLED';
     request.events.push({ status: 'SPOT_FILLED', backout_count: request.attempt_no, at: new Date() });
     await request.save();
@@ -561,7 +561,7 @@ export const podMemberService = {
     const request = membership.active_backout_id
       ? await BackoutRequestModel.findById(membership.active_backout_id)
       : null;
-    if (request && request.status === 'IN_PROCESS') {
+    if (request?.status === 'IN_PROCESS') {
       request.status = 'CANCELLED';
       request.events.push({ status: 'CANCELLED', backout_count: request.attempt_no, at: new Date() });
       await request.save();
@@ -772,7 +772,7 @@ export const podMemberService = {
       });
     }
     const payment = await PaymentModel.findById(request.payment_id);
-    if (!payment || payment.status !== 'SUCCESS') {
+    if (payment?.status !== 'SUCCESS') {
       throw new GraphQLError('The linked payment cannot be refunded', {
         extensions: { code: 'CONFLICT' },
       });

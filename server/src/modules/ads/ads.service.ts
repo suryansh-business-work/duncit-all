@@ -157,7 +157,7 @@ const EMPTY_CONTEXT: AdProductContext = {
 
 /** For a PRODUCT_AD / BRAND_AD the submitter must own the product; brand + names
  * + image are derived server-side so the request carries display context. */
-async function resolveAdProductContext(adKind: AdKind, productId: unknown, userId: string): Promise<AdProductContext> {
+async function resolveAdProductContext(adKind: AdKind, productId: string | null | undefined, userId: string): Promise<AdProductContext> {
   if (adKind === 'PLACEMENT') return EMPTY_CONTEXT;
   if (!productId || !Types.ObjectId.isValid(String(productId))) {
     fail('A product is required for a product or brand ad');

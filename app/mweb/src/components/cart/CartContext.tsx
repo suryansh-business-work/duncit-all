@@ -39,7 +39,7 @@ function loadLines(): CartLine[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((l) => l && l.pod_id && l.product_id) : [];
+    return Array.isArray(parsed) ? parsed.filter((l) => l?.pod_id && l?.product_id) : [];
   } catch {
     return [];
   }

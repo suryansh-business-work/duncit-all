@@ -83,12 +83,12 @@ export function HostInsightsFilterSheet({
               <ScrollView paddingHorizontal={16}>
                 <YStack gap={16} paddingBottom={8}>
                   <Section title="Pods by month">
-                    <OptionChipRow
+                    <OptionChipRow<HostChartRange>
                       layout="column"
                       testIDPrefix="insights-range"
                       options={options}
                       value={draft}
-                      onSelect={(v) => setDraft(v as HostChartRange)}
+                      onSelect={(v) => setDraft(v)}
                     />
                   </Section>
                 </YStack>

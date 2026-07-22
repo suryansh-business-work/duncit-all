@@ -11,7 +11,7 @@ import { uploadToImagekit } from './upload.service';
 
 // Docker (alpine musl) supplies the encoder via `apk add ffmpeg` + FFMPEG_PATH;
 // the ffmpeg-static binary covers local dev; a bare `ffmpeg` on PATH is last.
-ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH || (ffmpegStaticPath as unknown as string) || 'ffmpeg');
+ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH || ffmpegStaticPath || 'ffmpeg');
 
 export interface VideoCompressionJob {
   job_id: string;

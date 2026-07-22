@@ -145,11 +145,11 @@ function MemberBar({
           <Text fontSize={16} fontWeight="900" color="$color" testID="pod-booked-label">
             Pod Booked
           </Text>
-          {!canBackout ? (
+          {canBackout ? null : (
             <Text fontSize={10.5} color="$muted" testID="pod-backout-maxed">
               You have reached the maximum number of Backout attempts allowed for this Pod.
             </Text>
-          ) : null}
+          )}
         </YStack>
       </XStack>
       {canBackout ? (

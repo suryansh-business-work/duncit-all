@@ -88,7 +88,7 @@ export function BackoutConfirmDialog({
                 <Text fontSize={14} fontWeight="800" color="$color">
                   You will get the refund only if someone fills your spot.
                 </Text>
-                {refundAmount != null ? (
+                {refundAmount == null ? null : (
                   <Text
                     testID="backout-refund-amount"
                     fontSize={13.5}
@@ -98,7 +98,7 @@ export function BackoutConfirmDialog({
                     If the refund is done, you will get ₹{refundAmount} (after the {deductionPct}%
                     backout deduction).
                   </Text>
-                ) : null}
+                )}
               </YStack>
 
               <ScrollView

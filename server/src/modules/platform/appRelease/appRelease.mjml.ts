@@ -25,11 +25,11 @@ const CARD = '#FFFFFF';
 /** Escape text placed inside MJML/HTML so commit messages can't break markup. */
 function esc(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function headerSection(data: ReleaseMjmlData): string {

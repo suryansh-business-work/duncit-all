@@ -181,7 +181,8 @@ export default function ProductListingsTable({ brandId, canManageProducts = fals
         onClose={() => setAdTarget(null)}
         onSubmitted={(traceId) => {
           setAdTarget(null);
-          setMessage(`Ad request submitted${traceId ? ` · ${traceId}` : ''}. Marketing will review it.`);
+          const traceSuffix = traceId ? ` · ${traceId}` : '';
+          setMessage(`Ad request submitted${traceSuffix}. Marketing will review it.`);
         }}
       />
     </Card>

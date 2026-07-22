@@ -3,7 +3,13 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import PodActionPanel from '../PodActionPanel';
 
 const baseProps = {
-  pod: { pod_amount: 100, pod_title: 'Sunset Jam', club_slug: 's', pod_id: 'pod-1' },
+  pod: { pod_amount: 100, pod_title: 'Sunset Jam', club_slug: 's', pod_id: 'pod-1' } as {
+    pod_amount?: number;
+    pod_title: string;
+    club_slug: string;
+    pod_id: string;
+    pod_date_time?: string;
+  },
   isFree: false,
   isHost: false,
   priceFormat: (n: number) => `₹${n}`,

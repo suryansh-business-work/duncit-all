@@ -7,6 +7,9 @@ import PortalModesPage from './pages/portal-modes';
 import FeatureFlagsPage from './pages/feature-flags-page/FeatureFlagsPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import EmailTemplatesPage from './pages/email-templates-page/EmailTemplatesPage';
+import TelemetryDashboardPage from './pages/telemetry-dashboard';
+import BugsPage from './pages/bugs-page';
+import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import AppShell from './components/AppShell';
@@ -25,6 +28,9 @@ export default function App() {
         <Route path="/feature-flags" element={authed(<FeatureFlagsPage />)} />
         <Route path="/authentication" element={authed(<AuthenticationPage />)} />
         <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
+        <Route path="/telemetry" element={authed(<TelemetryDashboardPage />)} />
+        <Route path="/bugs" element={authed(<BugsPage />)} />
+        <Route path="/telemetry-logs-settings" element={authed(<TelemetryLogsSettingsPage />)} />
         <Route path="/server" element={<Navigate to="/server/info" replace />} />
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />

@@ -4,6 +4,7 @@ import {
   NavigationContainer,
   type Theme as NavTheme,
 } from '@react-navigation/native';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -45,8 +46,11 @@ loadWebFonts();
 // Ship structured, file-level logs to SignOz (via the server /logs ingest).
 // Native has no `location`, so environment/url are derived from the API base URL
 // (localhost / staging.*.duncit.com / *.duncit.com) the app is pointed at.
+// `os` splits native logs into iOS / Android / native-web for the telemetry Bugs view.
+const DEVICE_OS = Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
 configureLogs(httpTransport(`${appConfig.apiUrl}/logs`), {
   platform: 'native',
+  os: DEVICE_OS,
   environment: detectEnvironment(appConfig.apiUrl),
   url: () => appConfig.apiUrl,
   host: () => {

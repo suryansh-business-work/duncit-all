@@ -16,10 +16,12 @@
  */
 import os from 'node:os';
 import { logs as logsApi, SeverityNumber, type Logger } from '@opentelemetry/api-logs';
+import { telemetryRuntime } from './telemetryRuntime';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type Environment = 'localhost' | 'staging' | 'production';
 type Platform = 'web' | 'native' | 'server';
+type DeviceOS = 'ios' | 'android' | 'web';
 
 interface SerializedError {
   name: string;
@@ -31,6 +33,7 @@ interface LogRecord {
   app: string;
   portal?: string;
   platform: Platform;
+  os?: DeviceOS;
   environment: Environment;
   url?: string;
   host?: string;
@@ -52,6 +55,7 @@ const SEVERITY: Record<LogLevel, { num: SeverityNumber; text: string }> = {
 };
 const LEVELS = new Set<LogLevel>(['debug', 'info', 'warn', 'error']);
 const PLATFORMS = new Set<Platform>(['web', 'native', 'server']);
+const DEVICE_OSES = new Set<DeviceOS>(['ios', 'android', 'web']);
 const ENVIRONMENTS = new Set<Environment>(['localhost', 'staging', 'production']);
 
 /** The server's own deployment environment, from APP_ENV / NODE_ENV. */
@@ -90,6 +94,7 @@ function toAttributes(record: LogRecord): Record<string, AttrValue> {
     component: record.component,
   };
   if (record.portal) attrs.portal = record.portal;
+  if (record.os) attrs.os = record.os;
   if (record.url) attrs.url = record.url;
   if (record.host) attrs.host = record.host;
   if (record.error) {
@@ -109,18 +114,24 @@ function toAttributes(record: LogRecord): Record<string, AttrValue> {
 }
 
 function emitStructured(record: LogRecord): void {
-  try {
-    const sev = SEVERITY[record.level] ?? SEVERITY.info;
-    const source = record.portal ? `${record.app}:${record.portal}` : record.app;
-    logger.emit({
-      severityNumber: sev.num,
-      severityText: sev.text,
-      body: `[${source}@${record.environment}] ${record.page}/${record.component}`,
-      attributes: toAttributes(record),
-    });
-  } catch {
-    /* logging must never throw */
+  // Ship to SigNoz (OTLP) unless the admin toggled it off in Telemetry Settings.
+  if (telemetryRuntime.signozEnabled) {
+    try {
+      const sev = SEVERITY[record.level] ?? SEVERITY.info;
+      const source = record.portal ? `${record.app}:${record.portal}` : record.app;
+      logger.emit({
+        severityNumber: sev.num,
+        severityText: sev.text,
+        body: `[${source}@${record.environment}] ${record.page}/${record.component}`,
+        attributes: toAttributes(record),
+      });
+    } catch {
+      /* logging must never throw */
+    }
   }
+  // Persist to Mongo for the in-app Telemetry Dashboard / Bugs views — only for
+  // the admin-selected levels, and only once the telemetry ingest is wired up.
+  if (telemetryRuntime.shouldPersist(record.level)) telemetryRuntime.persist(record);
 }
 
 function levelFns(base: { app: string; portal?: string }) {
@@ -169,6 +180,8 @@ export function ingestRemoteLog(raw: unknown): void {
   const level: LogLevel = typeof r.level === 'string' && LEVELS.has(r.level) ? r.level : 'info';
   const platform: Platform =
     typeof r.platform === 'string' && PLATFORMS.has(r.platform) ? r.platform : 'web';
+  const os: DeviceOS | undefined =
+    typeof r.os === 'string' && DEVICE_OSES.has(r.os as DeviceOS) ? (r.os as DeviceOS) : undefined;
   const environment: Environment =
     typeof r.environment === 'string' && ENVIRONMENTS.has(r.environment) ? r.environment : 'production';
   const error =
@@ -186,6 +199,7 @@ export function ingestRemoteLog(raw: unknown): void {
     app: r.app,
     portal: typeof r.portal === 'string' ? r.portal : undefined,
     platform,
+    os,
     environment,
     url: typeof r.url === 'string' ? r.url : undefined,
     host: typeof r.host === 'string' ? r.host : undefined,

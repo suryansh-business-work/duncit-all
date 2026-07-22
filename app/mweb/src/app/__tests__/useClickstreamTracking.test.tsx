@@ -36,8 +36,9 @@ const render = (args: { enabled: boolean; path?: string; superCategory?: string 
     }),
   );
 
-const lastInput = () => recordSpy.mock.calls.at(-1)?.[0].variables.input;
-const eventTypes = () => recordSpy.mock.calls.map((c) => c[0].variables.input.event_type);
+const calls = () => recordSpy.mock.calls as any[][];
+const lastInput = () => calls()[calls().length - 1]?.[0].variables.input;
+const eventTypes = () => calls().map((c) => c[0].variables.input.event_type);
 
 beforeEach(() => {
   recordSpy.mockClear();
@@ -71,7 +72,7 @@ describe('useClickstreamTracking', () => {
     render({ enabled: true, path: '/deals', superCategory: 'shopping' });
 
     expect(eventTypes()).toContain('PAGE_VIEW');
-    const input = recordSpy.mock.calls[0][0].variables.input;
+    const input = calls()[0][0].variables.input;
     expect(input.event_type).toBe('PAGE_VIEW');
     expect(input.path).toBe('/deals');
     expect(input.super_category_slug).toBe('shopping');
@@ -86,7 +87,7 @@ describe('useClickstreamTracking', () => {
   it('nulls the super_category_slug when empty', () => {
     localStorage.setItem('token', 't');
     render({ enabled: true, superCategory: '' });
-    expect(recordSpy.mock.calls[0][0].variables.input.super_category_slug).toBeNull();
+    expect(calls()[0][0].variables.input.super_category_slug).toBeNull();
   });
 
   it('sends CLICK for interactive controls and describes the target', () => {

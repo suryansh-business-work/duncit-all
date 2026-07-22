@@ -71,7 +71,7 @@ describe('PodDetailAccordions', () => {
       pod: {
         ...basePod,
         payment_terms: '  Pay in full before start  ',
-        place_charges: [{ label: 'Corkage', amount: 50 }],
+        place_charges: [{ label: 'Corkage', amount: 50 }] as any,
       },
     });
     expect(screen.getByText('Payment terms')).toBeInTheDocument();
@@ -111,9 +111,9 @@ describe('PodDetailAccordions', () => {
       pod: {
         pod_description: 'desc',
         pod_info: 'info',
-        pod_amount: 'not-a-number',
-        pod_date_time: null,
-      },
+        pod_amount: 'not-a-number' as any,
+        pod_date_time: null as any,
+      } as any,
       isFree: true,
     });
     expect(screen.getByText('Payment details')).toBeInTheDocument();

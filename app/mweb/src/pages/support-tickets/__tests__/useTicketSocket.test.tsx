@@ -17,7 +17,7 @@ const on = vi.fn((event: string, cb: (...args: unknown[]) => void) => {
 });
 const ioMock = vi.fn(() => ({ on, disconnect }));
 vi.mock('socket.io-client', () => ({
-  io: (...args: unknown[]) => ioMock(...args),
+  io: (...args: unknown[]) => ioMock(...(args as [])),
   Socket: class {},
 }));
 
@@ -52,7 +52,7 @@ describe('useTicketSocket', () => {
     localStorage.setItem('token', 'tok');
     renderHook(() => useTicketSocket('t1', vi.fn()));
     expect(ioMock).toHaveBeenCalledTimes(1);
-    const [url, opts] = ioMock.mock.calls[0] as [string, Record<string, unknown>];
+    const [url, opts] = ioMock.mock.calls[0] as unknown as [string, Record<string, unknown>];
     expect(url).toBe('http://localhost:2001');
     expect(opts).toMatchObject({
       path: '/socket.io',
@@ -66,7 +66,7 @@ describe('useTicketSocket', () => {
     localStorage.setItem('token', 'tok');
     urlConfigsMock.graphqlUrl = 'not-a-valid-url';
     renderHook(() => useTicketSocket('t1', vi.fn()));
-    const [url] = ioMock.mock.calls[0] as [string];
+    const [url] = ioMock.mock.calls[0] as unknown as [string];
     expect(url).toBe(globalThis.window.location.origin);
   });
 

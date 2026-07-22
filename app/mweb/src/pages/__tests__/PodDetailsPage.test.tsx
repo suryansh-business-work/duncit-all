@@ -211,7 +211,9 @@ beforeEach(() => {
   actions.keepSpotOpen = false;
   actions.confettiOpen = false;
 });
-afterEach(() => vi.clearAllMocks());
+afterEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('PodDetailsPage', () => {
   it('renders the skeleton while the slug query is loading', () => {

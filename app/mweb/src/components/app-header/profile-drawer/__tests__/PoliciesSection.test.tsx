@@ -60,7 +60,9 @@ describe('PoliciesSection', () => {
     fireEvent.click(screen.getByText('Policies'));
     expect(setPoliciesOpen).toHaveBeenCalledTimes(1);
     // verify the passed updater flips the boolean
-    const updater = setPoliciesOpen.mock.calls[0][0] as (v: boolean) => boolean;
+    const updater = (setPoliciesOpen as any).mock.calls[0][0] as (
+      v: boolean,
+    ) => boolean;
     expect(updater(false)).toBe(true);
     expect(updater(true)).toBe(false);
   });

@@ -8,7 +8,7 @@ import { CATEGORIES, type CategoryOption } from '../queries';
 const makeWrapper =
   (mocks: readonly object[]) =>
   ({ children }: { children: ReactNode }) => (
-    <MockedProvider mocks={mocks} addTypename={false}>
+    <MockedProvider mocks={mocks as any} addTypename={false}>
       {children}
     </MockedProvider>
   );

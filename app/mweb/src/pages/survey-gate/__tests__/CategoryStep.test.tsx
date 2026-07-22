@@ -83,7 +83,7 @@ describe('CategoryStep', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => expect(onContinue).toHaveBeenCalledTimes(1));
-    const [scope, labels] = onContinue.mock.calls[0];
+    const [scope, labels] = vi.mocked(onContinue).mock.calls[0];
     expect(scope).toEqual<CategoryScope>({ super_category_id: 's1', category_id: 'c1', sub_category_id: 'sub1' });
     expect(labels).toEqual({ super: 'Food', category: 'Snacks', sub: 'Chips' });
   });
@@ -100,7 +100,7 @@ describe('CategoryStep', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
     await waitFor(() => expect(onContinue).toHaveBeenCalledTimes(1));
-    const [scope, labels] = onContinue.mock.calls[0];
+    const [scope, labels] = vi.mocked(onContinue).mock.calls[0];
     expect(scope).toEqual({ super_category_id: 's1', category_id: '', sub_category_id: '' });
     expect(labels.super).toBe('Food');
   });

@@ -11,7 +11,7 @@ import {
   formatRelative,
 } from '../queries';
 
-const opName = (doc: { definitions: unknown[] }) =>
+const opName = (doc: any) =>
   (doc.definitions[0] as { name?: { value: string } }).name?.value;
 
 describe('pod-ideas-page queries', () => {

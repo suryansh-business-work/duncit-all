@@ -97,12 +97,12 @@ describe('MomentLightbox', () => {
 
   it('navigates via ArrowRight / ArrowLeft keyboard keys', () => {
     const { onIndexChange } = renderBox();
-    fireEvent.keyDown(globalThis, { key: 'ArrowRight' });
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(onIndexChange).toHaveBeenLastCalledWith(1);
-    fireEvent.keyDown(globalThis, { key: 'ArrowLeft' });
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
     expect(onIndexChange).toHaveBeenLastCalledWith(0);
     // an unrelated key is ignored
-    fireEvent.keyDown(globalThis, { key: 'a' });
+    fireEvent.keyDown(window, { key: 'a' });
   });
 
   it('syncs current when the index prop changes', () => {
@@ -127,14 +127,14 @@ describe('MomentLightbox', () => {
   it('closes on Escape key', () => {
     vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
     const { onClose } = renderBox();
-    fireEvent.keyDown(globalThis, { key: 'Escape' });
+    fireEvent.keyDown(window, { key: 'Escape' });
     expect(onClose).toHaveBeenCalled();
   });
 
   it('closes when the browser back (popstate) fires', () => {
     vi.spyOn(globalThis.history, 'back').mockImplementation(() => {});
     const { onClose } = renderBox();
-    fireEvent.popState(globalThis);
+    fireEvent.popState(window);
     expect(onClose).toHaveBeenCalled();
   });
 
@@ -145,7 +145,7 @@ describe('MomentLightbox', () => {
     fireEvent.click(screen.getByLabelText('Close preview'));
     expect(onClose).toHaveBeenCalledTimes(1);
     // the synthetic popstate that would follow history.back is swallowed
-    fireEvent.popState(globalThis);
+    fireEvent.popState(window);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

@@ -150,7 +150,7 @@ describe('ChatRoomPage', () => {
   });
 
   it('shows an error when the pod link is missing club/pod ids', async () => {
-    const podNoSlug = { ...podActive, club_slug: null };
+    const podNoSlug = { ...podActive, club_slug: null } as any;
     renderPage([], podNoSlug);
     await screen.findByText('hello other');
     fireEvent.click(screen.getByTestId('chat-room-open-pod'));
@@ -252,7 +252,7 @@ describe('ChatRoomPage', () => {
   });
 
   it('shows the closed notice instead of the composer for an ended pod', async () => {
-    const endedPod = { ...podActive, pod_date_time: PAST, pod_end_date_time: PAST_END };
+    const endedPod = { ...podActive, pod_date_time: PAST, pod_end_date_time: PAST_END } as any;
     renderPage([], endedPod);
     await screen.findByText('hello other');
     expect(screen.getByText('This pod has ended — chat is closed.')).toBeInTheDocument();

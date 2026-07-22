@@ -24,7 +24,7 @@ const ioMock = vi.fn(() => {
 });
 
 vi.mock('socket.io-client', () => ({
-  io: (...args: any[]) => ioMock(...args),
+  io: (...args: any[]) => (ioMock as any)(...args),
   Socket: class {},
 }));
 
@@ -46,7 +46,9 @@ describe('usePodSocket', () => {
     ioMock.mockClear();
     localStorage.clear();
   });
-  afterEach(() => vi.clearAllMocks());
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('does not connect without a podId', () => {
     localStorage.setItem('token', 'abc');

@@ -168,7 +168,7 @@ const baseProps = {
   onZoneChange: vi.fn(),
 };
 
-function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks = [headerMock(), policiesMock]) {
+function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock]) {
   const merged = { ...baseProps, onSuperCategoryChange: vi.fn(), onLocationChange: vi.fn(), onZoneChange: vi.fn(), ...props };
   const utils = render(
     <MockedProvider mocks={mocks} addTypename={false}>
@@ -242,7 +242,7 @@ describe('AppHeader', () => {
   it('opens the location dialog in response to the global event', async () => {
     renderHeader();
     await screen.findByTestId('greeting');
-    fireEvent(globalThis, new Event(OPEN_LOCATION_PICKER_EVENT));
+    fireEvent(window, new Event(OPEN_LOCATION_PICKER_EVENT));
     expect(await screen.findByTestId('loc-dialog')).toBeInTheDocument();
   });
 

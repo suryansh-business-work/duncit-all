@@ -6,6 +6,7 @@ import { auth } from '@duncit/auth-tokens';
 
 import { AuthBackground } from '@/components/AuthBackground';
 import { AuthLogo } from '@/components/AuthLogo';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 
 export interface AuthScaffoldProps {
   title: string;
@@ -31,31 +32,36 @@ export function AuthScaffold({
   return (
     <AuthBackground>
       <SafeAreaView style={{ flex: 1 }} testID={testID}>
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: 'center',
-            paddingHorizontal: 24,
-            paddingVertical: 40,
-          }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <YStack width="100%" maxWidth={460} alignSelf="center">
-            <YStack alignItems="center" gap={8}>
-              <AuthLogo />
-              <Text textAlign="center" fontSize={30} fontWeight="900" color="$color">
-                {title}
-                {accentWord ? <Text color={auth.accent}> {accentWord}</Text> : null}
-              </Text>
-              <Text maxWidth={300} textAlign="center" fontSize={14} color="$muted">
-                {subtitle}
-              </Text>
+        {/* The keyboard shrinks the scroll viewport so the centered form lifts
+            above it — otherwise (Android edge-to-edge) the lower fields
+            (Password / Confirm Password) stay hidden behind the keyboard. */}
+        <KeyboardScreen>
+          <ScrollView
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              paddingHorizontal: 24,
+              paddingVertical: 40,
+            }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <YStack width="100%" maxWidth={460} alignSelf="center">
+              <YStack alignItems="center" gap={8}>
+                <AuthLogo />
+                <Text textAlign="center" fontSize={30} fontWeight="900" color="$color">
+                  {title}
+                  {accentWord ? <Text color={auth.accent}> {accentWord}</Text> : null}
+                </Text>
+                <Text maxWidth={300} textAlign="center" fontSize={14} color="$muted">
+                  {subtitle}
+                </Text>
+              </YStack>
+              <YStack marginTop={20} gap={16}>
+                {children}
+              </YStack>
             </YStack>
-            <YStack marginTop={20} gap={16}>
-              {children}
-            </YStack>
-          </YStack>
-        </ScrollView>
+          </ScrollView>
+        </KeyboardScreen>
       </SafeAreaView>
     </AuthBackground>
   );

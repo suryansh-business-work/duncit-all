@@ -26,6 +26,26 @@ export const POD_MESSAGES = gql`
       pod_title
       pod_date_time
       pod_end_date_time
+      pod_id
+      club_slug
+    }
+  }
+`;
+
+export const CHAT_PARTICIPANTS = gql`
+  query ChatParticipants($pod_id: ID!) {
+    chatParticipants(pod_id: $pod_id) {
+      participant_count
+      hosts {
+        user_id
+        full_name
+        profile_photo
+      }
+      participants {
+        user_id
+        full_name
+        profile_photo
+      }
     }
   }
 `;

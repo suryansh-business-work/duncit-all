@@ -4,9 +4,16 @@ export const POD_IDEAS = gql`
   query PodIdeas($filter: PodIdeaFilterInput) {
     podIdeas(filter: $filter) {
       id
+      idea_no
       author_id
       title
       description
+      super_category_id
+      category_id
+      sub_category_id
+      super_category_name
+      category_name
+      sub_category_name
       likes_count
       liked_by_me
       shares_count

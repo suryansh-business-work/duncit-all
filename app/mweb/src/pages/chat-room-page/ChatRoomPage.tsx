@@ -9,13 +9,15 @@ import {
 } from '@mui/material';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { isPodActive } from '../../utils/podStatus';
+import { podUrl } from '../../utils/seoUrls';
 import ChatClosedNotice from './ChatClosedNotice';
+import ChatParticipants from './ChatParticipants';
 import ChatRoomHeader from './ChatRoomHeader';
 import ChatRoomNotice from './ChatRoomNotice';
 import EmojiPopover from './EmojiPopover';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
-import { POD_MESSAGES, REACT_MSG, SEND_MSG } from './queries';
+import { CHAT_PARTICIPANTS, POD_MESSAGES, REACT_MSG, SEND_MSG } from './queries';
 import { usePodSocket } from './usePodSocket';
 
 export default function ChatRoomPage() {
@@ -23,6 +25,10 @@ export default function ChatRoomPage() {
   const navigate = useNavigate();
   const { data, loading, refetch } = useQuery(POD_MESSAGES, {
     variables: { pod_id: podId, limit: 80 },
+    fetchPolicy: 'cache-and-network',
+  });
+  const { data: peopleData } = useQuery(CHAT_PARTICIPANTS, {
+    variables: { pod_id: podId },
     fetchPolicy: 'cache-and-network',
   });
   const [text, setText] = useState('');
@@ -38,6 +44,15 @@ export default function ChatRoomPage() {
   const myId = data?.me?.user_id;
   const pod = data?.pod;
   const podEnded = pod ? !isPodActive(pod.pod_date_time, pod.pod_end_date_time) : false;
+  const people = peopleData?.chatParticipants;
+
+  const openPod = () => {
+    if (pod?.club_slug && pod?.pod_id) {
+      navigate(podUrl(pod.club_slug, pod.pod_id));
+    } else {
+      setError('Pod details are unavailable for this chat.');
+    }
+  };
   const messages = useMemo(() => {
     const initial = data?.podMessages ?? [];
     const merged = [...initial];
@@ -116,7 +131,21 @@ export default function ChatRoomPage() {
         mx: { xs: -1.25, sm: -2 },
       }}
     >
-      <ChatRoomHeader title={data?.pod?.pod_title} messageCount={messages.length} onBack={() => navigate('/chats')} />
+      <ChatRoomHeader
+        title={data?.pod?.pod_title}
+        messageCount={messages.length}
+        onBack={() => navigate('/chats')}
+        onOpenPod={openPod}
+      />
+
+      {people && (
+        <ChatParticipants
+          hosts={people.hosts}
+          participants={people.participants}
+          count={people.participant_count}
+          onOpenProfile={(userId) => navigate(`/u/${userId}`)}
+        />
+      )}
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)}>

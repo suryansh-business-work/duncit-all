@@ -16,6 +16,18 @@ import { graphqlRequest } from '@/services/graphql.client';
 
 type PodIdeasData = ResultOf<typeof PodIdeasDocument>;
 export type PodIdea = PodIdeasData['podIdeas'][number];
+
+/** Payload for a new idea — the composer collects the mandatory Super/Category/Sub. */
+export interface NewPodIdeaInput {
+  title: string;
+  description: string;
+  super_category_id: string;
+  category_id: string;
+  sub_category_id: string;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
 type PodIdeaDetailsData = ResultOf<typeof PodIdeaDetailsDocument>;
 export type PodIdeaDetail = NonNullable<PodIdeaDetailsData['podIdea']>;
 export type PodIdeaComment = PodIdeaDetail['comments'][number];
@@ -51,10 +63,21 @@ export function usePodIdeas(search: string) {
     };
   }, [load]);
 
-  const create = async (title: string, description: string) => {
+  const create = async (input: NewPodIdeaInput) => {
     await graphqlRequest(
       CreatePodIdeaDocument,
-      { input: { title: title.trim(), description: description.trim() } },
+      {
+        input: {
+          title: input.title.trim(),
+          description: input.description.trim(),
+          super_category_id: input.super_category_id,
+          category_id: input.category_id,
+          sub_category_id: input.sub_category_id,
+          super_category_name: input.super_category_name,
+          category_name: input.category_name,
+          sub_category_name: input.sub_category_name,
+        },
+      },
       { auth: true },
     );
     await load();

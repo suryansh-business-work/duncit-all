@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import {
   AccountEditForm,
@@ -64,82 +65,84 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={requestClose}>
       <ModalThemeScope>
-        <YStack flex={1} testID="edit-account-dialog">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={requestClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            position="absolute"
-            left={0}
-            right={0}
-            bottom={0}
-            maxHeight="92%"
-            backgroundColor="$background"
-            borderTopLeftRadius={20}
-            borderTopRightRadius={20}
-          >
-            <SafeAreaView edges={['bottom']}>
-              <XStack
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={16}
-                paddingTop={16}
-                paddingBottom={8}
-              >
-                <Text fontSize={18} fontWeight="900" color="$color">
-                  Edit profile
-                </Text>
+        <KeyboardScreen>
+          <YStack flex={1} testID="edit-account-dialog">
+            <YStack
+              role="button"
+              aria-label="Close"
+              onPress={requestClose}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.5)"
+            />
+            <YStack
+              position="absolute"
+              left={0}
+              right={0}
+              bottom={0}
+              maxHeight="92%"
+              backgroundColor="$background"
+              borderTopLeftRadius={20}
+              borderTopRightRadius={20}
+            >
+              <SafeAreaView edges={['bottom']}>
                 <XStack
-                  testID="edit-account-close"
-                  role="button"
-                  aria-label="Close"
-                  onPress={requestClose}
-                  width={32}
-                  height={32}
                   alignItems="center"
-                  justifyContent="center"
+                  justifyContent="space-between"
+                  paddingHorizontal={16}
+                  paddingTop={16}
+                  paddingBottom={8}
                 >
-                  <MaterialIcons name="close" size={20} color={color} />
+                  <Text fontSize={18} fontWeight="900" color="$color">
+                    Edit profile
+                  </Text>
+                  <XStack
+                    testID="edit-account-close"
+                    role="button"
+                    aria-label="Close"
+                    onPress={requestClose}
+                    width={32}
+                    height={32}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <MaterialIcons name="close" size={20} color={color} />
+                  </XStack>
                 </XStack>
-              </XStack>
-              <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 560 }}>
-                <YStack paddingHorizontal={16} paddingBottom={16}>
-                  <AccountEditForm
-                    me={me}
-                    loading={loading}
-                    errorMessage={errorMessage}
-                    onSubmit={submit}
-                    onDirtyChange={(dirty) => {
-                      dirtyRef.current = dirty;
-                    }}
-                    onRegisterReset={(reset) => {
-                      resetRef.current = reset;
-                    }}
-                  />
-                </YStack>
-              </ScrollView>
-            </SafeAreaView>
+                <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 560 }}>
+                  <YStack paddingHorizontal={16} paddingBottom={16}>
+                    <AccountEditForm
+                      me={me}
+                      loading={loading}
+                      errorMessage={errorMessage}
+                      onSubmit={submit}
+                      onDirtyChange={(dirty) => {
+                        dirtyRef.current = dirty;
+                      }}
+                      onRegisterReset={(reset) => {
+                        resetRef.current = reset;
+                      }}
+                    />
+                  </YStack>
+                </ScrollView>
+              </SafeAreaView>
+            </YStack>
           </YStack>
-        </YStack>
-        <ConfirmDialog
-          open={confirmOpen}
-          testID="edit-account-discard-confirm"
-          title="Discard unsaved changes?"
-          message="You have unsaved changes. Closing now will lose them."
-          confirmLabel="Discard"
-          cancelLabel="Keep editing"
-          destructive
-          onConfirm={confirmDiscard}
-          onCancel={() => setConfirmOpen(false)}
-        />
+          <ConfirmDialog
+            open={confirmOpen}
+            testID="edit-account-discard-confirm"
+            title="Discard unsaved changes?"
+            message="You have unsaved changes. Closing now will lose them."
+            confirmLabel="Discard"
+            cancelLabel="Keep editing"
+            destructive
+            onConfirm={confirmDiscard}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

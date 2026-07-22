@@ -120,6 +120,23 @@ describe('status.store publish (video vs image pipelines)', () => {
     expect(mockCompress).not.toHaveBeenCalled();
   });
 
+  it('defaults to a STORY, and creates a permanent POST when kind=POST (profile Add Post)', async () => {
+    // Default (no kind) → STORY.
+    await useStatusStore.getState().publish({ base64: 'abc', mediaType: 'IMAGE' });
+    const storyCreate = mockRequest.mock.calls.find(([doc]) =>
+      JSON.stringify(doc).includes('MobileCreatePost'),
+    );
+    expect(storyCreate?.[1].input.kind).toBe('STORY');
+
+    mockRequest.mockClear();
+    // kind:'POST' → permanent profile post.
+    await useStatusStore.getState().publish({ base64: 'abc', mediaType: 'IMAGE', kind: 'POST' });
+    const postCreate = mockRequest.mock.calls.find(([doc]) =>
+      JSON.stringify(doc).includes('MobileCreatePost'),
+    );
+    expect(postCreate?.[1].input.kind).toBe('POST');
+  });
+
   it('still refuses an image publish without base64 bytes', async () => {
     await expect(useStatusStore.getState().publish({ uri: 'file://p.jpg' })).rejects.toThrow(
       'No media selected.',

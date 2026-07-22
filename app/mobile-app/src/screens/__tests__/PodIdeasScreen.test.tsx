@@ -15,18 +15,41 @@ jest.mock('@/components/pod-ideas', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, Text, Pressable } = require('react-native');
   return {
+    EMPTY_CATEGORY_SCOPE: { super_category_id: '', category_id: '', sub_category_id: '' },
+    CategoryCascadeField: ({
+      onChange,
+    }: {
+      onChange: (
+        scope: { super_category_id: string; category_id: string; sub_category_id: string },
+        labels: unknown,
+      ) => void;
+    }) => (
+      <Pressable
+        testID="mock-filter-nomatch"
+        onPress={() =>
+          onChange({ super_category_id: 's1', category_id: 'c1', sub_category_id: 'zzz' }, {})
+        }
+      >
+        <Text>filter</Text>
+      </Pressable>
+    ),
     IdeasList: ({
+      ideas,
+      myIdeas,
       onOpen,
       onLike,
       onShare,
       onDelete,
     }: {
+      ideas: { id: string }[];
+      myIdeas: { id: string }[];
       onOpen: (id: string) => void;
       onLike: (id: string) => void;
       onShare: (idea: { id: string; title: string; description: string }) => void;
       onDelete: (id: string) => void;
     }) => (
       <View>
+        <Text testID="list-count">{`${ideas.length}/${myIdeas.length}`}</Text>
         <Pressable testID="mock-open" onPress={() => onOpen('idea-1')}>
           <Text>open</Text>
         </Pressable>
@@ -51,11 +74,25 @@ jest.mock('@/components/pod-ideas', () => {
     }: {
       open: boolean;
       onClose: () => void;
-      onSubmit: (a: string, b: string) => void;
+      onSubmit: (input: { title: string; description: string }) => void;
     }) =>
       open ? (
         <View>
-          <Pressable testID="mock-composer-submit" onPress={() => onSubmit('NT', 'ND')}>
+          <Pressable
+            testID="mock-composer-submit"
+            onPress={() =>
+              onSubmit({
+                title: 'NT',
+                description: 'ND',
+                super_category_id: 's1',
+                category_id: 'c1',
+                sub_category_id: 'b1',
+                super_category_name: 'For You',
+                category_name: 'Sports',
+                sub_category_name: 'Badminton',
+              } as never)
+            }
+          >
             <Text>composer</Text>
           </Pressable>
           <Pressable testID="mock-composer-close" onPress={onClose}>
@@ -92,9 +129,16 @@ jest.mock('@/components/pod-ideas', () => {
 
 const mockedUse = usePodIdeas as jest.Mock;
 
+const seededIdea = (id: string) => ({
+  id,
+  super_category_id: 's1',
+  category_id: 'c1',
+  sub_category_id: 'b1',
+});
+
 const makeApi = () => ({
-  ideas: [],
-  myIdeas: [],
+  ideas: [seededIdea('idea-1')],
+  myIdeas: [seededIdea('idea-2')],
   myId: 'me',
   hasData: true,
   isLoading: false,
@@ -116,9 +160,20 @@ describe('PodIdeasScreen', () => {
     renderWithProviders(<PodIdeasScreen />);
     fireEvent.press(screen.getByTestId('pod-ideas-add'));
     fireEvent.press(screen.getByTestId('mock-composer-submit'));
-    expect(api.create).toHaveBeenCalledWith('NT', 'ND');
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'NT', description: 'ND', sub_category_id: 'b1' }),
+    );
     fireEvent.press(screen.getByTestId('mock-composer-close'));
     expect(screen.queryByTestId('mock-composer-submit')).toBeNull();
+  });
+
+  it('filters the list by the selected category scope (client-side)', () => {
+    renderWithProviders(<PodIdeasScreen />);
+    // Both sections start populated.
+    expect(screen.getByTestId('list-count')).toHaveTextContent('1/1');
+    // Picking a sub category no idea carries hides them all.
+    fireEvent.press(screen.getByTestId('mock-filter-nomatch'));
+    expect(screen.getByTestId('list-count')).toHaveTextContent('0/0');
   });
 
   it('updates the search field and likes an idea', () => {

@@ -9,8 +9,17 @@ export interface IPodIdeaComment {
 
 export interface IPodIdea extends Document {
   author_id: Types.ObjectId;
+  /** Human-readable permanent id shown in the table (e.g. DUN-000001). */
+  idea_no: string;
   title: string;
   description: string;
+  /** Mandatory Super/Category/Sub the idea maps to (ids + denormalized names). */
+  super_category_id: Types.ObjectId | null;
+  category_id: Types.ObjectId | null;
+  sub_category_id: Types.ObjectId | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
   likes: Types.ObjectId[];
   shares_count: number;
   comments: IPodIdeaComment[];
@@ -31,8 +40,15 @@ const commentSchema = new Schema<IPodIdeaComment>(
 const podIdeaSchema = new Schema<IPodIdea>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    idea_no: { type: String, default: '', index: true },
     title: { type: String, required: true, trim: true, maxlength: 160 },
     description: { type: String, required: true, trim: true, maxlength: 2001 },
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    super_category_name: { type: String, default: '' },
+    category_name: { type: String, default: '' },
+    sub_category_name: { type: String, default: '' },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     shares_count: { type: Number, default: 0 },
     comments: { type: [commentSchema], default: [] },

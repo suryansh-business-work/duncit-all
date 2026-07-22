@@ -16,7 +16,9 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ShareIcon from '@mui/icons-material/Share';
 import DeleteIcon from '@mui/icons-material/Delete';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import { formatRelative } from './queries';
+import { categoryPathLabel } from '../../utils/ideaCategory';
 
 interface IdeaCardProps {
   idea: any;
@@ -41,6 +43,7 @@ export default function IdeaCard({
   const isMine = myId && idea.author_id === myId;
   const notApprovedColor = idea.status === 'REJECTED' ? 'error' : 'warning';
   const statusColor = idea.status === 'APPROVED' ? 'success' : notApprovedColor;
+  const categoryPath = categoryPathLabel(idea);
   return (
     <Card variant="outlined">
       <CardContent>
@@ -85,6 +88,26 @@ export default function IdeaCard({
             {idea.description}
           </Typography>
         </Box>
+        {(idea.idea_no || categoryPath) && (
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1, flexWrap: 'wrap', gap: 0.75 }}>
+            {idea.idea_no && (
+              <Chip
+                size="small"
+                variant="outlined"
+                label={idea.idea_no}
+                sx={{ fontFamily: 'monospace', fontWeight: 700 }}
+              />
+            )}
+            {categoryPath && (
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<LocalOfferOutlinedIcon />}
+                label={categoryPath}
+              />
+            )}
+          </Stack>
+        )}
         <Divider sx={{ my: 1.5 }} />
         <Stack direction="row" spacing={2} alignItems="center">
           <Button

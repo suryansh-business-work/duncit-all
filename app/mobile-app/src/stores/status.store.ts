@@ -21,6 +21,9 @@ export interface StatusUploadAsset {
   fileName?: string | null;
   mimeType?: string | null;
   mediaType?: 'IMAGE' | 'VIDEO';
+  /** STORY (default, 24h ephemeral) vs POST (permanent profile post). The
+   * profile "Add Post" flow sets POST; the story rail/avatar ring keep STORY. */
+  kind?: 'STORY' | 'POST';
   /** Trim window (seconds) the server cuts during the FFmpeg pass — set when a
    * picked video runs past the 15s story cap. */
   trim?: VideoTrim | null;
@@ -62,6 +65,7 @@ export const useStatusStore = create<StatusState>((set, get) => ({
   },
   publish: async (asset) => {
     const isVideo = asset.mediaType === 'VIDEO';
+    const kind = asset.kind ?? 'STORY';
     const mimeType = asset.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
     const fileName = asset.fileName ?? `story-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
     set({ progress: isVideo ? 2 : 10 });
@@ -107,7 +111,8 @@ export const useStatusStore = create<StatusState>((set, get) => ({
           input: {
             image_url: url,
             caption: '',
-            kind: 'STORY',
+            // STORY (default) is 24h-ephemeral; POST is a permanent profile post.
+            kind,
             media_type: isVideo ? 'VIDEO' : 'IMAGE',
           },
         },

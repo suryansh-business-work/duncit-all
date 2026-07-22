@@ -5,6 +5,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -109,84 +110,86 @@ export function AddressFormSheet({
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onCancel}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="address-form-sheet">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={onCancel}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.6)"
-          />
-          <YStack
-            maxHeight="88%"
-            backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
-            padding={16}
-            gap={10}
-          >
-            <Text fontSize={17} fontWeight="900" color="$color">
-              {title}
-            </Text>
-            <ScrollView>
-              <YStack gap={10} paddingBottom={12}>
-                <Field name="label" label="Label (Home, Office…)" control={control} />
-                <Field name="name" label="Receiver name" control={control} />
-                <Field name="phone" label="Phone" control={control} />
-                <Field name="line1" label="Address line 1" control={control} />
-                <Field name="line2" label="Address line 2" control={control} />
-                <Field name="landmark" label="Landmark" control={control} />
-                <Field name="city" label="City" control={control} />
-                <Field name="state" label="State" control={control} />
-                <Field name="pincode" label="Pincode" control={control} />
-                <Field name="country" label="Country" control={control} />
-              </YStack>
-            </ScrollView>
-            <XStack gap={12}>
-              <XStack
-                testID="address-cancel"
-                role="button"
-                aria-label="Cancel"
-                onPress={onCancel}
-                flex={1}
-                height={46}
-                alignItems="center"
-                justifyContent="center"
-                borderRadius={12}
-                borderWidth={1}
-                borderColor="$borderColor"
-                pressStyle={{ opacity: 0.85 }}
-              >
-                <Text fontSize={14} fontWeight="800" color="$color">
-                  Cancel
-                </Text>
+        <KeyboardScreen>
+          <YStack flex={1} justifyContent="flex-end" testID="address-form-sheet">
+            <YStack
+              role="button"
+              aria-label="Close"
+              onPress={onCancel}
+              position="absolute"
+              top={0}
+              left={0}
+              right={0}
+              bottom={0}
+              backgroundColor="rgba(0,0,0,0.6)"
+            />
+            <YStack
+              maxHeight="88%"
+              backgroundColor="$background"
+              borderTopLeftRadius={22}
+              borderTopRightRadius={22}
+              padding={16}
+              gap={10}
+            >
+              <Text fontSize={17} fontWeight="900" color="$color">
+                {title}
+              </Text>
+              <ScrollView>
+                <YStack gap={10} paddingBottom={12}>
+                  <Field name="label" label="Label (Home, Office…)" control={control} />
+                  <Field name="name" label="Receiver name" control={control} />
+                  <Field name="phone" label="Phone" control={control} />
+                  <Field name="line1" label="Address line 1" control={control} />
+                  <Field name="line2" label="Address line 2" control={control} />
+                  <Field name="landmark" label="Landmark" control={control} />
+                  <Field name="city" label="City" control={control} />
+                  <Field name="state" label="State" control={control} />
+                  <Field name="pincode" label="Pincode" control={control} />
+                  <Field name="country" label="Country" control={control} />
+                </YStack>
+              </ScrollView>
+              <XStack gap={12}>
+                <XStack
+                  testID="address-cancel"
+                  role="button"
+                  aria-label="Cancel"
+                  onPress={onCancel}
+                  flex={1}
+                  height={46}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={12}
+                  borderWidth={1}
+                  borderColor="$borderColor"
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  <Text fontSize={14} fontWeight="800" color="$color">
+                    Cancel
+                  </Text>
+                </XStack>
+                <XStack
+                  testID="address-save"
+                  role="button"
+                  aria-label="Save address"
+                  aria-disabled={saving}
+                  onPress={saving ? undefined : handleSubmit(onSubmit)}
+                  flex={1}
+                  height={46}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={12}
+                  backgroundColor="$primary"
+                  opacity={saving ? 0.6 : 1}
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                    Save address
+                  </Text>
+                </XStack>
               </XStack>
-              <XStack
-                testID="address-save"
-                role="button"
-                aria-label="Save address"
-                aria-disabled={saving}
-                onPress={saving ? undefined : handleSubmit(onSubmit)}
-                flex={1}
-                height={46}
-                alignItems="center"
-                justifyContent="center"
-                borderRadius={12}
-                backgroundColor="$primary"
-                opacity={saving ? 0.6 : 1}
-                pressStyle={{ opacity: 0.85 }}
-              >
-                <Text fontSize={14} fontWeight="900" color={onPrimary}>
-                  Save address
-                </Text>
-              </XStack>
-            </XStack>
+            </YStack>
           </YStack>
-        </YStack>
+        </KeyboardScreen>
       </ModalThemeScope>
     </Modal>
   );

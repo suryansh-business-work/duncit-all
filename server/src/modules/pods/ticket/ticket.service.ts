@@ -12,6 +12,7 @@ import { generateTicketPdf } from '@services/ticket/ticket.pdf';
 import { sendEmail } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const newTicketCode = () =>
   `TKT-${Date.now().toString(36).toUpperCase().slice(-5)}${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
@@ -145,7 +146,14 @@ export const ticketService = {
     });
     await doc.save();
 
-    this.email(doc).catch((e) => console.warn('Ticket email failed', e));
+    this.email(doc).catch((e) =>
+      logs.server.warn('ticket', 'ensureForMembership', {
+        error: e,
+        msg: 'Ticket email failed',
+        ticket_code,
+        membership_id: String(membership._id),
+      })
+    );
     return doc;
   },
 

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { ApiKeyModel, type IApiKey } from './apiKey.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -110,7 +111,12 @@ export const apiKeyService = {
     if (!doc) return null;
     ApiKeyModel.updateOne({ _id: doc._id }, { $set: { last_used_at: new Date() } })
       .exec()
-      .catch((err) => console.error('[apiKey] last_used_at update failed:', err));
+      .catch((err) =>
+        logs.server.error('apiKey', 'verify', {
+          error: err,
+          msg: 'last_used_at update failed',
+        })
+      );
     return doc;
   },
 };

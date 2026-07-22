@@ -13,6 +13,7 @@ import {
   tableStateToExpenseFilter,
   type ExpenseSummaryFilter,
 } from './queries';
+import { logs } from '@duncit/logs';
 import ExpenseTable from './ExpenseTable';
 import ExpenseDrawer from './ExpenseDrawer';
 
@@ -53,7 +54,12 @@ export default function ExpenseManagementPage() {
 
   const handleSaved = () => {
     refetchRef.current?.();
-    summaryQ.refetch().catch((e) => console.warn('Expense summary refresh failed', e));
+    summaryQ.refetch().catch((e) =>
+      logs.portal['finance'].warn('ExpenseManagementPage', 'handleSaved', {
+        error: e,
+        msg: 'Expense summary refresh failed',
+      }),
+    );
   };
   const openNew = () => {
     setActive(null);

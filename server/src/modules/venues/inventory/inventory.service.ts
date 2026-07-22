@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -349,7 +350,7 @@ function validateVariantsInput(input: any) {
   const seen = new Set<string>();
   for (const v of variants) {
     const label = cleanText(v?.option_label, 120) || 'variant';
-    if (!(Number(v?.unit_cost) > 0)) {
+    if (Number(v?.unit_cost) <= 0) {
       throw new GraphQLError(`Price for ${label} must be greater than 0`, { extensions: { code: 'BAD_USER_INPUT' } });
     }
     if (Number(v?.inventory_count) < 0) {
@@ -434,7 +435,7 @@ function toCategoryRows(input: any) {
 function applyCategories(doc: IInventoryProduct, input: any) {
   const rows = toCategoryRows(input);
   if (rows.length === 0) return;
-  doc.categories = rows as any;
+  doc.categories = rows;
   doc.super_category_id = rows[0].super_category_id;
   doc.category_id = rows[0].category_id;
   doc.sub_category_id = rows[0].sub_category_id;
@@ -679,8 +680,11 @@ async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: 
       silent: false,
     })
     .catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('[inventory] low-stock notify failed', error);
+      logs.server.error('inventory', 'notifyLowStockIfCrossed', {
+        error,
+        msg: 'low-stock notify failed',
+        product_id: String(doc._id),
+      });
     });
 }
 
@@ -1103,9 +1107,10 @@ export const inventoryService = {
     await logActivity(doc._id, user, approved ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
     // Tell the partner the outcome — they previously had to poll their table.
     const reviewTitle = approved ? 'Product approved 🎉' : 'Product listing declined';
+    const declineSuffix = doc.listing_review_notes ? ` — ${doc.listing_review_notes}` : '.';
     const reviewBody = approved
       ? `${doc.product_name} is approved and can now be stocked into pods.`
-      : `${doc.product_name} was declined${doc.listing_review_notes ? ` — ${doc.listing_review_notes}` : '.'}`;
+      : `${doc.product_name} was declined${declineSuffix}`;
     await notificationService
       .create({
         scope: 'USER',
@@ -1115,8 +1120,11 @@ export const inventoryService = {
         silent: false,
       })
       .catch((error) => {
-        // eslint-disable-next-line no-console
-        console.error('[inventory] review notify failed', error);
+        logs.server.error('inventory', 'reviewProductListing', {
+          error,
+          msg: 'review notify failed',
+          product_id: String(doc._id),
+        });
       });
     return inventoryProductToPub(doc);
   },

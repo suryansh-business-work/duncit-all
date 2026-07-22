@@ -13,6 +13,8 @@
 //   'false' — the flat GraphQL contract is preserved so 147 frontend files
 //   keep working unchanged.
 
+import { logs } from '@observability/log';
+
 const truthy = (v: string | undefined) =>
   v !== undefined && ['1', 'true', 'yes', 'on'].includes(v.toLowerCase());
 
@@ -22,8 +24,9 @@ export const USER_SCHEMA_FLAGS = {
 } as const;
 
 export function logUserSchemaFlags() {
-  // eslint-disable-next-line no-console
-  console.log(
-    `[user-schema] dualWrite=${USER_SCHEMA_FLAGS.dualWrite} nestedGraphql=${USER_SCHEMA_FLAGS.nestedGraphql}`
-  );
+  logs.server.info('user-schema', 'logUserSchemaFlags', {
+    msg: `[user-schema] dualWrite=${USER_SCHEMA_FLAGS.dualWrite} nestedGraphql=${USER_SCHEMA_FLAGS.nestedGraphql}`,
+    dualWrite: USER_SCHEMA_FLAGS.dualWrite,
+    nestedGraphql: USER_SCHEMA_FLAGS.nestedGraphql,
+  });
 }

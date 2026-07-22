@@ -4,6 +4,7 @@ const tsJest = ['ts-jest', { tsconfig: 'tsconfig.test.json', isolatedModules: tr
 const moduleNameMapper = {
   '^@modules$': '<rootDir>/src/modules/index.ts',
   '^@modules/(.*)$': '<rootDir>/src/modules/$1',
+  '^@observability/(.*)$': '<rootDir>/src/observability/$1',
   '^@config/(.*)$': '<rootDir>/src/config/$1',
   '^@services/(.*)$': '<rootDir>/src/services/$1',
   '^@utils/(.*)$': '<rootDir>/src/utils/$1',

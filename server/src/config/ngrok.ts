@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from './runtimeEnv';
+import { logs } from '@observability/log';
 
 /**
  * Local-dev ngrok tunnel. On a local server boot we open a free ngrok tunnel so
@@ -19,11 +20,11 @@ export async function startNgrokTunnel(port: number): Promise<string | null> {
   if (publicUrl || starting) return publicUrl;
   const authtoken = (process.env.NGROK_AUTHTOKEN || (await getRuntimeEnvValue('NGROK_AUTHTOKEN')) || '').trim();
   if (!authtoken) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      '[ngrok] NGROK_AUTHTOKEN not set — skipping tunnel. Twilio callbacks will not reach localhost. ' +
-        'Add a free token (NGROK_AUTHTOKEN) from https://dashboard.ngrok.com/get-started/your-authtoken'
-    );
+    logs.server.warn('ngrok', 'startNgrokTunnel', {
+      msg:
+        '[ngrok] NGROK_AUTHTOKEN not set — skipping tunnel. Twilio callbacks will not reach localhost. ' +
+        'Add a free token (NGROK_AUTHTOKEN) from https://dashboard.ngrok.com/get-started/your-authtoken',
+    });
     return null;
   }
   starting = true;
@@ -31,12 +32,17 @@ export async function startNgrokTunnel(port: number): Promise<string | null> {
     const ngrok = await import('@ngrok/ngrok');
     const listener = await ngrok.forward({ addr: port, authtoken });
     publicUrl = listener.url();
-    // eslint-disable-next-line no-console
-    console.log(`🌐 ngrok tunnel open: ${publicUrl} -> http://localhost:${port} (Twilio webhooks will use this)`);
+    logs.server.info('ngrok', 'startNgrokTunnel', {
+      msg: `🌐 ngrok tunnel open: ${publicUrl} -> http://localhost:${port} (Twilio webhooks will use this)`,
+      publicUrl,
+      port,
+    });
     return publicUrl;
   } catch (err: any) {
-    // eslint-disable-next-line no-console
-    console.warn('[ngrok] failed to start tunnel:', err?.message || err);
+    logs.server.warn('ngrok', 'startNgrokTunnel', {
+      error: err,
+      msg: '[ngrok] failed to start tunnel:',
+    });
     return null;
   } finally {
     starting = false;

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -69,6 +70,20 @@ function assertSurface(surface: string): asserts surface is UploadSurface {
   }
 }
 
+function applyCropPresets(doc: IUploadSetting, input: UpdateUploadSettingInput): void {
+  if (input.crop_presets === undefined) return;
+  const presets = input.crop_presets
+    .filter((p) => p && typeof p.key === 'string' && p.key.trim())
+    .map((p) => ({
+      key: String(p.key).trim().toUpperCase().slice(0, 40),
+      label: String(p.label ?? p.key).trim().slice(0, 80),
+      width: clamp(Number(p.width) || 0, 0, 8192),
+      height: clamp(Number(p.height) || 0, 0, 8192),
+      enabled: p.enabled !== false,
+    }));
+  if (presets.length) doc.crop_presets = presets;
+}
+
 export const uploadSettingService = {
   /** Settings row for a surface, seeded with defaults on first read. */
   async get(surface: string): Promise<IUploadSetting> {
@@ -112,18 +127,7 @@ export const uploadSettingService = {
     if (input.ai_image_monitoring_enabled !== undefined) {
       doc.ai_image_monitoring_enabled = input.ai_image_monitoring_enabled;
     }
-    if (input.crop_presets !== undefined) {
-      const presets = input.crop_presets
-        .filter((p) => p && typeof p.key === 'string' && p.key.trim())
-        .map((p) => ({
-          key: String(p.key).trim().toUpperCase().slice(0, 40),
-          label: String(p.label ?? p.key).trim().slice(0, 80),
-          width: clamp(Number(p.width) || 0, 0, 8192),
-          height: clamp(Number(p.height) || 0, 0, 8192),
-          enabled: p.enabled !== false,
-        }));
-      if (presets.length) doc.crop_presets = presets;
-    }
+    applyCropPresets(doc, input);
     if (input.default_crop_key !== undefined) {
       const key = String(input.default_crop_key).trim().toUpperCase();
       const known = doc.crop_presets.some((p) => p.key === key);
@@ -154,7 +158,7 @@ const IMAGE_SCAN_PROMPT = [
 export function parseScanVerdict(content: string): { risk: 'LOW' | 'MEDIUM' | 'HIGH'; summary: string } | null {
   try {
     const parsed = JSON.parse(content) as { risk?: unknown; summary?: unknown };
-    const risk = String(parsed.risk ?? '').toUpperCase();
+    const risk = (typeof parsed.risk === 'string' ? parsed.risk : '').toUpperCase();
     if (risk !== 'LOW' && risk !== 'MEDIUM' && risk !== 'HIGH') return null;
     return { risk, summary: typeof parsed.summary === 'string' ? parsed.summary.slice(0, 1000) : '' };
   } catch {
@@ -267,8 +271,7 @@ export const mediaScanService = {
       });
       reviewImageWithAi(log).catch(() => undefined);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[mediaScan] record failed:', err);
+      logs.server.error('mediaScan', 'record', { error: err, msg: 'record failed' });
     }
   },
 

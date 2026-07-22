@@ -11,6 +11,7 @@ import {
   updateAdPricingMock,
 } from '../mocks';
 import { __setTableRows, fetchRowsFrom } from './table-mock';
+import { logs } from '@duncit/logs';
 
 // ---------------------------------------------------------------------------
 // Module mocks — the shared table + app-settings + toast host. GraphQL flows
@@ -152,7 +153,7 @@ describe('ReviewDialog', () => {
   });
 
   it('logs when the review promise rejects', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logs.portal.marketing, 'error').mockImplementation(() => {});
     const onReview = vi.fn().mockRejectedValue(new Error('boom'));
     renderWithProviders(
       <ReviewDialog

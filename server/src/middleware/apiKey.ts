@@ -1,5 +1,6 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { apiKeyService } from '@modules/platform/apiKey/apiKey.service';
+import { logs } from '@observability/log';
 
 export interface ApiKeyAuth {
   id: string;
@@ -57,7 +58,10 @@ export function requireApiKey(...requiredScopes: string[]): RequestHandler {
       };
       return next();
     } catch (err) {
-      console.error('[apiKey] verification failed:', err);
+      logs.server.error('apiKey', 'requireApiKey', {
+        error: err,
+        msg: 'verification failed',
+      });
       return res.status(401).json({ error: 'invalid_api_key' });
     }
   };

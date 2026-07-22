@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { logs } from '@observability/log';
 
 /**
  * Retry forever with capped exponential backoff. Crashing the container on
@@ -35,14 +36,17 @@ export async function connectDB(): Promise<void> {
         retryWrites: true,
         ...(dbName ? { dbName } : {}),
       });
-      // eslint-disable-next-line no-console
-      console.log(`✅ MongoDB connected (attempt ${attempt})`);
+      logs.server.info('db', 'connectDB', {
+        attempt,
+        msg: '✅ MongoDB connected',
+      });
       return;
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `⚠️  MongoDB connect attempt ${attempt} failed: ${(err as Error).message}`
-      );
+      logs.server.warn('db', 'connectDB', {
+        error: err,
+        attempt,
+        msg: `⚠️  MongoDB connect attempt ${attempt} failed: ${(err as Error).message}`,
+      });
       await new Promise((r) => setTimeout(r, nextDelay()));
     }
   }

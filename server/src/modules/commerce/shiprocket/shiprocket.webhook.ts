@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import express from 'express';
 import { timingSafeEqual } from 'node:crypto';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { logs } from '@observability/log';
 import { shiprocketService } from './shiprocket.service';
 
 function safeEqual(a: string, b: string): boolean {
@@ -30,7 +31,7 @@ export function buildShiprocketWebhookRouter(): Router {
       }
       await shiprocketService.applyWebhookEvent((req.body ?? {}) as Record<string, any>);
     } catch (e) {
-      console.warn('[shiprocket] webhook error', (e as Error).message);
+      logs.server.warn('shiprocket', 'webhook', { error: e, msg: 'webhook error' });
     }
     return res.status(200).json({ ok: true });
   });

@@ -17,6 +17,7 @@ import {
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -169,12 +170,17 @@ const EMPTY_PRODUCT_RESOLUTION: ProductResolution = { lines: [], total: 0, needs
  * remaining (stocked − already sold) units per product. Throws on anything not
  * buyable; returns invoice-ready lines plus the priced total.
  */
-async function resolveProductLines(pod: any, selectedProducts: any[] = []): Promise<ProductResolution> {
-  const allowed = new Map<string, any>(
-    (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
-  );
-  // Merge duplicate selections of the same product+variant into one line.
-  const merged = new Map<string, { product_id: string; variant_id: string; quantity: number; fulfilment_method?: string }>();
+/** One merged product+variant selection line (duplicate rows summed). */
+interface MergedSelection {
+  product_id: string;
+  variant_id: string;
+  quantity: number;
+  fulfilment_method?: string;
+}
+
+/** Merge duplicate selections of the same product+variant into one line. */
+function mergeProductSelections(selectedProducts: any[]): Map<string, MergedSelection> {
+  const merged = new Map<string, MergedSelection>();
   for (const sel of selectedProducts) {
     const productId = String(sel?.product_id || '');
     const quantity = Number(sel?.quantity) || 0;
@@ -190,6 +196,56 @@ async function resolveProductLines(pod: any, selectedProducts: any[] = []): Prom
     row.quantity += quantity;
     merged.set(key, row);
   }
+  return merged;
+}
+
+/** Build one invoice-ready line for a merged selection, applying variant price +
+ * stock gates. Throws when the chosen variant is gone or out of stock. */
+function buildResolvedLine(row: MergedSelection, snapshot: any, product: any): ResolvedProductLine {
+  let unitCost = Number(snapshot.unit_cost || 0);
+  let variant: any = null;
+  if (row.variant_id) {
+    variant = (product?.variants ?? []).find((v: any) => String(v._id) === row.variant_id) ?? null;
+    if (!variant) {
+      throw new GraphQLError('The selected product variant is no longer available', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    unitCost = Number(variant.unit_cost || 0);
+    if (row.quantity > Number(variant.inventory_count || 0)) {
+      throw new GraphQLError(
+        `Only ${variant.inventory_count} ${snapshot.product_name} (${variant.option_label}) in stock`,
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
+  }
+  return {
+    product_id: row.product_id,
+    variant_id: row.variant_id,
+    variant_label: variant?.option_label ?? '',
+    variant_sku: variant?.sku ?? '',
+    name: snapshot.product_name || 'Product',
+    quantity: row.quantity,
+    unit_cost: unitCost,
+    gross: round2(unitCost * row.quantity),
+    fulfilment_method: row.fulfilment_method,
+  };
+}
+
+/** Pod-level gate: the pod's remaining stocked units, net of earlier sales. */
+function assertPodRemainingStock(perProductQty: Map<string, number>, allowed: Map<string, any>) {
+  for (const [productId, quantity] of perProductQty) {
+    const snapshot = allowed.get(productId);
+    const remaining = Math.max(0, Number(snapshot.quantity || 0) - Number(snapshot.sold_count || 0));
+    if (quantity > remaining) {
+      throw new GraphQLError(`Only ${remaining} ${snapshot.product_name} available`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+  }
+}
+
+async function resolveProductLines(pod: any, selectedProducts: any[] = []): Promise<ProductResolution> {
+  const allowed = new Map<string, any>(
+    (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
+  );
+  const merged = mergeProductSelections(selectedProducts);
   if (merged.size === 0) return EMPTY_PRODUCT_RESOLUTION;
 
   const productIds = Array.from(new Set(Array.from(merged.values(), (r) => r.product_id))).filter(
@@ -210,42 +266,10 @@ async function resolveProductLines(pod: any, selectedProducts: any[] = []): Prom
     }
     const product = productMap.get(row.product_id);
     if (product?.delivery_target === 'SHIPROCKET') needsShipping = true;
-    let unitCost = Number(snapshot.unit_cost || 0);
-    let variant: any = null;
-    if (row.variant_id) {
-      variant = (product?.variants ?? []).find((v: any) => String(v._id) === row.variant_id) ?? null;
-      if (!variant) {
-        throw new GraphQLError('The selected product variant is no longer available', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-      unitCost = Number(variant.unit_cost || 0);
-      if (row.quantity > Number(variant.inventory_count || 0)) {
-        throw new GraphQLError(
-          `Only ${variant.inventory_count} ${snapshot.product_name} (${variant.option_label}) in stock`,
-          { extensions: { code: 'BAD_USER_INPUT' } }
-        );
-      }
-    }
     perProductQty.set(row.product_id, (perProductQty.get(row.product_id) ?? 0) + row.quantity);
-    lines.push({
-      product_id: row.product_id,
-      variant_id: row.variant_id,
-      variant_label: variant?.option_label ?? '',
-      variant_sku: variant?.sku ?? '',
-      name: snapshot.product_name || 'Product',
-      quantity: row.quantity,
-      unit_cost: unitCost,
-      gross: round2(unitCost * row.quantity),
-      fulfilment_method: row.fulfilment_method,
-    });
+    lines.push(buildResolvedLine(row, snapshot, product));
   }
-  // Pod-level gate: the pod's remaining stocked units, net of earlier sales.
-  for (const [productId, quantity] of perProductQty) {
-    const snapshot = allowed.get(productId);
-    const remaining = Math.max(0, Number(snapshot.quantity || 0) - Number(snapshot.sold_count || 0));
-    if (quantity > remaining) {
-      throw new GraphQLError(`Only ${remaining} ${snapshot.product_name} available`, { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-  }
+  assertPodRemainingStock(perProductQty, allowed);
   return { lines, total: round2(lines.reduce((s, l) => s + l.gross, 0)), needs_shipping: needsShipping };
 }
 
@@ -369,13 +393,13 @@ async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
       await pod.save();
     }
   } catch (e) {
-    console.warn('Pod attendee update failed', e);
+    logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'Pod attendee update failed' });
   }
   try {
     const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
     await podMemberService.recordPaidJoin(String(pod._id), String(userId), paymentDocId);
   } catch (e) {
-    console.warn('PodMember record failed', e);
+    logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'PodMember record failed' });
   }
   try {
     const { evaluateBadgesForUser } = await import('@modules/engagement/badge/badge.service');
@@ -459,7 +483,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
     const { productOrderService } = await import('@modules/commerce/productOrder/productOrder.service');
     await productOrderService.createFromPayment(doc);
   } catch (e) {
-    console.warn('[payment] ProductOrder creation failed', (e as Error).message);
+    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'ProductOrder creation failed' });
   }
   try {
     const pdf = await generateInvoicePdf({
@@ -509,7 +533,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       ],
     });
   } catch (e) {
-    console.warn('Receipt/invoice email failed', e);
+    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Receipt/invoice email failed' });
   }
 }
 

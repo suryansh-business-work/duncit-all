@@ -16,6 +16,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
 import { sendBackoutSpotFilledEmail, sendPodRefundEmail } from '@services/email/email.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 // Legacy display constant kept for schema compatibility (refund_threshold_pct).
 const REFUND_THRESHOLD_PCT = 80;
@@ -129,9 +130,9 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
     ]);
     const sym = settings.currency_symbol ?? '₹';
     const refundLine =
-      request?.refund_amount != null
-        ? `Your refund of ${sym}${request.refund_amount} will be processed by our team shortly.`
-        : '';
+      request?.refund_amount == null
+        ? ''
+        : `Your refund of ${sym}${request.refund_amount} will be processed by our team shortly.`;
     const tail = refundLine || 'You can book the pod again anytime.';
     await notifyUserInApp(
       String(member.user_id),
@@ -148,7 +149,7 @@ async function notifySpotFilled(pod: any, member: IPodMember, request: IBackoutR
       });
     }
   } catch (err) {
-    console.error('[backout] spot-filled notify failed:', err);
+    logs.server.error('podMember', 'notifySpotFilled', { error: err, msg: '[backout] spot-filled notify failed' });
   }
 }
 
@@ -176,7 +177,7 @@ async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
       });
     }
   } catch (err) {
-    console.error('[backout] refund-processed notify failed:', err);
+    logs.server.error('podMember', 'notifyRefundProcessed', { error: err, msg: '[backout] refund-processed notify failed' });
   }
 }
 
@@ -188,7 +189,7 @@ async function markSpotFilled(pod: any, member: IPodMember) {
   member.status = 'BACKED_OUT';
   member.active_backout_id = null;
   await member.save();
-  if (request && request.status === 'IN_PROCESS') {
+  if (request?.status === 'IN_PROCESS') {
     request.status = 'SPOT_FILLED';
     request.events.push({ status: 'SPOT_FILLED', backout_count: request.attempt_no, at: new Date() });
     await request.save();
@@ -454,7 +455,7 @@ export const podMemberService = {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
       await ticketService.ensureForMembership(String(doc._id));
     } catch (e) {
-      console.warn('Ticket issue (free join) failed', e);
+      logs.server.warn('podMember', 'join', { error: e, msg: 'Ticket issue (free join) failed' });
     }
     return toPub(doc);
   },
@@ -561,7 +562,7 @@ export const podMemberService = {
     const request = membership.active_backout_id
       ? await BackoutRequestModel.findById(membership.active_backout_id)
       : null;
-    if (request && request.status === 'IN_PROCESS') {
+    if (request?.status === 'IN_PROCESS') {
       request.status = 'CANCELLED';
       request.events.push({ status: 'CANCELLED', backout_count: request.attempt_no, at: new Date() });
       await request.save();
@@ -641,7 +642,7 @@ export const podMemberService = {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
       await ticketService.ensureForMembership(String(doc._id));
     } catch (e) {
-      console.warn('Ticket issue (paid join) failed', e);
+      logs.server.warn('podMember', 'joinPaid', { error: e, msg: 'Ticket issue (paid join) failed' });
     }
     // The payment flow pushes the attendee before recording the membership, so
     // a fresh pod read sees the taken seat — fill in-process backouts it
@@ -650,7 +651,7 @@ export const podMemberService = {
       const pod = await PodModel.findById(podDocId);
       if (pod) await fillBackoutsAfterJoin(pod);
     } catch (e) {
-      console.warn('Backout fill (paid join) failed', e);
+      logs.server.warn('podMember', 'joinPaid', { error: e, msg: 'Backout fill (paid join) failed' });
     }
     return doc;
   },
@@ -713,7 +714,7 @@ export const podMemberService = {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
       await ticketService.ensureForMembership(String(membership._id));
     } catch (e) {
-      console.warn('Ticket issue (rejoin) failed', e);
+      logs.server.warn('podMember', 'rejoin', { error: e, msg: 'Ticket issue (rejoin) failed' });
     }
     return toPub(membership);
   },
@@ -772,7 +773,7 @@ export const podMemberService = {
       });
     }
     const payment = await PaymentModel.findById(request.payment_id);
-    if (!payment || payment.status !== 'SUCCESS') {
+    if (payment?.status !== 'SUCCESS') {
       throw new GraphQLError('The linked payment cannot be refunded', {
         extensions: { code: 'CONFLICT' },
       });

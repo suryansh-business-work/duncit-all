@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { EmailTemplateModel } from './emailTemplate.model';
 
 const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
@@ -128,7 +129,11 @@ export const emailTemplateService = {
       .map((f) => f.replace(/\.mjml$/, ''));
     for (const slug of slugs) {
       await loadTemplate(slug).catch((err) => {
-        console.error(`[emailTemplate.seedDefaults] ${slug} failed:`, err);
+        logs.server.error('emailTemplate', 'seedDefaults', {
+          error: err,
+          slug,
+          msg: `${slug} failed`,
+        });
         return null;
       });
     }

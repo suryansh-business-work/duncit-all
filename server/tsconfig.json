@@ -19,6 +19,7 @@
       "@realtime/*": ["src/realtime/*"],
       "@generated/*": ["src/generated/*"],
       "@modules/*": ["src/modules/*"],
+      "@observability/*": ["src/observability/*"],
       "@context": ["src/context.ts"]
     },
     "types": ["node"]

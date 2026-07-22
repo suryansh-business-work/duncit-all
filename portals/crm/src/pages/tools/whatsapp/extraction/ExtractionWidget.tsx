@@ -17,6 +17,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { logs } from '@duncit/logs';
 import { useExtraction } from './ExtractionContext';
 import type { WaExtraction } from '../whatsappQueries';
 
@@ -160,7 +161,14 @@ export default function ExtractionWidget() {
             size="small"
             color={running ? 'error' : 'default'}
             onClick={() => {
-              if (running) cancel().catch(console.error);
+              if (running)
+                cancel().catch((error) =>
+                  logs.portal['crm'].error('ExtractionWidget', 'cancel', {
+                    error,
+                    msg: 'Failed to cancel extraction',
+                    jobId: job.id,
+                  }),
+                );
               else setHiddenId(job.id);
             }}
           >

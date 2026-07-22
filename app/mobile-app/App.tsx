@@ -28,7 +28,7 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { useCartStore } from '@/stores/cart.store';
 import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import config, { createBrandConfig } from './tamagui.config';
-import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
+import { configureLogs, httpTransport, detectEnvironment } from '@duncit/logs';
 import { config as appConfig } from '@/constants/config';
 
 // Base navigator background = the gradient's base colour, so there's no white
@@ -42,9 +42,21 @@ const navThemeFor = (dark: boolean): NavTheme => ({
 // module load so the stylesheet is requested before first paint.
 loadWebFonts();
 
-// Ship console errors + structured logs to SignOz (via the server /logs ingest).
-configureLogs(httpTransport(`${appConfig.apiUrl}/logs`));
-captureConsole(logs.mobileApp);
+// Ship structured, file-level logs to SignOz (via the server /logs ingest).
+// Native has no `location`, so environment/url are derived from the API base URL
+// (localhost / staging.*.duncit.com / *.duncit.com) the app is pointed at.
+configureLogs(httpTransport(`${appConfig.apiUrl}/logs`), {
+  platform: 'native',
+  environment: detectEnvironment(appConfig.apiUrl),
+  url: () => appConfig.apiUrl,
+  host: () => {
+    try {
+      return new URL(appConfig.apiUrl).host;
+    } catch {
+      return undefined;
+    }
+  },
+});
 
 /**
  * App root: Tamagui theming + SafeArea + React Navigation. The theme store and

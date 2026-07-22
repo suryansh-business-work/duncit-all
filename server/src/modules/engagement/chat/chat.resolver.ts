@@ -39,6 +39,12 @@ export const chatResolvers = {
       return pods.map((p: any) => {
         // club_id is populated to { _id, club_id (slug), super_category_id }.
         const club = p.club_id && typeof p.club_id === 'object' ? p.club_id : null;
+        let clubId: string | null = null;
+        if (club) {
+          clubId = String(club._id);
+        } else if (p.club_id) {
+          clubId = String(p.club_id);
+        }
         return {
           id: String(p._id),
           pod_id: String(p._id),
@@ -50,7 +56,7 @@ export const chatResolvers = {
             : null,
           pod_attendees: (p.pod_attendees || []).map(String),
           no_of_spots: p.no_of_spots,
-          club_id: club ? String(club._id) : p.club_id ? String(p.club_id) : null,
+          club_id: clubId,
           club_slug: club?.club_id || null,
           super_category_id: club?.super_category_id ? String(club.super_category_id) : null,
           cover_url: p.pod_images_and_videos?.find((m: any) => m.type !== 'VIDEO')?.url || null,

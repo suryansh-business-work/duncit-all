@@ -58,7 +58,7 @@ for (const pkgPath of [MOBILE_PKG, MWEB_PKG]) {
 const mobileName = readJson(MOBILE_PKG).name;
 let lockText = readFileSync(MOBILE_LOCK, 'utf8');
 for (const indent of [2, 6]) {
-  const re = new RegExp(`("name": "${mobileName}",\\r?\\n {${indent}}"version": ")[^"]+(")`);
+  const re = new RegExp(String.raw`("name": "${mobileName}",\r?\n {${indent}}"version": ")[^"]+(")`);
   lockText = lockText.replace(re, `$1${next}$2`);
 }
 writeFileSync(MOBILE_LOCK, lockText);

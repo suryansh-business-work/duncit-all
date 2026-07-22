@@ -20,7 +20,8 @@ interface Props {
  * description, option definitions and the full per-variant matrix — approvals
  * must never be blind to what will actually go on sale. */
 export default function ListingReviewDetails({ row }: Readonly<Props>) {
-  const images = row.images?.length ? row.images : row.image_url ? [row.image_url] : [];
+  const fallbackImages = row.image_url ? [row.image_url] : [];
+  const images = row.images?.length ? row.images : fallbackImages;
   const hasVariants = (row.variants ?? []).length > 0;
 
   return (

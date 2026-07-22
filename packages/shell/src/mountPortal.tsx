@@ -14,7 +14,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
-import { configureLogs, httpTransport, captureConsole } from '@duncit/logs';
+import { configureLogs, httpTransport } from '@duncit/logs';
 import { PortalBranding } from './PortalBranding';
 import type { MountPortalOptions } from './types';
 
@@ -34,7 +34,6 @@ export function mountPortal(opts: MountPortalOptions): void {
     apolloClient,
     graphqlUrl,
     googleClientId = '',
-    logsPortal,
     loadUser,
     userStorageKey,
     children,
@@ -44,9 +43,9 @@ export function mountPortal(opts: MountPortalOptions): void {
     rootId = 'root',
   } = opts;
 
-  // Ship console errors + structured logs to SignOz (via the server /logs ingest).
-  configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')));
-  captureConsole(logsPortal);
+  // Ship structured, file-level logs to SignOz (via the server /logs ingest).
+  // environment + url + host are auto-detected from the browser at each call.
+  configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')), { platform: 'web' });
 
   const isAuthed = () => !!localStorage.getItem(config.tokenKey);
 

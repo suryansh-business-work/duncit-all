@@ -12,6 +12,7 @@
  * as the injectable prober) so the routes are unit-testable without a database.
  */
 import type { Router, Request, Response } from 'express';
+import { logs } from '@observability/log';
 import {
   findStatusService,
   getStatusEnvironment,
@@ -344,8 +345,7 @@ export function registerStatusReadRoutes(router: Router, store: StatusHistorySto
     try {
       await handleSummary(store, res);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[status] summary failed:', err);
+      logs.server.error('status', 'summary', { error: err, msg: 'summary failed' });
       res.status(500).json({ error: 'Failed to load status summary' });
     }
   });
@@ -354,8 +354,7 @@ export function registerStatusReadRoutes(router: Router, store: StatusHistorySto
     try {
       await handleHistory(store, req, res);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[status] history failed:', err);
+      logs.server.error('status', 'history', { error: err, msg: 'history failed' });
       res.status(500).json({ error: 'Failed to load status history' });
     }
   });
@@ -364,8 +363,7 @@ export function registerStatusReadRoutes(router: Router, store: StatusHistorySto
     try {
       await handleIncidents(store, res);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[status] incidents failed:', err);
+      logs.server.error('status', 'incidents', { error: err, msg: 'incidents failed' });
       res.status(500).json({ error: 'Failed to load incidents' });
     }
   });

@@ -6,6 +6,7 @@ import { Types } from 'mongoose';
 import { requireApiKey, type ApiKeyedRequest } from '@middleware/apiKey';
 import { venueService } from '@modules/venues/venue/venue.service';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { logs } from '@observability/log';
 
 const ERROR_STATUS: Record<string, number> = {
   BAD_USER_INPUT: 400,
@@ -20,7 +21,7 @@ function sendError(res: Response, err: unknown): Response {
     const status = ERROR_STATUS[String(err.extensions?.code)] ?? 500;
     return res.status(status).json({ error: err.message });
   }
-  console.error('[venueApi] unexpected error:', err);
+  logs.server.error('venueApi', 'sendError', { error: err, msg: 'unexpected error' });
   return res.status(500).json({ error: 'internal_error' });
 }
 

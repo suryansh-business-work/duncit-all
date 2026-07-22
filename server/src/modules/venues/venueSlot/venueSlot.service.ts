@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
 import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
@@ -355,8 +356,12 @@ async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean,
       silent: false,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[venueSlot] decision notification failed:', err);
+    logs.server.error('venueSlot', 'notifySlotDecision', {
+      error: err,
+      msg: 'decision notification failed',
+      approved,
+      slot_id: String(slot._id),
+    });
   }
 }
 

@@ -51,6 +51,7 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 import { toPostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
@@ -376,8 +377,7 @@ async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) 
       const label = PARTNER_ROLE_LABELS[role];
       if (email) {
         sendPartnerAccessGrantedEmail({ to: email, name, partner_type: label, portal_url: partnersUrl }).catch(
-          // eslint-disable-next-line no-console
-          (e) => console.error('[user.roles] partner access email failed:', e)
+          (e) => logs.server.error('user.roles', 'notifyPartnerAccessGranted', { error: e, msg: 'partner access email failed', userId, role })
         );
       }
       const { notificationService } = await import('@modules/engagement/notification/notification.service');
@@ -390,8 +390,7 @@ async function notifyPartnerAccessGranted(userId: string, addedRoles: string[]) 
       });
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[user.roles] partner access notify failed:', err);
+    logs.server.error('user.roles', 'notifyPartnerAccessGranted', { error: err, msg: 'partner access notify failed', userId });
   }
 }
 
@@ -415,8 +414,7 @@ async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
         await clubService.revokeAdminForUser(userId);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[user.replaceUserRoles] onboarding revoke sync failed:', err);
+      logs.server.error('user.replaceUserRoles', 'syncRevokedOnboarding', { error: err, msg: 'onboarding revoke sync failed', userId, role });
     }
   }
 }
@@ -842,8 +840,7 @@ export const userService = {
 
     if (created.auth?.email) {
       sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
-        // eslint-disable-next-line no-console
-        console.error('Email send failed', e)
+        logs.server.error('user.service', 'register', { error: e, msg: 'Email send failed' })
       );
     }
     return authPayload(created);
@@ -991,8 +988,7 @@ export const userService = {
     }
     if (created.auth?.email) {
       sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
-        // eslint-disable-next-line no-console
-        console.error('Email send failed', e)
+        logs.server.error('user.service', 'signupWithGoogle', { error: e, msg: 'Email send failed' })
       );
     }
     await UserModel.updateOne(
@@ -1592,8 +1588,7 @@ export const userService = {
         target_user_ids: [targetUserId],
       });
     } catch (err) {
-
-      console.error('notifyNewFollower failed', err);
+      logs.server.error('user.service', 'notifyNewFollower', { error: err, msg: 'notifyNewFollower failed', targetUserId });
     }
   },
 
@@ -1885,8 +1880,7 @@ export const userService = {
 
     if (created.auth?.email) {
       sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
-        // eslint-disable-next-line no-console
-        console.error('Email send failed', e)
+        logs.server.error('user.service', 'create', { error: e, msg: 'Email send failed' })
       );
     }
     const fresh = await UserModel.findById(created._id);
@@ -1977,8 +1971,7 @@ export const userService = {
       const email = target.auth?.email;
       if (email) {
         sendAdminAccessGrantedEmail({ to: email, name: target.profile?.first_name || 'there' }).catch(
-          // eslint-disable-next-line no-console
-          (e) => console.error('Admin granted email failed', e)
+          (e) => logs.server.error('user.service', 'grantAdmin', { error: e, msg: 'Admin granted email failed', userId: user_id })
         );
       }
     }
@@ -2007,8 +2000,7 @@ export const userService = {
       const email = target.auth?.email;
       if (email) {
         sendAdminAccessRevokedEmail({ to: email, name: target.profile?.first_name || 'there' }).catch(
-          // eslint-disable-next-line no-console
-          (e) => console.error('Admin revoked email failed', e)
+          (e) => logs.server.error('user.service', 'revokeAdmin', { error: e, msg: 'Admin revoked email failed', userId: user_id })
         );
       }
     }
@@ -2095,8 +2087,7 @@ export const userService = {
       });
       emailed = true;
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Admin credentials email failed', e);
+      logs.server.error('user.service', 'seedSuperAdmin', { error: e, msg: 'Admin credentials email failed' });
     }
 
     return { created, emailed, email: DEFAULT_EMAIL };

@@ -15,6 +15,7 @@ import LeadStatsBar from './LeadStatsBar';
 import LeadsTable, { type LeadRow } from './LeadsTable';
 import CleanDataButton from './CleanDataButton';
 import { downloadBase64File, fileToBase64 } from '@duncit/utils';
+import { logs } from '@duncit/logs';
 
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
@@ -94,7 +95,7 @@ export default function UserLeadsPage() {
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) onImport(f).catch(console.error);
+          if (f) onImport(f).catch((error) => logs.portal['crm'].error('user-leads', 'onImport', { error, msg: 'Failed to import user leads' }));
           e.target.value = '';
         }}
       />

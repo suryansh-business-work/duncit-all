@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import {
   VenueModel,
   type IVenue,
@@ -861,8 +862,12 @@ export const venueService = {
           },
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn(`[venue.setActive] email failed for ${slug}:`, (err as Error).message);
+        logs.server.warn('venue', 'setActive', {
+          error: err,
+          slug,
+          venue_id: String(v._id),
+          msg: 'venue status-change email failed',
+        });
       }
     }
 

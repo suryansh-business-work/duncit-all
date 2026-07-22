@@ -159,7 +159,7 @@ export function ShopScreen() {
           testIDPrefix="shop-sort"
           options={SORT_OPTIONS}
           value={sort}
-          onSelect={(value) => setSort(value as ShopSort)}
+          onSelect={(value) => setSort(value)}
           layout="scroll"
         />
       </YStack>

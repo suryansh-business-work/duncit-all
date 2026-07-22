@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, nextMeetingRequestNo, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
@@ -92,8 +93,7 @@ async function notifyUserInApp(userId: string, title: string, body: string, link
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
     await notificationService.create({ title, body, scope: 'USER', target_user_ids: [userId], silent: false, link_url: link_url ?? null });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[meeting] in-app notification failed:', err);
+    logs.server.error('meeting', 'notifyUserInApp', { error: err, msg: 'in-app notification failed', userId });
   }
 }
 
@@ -350,8 +350,7 @@ async function notifyScheduleChange(doc: any, wasScheduled: boolean, prevSchedul
   try {
     await notifyMeetingEvent(doc, event);
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[meeting.update] notify failed:', err);
+    logs.server.error('meeting.update', 'notifyScheduleChange', { error: err, msg: 'notify failed', meetingId: String(doc?._id) });
   }
 }
 
@@ -371,8 +370,7 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
     if (kind === 'booked') await sendMeetingBookedEmail(opts);
     else await sendMeetingCancelledEmail({ ...opts, reason: reason ?? '' });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[meeting] applicant email failed:', err);
+    logs.server.error('meeting', 'notifyApplicant', { error: err, msg: 'applicant email failed', kind });
   }
 }
 
@@ -647,8 +645,7 @@ export const meetingService = {
     try {
       await leadSurveyService.syncFromGate(userId, kind);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[meeting.request] syncFromGate failed:', err);
+      logs.server.error('meeting.request', 'syncFromGate', { error: err, msg: 'syncFromGate failed', userId, kind });
     }
     await notifyApplicant(doc, 'booked');
     return pub(doc);
@@ -783,8 +780,7 @@ export const meetingService = {
     try {
       await notifyMeetingEvent(doc, decision === 'APPROVED' ? 'approved' : 'rejected');
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[meeting.decide] notify failed:', err);
+      logs.server.error('meeting.decide', 'decide', { error: err, msg: 'notify failed', meetingId: id, decision });
     }
     return pub(doc);
   },

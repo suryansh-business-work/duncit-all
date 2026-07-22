@@ -1,4 +1,5 @@
 import { StatusCheckModel } from '../../statusHistory.model';
+import { logs } from '../../log';
 import { runStatusSweep, startStatusScheduler } from '../../statusScheduler';
 import { listStatusServices } from '../../statusServices';
 import type { ProbeResult } from '../../statusProbe';
@@ -111,13 +112,17 @@ describe('startStatusScheduler', () => {
 
   it('keeps the interval alive when a sweep fails', async () => {
     process.env.NODE_ENV = 'development';
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const errorSpy = jest.spyOn(logs.server, 'error').mockImplementation(() => undefined);
     insertMany.mockRejectedValue(new Error('mongo down'));
     const prober = jest.fn(async (target: URL) => okResult(target.toString()));
     const stop = startStatusScheduler({ prober });
 
     await jest.advanceTimersByTimeAsync(10_000);
-    expect(errorSpy).toHaveBeenCalledWith('[status-scheduler] sweep failed:', expect.any(Error));
+    expect(errorSpy).toHaveBeenCalledWith(
+      'status-scheduler',
+      'sweep',
+      expect.objectContaining({ error: expect.any(Error) }),
+    );
 
     await jest.advanceTimersByTimeAsync(5 * 60_000);
     expect(insertMany).toHaveBeenCalledTimes(2);

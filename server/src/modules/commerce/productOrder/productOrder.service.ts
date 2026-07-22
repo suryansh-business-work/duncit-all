@@ -12,6 +12,7 @@ import { InventoryProductModel } from '@modules/venues/inventory/inventory.model
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const newOrderNo = () =>
@@ -185,8 +186,10 @@ async function recordStockForOrder(order: IProductOrder) {
         );
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[productOrder] stock decrement failed:', err);
+      logs.server.error('productOrder', 'recordStockForOrder', {
+        error: err,
+        msg: 'stock decrement failed',
+      });
     }
   }
 }
@@ -307,7 +310,10 @@ export const productOrderService = {
       const { shiprocketService } = await import('@modules/commerce/shiprocket/shiprocket.service');
       await shiprocketService.createShipment(order);
     } catch (e) {
-      console.warn('[productOrder] shipment create skipped/failed', (e as Error).message);
+      logs.server.warn('productOrder', 'tryCreateShipment', {
+        error: e,
+        msg: 'shipment create skipped/failed',
+      });
     }
   },
 

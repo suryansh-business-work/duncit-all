@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Alert, AlertTitle, Box, Button, Stack } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { logs } from '@duncit/logs';
 
 interface Props {
   children: ReactNode;
@@ -22,8 +23,11 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // eslint-disable-next-line no-console
-    console.error('CRM render error:', error, info.componentStack);
+    logs.portal['crm'].error('ErrorBoundary', 'componentDidCatch', {
+      error,
+      msg: 'CRM render error',
+      componentStack: info.componentStack,
+    });
   }
 
   reset = () => this.setState({ error: null });

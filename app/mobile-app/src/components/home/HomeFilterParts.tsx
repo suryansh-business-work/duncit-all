@@ -50,23 +50,23 @@ export function Section({ title, children }: Readonly<SectionProps>) {
   );
 }
 
-interface OptionChipRowProps {
-  options: readonly (readonly [string, string])[];
-  value: string;
-  onSelect: (value: string) => void;
+interface OptionChipRowProps<T extends string = string> {
+  options: readonly (readonly [T, string])[];
+  value: T;
+  onSelect: (value: T) => void;
   testIDPrefix: string;
   /** `scroll` for a horizontal rail, `wrap` for flowing rows, `column` stacked. */
   layout?: 'scroll' | 'wrap' | 'column';
 }
 
 /** Renders a [value,label] option list as selectable chips in the chosen layout. */
-export function OptionChipRow({
+export function OptionChipRow<T extends string = string>({
   options,
   value,
   onSelect,
   testIDPrefix,
   layout = 'wrap',
-}: Readonly<OptionChipRowProps>) {
+}: Readonly<OptionChipRowProps<T>>) {
   const chips = options.map(([val, label]) => (
     <FilterChip
       key={val || 'all'}

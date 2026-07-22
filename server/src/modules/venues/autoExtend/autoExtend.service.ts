@@ -2,6 +2,7 @@ import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { SlotTemplateModel, type ISlotTemplate } from '@modules/venues/slotTemplate/slotTemplate.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { buildRecurringSlots, venueDateEndUtc } from './slotGenerator';
+import { logs } from '@observability/log';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -12,8 +13,7 @@ const clampMaxAdvance = (v: number | undefined) => {
 };
 
 const log = (msg: string, err?: unknown) => {
-  // eslint-disable-next-line no-console
-  console.error(`[autoExtend] ${msg}`, err ?? '');
+  logs.server.error('autoExtend', 'log', { error: err, msg });
 };
 
 /** The template to roll forward: the venue's referenced one (if still owned),

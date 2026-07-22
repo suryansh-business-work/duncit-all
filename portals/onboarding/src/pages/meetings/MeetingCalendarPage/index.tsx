@@ -16,6 +16,7 @@ import CalendarHeader from './CalendarHeader';
 import MonthView from './MonthView';
 import TimeGridView from './TimeGridView';
 import { rangeLabel, stepCursor, viewDays, type CalendarView } from './calendarMath';
+import { logs } from '@duncit/logs';
 
 interface MenuState {
   mouseX: number;
@@ -64,8 +65,11 @@ export default function MeetingCalendarPage() {
       await dismissMeeting({ variables: { id } });
       await refetch();
     } catch (e) {
-      // Best-effort — surfaced to SignOz via the frontend console bridge.
-      console.error('[meeting-calendar] could not remove meeting', e);
+      logs.portal['onboarding'].error('meeting-calendar', 'removeFromCalendar', {
+        error: e,
+        id,
+        msg: 'could not remove meeting',
+      });
     }
   };
 

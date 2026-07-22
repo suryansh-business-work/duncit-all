@@ -26,6 +26,7 @@ import { assertInvitable } from './coHost.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
+import { logs } from '@observability/log';
 
 const slugify = (s: string) =>
   s
@@ -351,8 +352,10 @@ async function notifyVenueSlotRequested(pod: any, slot: any) {
       silent: false,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[pod] slot request notification failed:', err);
+    logs.server.error('pod', 'notifyVenueSlotRequested', {
+      error: err,
+      msg: 'slot request notification failed',
+    });
   }
 }
 
@@ -396,8 +399,10 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       review_url: `${partnersUrl.replace(/\/+$/, '')}/venues/requests`,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[pod] slot request email failed:', err);
+    logs.server.error('pod', 'emailVenueSlotRequested', {
+      error: err,
+      msg: 'slot request email failed',
+    });
   }
 }
 
@@ -872,7 +877,7 @@ async function applyPodEditCore(doc: any, input: any) {
     'is_active',
   ];
   for (const f of fields) {
-    if (input[f] !== undefined) (doc as any)[f] = input[f];
+    if (input[f] !== undefined) doc[f] = input[f];
   }
   applyMeetingFieldsForUpdate(doc, input, nextMode);
   applyDatesForUpdate(doc, input);
@@ -902,6 +907,27 @@ async function holdOrBookForResubmit(doc: any, slotDoc: any, needsVenueApproval:
     await doc.save();
     throw e;
   }
+}
+
+/** Physical resubmission re-resolves the venue: a kept partner venue needs a
+ * fresh slot, otherwise the host's own venue / a plain location applies.
+ * assertPartnerVenue enforces that split and the resolved id is written back. */
+async function applyResubmitPhysicalVenue(
+  doc: any,
+  input: any,
+  slotDoc: any,
+  nextMode: string,
+  userId: string,
+) {
+  if (nextMode !== 'PHYSICAL') return;
+  const declaredVenueId = doc.venue_id ? String(doc.venue_id) : null;
+  const finalVenueId = input.venue_id === undefined ? declaredVenueId : input.venue_id;
+  if (!finalVenueId) return;
+  await assertPartnerVenue(
+    { venue_id: finalVenueId, venue_slot_id: slotDoc ? String(slotDoc._id) : undefined },
+    new Types.ObjectId(userId),
+  );
+  input.venue_id = finalVenueId;
 }
 
 export const podService = {
@@ -1207,19 +1233,10 @@ export const podService = {
       input.pod_date_time = slotInput.pod_date_time;
       input.pod_end_date_time = slotInput.pod_end_date_time;
     }
-    if (nextMode === 'PHYSICAL') {
-      // Without a fresh slot a partner venue cannot be kept: the rejected
-      // request must move to a new slot (or the host's own venue / a plain
-      // location). assertPartnerVenue enforces exactly that split.
-      const finalVenueId = input.venue_id !== undefined ? input.venue_id : (doc.venue_id ? String(doc.venue_id) : null);
-      if (finalVenueId) {
-        await assertPartnerVenue(
-          { venue_id: finalVenueId, venue_slot_id: slotDoc ? String(slotDoc._id) : undefined },
-          new Types.ObjectId(userId),
-        );
-        input.venue_id = finalVenueId;
-      }
-    }
+    // Without a fresh slot a partner venue cannot be kept: the rejected
+    // request must move to a new slot (or the host's own venue / a plain
+    // location). assertPartnerVenue enforces exactly that split.
+    await applyResubmitPhysicalVenue(doc, input, slotDoc, nextMode, userId);
 
     const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);
@@ -1278,8 +1295,10 @@ export const podService = {
         )
       );
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[pod] update emails failed:', err);
+      logs.server.error('pod', 'update', {
+        error: err,
+        msg: 'update emails failed',
+      });
     }
 
     const slugMap = await loadClubSlugMap([doc]);
@@ -1361,8 +1380,10 @@ export const podService = {
         ),
       ]);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[pod] delete emails failed:', err);
+      logs.server.error('pod', 'hostRemove', {
+        error: err,
+        msg: 'delete emails failed',
+      });
     }
 
     return true;

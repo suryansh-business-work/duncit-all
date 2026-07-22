@@ -29,7 +29,7 @@ export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
             testID={`chat-filter-${option.value}`}
             role="button"
             aria-label={option.label}
-            aria-selected={selected}
+            aria-pressed={selected}
             onPress={() => onChange(option.value)}
             paddingHorizontal={14}
             height={34}

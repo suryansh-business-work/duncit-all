@@ -80,8 +80,10 @@ export interface MountPortalOptions {
   graphqlUrl: string;
   /** Google OAuth client id (blank disables Google sign-in). */
   googleClientId?: string;
-  /** The `logs.portal.<x>` sink that `captureConsole` forwards console output to. */
-  logsPortal: Parameters<(typeof import('@duncit/logs'))['captureConsole']>[0];
+  /** The portal's `logs.portal.<x>` sink. Structured logging is now done at the
+   * file level (`logs.portal.<x>.error(...)`), so this is no longer wired into a
+   * global console capture — kept for back-compat with the portal main.tsx calls. */
+  logsPortal?: import('@duncit/logs').LevelFns;
   /** Fetch the signed-in user (network-only ME query). */
   loadUser: UserProviderProps['loadUser'];
   /** Override the user-cache localStorage key (defaults to `<config.key>_user`). */

@@ -22,7 +22,8 @@ export function httpTransport(endpoint: string): Transport {
 
 /** Default transport until configured — mirror to console so logs aren't lost. */
 export const consoleTransport: Transport = (record: LogRecord) => {
-  const tag = record.portal ? `${record.app}:${record.portal}` : record.app;
+  const source = record.portal ? `${record.app}:${record.portal}` : record.app;
+  const tag = `${source}@${record.environment}`;
   const line = `[${tag}] ${record.page}/${record.component}`;
   /* eslint-disable no-console -- structured log transport writes to the console */
   const byLevel = {
@@ -33,5 +34,5 @@ export const consoleTransport: Transport = (record: LogRecord) => {
   };
   /* eslint-enable no-console */
   const sink = byLevel[record.level] ?? byLevel.info;
-  sink(line, record.data ?? '');
+  sink(line, record.error ?? record.data ?? '');
 };

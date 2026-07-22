@@ -5,7 +5,8 @@ import { UserAddressModel, type IUserAddress } from './addressBook.model';
 const badInput = (msg: string) =>
   new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 
-const clean = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max);
+const clean = (value: string | null | undefined, max: number) =>
+  (value ?? '').trim().slice(0, max);
 
 const toPub = (d: IUserAddress) => ({
   id: String(d._id),

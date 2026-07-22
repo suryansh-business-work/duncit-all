@@ -13,6 +13,101 @@ interface Props {
   error?: string;
 }
 
+interface PreviewProps {
+  value: string;
+  isImage: boolean;
+  fileName: string;
+  muted: string;
+  onChange: (url: string) => void;
+}
+
+function BillPreview({ value, isImage, fileName, muted, onChange }: Readonly<PreviewProps>) {
+  return (
+    <XStack
+      testID="bill-preview"
+      alignItems="center"
+      gap={10}
+      padding={10}
+      borderRadius={12}
+      borderWidth={1}
+      borderColor="$borderColor"
+      backgroundColor="$surface"
+    >
+      {isImage ? (
+        <AppImage source={{ uri: value }} style={{ width: 44, height: 44, borderRadius: 10 }} />
+      ) : (
+        <YStack
+          width={44}
+          height={44}
+          borderRadius={10}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$background"
+          borderWidth={1}
+          borderColor="$borderColor"
+        >
+          <MaterialIcons name="description" size={22} color={muted} />
+        </YStack>
+      )}
+      <Text flex={1} fontSize={13} fontWeight="700" color="$color" numberOfLines={1}>
+        {fileName}
+      </Text>
+      <XStack
+        testID="bill-remove"
+        role="button"
+        aria-label="Remove venue bill"
+        onPress={() => onChange('')}
+        width={28}
+        height={28}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={14}
+        pressStyle={{ opacity: 0.7 }}
+      >
+        <MaterialIcons name="close" size={16} color={muted} />
+      </XStack>
+    </XStack>
+  );
+}
+
+interface UploadButtonProps {
+  uploading: boolean;
+  primary: string;
+  onPress: () => void;
+}
+
+function BillUploadButton({ uploading, primary, onPress }: Readonly<UploadButtonProps>) {
+  return (
+    <XStack
+      testID="bill-upload-add"
+      role="button"
+      aria-label="Upload the venue bill"
+      aria-disabled={uploading}
+      onPress={uploading ? undefined : onPress}
+      alignItems="center"
+      justifyContent="center"
+      gap={8}
+      paddingVertical={14}
+      borderRadius={12}
+      borderWidth={2}
+      borderColor="$borderColor"
+      borderStyle="dashed"
+      backgroundColor="$surface"
+      opacity={uploading ? 0.7 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      {uploading ? (
+        <Spinner size="small" color={primary} />
+      ) : (
+        <MaterialIcons name="upload-file" size={20} color={primary} />
+      )}
+      <Text fontSize={13.5} fontWeight="800" color="$color">
+        {uploading ? 'Uploading…' : 'Upload the venue bill'}
+      </Text>
+    </XStack>
+  );
+}
+
 /** Venue Bill — a single image/PDF picked from the device and uploaded directly
  * to ImageKit (bypassing the API body cap). Stores one hosted URL string with a
  * preview + remove control. Device-upload only (no raw URL box). */
@@ -33,78 +128,19 @@ export function BillUploadField({ value, onChange, error }: Readonly<Props>) {
         Venue Bill
       </Text>
       {value ? (
-        <XStack
-          testID="bill-preview"
-          alignItems="center"
-          gap={10}
-          padding={10}
-          borderRadius={12}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$surface"
-        >
-          {isImage ? (
-            <AppImage source={{ uri: value }} style={{ width: 44, height: 44, borderRadius: 10 }} />
-          ) : (
-            <YStack
-              width={44}
-              height={44}
-              borderRadius={10}
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor="$background"
-              borderWidth={1}
-              borderColor="$borderColor"
-            >
-              <MaterialIcons name="description" size={22} color={muted} />
-            </YStack>
-          )}
-          <Text flex={1} fontSize={13} fontWeight="700" color="$color" numberOfLines={1}>
-            {fileName}
-          </Text>
-          <XStack
-            testID="bill-remove"
-            role="button"
-            aria-label="Remove venue bill"
-            onPress={() => onChange('')}
-            width={28}
-            height={28}
-            alignItems="center"
-            justifyContent="center"
-            borderRadius={14}
-            pressStyle={{ opacity: 0.7 }}
-          >
-            <MaterialIcons name="close" size={16} color={muted} />
-          </XStack>
-        </XStack>
+        <BillPreview
+          value={value}
+          isImage={isImage}
+          fileName={fileName}
+          muted={muted}
+          onChange={onChange}
+        />
       ) : (
-        <XStack
-          testID="bill-upload-add"
-          role="button"
-          aria-label="Upload the venue bill"
-          aria-disabled={upload.uploading}
-          onPress={upload.uploading ? undefined : () => void addFile()}
-          alignItems="center"
-          justifyContent="center"
-          gap={8}
-          paddingVertical={14}
-          borderRadius={12}
-          borderWidth={2}
-          borderColor="$borderColor"
-          borderStyle="dashed"
-          backgroundColor="$surface"
-          opacity={upload.uploading ? 0.7 : 1}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          {upload.uploading ? (
-            <Spinner size="small" color={primary} />
-          ) : (
-            <MaterialIcons name="upload-file" size={20} color={primary} />
-          )}
-          <Text fontSize={13.5} fontWeight="800" color="$color">
-            {upload.uploading ? 'Uploading…' : 'Upload the venue bill'}
-          </Text>
-        </XStack>
+        <BillUploadButton
+          uploading={upload.uploading}
+          primary={primary}
+          onPress={() => void addFile()}
+        />
       )}
       {upload.error ? (
         <Text testID="bill-upload-error" fontSize={12} color="$danger">

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
 import {
@@ -134,6 +135,76 @@ function assertUploadSize(fileBytes: Buffer, isVideo: boolean, isDocument: boole
   }
 }
 
+type UploadSetting = NonNullable<Awaited<ReturnType<typeof getUploadSettingsSafe>>>;
+
+type UploadKind = { isVideo: boolean; isDocument: boolean; isImage: boolean };
+
+// Classify the upload by mime + extension, throwing when it's none of the
+// accepted kinds. Video wins if EITHER the mime or the extension says so, so a
+// video with a missing/generic mime is still capped at 50 MB (not a 100 MB image).
+function classifyUpload(mimeType: string, fileName: string, allowDocuments?: boolean): UploadKind {
+  const isVideo = /^video\//i.test(mimeType) || VIDEO_EXT_RE.test(fileName);
+  const isDocument =
+    !isVideo &&
+    allowDocuments === true &&
+    (DOC_MIME_RE.test(mimeType) || DOC_EXT_RE.test(fileName));
+  const isImage = !isVideo && !isDocument && /^image\//i.test(mimeType);
+  if (!isImage && !isVideo && !isDocument) {
+    const msg = allowDocuments
+      ? 'Only image, video or document uploads are allowed'
+      : 'Only image or video uploads are allowed';
+    throw new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return { isVideo, isDocument, isImage };
+}
+
+function assertVideoFormatAllowed(safeName: string, setting: UploadSetting) {
+  const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
+  if (ext && !setting.allowed_video_formats.includes(ext)) {
+    throw new GraphQLError(
+      `Video format .${ext} is not allowed (allowed: ${setting.allowed_video_formats.join(', ')})`,
+      { extensions: { code: 'BAD_USER_INPUT' } },
+    );
+  }
+}
+
+// Apply admin Upload Settings (crop / compression / format). Processing is an
+// enhancement, never a gate — on failure the original bytes/name are returned.
+async function processImageForUpload(params: {
+  fileBytes: Buffer;
+  safeName: string;
+  mimeType: string;
+  setting: UploadSetting;
+  crop?: CropRect | null;
+  cropPresetKey?: string | null;
+}): Promise<{ fileBytes: Buffer; safeName: string }> {
+  let fileBytes = params.fileBytes;
+  let safeName = params.safeName;
+  try {
+    const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
+    const normalized = ext === 'jpeg' ? 'jpg' : ext;
+    const allowed = params.setting.allowed_image_formats.map((f) => (f === 'jpeg' ? 'jpg' : f));
+    const forceJpeg =
+      !!normalized && !allowed.includes(normalized) && isProcessableImage(params.mimeType);
+    fileBytes = await processImageBytes({
+      fileBytes,
+      mimeType: params.mimeType,
+      setting: params.setting,
+      crop: params.crop,
+      cropPresetKey: params.cropPresetKey,
+      forceJpeg,
+    });
+    if (forceJpeg) safeName = safeName.replace(/\.[a-z0-9]{2,5}$/i, '.jpg');
+  } catch (err) {
+    logs.server.error('upload', 'processImageForUpload', {
+      error: err,
+      msg: 'image processing failed, uploading original',
+      safeName,
+    });
+  }
+  return { fileBytes, safeName };
+}
+
 export async function uploadBase64Image(opts: {
   fileBase64: string;
   fileName: string;
@@ -151,20 +222,7 @@ export async function uploadBase64Image(opts: {
 }) {
   const mimeType = (opts.mimeType || '').trim() || 'image/jpeg';
   const fileName = opts.fileName || '';
-  // Video wins if EITHER the mime or the extension says so, so a video with a
-  // missing/generic mime is still capped at 50 MB (not treated as a 100 MB image).
-  const isVideo = /^video\//i.test(mimeType) || VIDEO_EXT_RE.test(fileName);
-  const isDocument =
-    !isVideo &&
-    opts.allowDocuments === true &&
-    (DOC_MIME_RE.test(mimeType) || DOC_EXT_RE.test(fileName));
-  const isImage = !isVideo && !isDocument && /^image\//i.test(mimeType);
-  if (!isImage && !isVideo && !isDocument) {
-    const msg = opts.allowDocuments
-      ? 'Only image, video or document uploads are allowed'
-      : 'Only image or video uploads are allowed';
-    throw new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
-  }
+  const { isVideo, isDocument, isImage } = classifyUpload(mimeType, fileName, opts.allowDocuments);
 
   const raw = opts.fileBase64.includes(',')
     ? opts.fileBase64.split(',').pop() || ''
@@ -183,34 +241,19 @@ export async function uploadBase64Image(opts: {
   // unreadable (no DB) never blocks the upload — the file goes up as-is.
   const setting = await getUploadSettingsSafe(opts.surface);
   if (isVideo && setting) {
-    const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
-    if (ext && !setting.allowed_video_formats.includes(ext)) {
-      throw new GraphQLError(
-        `Video format .${ext} is not allowed (allowed: ${setting.allowed_video_formats.join(', ')})`,
-        { extensions: { code: 'BAD_USER_INPUT' } },
-      );
-    }
+    assertVideoFormatAllowed(safeName, setting);
   }
   if (isImage && setting) {
-    try {
-      const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
-      const normalized = ext === 'jpeg' ? 'jpg' : ext;
-      const allowed = setting.allowed_image_formats.map((f) => (f === 'jpeg' ? 'jpg' : f));
-      const forceJpeg = !!normalized && !allowed.includes(normalized) && isProcessableImage(mimeType);
-      fileBytes = await processImageBytes({
-        fileBytes,
-        mimeType,
-        setting,
-        crop: opts.crop,
-        cropPresetKey: opts.cropPresetKey,
-        forceJpeg,
-      });
-      if (forceJpeg) safeName = safeName.replace(/\.[a-z0-9]{2,5}$/i, '.jpg');
-    } catch (err) {
-      // Processing is an enhancement, never a gate — keep the original bytes.
-      // eslint-disable-next-line no-console
-      console.error('[upload] image processing failed, uploading original:', err);
-    }
+    const processed = await processImageForUpload({
+      fileBytes,
+      safeName,
+      mimeType,
+      setting,
+      crop: opts.crop,
+      cropPresetKey: opts.cropPresetKey,
+    });
+    fileBytes = processed.fileBytes;
+    safeName = processed.safeName;
   }
 
   const uploaded = await uploadToImagekit({

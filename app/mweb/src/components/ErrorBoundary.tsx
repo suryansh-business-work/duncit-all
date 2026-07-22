@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { logs } from '@duncit/logs';
 
 interface Props {
   children: ReactNode;
@@ -23,8 +24,11 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // eslint-disable-next-line no-console
-    console.error('ErrorBoundary caught an error', error, info.componentStack);
+    logs.mWeb.error('ErrorBoundary', 'componentDidCatch', {
+      error,
+      msg: 'ErrorBoundary caught an error',
+      componentStack: info.componentStack,
+    });
   }
 
   private readonly reset = () => this.setState({ error: null });

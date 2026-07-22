@@ -1,6 +1,14 @@
-export { logs, configureLogs } from './logs';
-export { captureConsole } from './capture';
+export { logs, configureLogs, createLogger, serializeError, type LogContext } from './logs';
 export { httpTransport, consoleTransport } from './transport';
-export { APPS, PORTALS, WEBSITES } from './config';
+export { APPS, PORTALS, WEBSITES, detectEnvironment } from './config';
 export type { AppKey, PortalKey, WebsiteKey } from './config';
-export type { LogLevel, LogRecord, Transport, LevelFns } from './types';
+export type {
+  Environment,
+  LevelFns,
+  LogDetail,
+  LogLevel,
+  LogRecord,
+  Platform,
+  SerializedError,
+  Transport,
+} from './types';

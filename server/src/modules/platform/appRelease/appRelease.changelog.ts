@@ -94,7 +94,10 @@ function isChangelog(value: unknown): value is Changelog {
 function buildPrompt(commits: ReleaseCommit[], meta: ChangelogMeta) {
   const lines = commits
     .filter((c) => !isMergeCommit(c.subject))
-    .map((c) => `- ${c.subject}${c.body ? `\n    ${c.body.replace(/\s+/g, ' ').slice(0, 200)}` : ''}`)
+    .map((c) => {
+      const bodyLine = c.body ? `\n    ${c.body.replace(/\s+/g, ' ').slice(0, 200)}` : '';
+      return `- ${c.subject}${bodyLine}`;
+    })
     .join('\n');
   const system = [
     `You write concise, friendly release notes for the "${meta.appName}" Android app.`,

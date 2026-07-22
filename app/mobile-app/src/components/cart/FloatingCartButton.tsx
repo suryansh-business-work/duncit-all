@@ -1,11 +1,10 @@
-import { useNavigation, useNavigationState } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { navigationRef } from '@/navigation/navigationRef';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { RootStackParamList } from '@/navigation/types';
 
 /** Screens where the floating button would cover its own flow. */
 const HIDDEN_ON = new Set(['Cart', 'Checkout']);
@@ -13,10 +12,18 @@ const HIDDEN_ON = new Set(['Cart', 'Checkout']);
 /** Floating cart entry point — visible whenever the cart has items (hidden on
  * the cart/checkout screens themselves). RN twin of mWeb's FloatingCartButton. */
 export function FloatingCartButton() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const routeName = useNavigationState((state) => state?.routes[state.index]?.name);
   const totalCount = useCartStore(selectCartCount);
   const { onPrimary } = useThemeColors();
+  const [routeName, setRouteName] = useState<string>();
+
+  // The button lives OUTSIDE the navigator (sibling of RootNavigator), so it
+  // reads the active route through the container ref and re-syncs on every
+  // navigation state change — which is what hides it on Cart/Checkout.
+  useEffect(() => {
+    const sync = () => setRouteName(navigationRef.getCurrentRoute()?.name);
+    sync();
+    return navigationRef.addListener('state', sync);
+  }, []);
 
   if (totalCount === 0 || HIDDEN_ON.has(routeName ?? '')) return null;
 
@@ -25,7 +32,7 @@ export function FloatingCartButton() {
       testID="floating-cart-button"
       role="button"
       aria-label={`Open cart (${totalCount} items)`}
-      onPress={() => navigation.navigate('Cart')}
+      onPress={() => navigationRef.navigate('Cart')}
       position="absolute"
       right={16}
       bottom={96}

@@ -18,6 +18,7 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { linking } from '@/navigation/linking';
+import { navigationRef } from '@/navigation/navigationRef';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAppVersionStore } from '@/stores/app-version.store';
@@ -96,7 +97,11 @@ export default function App() {
             <ErrorBoundary>
               <OfflineBanner />
               <YStack flex={1}>
-                <NavigationContainer theme={navThemeFor(scheme === 'dark')} linking={linking}>
+                <NavigationContainer
+                  ref={navigationRef}
+                  theme={navThemeFor(scheme === 'dark')}
+                  linking={linking}
+                >
                   <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
                   <RootNavigator />
                   <FloatingCartButton />

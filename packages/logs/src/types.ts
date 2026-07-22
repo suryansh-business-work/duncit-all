@@ -6,6 +6,10 @@ export type Environment = 'localhost' | 'staging' | 'production';
 /** Runtime the log was emitted from — drives the SignOz `platform` filter. */
 export type Platform = 'web' | 'native' | 'server';
 
+/** Native device OS — splits `platform:'native'` into iOS / Android / native-web.
+ * Unset for pure web (mWeb/portals/websites) and server logs. */
+export type DeviceOS = 'ios' | 'android' | 'web';
+
 /** A thrown value flattened to primitives so SignOz shows the full error. */
 export interface SerializedError {
   name: string;
@@ -22,6 +26,8 @@ export interface LogRecord {
   portal?: string;
   /** web | native | server. */
   platform: Platform;
+  /** Native device OS (ios | android | web); unset for web/server. */
+  os?: DeviceOS;
   /** localhost | staging | production. */
   environment: Environment;
   /** Full URL the event happened on (browser href / server request url). */

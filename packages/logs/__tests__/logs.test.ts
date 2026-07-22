@@ -135,6 +135,28 @@ describe('configureLogs context', () => {
   });
 });
 
+describe('device os + portal context', () => {
+  it('stamps the native device os from context and leaves it undefined on web', () => {
+    configureLogs((r) => sink.push(r), { platform: 'native', os: 'android' });
+    logs.mobileApp.error('PodDetails', 'BookBtn', { error: new Error('n') });
+    expect(sink[0]).toMatchObject({ platform: 'native', os: 'android' });
+    // Back on the default web context, os is unset.
+    configureLogs((r) => sink.push(r), { platform: 'web', os: undefined });
+    logs.mWeb.info('p', 'c');
+    expect(sink[1].os).toBeUndefined();
+  });
+
+  it('falls back to the context portal for a generic logger, but a bound logger wins', () => {
+    configureLogs((r) => sink.push(r), { platform: 'web', portal: 'tech' });
+    // Generic logger (no bound portal) inherits the context portal…
+    logs.mWeb.warn('settings', 'SaveBtn');
+    expect(sink[0]).toMatchObject({ app: 'mWeb', portal: 'tech' });
+    // …but a portal-bound logger keeps its own portal.
+    logs.portal.crm.error('leads', 'Table');
+    expect(sink[1]).toMatchObject({ app: 'portal', portal: 'crm' });
+  });
+});
+
 describe('serializeError', () => {
   it('flattens Errors, objects, primitives and nullish values', () => {
     expect(serializeError(new Error('boom'))).toMatchObject({ name: 'Error', message: 'boom' });

@@ -47,7 +47,7 @@ describe('mountPortal', () => {
     mountPortal(baseOpts());
 
     expect(logs.httpTransport).toHaveBeenCalledWith('https://api.test/logs');
-    expect(logs.configureLogs).toHaveBeenCalledWith('transport', { platform: 'web' });
+    expect(logs.configureLogs).toHaveBeenCalledWith('transport', { platform: 'web', portal: 'crm' });
     expect(createRootSpy).toHaveBeenCalledWith(root);
     expect(renderSpy).toHaveBeenCalledTimes(1);
 

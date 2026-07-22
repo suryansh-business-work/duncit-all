@@ -45,7 +45,12 @@ export function mountPortal(opts: MountPortalOptions): void {
 
   // Ship structured, file-level logs to SignOz (via the server /logs ingest).
   // environment + url + host are auto-detected from the browser at each call.
-  configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')), { platform: 'web' });
+  // `portal: config.key` stamps the portal identity on every log — including
+  // shared/generic loggers — so the telemetry Bugs view can slice by portal.
+  configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')), {
+    platform: 'web',
+    portal: config.key,
+  });
 
   const isAuthed = () => !!localStorage.getItem(config.tokenKey);
 

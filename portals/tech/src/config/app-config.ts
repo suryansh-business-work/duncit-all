@@ -27,6 +27,9 @@ export const appConfig = {
     { label: 'Feature Flags', to: '/feature-flags', icon: 'flag' },
     { label: 'Authentication', to: '/authentication', icon: 'lock' },
     { label: 'Email Templates', to: '/email-templates', icon: 'email' },
+    { label: 'Telemetry Dashboard', to: '/telemetry', icon: 'insights' },
+    { label: 'Bugs', to: '/bugs', icon: 'bug' },
+    { label: 'Telemetry Logs Settings', to: '/telemetry-logs-settings', icon: 'tune' },
     {
       label: 'Server',
       icon: 'dns',

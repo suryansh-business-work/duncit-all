@@ -7,6 +7,12 @@
  *   node scripts/build-local-android.js        →  build/duncit-<date>-build-<n> V<version>.apk
  *   node scripts/build-local-android.js --aab  →  build/duncit-<date>-build-<n> V<version>.aab
  *
+ * Server target (which API origin is baked into the release JS bundle):
+ *   default / --main       → production (https://server.duncit.com, from eas.json)
+ *   --staging              → staging (https://staging.server.duncit.com)
+ *   (or set DUNCIT_BUILD_ENV=staging|main). Wired to the package.json scripts
+ *   build:local:{apk,aab}:{main,staging}. EAS builds pick the URL via eas.json.
+ *
  *   e.g.  build/duncit-18-july-2026-build-1 V1.4.18.apk
  *   <date>    local build date, e.g. 18-july-2026
  *   <n>       that day's build counter (persisted in build/.build-number.json,
@@ -46,14 +52,57 @@ const outputDir = path.join(repoRoot, 'build');
 const dockerfile = path.join(appDir, 'Dockerfile.android');
 const monitorLog = path.join(outputDir, 'build-monitor.log');
 
-const gradleWorkers = process.env.GRADLE_WORKERS || '4';
-const gradleHeap = process.env.GRADLE_HEAP || '3g';
-const gradleWorkerHeap = process.env.GRADLE_WORKER_HEAP || '1g';
+function resolveGradleSettings(env = process.env) {
+  return {
+    gradleWorkers: env.GRADLE_WORKERS || '2',
+    gradleHeap: env.GRADLE_HEAP || '4g',
+    gradleWorkerHeap: env.GRADLE_WORKER_HEAP || '512m',
+    gradleCaching: env.GRADLE_CACHING ?? 'true',
+    gradleConfigCache: env.GRADLE_CONFIG_CACHE ?? 'false',
+  };
+}
+
+const {
+  gradleWorkers,
+  gradleHeap,
+  gradleWorkerHeap,
+  gradleCaching,
+  gradleConfigCache,
+} = resolveGradleSettings();
 const warnFreeMb = Number(process.env.MONITOR_WARN_FREE_MB || 3000);
 const abortFreeMb = Number(process.env.MONITOR_ABORT_FREE_MB || 1500);
 const SAMPLE_MS = 10_000;
 
 fs.mkdirSync(outputDir, { recursive: true });
+
+/* ── Server target (local build only) ─────────────────────────────────────── */
+
+/** Production API origin — read from eas.json so there's a single source of truth
+ * (the same value EAS bakes into store builds). */
+function readMainApiUrl(dir = appDir) {
+  const eas = JSON.parse(fs.readFileSync(path.join(dir, 'eas.json'), 'utf8'));
+  const url = eas?.build?.production?.env?.EXPO_PUBLIC_API_URL;
+  if (!url) {
+    throw new Error('eas.json → build.production.env.EXPO_PUBLIC_API_URL is missing.');
+  }
+  return url;
+}
+
+/** Staging origin derived from production per the repo convention (staging.<host>,
+ * see deploy.yml / CLAUDE.md). */
+function stagingApiUrl(mainUrl) {
+  return mainUrl.replace('://', '://staging.');
+}
+
+/** Build target from the flag the package.json script passes (--staging / --main)
+ * or DUNCIT_BUILD_ENV; defaults to production (matches the EAS + CI main default). */
+function resolveServerTarget(argv = process.argv, env = process.env) {
+  if (argv.includes('--staging')) return 'staging';
+  if (argv.includes('--main') || argv.includes('--production')) return 'production';
+  const fromEnv = (env.DUNCIT_BUILD_ENV ?? '').toLowerCase();
+  if (fromEnv === 'staging') return 'staging';
+  return 'production';
+}
 
 /* ── System monitor ───────────────────────────────────────────────────────── */
 
@@ -205,7 +254,13 @@ function renameArtifact(genericPath) {
 }
 
 async function main() {
+  const mainUrl = readMainApiUrl();
+  const urls = { production: mainUrl, staging: stagingApiUrl(mainUrl) };
+  const target = resolveServerTarget();
+  const apiUrl = urls[target];
+
   console.log(`\nBuilding Android ${buildType.toUpperCase()} via Docker…`);
+  console.log(`  Server     : ${target}  →  ${apiUrl}`);
   console.log(`  Dockerfile : ${dockerfile}`);
   console.log(`  Context    : ${repoRoot}`);
   console.log(`  Output     : ${outputDir}`);
@@ -219,9 +274,12 @@ async function main() {
     'build',
     '-f', dockerfile,
     '--build-arg', `BUILD_TYPE=${buildType}`,
+    '--build-arg', `EXPO_PUBLIC_API_URL=${apiUrl}`,
     '--build-arg', `GRADLE_WORKERS=${gradleWorkers}`,
     '--build-arg', `GRADLE_HEAP=${gradleHeap}`,
     '--build-arg', `GRADLE_WORKER_HEAP=${gradleWorkerHeap}`,
+    '--build-arg', `GRADLE_CACHING=${gradleCaching}`,
+    '--build-arg', `GRADLE_CONFIG_CACHE=${gradleConfigCache}`,
     '--progress', 'plain',
     '-t', imageTag,
     repoRoot,
@@ -264,4 +322,12 @@ if (require.main === module) {
   });
 }
 
-module.exports = { buildDateStamp, readAppVersion, nextBuildNumber };
+module.exports = {
+  buildDateStamp,
+  readAppVersion,
+  nextBuildNumber,
+  resolveGradleSettings,
+  readMainApiUrl,
+  stagingApiUrl,
+  resolveServerTarget,
+};

@@ -12,10 +12,18 @@ jest.mock('@/services/cart', () => ({
 
 const mockNavigate = jest.fn();
 let mockRouteName: string | null = 'Home';
+// CartScreen navigates via the useNavigation hook.
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
-  useNavigationState: (selector: (state: unknown) => unknown) =>
-    selector(mockRouteName === null ? undefined : { index: 0, routes: [{ name: mockRouteName }] }),
+}));
+// FloatingCartButton lives outside the navigator and navigates via the container ref.
+jest.mock('@/navigation/navigationRef', () => ({
+  navigationRef: {
+    getCurrentRoute: () => (mockRouteName === null ? undefined : { name: mockRouteName }),
+    // Lazy: the factory is hoisted above `mockNavigate`, so read it at call time.
+    navigate: (name: string) => mockNavigate(name),
+    addListener: () => () => undefined,
+  },
 }));
 
 const line = (over: Partial<CartLine> = {}): CartLine => ({

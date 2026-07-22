@@ -24,6 +24,7 @@ module.exports = {
     // Pure navigation wiring — exercised at runtime, not in unit tests (typechecked).
     '!src/navigation/RootNavigator.tsx',
     '!src/navigation/MainTabs.tsx',
+    '!src/navigation/navigationRef.ts',
     // Platform `.web` variants — jest runs the native platform, so these shims
     // (which mirror their tested native counterparts) are never loaded here.
     '!src/**/*.web.{ts,tsx}',

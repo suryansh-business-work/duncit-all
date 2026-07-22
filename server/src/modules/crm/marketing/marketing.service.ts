@@ -12,6 +12,7 @@ import { sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getMailConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
 const timers = new Map<string, NodeJS.Timeout>();
@@ -271,7 +272,14 @@ function scheduleDoc(doc: IMarketingCampaign) {
   const timer = setTimeout(() => {
     timers.delete(doc.campaign_id);
     if (delay > MAX_TIMER_DELAY) scheduleDoc(doc);
-    else sendCampaign(doc.campaign_id).catch((e) => console.error('Campaign send failed', e));
+    else
+      sendCampaign(doc.campaign_id).catch((e) =>
+        logs.server.error('marketing', 'scheduleDoc', {
+          error: e,
+          msg: 'Campaign send failed',
+          campaign_id: doc.campaign_id,
+        })
+      );
   }, Math.max(0, Math.min(delay, MAX_TIMER_DELAY)));
   timers.set(doc.campaign_id, timer);
 }

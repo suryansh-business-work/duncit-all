@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Snackbar } from '@mui/material';
+import { logs } from '@duncit/logs';
 import ConfirmDialog from '../ConfirmDialog';
 import HomeStatusViewer from '../../pages/home-page/HomeStatusViewer';
 import AvatarButton from './AvatarButton';
@@ -51,7 +52,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         onChange={(e) => {
           const file = e.target.files?.[0] ?? null;
           e.target.value = '';
-          a.onFileChange(file).catch(console.error);
+          a.onFileChange(file).catch((error) => logs.mWeb.error('ProfileAvatar', 'onFileChange', { error }));
         }}
       />
       <input
@@ -63,7 +64,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         onChange={(e) => {
           const file = e.target.files?.[0] ?? null;
           e.target.value = '';
-          a.onStoryFileChange(file).catch(console.error);
+          a.onStoryFileChange(file).catch((error) => logs.mWeb.error('ProfileAvatar', 'onStoryFileChange', { error }));
         }}
       />
 
@@ -117,7 +118,10 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         confirmLabel="Delete"
         destructive
         onConfirm={() => {
-          if (deleteId) a.confirmDeleteStory(deleteId).catch(console.error);
+          if (deleteId)
+            a.confirmDeleteStory(deleteId).catch((error) =>
+              logs.mWeb.error('ProfileAvatar', 'confirmDeleteStory', { error, deleteId }),
+            );
         }}
         onClose={() => a.setDeleteId(null)}
       />

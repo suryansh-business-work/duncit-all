@@ -6,6 +6,7 @@
  * `prober` is injectable (same pattern as buildStatusProbeRouter) so the
  * sweep can be unit-tested without hitting the network.
  */
+import { logs } from '@observability/log';
 import { probe, type ProbeResult } from './statusProbe';
 import { listStatusServices } from './statusServices';
 import { StatusCheckModel } from './statusHistory.model';
@@ -66,8 +67,7 @@ export function startStatusScheduler(options: StatusSchedulerOptions = {}): () =
   const sweep = () => {
     // The interval must survive any failure (network, DB, catalog).
     runStatusSweep(prober).catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error('[status-scheduler] sweep failed:', err);
+      logs.server.error('status-scheduler', 'sweep', { error: err, msg: 'sweep failed' });
     });
   };
   const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);

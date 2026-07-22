@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
 import {
@@ -195,8 +196,11 @@ async function processImageForUpload(params: {
     });
     if (forceJpeg) safeName = safeName.replace(/\.[a-z0-9]{2,5}$/i, '.jpg');
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[upload] image processing failed, uploading original:', err);
+    logs.server.error('upload', 'processImageForUpload', {
+      error: err,
+      msg: 'image processing failed, uploading original',
+      safeName,
+    });
   }
   return { fileBytes, safeName };
 }

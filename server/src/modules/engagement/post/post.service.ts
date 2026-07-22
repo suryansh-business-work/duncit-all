@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PostModel, type IPost } from './post.model';
 import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
+import { logs } from '@observability/log';
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -245,8 +246,11 @@ export const postService = {
     // Notify the owner only when transitioning to liked (never on unlike).
     if (nowLiked) {
       notifyPostActivity(String(doc.author_id), viewerId, String(doc._id), 'liked').catch((err) =>
-
-        console.error('notifyPostActivity (like) failed', err)
+        logs.server.error('post', 'toggleLike', {
+          error: err,
+          msg: 'notifyPostActivity (like) failed',
+          postId: String(doc._id),
+        })
       );
     }
     return toPub(doc, viewerId);
@@ -273,8 +277,11 @@ export const postService = {
     await doc.save();
     notifyPostActivity(String(doc.author_id), viewerId, String(doc._id), 'commented on').catch(
       (err) =>
-
-        console.error('notifyPostActivity (comment) failed', err)
+        logs.server.error('post', 'addComment', {
+          error: err,
+          msg: 'notifyPostActivity (comment) failed',
+          postId: String(doc._id),
+        })
     );
     return toPub(doc, viewerId);
   },

@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { logs } from '@duncit/logs';
 import ReviewDetails from './ReviewDetails';
 import type { AdRequestRow } from './helpers';
 
@@ -44,7 +45,14 @@ export default function ReviewDialog({
 
   const review = (approve: boolean) => {
     // onReview may be sync or async — normalise so a rejection is reported, not dropped.
-    Promise.resolve(onReview(request.id, approve, remarks.trim())).catch(console.error);
+    Promise.resolve(onReview(request.id, approve, remarks.trim())).catch((error) =>
+      logs.portal['marketing'].error('ReviewDialog', 'review', {
+        error,
+        requestId: request.id,
+        approve,
+        msg: 'onReview failed',
+      }),
+    );
   };
 
   const actions = isPending ? (

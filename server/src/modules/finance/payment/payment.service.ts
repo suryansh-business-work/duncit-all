@@ -17,6 +17,7 @@ import {
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -392,13 +393,13 @@ async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
       await pod.save();
     }
   } catch (e) {
-    console.warn('Pod attendee update failed', e);
+    logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'Pod attendee update failed' });
   }
   try {
     const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
     await podMemberService.recordPaidJoin(String(pod._id), String(userId), paymentDocId);
   } catch (e) {
-    console.warn('PodMember record failed', e);
+    logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'PodMember record failed' });
   }
   try {
     const { evaluateBadgesForUser } = await import('@modules/engagement/badge/badge.service');
@@ -482,7 +483,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
     const { productOrderService } = await import('@modules/commerce/productOrder/productOrder.service');
     await productOrderService.createFromPayment(doc);
   } catch (e) {
-    console.warn('[payment] ProductOrder creation failed', (e as Error).message);
+    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'ProductOrder creation failed' });
   }
   try {
     const pdf = await generateInvoicePdf({
@@ -532,7 +533,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       ],
     });
   } catch (e) {
-    console.warn('Receipt/invoice email failed', e);
+    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Receipt/invoice email failed' });
   }
 }
 

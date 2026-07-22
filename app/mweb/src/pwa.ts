@@ -1,5 +1,6 @@
 import { apolloClient } from './apollo';
 import { gql } from '@apollo/client';
+import { logs } from '@duncit/logs';
 
 const PUSH_CONFIG = gql`
   query PushConfig {
@@ -44,8 +45,7 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     await reg.update();
     return reg;
   } catch (e) {
-     
-    console.warn('SW registration failed', e);
+    logs.mWeb.warn('pwa', 'registerServiceWorker', { error: e, msg: 'SW registration failed' });
     return null;
   }
 }

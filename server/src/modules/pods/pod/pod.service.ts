@@ -26,6 +26,7 @@ import { assertInvitable } from './coHost.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
+import { logs } from '@observability/log';
 
 const slugify = (s: string) =>
   s
@@ -351,8 +352,10 @@ async function notifyVenueSlotRequested(pod: any, slot: any) {
       silent: false,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[pod] slot request notification failed:', err);
+    logs.server.error('pod', 'notifyVenueSlotRequested', {
+      error: err,
+      msg: 'slot request notification failed',
+    });
   }
 }
 
@@ -396,8 +399,10 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       review_url: `${partnersUrl.replace(/\/+$/, '')}/venues/requests`,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[pod] slot request email failed:', err);
+    logs.server.error('pod', 'emailVenueSlotRequested', {
+      error: err,
+      msg: 'slot request email failed',
+    });
   }
 }
 
@@ -1290,8 +1295,10 @@ export const podService = {
         )
       );
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[pod] update emails failed:', err);
+      logs.server.error('pod', 'update', {
+        error: err,
+        msg: 'update emails failed',
+      });
     }
 
     const slugMap = await loadClubSlugMap([doc]);
@@ -1373,8 +1380,10 @@ export const podService = {
         ),
       ]);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[pod] delete emails failed:', err);
+      logs.server.error('pod', 'hostRemove', {
+        error: err,
+        msg: 'delete emails failed',
+      });
     }
 
     return true;

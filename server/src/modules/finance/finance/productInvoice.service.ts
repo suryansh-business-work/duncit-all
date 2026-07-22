@@ -4,6 +4,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { generateProductInvoicePdf, type ProductInvoiceLine } from '@services/payout/product-invoice.pdf';
 import { nextInvoiceNumber } from './finance.model';
+import { logs } from '@observability/log';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 const clampPct = (n: number) => Math.min(100, Math.max(0, Number(n) || 0));
@@ -112,7 +113,11 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
         ],
       });
     } catch (e) {
-      console.warn('[productInvoice] failed:', (e as Error).message);
+      logs.server.warn('productInvoice', 'sendProductInvoicesForPod', {
+        error: e,
+        msg: 'failed',
+        sellerId,
+      });
     }
   }
 }

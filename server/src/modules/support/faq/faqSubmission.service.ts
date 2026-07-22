@@ -5,6 +5,7 @@ import { sendEmail } from '@services/email/email.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const submitSchema = yup.object({
   question: yup.string().required('Question is required').min(5).max(2000),
@@ -90,8 +91,11 @@ export const faqSubmissionService = {
           },
         });
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('faq submission ack email failed:', e);
+        logs.server.warn('faqSubmission', 'submit', {
+          error: e,
+          msg: 'faq submission ack email failed',
+          email: payload.email,
+        });
       }
     }
     return { ok: true, message: 'Thanks! We will look into your question.' };

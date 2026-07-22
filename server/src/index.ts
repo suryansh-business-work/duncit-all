@@ -44,8 +44,7 @@ async function safeSeed(name: string, fn: () => Promise<void>) {
   } catch (err) {
     // A single subsystem failing must not crash the whole API. Nginx would
     // otherwise return 502s to every client until the container restarts.
-    // eslint-disable-next-line no-console
-    console.error(`[bootstrap] ${name} failed:`, err);
+    logs.server.error('bootstrap', 'safeSeed', { error: err, name, msg: `${name} failed` });
   }
 }
 
@@ -281,8 +280,10 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
-  // eslint-disable-next-line no-console
-  console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
+  logs.server.info('bootstrap', 'listen', {
+    msg: 'Server ready',
+    url: `http://localhost:${port}/graphql`,
+  });
 
   // Local dev: open a free ngrok tunnel so Twilio can reach the /twilio webhooks.
   if (process.env.NODE_ENV !== 'production') {
@@ -291,7 +292,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error('Fatal bootstrap error:', err);
+  logs.server.error('bootstrap', 'main', { error: err, msg: 'Fatal bootstrap error' });
   process.exit(1);
 });

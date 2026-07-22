@@ -7,6 +7,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -406,8 +407,12 @@ export const hostService = {
         });
       } catch (err) {
         // Email failures should not block the status change.
-        // eslint-disable-next-line no-console
-        console.warn(`[host.setActive] email failed for ${slug}:`, (err as Error).message);
+        logs.server.warn('host.service', 'setActive', {
+          error: err,
+          slug,
+          host_email: h.email,
+          msg: `email failed for ${slug}`,
+        });
       }
     }
 

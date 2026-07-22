@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import { QueryGuard } from '@duncit/ui';
+import { logs } from '@duncit/logs';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
 import WhatsAppConnectCard from './WhatsAppConnectCard';
@@ -24,7 +25,12 @@ export default function WhatsAppLeadGeneratorPage() {
   const connection: WaConnection | undefined = data?.waConnection;
 
   const handleChanged = () => {
-    refetch().catch((e: unknown) => console.error('waConnection refetch failed', e));
+    refetch().catch((e: unknown) =>
+      logs.portal['crm'].error('WhatsAppLeadGeneratorPage', 'handleChanged', {
+        error: e,
+        msg: 'waConnection refetch failed',
+      }),
+    );
   };
 
   let body: ReactNode = null;

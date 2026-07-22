@@ -5,13 +5,12 @@ import '@fontsource/nunito/700.css';
 import '@fontsource/nunito/800.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { captureConsole, configureLogs, httpTransport, logs } from '@duncit/logs';
+import { configureLogs, httpTransport } from '@duncit/logs';
 import { SERVER_BASE } from './config/server';
 import App from './App';
 
 // Ship console errors to SignOz (via the server /logs ingest).
-configureLogs(httpTransport(`${SERVER_BASE}/logs`));
-captureConsole(logs.website.status);
+configureLogs(httpTransport(`${SERVER_BASE}/logs`), { platform: 'web' });
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root not found');

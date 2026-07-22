@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
@@ -129,7 +130,7 @@ async function notify(userIds: string[], title: string, body: string) {
       silent: false,
     });
   } catch (err) {
-    console.error('[coHost] notification failed:', err);
+    logs.server.error('coHost', 'notify', { error: err, msg: 'notification failed' });
   }
 }
 

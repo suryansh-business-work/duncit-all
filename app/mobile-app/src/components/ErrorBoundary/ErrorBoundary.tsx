@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, YStack } from 'tamagui';
+import { logs } from '@duncit/logs';
 
 interface Props {
   children: ReactNode;
@@ -23,8 +24,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    // eslint-disable-next-line no-console
-    console.error('ErrorBoundary caught an error', error, info.componentStack);
+    logs.mobileApp.error('ErrorBoundary', 'componentDidCatch', {
+      error,
+      msg: 'ErrorBoundary caught an error',
+      componentStack: info.componentStack,
+    });
   }
 
   private readonly reset = () => this.setState({ error: null });

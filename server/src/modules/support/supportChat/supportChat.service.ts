@@ -19,6 +19,7 @@ import {
   type TranscriptFormat,
 } from '@modules/support/transcript';
 import { paginateDocs, supportSearchRegex } from '@modules/support/support.pagination';
+import { logs } from '@observability/log';
 
 const SESSION_SORTABLE = new Set(['last_message_at', 'created_at', 'status']);
 
@@ -261,7 +262,11 @@ export const supportChatService = {
     // delivered over the socket so the user never waits on the model.
     if (!isAgent && aiHandling) {
       this.generateAiReply(String(session!._id)).catch((e) =>
-        console.error('[supportChat] AI reply failed', e)
+        logs.server.error('supportChat', 'generateAiReply', {
+          error: e,
+          msg: 'AI reply failed',
+          sessionId: String(session!._id),
+        })
       );
     }
     return pubMsg;

@@ -5,6 +5,7 @@ import { sendEmail } from '@services/email/email.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const subscribeSchema = yup.object({
   email: yup.string().required('Email required').email('Invalid email').max(160),
@@ -91,8 +92,11 @@ export const newsletterService = {
         },
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('newsletter welcome email failed:', e);
+      logs.server.warn('newsletter', 'subscribe', {
+        error: e,
+        email: payload.email,
+        msg: 'newsletter welcome email failed',
+      });
     }
     return { ok: true, message: 'Subscribed! Check your inbox.' };
   },

@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/pods/club/club.model';
@@ -254,8 +255,7 @@ export const podAuditService = {
       });
       reviewLogWithAi(log).catch(() => undefined);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[podAudit] record failed:', err);
+      logs.server.error('podAudit', 'record', { error: err, msg: 'record failed' });
     }
   },
 

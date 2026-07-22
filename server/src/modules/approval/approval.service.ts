@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { ApprovalRequestModel, type ApprovalStatus } from './approval.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -97,8 +98,12 @@ async function applyEcommChange(doc: any) {
       }
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[approval] applyEcommChange failed:', err);
+    logs.server.error('approval', 'applyEcommChange', {
+      error: err,
+      msg: 'applyEcommChange failed',
+      target_id: doc?.target_id ?? null,
+      type: doc?.type ?? null,
+    });
   }
 }
 

@@ -11,7 +11,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { apolloClient } from './apollo';
 import { urlConfigs } from './config/url-configs';
-import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
+import { configureLogs, httpTransport } from '@duncit/logs';
 import { ColorModeProvider } from './ColorModeContext';
 import { StudioModeProvider } from './StudioModeContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -75,9 +75,11 @@ const loadUser = async () => {
   return data?.me ?? null;
 };
 
-// Ship console errors + structured logs to SignOz (via the server /logs ingest).
-configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')));
-captureConsole(logs.mWeb);
+// Ship structured, file-level logs to SignOz (via the server /logs ingest).
+// environment + url + host are auto-detected from the browser at each call.
+configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')), {
+  platform: 'web',
+});
 
 function mount() {
   // A top-level ErrorBoundary wraps the WHOLE provider tree (not just the routes)

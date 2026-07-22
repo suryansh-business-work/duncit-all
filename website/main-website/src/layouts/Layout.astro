@@ -43,9 +43,8 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
     <slot />
       <script>
       // Ship console errors to SignOz (via the server /logs ingest).
-      import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
-      configureLogs(httpTransport(import.meta.env.PROD ? 'https://server.duncit.com/logs' : 'http://localhost:2001/logs'));
-      captureConsole(logs.website.duncit);
+      import { configureLogs, httpTransport } from '@duncit/logs';
+      configureLogs(httpTransport(import.meta.env.PROD ? 'https://server.duncit.com/logs' : 'http://localhost:2001/logs'), { platform: 'web' });
     </script>
   </body>
 </html>

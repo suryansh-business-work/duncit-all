@@ -1,13 +1,74 @@
-import { PORTALS, WEBSITES, type PortalKey, type WebsiteKey } from './config';
+import { PORTALS, WEBSITES, detectEnvironment, type PortalKey, type WebsiteKey } from './config';
 import { consoleTransport } from './transport';
-import type { LevelFns, LogLevel, LogRecord, Transport } from './types';
+import type {
+  Environment,
+  LevelFns,
+  LogDetail,
+  LogLevel,
+  LogRecord,
+  Platform,
+  SerializedError,
+  Transport,
+} from './types';
 
-// One process-wide transport. Apps call configureLogs() once at startup
-// (httpTransport in browsers/mobile, an OTLP transport in the server).
+/**
+ * Runtime context every record is stamped with. Resolved lazily on each emit so
+ * `url`/`environment` always reflect the current page (SPA navigation, etc.).
+ * Apps set this once via configureLogs(transport, context).
+ */
+export interface LogContext {
+  platform: Platform;
+  /** Fixed value or a resolver. Defaults to detecting from the current host. */
+  environment?: Environment | (() => Environment);
+  /** Full URL of the event. Defaults to location.href in browsers. */
+  url?: () => string | undefined;
+  /** Hostname. Defaults to location.hostname in browsers. */
+  host?: () => string | undefined;
+}
+
+// One process-wide transport + context. Apps call configureLogs() once at
+// startup (httpTransport in browsers/native, an OTLP transport in the server).
 let activeTransport: Transport = consoleTransport;
+let context: LogContext = { platform: 'web' };
 
-export function configureLogs(transport: Transport): void {
+export function configureLogs(transport: Transport, ctx?: Partial<LogContext>): void {
   activeTransport = transport;
+  if (ctx) context = { ...context, ...ctx };
+}
+
+/** Flatten any thrown value to { name, message, stack } so SignOz shows it all. */
+export function serializeError(err: unknown): SerializedError | undefined {
+  if (err === null || err === undefined) return undefined;
+  if (err instanceof Error) {
+    return { name: err.name || 'Error', message: err.message, stack: err.stack };
+  }
+  if (typeof err === 'object') {
+    try {
+      return { name: 'Object', message: JSON.stringify(err) };
+    } catch {
+      return { name: 'Object', message: String(err) };
+    }
+  }
+  return { name: typeof err, message: String(err) };
+}
+
+function currentHost(): string | undefined {
+  if (context.host) return context.host();
+  if (typeof location !== 'undefined') return location.hostname || undefined;
+  return undefined;
+}
+
+function currentUrl(): string | undefined {
+  if (context.url) return context.url();
+  if (typeof location !== 'undefined') return location.href || undefined;
+  return undefined;
+}
+
+function currentEnvironment(host: string | undefined): Environment {
+  const env = context.environment;
+  if (typeof env === 'function') return env();
+  if (env) return env;
+  return detectEnvironment(host);
 }
 
 function emit(
@@ -15,10 +76,30 @@ function emit(
   level: LogLevel,
   page: string,
   component: string,
-  data?: Record<string, unknown>,
+  detail?: LogDetail,
 ): void {
   try {
-    activeTransport({ ...base, level, page, component, data, timestamp: new Date().toISOString() });
+    const host = currentHost();
+    let error: SerializedError | undefined;
+    let data: Record<string, unknown> | undefined;
+    if (detail) {
+      const { error: e, err, ...rest } = detail;
+      error = serializeError(e ?? err);
+      data = Object.keys(rest).length > 0 ? rest : undefined;
+    }
+    activeTransport({
+      ...base,
+      platform: context.platform,
+      environment: currentEnvironment(host),
+      url: currentUrl(),
+      host,
+      level,
+      page,
+      component,
+      error,
+      data,
+      timestamp: new Date().toISOString(),
+    });
   } catch {
     /* logging must never throw */
   }
@@ -26,11 +107,18 @@ function emit(
 
 function levelFns(base: Pick<LogRecord, 'app' | 'portal'>): LevelFns {
   return {
-    debug: (page, component, data) => emit(base, 'debug', page, component, data),
-    info: (page, component, data) => emit(base, 'info', page, component, data),
-    warn: (page, component, data) => emit(base, 'warn', page, component, data),
-    error: (page, component, data) => emit(base, 'error', page, component, data),
+    debug: (page, component, detail) => emit(base, 'debug', page, component, detail),
+    info: (page, component, detail) => emit(base, 'info', page, component, detail),
+    warn: (page, component, detail) => emit(base, 'warn', page, component, detail),
+    error: (page, component, detail) => emit(base, 'error', page, component, detail),
   };
+}
+
+/** Build a file-level logger for any app/portal/website. Each app exports its own
+ * bound `log` (e.g. `export const log = createLogger('portal', 'crm')`) so call
+ * sites read `log.error(page, component, { error })`. */
+export function createLogger(app: string, portal?: string): LevelFns {
+  return levelFns(portal ? { app, portal } : { app });
 }
 
 // logs.portal.<name> / logs.website.<name> — built from the global lists.
@@ -51,12 +139,11 @@ const website = WEBSITES.reduce(
 );
 
 /**
- * Global structured logger.
- *   logs.server.error(page, component, { ...context })
- *   logs.mWeb.info(page, component, { ...context })
- *   logs.mobileApp.error(page, component, { ...context })
- *   logs.portal.crm.error(page, component, { ...context })
- *   logs.website.duncit.error(page, component, { ...context })
+ * Global structured logger. Prefer a per-file `createLogger(...)` bound `log`,
+ * but these shared entrypoints work everywhere too.
+ *   logs.mWeb.error(page, component, { error })
+ *   logs.portal.crm.warn(page, component, { error, id })
+ *   logs.website.duncit.info(page, component, { ... })
  */
 export const logs = {
   server: levelFns({ app: 'server' }),

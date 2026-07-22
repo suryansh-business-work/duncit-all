@@ -12,6 +12,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 // Schema defaults guarantee Date timestamps, so a direct toISOString is safe.
 const iso = (v: Date) => v.toISOString();
@@ -153,8 +154,11 @@ async function notifyHost(hostUserId: string, title: string, body: string) {
       silent: false,
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error('[hostRequest] in-app notification failed:', err);
+    logs.server.error('hostRequest', 'notifyHost', {
+      error: err,
+      msg: 'in-app notification failed',
+      hostUserId,
+    });
   }
 }
 
@@ -174,8 +178,11 @@ async function emailHost(h: IHostRequest, slug: string, subject: string) {
       },
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.warn(`[hostRequest] email failed for ${slug}:`, (err as Error).message);
+    logs.server.warn('hostRequest', 'emailHost', {
+      error: err,
+      msg: 'email failed',
+      slug,
+    });
   }
 }
 

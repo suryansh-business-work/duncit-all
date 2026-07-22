@@ -6,6 +6,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { sendEmail } from '@services/email/email.service';
+import { logs } from '@observability/log';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -338,8 +339,11 @@ export const ecommBrandService = {
           },
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn(`[ecommBrand.setActive] email failed for ${slug}:`, (err as Error).message);
+        logs.server.warn('ecommBrand', 'setActive', {
+          error: err,
+          slug,
+          msg: `email failed for ${slug}`,
+        });
       }
     }
 

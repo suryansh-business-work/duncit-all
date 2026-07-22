@@ -4,6 +4,7 @@
  * hardcoded business data.
  */
 import Constants from 'expo-constants';
+import { logs } from '@duncit/logs';
 
 const LOCAL_API_PORT = 2001;
 
@@ -38,9 +39,11 @@ function resolveApiUrl(): string {
 const apiUrl = resolveApiUrl();
 
 if (__DEV__) {
-  // Visible in the Metro logs so a network error is easy to diagnose.
-  // eslint-disable-next-line no-console
-  console.log(`[config] API origin: ${apiUrl}`);
+  // Visible in the logs so a network error is easy to diagnose.
+  logs.mobileApp.info('config', 'resolveApiUrl', {
+    msg: `API origin: ${apiUrl}`,
+    apiUrl,
+  });
 }
 
 export const config = {

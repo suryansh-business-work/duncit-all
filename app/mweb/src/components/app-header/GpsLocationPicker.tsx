@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { logs } from '@duncit/logs';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
@@ -45,7 +46,9 @@ export default function GpsLocationPicker({
         startIcon={busy ? <CircularProgress size={14} /> : <GpsFixedIcon fontSize="small" />}
         onClick={() => {
           reset();
-          request().catch(console.error);
+          request().catch((error: unknown) =>
+            logs.mWeb.error('GpsLocationPicker', 'request', { error, msg: 'geolocation request failed' }),
+          );
         }}
         disabled={busy}
         sx={{

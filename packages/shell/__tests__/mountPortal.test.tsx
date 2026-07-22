@@ -5,7 +5,6 @@ const createRootSpy = vi.hoisted(() => vi.fn(() => ({ render: renderSpy })));
 const logs = vi.hoisted(() => ({
   configureLogs: vi.fn(),
   httpTransport: vi.fn(() => 'transport'),
-  captureConsole: vi.fn(),
 }));
 
 vi.mock('@fontsource/nunito/400.css', () => ({}));
@@ -37,7 +36,6 @@ describe('mountPortal', () => {
     createRootSpy.mockClear();
     logs.configureLogs.mockClear();
     logs.httpTransport.mockClear();
-    logs.captureConsole.mockClear();
     localStorage.clear();
   });
 
@@ -49,8 +47,7 @@ describe('mountPortal', () => {
     mountPortal(baseOpts());
 
     expect(logs.httpTransport).toHaveBeenCalledWith('https://api.test/logs');
-    expect(logs.configureLogs).toHaveBeenCalledWith('transport');
-    expect(logs.captureConsole).toHaveBeenCalledWith('crm');
+    expect(logs.configureLogs).toHaveBeenCalledWith('transport', { platform: 'web' });
     expect(createRootSpy).toHaveBeenCalledWith(root);
     expect(renderSpy).toHaveBeenCalledTimes(1);
 

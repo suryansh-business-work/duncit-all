@@ -4,6 +4,8 @@ import type { LogRecord } from '../src/types';
 
 const record = (over: Partial<LogRecord> = {}): LogRecord => ({
   app: 'mWeb',
+  platform: 'web',
+  environment: 'production',
   level: 'info',
   page: 'home',
   component: 'App',
@@ -61,21 +63,30 @@ describe('consoleTransport', () => {
     consoleTransport(record({ level: 'debug', data: { d: 1 } }));
     consoleTransport(record({ level: 'info', data: { i: 1 } }));
 
-    expect(error).toHaveBeenCalledWith('[mWeb] home/App', { e: 1 });
-    expect(warn).toHaveBeenCalledWith('[mWeb] home/App', { w: 1 });
-    expect(debug).toHaveBeenCalledWith('[mWeb] home/App', { d: 1 });
-    expect(info).toHaveBeenCalledWith('[mWeb] home/App', { i: 1 });
+    expect(error).toHaveBeenCalledWith('[mWeb@production] home/App', { e: 1 });
+    expect(warn).toHaveBeenCalledWith('[mWeb@production] home/App', { w: 1 });
+    expect(debug).toHaveBeenCalledWith('[mWeb@production] home/App', { d: 1 });
+    expect(info).toHaveBeenCalledWith('[mWeb@production] home/App', { i: 1 });
   });
 
-  it('falls back to console.info for an unknown level and empty string for absent data', () => {
+  it('prints the serialized error when present', () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const e = { name: 'Error', message: 'boom' };
+    consoleTransport(record({ level: 'error', error: e }));
+    expect(err).toHaveBeenCalledWith('[mWeb@production] home/App', e);
+  });
+
+  it('falls back to console.info for an unknown level and empty string for absent data/error', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
     consoleTransport(record({ level: 'trace' as unknown as LogRecord['level'] }));
-    expect(info).toHaveBeenCalledWith('[mWeb] home/App', '');
+    expect(info).toHaveBeenCalledWith('[mWeb@production] home/App', '');
   });
 
-  it('tags portal records as app:portal', () => {
+  it('tags portal records as app:portal@environment', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
-    consoleTransport(record({ app: 'portal', portal: 'crm', page: 'leads', component: 'List' }));
-    expect(info).toHaveBeenCalledWith('[portal:crm] leads/List', '');
+    consoleTransport(
+      record({ app: 'portal', portal: 'crm', page: 'leads', component: 'List', environment: 'staging' }),
+    );
+    expect(info).toHaveBeenCalledWith('[portal:crm@staging] leads/List', '');
   });
 });

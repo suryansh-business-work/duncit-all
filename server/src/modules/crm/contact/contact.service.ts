@@ -5,6 +5,7 @@ import { sendEmail } from '@services/email/email.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const submitSchema = yup.object({
   name: yup.string().required('Name is required').max(120),
@@ -93,8 +94,7 @@ export const contactService = {
         },
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('contact ack email failed:', e);
+      logs.server.warn('contact', 'submit', { error: e, msg: 'contact ack email failed', email: payload.email });
     }
     return { ok: true, message: 'Thanks! We have received your message.' };
   },

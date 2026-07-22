@@ -7,6 +7,7 @@
  */
 import { PodDraftModel } from './pod-draft.model';
 import { AppSettingsModel } from '@modules/platform/settings/settings.model';
+import { logs } from '@observability/log';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SWEEP_INTERVAL_MS = DAY_MS; // once every 24h (off-peak-agnostic)
@@ -37,8 +38,10 @@ export function startPodDraftCleanupScheduler(): () => void {
   if (process.env.NODE_ENV === 'test') return () => undefined;
   const sweep = () => {
     runPodDraftCleanup().catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error('[pod-draft-cleanup] sweep failed:', err);
+      logs.server.error('pod-draft-cleanup', 'sweep', {
+        error: err,
+        msg: 'sweep failed',
+      });
     });
   };
   const first = setTimeout(sweep, FIRST_SWEEP_DELAY_MS);

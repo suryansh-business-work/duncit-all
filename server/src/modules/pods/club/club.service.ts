@@ -6,6 +6,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 const slugify = (s: string) =>
   s
@@ -275,8 +276,11 @@ export const clubService = {
       try {
         await userService.addRole(uid, 'CLUB_ADMIN');
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[clubService.syncClubAdminRoles] grant failed:', err);
+        logs.server.error('clubService', 'syncClubAdminRoles', {
+          error: err,
+          msg: 'grant failed',
+          uid,
+        });
       }
     }
     for (const uid of removed) {
@@ -285,8 +289,11 @@ export const clubService = {
       try {
         await userService.removeRole(uid, 'CLUB_ADMIN');
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('[clubService.syncClubAdminRoles] revoke failed:', err);
+        logs.server.error('clubService', 'syncClubAdminRoles', {
+          error: err,
+          msg: 'revoke failed',
+          uid,
+        });
       }
     }
   },

@@ -14,6 +14,7 @@ import {
 import { UserModel } from '@modules/access/user/user.model';
 import { emitNotifyForUsers } from './notification.events';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { logs } from '@observability/log';
 
 let vapidReady = false;
 
@@ -103,8 +104,11 @@ async function sendExpoChunk(chunk: ExpoMessage[]): Promise<{ delivered: number;
     }
   } catch (err) {
     failed += chunk.length;
-    // eslint-disable-next-line no-console
-    console.error('[notification] expo push failed:', err);
+    logs.server.error('notification', 'sendExpoChunk', {
+      error: err,
+      msg: 'expo push failed',
+      chunk_size: chunk.length,
+    });
   }
   return { delivered, failed };
 }
@@ -121,8 +125,9 @@ export const notificationService = {
         privateKey,
         subject: process.env.VAPID_SUBJECT || 'mailto:admin@duncit.app',
       });
-       
-      console.log('🔔 Generated new VAPID keys');
+      logs.server.info('notification', 'ensureVapid', {
+        msg: 'Generated new VAPID keys',
+      });
     }
     webpush.setVapidDetails(key.subject, key.publicKey, key.privateKey);
     vapidReady = true;

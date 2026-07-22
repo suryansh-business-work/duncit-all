@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import {
   BouncerSosAlertModel,
   BouncerCallbackRequestModel,
@@ -225,7 +226,14 @@ export const bouncerService = {
       title: `🚨 SOS ${pub.ticket_no} from ${pub.user.name}`,
       body: `At "${pub.pod.title}". ${pub.message || 'Tap to respond.'}`,
       link: `/bouncers?sos=${pub.id}`,
-    }).catch((e) => console.error('SOS notify failed', e));
+    }).catch((e) =>
+      logs.server.error('bouncer', 'raiseSos', {
+        error: e,
+        msg: 'SOS notify failed',
+        sosId: pub.id,
+        ticketNo: pub.ticket_no,
+      })
+    );
 
     return pub;
   },
@@ -428,7 +436,13 @@ export const bouncerService = {
         ? `${input.category}: ${pub.message.slice(0, 120)}`
         : `Category: ${input.category}`,
       link: `/bouncers?feedback=${pub.id}`,
-    }).catch((e) => console.error('Feedback notify failed', e));
+    }).catch((e) =>
+      logs.server.error('bouncer', 'submitFeedback', {
+        error: e,
+        msg: 'Feedback notify failed',
+        feedbackId: pub.id,
+      })
+    );
 
     return pub;
   },

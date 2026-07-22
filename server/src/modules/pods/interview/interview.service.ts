@@ -8,6 +8,7 @@ import {
   sendInterviewScheduledEmail,
 } from '@services/email/email.service';
 import { getUrlConfigs } from '@config/url-configs';
+import { logs } from '@observability/log';
 
 const toPub = (i: IInterview) => ({
   id: String(i._id),
@@ -124,8 +125,11 @@ export const interviewService = {
         ref: String(doc._id),
       });
     } catch (e) {
-       
-      console.warn('Applicant email failed', e);
+      logs.server.warn('interview', 'create', {
+        error: e,
+        msg: 'Applicant email failed',
+        ref: String(doc._id),
+      });
     }
 
     // Send admin notification
@@ -145,8 +149,11 @@ export const interviewService = {
           adminLink: `${urlConfigs.adminUrl}/interview-requests`,
         });
       } catch (e) {
-         
-        console.warn('Admin email failed', e);
+        logs.server.warn('interview', 'create', {
+          error: e,
+          msg: 'Admin email failed',
+          ref: String(doc._id),
+        });
       }
     }
 
@@ -184,8 +191,11 @@ export const interviewService = {
           ref: String(doc._id),
         });
       } catch (e) {
-         
-        console.warn('Scheduled email failed', e);
+        logs.server.warn('interview', 'update', {
+          error: e,
+          msg: 'Scheduled email failed',
+          ref: String(doc._id),
+        });
       }
     }
 

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
@@ -270,8 +271,7 @@ export const mediaScanService = {
       });
       reviewImageWithAi(log).catch(() => undefined);
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('[mediaScan] record failed:', err);
+      logs.server.error('mediaScan', 'record', { error: err, msg: 'record failed' });
     }
   },
 

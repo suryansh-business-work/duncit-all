@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Stack, TextField } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
+import { logs } from '@duncit/logs';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import ReviewDetails from './ReviewDetails';
 import type { ApprovalRequest } from './helpers';
@@ -43,7 +44,13 @@ export default function ReviewDialog({
       return;
     }
     // onDeny may be sync or async — normalise so a rejection is reported, not dropped.
-    Promise.resolve(onDeny(request.id, notes.trim())).catch(console.error);
+    Promise.resolve(onDeny(request.id, notes.trim())).catch((error) =>
+      logs.portal['admin'].error('ReviewDialog', 'handleDeny', {
+        error,
+        requestId: request.id,
+        msg: 'onDeny rejected',
+      }),
+    );
   };
 
   const actions = isPending ? (

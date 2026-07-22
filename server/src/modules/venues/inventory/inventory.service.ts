@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -679,8 +680,11 @@ async function notifyLowStockIfCrossed(doc: IInventoryProduct, beforeAvailable: 
       silent: false,
     })
     .catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('[inventory] low-stock notify failed', error);
+      logs.server.error('inventory', 'notifyLowStockIfCrossed', {
+        error,
+        msg: 'low-stock notify failed',
+        product_id: String(doc._id),
+      });
     });
 }
 
@@ -1116,8 +1120,11 @@ export const inventoryService = {
         silent: false,
       })
       .catch((error) => {
-        // eslint-disable-next-line no-console
-        console.error('[inventory] review notify failed', error);
+        logs.server.error('inventory', 'reviewProductListing', {
+          error,
+          msg: 'review notify failed',
+          product_id: String(doc._id),
+        });
       });
     return inventoryProductToPub(doc);
   },

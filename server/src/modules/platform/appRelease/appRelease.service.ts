@@ -1,5 +1,6 @@
 import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { sendHtmlEmail, type EmailAttachment } from '@services/email/email.service';
 import { buildChangelog, type ReleaseCommit } from './appRelease.changelog';
@@ -100,7 +101,11 @@ export async function sendAppReleaseEmail(
     html: string;
     errors: unknown[];
   };
-  if (errors?.length) console.warn('Release MJML warnings:', errors);
+  if (errors?.length)
+    logs.server.warn('appRelease', 'sendAppReleaseEmail', {
+      msg: 'Release MJML warnings',
+      errors,
+    });
 
   const attachments = await maybeAttachApk(input.apk_url, input.apk_size_mb, input.build_name);
   const subject = `📱 ${appName} v${input.version} — new build ready to test`;

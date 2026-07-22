@@ -6,6 +6,7 @@ jest.mock('@modules/engagement/notification/notification.service', () => ({
 }));
 
 import { userService } from '../../user.service';
+import { logs } from '@observability/log';
 
 describe('profile privacy helpers (no DB)', () => {
   it('treats invalid ids as not-following / empty / not-viewable', async () => {
@@ -61,7 +62,7 @@ describe('notifyNewFollower', () => {
 
   it('swallows notification failures', async () => {
     create.mockRejectedValueOnce(new Error('boom'));
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    const spy = jest.spyOn(logs.server, 'error').mockImplementation(() => undefined);
     await expect(
       userService.notifyNewFollower('target', { full_name: 'X' } as never)
     ).resolves.toBeUndefined();

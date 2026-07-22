@@ -1,3 +1,5 @@
+import { logs } from '@duncit/logs';
+
 /**
  * Run a promise we deliberately do not await, surfacing a rejection instead of
  * dropping it.
@@ -8,6 +10,6 @@
  */
 export function fireAndForget(promise: Promise<unknown>): void {
   promise.catch((error: unknown) => {
-    console.error(error);
+    logs.mobileApp.error('fire-and-forget', 'fireAndForget', { error });
   });
 }

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import { PaymentReleaseModel, type IPaymentRelease, type PaymentReleaseKind } from './paymentRelease.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -225,7 +226,7 @@ async function notifyApproval(doc: IPaymentRelease) {
       attachments,
     });
   } catch (error) {
-    console.warn('[paymentRelease] approval email failed:', (error as Error).message);
+    logs.server.warn('paymentRelease', 'notifyApproval', { error, msg: 'approval email failed' });
   }
 }
 
@@ -261,7 +262,7 @@ async function sendProductInvoices(doc: IPaymentRelease) {
       await sendProductInvoicesForPod(pod, fs);
     }
   } catch (e) {
-    console.warn('[paymentRelease] product invoices failed:', (e as Error).message);
+    logs.server.warn('paymentRelease', 'sendProductInvoices', { error: e, msg: 'product invoices failed' });
   }
 }
 
@@ -276,7 +277,7 @@ async function applyApproval(doc: IPaymentRelease) {
     // Completion frees the pod's unsold reserved stock back to the brand.
     const { podService } = await import('@modules/pods/pod/pod.service');
     await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
-      console.warn('[paymentRelease] stock release failed:', e.message);
+      logs.server.warn('paymentRelease', 'applyApproval', { error: e, msg: 'stock release failed' });
     });
   }
   if (doc.kind !== 'HOST_PAYMENT') return;
@@ -357,7 +358,7 @@ export const paymentReleaseService = {
       // Completion frees the pod's unsold reserved stock back to the brand.
       const { podService } = await import('@modules/pods/pod/pod.service');
       await podService.releaseCompletedPodStock(pod._id).catch((e: Error) => {
-        console.warn('[paymentRelease] stock release failed:', e.message);
+        logs.server.warn('paymentRelease', 'create', { error: e, msg: 'stock release failed' });
       });
       // AI-monitored audit trail: completion is a critical pod action.
       const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');

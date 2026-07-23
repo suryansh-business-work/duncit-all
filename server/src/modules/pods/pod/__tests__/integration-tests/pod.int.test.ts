@@ -1,9 +1,11 @@
 import { Types } from 'mongoose';
 import { podService } from '../../pod.service';
+import { podResolvers } from '../../pod.resolver';
 import { PodModel } from '../../pod.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { makeContext } from '@test/harness';
 
 const makePod = (over: Record<string, unknown> = {}) => ({
   pod_id: `p-${Math.random().toString(36).slice(2)}`,
@@ -434,6 +436,31 @@ describe('pod comment reactions (explore item 4)', () => {
     expect(widened.total).toBe(0);
 
     await expect(podService.tableMine('not-an-object-id')).rejects.toThrow(/authentication required/i);
+  });
+});
+
+describe('PodProductRequest.free_delivery_above (pod-shop free-delivery badge)', () => {
+  const resolveThreshold = (podResolvers as any).PodProductRequest.free_delivery_above;
+
+  it('resolves the LIVE product threshold, caching per request, and null when absent', async () => {
+    const withOffer = await InventoryProductModel.create({
+      product_name: 'Free ship kit',
+      sku: 'FDA-1',
+      unit_cost: 100,
+      free_delivery_above: 250,
+    });
+    const noOffer = await InventoryProductModel.create({
+      product_name: 'Plain kit',
+      sku: 'FDA-2',
+      unit_cost: 100,
+    });
+    const ctx = makeContext();
+    expect(await resolveThreshold({ product_id: String(withOffer._id) }, {}, ctx)).toBe(250);
+    expect(await resolveThreshold({ product_id: String(noOffer._id) }, {}, ctx)).toBeNull();
+    // Repeat + unknown/invalid ids: cached hit, missing product, malformed id.
+    expect(await resolveThreshold({ product_id: String(withOffer._id) }, {}, ctx)).toBe(250);
+    expect(await resolveThreshold({ product_id: String(new Types.ObjectId()) }, {}, ctx)).toBeNull();
+    expect(await resolveThreshold({ product_id: 'not-an-id' }, {}, ctx)).toBeNull();
   });
 });
 

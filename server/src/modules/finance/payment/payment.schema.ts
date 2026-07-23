@@ -246,6 +246,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     charge: Float!
     "True when priced live by ShipRocket; false when it fell back to the manual delivery charge."
     quoted: Boolean!
+    "True when every line in this warehouse group met its product's free-delivery threshold (charge = 0)."
+    free: Boolean!
   }
 
   type ProductShippingQuote {

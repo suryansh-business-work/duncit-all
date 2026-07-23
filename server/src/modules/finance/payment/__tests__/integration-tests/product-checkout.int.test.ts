@@ -23,7 +23,7 @@ const seedUser = () =>
 const seedWarehouse = (nickname: string, pincode: string) =>
   BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname, pincode });
 
-const seedShipProduct = (warehouseId: any, over: { delivery_charge?: number } = {}) =>
+const seedShipProduct = (warehouseId: any, over: Record<string, unknown> = {}) =>
   InventoryProductModel.create({
     product_name: 'Shipped Item',
     sku: `SKU-${++seq}`,
@@ -32,8 +32,9 @@ const seedShipProduct = (warehouseId: any, over: { delivery_charge?: number } = 
     delivery_target: 'SHIPROCKET',
     pickup_location_id: warehouseId,
     weight_kg: 1,
-    delivery_charge: over.delivery_charge ?? 40,
+    delivery_charge: 40,
     ownership: 'DUNCIT',
+    ...over,
   });
 
 const seedPodFor = (productId: any, unitCost = 300) =>
@@ -230,5 +231,78 @@ describe('standalone product checkout', () => {
     expect(quote.all_quoted).toBe(false);
     expect(quote.lines).toHaveLength(1);
     expect(quote.lines[0].charge).toBe(55);
+    expect(quote.lines[0].free).toBe(false);
+  });
+
+  describe('free-delivery threshold (free_delivery_above)', () => {
+    it('waives the warehouse delivery charge when the line meets the product threshold', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-FREE-A', '110010');
+      const product = await seedShipProduct(wh._id, { free_delivery_above: 500 });
+      const pod = await seedPodFor(product._id, 300);
+
+      // 2 × ₹300 = ₹600 ≥ ₹500 → products only, no delivery charge.
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 2 }]),
+        String(user._id)
+      );
+      expect(res.total).toBe(600);
+
+      const orders = await ordersFor(res.id);
+      expect(orders).toHaveLength(1);
+      expect(orders[0].shipping_charge).toBe(0);
+      expect(orders[0].total).toBe(orders[0].items_total);
+    });
+
+    it('still charges delivery while the line is below the threshold', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-FREE-B', '110011');
+      const product = await seedShipProduct(wh._id, { free_delivery_above: 500 });
+      const pod = await seedPodFor(product._id, 300);
+
+      // 1 × ₹300 = ₹300 < ₹500 → the ₹40 fallback delivery applies.
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 1 }]),
+        String(user._id)
+      );
+      expect(res.total).toBe(340);
+      const orders = await ordersFor(res.id);
+      expect(orders[0].shipping_charge).toBe(40);
+    });
+
+    it('previews per-warehouse free vs charged lines in the shipping quote', async () => {
+      const whFree = await seedWarehouse('WH-FREE-C', '110012');
+      const whPaid = await seedWarehouse('WH-FREE-D', '110013');
+      const freeProduct = await seedShipProduct(whFree._id, { free_delivery_above: 300 });
+      const paidProduct = await seedShipProduct(whPaid._id, { delivery_charge: 40 });
+      const pod = await PodModel.create({
+        pod_id: `pcpod-${++seq}`,
+        pod_title: 'Free vs paid pod',
+        pod_hosts_id: [new Types.ObjectId()],
+        club_id: new Types.ObjectId(),
+        pod_description: 'd',
+        pod_date_time: new Date(Date.now() + 86400_000),
+        pod_type: 'NON_NATIVE_PAID',
+        pod_amount: 500,
+        products_enabled: true,
+        product_requests: [
+          { product_id: freeProduct._id, product_name: 'F', unit_cost: 300, quantity: 10, total_cost: 3000 },
+          { product_id: paidProduct._id, product_name: 'P', unit_cost: 300, quantity: 10, total_cost: 3000 },
+        ],
+      });
+
+      const quote = await paymentService.productShippingQuote({
+        items: [
+          { product_id: String(freeProduct._id), pod_id: String(pod._id), quantity: 1 },
+          { product_id: String(paidProduct._id), pod_id: String(pod._id), quantity: 1 },
+        ],
+        delivery_pincode: '560001',
+      });
+      expect(quote.total).toBe(40);
+      expect(quote.lines).toHaveLength(2);
+      const byWarehouse = new Map(quote.lines.map((line: any) => [line.warehouse_id, line]));
+      expect(byWarehouse.get(String(whFree._id))).toMatchObject({ charge: 0, quoted: true, free: true });
+      expect(byWarehouse.get(String(whPaid._id))).toMatchObject({ charge: 40, quoted: false, free: false });
+    });
   });
 });

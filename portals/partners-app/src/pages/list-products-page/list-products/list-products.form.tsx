@@ -2,14 +2,16 @@ import { gql, useMutation } from '@apollo/client';
 import { useEffect, useState } from 'react';
 import { useForm, type Path } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Card, CardContent, Stack, Step, StepLabel, Stepper } from '@mui/material';
+import { Alert, Card, CardContent, Stack, Step, StepContent, StepLabel, Stepper } from '@mui/material';
 import MediaPickerDialog from '../../../components/MediaPickerDialog';
 import { parseApiError } from '@duncit/utils';
 import { ModerationBlockedDialog } from '@duncit/ui';
 import type { ProductListingValues } from './list-products.types';
 import { productListingSchema } from './list-products.schema';
-import { generateVariants, productToValues, toSubmitInput } from './list-products.map';
+import { productToValues, toSubmitInput } from './list-products.map';
 import { StepBody } from './list-products.form-ui';
+import StepActions from './StepActions';
+import { useAutoVariants } from './useAutoVariants';
 import { useProductModeration } from './useProductModeration';
 
 export { productListingSchema } from './list-products.schema';
@@ -46,7 +48,7 @@ const stepFields: Path<ProductListingValues>[][] = [
   ['product_name'],
   ['variants'],
   ['commission_pct'],
-  ['delivery_target'],
+  ['delivery_target', 'pickup_location_id', 'free_delivery_above'],
   [],
 ];
 
@@ -67,11 +69,12 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const loading = submitState.loading || updateState.loading || moderation.moderating;
   const editing = Boolean(product?.id);
 
-  const { control, handleSubmit, reset, trigger, watch, setValue, setError } = useForm<ProductListingValues>({
+  const { control, handleSubmit, reset, trigger, watch, getValues, setValue, setError } = useForm<ProductListingValues>({
     resolver: zodResolver(productListingSchema),
     defaultValues: productToValues(product),
     mode: 'onBlur',
   });
+  useAutoVariants(control, getValues, setValue);
 
   useEffect(() => {
     reset(productToValues(product));
@@ -108,10 +111,6 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
     setPickerIndex(null);
   };
 
-  const onGenerateVariants = () => {
-    setValue('variants', generateVariants(watch('options'), watch('variants')), { shouldValidate: false });
-  };
-
   const saveLabel = editing ? 'Update listing' : 'Submit for approval';
   const submitLabel = loading ? 'Saving...' : saveLabel;
 
@@ -119,13 +118,6 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2.25} component="form" onSubmit={onSubmit}>
-          <Stepper activeStep={activeStep} alternativeLabel sx={{ display: { xs: 'none', sm: 'flex' } }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
           {submitted && (
             <Alert severity="success">
               Product {editing ? 'updated' : 'submitted'}. Products portal approval is required before it shows in matching
@@ -133,28 +125,36 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
             </Alert>
           )}
           {apiError && <Alert severity="error">{apiError}</Alert>}
-          <StepBody
-            step={activeStep}
-            control={control}
-            watch={watch}
-            setValue={setValue}
-            onPickImage={setPickerIndex}
-            onGenerateVariants={onGenerateVariants}
-          />
-          <Stack direction="row" spacing={1} justifyContent="space-between">
-            <Button disabled={activeStep === 0 || loading} onClick={() => setActiveStep((step) => step - 1)}>
-              Back
-            </Button>
-            {activeStep < steps.length - 1 ? (
-              <Button variant="contained" onClick={next}>
-                Next
-              </Button>
-            ) : (
-              <Button type="submit" variant="contained" disabled={loading}>
-                {submitLabel}
-              </Button>
-            )}
-          </Stack>
+          <Stepper activeStep={activeStep} orientation="vertical">
+            {steps.map((label, index) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+                <StepContent>
+                  {activeStep === index && (
+                    <Stack spacing={2.25}>
+                      <StepBody
+                        step={index}
+                        brandId={brandId}
+                        control={control}
+                        watch={watch}
+                        setValue={setValue}
+                        onPickImage={setPickerIndex}
+                      />
+                      <StepActions
+                        isFirst={index === 0}
+                        isLast={index === steps.length - 1}
+                        loading={loading}
+                        moderating={moderation.moderating}
+                        submitLabel={submitLabel}
+                        onBack={() => setActiveStep((step) => step - 1)}
+                        onNext={next}
+                      />
+                    </Stack>
+                  )}
+                </StepContent>
+              </Step>
+            ))}
+          </Stepper>
         </Stack>
       </CardContent>
       <MediaPickerDialog

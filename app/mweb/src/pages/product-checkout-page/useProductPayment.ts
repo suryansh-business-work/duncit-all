@@ -17,7 +17,6 @@ import { buildProductCheckoutInput } from './productCheckoutInput';
 interface Args {
   session: CheckoutSession;
   items: ProductCartItemInput[];
-  podTitle: string;
 }
 
 /**
@@ -25,7 +24,7 @@ interface Args {
  * gateway when configured (create order → hosted sheet → shared verify); the
  * dummy gateway is the local fallback. Never touches the pod-join engine.
  */
-export function useProductPayment({ session, items, podTitle }: Args) {
+export function useProductPayment({ session, items }: Args) {
   const [doDummy] = useMutation(DUMMY_PRODUCT_CHECKOUT);
   const [doRazorpay] = useMutation(CREATE_RAZORPAY_PRODUCT_ORDER);
 
@@ -35,7 +34,6 @@ export function useProductPayment({ session, items, podTitle }: Args) {
     const finance = session.finance;
     const { input, simulate_failure } = buildProductCheckoutInput(values, {
       items,
-      podTitle,
       mainAddress: session.me?.address ?? null,
       couponCode: session.coupon?.ok ? session.coupon.code : null,
     });

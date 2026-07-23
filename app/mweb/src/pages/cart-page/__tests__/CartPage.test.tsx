@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { describe, expect, it, beforeEach } from 'vitest';
 import { MockedProvider } from '@apollo/client/testing';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
 import FloatingCartButton from '../../../components/cart/FloatingCartButton';
@@ -31,11 +31,6 @@ function Seed({ lines }: Readonly<{ lines: Array<{ meta: CartLineMeta; qty: numb
   return null;
 }
 
-function CheckoutProbe() {
-  const location = useLocation();
-  return <div data-testid="checkout-probe">{JSON.stringify(location.state)}</div>;
-}
-
 const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
   render(
     <MockedProvider mocks={[]} addTypename={false}>
@@ -46,7 +41,7 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
           <Routes>
             <Route path="/cart" element={<CartPage />} />
             <Route path="/shop" element={<div>SHOP</div>} />
-            <Route path="/product-checkout/:podId" element={<CheckoutProbe />} />
+            <Route path="/product-checkout" element={<div data-testid="checkout-probe">CHECKOUT</div>} />
           </Routes>
         </MemoryRouter>
       </CartProvider>
@@ -74,6 +69,9 @@ describe('CartPage + CartContext', () => {
     expect(screen.getByText('Alpha Tee — L / Blue')).toBeInTheDocument();
     // p1 total: 2×100 + 1×120 = 320.
     expect(screen.getByText('₹320')).toBeInTheDocument();
+    // Cart-wide grand total: 320 + 100 = 420.
+    expect(screen.getByText('Cart total')).toBeInTheDocument();
+    expect(screen.getByText('₹420')).toBeInTheDocument();
 
     // + on the base line (first Alpha row) hits its max at 3.
     fireEvent.click(screen.getAllByRole('button', { name: 'Increase Alpha Tee' })[0]!);
@@ -89,16 +87,23 @@ describe('CartPage + CartContext', () => {
     expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
   });
 
-  it('proceeds to the standalone product checkout for a pod group (title only, no products in state)', () => {
+  it('has ONE cart-level checkout that proceeds to the combined product checkout', () => {
     renderCart([
       { meta: meta(), qty: 2 },
-      { meta: meta({ variant_id: 'v1', unit_cost: 120 }), qty: 1 },
+      { meta: meta({ pod_id: 'p2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug' }), qty: 1 },
     ]);
+    // No per-pod checkout buttons — a single cart-wide CTA.
+    expect(screen.getAllByRole('button', { name: /proceed to checkout/i })).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: /proceed to checkout/i }));
-    const state = JSON.parse(screen.getByTestId('checkout-probe').textContent ?? '{}');
-    // The product checkout reads its lines from the cart — only the title travels.
-    expect(state.pod_title).toBe('Sunset Jam');
-    expect(state.selected_products).toBeUndefined();
+    expect(screen.getByTestId('checkout-probe')).toBeInTheDocument();
+  });
+
+  it('badges a line with Free delivery when it meets its product threshold', () => {
+    renderCart([
+      { meta: meta({ free_delivery_above: 200 }), qty: 2 }, // 200 >= 200 → free
+      { meta: meta({ pod_id: 'p2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', free_delivery_above: 500 }), qty: 1 },
+    ]);
+    expect(screen.getAllByText('Free delivery')).toHaveLength(1);
   });
 
   it('persists lines to localStorage and the floating button badges the count', () => {

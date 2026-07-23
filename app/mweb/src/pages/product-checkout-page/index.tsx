@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useWatch } from 'react-hook-form';
 import { Box, Button, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -13,29 +13,25 @@ import PaymentDetailsCard from '../checkout-page/PaymentDetailsCard';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
 import SavedAddressPicker from '../checkout-page/SavedAddressPicker';
 import { useCheckoutSession } from '../checkout-page/useCheckoutSession';
-import type { CheckoutState } from '../checkout-page/queries';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
 import { useProductPayment } from './useProductPayment';
 import { useProductShippingQuote } from './useProductShippingQuote';
 
+/** The combined product checkout — EVERY cart line (across pods) pays in ONE
+ * payment with one Pay button; delivery is listed per warehouse group. */
 export default function ProductCheckoutPage() {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const { podId = '' } = useParams();
-  const location = useLocation();
   const navigate = useNavigate();
-  const state = (location.state || {}) as CheckoutState;
-  const { lines: allLines, clearPod } = useCart();
+  const { lines, clearAll } = useCart();
 
-  const lines = useMemo(() => allLines.filter((line) => line.pod_id === podId), [allLines, podId]);
-  const podTitle = lines[0]?.pod_title || state.pod_title || 'Your order';
   const items = useMemo(() => mapLinesToItems(lines), [lines]);
   const subtotal = useMemo(() => productSubtotal(lines), [lines]);
 
   const session = useCheckoutSession({
-    couponPodId: podId || null,
-    onBeforeSuccess: () => clearPod(podId),
+    couponPodId: null,
+    onBeforeSuccess: () => clearAll(),
   });
   const deliveryPincode = useWatch({ control: session.control, name: 'pincode' }) || '';
   const { quote, loading: shippingLoading, pincodeValid } = useProductShippingQuote(items, deliveryPincode);
@@ -44,7 +40,7 @@ export default function ProductCheckoutPage() {
   const amount = subtotal + shippingTotal;
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
 
-  const onCheckout = useProductPayment({ session, items, podTitle });
+  const onCheckout = useProductPayment({ session, items });
   const submit = session.handleSubmit(onCheckout);
 
   if (session.success) {
@@ -79,7 +75,6 @@ export default function ProductCheckoutPage() {
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <ProductOrderSummaryCard
-            podTitle={podTitle}
             lines={lines}
             breakup={breakup}
             subtotal={subtotal}
@@ -121,7 +116,7 @@ function EmptyProductCheckout({ onCart }: Readonly<{ onCart: () => void }>) {
     <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
       <ShoppingBagIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
       <Typography variant="h6" fontWeight={900}>Nothing to checkout</Typography>
-      <Typography variant="body2" color="text.secondary">This pod has no products in your cart.</Typography>
+      <Typography variant="body2" color="text.secondary">There are no products in your cart.</Typography>
       <Button variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 800 }}>Back to cart</Button>
     </Stack>
   );

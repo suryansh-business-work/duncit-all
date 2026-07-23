@@ -2,9 +2,39 @@ import { Types } from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { BrandPickupLocationModel, type IBrandPickupLocation } from './brandPickupLocation.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 
 const notFound = () =>
   new GraphQLError('Pickup location not found', { extensions: { code: 'NOT_FOUND' } });
+
+/** Load a brand owned by the signed-in partner (404 otherwise) — the ownership
+ * gate for every myBrandPickupLocation* op. */
+async function loadOwnedBrand(userId: string, brandId: string) {
+  if (!Types.ObjectId.isValid(brandId)) {
+    throw new GraphQLError('Invalid brand', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const brand = await EcommBrandModel.findOne({
+    _id: brandId,
+    owner_user_id: new Types.ObjectId(userId),
+  }).select('_id');
+  if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+  return brand;
+}
+
+/** Load a warehouse that belongs to the given brand (404 otherwise). */
+async function ownedLocation(brandId: string, id: string) {
+  if (!Types.ObjectId.isValid(id)) throw notFound();
+  const doc = await BrandPickupLocationModel.findOne({
+    _id: id,
+    owner_kind: 'BRAND',
+    brand_id: new Types.ObjectId(brandId),
+  });
+  if (!doc) throw notFound();
+  return doc;
+}
+
+const isDuplicateKeyError = (error: unknown) =>
+  !!error && typeof error === 'object' && (error as { code?: number }).code === 11000;
 
 const toPub = (d: IBrandPickupLocation) => ({
   id: String(d._id),
@@ -102,6 +132,50 @@ export const brandPickupLocationService = {
     await doc.save();
     await syncBrandDefault(doc);
     return toPub(doc);
+  },
+
+  /* ---- Partner-scoped ops (brand ownership asserted; owner_kind/brand_id are
+   * forced server-side). ShipRocket registration stays admin-only — a partner
+   * warehouse uses the manual delivery_charge until an admin registers it. ---- */
+
+  async listMine(userId: string, brandDocId: string) {
+    await loadOwnedBrand(userId, brandDocId);
+    return this.list({ owner_kind: 'BRAND', brand_id: brandDocId });
+  },
+
+  async saveMine(userId: string, brandDocId: string, id: string | null | undefined, input: any) {
+    await loadOwnedBrand(userId, brandDocId);
+    if (id) await ownedLocation(brandDocId, id);
+    try {
+      return await this.save(id, { ...input, owner_kind: 'BRAND', brand_id: brandDocId });
+    } catch (error) {
+      if (isDuplicateKeyError(error)) {
+        throw new GraphQLError('A warehouse with this nickname already exists', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
+      throw error;
+    }
+  },
+
+  async removeMine(userId: string, brandDocId: string, id: string) {
+    await loadOwnedBrand(userId, brandDocId);
+    const doc = await ownedLocation(brandDocId, id);
+    // Reference guard: a warehouse still shipping products cannot be deleted.
+    const referenced = await InventoryProductModel.countDocuments({ pickup_location_id: doc._id });
+    if (referenced > 0) {
+      throw new GraphQLError(
+        `This warehouse is used by ${referenced} product(s) — move them to another warehouse first`,
+        { extensions: { code: 'BAD_REQUEST' } }
+      );
+    }
+    return this.remove(id);
+  },
+
+  async setDefaultMine(userId: string, brandDocId: string, id: string) {
+    await loadOwnedBrand(userId, brandDocId);
+    await ownedLocation(brandDocId, id);
+    return this.setDefault(id);
   },
 
   async registerWithShiprocket(id: string) {

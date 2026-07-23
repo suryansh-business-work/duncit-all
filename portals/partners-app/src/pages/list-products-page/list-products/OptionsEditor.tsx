@@ -1,19 +1,17 @@
 import { Autocomplete, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import AutoAwesomeMotionIcon from '@mui/icons-material/AutoAwesomeMotion';
 import { Controller, useFieldArray, type Control, type Path } from 'react-hook-form';
 import { RhfTextField } from '@duncit/forms';
 import type { ProductListingValues } from './list-products.types';
 
 interface Props {
   control: Control<ProductListingValues>;
-  onGenerate: () => void;
 }
 
-/** Define the product's options (Size, Colour, …) and their values. "Generate
- * variants" builds one variant per combination (the option matrix). */
-export default function OptionsEditor({ control, onGenerate }: Readonly<Props>) {
+/** Define the product's options (Size, Colour, …) and their values. A variant
+ * is generated automatically for every combination (the option matrix). */
+export default function OptionsEditor({ control }: Readonly<Props>) {
   const { fields, append, remove } = useFieldArray({ control, name: 'options' });
   return (
     <Stack spacing={1.5}>
@@ -21,7 +19,7 @@ export default function OptionsEditor({ control, onGenerate }: Readonly<Props>) 
         Options (e.g. Size, Colour)
       </Typography>
       <Typography variant="caption" color="text.secondary">
-        Add the options your product varies by, then generate a variant for every combination.
+        Add the options your product varies by — a variant tab appears automatically for every combination.
       </Typography>
       {fields.map((field, index) => (
         <Stack key={field.id} direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
@@ -59,20 +57,9 @@ export default function OptionsEditor({ control, onGenerate }: Readonly<Props>) 
           </IconButton>
         </Stack>
       ))}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => append({ name: '', values: [] })} sx={{ alignSelf: 'flex-start' }}>
-          Add option
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AutoAwesomeMotionIcon />}
-          onClick={onGenerate}
-          disabled={fields.length === 0}
-          sx={{ alignSelf: 'flex-start' }}
-        >
-          Generate variants
-        </Button>
-      </Stack>
+      <Button variant="outlined" startIcon={<AddIcon />} onClick={() => append({ name: '', values: [] })} sx={{ alignSelf: 'flex-start' }}>
+        Add option
+      </Button>
     </Stack>
   );
 }

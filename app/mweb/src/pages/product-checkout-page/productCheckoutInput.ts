@@ -2,8 +2,8 @@ import type { CartLine } from '../../components/cart/CartContext';
 import { toCheckoutContact, toCheckoutBilling, type PostalAddressParts } from '../checkout-page/checkout';
 import type { CheckoutForm, ProductCartItemInput } from '../checkout-page/queries';
 
-/** Cart lines for one pod → the product engine's cart items. Each line keeps its
- * own pod (the per-pod stock gate still applies) and its chosen variant. */
+/** Cart lines (across pods) → the product engine's cart items. Each line keeps
+ * its own pod (the per-pod stock gate still applies) and its chosen variant. */
 export const mapLinesToItems = (lines: CartLine[]): ProductCartItemInput[] =>
   lines.map((line) => ({
     product_id: line.product_id,
@@ -18,9 +18,14 @@ export const productSubtotal = (lines: CartLine[]): number =>
 
 interface BuildContext {
   items: ProductCartItemInput[];
-  podTitle: string;
   mainAddress?: PostalAddressParts | null;
   couponCode: string | null;
+}
+
+/** Generic payment description for the combined cart: `Product order · N items`. */
+export function productOrderDescription(items: ProductCartItemInput[]): string {
+  const count = items.reduce((sum, item) => sum + item.quantity, 0);
+  return `Product order · ${count} item${count === 1 ? '' : 's'}`;
 }
 
 /** Build the `ProductCheckoutInput` payload from the checkout form. Shipping
@@ -44,7 +49,7 @@ export function buildProductCheckoutInput(values: CheckoutForm, ctx: BuildContex
   };
   const input = {
     items: ctx.items,
-    description: `Product order · ${ctx.podTitle}`,
+    description: productOrderDescription(ctx.items),
     ...contact,
     billing,
     shipping_address,

@@ -1,6 +1,7 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
 import { Avatar, Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import SettingsIcon from '@mui/icons-material/Settings';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import { format } from 'date-fns';
@@ -25,6 +26,7 @@ interface Props {
   toolbarActions?: ReactNode;
   onOpen: (brand: EcommBrandRow) => void;
   onManageProducts: (brand: EcommBrandRow) => void;
+  onSettings: (brand: EcommBrandRow) => void;
 }
 
 const getBrandRowId = (brand: EcommBrandRow) => brand.id;
@@ -61,6 +63,7 @@ export default function PartnerBrandsTable({
   toolbarActions,
   onOpen,
   onManageProducts,
+  onSettings,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
     const renderActions = (brand: EcommBrandRow) => {
@@ -77,6 +80,11 @@ export default function PartnerBrandsTable({
           <Tooltip title={locked ? 'View' : 'Edit'}>
             <IconButton size="small" onClick={() => onOpen(brand)}>
               {locked ? <VisibilityIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Brand settings">
+            <IconButton size="small" onClick={() => onSettings(brand)}>
+              <SettingsIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Stack>
@@ -109,7 +117,7 @@ export default function PartnerBrandsTable({
       { field: 'updated_at', headerName: 'Updated', hide: true, width: 130, valueGetter: updatedValue },
       { field: 'actions', headerName: 'Action', sortable: false, width: 120, cellRenderer: renderActions },
     ];
-  }, [onOpen, onManageProducts]);
+  }, [onOpen, onManageProducts, onSettings]);
 
   return (
     <DuncitTable<EcommBrandRow>

@@ -38,7 +38,14 @@ export const appConfig: AppConfig = {
       ],
     },
     { label: 'Host', to: '/become-host', icon: 'work' },
-    { label: 'E-Commerce Brand', to: '/ecomm-brand', icon: 'marketplace' },
+    {
+      label: 'E-Commerce Brand',
+      icon: 'marketplace',
+      children: [
+        { label: 'Dashboard', to: '/ecomm/dashboard', icon: 'analytics' },
+        { label: 'Your Brands', to: '/ecomm-brand', icon: 'storefront' },
+      ],
+    },
     { label: 'FAQs', to: '/faqs', icon: 'help' },
     { label: 'Support', to: '/support', icon: 'support' },
     { label: 'Policies', to: '/policies', icon: 'policy' },

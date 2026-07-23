@@ -3,6 +3,9 @@ import { partnerDashboardService } from '../../partnerDashboard.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.model';
 
@@ -126,5 +129,93 @@ describe('partnerDashboardService integration', () => {
 
     const result = await partnerDashboardService.get(ownerId, { from: '2025-06-01', to: '2025-06-30' });
     expect(result.summary.venue_earning).toBe(300);
+  });
+});
+
+describe('partnerDashboardService.ecommStats', () => {
+  const seedOrder = (over: Record<string, unknown>) =>
+    ProductOrderModel.create({
+      order_no: `eco-${Math.random().toString(36).slice(2)}`,
+      buyer_id: new Types.ObjectId(),
+      payment_id: new Types.ObjectId(),
+      items_total: 0,
+      total: 0,
+      fulfilment_method: 'SHIP',
+      ...over,
+    });
+
+  it('rejects an invalid caller and a foreign/invalid brand narrow', async () => {
+    await expect(partnerDashboardService.ecommStats('not-an-id')).rejects.toThrow(/authentication/i);
+    const ownerId = new Types.ObjectId().toString();
+    await expect(partnerDashboardService.ecommStats(ownerId, 'nope')).rejects.toThrow(/invalid brand/i);
+    const foreign = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Foreign' });
+    await expect(partnerDashboardService.ecommStats(ownerId, String(foreign._id))).rejects.toThrow(/not yours/i);
+  });
+
+  it('returns zeros for a partner with no brands', async () => {
+    const stats = await partnerDashboardService.ecommStats(new Types.ObjectId().toString());
+    expect(stats).toEqual({
+      total_brands: 0,
+      approved_brands: 0,
+      total_products: 0,
+      approved_products: 0,
+      total_warehouses: 0,
+      total_orders: 0,
+      total_items_sold: 0,
+      gross_revenue: 0,
+    });
+  });
+
+  it('aggregates brands, products, warehouses and only the partner\'s countable order lines', async () => {
+    const ownerId = new Types.ObjectId().toString();
+    const owner = new Types.ObjectId(ownerId);
+    const approved = await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Approved Co', status: 'APPROVED' });
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Draft Co', status: 'DRAFT' });
+    const foreignBrand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Foreign Co' });
+
+    await InventoryProductModel.create({ product_name: 'Mine A', sku: 'ECO-A', unit_cost: 5, brand_id: approved._id, ownership: 'BRAND', listing_review_status: 'APPROVED' });
+    await InventoryProductModel.create({ product_name: 'Mine P', sku: 'ECO-P', unit_cost: 5, brand_id: approved._id, ownership: 'BRAND', listing_review_status: 'PENDING' });
+    await InventoryProductModel.create({ product_name: 'Foreign', sku: 'ECO-F', unit_cost: 5, brand_id: foreignBrand._id, ownership: 'BRAND', listing_review_status: 'APPROVED' });
+
+    await BrandPickupLocationModel.create({ owner_kind: 'BRAND', brand_id: approved._id, nickname: 'ECO-WH-1' });
+    await BrandPickupLocationModel.create({ owner_kind: 'BRAND', brand_id: foreignBrand._id, nickname: 'ECO-WH-2' });
+
+    const productId = new Types.ObjectId();
+    // Countable order: one owned line + one foreign line (only the owned line sums).
+    await seedOrder({
+      line_items: [
+        { product_id: productId, name: 'Mine A', qty: 2, unit_cost: 100.25, gross: 200.505, ownership: 'BRAND', brand_id: approved._id },
+        { product_id: productId, name: 'Foreign', qty: 5, unit_cost: 10, gross: 50, ownership: 'BRAND', brand_id: foreignBrand._id },
+      ],
+    });
+    // Second countable order for the same brand.
+    await seedOrder({
+      line_items: [{ product_id: productId, name: 'Mine A', qty: 1, unit_cost: 100, gross: 100, ownership: 'BRAND', brand_id: approved._id }],
+    });
+    // Cancelled order — never counted.
+    await seedOrder({
+      fulfilment_status: 'CANCELLED',
+      line_items: [{ product_id: productId, name: 'Mine A', qty: 9, unit_cost: 100, gross: 900, ownership: 'BRAND', brand_id: approved._id }],
+    });
+    // Foreign-only order — not the partner's sale at all.
+    await seedOrder({
+      line_items: [{ product_id: productId, name: 'Foreign', qty: 3, unit_cost: 10, gross: 30, ownership: 'BRAND', brand_id: foreignBrand._id }],
+    });
+
+    const stats = await partnerDashboardService.ecommStats(ownerId);
+    expect(stats.total_brands).toBe(2);
+    expect(stats.approved_brands).toBe(1);
+    expect(stats.total_products).toBe(2);
+    expect(stats.approved_products).toBe(1);
+    expect(stats.total_warehouses).toBe(1);
+    expect(stats.total_orders).toBe(2);
+    expect(stats.total_items_sold).toBe(3);
+    // 200.505 + 100 → rounded to 2dp.
+    expect(stats.gross_revenue).toBe(300.51);
+
+    // Narrowing to one owned brand keeps the same scope here (single selling brand).
+    const narrowed = await partnerDashboardService.ecommStats(ownerId, String(approved._id));
+    expect(narrowed.total_brands).toBe(1);
+    expect(narrowed.total_orders).toBe(2);
   });
 });

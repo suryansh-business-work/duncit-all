@@ -18,10 +18,8 @@ import {
   PUBLIC_FINANCE,
 } from '../../checkout-page/queries';
 
-const POD_ID = 'POD1';
-
 const meta = (over: Partial<CartLineMeta> = {}): CartLineMeta => ({
-  pod_id: POD_ID,
+  pod_id: 'POD1',
   pod_title: 'Sunset Jam',
   club_slug: 'club-one',
   product_id: 'a',
@@ -85,8 +83,9 @@ const meMock = (): MockedResponse => ({
   },
 });
 
+// The combined checkout is cart-wide — coupons are the GLOBAL set (pod_id null).
 const couponsMock = (): MockedResponse => ({
-  request: { query: AVAILABLE_COUPONS, variables: { pod_id: POD_ID } },
+  request: { query: AVAILABLE_COUPONS, variables: { pod_id: null } },
   result: { data: { availableCouponsForPod: [] } },
 });
 
@@ -95,7 +94,15 @@ const shippingMock = (): MockedResponse => ({
   variableMatcher: () => true,
   result: {
     data: {
-      productShippingQuote: { total: 80, currency_symbol: '₹', all_quoted: true, lines: [] },
+      productShippingQuote: {
+        total: 80,
+        currency_symbol: '₹',
+        all_quoted: true,
+        lines: [
+          { warehouse_id: 'w1', pickup_pincode: '560001', courier_name: 'BlueDart', charge: 80, quoted: true, free: false },
+          { warehouse_id: 'w2', pickup_pincode: '110001', courier_name: 'Delhivery', charge: 0, quoted: true, free: true },
+        ],
+      },
     },
   },
 });
@@ -123,13 +130,13 @@ function renderPage(mocks: MockedResponse[], lines: Array<{ meta: CartLineMeta; 
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
       <CartProvider>
-        <MemoryRouter initialEntries={[`/product-checkout/${POD_ID}`]}>
+        <MemoryRouter initialEntries={['/product-checkout']}>
           <Seed lines={lines} />
           <Routes>
             <Route path="/" element={<div>HOME</div>} />
             <Route path="/cart" element={<div>CART</div>} />
             <Route path="/orders" element={<div>ORDERS</div>} />
-            <Route path="/product-checkout/:podId" element={<ProductCheckoutPage />} />
+            <Route path="/product-checkout" element={<ProductCheckoutPage />} />
           </Routes>
         </MemoryRouter>
       </CartProvider>
@@ -140,27 +147,47 @@ function renderPage(mocks: MockedResponse[], lines: Array<{ meta: CartLineMeta; 
 beforeEach(() => localStorage.clear());
 
 describe('ProductCheckoutPage', () => {
-  it('shows the empty state when the pod has no cart lines', async () => {
+  it('shows the empty state when the cart has no lines', async () => {
     renderPage([financeMock(), meMock(), couponsMock()]);
     expect(await screen.findByText('Nothing to checkout')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /back to cart/i }));
     expect(screen.getByText('CART')).toBeInTheDocument();
   });
 
-  it('renders the product-only checkout with the Dummy gateway', async () => {
-    renderPage([financeMock(), meMock(), couponsMock(), shippingMock()], [{ meta: meta(), qty: 2 }]);
+  it('renders ALL cart lines across pods with per-warehouse delivery rows and ONE Pay', async () => {
+    renderPage(
+      [financeMock(), meMock(), couponsMock(), shippingMock()],
+      [
+        { meta: meta(), qty: 2 },
+        { meta: meta({ pod_id: 'POD2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', unit_cost: 50 }), qty: 1 },
+      ],
+    );
     expect(await screen.findByText('Complete your order')).toBeInTheDocument();
     expect(screen.getByText('Payment details')).toBeInTheDocument();
+    // Lines from BOTH pods, grouped under pod sub-headers.
+    expect(screen.getByText('Sunset Jam')).toBeInTheDocument();
+    expect(screen.getByText('Beach Bash')).toBeInTheDocument();
     expect(screen.getByText('Alpha Tee × 2')).toBeInTheDocument();
+    expect(screen.getByText('Beta Mug × 1')).toBeInTheDocument();
     expect(screen.getByText('Dummy')).toBeInTheDocument();
+    // Per-warehouse delivery rows + delivery total.
+    expect(await screen.findByText('BlueDart')).toBeInTheDocument();
+    expect(screen.getByText('Delhivery')).toBeInTheDocument();
+    expect(screen.getByText('Free')).toBeInTheDocument();
+    expect(screen.getByText('Delivery total')).toBeInTheDocument();
+    // ONE Pay button for the whole cart.
+    expect(screen.getAllByRole('button', { name: /^pay/i })).toHaveLength(1);
     // Product summary — never a pod ticket line.
     expect(screen.queryByText(/Ticket/)).not.toBeInTheDocument();
   });
 
-  it('completes a dummy product payment, then routes to the product orders history', async () => {
+  it('completes a dummy payment, clears the WHOLE cart, then routes to order history', async () => {
     renderPage(
       [financeMock(), meMock(), couponsMock(), shippingMock(), dummyMock()],
-      [{ meta: meta(), qty: 2 }],
+      [
+        { meta: meta(), qty: 2 },
+        { meta: meta({ pod_id: 'POD2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug' }), qty: 1 },
+      ],
     );
     await screen.findByText('Complete your order');
     const payButton = await screen.findByRole('button', { name: /^pay/i });
@@ -170,7 +197,7 @@ describe('ProductCheckoutPage', () => {
     // The success screen routes the buyer to their product orders (not pod history).
     fireEvent.click(screen.getByRole('button', { name: /my orders/i }));
     expect(screen.getByText('ORDERS')).toBeInTheDocument();
-    // That pod's lines are cleared from the cart after payment.
+    // EVERY pod's lines are cleared from the cart after the one payment.
     expect(JSON.parse(localStorage.getItem('mweb_cart_lines') ?? '[]')).toHaveLength(0);
   });
 });

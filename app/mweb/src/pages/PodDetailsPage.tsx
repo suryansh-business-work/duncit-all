@@ -176,6 +176,7 @@ export default function PodDetailsPage() {
                 image_url: variant.image_url || row.image_url || '',
                 unit_cost: variant.unit_cost,
                 max_quantity: variant.max,
+                free_delivery_above: row.free_delivery_above ?? null,
               },
               quantity,
             )

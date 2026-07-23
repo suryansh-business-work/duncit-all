@@ -15,6 +15,7 @@ const pod = {
       image_url: 'img1.png',
       unit_cost: 10,
       available_count: 5,
+      free_delivery_above: 40,
     },
     {
       product_id: 'p2',
@@ -70,6 +71,8 @@ describe('usePodProductSelection', () => {
       unit_cost: 10,
       max_quantity: 5,
       variant_id: '',
+      // The product's free-delivery threshold rides the line (badge in cart/checkout).
+      free_delivery_above: 40,
     });
   });
 
@@ -82,6 +85,7 @@ describe('usePodProductSelection', () => {
       image_url: 'fallback.png',
       unit_cost: 0,
       max_quantity: 3,
+      free_delivery_above: null,
     });
   });
 

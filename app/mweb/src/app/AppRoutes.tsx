@@ -164,7 +164,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />
         <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
         <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
-        <Route path="/product-checkout/:podId" element={withAuth(<ProductCheckoutPage />)} />
+        <Route path="/product-checkout" element={withAuth(<ProductCheckoutPage />)} />
         <Route path="/cart" element={withAuth(<CartPage />)} />
         <Route path="/shop" element={withAuth(<ShopPage />)} />
         <Route path="/product/:productId" element={withAuth(<ProductDetailPage />)} />

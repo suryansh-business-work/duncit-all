@@ -117,6 +117,7 @@ export default function EcommBrandPage() {
             }
             onOpen={(brand) => { setError(null); setEditing(brand); }}
             onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
+            onSettings={(brand) => navigate(`/ecomm-brand/${brand.id}/settings`)}
           />
         </CardContent>
       </Card>

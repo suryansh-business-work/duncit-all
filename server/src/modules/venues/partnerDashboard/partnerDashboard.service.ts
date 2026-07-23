@@ -4,9 +4,14 @@ import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.mod
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
+import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+
+/** Order states that never count toward a partner's e-commerce sales. */
+const EXCLUDED_ORDER_STATUSES = ['CANCELLED', 'FAILED', 'RTO'];
 
 interface DashboardRange {
   from: string;
@@ -125,6 +130,70 @@ export const partnerDashboardService = {
       upcoming_slots: upcoming.reduce((sum, s) => sum + s.count, 0),
       booked_slots: stat('BOOKED').count,
       pending_requests: stat('PENDING').count,
+    };
+  },
+
+  /** E-commerce KPI cards for the partner portal's E-Commerce Dashboard. Scope =
+   * one of the owner's brands (brand_doc_id) or all of them. Sales figures come
+   * from ProductOrder line items only (pod product_requests earnings are a
+   * separate stream on the main dashboard). */
+  async ecommStats(userId: string, brandDocId?: string | null) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    }
+    const brandFilter: any = { owner_user_id: new Types.ObjectId(userId) };
+    if (brandDocId) {
+      if (!Types.ObjectId.isValid(brandDocId)) {
+        throw new GraphQLError('Invalid brand id', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      brandFilter._id = new Types.ObjectId(brandDocId);
+    }
+    const brands = await EcommBrandModel.find(brandFilter).select('_id status').lean();
+    if (brandDocId && brands.length === 0) {
+      throw new GraphQLError('Brand not found or not yours', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const brandIds = brands.map((b) => b._id);
+
+    const productScope = { brand_id: { $in: brandIds }, ownership: 'BRAND' };
+    const [totalProducts, approvedProducts, totalWarehouses] = brandIds.length
+      ? await Promise.all([
+          InventoryProductModel.countDocuments(productScope),
+          InventoryProductModel.countDocuments({ ...productScope, listing_review_status: 'APPROVED' }),
+          BrandPickupLocationModel.countDocuments({ owner_kind: 'BRAND', brand_id: { $in: brandIds } }),
+        ])
+      : [0, 0, 0];
+
+    const orderRows = brandIds.length
+      ? await ProductOrderModel.aggregate([
+          {
+            $match: {
+              'line_items.brand_id': { $in: brandIds },
+              fulfilment_status: { $nin: EXCLUDED_ORDER_STATUSES },
+            },
+          },
+          { $unwind: '$line_items' },
+          { $match: { 'line_items.brand_id': { $in: brandIds } } },
+          {
+            $group: {
+              _id: null,
+              items: { $sum: '$line_items.qty' },
+              revenue: { $sum: '$line_items.gross' },
+              orders: { $addToSet: '$_id' },
+            },
+          },
+        ])
+      : [];
+    const orderAgg = orderRows[0] ?? { items: 0, revenue: 0, orders: [] };
+
+    return {
+      total_brands: brands.length,
+      approved_brands: brands.filter((b) => b.status === 'APPROVED').length,
+      total_products: totalProducts,
+      approved_products: approvedProducts,
+      total_warehouses: totalWarehouses,
+      total_orders: orderAgg.orders.length,
+      total_items_sold: orderAgg.items,
+      gross_revenue: money(orderAgg.revenue),
     };
   },
 

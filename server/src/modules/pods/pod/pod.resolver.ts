@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
 import { coHostService } from './coHost.service';
 import { clubService } from '@modules/pods/club/club.service';
@@ -6,6 +7,7 @@ import { requireRole, requireAuth } from '@middleware/rbac';
 import { UserModel } from '@modules/access/user/user.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
@@ -105,6 +107,14 @@ async function resolvePodPlace(parent: any, ctx: GraphQLContext) {
   return parent.__podPlace;
 }
 
+/** Per-request cache of live product free-delivery thresholds (one lookup per
+ * product across every pod's product_requests in the operation). */
+const getProductThresholdCache = (ctx: GraphQLContext) => {
+  const bag = ctx as GraphQLContext & { __podProductThresholdCache?: Map<string, Promise<any>> };
+  bag.__podProductThresholdCache ??= new Map();
+  return bag.__podProductThresholdCache;
+};
+
 async function canViewMeeting(parent: any, ctx: GraphQLContext) {
   if ((parent.pod_mode ?? 'PHYSICAL') !== 'VIRTUAL') return false;
   if (isAdminCtx(ctx)) return true;
@@ -179,6 +189,20 @@ export const podResolvers = {
           responded_at: c.responded_at ?? null,
         };
       });
+    },
+  },
+  PodProductRequest: {
+    // The pod snapshot predates the threshold field, so it is always resolved
+    // from the LIVE product — the same source the checkout quote reads.
+    free_delivery_above: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<number | null> => {
+      const id = String(parent.product_id ?? '');
+      if (!Types.ObjectId.isValid(id)) return null;
+      const cache = getProductThresholdCache(ctx);
+      if (!cache.has(id)) {
+        cache.set(id, InventoryProductModel.findById(id).select('free_delivery_above').lean().exec());
+      }
+      const product = await cache.get(id);
+      return product?.free_delivery_above ?? null;
     },
   },
   PodComment: {

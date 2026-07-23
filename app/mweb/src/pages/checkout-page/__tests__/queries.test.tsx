@@ -156,6 +156,7 @@ describe('checkout-page queries documents', () => {
     expect(printed).toContain('all_quoted');
     expect(printed).toContain('courier_name');
     expect(printed).toContain('quoted');
+    expect(printed).toContain('free');
   });
 
   it('every exported document has exactly one operation definition', () => {
@@ -262,8 +263,9 @@ describe('checkout-page exported types are usable', () => {
       total: 80,
       currency_symbol: '₹',
       all_quoted: true,
-      lines: [{ warehouse_id: 'w1', pickup_pincode: '560001', courier_name: 'BlueDart', charge: 80, quoted: true }],
+      lines: [{ warehouse_id: 'w1', pickup_pincode: '560001', courier_name: 'BlueDart', charge: 80, quoted: true, free: false }],
     };
     expect(quote.lines[0].courier_name).toBe('BlueDart');
+    expect(quote.lines[0].free).toBe(false);
   });
 });

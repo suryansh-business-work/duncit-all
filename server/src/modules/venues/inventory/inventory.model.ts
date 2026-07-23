@@ -119,6 +119,9 @@ export interface IInventoryProduct extends Document {
   host_request_allowed: boolean;
   delivery_available: boolean;
   delivery_charge: number;
+  /** Line subtotal (qty × unit price) at/above which this product's delivery is
+   * free. null = no free-delivery offer on this product. */
+  free_delivery_above: number | null;
 
   listing_review_status: ProductListingReviewStatus;
   listing_review_notes: string;
@@ -273,6 +276,7 @@ const productSchema = new Schema<IInventoryProduct>(
     host_request_allowed: { type: Boolean, default: true },
     delivery_available: { type: Boolean, default: false },
     delivery_charge: { type: Number, default: 0, min: 0 },
+    free_delivery_above: { type: Number, default: null, min: 0 },
 
     listing_review_status: {
       type: String,

@@ -17,15 +17,16 @@ const mockServ = getServiceability as jest.Mock;
 let seq = 0;
 const seedWarehouse = () =>
   BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: `SQWH-${++seq}`, pincode: '110001' });
-const seedShip = (warehouseId: any, over: { weight_kg?: number; delivery_charge?: number } = {}) =>
+const seedShip = (warehouseId: any, over: Record<string, unknown> = {}) =>
   InventoryProductModel.create({
     product_name: 'Ship',
     sku: `SQ-${++seq}`,
     unit_cost: 100,
     delivery_target: 'SHIPROCKET',
     pickup_location_id: warehouseId,
-    weight_kg: over.weight_kg ?? 1,
-    delivery_charge: over.delivery_charge ?? 30,
+    weight_kg: 1,
+    delivery_charge: 30,
+    ...over,
   });
 
 describe('shiprocketService.quoteShipping', () => {
@@ -75,5 +76,70 @@ describe('shiprocketService.quoteShipping', () => {
     const quote = await shiprocketService.quoteShipping([{ product_id: String(product._id), quantity: 1 }], '560001');
     expect(quote.total).toBe(45);
     expect(quote.breakup[0].quoted).toBe(false);
+    expect(quote.breakup[0].free).toBe(false);
+  });
+});
+
+describe('shiprocketService.quoteShipping free-delivery threshold', () => {
+  it('zeroes a group when the line meets the product threshold (no rate lookup)', async () => {
+    mockConfigured.mockResolvedValue(true);
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { free_delivery_above: 150 });
+    // 2 × ₹100 = ₹200 ≥ ₹150 → the warehouse group ships free.
+    const quote = await shiprocketService.quoteShipping([{ product_id: String(product._id), quantity: 2 }], '560001');
+    expect(quote.total).toBe(0);
+    expect(quote.all_quoted).toBe(true);
+    expect(quote.breakup[0]).toMatchObject({ charge: 0, quoted: true, free: true, courier_name: '' });
+    expect(mockServ).not.toHaveBeenCalled();
+  });
+
+  it('charges normally while the line is below the threshold', async () => {
+    mockConfigured.mockResolvedValue(true);
+    mockServ.mockResolvedValue({ serviceable: true, courier_name: 'Blue', courier_company_id: '1', freight_charge: 72.5, etd: '3' });
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, { free_delivery_above: 150 });
+    // 1 × ₹100 = ₹100 < ₹150 → normal live quote applies.
+    const quote = await shiprocketService.quoteShipping([{ product_id: String(product._id), quantity: 1 }], '560001');
+    expect(quote.total).toBe(72.5);
+    expect(quote.breakup[0]).toMatchObject({ charge: 72.5, quoted: true, free: false });
+  });
+
+  it('keeps the whole group paid when any line in the warehouse misses its threshold (mixed group)', async () => {
+    mockConfigured.mockResolvedValue(false);
+    const wh = await seedWarehouse();
+    // Qualifying line (₹100 ≥ ₹100) + a no-threshold product (never qualifies).
+    const qualifies = await seedShip(wh._id, { free_delivery_above: 100, delivery_charge: 30 });
+    const noOffer = await seedShip(wh._id, { delivery_charge: 60 });
+    const quote = await shiprocketService.quoteShipping(
+      [
+        { product_id: String(qualifies._id), quantity: 1 },
+        { product_id: String(noOffer._id), quantity: 1 },
+      ],
+      '560001'
+    );
+    expect(quote.breakup).toHaveLength(1);
+    expect(quote.breakup[0]).toMatchObject({ charge: 60, quoted: false, free: false });
+  });
+
+  it('prices a variant line by the variant unit_cost (variant price wins)', async () => {
+    mockConfigured.mockResolvedValue(false);
+    const wh = await seedWarehouse();
+    const product = await seedShip(wh._id, {
+      free_delivery_above: 350,
+      variants: [{ option_label: 'Big', unit_cost: 200, inventory_count: 5, images: [] }],
+    });
+    const variantId = String(product.variants[0]._id);
+    // 2 × variant ₹200 = ₹400 ≥ ₹350 → free (product-level ₹100 alone would not qualify).
+    const met = await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), variant_id: variantId, quantity: 2 }],
+      '560001'
+    );
+    expect(met.breakup[0]).toMatchObject({ charge: 0, free: true });
+    // 1 × ₹200 = ₹200 < ₹350 → the manual fallback still applies.
+    const missed = await shiprocketService.quoteShipping(
+      [{ product_id: String(product._id), variant_id: variantId, quantity: 1 }],
+      '560001'
+    );
+    expect(missed.breakup[0]).toMatchObject({ charge: 30, free: false });
   });
 });

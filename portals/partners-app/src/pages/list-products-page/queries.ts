@@ -19,6 +19,8 @@ const PRODUCT_FIELDS = `
   unit_cost
   commission_pct
   delivery_target
+  pickup_location_id
+  free_delivery_above
   super_category_id
   category_id
   sub_category_id

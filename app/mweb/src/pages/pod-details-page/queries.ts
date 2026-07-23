@@ -60,6 +60,7 @@ export const POD_DETAILS = gql`
         quantity
         available_count
         total_cost
+        free_delivery_above
       }
       product_cost_total
       like_count

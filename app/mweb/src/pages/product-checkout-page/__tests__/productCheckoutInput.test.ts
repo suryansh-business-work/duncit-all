@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { CartLine } from '../../../components/cart/CartContext';
 import type { CheckoutForm } from '../../checkout-page/queries';
-import { buildProductCheckoutInput, mapLinesToItems, productSubtotal } from '../productCheckoutInput';
+import {
+  buildProductCheckoutInput,
+  mapLinesToItems,
+  productOrderDescription,
+  productSubtotal,
+} from '../productCheckoutInput';
 
 const line = (over: Partial<CartLine> = {}): CartLine => ({
   pod_id: 'pod1',
@@ -51,17 +56,23 @@ describe('productCheckoutInput helpers', () => {
     expect(productSubtotal([line({ quantity: 2, unit_cost: 100 }), line({ quantity: 1, unit_cost: 120 })])).toBe(320);
   });
 
+  it('describes the combined order generically by its item count', () => {
+    expect(productOrderDescription(mapLinesToItems([line({ quantity: 1 })]))).toBe('Product order · 1 item');
+    expect(
+      productOrderDescription(mapLinesToItems([line({ quantity: 2 }), line({ variant_id: 'v1', quantity: 1 })])),
+    ).toBe('Product order · 3 items');
+  });
+
   it('builds the ProductCheckoutInput with items, contact, shipping and coupon', () => {
     const items = mapLinesToItems([line()]);
     const { input, simulate_failure } = buildProductCheckoutInput(form, {
       items,
-      podTitle: 'Sunset Jam',
       mainAddress: null,
       couponCode: 'SAVE10',
     });
     expect(simulate_failure).toBe(true);
     expect(input.items).toEqual(items);
-    expect(input.description).toBe('Product order · Sunset Jam');
+    expect(input.description).toBe('Product order · 2 items');
     // Contact email is lowercased by toCheckoutContact.
     expect(input.contact_email).toBe('jane@example.com');
     expect(input.contact_phone_extension).toBe('+91');
@@ -83,7 +94,6 @@ describe('productCheckoutInput helpers', () => {
   it('passes a null coupon through unchanged', () => {
     const { input } = buildProductCheckoutInput(form, {
       items: mapLinesToItems([line()]),
-      podTitle: 'Sunset Jam',
       mainAddress: null,
       couponCode: null,
     });

@@ -251,6 +251,7 @@ export const PRODUCT_SHIPPING_QUOTE = gql`
         courier_name
         charge
         quoted
+        free
       }
     }
   }
@@ -270,6 +271,8 @@ export interface ProductShippingQuoteLine {
   courier_name: string;
   charge: number;
   quoted: boolean;
+  /** True when every line in this warehouse group met its product's free-delivery threshold. */
+  free: boolean;
 }
 
 export interface ProductShippingQuote {

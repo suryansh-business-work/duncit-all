@@ -28,6 +28,8 @@ export const emptyValues: ProductListingValues = {
   variants: [{ ...emptyVariant }],
   commission_pct: 15,
   delivery_target: 'SHIPROCKET',
+  pickup_location_id: '',
+  free_delivery_above: '',
 };
 
 const comboKey = (values: VariantOptionValue[]) =>
@@ -151,6 +153,8 @@ export function productToValues(product?: any): ProductListingValues {
     // Keep the product's own delivery target on edit — resetting it silently
     // converted PICKUP-style listings into ShipRocket ones.
     delivery_target: product.delivery_target ?? 'SHIPROCKET',
+    pickup_location_id: product.pickup_location_id ?? '',
+    free_delivery_above: toNumberOrEmpty(product.free_delivery_above),
   };
 }
 
@@ -230,5 +234,7 @@ export function toSubmitInput(values: ProductListingValues, brandId: string) {
     variants: values.variants.map(toVariantInput),
     commission_pct: values.commission_pct,
     delivery_target: values.delivery_target,
+    pickup_location_id: values.pickup_location_id,
+    free_delivery_above: values.free_delivery_above === '' ? null : Number(values.free_delivery_above),
   };
 }

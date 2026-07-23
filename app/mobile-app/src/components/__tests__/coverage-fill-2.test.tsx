@@ -37,16 +37,20 @@ describe('EditAccountDialog non-Error save failure', () => {
       />,
     );
     fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
-    await waitFor(() =>
-      expect(screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled).toBe(
-        false,
-      ),
+    await waitFor(
+      () =>
+        expect(screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled).toBe(
+          false,
+        ),
+      { timeout: 8000 },
     );
     fireEvent.press(screen.getByTestId('account-edit-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('account-edit-error')).toHaveTextContent('Could not save profile.'),
-    );
-  });
+    // Generous timeout: the RHF validate → submit → rejected onSave → setState →
+    // re-render chain can exceed waitFor's 1s default under parallel CI load, so
+    // this assertion flaked order-dependently once the suite grew.
+    await screen.findByTestId('account-edit-error', {}, { timeout: 8000 });
+    expect(screen.getByTestId('account-edit-error')).toHaveTextContent('Could not save profile.');
+  }, 20000);
 });
 
 describe('CheckoutSuccess invoice fallback', () => {

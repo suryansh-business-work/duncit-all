@@ -19,7 +19,8 @@ interface CartState {
   /** Create/replace a line's quantity; qty <= 0 removes it. Persists. */
   setLine: (meta: CartLineMeta, quantity: number) => void;
   removeLine: (podId: string, key: string) => void;
-  clearPod: (podId: string) => void;
+  /** Empty the whole cart (post-checkout / Clear cart). Persists. */
+  clearAll: () => void;
 }
 
 const persist = (lines: CartLine[]) => {
@@ -27,7 +28,7 @@ const persist = (lines: CartLine[]) => {
 };
 
 /** Global cart — products added from any Pod Shop, persisted across launches.
- * RN twin of mWeb's CartProvider; checkout consumes one pod's lines at a time. */
+ * RN twin of mWeb's CartProvider; the product checkout pays ALL lines at once. */
 export const useCartStore = create<CartState>((set, get) => ({
   lines: [],
   hydrated: false,
@@ -60,13 +61,30 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ lines: next });
     persist(next);
   },
-  clearPod: (podId) => {
-    const next = get().lines.filter((line) => line.pod_id !== podId);
-    set({ lines: next });
-    persist(next);
+  clearAll: () => {
+    set({ lines: [] });
+    persist([]);
   },
 }));
 
 /** Total units across the cart — drives the floating button badge. */
 export const selectCartCount = (state: CartState): number =>
   state.lines.reduce((sum, line) => sum + line.quantity, 0);
+
+/** Grand total (₹) across every cart line — drives the cart-wide checkout CTA. */
+export const selectCartTotal = (state: CartState): number =>
+  state.lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
+
+/** Cart lines grouped by pod (insertion order kept) — shared by the cart screen
+ * and the combined product-checkout summary. */
+export const groupLinesByPod = (
+  lines: CartLine[],
+): [string, { title: string; lines: CartLine[] }][] => {
+  const byPod = new Map<string, { title: string; lines: CartLine[] }>();
+  for (const line of lines) {
+    const group = byPod.get(line.pod_id) ?? { title: line.pod_title, lines: [] };
+    group.lines.push(line);
+    byPod.set(line.pod_id, group);
+  }
+  return Array.from(byPod.entries());
+};

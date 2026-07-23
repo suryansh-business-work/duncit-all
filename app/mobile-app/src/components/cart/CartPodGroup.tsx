@@ -2,6 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
+import { lineQualifiesFreeDelivery } from '@/services/cart';
 import { cartLineKey, type CartLine } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -11,7 +13,6 @@ interface Props {
   lines: CartLine[];
   onSetQuantity: (line: CartLine, quantity: number) => void;
   onRemove: (line: CartLine) => void;
-  onCheckout: () => void;
 }
 
 interface StepperProps {
@@ -66,18 +67,11 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
   );
 }
 
-/** One pod's cart lines: per-line +/- and remove, and the group's "Proceed to
- * checkout" (checkout is per pod — products ride its booking). RN twin of
- * mWeb's CartPodGroup. */
-export function CartPodGroup({
-  podId,
-  podTitle,
-  lines,
-  onSetQuantity,
-  onRemove,
-  onCheckout,
-}: Readonly<Props>) {
-  const { muted, onPrimary } = useThemeColors();
+/** One pod's cart lines: per-line +/- and remove, plus the group's products
+ * total. Checkout is cart-wide (one payment) from the cart screen's single CTA.
+ * RN twin of mWeb's CartPodGroup. */
+export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }: Readonly<Props>) {
+  const { muted } = useThemeColors();
   const total = lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
   return (
     <YStack
@@ -109,7 +103,7 @@ export function CartPodGroup({
               />
             ) : null}
           </YStack>
-          <YStack flex={1} minWidth={0}>
+          <YStack flex={1} minWidth={0} gap={2}>
             <Text fontSize={13.5} fontWeight="800" color="$color" numberOfLines={1}>
               {line.product_name}
               {line.variant_label ? ` — ${line.variant_label}` : ''}
@@ -117,6 +111,9 @@ export function CartPodGroup({
             <Text fontSize={11.5} color="$muted">
               ₹{line.unit_cost} each
             </Text>
+            {lineQualifiesFreeDelivery(line) ? (
+              <FreeDeliveryBadge testID={`cart-free-delivery-${cartLineKey(line)}`} />
+            ) : null}
           </YStack>
           <LineStepper line={line} onSetQuantity={onSetQuantity} />
           <XStack
@@ -137,22 +134,6 @@ export function CartPodGroup({
         </Text>
         <Text fontSize={15} fontWeight="900" color="$color">
           ₹{total}
-        </Text>
-      </XStack>
-      <XStack
-        testID={`cart-checkout-${podId}`}
-        role="button"
-        aria-label="Proceed to checkout"
-        onPress={onCheckout}
-        height={46}
-        alignItems="center"
-        justifyContent="center"
-        borderRadius={999}
-        backgroundColor="$primary"
-        pressStyle={{ opacity: 0.85 }}
-      >
-        <Text fontSize={14} fontWeight="900" color={onPrimary}>
-          Proceed to checkout
         </Text>
       </XStack>
     </YStack>

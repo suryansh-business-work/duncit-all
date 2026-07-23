@@ -65,6 +65,7 @@ export const MobileProductShippingQuoteDocument = gql(`
         courier_name
         charge
         quoted
+        free
       }
     }
   }

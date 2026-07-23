@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -29,7 +29,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
 
-/** Empty state when the pod's cart lines were cleared before reaching checkout. */
+/** Empty state when the cart was cleared before reaching checkout. */
 function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
   const { muted, onPrimary } = useThemeColors();
   return (
@@ -39,7 +39,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
         Nothing to checkout
       </Text>
       <Text fontSize={13} color="$muted" textAlign="center">
-        This pod has no products in your cart.
+        There are no products in your cart.
       </Text>
       <XStack
         testID="product-checkout-back-to-cart"
@@ -62,17 +62,13 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
   );
 }
 
-/** Standalone product checkout — one pod's cart lines paid through the product
- * engine (separate from the pod-membership payment). RN twin of mWeb's
- * ProductCheckoutPage. */
+/** Standalone product checkout — EVERY cart line (all pods) paid in ONE product
+ * payment, delivery listed per warehouse (separate from the pod-membership
+ * payment). RN twin of mWeb's ProductCheckoutPage. */
 export function ProductCheckoutScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'ProductCheckout'>>();
-  const podId = route.params?.podId ?? '';
-  const allLines = useCartStore((s) => s.lines);
-  const clearPod = useCartStore((s) => s.clearPod);
-  const lines = useMemo(() => allLines.filter((line) => line.pod_id === podId), [allLines, podId]);
-  const podTitle = lines[0]?.pod_title || 'Your order';
+  const lines = useCartStore((s) => s.lines);
+  const clearAll = useCartStore((s) => s.clearAll);
   const items = useMemo(() => mapLinesToItems(lines), [lines]);
   const subtotal = useMemo(() => productSubtotal(lines), [lines]);
 
@@ -87,7 +83,7 @@ export function ProductCheckoutScreen() {
     verifyRazorpay,
     previewCoupon,
     downloadInvoice,
-  } = useProductCheckout(podId);
+  } = useProductCheckout();
 
   const [deliveryPincode, setDeliveryPincode] = useState('');
   const {
@@ -111,10 +107,10 @@ export function ProductCheckoutScreen() {
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
   const appliedCode = coupon?.ok ? (coupon.code ?? null) : null;
   const effectiveTotal = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
-  const payContext = { items, podTitle, couponCode: appliedCode };
+  const payContext = { items, couponCode: appliedCode };
 
   const finishSuccess = (result: NonNullable<ProductPayment>) => {
-    clearPod(podId);
+    clearAll();
     setPayment(result);
   };
 
@@ -209,7 +205,6 @@ export function ProductCheckoutScreen() {
     body = (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
         <ProductOrderSummary
-          podTitle={podTitle}
           lines={lines}
           breakup={breakup}
           subtotal={subtotal}

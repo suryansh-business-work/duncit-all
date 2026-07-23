@@ -34,20 +34,20 @@ export type ProductPayment = ResultOf<
   typeof MobileDummyProductCheckoutDocument
 >['dummyProductCheckout'];
 
-/** The one pod's lines being paid, plus the resolved title + coupon. */
+/** The whole cart's items being paid, plus the applied coupon. */
 export interface ProductPayContext {
   items: ProductCartItemInput[];
-  podTitle: string;
   couponCode: string | null;
 }
 
 /**
  * Loads the standalone product-checkout context (finance + me + coupons) and
  * runs the product payment via the dedicated product engine — never the pod-join
- * engine. RN twin of mWeb's product checkout data layer (useCheckoutSession +
+ * engine. The checkout is cart-wide, so coupons are never pod-scoped here.
+ * RN twin of mWeb's product checkout data layer (useCheckoutSession +
  * useProductPayment). Shipping is quoted separately by useProductShippingQuote.
  */
-export function useProductCheckout(podId: string) {
+export function useProductCheckout() {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [me, setMe] = useState<CheckoutMe>(null);
   const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
@@ -62,7 +62,7 @@ export function useProductCheckout(podId: string) {
       graphqlRequest(MobileCheckoutMeDocument, undefined, { auth: true }).then(
         (d) => active && setMe(d.me),
       ),
-      graphqlRequest(MobileAvailableCouponsDocument, { pod_id: podId || null }, { auth: true })
+      graphqlRequest(MobileAvailableCouponsDocument, { pod_id: null }, { auth: true })
         .then((d) => active && setAvailableCoupons(d.availableCouponsForPod))
         .catch(() => undefined),
     ])
@@ -71,14 +71,13 @@ export function useProductCheckout(podId: string) {
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, []);
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
 
   const buildInput = (values: CheckoutFormValues, ctx: ProductPayContext) =>
     buildProductCheckoutInput(values, {
       items: ctx.items,
-      podTitle: ctx.podTitle,
       mainAddress: me?.address ?? null,
       couponCode: ctx.couponCode,
     });
@@ -124,7 +123,7 @@ export function useProductCheckout(podId: string) {
   };
 
   const previewCoupon = (code: string, amount: number): Promise<CouponPreview> =>
-    previewCouponRequest(code, podId, amount);
+    previewCouponRequest(code, '', amount);
 
   return {
     finance,

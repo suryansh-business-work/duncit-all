@@ -82,7 +82,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PostDetail: 'post/:postId',
       VenueDetails: 'venue/:venueId',
       Checkout: 'checkout/:podId',
-      ProductCheckout: 'product-checkout/:podId',
+      ProductCheckout: 'product-checkout',
       NotFound: '*',
     },
   },

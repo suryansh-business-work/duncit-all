@@ -7,35 +7,22 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { CartPodGroup } from '@/components/cart/CartPodGroup';
 import { StackScreen } from '@/components/StackScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { cartLineKey, useCartStore, type CartLine } from '@/stores/cart.store';
+import { cartLineKey, groupLinesByPod, selectCartTotal, useCartStore } from '@/stores/cart.store';
 import type { RootStackParamList } from '@/navigation/types';
 
-/** The cart — every product added from any Pod Shop, grouped by pod. Each pod
- * group checks out as its OWN product payment (separate from the pod-membership
- * payment). RN twin of mWeb's CartPage. */
+/** The cart — every product added from any Pod Shop, grouped by pod for
+ * display, paid together as ONE product payment (delivery is still quoted per
+ * warehouse at checkout). RN twin of mWeb's CartPage. */
 export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, onPrimary } = useThemeColors();
   const lines = useCartStore((s) => s.lines);
   const setLine = useCartStore((s) => s.setLine);
   const removeLine = useCartStore((s) => s.removeLine);
-  const clearPod = useCartStore((s) => s.clearPod);
+  const clearAll = useCartStore((s) => s.clearAll);
+  const total = useCartStore(selectCartTotal);
 
-  const groups = useMemo(() => {
-    const byPod = new Map<string, { title: string; lines: CartLine[] }>();
-    for (const line of lines) {
-      const group = byPod.get(line.pod_id) ?? { title: line.pod_title, lines: [] };
-      group.lines.push(line);
-      byPod.set(line.pod_id, group);
-    }
-    return Array.from(byPod.entries());
-  }, [lines]);
-
-  // Each pod group starts a SEPARATE product payment for just that pod's lines
-  // via the product engine (never the pod-membership checkout).
-  const checkoutPod = (podId: string) => {
-    navigation.navigate('ProductCheckout', { podId });
-  };
+  const groups = useMemo(() => groupLinesByPod(lines), [lines]);
 
   let body;
   if (groups.length === 0) {
@@ -78,14 +65,38 @@ export function CartScreen() {
             lines={group.lines}
             onSetQuantity={(line, quantity) => setLine(line, quantity)}
             onRemove={(line) => removeLine(podId, cartLineKey(line))}
-            onCheckout={() => checkoutPod(podId)}
           />
         ))}
+        <XStack justifyContent="space-between" alignItems="center">
+          <Text fontSize={12} color="$muted">
+            Cart total
+          </Text>
+          <Text testID="cart-total" fontSize={16} fontWeight="900" color="$color">
+            ₹{total}
+          </Text>
+        </XStack>
+        {/* ONE cart-wide checkout — every line pays in a single product payment. */}
+        <XStack
+          testID="cart-checkout"
+          role="button"
+          aria-label="Proceed to checkout"
+          onPress={() => navigation.navigate('ProductCheckout')}
+          height={46}
+          alignItems="center"
+          justifyContent="center"
+          borderRadius={999}
+          backgroundColor="$primary"
+          pressStyle={{ opacity: 0.85 }}
+        >
+          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+            Proceed to checkout
+          </Text>
+        </XStack>
         <XStack
           testID="cart-clear"
           role="button"
           aria-label="Clear cart"
-          onPress={() => groups.forEach(([podId]) => clearPod(podId))}
+          onPress={clearAll}
           alignSelf="center"
           padding={8}
           pressStyle={{ opacity: 0.7 }}

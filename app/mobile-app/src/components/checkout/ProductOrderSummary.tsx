@@ -1,13 +1,16 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { cartLineKey, type CartLine } from '@/stores/cart.store';
+import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
+import { lineQualifiesFreeDelivery } from '@/services/cart';
+import { cartLineKey, groupLinesByPod, type CartLine } from '@/stores/cart.store';
 import type { ProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
 
+type QuoteLine = NonNullable<ProductShippingQuote>['lines'][number];
+
 interface Props {
-  podTitle: string;
   lines: CartLine[];
   breakup: CheckoutBreakup;
   subtotal: number;
@@ -34,26 +37,74 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
   );
 }
 
-/** The delivery row value: a prompt until a valid pincode, a spinner label while
- * quoting, else the live shipping total. Extracted to keep the summary free of a
- * nested ternary (S3358). RN twin of mWeb's deliveryValue. */
-function deliveryValue(
-  pincodeValid: boolean,
-  shippingLoading: boolean,
-  quote: ProductShippingQuote | null,
-  currency: string,
-): string {
-  if (!pincodeValid) return 'Enter pincode';
-  if (shippingLoading && !quote) return 'Calculating…';
-  return formatMoney(currency, quote?.total ?? 0);
+/** One product line: name × qty and its subtotal, plus the free-delivery badge
+ * when the line's subtotal reaches the product's threshold. */
+function ProductLineRow({ line, value }: Readonly<{ line: CartLine; value: string }>) {
+  const label = `${line.product_name}${line.variant_label ? ` — ${line.variant_label}` : ''} × ${line.quantity}`;
+  return (
+    <YStack gap={2}>
+      <Row label={label} value={value} />
+      {lineQualifiesFreeDelivery(line) ? (
+        <FreeDeliveryBadge testID={`summary-free-delivery-${line.pod_id}:${cartLineKey(line)}`} />
+      ) : null}
+    </YStack>
+  );
 }
 
-/** Product-only order summary for the standalone product checkout: line items,
- * products subtotal, live delivery (ShipRocket) and the payable total. No pod
- * ticket / "Event ticket" line — pods and products never share a payment. RN
- * twin of mWeb's ProductOrderSummaryCard. */
+/** A warehouse group's delivery charge: "Free" when every line in the group met
+ * its free-delivery threshold, else the (live or manual-fallback) charge. */
+function quoteLineValue(line: QuoteLine, currency: string): string {
+  if (line.free) return 'Free';
+  return formatMoney(currency, line.charge);
+}
+
+/** A warehouse group's row label: the courier name, marked "(estimated)" when
+ * ShipRocket could not price it live (manual fallback). */
+function quoteLineLabel(line: QuoteLine): string {
+  const courier = line.courier_name || 'Delivery';
+  if (line.quoted) return courier;
+  return `${courier} (estimated)`;
+}
+
+/** Delivery rows — a prompt until a valid pincode, a spinner label while
+ * quoting, else ONE ROW PER warehouse group plus the delivery total. RN twin of
+ * mWeb's DeliveryRows. */
+function DeliveryRows({
+  quote,
+  shippingLoading,
+  pincodeValid,
+  currency,
+}: Readonly<{
+  quote: ProductShippingQuote | null;
+  shippingLoading: boolean;
+  pincodeValid: boolean;
+  currency: string;
+}>) {
+  if (!pincodeValid) return <Row label="Delivery" value="Enter pincode" />;
+  if (!quote) {
+    const pending = shippingLoading ? 'Calculating…' : formatMoney(currency, 0);
+    return <Row label="Delivery" value={pending} />;
+  }
+  return (
+    <YStack gap={8}>
+      {quote.lines.map((line) => (
+        <Row
+          key={line.warehouse_id}
+          label={quoteLineLabel(line)}
+          value={quoteLineValue(line, currency)}
+        />
+      ))}
+      <Row label="Delivery total" value={formatMoney(currency, quote.total)} />
+    </YStack>
+  );
+}
+
+/** Product-only order summary for the combined product checkout: EVERY cart
+ * line grouped by pod, products subtotal, one live delivery row per warehouse
+ * group (ShipRocket) with a delivery total, and the payable total. No pod
+ * ticket line — pods and products never share a payment. RN twin of mWeb's
+ * ProductOrderSummaryCard. */
 export function ProductOrderSummary({
-  podTitle,
   lines,
   breakup,
   subtotal,
@@ -62,7 +113,7 @@ export function ProductOrderSummary({
   pincodeValid,
 }: Readonly<Props>) {
   const fmt = (value: number) => formatMoney(breakup.currency, value);
-  const delivery = deliveryValue(pincodeValid, shippingLoading, quote, breakup.currency);
+  const groups = groupLinesByPod(lines);
   const estimated = !!quote && !quote.all_quoted;
 
   return (
@@ -82,21 +133,40 @@ export function ProductOrderSummary({
             Order summary
           </Text>
           <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1}>
-            {podTitle}
+            Your order
           </Text>
         </YStack>
       </XStack>
       <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
-      {lines.map((line) => (
-        <Row
-          key={cartLineKey(line)}
-          label={`${line.product_name}${line.variant_label ? ` — ${line.variant_label}` : ''} × ${line.quantity}`}
-          value={fmt(line.unit_cost * line.quantity)}
-        />
+      {groups.map(([podId, group]) => (
+        <YStack key={podId} gap={6}>
+          <Text
+            testID={`summary-pod-${podId}`}
+            fontSize={11}
+            fontWeight="800"
+            textTransform="uppercase"
+            color="$muted"
+            numberOfLines={1}
+          >
+            {group.title}
+          </Text>
+          {group.lines.map((line) => (
+            <ProductLineRow
+              key={`${line.pod_id}:${cartLineKey(line)}`}
+              line={line}
+              value={fmt(line.unit_cost * line.quantity)}
+            />
+          ))}
+        </YStack>
       ))}
       <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
       <Row label="Subtotal" value={fmt(subtotal)} />
-      <Row label="Delivery" value={delivery} />
+      <DeliveryRows
+        quote={quote}
+        shippingLoading={shippingLoading}
+        pincodeValid={pincodeValid}
+        currency={breakup.currency}
+      />
       {estimated ? (
         <Text testID="product-shipping-estimated" fontSize={11.5} color="$muted">
           Estimated delivery — final charge confirmed at checkout.

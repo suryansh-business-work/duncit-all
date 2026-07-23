@@ -32,7 +32,7 @@ const mockRequest = graphqlRequest as jest.Mock;
 const isAvailable = Sharing.isAvailableAsync as jest.Mock;
 
 const items: ProductCartItemInput[] = [{ product_id: 'a', pod_id: 'p1', quantity: 2 }];
-const ctx = { items, podTitle: 'Sunset Jam', couponCode: null };
+const ctx = { items, couponCode: null };
 
 const values: CheckoutFormValues = {
   full_name: 'Riya Sharma',
@@ -144,7 +144,7 @@ beforeEach(() => {
 
 describe('useProductCheckout', () => {
   it('loads finance, me and the available coupons', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.finance?.gst_pct).toBe(18);
     expect(result.current.me?.email).toBe('r@d.com');
@@ -152,8 +152,8 @@ describe('useProductCheckout', () => {
     expect(result.current.initialValues.country).toBe('India');
   });
 
-  it('scopes the coupon lookup to no pod when the podId is empty', async () => {
-    const { result } = renderHook(() => useProductCheckout(''));
+  it('never scopes the coupon lookup to a pod (the checkout is cart-wide)', async () => {
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(mockRequest).toHaveBeenCalledWith(
       MobileAvailableCouponsDocument,
@@ -167,7 +167,7 @@ describe('useProductCheckout', () => {
       if (doc === MobileAvailableCouponsDocument) return Promise.reject(new Error('down'));
       return route(doc);
     });
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.availableCoupons).toEqual([]);
   });
@@ -178,13 +178,13 @@ describe('useProductCheckout', () => {
       .mockImplementation((doc) =>
         doc === MobileCheckoutMeDocument ? Promise.reject(new Error('down')) : route(doc),
       );
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.me).toBeNull();
   });
 
   it('pays via the product dummy engine with the mapped input', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     let payment;
     await act(async () => {
@@ -194,7 +194,7 @@ describe('useProductCheckout', () => {
     const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyProductCheckoutDocument);
     expect(call![1].input).toMatchObject({
       items,
-      description: 'Product order · Sunset Jam',
+      description: 'Product order · 2 items',
       delivery_pincode: '411001',
       simulate_failure: false,
     });
@@ -202,7 +202,7 @@ describe('useProductCheckout', () => {
   });
 
   it('creates a Razorpay product order then verifies the signature', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     let order;
     await act(async () => {
@@ -226,7 +226,7 @@ describe('useProductCheckout', () => {
   });
 
   it('threads the applied coupon into the product input', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
       await result.current.payProduct(values, { ...ctx, couponCode: 'TEN' });
@@ -235,8 +235,8 @@ describe('useProductCheckout', () => {
     expect(call![1].input.coupon_code).toBe('TEN');
   });
 
-  it('previews a coupon scoped to the pod', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+  it('previews a coupon without a pod scope', async () => {
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     let preview;
     await act(async () => {
@@ -245,13 +245,13 @@ describe('useProductCheckout', () => {
     expect(preview).toMatchObject({ ok: true, final_total: 180 });
     expect(mockRequest).toHaveBeenCalledWith(
       MobilePreviewCouponDocument,
-      expect.objectContaining({ input: expect.objectContaining({ pod_id: 'p1', amount: 200 }) }),
+      expect.objectContaining({ input: expect.objectContaining({ pod_id: null, amount: 200 }) }),
       { auth: true },
     );
   });
 
   it('saves the entered address as the main address when opted in', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
       await result.current.createRazorpayProductOrder({ ...values, save_as_main: true }, ctx);
@@ -266,7 +266,7 @@ describe('useProductCheckout', () => {
   });
 
   it('downloads the invoice via the share sheet', async () => {
-    const { result } = renderHook(() => useProductCheckout('p1'));
+    const { result } = renderHook(() => useProductCheckout());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
       await result.current.downloadInvoice('pay1', 'INV/1');

@@ -9,6 +9,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useProductCheckout', () => ({ useProductCheckout: jest.fn() }));
 jest.mock('@/hooks/useProductShippingQuote', () => ({ useProductShippingQuote: jest.fn() }));
 jest.mock('@/services/cart', () => ({
+  ...jest.requireActual('@/services/cart'),
   getCartLines: jest.fn().mockResolvedValue([]),
   setCartLines: jest.fn().mockResolvedValue(undefined),
 }));
@@ -22,10 +23,8 @@ jest.mock('expo-file-system/legacy', () => ({
 jest.mock('expo-sharing', () => ({ isAvailableAsync: jest.fn(), shareAsync: jest.fn() }));
 
 const mockNavigate = jest.fn();
-let mockRouteParams: { podId: string } | undefined = { podId: 'p1' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
-  useRoute: () => ({ params: mockRouteParams }),
 }));
 
 const mockedCheckout = useProductCheckout as jest.Mock;
@@ -112,7 +111,6 @@ async function fireRazorpaySuccess() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockRouteParams = { podId: 'p1' };
   useCartStore.setState({ lines: [line()], hydrated: true });
   payProduct.mockResolvedValue({
     id: 'pay1',
@@ -134,10 +132,26 @@ describe('ProductCheckoutScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Cart');
   });
 
-  it('shows the empty state when the route carries no pod id', () => {
-    mockRouteParams = undefined;
+  it("checks out EVERY pod's cart lines together, grouped by pod", () => {
+    useCartStore.setState({
+      lines: [
+        line(),
+        line({
+          pod_id: 'p2',
+          pod_title: 'Beach Bash',
+          product_id: 'b',
+          product_name: 'Beta Mug',
+          unit_cost: 80,
+          quantity: 1,
+        }),
+      ],
+      hydrated: true,
+    });
     renderWithProviders(<ProductCheckoutScreen />);
-    expect(screen.getByTestId('product-checkout-empty')).toBeOnTheScreen();
+    expect(screen.getByTestId('summary-pod-p1')).toHaveTextContent('Sunset Jam');
+    expect(screen.getByTestId('summary-pod-p2')).toHaveTextContent('Beach Bash');
+    expect(screen.getByText('Alpha Tee × 2')).toBeOnTheScreen();
+    expect(screen.getByText('Beta Mug × 1')).toBeOnTheScreen();
   });
 
   it('shows a spinner in the contact card while the profile is still loading', () => {
@@ -165,14 +179,18 @@ describe('ProductCheckoutScreen', () => {
     expect(screen.queryByText('Ticket price')).toBeNull();
   });
 
-  it('pays via the dummy engine, clears the pod cart and opens the orders history', async () => {
+  it('pays via the dummy engine, clears the whole cart and opens the orders history', async () => {
+    useCartStore.setState({
+      lines: [line(), line({ pod_id: 'p2', product_id: 'b', product_name: 'Beta Mug' })],
+      hydrated: true,
+    });
     renderWithProviders(<ProductCheckoutScreen />);
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));
     await waitFor(() => expect(payProduct).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByTestId('checkout-success')).toBeOnTheScreen());
-    // The pod's cart lines are cleared on success.
-    expect(useCartStore.getState().lines.some((l) => l.pod_id === 'p1')).toBe(false);
+    // EVERY cart line (all pods) is cleared on success — one combined payment.
+    expect(useCartStore.getState().lines).toEqual([]);
     expect(screen.getByText('My orders')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('success-profile'));
     expect(mockNavigate).toHaveBeenCalledWith('OrdersHistory');

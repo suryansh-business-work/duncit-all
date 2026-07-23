@@ -238,23 +238,30 @@ describe('PodShop', () => {
     expect(screen.getByText('Available')).toBeOnTheScreen();
     expect(screen.getByText('Tee')).toBeOnTheScreen();
     expect(screen.getByText('Available 5')).toBeOnTheScreen();
-    expect(screen.getByText('+₹100')).toBeOnTheScreen();
+    // Unpicked rows show the plain unit price (no "+" line-total preview).
+    expect(screen.getByText('₹100')).toBeOnTheScreen();
     expect(screen.getByText('Cap')).toBeOnTheScreen();
     // available_count null falls back to quantity; all-null → 0.
     expect(screen.getByText('Available 7')).toBeOnTheScreen();
     expect(screen.getByText('Available 0')).toBeOnTheScreen();
-    expect(screen.getByText('+₹0')).toBeOnTheScreen();
-    // Nothing picked yet → neutral caption + ₹0 running total.
+    // Nothing picked yet → neutral caption + ₹0 running total (and the ₹0 price
+    // on the all-null product).
     expect(screen.getByText('Selected product total')).toBeOnTheScreen();
-    expect(screen.getByText('₹0')).toBeOnTheScreen();
+    expect(screen.getAllByText('₹0').length).toBeGreaterThan(0);
+    // In-stock rows offer Add to cart; the out-of-stock row (max 0) hides it.
+    expect(screen.getByTestId('pod-shop-add-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-shop-add-4')).toBeNull();
   });
 
-  it('selects a product when its row is pressed', () => {
+  it('adds a product from its Add to cart button (row press never toggles)', () => {
     const onSelectionChange = jest.fn();
     renderWithProviders(
       <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={onSelectionChange} />,
     );
+    // The whole-card tap is gone — pressing the row is inert.
     fireEvent.press(screen.getByTestId('pod-shop-row-1'));
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('pod-shop-add-1'));
     expect(onSelectionChange).toHaveBeenCalledWith({ '1': 1 });
   });
 
@@ -291,7 +298,7 @@ describe('PodShop', () => {
     expect(onSelectionChange).toHaveBeenCalledWith({});
   });
 
-  it('deselects a picked product when its row is pressed again', () => {
+  it('swaps the Add to cart button for the stepper once a product is picked', () => {
     const onSelectionChange = jest.fn();
     renderWithProviders(
       <PodShop
@@ -300,8 +307,11 @@ describe('PodShop', () => {
         onSelectionChange={onSelectionChange}
       />,
     );
+    expect(screen.queryByTestId('pod-shop-add-2')).toBeNull();
+    expect(screen.getByTestId('pod-shop-qty-2')).toHaveTextContent('1');
+    // Pressing the picked row is inert too — only the steppers change quantity.
     fireEvent.press(screen.getByTestId('pod-shop-row-2'));
-    expect(onSelectionChange).toHaveBeenCalledWith({});
+    expect(onSelectionChange).not.toHaveBeenCalled();
   });
 
   it('disables the increment at max stock and shows a plural caption', () => {
@@ -338,9 +348,11 @@ describe('PodShop', () => {
         readOnly
       />,
     );
-    // Products are still visible (name + price + info icon), but not selectable.
+    // Products are still visible (name + price + info icon), but not selectable —
+    // the Add to cart button is hidden on read-only rows.
     expect(screen.getByText('Tee')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-shop-info-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-shop-add-1')).toBeNull();
     fireEvent.press(screen.getByTestId('pod-shop-row-1'));
     expect(onSelectionChange).not.toHaveBeenCalled();
     // The selection total is replaced by a shop-closed note (the "already booked"

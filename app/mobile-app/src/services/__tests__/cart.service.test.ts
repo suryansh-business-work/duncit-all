@@ -1,5 +1,5 @@
 import { getItem, setItem } from '@/services/secure-storage';
-import { getCartLines, setCartLines } from '@/services/cart';
+import { getCartLines, lineQualifiesFreeDelivery, setCartLines } from '@/services/cart';
 
 jest.mock('@/services/secure-storage', () => ({
   getItem: jest.fn(),
@@ -43,5 +43,21 @@ describe('cart service', () => {
     // Malformed rows are dropped, valid ones kept.
     mockGet.mockResolvedValue(JSON.stringify([line, null, { product_id: 'x' }]));
     expect(await getCartLines()).toEqual([line]);
+  });
+});
+
+describe('lineQualifiesFreeDelivery', () => {
+  it('never qualifies without a threshold (absent or null)', () => {
+    expect(lineQualifiesFreeDelivery(line)).toBe(false);
+    expect(lineQualifiesFreeDelivery({ ...line, free_delivery_above: null })).toBe(false);
+  });
+
+  it('qualifies only when the line subtotal reaches the threshold', () => {
+    expect(lineQualifiesFreeDelivery({ ...line, quantity: 2, free_delivery_above: 200 })).toBe(
+      true,
+    );
+    expect(lineQualifiesFreeDelivery({ ...line, quantity: 1, free_delivery_above: 200 })).toBe(
+      false,
+    );
   });
 });

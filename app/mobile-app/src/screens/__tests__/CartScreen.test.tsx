@@ -6,6 +6,7 @@ import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/cart', () => ({
+  ...jest.requireActual('@/services/cart'),
   getCartLines: jest.fn().mockResolvedValue([]),
   setCartLines: jest.fn().mockResolvedValue(undefined),
 }));
@@ -100,28 +101,44 @@ describe('CartScreen', () => {
     expect(useCartStore.getState().lines.some((l) => l.pod_id === 'p2')).toBe(false);
   });
 
-  it('starts a separate product checkout for one pod group', () => {
+  it('starts ONE cart-wide product checkout with the grand total', () => {
     useCartStore.setState({
       lines: [
         line(),
         line({
-          product_id: 'a',
-          variant_id: 'v1',
+          pod_id: 'p2',
+          pod_title: 'Beach Bash',
+          product_id: 'b',
           unit_cost: 120,
           quantity: 1,
-          variant_label: 'L',
         }),
       ],
       hydrated: true,
     });
     renderWithProviders(<CartScreen />);
-    fireEvent.press(screen.getByTestId('cart-checkout-p1'));
-    // Products check out via the standalone product engine (reads the pod's cart
-    // lines by podId), never the pod-membership Checkout.
-    expect(mockNavigate).toHaveBeenCalledWith('ProductCheckout', { podId: 'p1' });
+    // Grand total across every pod: 2×100 + 1×120.
+    expect(screen.getByTestId('cart-total')).toHaveTextContent('₹320');
+    fireEvent.press(screen.getByTestId('cart-checkout'));
+    // Every line checks out together via the standalone product engine (no
+    // per-pod param), never the pod-membership Checkout.
+    expect(mockNavigate).toHaveBeenCalledWith('ProductCheckout');
   });
 
-  it('clears every pod group from the Clear cart action', () => {
+  it('shows the free-delivery badge only on lines that reach their threshold', () => {
+    useCartStore.setState({
+      lines: [
+        line({ free_delivery_above: 200 }),
+        line({ product_id: 'b', product_name: 'Beta Mug', quantity: 1, free_delivery_above: 500 }),
+      ],
+      hydrated: true,
+    });
+    renderWithProviders(<CartScreen />);
+    // 2×100 ≥ 200 qualifies; 1×100 < 500 does not.
+    expect(screen.getByTestId('cart-free-delivery-a')).toBeOnTheScreen();
+    expect(screen.queryByTestId('cart-free-delivery-b')).toBeNull();
+  });
+
+  it('empties the whole cart from the Clear cart action', () => {
     useCartStore.setState({
       lines: [line(), line({ pod_id: 'p2', product_id: 'b' })],
       hydrated: true,

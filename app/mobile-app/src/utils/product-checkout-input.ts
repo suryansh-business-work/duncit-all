@@ -6,8 +6,8 @@ import type { ProductCartItemInput, ProductCheckoutInput } from '@/generated/gra
 /** Where the product order confirms back to (the mobile app has no web URL). */
 const CHECKOUT_URL = 'duncit-mobile://product-checkout';
 
-/** Cart lines for one pod → the product engine's cart items. Each line keeps its
- * own pod (the per-pod stock gate still applies) and its chosen variant. */
+/** All cart lines → the product engine's cart items. Each line keeps its own
+ * pod (the per-pod stock gate still applies) and its chosen variant. */
 export const mapLinesToItems = (lines: CartLine[]): ProductCartItemInput[] =>
   lines.map((line) => ({
     product_id: line.product_id,
@@ -22,10 +22,16 @@ export const productSubtotal = (lines: CartLine[]): number =>
 
 interface BuildContext {
   items: ProductCartItemInput[];
-  podTitle: string;
   mainAddress?: CheckoutMainAddress | null;
   couponCode: string | null;
 }
+
+/** Generic payment description for the combined cart, e.g. "Product order · 3 items". */
+export const productOrderDescription = (items: ProductCartItemInput[]): string => {
+  const count = items.reduce((sum, item) => sum + item.quantity, 0);
+  const noun = count === 1 ? 'item' : 'items';
+  return `Product order · ${count} ${noun}`;
+};
 
 interface BuiltProductCheckout {
   input: ProductCheckoutInput;
@@ -55,7 +61,7 @@ export function buildProductCheckoutInput(
   };
   const input: ProductCheckoutInput = {
     items: ctx.items,
-    description: `Product order · ${ctx.podTitle}`,
+    description: productOrderDescription(ctx.items),
     contact_name: values.full_name.trim(),
     contact_email: values.email,
     contact_phone_extension: values.phone_extension,

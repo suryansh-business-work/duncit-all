@@ -9,6 +9,7 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/cart', () => ({
+  ...jest.requireActual('@/services/cart'),
   getCartLines: jest.fn().mockResolvedValue([]),
   setCartLines: jest.fn().mockResolvedValue(undefined),
 }));
@@ -374,7 +375,7 @@ describe('PodDetailsScreen', () => {
       isLoading: false,
     });
     renderWithProviders(<PodDetailsScreen />);
-    fireEvent.press(screen.getByTestId('pod-shop-row-pr1'));
+    fireEvent.press(screen.getByTestId('pod-shop-add-pr1'));
     // The product is added to the cart (bought separately via the product
     // checkout), NOT mixed into the pod-membership payment.
     expect(useCartStore.getState().lines.some((l) => l.product_id === 'pr1')).toBe(true);
@@ -396,6 +397,15 @@ describe('PodDetailsScreen', () => {
             image_url: '',
             images: [],
           },
+          {
+            product_id: 'pr2',
+            product_name: 'Drum pad',
+            available_count: 4,
+            unit_cost: 300,
+            image_url: '',
+            images: [],
+            free_delivery_above: 300,
+          },
         ],
       },
       savedInitially: false,
@@ -413,11 +423,20 @@ describe('PodDetailsScreen', () => {
       quantity: 2,
       max_quantity: 3,
       image_url: 'http://x/v9.jpg',
+      // No product threshold → the variant line carries null.
+      free_delivery_above: null,
     });
     // A variant with no image of its own falls back to the pod row's image.
     fireEvent.press(screen.getByTestId('sheet-stub-add-imageless-variant'));
     const imageless = useCartStore.getState().lines.find((l) => l.variant_id === 'v10');
     expect(imageless?.image_url).toBe('');
+    // A product WITH a threshold threads it onto its variant lines too.
+    fireEvent.press(screen.getByTestId('pod-shop-info-pr2'));
+    fireEvent.press(screen.getByTestId('sheet-stub-add-variant'));
+    const thresholdLine = useCartStore
+      .getState()
+      .lines.find((l) => l.product_id === 'pr2' && l.variant_id === 'v9');
+    expect(thresholdLine?.free_delivery_above).toBe(300);
   });
 
   it('hides the Pod Shop when products are gated off, even with products', () => {

@@ -1,6 +1,7 @@
 import {
   buildProductCheckoutInput,
   mapLinesToItems,
+  productOrderDescription,
   productSubtotal,
 } from '@/utils/product-checkout-input';
 import type { CartLine } from '@/stores/cart.store';
@@ -67,20 +68,30 @@ describe('productSubtotal', () => {
   });
 });
 
+describe('productOrderDescription', () => {
+  it('counts total units with singular/plural wording', () => {
+    expect(productOrderDescription(mapLinesToItems([line({ quantity: 1 })]))).toBe(
+      'Product order · 1 item',
+    );
+    expect(productOrderDescription(mapLinesToItems([line(), line({ product_id: 'b' })]))).toBe(
+      'Product order · 4 items',
+    );
+  });
+});
+
 describe('buildProductCheckoutInput', () => {
   const items = mapLinesToItems([line()]);
 
   it('builds the product input from the entered fields (no coupon, no simulate)', () => {
     const { input, simulate_failure } = buildProductCheckoutInput(values, {
       items,
-      podTitle: 'Sunset Jam',
       mainAddress: null,
       couponCode: null,
     });
     expect(simulate_failure).toBe(false);
     expect(input).toMatchObject({
       items,
-      description: 'Product order · Sunset Jam',
+      description: 'Product order · 2 items',
       contact_name: 'Riya Sharma',
       contact_email: 'r@d.com',
       contact_phone_extension: '+91',
@@ -114,7 +125,7 @@ describe('buildProductCheckoutInput', () => {
     };
     const { input } = buildProductCheckoutInput(
       { ...values, same_as_main: true },
-      { items, podTitle: 'Sunset Jam', mainAddress, couponCode: 'TEN' },
+      { items, mainAddress, couponCode: 'TEN' },
     );
     expect(input.billing).toMatchObject({ line1: 'Main St 1', city: 'Delhi' });
     expect(input.shipping_address).toMatchObject({ line1: '12 Main Street' });
@@ -135,7 +146,7 @@ describe('buildProductCheckoutInput', () => {
         pincode: blank,
         simulate_failure: true,
       },
-      { items, podTitle: 'Sunset Jam', couponCode: null },
+      { items, couponCode: null },
     );
     expect(simulate_failure).toBe(true);
     expect(input.shipping_address).toMatchObject({

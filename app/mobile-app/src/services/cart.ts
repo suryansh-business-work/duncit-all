@@ -16,7 +16,16 @@ export interface CartLine {
   unit_cost: number;
   quantity: number;
   max_quantity: number;
+  /** Product threshold: line subtotal at/above which its delivery is free
+   * (null/absent = the product has no free-delivery offer). */
+  free_delivery_above?: number | null;
 }
+
+/** Whether a line's subtotal (qty × unit price) reaches its product's
+ * free-delivery threshold — drives the client-side badge only; the shipping
+ * quote's `free` flag stays authoritative per warehouse group. */
+export const lineQualifiesFreeDelivery = (line: CartLine): boolean =>
+  line.free_delivery_above != null && line.unit_cost * line.quantity >= line.free_delivery_above;
 
 /** Read the persisted cart lines, dropping anything malformed. */
 export async function getCartLines(): Promise<CartLine[]> {

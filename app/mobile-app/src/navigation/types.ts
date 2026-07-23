@@ -61,8 +61,8 @@ export type RootStackParamList = {
   HappeningNearby: undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
   Checkout: { podId: string };
-  // Standalone product checkout for one pod's cart lines (separate payment).
-  ProductCheckout: { podId: string };
+  // Standalone product checkout — EVERY cart line pays in one product payment.
+  ProductCheckout: undefined;
   Cart: undefined;
   Shop: undefined;
   OrdersHistory: undefined;

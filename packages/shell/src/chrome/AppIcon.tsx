@@ -54,6 +54,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import TuneIcon from '@mui/icons-material/Tune';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
+import WarehouseIcon from '@mui/icons-material/Warehouse';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import WidgetsIcon from '@mui/icons-material/Widgets';
@@ -131,6 +132,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   tools: HandymanIcon,
   tune: TuneIcon,
   upload: CloudUploadIcon,
+  warehouse: WarehouseIcon,
   'user-search': PersonSearchIcon,
   whatsapp: WhatsAppIcon,
   work: WorkIcon,

@@ -40,6 +40,7 @@ describe('Duncit Products app config', () => {
         '/ecomm/product-requests',
         '/ecomm/brands',
         '/orders',
+        '/settings/warehouses',
       ]),
     );
   });

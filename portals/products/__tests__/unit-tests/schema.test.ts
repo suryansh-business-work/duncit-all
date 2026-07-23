@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { productSchema } from '../../src/pages/inventory-page/inventory-product-page/schema';
 import { blankProductForm } from '../../src/pages/inventory-page/inventory-product-page/types';
 
-const valid = { ...blankProductForm, product_name: 'Cold Brew', unit_cost: 10 };
+const valid = { ...blankProductForm, product_name: 'Cold Brew', unit_cost: 10, pickup_location_id: 'wh1' };
 
 const messages = (input: unknown) => {
   const result = productSchema.safeParse(input);
@@ -60,5 +60,9 @@ describe('productSchema', () => {
   it('rejects more than 20 tags', () => {
     const tags = Array.from({ length: 21 }, (_v, i) => `t${i}`);
     expect(messages({ ...valid, tags })).toContain('At most 20 tags');
+  });
+
+  it('requires a warehouse (pickup location)', () => {
+    expect(messages({ ...valid, pickup_location_id: '' })).toContain('Warehouse is required');
   });
 });

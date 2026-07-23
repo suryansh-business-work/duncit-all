@@ -8,6 +8,7 @@ export const paymentTypeDefs = /* GraphQL */ `
 
   enum PaymentTargetType {
     POD
+    PRODUCT
     OTHER
   }
 
@@ -183,6 +184,78 @@ export const paymentTypeDefs = /* GraphQL */ `
     razorpay_signature: String!
   }
 
+  "One cart line for the standalone product checkout — each keeps its own pod (the pod's per-pod stock gate still applies)."
+  input ProductCartItemInput {
+    product_id: ID!
+    pod_id: ID!
+    quantity: Int!
+    variant_id: ID
+    "Optional per-line fulfilment override; falls back to the cart-level method."
+    fulfilment_method: FulfilmentMethod
+  }
+
+  "Standalone product-cart checkout (no pod ticket). Shipping is quoted live from ShipRocket and charged on top."
+  input ProductCheckoutInput {
+    items: [ProductCartItemInput!]!
+    description: String
+    contact_name: String
+    contact_email: String!
+    contact_phone: String
+    contact_phone_extension: String!
+    contact_phone_number: String!
+    billing: CheckoutBillingInput
+    billing_address: String
+    checkout_url: String!
+    coupon_code: String
+    "Cart-level default fulfilment method (default PICKUP)."
+    fulfilment_method: FulfilmentMethod
+    "Delivery address, required when any product ships."
+    shipping_address: OrderShippingAddressInput
+    "Destination pincode for the ShipRocket rate; falls back to shipping_address.pincode."
+    delivery_pincode: String
+  }
+
+  input DummyProductCheckoutInput {
+    items: [ProductCartItemInput!]!
+    description: String
+    contact_name: String
+    contact_email: String!
+    contact_phone: String
+    contact_phone_extension: String!
+    contact_phone_number: String!
+    billing: CheckoutBillingInput
+    billing_address: String
+    checkout_url: String!
+    coupon_code: String
+    fulfilment_method: FulfilmentMethod
+    shipping_address: OrderShippingAddressInput
+    delivery_pincode: String
+    simulate_failure: Boolean
+  }
+
+  input ProductShippingQuoteInput {
+    items: [ProductCartItemInput!]!
+    delivery_pincode: String!
+  }
+
+  "One warehouse's delivery estimate in a product-cart shipping quote."
+  type ProductShippingQuoteLine {
+    warehouse_id: ID!
+    pickup_pincode: String!
+    courier_name: String!
+    charge: Float!
+    "True when priced live by ShipRocket; false when it fell back to the manual delivery charge."
+    quoted: Boolean!
+  }
+
+  type ProductShippingQuote {
+    total: Float!
+    currency_symbol: String!
+    "True when every warehouse group was priced live by ShipRocket."
+    all_quoted: Boolean!
+    lines: [ProductShippingQuoteLine!]!
+  }
+
   extend type Query {
     payments(filter: PaymentFilterInput, limit: Int): [Payment!]!
     paymentsTable(query: TableQueryInput): PaymentTablePage!
@@ -190,6 +263,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     myPayments: [Payment!]!
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!
     paymentInvoicePdfBase64(payment_doc_id: ID!): String!
+    "Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout)."
+    productShippingQuote(input: ProductShippingQuoteInput!): ProductShippingQuote!
   }
 
   extend type Mutation {
@@ -197,5 +272,9 @@ export const paymentTypeDefs = /* GraphQL */ `
     createRazorpayOrder(input: RazorpayOrderInput!): RazorpayOrder!
     verifyRazorpayPayment(input: VerifyRazorpayInput!): Payment!
     refundPayment(payment_doc_id: ID!, reason: String): Payment!
+    "Standalone product-cart checkout via the dummy gateway."
+    dummyProductCheckout(input: DummyProductCheckoutInput!): Payment!
+    "Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment)."
+    createRazorpayProductOrder(input: ProductCheckoutInput!): RazorpayOrder!
   }
 `;

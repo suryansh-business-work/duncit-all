@@ -835,16 +835,39 @@ export type ChangePasswordInput = {
   otp: Scalars['String']['input'];
 };
 
+export type ChatParticipants = {
+  __typename?: 'ChatParticipants';
+  hosts: Array<ChatUser>;
+  participant_count: Scalars['Int']['output'];
+  participants: Array<ChatUser>;
+};
+
 export type ChatRoom = {
   __typename?: 'ChatRoom';
   club_id?: Maybe<Scalars['ID']['output']>;
+  /** The club's URL slug (Club.club_id) for building the pod detail path. */
+  club_slug?: Maybe<Scalars['String']['output']>;
   cover_url?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   no_of_spots?: Maybe<Scalars['Int']['output']>;
   pod_attendees: Array<Scalars['ID']['output']>;
   pod_date_time?: Maybe<Scalars['String']['output']>;
+  /** End time (or null) — clients bucket Upcoming vs Previous from these. */
+  pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** The pod's URL slug (Pod.pod_id) for linking to its detail page. */
+  pod_slug?: Maybe<Scalars['String']['output']>;
   pod_title: Scalars['String']['output'];
+  /** Super category the linked club maps to (For You / For Your Pet classification). */
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+};
+
+/** A host or participant shown in the chat detail people panel. */
+export type ChatUser = {
+  __typename?: 'ChatUser';
+  full_name: Scalars['String']['output'];
+  profile_photo?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
 };
 
 export type CheckInEventTicketInput = {
@@ -1595,7 +1618,14 @@ export type CreatePaymentReleaseInput = {
 };
 
 export type CreatePodIdeaInput = {
+  category_id: Scalars['ID']['input'];
+  category_name?: InputMaybe<Scalars['String']['input']>;
   description: Scalars['String']['input'];
+  sub_category_id: Scalars['ID']['input'];
+  sub_category_name?: InputMaybe<Scalars['String']['input']>;
+  /** Mandatory Super/Category/Sub the idea maps to (For You › Sports › Badminton). */
+  super_category_id: Scalars['ID']['input'];
+  super_category_name?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -2241,6 +2271,24 @@ export type DummyCheckoutInput = {
   pod_id?: InputMaybe<Scalars['ID']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
   /** Delivery address, required when any product ships. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
+  simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type DummyProductCheckoutInput = {
+  billing?: InputMaybe<CheckoutBillingInput>;
+  billing_address?: InputMaybe<Scalars['String']['input']>;
+  checkout_url: Scalars['String']['input'];
+  contact_email: Scalars['String']['input'];
+  contact_name?: InputMaybe<Scalars['String']['input']>;
+  contact_phone?: InputMaybe<Scalars['String']['input']>;
+  contact_phone_extension: Scalars['String']['input'];
+  contact_phone_number: Scalars['String']['input'];
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  delivery_pincode?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  fulfilment_method?: InputMaybe<FulfilmentMethod>;
+  items: Array<ProductCartItemInput>;
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -3415,6 +3463,8 @@ export type InventoryProduct = {
   notify_low_stock: Scalars['Boolean']['output'];
   options: Array<ProductOption>;
   ownership: ProductOwnership;
+  /** Duncit warehouse (BrandPickupLocation, owner_kind DUNCIT) this product ships from. Required for Duncit-owned products. */
+  pickup_location_id?: Maybe<Scalars['ID']['output']>;
   pod_available: Scalars['Boolean']['output'];
   product_name: Scalars['String']['output'];
   product_type: ProductType;
@@ -3465,6 +3515,8 @@ export type InventoryProductInput = {
   manufacturing_date?: InputMaybe<Scalars['String']['input']>;
   max_order_qty?: InputMaybe<Scalars['Int']['input']>;
   min_order_qty?: InputMaybe<Scalars['Int']['input']>;
+  /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
+  pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
   product_name: Scalars['String']['input'];
   product_type?: InputMaybe<ProductType>;
@@ -4135,6 +4187,8 @@ export type Mutation = {
   /** Create or update the caller's review of a product. */
   createProductReview: ProductReview;
   createRazorpayOrder: RazorpayOrder;
+  /** Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment). */
+  createRazorpayProductOrder: RazorpayOrder;
   createRole: Role;
   createSlotTemplate: SlotTemplate;
   createSurvey: Survey;
@@ -4227,6 +4281,8 @@ export type Mutation = {
   /** Onboarding staff remove a cancelled meeting from the calendar (kept for audit). */
   dismissMeeting: OnboardingMeeting;
   dummyCheckout: Payment;
+  /** Standalone product-cart checkout via the dummy gateway. */
+  dummyProductCheckout: Payment;
   duplicateInventoryProduct: InventoryProduct;
   /**  Admin-only: edit an existing adjustment's delta/remark in place. Returns the recomputed score.  */
   editAdjustment: HealthScore;
@@ -5137,6 +5193,11 @@ export type MutationCreateRazorpayOrderArgs = {
 };
 
 
+export type MutationCreateRazorpayProductOrderArgs = {
+  input: ProductCheckoutInput;
+};
+
+
 export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
 };
@@ -5550,6 +5611,11 @@ export type MutationDismissMeetingArgs = {
 
 export type MutationDummyCheckoutArgs = {
   input: DummyCheckoutInput;
+};
+
+
+export type MutationDummyProductCheckoutArgs = {
+  input: DummyProductCheckoutInput;
 };
 
 
@@ -7337,7 +7403,8 @@ export type PaymentTablePage = {
 
 export type PaymentTargetType =
   | 'OTHER'
-  | 'POD';
+  | 'POD'
+  | 'PRODUCT';
 
 export type PayoutMode =
   | 'IMMEDIATE'
@@ -7640,16 +7707,24 @@ export type PodIdea = {
   __typename?: 'PodIdea';
   author?: Maybe<User>;
   author_id: Scalars['ID']['output'];
+  category_id?: Maybe<Scalars['ID']['output']>;
+  category_name: Scalars['String']['output'];
   comments: Array<PodIdeaComment>;
   comments_count: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Human-readable permanent id (e.g. DUN-000001). */
+  idea_no: Scalars['String']['output'];
   liked_by_me: Scalars['Boolean']['output'];
   likes: Array<Scalars['ID']['output']>;
   likes_count: Scalars['Int']['output'];
   shares_count: Scalars['Int']['output'];
   status: PodIdeaStatus;
+  sub_category_id?: Maybe<Scalars['ID']['output']>;
+  sub_category_name: Scalars['String']['output'];
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+  super_category_name: Scalars['String']['output'];
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
 };
@@ -7665,8 +7740,11 @@ export type PodIdeaComment = {
 
 export type PodIdeaFilterInput = {
   author_id?: InputMaybe<Scalars['ID']['input']>;
+  category_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<PodIdeaStatus>;
+  sub_category_id?: InputMaybe<Scalars['ID']['input']>;
+  super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type PodIdeaStatus =
@@ -8062,6 +8140,16 @@ export type ProductAnalyticsLocation = {
   units_sold: Scalars['Int']['output'];
 };
 
+/** One cart line for the standalone product checkout — each keeps its own pod (the pod's per-pod stock gate still applies). */
+export type ProductCartItemInput = {
+  /** Optional per-line fulfilment override; falls back to the cart-level method. */
+  fulfilment_method?: InputMaybe<FulfilmentMethod>;
+  pod_id: Scalars['ID']['input'];
+  product_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
 /** One Super/Category/Sub taxonomy row a product is sold in (a product may have several). */
 export type ProductCategory = {
   __typename?: 'ProductCategory';
@@ -8080,6 +8168,27 @@ export type ProductCategoryInput = {
   sub_category_name?: InputMaybe<Scalars['String']['input']>;
   super_category_id: Scalars['ID']['input'];
   super_category_name?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Standalone product-cart checkout (no pod ticket). Shipping is quoted live from ShipRocket and charged on top. */
+export type ProductCheckoutInput = {
+  billing?: InputMaybe<CheckoutBillingInput>;
+  billing_address?: InputMaybe<Scalars['String']['input']>;
+  checkout_url: Scalars['String']['input'];
+  contact_email: Scalars['String']['input'];
+  contact_name?: InputMaybe<Scalars['String']['input']>;
+  contact_phone?: InputMaybe<Scalars['String']['input']>;
+  contact_phone_extension: Scalars['String']['input'];
+  contact_phone_number: Scalars['String']['input'];
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  /** Destination pincode for the ShipRocket rate; falls back to shipping_address.pincode. */
+  delivery_pincode?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Cart-level default fulfilment method (default PICKUP). */
+  fulfilment_method?: InputMaybe<FulfilmentMethod>;
+  items: Array<ProductCartItemInput>;
+  /** Delivery address, required when any product ships. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
 
 export type ProductListingDeliveryTarget =
@@ -8208,6 +8317,31 @@ export type ProductReviewSummary = {
   /** Count of reviews per star, index 0 = 1★ … index 4 = 5★. */
   star_counts: Array<Scalars['Int']['output']>;
   total: Scalars['Int']['output'];
+};
+
+export type ProductShippingQuote = {
+  __typename?: 'ProductShippingQuote';
+  /** True when every warehouse group was priced live by ShipRocket. */
+  all_quoted: Scalars['Boolean']['output'];
+  currency_symbol: Scalars['String']['output'];
+  lines: Array<ProductShippingQuoteLine>;
+  total: Scalars['Float']['output'];
+};
+
+export type ProductShippingQuoteInput = {
+  delivery_pincode: Scalars['String']['input'];
+  items: Array<ProductCartItemInput>;
+};
+
+/** One warehouse's delivery estimate in a product-cart shipping quote. */
+export type ProductShippingQuoteLine = {
+  __typename?: 'ProductShippingQuoteLine';
+  charge: Scalars['Float']['output'];
+  courier_name: Scalars['String']['output'];
+  pickup_pincode: Scalars['String']['output'];
+  /** True when priced live by ShipRocket; false when it fell back to the manual delivery charge. */
+  quoted: Scalars['Boolean']['output'];
+  warehouse_id: Scalars['ID']['output'];
 };
 
 export type ProductType =
@@ -8430,6 +8564,8 @@ export type Query = {
   /** All challenges (optionally filtered by a name search). */
   challenges: Array<Challenge>;
   challengesTable: ChallengeTablePage;
+  /** Host(s) and participants of a pod's chat (members only). */
+  chatParticipants: ChatParticipants;
   checkoutQuote: CheckoutQuote;
   club?: Maybe<Club>;
   /** Aggregated metrics for the signed-in Club Admin's clubs. */
@@ -8748,6 +8884,8 @@ export type Query = {
   productOrdersTable: ProductOrderTablePage;
   productReviewSummary: ProductReviewSummary;
   productReviews: Array<ProductReview>;
+  /** Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout). */
+  productShippingQuote: ProductShippingQuote;
   publicAppSettings: PublicAppSettings;
   publicClientConfig: PublicClientConfig;
   /** Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side). */
@@ -9042,6 +9180,11 @@ export type QueryChallengesArgs = {
 
 export type QueryChallengesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryChatParticipantsArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -10041,6 +10184,11 @@ export type QueryProductReviewSummaryArgs = {
 
 export type QueryProductReviewsArgs = {
   product_id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductShippingQuoteArgs = {
+  input: ProductShippingQuoteInput;
 };
 
 
@@ -11567,6 +11715,8 @@ export type UpdateInventoryProductInput = {
   manufacturing_date?: InputMaybe<Scalars['String']['input']>;
   max_order_qty?: InputMaybe<Scalars['Int']['input']>;
   min_order_qty?: InputMaybe<Scalars['Int']['input']>;
+  /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
+  pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
   product_name?: InputMaybe<Scalars['String']['input']>;
   product_type?: InputMaybe<ProductType>;

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { screen, fireEvent, within } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import SupplierDetailsSection from '../../src/pages/inventory-page/inventory-product-page/SupplierDetailsSection';
 import BasicInfoSection from '../../src/pages/inventory-page/inventory-product-page/BasicInfoSection';
 import PricingTaxSection from '../../src/pages/inventory-page/inventory-product-page/PricingTaxSection';
@@ -7,6 +7,7 @@ import InventoryManagementSection from '../../src/pages/inventory-page/inventory
 import DeliveryAvailabilitySection from '../../src/pages/inventory-page/inventory-product-page/DeliveryAvailabilitySection';
 import { ProductFormHarness } from './form-harness';
 import { renderWithProviders } from '../testkit';
+import { brandPickupLocationsMock, makeBrandPickupLocation } from '../mocks/pickup.mock';
 
 vi.mock('@duncit/app-settings', () => ({
   useDateFormat: () => ({ dateFormat: 'dd MMM yyyy' }),
@@ -65,11 +66,18 @@ describe('InventoryManagementSection', () => {
 });
 
 describe('DeliveryAvailabilitySection', () => {
-  it('enables the delivery charge only when delivery is available', () => {
-    renderSection(<DeliveryAvailabilitySection />);
+  it('enables the delivery charge only when delivery is available and shows the warehouse picker', async () => {
+    renderWithProviders(
+      <ProductFormHarness>
+        <DeliveryAvailabilitySection />
+      </ProductFormHarness>,
+      { mocks: [brandPickupLocationsMock([makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null })])] },
+    );
     const charge = screen.getByLabelText(/Delivery charge/i);
     expect(charge).toBeDisabled();
     expect(screen.getByText(/Enable "Delivery available" to set a charge/i)).toBeInTheDocument();
+    // The required warehouse picker is rendered alongside the shipping fields.
+    await waitFor(() => expect(screen.getByText('Main WH — Pune')).toBeInTheDocument());
     // Toggle the "Delivery available" switch on.
     const deliverySwitch = within(
       screen.getByText('Delivery available').closest('label') as HTMLElement,

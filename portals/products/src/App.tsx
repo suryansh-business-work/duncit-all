@@ -12,6 +12,7 @@ import BrandRequestPage from './pages/ecomm/ecomm-requests/BrandRequestPage';
 import ProductRequestPage from './pages/ecomm/ecomm-requests/ProductRequestPage';
 import ProductOrdersPage from './pages/orders/ProductOrdersPage';
 import ProductOrderDetailPage from './pages/orders/ProductOrderDetailPage';
+import DuncitWarehousesPage from './pages/settings/DuncitWarehousesPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/ecomm/brands/:brandId" element={products(<EcommBrandDetailPage />)} />
       <Route path="/orders" element={products(<ProductOrdersPage />)} />
       <Route path="/orders/:orderId" element={products(<ProductOrderDetailPage />)} />
+      <Route path="/settings/warehouses" element={products(<DuncitWarehousesPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

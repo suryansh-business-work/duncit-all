@@ -1,13 +1,110 @@
+import { Types } from 'mongoose';
+import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import {
   isShiprocketConfigured,
   createOrderAdhoc,
   assignAwb,
+  getServiceability,
   trackByShipment,
   type TrackResult,
 } from './shiprocket.gateway';
 import { mapShiprocketStatus } from './shiprocket.statusMap';
 import { ProductOrderModel, type IProductOrder } from '@modules/commerce/productOrder/productOrder.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+export interface ShipQuoteLine {
+  warehouse_id: string;
+  pickup_pincode: string;
+  courier_name: string;
+  charge: number;
+  quoted: boolean;
+}
+
+export interface ShipQuote {
+  total: number;
+  breakup: ShipQuoteLine[];
+  all_quoted: boolean;
+}
+
+interface ShipGroup {
+  warehouse_id: string;
+  weight: number;
+  manual: number;
+}
+
+/** Sum requested quantities per product id (variants of one product share a
+ * shipping weight group). */
+function mergeQuantities(items: Array<{ product_id: string; quantity: number }>): Map<string, number> {
+  const merged = new Map<string, number>();
+  for (const item of items) {
+    const id = String(item.product_id);
+    merged.set(id, (merged.get(id) ?? 0) + Number(item.quantity || 0));
+  }
+  return merged;
+}
+
+/** Bucket only SHIPROCKET-delivered products by their warehouse, accumulating
+ * total shipment weight and the manual delivery-charge fallback. Weight scales
+ * with quantity; the manual charge is a flat per-shipment fee, so a bucket takes
+ * the highest product delivery_charge (one courier pickup, charged once). */
+function buildShipGroups(products: any[], quantities: Map<string, number>): Map<string, ShipGroup> {
+  const groups = new Map<string, ShipGroup>();
+  for (const product of products) {
+    if (product.delivery_target !== 'SHIPROCKET') continue;
+    const qty = quantities.get(String(product._id)) ?? 0;
+    if (qty <= 0) continue;
+    const warehouseId = product.pickup_location_id ? String(product.pickup_location_id) : '';
+    const group = groups.get(warehouseId) ?? { warehouse_id: warehouseId, weight: 0, manual: 0 };
+    group.weight += Number(product.weight_kg || 0) * qty;
+    group.manual = Math.max(group.manual, Number(product.delivery_charge || 0));
+    groups.set(warehouseId, group);
+  }
+  return groups;
+}
+
+/** Quote one warehouse bucket: live ShipRocket rate, else the manual charge. */
+async function quoteShipGroup(
+  group: ShipGroup,
+  pickupPincode: string,
+  deliveryPincode: string,
+  configured: boolean,
+): Promise<ShipQuoteLine> {
+  const fallback: ShipQuoteLine = {
+    warehouse_id: group.warehouse_id,
+    pickup_pincode: pickupPincode,
+    courier_name: '',
+    charge: round2(group.manual),
+    quoted: false,
+  };
+  if (!configured || !pickupPincode || !deliveryPincode) return fallback;
+  try {
+    const quote = await getServiceability({
+      pickupPincode,
+      deliveryPincode,
+      weightKg: Math.max(0.1, group.weight),
+    });
+    if (!quote) return fallback;
+    return {
+      warehouse_id: group.warehouse_id,
+      pickup_pincode: pickupPincode,
+      courier_name: quote.courier_name,
+      charge: round2(quote.freight_charge),
+      quoted: true,
+    };
+  } catch (error) {
+    logs.server.error('shiprocket', 'quoteShipping', {
+      error,
+      msg: 'serviceability lookup failed; using manual delivery charge',
+      pickup_pincode: pickupPincode,
+      delivery_pincode: deliveryPincode,
+    });
+    return fallback;
+  }
+}
 
 async function resolvePickup(order: IProductOrder): Promise<string> {
   if (order.pickup_location_id) return order.pickup_location_id;
@@ -72,6 +169,44 @@ function applyTracking(order: IProductOrder, t: TrackResult): void {
 }
 
 export const shiprocketService = {
+  /**
+   * Estimate the delivery charge for a product cart: only SHIPROCKET-delivered
+   * products count, grouped by their Duncit warehouse (each group → one future
+   * SHIP order). Each group is quoted live from ShipRocket, falling back to the
+   * product's manual `delivery_charge` when ShipRocket can't rate it. The result
+   * is authoritative — the checkout charges exactly this total.
+   */
+  async quoteShipping(
+    items: Array<{ product_id: string; quantity: number }>,
+    deliveryPincode: string,
+  ): Promise<ShipQuote> {
+    const quantities = mergeQuantities(items);
+    const productIds = [...quantities.keys()].filter((id) => Types.ObjectId.isValid(id));
+    if (productIds.length === 0) return { total: 0, breakup: [], all_quoted: true };
+
+    const products = await InventoryProductModel.find({ _id: { $in: productIds } }).select(
+      'pickup_location_id delivery_target delivery_charge weight_kg',
+    );
+    const groups = buildShipGroups(products, quantities);
+    if (groups.size === 0) return { total: 0, breakup: [], all_quoted: true };
+
+    const warehouseIds = [...groups.keys()].filter((id) => id && Types.ObjectId.isValid(id));
+    const warehouses = await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('pincode');
+    const pincodeByWarehouse = new Map(warehouses.map((w) => [String(w._id), String(w.pincode ?? '')]));
+    const configured = await isShiprocketConfigured();
+
+    const breakup: ShipQuoteLine[] = [];
+    for (const group of groups.values()) {
+      const pincode = pincodeByWarehouse.get(group.warehouse_id) ?? '';
+      breakup.push(await quoteShipGroup(group, pincode, deliveryPincode, configured));
+    }
+    return {
+      total: round2(breakup.reduce((sum, line) => sum + line.charge, 0)),
+      breakup,
+      all_quoted: breakup.every((line) => line.quoted),
+    };
+  },
+
   /**
    * Create the ShipRocket order + shipment for a SHIP order and assign an AWB.
    * Best-effort: no-ops when ShipRocket is unconfigured or the order isn't SHIP,

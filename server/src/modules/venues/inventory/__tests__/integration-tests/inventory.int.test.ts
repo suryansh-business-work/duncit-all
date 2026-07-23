@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { inventoryService } from '../../inventory.service';
 import { InventoryProductModel } from '../../inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 
@@ -369,5 +370,65 @@ describe('inventory table queries (shared table engine)', () => {
 
     // Unauthenticated callers are rejected like listMyProductListings.
     await expect(inventoryService.myProductListingsTable(null)).rejects.toThrow(/authentication/i);
+  });
+});
+
+describe('inventoryService Duncit warehouse guard', () => {
+  const admin = { id: new Types.ObjectId().toString(), email: 'admin@duncit.com' } as never;
+
+  it('requires a valid Duncit warehouse to create a product and round-trips it', async () => {
+    // Missing warehouse → hard error (the field is mandatory for Duncit products).
+    await expect(
+      inventoryService.create({ product_name: 'No WH', unit_cost: 5 }, admin),
+    ).rejects.toThrow(/warehouse/i);
+
+    // A BRAND-owned warehouse is not a valid origin for a Duncit product.
+    const brandWh = await BrandPickupLocationModel.create({ owner_kind: 'BRAND', nickname: 'BR-WH' });
+    await expect(
+      inventoryService.create(
+        { product_name: 'Brand WH', unit_cost: 5, pickup_location_id: String(brandWh._id) },
+        admin,
+      ),
+    ).rejects.toThrow(/valid Duncit warehouse/i);
+
+    // A valid Duncit warehouse succeeds and serializes onto the public shape.
+    const duncitWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-WH' });
+    const created = await inventoryService.create(
+      { product_name: 'Good WH', unit_cost: 5, pickup_location_id: String(duncitWh._id) },
+      admin,
+    );
+    expect(created.pickup_location_id).toBe(String(duncitWh._id));
+  });
+
+  it('keeps a valid warehouse on update and rejects clearing it for a Duncit product', async () => {
+    const duncitWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'DUN-UPD' });
+    const created = await inventoryService.create(
+      { product_name: 'Editable', unit_cost: 5, pickup_location_id: String(duncitWh._id) },
+      admin,
+    );
+    const renamed = await inventoryService.update(
+      created.id,
+      { product_name: 'Editable 2', pickup_location_id: String(duncitWh._id) },
+      admin,
+    );
+    expect(renamed.product_name).toBe('Editable 2');
+    expect(renamed.pickup_location_id).toBe(String(duncitWh._id));
+
+    await expect(
+      inventoryService.update(created.id, { pickup_location_id: '' }, admin),
+    ).rejects.toThrow(/warehouse/i);
+  });
+
+  it('does not require a warehouse when updating a BRAND-owned product', async () => {
+    const doc = await InventoryProductModel.create({
+      product_name: 'Brand Item',
+      sku: 'BWH-GUARD-1',
+      unit_cost: 5,
+      brand_id: new Types.ObjectId(),
+      ownership: 'BRAND',
+    });
+    const updated = await inventoryService.update(String(doc._id), { product_name: 'Brand Item 2' }, admin);
+    expect(updated.product_name).toBe('Brand Item 2');
+    expect(updated.pickup_location_id).toBeNull();
   });
 });

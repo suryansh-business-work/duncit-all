@@ -197,6 +197,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     color: String!
     commission_pct: Float!
     delivery_target: ProductListingDeliveryTarget!
+    "Duncit warehouse (BrandPickupLocation, owner_kind DUNCIT) this product ships from. Required for Duncit-owned products."
+    pickup_location_id: ID
 
     is_active: Boolean!
 
@@ -317,6 +319,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
+    pickup_location_id: ID
     is_active: Boolean
   }
 
@@ -361,6 +365,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     length_cm: Float
     breadth_cm: Float
     weight_kg: Float
+    "Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side)."
+    pickup_location_id: ID
     is_active: Boolean
   }
 

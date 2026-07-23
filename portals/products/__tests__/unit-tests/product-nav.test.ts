@@ -7,6 +7,7 @@ describe('isProductNavItem', () => {
     expect(isProductNavItem('/inventory/new')).toBe(true);
     expect(isProductNavItem('/ecomm/brands')).toBe(true);
     expect(isProductNavItem('/orders/abc')).toBe(true);
+    expect(isProductNavItem('/settings/warehouses')).toBe(true);
   });
 
   it('treats the dashboard and unrelated routes as always-available', () => {

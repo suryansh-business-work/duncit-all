@@ -7,6 +7,7 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
@@ -76,6 +77,7 @@ const TRACKED_FIELDS = [
   'color',
   'commission_pct',
   'delivery_target',
+  'pickup_location_id',
   'barcode',
   'is_active',
 ] as const;
@@ -185,6 +187,7 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     color: product.color ?? '',
     commission_pct: product.commission_pct ?? 5,
     delivery_target: product.delivery_target ?? 'HOST',
+    pickup_location_id: product.pickup_location_id ? String(product.pickup_location_id) : null,
     is_active: !!product.is_active,
     last_updated_by_id: product.last_updated_by_id ?? null,
     last_updated_by_name: product.last_updated_by_name ?? '',
@@ -654,9 +657,29 @@ function applyInput(target: any, input: any) {
       target[field] = input[field] ? new Date(input[field]) : null;
     } else if (field === 'sku') {
       target.sku = String(input.sku).trim().toUpperCase();
+    } else if (field === 'pickup_location_id') {
+      target.pickup_location_id = toOid(input.pickup_location_id);
     } else {
       target[field] = input[field];
     }
+  }
+}
+
+/** Every Duncit-owned product must ship from a Duncit warehouse (a
+ * BrandPickupLocation with owner_kind DUNCIT). The warehouse pincode is the
+ * ShipRocket rate/shipment origin, so a missing/invalid one is a hard error. */
+async function assertDuncitWarehouse(pickupLocationId: unknown) {
+  const id = pickupLocationId ? String(pickupLocationId) : '';
+  if (!id || !Types.ObjectId.isValid(id)) {
+    throw new GraphQLError('A warehouse (pickup location) is required', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind');
+  if (!warehouse || warehouse.owner_kind !== 'DUNCIT') {
+    throw new GraphQLError('Select a valid Duncit warehouse', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
   }
 }
 
@@ -1131,6 +1154,8 @@ export const inventoryService = {
 
   async create(input: any, user: AuthUser | null) {
     validateInput(input);
+    // The Add form only creates Duncit-owned products, which must have a warehouse.
+    await assertDuncitWarehouse(input.pickup_location_id);
     const sku = input.sku?.trim() ? String(input.sku).trim().toUpperCase() : await generateUniqueSku();
     const existing = await InventoryProductModel.findOne({ sku });
     if (existing) throw new GraphQLError('Product SKU already exists', { extensions: { code: 'CONFLICT' } });
@@ -1184,6 +1209,8 @@ export const inventoryService = {
       damaged_count: doc.damaged_count,
     };
     applyInput(doc, input);
+    // Duncit-owned products must keep a valid Duncit warehouse after any edit.
+    if (doc.ownership === 'DUNCIT') await assertDuncitWarehouse(doc.pickup_location_id);
     const info = userInfo(user);
     doc.last_updated_by_id = info.id;
     doc.last_updated_by_name = info.name;

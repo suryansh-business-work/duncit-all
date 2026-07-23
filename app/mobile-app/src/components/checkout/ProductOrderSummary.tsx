@@ -106,10 +106,10 @@ function DeliveryRows({
 }
 
 /** Product-only order summary for the combined product checkout: EVERY cart
- * line grouped by pod, products subtotal, one live delivery row per warehouse
- * group (ShipRocket) with a delivery total, and the payable total. No pod
- * ticket line — pods and products never share a payment. RN twin of mWeb's
- * ProductOrderSummaryCard. */
+ * line grouped by pod, products subtotal, one live delivery row per
+ * (pod, warehouse) group (ShipRocket) with a delivery total, and the payable
+ * total. No pod ticket line — pods and products never share a payment. RN twin
+ * of mWeb's ProductOrderSummaryCard. */
 export function ProductOrderSummary({
   lines,
   breakup,

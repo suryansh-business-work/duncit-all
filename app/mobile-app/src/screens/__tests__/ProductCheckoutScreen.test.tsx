@@ -348,8 +348,7 @@ describe('ProductCheckoutScreen', () => {
     // Preview base = product subtotal (200), never subtotal + shipping (260).
     await waitFor(() => expect(previewCoupon).toHaveBeenCalledWith('TEN', 200));
     // You pay = discounted subtotal (180) + delivery (60), struck from 260.
-    expect(screen.getByTestId('coupon-total')).toHaveTextContent('You pay ₹240');
-    expect(screen.getByTestId('coupon-total')).toHaveTextContent('₹260');
+    expect(screen.getByTestId('coupon-total')).toHaveTextContent('You pay ₹240 ₹260');
     // Pay carries the applied code through to the product engine.
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));

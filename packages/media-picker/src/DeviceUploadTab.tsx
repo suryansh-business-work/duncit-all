@@ -49,6 +49,12 @@ function mediaKind(picked: File | null): 'image' | 'video' | 'other' {
   return 'other';
 }
 
+const STAGE_LABELS: Record<UploadStage, string> = {
+  uploading: 'Uploading',
+  compressing: 'Compressing',
+  processing: 'Cropping & compressing',
+};
+
 export default function DeviceUploadTab({
   accept,
   fileInputRef,
@@ -71,7 +77,7 @@ export default function DeviceUploadTab({
     kind === 'image' && dims
       ? suggestPresetKey(dims.width, dims.height, settings?.crop_presets ?? [])
       : null;
-  const stageLabel = stage === 'compressing' ? 'Compressing' : 'Uploading';
+  const stageLabel = STAGE_LABELS[stage];
 
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>
@@ -148,11 +154,15 @@ export default function DeviceUploadTab({
           </Button>
         </Stack>
       )}
-      {uploadPct !== null && (
+      {uploading && (
         <Box sx={{ width: '100%', maxWidth: 480 }}>
-          <LinearProgress variant="determinate" value={uploadPct} />
+          {uploadPct === null ? (
+            <LinearProgress />
+          ) : (
+            <LinearProgress variant="determinate" value={uploadPct} />
+          )}
           <Typography variant="caption" color="text.secondary">
-            {stageLabel}… {uploadPct}%
+            {stageLabel}…{uploadPct === null ? '' : ` ${uploadPct}%`}
           </Typography>
         </Box>
       )}

@@ -49,6 +49,8 @@ scripts/            # Slack upload utility
 | Command                              | Description                     |
 | ------------------------------------ | ------------------------------- |
 | `npm run start`                      | Expo dev server (port 2022)     |
+| `npm run start:main`                 | Dev server → production API      |
+| `npm run start:staging`              | Dev server → staging API         |
 | `npm run android` / `ios` / `web`    | Platform targets                |
 | `npm run lint` / `lint:fix`          | ESLint                          |
 | `npm run format`                     | Prettier                        |

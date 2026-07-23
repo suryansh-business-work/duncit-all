@@ -14,7 +14,7 @@ export const UPLOAD_STATUS_MEDIA = gql`
       fileName: $fileName
       mimeType: $mimeType
       folder: $folder
-      surface: "MOBILE_MWEB"
+      surface: "MWEB"
       crop: $crop
       crop_preset: $cropPreset
     ) {

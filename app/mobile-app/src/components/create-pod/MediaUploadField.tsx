@@ -1,9 +1,11 @@
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useUploadSettings } from '@/hooks/useUploadSettings';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
@@ -12,6 +14,13 @@ const splitLines = (text: string) =>
     .split('\n')
     .map((item) => item.trim())
     .filter(Boolean);
+
+/** Formats + size hint sourced from admin Upload Settings (no hardcoded copy). */
+function uploadHint(formats: string[] | undefined, maxImageMb: number | undefined): string {
+  if (!formats?.length || !maxImageMb) return 'Crop after selecting';
+  const list = formats.map((f) => f.toUpperCase()).join(', ');
+  return `${list} · up to ${maxImageMb} MB · crop after selecting`;
+}
 
 interface Props {
   value: string;
@@ -31,14 +40,12 @@ export function MediaUploadField({
   folder = '/pods',
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
-  const upload = useMediaUpload(folder);
   const urls = splitLines(value ?? '');
+  const settings = useUploadSettings();
+  const addUrl = (url: string) => onChange([...urls, url].join('\n'));
+  const upload = useMediaUpload(folder, addUrl);
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
-
-  const addFromLibrary = async () => {
-    const url = await upload.pickAndUpload();
-    if (url) onChange([...urls, url].join('\n'));
-  };
+  const busy = upload.uploading;
 
   return (
     <YStack gap={8}>
@@ -92,8 +99,8 @@ export function MediaUploadField({
         testID="media-upload-add"
         role="button"
         aria-label="Add media"
-        aria-disabled={upload.uploading}
-        onPress={upload.uploading ? undefined : () => void addFromLibrary()}
+        aria-disabled={busy}
+        onPress={busy ? undefined : () => void upload.pick()}
         alignItems="center"
         justifyContent="center"
         gap={8}
@@ -104,7 +111,7 @@ export function MediaUploadField({
         borderColor="$borderColor"
         borderStyle="dashed"
         backgroundColor="$surface"
-        opacity={upload.uploading ? 0.7 : 1}
+        opacity={busy ? 0.7 : 1}
         pressStyle={{ opacity: 0.85 }}
       >
         <YStack
@@ -117,20 +124,16 @@ export function MediaUploadField({
           borderWidth={1}
           borderColor="$borderColor"
         >
-          {upload.uploading ? (
-            <Spinner size="small" color={primary} />
-          ) : (
-            <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
-          )}
+          <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
         </YStack>
         <Text fontSize={14} fontWeight="800" color="$color">
-          {upload.uploading ? 'Uploading…' : 'Upload an image'}
+          Upload an image or video
         </Text>
         <Text fontSize={12} color="$muted">
-          Min 800×400px (JPG, PNG)
+          {uploadHint(settings?.allowed_image_formats, settings?.max_image_mb)}
         </Text>
       </YStack>
-      {upload.error ? (
+      {upload.error && !upload.pending ? (
         <Text testID="media-upload-error" fontSize={12} color="$danger">
           {upload.error}
         </Text>
@@ -140,6 +143,16 @@ export function MediaUploadField({
           {error}
         </Text>
       ) : null}
+      <MediaCropDialog
+        media={upload.pending}
+        settings={settings}
+        uploading={upload.uploading}
+        stage={upload.stage}
+        progress={upload.progress}
+        error={upload.error}
+        onConfirm={upload.confirm}
+        onCancel={upload.cancel}
+      />
     </YStack>
   );
 }

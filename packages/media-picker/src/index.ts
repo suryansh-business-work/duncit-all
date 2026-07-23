@@ -23,6 +23,7 @@ export { useUploadSettings } from './useUploadSettings';
 export { croppablePresets, formatBytes, formatDuration, presetAspect, suggestPresetKey } from './cropUtils';
 export { default as ImageCropStep } from './ImageCropStep';
 export { default as FileDetails, useMediaDimensions } from './FileDetails';
+export type { MediaDimensions } from './FileDetails';
 
 // Attachment classification helpers (URL → kind/name/ext).
 export {

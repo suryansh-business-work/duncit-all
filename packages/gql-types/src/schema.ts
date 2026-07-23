@@ -11935,7 +11935,8 @@ export type UploadSetting = {
 };
 
 export type UploadSurface =
-  | 'MOBILE_MWEB'
+  | 'MOBILE'
+  | 'MWEB'
   | 'PORTALS';
 
 export type UploadedImage = {

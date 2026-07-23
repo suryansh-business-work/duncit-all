@@ -62,7 +62,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
       const rawUrl = await upload(file, '/pods/reels', setPct);
       setStage('Compressing');
       setPct(0);
-      const url = await compressUploadedVideo(client, rawUrl, '/pods/reels', 'MOBILE_MWEB', setPct);
+      const url = await compressUploadedVideo(client, rawUrl, '/pods/reels', 'MWEB', setPct);
       if (url) form.setValue('reel_url', url, { shouldDirty: true });
     } catch (err: any) {
       setError(err?.message || 'Upload failed');

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import {
+  FileDetails,
   ImageCropStep,
   suggestPresetKey,
   useMediaDimensions,
@@ -20,7 +21,7 @@ interface Props {
  * keeps the picked file untouched.
  */
 export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly<Props>) {
-  const settings = useUploadSettings('MOBILE_MWEB');
+  const settings = useUploadSettings('MWEB');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [cropKey, setCropKey] = useState<string | null>(null);
   const [cropRect, setCropRect] = useState<CropRect | null>(null);
@@ -59,6 +60,7 @@ export default function StatusCropDialog({ file, onCancel, onConfirm }: Readonly
             onCropComplete={setCropRect}
           />
         )}
+        {file && <FileDetails file={file} dims={dims} />}
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>

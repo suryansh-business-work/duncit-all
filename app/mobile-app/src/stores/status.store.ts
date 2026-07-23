@@ -98,7 +98,7 @@ export const useStatusStore = create<StatusState>((set, get) => ({
             fileName,
             mimeType,
             folder: '/posts',
-            surface: 'MOBILE_MWEB',
+            surface: 'MOBILE',
           },
           { auth: true },
         );

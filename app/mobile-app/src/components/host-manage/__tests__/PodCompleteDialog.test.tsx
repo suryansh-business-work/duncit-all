@@ -9,12 +9,18 @@ jest.mock('@/hooks/useSettlementPreview', () => ({
   useSettlementPreview: () => ({ settlement: null, isLoading: false }),
 }));
 jest.mock('@/hooks/useMediaUpload', () => ({
-  useMediaUpload: () => ({
+  useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => ({
     uploading: false,
     error: undefined,
-    pickAndUpload: jest.fn().mockResolvedValue('https://cdn/p.jpg'),
+    pending: null,
+    stage: 'processing' as const,
+    progress: null,
+    pick: jest.fn(() => onUploaded('https://cdn/p.jpg')),
+    confirm: jest.fn(),
+    cancel: jest.fn(),
   }),
 }));
+jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
 jest.mock('@/hooks/useSupportUpload', () => ({
   useSupportUpload: () => ({
     uploading: false,

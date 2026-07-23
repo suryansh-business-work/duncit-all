@@ -23,15 +23,21 @@ jest.mock('@/hooks/usePotentialEarnings', () => ({
   usePotentialEarnings: () => ({ waterfall: null, isLoading: false }),
 }));
 
-// Cover media is upload-only now — stub the picker to return a hosted URL so the
-// Basics step can satisfy the "at least one image" rule.
+// Cover media is upload-only now — stub the picker so pressing "add" delivers a
+// hosted URL via onUploaded, satisfying the "at least one image" rule.
 jest.mock('@/hooks/useMediaUpload', () => ({
-  useMediaUpload: () => ({
+  useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => ({
     uploading: false,
     error: undefined,
-    pickAndUpload: jest.fn().mockResolvedValue('https://cdn/img.jpg'),
+    pending: null,
+    stage: 'processing' as const,
+    progress: null,
+    pick: jest.fn(() => onUploaded('https://cdn/img.jpg')),
+    confirm: jest.fn(),
+    cancel: jest.fn(),
   }),
 }));
+jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
 
 // The header LocationDialog is covered by its own spec (GPS/map). Stub it to a
 // button that applies a configurable (location, zone) pick.

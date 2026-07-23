@@ -143,7 +143,7 @@ describe('PodReelAccordion', () => {
       expect.anything(),
       'https://ik.example/raw.mp4',
       '/pods/reels',
-      'MOBILE_MWEB',
+      'MWEB',
       expect.any(Function),
     );
     // After success the populated UI (video + Added chip) is shown.

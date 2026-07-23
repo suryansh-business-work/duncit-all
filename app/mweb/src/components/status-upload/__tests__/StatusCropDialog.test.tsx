@@ -14,6 +14,9 @@ const state: {
 vi.mock('@duncit/media-picker', () => ({
   useUploadSettings: () => state.settings,
   useMediaDimensions: () => state.dims,
+  FileDetails: (props: { file: File }) => (
+    <div data-testid="file-details">{props.file.name}</div>
+  ),
   suggestPresetKey: (w: number, h: number, presets: Array<{ key: string }>) =>
     presets.length ? `suggest:${w}x${h}:${presets[0].key}` : null,
   // Lightweight stand-in that surfaces the props we care about and lets us

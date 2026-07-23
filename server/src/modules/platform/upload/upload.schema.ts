@@ -132,7 +132,7 @@ export const uploadTypeDefs = /* GraphQL */ `
       folder: String
       "Allow document files (PDF/Office/txt/csv) in addition to image/video — used by support chat attachments."
       allow_documents: Boolean
-      "Upload Settings surface of the caller (PORTALS | MOBILE_MWEB)."
+      "Upload Settings surface of the caller (PORTALS | MOBILE | MWEB)."
       surface: String
       "Optional crop rect (source pixels) applied server-side with sharp — images only."
       crop: UploadCropRectInput

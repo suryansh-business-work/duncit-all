@@ -6,11 +6,28 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
-const mockPickAndUpload = jest.fn();
+const mockPick = jest.fn();
 let mockUploading = false;
+let mockUploadUrl: string | null = 'https://cdn/new.jpg';
 jest.mock('@/hooks/useMediaUpload', () => ({
-  useMediaUpload: () => ({ uploading: mockUploading, pickAndUpload: mockPickAndUpload }),
+  useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => {
+    // pick() simulates the full pick → crop → confirm → upload round-trip.
+    mockPick.mockImplementation(() => {
+      if (mockUploadUrl) onUploaded(mockUploadUrl);
+    });
+    return {
+      uploading: mockUploading,
+      pending: null,
+      stage: 'processing' as const,
+      progress: null,
+      error: undefined,
+      pick: mockPick,
+      confirm: jest.fn(),
+      cancel: jest.fn(),
+    };
+  },
 }));
+jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
 
 const REVIEWS = [
   {
@@ -71,9 +88,9 @@ const opName = (doc: { definitions?: { name?: { value?: string } }[] }) =>
 
 beforeEach(() => {
   mockRequest.mockReset();
-  mockPickAndUpload.mockReset();
-  mockPickAndUpload.mockResolvedValue('https://cdn/new.jpg');
+  mockPick.mockClear();
   mockUploading = false;
+  mockUploadUrl = 'https://cdn/new.jpg';
 });
 
 describe('ProductReviews', () => {
@@ -158,7 +175,7 @@ describe('ProductReviews', () => {
   });
 
   it('ignores a cancelled photo pick', async () => {
-    mockPickAndUpload.mockResolvedValue(null);
+    mockUploadUrl = null;
     routeReviews([], 0, 0);
     renderWithProviders(<ProductReviews productId="pr1" />);
     await waitFor(() => expect(screen.getByTestId('review-add-photo')).toBeOnTheScreen());

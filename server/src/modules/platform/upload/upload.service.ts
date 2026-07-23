@@ -113,31 +113,42 @@ const DOC_MIME_RE = /^(application\/pdf|application\/msword|application\/vnd\.op
 const VIDEO_EXT_RE = /\.(mp4|mov|m4v|avi|webm|mkv|3gp|ts|flv|wmv|mpe?g)$/i;
 const DOC_EXT_RE = /\.(pdf|docx?|xlsx?|pptx?|txt|csv)$/i;
 
-// Videos are capped at 50 MB; images and documents keep the 100 MB ceiling
-// (support attachments spec). Non-attachment callers (avatars, pod media)
-// still upload images that are far smaller than this.
-function assertUploadSize(fileBytes: Buffer, isVideo: boolean, isDocument: boolean) {
-  if (isVideo) {
-    const maxVideoBytes = 50 * 1024 * 1024;
-    if (fileBytes.length > maxVideoBytes) {
-      throw new GraphQLError('Video is too large (max 50 MB)', {
+type UploadSetting = NonNullable<Awaited<ReturnType<typeof getUploadSettingsSafe>>>;
+
+type UploadKind = { isVideo: boolean; isDocument: boolean; isImage: boolean };
+
+// Documents keep a fixed 100 MB ceiling (support attachments spec). Images and
+// videos honour the admin Upload Settings caps; the fallbacks below only apply
+// when the settings row is unreadable (no DB — e.g. unit tests).
+const DOCUMENT_MAX_MB = 100;
+const FALLBACK_IMAGE_MAX_MB = 100;
+const FALLBACK_VIDEO_MAX_MB = 50;
+
+const megabytes = (mb: number) => mb * 1024 * 1024;
+
+/**
+ * Enforce the upload size ceiling. Images/videos use the per-surface admin
+ * limits (max_image_mb / max_video_mb) so raising or lowering them in the admin
+ * panel actually takes effect; documents keep the fixed attachment ceiling.
+ */
+function assertUploadSize(fileBytes: Buffer, kind: UploadKind, setting: UploadSetting | null) {
+  if (kind.isVideo) {
+    const maxMb = setting?.max_video_mb ?? FALLBACK_VIDEO_MAX_MB;
+    if (fileBytes.length > megabytes(maxMb)) {
+      throw new GraphQLError(`Video is too large (max ${maxMb} MB)`, {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
     return;
   }
-  const maxBytes = 100 * 1024 * 1024;
-  if (fileBytes.length > maxBytes) {
-    const kind = isDocument ? 'Document' : 'Image';
-    throw new GraphQLError(`${kind} is too large (max 100 MB)`, {
+  const maxMb = kind.isDocument ? DOCUMENT_MAX_MB : (setting?.max_image_mb ?? FALLBACK_IMAGE_MAX_MB);
+  if (fileBytes.length > megabytes(maxMb)) {
+    const label = kind.isDocument ? 'Document' : 'Image';
+    throw new GraphQLError(`${label} is too large (max ${maxMb} MB)`, {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
 }
-
-type UploadSetting = NonNullable<Awaited<ReturnType<typeof getUploadSettingsSafe>>>;
-
-type UploadKind = { isVideo: boolean; isDocument: boolean; isImage: boolean };
 
 // Classify the upload by mime + extension, throwing when it's none of the
 // accepted kinds. Video wins if EITHER the mime or the extension says so, so a
@@ -166,6 +177,23 @@ function assertVideoFormatAllowed(safeName: string, setting: UploadSetting) {
       { extensions: { code: 'BAD_USER_INPUT' } },
     );
   }
+}
+
+// Reject a disallowed image format. Processable formats (jpg/png/webp) that fall
+// outside the allow-list are transparently re-encoded to JPEG downstream, so we
+// only hard-reject NON-processable images (gif/svg/heic, …) that can't be
+// converted — this is what makes "remove gif from allowed formats" actually block
+// a gif upload instead of letting it pass through untouched.
+function assertImageFormatAllowed(safeName: string, mimeType: string, setting: UploadSetting) {
+  const ext = (/\.([a-z0-9]{2,5})$/i.exec(safeName)?.[1] ?? '').toLowerCase();
+  const normalized = ext === 'jpeg' ? 'jpg' : ext;
+  if (!normalized) return;
+  const allowed = setting.allowed_image_formats.map((f) => (f === 'jpeg' ? 'jpg' : f));
+  if (allowed.includes(normalized) || isProcessableImage(mimeType)) return;
+  throw new GraphQLError(
+    `Image format .${normalized} is not allowed (allowed: ${allowed.join(', ')})`,
+    { extensions: { code: 'BAD_USER_INPUT' } },
+  );
 }
 
 // Apply admin Upload Settings (crop / compression / format). Processing is an
@@ -211,7 +239,7 @@ export async function uploadBase64Image(opts: {
   folder?: string;
   mimeType?: string;
   allowDocuments?: boolean;
-  /** Upload Settings surface of the caller (PORTALS | MOBILE_MWEB). */
+  /** Upload Settings surface of the caller (PORTALS | MOBILE | MWEB). */
   surface?: string;
   /** Source-pixel crop rect from the client crop UI (images only). */
   crop?: CropRect | null;
@@ -231,19 +259,20 @@ export async function uploadBase64Image(opts: {
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  assertUploadSize(fileBytes, isVideo, isDocument);
 
   let safeName = (opts.fileName || `upload-${Date.now()}`)
     .replace(/[^a-zA-Z0-9_.-]/g, '_')
     .slice(0, 120);
 
-  // Admin Upload Settings (crop / compression / formats). Settings being
-  // unreadable (no DB) never blocks the upload — the file goes up as-is.
+  // Admin Upload Settings (size caps / crop / compression / formats). Settings
+  // being unreadable (no DB) never blocks the upload — the file goes up as-is.
   const setting = await getUploadSettingsSafe(opts.surface);
+  assertUploadSize(fileBytes, { isVideo, isDocument, isImage }, setting);
   if (isVideo && setting) {
     assertVideoFormatAllowed(safeName, setting);
   }
   if (isImage && setting) {
+    assertImageFormatAllowed(safeName, mimeType, setting);
     const processed = await processImageForUpload({
       fileBytes,
       safeName,

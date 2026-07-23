@@ -23,13 +23,13 @@ describe('uploadSetting integration', () => {
     await expect(uploadSettingService.get('DESKTOP')).rejects.toThrow('Unknown upload surface');
   });
 
-  it('lists both surfaces for the admin pages', async () => {
+  it('lists all three surfaces for the admin pages', async () => {
     const all = await uploadSettingService.list();
-    expect(all.map((s) => s.surface).sort()).toEqual(['MOBILE_MWEB', 'PORTALS']);
+    expect(all.map((s) => s.surface).sort()).toEqual(['MOBILE', 'MWEB', 'PORTALS']);
   });
 
   it('clamps numeric updates and normalises format lists', async () => {
-    const updated = await uploadSettingService.update('MOBILE_MWEB', {
+    const updated = await uploadSettingService.update('MOBILE', {
       max_image_mb: 0,
       max_video_mb: 9999,
       image_quality: 150,
@@ -85,7 +85,36 @@ describe('uploadSetting integration', () => {
         ))(),
     ).rejects.toThrow();
     const viaAdmin = await (uploadSettingResolvers.Query as any).allUploadSettings({}, {}, admin());
-    expect(viaAdmin).toHaveLength(2);
+    expect(viaAdmin).toHaveLength(3);
+  });
+
+  it('migrates the retired MOBILE_MWEB row into MOBILE + MWEB, preserving config', async () => {
+    // Simulate a pre-split deployment: an admin-tuned MOBILE_MWEB row already
+    // exists in the DB. Insert it RAW (the enum now rejects it on save, but the
+    // real migration only ever READS the legacy row — validation runs on save).
+    await UploadSettingModel.collection.insertOne({
+      surface: 'MOBILE_MWEB',
+      max_image_mb: 42,
+      max_video_mb: 100,
+      allowed_image_formats: ['jpg', 'webp'],
+      allowed_video_formats: ['mp4'],
+      image_compression_enabled: true,
+      image_quality: 80,
+      image_max_dimension: 1920,
+      video_compression_enabled: false,
+      video_crf: 28,
+      video_max_height: 1080,
+      ai_image_monitoring_enabled: true,
+      default_crop_key: 'NO_CROP',
+      crop_presets: DEFAULT_CROP_PRESETS,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
+    const mobile = await uploadSettingService.get('MOBILE');
+    const mweb = await uploadSettingService.get('MWEB');
+    expect(mobile.max_image_mb).toBe(42);
+    expect(mweb.max_image_mb).toBe(42);
+    expect(mobile.allowed_image_formats).toEqual(['jpg', 'webp']);
   });
 
   it('records an image scan row when monitoring is on, skips when off', async () => {
@@ -93,15 +122,15 @@ describe('uploadSetting integration', () => {
       url: 'https://ik.imagekit.io/x/a.jpg',
       fileName: 'a.jpg',
       folder: '/pods',
-      surface: 'MOBILE_MWEB',
+      surface: 'MOBILE',
       userId: null,
     });
     expect(await MediaScanLogModel.countDocuments()).toBe(1);
 
-    await uploadSettingService.update('MOBILE_MWEB', { ai_image_monitoring_enabled: false });
+    await uploadSettingService.update('MOBILE', { ai_image_monitoring_enabled: false });
     await mediaScanService.record({
       url: 'https://ik.imagekit.io/x/b.jpg',
-      surface: 'MOBILE_MWEB',
+      surface: 'MOBILE',
     });
     expect(await MediaScanLogModel.countDocuments()).toBe(1);
   });

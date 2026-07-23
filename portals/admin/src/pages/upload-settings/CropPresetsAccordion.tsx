@@ -41,6 +41,10 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
 
   const enabledPresets = presets.filter((p) => p.enabled);
   const defaultValid = enabledPresets.some((p) => p.key === defaultKey);
+  // An enabled preset (other than No Crop) must have a real target resolution;
+  // 0×0 would produce an invalid crop in the client crop step.
+  const needsDims = (p: Draft) => p.enabled && p.key !== 'NO_CROP';
+  const invalidDims = presets.some((p) => needsDims(p) && (p.width <= 0 || p.height <= 0));
 
   return (
     <Accordion>
@@ -80,6 +84,7 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
                 sx={{ width: 110 }}
                 value={String(preset.width)}
                 disabled={preset.key === 'NO_CROP'}
+                error={needsDims(preset) && preset.width <= 0}
                 onChange={(e) => patch(preset.key, { width: Number(e.target.value) || 0 })}
               />
               <TextField
@@ -88,6 +93,7 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
                 sx={{ width: 110 }}
                 value={String(preset.height)}
                 disabled={preset.key === 'NO_CROP'}
+                error={needsDims(preset) && preset.height <= 0}
                 onChange={(e) => patch(preset.key, { height: Number(e.target.value) || 0 })}
               />
             </Stack>
@@ -107,10 +113,15 @@ export default function CropPresetsAccordion({ settings, saving, onSave }: Reado
               </MenuItem>
             ))}
           </TextField>
+          {invalidDims && (
+            <Typography variant="caption" color="error">
+              Enabled presets need a width and height greater than 0.
+            </Typography>
+          )}
           <Button
             variant="contained"
             sx={{ alignSelf: 'flex-start' }}
-            disabled={saving || !defaultValid}
+            disabled={saving || !defaultValid || invalidDims}
             onClick={() => onSave({ crop_presets: presets, default_crop_key: defaultKey })}
           >
             Save crop presets

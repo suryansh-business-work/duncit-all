@@ -353,11 +353,12 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
   });
 
-  it('carries a selected product from the pod shop into checkout', () => {
+  it('adds a pod-shop product to the cart while the pod checkout stays membership-only', () => {
     mockedPod.mockReturnValue({
       ...podData,
       pod: {
         ...podData.pod,
+        products_enabled: true,
         product_requests: [
           {
             product_id: 'pr1',
@@ -374,11 +375,11 @@ describe('PodDetailsScreen', () => {
     });
     renderWithProviders(<PodDetailsScreen />);
     fireEvent.press(screen.getByTestId('pod-shop-row-pr1'));
+    // The product is added to the cart (bought separately via the product
+    // checkout), NOT mixed into the pod-membership payment.
+    expect(useCartStore.getState().lines.some((l) => l.product_id === 'pr1')).toBe(true);
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', {
-      podId: 'p1',
-      selectedProducts: [{ product_id: 'pr1', variant_id: '', quantity: 1, unit_cost: 200 }],
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
   });
 
   it('adds a picked variant line to the cart from the product detail sheet', () => {
@@ -465,7 +466,7 @@ describe('PodDetailsScreen', () => {
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByText('Join')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', selectedProducts: [] });
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
   });
 
   it('sends the pod host to Host Studio instead of booking their own pod', () => {

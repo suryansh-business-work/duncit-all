@@ -59,15 +59,10 @@ export type RootStackParamList = {
   ClubDetails: { clubId?: string; clubSlug?: string; title?: string };
   PreviousPods: undefined;
   HappeningNearby: undefined;
-  Checkout: {
-    podId: string;
-    selectedProducts?: {
-      product_id: string;
-      quantity: number;
-      variant_id?: string;
-      unit_cost?: number;
-    }[];
-  };
+  // Pod-membership checkout (pod_amount only — never carries products).
+  Checkout: { podId: string };
+  // Standalone product checkout for one pod's cart lines (separate payment).
+  ProductCheckout: { podId: string };
   Cart: undefined;
   Shop: undefined;
   OrdersHistory: undefined;
@@ -103,6 +98,7 @@ export type MenuRoute = Exclude<
   | 'Follow'
   | 'VenueDetails'
   | 'Checkout'
+  | 'ProductCheckout'
   | 'ProductDetail'
 >;
 

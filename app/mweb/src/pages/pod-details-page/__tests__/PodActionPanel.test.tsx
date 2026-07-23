@@ -17,7 +17,6 @@ const baseProps = {
   joining: false,
   backingOut: false,
   restoringSpot: false,
-  selectedProductTotal: 0,
   onJoinFree: vi.fn(),
   onBackout: vi.fn(),
   onKeepSpot: vi.fn(),
@@ -36,10 +35,10 @@ afterEach(() => {
 });
 
 describe('PodActionPanel', () => {
-  it('offers Book & Pay to a non-host viewer and includes selected product total', () => {
+  it('offers Book & Pay for the membership amount only (products are separate)', () => {
     const onPaidCheckout = vi.fn();
-    renderPanel({ selectedProductTotal: 50, onPaidCheckout });
-    const cta = screen.getByRole('button', { name: /book & pay ₹150/i });
+    renderPanel({ onPaidCheckout });
+    const cta = screen.getByRole('button', { name: /book & pay ₹100/i });
     expect(cta).toBeInTheDocument();
     fireEvent.click(cta);
     expect(onPaidCheckout).toHaveBeenCalledTimes(1);
@@ -103,7 +102,7 @@ describe('PodActionPanel', () => {
   });
 
   it('defaults the amount to 0 when pod_amount is missing', () => {
-    renderPanel({ pod: { ...baseProps.pod, pod_amount: undefined }, selectedProductTotal: 0 });
+    renderPanel({ pod: { ...baseProps.pod, pod_amount: undefined } });
     expect(screen.getByRole('button', { name: /book & pay ₹0/i })).toBeInTheDocument();
   });
 

@@ -46,7 +46,7 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
           <Routes>
             <Route path="/cart" element={<CartPage />} />
             <Route path="/shop" element={<div>SHOP</div>} />
-            <Route path="/checkout/:podId" element={<CheckoutProbe />} />
+            <Route path="/product-checkout/:podId" element={<CheckoutProbe />} />
           </Routes>
         </MemoryRouter>
       </CartProvider>
@@ -89,18 +89,16 @@ describe('CartPage + CartContext', () => {
     expect(screen.getByText('Your cart is empty')).toBeInTheDocument();
   });
 
-  it('proceeds to checkout for a pod group with variant-aware router state', () => {
+  it('proceeds to the standalone product checkout for a pod group (title only, no products in state)', () => {
     renderCart([
       { meta: meta(), qty: 2 },
       { meta: meta({ variant_id: 'v1', unit_cost: 120 }), qty: 1 },
     ]);
     fireEvent.click(screen.getByRole('button', { name: /proceed to checkout/i }));
     const state = JSON.parse(screen.getByTestId('checkout-probe').textContent ?? '{}');
+    // The product checkout reads its lines from the cart — only the title travels.
     expect(state.pod_title).toBe('Sunset Jam');
-    expect(state.selected_products).toEqual([
-      { product_id: 'a', variant_id: '', quantity: 2, unit_cost: 100 },
-      { product_id: 'a', variant_id: 'v1', quantity: 1, unit_cost: 120 },
-    ]);
+    expect(state.selected_products).toBeUndefined();
   });
 
   it('persists lines to localStorage and the floating button badges the count', () => {

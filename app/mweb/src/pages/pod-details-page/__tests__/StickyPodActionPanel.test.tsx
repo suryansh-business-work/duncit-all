@@ -11,7 +11,6 @@ const baseProps = {
   joining: false,
   backingOut: false,
   restoringSpot: false,
-  selectedProductTotal: 0,
   onJoinFree: vi.fn(),
   onBackout: vi.fn(),
   onKeepSpot: vi.fn(),
@@ -30,8 +29,8 @@ afterEach(() => {
 describe('StickyPodActionPanel', () => {
   it('renders the inner PodActionPanel booking CTA and forwards props', () => {
     const onPaidCheckout = vi.fn();
-    renderPanel({ selectedProductTotal: 25, onPaidCheckout });
-    const cta = screen.getByRole('button', { name: /book & pay ₹125/i });
+    renderPanel({ onPaidCheckout });
+    const cta = screen.getByRole('button', { name: /book & pay ₹100/i });
     expect(cta).toBeInTheDocument();
     fireEvent.click(cta);
     expect(onPaidCheckout).toHaveBeenCalledTimes(1);

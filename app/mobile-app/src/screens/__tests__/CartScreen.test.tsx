@@ -100,7 +100,7 @@ describe('CartScreen', () => {
     expect(useCartStore.getState().lines.some((l) => l.pod_id === 'p2')).toBe(false);
   });
 
-  it('proceeds to checkout for one pod group with the variant-aware lines', () => {
+  it('starts a separate product checkout for one pod group', () => {
     useCartStore.setState({
       lines: [
         line(),
@@ -116,13 +116,9 @@ describe('CartScreen', () => {
     });
     renderWithProviders(<CartScreen />);
     fireEvent.press(screen.getByTestId('cart-checkout-p1'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', {
-      podId: 'p1',
-      selectedProducts: [
-        { product_id: 'a', variant_id: '', quantity: 2, unit_cost: 100 },
-        { product_id: 'a', variant_id: 'v1', quantity: 1, unit_cost: 120 },
-      ],
-    });
+    // Products check out via the standalone product engine (reads the pod's cart
+    // lines by podId), never the pod-membership Checkout.
+    expect(mockNavigate).toHaveBeenCalledWith('ProductCheckout', { podId: 'p1' });
   });
 
   it('clears every pod group from the Clear cart action', () => {

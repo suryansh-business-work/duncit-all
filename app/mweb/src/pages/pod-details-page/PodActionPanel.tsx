@@ -19,7 +19,6 @@ interface Props {
   joining: boolean;
   backingOut: boolean;
   restoringSpot: boolean;
-  selectedProductTotal: number;
   onJoinFree: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
@@ -55,7 +54,6 @@ export default function PodActionPanel({
   joining,
   backingOut,
   restoringSpot,
-  selectedProductTotal,
   onJoinFree,
   onBackout,
   onKeepSpot,
@@ -205,7 +203,7 @@ export default function PodActionPanel({
     >
       {ms?.can_join === false
         ? 'Pod is full'
-        : `Book & Pay ${priceFormat(Number(pod.pod_amount || 0) + selectedProductTotal)}`}
+        : `Book & Pay ${priceFormat(Number(pod.pod_amount || 0))}`}
     </Button>
   );
 }

@@ -12,7 +12,6 @@ interface Props {
   joining: boolean;
   backingOut: boolean;
   restoringSpot: boolean;
-  selectedProductTotal: number;
   onJoinFree: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;

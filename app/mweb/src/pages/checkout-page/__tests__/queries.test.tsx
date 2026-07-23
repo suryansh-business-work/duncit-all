@@ -10,11 +10,16 @@ import {
   AVAILABLE_COUPONS,
   CREATE_RAZORPAY_ORDER,
   VERIFY_RAZORPAY_PAYMENT,
+  DUMMY_PRODUCT_CHECKOUT,
+  CREATE_RAZORPAY_PRODUCT_ORDER,
+  PRODUCT_SHIPPING_QUOTE,
   type AvailableCoupon,
   type CouponPreview,
   type CheckoutState,
   type CheckoutContact,
   type CheckoutForm,
+  type ProductCartItemInput,
+  type ProductShippingQuote,
 } from '../queries';
 
 function op(doc: { definitions: readonly DefinitionNode[] }): OperationDefinitionNode {
@@ -119,6 +124,40 @@ describe('checkout-page queries documents', () => {
     expect(printed).toContain('payment_id');
   });
 
+  it('DUMMY_PRODUCT_CHECKOUT is a product mutation taking DummyProductCheckoutInput', () => {
+    const def = op(DUMMY_PRODUCT_CHECKOUT);
+    expect(def.operation).toBe('mutation');
+    expect(def.name?.value).toBe('DummyProductCheckout');
+    const varTypes = (def.variableDefinitions ?? []).map((v) => JSON.stringify(v.type));
+    expect(varTypes.join()).toContain('DummyProductCheckoutInput');
+    const printed = JSON.stringify(DUMMY_PRODUCT_CHECKOUT);
+    expect(printed).toContain('dummyProductCheckout');
+    expect(printed).toContain('invoice_no');
+  });
+
+  it('CREATE_RAZORPAY_PRODUCT_ORDER is a product mutation taking ProductCheckoutInput', () => {
+    const def = op(CREATE_RAZORPAY_PRODUCT_ORDER);
+    expect(def.operation).toBe('mutation');
+    expect(def.name?.value).toBe('CreateRazorpayProductOrder');
+    const varTypes = (def.variableDefinitions ?? []).map((v) => JSON.stringify(v.type));
+    expect(varTypes.join()).toContain('ProductCheckoutInput');
+    const printed = JSON.stringify(CREATE_RAZORPAY_PRODUCT_ORDER);
+    expect(printed).toContain('createRazorpayProductOrder');
+    expect(printed).toContain('order_id');
+    expect(printed).toContain('payment');
+  });
+
+  it('PRODUCT_SHIPPING_QUOTE is a query returning the quote + per-warehouse lines', () => {
+    const def = op(PRODUCT_SHIPPING_QUOTE);
+    expect(def.operation).toBe('query');
+    expect(def.name?.value).toBe('ProductShippingQuote');
+    const printed = JSON.stringify(PRODUCT_SHIPPING_QUOTE);
+    expect(printed).toContain('productShippingQuote');
+    expect(printed).toContain('all_quoted');
+    expect(printed).toContain('courier_name');
+    expect(printed).toContain('quoted');
+  });
+
   it('every exported document has exactly one operation definition', () => {
     const docs = [
       PUBLIC_FINANCE,
@@ -130,6 +169,9 @@ describe('checkout-page queries documents', () => {
       AVAILABLE_COUPONS,
       CREATE_RAZORPAY_ORDER,
       VERIFY_RAZORPAY_PAYMENT,
+      DUMMY_PRODUCT_CHECKOUT,
+      CREATE_RAZORPAY_PRODUCT_ORDER,
+      PRODUCT_SHIPPING_QUOTE,
     ];
     docs.forEach((doc) => {
       const defs = doc.definitions.filter(
@@ -211,5 +253,17 @@ describe('checkout-page exported types are usable', () => {
       simulate_failure: false,
     };
     expect(form.same_as_main).toBe(true);
+  });
+
+  it('constructs ProductCartItemInput and ProductShippingQuote shapes', () => {
+    const item: ProductCartItemInput = { product_id: 'p1', pod_id: 'pod1', quantity: 2, variant_id: 'v1' };
+    expect(item.pod_id).toBe('pod1');
+    const quote: ProductShippingQuote = {
+      total: 80,
+      currency_symbol: '₹',
+      all_quoted: true,
+      lines: [{ warehouse_id: 'w1', pickup_pincode: '560001', courier_name: 'BlueDart', charge: 80, quoted: true }],
+    };
+    expect(quote.lines[0].courier_name).toBe('BlueDart');
   });
 });

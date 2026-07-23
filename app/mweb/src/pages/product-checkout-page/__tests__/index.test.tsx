@@ -1,0 +1,176 @@
+import '@testing-library/jest-dom/vitest';
+import { useRef } from 'react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+// lottie-react → lottie-web touches canvas getContext at import time (unavailable
+// in jsdom); the confetti/success screens pull it in. Stub it out.
+vi.mock('lottie-react', () => ({ default: () => null }));
+import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import ProductCheckoutPage from '../index';
+import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
+import {
+  AVAILABLE_COUPONS,
+  CHECKOUT_ME,
+  DUMMY_PRODUCT_CHECKOUT,
+  PRODUCT_SHIPPING_QUOTE,
+  PUBLIC_FINANCE,
+} from '../../checkout-page/queries';
+
+const POD_ID = 'POD1';
+
+const meta = (over: Partial<CartLineMeta> = {}): CartLineMeta => ({
+  pod_id: POD_ID,
+  pod_title: 'Sunset Jam',
+  club_slug: 'club-one',
+  product_id: 'a',
+  variant_id: '',
+  variant_label: '',
+  product_name: 'Alpha Tee',
+  image_url: '',
+  unit_cost: 100,
+  max_quantity: 5,
+  ...over,
+});
+
+function Seed({ lines }: Readonly<{ lines: Array<{ meta: CartLineMeta; qty: number }> }>) {
+  const { setLine } = useCart();
+  const seeded = useRef(false);
+  if (!seeded.current) {
+    seeded.current = true;
+    lines.forEach(({ meta: m, qty }) => setLine(m, qty));
+  }
+  return null;
+}
+
+const financeMock = (over: Record<string, unknown> = {}): MockedResponse => ({
+  request: { query: PUBLIC_FINANCE },
+  result: {
+    data: {
+      publicFinanceSettings: {
+        platform_fee_pct: 10,
+        gst_pct: 18,
+        currency_symbol: '₹',
+        dummy_mode: true,
+        razorpay_enabled: false,
+        ...over,
+      },
+    },
+  },
+});
+
+const meMock = (): MockedResponse => ({
+  request: { query: CHECKOUT_ME },
+  result: {
+    data: {
+      me: {
+        user_id: 'u1',
+        first_name: 'Jane',
+        last_name: 'Doe',
+        email: 'jane@example.com',
+        phone_number: '9876543210',
+        phone_extension: '+91',
+        address: {
+          line1: '221B Baker Street',
+          line2: '',
+          landmark: '',
+          city: 'London',
+          state: 'LDN',
+          pincode: '123456',
+          country: 'India',
+        },
+      },
+    },
+  },
+});
+
+const couponsMock = (): MockedResponse => ({
+  request: { query: AVAILABLE_COUPONS, variables: { pod_id: POD_ID } },
+  result: { data: { availableCouponsForPod: [] } },
+});
+
+const shippingMock = (): MockedResponse => ({
+  request: { query: PRODUCT_SHIPPING_QUOTE },
+  variableMatcher: () => true,
+  result: {
+    data: {
+      productShippingQuote: { total: 80, currency_symbol: '₹', all_quoted: true, lines: [] },
+    },
+  },
+});
+
+const dummyMock = (): MockedResponse => ({
+  request: { query: DUMMY_PRODUCT_CHECKOUT },
+  variableMatcher: () => true,
+  result: {
+    data: {
+      dummyProductCheckout: {
+        id: 'pay1',
+        payment_id: 'PAY-9',
+        invoice_no: 'INV-9',
+        total: 280,
+        currency_symbol: '₹',
+        status: 'SUCCESS',
+        paid_at: '2026-08-01T10:05:00.000Z',
+        created_at: '2026-08-01T10:05:00.000Z',
+      },
+    },
+  },
+});
+
+function renderPage(mocks: MockedResponse[], lines: Array<{ meta: CartLineMeta; qty: number }> = []) {
+  return render(
+    <MockedProvider mocks={mocks} addTypename={false}>
+      <CartProvider>
+        <MemoryRouter initialEntries={[`/product-checkout/${POD_ID}`]}>
+          <Seed lines={lines} />
+          <Routes>
+            <Route path="/" element={<div>HOME</div>} />
+            <Route path="/cart" element={<div>CART</div>} />
+            <Route path="/orders" element={<div>ORDERS</div>} />
+            <Route path="/product-checkout/:podId" element={<ProductCheckoutPage />} />
+          </Routes>
+        </MemoryRouter>
+      </CartProvider>
+    </MockedProvider>,
+  );
+}
+
+beforeEach(() => localStorage.clear());
+
+describe('ProductCheckoutPage', () => {
+  it('shows the empty state when the pod has no cart lines', async () => {
+    renderPage([financeMock(), meMock(), couponsMock()]);
+    expect(await screen.findByText('Nothing to checkout')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /back to cart/i }));
+    expect(screen.getByText('CART')).toBeInTheDocument();
+  });
+
+  it('renders the product-only checkout with the Dummy gateway', async () => {
+    renderPage([financeMock(), meMock(), couponsMock(), shippingMock()], [{ meta: meta(), qty: 2 }]);
+    expect(await screen.findByText('Complete your order')).toBeInTheDocument();
+    expect(screen.getByText('Payment details')).toBeInTheDocument();
+    expect(screen.getByText('Alpha Tee × 2')).toBeInTheDocument();
+    expect(screen.getByText('Dummy')).toBeInTheDocument();
+    // Product summary — never a pod ticket line.
+    expect(screen.queryByText(/Ticket/)).not.toBeInTheDocument();
+  });
+
+  it('completes a dummy product payment, then routes to the product orders history', async () => {
+    renderPage(
+      [financeMock(), meMock(), couponsMock(), shippingMock(), dummyMock()],
+      [{ meta: meta(), qty: 2 }],
+    );
+    await screen.findByText('Complete your order');
+    const payButton = await screen.findByRole('button', { name: /^pay/i });
+    await waitFor(() => expect(payButton).not.toBeDisabled());
+    fireEvent.click(payButton);
+    expect(await screen.findByText('Payment Successful')).toBeInTheDocument();
+    // The success screen routes the buyer to their product orders (not pod history).
+    fireEvent.click(screen.getByRole('button', { name: /my orders/i }));
+    expect(screen.getByText('ORDERS')).toBeInTheDocument();
+    // That pod's lines are cleared from the cart after payment.
+    expect(JSON.parse(localStorage.getItem('mweb_cart_lines') ?? '[]')).toHaveLength(0);
+  });
+});

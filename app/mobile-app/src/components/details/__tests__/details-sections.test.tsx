@@ -328,7 +328,7 @@ describe('PodShop', () => {
     expect(screen.queryByTestId('pod-shop-total')).toBeNull();
   });
 
-  it('is view-only once the pod is already booked (no selecting, no steppers, booked note)', () => {
+  it('is read-only when the shop is closed (no selecting, no steppers, closed note)', () => {
     const onSelectionChange = jest.fn();
     renderWithProviders(
       <PodShop
@@ -343,8 +343,9 @@ describe('PodShop', () => {
     expect(screen.getByTestId('pod-shop-info-1')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-shop-row-1'));
     expect(onSelectionChange).not.toHaveBeenCalled();
-    // The selection total is replaced by an "already booked" note.
-    expect(screen.getByTestId('pod-shop-booked-note')).toBeOnTheScreen();
+    // The selection total is replaced by a shop-closed note (the "already booked"
+    // message lives on the Join button only, never on the shop).
+    expect(screen.getByTestId('pod-shop-closed-note')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-shop-total')).toBeNull();
     expect(screen.queryByTestId('pod-shop-qty-1')).toBeNull();
   });

@@ -194,18 +194,27 @@ describe('PodCommercePreview', () => {
     expect(screen.getByText('₹999')).toBeInTheDocument();
   });
 
-  it('renders view-only mode with no checkboxes and a booked notice', () => {
-    renderPreview({ viewOnly: true, selectedProducts: { p1: 2 } });
+  it('goes read-only with a shop-closed notice when products are disabled', () => {
+    renderPreview({ pod: makePod({ products_enabled: false }), selectedProducts: { p1: 2 } });
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(screen.getByText(/already booked this pod/i)).toBeInTheDocument();
-    // Footer selection caption is hidden in view-only mode.
+    expect(screen.getByText(/shop is currently closed/i)).toBeInTheDocument();
+    // Footer selection caption is hidden while the shop is closed.
     expect(screen.queryByText('Selected product total')).not.toBeInTheDocument();
     expect(screen.getByTestId('detail-viewonly')).toHaveTextContent('true');
   });
 
-  it('does not select when a row is clicked in view-only mode', () => {
-    const { onSelectionChange } = renderPreview({ viewOnly: true });
+  it('does not select when a row is clicked while the shop is closed', () => {
+    const { onSelectionChange } = renderPreview({ pod: makePod({ products_enabled: false }) });
     fireEvent.click(screen.getByText('Mug'));
     expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
+  it('stays interactive for a booked/expired viewer (add-to-cart works in any pod state)', () => {
+    // products_enabled defaults to true → the shop is open regardless of membership.
+    const { onSelectionChange } = renderPreview({ selectedProducts: {} });
+    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByText('Mug'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
+    expect(screen.getByTestId('detail-viewonly')).toHaveTextContent('false');
   });
 });

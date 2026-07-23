@@ -13,7 +13,7 @@ jest.mock('@/hooks/usePodHistory', () => ({
   usePodTicket: () => ({ download: mockDownloadTicket }),
 }));
 const mockNavigate = jest.fn();
-type RouteParams = { podId: string; selectedProducts?: { product_id: string; quantity: number }[] };
+type RouteParams = { podId: string };
 let mockRouteParams: RouteParams | undefined = { podId: 'p1' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
@@ -63,7 +63,6 @@ const baseHook = (overrides: Record<string, unknown> = {}) => ({
   pod,
   me: null,
   initialValues: contactValues,
-  productTotal: 0,
   availableCoupons: [],
   isLoading: false,
   pay,
@@ -153,14 +152,13 @@ describe('CheckoutScreen', () => {
     expect(screen.getByTestId('checkout-contact-loading')).toBeOnTheScreen();
   });
 
-  it('carries the selected products into the payable amount', async () => {
-    mockRouteParams = { podId: 'p1', selectedProducts: [{ product_id: 'pr1', quantity: 2 }] };
-    mockedCheckout.mockReturnValue(baseHook({ productTotal: 200 }));
+  it('pays the pod membership amount only (no products mixed in)', async () => {
+    mockedCheckout.mockReturnValue(baseHook());
     renderWithProviders(<CheckoutScreen />);
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));
-    // pod_amount 500 + product total 200 = 700.
-    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 700, null));
+    // pod_amount 500 only — products are a separate product-checkout payment.
+    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 500, null));
   });
 
   it('pays and shows the success view', async () => {

@@ -19,7 +19,6 @@ import {
   buildCheckoutBilling,
   buildCheckoutContact,
   buildCheckoutInitialValues,
-  sumSelectedProducts,
   useCheckout,
   type CheckoutMe,
 } from '@/hooks/useCheckout';
@@ -437,144 +436,18 @@ describe('useCheckout', () => {
     );
   });
 
-  it('defaults selected products to an empty list and a zero add-on total', async () => {
+  it('sends the pod membership amount only — no products or shipping in the input', async () => {
     const { result } = renderHook(() => useCheckout('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.productTotal).toBe(0);
     await act(async () => {
       await result.current.pay(values, 500);
     });
-    expect(mockRequest).toHaveBeenCalledWith(
-      MobileDummyCheckoutDocument,
-      expect.objectContaining({ input: expect.objectContaining({ selected_products: [] }) }),
-      { auth: true },
-    );
-  });
-
-  it('sends the selected products on both the dummy + razorpay inputs', async () => {
-    const selected = [{ product_id: 'pr1', quantity: 2 }];
-    const { result } = renderHook(() => useCheckout('p1', selected));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => {
-      await result.current.pay(values, 900);
-    });
-    expect(mockRequest).toHaveBeenCalledWith(
-      MobileDummyCheckoutDocument,
-      expect.objectContaining({ input: expect.objectContaining({ selected_products: selected }) }),
-      { auth: true },
-    );
-    await act(async () => {
-      await result.current.createRazorpayOrder(values, 900);
-    });
-    expect(mockRequest).toHaveBeenCalledWith(
-      MobileCreateRazorpayOrderDocument,
-      expect.objectContaining({ input: expect.objectContaining({ selected_products: selected }) }),
-      { auth: true },
-    );
-  });
-
-  it('passes the chosen variant, strips client-only pricing, and ships to the entered address', async () => {
-    const selected = [
-      { product_id: 'pr1', variant_id: 'v1', quantity: 1, unit_cost: 240 },
-      { product_id: 'pr2', variant_id: '', quantity: 2, unit_cost: 100 },
-    ];
-    const { result } = renderHook(() => useCheckout('p1', selected));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => {
-      await result.current.pay(values, 900);
-    });
     const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
     const input = call![1].input;
-    // variant_id rides along; unit_cost (display-only) and empty variant ids are stripped.
-    expect(input.selected_products).toEqual([
-      { product_id: 'pr1', variant_id: 'v1', quantity: 1 },
-      { product_id: 'pr2', quantity: 2 },
-    ]);
-    // The delivery address mirrors the entered billing fields + contact.
-    expect(input.shipping_address).toMatchObject({
-      name: values.full_name,
-      line1: values.line1,
-      city: values.city,
-      pincode: values.pincode,
-      country: values.country || 'India',
-    });
-
-    // Defensive: a missing entered line1 still ships a well-formed address.
-    await act(async () => {
-      await result.current.pay({ ...values, line1: undefined as unknown as string }, 900);
-    });
-    const last = mockRequest.mock.calls.filter((c) => c[0] === MobileDummyCheckoutDocument).pop();
-    expect(last![1].input.shipping_address.line1).toBe('');
-  });
-
-  it('ships to the saved main address when "same as main" is on', async () => {
-    mockRequest.mockReset().mockImplementation((doc: unknown) => {
-      if (doc === MobileCheckoutMeDocument)
-        return Promise.resolve({
-          me: {
-            user_id: 'u1',
-            email: 'r@d.com',
-            phone_number: '9876543210',
-            phone_extension: '+91',
-            // A sparse saved address exercises the per-field '' fallbacks too.
-            address: { line1: '9 Palm Road' },
-          },
-        });
-      return route(doc);
-    });
-    const { result } = renderHook(() => useCheckout('p1', [{ product_id: 'pr1', quantity: 1 }]));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => {
-      await result.current.pay({ ...values, same_as_main: true }, 900);
-    });
-    const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
-    expect(call![1].input.shipping_address).toMatchObject({
-      line1: '9 Palm Road',
-      line2: '',
-      landmark: '',
-      city: '',
-      state: '',
-      pincode: '',
-      country: 'India',
-    });
-  });
-
-  it('falls back to the entered fields when "same as main" is on with no saved address', async () => {
-    const { result } = renderHook(() => useCheckout('p1', [{ product_id: 'pr1', quantity: 1 }]));
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => {
-      await result.current.pay({ ...values, same_as_main: true }, 900);
-    });
-    const call = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
-    expect(call![1].input.shipping_address.line1).toBe('12 Main Street');
-  });
-
-  it('computes the product add-on total from the pod catalogue', async () => {
-    mockRequest.mockReset().mockImplementation((doc: unknown) => {
-      if (doc === MobileCheckoutPodDocument)
-        return Promise.resolve({
-          pod: {
-            id: 'p1',
-            pod_title: 'Pod',
-            pod_amount: 500,
-            pod_images_and_videos: [],
-            product_requests: [
-              { product_id: 'pr1', product_name: 'Tee', unit_cost: 200 },
-              { product_id: 'pr2', product_name: 'Cap', unit_cost: 50 },
-            ],
-          },
-        });
-      return route(doc);
-    });
-    const { result } = renderHook(() =>
-      useCheckout('p1', [
-        { product_id: 'pr1', quantity: 2 },
-        { product_id: 'missing', quantity: 3 },
-      ]),
-    );
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    // pr1 200×2 = 400; an unknown id contributes nothing.
-    expect(result.current.productTotal).toBe(400);
+    expect(input.amount).toBe(500);
+    // Pod checkout is membership only — products/shipping ride the product engine.
+    expect('selected_products' in input).toBe(false);
+    expect('shipping_address' in input).toBe(false);
   });
 
   it('skips saving when opted in but a main address already exists', async () => {
@@ -688,30 +561,6 @@ describe('buildCheckoutBilling', () => {
 
   it('defaults the country to India when empty', () => {
     expect(buildCheckoutBilling({ ...values, country: '' }, null).country).toBe('India');
-  });
-});
-
-describe('sumSelectedProducts', () => {
-  const pod = {
-    product_requests: [
-      { product_id: 'a', unit_cost: 100 },
-      { product_id: 'b', unit_cost: null },
-    ],
-  } as unknown as Parameters<typeof sumSelectedProducts>[0];
-
-  it('sums picked line totals, skipping unknown ids and nullish costs', () => {
-    expect(
-      sumSelectedProducts(pod, [
-        { product_id: 'a', quantity: 2 },
-        { product_id: 'b', quantity: 1 },
-        { product_id: 'z', quantity: 5 },
-      ]),
-    ).toBe(200);
-  });
-
-  it('returns 0 for no pod or no picks', () => {
-    expect(sumSelectedProducts(null, [{ product_id: 'a', quantity: 2 }])).toBe(0);
-    expect(sumSelectedProducts(pod, [])).toBe(0);
   });
 });
 

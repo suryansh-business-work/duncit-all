@@ -47,7 +47,6 @@ function renderActions(overrides: Partial<Parameters<typeof usePodDetailActions>
     saved: false,
     savedIds: ['other'],
     referralFromUrl: null as string | null,
-    selectedProducts: [] as any[],
     refetch,
     navigate,
     ...overrides,
@@ -251,19 +250,16 @@ describe('usePodDetailActions', () => {
     expect(result.current.snack).toBeNull();
   });
 
-  it('onPaidCheckout navigates with computed amount + state incl. variant price', () => {
-    const { result, navigate } = renderActions({
-      selectedProducts: [
-        { product_id: 'p1', quantity: 2 }, // falls back to pod row unit_cost 10 => 20
-        { product_id: 'pX', unit_cost: 5, quantity: 3 }, // variant carries own price => 15
-      ] as any,
-    });
+  it('onPaidCheckout navigates with the membership amount only (no products)', () => {
+    const { result, navigate } = renderActions();
     act(() => result.current.onPaidCheckout());
     expect(navigate).toHaveBeenCalledTimes(1);
     const [url, opts] = navigate.mock.calls[0];
     expect(url).toContain('/checkout/pod-doc-1?');
-    expect(url).toContain('amount=135'); // 100 + 20 + 15
-    expect(opts.state).toMatchObject({ pod_id: 'pod-doc-1', amount: 135 });
+    expect(url).toContain('amount=100'); // pod_amount only
+    expect(opts.state).toMatchObject({ pod_id: 'pod-doc-1', amount: 100 });
+    // Pods never carry products into their payment.
+    expect(opts.state.selected_products).toBeUndefined();
   });
 
   it('onPaidCheckout no-ops with no pod', () => {

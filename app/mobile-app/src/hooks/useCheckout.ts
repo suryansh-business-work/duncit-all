@@ -1,24 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   MobileAvailableCouponsDocument,
-  MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
-  MobileCheckoutSaveAddressDocument,
   MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
-  MobilePreviewCouponDocument,
   MobilePublicFinanceDocument,
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import type { CheckoutBillingInput } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { CheckoutContact, CheckoutFormValues, CheckoutMainAddress } from '@/forms/checkout';
-import type { SelectedProduct } from '@/hooks/usePodProductSelection';
+import {
+  downloadPaymentInvoice,
+  maybeSaveMainAddress,
+  previewCouponRequest,
+} from '@/hooks/checkoutRequests';
+
+export type { CouponPreview } from '@/hooks/checkoutRequests';
 
 export type FinanceSettings = ResultOf<typeof MobilePublicFinanceDocument>['publicFinanceSettings'];
 export type CheckoutPod = ResultOf<typeof MobileCheckoutPodDocument>['pod'];
@@ -27,7 +28,6 @@ export type CheckoutPayment = ResultOf<typeof MobileDummyCheckoutDocument>['dumm
 export type RazorpayOrder = ResultOf<
   typeof MobileCreateRazorpayOrderDocument
 >['createRazorpayOrder'];
-export type CouponPreview = ResultOf<typeof MobilePreviewCouponDocument>['previewCoupon'];
 export type AvailableCoupon = ResultOf<
   typeof MobileAvailableCouponsDocument
 >['availableCouponsForPod'][number];
@@ -74,19 +74,6 @@ export function buildCheckoutContact(me: CheckoutMe): CheckoutContact | null {
   };
 }
 
-/** Sum the picked products' line totals (unit_cost × qty) against the pod's
- * product catalogue. Variant lines carry their own price; base lines use the
- * pod snapshot. The server recomputes + validates this, so it is only for
- * the displayed amount. Products missing from the catalogue contribute nothing. */
-export function sumSelectedProducts(pod: CheckoutPod, selectedProducts: SelectedProduct[]): number {
-  const byId = new Map((pod?.product_requests ?? []).map((p) => [p.product_id, p]));
-  return selectedProducts.reduce(
-    (sum, item) =>
-      sum + Number(item.unit_cost ?? byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity,
-    0,
-  );
-}
-
 /** Build the structured billing block sent on pay. Uses the saved main address
  * when "same as main" is on, else the entered fields; billing email is sent only
  * when it differs from the contact email, and GSTIN only when non-empty. */
@@ -112,8 +99,10 @@ export function buildCheckoutBilling(
 }
 
 /** Loads checkout context (finance + pod + me) and runs the dummy payment +
- * invoice download. RN twin of mWeb's CheckoutPage data layer. */
-export function useCheckout(podId: string, selectedProducts: SelectedProduct[] = []) {
+ * invoice download. Pod checkout pays the pod membership (pod_amount) ONLY —
+ * products are a separate payment via the standalone product checkout, never
+ * mixed in. RN twin of mWeb's CheckoutPage data layer. */
+export function useCheckout(podId: string) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [pod, setPod] = useState<CheckoutPod>(null);
   const [me, setMe] = useState<CheckoutMe>(null);
@@ -146,74 +135,30 @@ export function useCheckout(podId: string, selectedProducts: SelectedProduct[] =
   }, [podId]);
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
-  // Displayed add-on total for the picked products; the server is authoritative.
-  const productTotal = sumSelectedProducts(pod, selectedProducts);
 
-  const contactInput = (values: CheckoutFormValues, amount: number, couponCode?: string | null) => {
-    // Shipped products deliver to the billing address the buyer resolved here
-    // (the server rejects SHIP-bound products without one).
-    const addressSource = values.same_as_main && me?.address?.line1 ? me.address : values;
-    return {
-      pod_id: podId || null,
-      amount,
-      description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
-      contact_name: values.full_name.trim(),
-      contact_email: values.email,
-      contact_phone_extension: values.phone_extension,
-      contact_phone_number: values.phone_number,
-      billing: buildCheckoutBilling(values, me?.address ?? null),
-      shipping_address: {
-        name: values.full_name.trim(),
-        phone: `${values.phone_extension} ${values.phone_number}`.trim(),
-        email: values.email,
-        line1: addressSource.line1 ?? '',
-        line2: addressSource.line2 ?? '',
-        landmark: addressSource.landmark ?? '',
-        city: addressSource.city ?? '',
-        state: addressSource.state ?? '',
-        pincode: addressSource.pincode ?? '',
-        country: addressSource.country || 'India',
-      },
-      checkout_url: CHECKOUT_URL,
-      coupon_code: couponCode || null,
-      // Strip client-only fields (unit_cost) and pass the chosen variant.
-      selected_products: selectedProducts.map((item) => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        ...(item.variant_id ? { variant_id: item.variant_id } : {}),
-      })),
-    };
-  };
-
-  /** Persist the entered billing address as the main address when opted in. The
-   * opt-in only applies when there is no saved main address yet. */
-  const maybeSaveMainAddress = async (values: CheckoutFormValues) => {
-    if (!values.save_as_main || me?.address?.line1) return;
-    await graphqlRequest(
-      MobileCheckoutSaveAddressDocument,
-      {
-        input: {
-          address: {
-            line1: values.line1.trim(),
-            line2: values.line2.trim(),
-            landmark: values.landmark.trim(),
-            city: values.city.trim(),
-            state: values.state.trim(),
-            pincode: values.pincode.trim(),
-            country: values.country.trim() || 'India',
-          },
-        },
-      },
-      { auth: true },
-    );
-  };
+  const contactInput = (
+    values: CheckoutFormValues,
+    amount: number,
+    couponCode?: string | null,
+  ) => ({
+    pod_id: podId || null,
+    amount,
+    description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
+    contact_name: values.full_name.trim(),
+    contact_email: values.email,
+    contact_phone_extension: values.phone_extension,
+    contact_phone_number: values.phone_number,
+    billing: buildCheckoutBilling(values, me?.address ?? null),
+    checkout_url: CHECKOUT_URL,
+    coupon_code: couponCode || null,
+  });
 
   const pay = async (
     values: CheckoutFormValues,
     amount: number,
     couponCode?: string | null,
   ): Promise<CheckoutPayment> => {
-    await maybeSaveMainAddress(values);
+    await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileDummyCheckoutDocument,
       {
@@ -232,7 +177,7 @@ export function useCheckout(podId: string, selectedProducts: SelectedProduct[] =
     amount: number,
     couponCode?: string | null,
   ): Promise<RazorpayOrder> => {
-    await maybeSaveMainAddress(values);
+    await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileCreateRazorpayOrderDocument,
       { input: contactInput(values, amount, couponCode) },
@@ -241,14 +186,7 @@ export function useCheckout(podId: string, selectedProducts: SelectedProduct[] =
     return data.createRazorpayOrder;
   };
 
-  const previewCoupon = async (code: string, amount: number): Promise<CouponPreview> => {
-    const data = await graphqlRequest(
-      MobilePreviewCouponDocument,
-      { input: { code: code.trim(), pod_id: podId || null, amount } },
-      { auth: true },
-    );
-    return data.previewCoupon;
-  };
+  const previewCoupon = (code: string, amount: number) => previewCouponRequest(code, podId, amount);
 
   const verifyRazorpay = async (
     paymentDocId: string,
@@ -262,34 +200,17 @@ export function useCheckout(podId: string, selectedProducts: SelectedProduct[] =
     return data.verifyRazorpayPayment;
   };
 
-  const downloadInvoice = async (paymentDocId: string, invoiceNo: string) => {
-    const data = await graphqlRequest(
-      MobileCheckoutInvoiceDocument,
-      { id: paymentDocId },
-      { auth: true },
-    );
-    const base64 = data.paymentInvoicePdfBase64;
-    if (!base64) throw new Error('Invoice not available');
-    const safe = invoiceNo.replace(/[^A-Za-z0-9_-]+/g, '-');
-    const uri = `${FileSystem.cacheDirectory}invoice-${safe}.pdf`;
-    await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 });
-    if (!(await Sharing.isAvailableAsync()))
-      throw new Error('Sharing is not available on this device');
-    await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
-  };
-
   return {
     finance,
     pod,
     me,
     initialValues,
-    productTotal,
     availableCoupons,
     isLoading,
     pay,
     createRazorpayOrder,
     verifyRazorpay,
     previewCoupon,
-    downloadInvoice,
+    downloadInvoice: downloadPaymentInvoice,
   };
 }

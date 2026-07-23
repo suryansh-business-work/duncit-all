@@ -189,6 +189,96 @@ export const VERIFY_RAZORPAY_PAYMENT = gql`
   }
 `;
 
+/** Standalone product-cart checkout via the dummy gateway (no pod ticket).
+ * Returns the same Payment fields the pod dummy checkout selects. */
+export const DUMMY_PRODUCT_CHECKOUT = gql`
+  mutation DummyProductCheckout($input: DummyProductCheckoutInput!) {
+    dummyProductCheckout(input: $input) {
+      id
+      payment_id
+      invoice_no
+      total
+      currency_symbol
+      status
+      paid_at
+      created_at
+    }
+  }
+`;
+
+/** Standalone product-cart checkout via Razorpay (step 1; verify with
+ * VERIFY_RAZORPAY_PAYMENT). Returns the same RazorpayOrder shape as the pod flow. */
+export const CREATE_RAZORPAY_PRODUCT_ORDER = gql`
+  mutation CreateRazorpayProductOrder($input: ProductCheckoutInput!) {
+    createRazorpayProductOrder(input: $input) {
+      payment_doc_id
+      key_id
+      order_id
+      amount
+      currency
+      name
+      description
+      prefill_email
+      prefill_contact
+      currency_symbol
+      total
+      free
+      payment {
+        id
+        payment_id
+        invoice_no
+        total
+        currency_symbol
+        status
+        paid_at
+        created_at
+      }
+    }
+  }
+`;
+
+/** Live ShipRocket delivery estimate for a product cart (preview only; the
+ * charged amount is recomputed server-side at checkout). */
+export const PRODUCT_SHIPPING_QUOTE = gql`
+  query ProductShippingQuote($input: ProductShippingQuoteInput!) {
+    productShippingQuote(input: $input) {
+      total
+      currency_symbol
+      all_quoted
+      lines {
+        warehouse_id
+        pickup_pincode
+        courier_name
+        charge
+        quoted
+      }
+    }
+  }
+`;
+
+/** One line of the standalone product cart, mapped for the product engine. */
+export interface ProductCartItemInput {
+  product_id: string;
+  pod_id: string;
+  quantity: number;
+  variant_id?: string;
+}
+
+export interface ProductShippingQuoteLine {
+  warehouse_id: string;
+  pickup_pincode: string;
+  courier_name: string;
+  charge: number;
+  quoted: boolean;
+}
+
+export interface ProductShippingQuote {
+  total: number;
+  currency_symbol: string;
+  all_quoted: boolean;
+  lines: ProductShippingQuoteLine[];
+}
+
 export interface CouponPreview {
   ok: boolean;
   message: string | null;

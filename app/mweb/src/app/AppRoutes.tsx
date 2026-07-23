@@ -61,6 +61,7 @@ const AllTicketsPage = lazy(() =>
 const AccountHealthPage = lazy(() => import('../pages/AccountHealthPage'));
 const VenueHealthPage = lazy(() => import('../pages/VenueHealthPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
+const ProductCheckoutPage = lazy(() => import('../pages/product-checkout-page'));
 const CartPage = lazy(() => import('../pages/CartPage'));
 const ShopPage = lazy(() => import('../pages/shop-page'));
 const ProductDetailPage = lazy(() => import('../pages/ProductDetailPage'));
@@ -163,6 +164,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />
         <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
         <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
+        <Route path="/product-checkout/:podId" element={withAuth(<ProductCheckoutPage />)} />
         <Route path="/cart" element={withAuth(<CartPage />)} />
         <Route path="/shop" element={withAuth(<ShopPage />)} />
         <Route path="/product/:productId" element={withAuth(<ProductDetailPage />)} />

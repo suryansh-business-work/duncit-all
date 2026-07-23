@@ -6,6 +6,7 @@ import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 import {
   CheckoutSuccess,
   CouponField,
+  CouponTotal,
   OrderSummary,
   ProcessingOverlay,
   RazorpayWebView,
@@ -25,44 +26,17 @@ import type { RootStackParamList } from '@/navigation/types';
 import { buildBreakup } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 
-/** Strikethrough "You pay …" line shown once a coupon is applied. */
-function CouponTotal({
-  coupon,
-  currency,
-  effectiveTotal,
-  originalTotal,
-}: Readonly<{
-  coupon: CouponPreview | null;
-  currency: string;
-  effectiveTotal: number;
-  originalTotal: number;
-}>) {
-  if (!coupon?.ok) return null;
-  return (
-    <Text testID="coupon-total" fontSize={14} fontWeight="800" color="$color">
-      You pay {currency}
-      {effectiveTotal}{' '}
-      <Text fontSize={13} color="$muted" textDecorationLine="line-through">
-        {currency}
-        {originalTotal}
-      </Text>
-    </Text>
-  );
-}
-
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
  * finance dummy_mode is on, else live Razorpay. RN twin of mWeb's CheckoutPage. */
 export function CheckoutScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Checkout'>>();
   const podId = route.params?.podId ?? '';
-  const selectedProducts = route.params?.selectedProducts ?? [];
   const {
     finance,
     pod,
     me,
     initialValues,
-    productTotal,
     availableCoupons,
     isLoading,
     pay,
@@ -70,7 +44,7 @@ export function CheckoutScreen() {
     verifyRazorpay,
     previewCoupon,
     downloadInvoice,
-  } = useCheckout(podId, selectedProducts);
+  } = useCheckout(podId);
   const { download: downloadTicket } = usePodTicket();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +55,9 @@ export function CheckoutScreen() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const amount = Number(pod?.pod_amount ?? 0) + productTotal;
+  // Pod checkout pays the membership (pod_amount) ONLY — products are a separate
+  // payment through the standalone product checkout. Never mix the two.
+  const amount = Number(pod?.pod_amount ?? 0);
   const breakup = buildBreakup(amount, finance);
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
   // gateway is only a local fallback.
@@ -183,7 +159,7 @@ export function CheckoutScreen() {
       </ScrollView>
     ) : (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-        <OrderSummary pod={pod} breakup={breakup} selectedProducts={selectedProducts} />
+        <OrderSummary pod={pod} breakup={breakup} />
         <CouponField
           code={couponCode}
           setCode={setCouponCode}

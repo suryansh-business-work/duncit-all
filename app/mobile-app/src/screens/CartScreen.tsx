@@ -8,12 +8,11 @@ import { CartPodGroup } from '@/components/cart/CartPodGroup';
 import { StackScreen } from '@/components/StackScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { cartLineKey, useCartStore, type CartLine } from '@/stores/cart.store';
-import { parseSelectionKey } from '@/utils/product-selection';
 import type { RootStackParamList } from '@/navigation/types';
 
-/** The cart — every product added from any Pod Shop, grouped by pod. Checkout
- * runs per pod group (products are purchased with that pod's booking). RN twin
- * of mWeb's CartPage. */
+/** The cart — every product added from any Pod Shop, grouped by pod. Each pod
+ * group checks out as its OWN product payment (separate from the pod-membership
+ * payment). RN twin of mWeb's CartPage. */
 export function CartScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, onPrimary } = useThemeColors();
@@ -32,15 +31,10 @@ export function CartScreen() {
     return Array.from(byPod.entries());
   }, [lines]);
 
-  const checkoutPod = (podId: string, podLines: CartLine[]) => {
-    navigation.navigate('Checkout', {
-      podId,
-      selectedProducts: podLines.map((line) => ({
-        ...parseSelectionKey(cartLineKey(line)),
-        quantity: line.quantity,
-        unit_cost: line.unit_cost,
-      })),
-    });
+  // Each pod group starts a SEPARATE product payment for just that pod's lines
+  // via the product engine (never the pod-membership checkout).
+  const checkoutPod = (podId: string) => {
+    navigation.navigate('ProductCheckout', { podId });
   };
 
   let body;
@@ -84,7 +78,7 @@ export function CartScreen() {
             lines={group.lines}
             onSetQuantity={(line, quantity) => setLine(line, quantity)}
             onRemove={(line) => removeLine(podId, cartLineKey(line))}
-            onCheckout={() => checkoutPod(podId, group.lines)}
+            onCheckout={() => checkoutPod(podId)}
           />
         ))}
         <XStack

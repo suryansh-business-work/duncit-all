@@ -4,11 +4,11 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useNavigate } from 'react-router-dom';
 import { useCart, cartLineKey, type CartLine } from '../components/cart/CartContext';
 import { usePricing } from '../hooks/usePricing';
-import { parseSelectionKey } from '../utils/product-selection';
 import CartPodGroup from './cart-page/CartPodGroup';
 
 /** The cart — every product added from any Pod Shop, grouped by pod. Checkout
- * runs per pod group (products are purchased with that pod's booking). */
+ * runs per pod group as a standalone PRODUCT payment (separate from any pod
+ * booking) via the product checkout. */
 export default function CartPage() {
   const { lines, setLine, removeLine, clearPod } = useCart();
   const { format: priceFormat } = usePricing();
@@ -24,17 +24,11 @@ export default function CartPage() {
     return Array.from(byPod.entries());
   }, [lines]);
 
-  const checkoutPod = (podId: string, title: string, podLines: CartLine[]) => {
-    navigate(`/checkout/${podId}`, {
-      state: {
-        pod_title: title,
-        selected_products: podLines.map((line) => ({
-          ...parseSelectionKey(cartLineKey(line)),
-          quantity: line.quantity,
-          unit_cost: line.unit_cost,
-        })),
-      },
-    });
+  // Each pod group checks out as its own PRODUCT payment (no pod ticket). The
+  // product checkout reads the pod's lines from the cart, so only the title is
+  // forwarded for the header.
+  const checkoutPod = (podId: string, title: string) => {
+    navigate(`/product-checkout/${podId}`, { state: { pod_title: title } });
   };
 
   if (groups.length === 0) {
@@ -68,7 +62,7 @@ export default function CartPage() {
           priceFormat={priceFormat}
           onSetQuantity={(line, quantity) => setLine(line, quantity)}
           onRemove={(line) => removeLine(podId, cartLineKey(line))}
-          onCheckout={() => checkoutPod(podId, group.title, group.lines)}
+          onCheckout={() => checkoutPod(podId, group.title)}
         />
       ))}
       <Button

@@ -1,4 +1,5 @@
-import { useController, useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useController, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -26,6 +27,9 @@ export interface CheckoutFormProps {
   loading?: boolean;
   errorMessage?: string | null;
   dummyMode?: boolean;
+  /** Notified with the live delivery pincode — the product checkout uses it to
+   * fetch a live shipping quote. Omitted by the pod (membership) checkout. */
+  onPincodeChange?: (pincode: string) => void;
   onSubmit: (values: CheckoutFormValues) => void | Promise<void>;
 }
 
@@ -38,6 +42,7 @@ export function CheckoutForm({
   loading,
   errorMessage,
   dummyMode = true,
+  onPincodeChange,
   onSubmit,
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
@@ -47,6 +52,10 @@ export function CheckoutForm({
     mode: 'onBlur',
   });
   const simulate = useController({ control, name: 'simulate_failure' });
+  const pincode = useWatch({ control, name: 'pincode' });
+  useEffect(() => {
+    onPincodeChange?.(pincode);
+  }, [pincode, onPincodeChange]);
 
   return (
     <YStack gap={16}>

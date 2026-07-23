@@ -29,7 +29,7 @@ import { toErrorMessage } from '@/utils/errors';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import { isPodExpired, podShareMessage } from '@/utils/pod-format';
+import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Pod details — hero gallery + overview card + schedule/map + social bar + pod
@@ -59,13 +59,8 @@ export function PodDetailsScreen() {
   );
   const { backout, busy: backingOut } = usePodBackout();
   const { cancelBackout, busy: restoringSpot } = usePodCancelBackout();
-  const {
-    selectedProducts,
-    selectedProductList,
-    selectedProductTotal,
-    setSelectedProducts,
-    setVariantQuantity,
-  } = usePodProductSelection(podId, pod);
+  const { selectedProducts, selectedProductTotal, setSelectedProducts, setVariantQuantity } =
+    usePodProductSelection(podId, pod);
   const showProducts = useFeatureFlag('is_product_visible');
   const finance = usePublicFinance();
   const { openClub } = useDetailNav();
@@ -215,7 +210,7 @@ export function PodDetailsScreen() {
                   quantity,
                 )
               }
-              readOnly={!!membershipState?.is_member || isPodExpired(pod.pod_date_time)}
+              readOnly={pod.products_enabled === false}
             />
           </Reveal>
         ) : null}
@@ -282,12 +277,7 @@ export function PodDetailsScreen() {
           isFree={isFree}
           isHost={isPodHost}
           membershipState={membershipState}
-          onCheckout={() =>
-            navigation.navigate('Checkout', {
-              podId: pod.id,
-              selectedProducts: selectedProductList,
-            })
-          }
+          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id })}
           onBackout={() => setBackoutOpen(true)}
           onKeepSpot={openKeepSpot}
           onGoToDashboard={() => {

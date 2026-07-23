@@ -16,8 +16,6 @@ interface Props {
   selectedTotal?: number;
   /** A variant line change from the detail dialog (row + picked variant + qty). */
   onVariantQuantity?: (row: any, variant: VariantPick, quantity: number) => void;
-  /** View-only once the viewer has already booked this pod (no re-selecting). */
-  viewOnly?: boolean;
 }
 
 /** Footer label: a count of selected products, or a neutral total caption. */
@@ -26,10 +24,12 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity, viewOnly = false }: Readonly<Props>) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
+  // Add-to-cart works in ANY pod state — the ONLY gate is the owner closing the shop.
+  const readOnly = pod.products_enabled === false;
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
 
@@ -107,27 +107,27 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           {requests.map((item: any) => {
           const maxQuantity = Number(item.available_count ?? item.quantity ?? 0);
           const quantity = selectedProducts[item.product_id] || 0;
-          // Members can only view products — never re-select them.
-          const selected = !viewOnly && quantity > 0;
+          // A closed shop is read-only — no re-selecting.
+          const selected = !readOnly && quantity > 0;
           const imageUrl = item.image_url || item.images?.[0] || '';
           return (
             <Stack
               key={`${item.product_id}-${item.product_name}`}
-              onClick={viewOnly ? undefined : () => updateQuantity(item.product_id, selected ? 0 : 1)}
+              onClick={readOnly ? undefined : () => updateQuantity(item.product_id, selected ? 0 : 1)}
               direction="row"
               spacing={1}
               alignItems="center"
               sx={{
                 p: 1,
                 borderRadius: 3,
-                cursor: viewOnly ? 'default' : 'pointer',
+                cursor: readOnly ? 'default' : 'pointer',
                 border: '1px solid',
                 borderColor: selected ? selectedBorder : borderColor,
                 bgcolor: selected ? selectedBg : itemBg,
                 transition: 'all 0.18s ease',
               }}
             >
-              {!viewOnly && (
+              {!readOnly && (
                 <Checkbox
                   checked={selected}
                   onChange={() => updateQuantity(item.product_id, selected ? 0 : 1)}
@@ -172,9 +172,9 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
       )}
 
       <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
-      {viewOnly ? (
+      {readOnly ? (
         <Typography variant="caption" sx={{ color: mutedColor }}>
-          You&apos;ve already booked this pod.
+          The shop is currently closed.
         </Typography>
       ) : (
         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -192,7 +192,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         onClose={() => setInfoProductId(null)}
         selection={selectedProducts}
         maxQuantity={infoMax}
-        viewOnly={viewOnly}
+        viewOnly={readOnly}
         onUpdateLine={updateInfoLine}
       />
     </Box>

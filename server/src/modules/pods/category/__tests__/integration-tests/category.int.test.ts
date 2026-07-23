@@ -48,6 +48,38 @@ describe('categoryService integration', () => {
     expect(updated!.slug).toBe('live-events');
   });
 
+  it('stores + normalises the CATEGORY icon layout and rejects it on other levels', async () => {
+    const sup = await makeSuper('Games');
+    const cat = await categoryService.create({
+      name: 'Board',
+      level: 'CATEGORY',
+      parent_id: sup!.id,
+      // width over the 200 cap is clamped; a missing position defaults to TOP.
+      icon_layout_mweb: { position: 'LEFT', width: 300, height: 15 },
+      icon_layout_native: { width: 24, height: 24 },
+    });
+    expect(cat!.icon_layout_mweb).toEqual({ position: 'LEFT', width: 200, height: 15 });
+    expect(cat!.icon_layout_native).toEqual({ position: 'TOP', width: 24, height: 24 });
+
+    // The layout is a CATEGORY-only concern — SUPER/SUB reject it.
+    await expect(
+      categoryService.create({
+        name: 'NoLayout',
+        level: 'SUB',
+        parent_id: cat!.id,
+        icon_layout_mweb: { position: 'TOP', width: 40, height: 40 },
+      })
+    ).rejects.toThrow(/only be configured on a category/i);
+
+    // Update clears one surface (null) and changes the other.
+    const updated = await categoryService.update(cat!.id, {
+      icon_layout_mweb: null,
+      icon_layout_native: { position: 'BOTTOM', width: 50, height: 50 },
+    });
+    expect(updated!.icon_layout_mweb).toBeNull();
+    expect(updated!.icon_layout_native).toEqual({ position: 'BOTTOM', width: 50, height: 50 });
+  });
+
   it('cascade-deletes a SUPER with its descendants', async () => {
     const sup = await makeSuper('Wipe');
     const cat = await categoryService.create({ name: 'Child', level: 'CATEGORY', parent_id: sup!.id });

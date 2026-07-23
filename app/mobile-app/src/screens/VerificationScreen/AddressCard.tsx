@@ -53,20 +53,29 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
             name="state"
             label="State"
             placeholder="e.g. Maharashtra"
+            required
           />
-          <FormTextField control={control} name="city" label="City" placeholder="e.g. Mumbai" />
+          <FormTextField
+            control={control}
+            name="city"
+            label="City"
+            placeholder="e.g. Mumbai"
+            required
+          />
           <FormTextField
             control={control}
             name="pincode"
             label="Pincode"
             placeholder="e.g. 400001"
             keyboardType="number-pad"
+            required
           />
           <FormTextField
             control={control}
             name="line1"
             label="Address line 1"
             placeholder="House / street"
+            required
           />
           <FormTextField
             control={control}

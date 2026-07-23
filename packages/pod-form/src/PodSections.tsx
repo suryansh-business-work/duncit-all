@@ -94,6 +94,7 @@ export default function PodSections() {
             value={field.value}
             onChange={field.onChange}
             onPickImage={onPickImage}
+            required
             error={errors.media_text?.message}
             helperText="Cover image first; rest become a gallery."
           />

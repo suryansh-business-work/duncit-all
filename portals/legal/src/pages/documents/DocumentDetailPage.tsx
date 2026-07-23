@@ -116,8 +116,8 @@ export default function DocumentDetailPage() {
       return (
         <Paper variant="outlined" sx={{ p: 2 }}>
           <Stack spacing={2}>
-            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-            <DocumentTypeSelect value={docType} onChange={setDocType} />
+            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth required />
+            <DocumentTypeSelect value={docType} onChange={setDocType} required />
             <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth multiline minRows={2} />
             <Box>
               <Typography variant="caption" color="text.secondary">Content</Typography>

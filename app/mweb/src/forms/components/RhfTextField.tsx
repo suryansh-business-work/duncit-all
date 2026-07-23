@@ -15,7 +15,9 @@ export interface RhfTextFieldProps<T extends FieldValues> extends Omit<TextField
 /**
  * MUI `TextField` wired into react-hook-form. Shows the Zod validation message
  * once a field has an error, otherwise renders the `hint` so every input keeps
- * guidance underneath it (parity with the old Formik `FormField`).
+ * guidance underneath it (parity with the old Formik `FormField`). Pass `required`
+ * to add MUI's native trailing `*` on the label (themed red app-wide) and set
+ * `aria-required` on the input.
  */
 export default function RhfTextField<T extends FieldValues>({
   control,

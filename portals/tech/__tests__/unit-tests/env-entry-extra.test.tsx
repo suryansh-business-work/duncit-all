@@ -95,7 +95,7 @@ describe('EnvEntryForm interactions', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(<EnvEntryForm open def={twilioDef} initial={null} onSubmit={onSubmit} onClose={vi.fn()} />);
     const nameInput = screen.getByRole('textbox', { name: 'Name' });
-    const tokenInput = screen.getByLabelText('Auth Token');
+    const tokenInput = screen.getByLabelText(/^Auth Token/);
     fireEvent.click(screen.getByLabelText('Default'));
     fireEvent.click(screen.getByLabelText('Active'));
     fireEvent.blur(tokenInput);

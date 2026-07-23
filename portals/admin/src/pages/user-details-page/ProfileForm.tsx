@@ -53,10 +53,10 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
         </Stack>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="first_name" label="First name" />
+            <RhfTextField control={control} name="first_name" label="First name" required />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <RhfTextField control={control} name="last_name" label="Last name" />
+            <RhfTextField control={control} name="last_name" label="Last name" required />
           </Grid>
           <Grid item xs={12}>
             <RhfTextField control={control} name="email" type="email" label="Email" />
@@ -77,7 +77,7 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
             />
           </Grid>
           <Grid item xs={8} sm={9}>
-            <RhfTextField control={control} name="phone_number" label="Phone number" />
+            <RhfTextField control={control} name="phone_number" label="Phone number" required />
           </Grid>
           <AddressFields
             state={watch('state')}

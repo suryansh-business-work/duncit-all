@@ -2,6 +2,7 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
 import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -27,6 +28,7 @@ interface Props {
   onChange: (text: string) => void;
   error?: string;
   label?: string;
+  required?: boolean;
   folder?: string;
 }
 
@@ -37,6 +39,7 @@ export function MediaUploadField({
   onChange,
   error,
   label = 'Cover image (at least one image)',
+  required,
   folder = '/pods',
 }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
@@ -49,9 +52,7 @@ export function MediaUploadField({
 
   return (
     <YStack gap={8}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {label}
-      </Text>
+      <FieldLabel label={label} required={required} testID="media" />
       {urls.length > 0 ? (
         <XStack gap={8} flexWrap="wrap">
           {urls.map((url) => (

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CreatePodSlot } from './create-pod.types';
 
@@ -11,6 +12,7 @@ interface Props {
   selectedSlotId: string;
   onPick: (slot: CreatePodSlot) => void;
   error?: string;
+  required?: boolean;
 }
 
 const dayKey = (iso: string) => format(new Date(iso), 'yyyy-MM-dd');
@@ -26,7 +28,14 @@ const priceLabel = (slot: CreatePodSlot) => (slot.price > 0 ? `₹${slot.price}`
 
 /** Reskinned slot picker — a row of day chips over a grid of time tiles. The
  * chosen tile sets the pod's date & time. Mobile twin of mWeb's SlotPicker. */
-export function SlotPicker({ slots, loading, selectedSlotId, onPick, error }: Readonly<Props>) {
+export function SlotPicker({
+  slots,
+  loading,
+  selectedSlotId,
+  onPick,
+  error,
+  required,
+}: Readonly<Props>) {
   const { onPrimary, color } = useThemeColors();
   const byDay = new Map<string, CreatePodSlot[]>();
   for (const slot of slots) {
@@ -43,9 +52,7 @@ export function SlotPicker({ slots, loading, selectedSlotId, onPick, error }: Re
 
   return (
     <YStack gap={8}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        Date
-      </Text>
+      <FieldLabel label="Date" required={required} testID="create-pod-slot" />
       <Text fontSize={12} color="$muted">
         From the venue's availability calendar — the slot decides your pod's date & time.
       </Text>

@@ -45,6 +45,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
           name="email"
           type="email"
           label="Email"
+          required
           placeholder="hello@duncit.com"
           autoComplete="email"
           size="small"

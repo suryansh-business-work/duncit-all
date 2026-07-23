@@ -14,8 +14,8 @@ export default function HostIdentitySection() {
   return (
     <>
       <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-        <TextField label="Aadhar number" required {...tfProps('step2.aadhar_number')} />
-        <TextField label="PAN number" required {...tfProps('step2.pan_number')} />
+        <TextField label="Aadhar number" required {...tfProps('step2.aadhar_number', '12-digit number')} />
+        <TextField label="PAN number" required {...tfProps('step2.pan_number', 'Format ABCDE1234F')} />
       </Box>
       <MediaPickerField
         label="Passport photo"

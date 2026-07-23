@@ -136,6 +136,7 @@ export default function TelemetryLogsSettingsPage() {
               {...field}
               type="number"
               label="Retention (days)"
+              required
               error={!!fieldState.error}
               helperText={
                 fieldState.error?.message ?? 'Logs & bugs older than this are deleted daily (max 90).'

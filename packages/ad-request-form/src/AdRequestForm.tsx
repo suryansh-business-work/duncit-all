@@ -42,13 +42,14 @@ export default function AdRequestForm({
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
         <Grid item xs={12}>
-          <RhfTextField control={control} name="ad_title" label="Ad Title" hint="3–120 characters" />
+          <RhfTextField control={control} name="ad_title" label="Ad Title" required hint="3–120 characters" />
         </Grid>
         <Grid item xs={12}>
           <RhfTextField
             control={control}
             name="ad_description"
             label="Ad Description"
+            required
             multiline
             minRows={3}
             hint="What the ad promotes (10–1000 characters)"
@@ -102,6 +103,7 @@ export default function AdRequestForm({
                 slotProps={{
                   textField: {
                     fullWidth: true,
+                    required: true,
                     error: !!fieldState.error,
                     helperText: fieldState.error?.message ?? 'Today or later',
                   },
@@ -142,6 +144,7 @@ export default function AdRequestForm({
                 adType={adType}
                 value={field.value}
                 onChange={field.onChange}
+                required
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
               />

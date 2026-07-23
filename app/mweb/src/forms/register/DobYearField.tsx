@@ -37,6 +37,7 @@ export default function DobYearField({ control, minYear, maxYear }: Readonly<Pro
             }}
             slotProps={{
               textField: {
+                required: true,
                 size: 'small',
                 fullWidth: true,
                 onBlur: field.onBlur,

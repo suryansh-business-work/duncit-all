@@ -62,8 +62,8 @@ export default function NotificationFormDialog({
         <DialogContent dividers>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {opError && <Alert severity="error">{opError}</Alert>}
-            <RhfTextField control={control} name="title" label="Title" required />
-            <RhfTextField control={control} name="body" label="Body" required multiline minRows={3} />
+            <RhfTextField control={control} name="title" label="Title" required hint="3–120 characters" />
+            <RhfTextField control={control} name="body" label="Body" required multiline minRows={3} hint="5–1000 characters" />
             <Controller
               control={control}
               name="image_url"

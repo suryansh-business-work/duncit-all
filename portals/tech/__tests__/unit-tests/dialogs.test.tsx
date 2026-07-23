@@ -58,7 +58,7 @@ describe('CreateTemplateDialog', () => {
 });
 
 const typeEmail = async (value: string) => {
-  const input = screen.getByLabelText('To');
+  const input = screen.getByLabelText(/^To/);
   fireEvent.change(input, { target: { value } });
   await waitFor(() => expect((input as HTMLInputElement).value).toBe(value));
 };
@@ -125,7 +125,7 @@ describe('SendTestDialog', () => {
     const onResult = vi.fn();
     render(<SendTestDialog open templateId={null} varsJson="{}" onClose={vi.fn()} onResult={onResult} />);
     await typeEmail('a@b.co');
-    fireEvent.submit(screen.getByLabelText('To').closest('form')!);
+    fireEvent.submit(screen.getByLabelText(/^To/).closest('form')!);
     await new Promise((r) => setTimeout(r, 0));
     expect(m.run).not.toHaveBeenCalled();
     expect(onResult).not.toHaveBeenCalled();

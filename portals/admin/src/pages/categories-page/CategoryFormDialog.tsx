@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import IconPickerField from '../../components/IconPickerField';
 import MediaPickerField from '../../components/MediaPickerField';
+import IconLayoutSection from './IconLayoutSection';
 import { Level, FormState } from './queries';
 
 /** Mirrors the server's MIN_CO_HOSTS..MAX_CO_HOSTS bounds. */
@@ -98,6 +99,14 @@ export default function CategoryFormDialog({
                 }
                 folder="/categories/icons"
                 helperText="Upload or pick an image to use as the category visual."
+              />
+            )}
+            {/* Icon layout is a CATEGORY-only concept; the server rejects it on
+                SUPER/SUB, so the controls are only offered here. */}
+            {dialog.level === 'CATEGORY' && (
+              <IconLayoutSection
+                form={dialog.form}
+                onFormChange={(form) => setDialog({ ...dialog, form })}
               />
             )}
             <TextField

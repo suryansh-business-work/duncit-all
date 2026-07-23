@@ -56,7 +56,7 @@ describe('DocumentsListPage', () => {
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new document/i }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.change(within(dialog).getByLabelText('Document name'), { target: { value: 'Vendor Agreement' } });
+    fireEvent.change(within(dialog).getByLabelText(/^Document name/), { target: { value: 'Vendor Agreement' } });
     fireEvent.mouseDown(within(dialog).getByRole('combobox'));
     fireEvent.click(screen.getByText('Vendor Agreement'));
     fireEvent.change(within(dialog).getByTestId('quill'), { target: { value: '<p>Body</p>' } });
@@ -96,7 +96,7 @@ describe('DocumentsListPage', () => {
     await waitFor(() => expect(screen.getByText(/no documents yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new document/i }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.change(within(dialog).getByLabelText('Document name'), { target: { value: 'Some Doc' } });
+    fireEvent.change(within(dialog).getByLabelText(/^Document name/), { target: { value: 'Some Doc' } });
     fireEvent.mouseDown(within(dialog).getByRole('combobox'));
     fireEvent.click(screen.getByText('Vendor Agreement'));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));

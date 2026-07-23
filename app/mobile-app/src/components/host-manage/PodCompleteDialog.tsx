@@ -107,6 +107,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                           name="venue_bill_amount"
                           label="Venue Bill Amount"
                           keyboardType="numeric"
+                          required
                         />
                         <Controller
                           control={control}

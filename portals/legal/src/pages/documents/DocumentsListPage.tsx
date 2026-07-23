@@ -81,8 +81,8 @@ export default function DocumentsListPage() {
         <DialogTitle>New Document</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 0.5 }}>
-            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth autoFocus />
-            <DocumentTypeSelect value={docType} onChange={setDocType} />
+            <TextField label="Document name" value={name} onChange={(e) => setName(e.target.value)} fullWidth autoFocus required />
+            <DocumentTypeSelect value={docType} onChange={setDocType} required />
             <TextField
               label="Description"
               value={description}

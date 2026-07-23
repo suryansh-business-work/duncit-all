@@ -29,8 +29,8 @@ export default function HostStepContent({ step, s1, s2, s3, set1, set2, set3, op
   if (step === 1) {
     return (
       <Stack spacing={2}>
-        <TextField label="Aadhar number" required value={s2.aadhar_number} onChange={(e) => set2({ ...s2, aadhar_number: e.target.value })} />
-        <TextField label="PAN number" required value={s2.pan_number} onChange={(e) => set2({ ...s2, pan_number: e.target.value.toUpperCase() })} />
+        <TextField label="Aadhar number" required helperText="12-digit number" value={s2.aadhar_number} onChange={(e) => set2({ ...s2, aadhar_number: e.target.value })} />
+        <TextField label="PAN number" required helperText="Format ABCDE1234F" value={s2.pan_number} onChange={(e) => set2({ ...s2, pan_number: e.target.value.toUpperCase() })} />
         {s2.passport_photo_url && <Box component="img" src={s2.passport_photo_url} sx={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 1, border: 1, borderColor: 'divider' }} />}
         <HostUploader label="Passport-size photo" value={s2.passport_photo_url} onPick={() => openPicker('photo')} />
       </Stack>

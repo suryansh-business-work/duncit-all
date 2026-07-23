@@ -64,7 +64,7 @@ describe('TelemetryLogsSettingsPage', () => {
     withData();
     render(<TelemetryLogsSettingsPage />);
     await waitFor(() =>
-      expect((screen.getByLabelText('Retention (days)') as HTMLInputElement).value).toBe('45'),
+      expect((screen.getByLabelText(/^Retention/) as HTMLInputElement).value).toBe('45'),
     );
     expect(screen.getByText(/Last updated/)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'error' })).toBeChecked();
@@ -102,7 +102,7 @@ describe('TelemetryLogsSettingsPage', () => {
   it('surfaces a retention validation error on submit', async () => {
     withData();
     render(<TelemetryLogsSettingsPage />);
-    const retention = await screen.findByLabelText('Retention (days)');
+    const retention = await screen.findByLabelText(/^Retention/);
     fireEvent.change(retention, { target: { value: '0' } });
     // The retention input's HTML min constraint makes jsdom block an interactive
     // submit before the zod resolver runs; dispatch the submit event directly so
@@ -116,7 +116,7 @@ describe('TelemetryLogsSettingsPage', () => {
     render(<TelemetryLogsSettingsPage />);
     const signoz = await screen.findByRole('checkbox', { name: /Ship logs to SigNoz/i });
     fireEvent.click(signoz);
-    fireEvent.change(screen.getByLabelText('Retention (days)'), { target: { value: '60' } });
+    fireEvent.change(screen.getByLabelText(/^Retention/), { target: { value: '60' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(await screen.findByText('Telemetry settings saved')).toBeInTheDocument();

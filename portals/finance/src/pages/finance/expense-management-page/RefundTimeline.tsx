@@ -92,7 +92,7 @@ export default function RefundTimeline({ expense, onAdd, onRemove }: Readonly<Pr
       </Typography>
       <Stack direction="row" spacing={1}>
         <DatePicker label="Refund date" value={date} onChange={setDate} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-        <TextField label="Amount" size="small" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} sx={{ width: 160 }} />
+        <TextField label="Amount" required size="small" type="number" value={amount} onChange={(e) => setAmount(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} sx={{ width: 160 }} />
       </Stack>
       <TextField label="Note" size="small" value={note} onChange={(e) => setNote(e.target.value)} fullWidth />
       <Button variant="outlined" onClick={add} disabled={busy || remaining <= 0}>

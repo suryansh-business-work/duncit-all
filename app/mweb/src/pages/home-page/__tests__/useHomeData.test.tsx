@@ -26,7 +26,15 @@ const isoDaysFromNow = (n: number) => {
 
 const CATEGORIES = [
   { id: 's1', name: 'Sports', slug: 'sports', icon: 's', level: 'SUPER', parent_id: null },
-  { id: 'c1', name: 'Racquet', slug: 'racquet', icon: 'r', level: 'CATEGORY', parent_id: 's1' },
+  {
+    id: 'c1',
+    name: 'Racquet',
+    slug: 'racquet',
+    icon: 'r',
+    level: 'CATEGORY',
+    parent_id: 's1',
+    icon_layout_mweb: { position: 'LEFT', width: 50, height: 30 },
+  },
   { id: 'sub1', name: 'Badminton', slug: 'badminton', icon: null, level: 'SUB', parent_id: 'c1' },
   { id: 'c2', name: 'Ball', slug: 'ball', icon: null, level: 'CATEGORY', parent_id: 's1' },
   { id: 's2', name: 'Music', slug: 'music', icon: 'm', level: 'SUPER', parent_id: null },
@@ -256,6 +264,13 @@ describe('useHomeData', () => {
     expect(result.current.categoryChips.length).toBeGreaterThan(0);
     expect(result.current.vibeCategories.length).toBeGreaterThan(0);
     expect(result.current.vibeCategories[0]).toHaveProperty('subs');
+
+    // per-category mWeb icon layout is carried through onto the built object;
+    // a category without one gets null.
+    const racquet = result.current.vibeCategories.find((c: any) => c.id === 'c1');
+    expect(racquet?.iconLayout).toEqual({ position: 'LEFT', width: 50, height: 30 });
+    const rock = result.current.vibeCategories.find((c: any) => c.id === 'c3');
+    expect(rock?.iconLayout).toBeNull();
   });
 
   it('resolves host names via host_names, publicHosts, and no-match', async () => {

@@ -41,12 +41,14 @@ export default function RoleEditDialog({
             disabled={!!editing.id}
             helperText="Uppercase, e.g. CITY_ADMIN"
             fullWidth
+            required
           />
           <TextField
             label="Name"
             value={editing.name}
             onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))}
             fullWidth
+            required
           />
           <TextField
             label="Description"

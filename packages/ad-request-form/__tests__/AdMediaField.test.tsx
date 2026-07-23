@@ -51,6 +51,18 @@ describe('AdMediaField', () => {
     expect(img).toHaveAttribute('alt', 'Ad media preview');
   });
 
+  it('renders a required asterisk after the label when required', () => {
+    render(<AdMediaField adType="IMAGE" value="" onChange={vi.fn()} required />);
+    expect(screen.getByText('Ad Media')).toBeInTheDocument();
+    expect(screen.getByText('*')).toBeInTheDocument();
+  });
+
+  it('omits the required asterisk when not required', () => {
+    render(<AdMediaField adType="IMAGE" value="" onChange={vi.fn()} />);
+    expect(screen.getByText('Ad Media')).toBeInTheDocument();
+    expect(screen.queryByText('*')).not.toBeInTheDocument();
+  });
+
   it('closes the picker via its onClose', () => {
     render(<AdMediaField adType="IMAGE" value="" onChange={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /upload image/i }));

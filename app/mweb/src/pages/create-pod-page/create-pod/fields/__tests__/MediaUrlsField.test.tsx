@@ -60,7 +60,7 @@ function Harness({
 describe('MediaUrlsField', () => {
   it('renders the empty dropzone with default label and hint', () => {
     render(<Harness />);
-    expect(screen.getByText('Cover image *')).toBeInTheDocument();
+    expect(screen.getByText('Cover image')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Upload an image' })).toBeInTheDocument();
     expect(screen.getByText(/Min 800×400px/)).toBeInTheDocument();
     // Empty state: no thumbnails / add tile.

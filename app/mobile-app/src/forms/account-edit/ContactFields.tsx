@@ -55,6 +55,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
             control={control}
             name="phone_number"
             label="Phone number"
+            hint="10-digit number"
             keyboardType="phone-pad"
             maxLength={15}
           />
@@ -99,6 +100,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
             control={control}
             name="whatsapp_number"
             label="WhatsApp number"
+            hint="10-digit number"
             keyboardType="phone-pad"
             maxLength={15}
             editable={!sameAsContact}

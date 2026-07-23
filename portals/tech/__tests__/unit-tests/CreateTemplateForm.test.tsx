@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CreateTemplateForm from '../../src/pages/email-templates-page/CreateTemplateForm';
 
-const typeInto = (label: string, value: string) => {
+const typeInto = (label: RegExp, value: string) => {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
 };
 
@@ -16,10 +16,10 @@ describe('CreateTemplateForm', () => {
     expect(createBtn).toBeDisabled();
 
     // Slug input lowercases and replaces invalid chars with dashes.
-    typeInto('Slug', 'Welcome Email!');
-    expect((screen.getByLabelText('Slug') as HTMLInputElement).value).toBe('welcome-email-');
-    typeInto('Name', 'Welcome');
-    typeInto('Subject', 'Hello there');
+    typeInto(/^Slug/, 'Welcome Email!');
+    expect((screen.getByLabelText(/^Slug/) as HTMLInputElement).value).toBe('welcome-email-');
+    typeInto(/^Name/, 'Welcome');
+    typeInto(/^Subject/, 'Hello there');
 
     expect(createBtn).not.toBeDisabled();
     fireEvent.click(createBtn);

@@ -30,27 +30,39 @@ export type ClubPod = ClubDetailsResult['pods'][number];
 /** Resolve a pod's doc id: use the id from in-app navigation, else resolve the
  * shared (mWeb) slug URL (/club/:clubSlug/pod/:podSlug) via podBySlugs so a
  * shared link opens the right pod. Returns '' until resolved. */
-export function useResolvedPodId(params: {
-  podId?: string;
-  clubSlug?: string;
-  podSlug?: string;
-}): string {
+export function useResolvedPodId(params: { podId?: string; clubSlug?: string; podSlug?: string }): {
+  podId: string;
+  resolving: boolean;
+} {
   const { podId, clubSlug, podSlug } = params;
+  // A slug link (no in-app id) still needs a lookup before the details can load.
+  const needsResolve = !podId && !!clubSlug && !!podSlug;
   const [resolved, setResolved] = useState(podId ?? '');
+  const [resolving, setResolving] = useState(needsResolve);
   useEffect(() => {
     if (podId || !clubSlug || !podSlug) {
       setResolved(podId ?? '');
+      setResolving(false);
       return;
     }
     let active = true;
+    setResolving(true);
     graphqlRequest(PodBySlugsDocument, { clubSlug, podSlug }, { auth: true })
-      .then((r) => active && setResolved(r.podBySlugs?.id ?? ''))
-      .catch(() => active && setResolved(''));
+      .then((r) => {
+        if (!active) return;
+        setResolved(r.podBySlugs?.id ?? '');
+        setResolving(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setResolved('');
+        setResolving(false);
+      });
     return () => {
       active = false;
     };
   }, [podId, clubSlug, podSlug]);
-  return resolved;
+  return { podId: resolved, resolving };
 }
 
 /** Resolve a club's doc id: use the id from in-app navigation, else resolve the
@@ -118,6 +130,14 @@ export function usePodDetails(podId: string) {
   }, [podId]);
 
   useEffect(() => {
+    if (!podId) {
+      // No resolved id yet (a slug link is still resolving, or resolved to
+      // nothing) — clear any stale pod and stop loading so the caller shows the
+      // resolving skeleton / not-found state rather than flashing "unavailable".
+      setPod(null);
+      setIsLoading(false);
+      return;
+    }
     let active = true;
     setIsLoading(true);
     load()
@@ -126,7 +146,7 @@ export function usePodDetails(podId: string) {
     return () => {
       active = false;
     };
-  }, [load]);
+  }, [podId, load]);
 
   return {
     pod,

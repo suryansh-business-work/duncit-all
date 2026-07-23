@@ -45,7 +45,7 @@ export default function MarketingCampaignForm({
     <form noValidate onSubmit={submit}>
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
-          <RhfTextField control={control} name="name" label="Campaign name" />
+          <RhfTextField control={control} name="name" label="Campaign name" required hint="3–120 characters" />
         </Grid>
         <Grid item xs={12} sm={3}>
           <RhfTextField control={control} name="channel" label="Channel" select>
@@ -60,7 +60,7 @@ export default function MarketingCampaignForm({
           </RhfTextField>
         </Grid>
         <Grid item xs={12}>
-          <RhfTextField control={control} name="subject" label="Email subject" />
+          <RhfTextField control={control} name="subject" label="Email subject" required hint="3–180 characters" />
         </Grid>
         <Grid item xs={12} sm={4}>
           <Controller

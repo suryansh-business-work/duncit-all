@@ -55,11 +55,12 @@ export default function TryItPanel({ endpoint, apiKey }: Readonly<Props>) {
         <TextField
           key={param.name}
           size="small"
-          label={`${param.name}${param.required ? ' *' : ''} (${param.where})`}
+          label={`${param.name} (${param.where})`}
           helperText={param.description}
           value={values[param.name] ?? ''}
           onChange={(e) => setValues((prev) => ({ ...prev, [param.name]: e.target.value }))}
           fullWidth
+          required={param.required}
         />
       ))}
       <Button

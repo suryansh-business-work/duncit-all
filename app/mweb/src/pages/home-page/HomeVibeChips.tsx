@@ -4,6 +4,8 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AppsRoundedIcon from '@mui/icons-material/AppsRounded';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 import { renderSuperCategoryMark } from '../../components/app-header/superCategoryIcon';
+import VibeTab, { DEFAULT_ICON_SIZE } from './VibeTab';
+import type { IconLayout } from './VibeTab';
 
 export interface VibeSub {
   id: string;
@@ -14,6 +16,7 @@ export interface VibeCategory {
   id: string;
   name: string;
   icon?: string | null;
+  iconLayout?: IconLayout | null;
   subs: VibeSub[];
 }
 
@@ -34,61 +37,6 @@ const railSx = {
   scrollbarWidth: 'none',
   '&::-webkit-scrollbar': { display: 'none' },
 } as const;
-
-interface VibeTabProps {
-  label: string;
-  icon: ReactNode;
-  selected: boolean;
-  onClick: () => void;
-}
-
-/** A vertical icon-over-label tab for a top-level category (not an MUI Chip).
- * The icon renders full-bleed (no circular badge); the selected state is an
- * underline bar + primary-coloured label. */
-function VibeTab({ label, icon, selected, onClick }: Readonly<VibeTabProps>) {
-  return (
-    <Stack
-      component="button"
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      alignItems="center"
-      spacing={0.5}
-      sx={{
-        flex: '0 0 auto',
-        width: 76,
-        px: 0.5,
-        py: 0.75,
-        border: 'none',
-        background: 'transparent',
-        cursor: 'pointer',
-        color: selected ? 'primary.main' : 'text.secondary',
-      }}
-    >
-      <Box
-        sx={{
-          height: 46,
-          display: 'grid',
-          placeItems: 'center',
-          color: selected ? 'primary.main' : 'text.secondary',
-        }}
-      >
-        {icon}
-      </Box>
-      <Box
-        sx={{
-          height: 3,
-          width: 22,
-          borderRadius: 2,
-          bgcolor: selected ? 'primary.main' : 'transparent',
-        }}
-      />
-      <Typography variant="caption" sx={{ fontWeight: selected ? 900 : 700, lineHeight: 1.15, textAlign: 'center' }} noWrap>
-        {label}
-      </Typography>
-    </Stack>
-  );
-}
 
 interface VibeChipProps {
   label: string;
@@ -119,7 +67,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
   const activeCategory =
     categories.find((c) => c.id === selectedId || c.subs.some((s) => s.id === selectedId)) ?? null;
   const subs = activeCategory?.subs ?? [];
-  const allMark = renderSuperCategoryMark(allIcon, 40) ?? <AppsRoundedIcon sx={{ fontSize: 34 }} />;
+  const allMark = renderSuperCategoryMark(allIcon, DEFAULT_ICON_SIZE) ?? <AppsRoundedIcon sx={{ fontSize: 34 }} />;
 
   return (
     <Stack spacing={1}>
@@ -144,7 +92,12 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
             />
             {categories.map((category) => {
               const selected = category.id === selectedId || category.subs.some((s) => s.id === selectedId);
-              const mark = renderSuperCategoryMark(category.icon, 40) ?? <CategoryOutlinedIcon sx={{ fontSize: 34 }} />;
+              const layout = category.iconLayout ?? null;
+              const iconWidth = layout?.width ?? DEFAULT_ICON_SIZE;
+              const iconHeight = layout?.height ?? DEFAULT_ICON_SIZE;
+              const mark =
+                renderSuperCategoryMark(category.icon, iconWidth, iconHeight) ??
+                <CategoryOutlinedIcon sx={{ fontSize: 34 }} />;
               return (
                 <VibeTab
                   key={category.id}
@@ -152,6 +105,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
                   icon={mark}
                   selected={selected}
                   onClick={() => onSelect(category.id === selectedId ? '' : category.id)}
+                  layout={layout}
                 />
               );
             })}

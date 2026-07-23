@@ -109,6 +109,7 @@ describe('useHomeFeed', () => {
           icon: '🎵',
           level: 'CATEGORY',
           parent_id: null,
+          icon_layout_native: { position: 'LEFT', width: 60, height: 30 },
         },
         { id: 'cat2', name: 'Arts', slug: 'arts', level: 'CATEGORY', parent_id: null },
         { id: 'sub1', name: 'Jazz', slug: 'jazz', icon: '🎷', level: 'SUB', parent_id: 'cat1' },
@@ -117,13 +118,15 @@ describe('useHomeFeed', () => {
       ],
     } as never;
     const { result } = renderHook(() => useHomeFeed(''));
-    // Icons thread through onto categories + subs (undefined when absent).
+    // Icons + native icon layout thread through onto categories (layout is null
+    // when the category has none); subs carry only their icon.
     expect(result.current.vibeCategories).toEqual([
-      { id: 'cat2', name: 'Arts', subs: [] },
+      { id: 'cat2', name: 'Arts', iconLayout: null, subs: [] },
       {
         id: 'cat1',
         name: 'Music',
         icon: '🎵',
+        iconLayout: { position: 'LEFT', width: 60, height: 30 },
         subs: [
           { id: 'sub2', name: 'Blues' },
           { id: 'sub1', name: 'Jazz', icon: '🎷' },

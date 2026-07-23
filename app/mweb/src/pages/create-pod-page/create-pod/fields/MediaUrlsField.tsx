@@ -5,6 +5,7 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 
 const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 
@@ -19,6 +20,7 @@ interface Props {
   onChange: (text: string) => void;
   error?: string;
   label?: string;
+  required?: boolean;
   folder?: string;
 }
 
@@ -30,7 +32,8 @@ export default function MediaUrlsField({
   value,
   onChange,
   error,
-  label = 'Cover image *',
+  label = 'Cover image',
+  required = true,
   folder = '/pods',
 }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -52,7 +55,7 @@ export default function MediaUrlsField({
         color="text.secondary"
         sx={{ fontWeight: 900, letterSpacing: '0.06em' }}
       >
-        {label}
+        {requiredLabel(label, required)}
       </Typography>
       {urls.length === 0 ? (
         <Box

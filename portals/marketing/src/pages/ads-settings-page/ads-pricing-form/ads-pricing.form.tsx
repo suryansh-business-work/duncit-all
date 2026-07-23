@@ -94,6 +94,7 @@ export default function AdsPricingForm({
               type="number"
               inputProps={{ min: 0, step: '0.01' }}
               hint="Price charged per day for this placement"
+              required
             />
           </Grid>
         ))}
@@ -103,6 +104,7 @@ export default function AdsPricingForm({
             name="currency_symbol"
             label="Currency symbol"
             hint="Shown next to every ad price (e.g. ₹)"
+            required
           />
         </Grid>
         <Grid item xs={12}>

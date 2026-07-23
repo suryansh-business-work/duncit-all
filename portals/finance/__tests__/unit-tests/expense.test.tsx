@@ -59,7 +59,7 @@ describe('ExpenseManagementPage', () => {
     expect(screen.getByText(/greater than 0/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Date'), { target: { value: '' } });
-    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '250' } });
+    fireEvent.change(screen.getByLabelText(/^Amount/), { target: { value: '250' } });
     fireEvent.change(screen.getByLabelText(/vendor/i), { target: { value: 'Acme' } });
     fireEvent.change(screen.getByLabelText(/reference/i), { target: { value: 'txn-9' } });
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Snacks' } });
@@ -83,7 +83,7 @@ describe('ExpenseManagementPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new expense/i }));
-    fireEvent.change(await screen.findByLabelText('Amount'), { target: { value: '99' } });
+    fireEvent.change(await screen.findByLabelText(/^Amount/), { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'New expense' })).not.toBeInTheDocument());
   });
@@ -106,7 +106,7 @@ describe('ExpenseManagementPage', () => {
     // add-refund guard: no amount → the mutation is not fired yet
     fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
 
-    fireEvent.change(screen.getAllByLabelText('Amount')[1], { target: { value: '10' } });
+    fireEvent.change(screen.getAllByLabelText(/^Amount/)[1], { target: { value: '10' } });
     fireEvent.change(screen.getByLabelText('Note'), { target: { value: 'ref note' } });
     fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
     await waitFor(() => expect(screen.getByText('ref note')).toBeInTheDocument());
@@ -143,7 +143,7 @@ describe('ExpenseManagementPage', () => {
     await waitFor(() => expect(screen.getByText('Office rent')).toBeInTheDocument());
     fireEvent.click(screen.getByTestId('row-open'));
     await screen.findByText('Refunds & timeline');
-    fireEvent.change(screen.getAllByLabelText('Amount')[1], { target: { value: '10' } });
+    fireEvent.change(screen.getAllByLabelText(/^Amount/)[1], { target: { value: '10' } });
     fireEvent.click(screen.getByRole('button', { name: /add refund/i }));
     await waitFor(() => expect(screen.getAllByRole('button', { name: /remove refund/i }).length).toBeGreaterThan(0));
     fireEvent.click(screen.getAllByRole('button', { name: /remove refund/i })[0]);
@@ -169,7 +169,7 @@ describe('ExpenseManagementPage', () => {
       mocks: [expenseSummaryMock(), expensesTableMock([]), createExpenseMock({ fail: true })],
     });
     fireEvent.click(await screen.findByRole('button', { name: /new expense/i }));
-    fireEvent.change(await screen.findByLabelText('Amount'), { target: { value: '99' } });
+    fireEvent.change(await screen.findByLabelText(/^Amount/), { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
     expect(await screen.findByText('create failed')).toBeInTheDocument();
   });
@@ -179,7 +179,7 @@ describe('ExpenseManagementPage', () => {
       mocks: [expenseSummaryMock(), expensesTableMock([]), createExpenseMock({ delay: 60_000 })],
     });
     fireEvent.click(await screen.findByRole('button', { name: /new expense/i }));
-    fireEvent.change(await screen.findByLabelText('Amount'), { target: { value: '99' } });
+    fireEvent.change(await screen.findByLabelText(/^Amount/), { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: /add expense/i }));
     await waitFor(() => expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled());
   });

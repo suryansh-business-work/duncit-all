@@ -81,6 +81,7 @@ export default function SendTestDialog({
                 {...field}
                 autoFocus
                 fullWidth
+                required
                 margin="normal"
                 type="email"
                 label="To"

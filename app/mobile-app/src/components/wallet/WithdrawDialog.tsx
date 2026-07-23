@@ -95,6 +95,8 @@ export function WithdrawDialog({ open, maxAmount, currency, onClose, onDone }: R
                       name="amount"
                       label="Amount"
                       keyboardType="numeric"
+                      required
+                      hint={`Up to ${currency}${maxAmount.toFixed(2)}`}
                     />
                     <XStack gap={8}>
                       {METHODS.map((m) => (
@@ -130,6 +132,7 @@ export function WithdrawDialog({ open, maxAmount, currency, onClose, onDone }: R
                         name="upi_id"
                         label="UPI ID"
                         autoCapitalize="none"
+                        required
                       />
                     ) : (
                       <>
@@ -137,18 +140,21 @@ export function WithdrawDialog({ open, maxAmount, currency, onClose, onDone }: R
                           control={control}
                           name="account_holder_name"
                           label="Account holder name"
+                          required
                         />
                         <FormTextField
                           control={control}
                           name="account_number"
                           label="Account number"
                           keyboardType="numeric"
+                          required
                         />
                         <FormTextField
                           control={control}
                           name="ifsc_code"
                           label="IFSC code"
                           autoCapitalize="characters"
+                          required
                         />
                       </>
                     )}

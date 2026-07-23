@@ -83,6 +83,7 @@ export default function CreateKeyDialog({ open, busy, rawKey, error, onCreate, o
               onChange={(e) => setName(e.target.value)}
               fullWidth
               autoFocus
+              required
             />
             {error && <Alert severity="error">{error}</Alert>}
           </Stack>

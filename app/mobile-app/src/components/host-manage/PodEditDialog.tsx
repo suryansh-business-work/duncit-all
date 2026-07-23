@@ -93,12 +93,20 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <YStack gap={12} paddingBottom={6}>
-                    <FormTextField control={control} name="pod_title" label="Title" />
+                    <FormTextField
+                      control={control}
+                      name="pod_title"
+                      label="Title"
+                      required
+                      hint="3–120 characters"
+                    />
                     <FormTextField
                       control={control}
                       name="pod_description"
                       label="Description"
                       multiline
+                      required
+                      hint="At least 10 characters"
                     />
                     <Controller
                       control={control}

@@ -1,4 +1,5 @@
 import { Box, Chip, FormHelperText, Stack, Typography } from '@mui/material';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
@@ -33,7 +34,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" fontWeight={800}>
-        Your category *
+        {requiredLabel('Your category', true)}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
         {hostCategories.length > 0 ? (

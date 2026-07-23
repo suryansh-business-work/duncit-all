@@ -11,6 +11,14 @@ export const select = (): Components<Theme>['MuiSelect'] => ({
   defaultProps: { size: 'small' },
 });
 
+/**
+ * Paints the `required` asterisk in the danger colour so every required field
+ * carries a clear red `Label *` marker (parity with the mobile app + mWeb).
+ */
+export const formLabel = (c: ThemeCtx): Components<Theme>['MuiFormLabel'] => ({
+  styleOverrides: { asterisk: { color: c.t.semantic.error } },
+});
+
 export const formHelperText = (c: ThemeCtx): Components<Theme>['MuiFormHelperText'] => ({
   styleOverrides: {
     root: { marginTop: c.t.size.helperGap, lineHeight: 1.35, minHeight: '1.35em', overflowWrap: 'anywhere' },

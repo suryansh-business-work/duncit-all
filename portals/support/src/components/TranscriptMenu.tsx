@@ -98,6 +98,7 @@ export default function TranscriptMenu({ onDownload, onEmail, busy }: Readonly<P
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             sx={{ mt: 1 }}
+            required
           />
         </DialogContent>
         <DialogActions>

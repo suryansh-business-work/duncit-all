@@ -31,6 +31,7 @@ export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFor
         keyboardType="email-address"
         autoComplete="email"
         textContentType="emailAddress"
+        required
       />
       <FormTextField
         control={control}
@@ -40,6 +41,8 @@ export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFor
         secureTextEntry
         autoComplete="password"
         textContentType="password"
+        required
+        hint="At least 8 characters"
       />
 
       {errorMessage ? (

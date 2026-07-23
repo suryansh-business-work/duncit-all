@@ -12,8 +12,8 @@ describe('FlagEditDialog', () => {
     expect(screen.getByText('New Feature Flag')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('Key'), { target: { value: 'k' } });
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'n' } });
+    fireEvent.change(screen.getByLabelText(/^Key/), { target: { value: 'k' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'n' } });
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'd' } });
     expect(setEditing).toHaveBeenCalledTimes(3);
   });

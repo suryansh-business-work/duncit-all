@@ -110,7 +110,7 @@ export default function ExpenseDrawer({ open, expense, onClose, onSaved }: Reado
         <TextField select label="Category" value={form.category} onChange={(e) => set('category')(e.target.value)} fullWidth>
           {EXPENSE_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{labelize(c)}</MenuItem>)}
         </TextField>
-        <TextField label="Amount" type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} fullWidth />
+        <TextField label="Amount" required type="number" value={form.amount} onChange={(e) => set('amount')(e.target.value)} InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }} fullWidth />
         <TextField label="Vendor / payee" value={form.vendor_name} onChange={(e) => set('vendor_name')(e.target.value)} fullWidth />
         <TextField select label="Payment method" value={form.payment_method} onChange={(e) => set('payment_method')(e.target.value)} fullWidth>
           {PAYMENT_METHODS.map((m) => <MenuItem key={m} value={m}>{labelize(m)}</MenuItem>)}

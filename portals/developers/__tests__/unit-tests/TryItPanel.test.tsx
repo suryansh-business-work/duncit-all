@@ -28,7 +28,7 @@ describe('TryItPanel', () => {
     render(<TryItPanel endpoint={venueSlots} apiKey="k" />);
     const btn = screen.getByRole('button', { name: 'Send request' });
     expect(btn).toBeDisabled();
-    fireEvent.change(screen.getByLabelText(/venueId \*/), { target: { value: 'v1' } });
+    fireEvent.change(screen.getByLabelText(/^venueId/), { target: { value: 'v1' } });
     expect(btn).toBeEnabled();
   });
 
@@ -56,8 +56,8 @@ describe('TryItPanel', () => {
       text: () => Promise.resolve('not json'),
     });
     render(<TryItPanel endpoint={bookSlot} apiKey="k" />);
-    fireEvent.change(screen.getByLabelText(/venueId \*/), { target: { value: 'v1' } });
-    fireEvent.change(screen.getByLabelText(/slotId \*/), { target: { value: 's1' } });
+    fireEvent.change(screen.getByLabelText(/^venueId/), { target: { value: 'v1' } });
+    fireEvent.change(screen.getByLabelText(/^slotId/), { target: { value: 's1' } });
     fireEvent.change(screen.getByLabelText(/external_ref/), { target: { value: 'order-1' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send request' }));
 

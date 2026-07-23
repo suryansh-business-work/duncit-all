@@ -70,6 +70,8 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           control={control}
           name="otp"
           label="6-digit OTP"
+          required
+          hint="6-digit code"
           placeholder="123456"
           inputProps={{ inputMode: 'numeric', maxLength: 6 }}
           size="small"
@@ -86,6 +88,8 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           name="new_password"
           type={showPwd ? 'text' : 'password'}
           label="New password"
+          required
+          hint="At least 8 characters"
           placeholder="Create a new password"
           autoComplete="new-password"
           size="small"
@@ -96,6 +100,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           name="confirm_password"
           type={showConfirmPwd ? 'text' : 'password'}
           label="Confirm new password"
+          required
           placeholder="Re-enter new password"
           autoComplete="new-password"
           size="small"

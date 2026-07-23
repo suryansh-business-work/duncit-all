@@ -2,7 +2,7 @@ import { Share } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
-import { usePodDetails } from '@/hooks/useDetails';
+import { usePodDetails, useResolvedPodId } from '@/hooks/useDetails';
 import { useCartStore } from '@/stores/cart.store';
 import { useExploreStore } from '@/stores/explore.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
@@ -67,7 +67,10 @@ let mockLiked = false;
 let mockLikeCount = 3;
 jest.mock('@/hooks/useDetails', () => ({
   usePodDetails: jest.fn(),
-  useResolvedPodId: (p: { podId?: string }) => p?.podId ?? '',
+  useResolvedPodId: jest.fn((p: { podId?: string }) => ({
+    podId: p?.podId ?? '',
+    resolving: false,
+  })),
   usePodActions: () => ({
     liked: mockLiked,
     likeCount: mockLikeCount,
@@ -193,6 +196,18 @@ describe('PodDetailsScreen', () => {
       viewerId: 'me',
       savedInitially: false,
       isLoading: true,
+      refetch: jest.fn().mockResolvedValue(undefined),
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('pod-details-loading')).toBeOnTheScreen();
+  });
+
+  it('shows the loader while a shared slug link is still resolving', () => {
+    (useResolvedPodId as jest.Mock).mockReturnValueOnce({ podId: '', resolving: true });
+    mockedPod.mockReturnValue({
+      pod: null,
+      savedInitially: false,
+      isLoading: false,
       refetch: jest.fn().mockResolvedValue(undefined),
     });
     renderWithProviders(<PodDetailsScreen />);

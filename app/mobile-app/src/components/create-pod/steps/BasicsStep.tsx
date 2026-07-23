@@ -19,8 +19,21 @@ export function BasicsStep({ form }: Readonly<Props>) {
   const { control } = form;
   return (
     <YStack gap={14}>
-      <FormTextField control={control} name="pod_title" label="Pod title" />
-      <FormTextField control={control} name="pod_description" label="Pod description" multiline />
+      <FormTextField
+        control={control}
+        name="pod_title"
+        label="Pod title"
+        required
+        hint="3–120 characters"
+      />
+      <FormTextField
+        control={control}
+        name="pod_description"
+        label="Pod description"
+        multiline
+        required
+        hint="At least 10 characters"
+      />
       <Controller
         control={control}
         name="media_text"
@@ -29,6 +42,7 @@ export function BasicsStep({ form }: Readonly<Props>) {
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
+            required
           />
         )}
       />
@@ -37,7 +51,8 @@ export function BasicsStep({ form }: Readonly<Props>) {
         name="what_this_pod_offers"
         render={({ field, fieldState }) => (
           <ChipArrayField
-            label="What this pod offers *"
+            label="What this pod offers"
+            required
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}

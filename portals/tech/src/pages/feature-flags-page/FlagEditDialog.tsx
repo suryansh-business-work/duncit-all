@@ -38,6 +38,7 @@ export default function FlagEditDialog({
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="Key"
+            required={!editing.id}
             value={editing.key}
             onChange={(e) => setEditing((p) => ({ ...p, key: e.target.value }))}
             disabled={!!editing.id}
@@ -46,6 +47,7 @@ export default function FlagEditDialog({
           />
           <TextField
             label="Name"
+            required
             value={editing.name}
             onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))}
             fullWidth

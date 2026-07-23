@@ -3,7 +3,7 @@ import type { ThemeCtx } from '../types';
 import { cssBaseline } from './cssBaseline';
 import { appBar, paper, card, dialog, divider } from './surfaces';
 import { button, iconButton } from './buttons';
-import { textField, select, formHelperText, outlinedInput } from './inputs';
+import { textField, select, formLabel, formHelperText, outlinedInput } from './inputs';
 import { chip } from './chip';
 import { tooltip } from './tooltip';
 import { table, tableHead, tableCell } from './table';
@@ -26,6 +26,7 @@ export function buildComponents(c: ThemeCtx, extend?: ComponentExtend): Componen
     MuiIconButton: iconButton(c),
     MuiTextField: textField(),
     MuiSelect: select(),
+    MuiFormLabel: formLabel(c),
     MuiFormHelperText: formHelperText(c),
     MuiOutlinedInput: outlinedInput(c),
     MuiChip: chip(c),

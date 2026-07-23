@@ -58,6 +58,7 @@ export default function SendTestDialog({ open, templateId, varsJson, onClose, on
         <TextField
           autoFocus
           fullWidth
+          required
           margin="normal"
           type="email"
           label="To"

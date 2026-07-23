@@ -77,9 +77,9 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
               <Typography variant="body2" fontWeight={700}>{TARGETS.find((t) => t.value === target)?.label}</Typography>
               <Button size="small" onClick={() => setTarget(null)}>Change</Button>
             </Stack>
-            <TextField size="small" label="Name" value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
+            <TextField size="small" label="Name" required value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
             <TextField size="small" label="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText="Stable code key. Auto-derived from name if left blank." fullWidth />
-            <TextField size="small" label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
+            <TextField size="small" label="Subject" required value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
             <Stack direction="row" alignItems="center" spacing={1}>
               <MjmlAiButton currentMjml={mjml} onApply={setMjml} label="Seed MJML with AI" />
             </Stack>

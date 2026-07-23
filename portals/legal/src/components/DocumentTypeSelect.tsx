@@ -5,10 +5,11 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   label?: string;
+  required?: boolean;
 }
 
 /** Grouped, searchable picker over the canonical legal document-type list. */
-export default function DocumentTypeSelect({ value, onChange, label = 'Document Type' }: Readonly<Props>) {
+export default function DocumentTypeSelect({ value, onChange, label = 'Document Type', required }: Readonly<Props>) {
   const selected = DOCUMENT_TYPE_OPTIONS.find((o) => o.label === value) ?? null;
   return (
     <Autocomplete<DocumentTypeOption>
@@ -20,7 +21,7 @@ export default function DocumentTypeSelect({ value, onChange, label = 'Document 
       onChange={(_e, v) => onChange(v?.label ?? '')}
       fullWidth
       renderInput={(params) => (
-        <TextField {...params} label={label} placeholder="Search document type…" />
+        <TextField {...params} label={label} placeholder="Search document type…" required={required} />
       )}
     />
   );

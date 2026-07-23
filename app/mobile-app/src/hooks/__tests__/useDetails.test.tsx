@@ -17,10 +17,12 @@ beforeEach(() => mockRequest.mockReset());
 
 describe('useResolvedPodId / useResolvedClubId', () => {
   it('returns the doc id from in-app params (or empty) without a request', () => {
-    expect(renderHook(() => useResolvedPodId({ podId: 'p1' })).result.current).toBe('p1');
+    const inApp = renderHook(() => useResolvedPodId({ podId: 'p1' })).result.current;
+    expect(inApp.podId).toBe('p1');
+    expect(inApp.resolving).toBe(false);
     expect(renderHook(() => useResolvedClubId({ clubId: 'c1' })).result.current).toBe('c1');
-    expect(renderHook(() => useResolvedPodId({})).result.current).toBe('');
-    expect(renderHook(() => useResolvedPodId({ clubSlug: 'x' })).result.current).toBe('');
+    expect(renderHook(() => useResolvedPodId({})).result.current.podId).toBe('');
+    expect(renderHook(() => useResolvedPodId({ clubSlug: 'x' })).result.current.podId).toBe('');
     expect(renderHook(() => useResolvedClubId({})).result.current).toBe('');
     expect(mockRequest).not.toHaveBeenCalled();
   });
@@ -28,7 +30,10 @@ describe('useResolvedPodId / useResolvedClubId', () => {
   it('resolves a pod + club from a shared slug link', async () => {
     mockRequest.mockResolvedValueOnce({ podBySlugs: { id: 'p9' } });
     const pod = renderHook(() => useResolvedPodId({ clubSlug: 'jazz', podSlug: 'sunset' }));
-    await waitFor(() => expect(pod.result.current).toBe('p9'));
+    // Marked resolving until the slug lookup settles, so the caller can show a loader.
+    expect(pod.result.current.resolving).toBe(true);
+    await waitFor(() => expect(pod.result.current.podId).toBe('p9'));
+    expect(pod.result.current.resolving).toBe(false);
     mockRequest.mockResolvedValueOnce({ clubBySlug: { id: 'c9' } });
     const club = renderHook(() => useResolvedClubId({ clubSlug: 'jazz' }));
     await waitFor(() => expect(club.result.current).toBe('c9'));
@@ -38,11 +43,13 @@ describe('useResolvedPodId / useResolvedClubId', () => {
     // Pod: a resolved-but-missing match, then a rejected lookup.
     mockRequest.mockResolvedValueOnce({ podBySlugs: null });
     const podMissing = renderHook(() => useResolvedPodId({ clubSlug: 'x', podSlug: 'y' }));
-    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
-    expect(podMissing.result.current).toBe('');
+    // podId is '' from the initial state, so wait on `resolving` settling instead.
+    await waitFor(() => expect(podMissing.result.current.resolving).toBe(false));
+    expect(podMissing.result.current.podId).toBe('');
     mockRequest.mockRejectedValueOnce(new Error('down'));
     const podFailed = renderHook(() => useResolvedPodId({ clubSlug: 'a', podSlug: 'b' }));
-    await waitFor(() => expect(podFailed.result.current).toBe(''));
+    await waitFor(() => expect(podFailed.result.current.resolving).toBe(false));
+    expect(podFailed.result.current.podId).toBe('');
 
     // Club: a resolved-but-missing match, then a rejected lookup.
     mockRequest.mockResolvedValueOnce({ clubBySlug: null });
@@ -55,7 +62,7 @@ describe('useResolvedPodId / useResolvedClubId', () => {
 
   it('ignores a slug resolve or reject that lands after unmount', async () => {
     const settleAfterUnmount = async (
-      hook: () => string,
+      hook: () => unknown,
       settle: (control: { resolve: (v: unknown) => void; reject: (e: unknown) => void }) => void,
     ) => {
       let resolve!: (v: unknown) => void;
@@ -149,6 +156,13 @@ describe('usePodDetails / useClubDetails', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.people).toEqual([]);
     expect(result.current.error).toBeUndefined();
+  });
+
+  it('stays idle with no resolved id (a slug link is still resolving)', () => {
+    const { result } = renderHook(() => usePodDetails(''));
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.pod).toBeNull();
+    expect(mockRequest).not.toHaveBeenCalled();
   });
 
   it('handles a missing pod', async () => {

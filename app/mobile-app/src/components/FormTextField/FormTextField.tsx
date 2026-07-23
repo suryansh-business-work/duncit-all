@@ -27,6 +27,8 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
   control: Control<T>;
   name: Path<T>;
   label: string;
+  /** When true, appends a red `*` after the label to mark the field as required. */
+  required?: boolean;
   /** Muted helper text shown below the field when there is no error (mirrors MUI helperText). */
   hint?: string;
 }
@@ -42,6 +44,7 @@ export function FormTextField<T extends FieldValues>({
   control,
   name,
   label,
+  required,
   hint,
   secureTextEntry,
   ...inputProps
@@ -55,6 +58,7 @@ export function FormTextField<T extends FieldValues>({
   return (
     <Field
       label={label}
+      required={required}
       error={hasError ? fieldState.error?.message : undefined}
       hint={hint}
       testID={name}

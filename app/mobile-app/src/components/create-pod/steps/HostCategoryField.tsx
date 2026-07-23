@@ -51,7 +51,8 @@ export function HostCategoryField({ form, hostCategories }: Readonly<Props>) {
       name="host_category_key"
       render={({ field, fieldState }) => (
         <ChipSelectField
-          label="Your category *"
+          label="Your category"
+          required
           options={categoryOptions}
           value={field.value}
           onChange={pickCategory}

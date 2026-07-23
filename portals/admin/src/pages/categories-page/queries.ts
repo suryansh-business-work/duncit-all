@@ -19,6 +19,16 @@ export const CATEGORIES = gql`
       sort_order
       allow_co_hosts
       max_co_hosts
+      icon_layout_mweb {
+        position
+        width
+        height
+      }
+      icon_layout_native {
+        position
+        width
+        height
+      }
       updated_at
     }
   }
@@ -45,6 +55,16 @@ export const DELETE_CATEGORY = gql`
 
 export type Level = 'SUPER' | 'CATEGORY' | 'SUB';
 
+/** Where the category icon sits relative to its label in the home vibe tabber. */
+export type CategoryIconPosition = 'TOP' | 'BOTTOM' | 'LEFT' | 'RIGHT';
+
+/** Per-surface icon placement + pixel size. CATEGORY-level categories only. */
+export interface CategoryIconLayout {
+  position: CategoryIconPosition;
+  width: number;
+  height: number;
+}
+
 export interface CatItem {
   id: string;
   name: string;
@@ -58,6 +78,8 @@ export interface CatItem {
   sort_order: number;
   allow_co_hosts: boolean;
   max_co_hosts: number;
+  icon_layout_mweb?: CategoryIconLayout | null;
+  icon_layout_native?: CategoryIconLayout | null;
 }
 
 export interface FormState {
@@ -73,6 +95,10 @@ export interface FormState {
   allow_co_hosts: boolean;
   /** SUB-category only, 1-5. */
   max_co_hosts: number;
+  /** CATEGORY-level only; null until configured. */
+  icon_layout_mweb: CategoryIconLayout | null;
+  /** CATEGORY-level only; null until configured. */
+  icon_layout_native: CategoryIconLayout | null;
 }
 
 export const blankForm: FormState = {
@@ -85,4 +111,6 @@ export const blankForm: FormState = {
   is_active: true,
   allow_co_hosts: false,
   max_co_hosts: 1,
+  icon_layout_mweb: null,
+  icon_layout_native: null,
 };

@@ -139,10 +139,10 @@ describe('SupportTicketsPage', () => {
       expect(screen.getByDisplayValue('Jane Doe')).toBeInTheDocument(),
     );
 
-    fireEvent.change(screen.getByLabelText('Subject'), {
+    fireEvent.change(screen.getByLabelText(/^Subject/), {
       target: { value: 'My subject' },
     });
-    fireEvent.change(screen.getByLabelText("Tell us what's going on"), {
+    fireEvent.change(screen.getByLabelText(/Tell us what's going on/), {
       target: { value: 'This is a long enough message' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send to support' }));
@@ -174,10 +174,10 @@ describe('SupportTicketsPage', () => {
       expect(screen.getByDisplayValue('Jane Doe')).toBeInTheDocument(),
     );
 
-    fireEvent.change(screen.getByLabelText('Subject'), {
+    fireEvent.change(screen.getByLabelText(/^Subject/), {
       target: { value: 'My subject' },
     });
-    fireEvent.change(screen.getByLabelText("Tell us what's going on"), {
+    fireEvent.change(screen.getByLabelText(/Tell us what's going on/), {
       target: { value: 'This is a long enough message' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send to support' }));
@@ -212,10 +212,10 @@ describe('SupportTicketsPage', () => {
       expect(screen.getByDisplayValue('Jane Doe')).toBeInTheDocument(),
     );
 
-    fireEvent.change(screen.getByLabelText('Subject'), {
+    fireEvent.change(screen.getByLabelText(/^Subject/), {
       target: { value: 'My subject' },
     });
-    fireEvent.change(screen.getByLabelText("Tell us what's going on"), {
+    fireEvent.change(screen.getByLabelText(/Tell us what's going on/), {
       target: { value: 'This is a long enough message' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send to support' }));

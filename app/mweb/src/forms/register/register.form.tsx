@@ -76,6 +76,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           control={control}
           name="name"
           label="Name"
+          required
           placeholder="Riya Sharma"
           autoComplete="name"
           size="small"
@@ -87,6 +88,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           name="email"
           type="email"
           label="Email"
+          required
           placeholder="riya@gmail.com"
           autoComplete="email"
           size="small"
@@ -99,6 +101,8 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           name="password"
           type={showPwd ? 'text' : 'password'}
           label="Password"
+          required
+          hint="At least 8 characters"
           placeholder="Create password"
           autoComplete="new-password"
           size="small"
@@ -110,6 +114,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           name="confirmPassword"
           type={showConfirmPwd ? 'text' : 'password'}
           label="Confirm Password"
+          required
           placeholder="Re-enter password"
           autoComplete="new-password"
           size="small"

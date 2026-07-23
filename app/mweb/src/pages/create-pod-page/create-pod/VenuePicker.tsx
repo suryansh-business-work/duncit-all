@@ -1,21 +1,23 @@
 import { Box, Card, CardActionArea, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import { requiredLabel } from '../../../forms/components/requiredLabel';
 import type { CreatePodVenue } from './create-pod.types';
 
 interface Props {
   venues: CreatePodVenue[];
   selectedId: string;
   onSelect: (id: string) => void;
+  required?: boolean;
 }
 
 /** Step 3 venue picker — approved partner venues in the pod's city as a
  * horizontal card rail; tapping a card selects it (and clears the old slot). */
-export default function VenuePicker({ venues, selectedId, onSelect }: Readonly<Props>) {
+export default function VenuePicker({ venues, selectedId, onSelect, required }: Readonly<Props>) {
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" fontWeight={800}>
-        Select venue
+        {requiredLabel('Select venue', required)}
       </Typography>
       <Stack direction="row" sx={{ mt: 1, gap: 1.25, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
         {venues.map((venue) => {

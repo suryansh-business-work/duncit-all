@@ -22,6 +22,8 @@ interface Props<T extends FieldValues> {
   shrinkLabels?: boolean;
   /** Show the required asterisk on line1/city/state/pincode (checkout). */
   required?: boolean;
+  /** Format hint under the pincode field (varies by form's pincode rule). */
+  pincodeHint?: string;
 }
 
 const PINCODE_INPUT = { inputMode: 'numeric' as const, maxLength: 10 };
@@ -39,6 +41,7 @@ export default function AddressFields<T extends FieldValues>({
   size = 'medium',
   shrinkLabels,
   required = false,
+  pincodeHint,
 }: Readonly<Props<T>>) {
   const labelProps = shrinkLabels ? { shrink: true } : undefined;
   return (
@@ -51,7 +54,7 @@ export default function AddressFields<T extends FieldValues>({
         <RhfTextField control={control} name={names.state} label="State" required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-        <RhfTextField control={control} name={names.pincode} label="Pincode" required={required} size={size} sx={fieldSx} InputLabelProps={labelProps} inputProps={PINCODE_INPUT} />
+        <RhfTextField control={control} name={names.pincode} label="Pincode" required={required} hint={pincodeHint} size={size} sx={fieldSx} InputLabelProps={labelProps} inputProps={PINCODE_INPUT} />
         <RhfTextField control={control} name={names.country} label="Country" size={size} sx={fieldSx} InputLabelProps={labelProps} />
       </Stack>
     </Stack>

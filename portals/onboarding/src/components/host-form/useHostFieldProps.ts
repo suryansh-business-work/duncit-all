@@ -34,10 +34,10 @@ export function useHostFieldProps() {
   );
 
   const tfProps = useCallback(
-    (name: Name) => ({
+    (name: Name, hint = ' ') => ({
       ...register(name),
       error: hasError(name),
-      helperText: hasError(name) ? errorMessage(name) : ' ',
+      helperText: hasError(name) ? errorMessage(name) : hint,
       fullWidth: true,
       size: 'small' as const,
     }),

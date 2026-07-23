@@ -97,6 +97,7 @@ export default function PodContentFormDialog({
             <TextField
               label="Name"
               fullWidth
+              required={canEdit('pod_title')}
               disabled={!canEdit('pod_title')}
               error={!!errors.pod_title}
               helperText={errors.pod_title?.message}
@@ -107,6 +108,7 @@ export default function PodContentFormDialog({
               fullWidth
               multiline
               minRows={3}
+              required={canEdit('pod_description')}
               disabled={!canEdit('pod_description')}
               error={!!errors.pod_description}
               helperText={errors.pod_description?.message}

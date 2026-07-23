@@ -39,6 +39,8 @@ export function WhatsAppRequestForm({ loading, onSubmit, onSkip }: Readonly<Requ
           control={control}
           name="phone_number"
           label="WhatsApp number"
+          required
+          hint="6–15 digits"
           size="small"
         />
       </Stack>
@@ -79,6 +81,8 @@ export function WhatsAppVerifyForm({
         control={control}
         name="otp"
         label="Enter OTP"
+        required
+        hint="4–8 digit code"
         size="small"
         inputProps={{ inputMode: 'numeric', maxLength: 8 }}
       />

@@ -21,6 +21,7 @@ export default function MediaSection() {
             value={field.value}
             onChange={field.onChange}
             folder="/clubs"
+            required
             onPickImage={onPickImage}
             error={errors.feature_text?.message}
             helperText="Cover/header media shown on the club page — at least one image is required."

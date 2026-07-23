@@ -58,6 +58,9 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
     return ' ';
   };
 
+  // The first secret field is the only one enforced as required, and only on create.
+  const firstSecretField = def.fields.find((f) => f.secret);
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{isEdit ? `Edit ${initial.name}` : `New ${def.label} entry`}</DialogTitle>
@@ -132,6 +135,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                     value={rhfField.value}
                     error={fieldState.error?.message ?? false}
                     helperText={fieldHelper(field)}
+                    required={!isEdit && field === firstSecretField}
                     onChange={(e) => rhfField.onChange(e.target.value)}
                     onBlur={rhfField.onBlur}
                     onToggleBool={(_name, checked) => rhfField.onChange(checked ? 'true' : 'false')}

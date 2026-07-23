@@ -26,7 +26,18 @@ describe('BulletListField', () => {
       </FormHarness>,
     );
     expect(screen.getByText('Perks')).toBeInTheDocument();
+    expect(screen.queryByText('*')).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText('Point 1')).not.toBeInTheDocument();
+  });
+
+  it('renders a required asterisk after the label when required', () => {
+    render(
+      <FormHarness defaultValues={{ perks: [] }}>
+        <BulletListField name="perks" label="Perks" required />
+      </FormHarness>,
+    );
+    expect(screen.getByText('Perks')).toBeInTheDocument();
+    expect(screen.getByText('*')).toBeInTheDocument();
   });
 
   it('coerces a nullish entry value to an empty string', () => {

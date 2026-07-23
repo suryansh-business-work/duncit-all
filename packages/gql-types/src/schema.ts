@@ -835,16 +835,39 @@ export type ChangePasswordInput = {
   otp: Scalars['String']['input'];
 };
 
+export type ChatParticipants = {
+  __typename?: 'ChatParticipants';
+  hosts: Array<ChatUser>;
+  participant_count: Scalars['Int']['output'];
+  participants: Array<ChatUser>;
+};
+
 export type ChatRoom = {
   __typename?: 'ChatRoom';
   club_id?: Maybe<Scalars['ID']['output']>;
+  /** The club's URL slug (Club.club_id) for building the pod detail path. */
+  club_slug?: Maybe<Scalars['String']['output']>;
   cover_url?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   no_of_spots?: Maybe<Scalars['Int']['output']>;
   pod_attendees: Array<Scalars['ID']['output']>;
   pod_date_time?: Maybe<Scalars['String']['output']>;
+  /** End time (or null) — clients bucket Upcoming vs Previous from these. */
+  pod_end_date_time?: Maybe<Scalars['String']['output']>;
   pod_id?: Maybe<Scalars['ID']['output']>;
+  /** The pod's URL slug (Pod.pod_id) for linking to its detail page. */
+  pod_slug?: Maybe<Scalars['String']['output']>;
   pod_title: Scalars['String']['output'];
+  /** Super category the linked club maps to (For You / For Your Pet classification). */
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+};
+
+/** A host or participant shown in the chat detail people panel. */
+export type ChatUser = {
+  __typename?: 'ChatUser';
+  full_name: Scalars['String']['output'];
+  profile_photo?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
 };
 
 export type CheckInEventTicketInput = {
@@ -1595,7 +1618,14 @@ export type CreatePaymentReleaseInput = {
 };
 
 export type CreatePodIdeaInput = {
+  category_id: Scalars['ID']['input'];
+  category_name?: InputMaybe<Scalars['String']['input']>;
   description: Scalars['String']['input'];
+  sub_category_id: Scalars['ID']['input'];
+  sub_category_name?: InputMaybe<Scalars['String']['input']>;
+  /** Mandatory Super/Category/Sub the idea maps to (For You › Sports › Badminton). */
+  super_category_id: Scalars['ID']['input'];
+  super_category_name?: InputMaybe<Scalars['String']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -3415,6 +3445,8 @@ export type InventoryProduct = {
   notify_low_stock: Scalars['Boolean']['output'];
   options: Array<ProductOption>;
   ownership: ProductOwnership;
+  /** Duncit warehouse (BrandPickupLocation, owner_kind DUNCIT) this product ships from. Required for Duncit-owned products. */
+  pickup_location_id?: Maybe<Scalars['ID']['output']>;
   pod_available: Scalars['Boolean']['output'];
   product_name: Scalars['String']['output'];
   product_type: ProductType;
@@ -3465,6 +3497,8 @@ export type InventoryProductInput = {
   manufacturing_date?: InputMaybe<Scalars['String']['input']>;
   max_order_qty?: InputMaybe<Scalars['Int']['input']>;
   min_order_qty?: InputMaybe<Scalars['Int']['input']>;
+  /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
+  pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
   product_name: Scalars['String']['input'];
   product_type?: InputMaybe<ProductType>;
@@ -7640,16 +7674,24 @@ export type PodIdea = {
   __typename?: 'PodIdea';
   author?: Maybe<User>;
   author_id: Scalars['ID']['output'];
+  category_id?: Maybe<Scalars['ID']['output']>;
+  category_name: Scalars['String']['output'];
   comments: Array<PodIdeaComment>;
   comments_count: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
   description: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  /** Human-readable permanent id (e.g. DUN-000001). */
+  idea_no: Scalars['String']['output'];
   liked_by_me: Scalars['Boolean']['output'];
   likes: Array<Scalars['ID']['output']>;
   likes_count: Scalars['Int']['output'];
   shares_count: Scalars['Int']['output'];
   status: PodIdeaStatus;
+  sub_category_id?: Maybe<Scalars['ID']['output']>;
+  sub_category_name: Scalars['String']['output'];
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+  super_category_name: Scalars['String']['output'];
   title: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
 };
@@ -7665,8 +7707,11 @@ export type PodIdeaComment = {
 
 export type PodIdeaFilterInput = {
   author_id?: InputMaybe<Scalars['ID']['input']>;
+  category_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<PodIdeaStatus>;
+  sub_category_id?: InputMaybe<Scalars['ID']['input']>;
+  super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type PodIdeaStatus =
@@ -8430,6 +8475,8 @@ export type Query = {
   /** All challenges (optionally filtered by a name search). */
   challenges: Array<Challenge>;
   challengesTable: ChallengeTablePage;
+  /** Host(s) and participants of a pod's chat (members only). */
+  chatParticipants: ChatParticipants;
   checkoutQuote: CheckoutQuote;
   club?: Maybe<Club>;
   /** Aggregated metrics for the signed-in Club Admin's clubs. */
@@ -9042,6 +9089,11 @@ export type QueryChallengesArgs = {
 
 export type QueryChallengesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryChatParticipantsArgs = {
+  pod_id: Scalars['ID']['input'];
 };
 
 
@@ -11567,6 +11619,8 @@ export type UpdateInventoryProductInput = {
   manufacturing_date?: InputMaybe<Scalars['String']['input']>;
   max_order_qty?: InputMaybe<Scalars['Int']['input']>;
   min_order_qty?: InputMaybe<Scalars['Int']['input']>;
+  /** Duncit warehouse (owner_kind DUNCIT) origin. Required for Duncit-owned products (enforced server-side). */
+  pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   pod_available?: InputMaybe<Scalars['Boolean']['input']>;
   product_name?: InputMaybe<Scalars['String']['input']>;
   product_type?: InputMaybe<ProductType>;

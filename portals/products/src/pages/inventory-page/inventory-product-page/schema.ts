@@ -83,6 +83,8 @@ export const productSchema = z
     host_request_allowed: z.boolean(),
     delivery_available: z.boolean(),
     delivery_charge: z.number({ invalid_type_error: 'Number required' }).min(0).max(100000),
+    // Every Duncit product must ship from a Duncit warehouse (its rate/shipment origin).
+    pickup_location_id: z.string().min(1, 'Warehouse is required'),
 
     height_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
     length_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),

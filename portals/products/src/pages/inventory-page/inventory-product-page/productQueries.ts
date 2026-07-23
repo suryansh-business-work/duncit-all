@@ -42,6 +42,7 @@ export const INVENTORY_PRODUCT_DETAIL = gql`
       host_request_allowed
       delivery_available
       delivery_charge
+      pickup_location_id
       height_cm
       length_cm
       breadth_cm

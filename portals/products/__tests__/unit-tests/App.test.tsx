@@ -34,6 +34,9 @@ vi.mock('../../src/pages/orders/ProductOrdersPage', () => ({ default: () => <div
 vi.mock('../../src/pages/orders/ProductOrderDetailPage', () => ({
   default: () => <div>ORDER DETAIL</div>,
 }));
+vi.mock('../../src/pages/settings/DuncitWarehousesPage', () => ({
+  default: () => <div>WAREHOUSES PAGE</div>,
+}));
 vi.mock('@duncit/shell', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@duncit/shell')>()),
   ProfilePage: () => <div>PROFILE PAGE</div>,
@@ -69,6 +72,12 @@ describe('App routing', () => {
     renderWithProviders(<App />, { initialEntries: ['/orders'] });
     expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
     expect(screen.queryByText('ORDERS PAGE')).not.toBeInTheDocument();
+  });
+
+  it('renders the Duncit warehouses settings route when authenticated', () => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: ['/settings/warehouses'] });
+    expect(screen.getByText('WAREHOUSES PAGE')).toBeInTheDocument();
   });
 
   it('renders the shared profile page behind auth', () => {

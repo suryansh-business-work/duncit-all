@@ -48,6 +48,11 @@ export const appConfig = {
       icon: 'local_shipping',
       children: [{ label: 'Orders', to: '/orders', icon: 'local_shipping' }],
     },
+    {
+      label: 'Settings',
+      icon: 'settings',
+      children: [{ label: 'Duncit Warehouse Locations', to: '/settings/warehouses', icon: 'warehouse' }],
+    },
   ],
   modules: [],
 } satisfies AppConfig;

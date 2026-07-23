@@ -139,6 +139,10 @@ export interface IInventoryProduct extends Document {
   color: string;
   commission_pct: number;
   delivery_target: ProductListingDeliveryTarget;
+  /** The Duncit warehouse (BrandPickupLocation, owner_kind DUNCIT) this product
+   * ships from. Required for Duncit-owned products (enforced in the service);
+   * the warehouse pincode is the ShipRocket rate/shipment origin. */
+  pickup_location_id: Types.ObjectId | null;
 
   is_active: boolean;
 
@@ -294,6 +298,7 @@ const productSchema = new Schema<IInventoryProduct>(
     color: { type: String, default: '', trim: true, maxlength: 80 },
     commission_pct: { type: Number, default: 5, min: 5, max: 50 },
     delivery_target: { type: String, enum: ['HOST', 'VENUE', 'SHIPROCKET'], default: 'HOST' },
+    pickup_location_id: { type: Schema.Types.ObjectId, ref: 'BrandPickupLocation', default: null, index: true },
 
     is_active: { type: Boolean, default: true },
 

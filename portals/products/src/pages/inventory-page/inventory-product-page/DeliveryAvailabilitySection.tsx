@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
+import WarehouseSelect from './WarehouseSelect';
 import type { InventoryProductFormValues } from './types';
 
 type SwitchName = 'pod_available' | 'host_request_allowed' | 'delivery_available';
@@ -58,6 +59,9 @@ export default function DeliveryAvailabilitySection() {
           hint={chargeHint}
           InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
         />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <WarehouseSelect />
       </Grid>
       <Grid item xs={12}>
         <Typography variant="subtitle2" fontWeight={700}>

@@ -82,6 +82,7 @@ export const makeInventoryProduct = (
   delivery_available: true,
   delivery_charge: 0,
   delivery_target: 'HOST',
+  pickup_location_id: null,
   height_cm: 10,
   length_cm: 10,
   breadth_cm: 5,

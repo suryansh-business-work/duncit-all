@@ -1,6 +1,7 @@
 import { PORTALS, WEBSITES, detectEnvironment, type PortalKey, type WebsiteKey } from './config';
 import { consoleTransport } from './transport';
 import type {
+  DeviceOS,
   Environment,
   LevelFns,
   LogDetail,
@@ -18,6 +19,11 @@ import type {
  */
 export interface LogContext {
   platform: Platform;
+  /** Native device OS (ios | android | web). Set by the mobile app; unset on web. */
+  os?: DeviceOS;
+  /** Portal/website key, stamped on every record whose bound logger didn't set one
+   * (so shared/generic loggers in a portal still carry the portal identity). */
+  portal?: string;
   /** Fixed value or a resolver. Defaults to detecting from the current host. */
   environment?: Environment | (() => Environment);
   /** Full URL of the event. Defaults to location.href in browsers. */
@@ -89,7 +95,9 @@ function emit(
     }
     activeTransport({
       ...base,
+      portal: base.portal ?? context.portal,
       platform: context.platform,
+      os: context.os,
       environment: currentEnvironment(host),
       url: currentUrl(),
       host,

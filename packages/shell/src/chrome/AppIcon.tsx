@@ -5,6 +5,7 @@ import AnalyticsIcon from '@mui/icons-material/Analytics';
 import ArticleIcon from '@mui/icons-material/Article';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import BugReportIcon from '@mui/icons-material/BugReport';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -65,6 +66,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   ai: SmartToyIcon,
   analytics: AnalyticsIcon,
   article: ArticleIcon,
+  bug: BugReportIcon,
   calculator: CalculateIcon,
   calendar: CalendarMonthIcon,
   callback: PhoneCallbackIcon,

@@ -4,6 +4,7 @@ import { logs, ingestRemoteLog } from './observability/log';
 import { buildStatusProbeRouter } from './observability/statusProbe';
 import { startStatusScheduler } from './observability/statusScheduler';
 import { startPodDraftCleanupScheduler } from '@modules/pods/pod-draft/pod-draft.cleanup';
+import { startTelemetryCleanupScheduler } from './observability/telemetryScheduler';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
 import http from 'node:http';
@@ -18,6 +19,7 @@ import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
 import { rbacService } from '@modules/access/rbac/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
@@ -59,6 +61,10 @@ async function bootstrap() {
   });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
+  // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire
+  // the DB-persist handler so selected-level logs start recording.
+  await safeSeed('telemetry', () => telemetryService.seedDefaults());
+  telemetryService.enableIngestion();
   // Sync the latest mobile app version into the DB from the APP_VERSION env
   // (set by the deploy workflow from app.json) — updates on every push/boot.
   await safeSeed('appVersion', () => settingsService.applyEnvVersion());
@@ -108,6 +114,9 @@ async function bootstrap() {
 
   // Draft-pod retention: delete drafts past the admin-configured window daily.
   startPodDraftCleanupScheduler();
+
+  // Telemetry retention: delete persisted logs/bugs past the admin window daily.
+  startTelemetryCleanupScheduler();
 
   const app = express();
   const httpServer = http.createServer(app);

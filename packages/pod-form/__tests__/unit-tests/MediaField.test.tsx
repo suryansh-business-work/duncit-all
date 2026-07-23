@@ -55,6 +55,16 @@ describe('MediaField (rich picker mode)', () => {
     expect(screen.getByText('Cover first')).toBeInTheDocument();
   });
 
+  it('renders a required asterisk after the label when required', () => {
+    render(<MediaField label="Images" value="" onChange={vi.fn()} onPickImage={vi.fn()} required />);
+    expect(screen.getByText('*')).toBeInTheDocument();
+  });
+
+  it('omits the required asterisk when not required', () => {
+    render(<MediaField label="Images" value="" onChange={vi.fn()} onPickImage={vi.fn()} />);
+    expect(screen.queryByText('*')).not.toBeInTheDocument();
+  });
+
   it('appends a picked image via Add image', async () => {
     const user = userEvent.setup();
     const onPickImage = vi.fn().mockResolvedValue('https://a.com/new.jpg');

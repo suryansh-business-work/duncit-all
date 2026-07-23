@@ -37,6 +37,7 @@ export function StepBody({ step, control, watch, setValue, onPickImage, onGenera
           control={control}
           name="product_name"
           label="Product title"
+          required
           hint="Use the exact product name hosts will understand during pod creation."
         />
       </Stack>

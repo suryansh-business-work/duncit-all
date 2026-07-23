@@ -12,26 +12,29 @@ const resolveMuiIcon = (name: string) =>
 
 /**
  * Render a super/category `icon` value (image URL, MUI icon name or emoji) as a
- * node. `size` (px) sizes all three variants — default 18 for the compact header
- * chips; the home vibe tabber passes a larger value for a full-bleed icon.
+ * node. `size` (px) is the icon width — default 18 for the compact header chips;
+ * the home vibe tabber passes a larger value for a full-bleed icon. `height`
+ * defaults to `size` (square); pass it for a non-square image (icon layout). The
+ * MUI-icon / emoji variants use the larger of width/height as their font size.
  */
-export function renderSuperCategoryMark(icon: string | null | undefined, size = 18) {
+export function renderSuperCategoryMark(icon: string | null | undefined, size = 18, height = size) {
   const next = (icon ?? '').trim();
   if (!next) return null;
+  const fontSize = Math.max(size, height);
   if (isImageIcon(next)) {
     return (
       <Box
         component="img"
         src={next}
         alt=""
-        sx={{ width: size, height: size, objectFit: 'contain', borderRadius: 0.75, flex: '0 0 auto' }}
+        sx={{ width: size, height, objectFit: 'contain', borderRadius: 0.75, flex: '0 0 auto' }}
       />
     );
   }
   const MuiIcon = resolveMuiIcon(next);
-  if (MuiIcon) return <MuiIcon sx={{ fontSize: size, flex: '0 0 auto' }} />;
+  if (MuiIcon) return <MuiIcon sx={{ fontSize, flex: '0 0 auto' }} />;
   return next.length <= 2 ? (
-    <Box component="span" sx={{ lineHeight: 1, fontSize: size, flex: '0 0 auto' }}>
+    <Box component="span" sx={{ lineHeight: 1, fontSize, flex: '0 0 auto' }}>
       {next}
     </Box>
   ) : null;

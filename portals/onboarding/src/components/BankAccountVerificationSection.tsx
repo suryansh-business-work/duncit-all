@@ -59,7 +59,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
             value={value.account_number}
             onChange={(event) => set({ account_number: event.target.value })}
             error={!!errorFor?.('account_number')}
-            helperText={errorFor?.('account_number') || ' '}
+            helperText={errorFor?.('account_number') || '6 to 18 digits'}
             required
           />
           <TextField
@@ -68,7 +68,7 @@ export default function BankAccountVerificationSection({ value, onChange, errorF
             value={value.ifsc_code}
             onChange={(event) => set({ ifsc_code: event.target.value.toUpperCase() })}
             error={!!errorFor?.('ifsc_code')}
-            helperText={errorFor?.('ifsc_code') || ' '}
+            helperText={errorFor?.('ifsc_code') || 'Format ABCD0123456'}
             required
           />
         </>

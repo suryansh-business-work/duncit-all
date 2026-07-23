@@ -7,6 +7,7 @@ import SlotPicker from '../SlotPicker';
 import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
 import VirtualMeetingFields from '../VirtualMeetingFields';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 /** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
@@ -113,7 +114,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
 
   return (
     <Stack spacing={2}>
-      <VenuePicker venues={clubVenues} selectedId={venueId} onSelect={selectVenue} />
+      <VenuePicker venues={clubVenues} selectedId={venueId} onSelect={selectVenue} required />
       {clubVenues.length === 0 && (
         <Alert severity="info">No venues match this club yet — pick another club or go virtual.</Alert>
       )}
@@ -129,7 +130,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
             render={({ field }) => (
               <TextField
                 select
-                label="Space & capacity *"
+                label={requiredLabel('Space & capacity', true)}
                 fullWidth
                 value={field.value}
                 onChange={(e) => pickSpace(e.target.value)}
@@ -153,6 +154,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
           selectedSlotId={slotId}
           onPick={pickSlot}
           error={errors.venue_slot_id?.message}
+          required
         />
       )}
       {selectedVenue && slotId && (

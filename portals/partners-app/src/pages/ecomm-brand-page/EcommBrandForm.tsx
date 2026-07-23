@@ -12,15 +12,16 @@ interface FieldDef {
   name: keyof BrandFormValues & string;
   label: string;
   multiline?: boolean;
+  required?: boolean;
 }
 
 const SECTIONS: Array<{ title: string; fields: FieldDef[] }> = [
   {
     title: 'Brand identity',
     fields: [
-      { name: 'brand_name', label: 'Brand name *' },
+      { name: 'brand_name', label: 'Brand name', required: true },
       { name: 'tagline', label: 'Tagline' },
-      { name: 'description', label: 'Description *', multiline: true },
+      { name: 'description', label: 'Description', multiline: true, required: true },
     ],
   },
   {
@@ -34,7 +35,7 @@ const SECTIONS: Array<{ title: string; fields: FieldDef[] }> = [
     title: 'Contact',
     fields: [
       { name: 'contact_person', label: 'Contact person' },
-      { name: 'contact_email', label: 'Contact email *' },
+      { name: 'contact_email', label: 'Contact email', required: true },
       { name: 'contact_phone', label: 'Contact phone' },
     ],
   },
@@ -118,6 +119,7 @@ export default function EcommBrandForm({ defaultValues, busy, locked, onSave, on
               <TextField
                 key={field.name}
                 label={field.label}
+                required={field.required}
                 fullWidth
                 disabled={locked}
                 multiline={field.multiline}

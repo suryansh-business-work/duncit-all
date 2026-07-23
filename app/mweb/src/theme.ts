@@ -221,6 +221,11 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiFormControl: {
       styleOverrides: { root: { minWidth: 0 } },
     },
+    MuiFormLabel: {
+      // The `required` asterisk is rendered red so every required field carries a
+      // clear `Label *` marker on the label (matches the mobile app's red `*`).
+      styleOverrides: { asterisk: { color: tokens.semantic.error } },
+    },
     MuiFormHelperText: {
       styleOverrides: {
         root: {

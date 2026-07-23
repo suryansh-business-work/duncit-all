@@ -83,7 +83,7 @@ export default function WithdrawalsPage() {
           <Typography variant="body2" sx={{ mb: 2 }}>
             Rejecting refunds {reject?.name}'s wallet. Add a reason.
           </Typography>
-          <TextField label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} multiline minRows={2} fullWidth autoFocus />
+          <TextField label="Reason" required value={reason} onChange={(e) => setReason(e.target.value)} multiline minRows={2} fullWidth autoFocus />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setReject(null)}>Cancel</Button>

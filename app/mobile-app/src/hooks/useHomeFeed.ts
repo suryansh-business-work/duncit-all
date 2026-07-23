@@ -26,10 +26,18 @@ export interface VibeSub {
   name: string;
   icon?: string;
 }
+/** CATEGORY-level icon placement + size for the vibe tabber (server default when
+ * null: position TOP, 40x40 — the icon-over-label look). */
+export interface VibeIconLayout {
+  position: 'TOP' | 'BOTTOM' | 'LEFT' | 'RIGHT';
+  width: number;
+  height: number;
+}
 export interface VibeCategory {
   id: string;
   name: string;
   icon?: string;
+  iconLayout?: VibeIconLayout | null;
   subs: VibeSub[];
 }
 
@@ -75,6 +83,7 @@ function deriveVibeCategories(
     id: c.id,
     name: c.name,
     icon: c.icon ?? undefined,
+    iconLayout: c.icon_layout_native ?? null,
     subs: (subsByParent.get(c.id) ?? []).map((s) => ({
       id: s.id,
       name: s.name,

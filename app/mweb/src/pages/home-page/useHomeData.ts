@@ -364,6 +364,7 @@ export function useHomeData({
       id: c.id,
       name: c.name,
       icon: c.icon ?? null,
+      iconLayout: c.icon_layout_mweb ?? null,
       subs: (subsByParent.get(c.id) ?? []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon ?? null })),
     }));
   }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);

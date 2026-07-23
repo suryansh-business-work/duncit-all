@@ -80,6 +80,7 @@ export default function VenueOwnerAccordion({
                   {...params}
                   label="Pick an existing user as owner"
                   size="small"
+                  required
                   error={!!getVenueError(errors, 'owner_user_id')}
                   helperText={
                     getVenueError(errors, 'owner_user_id') ||

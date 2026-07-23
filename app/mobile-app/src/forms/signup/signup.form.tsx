@@ -37,6 +37,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         autoCapitalize="words"
         autoComplete="name"
         textContentType="name"
+        required
       />
       <FormTextField
         control={control}
@@ -46,6 +47,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         keyboardType="number-pad"
         maxLength={4}
         hint={`Between ${minBirthYear} and ${maxBirthYear}`}
+        required
       />
       <FormTextField
         control={control}
@@ -56,6 +58,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         keyboardType="email-address"
         autoComplete="email"
         textContentType="emailAddress"
+        required
       />
       <FormTextField
         control={control}
@@ -65,6 +68,8 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
+        required
+        hint="At least 8 characters"
       />
       <FormTextField
         control={control}
@@ -74,6 +79,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
+        required
       />
 
       {errorMessage ? (

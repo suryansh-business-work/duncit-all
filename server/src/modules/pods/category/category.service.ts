@@ -1,10 +1,45 @@
 import { GraphQLError } from 'graphql';
 import {
   CategoryModel,
+  CATEGORY_ICON_POSITIONS,
+  DEFAULT_CATEGORY_ICON_SIZE,
   MAX_CO_HOSTS,
   MIN_CO_HOSTS,
+  type CategoryIconPosition,
   type CategoryLevel,
+  type ICategoryIconLayout,
 } from './category.model';
+
+interface IconLayoutInput {
+  position?: CategoryIconPosition | null;
+  width?: number | null;
+  height?: number | null;
+}
+
+const ICON_POSITION_SET = new Set<CategoryIconPosition>(CATEGORY_ICON_POSITIONS);
+const MAX_ICON_SIZE = 200;
+
+/** Normalises an icon-layout input into a stored layout (position defaults to
+ * TOP; width/height are clamped to 1–200). Returns undefined to clear it. */
+const toIconLayout = (input?: IconLayoutInput | null): ICategoryIconLayout | undefined => {
+  if (!input) return undefined;
+  const position = ICON_POSITION_SET.has(input.position as CategoryIconPosition)
+    ? (input.position as CategoryIconPosition)
+    : 'TOP';
+  const clamp = (value: number | null | undefined) =>
+    Math.min(MAX_ICON_SIZE, Math.max(1, Math.round(Number(value) || DEFAULT_CATEGORY_ICON_SIZE)));
+  return { position, width: clamp(input.width), height: clamp(input.height) };
+};
+
+/** doc sub-document → GraphQL CategoryIconLayout (null when unset). */
+const layoutToPub = (layout?: ICategoryIconLayout | null) =>
+  layout
+    ? {
+        position: layout.position ?? 'TOP',
+        width: layout.width ?? DEFAULT_CATEGORY_ICON_SIZE,
+        height: layout.height ?? DEFAULT_CATEGORY_ICON_SIZE,
+      }
+    : null;
 import { ClubModel } from '@modules/pods/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { FaqModel } from '@modules/support/faq/faq.model';
@@ -34,6 +69,8 @@ const toPub = (d: any) => {
     sort_order: d.sort_order ?? 0,
     allow_co_hosts: !!d.allow_co_hosts,
     max_co_hosts: d.max_co_hosts ?? MIN_CO_HOSTS,
+    icon_layout_mweb: layoutToPub(d.icon_layout_mweb),
+    icon_layout_native: layoutToPub(d.icon_layout_native),
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -65,6 +102,22 @@ function validateCoHosts(
       input.max_co_hosts > MAX_CO_HOSTS)
   ) {
     throw new GraphQLError(`max_co_hosts must be between ${MIN_CO_HOSTS} and ${MAX_CO_HOSTS}`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
+/**
+ * Icon layout is a CATEGORY-level concern only (it drives the vibe tabber, whose
+ * first row is the CATEGORY tier). Rejecting on SUPER/SUB keeps the data honest.
+ */
+function validateIconLayout(
+  level: CategoryLevel,
+  input: { icon_layout_mweb?: unknown; icon_layout_native?: unknown }
+) {
+  const touches = input.icon_layout_mweb !== undefined || input.icon_layout_native !== undefined;
+  if (touches && level !== 'CATEGORY') {
+    throw new GraphQLError('Icon layout can only be configured on a category', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -126,11 +179,14 @@ export const categoryService = {
     sort_order?: number;
     allow_co_hosts?: boolean;
     max_co_hosts?: number;
+    icon_layout_mweb?: IconLayoutInput | null;
+    icon_layout_native?: IconLayoutInput | null;
   }) {
     const parent = input.parent_id ? await CategoryModel.findById(input.parent_id) : null;
     if (input.parent_id && !parent) notFound();
     validateParent(input.level, parent);
     validateCoHosts(input.level, input);
+    validateIconLayout(input.level, input);
 
     const slug = slugify(input.name);
     const dupe = await CategoryModel.findOne({ parent_id: input.parent_id ?? null, slug });
@@ -151,6 +207,8 @@ export const categoryService = {
       sort_order: input.sort_order ?? 0,
       allow_co_hosts: input.allow_co_hosts ?? false,
       max_co_hosts: input.max_co_hosts ?? MIN_CO_HOSTS,
+      icon_layout_mweb: toIconLayout(input.icon_layout_mweb),
+      icon_layout_native: toIconLayout(input.icon_layout_native),
     });
     return toPub(doc);
   },
@@ -166,11 +224,14 @@ export const categoryService = {
       is_active?: boolean;
       allow_co_hosts?: boolean;
       max_co_hosts?: number;
+      icon_layout_mweb?: IconLayoutInput | null;
+      icon_layout_native?: IconLayoutInput | null;
     }
   ) {
     const doc = await CategoryModel.findById(id);
     if (!doc) notFound();
     validateCoHosts(doc.level, input);
+    validateIconLayout(doc.level, input);
     if (input.name !== undefined) {
       doc.name = input.name.trim();
       doc.slug = slugify(input.name);
@@ -182,6 +243,12 @@ export const categoryService = {
     if (input.is_active !== undefined) doc.is_active = input.is_active;
     if (input.allow_co_hosts !== undefined) doc.allow_co_hosts = input.allow_co_hosts;
     if (input.max_co_hosts !== undefined) doc.max_co_hosts = input.max_co_hosts;
+    if (input.icon_layout_mweb !== undefined) {
+      doc.icon_layout_mweb = toIconLayout(input.icon_layout_mweb);
+    }
+    if (input.icon_layout_native !== undefined) {
+      doc.icon_layout_native = toIconLayout(input.icon_layout_native);
+    }
     await doc.save();
     return toPub(doc);
   },

@@ -2,6 +2,7 @@ import { Controller, type Control } from 'react-hook-form';
 import { format } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
 import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
@@ -71,7 +72,13 @@ function VirtualMeetingFields({
   return (
     <YStack gap={14}>
       <FormTextField control={control} name="meeting_platform" label="Meeting platform" />
-      <FormTextField control={control} name="meeting_url" label="Meeting link" />
+      <FormTextField
+        control={control}
+        name="meeting_url"
+        label="Meeting link"
+        required
+        hint="Starts with https://"
+      />
       <FormTextField control={control} name="meeting_notes" label="Meeting notes" multiline />
       <Controller
         control={control}
@@ -79,6 +86,7 @@ function VirtualMeetingFields({
         render={({ field, fieldState }) => (
           <DateTimeField
             label="Start date & time"
+            required
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
@@ -163,9 +171,7 @@ function VenueSpaceCard({
         {venue.venue_type ? `${venue.venue_type} · ` : ''}Total capacity: {venue.capacity ?? 0}
       </Text>
       <YStack gap={6}>
-        <Text fontSize={14} fontWeight="500" color="$color">
-          Space &amp; capacity *
-        </Text>
+        <FieldLabel label="Space & capacity" required testID="create-pod-space" />
         <XStack gap={6} flexWrap="wrap">
           {spaces.map((space) => (
             <SpaceChip
@@ -281,6 +287,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
               setValue('no_of_spots_text', '0', { shouldDirty: true });
             }}
             error={fieldState.error?.message}
+            required
           />
         )}
       />
@@ -304,6 +311,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
               selectedSlotId={slotId}
               onPick={pickSlot}
               error={fieldState.error?.message}
+              required
             />
           )}
         />

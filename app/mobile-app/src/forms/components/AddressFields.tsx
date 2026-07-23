@@ -17,6 +17,10 @@ export interface AddressFieldNames<T extends FieldValues> {
 export interface AddressFieldsProps<T extends FieldValues> {
   control: Control<T>;
   names: AddressFieldNames<T>;
+  /** Show the required `*` on line1/city/state/pincode (checkout billing). */
+  required?: boolean;
+  /** Format hint under the pincode field (varies by form's pincode rule). */
+  pincodeHint?: string;
 }
 
 /**
@@ -28,18 +32,25 @@ export interface AddressFieldsProps<T extends FieldValues> {
 export function AddressFields<T extends FieldValues>({
   control,
   names,
+  required = false,
+  pincodeHint,
 }: Readonly<AddressFieldsProps<T>>) {
   return (
     <YStack gap={12}>
-      <FormTextField control={control} name={names.line1} label="Address line 1" />
+      <FormTextField
+        control={control}
+        name={names.line1}
+        label="Address line 1"
+        required={required}
+      />
       <FormTextField control={control} name={names.line2} label="Address line 2 (optional)" />
       <FormTextField control={control} name={names.landmark} label="Landmark (optional)" />
       <XStack gap={12}>
         <YStack flex={1}>
-          <FormTextField control={control} name={names.city} label="City" />
+          <FormTextField control={control} name={names.city} label="City" required={required} />
         </YStack>
         <YStack flex={1}>
-          <FormTextField control={control} name={names.state} label="State" />
+          <FormTextField control={control} name={names.state} label="State" required={required} />
         </YStack>
       </XStack>
       <XStack gap={12}>
@@ -48,6 +59,8 @@ export function AddressFields<T extends FieldValues>({
             control={control}
             name={names.pincode}
             label="Pincode"
+            required={required}
+            hint={pincodeHint}
             keyboardType="number-pad"
             maxLength={10}
           />

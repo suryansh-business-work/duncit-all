@@ -58,8 +58,8 @@ describe('BasicsStep', () => {
     expect(screen.getByText(/What is this pod about\? \(3–120 characters\)/)).toBeInTheDocument();
     expect(screen.getByText(/Tell people what to expect/)).toBeInTheDocument();
     // Cover media + offers + hashtags + optional settings + reel all mount.
-    expect(screen.getByText('Cover image *')).toBeInTheDocument();
-    expect(screen.getByText('What this pod offers *')).toBeInTheDocument();
+    expect(screen.getByText('Cover image')).toBeInTheDocument();
+    expect(screen.getByText('What this pod offers')).toBeInTheDocument();
     expect(screen.getByLabelText('Hashtags')).toBeInTheDocument();
     expect(screen.getByText('OPTIONAL SETTINGS')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Pod Reel/ })).toBeInTheDocument();

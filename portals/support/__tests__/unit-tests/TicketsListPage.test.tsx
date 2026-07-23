@@ -113,7 +113,7 @@ describe('TicketsListPage', () => {
     await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new ticket/i }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.change(within(dialog).getByLabelText('Subject'), { target: { value: 'App crashes' } });
+    fireEvent.change(within(dialog).getByLabelText(/^Subject/), { target: { value: 'App crashes' } });
     // Pick a category from the select (exercises the category onChange handler).
     fireEvent.mouseDown(within(dialog).getByRole('combobox', { name: 'Category' }));
     fireEvent.click(await screen.findByRole('option', { name: 'TECHNICAL' }));
@@ -142,7 +142,7 @@ describe('TicketsListPage', () => {
     await waitFor(() => expect(screen.getByText(/no tickets here yet/i)).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /new ticket/i }));
     const dialog = await screen.findByRole('dialog');
-    fireEvent.change(within(dialog).getByLabelText('Subject'), { target: { value: 'Something' } });
+    fireEvent.change(within(dialog).getByLabelText(/^Subject/), { target: { value: 'Something' } });
     fireEvent.change(within(dialog).getByTestId('quill'), { target: { value: '<p>Body</p>' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => expect(screen.getByText('Created elsewhere')).toBeInTheDocument());

@@ -73,7 +73,7 @@ describe('DocumentDetailPage', () => {
     await waitFor(() => expect(screen.getByText('Body text')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /edit/i }));
     // Touch every editable field to exercise their change handlers.
-    fireEvent.change(screen.getByLabelText('Document name'), { target: { value: 'Privacy Policy v2' } });
+    fireEvent.change(screen.getByLabelText(/^Document name/), { target: { value: 'Privacy Policy v2' } });
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Updated description' } });
     fireEvent.mouseDown(screen.getByRole('combobox'));
     fireEvent.click(screen.getByText('Cookie Policy'));

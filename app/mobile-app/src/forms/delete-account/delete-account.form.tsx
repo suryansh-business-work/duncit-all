@@ -37,6 +37,8 @@ export function DeleteAccountForm({
         placeholder="123456"
         keyboardType="number-pad"
         maxLength={6}
+        required
+        hint="6-digit code"
       />
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="delete-account-error">

@@ -17,6 +17,16 @@ describe('Field', () => {
     expect(screen.queryByTestId('name-error')).toBeNull();
   });
 
+  it('appends a required asterisk after the label when required', () => {
+    renderWithProviders(
+      <Field label="Full name" required testID="name">
+        <Text>child</Text>
+      </Field>,
+    );
+    expect(screen.getByTestId('name-required')).toHaveTextContent('*');
+    expect(screen.getByTestId('name-label')).toHaveTextContent('Full name *');
+  });
+
   it('shows the muted hint when there is no error', () => {
     renderWithProviders(
       <Field label="Amount" hint="Max 1999." testID="amount">

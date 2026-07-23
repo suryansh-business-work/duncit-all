@@ -64,6 +64,11 @@ export const HOME_DATA = gql`
       icon
       level
       parent_id
+      icon_layout_mweb {
+        position
+        width
+        height
+      }
     }
   }
 `;

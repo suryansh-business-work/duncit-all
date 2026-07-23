@@ -21,6 +21,7 @@ export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Prop
         <TextField
           autoFocus
           fullWidth
+          required
           margin="normal"
           label="Slug"
           value={slug}
@@ -31,6 +32,7 @@ export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Prop
         />
         <TextField
           fullWidth
+          required
           margin="normal"
           label="Name"
           value={name}
@@ -38,6 +40,7 @@ export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Prop
         />
         <TextField
           fullWidth
+          required
           margin="normal"
           label="Subject"
           value={subject}

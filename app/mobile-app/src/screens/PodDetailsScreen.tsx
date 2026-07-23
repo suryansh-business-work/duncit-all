@@ -39,7 +39,7 @@ export function PodDetailsScreen() {
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
   // Doc id from in-app nav, or resolved from a shared /club/:clubSlug/pod/:podSlug link.
-  const podId = useResolvedPodId(route.params);
+  const { podId, resolving } = useResolvedPodId(route.params);
   const {
     pod,
     venue,
@@ -155,7 +155,7 @@ export function PodDetailsScreen() {
   };
 
   let podBody: ReactNode;
-  if (isLoading && !pod) {
+  if (resolving || (isLoading && !pod)) {
     podBody = <DetailSkeleton testID="pod-details-loading" />;
   } else if (pod) {
     podBody = (

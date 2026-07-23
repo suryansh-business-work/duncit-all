@@ -10,6 +10,7 @@ import DirectionsRunIcon from '@mui/icons-material/DirectionsRun';
 import EditLocationAltIcon from '@mui/icons-material/EditLocationAlt';
 import LocationDialog from '../../../../components/app-header/LocationDialog';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import ClubPreview from '../ClubPreview';
 import HostCategoryField from './HostCategoryField';
 import type { CreatePodClub, CreatePodForm, CreatePodHostCategory, CreatePodLocation } from '../create-pod.types';
@@ -114,7 +115,7 @@ export default function LocationClubStep({ form, clubs, locations, hostCategorie
             onChange={(_e, next) => field.onChange(next?.id ?? '')}
             isOptionEqualToValue={(option, selected) => option.id === selected.id}
             renderInput={(params) => (
-              <TextField {...params} label="Club" required error={!!errors.club_id} helperText={errors.club_id?.message ?? 'Search and select the club this pod belongs to'} />
+              <TextField {...params} label={requiredLabel('Club', true)} error={!!errors.club_id} helperText={errors.club_id?.message ?? 'Search and select the club this pod belongs to'} />
             )}
           />
         )}

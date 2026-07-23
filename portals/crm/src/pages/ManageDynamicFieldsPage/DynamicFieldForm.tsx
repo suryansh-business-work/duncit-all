@@ -39,6 +39,7 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
             fullWidth
             size="small"
             label="Label"
+            required
             value={draft.label}
             onChange={(e) => set({ label: e.target.value })}
             helperText="What the user sees on the form."

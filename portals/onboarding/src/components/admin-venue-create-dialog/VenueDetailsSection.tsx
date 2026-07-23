@@ -69,14 +69,14 @@ export default function VenueDetailsSection({ s1, setS1, errors }: Readonly<Prop
           gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
         }}
       >
-        <TextField label="Venue name *" size="small" value={s1.venue_name} onChange={(e) => set({ venue_name: e.target.value })} error={!!err('venue_name')} helperText={err('venue_name') || undefined} />
+        <TextField label="Venue name" required size="small" value={s1.venue_name} onChange={(e) => set({ venue_name: e.target.value })} error={!!err('venue_name')} helperText={err('venue_name') || undefined} />
         <TextField select label="Type" size="small" value={s1.venue_type} onChange={(e) => set({ venue_type: e.target.value })} error={!!err('venue_type')} helperText={err('venue_type') || undefined}>
           {VENUE_TYPES.map((t) => (
             <MenuItem key={t} value={t}>{t}</MenuItem>
           ))}
         </TextField>
         <TextField label="Capacity" type="number" size="small" value={s1.capacity} onChange={(e) => set({ capacity: Number(e.target.value) })} error={!!err('capacity')} helperText={err('capacity') || undefined} />
-        <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 1 *" size="small" value={s1.address_line1} onChange={(e) => set({ address_line1: e.target.value })} error={!!err('address_line1')} helperText={err('address_line1') || undefined} />
+        <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 1" required size="small" value={s1.address_line1} onChange={(e) => set({ address_line1: e.target.value })} error={!!err('address_line1')} helperText={err('address_line1') || undefined} />
         <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 2" size="small" value={s1.address_line2} onChange={(e) => set({ address_line2: e.target.value })} />
         <TextField sx={{ gridColumn: '1 / -1' }} label="Description" size="small" multiline minRows={2} value={s1.description} onChange={(e) => set({ description: e.target.value })} error={!!err('description')} helperText={err('description') || undefined} />
         <TextField

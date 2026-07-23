@@ -57,7 +57,7 @@ export default function NewTicketDialog({ open, onClose, onCreated }: Readonly<P
       <DialogTitle>New Ticket</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
-          <TextField label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus />
+          <TextField label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth autoFocus required />
           <TextField
             select
             label="Category"

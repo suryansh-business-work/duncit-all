@@ -10,6 +10,8 @@ interface AdMediaFieldProps {
   onChange: (url: string) => void;
   error?: boolean;
   helperText?: string;
+  /** Renders a red required asterisk after the field label. */
+  required?: boolean;
 }
 
 const PREVIEW_SX = {
@@ -25,7 +27,7 @@ const PREVIEW_SX = {
  * Ad creative upload: opens the shared MediaPickerDialog (device upload to
  * ImageKit or Pexels) scoped to the selected ad type, with an inline preview.
  */
-export default function AdMediaField({ adType, value, onChange, error, helperText }: Readonly<AdMediaFieldProps>) {
+export default function AdMediaField({ adType, value, onChange, error, helperText, required }: Readonly<AdMediaFieldProps>) {
   const [open, setOpen] = useState(false);
   const isVideo = adType === 'VIDEO';
   const mediaLabel = isVideo ? 'video' : 'image';
@@ -38,6 +40,10 @@ export default function AdMediaField({ adType, value, onChange, error, helperTex
 
   return (
     <Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+        Ad Media
+        {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}
+      </Typography>
       <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
         <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpen(true)}>
           {value ? `Replace ${mediaLabel}` : `Upload ${mediaLabel}`}

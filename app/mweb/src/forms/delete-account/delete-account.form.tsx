@@ -41,6 +41,8 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           control={control}
           name="otp"
           label="6-digit OTP"
+          required
+          hint="6-digit code"
           placeholder="123456"
           inputProps={{ inputMode: 'numeric', maxLength: 6 }}
           size="small"

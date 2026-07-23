@@ -104,7 +104,7 @@ export default function CompletePodDialog({
               </RhfTextField>
               {hasVenue && (
                 <>
-                  <RhfTextField control={control} name="venue_bill_amount" type="number" label="Venue bill amount" />
+                  <RhfTextField control={control} name="venue_bill_amount" type="number" label="Venue bill amount" required />
                   <Controller
                     control={control}
                     name="bill_url"
@@ -115,6 +115,7 @@ export default function CompletePodDialog({
                         onChange={field.onChange}
                         folder="/pod-bills"
                         helperText={fieldState.error?.message ?? ' '}
+                        required
                       />
                     )}
                   />

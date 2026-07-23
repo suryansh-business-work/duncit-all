@@ -9,6 +9,7 @@ interface Props {
   value: string;
   error?: string | false;
   helperText: string;
+  required?: boolean;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onBlur: (e: FocusEvent<HTMLInputElement>) => void;
   onToggleBool: (name: string, checked: boolean) => void;
@@ -19,7 +20,7 @@ interface Props {
  * masked field with an eye toggle so the value can be revealed on demand
  * (nothing is hidden from the operator — only obscured by default).
  */
-export default function ConfigField({ field, value, error, helperText, onChange, onBlur, onToggleBool }: Readonly<Props>) {
+export default function ConfigField({ field, value, error, helperText, required, onChange, onBlur, onToggleBool }: Readonly<Props>) {
   const [reveal, setReveal] = useState(false);
 
   if (field.bool) {
@@ -47,6 +48,7 @@ export default function ConfigField({ field, value, error, helperText, onChange,
       error={Boolean(error)}
       helperText={error || helperText}
       placeholder={field.hint ?? undefined}
+      required={required}
       fullWidth
       autoComplete={field.secret ? 'new-password' : 'off'}
       inputProps={{ autoComplete: field.secret ? 'new-password' : 'off', 'data-1p-ignore': true, 'data-lpignore': true }}

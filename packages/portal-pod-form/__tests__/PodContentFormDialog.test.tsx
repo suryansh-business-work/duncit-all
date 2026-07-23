@@ -18,8 +18,8 @@ describe('PodContentFormDialog', () => {
       <PodContentFormDialog open defaultValues={baseValues} editableFields={allFields} onClose={vi.fn()} onSubmit={vi.fn()} />,
     );
     expect(screen.getByText('Edit pod')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toHaveValue('Sample Pod');
-    expect(screen.getByLabelText('Description')).toHaveValue('Sample description');
+    expect(screen.getByLabelText(/^Name/)).toHaveValue('Sample Pod');
+    expect(screen.getByLabelText(/^Description/)).toHaveValue('Sample description');
   });
 
   it('renders a custom title when provided', () => {
@@ -47,8 +47,8 @@ describe('PodContentFormDialog', () => {
     render(
       <PodContentFormDialog open defaultValues={baseValues} editableFields={['pod_title']} onClose={vi.fn()} onSubmit={vi.fn()} />,
     );
-    expect(screen.getByLabelText('Name')).toBeEnabled();
-    expect(screen.getByLabelText('Description')).toBeDisabled();
+    expect(screen.getByLabelText(/^Name/)).toBeEnabled();
+    expect(screen.getByLabelText(/^Description/)).toBeDisabled();
     expect(screen.queryByRole('button', { name: /add image/i })).not.toBeInTheDocument();
   });
 
@@ -228,7 +228,7 @@ describe('PodContentFormDialog', () => {
     render(
       <PodContentFormDialog open defaultValues={baseValues} editableFields={allFields} onClose={vi.fn()} onSubmit={onSubmit} />,
     );
-    const nameInput = screen.getByLabelText('Name');
+    const nameInput = screen.getByLabelText(/^Name/);
     await user.clear(nameInput);
     await user.type(nameInput, 'Updated Name');
     await user.click(screen.getByRole('button', { name: 'Save' }));
@@ -265,6 +265,6 @@ describe('PodContentFormDialog', () => {
     rerender(
       <PodContentFormDialog open defaultValues={updated} editableFields={allFields} onClose={vi.fn()} onSubmit={vi.fn()} />,
     );
-    expect(screen.getByLabelText('Name')).toHaveValue('Reopened Pod');
+    expect(screen.getByLabelText(/^Name/)).toHaveValue('Reopened Pod');
   });
 });

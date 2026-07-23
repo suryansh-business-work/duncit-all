@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { CreatePodVenue } from './create-pod.types';
 
@@ -10,19 +11,25 @@ interface Props {
   onSelect: (id: string) => void;
   error?: string;
   emptyHint?: string;
+  required?: boolean;
 }
 
 /** Step 3 venue picker — approved partner venues in the pod's city as a
  * horizontal card rail. Mobile twin of mWeb's VenuePicker. */
-export function VenuePicker({ venues, selectedId, onSelect, error, emptyHint }: Readonly<Props>) {
+export function VenuePicker({
+  venues,
+  selectedId,
+  onSelect,
+  error,
+  emptyHint,
+  required,
+}: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
 
   if (venues.length === 0) {
     return (
       <YStack gap={8}>
-        <Text fontSize={14} fontWeight="500" color="$color">
-          Select venue
-        </Text>
+        <FieldLabel label="Select venue" required={required} testID="create-pod-venue" />
         <Text testID="create-pod-venue-empty" fontSize={12.5} color="$muted">
           {emptyHint ?? 'No venues match this club yet — pick another club or go virtual.'}
         </Text>
@@ -32,9 +39,7 @@ export function VenuePicker({ venues, selectedId, onSelect, error, emptyHint }: 
 
   return (
     <YStack gap={8}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        Select venue
-      </Text>
+      <FieldLabel label="Select venue" required={required} testID="create-pod-venue" />
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap={10} paddingRight={10}>
           {venues.map((venue) => {

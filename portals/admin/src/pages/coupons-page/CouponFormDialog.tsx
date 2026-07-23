@@ -89,11 +89,13 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
             name="code"
             label="Code"
             size="small"
+            required
+            hint="3–30 chars: A–Z, 0–9, - or _"
             inputProps={{ style: { textTransform: 'uppercase' } }}
           />
           <RhfTextField control={control} name="description" label="Description" size="small" multiline minRows={2} />
           <Stack direction="row" spacing={2}>
-            <RhfTextField control={control} name="discount_pct" type="number" label="Discount %" size="small" />
+            <RhfTextField control={control} name="discount_pct" type="number" label="Discount %" size="small" required hint="Between 1 and 100" />
             <RhfTextField control={control} name="min_order_amount" type="number" label="Min order ₹" size="small" />
           </Stack>
           <Stack direction="row" spacing={2}>
@@ -102,7 +104,7 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
               <MenuItem value="POD">Pod-specific</MenuItem>
             </RhfTextField>
             {scope === 'POD' && (
-              <RhfTextField control={control} name="pod_id" select label="Pod" size="small" disabled={!!lockedPod}>
+              <RhfTextField control={control} name="pod_id" select label="Pod" size="small" required disabled={!!lockedPod}>
                 {lockedPod ? (
                   <MenuItem value={lockedPod.id}>{lockedPod.title}</MenuItem>
                 ) : (

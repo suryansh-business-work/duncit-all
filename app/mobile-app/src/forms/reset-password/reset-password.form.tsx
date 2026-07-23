@@ -37,6 +37,8 @@ export function ResetPasswordForm({
         placeholder="123456"
         keyboardType="number-pad"
         maxLength={6}
+        required
+        hint="6-digit code"
       />
       <FormTextField
         control={control}
@@ -46,6 +48,8 @@ export function ResetPasswordForm({
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
+        required
+        hint="At least 8 characters"
       />
       <FormTextField
         control={control}
@@ -55,6 +59,7 @@ export function ResetPasswordForm({
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
+        required
       />
 
       {errorMessage ? (

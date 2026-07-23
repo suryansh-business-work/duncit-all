@@ -21,7 +21,7 @@ const openCreateDialog = (): HTMLElement => {
 };
 
 const submitName = (dialog: HTMLElement, name = 'New Key') => {
-  fireEvent.change(within(dialog).getByLabelText('Key name'), { target: { value: name } });
+  fireEvent.change(within(dialog).getByLabelText(/^Key name/), { target: { value: name } });
   fireEvent.click(within(dialog).getByRole('button', { name: 'Create key' }));
 };
 
@@ -62,7 +62,7 @@ describe('ApiKeysPage', () => {
     submitName(dialog);
     // rawKey stays null → the dialog never enters the "API key created" reveal state.
     await waitFor(() =>
-      expect(within(dialog).getByLabelText('Key name')).toBeInTheDocument(),
+      expect(within(dialog).getByLabelText(/^Key name/)).toBeInTheDocument(),
     );
     expect(screen.queryByText('API key created')).not.toBeInTheDocument();
   });

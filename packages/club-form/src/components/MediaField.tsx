@@ -2,6 +2,7 @@ import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
 import MediaRow from './MediaRow';
+import { requiredLabel } from './requiredLabel';
 
 interface Props {
   label: string;
@@ -10,6 +11,8 @@ interface Props {
   onChange: (next: string) => void;
   helperText?: string;
   error?: string;
+  /** Renders a red required asterisk after the label. */
+  required?: boolean;
   /** ImageKit storage folder for this field (forwarded to the picker). */
   folder?: string;
   /** When provided, a rich reorderable picker is used; otherwise a textarea. */
@@ -20,7 +23,7 @@ interface Props {
  * Media editor. With `onPickImage` it renders the reorderable image/video list
  * (admin/portal behaviour); without it, a newline textarea fallback.
  */
-export default function MediaField({ label, value, onChange, helperText, error, folder, onPickImage }: Readonly<Props>) {
+export default function MediaField({ label, value, onChange, helperText, error, required, folder, onPickImage }: Readonly<Props>) {
   const items = value
     .split('\n')
     .map((s) => s.trim())
@@ -30,6 +33,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
     return (
       <TextField
         label={label}
+        required={required}
         fullWidth
         multiline
         minRows={2}
@@ -69,7 +73,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">{label}</Typography>
+        <Typography variant="subtitle2">{requiredLabel(label, required)}</Typography>
         <Button size="small" startIcon={<AddIcon />} onClick={() => pickInto('new')}>
           Add image
         </Button>

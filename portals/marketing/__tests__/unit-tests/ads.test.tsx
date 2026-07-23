@@ -272,9 +272,9 @@ describe('AdsPricingForm + live example', () => {
     fireEvent.change(screen.getByLabelText('Days'), { target: { value: '' } });
     expect(screen.getByText(/Enter a valid price and day count/)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Days'), { target: { value: '3' } });
-    fireEvent.change(screen.getByLabelText('Currency symbol'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/^Currency symbol/), { target: { value: '' } });
     expect(screen.getByText(/Sidebar × 3 days = ₹/)).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Currency symbol'), { target: { value: '₹' } });
+    fireEvent.change(screen.getByLabelText(/^Currency symbol/), { target: { value: '₹' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Save Pricing' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Save Pricing' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());

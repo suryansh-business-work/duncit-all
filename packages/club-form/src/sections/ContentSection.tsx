@@ -14,6 +14,7 @@ export default function ContentSection() {
       <BulletListField
         name="who_we_are"
         label="Who We Are"
+        required
         helperText="Short intro lines about the club's identity — add at least one."
         error={errors.who_we_are?.message}
       />
@@ -21,6 +22,7 @@ export default function ContentSection() {
       <BulletListField
         name="what_we_do"
         label="What We Do"
+        required
         helperText="The activities/experiences the club runs — add at least one."
         error={errors.what_we_do?.message}
       />
@@ -28,6 +30,7 @@ export default function ContentSection() {
       <BulletListField
         name="perks"
         label="Perks"
+        required
         helperText="Benefits members get — add at least one."
         error={errors.perks?.message}
       />
@@ -35,6 +38,7 @@ export default function ContentSection() {
       <BulletListField
         name="values"
         label="Values"
+        required
         helperText="What the club stands for — add at least one."
         error={errors.values?.message}
       />

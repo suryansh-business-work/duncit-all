@@ -28,23 +28,23 @@ describe('CreateKeyDialog', () => {
     const createBtn = screen.getByRole('button', { name: 'Create key' });
     expect(createBtn).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('Key name'), { target: { value: '  ' } });
+    fireEvent.change(screen.getByLabelText(/^Key name/), { target: { value: '  ' } });
     expect(createBtn).toBeDisabled();
 
-    fireEvent.change(screen.getByLabelText('Key name'), { target: { value: 'Staging' } });
+    fireEvent.change(screen.getByLabelText(/^Key name/), { target: { value: 'Staging' } });
     expect(createBtn).toBeEnabled();
   });
 
   it('calls onCreate with the trimmed name', () => {
     render(<CreateKeyDialog {...baseProps} />);
-    fireEvent.change(screen.getByLabelText('Key name'), { target: { value: '  Staging  ' } });
+    fireEvent.change(screen.getByLabelText(/^Key name/), { target: { value: '  Staging  ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create key' }));
     expect(baseProps.onCreate).toHaveBeenCalledWith('Staging');
   });
 
   it('shows the busy label and disables Create while busy', () => {
     render(<CreateKeyDialog {...baseProps} busy />);
-    fireEvent.change(screen.getByLabelText('Key name'), { target: { value: 'x' } });
+    fireEvent.change(screen.getByLabelText(/^Key name/), { target: { value: 'x' } });
     const createBtn = screen.getByRole('button', { name: 'Creating…' });
     expect(createBtn).toBeDisabled();
   });
@@ -56,7 +56,7 @@ describe('CreateKeyDialog', () => {
 
   it('Cancel resets the name and calls onClose', () => {
     render(<CreateKeyDialog {...baseProps} />);
-    fireEvent.change(screen.getByLabelText('Key name'), { target: { value: 'abc' } });
+    fireEvent.change(screen.getByLabelText(/^Key name/), { target: { value: 'abc' } });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(baseProps.onClose).toHaveBeenCalledTimes(1);
   });

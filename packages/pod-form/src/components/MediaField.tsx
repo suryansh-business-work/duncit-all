@@ -10,6 +10,9 @@ interface Props {
   onChange: (next: string) => void;
   helperText?: string;
   error?: string;
+  /** Renders a red required asterisk after the label (the custom subtitle label
+   * can't inherit MUI's native required marker). */
+  required?: boolean;
   /** When provided, a rich picker is used; otherwise a plain multiline textarea. */
   onPickImage?: () => Promise<string | null>;
 }
@@ -18,7 +21,7 @@ interface Props {
  * Media editor. With `onPickImage` it renders the reorderable image/video list
  * (admin behaviour); without it, a newline textarea (partner behaviour).
  */
-export default function MediaField({ label, value, onChange, helperText, error, onPickImage }: Readonly<Props>) {
+export default function MediaField({ label, value, onChange, helperText, error, required, onPickImage }: Readonly<Props>) {
   const items = value
     .split('\n')
     .map((s) => s.trim())
@@ -28,6 +31,7 @@ export default function MediaField({ label, value, onChange, helperText, error, 
     return (
       <TextField
         label={label}
+        required={required}
         fullWidth
         multiline
         minRows={2}
@@ -68,7 +72,10 @@ export default function MediaField({ label, value, onChange, helperText, error, 
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
-        <Typography variant="subtitle2">{label}</Typography>
+        <Typography variant="subtitle2">
+          {label}
+          {required ? <Box component="span" sx={{ color: 'error.main' }}> *</Box> : null}
+        </Typography>
         <Button size="small" startIcon={<AddIcon />} onClick={() => pickInto('new')}>
           Add image
         </Button>

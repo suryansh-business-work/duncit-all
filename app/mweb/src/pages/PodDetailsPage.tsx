@@ -85,11 +85,13 @@ export default function PodDetailsPage() {
     navigate,
   });
 
-  if (slugResolution.loading || (loading && !data)) return <PodDetailsSkeleton />;
+  // Pod details are still pending whenever the slug has resolved to an id but its
+  // details query hasn't returned yet — this covers the render gap between the
+  // slug resolving and POD_DETAILS starting, so the skeleton shows instead of a
+  // "Pod not found." flash.
+  const detailsPending = !!id && !error && (loading || !data);
+  if (slugResolution.loading || detailsPending) return <PodDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!slugResolution.loading && !slugResolution.data?.podBySlugs) {
-    return <Alert severity="warning">Pod not found.</Alert>;
-  }
   if (!pod) return <Alert severity="warning">Pod not found.</Alert>;
 
   const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;

@@ -20,6 +20,27 @@ export const categoryTypeDefs = /* GraphQL */ `
     type: CategoryMediaType
   }
 
+  "Icon placement relative to the category label in the home vibe tabber."
+  enum CategoryIconPosition {
+    TOP
+    BOTTOM
+    LEFT
+    RIGHT
+  }
+
+  "CATEGORY level only: per-surface icon placement + size for the vibe tabber."
+  type CategoryIconLayout {
+    position: CategoryIconPosition!
+    width: Int!
+    height: Int!
+  }
+
+  input CategoryIconLayoutInput {
+    position: CategoryIconPosition
+    width: Int
+    height: Int
+  }
+
   type Category {
     id: ID!
     name: String!
@@ -36,6 +57,10 @@ export const categoryTypeDefs = /* GraphQL */ `
     allow_co_hosts: Boolean!
     "SUB level only: how many co-hosts one pod may carry (1-5)."
     max_co_hosts: Int!
+    "CATEGORY level only: icon layout for the mWeb vibe tabber."
+    icon_layout_mweb: CategoryIconLayout
+    "CATEGORY level only: icon layout for the native-app vibe tabber."
+    icon_layout_native: CategoryIconLayout
     created_at: String!
     updated_at: String!
   }
@@ -56,6 +81,8 @@ export const categoryTypeDefs = /* GraphQL */ `
     sort_order: Int
     allow_co_hosts: Boolean
     max_co_hosts: Int
+    icon_layout_mweb: CategoryIconLayoutInput
+    icon_layout_native: CategoryIconLayoutInput
   }
 
   input UpdateCategoryInput {
@@ -67,6 +94,8 @@ export const categoryTypeDefs = /* GraphQL */ `
     is_active: Boolean
     allow_co_hosts: Boolean
     max_co_hosts: Int
+    icon_layout_mweb: CategoryIconLayoutInput
+    icon_layout_native: CategoryIconLayoutInput
   }
 
   extend type Query {

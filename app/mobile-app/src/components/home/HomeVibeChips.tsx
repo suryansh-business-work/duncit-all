@@ -101,6 +101,7 @@ export function HomeVibeChips({
                 testID={`vibe-chip-${category.id}`}
                 label={category.name}
                 icon={category.icon}
+                iconLayout={category.iconLayout}
                 selected={selected}
                 onPress={() => onSelect(category.id === selectedId ? '' : category.id)}
               />

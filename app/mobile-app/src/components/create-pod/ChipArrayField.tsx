@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
   placeholder?: string;
   error?: string;
   max?: number;
+  required?: boolean;
   testID: string;
 }
 
@@ -22,6 +24,7 @@ export function ChipArrayField({
   placeholder,
   error,
   max = 20,
+  required,
   testID,
 }: Readonly<Props>) {
   const [draft, setDraft] = useState('');
@@ -37,9 +40,7 @@ export function ChipArrayField({
 
   return (
     <YStack gap={6}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {label}
-      </Text>
+      <FieldLabel label={label} required={required} testID={testID} />
       {value.length > 0 ? (
         <XStack gap={6} flexWrap="wrap">
           {value.map((tag) => (

@@ -2,6 +2,7 @@ import { Controller } from 'react-hook-form';
 import { Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { formatDurationBetween, useDateFormat } from '../../../utils/dateFormat';
+import { requiredLabel } from '../../../forms/components/requiredLabel';
 import type { CreatePodForm } from './create-pod.types';
 
 /** Virtual-pod branch of Step 3: meeting platform/link/notes + start/end pickers.
@@ -28,8 +29,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
         helperText={errors.meeting_platform?.message ?? 'e.g. Google Meet, Zoom'}
       />
       <TextField
-        label="Meeting link"
-        required
+        label={requiredLabel('Meeting link', true)}
         fullWidth
         {...register('meeting_url')}
         error={!!errors.meeting_url}
@@ -42,7 +42,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
           name="pod_date_time"
           render={({ field }) => (
             <DateTimePicker
-              label="Start date & time"
+              label={requiredLabel('Start date & time', true)}
               value={field.value}
               onChange={field.onChange}
               format={dateTimeFormat}
@@ -50,7 +50,6 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
               slotProps={{
                 textField: {
                   fullWidth: true,
-                  required: true,
                   error: !!errors.pod_date_time,
                   helperText: errors.pod_date_time?.message,
                 },

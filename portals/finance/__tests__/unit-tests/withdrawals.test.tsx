@@ -52,7 +52,7 @@ describe('WithdrawalsPage', () => {
     const dialog = await screen.findByRole('dialog');
     const confirm = within(dialog).getByRole('button', { name: /reject & refund/i });
     expect(confirm).toBeDisabled();
-    fireEvent.change(within(dialog).getByLabelText('Reason'), { target: { value: 'fraud' } });
+    fireEvent.change(within(dialog).getByLabelText(/^Reason/), { target: { value: 'fraud' } });
     fireEvent.click(confirm);
     await waitFor(() => expect(notifySuccess).toHaveBeenCalledWith('Withdrawal rejected'));
   });

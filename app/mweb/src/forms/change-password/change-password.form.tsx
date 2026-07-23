@@ -77,6 +77,7 @@ export function CurrentPasswordForm({
           name="current_password"
           type={show ? 'text' : 'password'}
           label="Current password"
+          required
           placeholder="Enter your current password"
           autoComplete="current-password"
           size="small"
@@ -131,6 +132,8 @@ export function NewPasswordForm({
           control={control}
           name="otp"
           label="6-digit OTP"
+          required
+          hint="6-digit code"
           placeholder="123456"
           inputProps={{ inputMode: 'numeric', maxLength: 6 }}
           size="small"
@@ -147,6 +150,8 @@ export function NewPasswordForm({
           name="new_password"
           type={showPwd ? 'text' : 'password'}
           label="New password"
+          required
+          hint="At least 8 characters"
           placeholder="Create a new password"
           autoComplete="new-password"
           size="small"
@@ -157,6 +162,7 @@ export function NewPasswordForm({
           name="confirm_password"
           type={showConfirm ? 'text' : 'password'}
           label="Confirm new password"
+          required
           placeholder="Re-enter new password"
           autoComplete="new-password"
           size="small"

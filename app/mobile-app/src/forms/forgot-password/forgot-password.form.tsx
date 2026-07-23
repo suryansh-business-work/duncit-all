@@ -42,6 +42,7 @@ export function ForgotPasswordForm({
         keyboardType="email-address"
         autoComplete="email"
         textContentType="emailAddress"
+        required
       />
 
       {emailError ? (

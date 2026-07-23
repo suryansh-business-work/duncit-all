@@ -14,7 +14,7 @@ export default function AboutSection() {
         required
         multiline
         minRows={3}
-        hint=" "
+        hint="At least 10 characters"
       />
       <TextField
         label="Pod info / additional notes"

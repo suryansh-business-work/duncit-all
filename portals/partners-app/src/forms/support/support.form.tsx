@@ -51,13 +51,13 @@ export default function SupportForm({ initialValues, loading, errorMessage, onSu
 
   return (
     <Stack component="form" noValidate onSubmit={submit} spacing={2}>
-      <RhfTextField control={control} name="name" label="Your name" autoComplete="name" />
+      <RhfTextField control={control} name="name" label="Your name" required autoComplete="name" />
       <RhfTextField control={control} name="email" label="Email" type="email" autoComplete="email" disabled InputProps={{ readOnly: true }} hint="Locked to your Duncit account" />
       <TextField select label="Category" defaultValue={defaults.category} error={categoryError} helperText={categoryError ? errors.category?.message : ' '} fullWidth {...register('category')}>
         {SUPPORT_CATEGORIES.map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
       </TextField>
-      <RhfTextField control={control} name="subject" label="Subject" />
-      <RhfTextField control={control} name="message" label="Message" multiline minRows={4} />
+      <RhfTextField control={control} name="subject" label="Subject" required />
+      <RhfTextField control={control} name="message" label="Message" required multiline minRows={4} hint="At least 10 characters" />
       {(errorMessage ?? rootError) && <Alert severity="error">{errorMessage ?? rootError}</Alert>}
       <Button type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</Button>
     </Stack>

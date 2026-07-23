@@ -63,6 +63,7 @@ export default function LoginForm({
           name="email"
           type="email"
           label="Email"
+          required
           placeholder="hello@duncit.com"
           autoComplete="email"
           size="small"
@@ -79,6 +80,8 @@ export default function LoginForm({
           name="password"
           type={showPwd ? 'text' : 'password'}
           label="Password"
+          required
+          hint="At least 8 characters"
           placeholder="Enter password"
           autoComplete="current-password"
           size="small"

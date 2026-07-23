@@ -14,9 +14,9 @@ export default function VenueOwnerSection({ s3, setS3, errors }: Readonly<Props>
   const err = (field: keyof Step3) => getVenueError(errors, `step3.${field}`);
   return (
     <Box sx={{ display: 'grid', columnGap: 1.5, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-        <TextField label="Owner name *" size="small" value={s3.owner_name} onChange={(e) => set({ owner_name: e.target.value })} error={!!err('owner_name')} helperText={err('owner_name') || undefined} />
-        <TextField label="Owner email *" size="small" value={s3.owner_email} onChange={(e) => set({ owner_email: e.target.value })} error={!!err('owner_email')} helperText={err('owner_email') || undefined} />
-        <TextField label="Owner phone *" size="small" value={s3.owner_phone} onChange={(e) => set({ owner_phone: e.target.value })} error={!!err('owner_phone')} helperText={err('owner_phone') || undefined} />
+        <TextField label="Owner name" required size="small" value={s3.owner_name} onChange={(e) => set({ owner_name: e.target.value })} error={!!err('owner_name')} helperText={err('owner_name') || undefined} />
+        <TextField label="Owner email" required size="small" value={s3.owner_email} onChange={(e) => set({ owner_email: e.target.value })} error={!!err('owner_email')} helperText={err('owner_email') || undefined} />
+        <TextField label="Owner phone" required size="small" value={s3.owner_phone} onChange={(e) => set({ owner_phone: e.target.value })} error={!!err('owner_phone')} helperText={err('owner_phone') || '6–15 digits, optional + prefix'} />
         <DateField
           label="DOB"
           size="small"

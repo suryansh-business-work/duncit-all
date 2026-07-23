@@ -46,6 +46,16 @@ describe('MediaField — picker mode (with onPickImage)', () => {
     expect(screen.queryByText('cap')).not.toBeInTheDocument();
   });
 
+  it('renders a required asterisk after the label when required', () => {
+    render(<MediaField label="Media" value="" onChange={vi.fn()} onPickImage={vi.fn()} required />);
+    expect(screen.getByText('*')).toBeInTheDocument();
+  });
+
+  it('omits the required asterisk when not required', () => {
+    render(<MediaField label="Media" value="" onChange={vi.fn()} onPickImage={vi.fn()} />);
+    expect(screen.queryByText('*')).not.toBeInTheDocument();
+  });
+
   it('appends a picked URL to an empty list', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

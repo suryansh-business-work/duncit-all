@@ -47,6 +47,7 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
           control={control}
           name="phone_number"
           label="Phone number"
+          hint="10-digit number"
           size="small"
           InputLabelProps={{ shrink: true }}
           inputProps={numericInput}
@@ -78,6 +79,7 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
           control={control}
           name="whatsapp_number"
           label="WhatsApp number"
+          hint="10-digit number"
           size="small"
           disabled={sameAsContact}
           InputLabelProps={{ shrink: true }}

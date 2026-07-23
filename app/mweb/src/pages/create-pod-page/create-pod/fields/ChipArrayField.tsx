@@ -1,8 +1,10 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 
 interface Props {
   label: string;
+  required?: boolean;
   value: string[];
   onChange: (next: string[]) => void;
   helperText?: string;
@@ -14,6 +16,7 @@ interface Props {
 /** Enter-to-add chip list backed by a string[] form field. */
 export default function ChipArrayField({
   label,
+  required,
   value,
   onChange,
   helperText,
@@ -45,7 +48,7 @@ export default function ChipArrayField({
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-        {label}
+        {requiredLabel(label, required)}
       </Typography>
       {value.length > 0 && (
         <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.5, mb: 1 }}>

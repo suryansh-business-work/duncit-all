@@ -1,5 +1,7 @@
 import { Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
+
 export interface ChipOption {
   value: string;
   label: string;
@@ -12,6 +14,7 @@ interface Props {
   onChange: (value: string) => void;
   error?: string;
   emptyHint?: string;
+  required?: boolean;
   testID: string;
 }
 
@@ -24,13 +27,12 @@ export function ChipSelectField({
   onChange,
   error,
   emptyHint,
+  required,
   testID,
 }: Readonly<Props>) {
   return (
     <YStack gap={6}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {label}
-      </Text>
+      <FieldLabel label={label} required={required} testID={testID} />
       {options.length === 0 ? (
         <Text testID={`${testID}-empty`} fontSize={12.5} color="$muted">
           {emptyHint ?? 'No options available.'}

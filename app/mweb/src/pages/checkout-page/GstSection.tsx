@@ -44,7 +44,9 @@ export default function GstSection({ control, fieldSx }: Readonly<Props>) {
             />
           )}
         />
-        {hasGstin && <RhfTextField control={control} name="gstin" label="GSTIN" sx={fieldSx} />}
+        {hasGstin && (
+          <RhfTextField control={control} name="gstin" label="GSTIN" hint="15-character GSTIN" sx={fieldSx} />
+        )}
       </Stack>
     </PodAccordion>
   );

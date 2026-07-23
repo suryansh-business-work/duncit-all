@@ -65,8 +65,9 @@ export default function PodPlanFormDialog({ open, editing, loading, onClose, onS
               hint="e.g. free, premium"
               disabled={!!editing}
               size="small"
+              required
             />
-            <RhfTextField control={control} name="name" label="Display name" size="small" />
+            <RhfTextField control={control} name="name" label="Display name" size="small" required />
             <RhfTextField control={control} name="description" label="Description" multiline minRows={2} size="small" />
             <RhfTextField control={control} name="image_url" label="Image URL" size="small" />
             <Controller

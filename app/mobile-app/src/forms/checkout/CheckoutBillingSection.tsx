@@ -86,7 +86,12 @@ function BillingAddress({ control, mainAddress, sameAsMain }: Readonly<BillingBo
         {sameAsMain ? (
           <MainAddressSummary address={mainAddress} />
         ) : (
-          <AddressFields control={control} names={ADDRESS_NAMES} />
+          <AddressFields
+            control={control}
+            names={ADDRESS_NAMES}
+            required
+            pincodeHint="4–10 digits"
+          />
         )}
       </YStack>
     );
@@ -145,6 +150,7 @@ function GstBody({ control }: Readonly<{ control: Control<CheckoutFormValues> }>
           control={control}
           name="gstin"
           label="GSTIN"
+          hint="15-character GSTIN"
           autoCapitalize="characters"
           maxLength={15}
         />

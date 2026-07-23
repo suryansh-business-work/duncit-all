@@ -191,8 +191,8 @@ describe('MarketingCampaignForm', () => {
         onValuesChange={onValuesChange}
       />,
     );
-    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
-    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Verify' }));
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
@@ -255,7 +255,7 @@ describe('MarketingCampaignForm', () => {
 describe('MarketingCampaignsPage', () => {
   it('renders the form + preview + history and schedules a preview render', async () => {
     renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, { mocks: pageBaseMocks() });
-    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'A subject line' } });
+    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'A subject line' } });
     // The debounced lazy render resolves and its subject reaches the preview.
     await waitFor(() => expect(screen.getByText('S')).toBeInTheDocument(), { timeout: 2500 });
   });
@@ -300,8 +300,8 @@ describe('MarketingCampaignsPage', () => {
     renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
       mocks: [...pageBaseMocks(), createCampaignMock()],
     });
-    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
-    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     fireEvent.change(screen.getByLabelText('Schedule at'), {
       target: { value: '2030-01-01T00:00:00.000Z' },
     });
@@ -316,8 +316,8 @@ describe('MarketingCampaignsPage', () => {
     renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
       mocks: [...pageBaseMocks(), createCampaignMock()],
     });
-    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
-    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign sent'));
@@ -327,8 +327,8 @@ describe('MarketingCampaignsPage', () => {
     renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
       mocks: [...pageBaseMocks(), createCampaignMock({ serverError: 'Bad MJML' })],
     });
-    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
-    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Bad MJML'));
@@ -338,8 +338,8 @@ describe('MarketingCampaignsPage', () => {
     renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
       mocks: [...pageBaseMocks(), createCampaignMock({ throwMessage: 'Network down' })],
     });
-    fireEvent.change(screen.getByLabelText('Campaign name'), { target: { value: 'Weekend launch' } });
-    fireEvent.change(screen.getByLabelText('Email subject'), { target: { value: 'Pods live' } });
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
+    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(screen.getByText('Network down')).toBeInTheDocument());

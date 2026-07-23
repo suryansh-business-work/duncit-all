@@ -128,6 +128,7 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
+            required
           />
         )}
       />

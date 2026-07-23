@@ -132,7 +132,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
             <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
               <TextField label="Full name" required {...tfProps('step1.full_name')} />
               <TextField label="Email" type="email" required {...tfProps('step1.email')} />
-              <TextField label="Phone" required {...tfProps('step1.phone')} />
+              <TextField label="Phone" required {...tfProps('step1.phone', '6–15 digits, optional + prefix')} />
               <DateField
                 size="small"
                 label="DOB"

@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { FieldLabel } from '@/components/Field';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -15,6 +16,7 @@ interface Props {
   value: string;
   onChange: (text: string) => void;
   error?: string;
+  required?: boolean;
   testID: string;
 }
 
@@ -23,7 +25,14 @@ interface Props {
  * calendar/time sheet. The picked value is echoed below in the admin-panel
  * display format (rule 11), mirroring mWeb's MUI X DateTimePicker.
  */
-export function DateTimeField({ label, value, onChange, error, testID }: Readonly<Props>) {
+export function DateTimeField({
+  label,
+  value,
+  onChange,
+  error,
+  required,
+  testID,
+}: Readonly<Props>) {
   const { color: ink, muted } = useThemeColors();
   const { dateFormat, timeFormat } = useAppSettings();
   const [open, setOpen] = useState(false);
@@ -32,9 +41,7 @@ export function DateTimeField({ label, value, onChange, error, testID }: Readonl
 
   return (
     <YStack gap={6}>
-      <Text fontSize={14} fontWeight="500" color="$color">
-        {label}
-      </Text>
+      <FieldLabel label={label} required={required} testID={testID} />
       <XStack gap={8} alignItems="center">
         <Input
           testID={`field-${testID}`}

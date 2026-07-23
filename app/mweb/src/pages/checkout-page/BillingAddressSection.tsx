@@ -83,7 +83,15 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
       <Stack spacing={1.5}>
         {hasMainAddress && <BillingCheckbox control={control} name="same_as_main" label="Same as my main address" />}
         {sameAsMain && mainAddress && <BillingSummary address={mainAddress} />}
-        {showEditable && <AddressFields control={control} names={ADDRESS_NAMES} fieldSx={fieldSx} required />}
+        {showEditable && (
+          <AddressFields
+            control={control}
+            names={ADDRESS_NAMES}
+            fieldSx={fieldSx}
+            required
+            pincodeHint="4–10 digits"
+          />
+        )}
         <RhfTextField control={control} name="billing_email" label="Billing email (optional)" sx={fieldSx} />
         {!hasMainAddress && <BillingCheckbox control={control} name="save_as_main" label="Save this as my main address" />}
       </Stack>

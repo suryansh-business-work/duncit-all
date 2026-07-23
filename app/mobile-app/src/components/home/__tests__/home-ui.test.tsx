@@ -12,6 +12,13 @@ import { renderWithProviders } from '@/utils/test-utils';
 const categories: VibeCategory[] = [
   { id: 'c1', name: 'Music', icon: '🎵', subs: [{ id: 's1', name: 'Jazz' }] },
   { id: 'c2', name: 'Sports', icon: 'https://cdn.duncit/sport.png', subs: [] },
+  {
+    id: 'c3',
+    name: 'Art',
+    icon: 'https://cdn.duncit/art.png',
+    iconLayout: { position: 'LEFT', width: 60, height: 30 },
+    subs: [],
+  },
 ];
 
 const pod = {
@@ -132,6 +139,22 @@ describe('HomeVibeChips', () => {
       />,
     );
     expect(screen.getByTestId('vibe-chip-all-image')).toBeOnTheScreen();
+  });
+
+  it('applies the per-category icon layout size, and the default when absent', () => {
+    renderWithProviders(
+      <HomeVibeChips categories={categories} selectedId="" onSelect={jest.fn()} />,
+    );
+    // c3 has a LEFT layout with a custom 60x30 icon → applied to the image.
+    expect(screen.getByTestId('vibe-chip-c3-image').props.style).toMatchObject({
+      width: 60,
+      height: 30,
+    });
+    // c2 has no layout → the image falls back to the default 40x40 size.
+    expect(screen.getByTestId('vibe-chip-c2-image').props.style).toMatchObject({
+      width: 40,
+      height: 40,
+    });
   });
 });
 

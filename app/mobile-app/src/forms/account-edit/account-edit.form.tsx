@@ -85,6 +85,7 @@ export function AccountEditForm({
             control={control}
             name="first_name"
             label="First name"
+            required
             autoCapitalize="words"
           />
         </YStack>
@@ -98,7 +99,14 @@ export function AccountEditForm({
         </YStack>
       </XStack>
 
-      <FormTextField control={control} name="bio" label="Bio" multiline numberOfLines={3} />
+      <FormTextField
+        control={control}
+        name="bio"
+        label="Bio"
+        hint="Up to 280 characters"
+        multiline
+        numberOfLines={3}
+      />
 
       <DobDateField control={control} />
 
@@ -109,7 +117,7 @@ export function AccountEditForm({
       <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={0.6}>
         MAIN ADDRESS
       </Text>
-      <AddressFields control={control} names={ADDRESS_NAMES} />
+      <AddressFields control={control} names={ADDRESS_NAMES} pincodeHint="6-digit PIN code" />
 
       <XStack
         testID="account-edit-discard"

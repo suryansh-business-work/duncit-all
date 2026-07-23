@@ -76,6 +76,8 @@ export default function CategoriesPage() {
         is_active: item.is_active,
         allow_co_hosts: item.allow_co_hosts ?? false,
         max_co_hosts: item.max_co_hosts ?? 1,
+        icon_layout_mweb: item.icon_layout_mweb ?? null,
+        icon_layout_native: item.icon_layout_native ?? null,
       },
     });
   };

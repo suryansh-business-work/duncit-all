@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format, isToday, isTomorrow } from 'date-fns';
 import { Box, CircularProgress, FormHelperText, Stack, Typography } from '@mui/material';
+import { requiredLabel } from '../../../forms/components/requiredLabel';
 import type { CreatePodSlot } from './create-pod.types';
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
   selectedSlotId: string;
   onPick: (slot: CreatePodSlot) => void;
   error?: string;
+  required?: boolean;
 }
 
 const dayKey = (iso: string) => format(new Date(iso), 'yyyy-MM-dd');
@@ -24,7 +26,7 @@ const priceLabel = (slot: CreatePodSlot) => (slot.price > 0 ? `₹${slot.price.t
 
 /** Reskinned slot picker — a row of day chips over a grid of time tiles. The
  * chosen tile sets the pod's date & time from the venue's availability calendar. */
-export default function SlotPicker({ slots, loading, selectedSlotId, onPick, error }: Readonly<Props>) {
+export default function SlotPicker({ slots, loading, selectedSlotId, onPick, error, required }: Readonly<Props>) {
   const byDay = new Map<string, CreatePodSlot[]>();
   for (const slot of slots) {
     const key = dayKey(slot.start_at);
@@ -39,7 +41,7 @@ export default function SlotPicker({ slots, loading, selectedSlotId, onPick, err
   return (
     <Stack spacing={1.25}>
       <Box>
-        <Typography variant="subtitle2" fontWeight={800}>Date</Typography>
+        <Typography variant="subtitle2" fontWeight={800}>{requiredLabel('Date', required)}</Typography>
         <Typography variant="caption" color="text.secondary">
           From the venue's availability calendar — the slot sets your pod's date & time.
         </Typography>

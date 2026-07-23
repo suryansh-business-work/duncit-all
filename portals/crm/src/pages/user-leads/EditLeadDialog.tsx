@@ -49,6 +49,7 @@ export default function EditLeadDialog({ lead, onClose, onSaved }: Readonly<Prop
           <TextField
             label="Phone (with country code)"
             size="small"
+            required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             error={!!error}

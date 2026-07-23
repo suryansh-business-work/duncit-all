@@ -71,13 +71,13 @@ export default function ReminderFormDialog({ open, entity, leadId, reminder, onC
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          <TextField size="small" label="Title" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus fullWidth />
+          <TextField size="small" label="Title" required value={title} onChange={(e) => setTitle(e.target.value)} autoFocus fullWidth />
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DateTimePicker
               label="Due date & time"
               value={dueAt}
               onChange={setDueAt}
-              slotProps={{ textField: { size: 'small', fullWidth: true } }}
+              slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
             />
           </LocalizationProvider>
           <TextField size="small" label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />

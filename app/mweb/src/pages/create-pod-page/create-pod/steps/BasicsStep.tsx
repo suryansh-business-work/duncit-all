@@ -5,6 +5,7 @@ import MediaUrlsField from '../fields/MediaUrlsField';
 import PodReelAccordion from '../fields/PodReelAccordion';
 import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
+import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import type { CreatePodForm } from '../create-pod.types';
 
 interface Props {
@@ -24,8 +25,7 @@ export default function BasicsStep({ form }: Readonly<Props>) {
   return (
     <Stack spacing={2.25}>
       <TextField
-        label="Pod title"
-        required
+        label={requiredLabel('Pod title', true)}
         fullWidth
         placeholder="e.g. Downtown Runners Club"
         {...register('pod_title')}
@@ -33,8 +33,7 @@ export default function BasicsStep({ form }: Readonly<Props>) {
         helperText={errors.pod_title?.message ?? 'What is this pod about? (3–120 characters)'}
       />
       <TextField
-        label="Description"
-        required
+        label={requiredLabel('Description', true)}
         fullWidth
         multiline
         minRows={4}
@@ -59,7 +58,8 @@ export default function BasicsStep({ form }: Readonly<Props>) {
         name="what_this_pod_offers"
         render={({ field, fieldState }) => (
           <ChipArrayField
-            label="What this pod offers *"
+            label="What this pod offers"
+            required
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}

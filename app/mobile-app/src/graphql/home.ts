@@ -15,6 +15,11 @@ export const HomeFeedDocument = gql(`
       icon
       level
       parent_id
+      icon_layout_native {
+        position
+        width
+        height
+      }
     }
     clubs(filter: { is_active: true }) {
       id

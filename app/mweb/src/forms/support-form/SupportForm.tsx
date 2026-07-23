@@ -102,6 +102,7 @@ export default function SupportForm({
               {...field}
               select
               label="Category"
+              required
               size="small"
               fullWidth
               InputProps={{
@@ -124,6 +125,8 @@ export default function SupportForm({
           control={control}
           name="subject"
           label="Subject"
+          required
+          hint="3–120 characters"
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -136,6 +139,8 @@ export default function SupportForm({
           control={control}
           name="message"
           label="Tell us what's going on"
+          required
+          hint="At least 10 characters"
           multiline
           minRows={4}
         />

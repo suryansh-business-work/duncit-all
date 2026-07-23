@@ -40,6 +40,7 @@ export default function CreateLeadDialog({ open, onClose, onCreated }: Readonly<
           <TextField
             label="Phone (with country code)"
             size="small"
+            required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="9198XXXXXXXX"

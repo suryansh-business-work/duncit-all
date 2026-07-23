@@ -100,6 +100,7 @@ export default function AccountEditForm({
           control={control}
           name="bio"
           label="Bio"
+          hint="Up to 500 characters"
           multiline
           minRows={2}
           size="small"
@@ -111,7 +112,13 @@ export default function AccountEditForm({
         <Typography variant="overline" color="text.secondary" fontWeight={900}>
           Main address
         </Typography>
-        <AddressFields control={control} names={ADDRESS_NAMES} size="small" shrinkLabels />
+        <AddressFields
+          control={control}
+          names={ADDRESS_NAMES}
+          size="small"
+          shrinkLabels
+          pincodeHint="6-digit PIN code"
+        />
         <Stack direction="row" spacing={1}>
           <Button
             type="button"

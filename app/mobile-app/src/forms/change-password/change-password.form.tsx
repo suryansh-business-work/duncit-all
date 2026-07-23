@@ -41,6 +41,7 @@ export function CurrentPasswordForm({
         secureTextEntry
         autoComplete="password"
         textContentType="password"
+        required
       />
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="current-password-error">
@@ -78,6 +79,8 @@ export function NewPasswordForm({
         placeholder="123456"
         keyboardType="number-pad"
         maxLength={6}
+        required
+        hint="6-digit code"
       />
       <FormTextField
         control={control}
@@ -87,6 +90,8 @@ export function NewPasswordForm({
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
+        required
+        hint="At least 8 characters"
       />
       <FormTextField
         control={control}
@@ -96,6 +101,7 @@ export function NewPasswordForm({
         secureTextEntry
         autoComplete="password-new"
         textContentType="newPassword"
+        required
       />
       {errorMessage ? (
         <Text fontSize={14} color="$danger" testID="new-password-error">

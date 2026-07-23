@@ -34,8 +34,23 @@ export const partnerDashboardTypeDefs = /* GraphQL */ `
     pending_requests: Int!
   }
 
+  "Owner-scoped e-commerce KPIs. brand_doc_id narrows to one owned brand; omitted = all owned brands."
+  type PartnerEcommStats {
+    total_brands: Int!
+    approved_brands: Int!
+    total_products: Int!
+    approved_products: Int!
+    total_warehouses: Int!
+    "Distinct product orders containing at least one of the partner's brand lines (cancelled/failed/RTO excluded)."
+    total_orders: Int!
+    total_items_sold: Int!
+    "Gross value of the partner's sold line items (before Duncit commission)."
+    gross_revenue: Float!
+  }
+
   extend type Query {
     partnerDashboard(from: String!, to: String!): PartnerDashboard!
     venueOwnerStats(venue_id: ID): VenueOwnerStats!
+    partnerEcommStats(brand_doc_id: ID): PartnerEcommStats!
   }
 `;

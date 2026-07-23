@@ -31,7 +31,6 @@ interface Args {
   saved: boolean;
   savedIds: string[];
   referralFromUrl: string | null;
-  selectedProducts: Array<{ product_id: string; quantity: number }>;
   refetch: () => Promise<unknown>;
   navigate: NavigateFunction;
 }
@@ -42,7 +41,6 @@ export function usePodDetailActions({
   saved,
   savedIds,
   referralFromUrl,
-  selectedProducts,
   refetch,
   navigate,
 }: Args) {
@@ -131,26 +129,20 @@ export function usePodDetailActions({
     }
   };
 
+  // Book & Pay charges the pod membership (pod_amount) ONLY — products are bought
+  // separately through the standalone product checkout, never mixed in one payment.
   const onPaidCheckout = () => {
     if (!pod) return;
-    const byId = new Map<string, any>((pod.product_requests ?? []).map((item: any) => [item.product_id, item]));
-    // Variant lines carry their own price; base lines fall back to the pod row.
-    const selectedTotal = selectedProducts.reduce(
-      (sum, item: any) =>
-        sum + Number(item.unit_cost ?? byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity,
-      0,
-    );
-    const amount = Number(pod.pod_amount) + selectedTotal;
+    const amount = Number(pod.pod_amount) || 0;
     const params = new URLSearchParams({
       title: pod.pod_title || '',
-      amount: String(amount || 0),
+      amount: String(amount),
     });
     navigate(`/checkout/${pod.id}?${params.toString()}`, {
       state: {
         pod_id: pod.id,
         pod_title: pod.pod_title,
         amount,
-        selected_products: selectedProducts,
         description: `Pod booking · ${pod.pod_title}`,
       },
     });

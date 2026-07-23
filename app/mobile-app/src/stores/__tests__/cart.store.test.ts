@@ -1,5 +1,12 @@
 import { getCartLines, setCartLines } from '@/services/cart';
-import { cartLineKey, selectCartCount, useCartStore, type CartLineMeta } from '@/stores/cart.store';
+import {
+  cartLineKey,
+  groupLinesByPod,
+  selectCartCount,
+  selectCartTotal,
+  useCartStore,
+  type CartLineMeta,
+} from '@/stores/cart.store';
 
 jest.mock('@/services/cart', () => ({
   getCartLines: jest.fn().mockResolvedValue([]),
@@ -56,14 +63,41 @@ describe('cart.store', () => {
     expect(mockSet).toHaveBeenCalledTimes(4);
   });
 
-  it('removeLine targets one pod+key; clearPod empties only that pod', () => {
-    const { setLine, removeLine, clearPod } = useCartStore.getState();
+  it('removeLine targets one pod+key only', () => {
+    const { setLine, removeLine } = useCartStore.getState();
     setLine(meta(), 1);
     setLine(meta({ pod_id: 'p2', product_id: 'b', product_name: 'Beta' }), 2);
     removeLine('p1', cartLineKey({ product_id: 'a', variant_id: '' }));
     expect(useCartStore.getState().lines.map((l) => l.pod_id)).toEqual(['p2']);
-    clearPod('p2');
+  });
+
+  it('clearAll empties the whole cart across pods and persists the wipe', () => {
+    const { setLine, clearAll } = useCartStore.getState();
+    setLine(meta(), 1);
+    setLine(meta({ pod_id: 'p2', product_id: 'b', product_name: 'Beta' }), 2);
+    clearAll();
     expect(useCartStore.getState().lines).toEqual([]);
+    expect(mockSet).toHaveBeenLastCalledWith([]);
+  });
+
+  it('selectCartTotal sums unit cost × quantity across every line', () => {
+    const { setLine } = useCartStore.getState();
+    setLine(meta(), 2);
+    setLine(meta({ pod_id: 'p2', product_id: 'b', unit_cost: 50 }), 3);
+    expect(selectCartTotal(useCartStore.getState())).toBe(350);
+  });
+
+  it('groupLinesByPod keeps insertion order and the pod titles', () => {
+    const lines = [
+      { ...meta(), quantity: 1 },
+      { ...meta({ pod_id: 'p2', pod_title: 'Pod Two', product_id: 'b' }), quantity: 2 },
+      { ...meta({ product_id: 'c', product_name: 'Gamma' }), quantity: 1 },
+    ];
+    const [first, second] = groupLinesByPod(lines);
+    expect([first?.[0], second?.[0]]).toEqual(['p1', 'p2']);
+    expect(first?.[1].title).toBe('Pod One');
+    expect(first?.[1].lines.map((line) => line.product_id)).toEqual(['a', 'c']);
+    expect(second?.[1].lines).toHaveLength(1);
   });
 
   it('survives a persistence failure (write is best-effort)', () => {

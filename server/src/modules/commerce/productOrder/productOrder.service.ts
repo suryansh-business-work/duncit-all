@@ -249,14 +249,29 @@ async function buildWarehouseMap(lines: any[]): Promise<Map<string, Warehouse>> 
   return map;
 }
 
-/** Shipping charge per warehouse id, taken from the payment's quoted breakup. */
+/** Shipping charge per (pod, warehouse) group, taken from the payment's quoted
+ * breakup. Modern quote lines carry a pod_id and key `pod|warehouse` — each
+ * order records exactly its own group's charge. Legacy metadata (no pod_id on
+ * the line) keys by warehouse alone as a fallback. */
 function buildShippingChargeMap(shipping: any): Map<string, number> {
   const map = new Map<string, number>();
   const breakup: any[] = Array.isArray(shipping?.breakup) ? shipping.breakup : [];
   for (const entry of breakup) {
-    map.set(String(entry.warehouse_id ?? ''), Number(entry.charge) || 0);
+    const warehouseId = String(entry.warehouse_id ?? '');
+    const charge = Number(entry.charge) || 0;
+    if (entry.pod_id === undefined) {
+      map.set(warehouseId, charge);
+    } else {
+      map.set(`${String(entry.pod_id ?? '')}|${warehouseId}`, charge);
+    }
   }
   return map;
+}
+
+/** The shipping charge for one order group: the (pod, warehouse) quote line
+ * wins; a warehouse-only line covers legacy payment metadata. */
+function shippingChargeForGroup(charges: Map<string, number>, group: OrderGroup): number {
+  return charges.get(`${group.pod_id}|${group.warehouse.id}`) ?? charges.get(group.warehouse.id) ?? 0;
 }
 
 interface OrderGroup {
@@ -352,7 +367,7 @@ export const productOrderService = {
     const topMethod = asMethod(meta.fulfilment_method ?? 'PICKUP');
     const fallbackPodId = payment.pod_id ? String(payment.pod_id) : '';
     const warehouseMap = await buildWarehouseMap(lines);
-    const shippingByWarehouse = buildShippingChargeMap(meta.shipping);
+    const shippingCharges = buildShippingChargeMap(meta.shipping);
     const groups = groupOrderLines(lines, topMethod, warehouseMap, fallbackPodId);
     const venueByPod = await loadVenueByPod(groups.map((g) => g.pod_id));
     const shippingAddress = meta.shipping_address ?? null;
@@ -375,7 +390,7 @@ export const productOrderService = {
         group,
         shippingAddress,
         pickupVenueId: venueByPod.get(group.pod_id) ?? null,
-        shippingCharge: shippingByWarehouse.get(group.warehouse.id) ?? 0,
+        shippingCharge: shippingChargeForGroup(shippingCharges, group),
       });
       created.push(doc);
       // Point of sale: stock moves only when this order doc is first created.

@@ -12,5 +12,9 @@ export const partnerDashboardResolvers = {
       const user = requireAuth(ctx);
       return partnerDashboardService.venueStats(user.id, args.venue_id);
     },
+    partnerEcommStats: async (_p: unknown, args: { brand_doc_id?: string | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return partnerDashboardService.ecommStats(user.id, args.brand_doc_id);
+    },
   },
 };

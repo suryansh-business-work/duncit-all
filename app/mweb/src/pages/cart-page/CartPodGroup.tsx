@@ -1,8 +1,8 @@
-import { Box, Button, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import { cartLineKey, type CartLine } from '../../components/cart/CartContext';
+import { cartLineKey, lineQualifiesFreeDelivery, type CartLine } from '../../components/cart/CartContext';
 
 interface Props {
   podId: string;
@@ -11,11 +11,10 @@ interface Props {
   priceFormat: (amount: number) => string;
   onSetQuantity: (line: CartLine, quantity: number) => void;
   onRemove: (line: CartLine) => void;
-  onCheckout: () => void;
 }
 
-/** One pod's cart lines: per-line +/- and remove, and the group's sticky
- * "Proceed to checkout" (checkout is per pod — products ride its booking). */
+/** One pod's cart lines: per-line +/- and remove, plus the group total. The
+ * WHOLE cart checks out together — the single CTA lives on the cart page. */
 export default function CartPodGroup({
   podId,
   podTitle,
@@ -23,7 +22,6 @@ export default function CartPodGroup({
   priceFormat,
   onSetQuantity,
   onRemove,
-  onCheckout,
 }: Readonly<Props>) {
   const total = lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
   return (
@@ -54,9 +52,19 @@ export default function CartPodGroup({
               {line.product_name}
               {line.variant_label ? ` — ${line.variant_label}` : ''}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {priceFormat(line.unit_cost)} each
-            </Typography>
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Typography variant="caption" color="text.secondary">
+                {priceFormat(line.unit_cost)} each
+              </Typography>
+              {lineQualifiesFreeDelivery(line) && (
+                <Chip
+                  size="small"
+                  color="success"
+                  label="Free delivery"
+                  sx={{ height: 18, fontSize: 11, fontWeight: 700 }}
+                />
+              )}
+            </Stack>
           </Box>
           <Stack direction="row" spacing={0.5} alignItems="center">
             <IconButton
@@ -96,9 +104,6 @@ export default function CartPodGroup({
           {priceFormat(total)}
         </Typography>
       </Stack>
-      <Button variant="contained" onClick={onCheckout} sx={{ borderRadius: 999, fontWeight: 900 }}>
-        Proceed to checkout
-      </Button>
     </Stack>
   );
 }

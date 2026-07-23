@@ -15,7 +15,8 @@ interface PodShopProps {
   selectedTotal?: number;
   /** A variant line change from the detail sheet (row + picked variant + qty). */
   onVariantQuantity?: (row: any, variant: VariantPick, quantity: number) => void;
-  /** View-only once the viewer has already booked this pod (no re-selecting). */
+  /** Read-only when the pod owner closed the shop (products_enabled === false) —
+   * add-to-cart works in every other pod state (member/expired/etc). */
   readOnly?: boolean;
 }
 
@@ -126,8 +127,8 @@ export function PodShop({
       )}
 
       {products.length > 0 && readOnly ? (
-        <Text testID="pod-shop-booked-note" fontSize={12.5} color="$muted">
-          {'You’ve already booked this pod.'}
+        <Text testID="pod-shop-closed-note" fontSize={12.5} color="$muted">
+          The shop is currently closed.
         </Text>
       ) : null}
       {products.length > 0 && !readOnly ? (

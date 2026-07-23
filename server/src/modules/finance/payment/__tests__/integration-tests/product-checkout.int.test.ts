@@ -23,7 +23,7 @@ const seedUser = () =>
 const seedWarehouse = (nickname: string, pincode: string) =>
   BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname, pincode });
 
-const seedShipProduct = (warehouseId: any, over: { delivery_charge?: number } = {}) =>
+const seedShipProduct = (warehouseId: any, over: Record<string, unknown> = {}) =>
   InventoryProductModel.create({
     product_name: 'Shipped Item',
     sku: `SKU-${++seq}`,
@@ -32,8 +32,9 @@ const seedShipProduct = (warehouseId: any, over: { delivery_charge?: number } = 
     delivery_target: 'SHIPROCKET',
     pickup_location_id: warehouseId,
     weight_kg: 1,
-    delivery_charge: over.delivery_charge ?? 40,
+    delivery_charge: 40,
     ownership: 'DUNCIT',
+    ...over,
   });
 
 const seedPodFor = (productId: any, unitCost = 300) =>
@@ -230,5 +231,197 @@ describe('standalone product checkout', () => {
     expect(quote.all_quoted).toBe(false);
     expect(quote.lines).toHaveLength(1);
     expect(quote.lines[0].charge).toBe(55);
+    expect(quote.lines[0].free).toBe(false);
+  });
+
+  describe('per-(pod, warehouse) shipping groups', () => {
+    it('quotes + charges one group per pod even from a shared warehouse, and each order records exactly its group charge', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-POD-A', '110020');
+      const productA = await seedShipProduct(wh._id, { delivery_charge: 40 });
+      const productB = await seedShipProduct(wh._id, { delivery_charge: 60 });
+      const podA = await seedPodFor(productA._id);
+      const podB = await seedPodFor(productB._id);
+      const items = [
+        { product_id: String(productA._id), pod_id: String(podA._id), quantity: 1 },
+        { product_id: String(productB._id), pod_id: String(podB._id), quantity: 1 },
+      ];
+
+      // Two quote lines — one per (pod, warehouse) group, each pod-tagged.
+      const quote = await paymentService.productShippingQuote({ items, delivery_pincode: '560001' });
+      expect(quote.lines).toHaveLength(2);
+      const byPod = new Map(quote.lines.map((line: any) => [line.pod_id, line]));
+      expect(byPod.get(String(podA._id))).toMatchObject({ warehouse_id: String(wh._id), charge: 40 });
+      expect(byPod.get(String(podB._id))).toMatchObject({ warehouse_id: String(wh._id), charge: 60 });
+      expect(quote.total).toBe(100);
+
+      // The payment charges the sum of both groups: 600 products + 100 delivery.
+      const res = await paymentService.dummyProductCheckout(cartInput(items), String(user._id));
+      expect(res.total).toBe(700);
+
+      // Each order records exactly its own group's charge; sum == charged shipping.
+      const orders = await ordersFor(res.id);
+      expect(orders).toHaveLength(2);
+      const chargeByPod = new Map(orders.map((o) => [String(o.pod_id), o.shipping_charge]));
+      expect(chargeByPod.get(String(podA._id))).toBe(40);
+      expect(chargeByPod.get(String(podB._id))).toBe(60);
+      expect(orders.reduce((s, o) => s + o.shipping_charge, 0)).toBe(100);
+    });
+
+    it('does NOT merge the same product across pods for the free-delivery threshold', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-POD-B', '110021');
+      const product = await seedShipProduct(wh._id, { free_delivery_above: 500, delivery_charge: 40 });
+      const podA = await seedPodFor(product._id, 300);
+      const podB = await seedPodFor(product._id, 300);
+
+      // ₹300 + ₹300 across two pods would pool to ₹600 ≥ ₹500 — but each pod
+      // ships separately, and each ₹300 line misses the threshold on its own.
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([
+          { product_id: String(product._id), pod_id: String(podA._id), quantity: 1 },
+          { product_id: String(product._id), pod_id: String(podB._id), quantity: 1 },
+        ]),
+        String(user._id)
+      );
+      expect(res.total).toBe(680); // 600 products + 40 + 40 delivery
+
+      const orders = await ordersFor(res.id);
+      expect(orders).toHaveLength(2);
+      for (const order of orders) expect(order.shipping_charge).toBe(40);
+    });
+
+    it('keeps a qualifying group free while charging the other group in the same payment', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-POD-C', '110022');
+      const freeProduct = await seedShipProduct(wh._id, { free_delivery_above: 500 });
+      const paidProduct = await seedShipProduct(wh._id, { delivery_charge: 40 });
+      const freePod = await seedPodFor(freeProduct._id, 300);
+      const paidPod = await seedPodFor(paidProduct._id, 300);
+
+      // freePod: 2 × ₹300 = ₹600 ≥ ₹500 → its group ships free; paidPod pays ₹40.
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([
+          { product_id: String(freeProduct._id), pod_id: String(freePod._id), quantity: 2 },
+          { product_id: String(paidProduct._id), pod_id: String(paidPod._id), quantity: 1 },
+        ]),
+        String(user._id)
+      );
+      expect(res.total).toBe(940); // 900 products + 40 delivery
+
+      const orders = await ordersFor(res.id);
+      const chargeByPod = new Map(orders.map((o) => [String(o.pod_id), o.shipping_charge]));
+      expect(chargeByPod.get(String(freePod._id))).toBe(0);
+      expect(chargeByPod.get(String(paidPod._id))).toBe(40);
+    });
+  });
+
+  describe('free-delivery threshold (free_delivery_above)', () => {
+    it('waives the warehouse delivery charge when the line meets the product threshold', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-FREE-A', '110010');
+      const product = await seedShipProduct(wh._id, { free_delivery_above: 500 });
+      const pod = await seedPodFor(product._id, 300);
+
+      // 2 × ₹300 = ₹600 ≥ ₹500 → products only, no delivery charge.
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 2 }]),
+        String(user._id)
+      );
+      expect(res.total).toBe(600);
+
+      const orders = await ordersFor(res.id);
+      expect(orders).toHaveLength(1);
+      expect(orders[0].shipping_charge).toBe(0);
+      expect(orders[0].total).toBe(orders[0].items_total);
+    });
+
+    it('still charges delivery while the line is below the threshold', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-FREE-B', '110011');
+      const product = await seedShipProduct(wh._id, { free_delivery_above: 500 });
+      const pod = await seedPodFor(product._id, 300);
+
+      // 1 × ₹300 = ₹300 < ₹500 → the ₹40 fallback delivery applies.
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 1 }]),
+        String(user._id)
+      );
+      expect(res.total).toBe(340);
+      const orders = await ordersFor(res.id);
+      expect(orders[0].shipping_charge).toBe(40);
+    });
+
+    it('qualifies from the pod snapshot price the buyer is charged, not the live product price', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-SNAP-A', '110014');
+      // Live product price ₹300 (2 × 300 = 600 ≥ 500 would be free) — but the
+      // pod snapshot the buyer is actually charged is ₹200 (2 × 200 = 400 < 500).
+      const product = await seedShipProduct(wh._id, { free_delivery_above: 500 });
+      const pod = await seedPodFor(product._id, 200);
+
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 2 }]),
+        String(user._id)
+      );
+      expect(res.total).toBe(440); // 400 charged products + 40 delivery
+
+      const orders = await ordersFor(res.id);
+      expect(orders).toHaveLength(1);
+      expect(orders[0].shipping_charge).toBe(40);
+    });
+
+    it('waives delivery when the snapshot price qualifies even though the live price would not', async () => {
+      const user = await seedUser();
+      const wh = await seedWarehouse('WH-SNAP-B', '110015');
+      // Live ₹100 (2 × 100 = 200 < 500) — but the buyer is charged the ₹300
+      // snapshot (2 × 300 = 600 ≥ 500), so delivery is free.
+      const product = await seedShipProduct(wh._id, { unit_cost: 100, free_delivery_above: 500 });
+      const pod = await seedPodFor(product._id, 300);
+
+      const res = await paymentService.dummyProductCheckout(
+        cartInput([{ product_id: String(product._id), pod_id: String(pod._id), quantity: 2 }]),
+        String(user._id)
+      );
+      expect(res.total).toBe(600); // snapshot products only, no delivery
+
+      const orders = await ordersFor(res.id);
+      expect(orders[0].shipping_charge).toBe(0);
+    });
+
+    it('previews per-warehouse free vs charged lines in the shipping quote', async () => {
+      const whFree = await seedWarehouse('WH-FREE-C', '110012');
+      const whPaid = await seedWarehouse('WH-FREE-D', '110013');
+      const freeProduct = await seedShipProduct(whFree._id, { free_delivery_above: 300 });
+      const paidProduct = await seedShipProduct(whPaid._id, { delivery_charge: 40 });
+      const pod = await PodModel.create({
+        pod_id: `pcpod-${++seq}`,
+        pod_title: 'Free vs paid pod',
+        pod_hosts_id: [new Types.ObjectId()],
+        club_id: new Types.ObjectId(),
+        pod_description: 'd',
+        pod_date_time: new Date(Date.now() + 86400_000),
+        pod_type: 'NON_NATIVE_PAID',
+        pod_amount: 500,
+        products_enabled: true,
+        product_requests: [
+          { product_id: freeProduct._id, product_name: 'F', unit_cost: 300, quantity: 10, total_cost: 3000 },
+          { product_id: paidProduct._id, product_name: 'P', unit_cost: 300, quantity: 10, total_cost: 3000 },
+        ],
+      });
+
+      const quote = await paymentService.productShippingQuote({
+        items: [
+          { product_id: String(freeProduct._id), pod_id: String(pod._id), quantity: 1 },
+          { product_id: String(paidProduct._id), pod_id: String(pod._id), quantity: 1 },
+        ],
+        delivery_pincode: '560001',
+      });
+      expect(quote.total).toBe(40);
+      expect(quote.lines).toHaveLength(2);
+      const byWarehouse = new Map(quote.lines.map((line: any) => [line.warehouse_id, line]));
+      expect(byWarehouse.get(String(whFree._id))).toMatchObject({ charge: 0, quoted: true, free: true });
+      expect(byWarehouse.get(String(whPaid._id))).toMatchObject({ charge: 40, quoted: false, free: false });
+    });
   });
 });

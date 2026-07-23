@@ -43,4 +43,8 @@ export interface ProductListingValues {
   variants: ProductVariantValues[];
   commission_pct: number;
   delivery_target: ProductListingDeliveryTarget;
+  /** Brand warehouse (BrandPickupLocation) this product ships from. */
+  pickup_location_id: string;
+  /** Line subtotal at/above which this product's delivery is free ('' = no offer). */
+  free_delivery_above: number | string;
 }

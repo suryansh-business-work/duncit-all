@@ -40,9 +40,12 @@ interface Props {
   pod?: any;
   onHome: () => void;
   onProfile: () => void;
+  /** Label for the primary action (defaults to "My Profile"; the product
+   * checkout routes to "My Orders"). */
+  profileLabel?: string;
 }
 
-export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Readonly<Props>) {
+export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profileLabel = 'My Profile' }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [confetti, setConfetti] = useState(true);
@@ -157,7 +160,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Rea
             )}
             <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>Invoice</Button>
             <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>Home</Button>
-            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>My Profile</Button>
+            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileLabel}</Button>
           </Stack>
         </CardContent>
       </Card>

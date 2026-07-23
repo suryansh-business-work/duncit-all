@@ -39,29 +39,17 @@ describe('OrderSummaryCard', () => {
     expect(screen.queryByText('North Zone')).not.toBeInTheDocument();
   });
 
-  it('renders product add-on rows and subtracts them from the ticket price', () => {
+  it('never renders product rows — pod checkout is membership only', () => {
+    // Products are now a separate payment; the pod summary carries no add-on lines.
     const pod = {
       pod_title: 'Pod X',
-      product_requests: [
-        { product_id: 'p1', product_name: 'T-Shirt', unit_cost: 200 },
-        { product_id: 'p2', product_name: 'Cap', unit_cost: 100 },
-      ],
+      product_requests: [{ product_id: 'p1', product_name: 'T-Shirt', unit_cost: 200 }],
     };
-    const selectedProducts = [
-      { product_id: 'p1', quantity: 2, unit_cost: 250 }, // overrides row unit_cost => 500
-      { product_id: 'p2', quantity: 1 }, // uses row unit_cost => 100
-      { product_id: 'p3', quantity: 5 }, // not in rowById => filtered out
-      { product_id: 'p1', quantity: 0 }, // zero qty => filtered out
-    ];
-    render(<OrderSummaryCard pod={pod} breakup={breakup} selectedProducts={selectedProducts} />);
-    expect(screen.getByText('T-Shirt x2')).toBeInTheDocument();
-    expect(screen.getByText('Cap x1')).toBeInTheDocument();
-    expect(screen.getByText('Product add-ons')).toBeInTheDocument();
-    // productTotal = 500 + 100 = 600 ; ticket = 1180 - 600 = 580
-    expect(screen.getByText('₹600.00')).toBeInTheDocument();
-    expect(screen.getByText('₹580.00')).toBeInTheDocument();
-    // p3/p1-zero not rendered
-    expect(screen.queryByText(/x5/)).not.toBeInTheDocument();
+    render(<OrderSummaryCard pod={pod} breakup={breakup} />);
+    expect(screen.queryByText('Product add-ons')).not.toBeInTheDocument();
+    expect(screen.queryByText(/T-Shirt/)).not.toBeInTheDocument();
+    // Ticket price equals the whole payable.
+    expect(screen.getAllByText('₹1180.00')).toHaveLength(2);
   });
 
   it('shows venue charges block and opens/closes the info dialog', async () => {

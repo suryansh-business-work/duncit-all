@@ -38,43 +38,23 @@ describe('OrderSummary', () => {
     expect(screen.queryByText('Platform fee (10%)')).not.toBeOnTheScreen();
   });
 
-  it('breaks out carried products with the ticket price shown separately', () => {
+  it('shows the ticket date without a zone when the pod has no zone_name', () => {
     renderWithProviders(
       <OrderSummary
         pod={
           {
             id: 'p1',
             pod_title: 'Sunset Pod',
+            pod_date_time: '2026-06-10T10:00:00Z',
             pod_images_and_videos: [],
-            product_requests: [
-              { product_id: 'pr1', product_name: 'Tee', unit_cost: 15 },
-              { product_id: 'pr2', product_name: 'Cap', unit_cost: 5 },
-              { product_id: 'pr3', product_name: 'Badge', unit_cost: null },
-            ],
           } as never
         }
         breakup={breakup}
-        selectedProducts={[
-          { product_id: 'pr1', quantity: 2 },
-          { product_id: 'pr2', quantity: 1 },
-          { product_id: 'pr3', quantity: 1 },
-          { product_id: 'missing', quantity: 4 },
-        ]}
       />,
     );
-    // Ticket price = total (130) − product add-ons (30 + 5 + 0 = 35) = 95.
-    expect(screen.getByText('Ticket price')).toBeOnTheScreen();
-    expect(screen.getByText('₹95.00')).toBeOnTheScreen();
-    // One row per picked product with its line total (nullish cost → 0).
-    expect(screen.getByText('Tee × 2')).toBeOnTheScreen();
-    expect(screen.getByText('₹30.00')).toBeOnTheScreen();
-    expect(screen.getByText('Cap × 1')).toBeOnTheScreen();
-    expect(screen.getByText('₹5.00')).toBeOnTheScreen();
-    expect(screen.getByText('Badge × 1')).toBeOnTheScreen();
-    // Add-ons subtotal, and the plain "Subtotal" row is replaced.
-    expect(screen.getByText('Products')).toBeOnTheScreen();
-    expect(screen.getByText('₹35.00')).toBeOnTheScreen();
-    expect(screen.queryByText('Subtotal')).toBeNull();
+    // Membership only — a single "Subtotal" row, never a product breakdown.
+    expect(screen.getByText('Subtotal')).toBeOnTheScreen();
+    expect(screen.queryByText('Ticket price')).toBeNull();
   });
 
   it('tolerates a pod with no image/date', () => {
@@ -173,10 +153,26 @@ describe('CheckoutSuccess', () => {
     );
     expect(screen.getByText('Payment successful')).toBeOnTheScreen();
     expect(screen.getByText('₹130.00')).toBeOnTheScreen();
+    // Defaults to the pod-bookings label when no profileLabel is given.
+    expect(screen.getByText('My bookings')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('success-home'));
     fireEvent.press(screen.getByTestId('success-profile'));
     expect(onHome).toHaveBeenCalled();
     expect(onProfile).toHaveBeenCalled();
+  });
+
+  it('shows a custom profile label (product checkout routes to My orders)', () => {
+    renderWithProviders(
+      <CheckoutSuccess
+        payment={payment}
+        onDownloadInvoice={jest.fn().mockResolvedValue(undefined)}
+        onHome={jest.fn()}
+        onProfile={jest.fn()}
+        profileLabel="My orders"
+      />,
+    );
+    expect(screen.getByText('My orders')).toBeOnTheScreen();
+    expect(screen.queryByText('My bookings')).toBeNull();
   });
 
   it('downloads the invoice and surfaces a failure', async () => {

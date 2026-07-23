@@ -373,6 +373,96 @@ describe('inventory table queries (shared table engine)', () => {
   });
 });
 
+describe('partner listing warehouse + free-delivery threshold', () => {
+  const seedManager = async () => {
+    const userId = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: userId,
+      auth: { email: 'lister@example.com' },
+      metadata: { role_keys: ['ECOMM_MANAGER'], status: 'ACTIVE' },
+    } as never);
+    return { id: String(userId), email: 'lister@example.com' } as never;
+  };
+
+  const listingInput = (brandId: unknown, over: Record<string, unknown> = {}) => ({
+    brand_id: String(brandId),
+    super_category_id: String(new Types.ObjectId()),
+    category_id: String(new Types.ObjectId()),
+    sub_category_id: String(new Types.ObjectId()),
+    product_name: 'Listing Kit',
+    image_url: 'https://cdn.example.com/listing.jpg',
+    description: 'A perfectly valid product description text',
+    inventory_count: 5,
+    unit_cost: 100,
+    commission_pct: 10,
+    delivery_target: 'SHIPROCKET',
+    ...over,
+  });
+
+  it('rejects a warehouse that does not belong to the listing brand', async () => {
+    const user = await seedManager();
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co' });
+    // Another brand's warehouse.
+    const foreignWh = await BrandPickupLocationModel.create({
+      owner_kind: 'BRAND',
+      brand_id: new Types.ObjectId(),
+      nickname: 'LIST-FOREIGN-WH',
+    });
+    await expect(
+      inventoryService.submitProductListing(listingInput(brand._id, { pickup_location_id: String(foreignWh._id) }), user)
+    ).rejects.toThrow(/belongs to this brand/i);
+    // A Duncit warehouse is not a brand origin either.
+    const duncitWh = await BrandPickupLocationModel.create({ owner_kind: 'DUNCIT', nickname: 'LIST-DUN-WH' });
+    await expect(
+      inventoryService.submitProductListing(listingInput(brand._id, { pickup_location_id: String(duncitWh._id) }), user)
+    ).rejects.toThrow(/belongs to this brand/i);
+    // A malformed id is rejected up front.
+    await expect(
+      inventoryService.submitProductListing(listingInput(brand._id, { pickup_location_id: 'nope' }), user)
+    ).rejects.toThrow(/valid warehouse/i);
+  });
+
+  it('persists a same-brand warehouse + free-delivery threshold and round-trips them', async () => {
+    const user = await seedManager();
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 2' });
+    const wh = await BrandPickupLocationModel.create({
+      owner_kind: 'BRAND',
+      brand_id: brand._id,
+      nickname: 'LIST-OWN-WH',
+    });
+    const created = await inventoryService.submitProductListing(
+      listingInput(brand._id, { pickup_location_id: String(wh._id), free_delivery_above: 499 }),
+      user
+    );
+    expect(created.pickup_location_id).toBe(String(wh._id));
+    expect(created.free_delivery_above).toBe(499);
+
+    // An edit can clear the threshold (null = no offer) and keeps the warehouse.
+    const updated = await inventoryService.updateMyProductListing(
+      created.id,
+      listingInput(brand._id, { pickup_location_id: String(wh._id), free_delivery_above: null }),
+      user
+    );
+    expect(updated.free_delivery_above).toBeNull();
+    expect(updated.pickup_location_id).toBe(String(wh._id));
+  });
+
+  it('omitting the warehouse keeps the listing unassigned and validates the threshold', async () => {
+    const user = await seedManager();
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 3' });
+    await expect(
+      inventoryService.submitProductListing(listingInput(brand._id, { free_delivery_above: -5 }), user)
+    ).rejects.toThrow(/cannot be negative/i);
+    await expect(
+      inventoryService.submitProductListing(listingInput(brand._id, { free_delivery_above: 'abc' }), user)
+    ).rejects.toThrow(/cannot be negative/i);
+
+    const created = await inventoryService.submitProductListing(listingInput(brand._id), user);
+    expect(created.pickup_location_id).toBeNull();
+    expect(created.free_delivery_above).toBeNull();
+  });
+});
+
 describe('inventoryService Duncit warehouse guard', () => {
   const admin = { id: new Types.ObjectId().toString(), email: 'admin@duncit.com' } as never;
 

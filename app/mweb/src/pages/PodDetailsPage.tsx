@@ -15,7 +15,6 @@ import KeepSpotDialog from './pod-details-page/KeepSpotDialog';
 import PodHero from './pod-details-page/PodHero';
 import PodOverview from './pod-details-page/PodOverview';
 import PodCommercePreview from './pod-details-page/PodCommercePreview';
-import { isPodExpired } from '../utils/podStatus';
 import StickyPodActionPanel from './pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
@@ -80,7 +79,6 @@ export default function PodDetailsPage() {
     saved,
     savedIds,
     referralFromUrl,
-    selectedProducts: productSelection.selectedProductList,
     refetch,
     navigate,
   });
@@ -178,11 +176,11 @@ export default function PodDetailsPage() {
                 image_url: variant.image_url || row.image_url || '',
                 unit_cost: variant.unit_cost,
                 max_quantity: variant.max,
+                free_delivery_above: row.free_delivery_above ?? null,
               },
               quantity,
             )
           }
-          viewOnly={!!data?.podMembershipState?.is_member || isPodExpired(pod.pod_date_time)}
         />
       )}
 
@@ -227,7 +225,6 @@ export default function PodDetailsPage() {
         joining={actions.joinState.loading}
         backingOut={actions.backoutState.loading}
         restoringSpot={actions.cancelBackoutState.loading}
-        selectedProductTotal={productSelection.selectedProductTotal}
         onJoinFree={actions.onJoinFree}
         onBackout={() => actions.setBackoutOpen(true)}
         onKeepSpot={actions.openKeepSpot}

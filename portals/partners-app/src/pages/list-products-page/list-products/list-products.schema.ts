@@ -61,4 +61,13 @@ export const productListingSchema = z.object({
     .refine(hasStock, { message: 'Total stock across variants must be at least 1' }),
   commission_pct: z.number().min(5, 'Commission starts at 5%').max(50, 'Commission cannot exceed 50%'),
   delivery_target: z.literal('SHIPROCKET'),
+  pickup_location_id: z.string().min(1, 'Select a warehouse'),
+  free_delivery_above: z.preprocess(
+    (value) => (value === '' || value === null || value === undefined ? null : Number(value)),
+    z
+      .number({ invalid_type_error: 'Enter a valid amount' })
+      .min(0, 'Amount cannot be negative')
+      .max(1000000, 'Amount cannot exceed ₹10,00,000')
+      .nullable(),
+  ),
 });

@@ -9,6 +9,7 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/cart', () => ({
+  ...jest.requireActual('@/services/cart'),
   getCartLines: jest.fn().mockResolvedValue([]),
   setCartLines: jest.fn().mockResolvedValue(undefined),
 }));
@@ -353,11 +354,12 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
   });
 
-  it('carries a selected product from the pod shop into checkout', () => {
+  it('adds a pod-shop product to the cart while the pod checkout stays membership-only', () => {
     mockedPod.mockReturnValue({
       ...podData,
       pod: {
         ...podData.pod,
+        products_enabled: true,
         product_requests: [
           {
             product_id: 'pr1',
@@ -373,12 +375,12 @@ describe('PodDetailsScreen', () => {
       isLoading: false,
     });
     renderWithProviders(<PodDetailsScreen />);
-    fireEvent.press(screen.getByTestId('pod-shop-row-pr1'));
+    fireEvent.press(screen.getByTestId('pod-shop-add-pr1'));
+    // The product is added to the cart (bought separately via the product
+    // checkout), NOT mixed into the pod-membership payment.
+    expect(useCartStore.getState().lines.some((l) => l.product_id === 'pr1')).toBe(true);
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', {
-      podId: 'p1',
-      selectedProducts: [{ product_id: 'pr1', variant_id: '', quantity: 1, unit_cost: 200 }],
-    });
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
   });
 
   it('adds a picked variant line to the cart from the product detail sheet', () => {
@@ -394,6 +396,15 @@ describe('PodDetailsScreen', () => {
             unit_cost: 200,
             image_url: '',
             images: [],
+          },
+          {
+            product_id: 'pr2',
+            product_name: 'Drum pad',
+            available_count: 4,
+            unit_cost: 300,
+            image_url: '',
+            images: [],
+            free_delivery_above: 300,
           },
         ],
       },
@@ -412,11 +423,20 @@ describe('PodDetailsScreen', () => {
       quantity: 2,
       max_quantity: 3,
       image_url: 'http://x/v9.jpg',
+      // No product threshold → the variant line carries null.
+      free_delivery_above: null,
     });
     // A variant with no image of its own falls back to the pod row's image.
     fireEvent.press(screen.getByTestId('sheet-stub-add-imageless-variant'));
     const imageless = useCartStore.getState().lines.find((l) => l.variant_id === 'v10');
     expect(imageless?.image_url).toBe('');
+    // A product WITH a threshold threads it onto its variant lines too.
+    fireEvent.press(screen.getByTestId('pod-shop-info-pr2'));
+    fireEvent.press(screen.getByTestId('sheet-stub-add-variant'));
+    const thresholdLine = useCartStore
+      .getState()
+      .lines.find((l) => l.product_id === 'pr2' && l.variant_id === 'v9');
+    expect(thresholdLine?.free_delivery_above).toBe(300);
   });
 
   it('hides the Pod Shop when products are gated off, even with products', () => {
@@ -465,7 +485,7 @@ describe('PodDetailsScreen', () => {
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByText('Join')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', selectedProducts: [] });
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
   });
 
   it('sends the pod host to Host Studio instead of booking their own pod', () => {

@@ -28,6 +28,8 @@ export const emptyValues: ProductListingValues = {
   variants: [{ ...emptyVariant }],
   commission_pct: 15,
   delivery_target: 'SHIPROCKET',
+  pickup_location_id: '',
+  free_delivery_above: '',
 };
 
 const comboKey = (values: VariantOptionValue[]) =>
@@ -151,6 +153,8 @@ export function productToValues(product?: any): ProductListingValues {
     // Keep the product's own delivery target on edit — resetting it silently
     // converted PICKUP-style listings into ShipRocket ones.
     delivery_target: product.delivery_target ?? 'SHIPROCKET',
+    pickup_location_id: product.pickup_location_id ?? '',
+    free_delivery_above: toNumberOrEmpty(product.free_delivery_above),
   };
 }
 
@@ -193,6 +197,14 @@ export function productViolationTarget(field: string): { stepIndex: number; path
   return { stepIndex: 1, path: null };
 }
 
+/** Blank/unset free-delivery amount means "no offer" — never coerce it to 0
+ * (the Zod schema preprocesses '' to null before submit). */
+const toFreeDeliveryAbove = (value: number | string | null | undefined): number | null => {
+  if (value == null || value === '') return null;
+  const amount = Number(value);
+  return Number.isNaN(amount) ? null : amount;
+};
+
 /** Build the ProductListingInput. The first variant backfills the flat product
  * fields (the server also mirrors them) and the single category triple. */
 export function toSubmitInput(values: ProductListingValues, brandId: string) {
@@ -230,5 +242,7 @@ export function toSubmitInput(values: ProductListingValues, brandId: string) {
     variants: values.variants.map(toVariantInput),
     commission_pct: values.commission_pct,
     delivery_target: values.delivery_target,
+    pickup_location_id: values.pickup_location_id,
+    free_delivery_above: toFreeDeliveryAbove(values.free_delivery_above),
   };
 }

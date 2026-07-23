@@ -4,13 +4,13 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useNavigate } from 'react-router-dom';
 import { useCart, cartLineKey, type CartLine } from '../components/cart/CartContext';
 import { usePricing } from '../hooks/usePricing';
-import { parseSelectionKey } from '../utils/product-selection';
 import CartPodGroup from './cart-page/CartPodGroup';
 
-/** The cart — every product added from any Pod Shop, grouped by pod. Checkout
- * runs per pod group (products are purchased with that pod's booking). */
+/** The cart — every product added from any Pod Shop, grouped by pod. The WHOLE
+ * cart checks out as ONE standalone PRODUCT payment (separate from any pod
+ * booking) via the combined product checkout. */
 export default function CartPage() {
-  const { lines, setLine, removeLine, clearPod } = useCart();
+  const { lines, setLine, removeLine, clearAll } = useCart();
   const { format: priceFormat } = usePricing();
   const navigate = useNavigate();
 
@@ -24,18 +24,10 @@ export default function CartPage() {
     return Array.from(byPod.entries());
   }, [lines]);
 
-  const checkoutPod = (podId: string, title: string, podLines: CartLine[]) => {
-    navigate(`/checkout/${podId}`, {
-      state: {
-        pod_title: title,
-        selected_products: podLines.map((line) => ({
-          ...parseSelectionKey(cartLineKey(line)),
-          quantity: line.quantity,
-          unit_cost: line.unit_cost,
-        })),
-      },
-    });
-  };
+  const grandTotal = useMemo(
+    () => lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0),
+    [lines],
+  );
 
   if (groups.length === 0) {
     return (
@@ -68,15 +60,26 @@ export default function CartPage() {
           priceFormat={priceFormat}
           onSetQuantity={(line, quantity) => setLine(line, quantity)}
           onRemove={(line) => removeLine(podId, cartLineKey(line))}
-          onCheckout={() => checkoutPod(podId, group.title, group.lines)}
         />
       ))}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.5 }}>
+        <Typography variant="body2" color="text.secondary">
+          Cart total
+        </Typography>
+        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+          {priceFormat(grandTotal)}
+        </Typography>
+      </Stack>
+      {/* The whole cart pays in ONE product payment — delivery is quoted per
+          warehouse on the checkout, but there is a single Pay. */}
       <Button
-        variant="text"
-        color="error"
-        onClick={() => groups.forEach(([podId]) => clearPod(podId))}
-        sx={{ alignSelf: 'center', fontWeight: 800 }}
+        variant="contained"
+        onClick={() => navigate('/product-checkout')}
+        sx={{ borderRadius: 999, fontWeight: 900 }}
       >
+        Proceed to checkout
+      </Button>
+      <Button variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 800 }}>
         Clear cart
       </Button>
     </Stack>

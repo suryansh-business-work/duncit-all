@@ -15,6 +15,8 @@ export interface CartLine {
   unit_cost: number;
   quantity: number;
   max_quantity: number;
+  /** Product's free-delivery threshold (₹ line subtotal); null/absent = never free. */
+  free_delivery_above?: number | null;
 }
 
 export type CartLineMeta = Omit<CartLine, 'quantity'>;
@@ -25,6 +27,8 @@ interface CartContextValue {
   setLine: (meta: CartLineMeta, quantity: number) => void;
   removeLine: (podId: string, key: string) => void;
   clearPod: (podId: string) => void;
+  /** Empty the whole cart (after the combined product checkout succeeds). */
+  clearAll: () => void;
   totalCount: number;
 }
 
@@ -78,11 +82,13 @@ export function CartProvider({ children }: Readonly<{ children: React.ReactNode 
     setLines((current) => current.filter((l) => l.pod_id !== podId));
   }, []);
 
+  const clearAll = useCallback(() => setLines([]), []);
+
   const totalCount = useMemo(() => lines.reduce((sum, l) => sum + l.quantity, 0), [lines]);
 
   const value = useMemo(
-    () => ({ lines, setLine, removeLine, clearPod, totalCount }),
-    [lines, setLine, removeLine, clearPod, totalCount],
+    () => ({ lines, setLine, removeLine, clearPod, clearAll, totalCount }),
+    [lines, setLine, removeLine, clearPod, clearAll, totalCount],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
@@ -95,3 +101,11 @@ export function useCart() {
 }
 
 export { lineKey as cartLineKey };
+
+/** Whether a cart line meets its product's free-delivery threshold (drives the
+ * client-side badge only — the group-level truth stays server-side on the
+ * shipping quote's `free` flag). */
+export const lineQualifiesFreeDelivery = (
+  line: Pick<CartLine, 'unit_cost' | 'quantity' | 'free_delivery_above'>,
+): boolean =>
+  line.free_delivery_above != null && line.unit_cost * line.quantity >= line.free_delivery_above;

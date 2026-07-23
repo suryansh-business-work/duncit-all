@@ -17,7 +17,8 @@ export interface CheckoutBreakup {
   gstPct: number;
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
+/** Money rounding to 2dp — the finance engine's single-round rule. */
+export const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** GST extracted from a GST-inclusive total (total × g/(100+g)) — the finance
  * engine's inclusive extraction, single-round. */

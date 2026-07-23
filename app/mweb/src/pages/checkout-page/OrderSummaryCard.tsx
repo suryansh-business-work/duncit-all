@@ -9,38 +9,18 @@ interface Props {
   pod: any;
   stateTitle?: string;
   breakup: any;
-  selectedProducts?: Array<{
-    product_id: string;
-    quantity: number;
-    variant_id?: string;
-    unit_cost?: number;
-  }>;
 }
 
-export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedProducts = [] }: Readonly<Props>) {
+export default function OrderSummaryCard({ pod, stateTitle, breakup }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const title = pod?.pod_title || stateTitle || 'Pod booking';
   const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
-  const rowById = new Map<string, any>((pod?.product_requests ?? []).map((item: any) => [item.product_id, item]));
-  // One summary row per selection line (a chosen variant is its own line and
-  // carries its own price; base lines price from the pod snapshot).
-  const productItems = selectedProducts
-    .filter((item) => rowById.has(item.product_id) && item.quantity > 0)
-    .map((item) => {
-      const row = rowById.get(item.product_id);
-      const unitCost = Number(item.unit_cost ?? row.unit_cost ?? 0);
-      return {
-        key: `${item.product_id}-${item.variant_id ?? 'base'}`,
-        product_name: row.product_name,
-        quantity: item.quantity,
-        total_cost: unitCost * Number(item.quantity || 0),
-      };
-    });
-  const productTotal = productItems.reduce((sum: number, item: any) => sum + Number(item.total_cost || 0), 0);
-  const ticketTotal = Math.max(0, Number(breakup.total) - productTotal);
+  // Pod checkout is membership only — the ticket price is the whole payable.
+  // Products are purchased separately through the standalone product checkout.
+  const ticketTotal = Number(breakup.total);
   // Venue charges are paid directly at the venue — shown for transparency but
   // NOT added to the online "Total payable".
   const venueCharges: VenueCharge[] = pod?.place_charges ?? [];
@@ -63,10 +43,6 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
           <Row label="Ticket price" value={fmt(ticketTotal)} />
-          {productItems.map((item: any) => (
-            <Row key={item.key} label={`${item.product_name} x${item.quantity}`} value={fmt(item.total_cost)} />
-          ))}
-          {productTotal > 0 && <Row label="Product add-ons" value={fmt(productTotal)} />}
           <Divider sx={{ my: 1 }} />
           <Typography variant="caption" color="text.secondary">Inclusive of:</Typography>
           <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />

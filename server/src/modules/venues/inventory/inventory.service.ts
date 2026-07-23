@@ -62,6 +62,7 @@ const TRACKED_FIELDS = [
   'host_request_allowed',
   'delivery_available',
   'delivery_charge',
+  'free_delivery_above',
   'listing_review_status',
   'listing_review_notes',
   'listing_submitted_by_id',
@@ -171,6 +172,7 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     host_request_allowed: !!product.host_request_allowed,
     delivery_available: !!product.delivery_available,
     delivery_charge: product.delivery_charge ?? 0,
+    free_delivery_above: product.free_delivery_above ?? null,
     listing_review_status: product.listing_review_status ?? 'APPROVED',
     listing_review_notes: product.listing_review_notes ?? '',
     listing_submitted_by_id: product.listing_submitted_by_id ?? null,
@@ -342,7 +344,35 @@ function validateProductListingInput(input: any) {
   if (commission < 5 || commission > 50) {
     throw new GraphQLError('Commission must be between 5% and 50%', { extensions: { code: 'BAD_USER_INPUT' } });
   }
+  if (input.free_delivery_above !== undefined && input.free_delivery_above !== null) {
+    const threshold = Number(input.free_delivery_above);
+    if (!Number.isFinite(threshold) || threshold < 0) {
+      throw new GraphQLError('Free-delivery threshold cannot be negative', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+  }
   validateVariantsInput(input);
+}
+
+/** Nullable ₹ amount: null/undefined/'' → null (offer disabled). */
+const toNullableAmount = (value: unknown) => {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** A partner listing may only ship from a warehouse of its OWN brand
+ * (owner_kind BRAND + matching brand_id) — foreign warehouses are rejected. */
+async function assertBrandWarehouse(pickupLocationId: unknown, brandId: unknown) {
+  if (pickupLocationId === null || pickupLocationId === undefined || pickupLocationId === '') return;
+  const id = String(pickupLocationId);
+  if (!Types.ObjectId.isValid(id)) {
+    throw new GraphQLError('Select a valid warehouse', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind brand_id');
+  const sameBrand = warehouse?.owner_kind === 'BRAND' && String(warehouse.brand_id ?? '') === String(brandId ?? '');
+  if (!sameBrand) {
+    throw new GraphQLError('Select a warehouse that belongs to this brand', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
 }
 
 /** Server-side mirror of the portal's per-variant rules: every variant needs a
@@ -549,6 +579,8 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
   applyVariants(doc, input);
   doc.commission_pct = Number(input.commission_pct) || 5;
   doc.delivery_target = resolveDeliveryTarget(input.delivery_target);
+  doc.free_delivery_above = toNullableAmount(input.free_delivery_above);
+  if (input.pickup_location_id !== undefined) doc.pickup_location_id = toOid(input.pickup_location_id);
   const info = userInfo(user);
   doc.last_updated_by_id = info.id;
   doc.last_updated_by_name = info.name;
@@ -949,6 +981,7 @@ export const inventoryService = {
     validateProductListingInput(input);
     moderationService.assertProductCleanOrThrow(productModerationInput(input));
     await assertBrandActive(input.brand_id);
+    await assertBrandWarehouse(input.pickup_location_id, input.brand_id);
     const info = userInfo(actor);
     const sku = await generateUniqueSku();
     const images = listingImages(input);
@@ -991,6 +1024,8 @@ export const inventoryService = {
       color: cleanText(input.color, 80),
       commission_pct: Number(input.commission_pct) || 5,
       delivery_target: resolveDeliveryTarget(input.delivery_target),
+      free_delivery_above: toNullableAmount(input.free_delivery_above),
+      pickup_location_id: toOid(input.pickup_location_id),
       last_updated_by_id: info.id,
       last_updated_by_name: info.name,
     });
@@ -1006,6 +1041,7 @@ export const inventoryService = {
     await requireEcommManager(user);
     validateProductListingInput(input);
     moderationService.assertProductCleanOrThrow(productModerationInput(input));
+    await assertBrandWarehouse(input.pickup_location_id, input.brand_id);
     const doc = await ownedListing(id, user);
     const before = doc.toObject();
     const beforeStock = {

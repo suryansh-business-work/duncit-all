@@ -44,6 +44,8 @@ export const brandPickupLocationTypeDefs = /* GraphQL */ `
   extend type Query {
     "Pickup/warehouse locations for a Duncit or brand owner (Products portal)."
     brandPickupLocations(owner_kind: PickupOwnerKind, brand_doc_id: ID): [BrandPickupLocation!]!
+    "Warehouses of one of the caller's OWN brands (partner portal Brand Settings)."
+    myBrandPickupLocations(brand_doc_id: ID!): [BrandPickupLocation!]!
   }
 
   extend type Mutation {
@@ -52,5 +54,10 @@ export const brandPickupLocationTypeDefs = /* GraphQL */ `
     setDefaultBrandPickupLocation(id: ID!): BrandPickupLocation!
     "Register the location with ShipRocket so SHIP orders can pick up from it."
     registerBrandPickupWithShiprocket(id: ID!): BrandPickupLocation!
+    "Create/update a warehouse on one of the caller's OWN brands (owner_kind/brand_id are forced server-side)."
+    saveMyBrandPickupLocation(brand_doc_id: ID!, id: ID, input: BrandPickupLocationInput!): BrandPickupLocation!
+    "Delete an own-brand warehouse. Blocked while any product still ships from it."
+    deleteMyBrandPickupLocation(brand_doc_id: ID!, id: ID!): Boolean!
+    setDefaultMyBrandPickupLocation(brand_doc_id: ID!, id: ID!): BrandPickupLocation!
   }
 `;

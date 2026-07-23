@@ -48,6 +48,7 @@ export function usePodProductSelection(id: string, pod: any) {
             image_url: row.image_url || row.images?.[0] || '',
             unit_cost: Number(row.unit_cost || 0),
             max_quantity: Number(row.available_count ?? row.quantity ?? 0),
+            free_delivery_above: row.free_delivery_above ?? null,
           },
           quantity,
         );

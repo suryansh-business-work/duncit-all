@@ -1,7 +1,13 @@
 import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { CartProvider, cartLineKey, useCart, type CartLineMeta } from '../CartContext';
+import {
+  CartProvider,
+  cartLineKey,
+  lineQualifiesFreeDelivery,
+  useCart,
+  type CartLineMeta,
+} from '../CartContext';
 
 const STORAGE_KEY = 'mweb_cart_lines';
 
@@ -102,6 +108,28 @@ describe('CartProvider', () => {
     act(() => result.current.setLine(meta({ pod_id: 'p2', product_id: 'c' }), 1));
     act(() => result.current.clearPod('p1'));
     expect(result.current.lines.map((l) => l.pod_id)).toEqual(['p2']);
+  });
+
+  it('clearAll empties the whole cart across pods', () => {
+    const { result } = renderCart();
+    act(() => result.current.setLine(meta({ pod_id: 'p1', product_id: 'a' }), 1));
+    act(() => result.current.setLine(meta({ pod_id: 'p2', product_id: 'b' }), 2));
+    act(() => result.current.clearAll());
+    expect(result.current.lines).toEqual([]);
+    expect(result.current.totalCount).toBe(0);
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!)).toEqual([]);
+  });
+});
+
+describe('lineQualifiesFreeDelivery', () => {
+  it('is false without a threshold (null or absent)', () => {
+    expect(lineQualifiesFreeDelivery({ unit_cost: 100, quantity: 10, free_delivery_above: null })).toBe(false);
+    expect(lineQualifiesFreeDelivery({ unit_cost: 100, quantity: 10 })).toBe(false);
+  });
+
+  it('is true when the line subtotal meets the threshold, false below it', () => {
+    expect(lineQualifiesFreeDelivery({ unit_cost: 100, quantity: 5, free_delivery_above: 500 })).toBe(true);
+    expect(lineQualifiesFreeDelivery({ unit_cost: 100, quantity: 4, free_delivery_above: 500 })).toBe(false);
   });
 });
 

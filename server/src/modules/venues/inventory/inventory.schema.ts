@@ -180,6 +180,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     host_request_allowed: Boolean!
     delivery_available: Boolean!
     delivery_charge: Float!
+    "Line subtotal (qty x unit price) at/above which this product's delivery is free. null = no offer."
+    free_delivery_above: Float
 
     listing_review_status: ProductListingReviewStatus!
     listing_review_notes: String!
@@ -315,6 +317,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     host_request_allowed: Boolean
     delivery_available: Boolean
     delivery_charge: Float
+    free_delivery_above: Float
     height_cm: Float
     length_cm: Float
     breadth_cm: Float
@@ -361,6 +364,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     host_request_allowed: Boolean
     delivery_available: Boolean
     delivery_charge: Float
+    free_delivery_above: Float
     height_cm: Float
     length_cm: Float
     breadth_cm: Float
@@ -412,6 +416,10 @@ export const inventoryTypeDefs = /* GraphQL */ `
     variants: [ProductVariantInput!]
     commission_pct: Float!
     delivery_target: ProductListingDeliveryTarget!
+    "Warehouse (BrandPickupLocation of the SAME brand) this product ships from."
+    pickup_location_id: ID
+    "Line subtotal (qty x unit price) at/above which this product's delivery is free. Omit/null = no offer."
+    free_delivery_above: Float
   }
 
   extend type Query {

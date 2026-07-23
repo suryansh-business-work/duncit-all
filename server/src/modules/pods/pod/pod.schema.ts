@@ -60,6 +60,8 @@ export const podTypeDefs = /* GraphQL */ `
     quantity: Int!
     available_count: Int!
     total_cost: Float!
+    "Live product threshold: line subtotal at/above which its delivery is free (null = no offer)."
+    free_delivery_above: Float
   }
 
   input PodProductRequestInput {

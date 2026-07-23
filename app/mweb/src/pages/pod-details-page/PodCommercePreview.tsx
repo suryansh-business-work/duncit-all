@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Box, Checkbox, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
@@ -16,8 +17,6 @@ interface Props {
   selectedTotal?: number;
   /** A variant line change from the detail dialog (row + picked variant + qty). */
   onVariantQuantity?: (row: any, variant: VariantPick, quantity: number) => void;
-  /** View-only once the viewer has already booked this pod (no re-selecting). */
-  viewOnly?: boolean;
 }
 
 /** Footer label: a count of selected products, or a neutral total caption. */
@@ -26,10 +25,12 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity, viewOnly = false }: Readonly<Props>) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, selectedTotal, onVariantQuantity }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
+  // Add-to-cart works in ANY pod state — the ONLY gate is the owner closing the shop.
+  const readOnly = pod.products_enabled === false;
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
 
@@ -107,57 +108,54 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           {requests.map((item: any) => {
           const maxQuantity = Number(item.available_count ?? item.quantity ?? 0);
           const quantity = selectedProducts[item.product_id] || 0;
-          // Members can only view products — never re-select them.
-          const selected = !viewOnly && quantity > 0;
+          // A closed shop is read-only — no re-selecting. Selected styling stays
+          // as the in-cart indicator.
+          const selected = !readOnly && quantity > 0;
           const imageUrl = item.image_url || item.images?.[0] || '';
           return (
             <Stack
               key={`${item.product_id}-${item.product_name}`}
-              onClick={viewOnly ? undefined : () => updateQuantity(item.product_id, selected ? 0 : 1)}
               direction="row"
               spacing={1}
               alignItems="center"
               sx={{
                 p: 1,
                 borderRadius: 3,
-                cursor: viewOnly ? 'default' : 'pointer',
                 border: '1px solid',
                 borderColor: selected ? selectedBorder : borderColor,
                 bgcolor: selected ? selectedBg : itemBg,
                 transition: 'all 0.18s ease',
               }}
             >
-              {!viewOnly && (
-                <Checkbox
-                  checked={selected}
-                  onChange={() => updateQuantity(item.product_id, selected ? 0 : 1)}
-                  onClick={(event) => event.stopPropagation()}
-                  sx={{
-                    p: 0.5,
-                    color: mutedColor,
-                    '&.Mui-checked': { color: '#ff8b5f' },
-                  }}
-                />
-              )}
               <Box sx={{ width: 54, height: 54, borderRadius: 2, overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
                 {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.product_name}</Typography>
                 <Typography variant="caption" sx={{ color: mutedColor }} noWrap>Available {maxQuantity}</Typography>
-                {selected && <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }} onClick={(event) => event.stopPropagation()}>
-                  <IconButton size="small" onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
+                {!readOnly && quantity === 0 && maxQuantity > 0 && (
+                  <Box sx={{ mt: 0.75 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      startIcon={<AddShoppingCartIcon />}
+                      onClick={() => updateQuantity(item.product_id, 1)}
+                      sx={{ borderRadius: 999, fontWeight: 800, textTransform: 'none' }}
+                    >
+                      Add to cart
+                    </Button>
+                  </Box>
+                )}
+                {selected && <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
+                  <IconButton size="small" aria-label={`Decrease ${item.product_name}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
                   <Typography variant="body2" fontWeight={900}>{quantity}</Typography>
-                  <IconButton size="small" disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
+                  <IconButton size="small" aria-label={`Increase ${item.product_name}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
                 </Stack>}
               </Box>
               <IconButton
                 size="small"
                 aria-label={`View ${item.product_name} details`}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  setInfoProductId(item.product_id);
-                }}
+                onClick={() => setInfoProductId(item.product_id)}
                 sx={{ color: mutedColor }}
               >
                 <InfoOutlinedIcon fontSize="small" />
@@ -172,9 +170,9 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
       )}
 
       <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
-      {viewOnly ? (
+      {readOnly ? (
         <Typography variant="caption" sx={{ color: mutedColor }}>
-          You&apos;ve already booked this pod.
+          The shop is currently closed.
         </Typography>
       ) : (
         <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -192,7 +190,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         onClose={() => setInfoProductId(null)}
         selection={selectedProducts}
         maxQuantity={infoMax}
-        viewOnly={viewOnly}
+        viewOnly={readOnly}
         onUpdateLine={updateInfoLine}
       />
     </Box>

@@ -20,7 +20,14 @@ const pod = {
       available_count: 5,
       image_url: 'http://x/a.jpg',
     },
-    { product_id: 'b', product_name: 'Beta', unit_cost: 50, quantity: 3, available_count: 3 },
+    {
+      product_id: 'b',
+      product_name: 'Beta',
+      unit_cost: 50,
+      quantity: 3,
+      available_count: 3,
+      free_delivery_above: 120,
+    },
   ],
 } as never;
 
@@ -66,6 +73,15 @@ describe('usePodProductSelection (cart-backed)', () => {
     expect(result.current.selectedProducts).toEqual({});
     rerender({ id: 'p1' });
     expect(result.current.selectedProducts).toEqual({ a: 2 });
+  });
+
+  it("threads each product's free-delivery threshold onto its base cart line", () => {
+    const { result } = renderHook(() => usePodProductSelection('p1', pod));
+    act(() => result.current.setSelectedProducts({ a: 1, b: 1 }));
+    const lines = useCartStore.getState().lines;
+    // Row a has no threshold → null; row b carries its ₹120 threshold.
+    expect(lines.find((l) => l.product_id === 'a')?.free_delivery_above).toBeNull();
+    expect(lines.find((l) => l.product_id === 'b')?.free_delivery_above).toBe(120);
   });
 
   it('adds variant lines with their own price via setVariantQuantity', () => {

@@ -238,14 +238,18 @@ export const paymentTypeDefs = /* GraphQL */ `
     delivery_pincode: String!
   }
 
-  "One warehouse's delivery estimate in a product-cart shipping quote."
+  "One (pod, warehouse) group's delivery estimate in a product-cart shipping quote — each group ships (and is charged) separately."
   type ProductShippingQuoteLine {
+    "The pod this shipment group belongs to (null/empty when the cart line carried no pod)."
+    pod_id: ID
     warehouse_id: ID!
     pickup_pincode: String!
     courier_name: String!
     charge: Float!
     "True when priced live by ShipRocket; false when it fell back to the manual delivery charge."
     quoted: Boolean!
+    "True when every line in this warehouse group met its product's free-delivery threshold (charge = 0)."
+    free: Boolean!
   }
 
   type ProductShippingQuote {

@@ -87,6 +87,7 @@ export const PodDetailsDocument = gql(`
         quantity
         available_count
         total_cost
+        free_delivery_above
       }
       like_count
       liked_by_me

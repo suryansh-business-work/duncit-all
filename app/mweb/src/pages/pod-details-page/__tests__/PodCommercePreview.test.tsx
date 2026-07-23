@@ -100,29 +100,50 @@ describe('PodCommercePreview', () => {
     expect(screen.getByText('No products available yet.')).toBeInTheDocument();
   });
 
-  it('selects a product when its row is clicked', () => {
+  it('never toggles selection from a card tap (no checkbox, no row onClick)', () => {
     const { onSelectionChange } = renderPreview();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Mug'));
+    expect(onSelectionChange).not.toHaveBeenCalled();
+  });
+
+  it('adds a product via the Add to cart button when quantity is 0', () => {
+    const { onSelectionChange } = renderPreview();
+    // One button per (named) unselected product.
+    expect(screen.getAllByRole('button', { name: /add to cart/i })).toHaveLength(2);
+    fireEvent.click(screen.getAllByRole('button', { name: /add to cart/i })[0]);
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
   });
 
-  it('deselects a product when its checkbox is toggled off', () => {
-    const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 2 } });
-    const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[0]);
-    expect(onSelectionChange).toHaveBeenCalledWith({});
+  it('hides the Add to cart button when the product is sold out', () => {
+    const soldOut = { product_id: 'p4', product_name: 'Poster', unit_cost: 20, available_count: 0 };
+    const { onSelectionChange } = renderPreview({
+      pod: makePod({ product_requests: [requestA, soldOut] }),
+    });
+    expect(screen.getByText('Poster')).toBeInTheDocument();
+    expect(screen.getByText('Available 0')).toBeInTheDocument();
+    // Only the in-stock product keeps its Add to cart button.
+    const buttons = screen.getAllByRole('button', { name: /add to cart/i });
+    expect(buttons).toHaveLength(1);
+    fireEvent.click(buttons[0]);
+    expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
   });
 
-  it('increments and decrements the quantity of a selected product', () => {
+  it('replaces the Add to cart button with the stepper once quantity > 0', () => {
     const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 2 } });
     expect(screen.getByText('2')).toBeInTheDocument();
-    // The stepper's "-" (decrement) and "+" (increment) are the icon buttons
-    // rendered once a product is selected — the first two icon buttons in the row.
-    const iconButtons = screen.getAllByRole('button').filter((b) => b.querySelector('svg'));
-    fireEvent.click(iconButtons[0]); // decrement 2 -> 1
+    // p1 shows the stepper; only p2 keeps its Add to cart button.
+    expect(screen.getAllByRole('button', { name: /add to cart/i })).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease Mug' })); // 2 -> 1
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
-    fireEvent.click(iconButtons[1]); // increment 2 -> 3 (still < max 5)
+    fireEvent.click(screen.getByRole('button', { name: 'Increase Mug' })); // 2 -> 3 (< max 5)
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 3 });
+  });
+
+  it('removes the line when the stepper decrements to zero', () => {
+    const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 1 } });
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease Mug' }));
+    expect(onSelectionChange).toHaveBeenCalledWith({});
   });
 
   it('caps increment at the available maximum', () => {
@@ -130,8 +151,8 @@ describe('PodCommercePreview', () => {
     // At max (5), the increment button is disabled — the + click is a no-op.
     // Decrement still works.
     expect(screen.getByText('5')).toBeInTheDocument();
-    const icons = screen.getAllByRole('button').filter((b) => b.querySelector('svg'));
-    fireEvent.click(icons[0]); // decrement
+    expect(screen.getByRole('button', { name: 'Increase Mug' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Decrease Mug' }));
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 4 });
   });
 
@@ -194,18 +215,22 @@ describe('PodCommercePreview', () => {
     expect(screen.getByText('₹999')).toBeInTheDocument();
   });
 
-  it('renders view-only mode with no checkboxes and a booked notice', () => {
-    renderPreview({ viewOnly: true, selectedProducts: { p1: 2 } });
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
-    expect(screen.getByText(/already booked this pod/i)).toBeInTheDocument();
-    // Footer selection caption is hidden in view-only mode.
+  it('goes read-only with a shop-closed notice when products are disabled', () => {
+    renderPreview({ pod: makePod({ products_enabled: false }), selectedProducts: { p1: 2 } });
+    // No Add to cart buttons and no steppers while the shop is closed.
+    expect(screen.queryByRole('button', { name: /add to cart/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Increase Mug' })).not.toBeInTheDocument();
+    expect(screen.getByText(/shop is currently closed/i)).toBeInTheDocument();
+    // Footer selection caption is hidden while the shop is closed.
     expect(screen.queryByText('Selected product total')).not.toBeInTheDocument();
     expect(screen.getByTestId('detail-viewonly')).toHaveTextContent('true');
   });
 
-  it('does not select when a row is clicked in view-only mode', () => {
-    const { onSelectionChange } = renderPreview({ viewOnly: true });
-    fireEvent.click(screen.getByText('Mug'));
-    expect(onSelectionChange).not.toHaveBeenCalled();
+  it('stays interactive for a booked/expired viewer (add-to-cart works in any pod state)', () => {
+    // products_enabled defaults to true → the shop is open regardless of membership.
+    const { onSelectionChange } = renderPreview({ selectedProducts: {} });
+    fireEvent.click(screen.getAllByRole('button', { name: /add to cart/i })[0]);
+    expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
+    expect(screen.getByTestId('detail-viewonly')).toHaveTextContent('false');
   });
 });

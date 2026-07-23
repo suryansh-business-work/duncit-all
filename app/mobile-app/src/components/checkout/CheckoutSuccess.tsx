@@ -17,6 +17,9 @@ export interface CheckoutSuccessProps {
   onDownloadTicket?: () => Promise<void>;
   onHome: () => void;
   onProfile: () => void;
+  /** Label for the secondary action (defaults to "My bookings"; the product
+   * checkout routes to "My orders"). */
+  profileLabel?: string;
 }
 
 /** Payment success view — ticket + invoice download + navigation. RN twin of
@@ -28,6 +31,7 @@ export function CheckoutSuccess({
   onDownloadTicket,
   onHome,
   onProfile,
+  profileLabel = 'My bookings',
 }: Readonly<CheckoutSuccessProps>) {
   const { onPrimary } = useThemeColors();
   const [busy, setBusy] = useState(false);
@@ -154,7 +158,7 @@ export function CheckoutSuccess({
           pressStyle={{ opacity: 0.85 }}
         >
           <Text fontSize={14} fontWeight="900" color="$color">
-            My bookings
+            {profileLabel}
           </Text>
         </XStack>
       </XStack>

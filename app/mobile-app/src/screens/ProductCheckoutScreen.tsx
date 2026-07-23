@@ -24,7 +24,7 @@ import { useProductCheckout, type ProductPayment } from '@/hooks/useProductCheck
 import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useCartStore } from '@/stores/cart.store';
-import { buildBreakup } from '@/utils/checkout-math';
+import { buildBreakup, round2 } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
@@ -101,12 +101,16 @@ export function ProductCheckoutScreen() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const amount = subtotal + (quote?.total ?? 0);
+  const shippingTotal = quote?.total ?? 0;
+  const amount = subtotal + shippingTotal;
   const breakup = buildBreakup(amount, finance);
   const razorpayEnabled = !!finance?.razorpay_enabled;
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
   const appliedCode = coupon?.ok ? (coupon.code ?? null) : null;
-  const effectiveTotal = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
+  // The server discounts the PRODUCT SUBTOTAL only, then adds shipping — mirror
+  // that here so the "You pay" amount always equals the charged amount.
+  const discountedPay = coupon?.ok ? round2(coupon.final_total + shippingTotal) : null;
+  const effectiveTotal = discountedPay ?? breakup?.total ?? amount;
   const payContext = { items, couponCode: appliedCode };
 
   const finishSuccess = (result: NonNullable<ProductPayment>) => {
@@ -120,7 +124,8 @@ export function ProductCheckoutScreen() {
     setApplyingCoupon(true);
     setCouponError(null);
     try {
-      const preview = await previewCoupon(code, amount);
+      // Coupons discount the product subtotal only — never the shipping charge.
+      const preview = await previewCoupon(code, subtotal);
       if (preview?.ok) setCoupon(preview);
       else {
         setCoupon(null);

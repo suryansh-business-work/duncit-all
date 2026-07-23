@@ -246,6 +246,7 @@ export const PRODUCT_SHIPPING_QUOTE = gql`
       currency_symbol
       all_quoted
       lines {
+        pod_id
         warehouse_id
         pickup_pincode
         courier_name
@@ -266,6 +267,8 @@ export interface ProductCartItemInput {
 }
 
 export interface ProductShippingQuoteLine {
+  /** The pod this (pod, warehouse) shipment group belongs to (null/'' when the cart line carried no pod). */
+  pod_id: string | null;
   warehouse_id: string;
   pickup_pincode: string;
   courier_name: string;

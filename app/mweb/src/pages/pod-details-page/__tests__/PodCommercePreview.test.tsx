@@ -115,6 +115,20 @@ describe('PodCommercePreview', () => {
     expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
   });
 
+  it('hides the Add to cart button when the product is sold out', () => {
+    const soldOut = { product_id: 'p4', product_name: 'Poster', unit_cost: 20, available_count: 0 };
+    const { onSelectionChange } = renderPreview({
+      pod: makePod({ product_requests: [requestA, soldOut] }),
+    });
+    expect(screen.getByText('Poster')).toBeInTheDocument();
+    expect(screen.getByText('Available 0')).toBeInTheDocument();
+    // Only the in-stock product keeps its Add to cart button.
+    const buttons = screen.getAllByRole('button', { name: /add to cart/i });
+    expect(buttons).toHaveLength(1);
+    fireEvent.click(buttons[0]);
+    expect(onSelectionChange).toHaveBeenCalledWith({ p1: 1 });
+  });
+
   it('replaces the Add to cart button with the stepper once quantity > 0', () => {
     const { onSelectionChange } = renderPreview({ selectedProducts: { p1: 2 } });
     expect(screen.getByText('2')).toBeInTheDocument();

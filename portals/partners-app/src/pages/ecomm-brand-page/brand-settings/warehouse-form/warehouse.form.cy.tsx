@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { MockLink } from '@apollo/client/testing';
 import { warehouseSchema } from './warehouse.form';
-import { emptyWarehouseValues, warehouseToValues } from './warehouse.types';
-import type { BrandWarehouse } from '../warehouse.queries';
+import { emptyWarehouseValues, toSaveWarehouseVariables, warehouseToValues } from './warehouse.types';
+import { SAVE_MY_WAREHOUSE, type BrandWarehouse } from '../warehouse.queries';
 
 const validWarehouse = {
   nickname: 'Delhi warehouse',
@@ -56,6 +58,46 @@ describe('warehouseSchema', () => {
 
   it('allows address line 2 to stay blank', () => {
     expect(warehouseSchema.safeParse({ ...validWarehouse, address_line2: '' }).success).toBe(true);
+  });
+});
+
+describe('toSaveWarehouseVariables', () => {
+  it('always includes owner_kind BRAND in the mutation input', () => {
+    const variables = toSaveWarehouseVariables('b1', null, validWarehouse);
+    expect(variables).toEqual({
+      brand_doc_id: 'b1',
+      id: null,
+      input: { ...validWarehouse, owner_kind: 'BRAND' },
+    });
+  });
+
+  it('satisfies the SAVE_MY_WAREHOUSE document (owner_kind is part of the sent variables)', async () => {
+    const saved = {
+      __typename: 'BrandPickupLocation',
+      id: 'w1',
+      owner_kind: 'BRAND',
+      brand_id: 'b1',
+      ...validWarehouse,
+      shiprocket_registered: false,
+      shiprocket_pickup_id: '',
+      updated_at: '2026-07-01T00:00:00.000Z',
+    };
+    // The expected variables are spelled out literally: a save built without
+    // owner_kind would not match this mock and the mutation would reject.
+    const mock = {
+      request: {
+        query: SAVE_MY_WAREHOUSE,
+        variables: { brand_doc_id: 'b1', id: 'w1', input: { ...validWarehouse, owner_kind: 'BRAND' } },
+      },
+      result: { data: { saveMyBrandPickupLocation: saved } },
+    };
+    const client = new ApolloClient({ link: new MockLink([mock]), cache: new InMemoryCache() });
+    const response = await client.mutate({
+      mutation: SAVE_MY_WAREHOUSE,
+      variables: toSaveWarehouseVariables('b1', 'w1', validWarehouse),
+    });
+    expect(response.data?.saveMyBrandPickupLocation.id).toBe('w1');
+    expect(response.data?.saveMyBrandPickupLocation.owner_kind).toBe('BRAND');
   });
 });
 

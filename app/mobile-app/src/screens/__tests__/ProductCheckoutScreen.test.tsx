@@ -309,7 +309,29 @@ describe('ProductCheckoutScreen', () => {
     expect(screen.queryByTestId('razorpay-webview-frame')).toBeNull();
   });
 
-  it('applies a coupon (from a valid code), then clears it', async () => {
+  it('previews a coupon against the product subtotal only and adds shipping after', async () => {
+    // Subtotal ₹200 + delivery ₹60: the server discounts the PRODUCT SUBTOTAL
+    // only, then adds shipping — the preview base and Pay amount must match it.
+    mockedShipping.mockReturnValue({
+      quote: {
+        total: 60,
+        currency_symbol: '₹',
+        all_quoted: true,
+        lines: [
+          {
+            pod_id: 'p1',
+            warehouse_id: 'w1',
+            pickup_pincode: '110001',
+            courier_name: 'Delhivery',
+            charge: 60,
+            quoted: true,
+            free: false,
+          },
+        ],
+      },
+      loading: false,
+      pincodeValid: true,
+    });
     previewCoupon.mockResolvedValue({
       ok: true,
       message: null,
@@ -323,8 +345,11 @@ describe('ProductCheckoutScreen', () => {
     renderWithProviders(<ProductCheckoutScreen />);
     fireEvent.changeText(screen.getByTestId('coupon-input'), 'TEN');
     fireEvent.press(screen.getByTestId('coupon-apply'));
+    // Preview base = product subtotal (200), never subtotal + shipping (260).
     await waitFor(() => expect(previewCoupon).toHaveBeenCalledWith('TEN', 200));
-    expect(screen.getByTestId('coupon-total')).toBeOnTheScreen();
+    // You pay = discounted subtotal (180) + delivery (60), struck from 260.
+    expect(screen.getByTestId('coupon-total')).toHaveTextContent('You pay ₹240');
+    expect(screen.getByTestId('coupon-total')).toHaveTextContent('₹260');
     // Pay carries the applied code through to the product engine.
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));

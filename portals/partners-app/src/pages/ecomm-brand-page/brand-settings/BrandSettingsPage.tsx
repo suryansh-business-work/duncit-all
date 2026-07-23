@@ -9,7 +9,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import { parseApiError } from '@duncit/utils';
 import { MY_BRANDS, type EcommBrand } from '../queries';
-import { WarehouseForm, warehouseToValues, type WarehouseFormValues } from './warehouse-form';
+import {
+  WarehouseForm, toSaveWarehouseVariables, warehouseToValues, type WarehouseFormValues,
+} from './warehouse-form';
 import WarehouseList from './WarehouseList';
 import {
   DELETE_MY_WAREHOUSE, MY_BRAND_WAREHOUSES, SAVE_MY_WAREHOUSE, SET_DEFAULT_MY_WAREHOUSE,
@@ -53,7 +55,7 @@ export default function BrandSettingsPage() {
     setApiError(null);
     try {
       await saveWarehouse({
-        variables: { brand_doc_id: brandId, id: editingWarehouse?.id ?? null, input: values },
+        variables: toSaveWarehouseVariables(brandId, editingWarehouse?.id ?? null, values),
       });
       setMessage('Warehouse saved.');
       closeDialog();

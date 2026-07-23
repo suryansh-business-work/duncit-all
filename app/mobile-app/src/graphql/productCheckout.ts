@@ -60,6 +60,7 @@ export const MobileProductShippingQuoteDocument = gql(`
       currency_symbol
       all_quoted
       lines {
+        pod_id
         warehouse_id
         pickup_pincode
         courier_name

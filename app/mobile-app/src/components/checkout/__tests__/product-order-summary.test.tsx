@@ -65,12 +65,15 @@ const lines: CartLine[] = [
   },
 ];
 
+// Both groups ship from the SAME warehouse but belong to different pods — the
+// per-(pod, warehouse) split must render both rows (composite keys).
 const quoted: ProductShippingQuote = {
   total: 60,
   currency_symbol: '₹',
   all_quoted: true,
   lines: [
     {
+      pod_id: 'p1',
       warehouse_id: 'w1',
       pickup_pincode: '110001',
       courier_name: 'Delhivery',
@@ -79,8 +82,9 @@ const quoted: ProductShippingQuote = {
       free: false,
     },
     {
-      warehouse_id: 'w2',
-      pickup_pincode: '400001',
+      pod_id: 'p2',
+      warehouse_id: 'w1',
+      pickup_pincode: '110001',
       courier_name: 'Xpressbees',
       charge: 0,
       quoted: true,
@@ -136,17 +140,29 @@ describe('ProductOrderSummary', () => {
     expect(screen.getByText('Calculating…')).toBeOnTheScreen();
   });
 
-  it('lists one delivery row per warehouse group plus the delivery total', () => {
+  it('lists one delivery row per (pod, warehouse) group, pod-prefixed across pods', () => {
     render({ pincodeValid: true, quote: quoted });
-    // Charged group: courier name + live charge (the free group adds ₹0, so the
-    // delivery total repeats the same ₹60.00).
-    expect(screen.getByText('Delhivery')).toBeOnTheScreen();
+    // Both groups share warehouse w1 yet belong to different pods — the cart
+    // spans 2 pods, so each row is prefixed with its pod's title. Charged group:
+    // courier name + live charge (the free group adds ₹0, so the delivery total
+    // repeats the same ₹60.00).
+    expect(screen.getByText('Sunset Jam — Delhivery')).toBeOnTheScreen();
     expect(screen.getAllByText('₹60.00')).toHaveLength(2);
     // Free group: every line met its threshold.
-    expect(screen.getByText('Xpressbees')).toBeOnTheScreen();
+    expect(screen.getByText('Beach Bash — Xpressbees')).toBeOnTheScreen();
     expect(screen.getByText('Free')).toBeOnTheScreen();
     expect(screen.getByText('Delivery total')).toBeOnTheScreen();
     expect(screen.queryByTestId('product-shipping-estimated')).toBeNull();
+  });
+
+  it('keeps delivery labels unprefixed when the cart spans a single pod', () => {
+    render({
+      lines: lines.filter((cartLine) => cartLine.pod_id === 'p1'),
+      pincodeValid: true,
+      quote: { ...quoted, lines: quoted.lines.slice(0, 1) },
+    });
+    expect(screen.getByText('Delhivery')).toBeOnTheScreen();
+    expect(screen.queryByText('Sunset Jam — Delhivery')).toBeNull();
   });
 
   it('marks manual-fallback groups as estimated with the courier fallback label', () => {
@@ -156,6 +172,7 @@ describe('ProductOrderSummary', () => {
       all_quoted: false,
       lines: [
         {
+          pod_id: null,
           warehouse_id: 'w3',
           pickup_pincode: '560001',
           courier_name: '',
@@ -167,8 +184,9 @@ describe('ProductOrderSummary', () => {
     };
     render({ pincodeValid: true, shippingLoading: true, quote: fallback });
     // A present quote wins over the loading state; the empty courier name falls
-    // back to a generic "Delivery" label marked as estimated. The single manual
-    // group is the whole delivery total, so ₹30.00 renders twice.
+    // back to a generic "Delivery" label marked as estimated — and a null pod id
+    // never gains a pod prefix even though the cart spans 2 pods. The single
+    // manual group is the whole delivery total, so ₹30.00 renders twice.
     expect(screen.getByText('Delivery (estimated)')).toBeOnTheScreen();
     expect(screen.getAllByText('₹30.00')).toHaveLength(2);
     expect(screen.getByTestId('product-shipping-estimated')).toBeOnTheScreen();

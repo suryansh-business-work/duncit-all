@@ -30,6 +30,13 @@ export const emptyWarehouseValues: WarehouseFormValues = {
   is_default: false,
 };
 
+/** Variables for SAVE_MY_WAREHOUSE. BrandPickupLocationInput.owner_kind is
+ * non-null on the server (which forces BRAND for partner saves anyway), so it
+ * must always be sent or the mutation fails GraphQL validation. */
+export function toSaveWarehouseVariables(brandId: string, id: string | null, values: WarehouseFormValues) {
+  return { brand_doc_id: brandId, id, input: { ...values, owner_kind: 'BRAND' as const } };
+}
+
 /** Prefill the form from an existing warehouse (or the empty defaults). */
 export function warehouseToValues(warehouse?: BrandWarehouse | null): WarehouseFormValues {
   if (!warehouse) return { ...emptyWarehouseValues };

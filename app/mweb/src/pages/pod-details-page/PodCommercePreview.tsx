@@ -133,7 +133,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.product_name}</Typography>
                 <Typography variant="caption" sx={{ color: mutedColor }} noWrap>Available {maxQuantity}</Typography>
-                {!readOnly && quantity === 0 && (
+                {!readOnly && quantity === 0 && maxQuantity > 0 && (
                   <Box sx={{ mt: 0.75 }}>
                     <Button
                       size="small"

@@ -301,7 +301,9 @@ export const shiprocketService = {
     const groups = buildShipGroups(products, linesByPodProduct, snapshotUnitCosts);
     if (groups.size === 0) return { total: 0, breakup: [], all_quoted: true };
 
-    const warehouseIds = [...groups.keys()].filter((id) => id && Types.ObjectId.isValid(id));
+    const warehouseIds = [
+      ...new Set([...groups.values()].map((g) => g.warehouse_id)),
+    ].filter((id) => id && Types.ObjectId.isValid(id));
     const warehouses = await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('pincode');
     const pincodeByWarehouse = new Map(warehouses.map((w) => [String(w._id), String(w.pincode ?? '')]));
     const configured = await isShiprocketConfigured();

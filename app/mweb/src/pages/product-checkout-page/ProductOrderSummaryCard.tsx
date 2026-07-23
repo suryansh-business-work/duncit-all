@@ -73,32 +73,49 @@ function quoteLineValue(line: ProductShippingQuoteLine, currency: string): strin
   return formatMoney(currency, line.charge);
 }
 
+/** A (pod, warehouse) group's row label: the courier name (the server emits ''
+ * for free and manual-fallback groups — fall back to "Delivery"), marked
+ * "(estimated)" when ShipRocket could not price it live, and prefixed with the
+ * pod's title when the cart spans multiple pods. */
+function quoteLineLabel(line: ProductShippingQuoteLine, podTitle: string | null): string {
+  const courier = line.courier_name || 'Delivery';
+  const base = line.quoted ? courier : `${courier} (estimated)`;
+  if (podTitle) return `${podTitle} — ${base}`;
+  return base;
+}
+
 /** Delivery rows — a prompt until a valid pincode, a spinner label while
- * quoting, else ONE ROW PER warehouse group plus the delivery total. */
+ * quoting, else ONE ROW PER (pod, warehouse) group plus the delivery total. */
 function DeliveryRows({
   quote,
   shippingLoading,
   pincodeValid,
   currency,
+  podTitles,
 }: Readonly<{
   quote: ProductShippingQuote | null;
   shippingLoading: boolean;
   pincodeValid: boolean;
   currency: string;
+  podTitles: ReadonlyMap<string, string>;
 }>) {
   if (!pincodeValid) return <Row label="Delivery" value="Enter pincode" />;
   if (!quote) {
     return <Row label="Delivery" value={shippingLoading ? 'Calculating…' : formatMoney(currency, 0)} />;
   }
+  const multiPod = new Set(quote.lines.map((line) => line.pod_id ?? '')).size > 1;
   return (
     <>
-      {quote.lines.map((line) => (
-        <Row
-          key={line.warehouse_id}
-          label={line.quoted ? line.courier_name : `${line.courier_name} (estimated)`}
-          value={quoteLineValue(line, currency)}
-        />
-      ))}
+      {quote.lines.map((line) => {
+        const podTitle = multiPod ? (podTitles.get(line.pod_id ?? '') ?? null) : null;
+        return (
+          <Row
+            key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
+            label={quoteLineLabel(line, podTitle)}
+            value={quoteLineValue(line, currency)}
+          />
+        );
+      })}
       <Row label="Delivery total" value={formatMoney(currency, quote.total)} />
     </>
   );
@@ -113,6 +130,7 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
   const isDark = theme.palette.mode === 'dark';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const groups = groupByPod(lines);
+  const podTitles = new Map(groups.map((group) => [group.pod_id, group.pod_title]));
   const estimated = !!quote && !quote.all_quoted;
 
   return (
@@ -141,7 +159,7 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
           ))}
           <Divider sx={{ my: 1 }} />
           <Row label="Subtotal" value={fmt(subtotal)} />
-          <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} />
+          <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} podTitles={podTitles} />
           {estimated && (
             <Typography variant="caption" color="text.secondary">
               Estimated delivery — final charge confirmed at checkout.

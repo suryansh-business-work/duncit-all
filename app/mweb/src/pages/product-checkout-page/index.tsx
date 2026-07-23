@@ -57,6 +57,10 @@ export default function ProductCheckoutPage() {
   if (lines.length === 0) return <EmptyProductCheckout onCart={() => navigate('/cart')} />;
   if (session.financeLoading || !breakup) return <ProductCheckoutSkeleton />;
 
+  // The server discounts the PRODUCT SUBTOTAL only and adds shipping on top —
+  // preview against the subtotal and pay discounted subtotal + delivery.
+  const effectiveTotal = session.coupon?.ok ? session.coupon.final_total + shippingTotal : breakup.total;
+
   const headerBg = isDark
     ? 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)'
     : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 58%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`;
@@ -88,7 +92,7 @@ export default function ProductCheckoutPage() {
             error={session.error}
             submitting={session.submitting}
             total={breakup.total}
-            effectiveTotal={session.coupon?.ok ? session.coupon.final_total : breakup.total}
+            effectiveTotal={effectiveTotal}
             currency={breakup.currency}
             dummyMode={!!session.finance?.dummy_mode && !session.finance?.razorpay_enabled}
             mainAddress={session.mainAddress}
@@ -101,7 +105,7 @@ export default function ProductCheckoutPage() {
             couponError={session.couponError}
             applyingCoupon={session.applyingCoupon}
             availableCoupons={session.availableCoupons}
-            onApplyCoupon={(code) => session.applyCoupon(amount, code)}
+            onApplyCoupon={(code) => session.applyCoupon(subtotal, code)}
             onRemoveCoupon={session.removeCoupon}
           />
         </Stack>

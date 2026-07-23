@@ -14,6 +14,7 @@ import {
   AVAILABLE_COUPONS,
   CHECKOUT_ME,
   DUMMY_PRODUCT_CHECKOUT,
+  PREVIEW_COUPON,
   PRODUCT_SHIPPING_QUOTE,
   PUBLIC_FINANCE,
 } from '../../checkout-page/queries';
@@ -89,6 +90,8 @@ const couponsMock = (): MockedResponse => ({
   result: { data: { availableCouponsForPod: [] } },
 });
 
+// Real server line shapes: one line per (pod, warehouse) group; free groups
+// carry courier_name '' (no rate lookup ever ran).
 const shippingMock = (): MockedResponse => ({
   request: { query: PRODUCT_SHIPPING_QUOTE },
   variableMatcher: () => true,
@@ -99,9 +102,32 @@ const shippingMock = (): MockedResponse => ({
         currency_symbol: '₹',
         all_quoted: true,
         lines: [
-          { warehouse_id: 'w1', pickup_pincode: '560001', courier_name: 'BlueDart', charge: 80, quoted: true, free: false },
-          { warehouse_id: 'w2', pickup_pincode: '110001', courier_name: 'Delhivery', charge: 0, quoted: true, free: true },
+          { pod_id: 'POD1', warehouse_id: 'w1', pickup_pincode: '560001', courier_name: 'BlueDart', charge: 80, quoted: true, free: false },
+          { pod_id: 'POD2', warehouse_id: 'w2', pickup_pincode: '110001', courier_name: '', charge: 0, quoted: true, free: true },
         ],
+      },
+    },
+  },
+});
+
+// Strict variables: the preview MUST be requested against the PRODUCT subtotal
+// (250), never subtotal + shipping — the server discounts the subtotal only.
+const couponPreviewMock = (): MockedResponse => ({
+  request: {
+    query: PREVIEW_COUPON,
+    variables: { input: { code: 'SAVE10', pod_id: null, amount: 250 } },
+  },
+  result: {
+    data: {
+      previewCoupon: {
+        ok: true,
+        message: null,
+        code: 'SAVE10',
+        discount_pct: 10,
+        original_total: 250,
+        discount_amount: 25,
+        final_total: 225,
+        currency_symbol: '₹',
       },
     },
   },
@@ -170,15 +196,35 @@ describe('ProductCheckoutPage', () => {
     expect(screen.getByText('Alpha Tee × 2')).toBeInTheDocument();
     expect(screen.getByText('Beta Mug × 1')).toBeInTheDocument();
     expect(screen.getByText('Dummy')).toBeInTheDocument();
-    // Per-warehouse delivery rows + delivery total.
-    expect(await screen.findByText('BlueDart')).toBeInTheDocument();
-    expect(screen.getByText('Delhivery')).toBeInTheDocument();
+    // Per-(pod, warehouse) delivery rows (pod-title prefixed — the cart spans
+    // two pods; the free group falls back to the "Delivery" label) + total.
+    expect(await screen.findByText('Sunset Jam — BlueDart')).toBeInTheDocument();
+    expect(screen.getByText('Beach Bash — Delivery')).toBeInTheDocument();
     expect(screen.getByText('Free')).toBeInTheDocument();
     expect(screen.getByText('Delivery total')).toBeInTheDocument();
     // ONE Pay button for the whole cart.
     expect(screen.getAllByRole('button', { name: /^pay/i })).toHaveLength(1);
     // Product summary — never a pod ticket line.
     expect(screen.queryByText(/Ticket/)).not.toBeInTheDocument();
+  });
+
+  it('previews the coupon against the PRODUCT subtotal and pays discounted subtotal + shipping', async () => {
+    renderPage(
+      [financeMock(), meMock(), couponsMock(), shippingMock(), couponPreviewMock()],
+      [
+        { meta: meta(), qty: 2 }, // 200
+        { meta: meta({ pod_id: 'POD2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', unit_cost: 50 }), qty: 1 }, // 50
+      ],
+    );
+    await screen.findByText('Complete your order');
+    // Wait for the live quote (shipping 80) so the Pay total includes delivery.
+    await screen.findByText('Sunset Jam — BlueDart');
+    fireEvent.change(screen.getByLabelText('Coupon code'), { target: { value: 'SAVE10' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    // The strict-variables mock only matches amount=250 (the product subtotal).
+    expect(await screen.findByText('SAVE10 applied')).toBeInTheDocument();
+    // Pay = discounted subtotal (225) + shipping (80) — never final_total alone.
+    expect(screen.getByRole('button', { name: /^pay/i })).toHaveTextContent('Pay ₹305.00');
   });
 
   it('completes a dummy payment, clears the WHOLE cart, then routes to order history', async () => {

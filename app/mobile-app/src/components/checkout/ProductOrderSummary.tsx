@@ -58,27 +58,33 @@ function quoteLineValue(line: QuoteLine, currency: string): string {
   return formatMoney(currency, line.charge);
 }
 
-/** A warehouse group's row label: the courier name, marked "(estimated)" when
- * ShipRocket could not price it live (manual fallback). */
-function quoteLineLabel(line: QuoteLine): string {
+/** A (pod, warehouse) group's row label: the courier name, marked "(estimated)"
+ * when ShipRocket could not price it live (manual fallback), prefixed with the
+ * pod's title when the cart spans more than one pod. */
+function quoteLineLabel(line: QuoteLine, podTitle: string | undefined): string {
   const courier = line.courier_name || 'Delivery';
-  if (line.quoted) return courier;
-  return `${courier} (estimated)`;
+  const base = line.quoted ? courier : `${courier} (estimated)`;
+  if (podTitle) return `${podTitle} — ${base}`;
+  return base;
 }
 
 /** Delivery rows — a prompt until a valid pincode, a spinner label while
- * quoting, else ONE ROW PER warehouse group plus the delivery total. RN twin of
- * mWeb's DeliveryRows. */
+ * quoting, else ONE ROW PER (pod, warehouse) group plus the delivery total. RN
+ * twin of mWeb's DeliveryRows. */
 function DeliveryRows({
   quote,
   shippingLoading,
   pincodeValid,
   currency,
+  podTitles,
+  multiPod,
 }: Readonly<{
   quote: ProductShippingQuote | null;
   shippingLoading: boolean;
   pincodeValid: boolean;
   currency: string;
+  podTitles: ReadonlyMap<string, string>;
+  multiPod: boolean;
 }>) {
   if (!pincodeValid) return <Row label="Delivery" value="Enter pincode" />;
   if (!quote) {
@@ -89,8 +95,8 @@ function DeliveryRows({
     <YStack gap={8}>
       {quote.lines.map((line) => (
         <Row
-          key={line.warehouse_id}
-          label={quoteLineLabel(line)}
+          key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
+          label={quoteLineLabel(line, multiPod ? podTitles.get(line.pod_id ?? '') : undefined)}
           value={quoteLineValue(line, currency)}
         />
       ))}
@@ -114,6 +120,7 @@ export function ProductOrderSummary({
 }: Readonly<Props>) {
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const groups = groupLinesByPod(lines);
+  const podTitles = new Map(groups.map(([podId, group]) => [podId, group.title]));
   const estimated = !!quote && !quote.all_quoted;
 
   return (
@@ -166,6 +173,8 @@ export function ProductOrderSummary({
         shippingLoading={shippingLoading}
         pincodeValid={pincodeValid}
         currency={breakup.currency}
+        podTitles={podTitles}
+        multiPod={groups.length > 1}
       />
       {estimated ? (
         <Text testID="product-shipping-estimated" fontSize={11.5} color="$muted">

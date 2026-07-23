@@ -23,6 +23,7 @@ const line = (over: Partial<CartLine> = {}): CartLine => ({
 });
 
 const quoteLine = (over: Partial<ProductShippingQuoteLine> = {}): ProductShippingQuoteLine => ({
+  pod_id: 'pod1',
   warehouse_id: 'w1',
   pickup_pincode: '560001',
   courier_name: 'BlueDart',
@@ -85,27 +86,49 @@ describe('ProductOrderSummaryCard', () => {
     expect(screen.getByText('Beta Mug × 1')).toBeInTheDocument();
   });
 
-  it('shows "Free" for a free warehouse group and the charge for the rest', () => {
+  it('labels a free group "Delivery" / "Free" (the server emits courier_name "")', () => {
     renderCard({
       quote: quote({
         total: 80,
-        lines: [quoteLine(), quoteLine({ warehouse_id: 'w2', courier_name: 'Delhivery', charge: 0, free: true })],
+        // Real free-group shape: no courier lookup happens, courier_name is ''.
+        lines: [quoteLine(), quoteLine({ warehouse_id: 'w2', courier_name: '', charge: 0, quoted: true, free: true })],
       }),
     });
     expect(screen.getByText('BlueDart')).toBeInTheDocument();
-    expect(screen.getByText('Delhivery')).toBeInTheDocument();
+    expect(screen.getByText('Delivery')).toBeInTheDocument();
     expect(screen.getByText('Free')).toBeInTheDocument();
   });
 
-  it('marks a manual-fallback line as estimated and shows the estimate caption', () => {
+  it('marks a manual-fallback line as "Delivery (estimated)" and shows the estimate caption', () => {
     renderCard({
       quote: quote({
         all_quoted: false,
-        lines: [quoteLine({ courier_name: 'Standard delivery', quoted: false, charge: 40 })],
+        // Real manual-fallback shape: ShipRocket could not price it, courier_name is ''.
+        lines: [quoteLine({ courier_name: '', quoted: false, free: false, charge: 40 })],
       }),
     });
-    expect(screen.getByText('Standard delivery (estimated)')).toBeInTheDocument();
+    expect(screen.getByText('Delivery (estimated)')).toBeInTheDocument();
     expect(screen.getByText(/estimated delivery/i)).toBeInTheDocument();
+  });
+
+  it('prefixes delivery rows with the pod title when the cart spans multiple pods', () => {
+    renderCard({
+      lines: [
+        line(),
+        line({ pod_id: 'pod2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', quantity: 1 }),
+      ],
+      quote: quote({
+        total: 80,
+        // Same warehouse serving two pods — one row per (pod, warehouse) group.
+        lines: [
+          quoteLine(),
+          quoteLine({ pod_id: 'pod2', courier_name: '', charge: 0, quoted: true, free: true }),
+        ],
+      }),
+    });
+    expect(screen.getByText('Sunset Jam — BlueDart')).toBeInTheDocument();
+    expect(screen.getByText('Beach Bash — Delivery')).toBeInTheDocument();
+    expect(screen.getByText('Free')).toBeInTheDocument();
   });
 
   it('badges a line with Free delivery when it meets its product threshold', () => {

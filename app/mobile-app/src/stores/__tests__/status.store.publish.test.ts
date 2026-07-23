@@ -100,7 +100,7 @@ describe('status.store publish (video vs image pipelines)', () => {
     ).rejects.toThrow('No media selected.');
   });
 
-  it('uploads images through the server with the MOBILE_MWEB surface', async () => {
+  it('uploads images through the server with the MOBILE surface', async () => {
     await useStatusStore.getState().publish({
       base64: 'abc',
       fileName: 'pic.jpg',
@@ -114,7 +114,7 @@ describe('status.store publish (video vs image pipelines)', () => {
       fileBase64: 'data:image/jpeg;base64,abc',
       fileName: 'pic.jpg',
       folder: '/posts',
-      surface: 'MOBILE_MWEB',
+      surface: 'MOBILE',
     });
     expect(mockUpload).not.toHaveBeenCalled();
     expect(mockCompress).not.toHaveBeenCalled();

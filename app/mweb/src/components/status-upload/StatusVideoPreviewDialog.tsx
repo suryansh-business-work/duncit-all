@@ -11,7 +11,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import type { VideoTrim } from '@duncit/media-picker';
+import { FileDetails } from '@duncit/media-picker';
+import type { MediaDimensions, VideoTrim } from '@duncit/media-picker';
 
 /** Story videos are short clips — capped at 15s (Bug 3). */
 export const MAX_STORY_VIDEO_SECONDS = 15;
@@ -37,6 +38,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [duration, setDuration] = useState(0);
   const [start, setStart] = useState(0);
+  const [dims, setDims] = useState<MediaDimensions | null>(null);
   const url = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(
     () => () => {
@@ -47,7 +49,14 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
   useEffect(() => {
     setDuration(0);
     setStart(0);
+    setDims(null);
   }, [file]);
+
+  const onLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = e.currentTarget;
+    setDuration(video.duration || 0);
+    setDims({ width: video.videoWidth, height: video.videoHeight, duration: video.duration || 0 });
+  };
 
   const needsTrim = duration > MAX_STORY_VIDEO_SECONDS;
   const maxStart = Math.max(0, duration - MAX_STORY_VIDEO_SECONDS);
@@ -73,12 +82,11 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
               src={url}
               controls
               playsInline
-              onLoadedMetadata={(e: React.SyntheticEvent<HTMLVideoElement>) =>
-                setDuration(e.currentTarget.duration || 0)
-              }
+              onLoadedMetadata={onLoadedMetadata}
               sx={{ width: '100%', maxHeight: '48vh', borderRadius: 2, bgcolor: 'common.black' }}
             />
           )}
+          {file && <FileDetails file={file} dims={dims} />}
           {needsTrim && (
             <>
               <Alert severity="info">

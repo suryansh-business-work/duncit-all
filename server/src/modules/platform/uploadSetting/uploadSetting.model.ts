@@ -1,9 +1,25 @@
 import { Schema, model, type Document } from 'mongoose';
 
 /** Which client family a settings row applies to (admin Upload Settings pages):
- * PORTALS = all MUI portals; MOBILE_MWEB = the native app + mWeb PWA. */
-export const UPLOAD_SURFACES = ['PORTALS', 'MOBILE_MWEB'] as const;
+ * PORTALS = all MUI portals; MOBILE = the native app; MWEB = the mWeb PWA. */
+export const UPLOAD_SURFACES = ['PORTALS', 'MOBILE', 'MWEB'] as const;
 export type UploadSurface = (typeof UPLOAD_SURFACES)[number];
+
+/** Legacy surface (before the MOBILE / MWEB split) — still normalized on read
+ * so any stray string path resolves to a valid surface instead of throwing. */
+export const LEGACY_MOBILE_MWEB_SURFACE = 'MOBILE_MWEB';
+
+/**
+ * Coerce any inbound surface string to a valid {@link UploadSurface}. The old
+ * merged `MOBILE_MWEB` value maps to `MOBILE`; anything unknown/omitted falls
+ * back to `MOBILE` (the prior default before the split).
+ */
+export function normalizeSurface(surface?: string | null): UploadSurface {
+  const value = String(surface ?? '').trim().toUpperCase();
+  if (value === 'PORTALS') return 'PORTALS';
+  if (value === 'MWEB') return 'MWEB';
+  return 'MOBILE';
+}
 
 export interface IUploadCropPreset {
   /** Stable key, e.g. NO_CROP / RATIO_16_9 / POD_FEATURE. */

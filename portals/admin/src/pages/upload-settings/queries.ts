@@ -85,6 +85,7 @@ export const PRESET_USAGE_NOTES: Record<string, string> = {
   VERTICAL_9_16: 'Status/story viewer and Explore reels (full-screen vertical).',
   POD_FEATURE: 'Pod cover media — the create-pod field hints “Min 800×400px” (2:1).',
   POD_MOMENT: 'Club moments and profile post grids (1:1 tiles).',
+  PRODUCT: 'Shop product cards and variant images (1:1 square grids).',
   VENUE_PHOTO: 'Venue details photo gallery (4:3).',
   AVATAR: 'Profile avatar crop output (720×720 round).',
 };

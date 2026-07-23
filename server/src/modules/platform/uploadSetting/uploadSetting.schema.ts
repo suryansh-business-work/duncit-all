@@ -1,7 +1,8 @@
 export const uploadSettingTypeDefs = /* GraphQL */ `
   enum UploadSurface {
     PORTALS
-    MOBILE_MWEB
+    MOBILE
+    MWEB
   }
 
   type UploadCropPreset {

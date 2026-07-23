@@ -85,7 +85,8 @@ export const appConfig = {
       icon: 'upload',
       children: [
         { label: 'Portals Upload Setting', to: '/upload-settings/portals', icon: 'tune' },
-        { label: 'Mobile App + mWeb Upload Setting', to: '/upload-settings/apps', icon: 'tune' },
+        { label: 'Mobile App', to: '/upload-settings/mobile', icon: 'tune' },
+        { label: 'mWeb Upload Setting', to: '/upload-settings/mweb', icon: 'tune' },
       ],
     },
     {
@@ -130,10 +131,16 @@ export const appConfig = {
       keywords: ['upload', 'crop', 'compression', 'image', 'video', 'formats', 'ai'],
     },
     {
-      label: 'Mobile App + mWeb Upload Setting',
-      to: '/upload-settings/apps',
+      label: 'Mobile App',
+      to: '/upload-settings/mobile',
       section: 'Upload Settings',
-      keywords: ['upload', 'crop', 'compression', 'reel', 'status', 'mobile', 'mweb'],
+      keywords: ['upload', 'crop', 'compression', 'reel', 'status', 'mobile', 'native', 'app'],
+    },
+    {
+      label: 'mWeb Upload Setting',
+      to: '/upload-settings/mweb',
+      section: 'Upload Settings',
+      keywords: ['upload', 'crop', 'compression', 'reel', 'status', 'mweb', 'pwa'],
     },
     { label: 'Branding', to: '/branding', section: 'System', keywords: ['logo', 'theme', 'identity'] },
     { label: 'Settings', to: '/settings', section: 'System', keywords: ['system', 'config', 'preferences'] },

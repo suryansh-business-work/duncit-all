@@ -96,7 +96,7 @@ describe('uploadStatusMedia — video path', () => {
       expect.anything(),
       'https://ik.io/raw.mp4',
       '/pod-status',
-      'MOBILE_MWEB',
+      'MWEB',
       expect.any(Function),
       trim,
     );

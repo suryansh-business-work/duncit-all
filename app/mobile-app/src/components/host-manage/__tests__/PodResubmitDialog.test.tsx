@@ -7,8 +7,18 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 jest.mock('@/hooks/useMediaUpload', () => ({
-  useMediaUpload: () => ({ uploading: false, error: undefined, pickAndUpload: jest.fn() }),
+  useMediaUpload: () => ({
+    uploading: false,
+    error: undefined,
+    pending: null,
+    stage: 'processing' as const,
+    progress: null,
+    pick: jest.fn(),
+    confirm: jest.fn(),
+    cancel: jest.fn(),
+  }),
 }));
+jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
 jest.mock('@/hooks/useVenueSlots', () => ({ useVenueSlots: jest.fn() }));
 
 const mockRequest = graphqlRequest as jest.Mock;

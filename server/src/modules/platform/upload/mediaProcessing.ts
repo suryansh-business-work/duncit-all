@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import sharp from 'sharp';
 import { uploadSettingService } from '@modules/platform/uploadSetting/uploadSetting.service';
-import type { IUploadSetting } from '@modules/platform/uploadSetting/uploadSetting.model';
+import {
+  normalizeSurface,
+  type IUploadSetting,
+} from '@modules/platform/uploadSetting/uploadSetting.model';
 
 /** Source-pixel crop rectangle (react-easy-crop's croppedAreaPixels shape). */
 export interface CropRect {
@@ -19,7 +22,7 @@ export interface CropRect {
 export async function getUploadSettingsSafe(surface?: string | null): Promise<IUploadSetting | null> {
   if (mongoose.connection.readyState !== 1) return null;
   try {
-    return await uploadSettingService.get(surface === 'PORTALS' ? 'PORTALS' : 'MOBILE_MWEB');
+    return await uploadSettingService.get(normalizeSurface(surface));
   } catch {
     return null;
   }

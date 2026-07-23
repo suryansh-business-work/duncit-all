@@ -97,12 +97,33 @@ export const UploadImageDocument = gql(`
   }
 `);
 
+/** Admin Upload Settings for a surface — crop presets, size caps and allowed
+ * formats the native crop/upload UI honours (MOBILE surface). */
+export const UploadSettingsDocument = gql(`
+  query MobileUploadSettings($surface: UploadSurface!) {
+    uploadSettings(surface: $surface) {
+      max_image_mb
+      max_video_mb
+      allowed_image_formats
+      allowed_video_formats
+      default_crop_key
+      crop_presets {
+        key
+        label
+        width
+        height
+        enabled
+      }
+    }
+  }
+`);
+
 /** Starts the server-side FFmpeg compression of an already direct-uploaded
  * ImageKit video; poll MobileVideoCompressionJob for the real percentage.
  * The optional trim window cuts story videos down to the 15s cap. */
 export const StartVideoCompressionDocument = gql(`
   mutation MobileStartVideoCompression($remoteUrl: String!, $folder: String, $trimStart: Float, $trimDuration: Float) {
-    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: "MOBILE_MWEB", trim_start_seconds: $trimStart, trim_duration_seconds: $trimDuration) {
+    startVideoCompression(remote_url: $remoteUrl, folder: $folder, surface: "MOBILE", trim_start_seconds: $trimStart, trim_duration_seconds: $trimDuration) {
       job_id
       status
       pct

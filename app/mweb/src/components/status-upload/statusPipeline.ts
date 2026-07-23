@@ -59,7 +59,7 @@ export async function uploadStatusMedia(opts: {
       apolloClient,
       rawUrl,
       folder,
-      'MOBILE_MWEB',
+      'MWEB',
       (pct) => onStage({ progress: 70 + Math.round(pct * 0.25), message: 'Compressing video...' }),
       opts.trim ?? null,
     );

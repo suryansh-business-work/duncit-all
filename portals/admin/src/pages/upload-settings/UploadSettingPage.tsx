@@ -14,7 +14,7 @@ interface Props {
 }
 
 /**
- * Admin > Upload Settings — one page per surface (Portals / Mobile App + mWeb):
+ * Admin > Upload Settings — one page per surface (Portals / Mobile App / mWeb):
  * max upload sizes, allowed formats, image crop resolution presets, sharp/FFmpeg
  * compression and AI image monitoring, all applied by the server upload path.
  */

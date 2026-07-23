@@ -4,7 +4,9 @@ import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
+  LEGACY_MOBILE_MWEB_SURFACE,
   MediaScanLogModel,
+  normalizeSurface,
   UploadSettingModel,
   UPLOAD_SURFACES,
   type IMediaScanLog,
@@ -24,6 +26,7 @@ import {
  * - POD_FEATURE 1600×800 (2:1): pod cover media — the create-pod field hints
  *   "Min 800×400px" on both mWeb and mobile.
  * - POD_MOMENT 1080×1080 (1:1): club moments MomentTile + profile post grids.
+ * - PRODUCT 1200×1200 (1:1): shop product cards + variant images (square grids).
  * - VENUE_PHOTO 1600×1200 (4:3): venue details photo gallery.
  * - AVATAR 720×720 (1:1): profile avatar crop output size.
  */
@@ -33,6 +36,7 @@ export const DEFAULT_CROP_PRESETS: IUploadCropPreset[] = [
   { key: 'VERTICAL_9_16', label: 'Vertical Image (1080×1920)', width: 1080, height: 1920, enabled: true },
   { key: 'POD_FEATURE', label: 'Pod Feature Image (1600×800)', width: 1600, height: 800, enabled: true },
   { key: 'POD_MOMENT', label: 'Pod Moment (1080×1080)', width: 1080, height: 1080, enabled: true },
+  { key: 'PRODUCT', label: 'Product Image (1200×1200)', width: 1200, height: 1200, enabled: true },
   { key: 'VENUE_PHOTO', label: 'Venue Photo (1600×1200)', width: 1600, height: 1200, enabled: true },
   { key: 'AVATAR', label: 'Avatar (720×720)', width: 720, height: 720, enabled: true },
 ];
@@ -84,15 +88,46 @@ function applyCropPresets(doc: IUploadSetting, input: UpdateUploadSettingInput):
   if (presets.length) doc.crop_presets = presets;
 }
 
+/** Admin-tunable fields carried across the MOBILE_MWEB → MOBILE/MWEB split so a
+ * new surface inherits any customisation instead of resetting to defaults. */
+function carryOverConfig(src: IUploadSetting): Partial<IUploadSetting> {
+  return {
+    max_image_mb: src.max_image_mb,
+    max_video_mb: src.max_video_mb,
+    allowed_image_formats: [...src.allowed_image_formats],
+    allowed_video_formats: [...src.allowed_video_formats],
+    image_compression_enabled: src.image_compression_enabled,
+    image_quality: src.image_quality,
+    image_max_dimension: src.image_max_dimension,
+    video_compression_enabled: src.video_compression_enabled,
+    video_crf: src.video_crf,
+    video_max_height: src.video_max_height,
+    ai_image_monitoring_enabled: src.ai_image_monitoring_enabled,
+    default_crop_key: src.default_crop_key,
+    crop_presets: src.crop_presets.map((p) => ({ ...p })),
+  };
+}
+
+/** Fields to seed a brand-new row with. MOBILE/MWEB inherit the retired
+ * MOBILE_MWEB row's config when present; everything else uses defaults. */
+async function seedFieldsFor(surface: UploadSurface): Promise<Partial<IUploadSetting>> {
+  if (surface === 'MOBILE' || surface === 'MWEB') {
+    const legacy = await UploadSettingModel.findOne({ surface: LEGACY_MOBILE_MWEB_SURFACE });
+    if (legacy) return carryOverConfig(legacy);
+  }
+  return { crop_presets: DEFAULT_CROP_PRESETS };
+}
+
 export const uploadSettingService = {
   /** Settings row for a surface, seeded with defaults on first read. */
   async get(surface: string): Promise<IUploadSetting> {
     assertSurface(surface);
     const existing = await UploadSettingModel.findOne({ surface });
     if (existing) return existing;
+    const seed = await seedFieldsFor(surface);
     return UploadSettingModel.findOneAndUpdate(
       { surface },
-      { $setOnInsert: { surface, crop_presets: DEFAULT_CROP_PRESETS } },
+      { $setOnInsert: { surface, ...seed } },
       { new: true, upsert: true },
     ) as Promise<IUploadSetting>;
   },
@@ -258,9 +293,7 @@ export const mediaScanService = {
   }): Promise<void> {
     if (mongoose.connection.readyState !== 1) return;
     try {
-      const setting = await uploadSettingService.get(
-        input.surface === 'PORTALS' ? 'PORTALS' : 'MOBILE_MWEB',
-      );
+      const setting = await uploadSettingService.get(normalizeSurface(input.surface));
       if (!setting.ai_image_monitoring_enabled) return;
       const log = await MediaScanLogModel.create({
         url: input.url,

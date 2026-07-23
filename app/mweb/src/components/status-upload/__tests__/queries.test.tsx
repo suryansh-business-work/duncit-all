@@ -21,12 +21,12 @@ describe('status-upload queries', () => {
     }
   });
 
-  it('UPLOAD_STATUS_MEDIA targets uploadImageToImagekit with MOBILE_MWEB surface', () => {
+  it('UPLOAD_STATUS_MEDIA targets uploadImageToImagekit with MWEB surface', () => {
     const op = opDef(UPLOAD_STATUS_MEDIA);
     expect(op.name?.value).toBe('UploadStatusMedia');
     const printed = print(UPLOAD_STATUS_MEDIA);
     expect(printed).toContain('uploadImageToImagekit');
-    expect(printed).toContain('surface: "MOBILE_MWEB"');
+    expect(printed).toContain('surface: "MWEB"');
     expect(printed).toContain('crop_preset: $cropPreset');
     expect(printed).toContain('fileId');
     const varNames = (op.variableDefinitions ?? []).map(

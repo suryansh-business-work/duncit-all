@@ -9,7 +9,11 @@ import { croppablePresets } from './cropUtils';
 import { validateFile } from './utils';
 import type { CropRect, FilePolicy, UploadSurface } from './types';
 
-export type UploadStage = 'uploading' | 'compressing';
+// 'uploading'/'compressing' carry a real byte / FFmpeg percentage (video).
+// 'processing' is the image path — the server crops + compresses + uploads in a
+// single mutation with no progress channel, so it shows an honest indeterminate
+// bar instead of a fabricated percentage.
+export type UploadStage = 'uploading' | 'compressing' | 'processing';
 
 interface Args extends FilePolicy {
   open: boolean;
@@ -92,8 +96,9 @@ export function useDeviceUpload({
     if (!picked) return;
     const isVideo = picked.type.startsWith('video/');
     setUploading(true);
-    setStage('uploading');
-    setUploadPct(isVideo ? 0 : 10);
+    // Video shows a real byte %; image shows an honest indeterminate bar.
+    setStage(isVideo ? 'uploading' : 'processing');
+    setUploadPct(isVideo ? 0 : null);
     setError(null);
     try {
       let url: string;
@@ -104,21 +109,22 @@ export function useDeviceUpload({
         setStage('compressing');
         setUploadPct(0);
         url = await compressUploadedVideo(client, url, folder, surface, setUploadPct);
+        setUploadPct(100);
       } else {
+        // Crop rect + preset go to the server, which crops → compresses (sharp)
+        // → uploads in one pass, so the final artifact is cropped + compressed.
         const croppable = croppablePresets(settings?.crop_presets ?? []).some(
           (p) => p.key === cropKey,
         );
         const uploaded = await uploadImageToImagekit(client, picked, {
           folder,
           allowDocuments,
-          onProgress: setUploadPct,
           surface,
           crop: croppable ? cropRect : null,
           cropPreset: croppable ? cropKey : null,
         });
         url = uploaded.url;
       }
-      setUploadPct(100);
       onPicked(url);
       onClose();
     } catch (e: any) {

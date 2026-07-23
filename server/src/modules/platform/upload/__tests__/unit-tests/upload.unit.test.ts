@@ -5,10 +5,46 @@ jest.mock('@config/runtimeEnv', () => ({
   getRuntimeEnvValue: jest.fn(async () => 'test-value'),
 }));
 
+// getUploadSettingsSafe is the seam that decides whether the admin size/format
+// caps apply. Default = null (no DB, matches the un-mocked runtime); individual
+// tests override it with a fake row to exercise the setting-present branches.
+jest.mock('../../mediaProcessing', () => {
+  const actual = jest.requireActual('../../mediaProcessing');
+  return { ...actual, getUploadSettingsSafe: jest.fn(async () => null) };
+});
+
+import { getUploadSettingsSafe } from '../../mediaProcessing';
 import { uploadBase64Image } from '../../upload.service';
+
+const mockSettings = getUploadSettingsSafe as jest.Mock;
 
 const MB = 1024 * 1024;
 const videoBase64 = (bytes: number) => Buffer.alloc(bytes).toString('base64');
+
+/** A settings row with compression off so image bytes pass through untouched. */
+const fakeSetting = (over: Record<string, unknown> = {}) => ({
+  surface: 'MOBILE',
+  max_image_mb: 15,
+  max_video_mb: 100,
+  allowed_image_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+  allowed_video_formats: ['mp4', 'mov', 'webm'],
+  image_compression_enabled: false,
+  image_quality: 80,
+  image_max_dimension: 1920,
+  video_compression_enabled: false,
+  video_crf: 28,
+  video_max_height: 1080,
+  ai_image_monitoring_enabled: false,
+  default_crop_key: 'NO_CROP',
+  crop_presets: [],
+  ...over,
+});
+
+const mockImagekitOk = () =>
+  jest.spyOn(global, 'fetch' as any).mockResolvedValue({
+    ok: true,
+    json: async () => ({ url: 'https://cdn/out', fileId: 'f1' }),
+  } as any);
 
 describe('upload unit', () => {
   it('getImagekitAuth requires authentication', async () => {
@@ -58,6 +94,118 @@ describe('upload unit', () => {
         mimeType: 'video/mp4',
       });
       expect(res.url).toBe('https://cdn/clip.mp4');
+    } finally {
+      fetchMock.mockRestore();
+    }
+  });
+
+  describe('admin Upload Settings enforcement (settings present)', () => {
+    it('enforces the admin max_video_mb instead of the hardcoded 50 MB cap', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ max_video_mb: 1 }));
+      await expect(
+        uploadBase64Image({
+          fileBase64: videoBase64(2 * MB),
+          fileName: 'clip.mp4',
+          mimeType: 'video/mp4',
+          surface: 'MOBILE',
+        }),
+      ).rejects.toThrow('Video is too large (max 1 MB)');
+    });
+
+    it('enforces the admin max_image_mb cap', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ max_image_mb: 1 }));
+      await expect(
+        uploadBase64Image({
+          fileBase64: videoBase64(2 * MB),
+          fileName: 'a.gif',
+          mimeType: 'image/gif',
+          surface: 'MOBILE',
+        }),
+      ).rejects.toThrow('Image is too large (max 1 MB)');
+    });
+
+    it('rejects a disallowed non-processable image format (gif removed from the allow-list)', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ allowed_image_formats: ['jpg'] }));
+      await expect(
+        uploadBase64Image({
+          fileBase64: Buffer.from('GIF89a').toString('base64'),
+          fileName: 'a.gif',
+          mimeType: 'image/gif',
+          surface: 'MOBILE',
+        }),
+      ).rejects.toThrow('Image format .gif is not allowed');
+    });
+
+    it('rejects a disallowed video format even under the size cap', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ allowed_video_formats: ['webm'] }));
+      await expect(
+        uploadBase64Image({
+          fileBase64: videoBase64(1 * MB),
+          fileName: 'clip.mp4',
+          mimeType: 'video/mp4',
+          surface: 'MOBILE',
+        }),
+      ).rejects.toThrow('Video format .mp4 is not allowed');
+    });
+
+    it('uploads an allowed image (gif kept in the allow-list) through the settings path', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting());
+      const fetchMock = mockImagekitOk();
+      try {
+        const res = await uploadBase64Image({
+          fileBase64: Buffer.from('GIF89a').toString('base64'),
+          fileName: 'a.gif',
+          mimeType: 'image/gif',
+          surface: 'MOBILE',
+        });
+        expect(res.url).toBe('https://cdn/out');
+      } finally {
+        fetchMock.mockRestore();
+      }
+    });
+
+    it('lets an extension-less image pass the format guard and uploads it', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting());
+      const fetchMock = mockImagekitOk();
+      try {
+        const res = await uploadBase64Image({
+          fileBase64: Buffer.from('not-a-real-png').toString('base64'),
+          fileName: 'photo',
+          mimeType: 'image/png',
+          surface: 'MOBILE',
+        });
+        expect(res.url).toBe('https://cdn/out');
+      } finally {
+        fetchMock.mockRestore();
+      }
+    });
+
+    it('re-encodes a disallowed-but-processable format (png not in the allow-list) instead of rejecting', async () => {
+      mockSettings.mockResolvedValueOnce(fakeSetting({ allowed_image_formats: ['jpg'] }));
+      const fetchMock = mockImagekitOk();
+      try {
+        const res = await uploadBase64Image({
+          fileBase64: Buffer.from('not-a-real-png').toString('base64'),
+          fileName: 'a.png',
+          mimeType: 'image/png',
+          surface: 'MOBILE',
+        });
+        expect(res.url).toBe('https://cdn/out');
+      } finally {
+        fetchMock.mockRestore();
+      }
+    });
+  });
+
+  it('uploads a small image on the fallback cap when settings are unavailable', async () => {
+    const fetchMock = mockImagekitOk();
+    try {
+      const res = await uploadBase64Image({
+        fileBase64: Buffer.from('GIF89a').toString('base64'),
+        fileName: 'a.gif',
+        mimeType: 'image/gif',
+      });
+      expect(res.url).toBe('https://cdn/out');
     } finally {
       fetchMock.mockRestore();
     }

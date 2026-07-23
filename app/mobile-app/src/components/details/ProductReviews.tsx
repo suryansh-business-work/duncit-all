@@ -3,6 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Button, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
+import { MediaCropDialog } from '@/components/media-crop/MediaCropDialog';
 import {
   CreateProductReviewDocument,
   ProductReviewsDocument,
@@ -11,6 +12,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useUploadSettings } from '@/hooks/useUploadSettings';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Review {
@@ -58,7 +60,6 @@ function Stars({
  * form (stars + comment), the list with images + seller reply and thumbs voting. */
 export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
   const { color: ink, primary } = useThemeColors();
-  const { uploading, pickAndUpload } = useMediaUpload('/product-reviews');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,11 +68,9 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
   const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  const addPhoto = async () => {
-    const url = await pickAndUpload();
-    if (url) setImages((prev) => [...prev, url]);
-  };
+  const settings = useUploadSettings();
+  const upload = useMediaUpload('/product-reviews', (url) => setImages((prev) => [...prev, url]));
+  const uploadBusy = upload.uploading;
 
   const load = () => {
     setLoading(true);
@@ -161,16 +160,26 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
         <XStack
           testID="review-add-photo"
           role="button"
-          onPress={addPhoto}
+          onPress={uploadBusy ? undefined : () => void upload.pick()}
           alignItems="center"
           gap={6}
-          opacity={uploading ? 0.6 : 1}
+          opacity={uploadBusy ? 0.6 : 1}
         >
           <MaterialIcons name="add-photo-alternate" size={18} color={primary} />
           <Text fontSize={13} fontWeight="700" color={primary}>
-            {uploading ? 'Uploading…' : 'Add photo'}
+            {uploadBusy ? 'Uploading…' : 'Add photo'}
           </Text>
         </XStack>
+        <MediaCropDialog
+          media={upload.pending}
+          settings={settings}
+          uploading={upload.uploading}
+          stage={upload.stage}
+          progress={upload.progress}
+          error={upload.error}
+          onConfirm={upload.confirm}
+          onCancel={upload.cancel}
+        />
         {error ? (
           <Text testID="review-error" color="$danger" fontSize={12}>
             {error}

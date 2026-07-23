@@ -18,7 +18,8 @@ import PodsPage from './pages/PodsPage';
 import PodDetailsPage from './pages/PodDetailsPage';
 import PodSettingsPage from './pages/PodSettingsPage';
 import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSettingPage';
-import AppsUploadSettingPage from './pages/upload-settings/AppsUploadSettingPage';
+import MobileUploadSettingPage from './pages/upload-settings/MobileUploadSettingPage';
+import MwebUploadSettingPage from './pages/upload-settings/MwebUploadSettingPage';
 import PodMonitoringPage from './pages/pod-monitoring/PodMonitoringPage';
 import CouponsPage from './pages/CouponsPage';
 import ReferralsPage from './pages/referrals-page/ReferralsPage';
@@ -66,7 +67,8 @@ export default function App() {
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/approvals" element={<ApprovalsPage />} />
                 <Route path="/upload-settings/portals" element={<PortalsUploadSettingPage />} />
-                <Route path="/upload-settings/apps" element={<AppsUploadSettingPage />} />
+                <Route path="/upload-settings/mobile" element={<MobileUploadSettingPage />} />
+                <Route path="/upload-settings/mweb" element={<MwebUploadSettingPage />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />

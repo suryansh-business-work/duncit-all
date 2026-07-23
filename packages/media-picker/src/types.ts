@@ -1,4 +1,4 @@
-export type UploadSurface = 'PORTALS' | 'MOBILE_MWEB';
+export type UploadSurface = 'PORTALS' | 'MOBILE' | 'MWEB';
 
 export interface UploadCropPreset {
   key: string;

@@ -174,6 +174,49 @@ export async function addPickupLocation(payload: Record<string, unknown>): Promi
   };
 }
 
+export interface ServiceabilityQuote {
+  serviceable: boolean;
+  courier_name: string;
+  courier_company_id: string;
+  freight_charge: number;
+  etd: string;
+}
+
+const rateOf = (courier: any): number =>
+  Number(courier?.rate ?? courier?.freight_charge ?? courier?.total_charge ?? 0) || 0;
+
+/**
+ * Cheapest serviceable courier for a pickup→delivery pincode + weight. Returns
+ * `null` when ShipRocket is unconfigured or no courier services the lane, so
+ * callers fall back to the product's manual delivery charge. Genuine gateway
+ * errors propagate (the caller decides whether to swallow them).
+ */
+export async function getServiceability(args: {
+  pickupPincode: string;
+  deliveryPincode: string;
+  weightKg: number;
+  cod?: boolean;
+}): Promise<ServiceabilityQuote | null> {
+  if (!(await isShiprocketConfigured())) return null;
+  const params = new URLSearchParams({
+    pickup_postcode: String(args.pickupPincode),
+    delivery_postcode: String(args.deliveryPincode),
+    weight: String(args.weightKg),
+    cod: args.cod ? '1' : '0',
+  });
+  const data = await srRequest<any>(`/courier/serviceability/?${params.toString()}`, { method: 'GET' });
+  const couriers: any[] = data?.data?.available_courier_companies ?? [];
+  if (couriers.length === 0) return null;
+  const cheapest = couriers.reduce((min, courier) => (rateOf(courier) < rateOf(min) ? courier : min));
+  return {
+    serviceable: true,
+    courier_name: String(cheapest.courier_name ?? ''),
+    courier_company_id: String(cheapest.courier_company_id ?? ''),
+    freight_charge: rateOf(cheapest),
+    etd: String(cheapest.etd ?? cheapest.estimated_delivery_days ?? ''),
+  };
+}
+
 function normaliseTracking(data: any): TrackResult {
   const td = data?.tracking_data ?? data ?? {};
   const track = td?.shipment_track?.[0] ?? {};

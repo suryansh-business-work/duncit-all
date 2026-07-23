@@ -9,6 +9,7 @@ import {
   type IProductOrder,
 } from './productOrder.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { IPayment } from '@modules/finance/payment/payment.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -217,49 +218,119 @@ async function applyProductDeliveryOverrides(lines: any[]) {
   }
 }
 
-/** Bucket the snapshot lines by their effective fulfilment method (per-line
- * override, else the checkout-level one). */
-function groupLinesByMethod(lines: any[], topMethod: FulfilmentMethod) {
-  const groups = new Map<FulfilmentMethod, any[]>();
-  for (const line of lines) {
-    const method = asMethod(line.fulfilment_method ?? topMethod);
-    const arr = groups.get(method) ?? [];
-    arr.push(line);
-    groups.set(method, arr);
+interface Warehouse {
+  id: string;
+  nickname: string;
+}
+const EMPTY_WAREHOUSE: Warehouse = { id: '', nickname: '' };
+
+/** Map each product id → its Duncit warehouse ({ id, nickname }) so SHIP orders
+ * carry the right pickup origin (nickname = the ShipRocket-registered pickup). */
+async function buildWarehouseMap(lines: any[]): Promise<Map<string, Warehouse>> {
+  const map = new Map<string, Warehouse>();
+  const productIds = Array.from(
+    new Set(lines.map((l) => String(l.product_id || '')).filter((id) => Types.ObjectId.isValid(id)))
+  );
+  if (productIds.length === 0) return map;
+  const products = await InventoryProductModel.find({ _id: { $in: productIds } })
+    .select('pickup_location_id')
+    .lean();
+  const warehouseIds = Array.from(
+    new Set(products.map((p: any) => (p.pickup_location_id ? String(p.pickup_location_id) : '')).filter(Boolean))
+  );
+  const warehouses = warehouseIds.length
+    ? await BrandPickupLocationModel.find({ _id: { $in: warehouseIds } }).select('nickname').lean()
+    : [];
+  const nicknameById = new Map(warehouses.map((w: any) => [String(w._id), String(w.nickname ?? '')]));
+  for (const product of products) {
+    const id = product.pickup_location_id ? String(product.pickup_location_id) : '';
+    map.set(String(product._id), { id, nickname: nicknameById.get(id) ?? '' });
   }
-  return groups;
+  return map;
 }
 
-/** Persist the order doc for one fulfilment-method group. */
-async function createOrderForGroup(
-  payment: IPayment,
-  method: FulfilmentMethod,
-  groupLines: any[],
-  shippingAddress: any,
-  pickupVenueId: any
-) {
-  const line_items = await Promise.all(groupLines.map(buildLineItem));
+/** Shipping charge per warehouse id, taken from the payment's quoted breakup. */
+function buildShippingChargeMap(shipping: any): Map<string, number> {
+  const map = new Map<string, number>();
+  const breakup: any[] = Array.isArray(shipping?.breakup) ? shipping.breakup : [];
+  for (const entry of breakup) {
+    map.set(String(entry.warehouse_id ?? ''), Number(entry.charge) || 0);
+  }
+  return map;
+}
+
+interface OrderGroup {
+  pod_id: string;
+  method: FulfilmentMethod;
+  warehouse: Warehouse;
+  lines: any[];
+}
+
+/** Bucket lines by (pod, method, warehouse) — the shape of one product order.
+ * A unified cart spans pods; SHIPROCKET products split further by warehouse. */
+function groupOrderLines(
+  lines: any[],
+  topMethod: FulfilmentMethod,
+  warehouseMap: Map<string, Warehouse>,
+  fallbackPodId: string
+): OrderGroup[] {
+  const groups = new Map<string, OrderGroup>();
+  for (const line of lines) {
+    const method = asMethod(line.fulfilment_method ?? topMethod);
+    const podId = line.pod_id ? String(line.pod_id) : fallbackPodId;
+    const warehouse =
+      method === 'SHIP' ? warehouseMap.get(String(line.product_id)) ?? EMPTY_WAREHOUSE : EMPTY_WAREHOUSE;
+    const key = `${podId}|${method}|${warehouse.id}`;
+    const group = groups.get(key) ?? { pod_id: podId, method, warehouse, lines: [] };
+    group.lines.push(line);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
+/** venue_id per distinct pod, for a PICKUP order's pickup_venue_id. */
+async function loadVenueByPod(podIds: string[]): Promise<Map<string, any>> {
+  const valid = Array.from(new Set(podIds.filter((id) => id && Types.ObjectId.isValid(id))));
+  if (valid.length === 0) return new Map();
+  const pods = await PodModel.find({ _id: { $in: valid } }).select('venue_id').lean();
+  return new Map(pods.map((p: any) => [String(p._id), p.venue_id ?? null]));
+}
+
+interface CreateOrderInput {
+  group: OrderGroup;
+  shippingAddress: any;
+  pickupVenueId: any;
+  shippingCharge: number;
+}
+
+/** Persist the order doc for one (pod, method, warehouse) group. */
+async function createOrderForGroup(payment: IPayment, input: CreateOrderInput) {
+  const { group, shippingAddress, pickupVenueId, shippingCharge } = input;
+  const line_items = await Promise.all(group.lines.map(buildLineItem));
   const items_total = round2(line_items.reduce((s, l) => s + l.gross, 0));
-  const isShip = method === 'SHIP';
+  const isShip = group.method === 'SHIP';
+  const charge = isShip ? round2(shippingCharge) : 0;
+  const podObjId = Types.ObjectId.isValid(group.pod_id) ? new Types.ObjectId(group.pod_id) : null;
   return ProductOrderModel.create({
     order_no: newOrderNo(),
     buyer_id: payment.user_id,
     buyer_name: payment.user_name,
     buyer_email: payment.user_email,
     buyer_phone: payment.user_phone,
-    pod_id: payment.pod_id,
+    pod_id: podObjId,
     payment_id: payment._id,
     payment_ref: payment.payment_id,
     line_items,
     currency_symbol: payment.currency_symbol,
     items_total,
-    shipping_charge: 0,
-    total: items_total,
-    fulfilment_method: method,
+    shipping_charge: charge,
+    total: round2(items_total + charge),
+    fulfilment_method: group.method,
     fulfilment_status: isShip ? 'AWAITING_SHIPMENT' : 'PENDING',
     shipping_address: isShip ? shippingAddress : null,
     pickup_venue_id: isShip ? null : pickupVenueId,
     pickup_ref: isShip ? '' : newPickupRef(),
+    pickup_location_id: isShip ? group.warehouse.nickname : '',
   });
 }
 
@@ -278,27 +349,38 @@ export const productOrderService = {
     if (lines.length === 0) return [];
 
     await applyProductDeliveryOverrides(lines);
-    const groups = groupLinesByMethod(lines, asMethod(meta.fulfilment_method ?? 'PICKUP'));
-
-    const pod = payment.pod_id ? await PodModel.findById(payment.pod_id) : null;
+    const topMethod = asMethod(meta.fulfilment_method ?? 'PICKUP');
+    const fallbackPodId = payment.pod_id ? String(payment.pod_id) : '';
+    const warehouseMap = await buildWarehouseMap(lines);
+    const shippingByWarehouse = buildShippingChargeMap(meta.shipping);
+    const groups = groupOrderLines(lines, topMethod, warehouseMap, fallbackPodId);
+    const venueByPod = await loadVenueByPod(groups.map((g) => g.pod_id));
     const shippingAddress = meta.shipping_address ?? null;
-    const pickupVenueId = (pod as any)?.venue_id ?? null;
-    const created: IProductOrder[] = [];
 
-    for (const [method, groupLines] of groups) {
+    const created: IProductOrder[] = [];
+    for (const group of groups) {
+      const podObjId = Types.ObjectId.isValid(group.pod_id) ? new Types.ObjectId(group.pod_id) : null;
+      const pickupLocationId = group.method === 'SHIP' ? group.warehouse.nickname : '';
       const existing = await ProductOrderModel.findOne({
         payment_id: payment._id,
-        fulfilment_method: method,
+        pod_id: podObjId,
+        fulfilment_method: group.method,
+        pickup_location_id: pickupLocationId,
       });
       if (existing) {
         created.push(existing);
         continue;
       }
-      const doc = await createOrderForGroup(payment, method, groupLines, shippingAddress, pickupVenueId);
+      const doc = await createOrderForGroup(payment, {
+        group,
+        shippingAddress,
+        pickupVenueId: venueByPod.get(group.pod_id) ?? null,
+        shippingCharge: shippingByWarehouse.get(group.warehouse.id) ?? 0,
+      });
       created.push(doc);
       // Point of sale: stock moves only when this order doc is first created.
       await recordStockForOrder(doc);
-      if (method === 'SHIP') await this.tryCreateShipment(doc);
+      if (group.method === 'SHIP') await this.tryCreateShipment(doc);
     }
     return created.map(toPub);
   },

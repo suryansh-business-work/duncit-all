@@ -215,8 +215,12 @@ const productOrderSchema = new Schema<IProductOrder>(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
-// One payment yields at most one order per fulfilment method — the idempotency key.
-productOrderSchema.index({ payment_id: 1, fulfilment_method: 1 }, { unique: true });
+// One payment can span multiple pods (unified cart) and multiple warehouses
+// (one SHIP order per pickup origin), so the idempotency key is the full tuple.
+productOrderSchema.index(
+  { payment_id: 1, pod_id: 1, fulfilment_method: 1, pickup_location_id: 1 },
+  { unique: true }
+);
 productOrderSchema.index({ buyer_id: 1, created_at: -1 });
 
 export const ProductOrderModel = model<IProductOrder>('ProductOrder', productOrderSchema);

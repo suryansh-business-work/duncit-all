@@ -144,6 +144,9 @@ const newPaymentId = () =>
 /** One resolved, invoice-ready checkout line per product+variant selection. */
 interface ResolvedProductLine {
   product_id: string;
+  /** The pod this line was bought from — a unified cart spans pods, and the
+   * per-pod stock gate + product-order split both need it. */
+  pod_id: string;
   variant_id: string;
   variant_label: string;
   variant_sku: string;
@@ -201,7 +204,7 @@ function mergeProductSelections(selectedProducts: any[]): Map<string, MergedSele
 
 /** Build one invoice-ready line for a merged selection, applying variant price +
  * stock gates. Throws when the chosen variant is gone or out of stock. */
-function buildResolvedLine(row: MergedSelection, snapshot: any, product: any): ResolvedProductLine {
+function buildResolvedLine(row: MergedSelection, snapshot: any, product: any, podId: string): ResolvedProductLine {
   let unitCost = Number(snapshot.unit_cost || 0);
   let variant: any = null;
   if (row.variant_id) {
@@ -219,6 +222,7 @@ function buildResolvedLine(row: MergedSelection, snapshot: any, product: any): R
   }
   return {
     product_id: row.product_id,
+    pod_id: podId,
     variant_id: row.variant_id,
     variant_label: variant?.option_label ?? '',
     variant_sku: variant?.sku ?? '',
@@ -267,7 +271,7 @@ async function resolveProductLines(pod: any, selectedProducts: any[] = []): Prom
     const product = productMap.get(row.product_id);
     if (product?.delivery_target === 'SHIPROCKET') needsShipping = true;
     perProductQty.set(row.product_id, (perProductQty.get(row.product_id) ?? 0) + row.quantity);
-    lines.push(buildResolvedLine(row, snapshot, product));
+    lines.push(buildResolvedLine(row, snapshot, product, String(pod?._id ?? '')));
   }
   assertPodRemainingStock(perProductQty, allowed);
   return { lines, total: round2(lines.reduce((s, l) => s + l.gross, 0)), needs_shipping: needsShipping };
@@ -384,6 +388,137 @@ async function resolvePayable(input: any) {
   return { pod, payableAmount, description, products };
 }
 
+/** Group cart selections by their pod so each pod's own product_requests
+ * snapshot + per-pod stock gate apply (a unified cart may span pods). */
+function groupItemsByPod(items: any[]): Map<string, any[]> {
+  const byPod = new Map<string, any[]>();
+  for (const item of items) {
+    const podId = String(item?.pod_id || '');
+    if (!podId) {
+      throw new GraphQLError('Each cart item needs a pod', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const arr = byPod.get(podId) ?? [];
+    arr.push(item);
+    byPod.set(podId, arr);
+  }
+  return byPod;
+}
+
+interface ProductPayableResolution {
+  lines: ResolvedProductLine[];
+  productsTotal: number;
+  needs_shipping: boolean;
+  shipping: { total: number; breakup: any[]; all_quoted: boolean };
+  deliveryPincode: string;
+}
+
+/**
+ * Resolve a standalone product cart (possibly spanning multiple pods) into
+ * priced, invoice-ready lines + the live ShipRocket delivery charge. Reuses the
+ * per-pod resolver so every gate (variant/stock/sold_count) still applies, and
+ * requires a delivery address whenever any line ships.
+ */
+async function resolveProductPayable(input: any): Promise<ProductPayableResolution> {
+  const items: any[] = Array.isArray(input.items) ? input.items : [];
+  if (items.length === 0) {
+    throw new GraphQLError('Your cart is empty', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const byPod = groupItemsByPod(items);
+  const lines: ResolvedProductLine[] = [];
+  let productsTotal = 0;
+  let needsShipping = false;
+  for (const [podId, podItems] of byPod) {
+    const pod = Types.ObjectId.isValid(podId) ? await PodModel.findById(podId) : null;
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    const resolution = await resolveProductLines(pod, podItems);
+    lines.push(...resolution.lines);
+    productsTotal = round2(productsTotal + resolution.total);
+    if (resolution.needs_shipping) needsShipping = true;
+  }
+  if (needsShipping && !input.shipping_address) {
+    throw new GraphQLError('A delivery address is required for shipped products', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const deliveryPincode = String(input.delivery_pincode || input.shipping_address?.pincode || '');
+  const { shiprocketService } = await import('@modules/commerce/shiprocket/shiprocket.service');
+  const shipping = await shiprocketService.quoteShipping(items, deliveryPincode);
+  return { lines, productsTotal, needs_shipping: needsShipping, shipping, deliveryPincode };
+}
+
+/** Coupon + GST for a product cart: the discount applies to the product subtotal
+ * only; shipping is added after, and GST is extracted inclusive from the whole. */
+async function applyProductCoupon(input: any, productsTotal: number, shippingCharge: number, userId: string) {
+  const gross = round2(productsTotal + shippingCharge);
+  const originalQuote = await computeQuote(gross);
+  const code = (input.coupon_code || '').trim();
+  if (!code) {
+    return { quote: originalQuote, originalTotal: originalQuote.total, couponCode: null as string | null, couponDiscount: 0 };
+  }
+  // POD-scoped coupons correctly reject here (pod id is null for a product cart).
+  const result = await couponService.evaluate(code, null, productsTotal, userId);
+  if (!result.ok) {
+    throw new GraphQLError(result.message ?? 'Invalid coupon', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const quote = await computeQuote(round2((Number(result.final_total) || 0) + shippingCharge));
+  return {
+    quote,
+    originalTotal: originalQuote.total,
+    couponCode: result.coupon!.code,
+    couponDiscount: round2(originalQuote.total - quote.total),
+  };
+}
+
+/** Metadata blob for a standalone product payment (no pod ticket). Drives the
+ * per-pod/per-warehouse product-order split + the invoice's delivery line. */
+const productPaymentMetadata = (input: any, resolution: ProductPayableResolution) => ({
+  source: 'app_product_checkout',
+  checkout_url: input.checkout_url,
+  pod_id: null,
+  ticket_amount: null,
+  product_cost_total: resolution.productsTotal,
+  selected_products: input.items ?? [],
+  product_lines: resolution.lines,
+  fulfilment_method: input.fulfilment_method ?? 'PICKUP',
+  shipping_address: input.shipping_address ?? null,
+  delivery_pincode: resolution.deliveryPincode,
+  shipping: resolution.shipping,
+});
+
+interface RazorpaySheetArgs {
+  paymentDocId: string;
+  keyId: string;
+  orderId: string;
+  amountPaise: number;
+  businessName: string;
+  description: string;
+  input: any;
+  currencySymbol: string;
+  total: number;
+  free: boolean;
+  payment: any;
+}
+
+/** Build the RazorpayOrder sheet payload the client opens (shared by the pod +
+ * product live-checkout flows). */
+function razorpaySheet(a: RazorpaySheetArgs) {
+  return {
+    payment_doc_id: a.paymentDocId,
+    key_id: a.keyId,
+    order_id: a.orderId,
+    amount: a.amountPaise,
+    currency: 'INR',
+    name: a.businessName,
+    description: a.description,
+    prefill_email: a.input.contact_email,
+    prefill_contact: a.input.contact_phone_number,
+    currency_symbol: a.currencySymbol,
+    total: a.total,
+    free: a.free,
+    payment: a.payment,
+  };
+}
+
 /** Books the slot + records the PodMember row + evaluates badges for a paid pod. */
 async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
   if (!pod) return;
@@ -434,6 +569,7 @@ function billingAddressLines(b?: IPayment['billing']): string[] {
 function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: number; unit_price: number; amount: number }> {
   const meta: Record<string, any> = doc.metadata ?? {};
   const productLines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
+  const isProductPayment = meta.source === 'app_product_checkout';
   const ticketGross = round2(Number(meta.ticket_amount ?? 0));
   const productGross = round2(productLines.reduce((sum, l) => sum + Number(l.gross || 0), 0));
   const totalGross = round2(ticketGross + productGross);
@@ -442,7 +578,7 @@ function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: num
     return [{ description: doc.description, qty: 1, unit_price: doc.subtotal, amount: doc.subtotal }];
   }
 
-  // Proportional share of the net subtotal, largest-remainder-safe: the ticket
+  // Proportional share of the net subtotal, largest-remainder-safe: the residual
   // line absorbs the rounding residue so the items sum to the subtotal exactly.
   const shareOf = (gross: number) => round2((doc.subtotal * gross) / totalGross);
   const items = productLines.map((l) => {
@@ -451,8 +587,15 @@ function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: num
     return { description: l.name || 'Product', qty, unit_price: round2(amount / qty), amount };
   });
   const productsNet = round2(items.reduce((sum, it) => sum + it.amount, 0));
-  const ticketNet = round2(doc.subtotal - productsNet);
-  return [{ description: 'Event ticket', qty: 1, unit_price: ticketNet, amount: ticketNet }, ...items];
+  const residualNet = round2(doc.subtotal - productsNet);
+
+  // Product cart: the residual is the (net) delivery charge — omit it when there
+  // was no shipping. Pod checkout: the residual is the event ticket.
+  if (isProductPayment) {
+    if (residualNet <= 0) return items;
+    return [...items, { description: 'Delivery charge', qty: 1, unit_price: residualNet, amount: residualNet }];
+  }
+  return [{ description: 'Event ticket', qty: 1, unit_price: residualNet, amount: residualNet }, ...items];
 }
 
 /** Invoice bill-to fields from a payment — prefers the billing snapshot, falls
@@ -674,21 +817,19 @@ export const paymentService = {
       });
       await finalizePaidPayment(freeDoc, fs, 'Coupon (100% off)');
       if (couponCode) await couponService.recordRedemption(couponCode);
-      return {
-        payment_doc_id: String(freeDoc._id),
-        key_id: keyId,
-        order_id: '',
-        amount: 0,
-        currency: 'INR',
-        name: fs.business_name,
+      return razorpaySheet({
+        paymentDocId: String(freeDoc._id),
+        keyId,
+        orderId: '',
+        amountPaise: 0,
+        businessName: fs.business_name,
         description,
-        prefill_email: input.contact_email,
-        prefill_contact: input.contact_phone_number,
-        currency_symbol: quote.currency_symbol,
+        input,
+        currencySymbol: quote.currency_symbol,
         total: 0,
         free: true,
         payment: toPub(freeDoc),
-      };
+      });
     }
 
     const amountPaise = Math.round(quote.total * 100);
@@ -709,21 +850,19 @@ export const paymentService = {
       metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal, razorpay_order_id: order.id },
     });
 
-    return {
-      payment_doc_id: String(doc._id),
-      key_id: keyId,
-      order_id: order.id,
-      amount: amountPaise,
-      currency: 'INR',
-      name: fs.business_name,
+    return razorpaySheet({
+      paymentDocId: String(doc._id),
+      keyId,
+      orderId: order.id,
+      amountPaise,
+      businessName: fs.business_name,
       description,
-      prefill_email: input.contact_email,
-      prefill_contact: input.contact_phone_number,
-      currency_symbol: quote.currency_symbol,
+      input,
+      currencySymbol: quote.currency_symbol,
       total: quote.total,
       free: false,
       payment: null,
-    };
+    });
   },
 
   /** Step 2 of live checkout: verify the signature, then finalize the payment. */
@@ -763,6 +902,174 @@ export const paymentService = {
     await finalizePaidPayment(doc, fs, 'Razorpay');
     if (doc.coupon_code) await couponService.recordRedemption(doc.coupon_code);
     return toPub(doc);
+  },
+
+  /** Live ShipRocket delivery estimate for a product cart (preview only). The
+   * charged amount is recomputed server-side at checkout, never trusted from here. */
+  async productShippingQuote(input: any) {
+    const items = Array.isArray(input.items) ? input.items : [];
+    const deliveryPincode = String(input.delivery_pincode || '');
+    const fs = await getFinanceSettings();
+    const { shiprocketService } = await import('@modules/commerce/shiprocket/shiprocket.service');
+    const quote = await shiprocketService.quoteShipping(items, deliveryPincode);
+    return {
+      total: quote.total,
+      currency_symbol: fs.currency_symbol,
+      all_quoted: quote.all_quoted,
+      lines: quote.breakup,
+    };
+  },
+
+  /** Standalone product-cart checkout via the dummy gateway (no pod ticket). */
+  async dummyProductCheckout(input: any, userId: string) {
+    const fs = await getFinanceSettings();
+    if (!fs.dummy_mode) {
+      throw new GraphQLError('Live payment gateway is not configured. Enable dummy mode to test.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    const user = await UserModel.findById(userId);
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+
+    const resolution = await resolveProductPayable(input);
+    const { quote, originalTotal, couponCode, couponDiscount } = await applyProductCoupon(
+      input,
+      resolution.productsTotal,
+      resolution.shipping.total,
+      userId
+    );
+
+    const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
+    const paidAt = status === 'SUCCESS' ? new Date() : null;
+    const invoice_no = status === 'SUCCESS' ? await nextInvoiceNumber() : null;
+
+    const doc = await PaymentModel.create({
+      payment_id: newPaymentId(),
+      invoice_no,
+      user_id: user._id,
+      ...buildBuyerFields(input, user),
+      checkout_url: input.checkout_url,
+      target_type: 'PRODUCT',
+      pod_id: null,
+      description: input.description || 'Product order',
+      subtotal: quote.subtotal,
+      platform_fee_pct: quote.platform_fee_pct,
+      platform_fee_amount: quote.platform_fee_amount,
+      gst_pct: quote.gst_pct,
+      gst_amount: quote.gst_amount,
+      total: quote.total,
+      currency_symbol: quote.currency_symbol,
+      coupon_code: couponCode,
+      coupon_discount: couponDiscount,
+      status,
+      gateway: 'DUMMY',
+      gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
+      paid_at: paidAt,
+      metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal },
+    });
+
+    if (status === 'SUCCESS') {
+      await finalizePaidPayment(doc, fs, 'Dummy Gateway');
+      if (couponCode) await couponService.recordRedemption(couponCode);
+    }
+    return toPub(doc);
+  },
+
+  /** Step 1 of live product-cart checkout: create a Razorpay order + a PENDING
+   * PRODUCT payment. Verified via the shared verifyRazorpayPayment. */
+  async createRazorpayProductCheckout(input: any, userId: string) {
+    const fs = await getFinanceSettings();
+    const { keyId } = await getRazorpayKeys();
+    const user = await UserModel.findById(userId);
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+
+    const resolution = await resolveProductPayable(input);
+    const { quote, originalTotal, couponCode, couponDiscount } = await applyProductCoupon(
+      input,
+      resolution.productsTotal,
+      resolution.shipping.total,
+      userId
+    );
+    const payment_id = newPaymentId();
+    const description = input.description || 'Product order';
+    const base = {
+      payment_id,
+      user_id: user._id,
+      ...buildBuyerFields(input, user),
+      checkout_url: input.checkout_url,
+      target_type: 'PRODUCT',
+      pod_id: null,
+      description,
+      subtotal: quote.subtotal,
+      platform_fee_pct: quote.platform_fee_pct,
+      platform_fee_amount: quote.platform_fee_amount,
+      gst_pct: quote.gst_pct,
+      gst_amount: quote.gst_amount,
+      total: quote.total,
+      currency_symbol: quote.currency_symbol,
+      coupon_code: couponCode,
+      coupon_discount: couponDiscount,
+    };
+
+    // 100%-off coupon → nothing to charge: finalize immediately, skip the gateway.
+    if (quote.total <= 0) {
+      const freeDoc = await PaymentModel.create({
+        ...base,
+        invoice_no: await nextInvoiceNumber(),
+        status: 'SUCCESS',
+        gateway: 'COUPON',
+        gateway_ref: `coupon_${Date.now()}`,
+        paid_at: new Date(),
+        metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal },
+      });
+      await finalizePaidPayment(freeDoc, fs, 'Coupon (100% off)');
+      if (couponCode) await couponService.recordRedemption(couponCode);
+      return razorpaySheet({
+        paymentDocId: String(freeDoc._id),
+        keyId,
+        orderId: '',
+        amountPaise: 0,
+        businessName: fs.business_name,
+        description,
+        input,
+        currencySymbol: quote.currency_symbol,
+        total: 0,
+        free: true,
+        payment: toPub(freeDoc),
+      });
+    }
+
+    const amountPaise = Math.round(quote.total * 100);
+    const order = await createRazorpayOrder({
+      amountPaise,
+      currency: 'INR',
+      receipt: payment_id,
+      notes: { kind: 'product', user_id: String(user._id) },
+    });
+
+    const doc = await PaymentModel.create({
+      ...base,
+      invoice_no: null,
+      status: 'PENDING',
+      gateway: 'RAZORPAY',
+      gateway_ref: order.id,
+      paid_at: null,
+      metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal, razorpay_order_id: order.id },
+    });
+
+    return razorpaySheet({
+      paymentDocId: String(doc._id),
+      keyId,
+      orderId: order.id,
+      amountPaise,
+      businessName: fs.business_name,
+      description,
+      input,
+      currencySymbol: quote.currency_symbol,
+      total: quote.total,
+      free: false,
+      payment: null,
+    });
   },
 
   async refund(paymentDocId: string, reason?: string) {

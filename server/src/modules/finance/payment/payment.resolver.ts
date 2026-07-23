@@ -5,6 +5,9 @@ import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import {
   dummyCheckoutSchema,
+  dummyProductCheckoutSchema,
+  productCheckoutSchema,
+  productShippingQuoteSchema,
   razorpayOrderSchema,
   verifyRazorpaySchema,
 } from './payment.validator';
@@ -52,6 +55,11 @@ export const paymentResolvers = {
       const u = requireAuth(ctx);
       return paymentService.invoicePdfBase64(args.payment_doc_id, u.id, hasRole(u, ADMIN_RW));
     },
+    productShippingQuote: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      const input = await validate(productShippingQuoteSchema, args.input);
+      return paymentService.productShippingQuote(input);
+    },
   },
   Mutation: {
     dummyCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -72,6 +80,16 @@ export const paymentResolvers = {
     refundPayment: (_p: unknown, args: { payment_doc_id: string; reason?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return paymentService.refund(args.payment_doc_id, args.reason);
+    },
+    dummyProductCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      const input = await validate(dummyProductCheckoutSchema, args.input);
+      return paymentService.dummyProductCheckout(input, u.id);
+    },
+    createRazorpayProductOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      const input = await validate(productCheckoutSchema, args.input);
+      return paymentService.createRazorpayProductCheckout(input, u.id);
     },
   },
 };

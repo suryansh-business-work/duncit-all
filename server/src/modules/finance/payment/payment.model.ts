@@ -1,7 +1,7 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
-export type PaymentTargetType = 'POD' | 'OTHER';
+export type PaymentTargetType = 'POD' | 'PRODUCT' | 'OTHER';
 
 export interface IBillingDetails {
   name: string;
@@ -78,7 +78,7 @@ const paymentSchema = new Schema<IPayment>(
     billing_address: { type: String, default: '' },
     billing: { type: billingSchema, default: () => ({}) },
     checkout_url: { type: String, default: '' },
-    target_type: { type: String, enum: ['POD', 'OTHER'], default: 'POD' },
+    target_type: { type: String, enum: ['POD', 'PRODUCT', 'OTHER'], default: 'POD' },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
     description: { type: String, default: '' },
     subtotal: { type: Number, required: true, min: 0 },

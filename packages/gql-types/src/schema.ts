@@ -2275,6 +2275,24 @@ export type DummyCheckoutInput = {
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
+export type DummyProductCheckoutInput = {
+  billing?: InputMaybe<CheckoutBillingInput>;
+  billing_address?: InputMaybe<Scalars['String']['input']>;
+  checkout_url: Scalars['String']['input'];
+  contact_email: Scalars['String']['input'];
+  contact_name?: InputMaybe<Scalars['String']['input']>;
+  contact_phone?: InputMaybe<Scalars['String']['input']>;
+  contact_phone_extension: Scalars['String']['input'];
+  contact_phone_number: Scalars['String']['input'];
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  delivery_pincode?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  fulfilment_method?: InputMaybe<FulfilmentMethod>;
+  items: Array<ProductCartItemInput>;
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
+  simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
 export type EarningsSummary = {
   __typename?: 'EarningsSummary';
   currency_symbol: Scalars['String']['output'];
@@ -4169,6 +4187,8 @@ export type Mutation = {
   /** Create or update the caller's review of a product. */
   createProductReview: ProductReview;
   createRazorpayOrder: RazorpayOrder;
+  /** Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment). */
+  createRazorpayProductOrder: RazorpayOrder;
   createRole: Role;
   createSlotTemplate: SlotTemplate;
   createSurvey: Survey;
@@ -4261,6 +4281,8 @@ export type Mutation = {
   /** Onboarding staff remove a cancelled meeting from the calendar (kept for audit). */
   dismissMeeting: OnboardingMeeting;
   dummyCheckout: Payment;
+  /** Standalone product-cart checkout via the dummy gateway. */
+  dummyProductCheckout: Payment;
   duplicateInventoryProduct: InventoryProduct;
   /**  Admin-only: edit an existing adjustment's delta/remark in place. Returns the recomputed score.  */
   editAdjustment: HealthScore;
@@ -5171,6 +5193,11 @@ export type MutationCreateRazorpayOrderArgs = {
 };
 
 
+export type MutationCreateRazorpayProductOrderArgs = {
+  input: ProductCheckoutInput;
+};
+
+
 export type MutationCreateRoleArgs = {
   input: CreateRoleInput;
 };
@@ -5584,6 +5611,11 @@ export type MutationDismissMeetingArgs = {
 
 export type MutationDummyCheckoutArgs = {
   input: DummyCheckoutInput;
+};
+
+
+export type MutationDummyProductCheckoutArgs = {
+  input: DummyProductCheckoutInput;
 };
 
 
@@ -7371,7 +7403,8 @@ export type PaymentTablePage = {
 
 export type PaymentTargetType =
   | 'OTHER'
-  | 'POD';
+  | 'POD'
+  | 'PRODUCT';
 
 export type PayoutMode =
   | 'IMMEDIATE'
@@ -8107,6 +8140,16 @@ export type ProductAnalyticsLocation = {
   units_sold: Scalars['Int']['output'];
 };
 
+/** One cart line for the standalone product checkout — each keeps its own pod (the pod's per-pod stock gate still applies). */
+export type ProductCartItemInput = {
+  /** Optional per-line fulfilment override; falls back to the cart-level method. */
+  fulfilment_method?: InputMaybe<FulfilmentMethod>;
+  pod_id: Scalars['ID']['input'];
+  product_id: Scalars['ID']['input'];
+  quantity: Scalars['Int']['input'];
+  variant_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
 /** One Super/Category/Sub taxonomy row a product is sold in (a product may have several). */
 export type ProductCategory = {
   __typename?: 'ProductCategory';
@@ -8125,6 +8168,27 @@ export type ProductCategoryInput = {
   sub_category_name?: InputMaybe<Scalars['String']['input']>;
   super_category_id: Scalars['ID']['input'];
   super_category_name?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Standalone product-cart checkout (no pod ticket). Shipping is quoted live from ShipRocket and charged on top. */
+export type ProductCheckoutInput = {
+  billing?: InputMaybe<CheckoutBillingInput>;
+  billing_address?: InputMaybe<Scalars['String']['input']>;
+  checkout_url: Scalars['String']['input'];
+  contact_email: Scalars['String']['input'];
+  contact_name?: InputMaybe<Scalars['String']['input']>;
+  contact_phone?: InputMaybe<Scalars['String']['input']>;
+  contact_phone_extension: Scalars['String']['input'];
+  contact_phone_number: Scalars['String']['input'];
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  /** Destination pincode for the ShipRocket rate; falls back to shipping_address.pincode. */
+  delivery_pincode?: InputMaybe<Scalars['String']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Cart-level default fulfilment method (default PICKUP). */
+  fulfilment_method?: InputMaybe<FulfilmentMethod>;
+  items: Array<ProductCartItemInput>;
+  /** Delivery address, required when any product ships. */
+  shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
 
 export type ProductListingDeliveryTarget =
@@ -8253,6 +8317,31 @@ export type ProductReviewSummary = {
   /** Count of reviews per star, index 0 = 1★ … index 4 = 5★. */
   star_counts: Array<Scalars['Int']['output']>;
   total: Scalars['Int']['output'];
+};
+
+export type ProductShippingQuote = {
+  __typename?: 'ProductShippingQuote';
+  /** True when every warehouse group was priced live by ShipRocket. */
+  all_quoted: Scalars['Boolean']['output'];
+  currency_symbol: Scalars['String']['output'];
+  lines: Array<ProductShippingQuoteLine>;
+  total: Scalars['Float']['output'];
+};
+
+export type ProductShippingQuoteInput = {
+  delivery_pincode: Scalars['String']['input'];
+  items: Array<ProductCartItemInput>;
+};
+
+/** One warehouse's delivery estimate in a product-cart shipping quote. */
+export type ProductShippingQuoteLine = {
+  __typename?: 'ProductShippingQuoteLine';
+  charge: Scalars['Float']['output'];
+  courier_name: Scalars['String']['output'];
+  pickup_pincode: Scalars['String']['output'];
+  /** True when priced live by ShipRocket; false when it fell back to the manual delivery charge. */
+  quoted: Scalars['Boolean']['output'];
+  warehouse_id: Scalars['ID']['output'];
 };
 
 export type ProductType =
@@ -8795,6 +8884,8 @@ export type Query = {
   productOrdersTable: ProductOrderTablePage;
   productReviewSummary: ProductReviewSummary;
   productReviews: Array<ProductReview>;
+  /** Live ShipRocket delivery estimate for a product cart (preview only; the charged amount is recomputed server-side at checkout). */
+  productShippingQuote: ProductShippingQuote;
   publicAppSettings: PublicAppSettings;
   publicClientConfig: PublicClientConfig;
   /** Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side). */
@@ -10093,6 +10184,11 @@ export type QueryProductReviewSummaryArgs = {
 
 export type QueryProductReviewsArgs = {
   product_id: Scalars['ID']['input'];
+};
+
+
+export type QueryProductShippingQuoteArgs = {
+  input: ProductShippingQuoteInput;
 };
 
 

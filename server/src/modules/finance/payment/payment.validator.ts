@@ -69,3 +69,52 @@ export const verifyRazorpaySchema = yup.object({
   razorpay_payment_id: yup.string().trim().required('Payment id is required'),
   razorpay_signature: yup.string().trim().required('Signature is required'),
 });
+
+const pincodeRegex = /^\d{4,10}$/;
+
+// Standalone product-cart checkout (no pod ticket). `items` sub-fields are
+// enforced by the GraphQL input type; the array itself just can't be empty.
+export const dummyProductCheckoutSchema = yup.object({
+  items: yup.array().min(1, 'Your cart is empty').required('Items are required'),
+  description: yup.string().trim().max(300).default('Product order'),
+  contact_name: yup.string().trim().max(160).optional(),
+  contact_email: yup.string().trim().email().required('Email is required'),
+  contact_phone: yup.string().trim().max(32).optional(),
+  contact_phone_extension: yup.string().trim().matches(phoneExtensionRegex, 'Phone code is invalid').required('Phone code is required'),
+  contact_phone_number: yup.string().trim().matches(phoneNumberRegex, 'Phone must contain only digits (6-15 digits)').required('Phone is required'),
+  billing: checkoutBillingSchema.optional().default(undefined),
+  billing_address: yup.string().trim().max(500).optional(),
+  checkout_url: yup
+    .string()
+    .trim()
+    .max(2048)
+    .required('Checkout URL is required')
+    .test('is-url', 'checkout_url must be a valid URL', (val) => {
+      if (!val) return false;
+      try { new URL(val); return true; } catch { return false; }
+    }),
+  coupon_code: yup.string().trim().max(40).nullable().default(null),
+  fulfilment_method: yup.string().oneOf(['SHIP', 'PICKUP']).default('PICKUP'),
+  shipping_address: yup.object().nullable().default(null),
+  delivery_pincode: yup
+    .string()
+    .trim()
+    .matches(pincodeRegex, { message: 'Enter a valid pincode', excludeEmptyString: true })
+    .nullable()
+    .default(null),
+  simulate_failure: yup.boolean().default(false),
+}).test(
+  'has-billing',
+  'A billing address is required',
+  (v) => !!(v.billing?.line1 || (v.billing_address && v.billing_address.trim().length >= 8))
+);
+
+export type DummyProductCheckoutDTO = yup.InferType<typeof dummyProductCheckoutSchema>;
+
+/** Live Razorpay product order — same fields as the dummy flow, no simulate_failure. */
+export const productCheckoutSchema = dummyProductCheckoutSchema.omit(['simulate_failure']);
+
+export const productShippingQuoteSchema = yup.object({
+  items: yup.array().min(1, 'Your cart is empty').required('Items are required'),
+  delivery_pincode: yup.string().trim().matches(pincodeRegex, 'Enter a valid pincode').required('Delivery pincode is required'),
+});

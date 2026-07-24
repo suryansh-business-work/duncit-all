@@ -43,6 +43,7 @@ export const appConfig = {
         { label: 'Product Request', to: '/ecomm/product-request', icon: 'inventory' },
       ],
     },
+    { label: 'Warehouse Approval', to: '/warehouse-approval', icon: 'warehouse' },
     {
       label: 'Fulfilment',
       icon: 'local_shipping',

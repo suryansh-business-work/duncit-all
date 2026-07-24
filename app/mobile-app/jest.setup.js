@@ -86,6 +86,27 @@ jest.mock('moti', () => {
   };
 });
 
+// socket.io-client keeps ping/reconnect timers alive after a socket is created;
+// a SCREEN spec that renders a socket hook (LiveChat, tickets, live pods)
+// without mocking socket.io leaves that handle open, so the jest worker is
+// force-exited and its coverage isn't collected — an intermittent failure on
+// the 100% gate. Default to an inert socket so no spec opens a real connection;
+// the socket-hook specs override this with their own richer jest.mock.
+jest.mock('socket.io-client', () => {
+  const io = jest.fn(() => ({
+    on: jest.fn(),
+    off: jest.fn(),
+    emit: jest.fn(),
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+    close: jest.fn(),
+    removeAllListeners: jest.fn(),
+    connected: false,
+    id: 'test-socket',
+  }));
+  return { __esModule: true, io, default: io };
+});
+
 // Clear the in-memory Earn onboarding draft between tests so a draft written by
 // one test never seeds the next (the store persists within a test file).
 afterEach(() => {

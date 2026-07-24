@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import DockerContainersTable from '../../src/pages/server/DockerContainersTable';
 import type { DockerContainer } from '../../src/pages/server/queries';
 import { makeDockerContainer } from '../mocks/server.mock';
@@ -12,16 +12,35 @@ beforeEach(() => {
 
 describe('DockerContainersTable', () => {
   it('shows the empty state when there are no containers', async () => {
-    render(<DockerContainersTable fetchRows={fetchFor([])} refetchRef={{ current: null }} />);
+    render(
+      <DockerContainersTable
+        fetchRows={fetchFor([])}
+        refetchRef={{ current: null }}
+        onRestart={vi.fn()}
+      />,
+    );
     expect(await screen.findByText('No containers found.')).toBeInTheDocument();
   });
 
   it('renders running/stopped rows, the id fallback and created dates', async () => {
     const rows = [
       makeDockerContainer({ id: 'abc123', name: 'server', state: 'running', status: 'Up 3 days' }),
-      makeDockerContainer({ id: 'def456', name: '', image: 'nginx:1.27', state: 'exited', status: 'Exited (0)', createdAt: null }),
+      makeDockerContainer({
+        id: 'def456',
+        name: '',
+        image: 'nginx:1.27',
+        state: 'exited',
+        status: 'Exited (0)',
+        createdAt: null,
+      }),
     ];
-    render(<DockerContainersTable fetchRows={fetchFor(rows)} refetchRef={{ current: null }} />);
+    render(
+      <DockerContainersTable
+        fetchRows={fetchFor(rows)}
+        refetchRef={{ current: null }}
+        onRestart={vi.fn()}
+      />,
+    );
 
     expect(await screen.findByText('server')).toBeInTheDocument();
     expect(screen.getByText('def456')).toBeInTheDocument(); // nameless container falls back to its id
@@ -30,5 +49,23 @@ describe('DockerContainersTable', () => {
     expect(screen.getByText('exited')).toBeInTheDocument();
     expect(screen.getByText('Up 3 days')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument(); // null createdAt
+  });
+
+  it('restarts by container name, falling back to the id when the name is blank', async () => {
+    const onRestart = vi.fn();
+    render(
+      <DockerContainersTable
+        fetchRows={fetchFor([
+          makeDockerContainer({ id: 'abc123', name: 'duncit-crm' }),
+          makeDockerContainer({ id: 'def456', name: '' }),
+        ])}
+        refetchRef={{ current: null }}
+        onRestart={onRestart}
+      />,
+    );
+    const buttons = await screen.findAllByRole('button', { name: /restart/i });
+    buttons.forEach((b) => fireEvent.click(b));
+    expect(onRestart).toHaveBeenCalledWith('duncit-crm');
+    expect(onRestart).toHaveBeenCalledWith('def456');
   });
 });

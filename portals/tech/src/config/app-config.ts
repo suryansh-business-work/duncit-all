@@ -11,8 +11,8 @@ export const appConfig = {
   name: 'Tech',
   fullName: 'Duncit Tech',
   tagline: 'Manage platform configuration and environment variables.',
-  promoTitle: "Ship with control",
-  promoText: "Environment, feature flags and platform config in one console.",
+  promoTitle: 'Ship with control',
+  promoText: 'Environment, feature flags and platform config in one console.',
   portalLabel: 'Tech Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -36,6 +36,7 @@ export const appConfig = {
       children: [
         { label: 'Info', to: '/server/info', icon: 'info' },
         { label: 'Docker', to: '/server/docker', icon: 'docker' },
+        { label: 'Terminal', to: '/server/terminal', icon: 'terminal' },
       ],
     },
   ],

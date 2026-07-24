@@ -1,5 +1,6 @@
-import type { MutableRefObject } from 'react';
-import { Chip, Typography } from '@mui/material';
+import { useMemo, type MutableRefObject } from 'react';
+import { Button, Chip, Typography } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { formatDateTime } from './format';
 import type { DockerContainer } from './queries';
@@ -17,12 +18,16 @@ const STATE_OPTIONS = [
 const getContainerRowId = (c: DockerContainer) => c.id;
 
 const renderName = (c: DockerContainer) => (
-  <Typography variant="body2" fontWeight={600}>{c.name || c.id}</Typography>
+  <Typography variant="body2" fontWeight={600}>
+    {c.name || c.id}
+  </Typography>
 );
 const nameValue = (c: DockerContainer) => c.name || c.id;
 
 const renderImage = (c: DockerContainer) => (
-  <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>{c.image}</Typography>
+  <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+    {c.image}
+  </Typography>
 );
 
 const renderState = (c: DockerContainer) => (
@@ -32,24 +37,85 @@ const renderState = (c: DockerContainer) => (
 const createdValue = (c: DockerContainer) => formatDateTime(c.createdAt);
 
 const COLUMNS: DuncitColumn<DockerContainer>[] = [
-  { field: 'name', headerName: 'Name', flex: 1, minWidth: 180, filter: { type: 'text' }, cellRenderer: renderName, valueGetter: nameValue },
-  { field: 'image', headerName: 'Image', flex: 1.4, minWidth: 220, filter: { type: 'text' }, cellRenderer: renderImage },
-  { field: 'state', headerName: 'State', width: 130, filter: { type: 'select', options: STATE_OPTIONS }, cellRenderer: renderState },
+  {
+    field: 'name',
+    headerName: 'Name',
+    flex: 1,
+    minWidth: 180,
+    filter: { type: 'text' },
+    cellRenderer: renderName,
+    valueGetter: nameValue,
+  },
+  {
+    field: 'image',
+    headerName: 'Image',
+    flex: 1.4,
+    minWidth: 220,
+    filter: { type: 'text' },
+    cellRenderer: renderImage,
+  },
+  {
+    field: 'state',
+    headerName: 'State',
+    width: 130,
+    filter: { type: 'select', options: STATE_OPTIONS },
+    cellRenderer: renderState,
+  },
   { field: 'status', headerName: 'Status', flex: 1, minWidth: 160 },
-  { field: 'createdAt', headerName: 'Created', width: 180, filter: { type: 'date' }, valueGetter: createdValue },
+  {
+    field: 'createdAt',
+    headerName: 'Created',
+    width: 180,
+    filter: { type: 'date' },
+    valueGetter: createdValue,
+  },
 ];
 
 interface Props {
   fetchRows: TableFetch<DockerContainer>;
   refetchRef: MutableRefObject<(() => void) | null>;
+  onRestart: (name: string) => void;
 }
 
-/** Server-paged table over the host's Docker containers (read-only). */
-export default function DockerContainersTable({ fetchRows, refetchRef }: Readonly<Props>) {
+/** Server-paged table over the host's Docker containers, with a per-row Restart
+ * action. The action column carries a `valueGetter` on the container state so
+ * AG Grid re-renders the cell after a restart (renderer-only columns otherwise
+ * freeze on stale rows). */
+export default function DockerContainersTable({
+  fetchRows,
+  refetchRef,
+  onRestart,
+}: Readonly<Props>) {
+  const columns = useMemo<DuncitColumn<DockerContainer>[]>(
+    () => [
+      ...COLUMNS,
+      {
+        field: 'actions',
+        headerName: '',
+        sortable: false,
+        width: 130,
+        valueGetter: (c) => c.state,
+        cellRenderer: (c: DockerContainer) => (
+          <Button
+            size="small"
+            variant="outlined"
+            color="warning"
+            startIcon={<RestartAltIcon fontSize="small" />}
+            onClick={() => onRestart(c.name || c.id)}
+            sx={{ whiteSpace: 'nowrap' }}
+          >
+            Restart
+          </Button>
+        ),
+      },
+    ],
+    [onRestart],
+  );
+
   return (
     <DuncitTable<DockerContainer>
       tableId="tech-docker-containers"
-      columns={COLUMNS}
+      columns={columns}
       fetchRows={fetchRows}
       getRowId={getContainerRowId}
       emptyText="No containers found."

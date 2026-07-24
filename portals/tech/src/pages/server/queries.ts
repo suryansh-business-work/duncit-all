@@ -97,6 +97,34 @@ export const DOCKER_CONTAINERS_TABLE = gql`
   }
 `;
 
+/** Restart one container by name (SUPER_ADMIN / TECH_MANAGER). */
+export const TECH_RESTART_CONTAINER = gql`
+  mutation TechRestartContainer($name: String!) {
+    techRestartContainer(name: $name) {
+      ok
+      error
+    }
+  }
+`;
+
+/** Recent logs for one container — polled by the restart log dialog. */
+export const TECH_CONTAINER_LOGS = gql`
+  query TechContainerLogs($name: String!, $tail: Int) {
+    techContainerLogs(name: $name, tail: $tail)
+  }
+`;
+
+/** Run a shell command in the API container (SUPER_ADMIN only, audited). */
+export const TECH_EXEC = gql`
+  mutation TechExec($command: String!) {
+    techExec(command: $command) {
+      stdout
+      stderr
+      exitCode
+    }
+  }
+`;
+
 /** Extract the hostname from a URL, or undefined when it can't be parsed. */
 export function hostFromUrl(url: string): string | undefined {
   try {
@@ -182,4 +210,13 @@ export interface DockerInfo {
   containersRunning: number;
   containersTotal: number;
   containers: DockerContainer[];
+}
+export interface TechRestartResult {
+  ok: boolean;
+  error: string | null;
+}
+export interface TechExecResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
 }

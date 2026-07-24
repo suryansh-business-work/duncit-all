@@ -51,6 +51,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import StarRateIcon from '@mui/icons-material/StarRate';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import TuneIcon from '@mui/icons-material/Tune';
 import ViewInArIcon from '@mui/icons-material/ViewInAr';
@@ -128,6 +129,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   support: SupportAgentIcon,
   survey: AssignmentIcon,
   ticket: ConfirmationNumberIcon,
+  terminal: TerminalIcon,
   timeline: TimelineIcon,
   tools: HandymanIcon,
   tune: TuneIcon,

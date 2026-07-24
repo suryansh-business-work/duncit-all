@@ -36,10 +36,13 @@ async function ownedLocation(brandId: string, id: string) {
 const isDuplicateKeyError = (error: unknown) =>
   !!error && typeof error === 'object' && (error as { code?: number }).code === 11000;
 
+const REVIEW_STATUSES = new Set(['PENDING', 'APPROVED', 'REJECTED']);
+
 const toPub = (d: IBrandPickupLocation) => ({
   id: String(d._id),
   owner_kind: d.owner_kind,
   brand_id: d.brand_id ? String(d.brand_id) : null,
+  review_status: d.review_status ?? 'APPROVED',
   nickname: d.nickname,
   contact_name: d.contact_name,
   phone: d.phone,
@@ -104,6 +107,8 @@ export const brandPickupLocationService = {
       pincode: String(input.pincode ?? '').trim(),
       country: String(input.country ?? 'India').trim(),
       is_default: !!input.is_default,
+      // Admin/Duncit saves default to APPROVED; partner saves force PENDING.
+      review_status: REVIEW_STATUSES.has(input.review_status) ? input.review_status : 'APPROVED',
     };
     let doc: IBrandPickupLocation | null;
     if (id) {
@@ -147,7 +152,17 @@ export const brandPickupLocationService = {
     await loadOwnedBrand(userId, brandDocId);
     if (id) await ownedLocation(brandDocId, id);
     try {
-      return await this.save(id, { ...input, owner_kind: 'BRAND', brand_id: brandDocId });
+      // Partner warehouses are gated: saved as PENDING and blocked from product
+      // use until a Products Manager approves the raised request.
+      const saved = await this.save(id, {
+        ...input,
+        owner_kind: 'BRAND',
+        brand_id: brandDocId,
+        review_status: 'PENDING',
+      });
+      const { approvalService } = await import('@modules/approval/approval.service');
+      await approvalService.submitWarehouseApproval(saved.id, saved.nickname, !!id, userId);
+      return saved;
     } catch (error) {
       if (isDuplicateKeyError(error)) {
         throw new GraphQLError('A warehouse with this nickname already exists', {

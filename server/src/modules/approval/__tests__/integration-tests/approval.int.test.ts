@@ -1,7 +1,9 @@
 import { Types } from 'mongoose';
 import { approvalService } from '../../approval.service';
+import { ApprovalRequestModel } from '../../approval.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 
 const ADMIN = { id: 'admin-1', name: 'admin@example.com' };
 
@@ -139,5 +141,62 @@ describe('approval — ecomm change requests', () => {
 
     await expect(approvalService.approve(new Types.ObjectId().toString(), ADMIN)).rejects.toThrow(/not found/i);
     await expect(approvalService.deny(new Types.ObjectId().toString(), ADMIN)).rejects.toThrow(/not found/i);
+  });
+});
+
+describe('approval — warehouse approval requests', () => {
+  const insertWarehouse = async () => {
+    const id = new Types.ObjectId();
+    await BrandPickupLocationModel.collection.insertOne({
+      _id: id,
+      owner_kind: 'BRAND',
+      brand_id: new Types.ObjectId(),
+      nickname: `WH-${String(id)}`,
+      review_status: 'PENDING',
+    } as never);
+    return id;
+  };
+
+  it('submits, lists (all + by status), and approves — marking the warehouse APPROVED', async () => {
+    const whId = await insertWarehouse();
+    const req = await approvalService.submitWarehouseApproval(String(whId), 'WH One', false, 'u1');
+    expect(req!.type).toBe('WAREHOUSE_APPROVAL');
+    expect(req!.status).toBe('PENDING');
+    expect((await approvalService.listWarehouseApprovals()).some((r: any) => r.id === req!.id)).toBe(true);
+    expect((await approvalService.listWarehouseApprovals('PENDING')).some((r: any) => r.id === req!.id)).toBe(true);
+    await approvalService.reviewWarehouse(req!.id, 'APPROVE', ADMIN);
+    const wh: any = await BrandPickupLocationModel.findById(whId);
+    expect(wh.review_status).toBe('APPROVED');
+  });
+
+  it('supersedes a prior pending request and denies — marking the warehouse REJECTED', async () => {
+    const whId = await insertWarehouse();
+    await approvalService.submitWarehouseApproval(String(whId), 'WH Two', false, 'u1');
+    const second = await approvalService.submitWarehouseApproval(String(whId), 'WH Two', true, 'u1');
+    const pending = (await approvalService.listWarehouseApprovals('PENDING')).filter(
+      (r: any) => r.target_id === String(whId),
+    );
+    expect(pending).toHaveLength(1);
+    await approvalService.reviewWarehouse(second!.id, 'DENY', ADMIN, 'incomplete');
+    const wh: any = await BrandPickupLocationModel.findById(whId);
+    expect(wh.review_status).toBe('REJECTED');
+  });
+
+  it('reviewWarehouse rejects a missing id and a non-warehouse request', async () => {
+    await expect(
+      approvalService.reviewWarehouse(new Types.ObjectId().toString(), 'APPROVE', ADMIN),
+    ).rejects.toThrow(/not found/i);
+    const ecomm = await approvalService.submitEcommChange(
+      { kind: 'PRODUCT', target_id: new Types.ObjectId().toString(), target_name: 'X', details: [], payload: '{}' },
+      ADMIN,
+    );
+    await expect(approvalService.reviewWarehouse(ecomm!.id, 'APPROVE', ADMIN)).rejects.toThrow(/not a warehouse/i);
+  });
+
+  it('tolerates a missing target_id and a malformed target id when applying the decision', async () => {
+    const noTarget = await ApprovalRequestModel.create({ type: 'WAREHOUSE_APPROVAL', status: 'PENDING', target_id: null });
+    expect((await approvalService.reviewWarehouse(String(noTarget._id), 'APPROVE', ADMIN))!.status).toBe('APPROVED');
+    const badTarget = await ApprovalRequestModel.create({ type: 'WAREHOUSE_APPROVAL', status: 'PENDING', target_id: 'not-an-id' });
+    expect((await approvalService.reviewWarehouse(String(badTarget._id), 'APPROVE', ADMIN))!.status).toBe('APPROVED');
   });
 });

@@ -8,6 +8,8 @@ import { requireRole } from '@middleware/rbac';
 const APPROVAL_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 // The Products portal raises + views ecomm change requests.
 const ECOMM_PORTAL = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
+// The Products portal reviews warehouse-approval requests (scoped to that type).
+const WAREHOUSE_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
 
 export const approvalResolvers = {
   Query: {
@@ -27,6 +29,14 @@ export const approvalResolvers = {
       requireRole(ctx, ECOMM_PORTAL);
       return approvalService.listEcommChanges(args.kind ?? null);
     },
+    warehouseApprovalRequests: (
+      _p: unknown,
+      args: { status?: ApprovalStatus | null },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, WAREHOUSE_REVIEW);
+      return approvalService.listWarehouseApprovals(args.status ?? null);
+    },
   },
   Mutation: {
     approveRequest: (_p: unknown, args: { id: string; notes?: string | null }, ctx: GraphQLContext) => {
@@ -40,6 +50,14 @@ export const approvalResolvers = {
     submitEcommChangeRequest: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ECOMM_PORTAL);
       return approvalService.submitEcommChange(args.input, { id: user.id, name: user.email ?? null });
+    },
+    approveWarehouseRequest: (_p: unknown, args: { id: string; notes?: string | null }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, WAREHOUSE_REVIEW);
+      return approvalService.reviewWarehouse(args.id, 'APPROVE', { id: user.id, name: user.email ?? null }, args.notes);
+    },
+    denyWarehouseRequest: (_p: unknown, args: { id: string; notes?: string | null }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, WAREHOUSE_REVIEW);
+      return approvalService.reviewWarehouse(args.id, 'DENY', { id: user.id, name: user.email ?? null }, args.notes);
     },
   },
 };

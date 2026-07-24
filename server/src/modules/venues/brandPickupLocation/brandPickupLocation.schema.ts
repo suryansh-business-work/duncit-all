@@ -8,6 +8,8 @@ export const brandPickupLocationTypeDefs = /* GraphQL */ `
     id: ID!
     owner_kind: PickupOwnerKind!
     brand_id: ID
+    "Partner-warehouse approval gate: PENDING | APPROVED | REJECTED (Duncit-owned + legacy are APPROVED)."
+    review_status: String!
     nickname: String!
     contact_name: String!
     phone: String!

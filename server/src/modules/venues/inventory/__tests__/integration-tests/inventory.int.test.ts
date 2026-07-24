@@ -483,6 +483,23 @@ describe('partner listing warehouse + free-delivery threshold', () => {
     ).rejects.toThrow(/valid warehouse/i);
   });
 
+  it('blocks a same-brand warehouse that is still awaiting approval', async () => {
+    const user = await seedManager();
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co Pending' });
+    const pendingWh = await BrandPickupLocationModel.create({
+      owner_kind: 'BRAND',
+      brand_id: brand._id,
+      nickname: 'LIST-PENDING-WH',
+      review_status: 'PENDING',
+    });
+    await expect(
+      inventoryService.submitProductListing(
+        listingInput(brand._id, { pickup_location_id: String(pendingWh._id) }),
+        user
+      )
+    ).rejects.toThrow(/awaiting approval/i);
+  });
+
   it('persists a same-brand warehouse + free-delivery threshold and round-trips them', async () => {
     const user = await seedManager();
     const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'List Co 2' });

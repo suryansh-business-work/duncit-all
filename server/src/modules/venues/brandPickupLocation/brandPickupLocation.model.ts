@@ -1,10 +1,15 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
 export type PickupOwnerKind = 'DUNCIT' | 'BRAND';
+export type PickupReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export const PICKUP_REVIEW_STATUSES: readonly PickupReviewStatus[] = ['PENDING', 'APPROVED', 'REJECTED'];
 
 export interface IBrandPickupLocation extends Document {
   owner_kind: PickupOwnerKind;
   brand_id: Types.ObjectId | null;
+  /** Partner warehouses are gated: PENDING until a Products Manager approves,
+   * then APPROVED (usable) or REJECTED. Duncit-owned + legacy default APPROVED. */
+  review_status: PickupReviewStatus;
   nickname: string;
   contact_name: string;
   phone: string;
@@ -26,6 +31,12 @@ const brandPickupLocationSchema = new Schema<IBrandPickupLocation>(
   {
     owner_kind: { type: String, enum: ['DUNCIT', 'BRAND'], default: 'BRAND', index: true },
     brand_id: { type: Schema.Types.ObjectId, ref: 'EcommBrand', default: null, index: true },
+    review_status: {
+      type: String,
+      enum: ['PENDING', 'APPROVED', 'REJECTED'],
+      default: 'APPROVED',
+      index: true,
+    },
     // ShipRocket pickup-location nickname — must be unique within the ShipRocket account.
     nickname: { type: String, required: true, trim: true, maxlength: 60 },
     contact_name: { type: String, default: '', trim: true, maxlength: 160 },

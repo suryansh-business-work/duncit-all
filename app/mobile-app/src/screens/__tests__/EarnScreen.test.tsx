@@ -81,6 +81,8 @@ describe('EarnScreen', () => {
     renderWithProviders(<EarnScreen />);
     await waitFor(() => expect(screen.getByText('Meeting scheduled')).toBeOnTheScreen());
     expect(screen.getByText(/unlocks once the meeting is done/)).toBeOnTheScreen();
+    // Business rule: a non-approved (meeting) state must NOT expose a next-step CTA.
+    expect(screen.queryByTestId('earn-box-VENUE_OWNER-cta')).toBeNull();
     // Pending venue meeting blocks the venue box…
     fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
     expect(mockNavigate).not.toHaveBeenCalled();
@@ -225,26 +227,32 @@ describe('EarnScreen', () => {
     expect(screen.getByTestId('earn-box-HOST')).toBeOnTheScreen();
   });
 
-  it('gives an approved host an in-app CTA into Host Studio', () => {
+  it('gives an approved host an in-app CTA into Host Studio, keeping the label visible', () => {
     mockUseMe.mockReturnValue({ data: { me: { roles: ['HOST'] } } });
     renderWithProviders(<EarnScreen />);
+    // Business rule: the "Already enabled" label stays visible alongside the CTA.
+    expect(screen.getByText('Already enabled')).toBeOnTheScreen();
     expect(screen.getByText('Ready to host more experiences?')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('earn-box-HOST-cta'));
     expect(mockNavigate).toHaveBeenCalledWith('HostManage');
   });
 
-  it('sends approved venue/brand/club users to the Partner Portal deep link', () => {
+  it('sends each approved venue/brand/club CTA to its OWN Partner Portal deep link', () => {
     const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
     mockUseMe.mockReturnValue({
       data: { me: { roles: ['VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'] } },
     });
     renderWithProviders(<EarnScreen />);
+    // Assert each button in isolation (toHaveBeenLastCalledWith) so a
+    // button->URL cross-wiring would be caught, not just the URL set.
     fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER-cta'));
+    expect(openSpy).toHaveBeenLastCalledWith('https://partners-app.duncit.com/register-venue/new');
     fireEvent.press(screen.getByTestId('earn-box-ECOMM_MANAGER-cta'));
+    expect(openSpy).toHaveBeenLastCalledWith('https://partners-app.duncit.com/ecomm-brand');
     fireEvent.press(screen.getByTestId('earn-box-CLUB_ADMIN-cta'));
-    expect(openSpy).toHaveBeenCalledWith('https://partners-app.duncit.com/register-venue/new');
-    expect(openSpy).toHaveBeenCalledWith('https://partners-app.duncit.com/ecomm-brand');
-    expect(openSpy).toHaveBeenCalledWith('https://partners-app.duncit.com/club-admin/dashboard');
+    expect(openSpy).toHaveBeenLastCalledWith(
+      'https://partners-app.duncit.com/club-admin/dashboard',
+    );
     // Partner CTAs leave in-app navigation untouched.
     expect(mockNavigate).not.toHaveBeenCalled();
     openSpy.mockRestore();

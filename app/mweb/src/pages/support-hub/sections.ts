@@ -4,6 +4,7 @@ import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import HistoryIcon from '@mui/icons-material/History';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SensorsIcon from '@mui/icons-material/Sensors';
+import FeedbackOutlinedIcon from '@mui/icons-material/FeedbackOutlined';
 
 export interface SupportSection {
   key: string;
@@ -61,6 +62,15 @@ export const SUPPORT_SECTIONS: SupportSection[] = [
     description: 'Every request you have raised, in one list',
     Icon: HistoryIcon,
     color: '#7c5cff',
+    podScoped: false,
+  },
+  {
+    key: 'feedback',
+    path: '/support/feedback',
+    label: 'Report a Problem',
+    description: 'Send feedback or report an issue to our team',
+    Icon: FeedbackOutlinedIcon,
+    color: '#ff9800',
     podScoped: false,
   },
 ];

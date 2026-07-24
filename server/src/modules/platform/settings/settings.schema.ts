@@ -129,6 +129,8 @@ export const settingsTypeDefs = gql`
     android_app_url: String!
     ios_app_url: String!
     home_all_vibe_icon_url: String!
+    "Icon placement + size for the home All tab (null means the default TOP 40x40 look)."
+    home_all_vibe_icon_layout: CategoryIconLayout
     home_header_tagline: String!
     app_latest_version: String!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
@@ -170,6 +172,7 @@ export const settingsTypeDefs = gql`
     android_app_url: String
     ios_app_url: String
     home_all_vibe_icon_url: String
+    home_all_vibe_icon_layout: CategoryIconLayoutInput
     home_header_tagline: String
     app_latest_version: String
   }

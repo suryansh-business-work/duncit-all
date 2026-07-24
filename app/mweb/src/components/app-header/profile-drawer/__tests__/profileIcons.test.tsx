@@ -17,6 +17,7 @@ const ALL_KEYS: ProfileIconKey[] = [
   'faqs',
   'shop',
   'orders',
+  'wallet',
 ];
 
 describe('profileIcon', () => {

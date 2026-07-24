@@ -26,6 +26,46 @@ async function getImagekitConfig() {
 }
 
 /**
+ * Fail fast with a precise message when the ImageKit keys are missing OR
+ * malformed. A swapped key pair (public value in the private field, or a key
+ * from a different ImageKit account) is the usual cause of ImageKit's opaque
+ * "invalid signature parameter" upload rejection — validating the well-known
+ * `private_` / `public_` / URL prefixes surfaces it at the source.
+ */
+function assertImagekitConfig(config: {
+  publicKey: string;
+  privateKey: string;
+  urlEndpoint: string;
+}): void {
+  const problems: string[] = [];
+  if (!config.privateKey) {
+    problems.push('IMAGEKIT_PRIVATE_KEY is missing');
+  } else if (!config.privateKey.startsWith('private_')) {
+    problems.push(
+      'IMAGEKIT_PRIVATE_KEY is malformed (it must start with "private_") — the public and private keys may be swapped',
+    );
+  }
+  if (!config.publicKey) {
+    problems.push('IMAGEKIT_PUBLIC_KEY is missing');
+  } else if (!config.publicKey.startsWith('public_')) {
+    problems.push('IMAGEKIT_PUBLIC_KEY is malformed (it must start with "public_")');
+  }
+  if (!config.urlEndpoint) {
+    problems.push('IMAGEKIT_URL_ENDPOINT is missing');
+  } else if (!config.urlEndpoint.startsWith('http')) {
+    problems.push('IMAGEKIT_URL_ENDPOINT must be a URL');
+  }
+  if (problems.length > 0) {
+    const detail = problems.join('; ');
+    logs.server.error('upload', 'getImagekitAuth', { error: `ImageKit misconfigured: ${detail}` });
+    throw new GraphQLError(
+      `ImageKit is misconfigured: ${detail}. Fix it in Tech portal → Environment Variables → ImageKit.`,
+      { extensions: { code: 'CONFIG_ERROR' } },
+    );
+  }
+}
+
+/**
  * Generate the auth params required by the ImageKit browser-side upload SDK.
  * The browser uses this to upload directly to ImageKit without ever seeing
  * the private key.
@@ -36,11 +76,7 @@ async function getImagekitConfig() {
  */
 export async function getImagekitAuth(expireSeconds = 30 * 60) {
   const config = await getImagekitConfig();
-  if (!config.privateKey || !config.publicKey || !config.urlEndpoint) {
-    throw new GraphQLError('ImageKit is not configured', {
-      extensions: { code: 'CONFIG_ERROR' },
-    });
-  }
+  assertImagekitConfig(config);
   // Hex-only token — some HTTP clients mangle UUID hyphens or padding chars.
   const token = crypto.randomBytes(16).toString('hex');
   const expire = Math.floor(Date.now() / 1000) + expireSeconds;

@@ -58,6 +58,9 @@ const LiveTicketsPage = lazy(() =>
 const AllTicketsPage = lazy(() =>
   import('../pages/support-hub').then((m) => ({ default: m.AllTicketsPage })),
 );
+const FeedbackPage = lazy(() =>
+  import('../pages/support-hub').then((m) => ({ default: m.FeedbackPage })),
+);
 const AccountHealthPage = lazy(() => import('../pages/AccountHealthPage'));
 const VenueHealthPage = lazy(() => import('../pages/VenueHealthPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
@@ -152,6 +155,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/support/tickets" element={withAuth(<SupportTicketsPage />)} />
         <Route path="/support/live" element={withAuth(<LiveTicketsPage />)} />
         <Route path="/support/all" element={withAuth(<AllTicketsPage />)} />
+        <Route path="/support/feedback" element={withAuth(<FeedbackPage />)} />
         <Route path="/tickets/:id" element={withAuth(<TicketDetailPage />)} />
         <Route path="/live-chat" element={withAuth(<SupportChatPage />)} />
         <Route path="/tickets" element={<Navigate to="/support/live" replace />} />

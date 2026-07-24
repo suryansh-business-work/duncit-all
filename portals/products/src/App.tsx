@@ -12,6 +12,7 @@ import BrandRequestPage from './pages/ecomm/ecomm-requests/BrandRequestPage';
 import ProductRequestPage from './pages/ecomm/ecomm-requests/ProductRequestPage';
 import ProductOrdersPage from './pages/orders/ProductOrdersPage';
 import ProductOrderDetailPage from './pages/orders/ProductOrderDetailPage';
+import WarehouseApprovalPage from './pages/warehouse-approval';
 import DuncitWarehousesPage from './pages/settings/DuncitWarehousesPage';
 import PodShopSliderPage from './pages/settings/PodShopSliderPage';
 import AppShell from './components/AppShell';
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/ecomm/product-request" element={products(<ProductRequestPage />)} />
       <Route path="/ecomm/brands" element={products(<EcommMarketplacePage />)} />
       <Route path="/ecomm/brands/:brandId" element={products(<EcommBrandDetailPage />)} />
+      <Route path="/warehouse-approval" element={products(<WarehouseApprovalPage />)} />
       <Route path="/orders" element={products(<ProductOrdersPage />)} />
       <Route path="/orders/:orderId" element={products(<ProductOrderDetailPage />)} />
       <Route path="/settings/warehouses" element={products(<DuncitWarehousesPage />)} />

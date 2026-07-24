@@ -369,10 +369,16 @@ async function assertBrandWarehouse(pickupLocationId: unknown, brandId: unknown)
   if (!Types.ObjectId.isValid(id)) {
     throw new GraphQLError('Select a valid warehouse', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind brand_id');
+  const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind brand_id review_status');
   const sameBrand = warehouse?.owner_kind === 'BRAND' && String(warehouse.brand_id ?? '') === String(brandId ?? '');
   if (!sameBrand) {
     throw new GraphQLError('Select a warehouse that belongs to this brand', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  // A partner warehouse must be approved before products can ship from it.
+  if (warehouse!.review_status !== 'APPROVED') {
+    throw new GraphQLError('This warehouse is awaiting approval — it can be used once approved', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
   }
 }
 

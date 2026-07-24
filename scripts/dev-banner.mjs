@@ -4,6 +4,9 @@
 // and prints a clean project-URL table once all are up (or after a 20s
 // fallback if a signal is missed). Pure Node, zero deps, Windows-safe.
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import net from 'node:net';
+import path from 'node:path';
 import process from 'node:process';
 
 const projects = [
@@ -42,6 +45,67 @@ const expectedReady = projects.filter((p) => !p.external).length;
 
 const urlOf = (p) => `http://localhost:${p.port}${p.path ?? '/'}`;
 
+const localHostnames = new Set(['localhost', '127.0.0.1', '::1']);
+const defaultMongoUri = 'mongodb://localhost:27017/duncit';
+
+function parseEnvFile(filePath) {
+  const contents = fs.readFileSync(filePath, 'utf8');
+  return contents.split(/\r?\n/).reduce((env, line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return env;
+    const [key, ...rest] = trimmed.split('=');
+    env[key.trim()] = rest.join('=').trim();
+    return env;
+  }, {});
+}
+
+function parseMongoUri(uri) {
+  try {
+    const parsed = new URL(uri);
+    const host = parsed.hostname;
+    const port = Number(parsed.port || '27017');
+    return { host, port };
+  } catch {
+    return null;
+  }
+}
+
+function probeTcp(host, port) {
+  return new Promise((resolve) => {
+    const socket = net.connect({ host, port, timeout: 1500 }, () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.on('error', () => resolve(false));
+    socket.on('timeout', () => {
+      socket.destroy();
+      resolve(false);
+    });
+  });
+}
+
+async function verifyMongoIsReachable() {
+  const envPath = path.join(process.cwd(), 'server', '.env');
+  const env = fs.existsSync(envPath) ? parseEnvFile(envPath) : {};
+  const uri = process.env.MONGO_URI || env.MONGO_URI || defaultMongoUri;
+  if (!uri) {
+    console.error('ERROR: MONGO_URI is not configured for the local server.');
+    console.error('Create server/.env from server/.env.example and set MONGO_URI.');
+    process.exit(1);
+  }
+
+  const parsed = parseMongoUri(uri);
+  if (!parsed) return;
+  if (!localHostnames.has(parsed.host)) return;
+
+  const reachable = await probeTcp(parsed.host, parsed.port);
+  if (!reachable) {
+    console.error(`ERROR: MongoDB is not reachable at ${parsed.host}:${parsed.port}.`);
+    console.error('Start MongoDB locally before running `pnpm run:all` or set MONGO_URI to a reachable database.');
+    process.exit(1);
+  }
+}
+
 const ready = new Set();
 let printed = false;
 
@@ -77,6 +141,7 @@ function detectReady(line) {
 // Node 22+ on Windows refuses to spawn `.cmd`/`.bat` directly without a
 // shell (CVE-2024-27980). Use `shell: true` so cmd.exe resolves `pnpm`.
 const isWindows = process.platform === 'win32';
+await verifyMongoIsReachable();
 const child = spawn('pnpm', ['--parallel', '--recursive', '--if-present', 'dev'], {
   stdio: ['inherit', 'pipe', 'pipe'],
   shell: isWindows,

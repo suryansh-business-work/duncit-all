@@ -23,6 +23,7 @@ const headerMock = {
         mweb_logo_url: '',
         primary_color: '#ff4f73',
         home_all_vibe_icon_url: '',
+        home_all_vibe_icon_layout: null,
         home_header_tagline: '',
       },
       me: {

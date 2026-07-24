@@ -16,12 +16,18 @@ const adsMock = {
 
 function renderContent(props: {
   me: any;
+  roles?: string[];
   showPodPlans: boolean;
   onNavigate: (to: string) => void;
 }) {
   return render(
     <MockedProvider mocks={[adsMock]}>
-      <UserModeContent {...props} />
+      <UserModeContent
+        me={props.me}
+        roles={props.roles ?? []}
+        showPodPlans={props.showPodPlans}
+        onNavigate={props.onNavigate}
+      />
     </MockedProvider>,
   );
 }
@@ -84,10 +90,25 @@ describe('UserModeContent', () => {
 
     rerender(
       <MockedProvider mocks={[adsMock]}>
-        <UserModeContent me={FULL_ME} showPodPlans onNavigate={vi.fn()} />
+        <UserModeContent me={FULL_ME} roles={[]} showPodPlans onNavigate={vi.fn()} />
       </MockedProvider>,
     );
     expect(screen.getByText('Pod Plans')).toBeInTheDocument();
+  });
+
+  it('shows an Earnings > Withdrawal row for partner roles (hidden for consumers)', () => {
+    const onNavigate = vi.fn();
+    const { rerender } = renderContent({ me: FULL_ME, showPodPlans: false, onNavigate });
+    // Pure consumer → no Withdrawal row.
+    expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
+
+    rerender(
+      <MockedProvider mocks={[adsMock]}>
+        <UserModeContent me={FULL_ME} roles={['HOST']} showPodPlans={false} onNavigate={onNavigate} />
+      </MockedProvider>,
+    );
+    fireEvent.click(screen.getByText('Withdrawal'));
+    expect(onNavigate).toHaveBeenCalledWith('/host/wallet');
   });
 
   it('navigates to /profile when the identity row is clicked', () => {

@@ -291,7 +291,9 @@ export const podAuditService = {
   async listForPod(podId: string) {
     if (!Types.ObjectId.isValid(podId)) return [];
     const docs = await PodAuditLogModel.find({ pod_id: new Types.ObjectId(podId) })
-      .sort({ created_at: -1 })
+      // _id (a monotonic ObjectId) breaks created_at ties so rapid same-millisecond
+      // events (e.g. CREATE then DELETE) still order newest-first deterministically.
+      .sort({ created_at: -1, _id: -1 })
       .limit(200);
     return docs.map(toPub);
   },

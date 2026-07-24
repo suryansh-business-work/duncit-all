@@ -13,6 +13,7 @@ export const envEntryTypeDefs = gql`
     SERVAM
     RAZORPAY
     SHIPROCKET
+    SLACK
   }
 
   type EnvConfigPair {

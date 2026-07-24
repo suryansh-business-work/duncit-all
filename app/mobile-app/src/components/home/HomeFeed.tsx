@@ -95,6 +95,7 @@ export function HomeFeed() {
               selectedId={selectedCategoryId}
               onSelect={setSelectedCategoryId}
               allIcon={brandingData?.branding.home_all_vibe_icon_url}
+              allLayout={brandingData?.branding.home_all_vibe_icon_layout}
               action={
                 <HomeFilterButton
                   count={filterCount}

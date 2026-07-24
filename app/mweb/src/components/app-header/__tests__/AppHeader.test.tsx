@@ -113,7 +113,7 @@ vi.mock('../SurveyHeaderActions', () => ({
 
 // ---- fixtures --------------------------------------------------------------
 const headerData = {
-  branding: { app_name: 'Duncit', logo_url: '', mweb_logo_url: '', primary_color: '#f0f', home_all_vibe_icon_url: '', home_header_tagline: 'Find your people' },
+  branding: { app_name: 'Duncit', logo_url: '', mweb_logo_url: '', primary_color: '#f0f', home_all_vibe_icon_url: '', home_all_vibe_icon_layout: null, home_header_tagline: 'Find your people' },
   me: {
     user_id: 'u1',
     full_name: 'Ada Lovelace',

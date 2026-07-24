@@ -107,6 +107,24 @@ async function applyEcommChange(doc: any) {
   }
 }
 
+/** Apply a warehouse-approval decision to its BrandPickupLocation: APPROVED makes
+ * it usable, REJECTED keeps it blocked. Best-effort — never blocks the decision. */
+async function applyWarehouseReview(doc: any, status: 'APPROVED' | 'REJECTED') {
+  if (!doc.target_id) return;
+  try {
+    const { BrandPickupLocationModel } = await import(
+      '@modules/venues/brandPickupLocation/brandPickupLocation.model'
+    );
+    await BrandPickupLocationModel.findByIdAndUpdate(doc.target_id, { $set: { review_status: status } });
+  } catch (err) {
+    logs.server.error('approval', 'applyWarehouseReview', {
+      error: err,
+      msg: 'applyWarehouseReview failed',
+      target_id: doc?.target_id ?? null,
+    });
+  }
+}
+
 export const approvalService = {
   async list(filter: { status?: ApprovalStatus | null; type?: string | null } = {}) {
     const q: any = {};
@@ -135,6 +153,46 @@ export const approvalService = {
     else if (upper === 'PRODUCT') types = ['ECOMM_PRODUCT_CHANGE'];
     const docs = await ApprovalRequestModel.find({ type: { $in: types } }).sort({ created_at: -1 });
     return docs.map(pub);
+  },
+
+  /** Products portal: list warehouse-approval requests (optionally by status). */
+  async listWarehouseApprovals(status?: ApprovalStatus | null) {
+    const q: any = { type: 'WAREHOUSE_APPROVAL' };
+    if (status) q.status = status;
+    const docs = await ApprovalRequestModel.find(q).sort({ created_at: -1 });
+    return docs.map(pub);
+  },
+
+  /** Partner save raised this: one PENDING request per warehouse — a re-save
+   * supersedes the previous pending request. Called from brandPickupLocation. */
+  async submitWarehouseApproval(targetId: string, targetName: string, isEdit: boolean, requestedById: string) {
+    await ApprovalRequestModel.deleteMany({
+      type: 'WAREHOUSE_APPROVAL',
+      target_id: targetId,
+      status: 'PENDING',
+    });
+    const verb = isEdit ? 'Updated' : 'New';
+    const doc = await ApprovalRequestModel.create({
+      type: 'WAREHOUSE_APPROVAL',
+      source_portal: 'partners',
+      title: `Warehouse approval — ${targetName}`,
+      summary: `${verb} warehouse "${targetName}" is awaiting approval before it can be used for shipping.`,
+      details: [{ label: 'Warehouse', value: targetName }],
+      target_id: targetId,
+      requested_by: requestedById,
+    });
+    return pub(doc);
+  },
+
+  /** Products portal review of a warehouse request (type-guarded so the products
+   * reviewer role can't touch ecomm/other requests via this path). */
+  async reviewWarehouse(id: string, decision: 'APPROVE' | 'DENY', reviewer: Reviewer, notes?: string | null) {
+    const existing = await ApprovalRequestModel.findById(id);
+    if (!existing) throw notFound();
+    if (existing.type !== 'WAREHOUSE_APPROVAL') {
+      throw new GraphQLError('Not a warehouse approval request', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    return decision === 'APPROVE' ? this.approve(id, reviewer, notes) : this.deny(id, reviewer, notes);
   },
 
   /** Products portal: raise a brand/product change request for admin approval. */
@@ -170,6 +228,10 @@ export const approvalService = {
     await doc.save();
     if (doc.type === 'ECOMM_BRAND_CHANGE' || doc.type === 'ECOMM_PRODUCT_CHANGE') {
       await applyEcommChange(doc);
+    } else {
+      // The only other type today is WAREHOUSE_APPROVAL; applyWarehouseReview
+      // no-ops unless the request carries a warehouse target_id.
+      await applyWarehouseReview(doc, 'APPROVED');
     }
     return pub(doc);
   },
@@ -186,6 +248,9 @@ export const approvalService = {
     doc.reviewed_at = new Date();
     doc.review_notes = notes ?? null;
     await doc.save();
+    if (doc.type === 'WAREHOUSE_APPROVAL') {
+      await applyWarehouseReview(doc, 'REJECTED');
+    }
     return pub(doc);
   },
 };

@@ -32,6 +32,7 @@ COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs        ./packages/logs
 COPY packages/geo         ./packages/geo
 COPY packages/regex       ./packages/regex
+COPY packages/slack       ./packages/slack
 
 WORKDIR /repo/app/mobile-app
 # Dependency manifests only → the slow install layer is reused for every build

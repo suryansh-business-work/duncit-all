@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AppImage } from '@/components/AppImage';
 import { FreeDeliveryBadge } from '@/components/cart/FreeDeliveryBadge';
 import { lineQualifiesFreeDelivery } from '@/services/cart';
 import { cartLineKey, type CartLine } from '@/stores/cart.store';
@@ -40,9 +41,44 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
   );
 }
 
-/** One product line: an info button (opens the product details), name × qty and
- * its subtotal, plus the free-delivery badge when the line's subtotal reaches
- * the product's threshold. No pod title — products and pods are separate. */
+/** The line's product photo as a tappable thumbnail that opens the product
+ * details; falls back to a shopping-bag placeholder when the line has no image. */
+function LineThumb({
+  line,
+  onInfo,
+}: Readonly<{ line: CartLine; onInfo: (productId: string) => void }>) {
+  return (
+    <XStack
+      testID={`summary-info-${line.pod_id}:${cartLineKey(line)}`}
+      role="button"
+      aria-label={`View ${line.product_name} details`}
+      onPress={() => onInfo(line.product_id)}
+      pressStyle={{ opacity: 0.6 }}
+      width={40}
+      height={40}
+      borderRadius={8}
+      overflow="hidden"
+      backgroundColor="$surface"
+      alignItems="center"
+      justifyContent="center"
+    >
+      {line.image_url ? (
+        <AppImage
+          testID={`summary-thumb-${line.pod_id}:${cartLineKey(line)}`}
+          source={{ uri: line.image_url }}
+          style={{ width: 40, height: 40 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <MaterialIcons name="shopping-bag" size={18} color="#9aa0a6" />
+      )}
+    </XStack>
+  );
+}
+
+/** One product line: a tappable product photo (opens the product details),
+ * name × qty and its subtotal, plus the free-delivery badge when the line's
+ * subtotal reaches the product's threshold. No pod title — separate entities. */
 function ProductLineRow({
   line,
   value,
@@ -52,16 +88,8 @@ function ProductLineRow({
   return (
     <YStack gap={2}>
       <XStack justifyContent="space-between" alignItems="center" gap={8}>
-        <XStack flex={1} minWidth={0} alignItems="center" gap={6}>
-          <XStack
-            testID={`summary-info-${line.pod_id}:${cartLineKey(line)}`}
-            role="button"
-            aria-label={`View ${line.product_name} details`}
-            onPress={() => onInfo(line.product_id)}
-            pressStyle={{ opacity: 0.6 }}
-          >
-            <MaterialIcons name="info-outline" size={16} color="#9aa0a6" />
-          </XStack>
+        <XStack flex={1} minWidth={0} alignItems="center" gap={8}>
+          <LineThumb line={line} onInfo={onInfo} />
           <Text flex={1} fontSize={13} fontWeight="600" color="$muted" numberOfLines={1}>
             {label}
           </Text>

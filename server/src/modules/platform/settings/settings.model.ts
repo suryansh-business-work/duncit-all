@@ -122,6 +122,9 @@ export interface IBranding extends Document {
   // (mWeb + mobile). Admin-managed from the Category catalogue; empty string
   // falls back to the bundled apps/grid icon on each client.
   home_all_vibe_icon_url: string;
+  // Icon placement (TOP/BOTTOM/LEFT/RIGHT relative to the label) + size for the
+  // "All" tab. null → the default TOP / 40×40 look on each client.
+  home_all_vibe_icon_layout?: { position: string; width: number; height: number } | null;
   // Tagline shown in the home header, above the location (mWeb + mobile).
   home_header_tagline: string;
   // Latest released mobile app version (semver, e.g. "1.2.3"). Auto-synced on
@@ -141,6 +144,21 @@ const podShopSliderMediaSchema = new Schema<{ url: string; type: string; order: 
     url: { type: String, required: true },
     type: { type: String, enum: ["IMAGE", "VIDEO"], default: "IMAGE" },
     order: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
+const HOME_VIBE_ICON_POSITIONS = ["TOP", "BOTTOM", "LEFT", "RIGHT"];
+
+const homeAllVibeIconLayoutSchema = new Schema<{
+  position: string;
+  width: number;
+  height: number;
+}>(
+  {
+    position: { type: String, enum: HOME_VIBE_ICON_POSITIONS, default: "TOP" },
+    width: { type: Number, default: 40, min: 1, max: 200 },
+    height: { type: Number, default: 40, min: 1, max: 200 },
   },
   { _id: false },
 );
@@ -185,6 +203,7 @@ const brandingSchema = new Schema<IBranding>(
     android_app_url: { type: String, default: "" },
     ios_app_url: { type: String, default: "" },
     home_all_vibe_icon_url: { type: String, default: "" },
+    home_all_vibe_icon_layout: { type: homeAllVibeIconLayoutSchema, default: null },
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
     pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },

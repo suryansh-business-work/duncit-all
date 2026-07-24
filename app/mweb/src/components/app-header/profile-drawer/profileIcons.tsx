@@ -13,6 +13,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -30,6 +31,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   orders: <LocalShippingIcon />,
   addresses: <HomeWorkIcon />,
   cart: <ShoppingCartIcon />,
+  wallet: <AccountBalanceWalletIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

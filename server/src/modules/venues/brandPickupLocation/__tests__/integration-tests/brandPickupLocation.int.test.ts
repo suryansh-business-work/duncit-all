@@ -135,6 +135,31 @@ describe('brandPickupLocationService partner-scoped ops', () => {
     expect(list.find((l) => l.id === first.id)?.is_default).toBe(false);
   });
 
+  it('gates a partner warehouse: saved PENDING with an approval request raised', async () => {
+    const { ApprovalRequestModel } = await import('@modules/approval/approval.model');
+    const userId = new Types.ObjectId().toString();
+    const brand = await seedOwnedBrand(userId, 'Gate Co');
+    const saved = await brandPickupLocationService.saveMine(userId, String(brand._id), null, {
+      owner_kind: 'BRAND',
+      nickname: 'GATE-WH',
+    });
+    expect(saved.review_status).toBe('PENDING');
+    const reqs = await ApprovalRequestModel.find({ type: 'WAREHOUSE_APPROVAL', target_id: saved.id });
+    expect(reqs).toHaveLength(1);
+    expect(reqs[0]?.status).toBe('PENDING');
+  });
+
+  it('defaults review_status to APPROVED for a legacy doc without the field', async () => {
+    const raw = new Types.ObjectId();
+    await BrandPickupLocationModel.collection.insertOne({
+      _id: raw,
+      owner_kind: 'DUNCIT',
+      nickname: 'LEGACY-WH',
+    } as never);
+    const list = await brandPickupLocationService.list({ owner_kind: 'DUNCIT' });
+    expect(list.find((l) => l.id === String(raw))?.review_status).toBe('APPROVED');
+  });
+
   it('surfaces a CONFLICT for a duplicate nickname and rethrows other save errors', async () => {
     const userId = new Types.ObjectId().toString();
     const brand = await seedOwnedBrand(userId, 'Dup Co');

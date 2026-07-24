@@ -57,6 +57,9 @@ importers:
       '@duncit/regex':
         specifier: workspace:*
         version: link:../../packages/regex
+      '@duncit/slack':
+        specifier: workspace:*
+        version: link:../../packages/slack
       '@duncit/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -954,6 +957,18 @@ importers:
       react-router-dom:
         specifier: ^6.23.1
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+
+  packages/slack:
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -3256,6 +3271,9 @@ importers:
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
+      '@duncit/slack':
+        specifier: workspace:*
+        version: link:../../packages/slack
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table

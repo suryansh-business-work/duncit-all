@@ -54,6 +54,8 @@ export const approvalTypeDefs = gql`
     approvalRequestsTable(query: TableQueryInput): ApprovalRequestTablePage!
     "Products portal: brand/product change requests raised from this portal (kind = BRAND | PRODUCT)."
     myEcommChangeRequests(kind: String): [ApprovalRequest!]!
+    "Products portal: partner warehouse-approval requests (optionally by status)."
+    warehouseApprovalRequests(status: ApprovalStatus): [ApprovalRequest!]!
   }
 
   "A proposed label → value change row shown to the reviewer."
@@ -82,5 +84,9 @@ export const approvalTypeDefs = gql`
     denyRequest(id: ID!, notes: String): ApprovalRequest!
     "Products portal: raise a brand/product change request for admin approval (Task B item 2)."
     submitEcommChangeRequest(input: EcommChangeRequestInput!): ApprovalRequest!
+    "Products portal: approve a partner warehouse so it goes live (usable for shipping)."
+    approveWarehouseRequest(id: ID!, notes: String): ApprovalRequest!
+    "Products portal: deny a partner warehouse (stays blocked)."
+    denyWarehouseRequest(id: ID!, notes: String): ApprovalRequest!
   }
 `;

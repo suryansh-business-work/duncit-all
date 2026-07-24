@@ -24,6 +24,11 @@ export const BRANDING_FIELDS = `
   android_app_url
   ios_app_url
   home_all_vibe_icon_url
+  home_all_vibe_icon_layout {
+    position
+    width
+    height
+  }
   home_header_tagline
   mobile_font_family
   mweb_font_family
@@ -79,6 +84,7 @@ export interface BrandingFormState {
   android_app_url: string;
   ios_app_url: string;
   home_all_vibe_icon_url: string;
+  home_all_vibe_icon_layout: { position: string; width: number; height: number } | null;
   home_header_tagline: string;
   mobile_font_family: string;
   mweb_font_family: string;
@@ -111,6 +117,7 @@ export const emptyBrandingForm: BrandingFormState = {
   android_app_url: '',
   ios_app_url: '',
   home_all_vibe_icon_url: '',
+  home_all_vibe_icon_layout: null,
   home_header_tagline: 'It All Starts Here!',
   mobile_font_family: '',
   mweb_font_family: '',

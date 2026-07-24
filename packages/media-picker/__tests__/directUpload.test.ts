@@ -109,4 +109,20 @@ describe('directUploadToImagekit', () => {
       'Upload is not available right now',
     );
   });
+
+  it('rejects a non-Blob file part instead of sending "[object Object]"', async () => {
+    await expect(
+      directUploadToImagekit(makeClient(), { name: 'x' } as unknown as File, '/x'),
+    ).rejects.toThrow('a real file (Blob) is required');
+  });
+
+  it('rejects a 2xx response that carries no file URL', async () => {
+    const pending = directUploadToImagekit(makeClient(), file, '/pods/reels');
+    await waitForSend();
+    const xhr = lastXhr!;
+    xhr.status = 200;
+    xhr.responseText = JSON.stringify({ fileId: 'f1' });
+    xhr.onload?.();
+    await expect(pending).rejects.toThrow('returned no file URL');
+  });
 });

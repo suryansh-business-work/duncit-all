@@ -126,9 +126,32 @@ describe('ProductOrderSummary', () => {
     expect(screen.getByText('₹130.00')).toBeOnTheScreen();
   });
 
-  it('fires onInfo with the line product id when its info button is pressed', () => {
+  it('fires onInfo with the line product id when its photo is pressed', () => {
     const onInfo = jest.fn();
     render({ onInfo });
+    fireEvent.press(screen.getByTestId('summary-info-p1:a'));
+    expect(onInfo).toHaveBeenCalledWith('a');
+  });
+
+  it('renders the product photo as the details trigger when the line has an image', () => {
+    const onInfo = jest.fn();
+    const withImage: CartLine = {
+      pod_id: 'p1',
+      pod_title: 'Sunset Jam',
+      club_slug: 'c1',
+      product_id: 'a',
+      variant_id: '',
+      variant_label: '',
+      product_name: 'Alpha Tee',
+      image_url: 'https://cdn.duncit.com/tee.jpg',
+      unit_cost: 100,
+      quantity: 2,
+      max_quantity: 5,
+      free_delivery_above: 150,
+    };
+    render({ lines: [withImage], onInfo });
+    // The photo (not a placeholder) is shown and is the tap-to-details target.
+    expect(screen.getByTestId('summary-thumb-p1:a')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('summary-info-p1:a'));
     expect(onInfo).toHaveBeenCalledWith('a');
   });

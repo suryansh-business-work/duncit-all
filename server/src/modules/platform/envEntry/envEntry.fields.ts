@@ -81,6 +81,12 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'webhook_secret', label: 'Webhook x-api-key (optional)', secret: true, hint: 'Verifies inbound ShipRocket webhooks' },
     { name: 'token_ttl_hours', label: 'Token TTL hours (optional)', number: true, hint: 'Auth token cache lifetime; default 240 (~10 days)' },
   ],
+  SLACK: [
+    { name: 'bot_token', label: 'Bot User OAuth Token', secret: true, hint: 'xoxb-… (Slack app → OAuth & Permissions)' },
+    { name: 'signing_secret', label: 'Signing Secret (optional)', secret: true, hint: 'Verifies inbound Slack events/webhooks' },
+    { name: 'default_channel', label: 'Default Channel (optional)', hint: 'Channel ID (e.g. C0123ABCD) messages default to' },
+    { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -96,6 +102,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   SERVAM: 'https://dashboard.sarvam.ai/admin',
   RAZORPAY: 'https://dashboard.razorpay.com/app/keys',
   SHIPROCKET: 'https://app.shiprocket.in/api-user',
+  SLACK: 'https://api.slack.com/apps',
 };
 
 const secretSet = new Set<string>();
@@ -143,6 +150,10 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SHIPROCKET_CHANNEL_ID: { category: 'SHIPROCKET', field: 'channel_id' },
   SHIPROCKET_WEBHOOK_SECRET: { category: 'SHIPROCKET', field: 'webhook_secret' },
   SHIPROCKET_TOKEN_TTL_HOURS: { category: 'SHIPROCKET', field: 'token_ttl_hours' },
+  SLACK_BOT_TOKEN: { category: 'SLACK', field: 'bot_token' },
+  SLACK_SIGNING_SECRET: { category: 'SLACK', field: 'signing_secret' },
+  SLACK_DEFAULT_CHANNEL: { category: 'SLACK', field: 'default_channel' },
+  SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
 };
 
 export function maskSecret(value: string) {

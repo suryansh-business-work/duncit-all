@@ -21,6 +21,7 @@ COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs ./packages/logs
 COPY packages/geo ./packages/geo
 COPY packages/regex ./packages/regex
+COPY packages/slack ./packages/slack
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

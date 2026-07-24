@@ -4,7 +4,7 @@ import type { MaterialIcons } from '@expo/vector-icons';
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
 /** Param-less support destinations reachable from the "More ways" grid. */
-export type SupportRoute = 'Sos' | 'Callback' | 'SupportTickets' | 'AllSupportTickets';
+export type SupportRoute = 'Sos' | 'Callback' | 'SupportTickets' | 'AllSupportTickets' | 'Feedback';
 
 export interface SupportSection {
   key: string;
@@ -53,5 +53,13 @@ export const SUPPORT_MORE_WAYS: SupportSection[] = [
     icon: 'history',
     color: '#7c5cff',
     route: 'AllSupportTickets',
+  },
+  {
+    key: 'feedback',
+    title: 'Report a Problem',
+    desc: 'Send feedback or report an issue to our team',
+    icon: 'feedback',
+    color: '#ff9800',
+    route: 'Feedback',
   },
 ];

@@ -39,6 +39,7 @@ describe('SidebarUserContent', () => {
           profile_photo: 'https://x/p.png',
         }}
         account={{ first_name: 'Asha' }}
+        roles={[]}
         showPodPlans={false}
         onNavigate={onNavigate}
       />,
@@ -78,6 +79,24 @@ describe('SidebarUserContent', () => {
     expect(onNavigate).toHaveBeenCalledWith('AddressBook');
     fireEvent.press(screen.getByTestId('sidebar-item-Cart'));
     expect(onNavigate).toHaveBeenCalledWith('Cart');
+
+    // No Earnings/Withdrawal row for a pure consumer (no partner roles).
+    expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
+  });
+
+  it('shows an Earnings > Withdrawal row for partner roles and routes to the wallet', () => {
+    const onNavigate = jest.fn();
+    renderWithProviders(
+      <SidebarUserContent
+        me={{ full_name: 'Host Roy' }}
+        account={FULL_ACCOUNT}
+        roles={['HOST']}
+        showPodPlans={false}
+        onNavigate={onNavigate}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('sidebar-item-Withdrawal'));
+    expect(onNavigate).toHaveBeenCalledWith('Wallet');
   });
 
   it('hides the banner at 100% and shows Pod Plans when the flag is on', () => {
@@ -86,6 +105,7 @@ describe('SidebarUserContent', () => {
       <SidebarUserContent
         me={{ full_name: 'Bob Roy' }}
         account={FULL_ACCOUNT}
+        roles={[]}
         showPodPlans
         onNavigate={onNavigate}
       />,
@@ -110,7 +130,13 @@ describe('SidebarUserContent', () => {
       },
     ];
     renderWithProviders(
-      <SidebarUserContent me={null} account={null} showPodPlans={false} onNavigate={jest.fn()} />,
+      <SidebarUserContent
+        me={null}
+        account={null}
+        roles={[]}
+        showPodPlans={false}
+        onNavigate={jest.fn()}
+      />,
     );
     expect(screen.getByTestId('ad-slot-SIDEBAR')).toBeOnTheScreen();
     expect(screen.getByText('Sponsored Venue')).toBeOnTheScreen();
@@ -118,7 +144,13 @@ describe('SidebarUserContent', () => {
 
   it('falls back to placeholders with no user and no account (0% complete)', () => {
     renderWithProviders(
-      <SidebarUserContent me={null} account={null} showPodPlans={false} onNavigate={jest.fn()} />,
+      <SidebarUserContent
+        me={null}
+        account={null}
+        roles={[]}
+        showPodPlans={false}
+        onNavigate={jest.fn()}
+      />,
     );
     expect(screen.getByText('U')).toBeOnTheScreen();
     expect(screen.getByText('User')).toBeOnTheScreen();

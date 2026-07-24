@@ -21,6 +21,7 @@
     "@duncit/forms": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/shell": "workspace:*",
+    "@duncit/slack": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",

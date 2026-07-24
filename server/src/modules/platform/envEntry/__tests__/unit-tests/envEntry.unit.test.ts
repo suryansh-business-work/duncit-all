@@ -97,5 +97,22 @@ describe('envEntry unit', () => {
       expect(res.ok).toBe(false);
       expect(res.message).toMatch(/boom/);
     });
+
+    it('validates a Slack bot token via auth.test (body.ok decides, HTTP is always 200)', async () => {
+      // Missing token → not-ok without a network call.
+      expect((await testEnvConnection('SLACK', {})).ok).toBe(false);
+      // ok:true with a team name, then without one.
+      (global as any).fetch = okFetch({ ok: true, team: 'Duncit' });
+      expect((await testEnvConnection('SLACK', { bot_token: 'xoxb-1' })).ok).toBe(true);
+      (global as any).fetch = okFetch({ ok: true });
+      expect((await testEnvConnection('SLACK', { bot_token: 'xoxb-1' })).ok).toBe(true);
+      // ok:false with an error string, then without one.
+      (global as any).fetch = okFetch({ ok: false, error: 'invalid_auth' });
+      const bad = await testEnvConnection('SLACK', { bot_token: 'xoxb-1' });
+      expect(bad.ok).toBe(false);
+      expect(bad.message).toMatch(/invalid_auth/);
+      (global as any).fetch = okFetch({ ok: false });
+      expect((await testEnvConnection('SLACK', { bot_token: 'xoxb-1' })).ok).toBe(false);
+    });
   });
 });

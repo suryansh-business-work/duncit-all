@@ -39,6 +39,7 @@ export default defineConfig({
         'src/pages/orders/queries.ts',
         'src/pages/ecomm/queries.ts',
         'src/pages/ecomm/ecomm-requests/queries.ts',
+        'src/pages/warehouse-approval/queries.ts',
         // Type-only declarations.
         'src/**/*.d.ts',
         'src/vite-env.d.ts',

@@ -3,13 +3,19 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import { MemoryRouter } from 'react-router-dom';
 import { gql } from '@apollo/client';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
   return { ...actual, useNavigate: () => navigateMock };
 });
+// The product-seller (ECOMM) card is gated behind `is_product_visible`; default
+// it on so the pre-existing tests keep seeing all four cards.
+const flag = vi.hoisted(() => ({ product: true }));
+vi.mock('../../../hooks/useFeatureFlag', () => ({
+  useFeatureFlag: () => flag.product,
+}));
 
 import EarnPage from '../index';
 
@@ -62,6 +68,10 @@ function setup(mock: ReturnType<typeof makeMock>) {
 }
 
 describe('EarnPage', () => {
+  beforeEach(() => {
+    flag.product = true;
+  });
+
   it('shows skeletons while loading then renders the four earn boxes', async () => {
     setup(makeMock([], []));
     // Heading is always visible; boxes appear after the query resolves.
@@ -81,9 +91,13 @@ describe('EarnPage', () => {
     expect(navigateMock).toHaveBeenCalledWith(-1);
   });
 
-  it('locks a box the user already holds the role for', async () => {
+  it('locks a box the user already holds the role for, keeping the label + adding a CTA', async () => {
     setup(makeMock(['HOST'], []));
+    // Business rule: the "Already enabled" label stays visible alongside the CTA.
     expect(await screen.findByText('Already enabled')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Ready to host more experiences?' }),
+    ).toBeInTheDocument();
   });
 
   it('shows a scheduled-meeting notice + reschedule/cancel actions for a pending meeting', async () => {
@@ -170,19 +184,44 @@ describe('EarnPage', () => {
     });
     try {
       setup(makeMock(['VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'], []));
+      // Assert each button in isolation (toHaveBeenLastCalledWith) so a
+      // button->URL cross-wiring would be caught, not just the URL set.
       fireEvent.click(
         await screen.findByRole('button', { name: 'Ready to register another venue?' }),
       );
+      expect(replace).toHaveBeenLastCalledWith(
+        'https://partners-app.duncit.com/register-venue/new',
+      );
       fireEvent.click(screen.getByRole('button', { name: 'Ready to add another brand?' }));
+      expect(replace).toHaveBeenLastCalledWith('https://partners-app.duncit.com/ecomm-brand');
       fireEvent.click(screen.getByRole('button', { name: 'Manage your clubs' }));
-      expect(replace).toHaveBeenCalledWith('https://partners-app.duncit.com/register-venue/new');
-      expect(replace).toHaveBeenCalledWith('https://partners-app.duncit.com/ecomm-brand');
-      expect(replace).toHaveBeenCalledWith('https://partners-app.duncit.com/club-admin/dashboard');
+      expect(replace).toHaveBeenLastCalledWith(
+        'https://partners-app.duncit.com/club-admin/dashboard',
+      );
     } finally {
       Object.defineProperty(globalThis.window, 'location', {
         configurable: true,
         value: original,
       });
     }
+  });
+
+  it('hides the product-seller card and its CTA when products are gated off', async () => {
+    flag.product = false;
+    setup(makeMock(['ECOMM_MANAGER'], []));
+    expect(await screen.findByText('By hosting a pod')).toBeInTheDocument();
+    expect(screen.queryByText('By listing your product')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ready to add another brand?' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows no next-step CTA for a non-approved (meeting-scheduled) card', async () => {
+    setup(makeMock([], [meeting({ kind: 'VENUE', status: 'SCHEDULED' })]));
+    expect(await screen.findByText('Meeting scheduled')).toBeInTheDocument();
+    // Business rule: CTAs appear ONLY for approved users.
+    expect(
+      screen.queryByRole('button', { name: 'Ready to register another venue?' }),
+    ).not.toBeInTheDocument();
   });
 });

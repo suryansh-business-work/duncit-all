@@ -28,7 +28,9 @@ const findPidsOnWindows = async (port) => {
   ].join(' | ');
   const result = await runCommand('powershell.exe', ['-NoProfile', '-Command', command]);
 
-  return result.output.split(/\s+/).filter(Boolean);
+  return result.output
+    .split(/\s+/)
+    .filter((value) => value && value !== '0');
 };
 
 const findPidsOnUnix = async (port) => {

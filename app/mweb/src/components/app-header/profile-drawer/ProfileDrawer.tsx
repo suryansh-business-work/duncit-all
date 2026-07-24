@@ -88,7 +88,7 @@ export default function ProfileDrawer({
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
           {/* One unified card layout for every role — the studio-specific menu
               list was retired so all modes share this design. */}
-          <UserModeContent me={me} showPodPlans={showPodPlans} onNavigate={go} />
+          <UserModeContent me={me} roles={roles} showPodPlans={showPodPlans} onNavigate={go} />
 
           {canSwitch && (
             <Box sx={{ px: 2, pb: 1.25 }}>

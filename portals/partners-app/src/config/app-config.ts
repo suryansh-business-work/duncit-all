@@ -63,12 +63,23 @@ const CLUB_ADMIN_NAV: AppNavItem = {
   ],
 };
 
-/** Sidebar nav for the signed-in user — appends Club Admin tools when entitled. */
+/** Wallet/Withdrawal is shown to partner roles that can earn payouts. */
+const WALLET_NAV: AppNavItem = { label: 'Wallet', to: '/wallet', icon: 'wallet' };
+const EARNING_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER']);
+
+/** Sidebar nav for the signed-in user — appends Club Admin tools when entitled
+ * and a Wallet entry for roles that can earn payouts. Both slot in before Help
+ * (FAQs), keeping the partner tools grouped together. */
 export function buildNav(roles?: readonly string[] | null): AppNavItem[] {
-  if (!roles?.includes('CLUB_ADMIN')) return appConfig.nav;
+  const isClubAdmin = roles?.includes('CLUB_ADMIN') ?? false;
+  const isEarner = roles?.some((role) => EARNING_ROLES.has(role)) ?? false;
+  if (!isClubAdmin && !isEarner) return appConfig.nav;
   const nav = [...appConfig.nav];
-  // Keep Club Admin with the partner tools, before Help (FAQs).
-  const helpIndex = nav.findIndex((item) => item.to === '/faqs');
-  nav.splice(helpIndex === -1 ? nav.length : helpIndex, 0, CLUB_ADMIN_NAV);
+  const helpIndex = () => {
+    const index = nav.findIndex((item) => item.to === '/faqs');
+    return index === -1 ? nav.length : index;
+  };
+  if (isClubAdmin) nav.splice(helpIndex(), 0, CLUB_ADMIN_NAV);
+  if (isEarner) nav.splice(helpIndex(), 0, WALLET_NAV);
   return nav;
 }

@@ -115,6 +115,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
               <SidebarUserContent
                 me={me}
                 account={account}
+                roles={roles}
                 showPodPlans={showPodPlans}
                 onNavigate={go}
               />

@@ -43,6 +43,7 @@ export default defineConfig({
         'src/pages/email-templates-page/queries.ts',
         'src/pages/environment/queries.ts',
         'src/pages/environment/portal-env-queries.ts',
+        'src/pages/slack/queries.ts',
       ],
       thresholds: {
         lines: 100,

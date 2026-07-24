@@ -1,6 +1,5 @@
-import { Box, Card, CardContent, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, ButtonBase, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   cartLineKey,
@@ -31,9 +30,44 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
   );
 }
 
-/** One product line: an info button that opens the product details, the label +
- * qty, a "Free delivery" badge when the line meets its product's threshold, and
- * the line total. No pod title — products and pods are separate entities. */
+/** The line's product photo as a tappable thumbnail that opens the product
+ * details; falls back to a shopping-bag placeholder when the line has no image. */
+function LineThumb({
+  line,
+  onInfo,
+}: Readonly<{ line: CartLine; onInfo: (productId: string) => void }>) {
+  return (
+    <ButtonBase
+      aria-label={`View ${line.product_name} details`}
+      onClick={() => onInfo(line.product_id)}
+      sx={{
+        width: 40,
+        height: 40,
+        flexShrink: 0,
+        borderRadius: 1,
+        overflow: 'hidden',
+        bgcolor: 'action.hover',
+        display: 'grid',
+        placeItems: 'center',
+      }}
+    >
+      {line.image_url ? (
+        <Box
+          component="img"
+          src={line.image_url}
+          alt={line.product_name}
+          sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <ShoppingBagIcon fontSize="small" sx={{ color: 'text.disabled' }} />
+      )}
+    </ButtonBase>
+  );
+}
+
+/** One product line: a tappable product photo that opens the product details,
+ * the label + qty, a "Free delivery" badge when the line meets its product's
+ * threshold, and the line total. No pod title — products and pods are separate. */
 function LineRow({
   line,
   fmt,
@@ -42,15 +76,8 @@ function LineRow({
   const label = `${line.product_name}${line.variant_label ? ` — ${line.variant_label}` : ''} × ${line.quantity}`;
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
-        <IconButton
-          size="small"
-          aria-label={`View ${line.product_name} details`}
-          onClick={() => onInfo(line.product_id)}
-          sx={{ p: 0.25, color: 'text.secondary' }}
-        >
-          <InfoOutlinedIcon fontSize="small" />
-        </IconButton>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+        <LineThumb line={line} onInfo={onInfo} />
         <Typography variant="body2" fontWeight={500} noWrap>{label}</Typography>
         {lineQualifiesFreeDelivery(line) && (
           <Chip size="small" color="success" label="Free delivery" sx={{ height: 18, fontSize: 11, fontWeight: 700 }} />

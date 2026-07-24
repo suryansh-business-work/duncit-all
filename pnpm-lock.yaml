@@ -57,6 +57,9 @@ importers:
       '@duncit/regex':
         specifier: workspace:*
         version: link:../../packages/regex
+      '@duncit/slack':
+        specifier: workspace:*
+        version: link:../../packages/slack
       '@duncit/ui':
         specifier: workspace:*
         version: link:../../packages/ui

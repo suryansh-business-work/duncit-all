@@ -1,4 +1,10 @@
-import { PROFILE_GRID, REFERRAL_TILE, SHOP_ITEMS, buildManageItems } from '../profileSections';
+import {
+  PROFILE_GRID,
+  REFERRAL_TILE,
+  SHOP_ITEMS,
+  buildEarningsItems,
+  buildManageItems,
+} from '../profileSections';
 
 describe('profileSections', () => {
   it('exposes exactly four quick-action tiles pointing at real screens', () => {
@@ -30,6 +36,17 @@ describe('profileSections', () => {
       'PodPlans',
       'Faqs',
     ]);
+  });
+
+  it('shows an Earnings > Withdrawal row only for partner roles (empty for consumers)', () => {
+    expect(buildEarningsItems([])).toEqual([]);
+    expect(buildEarningsItems(['USER'])).toEqual([]);
+    const host = buildEarningsItems(['HOST']);
+    expect(host.map((i) => i.label)).toEqual(['Withdrawal']);
+    expect(host[0]?.route).toBe('Wallet');
+    expect(buildEarningsItems(['VENUE_OWNER'])).toHaveLength(1);
+    expect(buildEarningsItems(['CLUB_ADMIN'])).toHaveLength(1);
+    expect(buildEarningsItems(['ECOMM_MANAGER'])).toHaveLength(1);
   });
 
   it('exposes the Shop e-commerce section as its own list of real screens', () => {

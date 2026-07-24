@@ -18,7 +18,8 @@ export type ProfileIconKey =
   | 'shop'
   | 'orders'
   | 'addresses'
-  | 'cart';
+  | 'cart'
+  | 'wallet';
 
 export interface ProfileTile {
   key: string;
@@ -60,6 +61,25 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
     items.splice(items.length - 1, 0, { key: 'plans', label: 'Pod Plans', caption: '', icon: 'plans', to: '/pod-plans' });
   }
   return items;
+}
+
+/** Roles that can earn payouts and therefore see the Withdrawal entry. */
+const WITHDRAWAL_ROLES = new Set(['HOST', 'VENUE_OWNER', 'CLUB_ADMIN', 'ECOMM_MANAGER']);
+
+/** The "Earnings" grouped list — a Withdrawal row shown only to partner roles
+ * (host, venue, club, e-comm) who can earn payouts. Empty for pure consumers, so
+ * the section is hidden. Points at the existing wallet page. */
+export function buildEarningsItems(roles: readonly string[]): ProfileTile[] {
+  if (!roles.some((role) => WITHDRAWAL_ROLES.has(role))) return [];
+  return [
+    {
+      key: 'withdrawal',
+      label: 'Withdrawal',
+      caption: 'Withdraw your earnings',
+      icon: 'wallet',
+      to: '/host/wallet',
+    },
+  ];
 }
 
 /** The "Shop" grouped list — the e-commerce destinations, a section that sits

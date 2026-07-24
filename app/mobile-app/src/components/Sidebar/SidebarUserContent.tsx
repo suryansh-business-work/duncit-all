@@ -9,7 +9,7 @@ import { SidebarQuickGrid } from './SidebarQuickGrid';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
-import { buildManageItems, SHOP_ITEMS } from './profileSections';
+import { buildEarningsItems, buildManageItems, SHOP_ITEMS } from './profileSections';
 
 /** The consumer (USER mode) profile layout — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card and the Manage
@@ -18,15 +18,18 @@ import { buildManageItems, SHOP_ITEMS } from './profileSections';
 export function SidebarUserContent({
   me,
   account,
+  roles,
   showPodPlans,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
   account?: ProfileForCompletion | null;
+  roles: readonly string[];
   showPodPlans: boolean;
   onNavigate: (route: MenuRoute) => void;
 }>) {
   const percent = profileCompletion(account ?? {});
+  const earningsItems = buildEarningsItems(roles);
   return (
     <YStack>
       <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
@@ -42,6 +45,9 @@ export function SidebarUserContent({
         items={buildManageItems(showPodPlans)}
         onNavigate={onNavigate}
       />
+      {earningsItems.length > 0 ? (
+        <SidebarManageList title="Earnings" items={earningsItems} onNavigate={onNavigate} />
+      ) : null}
       <SidebarManageList title="Shop" items={SHOP_ITEMS} onNavigate={onNavigate} />
     </YStack>
   );

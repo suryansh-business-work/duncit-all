@@ -15,9 +15,18 @@ export const SHOP_PRODUCTS = gql`
       super_category_id
       sub_category_id
       created_at
+      review_summary {
+        average_rating
+        total
+      }
     }
   }
 `;
+
+export interface ReviewSummary {
+  average_rating: number;
+  total: number;
+}
 
 export interface ShopProduct {
   id: string;
@@ -30,6 +39,7 @@ export interface ShopProduct {
   super_category_id?: string | null;
   sub_category_id?: string | null;
   created_at?: string | null;
+  review_summary?: ReviewSummary | null;
 }
 
 export type ShopSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC';

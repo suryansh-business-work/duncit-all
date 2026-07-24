@@ -12,6 +12,9 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
+import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 import ClubCategoryChips from '../clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from '../search-page/useSearchDiscovery';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
@@ -26,15 +29,44 @@ import {
   type ShopSort,
 } from './queries';
 
+const TRUST_ITEMS = [
+  { Icon: VerifiedUserRoundedIcon, title: 'Trusted Pods', caption: 'Quality Products' },
+  { Icon: LocalOfferRoundedIcon, title: 'Best Prices', caption: 'Great Deals' },
+  { Icon: LocalShippingRoundedIcon, title: 'Safe Delivery', caption: 'Hassle Free' },
+] as const;
+
+/** Reassurance strip below the grid — static marketing copy. */
+function TrustBar() {
+  return (
+    <Stack
+      direction="row"
+      justifyContent="space-around"
+      sx={{ bgcolor: 'action.hover', borderRadius: 3, p: 1.5, mt: 1 }}
+    >
+      {TRUST_ITEMS.map(({ Icon, title, caption }) => (
+        <Stack key={title} direction="row" spacing={1} alignItems="center">
+          <Icon sx={{ color: 'primary.main' }} fontSize="small" />
+          <Box>
+            <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', lineHeight: 1.1 }}>
+              {title}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+              {caption}
+            </Typography>
+          </Box>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
+
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
  * products with category chips, debounced search and sorting. Tapping a product
  * opens its detail page; purchases happen through a pod's shop. */
 export default function ShopPage() {
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error } = useQuery(SHOP_PRODUCTS, {
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
   const { all, buttons, matchesCategory } = useSearchCategories();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -42,6 +74,11 @@ export default function ShopPage() {
   const search = useDebouncedValue(q, 350);
 
   const categoryOptions = useMemo(() => scopeCategoryButtons(buttons, all, null), [buttons, all]);
+  const categoryName = useMemo(() => {
+    const map = new Map(all.map((c) => [c.id, c.name] as const));
+    return (product: ShopProduct) =>
+      map.get(product.super_category_id ?? '') ?? map.get(product.category_id ?? '') ?? '';
+  }, [all]);
 
   const products = useMemo(() => {
     const list: ShopProduct[] = data?.availablePodProducts ?? [];
@@ -67,19 +104,18 @@ export default function ShopPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
-      <PodShopSlider />
       <Box>
         <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
           Pod Shop
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
-          Products you can add on when booking a pod
+          Discover. Support. Shop Pods
         </Typography>
       </Box>
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField
           size="small"
-          placeholder="Search products"
+          placeholder="Search products or brands…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           InputProps={{
@@ -91,10 +127,7 @@ export default function ShopPage() {
           }}
           sx={{
             flex: 1,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 999,
-              bgcolor: 'background.paper',
-            },
+            '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' },
           }}
         />
         <TextField
@@ -117,26 +150,34 @@ export default function ShopPage() {
         selectedId={categoryId}
         onSelect={setCategoryId}
       />
+      <PodShopSlider />
       {products.length === 0 ? (
         <Alert severity="info">No products match your filters.</Alert>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
-            gap: 1.5,
-          }}
-        >
-          {products.map((product) => (
-            <ShopProductCard
-              key={product.id}
-              product={product}
-              priceFormat={priceFormat}
-              onOpen={(id) => navigate(`/product/${id}`)}
-            />
-          ))}
-        </Box>
+        <>
+          <Typography variant="h6" sx={{ fontWeight: 900 }}>
+            Featured Products
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
+              gap: 1.5,
+            }}
+          >
+            {products.map((product) => (
+              <ShopProductCard
+                key={product.id}
+                product={product}
+                priceFormat={priceFormat}
+                categoryLabel={categoryName(product)}
+                onOpen={(id) => navigate(`/product/${id}`)}
+              />
+            ))}
+          </Box>
+        </>
       )}
+      <TrustBar />
     </Stack>
   );
 }

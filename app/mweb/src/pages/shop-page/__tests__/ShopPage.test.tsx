@@ -25,6 +25,7 @@ const product = (over: Record<string, unknown>) => ({
   super_category_id: null,
   sub_category_id: null,
   created_at: '2026-01-01T00:00:00.000Z',
+  review_summary: { __typename: 'ProductReviewSummary', average_rating: 0, total: 0 },
   ...over,
 });
 
@@ -90,7 +91,7 @@ describe('ShopPage', () => {
   it('filters by the debounced search term', async () => {
     renderPage();
     await screen.findByText('Banana');
-    fireEvent.change(screen.getByPlaceholderText('Search products'), { target: { value: 'apple' } });
+    fireEvent.change(screen.getByPlaceholderText('Search products or brands…'), { target: { value: 'apple' } });
     await waitFor(() => expect(screen.queryByText('Banana')).not.toBeInTheDocument());
     expect(screen.getByText('Apple')).toBeInTheDocument();
   });
@@ -98,7 +99,7 @@ describe('ShopPage', () => {
   it('matches the brand name in search too', async () => {
     renderPage();
     await screen.findByText('Banana');
-    fireEvent.change(screen.getByPlaceholderText('Search products'), { target: { value: 'zeta' } });
+    fireEvent.change(screen.getByPlaceholderText('Search products or brands…'), { target: { value: 'zeta' } });
     await waitFor(() => expect(screen.queryByText('Cherry')).not.toBeInTheDocument());
     expect(screen.getByText('Apple')).toBeInTheDocument();
   });
@@ -106,7 +107,7 @@ describe('ShopPage', () => {
   it('shows the empty state when nothing matches', async () => {
     renderPage();
     await screen.findByText('Banana');
-    fireEvent.change(screen.getByPlaceholderText('Search products'), { target: { value: 'zzzznope' } });
+    fireEvent.change(screen.getByPlaceholderText('Search products or brands…'), { target: { value: 'zzzznope' } });
     expect(await screen.findByText('No products match your filters.')).toBeInTheDocument();
   });
 

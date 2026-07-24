@@ -40,7 +40,14 @@ let dnsHintShown = false;
 function overrideMongoDns(reason: string): void {
   if (dnsOverridden) return;
   const servers = mongoDnsServers();
-  dns.setServers(servers);
+  try {
+    // dns.setServers throws synchronously on a malformed IP — never let a bad
+    // MONGO_DNS_SERVERS value crash boot; keep retrying with the default resolver.
+    dns.setServers(servers);
+  } catch (e) {
+    console.warn(`⚠️  Ignoring invalid MONGO_DNS_SERVERS (${servers.join(', ')}): ${(e as Error).message}`);
+    return;
+  }
   dnsOverridden = true;
   const msg = `Resolving MongoDB SRV via DNS ${servers.join(', ')} (${reason}).`;
   console.info(`ℹ️  ${msg}`);

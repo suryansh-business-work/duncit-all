@@ -7,13 +7,22 @@ import { meetingStatusLabel } from './statusLabel';
 import type { MeetingApprovalStatus, OnboardingMeeting } from './queries';
 
 const STATUS_COLORS: StatusColorMap = {
-  REQUESTED: 'default', SCHEDULED: 'info', DONE: 'success', CANCELLED: 'error',
+  REQUESTED: 'default',
+  SCHEDULED: 'info',
+  DONE: 'success',
+  CANCELLED: 'error',
 };
 const APPROVAL_LABELS: Record<MeetingApprovalStatus, string> = {
-  NONE: '—', PENDING: 'Pending', APPROVED: 'Approved', DENIED: 'Denied',
+  NONE: '—',
+  PENDING: 'Pending',
+  APPROVED: 'Approved',
+  DENIED: 'Denied',
 };
 const APPROVAL_COLORS: StatusColorMap = {
-  NONE: 'default', PENDING: 'warning', APPROVED: 'success', DENIED: 'error',
+  NONE: 'default',
+  PENDING: 'warning',
+  APPROVED: 'success',
+  DENIED: 'error',
 };
 const APPROVAL_OPTIONS = (['APPROVED', 'DENIED'] as const).map((s) => ({
   value: s,
@@ -27,7 +36,12 @@ const catPath = (m: OnboardingMeeting) =>
 /** Onboarding decision on the interviewer's feedback. */
 function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | null }>) {
   const value = status ?? 'NONE';
-  if (value === 'NONE') return <Typography variant="body2" color="text.secondary">—</Typography>;
+  if (value === 'NONE')
+    return (
+      <Typography variant="body2" color="text.secondary">
+        —
+      </Typography>
+    );
   return <StatusChip status={value} label={APPROVAL_LABELS[value]} colorMap={APPROVAL_COLORS} />;
 }
 
@@ -35,15 +49,27 @@ function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | nu
 function JoinCell({ meeting }: Readonly<{ meeting: OnboardingMeeting }>) {
   const blocked = meeting.status === 'CANCELLED' || meeting.approval_status === 'DENIED';
   if (meeting.meeting_link && !blocked) {
-    return <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">Join</Link>;
+    return (
+      <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">
+        Join
+      </Link>
+    );
   }
-  return <Typography variant="body2" color="text.secondary">—</Typography>;
+  return (
+    <Typography variant="body2" color="text.secondary">
+      —
+    </Typography>
+  );
 }
 
 const getMeetingRowId = (m: OnboardingMeeting) => m.id;
 
 const renderRequestNo = (m: OnboardingMeeting) => (
-  <Typography variant="body2" fontWeight={800} sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+  <Typography
+    variant="body2"
+    fontWeight={800}
+    sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}
+  >
     {m.request_no || '—'}
   </Typography>
 );
@@ -56,7 +82,9 @@ const renderMeetingStatus = (m: OnboardingMeeting) => (
   <>
     <StatusChip status={m.status} colorMap={STATUS_COLORS} label={meetingStatusLabel(m)} />
     {m.status === 'CANCELLED' && m.cancel_reason && (
-      <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
+      <Typography variant="caption" color="text.secondary" display="block">
+        {m.cancel_reason}
+      </Typography>
     )}
   </>
 );
@@ -102,7 +130,9 @@ export default function MeetingsTable({
         >
           {requesterValue(m)}
         </Link>
-        <Typography variant="caption" color="text.secondary" display="block">{m.user_email || m.contact_phone || ''}</Typography>
+        <Typography variant="caption" color="text.secondary" display="block">
+          {m.user_email || m.contact_phone || ''}
+        </Typography>
       </>
     );
     const renderActions = (m: OnboardingMeeting) => (
@@ -132,7 +162,13 @@ export default function MeetingsTable({
         cellRenderer: renderRequester,
         valueGetter: requesterValue,
       },
-      { field: 'category', headerName: 'Category', sortable: false, minWidth: 190, valueGetter: catPath },
+      {
+        field: 'category',
+        headerName: 'Category',
+        sortable: false,
+        minWidth: 190,
+        valueGetter: catPath,
+      },
       {
         field: 'requested_at',
         headerName: 'Requested for',
@@ -147,7 +183,18 @@ export default function MeetingsTable({
         filter: { type: 'date' },
         valueGetter: (m) => fmt(m.scheduled_at),
       },
-      { field: 'link', headerName: 'Link', sortable: false, width: 90, cellRenderer: renderJoin },
+      {
+        field: 'link',
+        headerName: 'Link',
+        sortable: false,
+        width: 90,
+        cellRenderer: renderJoin,
+        // Renderer-only column: give it a value that changes whenever the Join
+        // link (or the cancelled/denied gate) changes, so AG Grid's immutable
+        // diffing re-renders it after a refetch instead of freezing on the
+        // pre-save row (stale "—" until a manual refresh).
+        valueGetter: (m) => `${m.meeting_link ?? ''}|${m.status}|${m.approval_status ?? 'NONE'}`,
+      },
       {
         field: 'status',
         headerName: 'Status',
@@ -163,7 +210,23 @@ export default function MeetingsTable({
         cellRenderer: renderApproval,
         valueGetter: (m) => APPROVAL_LABELS[m.approval_status ?? 'NONE'],
       },
-      { field: 'actions', headerName: 'Actions', sortable: false, width: 90, cellRenderer: renderActions },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        sortable: false,
+        width: 90,
+        cellRenderer: renderActions,
+        // Renderer-only column: the available actions depend on status +
+        // approval_status, and the cell's closure carries the whole row into the
+        // Schedule dialog on reopen — so key the value on every field that must
+        // re-render the cell (status/approval for the menu; scheduled_at +
+        // meeting_link so a reschedule shows its saved day/link). Without this
+        // the cell froze on the pre-mutation row: after "Mark done" the menu kept
+        // the SCHEDULED actions (no "Approve / Deny") so applicants never
+        // onboarded, and reopening after a save showed a blank link/day.
+        valueGetter: (m) =>
+          `${m.status}|${m.approval_status ?? 'NONE'}|${m.scheduled_at ?? ''}|${m.meeting_link ?? ''}`,
+      },
     ];
   }, [marking, onSchedule, onMarkDone, onDecide, onReject, onRequester]);
 

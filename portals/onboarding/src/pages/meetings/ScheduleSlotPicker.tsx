@@ -29,27 +29,38 @@ export default function ScheduleSlotPicker({ slots, value, onChange }: Readonly<
   for (const s of slots) {
     if (!days.some((d) => dayKey(d) === dayKey(s.start_at))) days.push(s.start_at);
   }
-  const activeDay = day || days[0] || '';
+  // Until the staff explicitly switches days, default to the day of the already
+  // selected slot (`value`) — so reopening a scheduled meeting shows its saved
+  // day, not "today" (the first available day). Falls back to the first day.
+  const valueDay = value ? days.find((d) => dayKey(d) === dayKey(value)) : undefined;
+  const activeDay = day || valueDay || days[0] || '';
   const daySlots = slots.filter((s) => dayKey(s.start_at) === dayKey(activeDay));
 
   return (
     <Stack spacing={1.5}>
       <Box>
-        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Day</Typography>
+        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
+          Day
+        </Typography>
         <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
           {days.map((d) => (
             <Chip
               key={d}
               label={dayLabel(d)}
               color={dayKey(d) === dayKey(activeDay) ? 'primary' : 'default'}
-              onClick={() => { setDay(d); onChange(''); }}
+              onClick={() => {
+                setDay(d);
+                onChange('');
+              }}
               sx={{ fontWeight: 800 }}
             />
           ))}
         </Stack>
       </Box>
       <Box>
-        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Time slot</Typography>
+        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
+          Time slot
+        </Typography>
         <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
           {daySlots.map((s) => (
             <Chip

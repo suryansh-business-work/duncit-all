@@ -45,8 +45,10 @@ export const slackTypeDefs = gql`
     slackChannels: [SlackChannel!]!
   }
 
-  "In-app feedback / problem report from any signed-in user. The server stamps
-  the authenticated identity and routes it to the feedback channel."
+  """
+  In-app feedback / problem report from any signed-in user. The server stamps
+  the authenticated identity and routes it to the feedback channel.
+  """
   input AppFeedbackInput {
     "Bug | Idea | Question | Other (free-form, shown as a label)."
     category: String!

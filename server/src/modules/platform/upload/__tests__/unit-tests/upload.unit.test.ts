@@ -14,9 +14,19 @@ jest.mock('../../mediaProcessing', () => {
 });
 
 import { getUploadSettingsSafe } from '../../mediaProcessing';
-import { uploadBase64Image } from '../../upload.service';
+import { getImagekitAuth, uploadBase64Image } from '../../upload.service';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 
 const mockSettings = getUploadSettingsSafe as jest.Mock;
+const mockEnv = getRuntimeEnvValue as jest.Mock;
+
+const setImagekitKeys = (pub: string, priv: string, url: string) =>
+  mockEnv.mockImplementation(async (key: string) => {
+    if (key === 'IMAGEKIT_PUBLIC_KEY') return pub;
+    if (key === 'IMAGEKIT_PRIVATE_KEY') return priv;
+    if (key === 'IMAGEKIT_URL_ENDPOINT') return url;
+    return 'test-value';
+  });
 
 const MB = 1024 * 1024;
 const videoBase64 = (bytes: number) => Buffer.alloc(bytes).toString('base64');
@@ -194,6 +204,32 @@ describe('upload unit', () => {
       } finally {
         fetchMock.mockRestore();
       }
+    });
+  });
+
+  describe('getImagekitAuth config validation', () => {
+    afterEach(() => mockEnv.mockImplementation(async () => 'test-value'));
+
+    it('returns signed auth params for a valid key pair', async () => {
+      setImagekitKeys('public_abc', 'private_xyz', 'https://ik.imagekit.io/duncit');
+      const auth = await getImagekitAuth();
+      expect(auth.publicKey).toBe('public_abc');
+      expect(auth.urlEndpoint).toBe('https://ik.imagekit.io/duncit');
+      expect(auth.token).toMatch(/^[0-9a-f]{32}$/);
+      expect(auth.signature).toMatch(/^[0-9a-f]{40}$/);
+      expect(auth.expire).toBeGreaterThan(Math.floor(Date.now() / 1000));
+    });
+
+    it.each([
+      ['', 'private_xyz', 'https://x', /IMAGEKIT_PUBLIC_KEY is missing/],
+      ['bad', 'private_xyz', 'https://x', /IMAGEKIT_PUBLIC_KEY is malformed/],
+      ['public_abc', '', 'https://x', /IMAGEKIT_PRIVATE_KEY is missing/],
+      ['public_abc', 'bad', 'https://x', /swapped/],
+      ['public_abc', 'private_xyz', '', /IMAGEKIT_URL_ENDPOINT is missing/],
+      ['public_abc', 'private_xyz', 'ftp://x', /IMAGEKIT_URL_ENDPOINT must be a URL/],
+    ])('rejects a misconfigured key pair (%s / %s / %s)', async (pub, priv, url, expected) => {
+      setImagekitKeys(pub, priv, url);
+      await expect(getImagekitAuth()).rejects.toThrow(expected);
     });
   });
 

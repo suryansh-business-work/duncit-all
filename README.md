@@ -55,9 +55,14 @@ JWT_SECRET=your-secret
 
 ### 3. Start MongoDB
 
+Local development requires a running MongoDB instance before the server can boot.
+
 ```bash
+# start MongoDB before running the server or pnpm run:all
 mongod
 ```
+
+If you use a `.env` file, create `server/.env` from `server/.env.example` and set `MONGO_URI`.
 
 ### 4. Run the stack
 

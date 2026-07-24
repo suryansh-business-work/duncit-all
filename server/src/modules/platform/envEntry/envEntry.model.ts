@@ -18,6 +18,7 @@ export const ENV_CATEGORIES = [
   'SERVAM',
   'RAZORPAY',
   'SHIPROCKET',
+  'SLACK',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

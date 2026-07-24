@@ -189,6 +189,21 @@ async function probeShiprocket(str: ConfigStr): Promise<TestResult> {
     : { ok: false, message: `ShipRocket rejected the credentials (HTTP ${res.status})` };
 }
 
+async function probeSlack(str: ConfigStr): Promise<TestResult> {
+  if (!str('bot_token')) return { ok: false, message: 'Bot token is required' };
+  const res = await fetch('https://slack.com/api/auth.test', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${str('bot_token')}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; team?: string; error?: string };
+  return data.ok
+    ? { ok: true, message: `Slack workspace "${data.team ?? ''}" connected` }
+    : { ok: false, message: `Slack rejected the token${data.error ? `: ${data.error}` : ''}` };
+}
+
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
   IMAGEKIT: probeImagekit,
   PEXELS: probePexels,
@@ -200,6 +215,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   SERVAM: probeServam,
   RAZORPAY: probeRazorpay,
   SHIPROCKET: probeShiprocket,
+  SLACK: probeSlack,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

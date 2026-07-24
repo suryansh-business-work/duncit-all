@@ -47,8 +47,10 @@ const categoriesMock: MockedResponse = {
   result: {
     data: {
       categories: [
-        { __typename: 'Category', id: 'cat-1', name: 'Sports', slug: 'sports', icon: null, level: 'CATEGORY', parent_id: null },
-        { __typename: 'Category', id: 'cat-2', name: 'Food', slug: 'food', icon: null, level: 'CATEGORY', parent_id: null },
+        { __typename: 'Category', id: 'sup-sports', name: 'Sports', slug: 'sports', icon: null, level: 'SUPER', parent_id: null },
+        { __typename: 'Category', id: 'sup-food', name: 'Food', slug: 'food', icon: null, level: 'SUPER', parent_id: null },
+        { __typename: 'Category', id: 'cat-1', name: 'Rackets', slug: 'rackets', icon: null, level: 'CATEGORY', parent_id: 'sup-sports' },
+        { __typename: 'Category', id: 'cat-2', name: 'Snacks', slug: 'snacks', icon: null, level: 'CATEGORY', parent_id: 'sup-food' },
       ],
     },
   },

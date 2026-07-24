@@ -29,6 +29,7 @@ const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
     super_category_id: 'sup1',
     sub_category_id: null,
     created_at: null,
+    review_summary: { average_rating: 0, total: 0 },
     ...over,
   }) as ShopProduct;
 
@@ -38,8 +39,10 @@ beforeEach(() => {
   mockRequest.mockReset();
   mockCategories = [
     { id: 'sup1', name: 'Lifestyle', level: 'SUPER', parent_id: null },
+    { id: 'sup2', name: 'Food', level: 'SUPER', parent_id: null },
     { id: 'cat1', name: 'Apparel', level: 'CATEGORY', parent_id: 'sup1' },
-    { id: 'cat2', name: 'Drinks', level: 'CATEGORY', parent_id: 'sup1' },
+    { id: 'cat2', name: 'Drinks', level: 'CATEGORY', parent_id: 'sup2' },
+    { id: 'sub1', name: 'Tees', level: 'SUB', parent_id: 'cat1' },
   ];
 });
 
@@ -60,10 +63,10 @@ describe('sortShopProducts', () => {
 });
 
 describe('ShopScreen', () => {
-  it('shows the loading spinner, then the product grid, and opens a product', async () => {
+  it('shows the grid with ratings + SUB-category badges, and opens a product', async () => {
     mockRequest.mockResolvedValue({
       availablePodProducts: [
-        product(),
+        product({ review_summary: { average_rating: 4.6, total: 128 } }), // p1: category → Apparel
         product({
           id: 'p2',
           product_name: 'Beta Mug',
@@ -71,14 +74,28 @@ describe('ShopScreen', () => {
           image_url: '',
           images: ['http://x/b.jpg'],
           category_id: 'cat2',
+          super_category_id: 'sup2',
+          sub_category_id: 'sub1', // sub → Tees (most specific)
           unit_cost: 60,
         }),
+        product({
+          id: 'p4',
+          product_name: 'Sup Only',
+          category_id: null,
+          super_category_id: 'sup1',
+        }), // super → Lifestyle
+        product({ id: 'p5', product_name: 'No Cat', category_id: null, super_category_id: null }), // none → no badge
       ],
     });
     renderWithProviders(<ShopScreen />);
     expect(screen.getByTestId('shop-loading')).toBeOnTheScreen();
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
-    expect(screen.getByText('Beta Mug')).toBeOnTheScreen();
+    expect(screen.getByText('Featured Products')).toBeOnTheScreen();
+    expect(screen.getByTestId('shop-product-rating-p1')).toBeOnTheScreen();
+    expect(screen.getByTestId('shop-product-cat-p1')).toHaveTextContent('Apparel');
+    expect(screen.getByTestId('shop-product-cat-p2')).toHaveTextContent('Tees');
+    expect(screen.getByTestId('shop-product-cat-p4')).toHaveTextContent('Lifestyle');
+    expect(screen.queryByTestId('shop-product-cat-p5')).toBeNull();
     fireEvent.press(screen.getByTestId('shop-product-p1'));
     expect(mockNavigate).toHaveBeenCalledWith('ProductDetail', { productId: 'p1' });
   });
@@ -92,6 +109,7 @@ describe('ShopScreen', () => {
           product_name: 'Beta Mug',
           brand_name: 'Rival',
           category_id: 'cat2',
+          super_category_id: 'sup2',
           unit_cost: 60,
         }),
       ],
@@ -99,8 +117,8 @@ describe('ShopScreen', () => {
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
 
-    // Category chip narrows to Apparel (p1 only).
-    fireEvent.press(screen.getByTestId('shop-cat-cat1'));
+    // Super-category chip narrows to Lifestyle (p1 only; p2 is under Food).
+    fireEvent.press(screen.getByTestId('shop-cat-sup1'));
     expect(screen.queryByTestId('shop-product-p2')).toBeNull();
     fireEvent.press(screen.getByTestId('shop-cat-all'));
 

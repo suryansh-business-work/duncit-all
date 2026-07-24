@@ -1,13 +1,22 @@
+import { Linking } from 'react-native';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import { PodShopSlider } from '@/components/shop/PodShopSlider';
+import { PodShopSlider, openSliderCta } from '@/components/shop/PodShopSlider';
 import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
-const sliderData = (media: { url: string; type: string; order: number }[]) => ({
+const slide = (over: Record<string, unknown>) => ({
+  heading: '',
+  subheading: '',
+  cta_label: '',
+  cta_url: '',
+  ...over,
+});
+
+const sliderData = (media: Record<string, unknown>[]) => ({
   branding: { pod_shop_slider: media },
 });
 
@@ -72,8 +81,46 @@ describe('PodShopSlider', () => {
     const { unmount } = renderWithProviders(<PodShopSlider />);
     unmount();
     await act(async () => {
-      resolve(sliderData([{ url: 'https://cdn/a.jpg', type: 'IMAGE', order: 0 }]));
+      resolve(sliderData([slide({ url: 'https://cdn/a.jpg', type: 'IMAGE', order: 0 })]));
     });
     expect(mockRequest).toHaveBeenCalled();
+  });
+
+  it('renders overlay copy + CTA (partial fields) and opens the CTA target', async () => {
+    const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    mockRequest.mockResolvedValue(
+      sliderData([
+        // heading + CTA, no subheading
+        slide({
+          url: 'https://cdn/a.jpg',
+          type: 'IMAGE',
+          order: 0,
+          heading: 'Gear Up',
+          cta_label: 'Shop Now',
+          cta_url: 'https://x',
+        }),
+        // subheading only (no heading / CTA)
+        slide({ url: 'https://cdn/b.jpg', type: 'IMAGE', order: 1, subheading: 'Top picks' }),
+      ]),
+    );
+    renderWithProviders(<PodShopSlider />);
+    expect(await screen.findByText('Gear Up')).toBeOnTheScreen();
+    expect(screen.getByText('Top picks')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-shop-slide-cta'));
+    expect(spy).toHaveBeenCalledWith('https://x');
+    spy.mockRestore();
+  });
+
+  it('openSliderCta opens external targets and ignores blanks/failures', async () => {
+    const spy = jest.spyOn(Linking, 'openURL');
+    spy.mockResolvedValueOnce(true as never);
+    openSliderCta('https://a');
+    expect(spy).toHaveBeenCalledWith('https://a');
+    spy.mockRejectedValueOnce(new Error('no'));
+    openSliderCta('https://b'); // rejection is swallowed
+    await new Promise((r) => setTimeout(r, 0));
+    openSliderCta('   '); // blank → early return, no extra call
+    expect(spy).toHaveBeenCalledTimes(2);
+    spy.mockRestore();
   });
 });

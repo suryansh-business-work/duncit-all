@@ -16,7 +16,7 @@ import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
 import ClubCategoryChips from '../clubs-page/ClubCategoryChips';
-import { scopeCategoryButtons, useSearchCategories } from '../search-page/useSearchDiscovery';
+import { useSearchCategories } from '../search-page/useSearchDiscovery';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { usePricing } from '../../hooks/usePricing';
 import PodShopSlider from './PodShopSlider';
@@ -67,17 +67,25 @@ export default function ShopPage() {
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
   const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
-  const { all, buttons, matchesCategory } = useSearchCategories();
+  const { all, matchesCategory } = useSearchCategories();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [sort, setSort] = useState<ShopSort>('NAME');
   const search = useDebouncedValue(q, 350);
 
-  const categoryOptions = useMemo(() => scopeCategoryButtons(buttons, all, null), [buttons, all]);
+  // Top filter chips are SUPER categories (the top-level vibe); the matcher keeps
+  // products tagged at descendant categories/subs.
+  const categoryOptions = useMemo(
+    () => all.filter((c) => c.level === 'SUPER').slice().sort((a, b) => a.name.localeCompare(b.name)),
+    [all],
+  );
+  // Card badge shows the most specific category the product carries — its SUB
+  // category, else category, else super.
   const categoryName = useMemo(() => {
     const map = new Map(all.map((c) => [c.id, c.name] as const));
     return (product: ShopProduct) =>
-      map.get(product.super_category_id ?? '') ?? map.get(product.category_id ?? '') ?? '';
+      map.get(product.sub_category_id ?? product.category_id ?? product.super_category_id ?? '') ??
+      '';
   }, [all]);
 
   const products = useMemo(() => {

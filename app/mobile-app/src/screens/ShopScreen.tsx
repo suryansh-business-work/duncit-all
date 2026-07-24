@@ -36,13 +36,46 @@ export function sortShopProducts(products: ShopProduct[], sort: ShopSort): ShopP
   return copy.sort((a, b) => a.product_name.localeCompare(b.product_name));
 }
 
+const TRUST_ITEMS = [
+  ['verified-user', 'Trusted Pods', 'Quality Products'],
+  ['local-offer', 'Best Prices', 'Great Deals'],
+  ['local-shipping', 'Safe Delivery', 'Hassle Free'],
+] as const;
+
+/** Reassurance strip below the grid — static marketing copy. */
+function TrustBar({ tint }: Readonly<{ tint: string }>) {
+  return (
+    <XStack
+      justifyContent="space-around"
+      margin={16}
+      padding={14}
+      borderRadius={16}
+      backgroundColor="$surface"
+    >
+      {TRUST_ITEMS.map(([icon, title, caption]) => (
+        <XStack key={title} alignItems="center" gap={8}>
+          <MaterialIcons name={icon} size={20} color={tint} />
+          <YStack>
+            <Text fontSize={11.5} fontWeight="900" color="$color">
+              {title}
+            </Text>
+            <Text fontSize={10.5} color="$muted">
+              {caption}
+            </Text>
+          </YStack>
+        </XStack>
+      ))}
+    </XStack>
+  );
+}
+
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
  * products with category chips, debounced search and sorting. Tapping a product
  * opens its detail screen; purchases happen through a pod's shop. RN twin of
  * mWeb's ShopPage. */
 export function ShopScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { muted } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const { categories } = useHomeData();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,14 +96,25 @@ export function ShopScreen() {
     };
   }, []);
 
+  // Top filter chips are SUPER categories (the top-level vibe); the matcher keeps
+  // products tagged at descendant categories/subs.
   const categoryOptions = useMemo(
     () =>
       categories
-        .filter((c) => c.level === 'CATEGORY')
+        .filter((c) => c.level === 'SUPER')
         .map((c) => [c.id, c.name] as const)
         .sort((a, b) => a[1].localeCompare(b[1])),
     [categories],
   );
+
+  // The card badge shows the most specific category the product carries — its SUB
+  // category, else category, else super.
+  const categoryName = useMemo(() => {
+    const map = new Map(categories.map((c) => [c.id, c.name] as const));
+    return (product: ShopProduct) =>
+      map.get(product.sub_category_id ?? product.category_id ?? product.super_category_id ?? '') ??
+      '';
+  }, [categories]);
 
   const visible = useMemo(() => {
     const matches = makeCategoryMatcher(categories);
@@ -107,21 +151,37 @@ export function ShopScreen() {
     );
   } else {
     body = (
-      <XStack flexWrap="wrap" gap={10} padding={16}>
-        {visible.map((product) => (
-          <ShopProductCard
-            key={product.id}
-            product={product}
-            onOpen={(productId) => navigation.navigate('ProductDetail', { productId })}
-          />
-        ))}
-      </XStack>
+      <YStack>
+        <Text
+          testID="shop-featured-heading"
+          fontSize={17}
+          fontWeight="900"
+          color="$color"
+          paddingHorizontal={16}
+          paddingTop={8}
+        >
+          Featured Products
+        </Text>
+        <XStack flexWrap="wrap" gap={10} padding={16}>
+          {visible.map((product) => (
+            <ShopProductCard
+              key={product.id}
+              product={product}
+              categoryLabel={categoryName(product)}
+              onOpen={(productId) => navigation.navigate('ProductDetail', { productId })}
+            />
+          ))}
+        </XStack>
+      </YStack>
     );
   }
 
   return (
     <StackScreen title="Pod Shop" testID="shop-screen">
       <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
+        <Text testID="shop-subtitle" fontSize={12.5} fontWeight="700" color="$muted">
+          Discover. Support. Shop Pods
+        </Text>
         <XStack
           alignItems="center"
           gap={8}
@@ -167,6 +227,7 @@ export function ShopScreen() {
       <ScrollView flex={1}>
         <PodShopSlider />
         {body}
+        <TrustBar tint={primary} />
       </ScrollView>
     </StackScreen>
   );

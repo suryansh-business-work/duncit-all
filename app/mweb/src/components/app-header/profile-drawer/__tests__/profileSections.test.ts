@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PROFILE_GRID, REFERRAL_TILE, buildManageItems } from '../profileSections';
+import { PROFILE_GRID, REFERRAL_TILE, SHOP_ITEMS, buildManageItems } from '../profileSections';
 
 describe('profileSections', () => {
   it('exposes exactly four quick-action tiles pointing at real routes', () => {
@@ -24,24 +24,15 @@ describe('profileSections', () => {
     expect(REFERRAL_TILE.caption).not.toMatch(/\d/);
   });
 
-  it('builds the manage list without Pod Plans by default', () => {
+  it('builds the manage list (account rows only) without Pod Plans by default', () => {
     const labels = buildManageItems(false).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Pod Shop',
-      'My Product Order History',
-      'Saved Items',
-      'Verification',
-      'FAQs',
-    ]);
+    expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'FAQs']);
   });
 
   it('inserts Pod Plans before FAQs when the flag is on', () => {
     const labels = buildManageItems(true).map((i) => i.label);
     expect(labels).toEqual([
       'Manage Account',
-      'Pod Shop',
-      'My Product Order History',
       'Saved Items',
       'Verification',
       'Pod Plans',
@@ -49,8 +40,18 @@ describe('profileSections', () => {
     ]);
   });
 
+  it('exposes the Shop e-commerce section as its own list of real routes', () => {
+    expect(SHOP_ITEMS.map((i) => i.label)).toEqual([
+      'Pod Shop',
+      'My Product Order History',
+      'Address Book',
+      'Cart',
+    ]);
+    expect(SHOP_ITEMS.map((i) => i.to)).toEqual(['/shop', '/orders', '/address-book', '/cart']);
+  });
+
   it('every route is absolute', () => {
-    const all = [...PROFILE_GRID, REFERRAL_TILE, ...buildManageItems(true)];
+    const all = [...PROFILE_GRID, REFERRAL_TILE, ...buildManageItems(true), ...SHOP_ITEMS];
     expect(all.every((t) => t.to.startsWith('/'))).toBe(true);
   });
 });

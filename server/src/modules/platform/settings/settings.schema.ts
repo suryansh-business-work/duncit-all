@@ -88,6 +88,19 @@ export const settingsTypeDefs = gql`
     enabled: Boolean
   }
 
+  "One media item in the global Pod Shop top slider (image or video)."
+  type PodShopSliderMedia {
+    url: String!
+    type: CategoryMediaType!
+    order: Int!
+  }
+
+  input PodShopSliderMediaInput {
+    url: String!
+    type: CategoryMediaType
+    order: Int
+  }
+
   type Branding {
     app_name: String!
     logo_url: String!
@@ -118,6 +131,8 @@ export const settingsTypeDefs = gql`
     home_all_vibe_icon_url: String!
     home_header_tagline: String!
     app_latest_version: String!
+    "Global Pod Shop top slider — admin-managed image/video media (products portal)."
+    pod_shop_slider: [PodShopSliderMedia!]!
     updated_at: String
   }
 
@@ -181,5 +196,7 @@ export const settingsTypeDefs = gql`
     setFeatureFlag(flag_id: ID!, enabled: Boolean!): FeatureFlag!
     deleteFeatureFlag(flag_id: ID!): Boolean!
     updateBranding(input: UpdateBrandingInput!): Branding!
+    "Replace the global Pod Shop slider media (managed from the products portal)."
+    updatePodShopSlider(input: [PodShopSliderMediaInput!]!): [PodShopSliderMedia!]!
   }
 `;

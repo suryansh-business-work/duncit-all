@@ -9,7 +9,7 @@ import { SidebarQuickGrid } from './SidebarQuickGrid';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
-import { buildManageItems } from './profileSections';
+import { buildManageItems, SHOP_ITEMS } from './profileSections';
 
 /** The consumer (USER mode) profile layout — RN twin of mWeb's <UserModeContent/>:
  * identity, incomplete nudge, quick-action grid, referral card and the Manage
@@ -37,7 +37,12 @@ export function SidebarUserContent({
       <SidebarVenuesCard onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" />
       <SidebarReferralCard onNavigate={onNavigate} />
-      <SidebarManageList items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
+      <SidebarManageList
+        title="Manage Account"
+        items={buildManageItems(showPodPlans)}
+        onNavigate={onNavigate}
+      />
+      <SidebarManageList title="Shop" items={SHOP_ITEMS} onNavigate={onNavigate} />
     </YStack>
   );
 }

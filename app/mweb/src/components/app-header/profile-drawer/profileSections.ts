@@ -16,7 +16,9 @@ export type ProfileIconKey =
   | 'plans'
   | 'faqs'
   | 'shop'
-  | 'orders';
+  | 'orders'
+  | 'addresses'
+  | 'cart';
 
 export interface ProfileTile {
   key: string;
@@ -43,13 +45,12 @@ export const REFERRAL_TILE: ProfileTile = {
   to: '/referral',
 };
 
-/** The "Manage Account" grouped list — the destinations not in the grid.
- * `showPodPlans` gates the Pod Plans row. */
+/** The "Manage Account" grouped list — the account destinations not in the grid.
+ * E-commerce rows live in their own {@link SHOP_ITEMS} section. `showPodPlans`
+ * gates the Pod Plans row. */
 export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
   const items: ProfileTile[] = [
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
-    { key: 'shop', label: 'Pod Shop', caption: '', icon: 'shop', to: '/shop' },
-    { key: 'orders', label: 'My Product Order History', caption: '', icon: 'orders', to: '/orders' },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
     { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
     { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
@@ -60,3 +61,12 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
   }
   return items;
 }
+
+/** The "Shop" grouped list — the e-commerce destinations, a section that sits
+ * parallel to Manage Account. Static (no flag gating), so a plain const. */
+export const SHOP_ITEMS: readonly ProfileTile[] = [
+  { key: 'shop', label: 'Pod Shop', caption: '', icon: 'shop', to: '/shop' },
+  { key: 'orders', label: 'My Product Order History', caption: '', icon: 'orders', to: '/orders' },
+  { key: 'addresses', label: 'Address Book', caption: '', icon: 'addresses', to: '/address-book' },
+  { key: 'cart', label: 'Cart', caption: '', icon: 'cart', to: '/cart' },
+];

@@ -11,6 +11,8 @@ const ADMIN_READ = [
   "TECH_MANAGER",
 ];
 const ADMIN_WRITE = ["SUPER_ADMIN", "TECH_MANAGER"];
+// The Pod Shop slider is curated from the Products portal (plus platform admins).
+const SLIDER_WRITE = ["SUPER_ADMIN", "CITY_ADMIN", "PRODUCTS_MANAGER", "TECH_MANAGER"];
 
 export const settingsResolvers = {
   Query: {
@@ -92,6 +94,14 @@ export const settingsResolvers = {
     ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.updateBranding(args.input);
+    },
+    updatePodShopSlider: async (
+      _p: unknown,
+      args: { input: any[] },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, SLIDER_WRITE);
+      return settingsService.updatePodShopSlider(args.input);
     },
   },
 };

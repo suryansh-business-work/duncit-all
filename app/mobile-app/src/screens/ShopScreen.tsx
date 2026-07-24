@@ -6,6 +6,7 @@ import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { OptionChipRow } from '@/components/home/HomeFilterParts';
+import { PodShopSlider } from '@/components/shop/PodShopSlider';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
 import { StackScreen } from '@/components/StackScreen';
 import { ShopProductsDocument } from '@/graphql/shop';
@@ -163,7 +164,10 @@ export function ShopScreen() {
           layout="scroll"
         />
       </YStack>
-      <ScrollView flex={1}>{body}</ScrollView>
+      <ScrollView flex={1}>
+        <PodShopSlider />
+        {body}
+      </ScrollView>
     </StackScreen>
   );
 }

@@ -4,6 +4,7 @@ import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { ClubModel } from '@modules/pods/club/club.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
@@ -1283,6 +1284,69 @@ export const inventoryService = {
       club_id: p.club_id ? String(p.club_id) : '',
       is_active: !!p.is_active,
     }));
+  },
+
+  /**
+   * Buyer-facing: the LIVE pods that currently stock a catalogue product, each
+   * with the per-pod purchase context (doc id, price, stock, delivery threshold)
+   * the cart needs. Lets the buyer add a product from the catalogue / standalone
+   * product detail (which carry no pod context) — the product stays a separate
+   * entity, the pod is resolved here. Price/stock come from the pod's snapshot;
+   * free_delivery_above is read live from the product (snapshots predate it).
+   */
+  async podsForProduct(productId: string) {
+    if (!Types.ObjectId.isValid(productId)) return [];
+    const pods = await PodModel.find({
+      'product_requests.product_id': productId,
+      products_enabled: true,
+      is_active: true,
+      venue_approval_status: { $ne: 'PENDING' },
+      pod_date_time: { $gte: new Date() },
+    })
+      .sort({ pod_date_time: 1 })
+      .limit(100);
+    if (pods.length === 0) return [];
+
+    const product = await InventoryProductModel.findById(productId)
+      .select('free_delivery_above')
+      .lean();
+    const freeDeliveryAbove = (product as any)?.free_delivery_above ?? null;
+
+    const clubIds = [
+      ...new Set(pods.map((p: any) => p.club_id && String(p.club_id)).filter(Boolean)),
+    ];
+    const clubs = clubIds.length
+      ? await ClubModel.find({ _id: { $in: clubIds } }, { club_id: 1 })
+      : [];
+    const clubSlugById = new Map(clubs.map((c: any) => [String(c._id), c.club_id]));
+
+    const options: {
+      pod_id: string;
+      pod_title: string;
+      club_slug: string;
+      product_name: string;
+      unit_cost: number;
+      available_count: number;
+      free_delivery_above: number | null;
+      image_url: string;
+    }[] = [];
+    for (const pod of pods as any[]) {
+      const req = (pod.product_requests ?? []).find(
+        (r: any) => String(r.product_id) === productId
+      );
+      if (!req) continue;
+      options.push({
+        pod_id: String(pod._id),
+        pod_title: pod.pod_title ?? '',
+        club_slug: pod.club_id ? (clubSlugById.get(String(pod.club_id)) ?? '') : '',
+        product_name: req.product_name ?? '',
+        unit_cost: Number(req.unit_cost ?? 0),
+        available_count: Math.max(0, Number(req.quantity ?? 0) - Number(req.sold_count ?? 0)),
+        free_delivery_above: freeDeliveryAbove,
+        image_url: req.image_url || req.images?.[0] || '',
+      });
+    }
+    return options;
   },
 
   async permanentlyDelete(id: string, user: AuthUser | null) {

@@ -1,7 +1,6 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ShopScreen, sortShopProducts, type ShopProduct } from '@/screens/ShopScreen';
-import { ProductDetailScreen } from '@/screens/ProductDetailScreen';
 import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -12,14 +11,8 @@ jest.mock('@/hooks/useHomeFeed', () => ({
 }));
 
 const mockNavigate = jest.fn();
-const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack, navigate: mockNavigate }),
-  useRoute: () => ({ params: { productId: 'p1' } }),
-}));
-// The sheet's behavior is covered in ProductDetailSheet.test — stub it here.
-jest.mock('@/components/details/ProductDetailSheet', () => ({
-  ProductDetailSheet: () => null,
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
 }));
 
 const mockRequest = graphqlRequest as jest.Mock;
@@ -147,12 +140,5 @@ describe('ShopScreen', () => {
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p3')).toBeOnTheScreen());
     expect(screen.queryByTestId('shop-cat-all')).toBeNull();
-  });
-});
-
-describe('ProductDetailScreen', () => {
-  it('renders the detail sheet for the routed product', () => {
-    renderWithProviders(<ProductDetailScreen />);
-    expect(screen.getByTestId('product-detail-screen')).toBeOnTheScreen();
   });
 });

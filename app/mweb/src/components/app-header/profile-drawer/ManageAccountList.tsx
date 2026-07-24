@@ -4,12 +4,14 @@ import { profileIcon } from './profileIcons';
 import type { ProfileTile } from './profileSections';
 
 interface ManageAccountListProps {
-  items: ProfileTile[];
+  title: string;
+  items: readonly ProfileTile[];
   onNavigate: (to: string) => void;
 }
 
-/** The "Manage Account" grouped list — icon + label + chevron rows. */
-export default function ManageAccountList({ items, onNavigate }: Readonly<ManageAccountListProps>) {
+/** A titled, grouped drawer list — icon + label + chevron rows. Reused for both
+ * the Manage Account and Shop sections. */
+export default function ManageAccountList({ title, items, onNavigate }: Readonly<ManageAccountListProps>) {
   return (
     <Box sx={{ px: 2, pb: 1.25 }}>
       <Typography
@@ -17,7 +19,7 @@ export default function ManageAccountList({ items, onNavigate }: Readonly<Manage
         color="text.secondary"
         sx={{ fontWeight: 800, letterSpacing: 0.4, pl: 0.5 }}
       >
-        Manage Account
+        {title}
       </Typography>
       <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: 3, overflow: 'hidden' }}>
         <List disablePadding>

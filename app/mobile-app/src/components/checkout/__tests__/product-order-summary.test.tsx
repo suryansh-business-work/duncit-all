@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 
 import { ProductOrderSummary } from '@/components/checkout/ProductOrderSummary';
 import type { CartLine } from '@/stores/cart.store';
@@ -102,24 +102,35 @@ function render(over: Partial<ComponentProps<typeof ProductOrderSummary>> = {}) 
       quote={null}
       shippingLoading={false}
       pincodeValid={false}
+      onInfo={() => {}}
       {...over}
     />,
   );
 }
 
 describe('ProductOrderSummary', () => {
-  it('groups lines by pod with sub-headers and the inclusive breakup', () => {
+  it('lists lines flat (no pod titles) with an info button and the inclusive breakup', () => {
     render();
     expect(screen.getByTestId('product-order-summary')).toBeOnTheScreen();
-    expect(screen.getByTestId('summary-pod-p1')).toHaveTextContent('Sunset Jam');
-    expect(screen.getByTestId('summary-pod-p2')).toHaveTextContent('Beach Bash');
+    // No pod sub-headers — products and pods are separate entities.
+    expect(screen.queryByTestId('summary-pod-p1')).toBeNull();
+    expect(screen.queryByTestId('summary-pod-p2')).toBeNull();
     expect(screen.getByText('Alpha Tee × 2')).toBeOnTheScreen();
     expect(screen.getByText('Alpha Tee — L / Blue × 1')).toBeOnTheScreen();
     expect(screen.getByText('Beta Mug × 1')).toBeOnTheScreen();
+    // Every line has an info button (opens the product details).
+    expect(screen.getByTestId('summary-info-p1:a')).toBeOnTheScreen();
     expect(screen.getByText('Subtotal')).toBeOnTheScreen();
     expect(screen.getByText('₹400.00')).toBeOnTheScreen();
     expect(screen.getByText('GST (18%)')).toBeOnTheScreen();
     expect(screen.getByText('₹130.00')).toBeOnTheScreen();
+  });
+
+  it('fires onInfo with the line product id when its info button is pressed', () => {
+    const onInfo = jest.fn();
+    render({ onInfo });
+    fireEvent.press(screen.getByTestId('summary-info-p1:a'));
+    expect(onInfo).toHaveBeenCalledWith('a');
   });
 
   it('badges only the lines whose subtotal reaches their threshold', () => {
@@ -140,29 +151,18 @@ describe('ProductOrderSummary', () => {
     expect(screen.getByText('Calculating…')).toBeOnTheScreen();
   });
 
-  it('lists one delivery row per (pod, warehouse) group, pod-prefixed across pods', () => {
+  it('lists one delivery row per warehouse group, labelled by courier only', () => {
     render({ pincodeValid: true, quote: quoted });
-    // Both groups share warehouse w1 yet belong to different pods — the cart
-    // spans 2 pods, so each row is prefixed with its pod's title. Charged group:
-    // courier name + live charge (the free group adds ₹0, so the delivery total
-    // repeats the same ₹60.00).
-    expect(screen.getByText('Sunset Jam — Delhivery')).toBeOnTheScreen();
+    // Charged group: courier name + live charge (the free group adds ₹0, so the
+    // delivery total repeats the same ₹60.00). Rows are NEVER pod-prefixed —
+    // products and pods are separate entities.
+    expect(screen.getByText('Delhivery')).toBeOnTheScreen();
     expect(screen.getAllByText('₹60.00')).toHaveLength(2);
-    // Free group: every line met its threshold.
-    expect(screen.getByText('Beach Bash — Xpressbees')).toBeOnTheScreen();
+    expect(screen.getByText('Xpressbees')).toBeOnTheScreen();
+    expect(screen.queryByText('Sunset Jam — Delhivery')).toBeNull();
     expect(screen.getByText('Free')).toBeOnTheScreen();
     expect(screen.getByText('Delivery total')).toBeOnTheScreen();
     expect(screen.queryByTestId('product-shipping-estimated')).toBeNull();
-  });
-
-  it('keeps delivery labels unprefixed when the cart spans a single pod', () => {
-    render({
-      lines: lines.filter((cartLine) => cartLine.pod_id === 'p1'),
-      pincodeValid: true,
-      quote: { ...quoted, lines: quoted.lines.slice(0, 1) },
-    });
-    expect(screen.getByText('Delhivery')).toBeOnTheScreen();
-    expect(screen.queryByText('Sunset Jam — Delhivery')).toBeNull();
   });
 
   it('marks manual-fallback groups as estimated with the courier fallback label', () => {

@@ -116,6 +116,16 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.listLinkedPods(args.product_doc_id);
     },
+    // Any signed-in buyer can list the pods that stock a product — the per-pod
+    // purchase context to add it to the cart from the catalogue / product detail.
+    podsForProduct: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.podsForProduct(args.product_doc_id);
+    },
   },
   Mutation: {
     createInventoryProduct: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

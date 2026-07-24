@@ -70,6 +70,14 @@ describe('SidebarUserContent', () => {
     expect(screen.queryByTestId('sidebar-item-Pod Plans')).toBeNull();
     fireEvent.press(screen.getByTestId('sidebar-item-Saved Items'));
     expect(onNavigate).toHaveBeenCalledWith('Saved');
+
+    // Shop section — the e-commerce group parallel to Manage Account.
+    fireEvent.press(screen.getByTestId('sidebar-item-Pod Shop'));
+    expect(onNavigate).toHaveBeenCalledWith('Shop');
+    fireEvent.press(screen.getByTestId('sidebar-item-Address Book'));
+    expect(onNavigate).toHaveBeenCalledWith('AddressBook');
+    fireEvent.press(screen.getByTestId('sidebar-item-Cart'));
+    expect(onNavigate).toHaveBeenCalledWith('Cart');
   });
 
   it('hides the banner at 100% and shows Pod Plans when the flag is on', () => {

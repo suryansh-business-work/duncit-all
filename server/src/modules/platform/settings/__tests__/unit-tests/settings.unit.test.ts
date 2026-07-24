@@ -14,4 +14,10 @@ describe('settings unit', () => {
       (settingsResolvers.Mutation as any).createFeatureFlag({}, { input: {} }, makeContext({ roles: ['CITY_ADMIN'] }))
     ).rejects.toThrow(/access denied/i);
   });
+
+  it('updatePodShopSlider is gated to slider-write roles', async () => {
+    await expect(
+      (settingsResolvers.Mutation as any).updatePodShopSlider({}, { input: [] }, makeContext({ roles: ['USER'] }))
+    ).rejects.toThrow(/access denied/i);
+  });
 });

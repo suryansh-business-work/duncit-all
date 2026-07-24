@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ResultOf } from '@graphql-typed-document-node/core';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import {
@@ -11,9 +12,12 @@ import {
   ProcessingOverlay,
   ProductOrderSummary,
   RazorpayWebView,
+  SavedAddressPicker,
 } from '@/components/checkout';
+import { ProductDetailSheet } from '@/components/details/ProductDetailSheet';
 import { StackScreen } from '@/components/StackScreen';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
+import { MyAddressesDocument } from '@/graphql/address-book';
 import type { CouponPreview } from '@/hooks/checkoutRequests';
 import {
   buildCheckoutContact,
@@ -28,6 +32,29 @@ import { buildBreakup, round2 } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 import { mapLinesToItems, productSubtotal } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
+
+type CheckoutAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
+
+/** Merge a picked saved address into the checkout form values — the picked
+ * address becomes the (non-"same as main") delivery/billing address, and its
+ * pincode drives the live delivery quote via the form's pincode watcher. */
+function addressToForm(
+  address: CheckoutAddress,
+  base: Partial<CheckoutFormValues>,
+): Partial<CheckoutFormValues> {
+  return {
+    ...base,
+    same_as_main: false,
+    full_name: address.name || base.full_name,
+    line1: address.line1,
+    line2: address.line2,
+    landmark: address.landmark,
+    city: address.city,
+    state: address.state,
+    pincode: address.pincode,
+    country: address.country || 'India',
+  };
+}
 
 /** Empty state when the cart was cleared before reaching checkout. */
 function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
@@ -86,11 +113,20 @@ export function ProductCheckoutScreen() {
   } = useProductCheckout();
 
   const [deliveryPincode, setDeliveryPincode] = useState('');
+  const [pickedAddress, setPickedAddress] = useState<CheckoutAddress | null>(null);
+  const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const {
     quote,
     loading: shippingLoading,
     pincodeValid,
   } = useProductShippingQuote(items, deliveryPincode);
+
+  // Picking a saved address prefills the billing/delivery form (incl. pincode) —
+  // the form's pincode watcher then re-quotes delivery for that address.
+  const formInitial = useMemo(
+    () => (pickedAddress ? addressToForm(pickedAddress, initialValues ?? {}) : initialValues),
+    [pickedAddress, initialValues],
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -209,6 +245,7 @@ export function ProductCheckoutScreen() {
   } else if (breakup) {
     body = (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+        <SavedAddressPicker onPick={setPickedAddress} />
         <ProductOrderSummary
           lines={lines}
           breakup={breakup}
@@ -216,6 +253,7 @@ export function ProductCheckoutScreen() {
           quote={quote}
           shippingLoading={shippingLoading}
           pincodeValid={pincodeValid}
+          onInfo={setInfoProductId}
         />
         <CouponField
           code={couponCode}
@@ -235,7 +273,7 @@ export function ProductCheckoutScreen() {
           originalTotal={breakup.total}
         />
         <CheckoutForm
-          initialValues={initialValues}
+          initialValues={formInitial}
           mainAddress={me?.address ?? null}
           contact={buildCheckoutContact(me)}
           contactLoading={isLoading && !me}
@@ -258,6 +296,11 @@ export function ProductCheckoutScreen() {
   return (
     <StackScreen title="Product checkout" testID="product-checkout-screen">
       {body}
+      <ProductDetailSheet
+        productId={infoProductId}
+        onClose={() => setInfoProductId(null)}
+        readOnly
+      />
       <RazorpayWebView
         order={order}
         open={!!order}

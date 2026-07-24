@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import pkg from './package.json' assert { type: 'json' };
+import pkg from './package.json' with { type: 'json' };
 
 // Split large, stable vendor libraries into their own chunks so they cache
 // across deploys (app code changes far more often) and download in parallel,

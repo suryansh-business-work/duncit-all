@@ -1,6 +1,8 @@
 import { settingsService } from '../../settings.service';
+import { settingsResolvers } from '../../settings.resolver';
 import { FeatureFlagModel } from '../../settings.model';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
+import { makeContext } from '@test/harness';
 import {
   getReopenWindowZone,
   setReopenWindowZone,
@@ -68,6 +70,33 @@ describe('settingsService integration', () => {
 
     const updated = await settingsService.updateBranding({ support_phone: '+911234567890' });
     expect(updated.support_phone).toBe('+911234567890');
+  });
+
+  it('replaces and reads back the pod shop slider media (backfilling order + video type)', async () => {
+    const initial = await settingsService.getBranding();
+    expect(initial.pod_shop_slider).toEqual([]);
+
+    const saved = await settingsService.updatePodShopSlider([
+      { url: 'https://cdn/a.jpg', type: 'IMAGE', order: 0 },
+      { url: 'https://cdn/b.mp4', type: 'VIDEO' }, // order backfilled from position
+    ]);
+    expect(saved).toEqual([
+      { url: 'https://cdn/a.jpg', type: 'IMAGE', order: 0 },
+      { url: 'https://cdn/b.mp4', type: 'VIDEO', order: 1 },
+    ]);
+
+    // Persisted onto the public branding read the buyer apps consume.
+    const branding = await settingsService.getBranding();
+    expect(branding.pod_shop_slider).toEqual(saved);
+  });
+
+  it('lets a slider-write admin replace the slider through the mutation resolver', async () => {
+    const result = await (settingsResolvers.Mutation as any).updatePodShopSlider(
+      {},
+      { input: [{ url: 'https://cdn/x.jpg', type: 'IMAGE', order: 0 }] },
+      makeContext({ roles: ['SUPER_ADMIN'] })
+    );
+    expect(result).toEqual([{ url: 'https://cdn/x.jpg', type: 'IMAGE', order: 0 }]);
   });
 
   it('serves app version info and syncs the latest version from APP_VERSION', async () => {

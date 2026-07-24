@@ -10,8 +10,8 @@ export const appConfig = {
   name: 'Products',
   fullName: 'Duncit Products',
   tagline: 'Manage the product catalog and roadmap.',
-  promoTitle: "Build what matters",
-  promoText: "Catalog, inventory and roadmap from one console.",
+  promoTitle: 'Build what matters',
+  promoText: 'Catalog, inventory and roadmap from one console.',
   portalLabel: 'Products Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -51,7 +51,10 @@ export const appConfig = {
     {
       label: 'Settings',
       icon: 'settings',
-      children: [{ label: 'Duncit Warehouse Locations', to: '/settings/warehouses', icon: 'warehouse' }],
+      children: [
+        { label: 'Duncit Warehouse Locations', to: '/settings/warehouses', icon: 'warehouse' },
+        { label: 'Pod Shop Slider', to: '/settings/pod-shop-slider', icon: 'view_carousel' },
+      ],
     },
   ],
   modules: [],

@@ -5,7 +5,7 @@ import ReferralCard from './ReferralCard';
 import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
-import { buildManageItems } from './profileSections';
+import { buildManageItems, SHOP_ITEMS } from './profileSections';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 
 interface UserModeContentProps {
@@ -26,7 +26,8 @@ export default function UserModeContent({ me, showPodPlans, onNavigate }: Readon
       <VenuesCard onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.25 }} />
       <ReferralCard onNavigate={onNavigate} />
-      <ManageAccountList items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
+      <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
+      <ManageAccountList title="Shop" items={SHOP_ITEMS} onNavigate={onNavigate} />
     </>
   );
 }

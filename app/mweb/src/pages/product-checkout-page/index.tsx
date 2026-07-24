@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWatch } from 'react-hook-form';
 import { Box, Button, IconButton, Skeleton, Stack, Typography } from '@mui/material';
@@ -12,6 +12,7 @@ import GatewayChip from '../checkout-page/GatewayChip';
 import PaymentDetailsCard from '../checkout-page/PaymentDetailsCard';
 import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
 import SavedAddressPicker from '../checkout-page/SavedAddressPicker';
+import ProductDetailDialog from '../pod-details-page/ProductDetailDialog';
 import { useCheckoutSession } from '../checkout-page/useCheckoutSession';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
@@ -33,7 +34,12 @@ export default function ProductCheckoutPage() {
     couponPodId: null,
     onBeforeSuccess: () => clearAll(),
   });
-  const deliveryPincode = useWatch({ control: session.control, name: 'pincode' }) || '';
+  // The delivery quote follows the chosen saved address (its pincode); until one
+  // is picked it falls back to the pincode typed into the billing form.
+  const [pickedPincode, setPickedPincode] = useState('');
+  const [infoProductId, setInfoProductId] = useState<string | null>(null);
+  const formPincode = useWatch({ control: session.control, name: 'pincode' }) || '';
+  const deliveryPincode = pickedPincode || formPincode;
   const { quote, loading: shippingLoading, pincodeValid } = useProductShippingQuote(items, deliveryPincode);
 
   const shippingTotal = quote?.total ?? 0;
@@ -76,7 +82,12 @@ export default function ProductCheckoutPage() {
           </Box>
           <GatewayChip finance={session.finance} />
         </Stack>
-        <SavedAddressPicker onPick={session.pickAddress} />
+        <SavedAddressPicker
+          onPick={(address) => {
+            session.pickAddress(address);
+            setPickedPincode(address.pincode);
+          }}
+        />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <ProductOrderSummaryCard
             lines={lines}
@@ -85,6 +96,7 @@ export default function ProductCheckoutPage() {
             quote={quote}
             shippingLoading={shippingLoading}
             pincodeValid={pincodeValid}
+            onInfo={setInfoProductId}
           />
           <PaymentDetailsCard
             control={session.control}
@@ -110,6 +122,7 @@ export default function ProductCheckoutPage() {
           />
         </Stack>
       </Box>
+      <ProductDetailDialog productId={infoProductId} onClose={() => setInfoProductId(null)} />
       <ProcessingBackdrop open={session.submitting} />
     </Box>
   );

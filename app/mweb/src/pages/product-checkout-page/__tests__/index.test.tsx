@@ -190,16 +190,17 @@ describe('ProductCheckoutPage', () => {
     );
     expect(await screen.findByText('Complete your order')).toBeInTheDocument();
     expect(screen.getByText('Payment details')).toBeInTheDocument();
-    // Lines from BOTH pods, grouped under pod sub-headers.
-    expect(screen.getByText('Sunset Jam')).toBeInTheDocument();
-    expect(screen.getByText('Beach Bash')).toBeInTheDocument();
+    // Lines from BOTH pods, listed flat with NO pod titles (products and pods
+    // are separate entities — the checkout never shows a pod title).
+    expect(screen.queryByText('Sunset Jam')).not.toBeInTheDocument();
+    expect(screen.queryByText('Beach Bash')).not.toBeInTheDocument();
     expect(screen.getByText('Alpha Tee × 2')).toBeInTheDocument();
     expect(screen.getByText('Beta Mug × 1')).toBeInTheDocument();
     expect(screen.getByText('Dummy')).toBeInTheDocument();
-    // Per-(pod, warehouse) delivery rows (pod-title prefixed — the cart spans
-    // two pods; the free group falls back to the "Delivery" label) + total.
-    expect(await screen.findByText('Sunset Jam — BlueDart')).toBeInTheDocument();
-    expect(screen.getByText('Beach Bash — Delivery')).toBeInTheDocument();
+    // Per-warehouse delivery rows labelled by courier only — never pod-prefixed;
+    // the free group falls back to the "Delivery" label) + total.
+    expect(await screen.findByText('BlueDart')).toBeInTheDocument();
+    expect(screen.getByText('Delivery')).toBeInTheDocument();
     expect(screen.getByText('Free')).toBeInTheDocument();
     expect(screen.getByText('Delivery total')).toBeInTheDocument();
     // ONE Pay button for the whole cart.
@@ -218,7 +219,7 @@ describe('ProductCheckoutPage', () => {
     );
     await screen.findByText('Complete your order');
     // Wait for the live quote (shipping 80) so the Pay total includes delivery.
-    await screen.findByText('Sunset Jam — BlueDart');
+    await screen.findByText('BlueDart');
     fireEvent.change(screen.getByLabelText('Coupon code'), { target: { value: 'SAVE10' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
     // The strict-variables mock only matches amount=250 (the product subtotal).

@@ -58,7 +58,25 @@ describe('SavedAddressPicker', () => {
     expect(await screen.findByLabelText('Deliver to a saved address')).toBeInTheDocument();
   });
 
-  it('fires onPick with the chosen address and shows the default suffix', async () => {
+  it('auto-selects the default address on load and fires onPick with it', async () => {
+    const onPick = vi.fn();
+    render(
+      <MockedProvider mocks={[listMock([home, work]), listMock([home, work])]}>
+        <SavedAddressPicker onPick={onPick} />
+      </MockedProvider>,
+    );
+
+    await screen.findByLabelText('Deliver to a saved address');
+    await waitFor(() => expect(onPick).toHaveBeenCalled());
+    const first = onPick.mock.calls[0][0] as UserAddress;
+    expect(first.id).toBe('a1');
+    // The default shows pre-selected in the field.
+    expect(screen.getByRole('combobox')).toHaveTextContent(
+      'Home (default) — 12 Baker Street, Mumbai',
+    );
+  });
+
+  it('re-fires onPick with the chosen address when the buyer picks another', async () => {
     const onPick = vi.fn();
     render(
       <MockedProvider mocks={[listMock([home, work]), listMock([home, work])]}>
@@ -75,11 +93,11 @@ describe('SavedAddressPicker', () => {
     expect(options[0]).toHaveTextContent('Home (default) — 12 Baker Street, Mumbai');
     expect(options[1]).toHaveTextContent('Work — 99 Tech Park, Pune');
 
-    fireEvent.click(options[0]);
+    fireEvent.click(options[1]);
 
-    expect(onPick).toHaveBeenCalledTimes(1);
-    const picked = (onPick.mock.calls[0][0] as UserAddress);
-    expect(picked.id).toBe('a1');
-    expect(picked.label).toBe('Home');
+    const calls = onPick.mock.calls;
+    const picked = calls[calls.length - 1][0] as UserAddress;
+    expect(picked.id).toBe('a2');
+    expect(picked.label).toBe('Work');
   });
 });

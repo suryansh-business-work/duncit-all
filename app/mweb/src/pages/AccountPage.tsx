@@ -22,7 +22,6 @@ import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
 import CompletionMeter from './account-page/CompletionMeter';
 import { toDobInput } from './account-page/account-edit';
-import AddressBookSection from './account-page/AddressBookSection';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
@@ -176,8 +175,6 @@ export default function AccountPage() {
       )}
 
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
-
-      <AddressBookSection />
 
       <HostsVenuesCard />
 

@@ -66,6 +66,7 @@ const CartPage = lazy(() => import('../pages/CartPage'));
 const ShopPage = lazy(() => import('../pages/shop-page'));
 const ProductDetailPage = lazy(() => import('../pages/ProductDetailPage'));
 const OrdersHistoryPage = lazy(() => import('../pages/OrdersHistoryPage'));
+const AddressBookPage = lazy(() => import('../pages/AddressBookPage'));
 const ExplorePage = lazy(() => import('../pages/ExplorePage'));
 const SearchPage = lazy(() => import('../pages/search-page'));
 const PreviousPodsPage = lazy(() => import('../pages/PreviousPodsPage'));
@@ -169,6 +170,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/shop" element={withAuth(<ShopPage />)} />
         <Route path="/product/:productId" element={withAuth(<ProductDetailPage />)} />
         <Route path="/orders" element={withAuth(<OrdersHistoryPage />)} />
+        <Route path="/address-book" element={withAuth(<AddressBookPage />)} />
         <Route
           path="/explore"
           element={withAuth(

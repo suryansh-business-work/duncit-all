@@ -20,14 +20,33 @@ export default function PodShopSliderPage() {
 
   useEffect(() => {
     const items = data?.branding?.pod_shop_slider as SliderMedia[] | undefined;
-    if (items) setMedia(items.map((m) => ({ url: m.url, type: m.type })));
+    if (items) {
+      setMedia(
+        items.map((m) => ({
+          url: m.url,
+          type: m.type,
+          heading: m.heading ?? '',
+          subheading: m.subheading ?? '',
+          cta_label: m.cta_label ?? '',
+          cta_url: m.cta_url ?? '',
+        })),
+      );
+    }
   }, [data]);
 
   const onSave = async () => {
     try {
       await save({
         variables: {
-          input: media.map((m, order) => ({ url: m.url, type: m.type, order })),
+          input: media.map((m, order) => ({
+            url: m.url,
+            type: m.type,
+            order,
+            heading: m.heading ?? '',
+            subheading: m.subheading ?? '',
+            cta_label: m.cta_label ?? '',
+            cta_url: m.cta_url ?? '',
+          })),
         },
       });
       notifySuccess('Pod Shop slider updated');

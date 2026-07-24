@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, IconButton, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -27,6 +27,14 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
   };
 
   const remove = (url: string) => onChange(media.filter((m) => m.url !== url));
+
+  const update = (index: number, patch: Partial<SliderMedia>) => {
+    const next = [...media];
+    const current = next[index];
+    if (!current) return;
+    next[index] = { ...current, ...patch };
+    onChange(next);
+  };
 
   const move = (index: number, delta: number) => {
     const target = index + delta;
@@ -71,11 +79,10 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
           {media.map((item, index) => (
             <Stack
               key={item.url}
-              direction="row"
               spacing={1}
-              alignItems="center"
               sx={{ p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}
             >
+              <Stack direction="row" spacing={1} alignItems="center">
               {item.type === 'VIDEO' ? (
                 <Box
                   component="video"
@@ -134,6 +141,43 @@ export default function SliderMediaField({ media, onChange }: Readonly<Props>) {
                   <DeleteOutlineIcon fontSize="inherit" />
                 </IconButton>
               </Tooltip>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField
+                  size="small"
+                  label="Heading"
+                  value={item.heading ?? ''}
+                  onChange={(e) => update(index, { heading: e.target.value })}
+                  fullWidth
+                  placeholder="Gear Up Your Game"
+                />
+                <TextField
+                  size="small"
+                  label="Subheading"
+                  value={item.subheading ?? ''}
+                  onChange={(e) => update(index, { subheading: e.target.value })}
+                  fullWidth
+                  placeholder="Top picks for every champion."
+                />
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <TextField
+                  size="small"
+                  label="CTA label"
+                  value={item.cta_label ?? ''}
+                  onChange={(e) => update(index, { cta_label: e.target.value })}
+                  fullWidth
+                  placeholder="Shop Now"
+                />
+                <TextField
+                  size="small"
+                  label="CTA link (URL or /path)"
+                  value={item.cta_url ?? ''}
+                  onChange={(e) => update(index, { cta_url: e.target.value })}
+                  fullWidth
+                  placeholder="/shop"
+                />
+              </Stack>
             </Stack>
           ))}
         </Stack>

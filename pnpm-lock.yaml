@@ -961,6 +961,18 @@ importers:
         specifier: 1.6.1
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
 
+  packages/slack:
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+
   packages/table:
     devDependencies:
       '@mui/icons-material':
@@ -3256,6 +3268,9 @@ importers:
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
+      '@duncit/slack':
+        specifier: workspace:*
+        version: link:../../packages/slack
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table

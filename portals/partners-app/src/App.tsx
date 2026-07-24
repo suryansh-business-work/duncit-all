@@ -18,6 +18,7 @@ import ProductDetailPage from './pages/list-products-page/ProductDetailPage';
 import ProductSettingsPage from './pages/list-products-page/ProductSettingsPage';
 import PartnerPoliciesPage from './pages/policies-page/PartnerPoliciesPage';
 import SupportPage from './pages/support-page/SupportPage';
+import WalletPage from './pages/wallet-page';
 import ClubAdminDashboardPage from './pages/club-admin-dashboard-page/ClubAdminDashboardPage';
 import ClubAdminClubsPage from './pages/club-admin-clubs-page/ClubAdminClubsPage';
 import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminClubPodsPage';
@@ -59,6 +60,7 @@ export default function App() {
       <Route path="/club-admin/clubs/:clubId" element={authed(<ClubAdminClubPodsPage />)} />
       <Route path="/club-admin/monitoring" element={authed(<ClubAdminPodMonitoringPage />)} />
       <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
+      <Route path="/wallet" element={authed(<WalletPage />)} />
       <Route path="/support" element={authed(<SupportPage />)} />
       <Route path="/policies" element={authed(<PartnerPoliciesPage />)} />
       <Route path="/policies/:slug" element={authed(<PartnerPoliciesPage />)} />

@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { SvgIconProps } from '@mui/material';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import ArticleIcon from '@mui/icons-material/Article';
@@ -134,6 +135,7 @@ const ICONS: Record<string, ComponentType<SvgIconProps>> = {
   tools: HandymanIcon,
   tune: TuneIcon,
   upload: CloudUploadIcon,
+  wallet: AccountBalanceWalletIcon,
   warehouse: WarehouseIcon,
   'user-search': PersonSearchIcon,
   whatsapp: WhatsAppIcon,

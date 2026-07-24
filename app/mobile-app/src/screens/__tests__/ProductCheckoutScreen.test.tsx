@@ -3,11 +3,14 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
 import { useProductCheckout } from '@/hooks/useProductCheckout';
 import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
+import { graphqlRequest } from '@/services/graphql.client';
 import { useCartStore, type CartLine } from '@/stores/cart.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useProductCheckout', () => ({ useProductCheckout: jest.fn() }));
 jest.mock('@/hooks/useProductShippingQuote', () => ({ useProductShippingQuote: jest.fn() }));
+// The address picker + product-detail sheet both read via graphqlRequest.
+jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 jest.mock('@/services/cart', () => ({
   ...jest.requireActual('@/services/cart'),
   getCartLines: jest.fn().mockResolvedValue([]),
@@ -54,6 +57,22 @@ const contactValues = {
   email: 'r@d.com',
   phone_extension: '+91',
   phone_number: '9876543210',
+};
+
+const savedAddress = {
+  id: 'a1',
+  label: 'Home',
+  name: 'Riya Sharma',
+  phone: '9876543210',
+  email: '',
+  line1: '12 MG Road',
+  line2: '',
+  landmark: '',
+  city: 'Pune',
+  state: 'Maharashtra',
+  pincode: '411001',
+  country: 'India',
+  is_default: true,
 };
 
 const line = (over: Partial<CartLine> = {}): CartLine => ({
@@ -121,6 +140,8 @@ beforeEach(() => {
   });
   mockedShipping.mockReturnValue({ quote: null, loading: false, pincodeValid: false });
   mockedCheckout.mockReturnValue(baseHook());
+  // Empty address book by default → the picker stays hidden.
+  (graphqlRequest as jest.Mock).mockResolvedValue({ myAddresses: [] });
 });
 
 describe('ProductCheckoutScreen', () => {
@@ -132,7 +153,7 @@ describe('ProductCheckoutScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Cart');
   });
 
-  it("checks out EVERY pod's cart lines together, grouped by pod", () => {
+  it("checks out EVERY pod's cart lines together as one flat product list", () => {
     useCartStore.setState({
       lines: [
         line(),
@@ -148,10 +169,48 @@ describe('ProductCheckoutScreen', () => {
       hydrated: true,
     });
     renderWithProviders(<ProductCheckoutScreen />);
-    expect(screen.getByTestId('summary-pod-p1')).toHaveTextContent('Sunset Jam');
-    expect(screen.getByTestId('summary-pod-p2')).toHaveTextContent('Beach Bash');
+    // No pod sub-headers — products and pods are separate entities.
+    expect(screen.queryByTestId('summary-pod-p1')).toBeNull();
+    expect(screen.queryByTestId('summary-pod-p2')).toBeNull();
     expect(screen.getByText('Alpha Tee × 2')).toBeOnTheScreen();
     expect(screen.getByText('Beta Mug × 1')).toBeOnTheScreen();
+    // Each line has an info button that opens the product details.
+    expect(screen.getByTestId('summary-info-p1:a')).toBeOnTheScreen();
+    expect(screen.getByTestId('summary-info-p2:b')).toBeOnTheScreen();
+  });
+
+  it('opens a product detail from the summary info button and closes it', async () => {
+    renderWithProviders(<ProductCheckoutScreen />);
+    fireEvent.press(screen.getByTestId('summary-info-p1:a'));
+    expect(await screen.findByTestId('product-detail-sheet')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('product-detail-close'));
+    await waitFor(() => expect(screen.queryByTestId('product-detail-sheet')).toBeNull());
+  });
+
+  it('auto-selects the default saved address and prefills the delivery form from it', async () => {
+    (graphqlRequest as jest.Mock).mockResolvedValue({ myAddresses: [savedAddress] });
+    renderWithProviders(<ProductCheckoutScreen />);
+    // The address picker appears with the default pre-selected …
+    await waitFor(() => expect(screen.getByTestId('checkout-address-field')).toBeOnTheScreen());
+    // … and its address prefills the billing/delivery form (incl. pincode).
+    await waitFor(() => expect(screen.getByTestId('field-line1').props.value).toBe('12 MG Road'));
+    expect(screen.getByTestId('field-pincode').props.value).toBe('411001');
+  });
+
+  it('falls back to the profile name and default country when the address omits them', async () => {
+    (graphqlRequest as jest.Mock).mockResolvedValue({
+      myAddresses: [{ ...savedAddress, name: '', country: '' }],
+    });
+    renderWithProviders(<ProductCheckoutScreen />);
+    // Prefill still runs (line1 filled) while name/country take their fallbacks.
+    await waitFor(() => expect(screen.getByTestId('field-line1').props.value).toBe('12 MG Road'));
+  });
+
+  it('prefills a picked address even when the checkout profile has no initial values', async () => {
+    mockedCheckout.mockReturnValue(baseHook({ initialValues: undefined }));
+    (graphqlRequest as jest.Mock).mockResolvedValue({ myAddresses: [savedAddress] });
+    renderWithProviders(<ProductCheckoutScreen />);
+    await waitFor(() => expect(screen.getByTestId('field-line1').props.value).toBe('12 MG Road'));
   });
 
   it('shows a spinner in the contact card while the profile is still loading', () => {

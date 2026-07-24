@@ -45,10 +45,6 @@ vi.mock('../account-page/CompletionMeter', () => ({
   default: () => <div>stub-completion</div>,
 }));
 
-vi.mock('../account-page/AddressBookSection', () => ({
-  default: () => <div>stub-addressbook</div>,
-}));
-
 vi.mock('../account-page/HostsVenuesCard', () => ({
   default: () => <div>stub-hostsvenues</div>,
 }));
@@ -205,7 +201,6 @@ describe('AccountPage', () => {
     expect(screen.getByText('Location: London · LDN · UK')).toBeInTheDocument();
     expect(screen.getByText('Date of birth: fmt(1990-01-01)')).toBeInTheDocument();
     expect(screen.getByText('stub-completion')).toBeInTheDocument();
-    expect(screen.getByText('stub-addressbook')).toBeInTheDocument();
     expect(screen.getByText('stub-security')).toBeInTheDocument();
   });
 

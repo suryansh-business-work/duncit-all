@@ -1,5 +1,6 @@
-import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
 import {
   cartLineKey,
@@ -16,28 +17,9 @@ interface Props {
   quote: ProductShippingQuote | null;
   shippingLoading: boolean;
   pincodeValid: boolean;
-}
-
-interface PodGroup {
-  pod_id: string;
-  pod_title: string;
-  lines: CartLine[];
-}
-
-/** Cart lines grouped by pod, preserving cart order (for the sub-headers). */
-function groupByPod(lines: CartLine[]): PodGroup[] {
-  const groups: PodGroup[] = [];
-  const byPod = new Map<string, PodGroup>();
-  for (const line of lines) {
-    let group = byPod.get(line.pod_id);
-    if (!group) {
-      group = { pod_id: line.pod_id, pod_title: line.pod_title, lines: [] };
-      byPod.set(line.pod_id, group);
-      groups.push(group);
-    }
-    group.lines.push(line);
-  }
-  return groups;
+  /** Opens the product-detail dialog for a line. Products and Pods are separate
+   * entities — the checkout lists products only, each with an info button. */
+  onInfo: (productId: string) => void;
 }
 
 function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
@@ -49,14 +31,27 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
   );
 }
 
-/** One product line: label + qty, a "Free delivery" badge when the line meets
- * its product's threshold, and the line total. */
-function LineRow({ line, fmt }: Readonly<{ line: CartLine; fmt: (value: number) => string }>) {
+/** One product line: an info button that opens the product details, the label +
+ * qty, a "Free delivery" badge when the line meets its product's threshold, and
+ * the line total. No pod title — products and pods are separate entities. */
+function LineRow({
+  line,
+  fmt,
+  onInfo,
+}: Readonly<{ line: CartLine; fmt: (value: number) => string; onInfo: (productId: string) => void }>) {
   const label = `${line.product_name}${line.variant_label ? ` — ${line.variant_label}` : ''} × ${line.quantity}`;
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
-        <Typography variant="body2" fontWeight={500}>{label}</Typography>
+      <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+        <IconButton
+          size="small"
+          aria-label={`View ${line.product_name} details`}
+          onClick={() => onInfo(line.product_id)}
+          sx={{ p: 0.25, color: 'text.secondary' }}
+        >
+          <InfoOutlinedIcon fontSize="small" />
+        </IconButton>
+        <Typography variant="body2" fontWeight={500} noWrap>{label}</Typography>
         {lineQualifiesFreeDelivery(line) && (
           <Chip size="small" color="success" label="Free delivery" sx={{ height: 18, fontSize: 11, fontWeight: 700 }} />
         )}
@@ -73,64 +68,54 @@ function quoteLineValue(line: ProductShippingQuoteLine, currency: string): strin
   return formatMoney(currency, line.charge);
 }
 
-/** A (pod, warehouse) group's row label: the courier name (the server emits ''
- * for free and manual-fallback groups — fall back to "Delivery"), marked
- * "(estimated)" when ShipRocket could not price it live, and prefixed with the
- * pod's title when the cart spans multiple pods. */
-function quoteLineLabel(line: ProductShippingQuoteLine, podTitle: string | null): string {
+/** A warehouse group's row label: the courier name (the server emits '' for free
+ * and manual-fallback groups — fall back to "Delivery"), marked "(estimated)"
+ * when ShipRocket could not price it live. No pod title — checkout hides pod
+ * detail (products and pods are separate entities). */
+function quoteLineLabel(line: ProductShippingQuoteLine): string {
   const courier = line.courier_name || 'Delivery';
-  const base = line.quoted ? courier : `${courier} (estimated)`;
-  if (podTitle) return `${podTitle} — ${base}`;
-  return base;
+  return line.quoted ? courier : `${courier} (estimated)`;
 }
 
 /** Delivery rows — a prompt until a valid pincode, a spinner label while
- * quoting, else ONE ROW PER (pod, warehouse) group plus the delivery total. */
+ * quoting, else ONE ROW PER warehouse group plus the delivery total. */
 function DeliveryRows({
   quote,
   shippingLoading,
   pincodeValid,
   currency,
-  podTitles,
 }: Readonly<{
   quote: ProductShippingQuote | null;
   shippingLoading: boolean;
   pincodeValid: boolean;
   currency: string;
-  podTitles: ReadonlyMap<string, string>;
 }>) {
   if (!pincodeValid) return <Row label="Delivery" value="Enter pincode" />;
   if (!quote) {
     return <Row label="Delivery" value={shippingLoading ? 'Calculating…' : formatMoney(currency, 0)} />;
   }
-  const multiPod = new Set(quote.lines.map((line) => line.pod_id ?? '')).size > 1;
   return (
     <>
-      {quote.lines.map((line) => {
-        const podTitle = multiPod ? (podTitles.get(line.pod_id ?? '') ?? null) : null;
-        return (
-          <Row
-            key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
-            label={quoteLineLabel(line, podTitle)}
-            value={quoteLineValue(line, currency)}
-          />
-        );
-      })}
+      {quote.lines.map((line) => (
+        <Row
+          key={`${line.pod_id ?? ''}:${line.warehouse_id}`}
+          label={quoteLineLabel(line)}
+          value={quoteLineValue(line, currency)}
+        />
+      ))}
       <Row label="Delivery total" value={formatMoney(currency, quote.total)} />
     </>
   );
 }
 
-/** Product-only order summary for the combined product checkout: line items
- * grouped by pod, products subtotal, per-warehouse delivery (ShipRocket) and
- * the payable total. No pod ticket / "Event ticket" line — pods and products
- * never share a payment. */
-export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid }: Readonly<Props>) {
+/** Product-only order summary for the combined product checkout: a flat product
+ * line list (each with an info button), products subtotal, per-warehouse
+ * delivery (ShipRocket) and the payable total. No pod title / "Event ticket"
+ * line — pods and products are separate entities and never share a payment. */
+export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quote, shippingLoading, pincodeValid, onInfo }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
-  const groups = groupByPod(lines);
-  const podTitles = new Map(groups.map((group) => [group.pod_id, group.pod_title]));
   const estimated = !!quote && !quote.all_quoted;
 
   return (
@@ -145,21 +130,14 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
         </Stack>
         <Divider sx={{ my: 1 }} />
         <Stack spacing={0.75}>
-          {groups.map((group) => (
-            <Box key={group.pod_id}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }} noWrap>
-                {group.pod_title}
-              </Typography>
-              <Stack spacing={0.5}>
-                {group.lines.map((line) => (
-                  <LineRow key={`${group.pod_id}:${cartLineKey(line)}`} line={line} fmt={fmt} />
-                ))}
-              </Stack>
-            </Box>
-          ))}
+          <Stack spacing={0.5}>
+            {lines.map((line) => (
+              <LineRow key={`${line.pod_id}:${cartLineKey(line)}`} line={line} fmt={fmt} onInfo={onInfo} />
+            ))}
+          </Stack>
           <Divider sx={{ my: 1 }} />
           <Row label="Subtotal" value={fmt(subtotal)} />
-          <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} podTitles={podTitles} />
+          <DeliveryRows quote={quote} shippingLoading={shippingLoading} pincodeValid={pincodeValid} currency={breakup.currency} />
           {estimated && (
             <Typography variant="caption" color="text.secondary">
               Estimated delivery — final charge confirmed at checkout.

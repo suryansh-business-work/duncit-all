@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { InMemoryCache } from '@apollo/client';
 import { MockedProvider } from '@apollo/client/testing';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import ProductDetailPage from '../ProductDetailPage';
+import ProductDetailPage, { PODS_FOR_PRODUCT } from '../ProductDetailPage';
 import { PUBLIC_PRODUCT, PRODUCT_REVIEWS, PUBLIC_BRAND } from '../pod-details-page/queries';
+import { CartProvider } from '../../components/cart/CartContext';
 
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -56,7 +57,10 @@ const fullProduct = {
 const reviewsMock = {
   request: { query: PRODUCT_REVIEWS, variables: { id: PRODUCT_ID } },
   result: {
-    data: { productReviewSummary: { average_rating: 0, total: 0, star_counts: [] }, productReviews: [] },
+    data: {
+      productReviewSummary: { average_rating: 0, total: 0, star_counts: [] },
+      productReviews: [],
+    },
   },
 };
 
@@ -90,23 +94,35 @@ const brandMock = {
  * browse list). We reproduce that here by pre-seeding the Apollo cache, which
  * makes useQuery return the product synchronously with loading=false.
  */
-function renderPage(product: unknown, mocks: readonly unknown[]) {
+function renderPage(product: unknown, mocks: readonly unknown[], pods: unknown[] = []) {
   const cache = new InMemoryCache({ addTypename: false });
   cache.writeQuery({
     query: PUBLIC_PRODUCT,
     variables: { id: PRODUCT_ID },
     data: { publicInventoryProduct: product },
   });
+  const podsMock = {
+    request: { query: PODS_FOR_PRODUCT, variables: { id: PRODUCT_ID } },
+    result: { data: { podsForProduct: pods } },
+  };
   return render(
-    <MockedProvider mocks={mocks as never} addTypename={false} cache={cache}>
-      <MemoryRouter initialEntries={[`/product/${PRODUCT_ID}`]}>
-        <Routes>
-          <Route path="/product/:productId" element={<ProductDetailPage />} />
-        </Routes>
-      </MemoryRouter>
+    <MockedProvider
+      mocks={[...mocks, podsMock, podsMock] as never}
+      addTypename={false}
+      cache={cache}
+    >
+      <CartProvider>
+        <MemoryRouter initialEntries={[`/product/${PRODUCT_ID}`]}>
+          <Routes>
+            <Route path="/product/:productId" element={<ProductDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </CartProvider>
     </MockedProvider>,
   );
 }
+
+beforeEach(() => localStorage.clear());
 
 describe('ProductDetailPage', () => {
   it('renders the populated product with price, specs, brand and variants', async () => {
@@ -180,9 +196,59 @@ describe('ProductDetailPage', () => {
   });
 
   it('uses short_description when description is empty', async () => {
-    const shortOnly = { ...fullProduct, variants: [], description: '', short_description: 'Just a short one' };
+    const shortOnly = {
+      ...fullProduct,
+      variants: [],
+      description: '',
+      short_description: 'Just a short one',
+    };
     renderPage(shortOnly, [reviewsMock]);
     await screen.findByText('Yoga Mat');
     expect(screen.getByText('Just a short one')).toBeInTheDocument();
+  });
+
+  it('adds the product to the cart via the cheapest stocking pod', async () => {
+    renderPage(
+      { ...fullProduct, variants: [] },
+      [reviewsMock],
+      [
+        {
+          pod_id: 'podA',
+          pod_title: 'A',
+          club_slug: 'ca',
+          product_name: 'Yoga Mat',
+          unit_cost: 1600,
+          available_count: 5,
+          free_delivery_above: null,
+          image_url: 'https://img/a.jpg',
+        },
+        {
+          pod_id: 'podB',
+          pod_title: 'B',
+          club_slug: 'cb',
+          product_name: 'Yoga Mat',
+          unit_cost: 1499,
+          available_count: 8,
+          free_delivery_above: 2000,
+          image_url: 'https://img/b.jpg',
+        },
+      ],
+    );
+    await screen.findByText('Yoga Mat');
+    fireEvent.click(await screen.findByRole('button', { name: /add to selection/i }));
+
+    // Persists to the cart via the cheapest pod (podB, ₹1499).
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem('mweb_cart_lines') ?? '[]');
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toMatchObject({
+        pod_id: 'podB',
+        product_id: PRODUCT_ID,
+        unit_cost: 1499,
+        quantity: 1,
+      });
+    });
+    // The stepper replaces the add button once the product is in the cart.
+    expect(await screen.findByLabelText('Increase quantity')).toBeInTheDocument();
   });
 });

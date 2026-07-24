@@ -1,5 +1,6 @@
 export { OrderSummary } from './OrderSummary';
 export { ProductOrderSummary } from './ProductOrderSummary';
+export { SavedAddressPicker } from './SavedAddressPicker';
 export { VenueChargesSheet } from './VenueChargesSheet';
 export { CheckoutSuccess } from './CheckoutSuccess';
 export { ConfirmationPodCard } from './ConfirmationPodCard';

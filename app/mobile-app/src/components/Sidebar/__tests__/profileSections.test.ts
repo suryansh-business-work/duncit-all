@@ -1,4 +1,4 @@
-import { PROFILE_GRID, REFERRAL_TILE, buildManageItems } from '../profileSections';
+import { PROFILE_GRID, REFERRAL_TILE, SHOP_ITEMS, buildManageItems } from '../profileSections';
 
 describe('profileSections', () => {
   it('exposes exactly four quick-action tiles pointing at real screens', () => {
@@ -12,40 +12,38 @@ describe('profileSections', () => {
     expect(REFERRAL_TILE.caption).not.toMatch(/\d/);
   });
 
-  it('builds the manage list without Pod Plans by default', () => {
+  it('builds the manage list (account rows only) without Pod Plans by default', () => {
     const labels = buildManageItems(false).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Pod Shop',
-      'My Product Order History',
-      'Saved Items',
-      'Verification',
-      'FAQs',
-    ]);
+    expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'FAQs']);
   });
 
   it('inserts Pod Plans before FAQs when the flag is on', () => {
     const labels = buildManageItems(true).map((i) => i.label);
-    expect(labels).toEqual([
-      'Manage Account',
-      'Pod Shop',
-      'My Product Order History',
-      'Saved Items',
-      'Verification',
-      'Pod Plans',
-      'FAQs',
-    ]);
+    expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'Pod Plans', 'FAQs']);
   });
 
   it('routes every manage item to a Pod-Plans-gated screen name', () => {
     expect(buildManageItems(true).map((i) => i.route)).toEqual([
       'Account',
-      'Shop',
-      'OrdersHistory',
       'Saved',
       'Verification',
       'PodPlans',
       'Faqs',
+    ]);
+  });
+
+  it('exposes the Shop e-commerce section as its own list of real screens', () => {
+    expect(SHOP_ITEMS.map((i) => i.label)).toEqual([
+      'Pod Shop',
+      'My Product Order History',
+      'Address Book',
+      'Cart',
+    ]);
+    expect(SHOP_ITEMS.map((i) => i.route)).toEqual([
+      'Shop',
+      'OrdersHistory',
+      'AddressBook',
+      'Cart',
     ]);
   });
 });

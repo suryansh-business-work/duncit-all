@@ -179,6 +179,24 @@ export const PublicInventoryProductDocument = gql(`
   }
 `);
 
+/** Pods that currently stock a catalogue product — the per-pod cart context so
+ * the buyer can add a product from the catalogue / standalone product detail
+ * (which carry no pod context). Products and pods stay separate entities. */
+export const PodsForProductDocument = gql(`
+  query MobilePodsForProduct($productDocId: ID!) {
+    podsForProduct(product_doc_id: $productDocId) {
+      pod_id
+      pod_title
+      club_slug
+      product_name
+      unit_cost
+      available_count
+      free_delivery_above
+      image_url
+    }
+  }
+`);
+
 /** Ratings & reviews for a product (summary + list) for the product-detail sheet. */
 export const ProductReviewsDocument = gql(`
   query MobileProductReviews($id: ID!) {

@@ -66,6 +66,7 @@ export type RootStackParamList = {
   Cart: undefined;
   Shop: undefined;
   OrdersHistory: undefined;
+  AddressBook: undefined;
   ProductDetail: { productId: string };
   HostsVenues: undefined;
   Venues: undefined;

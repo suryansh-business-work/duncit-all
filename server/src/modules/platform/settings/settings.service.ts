@@ -146,6 +146,11 @@ const brandingToPub = (doc: any) => ({
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   app_latest_version: doc.app_latest_version ?? "",
+  pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({
+    url: m.url,
+    type: m.type ?? "IMAGE",
+    order: m.order ?? 0,
+  })),
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
 
@@ -419,6 +424,22 @@ export const settingsService = {
       { new: true, upsert: true },
     );
     return brandingToPub(doc);
+  },
+
+  /** Replace the global Pod Shop slider media (products portal). Normalises the
+   * media type and backfills the display order from array position. */
+  async updatePodShopSlider(input: { url: string; type?: string; order?: number }[]) {
+    const media = (input ?? []).map((m, i) => ({
+      url: m.url,
+      type: m.type === "VIDEO" ? "VIDEO" : "IMAGE",
+      order: m.order ?? i,
+    }));
+    const doc = await BrandingModel.findOneAndUpdate(
+      { singleton_key: "branding" },
+      { $set: { pod_shop_slider: media } },
+      { new: true, upsert: true },
+    );
+    return brandingToPub(doc).pod_shop_slider;
   },
 
   async seedDefaults() {

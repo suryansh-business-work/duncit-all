@@ -19,3 +19,18 @@ export const ShopProductsDocument = gql(`
     }
   }
 `);
+
+/** The global Pod Shop top slider (image/video) — admin-managed from the
+ * products portal, shown above the Pod Shop grid. RN twin of mWeb's shop-page
+ * slider read. */
+export const PodShopSliderDocument = gql(`
+  query MobilePodShopSlider {
+    branding {
+      pod_shop_slider {
+        url
+        type
+        order
+      }
+    }
+  }
+`);

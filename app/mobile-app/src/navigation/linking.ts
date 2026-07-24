@@ -83,6 +83,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       VenueDetails: 'venue/:venueId',
       Checkout: 'checkout/:podId',
       ProductCheckout: 'product-checkout',
+      AddressBook: 'address-book',
       NotFound: '*',
     },
   },

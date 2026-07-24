@@ -13,6 +13,7 @@ import ProductRequestPage from './pages/ecomm/ecomm-requests/ProductRequestPage'
 import ProductOrdersPage from './pages/orders/ProductOrdersPage';
 import ProductOrderDetailPage from './pages/orders/ProductOrderDetailPage';
 import DuncitWarehousesPage from './pages/settings/DuncitWarehousesPage';
+import PodShopSliderPage from './pages/settings/PodShopSliderPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -44,6 +45,7 @@ export default function App() {
       <Route path="/orders" element={products(<ProductOrdersPage />)} />
       <Route path="/orders/:orderId" element={products(<ProductOrderDetailPage />)} />
       <Route path="/settings/warehouses" element={products(<DuncitWarehousesPage />)} />
+      <Route path="/settings/pod-shop-slider" element={products(<PodShopSliderPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

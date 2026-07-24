@@ -56,6 +56,9 @@ describe('UserModeContent', () => {
     expect(screen.getByText('Refer & Earn')).toBeInTheDocument();
     expect(screen.getByText('Pod Shop')).toBeInTheDocument();
     expect(screen.getByText('FAQs')).toBeInTheDocument();
+    // Shop section — the e-commerce group parallel to Manage Account.
+    expect(screen.getByText('Address Book')).toBeInTheDocument();
+    expect(screen.getByText('Cart')).toBeInTheDocument();
   });
 
   it('shows the incomplete banner when profile completion < 100%', () => {
@@ -116,5 +119,8 @@ describe('UserModeContent', () => {
 
     fireEvent.click(screen.getByText('Pod Shop'));
     expect(onNavigate).toHaveBeenCalledWith('/shop');
+
+    fireEvent.click(screen.getByText('Address Book'));
+    expect(onNavigate).toHaveBeenCalledWith('/address-book');
   });
 });

@@ -35,11 +35,17 @@ function ManageRow({
   );
 }
 
-/** "Manage Account" grouped list — RN port of mWeb's <ManageAccountList/>. */
+/** A titled, grouped sidebar list (icon + label + chevron rows) — RN port of
+ * mWeb's <ManageAccountList/>. Reused for both Manage Account and Shop. */
 export function SidebarManageList({
+  title,
   items,
   onNavigate,
-}: Readonly<{ items: ProfileTile[]; onNavigate: (route: MenuRoute) => void }>) {
+}: Readonly<{
+  title: string;
+  items: readonly ProfileTile[];
+  onNavigate: (route: MenuRoute) => void;
+}>) {
   return (
     <YStack paddingHorizontal={16} paddingBottom={10} gap={4}>
       <Text
@@ -50,7 +56,7 @@ export function SidebarManageList({
         color="$muted"
         paddingLeft={2}
       >
-        Manage Account
+        {title}
       </Text>
       <YStack
         borderRadius={12}

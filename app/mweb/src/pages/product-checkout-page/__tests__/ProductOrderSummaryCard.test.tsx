@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import type { CartLine } from '../../../components/cart/CartContext';
 import type { ProductShippingQuote, ProductShippingQuoteLine } from '../../checkout-page/queries';
 import ProductOrderSummaryCard from '../ProductOrderSummaryCard';
@@ -50,6 +50,7 @@ const renderCard = (props: Partial<React.ComponentProps<typeof ProductOrderSumma
       quote={quote()}
       shippingLoading={false}
       pincodeValid
+      onInfo={() => {}}
       {...props}
     />,
   );
@@ -73,17 +74,25 @@ describe('ProductOrderSummaryCard', () => {
     expect(screen.queryByText(/Ticket/)).not.toBeInTheDocument();
   });
 
-  it('groups line items under pod sub-headers', () => {
+  it('lists all lines flat with no pod titles (products and pods are separate)', () => {
     renderCard({
       lines: [
         line(),
         line({ pod_id: 'pod2', pod_title: 'Beach Bash', product_id: 'b', product_name: 'Beta Mug', quantity: 1 }),
       ],
     });
-    expect(screen.getByText('Sunset Jam')).toBeInTheDocument();
-    expect(screen.getByText('Beach Bash')).toBeInTheDocument();
     expect(screen.getByText('Alpha Tee × 2')).toBeInTheDocument();
     expect(screen.getByText('Beta Mug × 1')).toBeInTheDocument();
+    // No pod titles / sub-headers in the checkout summary.
+    expect(screen.queryByText('Sunset Jam')).not.toBeInTheDocument();
+    expect(screen.queryByText('Beach Bash')).not.toBeInTheDocument();
+  });
+
+  it('opens the product details from a line info button', () => {
+    const onInfo = vi.fn();
+    renderCard({ onInfo });
+    fireEvent.click(screen.getAllByLabelText(/view .* details/i)[0]);
+    expect(onInfo).toHaveBeenCalledWith('a');
   });
 
   it('labels a free group "Delivery" / "Free" (the server emits courier_name "")', () => {
@@ -111,7 +120,7 @@ describe('ProductOrderSummaryCard', () => {
     expect(screen.getByText(/estimated delivery/i)).toBeInTheDocument();
   });
 
-  it('prefixes delivery rows with the pod title when the cart spans multiple pods', () => {
+  it('labels delivery rows by courier only — never pod-prefixed', () => {
     renderCard({
       lines: [
         line(),
@@ -126,9 +135,11 @@ describe('ProductOrderSummaryCard', () => {
         ],
       }),
     });
-    expect(screen.getByText('Sunset Jam — BlueDart')).toBeInTheDocument();
-    expect(screen.getByText('Beach Bash — Delivery')).toBeInTheDocument();
+    expect(screen.getByText('BlueDart')).toBeInTheDocument();
+    expect(screen.getByText('Delivery')).toBeInTheDocument();
     expect(screen.getByText('Free')).toBeInTheDocument();
+    // Pod titles never appear in the delivery labels.
+    expect(screen.queryByText('Sunset Jam — BlueDart')).not.toBeInTheDocument();
   });
 
   it('badges a line with Free delivery when it meets its product threshold', () => {

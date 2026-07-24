@@ -249,6 +249,20 @@ export const inventoryTypeDefs = /* GraphQL */ `
     is_active: Boolean!
   }
 
+  "A pod that currently stocks a catalogue product — the per-pod purchase context (price, stock, delivery) needed to add the product to the cart when there is no pod route context (catalogue / standalone product detail)."
+  type ProductPodOption {
+    "The pod's document id — the value that goes on the cart line's pod_id."
+    pod_id: ID!
+    pod_title: String!
+    club_slug: String!
+    product_name: String!
+    unit_cost: Float!
+    available_count: Int!
+    "Live product threshold: line subtotal at/above which delivery is free (null = no offer)."
+    free_delivery_above: Float
+    image_url: String!
+  }
+
   type ProductAnalyticsLocation {
     location: String!
     units_sold: Int!
@@ -446,6 +460,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     inventoryStockMovements(product_doc_id: ID!, limit: Int): [InventoryStockMovement!]!
     inventoryAnalytics(product_doc_id: ID!, days: Int): [InventoryAnalyticsPoint!]!
     inventoryProductLinkedPods(product_doc_id: ID!): [InventoryLinkedPod!]!
+    "Pods that currently stock a catalogue product — per-pod purchase context so a buyer can add the product to the cart from the catalogue / standalone product detail (any signed-in user)."
+    podsForProduct(product_doc_id: ID!): [ProductPodOption!]!
   }
 
   extend type Mutation {

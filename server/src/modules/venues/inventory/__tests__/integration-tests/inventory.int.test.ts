@@ -1,10 +1,14 @@
 import { Types } from 'mongoose';
 import { inventoryService } from '../../inventory.service';
+import { inventoryResolvers } from '../../inventory.resolver';
 import { InventoryProductModel } from '../../inventory.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
+import { ClubModel } from '@modules/pods/club/club.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
+import { makeContext } from '@test/harness';
 
 describe('inventoryService integration', () => {
   it('lists no products / requests on an empty dataset', async () => {
@@ -37,6 +41,63 @@ describe('inventoryService integration', () => {
     const sku = await inventoryService.generateSku();
     expect(typeof sku).toBe('string');
     expect(sku.length).toBeGreaterThan(0);
+  });
+
+  it('podsForProduct returns the live pods that stock a product with per-pod cart context', async () => {
+    const productId = new Types.ObjectId();
+    const clubId = new Types.ObjectId();
+    await ClubModel.collection.insertOne({ _id: clubId, club_id: 'jazz-club' } as never);
+    await InventoryProductModel.collection.insertOne({
+      _id: productId,
+      product_name: 'Tee',
+      free_delivery_above: 500,
+    } as never);
+    await PodModel.collection.insertOne({
+      _id: new Types.ObjectId(),
+      pod_id: 'my-pod',
+      pod_title: 'Sunset Jam',
+      club_id: clubId,
+      products_enabled: true,
+      is_active: true,
+      venue_approval_status: 'NONE',
+      pod_date_time: new Date(Date.now() + 86_400_000),
+      product_requests: [
+        {
+          product_id: productId,
+          product_name: 'Tee',
+          image_url: 'https://cdn/tee.jpg',
+          unit_cost: 100,
+          quantity: 10,
+          sold_count: 3,
+          total_cost: 1000,
+        },
+      ],
+    } as never);
+
+    const options = await inventoryService.podsForProduct(String(productId));
+    expect(options).toHaveLength(1);
+    expect(options[0]).toMatchObject({
+      pod_title: 'Sunset Jam',
+      club_slug: 'jazz-club',
+      product_name: 'Tee',
+      unit_cost: 100,
+      available_count: 7, // quantity 10 − sold_count 3
+      free_delivery_above: 500, // read live from the product, not the snapshot
+      image_url: 'https://cdn/tee.jpg',
+    });
+
+    // Invalid ids and unknown products resolve to an empty list (never throws).
+    expect(await inventoryService.podsForProduct('not-an-id')).toEqual([]);
+    expect(await inventoryService.podsForProduct(new Types.ObjectId().toString())).toEqual([]);
+  });
+
+  it('exposes podsForProduct to any signed-in buyer (resolver auth passes)', async () => {
+    const result = await (inventoryResolvers.Query as any).podsForProduct(
+      {},
+      { product_doc_id: new Types.ObjectId().toString() },
+      makeContext({ roles: ['USER'] })
+    );
+    expect(result).toEqual([]);
   });
 
   it('exposes per-variant price/stock/images on the product detail', async () => {

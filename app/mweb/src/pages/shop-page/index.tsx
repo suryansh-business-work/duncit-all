@@ -16,6 +16,7 @@ import ClubCategoryChips from '../clubs-page/ClubCategoryChips';
 import { scopeCategoryButtons, useSearchCategories } from '../search-page/useSearchDiscovery';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { usePricing } from '../../hooks/usePricing';
+import PodShopSlider from './PodShopSlider';
 import ShopProductCard from './ShopProductCard';
 import {
   SHOP_PRODUCTS,
@@ -31,7 +32,9 @@ import {
 export default function ShopPage() {
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery(SHOP_PRODUCTS, {
+    fetchPolicy: 'cache-and-network',
+  });
   const { all, buttons, matchesCategory } = useSearchCategories();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -64,6 +67,7 @@ export default function ShopPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
+      <PodShopSlider />
       <Box>
         <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
           Pod Shop
@@ -85,7 +89,13 @@ export default function ShopPage() {
               </InputAdornment>
             ),
           }}
-          sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+          sx={{
+            flex: 1,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 999,
+              bgcolor: 'background.paper',
+            },
+          }}
         />
         <TextField
           select
@@ -102,7 +112,11 @@ export default function ShopPage() {
           ))}
         </TextField>
       </Stack>
-      <ClubCategoryChips categories={categoryOptions} selectedId={categoryId} onSelect={setCategoryId} />
+      <ClubCategoryChips
+        categories={categoryOptions}
+        selectedId={categoryId}
+        onSelect={setCategoryId}
+      />
       {products.length === 0 ? (
         <Alert severity="info">No products match your filters.</Alert>
       ) : (

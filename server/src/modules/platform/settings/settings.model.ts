@@ -129,9 +129,21 @@ export interface IBranding extends Document {
   // mobile app compares its baked-in version to this and force-updates when
   // it is behind.
   app_latest_version: string;
+  // Global Pod Shop top slider (image/video), admin-managed from the products
+  // portal. Shown above the platform-wide Pod Shop grid on mobile + mWeb.
+  pod_shop_slider: { url: string; type: string; order: number }[];
   created_at: Date;
   updated_at: Date;
 }
+
+const podShopSliderMediaSchema = new Schema<{ url: string; type: string; order: number }>(
+  {
+    url: { type: String, required: true },
+    type: { type: String, enum: ["IMAGE", "VIDEO"], default: "IMAGE" },
+    order: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
 
 const brandingSchema = new Schema<IBranding>(
   {
@@ -175,6 +187,7 @@ const brandingSchema = new Schema<IBranding>(
     home_all_vibe_icon_url: { type: String, default: "" },
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
+    pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

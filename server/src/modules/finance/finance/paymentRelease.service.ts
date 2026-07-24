@@ -280,11 +280,28 @@ async function applyApproval(doc: IPaymentRelease) {
       logs.server.warn('paymentRelease', 'applyApproval', { error: e, msg: 'stock release failed' });
     });
   }
-  if (doc.kind !== 'HOST_PAYMENT') return;
+  const payout = doc.approved_amount ?? doc.amount_requested;
+  if (doc.kind !== 'HOST_PAYMENT') {
+    // Venue billing: credit the venue owner's wallet so they can withdraw too,
+    // mirroring the host payout. Idempotent per release_id in the wallet service.
+    if (doc.venue_id) {
+      const venue = await VenueModel.findById(doc.venue_id).select('owner_user_id');
+      const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
+      if (ownerId) {
+        const { walletService } = await import('@modules/finance/wallet/wallet.service');
+        await walletService.creditPodPayout(ownerId, payout, {
+          pod_id: doc.pod_id,
+          release_id: doc.release_id,
+          reason: `Venue payout for ${doc.pod_title}`,
+        });
+      }
+    }
+    return;
+  }
   // The host's commission is credited to their wallet to withdraw later.
   if (doc.host_user_id) {
     const { walletService } = await import('@modules/finance/wallet/wallet.service');
-    await walletService.creditPodPayout(String(doc.host_user_id), doc.approved_amount ?? doc.amount_requested, {
+    await walletService.creditPodPayout(String(doc.host_user_id), payout, {
       pod_id: doc.pod_id,
       release_id: doc.release_id,
       reason: `Payout for ${doc.pod_title}`,

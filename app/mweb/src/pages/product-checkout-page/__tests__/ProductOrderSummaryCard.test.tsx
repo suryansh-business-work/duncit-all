@@ -88,11 +88,17 @@ describe('ProductOrderSummaryCard', () => {
     expect(screen.queryByText('Beach Bash')).not.toBeInTheDocument();
   });
 
-  it('opens the product details from a line info button', () => {
+  it('opens the product details from a line photo', () => {
     const onInfo = vi.fn();
     renderCard({ onInfo });
     fireEvent.click(screen.getAllByLabelText(/view .* details/i)[0]);
     expect(onInfo).toHaveBeenCalledWith('a');
+  });
+
+  it('renders the product photo as the details trigger when the line has an image', () => {
+    renderCard({ lines: [line({ image_url: 'https://cdn.duncit.com/tee.jpg' })] });
+    const img = screen.getByRole('img', { name: 'Alpha Tee' });
+    expect(img).toHaveAttribute('src', 'https://cdn.duncit.com/tee.jpg');
   });
 
   it('labels a free group "Delivery" / "Free" (the server emits courier_name "")', () => {

@@ -39,6 +39,7 @@ export const appConfig = {
         { label: 'Terminal', to: '/server/terminal', icon: 'terminal' },
       ],
     },
+    { label: 'Slack', to: '/slack', icon: 'chat' },
   ],
   modules: [],
 } satisfies AppConfig;

@@ -41,6 +41,7 @@ export type RootStackParamList = {
   ChatWithUs: undefined;
   LiveChat: undefined;
   AllSupportTickets: undefined;
+  Feedback: undefined;
   TicketDetails: { ticketId: string };
   PodIdeas: undefined;
   Referral: undefined;

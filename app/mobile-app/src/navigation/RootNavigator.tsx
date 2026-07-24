@@ -52,6 +52,7 @@ import { CallbackScreen } from '@/screens/CallbackScreen';
 import { ChatWithUsScreen } from '@/screens/ChatWithUsScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
 import { AllSupportTicketsScreen } from '@/screens/AllSupportTicketsScreen';
+import { FeedbackScreen } from '@/screens/FeedbackScreen';
 import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { SurveyScreen } from '@/screens/SurveyScreen';
@@ -115,6 +116,7 @@ export function RootNavigator() {
       <Stack.Screen name="ChatWithUs" component={ChatWithUsScreen} />
       <Stack.Screen name="LiveChat" component={LiveChatScreen} />
       <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
+      <Stack.Screen name="Feedback" component={FeedbackScreen} />
       <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
       <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
       <Stack.Screen name="Referral" component={ReferralScreen} />

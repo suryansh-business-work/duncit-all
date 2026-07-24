@@ -21,6 +21,11 @@ function postToImagekit(
   folder: string,
   onProgress?: UploadProgress,
 ): Promise<string> {
+  // A DOM FormData stringifies any non-Blob part to "[object Object]", which
+  // ImageKit then rejects — fail fast with a clear message instead.
+  if (!(file instanceof Blob)) {
+    return Promise.reject(new Error('Cannot upload: a real file (Blob) is required.'));
+  }
   const form = new FormData();
   form.append('file', file);
   form.append('fileName', file.name || `upload-${Date.now()}`);
@@ -45,7 +50,11 @@ function postToImagekit(
         // Non-JSON body — fall through to the generic error below.
       }
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(json.url as string);
+        if (json.url) {
+          resolve(json.url as string);
+        } else {
+          reject(new Error('Upload succeeded but ImageKit returned no file URL'));
+        }
       } else {
         reject(new Error(json?.message || 'Upload failed'));
       }

@@ -8,6 +8,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EarnBox from './EarnBox';
 import EarnMeetingActions from './EarnMeetingActions';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const EARN_ME = gql`
   query EarnMe {
@@ -185,6 +186,10 @@ export default function EarnPage() {
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
   const showSkeleton = loading && !data;
+  // The product-seller path is hidden when products are gated off — mirrors the
+  // native EarnScreen so all three platforms behave identically.
+  const showProducts = useFeatureFlag('is_product_visible');
+  const boxes = showProducts ? BOXES : BOXES.filter((box) => box.kind !== 'ECOMM');
 
   // Approved-user next step: an in-app route (host) or the Partner Portal
   // (venue/ecomm/club — opening the deep link there preserves it through login).
@@ -218,11 +223,11 @@ export default function EarnPage() {
       </Stack>
       <Stack spacing={1.5}>
         {showSkeleton
-          ? BOXES.map((box) => (
+          ? boxes.map((box) => (
               <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: 3 }} />
             ))
           : null}
-        {showSkeleton ? null : BOXES.map((box) => {
+        {showSkeleton ? null : boxes.map((box) => {
           const state = earnBoxState(box, roles, meetings);
           const { scheduledMeeting } = state;
           const cta = state.approved

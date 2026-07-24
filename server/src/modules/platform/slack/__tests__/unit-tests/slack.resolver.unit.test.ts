@@ -6,6 +6,7 @@ jest.mock('../../slack.service', () => ({
     configured: jest.fn().mockResolvedValue(true),
     channels: jest.fn().mockResolvedValue([{ id: 'C1' }]),
     send: jest.fn().mockResolvedValue({ ok: true, channel: 'C1', ts: '1' }),
+    sendFeedback: jest.fn().mockResolvedValue({ ok: true, channel: 'C_FB', ts: '2' }),
   },
 }));
 
@@ -34,5 +35,18 @@ describe('slackResolvers', () => {
     expect(() => slackResolvers.Query.slackChannels({}, {}, ctx(null))).toThrow(GraphQLError);
     expect(() => slackResolvers.Mutation.sendSlackMessage({}, { input: {} }, ctx(['USER']))).toThrow(GraphQLError);
     expect(slackService.send).not.toHaveBeenCalled();
+  });
+
+  it('lets any signed-in user submit feedback, stamping the token identity', async () => {
+    const input = { category: 'Bug', message: 'broken' };
+    await slackResolvers.Mutation.submitAppFeedback({}, { input }, ctx(['USER']));
+    expect(slackService.sendFeedback).toHaveBeenCalledWith({ id: 'u1', roles: ['USER'] }, input);
+  });
+
+  it('rejects feedback from an unauthenticated caller', () => {
+    expect(() => slackResolvers.Mutation.submitAppFeedback({}, { input: {} }, ctx(null))).toThrow(
+      GraphQLError,
+    );
+    expect(slackService.sendFeedback).not.toHaveBeenCalled();
   });
 });

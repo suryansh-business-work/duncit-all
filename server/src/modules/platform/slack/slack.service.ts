@@ -79,4 +79,43 @@ export const slackService = {
     logs.server.info('slack', 'send', { channel: result.channel, ts: result.ts });
     return { ok: true, channel: result.channel, ts: result.ts };
   },
+
+  /**
+   * Post in-app feedback from a signed-in user. Identity is taken from the
+   * authenticated context (never the client) and the channel is forced to the
+   * feedback channel (or the default), so this stays safe to expose to every
+   * user without the Slack-manage role.
+   */
+  async sendFeedback(user: { id: string; email?: string | null }, input: any) {
+    const category = optionalStr(input.category);
+    const message = optionalStr(input.message);
+    if (!category || !message) {
+      throw badInput('Category and message are required');
+    }
+    const channel =
+      optionalStr(await getRuntimeEnvValue('SLACK_FEEDBACK_CHANNEL')) ??
+      optionalStr(await getRuntimeEnvValue('SLACK_DEFAULT_CHANNEL'));
+    if (!channel) {
+      throw badInput('No Slack channel is configured for feedback');
+    }
+    const who = optionalStr(user.email) ?? user.id;
+    const platform = optionalStr(input.platform) ?? 'app';
+    const body = parseJsonArray(input.blocks_json, 'Feedback') ?? [
+      { type: 'section', text: { type: 'mrkdwn', text: message } },
+    ];
+    const blocks = [
+      ...body,
+      {
+        type: 'context',
+        elements: [{ type: 'mrkdwn', text: `${category} · by ${who} · ${platform}` }],
+      },
+    ];
+    const result = await postMessage({
+      channel,
+      text: `App feedback (${category}) from ${who}: ${message}`,
+      blocks,
+    });
+    logs.server.info('slack', 'feedback', { channel: result.channel, ts: result.ts, category });
+    return { ok: true, channel: result.channel, ts: result.ts };
+  },
 };

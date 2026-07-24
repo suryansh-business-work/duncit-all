@@ -45,8 +45,22 @@ export const slackTypeDefs = gql`
     slackChannels: [SlackChannel!]!
   }
 
+  "In-app feedback / problem report from any signed-in user. The server stamps
+  the authenticated identity and routes it to the feedback channel."
+  input AppFeedbackInput {
+    "Bug | Idea | Question | Other (free-form, shown as a label)."
+    category: String!
+    message: String!
+    "Where it was sent from — 'web' | 'ios' | 'android' (labelling only)."
+    platform: String
+    "JSON array of Block Kit blocks (stringified) the client composed for the body."
+    blocks_json: String
+  }
+
   extend type Mutation {
     "Post a message to a Slack channel (full message surface)."
     sendSlackMessage(input: SendSlackMessageInput!): SlackSendResult!
+    "Post in-app feedback to Slack. Any signed-in user; identity is server-stamped."
+    submitAppFeedback(input: AppFeedbackInput!): SlackSendResult!
   }
 `;

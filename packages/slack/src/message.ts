@@ -73,3 +73,14 @@ export const SLACK_CONFIGURED_SDL = `
     slackConfigured
   }
 `;
+
+/** Authed feedback mutation — any signed-in user; the server stamps identity. */
+export const SUBMIT_APP_FEEDBACK_SDL = `
+  mutation SubmitAppFeedback($input: AppFeedbackInput!) {
+    submitAppFeedback(input: $input) {
+      ok
+      channel
+      ts
+    }
+  }
+`;

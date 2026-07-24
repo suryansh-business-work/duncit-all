@@ -85,6 +85,7 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'bot_token', label: 'Bot User OAuth Token', secret: true, hint: 'xoxb-… (Slack app → OAuth & Permissions)' },
     { name: 'signing_secret', label: 'Signing Secret (optional)', secret: true, hint: 'Verifies inbound Slack events/webhooks' },
     { name: 'default_channel', label: 'Default Channel (optional)', hint: 'Channel ID (e.g. C0123ABCD) messages default to' },
+    { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
   ],
 };
 
@@ -152,6 +153,7 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SLACK_BOT_TOKEN: { category: 'SLACK', field: 'bot_token' },
   SLACK_SIGNING_SECRET: { category: 'SLACK', field: 'signing_secret' },
   SLACK_DEFAULT_CHANNEL: { category: 'SLACK', field: 'default_channel' },
+  SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
 };
 
 export function maskSecret(value: string) {

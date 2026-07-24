@@ -75,3 +75,14 @@ export interface SendSlackMessageResult {
   ts: string;
   error?: string | null;
 }
+
+export type FeedbackCategory = 'Bug' | 'Idea' | 'Question' | 'Other';
+
+/** Input for the authed `submitAppFeedback` mutation. The server stamps the
+ * real user identity + routes the channel; the client only supplies content. */
+export interface AppFeedbackInput {
+  category: string;
+  message: string;
+  platform?: string;
+  blocks_json?: string;
+}

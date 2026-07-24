@@ -130,3 +130,56 @@ describe('slackService.send', () => {
     await expect(slackService.send({ channel: 'CX', text: 'hi' })).rejects.toThrow(/HTTP 502/i);
   });
 });
+
+describe('slackService.sendFeedback', () => {
+  const channelEnv = (fb: string, def: string) => (k: string) => {
+    if (k === 'SLACK_BOT_TOKEN') return 'xoxb-1';
+    if (k === 'SLACK_FEEDBACK_CHANNEL') return fb;
+    if (k === 'SLACK_DEFAULT_CHANNEL') return def;
+    return '';
+  };
+
+  it('posts to the feedback channel with the client blocks and stamps the token identity', async () => {
+    withToken(channelEnv('C_FB', 'C_DEF'));
+    let posted: any;
+    (global as any).fetch = jest.fn().mockImplementation((_url: string, init: any) => {
+      posted = JSON.parse(init.body);
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ ok: true, channel: 'C_FB', ts: '9' }) });
+    });
+    const res = await slackService.sendFeedback(
+      { id: 'u1', email: 'a@b.com' },
+      { category: 'Bug', message: 'broken', platform: 'web', blocks_json: '[{"type":"divider"}]' },
+    );
+    expect(res).toEqual({ ok: true, channel: 'C_FB', ts: '9' });
+    expect(posted.channel).toBe('C_FB');
+    // Client body block kept, server appends a trusted identity context block.
+    expect(posted.blocks[0]).toEqual({ type: 'divider' });
+    expect(posted.blocks[1].elements[0].text).toBe('Bug · by a@b.com · web');
+  });
+
+  it('falls back to the default channel, the user id and a section body', async () => {
+    withToken(channelEnv('', 'C_DEF'));
+    let posted: any;
+    (global as any).fetch = jest.fn().mockImplementation((_url: string, init: any) => {
+      posted = JSON.parse(init.body);
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ ok: true, channel: 'C_DEF', ts: '1' }) });
+    });
+    const res = await slackService.sendFeedback({ id: 'u2' }, { category: 'Idea', message: 'nice' });
+    expect(res.channel).toBe('C_DEF');
+    expect(posted.channel).toBe('C_DEF');
+    expect(posted.blocks[0]).toEqual({ type: 'section', text: { type: 'mrkdwn', text: 'nice' } });
+    expect(posted.blocks[1].elements[0].text).toBe('Idea · by u2 · app');
+  });
+
+  it('requires both a category and a message', async () => {
+    await expect(slackService.sendFeedback({ id: 'u1' }, { message: 'x' })).rejects.toThrow(/required/i);
+    await expect(slackService.sendFeedback({ id: 'u1' }, { category: 'Bug' })).rejects.toThrow(/required/i);
+  });
+
+  it('rejects when no feedback or default channel is configured', async () => {
+    withToken(channelEnv('', ''));
+    await expect(
+      slackService.sendFeedback({ id: 'u1' }, { category: 'Bug', message: 'x' }),
+    ).rejects.toThrow(/no slack channel/i);
+  });
+});

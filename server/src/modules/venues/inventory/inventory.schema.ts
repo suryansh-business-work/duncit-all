@@ -209,6 +209,9 @@ export const inventoryTypeDefs = /* GraphQL */ `
 
     created_at: String!
     updated_at: String!
+
+    "Aggregate rating for the Pod Shop catalogue card (average + count + star split)."
+    review_summary: ProductReviewSummary!
   }
 
   type InventoryActivityLog {

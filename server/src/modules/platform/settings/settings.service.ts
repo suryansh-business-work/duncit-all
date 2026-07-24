@@ -181,6 +181,10 @@ const brandingToPub = (doc: any) => ({
     url: m.url,
     type: m.type ?? "IMAGE",
     order: m.order ?? 0,
+    heading: m.heading ?? "",
+    subheading: m.subheading ?? "",
+    cta_label: m.cta_label ?? "",
+    cta_url: m.cta_url ?? "",
   })),
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
@@ -472,11 +476,25 @@ export const settingsService = {
 
   /** Replace the global Pod Shop slider media (products portal). Normalises the
    * media type and backfills the display order from array position. */
-  async updatePodShopSlider(input: { url: string; type?: string; order?: number }[]) {
+  async updatePodShopSlider(
+    input: {
+      url: string;
+      type?: string;
+      order?: number;
+      heading?: string | null;
+      subheading?: string | null;
+      cta_label?: string | null;
+      cta_url?: string | null;
+    }[],
+  ) {
     const media = (input ?? []).map((m, i) => ({
       url: m.url,
       type: m.type === "VIDEO" ? "VIDEO" : "IMAGE",
       order: m.order ?? i,
+      heading: (m.heading ?? "").trim(),
+      subheading: (m.subheading ?? "").trim(),
+      cta_label: (m.cta_label ?? "").trim(),
+      cta_url: (m.cta_url ?? "").trim(),
     }));
     const doc = await BrandingModel.findOneAndUpdate(
       { singleton_key: "branding" },

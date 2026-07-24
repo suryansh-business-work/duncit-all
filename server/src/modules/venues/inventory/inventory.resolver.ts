@@ -1,10 +1,17 @@
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { inventoryService } from './inventory.service';
+import { productReviewService } from '../productReview/productReview.service';
 
 export const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
 
 export const inventoryResolvers = {
+  InventoryProduct: {
+    // Resolved lazily — only the Pod Shop catalogue query requests it, so other
+    // InventoryProduct reads pay nothing.
+    review_summary: (parent: { id?: string; _id?: unknown }) =>
+      productReviewService.summary(String(parent.id ?? parent._id)),
+  },
   Query: {
     inventoryProducts: async (
       _p: unknown,

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, YStack } from 'tamagui';
@@ -13,6 +14,11 @@ import { graphqlRequest } from '@/services/graphql.client';
 import type { RootStackParamList } from '@/navigation/types';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
+// Partner-facing next steps live in the Partner Portal; approved users are sent
+// there (login there preserves the intended destination). Matches the mWeb
+// PartnerRedirect target.
+const PARTNER_PORTAL_URL = 'https://partners-app.duncit.com';
+
 const BOXES = [
   {
     role: 'HOST',
@@ -21,6 +27,8 @@ const BOXES = [
     description: 'Run meetups and experiences for your community and earn from paid pods.',
     icon: 'dashboard',
     route: 'BecomeHost',
+    // In-app: Host Studio → "Ready to Host More Experiences" → Apply Now.
+    cta: { label: 'Ready to host more experiences?', internalRoute: 'HostManage' },
   },
   {
     role: 'VENUE_OWNER',
@@ -29,6 +37,7 @@ const BOXES = [
     description: 'List your space as a Duncit venue and host pods or rent it out.',
     icon: 'store',
     route: 'RegisterVenue',
+    cta: { label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
   },
   {
     role: 'ECOMM_MANAGER',
@@ -37,6 +46,7 @@ const BOXES = [
     description: 'Sell your products to the Duncit community through pods and the shop.',
     icon: 'inventory-2',
     route: 'ListProduct',
+    cta: { label: 'Ready to add another brand?', partnerPath: '/ecomm-brand' },
   },
   {
     role: 'CLUB_ADMIN',
@@ -45,6 +55,7 @@ const BOXES = [
     description: 'Run a Duncit club and manage its pods and members as a club admin.',
     icon: 'groups',
     route: 'BeClubAdmin',
+    cta: { label: 'Manage your clubs', partnerPath: '/club-admin/dashboard' },
   },
 ] as const;
 
@@ -73,10 +84,12 @@ interface EarnBoxState {
   disabled: boolean;
   disabledLabel: string;
   description: string;
+  /** True only when the user already holds the role — drives the next-step CTA. */
+  approved: boolean;
   scheduledMeeting?: EarnMeeting;
 }
 
-/** Resolve a card's locked/unlocked state: held role → 'Already enabled';
+/** Resolve a card's locked/unlocked state: held role → 'Already enabled' (+CTA);
  * an open (REQUESTED/SCHEDULED) meeting → 'Meeting scheduled' + reschedule/cancel
  * actions; a DONE meeting awaiting approval → 'Onboarding in process.'. */
 const earnBoxState = (
@@ -85,7 +98,12 @@ const earnBoxState = (
   meetings: readonly EarnMeeting[],
 ): EarnBoxState => {
   if (roles.includes(box.role)) {
-    return { disabled: true, disabledLabel: 'Already enabled', description: box.description };
+    return {
+      disabled: true,
+      disabledLabel: 'Already enabled',
+      description: box.description,
+      approved: true,
+    };
   }
   const meeting = meetings.find((m) => m.kind === box.kind);
   if (meeting && PENDING.has(meeting.status)) {
@@ -93,6 +111,7 @@ const earnBoxState = (
       disabled: true,
       disabledLabel: 'Meeting scheduled',
       description: meetingNotice(meeting),
+      approved: false,
       scheduledMeeting: meeting,
     };
   }
@@ -101,6 +120,7 @@ const earnBoxState = (
       disabled: true,
       disabledLabel: IN_PROCESS_LABEL,
       description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+      approved: false,
     };
   }
   if (
@@ -112,9 +132,15 @@ const earnBoxState = (
       disabled: true,
       disabledLabel: IN_PROCESS_LABEL,
       description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+      approved: false,
     };
   }
-  return { disabled: false, disabledLabel: 'Already enabled', description: box.description };
+  return {
+    disabled: false,
+    disabledLabel: 'Already enabled',
+    description: box.description,
+    approved: false,
+  };
 };
 
 /** "Earn with Duncit" — three ways to start earning; a box is disabled when the
@@ -141,6 +167,16 @@ export function EarnScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation]);
 
+  // Approved-user next step: an in-app route (host) or the Partner Portal
+  // (venue/ecomm/club — opening the deep link there preserves it through login).
+  const runCta = (cta: EarnBoxDef['cta']) => {
+    if ('internalRoute' in cta) {
+      navigation.navigate(cta.internalRoute);
+      return;
+    }
+    fireAndForget(Linking.openURL(`${PARTNER_PORTAL_URL}${cta.partnerPath}`));
+  };
+
   return (
     <StackScreen title="Earn with Duncit" testID="earn-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -151,6 +187,9 @@ export function EarnScreen() {
           {boxes.map((box) => {
             const state = earnBoxState(box, roles, meetings);
             const { scheduledMeeting } = state;
+            const cta = state.approved
+              ? { label: box.cta.label, onPress: () => runCta(box.cta) }
+              : undefined;
             return (
               <YStack key={box.role} gap={8}>
                 <EarnBox
@@ -160,6 +199,7 @@ export function EarnScreen() {
                   icon={box.icon}
                   disabled={state.disabled}
                   disabledLabel={state.disabledLabel}
+                  cta={cta}
                   onPress={() => navigation.navigate(box.route)}
                 />
                 {scheduledMeeting ? (

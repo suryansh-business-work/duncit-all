@@ -153,4 +153,36 @@ describe('EarnPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Cancel meeting/ }));
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
   });
+
+  it('offers an approved host a CTA into Host Studio', async () => {
+    navigateMock.mockClear();
+    setup(makeMock(['HOST'], []));
+    fireEvent.click(await screen.findByRole('button', { name: 'Ready to host more experiences?' }));
+    expect(navigateMock).toHaveBeenCalledWith('/host/manage');
+  });
+
+  it('sends approved venue/brand/club users to the Partner Portal deep link', async () => {
+    const replace = vi.fn();
+    const original = globalThis.window.location;
+    Object.defineProperty(globalThis.window, 'location', {
+      configurable: true,
+      value: { ...original, replace },
+    });
+    try {
+      setup(makeMock(['VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'], []));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Ready to register another venue?' }),
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'Ready to add another brand?' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Manage your clubs' }));
+      expect(replace).toHaveBeenCalledWith('https://partners-app.duncit.com/register-venue/new');
+      expect(replace).toHaveBeenCalledWith('https://partners-app.duncit.com/ecomm-brand');
+      expect(replace).toHaveBeenCalledWith('https://partners-app.duncit.com/club-admin/dashboard');
+    } finally {
+      Object.defineProperty(globalThis.window, 'location', {
+        configurable: true,
+        value: original,
+      });
+    }
+  });
 });

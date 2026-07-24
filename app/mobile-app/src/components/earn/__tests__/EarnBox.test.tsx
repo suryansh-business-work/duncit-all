@@ -37,4 +37,28 @@ describe('EarnBox', () => {
     fireEvent.press(screen.getByTestId('earn-box'));
     expect(onPress).not.toHaveBeenCalled();
   });
+
+  it('shows a next-step CTA for an approved role and fires it without navigating the card', () => {
+    const onPress = jest.fn();
+    const ctaPress = jest.fn();
+    renderWithProviders(
+      <EarnBox
+        testID="earn-box"
+        title="Host"
+        description="d"
+        icon="dashboard"
+        disabled
+        disabledLabel="Already enabled"
+        cta={{ label: 'Ready to host more experiences?', onPress: ctaPress }}
+        onPress={onPress}
+      />,
+    );
+    expect(screen.getByTestId('earn-box-enabled')).toBeOnTheScreen();
+    expect(screen.getByText('Ready to host more experiences?')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('earn-box-cta'));
+    expect(ctaPress).toHaveBeenCalled();
+    // The card itself stays non-navigable while disabled.
+    fireEvent.press(screen.getByTestId('earn-box'));
+    expect(onPress).not.toHaveBeenCalled();
+  });
 });

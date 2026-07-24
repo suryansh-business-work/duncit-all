@@ -1,3 +1,4 @@
+import { Linking } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { EarnScreen } from '@/screens/EarnScreen';
@@ -222,5 +223,30 @@ describe('EarnScreen', () => {
     renderWithProviders(<EarnScreen />);
     expect(screen.queryByTestId('earn-box-ECOMM_MANAGER')).toBeNull();
     expect(screen.getByTestId('earn-box-HOST')).toBeOnTheScreen();
+  });
+
+  it('gives an approved host an in-app CTA into Host Studio', () => {
+    mockUseMe.mockReturnValue({ data: { me: { roles: ['HOST'] } } });
+    renderWithProviders(<EarnScreen />);
+    expect(screen.getByText('Ready to host more experiences?')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('earn-box-HOST-cta'));
+    expect(mockNavigate).toHaveBeenCalledWith('HostManage');
+  });
+
+  it('sends approved venue/brand/club users to the Partner Portal deep link', () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+    mockUseMe.mockReturnValue({
+      data: { me: { roles: ['VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'] } },
+    });
+    renderWithProviders(<EarnScreen />);
+    fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER-cta'));
+    fireEvent.press(screen.getByTestId('earn-box-ECOMM_MANAGER-cta'));
+    fireEvent.press(screen.getByTestId('earn-box-CLUB_ADMIN-cta'));
+    expect(openSpy).toHaveBeenCalledWith('https://partners-app.duncit.com/register-venue/new');
+    expect(openSpy).toHaveBeenCalledWith('https://partners-app.duncit.com/ecomm-brand');
+    expect(openSpy).toHaveBeenCalledWith('https://partners-app.duncit.com/club-admin/dashboard');
+    // Partner CTAs leave in-app navigation untouched.
+    expect(mockNavigate).not.toHaveBeenCalled();
+    openSpy.mockRestore();
   });
 });

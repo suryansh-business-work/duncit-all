@@ -29,6 +29,11 @@ const EARN_ME = gql`
   }
 `;
 
+// Partner-facing next steps live in the Partner Portal; approved users are sent
+// there (login there preserves the intended destination). Matches the
+// PartnerRedirect target in AppRoutes.
+const PARTNER_PORTAL_URL = 'https://partners-app.duncit.com';
+
 const BOXES = [
   {
     role: 'HOST',
@@ -37,6 +42,8 @@ const BOXES = [
     description: 'Run meetups and experiences for your community and earn from paid pods.',
     to: '/survey/host',
     icon: <DashboardIcon />,
+    // In-app: Host Studio → "Ready to Host More Experiences" → Apply Now.
+    cta: { label: 'Ready to host more experiences?', internalTo: '/host/manage' },
   },
   {
     role: 'VENUE_OWNER',
@@ -45,6 +52,7 @@ const BOXES = [
     description: 'List your space as a Duncit venue and host pods or rent it out.',
     to: '/survey/venue',
     icon: <StorefrontIcon />,
+    cta: { label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
   },
   {
     role: 'ECOMM_MANAGER',
@@ -53,6 +61,7 @@ const BOXES = [
     description: 'Sell your products to the Duncit community through pods and the shop.',
     to: '/survey/ecomm',
     icon: <Inventory2Icon />,
+    cta: { label: 'Ready to add another brand?', partnerPath: '/ecomm-brand' },
   },
   {
     role: 'CLUB_ADMIN',
@@ -61,6 +70,7 @@ const BOXES = [
     description: 'Run a Duncit club and manage its pods and members as a club admin.',
     to: '/survey/club_admin',
     icon: <GroupsIcon />,
+    cta: { label: 'Manage your clubs', partnerPath: '/club-admin/dashboard' },
   },
 ];
 
@@ -83,6 +93,7 @@ interface EarnBoxDef {
   description: string;
   to: string;
   icon: JSX.Element;
+  cta: { label: string; internalTo?: string; partnerPath?: string };
 }
 
 const PENDING = new Set(['REQUESTED', 'SCHEDULED']);
@@ -108,6 +119,8 @@ interface EarnBoxState {
   disabled: boolean;
   disabledLabel: string;
   description: string;
+  /** True only when the user already holds the role — drives the next-step CTA. */
+  approved: boolean;
   scheduledMeeting?: EarnMeeting;
 }
 
@@ -118,7 +131,12 @@ const earnBoxState = (
   meetings: readonly EarnMeeting[],
 ): EarnBoxState => {
   if (roles.includes(box.role)) {
-    return { disabled: true, disabledLabel: 'Already enabled', description: box.description };
+    return {
+      disabled: true,
+      disabledLabel: 'Already enabled',
+      description: box.description,
+      approved: true,
+    };
   }
   const meeting = meetings.find((m) => m.kind === box.kind);
   if (meeting && PENDING.has(meeting.status)) {
@@ -126,6 +144,7 @@ const earnBoxState = (
       disabled: true,
       disabledLabel: 'Meeting scheduled',
       description: meetingNotice(meeting),
+      approved: false,
       scheduledMeeting: meeting,
     };
   }
@@ -134,6 +153,7 @@ const earnBoxState = (
       disabled: true,
       disabledLabel: IN_PROCESS_LABEL,
       description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+      approved: false,
     };
   }
   if (
@@ -145,9 +165,15 @@ const earnBoxState = (
       disabled: true,
       disabledLabel: IN_PROCESS_LABEL,
       description: `${IN_PROCESS_LABEL} Our team is reviewing your application.`,
+      approved: false,
     };
   }
-  return { disabled: false, disabledLabel: 'Already enabled', description: box.description };
+  return {
+    disabled: false,
+    disabledLabel: 'Already enabled',
+    description: box.description,
+    approved: false,
+  };
 };
 
 /** "Earn with Duncit" — three ways to start earning. A box is disabled when the
@@ -159,6 +185,18 @@ export default function EarnPage() {
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
   const showSkeleton = loading && !data;
+
+  // Approved-user next step: an in-app route (host) or the Partner Portal
+  // (venue/ecomm/club — opening the deep link there preserves it through login).
+  const runCta = (cta: EarnBoxDef['cta']) => {
+    if (cta.internalTo) {
+      navigate(cta.internalTo);
+      return;
+    }
+    if (cta.partnerPath) {
+      globalThis.window.location.replace(`${PARTNER_PORTAL_URL}${cta.partnerPath}`);
+    }
+  };
 
   return (
     <Stack
@@ -187,6 +225,9 @@ export default function EarnPage() {
         {showSkeleton ? null : BOXES.map((box) => {
           const state = earnBoxState(box, roles, meetings);
           const { scheduledMeeting } = state;
+          const cta = state.approved
+            ? { label: box.cta.label, onClick: () => runCta(box.cta) }
+            : undefined;
           return (
             <Stack key={box.role} spacing={0}>
               <EarnBox
@@ -196,6 +237,7 @@ export default function EarnPage() {
                 to={box.to}
                 disabled={state.disabled}
                 disabledLabel={state.disabledLabel}
+                cta={cta}
               />
               {scheduledMeeting && (
                 <EarnMeetingActions

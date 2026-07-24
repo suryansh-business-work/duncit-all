@@ -1,11 +1,12 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.7",
+  "version": "1.5.8",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
   "scripts": {
     "start": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --port 2022",
+    "start:local": "cross-env NODE_OPTIONS=--max-old-space-size=8192 EXPO_PUBLIC_API_URL=http://localhost:2001 expo start --port 2022",
     "start:main": "cross-env NODE_OPTIONS=--max-old-space-size=8192 EXPO_PUBLIC_API_URL=https://server.duncit.com expo start --port 2022",
     "start:staging": "cross-env NODE_OPTIONS=--max-old-space-size=8192 EXPO_PUBLIC_API_URL=https://staging.server.duncit.com expo start --port 2022",
     "android": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --android --port 2022",

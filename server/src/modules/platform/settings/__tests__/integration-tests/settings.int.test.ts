@@ -72,6 +72,27 @@ describe('settingsService integration', () => {
     expect(updated.support_phone).toBe('+911234567890');
   });
 
+  it('normalises and clears the "All" tab icon layout', async () => {
+    // Default: no layout.
+    expect((await settingsService.getBranding()).home_all_vibe_icon_layout).toBeNull();
+
+    // Valid position kept; size clamped (>200 → 200, <1 → 1).
+    const set = await settingsService.updateBranding({
+      home_all_vibe_icon_layout: { position: 'LEFT', width: 300, height: -5 },
+    });
+    expect(set.home_all_vibe_icon_layout).toEqual({ position: 'LEFT', width: 200, height: 1 });
+
+    // Invalid position → TOP; 0 size → default 40.
+    const fixed = await settingsService.updateBranding({
+      home_all_vibe_icon_layout: { position: 'DIAGONAL', width: 0, height: 40 },
+    });
+    expect(fixed.home_all_vibe_icon_layout).toEqual({ position: 'TOP', width: 40, height: 40 });
+
+    // null clears it.
+    const cleared = await settingsService.updateBranding({ home_all_vibe_icon_layout: null });
+    expect(cleared.home_all_vibe_icon_layout).toBeNull();
+  });
+
   it('replaces and reads back the pod shop slider media (backfilling order + video type)', async () => {
     const initial = await settingsService.getBranding();
     expect(initial.pod_shop_slider).toEqual([]);

@@ -51,7 +51,7 @@ const baseReturn = () => ({
   data: { pods: [{ id: 'p1' }], clubs: [{ id: 'c1' }] },
   loading: false,
   error: undefined,
-  branding: { home_all_vibe_icon_url: null },
+  branding: { home_all_vibe_icon_url: null, home_all_vibe_icon_layout: null },
   me: { user_id: 'u1' },
   isHost: false,
   clubs: [{ id: 'c1' }],

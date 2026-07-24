@@ -8,6 +8,11 @@ export const HEADER_DATA = gql`
       mweb_logo_url
       primary_color
       home_all_vibe_icon_url
+      home_all_vibe_icon_layout {
+        position
+        width
+        height
+      }
       home_header_tagline
     }
     me {

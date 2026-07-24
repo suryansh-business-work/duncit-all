@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { VibeCategoryTab } from '@/components/home/VibeCategoryTab';
-import type { VibeCategory } from '@/hooks/useHomeFeed';
+import type { VibeCategory, VibeIconLayout } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface HomeVibeChipsProps {
@@ -12,6 +12,8 @@ interface HomeVibeChipsProps {
   onSelect: (id: string) => void;
   /** Admin-managed icon for the leading "All" tab (branding). */
   allIcon?: string | null;
+  /** Admin-managed icon layout (position + size) for the "All" tab (branding). */
+  allLayout?: VibeIconLayout | null;
   /** Right-aligned slot in the header (e.g. the Filters button). */
   action?: ReactNode;
 }
@@ -56,6 +58,7 @@ export function HomeVibeChips({
   selectedId,
   onSelect,
   allIcon,
+  allLayout,
   action,
 }: Readonly<HomeVibeChipsProps>) {
   const { primary } = useThemeColors();
@@ -88,6 +91,7 @@ export function HomeVibeChips({
             testID="vibe-chip-all"
             label="All"
             icon={allIcon ?? undefined}
+            iconLayout={allLayout}
             fallback="apps"
             selected={selectedId === ''}
             onPress={() => onSelect('')}

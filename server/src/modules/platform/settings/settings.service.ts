@@ -114,6 +114,36 @@ const BRANDING_FIELDS = [
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
+const VIBE_ICON_POSITIONS = new Set(["TOP", "BOTTOM", "LEFT", "RIGHT"]);
+const DEFAULT_VIBE_ICON_SIZE = 40;
+
+/** Clamp an icon dimension to 1–200 px, defaulting a missing/0/NaN value. */
+const clampVibeIconSize = (value: unknown): number => {
+  const rounded = Math.round(Number(value)) || DEFAULT_VIBE_ICON_SIZE;
+  return Math.min(200, Math.max(1, rounded));
+};
+
+/**
+ * Normalise the "All" tab icon-layout input: position defaults to TOP, width /
+ * height are clamped to 1–200. Passing null/undefined clears the layout.
+ */
+const normalizeVibeIconLayout = (
+  input?: { position?: string | null; width?: number | null; height?: number | null } | null,
+) => {
+  if (!input) return null;
+  const rawPosition = input.position ?? "";
+  return {
+    position: VIBE_ICON_POSITIONS.has(rawPosition) ? rawPosition : "TOP",
+    width: clampVibeIconSize(input.width),
+    height: clampVibeIconSize(input.height),
+  };
+};
+
+/** Stored "All" tab layout → GraphQL CategoryIconLayout (null when unset). */
+const vibeIconLayoutToPub = (
+  layout?: { position: string; width: number; height: number } | null,
+) => (layout ? { position: layout.position, width: layout.width, height: layout.height } : null);
+
 const brandingToPub = (doc: any) => ({
   app_name: doc.app_name ?? "Duncit",
   logo_url: doc.logo_url ?? "",
@@ -144,6 +174,7 @@ const brandingToPub = (doc: any) => ({
   android_app_url: doc.android_app_url ?? "",
   ios_app_url: doc.ios_app_url ?? "",
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
+  home_all_vibe_icon_layout: vibeIconLayoutToPub(doc.home_all_vibe_icon_layout),
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   app_latest_version: doc.app_latest_version ?? "",
   pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({
@@ -413,10 +444,23 @@ export const settingsService = {
     );
   },
 
-  async updateBranding(input: Partial<Record<BrandingField, string>>) {
+  async updateBranding(
+    input: Partial<Record<BrandingField, string>> & {
+      home_all_vibe_icon_layout?: {
+        position?: string | null;
+        width?: number | null;
+        height?: number | null;
+      } | null;
+    },
+  ) {
     const update: any = {};
     for (const k of BRANDING_FIELDS) {
       if (input[k] !== undefined) update[k] = input[k];
+    }
+    // The "All" tab icon layout is an object, not a plain string field — normalise
+    // it (default position, clamp size) before storing; null clears it.
+    if (input.home_all_vibe_icon_layout !== undefined) {
+      update.home_all_vibe_icon_layout = normalizeVibeIconLayout(input.home_all_vibe_icon_layout);
     }
     const doc = await BrandingModel.findOneAndUpdate(
       { singleton_key: "branding" },

@@ -26,6 +26,8 @@ interface HomeVibeChipsProps {
   onSelect: (id: string) => void;
   /** Admin-managed icon for the leading "All" tab (branding). */
   allIcon?: string | null;
+  /** Admin-managed icon layout (position + size) for the "All" tab (branding). */
+  allLayout?: IconLayout | null;
   /** Right-aligned slot in the header (e.g. the Filters button). */
   action?: ReactNode;
 }
@@ -60,14 +62,15 @@ function VibeChip({ label, selected, onClick }: Readonly<VibeChipProps>) {
 
 /** "What's your vibe" — top-level categories as a horizontal icon tabber; the
  * selected category's sub-categories appear as pills directly below. */
-export default function HomeVibeChips({ categories, selectedId, onSelect, allIcon, action }: Readonly<HomeVibeChipsProps>) {
+export default function HomeVibeChips({ categories, selectedId, onSelect, allIcon, allLayout, action }: Readonly<HomeVibeChipsProps>) {
   const hasCategories = categories.length > 0;
   if (!hasCategories && !action) return null;
 
   const activeCategory =
     categories.find((c) => c.id === selectedId || c.subs.some((s) => s.id === selectedId)) ?? null;
   const subs = activeCategory?.subs ?? [];
-  const allMark = renderSuperCategoryMark(allIcon, DEFAULT_ICON_SIZE) ?? <AppsRoundedIcon sx={{ fontSize: 34 }} />;
+  const allIconSize = allLayout?.height ?? DEFAULT_ICON_SIZE;
+  const allMark = renderSuperCategoryMark(allIcon, allIconSize) ?? <AppsRoundedIcon sx={{ fontSize: 34 }} />;
 
   return (
     <Stack spacing={1}>
@@ -89,6 +92,7 @@ export default function HomeVibeChips({ categories, selectedId, onSelect, allIco
               icon={allMark}
               selected={selectedId === ''}
               onClick={() => onSelect('')}
+              layout={allLayout}
             />
             {categories.map((category) => {
               const selected = category.id === selectedId || category.subs.some((s) => s.id === selectedId);

@@ -95,6 +95,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         selectedId={categoryId}
         onSelect={setCategoryId}
         allIcon={branding?.home_all_vibe_icon_url}
+        allLayout={branding?.home_all_vibe_icon_layout}
         action={
           <FilterMenu
             open={filtersOpen}

@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
+    "dev:main": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
+    "dev:staging": "cross-env MONGO_DB_NAME=duncit-staging ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json && node scripts/copy-email-templates.js",
     "start": "node -r ./dist/tracing.js dist/index.js",
     "codegen": "graphql-codegen --config codegen.ts",
@@ -72,6 +74,7 @@
     "yup": "^1.4.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "@graphql-codegen/cli": "^5.0.2",
     "@graphql-codegen/typescript": "^4.0.6",
     "@graphql-codegen/typescript-resolvers": "^4.0.6",

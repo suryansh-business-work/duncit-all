@@ -12,6 +12,7 @@ import BugsPage from './pages/bugs-page';
 import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
+import TerminalPage from './pages/server/TerminalPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/server" element={<Navigate to="/server/info" replace />} />
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />
+        <Route path="/server/terminal" element={authed(<TerminalPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

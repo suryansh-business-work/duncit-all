@@ -1,10 +1,14 @@
 {
   "name": "mweb-app",
-  "version": "1.5.8",
+  "version": "1.5.11",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:main": "cross-env VITE_GRAPHQL_URL=https://server.duncit.com/graphql vite",
+    "dev:staging": "cross-env VITE_GRAPHQL_URL=https://staging.server.duncit.com/graphql vite",
+    "dev:local:main": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
+    "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:force": "vite --force",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
@@ -59,6 +63,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "@playwright/test": "^1.60.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",

@@ -86,6 +86,47 @@ To release all local project ports:
 pnpm kill-ports:all
 ```
 
+### 5. Choosing which backend a portal talks to
+
+A locally-running portal (`pnpm dev` / `pnpm dev:<portal>`) targets **`http://localhost:2001/graphql`** by
+default, so it needs a local server running (steps 2–4). If the API isn't up you'll see every GraphQL request
+fail with `net::ERR_CONNECTION_REFUSED` and login won't work.
+
+Every portal (all 17 + mWeb) also ships target-specific dev scripts — the web equivalent of the mobile app's
+`start:local` / `start:main` / `start:staging`. They set `VITE_GRAPHQL_URL` (via `cross-env`) so you can point a
+local portal at a live or local API without editing any file:
+
+```bash
+# from a portal, e.g. tech
+pnpm --filter tech dev            # default → http://localhost:2001/graphql  (needs a local server)
+pnpm --filter tech dev:main       # → https://server.duncit.com/graphql          (production API + DB)
+pnpm --filter tech dev:staging    # → https://staging.server.duncit.com/graphql  (staging API + DB)
+pnpm --filter tech dev:local:main    # → http://localhost:2001/graphql, pair with server `dev:main`
+pnpm --filter tech dev:local:staging # → http://localhost:2001/graphql, pair with server `dev:staging`
+```
+
+The local server chooses its **database** the same way (default = main; `duncit-staging` for staging):
+
+```bash
+pnpm --filter server dev          # main database (URI default)
+pnpm --filter server dev:main     # main database (explicit alias)
+pnpm --filter server dev:staging  # MONGO_DB_NAME=duncit-staging
+```
+
+| Portal script         | GraphQL endpoint                            | Pair the server with       | Data source          |
+| --------------------- | ------------------------------------------- | -------------------------- | -------------------- |
+| `dev`                 | `http://localhost:2001/graphql`             | `dev` / `dev:main`         | your local server    |
+| `dev:main`            | `https://server.duncit.com/graphql`         | — (remote)                 | **production DB**    |
+| `dev:staging`         | `https://staging.server.duncit.com/graphql` | — (remote)                 | staging DB           |
+| `dev:local:main`      | `http://localhost:2001/graphql`             | `pnpm --filter server dev:main`    | local server, main DB    |
+| `dev:local:staging`   | `http://localhost:2001/graphql`             | `pnpm --filter server dev:staging` | local server, `duncit-staging` |
+
+> **Which do I want?** To log in with an existing account (e.g. an admin/partner that already exists), the
+> quickest path is `dev:main` — it uses the production API + DB, no local server required. The `dev:local:*`
+> modes need `server/.env` populated with a valid `MONGO_URI` and a running local server.
+>
+> **Mobile app** (`app/mobile-app`, npm) has the same switch: `npm run start:local | start:main | start:staging`.
+
 ## 🔄 GraphQL Codegen
 
 ```bash
@@ -152,6 +193,17 @@ pnpm run:all         # start all projects
 pnpm kill-ports:all  # release all project ports
 pnpm build           # build all workspaces
 pnpm codegen         # generate GraphQL types
+```
+
+Per-portal backend targeting (any of the 17 portals + mWeb — see [§5](#5-choosing-which-backend-a-portal-talks-to)):
+
+```bash
+pnpm --filter <portal> dev              # localhost:2001 (default)
+pnpm --filter <portal> dev:main         # server.duncit.com          (production)
+pnpm --filter <portal> dev:staging      # staging.server.duncit.com  (staging)
+pnpm --filter <portal> dev:local:main   # localhost:2001, + server dev:main
+pnpm --filter <portal> dev:local:staging# localhost:2001, + server dev:staging
+pnpm --filter server   dev:staging      # local API on the duncit-staging DB
 ```
 
 ## 🔮 Future Improvements

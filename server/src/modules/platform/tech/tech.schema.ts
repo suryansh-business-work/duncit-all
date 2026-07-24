@@ -96,6 +96,17 @@ export const techTypeDefs = gql`
     page_size: Int!
   }
 
+  type TechRestartResult {
+    ok: Boolean!
+    error: String
+  }
+
+  type TechExecResult {
+    stdout: String!
+    stderr: String!
+    exitCode: Int!
+  }
+
   extend type Query {
     "Live host metrics for the Tech portal Server > Info page. Pass sslHost to include that domain's TLS certificate."
     techServerInfo(sslHost: String): TechServerInfo!
@@ -103,5 +114,14 @@ export const techTypeDefs = gql`
     techDockerInfo: TechDockerInfo!
     "Paged/searchable view over techDockerInfo.containers for the shared table engine."
     techDockerContainersTable(query: TableQueryInput): TechDockerContainerTablePage!
+    "Recent logs for one container (demuxed) — polled by the restart log panel."
+    techContainerLogs(name: String!, tail: Int): String!
+  }
+
+  extend type Mutation {
+    "Restart one Docker container by name (SUPER_ADMIN / TECH_MANAGER). Audited."
+    techRestartContainer(name: String!): TechRestartResult!
+    "Run a shell command in the API container and return its output. SUPER_ADMIN only — host-root-equivalent via the mounted docker socket, and audited."
+    techExec(command: String!): TechExecResult!
   }
 `;

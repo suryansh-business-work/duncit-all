@@ -267,3 +267,39 @@ Sonar rules that keep failing here (rule id in brackets). **Get them right up fr
 
 
 37. Use @duncit/table jaha jaha bhi Portal me table use kar rahe ho
+
+38. Localization (ENFORCED) — **NO HARDCODED USER-FACING TEXT.** Before you write any
+string a user can read — in `.tsx`, `.ts`, `.json`, or an `.mjml` email template — it must
+already exist as a Localization entry AND in that surface's local fallback bundle.
+
+**The order is: entry first, then code.** Never ship the literal and "localize it later".
+
+- **Where entries live:** Admin Panel → **Localization** → *Locales* (the languages /
+  country locales) and *Translations* (the key/value entries). Keys are namespaced
+  page-wise and portal-wise, e.g. `mweb.shop.emptyState`, `admin.settings.timeSourceHint`.
+- **The parser/runtime is one common package** — never add `i18next`, `react-intl` or any
+  other i18n dependency to a workspace, and never write a second `t()`.
+  (`portals/crm/open-wa-server/**` is vendored third-party and exempt — do not extend its
+  i18next.)
+- **Every surface ships a LOCAL FALLBACK bundle** with the SAME key structure as the server
+  data, so a screen renders correctly offline and before the API responds. The fallback is
+  not optional — a key missing from it is a build failure, exactly like a missing fallback
+  icon (rule 39).
+- **Applies to every surface:** each portal, mWeb, the native app, the Astro websites and
+  the MJML email templates. The websites use the same package, the same admin data and the
+  same UI — do not build a website-only localization.
+- **Per-user language** lives on `profile.locale` (already on the user document) and is
+  changed from the profile/account section of native, mWeb and the portal shell.
+- When you add a key: add it to the server entries, add it to the surface's fallback
+  bundle, then use it. Adding a raw string instead is a review rejection.
+
+39. Fallback icons (ENFORCED) — every project ships `src/fallback-icons/` (native:
+`assets/fallback-icons/`) containing a local copy of **every** name exported by
+`@duncit/fallback-icons`. Server-hosted branding icons can be blank, deleted or offline;
+the bundled copy is what renders then. Two compile-time gates enforce this and neither is
+optional: `node scripts/verify-fallback-icons.mjs <dir>` is chained inside each project's
+`build` script (NOT `prebuild` — pnpm ≥8 does not run pre/post scripts), and the manifest
+is typed `FallbackIconManifest<T>` so a missing NAME fails `tsc`. Assets live under `src/`
+(or native `assets/`), never `public/` — Vite copies `public/` blind and never verifies it.
+Do not rely on the bundler alone: a static import only fails Rollup/Metro if that module is
+reachable from an entry, so an unimported manifest silently passes.

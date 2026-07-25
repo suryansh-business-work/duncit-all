@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.55",
+  "version": "1.5.56",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -12,7 +12,7 @@
     "android": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --android --port 2022",
     "ios": "expo start --ios --port 2022",
     "web": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --web --port 2022",
-    "export:web": "expo export --platform web --output-dir dist",
+    "export:web": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons && expo export --platform web --output-dir dist",
     "prebuild": "expo prebuild",
     "codegen": "graphql-codegen --config codegen.ts",
     "eas-build-post-install": "npm run codegen",
@@ -20,7 +20,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons && tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -39,11 +39,13 @@
     "build:local:aab:staging": "node scripts/build-local-android.js --aab --staging",
     "build:local:ios": "node scripts/build-local-ios.js",
     "upload:slack": "node scripts/upload-slack.js",
-    "ci": "npm run test:coverage && npm run typecheck && npm run lint"
+    "ci": "npm run test:coverage && npm run typecheck && npm run lint",
+    "verify:fallback-icons": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons"
   },
   "dependencies": {
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
     "@duncit/datetime": "file:../../packages/datetime",
+    "@duncit/fallback-icons": "file:../../packages/fallback-icons",
     "@duncit/geo": "file:../../packages/geo",
     "@duncit/logs": "file:../../packages/logs",
     "@duncit/regex": "file:../../packages/regex",

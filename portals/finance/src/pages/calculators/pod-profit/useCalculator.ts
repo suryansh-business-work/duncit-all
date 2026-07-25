@@ -35,17 +35,24 @@ export function useCalculator(inputs: PodProfitInputs): PodProfitResults {
     const hostPct = clampPercent(inputs.host_commission_percent);
     const venuePct = clampPercent(inputs.venue_commission_percent);
 
+    const clubAdminPct = clampPercent(inputs.club_admin_percent);
+
     const gst = Math.round((amount * gstPct) / (100 + gstPct));
     const net = amount - gst;
     const fee = Math.round((net * feePct) / 100);
     const pool = net - fee;
-    const venueAmount = Math.min(toPaise(inputs.venue_amount), pool);
-    const hostAmount = pool - venueAmount;
+    // The club-admin cut comes off the pool right after GST + platform fee
+    // (before the venue/host split) and becomes Duncit revenue — mirrors
+    // breakdown.math.ts. Clamped to the pool so nothing downstream goes negative.
+    const clubAdmin = Math.min(pool, Math.round((pool * clubAdminPct) / 100));
+    const splitPool = pool - clubAdmin;
+    const venueAmount = Math.min(toPaise(inputs.venue_amount), splitPool);
+    const hostAmount = splitPool - venueAmount;
     const venueCommission = Math.round((venueAmount * venuePct) / 100);
     const hostCommission = Math.round((hostAmount * hostPct) / 100);
     const venueReceives = venueAmount - venueCommission;
     const hostReceives = hostAmount - hostCommission;
-    const duncitRevenue = fee + hostCommission + venueCommission;
+    const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;
     const hostEarn = amount === 0 ? 0 : Math.round((hostReceives / amount) * 10000) / 100;
 
     return {
@@ -56,6 +63,7 @@ export function useCalculator(inputs: PodProfitInputs): PodProfitResults {
       net_amount: toRupees(net),
       platform_fee_amount: toRupees(fee),
       pool_amount: toRupees(pool),
+      club_admin_amount: toRupees(clubAdmin),
       venue_amount: toRupees(venueAmount),
       venue_commission_amount: toRupees(venueCommission),
       venue_receives: toRupees(venueReceives),

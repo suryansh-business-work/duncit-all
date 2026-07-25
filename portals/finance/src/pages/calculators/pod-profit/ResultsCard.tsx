@@ -107,6 +107,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
         <Row label="Platform fee" value={formatRupees(results.platform_fee_amount)} emphasis="primary" />
         <Row label="Venue commission" value={formatRupees(results.venue_commission_amount)} emphasis="primary" />
         <Row label="Host commission" value={formatRupees(results.host_commission_amount)} emphasis="primary" />
+        <Row label="Club admin cut" value={formatRupees(results.club_admin_amount)} emphasis="primary" />
 
         <Divider sx={{ my: 1 }} />
         <SectionLabel text="Payouts" />

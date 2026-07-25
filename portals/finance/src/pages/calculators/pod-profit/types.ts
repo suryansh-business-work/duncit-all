@@ -17,6 +17,9 @@ export interface PodProfitInputs {
   host_commission_percent: number;
   /** Duncit commission % taken from the venue's amount (default deduction). */
   venue_commission_percent: number;
+  /** Club-admin cut % off the pool (after GST + platform fee, before the
+   * venue/host split). Becomes Duncit revenue — mirrors breakdown.math.ts. */
+  club_admin_percent: number;
 }
 
 export interface PodProfitResults {
@@ -30,6 +33,8 @@ export interface PodProfitResults {
   net_amount: number;
   platform_fee_amount: number;
   pool_amount: number;
+  /** Club-admin cut off the pool — folded into duncit_revenue_total. */
+  club_admin_amount: number;
   /** The venue's fixed slot price, clamped to the pool. */
   venue_amount: number;
   venue_commission_amount: number;
@@ -54,6 +59,7 @@ export const DEFAULT_INPUTS: PodProfitInputs = {
   venue_amount: 400,
   host_commission_percent: 10,
   venue_commission_percent: 10,
+  club_admin_percent: 0,
 };
 
 export const formatRupees = (value: number): string =>

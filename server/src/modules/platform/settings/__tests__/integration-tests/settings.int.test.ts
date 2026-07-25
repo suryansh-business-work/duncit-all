@@ -98,12 +98,36 @@ describe('settingsService integration', () => {
     expect(initial.pod_shop_slider).toEqual([]);
 
     const saved = await settingsService.updatePodShopSlider([
-      { url: 'https://cdn/a.jpg', type: 'IMAGE', order: 0 },
-      { url: 'https://cdn/b.mp4', type: 'VIDEO' }, // order backfilled from position
+      {
+        url: 'https://cdn/a.jpg',
+        type: 'IMAGE',
+        order: 0,
+        heading: '  Gear Up  ', // trimmed
+        subheading: 'Top picks',
+        cta_label: 'Shop Now',
+        cta_url: '/shop',
+      },
+      { url: 'https://cdn/b.mp4', type: 'VIDEO' }, // order backfilled, copy fields default to ''
     ]);
     expect(saved).toEqual([
-      { url: 'https://cdn/a.jpg', type: 'IMAGE', order: 0 },
-      { url: 'https://cdn/b.mp4', type: 'VIDEO', order: 1 },
+      {
+        url: 'https://cdn/a.jpg',
+        type: 'IMAGE',
+        order: 0,
+        heading: 'Gear Up',
+        subheading: 'Top picks',
+        cta_label: 'Shop Now',
+        cta_url: '/shop',
+      },
+      {
+        url: 'https://cdn/b.mp4',
+        type: 'VIDEO',
+        order: 1,
+        heading: '',
+        subheading: '',
+        cta_label: '',
+        cta_url: '',
+      },
     ]);
 
     // Persisted onto the public branding read the buyer apps consume.
@@ -117,7 +141,17 @@ describe('settingsService integration', () => {
       { input: [{ url: 'https://cdn/x.jpg', type: 'IMAGE', order: 0 }] },
       makeContext({ roles: ['SUPER_ADMIN'] })
     );
-    expect(result).toEqual([{ url: 'https://cdn/x.jpg', type: 'IMAGE', order: 0 }]);
+    expect(result).toEqual([
+      {
+        url: 'https://cdn/x.jpg',
+        type: 'IMAGE',
+        order: 0,
+        heading: '',
+        subheading: '',
+        cta_label: '',
+        cta_url: '',
+      },
+    ]);
   });
 
   it('serves app version info and syncs the latest version from APP_VERSION', async () => {

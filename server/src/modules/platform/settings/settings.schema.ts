@@ -93,12 +93,21 @@ export const settingsTypeDefs = gql`
     url: String!
     type: CategoryMediaType!
     order: Int!
+    "Optional overlay copy + call-to-action shown on the Pod Shop hero slide."
+    heading: String!
+    subheading: String!
+    cta_label: String!
+    cta_url: String!
   }
 
   input PodShopSliderMediaInput {
     url: String!
     type: CategoryMediaType
     order: Int
+    heading: String
+    subheading: String
+    cta_label: String
+    cta_url: String
   }
 
   type Branding {

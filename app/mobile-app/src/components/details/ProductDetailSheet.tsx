@@ -408,25 +408,9 @@ export function ProductDetailSheet({
   return (
     <Modal visible={!!productId} transparent animationType="slide" onRequestClose={onClose}>
       <ModalThemeScope>
-        <YStack flex={1} justifyContent="flex-end" testID="product-detail-sheet">
-          <YStack
-            role="button"
-            aria-label="Close"
-            onPress={onClose}
-            position="absolute"
-            top={0}
-            left={0}
-            right={0}
-            bottom={0}
-            backgroundColor="rgba(0,0,0,0.5)"
-          />
-          <YStack
-            backgroundColor="$background"
-            borderTopLeftRadius={22}
-            borderTopRightRadius={22}
-            maxHeight="86%"
-          >
-            <SafeAreaView edges={['bottom']}>
+        <YStack flex={1} backgroundColor="$background" testID="product-detail-sheet">
+          <YStack flex={1}>
+            <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <Text fontSize={17} fontWeight="900" color="$color">
                   Product details

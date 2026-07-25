@@ -12,10 +12,15 @@ export const ShopProductsDocument = gql(`
       image_url
       images
       unit_cost
+      available_count
       category_id
       super_category_id
       sub_category_id
       created_at
+      review_summary {
+        average_rating
+        total
+      }
     }
   }
 `);
@@ -30,6 +35,10 @@ export const PodShopSliderDocument = gql(`
         url
         type
         order
+        heading
+        subheading
+        cta_label
+        cta_url
       }
     }
   }

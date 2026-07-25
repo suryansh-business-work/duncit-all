@@ -6,8 +6,10 @@ import { navigationRef } from '@/navigation/navigationRef';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
-/** Screens where the floating button would cover its own flow. */
-const HIDDEN_ON = new Set(['Cart', 'Checkout']);
+/** Screens with their own cart entry point / flow, where the floating button
+ * would be redundant or cover its own controls: the cart, both checkouts, and
+ * the Pod Shop (which shows a cart button in its header). */
+const HIDDEN_ON = new Set(['Cart', 'Checkout', 'ProductCheckout', 'Shop']);
 
 /** Floating cart entry point — visible whenever the cart has items (hidden on
  * the cart/checkout screens themselves). RN twin of mWeb's FloatingCartButton. */

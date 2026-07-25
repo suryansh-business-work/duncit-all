@@ -1,61 +1,63 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ClubCategoryChips from '../clubs-page/ClubCategoryChips';
-import { scopeCategoryButtons, useSearchCategories } from '../search-page/useSearchDiscovery';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
+import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
+import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
+import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
+import { useSearchCategories } from '../search-page/useSearchDiscovery';
 import { usePricing } from '../../hooks/usePricing';
 import PodShopSlider from './PodShopSlider';
 import ShopProductCard from './ShopProductCard';
-import {
-  SHOP_PRODUCTS,
-  SHOP_SORT_OPTIONS,
-  sortShopProducts,
-  type ShopProduct,
-  type ShopSort,
-} from './queries';
+import ShopHeaderCart from './ShopHeaderCart';
+import ShopFilterBar from './ShopFilterBar';
+import { useQuickAddToCart } from './useQuickAddToCart';
+import { useShopFilters } from './useShopFilters';
+import { SHOP_PRODUCTS, type ShopProduct } from './queries';
+
+const TRUST_ITEMS = [
+  { Icon: VerifiedUserRoundedIcon, title: 'Trusted Pods', caption: 'Quality Products' },
+  { Icon: LocalOfferRoundedIcon, title: 'Best Prices', caption: 'Great Deals' },
+  { Icon: LocalShippingRoundedIcon, title: 'Safe Delivery', caption: 'Hassle Free' },
+] as const;
+
+/** Reassurance strip below the grid — static marketing copy. */
+function TrustBar() {
+  return (
+    <Stack
+      direction="row"
+      justifyContent="space-around"
+      sx={{ bgcolor: 'action.hover', borderRadius: 3, p: 1.5, mt: 1 }}
+    >
+      {TRUST_ITEMS.map(({ Icon, title, caption }) => (
+        <Stack key={title} direction="row" spacing={1} alignItems="center">
+          <Icon sx={{ color: 'primary.main' }} fontSize="small" />
+          <Box>
+            <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', lineHeight: 1.1 }}>
+              {title}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
+              {caption}
+            </Typography>
+          </Box>
+        </Stack>
+      ))}
+    </Stack>
+  );
+}
 
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
- * products with category chips, debounced search and sorting. Tapping a product
- * opens its detail page; purchases happen through a pod's shop. */
+ * products with a filter button (Super → Category → Sub cascade, rating,
+ * include-out-of-stock and sort), debounced search and a header cart. Tapping a
+ * product opens its detail page; purchases happen through a pod's shop. */
 export default function ShopPage() {
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
-  const { data, loading, error } = useQuery(SHOP_PRODUCTS, {
-    fetchPolicy: 'cache-and-network',
-  });
-  const { all, buttons, matchesCategory } = useSearchCategories();
-  const [q, setQ] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [sort, setSort] = useState<ShopSort>('NAME');
-  const search = useDebouncedValue(q, 350);
-
-  const categoryOptions = useMemo(() => scopeCategoryButtons(buttons, all, null), [buttons, all]);
-
-  const products = useMemo(() => {
-    const list: ShopProduct[] = data?.availablePodProducts ?? [];
-    const term = search.trim().toLowerCase();
-    const filtered = list
-      .filter((product) => matchesCategory(product, categoryId))
-      .filter(
-        (product) =>
-          !term ||
-          product.product_name?.toLowerCase().includes(term) ||
-          product.brand_name?.toLowerCase().includes(term),
-      );
-    return sortShopProducts(filtered, sort);
-  }, [data, search, categoryId, sort, matchesCategory]);
+  const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
+  const { all, matchesCategory } = useSearchCategories();
+  const { addingId, add } = useQuickAddToCart();
+  const products = useMemo<ShopProduct[]>(() => data?.availablePodProducts ?? [], [data]);
+  const filters = useShopFilters(all, products, matchesCategory);
 
   if (loading && !data)
     return (
@@ -67,76 +69,42 @@ export default function ShopPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
-      <PodShopSlider />
-      <Box>
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
           Pod Shop
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
-          Products you can add on when booking a pod
-        </Typography>
-      </Box>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <TextField
-          size="small"
-          placeholder="Search products"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            flex: 1,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 999,
-              bgcolor: 'background.paper',
-            },
-          }}
-        />
-        <TextField
-          select
-          size="small"
-          label="Sort"
-          value={sort}
-          onChange={(e) => setSort(e.target.value as ShopSort)}
-          sx={{ minWidth: 168 }}
-        >
-          {SHOP_SORT_OPTIONS.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
+        <ShopHeaderCart />
       </Stack>
-      <ClubCategoryChips
-        categories={categoryOptions}
-        selectedId={categoryId}
-        onSelect={setCategoryId}
-      />
-      {products.length === 0 ? (
+      <PodShopSlider />
+      <ShopFilterBar filters={filters} />
+      {filters.visible.length === 0 ? (
         <Alert severity="info">No products match your filters.</Alert>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
-            gap: 1.5,
-          }}
-        >
-          {products.map((product) => (
-            <ShopProductCard
-              key={product.id}
-              product={product}
-              priceFormat={priceFormat}
-              onOpen={(id) => navigate(`/product/${id}`)}
-            />
-          ))}
-        </Box>
+        <>
+          <Typography variant="h6" sx={{ fontWeight: 900 }}>
+            Featured Products
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
+              gap: 1.5,
+            }}
+          >
+            {filters.visible.map((product) => (
+              <ShopProductCard
+                key={product.id}
+                product={product}
+                priceFormat={priceFormat}
+                adding={addingId === product.id}
+                onOpen={(id) => navigate(`/product/${id}`)}
+                onQuickAdd={add}
+              />
+            ))}
+          </Box>
+        </>
       )}
+      <TrustBar />
     </Stack>
   );
 }

@@ -14,6 +14,7 @@ function makeProduct(overrides: Partial<ShopProduct> = {}): ShopProduct {
     image_url: null,
     images: [],
     unit_cost: 100,
+    available_count: 5,
     category_id: null,
     super_category_id: null,
     sub_category_id: null,

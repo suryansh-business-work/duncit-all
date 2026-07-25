@@ -245,7 +245,7 @@ export default function ProductDetailDialog({
 
   return (
     <>
-      <Dialog open={Boolean(productId)} onClose={onClose} fullWidth maxWidth="sm">
+      <Dialog open={Boolean(productId)} onClose={onClose} fullScreen>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           Product details
           <IconButton aria-label="Close" onClick={onClose} size="small">

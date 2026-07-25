@@ -139,11 +139,23 @@ export interface IBranding extends Document {
   updated_at: Date;
 }
 
-const podShopSliderMediaSchema = new Schema<{ url: string; type: string; order: number }>(
+const podShopSliderMediaSchema = new Schema<{
+  url: string;
+  type: string;
+  order: number;
+  heading: string;
+  subheading: string;
+  cta_label: string;
+  cta_url: string;
+}>(
   {
     url: { type: String, required: true },
     type: { type: String, enum: ["IMAGE", "VIDEO"], default: "IMAGE" },
     order: { type: Number, default: 0 },
+    heading: { type: String, default: "" },
+    subheading: { type: String, default: "" },
+    cta_label: { type: String, default: "" },
+    cta_url: { type: String, default: "" },
   },
   { _id: false },
 );

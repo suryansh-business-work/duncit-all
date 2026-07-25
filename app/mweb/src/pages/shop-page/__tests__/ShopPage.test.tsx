@@ -6,6 +6,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ShopPage from '../index';
 import { SHOP_PRODUCTS } from '../queries';
 import { SEARCH_CATEGORIES } from '../../search-page/queries';
+import { CartProvider } from '../../../components/cart/CartContext';
 
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -21,10 +22,12 @@ const product = (over: Record<string, unknown>) => ({
   image_url: null,
   images: [],
   unit_cost: 10,
+  available_count: 5,
   category_id: null,
   super_category_id: null,
   sub_category_id: null,
   created_at: '2026-01-01T00:00:00.000Z',
+  review_summary: { __typename: 'ProductReviewSummary', average_rating: 0, total: 0 },
   ...over,
 });
 
@@ -46,8 +49,10 @@ const categoriesMock: MockedResponse = {
   result: {
     data: {
       categories: [
-        { __typename: 'Category', id: 'cat-1', name: 'Sports', slug: 'sports', icon: null, level: 'CATEGORY', parent_id: null },
-        { __typename: 'Category', id: 'cat-2', name: 'Food', slug: 'food', icon: null, level: 'CATEGORY', parent_id: null },
+        { __typename: 'Category', id: 'sup-sports', name: 'Sports', slug: 'sports', icon: null, level: 'SUPER', parent_id: null },
+        { __typename: 'Category', id: 'sup-food', name: 'Food', slug: 'food', icon: null, level: 'SUPER', parent_id: null },
+        { __typename: 'Category', id: 'cat-1', name: 'Rackets', slug: 'rackets', icon: null, level: 'CATEGORY', parent_id: 'sup-sports' },
+        { __typename: 'Category', id: 'cat-2', name: 'Snacks', slug: 'snacks', icon: null, level: 'CATEGORY', parent_id: 'sup-food' },
       ],
     },
   },
@@ -56,9 +61,11 @@ const categoriesMock: MockedResponse = {
 function renderPage(mocks: MockedResponse[] = [productsMock, categoriesMock]) {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <MemoryRouter initialEntries={['/shop']}>
-        <ShopPage />
-      </MemoryRouter>
+      <CartProvider>
+        <MemoryRouter initialEntries={['/shop']}>
+          <ShopPage />
+        </MemoryRouter>
+      </CartProvider>
     </MockedProvider>,
   );
 }
@@ -90,7 +97,7 @@ describe('ShopPage', () => {
   it('filters by the debounced search term', async () => {
     renderPage();
     await screen.findByText('Banana');
-    fireEvent.change(screen.getByPlaceholderText('Search products'), { target: { value: 'apple' } });
+    fireEvent.change(screen.getByPlaceholderText('Search products or brands…'), { target: { value: 'apple' } });
     await waitFor(() => expect(screen.queryByText('Banana')).not.toBeInTheDocument());
     expect(screen.getByText('Apple')).toBeInTheDocument();
   });
@@ -98,7 +105,7 @@ describe('ShopPage', () => {
   it('matches the brand name in search too', async () => {
     renderPage();
     await screen.findByText('Banana');
-    fireEvent.change(screen.getByPlaceholderText('Search products'), { target: { value: 'zeta' } });
+    fireEvent.change(screen.getByPlaceholderText('Search products or brands…'), { target: { value: 'zeta' } });
     await waitFor(() => expect(screen.queryByText('Cherry')).not.toBeInTheDocument());
     expect(screen.getByText('Apple')).toBeInTheDocument();
   });
@@ -106,13 +113,14 @@ describe('ShopPage', () => {
   it('shows the empty state when nothing matches', async () => {
     renderPage();
     await screen.findByText('Banana');
-    fireEvent.change(screen.getByPlaceholderText('Search products'), { target: { value: 'zzzznope' } });
+    fireEvent.change(screen.getByPlaceholderText('Search products or brands…'), { target: { value: 'zzzznope' } });
     expect(await screen.findByText('No products match your filters.')).toBeInTheDocument();
   });
 
   it('filters by category chip selection', async () => {
     renderPage();
     await screen.findByText('Banana');
+    fireEvent.click(screen.getByLabelText('Filters'));
     fireEvent.click(screen.getByRole('button', { name: 'Sports' }));
     await waitFor(() => expect(screen.queryByText('Apple')).not.toBeInTheDocument());
     expect(screen.getByText('Banana')).toBeInTheDocument();
@@ -122,6 +130,7 @@ describe('ShopPage', () => {
   it('re-sorts by price ascending and descending', async () => {
     renderPage();
     await screen.findByText('Banana');
+    fireEvent.click(screen.getByLabelText('Filters'));
     const combo = screen.getByRole('combobox');
     fireEvent.mouseDown(combo);
     fireEvent.click(await screen.findByText('Price: low to high'));

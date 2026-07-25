@@ -25,10 +25,12 @@ const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
     image_url: 'http://x/a.jpg',
     images: [],
     unit_cost: 100,
+    available_count: 5,
     category_id: 'cat1',
     super_category_id: 'sup1',
     sub_category_id: null,
     created_at: null,
+    review_summary: { average_rating: 0, total: 0 },
     ...over,
   }) as ShopProduct;
 
@@ -38,8 +40,10 @@ beforeEach(() => {
   mockRequest.mockReset();
   mockCategories = [
     { id: 'sup1', name: 'Lifestyle', level: 'SUPER', parent_id: null },
+    { id: 'sup2', name: 'Food', level: 'SUPER', parent_id: null },
     { id: 'cat1', name: 'Apparel', level: 'CATEGORY', parent_id: 'sup1' },
-    { id: 'cat2', name: 'Drinks', level: 'CATEGORY', parent_id: 'sup1' },
+    { id: 'cat2', name: 'Drinks', level: 'CATEGORY', parent_id: 'sup2' },
+    { id: 'sub1', name: 'Tees', level: 'SUB', parent_id: 'cat1' },
   ];
 });
 
@@ -60,30 +64,31 @@ describe('sortShopProducts', () => {
 });
 
 describe('ShopScreen', () => {
-  it('shows the loading spinner, then the product grid, and opens a product', async () => {
+  it('shows the grid with ratings, and opens a product', async () => {
     mockRequest.mockResolvedValue({
       availablePodProducts: [
-        product(),
+        product({ review_summary: { average_rating: 4.6, total: 128 } }), // p1 has a rating
         product({
           id: 'p2',
           product_name: 'Beta Mug',
           brand_name: '',
           image_url: '',
-          images: ['http://x/b.jpg'],
-          category_id: 'cat2',
+          images: ['http://x/b.jpg'], // image_url fallback → images[0]
           unit_cost: 60,
-        }),
+        }), // p2 has no rating (default summary total 0)
       ],
     });
     renderWithProviders(<ShopScreen />);
     expect(screen.getByTestId('shop-loading')).toBeOnTheScreen();
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
-    expect(screen.getByText('Beta Mug')).toBeOnTheScreen();
+    expect(screen.getByText('Featured Products')).toBeOnTheScreen();
+    expect(screen.getByTestId('shop-product-rating-p1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('shop-product-rating-p2')).toBeNull();
     fireEvent.press(screen.getByTestId('shop-product-p1'));
     expect(mockNavigate).toHaveBeenCalledWith('ProductDetail', { productId: 'p1' });
   });
 
-  it('filters by category chip and debounced search, and sorts by price', async () => {
+  it('filters by super-category chip and debounced search, and sorts by price', async () => {
     mockRequest.mockResolvedValue({
       availablePodProducts: [
         product(),
@@ -92,6 +97,7 @@ describe('ShopScreen', () => {
           product_name: 'Beta Mug',
           brand_name: 'Rival',
           category_id: 'cat2',
+          super_category_id: 'sup2',
           unit_cost: 60,
         }),
       ],
@@ -99,10 +105,13 @@ describe('ShopScreen', () => {
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
 
-    // Category chip narrows to Apparel (p1 only).
-    fireEvent.press(screen.getByTestId('shop-cat-cat1'));
+    // Filters live behind the filter button — reveal them first.
+    fireEvent.press(screen.getByTestId('shop-filter-toggle'));
+
+    // Super-category chip narrows to Lifestyle (p1 only; p2 is under Food).
+    fireEvent.press(screen.getByTestId('shop-super-sup1'));
     expect(screen.queryByTestId('shop-product-p2')).toBeNull();
-    fireEvent.press(screen.getByTestId('shop-cat-all'));
+    fireEvent.press(screen.getByTestId('shop-super-all'));
 
     // Sort by price ascending puts the ₹60 mug first.
     fireEvent.press(screen.getByTestId('shop-sort-PRICE_ASC'));
@@ -130,7 +139,7 @@ describe('ShopScreen', () => {
     await waitFor(() => expect(screen.getByTestId('shop-error')).toHaveTextContent('offline'));
   });
 
-  it('hides the category rail when no categories exist and covers image fallbacks', async () => {
+  it('hides the super-category rail when no categories exist and covers image fallbacks', async () => {
     mockCategories = [];
     mockRequest.mockResolvedValue({
       availablePodProducts: [
@@ -139,6 +148,15 @@ describe('ShopScreen', () => {
     });
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p3')).toBeOnTheScreen());
-    expect(screen.queryByTestId('shop-cat-all')).toBeNull();
+    fireEvent.press(screen.getByTestId('shop-filter-toggle'));
+    expect(screen.queryByTestId('shop-super-all')).toBeNull();
+  });
+
+  it('opens the cart from the header cart button', async () => {
+    mockRequest.mockResolvedValue({ availablePodProducts: [product()] });
+    renderWithProviders(<ShopScreen />);
+    await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('shop-header-cart'));
+    expect(mockNavigate).toHaveBeenCalledWith('Cart');
   });
 });

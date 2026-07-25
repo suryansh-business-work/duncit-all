@@ -156,6 +156,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     damaged_count: Int!
     requested_count: Int!
     available_count: Int!
+    """Units currently available across all live pods stocking this product (0 = out of stock in pods). Only meaningful on the Pod Shop list."""
+    pod_available_count: Int!
 
     vendor_name: String!
     supplier_contact: String!

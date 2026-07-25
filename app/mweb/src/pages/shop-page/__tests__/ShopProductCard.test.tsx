@@ -11,7 +11,7 @@ const baseProduct = (over: Partial<ShopProduct> = {}): ShopProduct => ({
   image_url: 'https://img.test/head.jpg',
   images: [],
   unit_cost: 4999,
-  available_count: 5,
+  pod_available_count: 5,
   category_id: 'c-1',
   super_category_id: null,
   sub_category_id: null,
@@ -99,7 +99,7 @@ describe('ShopProductCard', () => {
   });
 
   it('shows "Out of stock" and no add button when unavailable', () => {
-    renderCard({ product: { available_count: 0 } });
+    renderCard({ product: { pod_available_count: 0 } });
     expect(screen.getByText('Out of stock')).toBeInTheDocument();
     expect(screen.queryByLabelText('Add Wireless Headphones to cart')).not.toBeInTheDocument();
   });

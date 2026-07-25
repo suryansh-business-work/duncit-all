@@ -20,7 +20,7 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
   const imageUrl = product.image_url || product.images[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
-  const outOfStock = product.available_count <= 0;
+  const outOfStock = product.pod_available_count <= 0;
   const quickAdd = () => {
     Vibration.vibrate(8);
     onQuickAdd(product);

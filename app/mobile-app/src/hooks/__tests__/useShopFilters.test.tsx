@@ -18,7 +18,7 @@ const product = (over: Partial<ShopProduct>): ShopProduct =>
     image_url: '',
     images: [],
     unit_cost: 100,
-    available_count: 5,
+    pod_available_count: 5,
     category_id: null,
     super_category_id: null,
     sub_category_id: null,
@@ -52,7 +52,7 @@ const products: ShopProduct[] = [
     super_category_id: 'sup1',
     category_id: 'cat1',
     sub_category_id: 'sub1',
-    available_count: 0,
+    pod_available_count: 0,
     review_summary: { average_rating: 5, total: 3 },
   }),
 ];

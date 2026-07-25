@@ -25,7 +25,7 @@ const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
     image_url: 'http://x/a.jpg',
     images: [],
     unit_cost: 100,
-    available_count: 5,
+    pod_available_count: 5,
     category_id: 'cat1',
     super_category_id: 'sup1',
     sub_category_id: null,

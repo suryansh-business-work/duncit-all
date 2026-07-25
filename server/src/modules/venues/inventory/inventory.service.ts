@@ -154,6 +154,9 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     damaged_count: product.damaged_count ?? 0,
     requested_count: requested,
     available_count: Math.max(inventory - requested - reserved, 0),
+    // Real pod availability is attached by listAvailablePodProducts; defaults to 0
+    // everywhere else so the non-null schema field always resolves.
+    pod_available_count: 0,
     vendor_name: product.vendor_name ?? '',
     supplier_contact: product.supplier_contact ?? '',
     unit_cost: product.unit_cost ?? 0,
@@ -889,7 +892,39 @@ export const inventoryService = {
       q.brand_id = { $nin: inactiveBrands.map((b) => b._id) };
     }
     const docs = await InventoryProductModel.find(q).sort({ product_name: 1 }).limit(300);
-    return docs.map(inventoryProductToPub);
+    const podAvailability = await this.podAvailabilityByProduct(docs.map((d) => String(d._id)));
+    return docs.map((d) => ({
+      ...inventoryProductToPub(d),
+      pod_available_count: podAvailability.get(String(d._id)) ?? 0,
+    }));
+  },
+
+  /** Sum of available units (quantity − sold) across all live pods, per product
+   * id, in a single query — powers the Pod Shop out-of-stock signal for the whole
+   * list. A product with 0 here is out of stock in pods even if its catalogue has
+   * inventory. "Live" matches podsForProduct: enabled, active, not pending, future. */
+  async podAvailabilityByProduct(productIds: string[]): Promise<Map<string, number>> {
+    const byProduct = new Map<string, number>();
+    if (productIds.length === 0) return byProduct;
+    const wanted = new Set(productIds);
+    const pods = await PodModel.find({
+      'product_requests.product_id': { $in: productIds },
+      products_enabled: true,
+      is_active: true,
+      venue_approval_status: { $ne: 'PENDING' },
+      pod_date_time: { $gte: new Date() },
+    })
+      .select('product_requests')
+      .lean();
+    for (const pod of pods as any[]) {
+      for (const req of pod.product_requests ?? []) {
+        const pid = String(req.product_id);
+        if (!wanted.has(pid)) continue;
+        const avail = Math.max(0, Number(req.quantity ?? 0) - Number(req.sold_count ?? 0));
+        byProduct.set(pid, (byProduct.get(pid) ?? 0) + avail);
+      }
+    }
+    return byProduct;
   },
 
   async getById(id: string) {

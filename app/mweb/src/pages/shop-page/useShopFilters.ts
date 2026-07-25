@@ -94,7 +94,7 @@ export function useShopFilters(
     const min = Number(minRating);
     const keep = (p: ShopProduct) => {
       if (!matches(p, effectiveCategoryId)) return false;
-      if (!includeOutOfStock && p.available_count <= 0) return false;
+      if (!includeOutOfStock && p.pod_available_count <= 0) return false;
       if (min > 0 && (p.review_summary?.average_rating ?? 0) < min) return false;
       if (!term) return true;
       return Boolean(

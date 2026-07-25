@@ -19,6 +19,10 @@ export const PublicAppSettingsDocument = gql(`
       date_format
       time_format
       time_zone
+      time_source
+      custom_time
+      custom_time_set_at
+      server_time
       min_birth_year
       max_birth_year
       draft_retention_days

@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.51",
+  "version": "1.5.52",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",
+    "@duncit/datetime": "file:../../packages/datetime",
     "@duncit/geo": "file:../../packages/geo",
     "@duncit/logs": "file:../../packages/logs",
     "@duncit/regex": "file:../../packages/regex",

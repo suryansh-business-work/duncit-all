@@ -1,40 +1,31 @@
-import { format, parseISO } from 'date-fns';
+import type { DateInput } from '@duncit/datetime';
 
-/** Fallback display formats — admin-configurable formatting is a follow-up (rule 11). */
-const DATE_FORMAT = 'dd MMM yyyy';
-const DATE_TIME_FORMAT = 'dd MMM yyyy, hh:mm a';
+import { appFormatter, appNow } from '@/utils/app-formatter';
 
-type DateInput = string | number | Date | null | undefined;
-
-const toDate = (input: DateInput): Date | null => {
+const toDate = (input: string | null | undefined): Date | null => {
   if (!input) return null;
-  if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
-  if (typeof input === 'number') return new Date(input);
-  try {
-    const parsed = parseISO(input);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  } catch {
-    return null;
-  }
+  const parsed = new Date(input);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-/** Local-timezone date label, e.g. "07 Jun 2026". Empty string when unparseable. */
+/** Date label in the admin's format + zone, e.g. "07 Jun 2026". Empty when
+ * unparseable. Driven by Admin > Settings, identical to mWeb (rule 11). */
 export function formatDate(input: DateInput): string {
-  const date = toDate(input);
-  return date ? format(date, DATE_FORMAT) : '';
+  return appFormatter().formatDate(input);
 }
 
-/** Local-timezone date+time label, e.g. "07 Jun 2026, 06:30 PM". Empty when unparseable. */
+/** Date+time label in the admin's format + zone, e.g. "07 Jun 2026, 06:30 PM".
+ * Empty when unparseable. */
 export function formatDateTime(input: DateInput): string {
-  const date = toDate(input);
-  return date ? format(date, DATE_TIME_FORMAT) : '';
+  return appFormatter().formatDateTime(input);
 }
 
 /** "X remaining" until a status auto-expires; null when unknown/expired —
- * mirrors mWeb's statusRemainingLabel so both viewers read identically. */
+ * mirrors mWeb's statusRemainingLabel so both viewers read identically.
+ * Defaults to the APPLICATION clock, so a custom admin time moves it too. */
 export function statusRemainingLabel(
   expiresAt: string | null | undefined,
-  now: Date = new Date(),
+  now: Date = appNow(),
 ): string | null {
   const expiry = toDate(expiresAt);
   if (!expiry || expiry.getTime() <= now.getTime()) return null;
@@ -45,9 +36,10 @@ export function statusRemainingLabel(
   return `${Math.floor(hours / 24)}d remaining`;
 }
 
-/** Compact "time since" label (now / 5m / 3h / 2d) — RN port of mWeb's formatRelative. */
+/** Compact "time since" label (now / 5m / 3h / 2d) — RN port of mWeb's
+ * formatRelative, measured against the application clock. */
 export function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
+  const diff = appNow().getTime() - new Date(iso).getTime();
   const minutes = Math.floor(diff / 60000);
   if (minutes < 1) return 'now';
   if (minutes < 60) return `${minutes}m`;

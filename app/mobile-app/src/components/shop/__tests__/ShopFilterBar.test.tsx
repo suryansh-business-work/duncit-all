@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
+import type { ShopFilters } from '@/hooks/useShopFilters';
 import type { ShopSort } from '@/screens/ShopScreen';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -10,58 +11,85 @@ const SORT_OPTIONS = [
   ['PRICE_DESC', 'Price ↓'],
 ] as const satisfies readonly (readonly [ShopSort, string])[];
 
-const setup = (over: Partial<Parameters<typeof ShopFilterBar>[0]> = {}) => {
-  const props = {
-    query: '',
-    onQueryChange: jest.fn(),
-    categoryOptions: [
-      ['sup1', 'Lifestyle'],
-      ['sup2', 'Food'],
-    ] as (readonly [string, string])[],
-    categoryId: '',
-    onCategoryChange: jest.fn(),
-    sortOptions: SORT_OPTIONS,
-    sort: 'NAME' as ShopSort,
-    onSortChange: jest.fn(),
-    muted: '#888888',
-    ...over,
-  };
-  renderWithProviders(<ShopFilterBar {...props} />);
-  return props;
-};
+const makeFilters = (over: Partial<ShopFilters> = {}): ShopFilters => ({
+  query: '',
+  setQuery: jest.fn(),
+  superId: '',
+  selectSuper: jest.fn(),
+  categoryId: '',
+  selectCategory: jest.fn(),
+  subId: '',
+  setSubId: jest.fn(),
+  minRating: '0',
+  setMinRating: jest.fn(),
+  includeOutOfStock: false,
+  setIncludeOutOfStock: jest.fn(),
+  sort: 'NAME',
+  setSort: jest.fn(),
+  superOptions: [['s1', 'Lifestyle']],
+  categoryOptions: [['c1', 'Apparel']],
+  subOptions: [['b1', 'Tees']],
+  activeCount: 0,
+  visible: [],
+  ...over,
+});
+
+const render = (filters: ShopFilters) =>
+  renderWithProviders(
+    <ShopFilterBar filters={filters} sortOptions={SORT_OPTIONS} muted="#888888" />,
+  );
 
 describe('ShopFilterBar', () => {
-  it('keeps filters hidden until the filter button is pressed, then hides again', () => {
-    setup();
+  it('reveals the cascade + rating + stock + sort and forwards every change', () => {
+    const filters = makeFilters();
+    render(filters);
     expect(screen.queryByTestId('shop-filter-count')).toBeNull();
-    expect(screen.queryByTestId('shop-cat-all')).toBeNull();
+    expect(screen.queryByTestId('shop-super-all')).toBeNull();
 
     fireEvent.press(screen.getByTestId('shop-filter-toggle'));
+    expect(screen.getByTestId('shop-super-all')).toBeOnTheScreen();
     expect(screen.getByTestId('shop-cat-all')).toBeOnTheScreen();
+    expect(screen.getByTestId('shop-sub-all')).toBeOnTheScreen();
+    expect(screen.getByTestId('shop-rating-0')).toBeOnTheScreen();
     expect(screen.getByTestId('shop-sort-NAME')).toBeOnTheScreen();
-
-    fireEvent.press(screen.getByTestId('shop-filter-toggle'));
-    expect(screen.queryByTestId('shop-cat-all')).toBeNull();
-  });
-
-  it('shows an active-count badge and forwards search/category/sort changes', () => {
-    const props = setup({ categoryId: 'sup1', sort: 'PRICE_ASC' });
-    expect(screen.getByTestId('shop-filter-count')).toHaveTextContent('2');
 
     fireEvent.changeText(screen.getByTestId('shop-search-input'), 'abc');
-    expect(props.onQueryChange).toHaveBeenCalledWith('abc');
+    expect(filters.setQuery).toHaveBeenCalledWith('abc');
+    fireEvent.press(screen.getByTestId('shop-super-s1'));
+    expect(filters.selectSuper).toHaveBeenCalledWith('s1');
+    fireEvent.press(screen.getByTestId('shop-cat-c1'));
+    expect(filters.selectCategory).toHaveBeenCalledWith('c1');
+    fireEvent.press(screen.getByTestId('shop-sub-b1'));
+    expect(filters.setSubId).toHaveBeenCalledWith('b1');
+    fireEvent.press(screen.getByTestId('shop-rating-4'));
+    expect(filters.setMinRating).toHaveBeenCalledWith('4');
+    fireEvent.press(screen.getByTestId('shop-sort-PRICE_ASC'));
+    expect(filters.setSort).toHaveBeenCalledWith('PRICE_ASC');
+    fireEvent.press(screen.getByTestId('shop-oos-toggle'));
+    expect(filters.setIncludeOutOfStock).toHaveBeenCalledWith(true);
 
     fireEvent.press(screen.getByTestId('shop-filter-toggle'));
-    fireEvent.press(screen.getByTestId('shop-cat-sup2'));
-    expect(props.onCategoryChange).toHaveBeenCalledWith('sup2');
-    fireEvent.press(screen.getByTestId('shop-sort-PRICE_DESC'));
-    expect(props.onSortChange).toHaveBeenCalledWith('PRICE_DESC');
+    expect(screen.queryByTestId('shop-super-all')).toBeNull();
   });
 
-  it('omits the category rail when there are no categories', () => {
-    setup({ categoryOptions: [] });
+  it('shows the active-count badge, a checked out-of-stock box, and hides empty cascades', () => {
+    const filters = makeFilters({
+      activeCount: 3,
+      includeOutOfStock: true,
+      superOptions: [],
+      categoryOptions: [],
+      subOptions: [],
+    });
+    render(filters);
+    expect(screen.getByTestId('shop-filter-count')).toHaveTextContent('3');
+
     fireEvent.press(screen.getByTestId('shop-filter-toggle'));
+    expect(screen.queryByTestId('shop-super-all')).toBeNull();
     expect(screen.queryByTestId('shop-cat-all')).toBeNull();
+    expect(screen.queryByTestId('shop-sub-all')).toBeNull();
     expect(screen.getByTestId('shop-sort-NAME')).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByTestId('shop-oos-toggle'));
+    expect(filters.setIncludeOutOfStock).toHaveBeenCalledWith(false);
   });
 });

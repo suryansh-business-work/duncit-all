@@ -2,37 +2,22 @@ import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
-import { OptionChipRow } from '@/components/home/HomeFilterParts';
+import { OptionChipRow, Section } from '@/components/home/HomeFilterParts';
+import { SHOP_RATING_OPTIONS, type ShopFilters } from '@/hooks/useShopFilters';
 import type { ShopSort } from '@/screens/ShopScreen';
 
 interface Props {
-  query: string;
-  onQueryChange: (value: string) => void;
-  categoryOptions: (readonly [string, string])[];
-  categoryId: string;
-  onCategoryChange: (id: string) => void;
+  filters: ShopFilters;
   sortOptions: readonly (readonly [ShopSort, string])[];
-  sort: ShopSort;
-  onSortChange: (sort: ShopSort) => void;
   muted: string;
 }
 
-/** Search field + a filter button that reveals the category rail and sort — the
- * filters live behind the button (with an active-count badge) to keep the Pod
- * Shop header clean. RN twin of mWeb's ShopFilterBar. */
-export function ShopFilterBar({
-  query,
-  onQueryChange,
-  categoryOptions,
-  categoryId,
-  onCategoryChange,
-  sortOptions,
-  sort,
-  onSortChange,
-  muted,
-}: Readonly<Props>) {
+/** Search field + a filter button that reveals the Super → Category → Sub
+ * cascade, rating buckets, an include-out-of-stock toggle and sort. Filters live
+ * behind the button (with an active-count badge) to keep the header clean. RN
+ * twin of mWeb's ShopFilterBar. */
+export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
-  const activeCount = (categoryId ? 1 : 0) + (sort === 'NAME' ? 0 : 1);
   return (
     <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
       <XStack gap={8} alignItems="center">
@@ -53,8 +38,8 @@ export function ShopFilterBar({
             aria-label="Search products"
             flex={1}
             unstyled
-            value={query}
-            onChangeText={onQueryChange}
+            value={filters.query}
+            onChangeText={filters.setQuery}
             placeholder="Search products or brands…"
             placeholderTextColor="$muted"
             color="$color"
@@ -78,7 +63,7 @@ export function ShopFilterBar({
           pressStyle={{ opacity: 0.8 }}
         >
           <MaterialIcons name="tune" size={20} color={open ? '#ffffff' : muted} />
-          {activeCount > 0 ? (
+          {filters.activeCount > 0 ? (
             <YStack
               testID="shop-filter-count"
               position="absolute"
@@ -93,30 +78,84 @@ export function ShopFilterBar({
               backgroundColor="$danger"
             >
               <Text fontSize={9} fontWeight="900" color="#ffffff">
-                {activeCount}
+                {filters.activeCount}
               </Text>
             </YStack>
           ) : null}
         </XStack>
       </XStack>
       {open ? (
-        <YStack gap={10}>
-          {categoryOptions.length > 0 ? (
+        <YStack gap={14} paddingBottom={4}>
+          {filters.superOptions.length > 0 ? (
+            <Section title="Super category">
+              <OptionChipRow
+                testIDPrefix="shop-super"
+                options={[['', 'All'], ...filters.superOptions]}
+                value={filters.superId}
+                onSelect={filters.selectSuper}
+                layout="scroll"
+              />
+            </Section>
+          ) : null}
+          {filters.categoryOptions.length > 0 ? (
+            <Section title="Category">
+              <OptionChipRow
+                testIDPrefix="shop-cat"
+                options={[['', 'All'], ...filters.categoryOptions]}
+                value={filters.categoryId}
+                onSelect={filters.selectCategory}
+                layout="scroll"
+              />
+            </Section>
+          ) : null}
+          {filters.subOptions.length > 0 ? (
+            <Section title="Sub-category">
+              <OptionChipRow
+                testIDPrefix="shop-sub"
+                options={[['', 'All'], ...filters.subOptions]}
+                value={filters.subId}
+                onSelect={filters.setSubId}
+                layout="scroll"
+              />
+            </Section>
+          ) : null}
+          <Section title="Rating">
             <OptionChipRow
-              testIDPrefix="shop-cat"
-              options={[['', 'All'], ...categoryOptions]}
-              value={categoryId}
-              onSelect={onCategoryChange}
+              testIDPrefix="shop-rating"
+              options={SHOP_RATING_OPTIONS}
+              value={filters.minRating}
+              onSelect={filters.setMinRating}
               layout="scroll"
             />
-          ) : null}
-          <OptionChipRow
-            testIDPrefix="shop-sort"
-            options={sortOptions}
-            value={sort}
-            onSelect={onSortChange}
-            layout="scroll"
-          />
+          </Section>
+          <XStack
+            testID="shop-oos-toggle"
+            role="checkbox"
+            aria-label="Include out of stock"
+            aria-checked={filters.includeOutOfStock}
+            onPress={() => filters.setIncludeOutOfStock(!filters.includeOutOfStock)}
+            alignItems="center"
+            gap={8}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons
+              name={filters.includeOutOfStock ? 'check-box' : 'check-box-outline-blank'}
+              size={22}
+              color={filters.includeOutOfStock ? '#2e7d32' : muted}
+            />
+            <Text fontSize={13} fontWeight="700" color="$color">
+              Include out of stock
+            </Text>
+          </XStack>
+          <Section title="Sort">
+            <OptionChipRow
+              testIDPrefix="shop-sort"
+              options={sortOptions}
+              value={filters.sort}
+              onSelect={filters.setSort}
+              layout="scroll"
+            />
+          </Section>
         </YStack>
       ) : null}
     </YStack>

@@ -6,19 +6,18 @@ import type { ShopProduct } from './queries';
 interface Props {
   product: ShopProduct;
   priceFormat: (amount: number) => string;
-  categoryLabel?: string;
   adding: boolean;
   onOpen: (id: string) => void;
   onQuickAdd: (product: ShopProduct) => void;
 }
 
-/** One product tile in the Pod Shop browse grid — category badge, image, name,
- * price and (when reviewed) an average-rating chip. Tapping opens the full
- * product detail page; the corner button quick-adds to cart via the cheapest pod. */
+/** One product tile in the Pod Shop browse grid — image, name, price and (when
+ * reviewed) an average-rating chip. Tapping opens the full product detail page;
+ * the corner button quick-adds to cart via the cheapest pod (with a light
+ * haptic where supported). */
 export default function ShopProductCard({
   product,
   priceFormat,
-  categoryLabel,
   adding,
   onOpen,
   onQuickAdd,
@@ -27,6 +26,10 @@ export default function ShopProductCard({
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
   const outOfStock = product.available_count <= 0;
+  const quickAdd = () => {
+    globalThis.navigator?.vibrate?.(8);
+    onQuickAdd(product);
+  };
   return (
     <Card
       sx={{ position: 'relative', borderRadius: 3, border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
@@ -69,22 +72,6 @@ export default function ShopProductCard({
           </Stack>
         </Stack>
       </CardActionArea>
-      {categoryLabel && (
-        <Chip
-          label={categoryLabel}
-          size="small"
-          sx={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            height: 22,
-            fontWeight: 800,
-            fontSize: 11,
-            bgcolor: 'background.paper',
-            color: 'primary.main',
-          }}
-        />
-      )}
       {outOfStock ? (
         <Chip
           label="Out of stock"
@@ -104,7 +91,7 @@ export default function ShopProductCard({
         <IconButton
           aria-label={`Add ${product.product_name} to cart`}
           disabled={adding}
-          onClick={() => onQuickAdd(product)}
+          onClick={quickAdd}
           size="small"
           sx={{
             position: 'absolute',

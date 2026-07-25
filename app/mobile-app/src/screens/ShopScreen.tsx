@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,13 +11,12 @@ import { ShopHeaderCart } from '@/components/shop/ShopHeaderCart';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
 import { StackScreen } from '@/components/StackScreen';
 import { ShopProductsDocument } from '@/graphql/shop';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useHomeData } from '@/hooks/useHomeFeed';
 import { useQuickAddToCart } from '@/hooks/useQuickAddToCart';
+import { useShopFilters } from '@/hooks/useShopFilters';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
-import { makeCategoryMatcher } from '@/utils/category-match';
 import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -85,10 +84,8 @@ export function ShopScreen() {
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [sort, setSort] = useState<ShopSort>('NAME');
-  const search = useDebouncedValue(query);
+  const filters = useShopFilters(categories, products);
+  const visible = filters.visible;
 
   useEffect(() => {
     let active = true;
@@ -100,40 +97,6 @@ export function ShopScreen() {
       active = false;
     };
   }, []);
-
-  // Top filter chips are SUPER categories (the top-level vibe); the matcher keeps
-  // products tagged at descendant categories/subs.
-  const categoryOptions = useMemo(
-    () =>
-      categories
-        .filter((c) => c.level === 'SUPER')
-        .map((c) => [c.id, c.name] as const)
-        .sort((a, b) => a[1].localeCompare(b[1])),
-    [categories],
-  );
-
-  // The card badge shows the most specific category the product carries — its SUB
-  // category, else category, else super.
-  const categoryName = useMemo(() => {
-    const map = new Map(categories.map((c) => [c.id, c.name] as const));
-    return (product: ShopProduct) =>
-      map.get(product.sub_category_id ?? product.category_id ?? product.super_category_id ?? '') ??
-      '';
-  }, [categories]);
-
-  const visible = useMemo(() => {
-    const matches = makeCategoryMatcher(categories);
-    const term = search.trim().toLowerCase();
-    const filtered = products
-      .filter((product) => matches(product, categoryId))
-      .filter(
-        (product) =>
-          !term ||
-          product.product_name?.toLowerCase().includes(term) ||
-          product.brand_name?.toLowerCase().includes(term),
-      );
-    return sortShopProducts(filtered, sort);
-  }, [products, categories, categoryId, search, sort]);
 
   let body;
   if (isLoading) {
@@ -172,7 +135,6 @@ export function ShopScreen() {
             <ShopProductCard
               key={product.id}
               product={product}
-              categoryLabel={categoryName(product)}
               adding={addingId === product.id}
               onOpen={(productId) => navigation.navigate('ProductDetail', { productId })}
               onQuickAdd={add}
@@ -197,17 +159,7 @@ export function ShopScreen() {
     >
       <ScrollView flex={1}>
         <PodShopSlider />
-        <ShopFilterBar
-          query={query}
-          onQueryChange={setQuery}
-          categoryOptions={categoryOptions}
-          categoryId={categoryId}
-          onCategoryChange={setCategoryId}
-          sortOptions={SORT_OPTIONS}
-          sort={sort}
-          onSortChange={setSort}
-          muted={muted}
-        />
+        <ShopFilterBar filters={filters} sortOptions={SORT_OPTIONS} muted={muted} />
         {body}
         <TrustBar tint={primary} />
       </ScrollView>

@@ -103,9 +103,11 @@ describe('useDateFormat — local mode (default)', () => {
 });
 
 describe('useDateFormat — time-zone-aware mode', () => {
-  it('uses the zoned fallback time pattern when settings are absent', () => {
+  it('uses the shared fallback time pattern when settings are absent', () => {
+    // Same fallback zoned or not: it matches the server default for
+    // time_format, so nothing changes once settings load.
     const f = useDateFormat({ timeZoneAware: true });
-    expect(f.timeFormat).toBe('HH:mm');
+    expect(f.timeFormat).toBe('hh:mm a');
     expect(f.timeZone).toBe('Asia/Kolkata');
   });
 

@@ -14,6 +14,12 @@ import {
  * The formatting itself lives in @duncit/datetime so mobile, mWeb and every
  * portal share ONE implementation; this module is just the Apollo adapter.
  */
+/**
+ * ONE `PublicAppSettings` operation for the whole monorepo. Surfaces used to
+ * declare their own copies selecting different fields under the same operation
+ * name, which makes Apollo's normalized cache thrash between them — so the
+ * non-date fields other surfaces need live here too.
+ */
 export const PUBLIC_APP_SETTINGS = gql`
   query PublicAppSettings {
     publicAppSettings {
@@ -24,6 +30,9 @@ export const PUBLIC_APP_SETTINGS = gql`
       custom_time
       custom_time_set_at
       server_time
+      min_birth_year
+      max_birth_year
+      draft_retention_days
     }
   }
 `;

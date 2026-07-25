@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   FALLBACK_DATE_FORMAT,
-  FALLBACK_TIME_FORMAT_LOCAL,
-  FALLBACK_TIME_FORMAT_ZONED,
+  FALLBACK_TIME_FORMAT,
   FALLBACK_TIME_ZONE,
   createDateFormatter,
 } from '../src/format';
@@ -11,14 +10,13 @@ describe('createDateFormatter', () => {
   it('falls back to the documented defaults when settings are empty', () => {
     const f = createDateFormatter();
     expect(f.dateFormat).toBe(FALLBACK_DATE_FORMAT);
-    expect(f.timeFormat).toBe(FALLBACK_TIME_FORMAT_LOCAL);
+    expect(f.timeFormat).toBe(FALLBACK_TIME_FORMAT);
     expect(f.timeZone).toBe(FALLBACK_TIME_ZONE);
   });
 
-  it('uses the 24h time fallback in zone-aware mode', () => {
-    expect(createDateFormatter({ timeZoneAware: true }).timeFormat).toBe(
-      FALLBACK_TIME_FORMAT_ZONED,
-    );
+  it('uses the SAME time fallback zoned or not, so surfaces never disagree', () => {
+    expect(createDateFormatter({ timeZoneAware: true }).timeFormat).toBe(FALLBACK_TIME_FORMAT);
+    expect(createDateFormatter().timeFormat).toBe(FALLBACK_TIME_FORMAT);
   });
 
   it('honours admin patterns and formats in the configured zone', () => {

@@ -1,21 +1,30 @@
-import { gql, useQuery } from '@apollo/client';
-import { parseISO } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
+import { useQuery } from '@apollo/client';
+import {
+  PUBLIC_APP_SETTINGS,
+  useDateFormat as useSharedDateFormat,
+  type DateInput,
+} from '@duncit/app-settings';
 
-export const PUBLIC_APP_SETTINGS = gql`
-  query PublicAppSettings {
-    publicAppSettings {
-      date_format
-      time_format
-      time_zone
-      min_birth_year
-      max_birth_year
-      draft_retention_days
-    }
-  }
-`;
+/**
+ * mWeb's date/time entry point. The implementation lives in @duncit/datetime
+ * (via @duncit/app-settings) so mobile, mWeb and every portal format dates
+ * identically and follow the admin's time source — this module only keeps the
+ * mWeb-specific settings hooks and preserves the existing import paths.
+ */
+export { PUBLIC_APP_SETTINGS };
+export type { DateInput };
 
 const FALLBACK_DRAFT_RETENTION_DAYS = 3;
+const FALLBACK_MIN_BIRTH_YEAR = 1940;
+const FALLBACK_MAX_BIRTH_YEAR = 2012;
+
+/**
+ * Formats in the admin-configured IANA zone so every client renders the same
+ * wall-clock time regardless of the viewer's device timezone (B10).
+ */
+export function useDateFormat() {
+  return useSharedDateFormat({ timeZoneAware: true });
+}
 
 /** Admin-configured draft-pod retention window in days (Admin > Pods > Pod
  * Settings), with a safe fallback. Drives the Host Studio draft-expiry note. */
@@ -24,58 +33,12 @@ export function useDraftRetentionDays(): number {
   return (data?.publicAppSettings?.draft_retention_days as number) ?? FALLBACK_DRAFT_RETENTION_DAYS;
 }
 
-const FALLBACK_DATE = 'dd MMM yyyy';
-const FALLBACK_TIME = 'hh:mm a';
-const FALLBACK_ZONE = 'Asia/Kolkata';
-const FALLBACK_MIN_BIRTH_YEAR = 1940;
-const FALLBACK_MAX_BIRTH_YEAR = 2012;
-
 /** Admin-configured signup birth-year bounds (Admin > Settings), with fallbacks. */
 export function useSignupBirthYearBounds() {
   const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   return {
     minBirthYear: (data?.publicAppSettings?.min_birth_year as number) ?? FALLBACK_MIN_BIRTH_YEAR,
     maxBirthYear: (data?.publicAppSettings?.max_birth_year as number) ?? FALLBACK_MAX_BIRTH_YEAR,
-  };
-}
-
-type DateInput = string | number | Date | null | undefined;
-
-export function useDateFormat() {
-  const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
-  const dateFormat: string = data?.publicAppSettings?.date_format || FALLBACK_DATE;
-  const timeFormat: string = data?.publicAppSettings?.time_format || FALLBACK_TIME;
-  const timeZone: string = data?.publicAppSettings?.time_zone || FALLBACK_ZONE;
-
-  const toDate = (input: DateInput): Date | null => {
-    if (!input) return null;
-    if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
-    if (typeof input === 'number') return new Date(input);
-    try {
-      return parseISO(input);
-    } catch {
-      return null;
-    }
-  };
-
-  // Format in the admin-configured IANA zone so every client renders the same
-  // wall-clock time regardless of the viewer's device timezone (B10).
-  const safeFmt = (d: Date | null, p: string) => {
-    if (!d) return '';
-    try {
-      return formatInTimeZone(d, timeZone, p);
-    } catch {
-      return '';
-    }
-  };
-
-  return {
-    dateFormat,
-    timeFormat,
-    timeZone,
-    formatDate: (input: DateInput) => safeFmt(toDate(input), dateFormat),
-    formatTime: (input: DateInput) => safeFmt(toDate(input), timeFormat),
-    formatDateTime: (input: DateInput) => safeFmt(toDate(input), `${dateFormat} · ${timeFormat}`),
   };
 }
 

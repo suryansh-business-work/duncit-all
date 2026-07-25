@@ -14,8 +14,10 @@ import { createClock, type Clock, type ClockInput } from './clock';
  */
 
 export const FALLBACK_DATE_FORMAT = 'dd MMM yyyy';
-export const FALLBACK_TIME_FORMAT_LOCAL = 'hh:mm a';
-export const FALLBACK_TIME_FORMAT_ZONED = 'HH:mm';
+// ONE fallback for every surface, matching the server default for time_format.
+// A zoned-only 24h fallback used to make mWeb and the portals disagree while
+// settings were still loading.
+export const FALLBACK_TIME_FORMAT = 'hh:mm a';
 export const FALLBACK_TIME_ZONE = 'Asia/Kolkata';
 
 export type DateInput = string | number | Date | null | undefined;
@@ -26,7 +28,7 @@ export interface DateFormatterSettings {
   timeZone?: string | null;
   /**
    * Format in the admin-configured zone (date-fns-tz) rather than the device's
-   * local zone. Zoned mode also defaults the time pattern to 24h.
+   * local zone.
    */
   timeZoneAware?: boolean;
   /** Time source + anchors; drives `now`, `dayLabel` and occasion matching. */
@@ -78,9 +80,8 @@ const DAY_MS = 86_400_000;
  */
 export function createDateFormatter(settings: Readonly<DateFormatterSettings> = {}): DateFormatter {
   const timeZoneAware = settings.timeZoneAware === true;
-  const fallbackTime = timeZoneAware ? FALLBACK_TIME_FORMAT_ZONED : FALLBACK_TIME_FORMAT_LOCAL;
   const dateFormat = settings.dateFormat || FALLBACK_DATE_FORMAT;
-  const timeFormat = settings.timeFormat || fallbackTime;
+  const timeFormat = settings.timeFormat || FALLBACK_TIME_FORMAT;
   const timeZone = settings.timeZone || FALLBACK_TIME_ZONE;
   const clock = createClock(settings.clock ?? { source: 'BROWSER' });
   const toDate = timeZoneAware ? toDateZoned : toDateLocal;

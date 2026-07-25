@@ -13,8 +13,7 @@ export {
 } from './clock';
 export {
   FALLBACK_DATE_FORMAT,
-  FALLBACK_TIME_FORMAT_LOCAL,
-  FALLBACK_TIME_FORMAT_ZONED,
+  FALLBACK_TIME_FORMAT,
   FALLBACK_TIME_ZONE,
   createDateFormatter,
   type DateFormatter,

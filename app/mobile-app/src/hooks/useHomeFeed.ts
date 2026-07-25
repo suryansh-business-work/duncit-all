@@ -43,10 +43,12 @@ export interface VibeCategory {
 
 /** Structured two-row vibe filter: CATEGORY chips, each carrying its SUB chips.
  * Only categories/subs that actually have pods (directly or via a descendant)
- * in the current scope are kept. */
+ * in the current scope are kept — unless `showAllVibes` is on (admin toggle),
+ * which keeps every category/sub (with its icon) even ones with no pods. */
 function deriveVibeCategories(
   allChips: HomeCategory[],
   podCategoryIds: Set<string | null | undefined>,
+  showAllVibes: boolean,
 ): VibeCategory[] {
   const parentById = new Map(allChips.map((c) => [c.id, c.parent_id ?? null]));
   const isDescendant = (childId: string, ancestorId: string) => {
@@ -64,12 +66,13 @@ function deriveVibeCategories(
     }
     return false;
   };
+  const isVisible = (chipId: string) => showAllVibes || chipHasPods(chipId);
   const categories = allChips
-    .filter((c) => c.level === 'CATEGORY' && chipHasPods(c.id))
+    .filter((c) => c.level === 'CATEGORY' && isVisible(c.id))
     .sort((a, b) => a.name.localeCompare(b.name));
   const subsByParent = new Map<string, HomeCategory[]>();
   allChips
-    .filter((c) => c.level === 'SUB' && chipHasPods(c.id))
+    .filter((c) => c.level === 'SUB' && isVisible(c.id))
     .forEach((s) => {
       const key = s.parent_id ?? '';
       const arr = subsByParent.get(key) ?? [];
@@ -108,6 +111,7 @@ function deriveHome(
   selectedSuperId: string | null,
   selectedLocationId: string,
   filters: HomeFilters,
+  showAllVibes: boolean,
 ) {
   const clubs = data?.clubs ?? [];
   const allPods = data?.pods ?? [];
@@ -139,7 +143,7 @@ function deriveHome(
     allPods.filter(inScope).map((p) => clubsById.get(p.club_id)?.category_id),
   );
   const categoryChips = allChips.filter((c) => podCategoryIds.has(c.id));
-  const vibeCategories = deriveVibeCategories(allChips, podCategoryIds);
+  const vibeCategories = deriveVibeCategories(allChips, podCategoryIds, showAllVibes);
   // Whether this city/scope has any pods at all (pre category/price/date filter)
   // — drives disabling the Filter + Search controls when there's nothing to act on.
   const hasContent = allPods.some(inScope);
@@ -219,6 +223,7 @@ export function useHomeData() {
 export function useHomeFeed(
   selectedCategoryId: string,
   filters: HomeFilters = DEFAULT_HOME_FILTERS,
+  showAllVibes = false,
 ) {
   const data = useHomeStore((s) => s.data);
   const isLoading = useHomeStore((s) => s.isLoading);
@@ -232,8 +237,16 @@ export function useHomeFeed(
   }, [fetch]);
 
   const derived = useMemo(
-    () => deriveHome(data, selectedCategoryId, selectedSuperId, selectedLocationId, filters),
-    [data, selectedCategoryId, selectedSuperId, selectedLocationId, filters],
+    () =>
+      deriveHome(
+        data,
+        selectedCategoryId,
+        selectedSuperId,
+        selectedLocationId,
+        filters,
+        showAllVibes,
+      ),
+    [data, selectedCategoryId, selectedSuperId, selectedLocationId, filters, showAllVibes],
   );
 
   return { isLoading, error, hasData: !!data, refetch: () => fetch(true), ...derived };

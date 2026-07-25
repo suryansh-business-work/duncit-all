@@ -341,17 +341,22 @@ export function useHomeData({
 
   // Structured two-row "What's your vibe": CATEGORY-level chips (row 1), each
   // carrying its SUB-category chips (row 2, shown when the category is picked).
-  // Only categories/subs that actually have pods in the current context appear.
+  // Only categories/subs that actually have pods appear — unless the admin's
+  // "show all categories on Home" toggle is on, which shows every category.
+  const showAllVibes = headerData?.branding?.home_show_all_vibe_categories === true;
   const vibeCategories = useMemo(() => {
     const cats = data?.categories ?? [];
     const chipHasPods = makeChipHasPods(podCategoryIds, isDescendantOf);
     const inScope = (c: any) => !selectedSuperId || isDescendantOf(c.id, selectedSuperId);
+    // When the admin toggle is on, show every category/sub (with its icon) even
+    // ones with no pods yet; otherwise only those that currently have pods.
+    const isVisible = (c: any) => showAllVibes || chipHasPods(c.id);
     const categories = cats
-      .filter((c: any) => c.level === 'CATEGORY' && inScope(c) && chipHasPods(c.id))
+      .filter((c: any) => c.level === 'CATEGORY' && inScope(c) && isVisible(c))
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
     const subsByParent = new Map<string, any[]>();
     cats
-      .filter((c: any) => c.level === 'SUB' && chipHasPods(c.id))
+      .filter((c: any) => c.level === 'SUB' && isVisible(c))
       .forEach((s: any) => {
         const arr = subsByParent.get(s.parent_id) ?? [];
         arr.push(s);
@@ -367,7 +372,7 @@ export function useHomeData({
       iconLayout: c.icon_layout_mweb ?? null,
       subs: (subsByParent.get(c.id) ?? []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon ?? null })),
     }));
-  }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);
+  }, [data, selectedSuperId, isDescendantOf, podCategoryIds, showAllVibes]);
 
   const clubs = useMemo(() => {
     const all = data?.clubs ?? [];

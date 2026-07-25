@@ -155,7 +155,21 @@ const headerMock = {
   request: { query: HEADER_DATA },
   result: {
     data: {
-      branding: { app_name: 'Duncit' },
+      branding: { app_name: 'Duncit', home_show_all_vibe_categories: false },
+      me: { user_id: 'me1', roles: ['HOST'], following_user_ids: ['u2'] },
+      superCategories: [],
+      locations: [],
+      activePodLocationIds: [],
+    },
+  },
+};
+
+// Same as headerMock but with the admin "show all categories on Home" toggle on.
+const headerMockShowAll = {
+  request: { query: HEADER_DATA },
+  result: {
+    data: {
+      branding: { app_name: 'Duncit', home_show_all_vibe_categories: true },
       me: { user_id: 'me1', roles: ['HOST'], following_user_ids: ['u2'] },
       superCategories: [],
       locations: [],
@@ -271,6 +285,27 @@ describe('useHomeData', () => {
     expect(racquet?.iconLayout).toEqual({ position: 'LEFT', width: 50, height: 30 });
     const rock = result.current.vibeCategories.find((c: any) => c.id === 'c3');
     expect(rock?.iconLayout).toBeNull();
+  });
+
+  it('shows every category (including pod-less ones) when the admin toggle is on', async () => {
+    // Default (toggle off): the pod-less "Ball" category (c2) is hidden.
+    const { result: off } = renderHook(() => useHomeData(baseParams), {
+      wrapper: wrapperWith([homeDataMock('loc1', 'zoneA'), headerMock, followedClubsMock, followedUsersMock]),
+    });
+    await waitFor(() => expect(off.current.loading).toBe(false));
+    expect(off.current.vibeCategories.map((c: any) => c.id)).not.toContain('c2');
+
+    // Toggle on: c2 appears even though no pods reference it.
+    const { result: on } = renderHook(() => useHomeData(baseParams), {
+      wrapper: wrapperWith([
+        homeDataMock('loc1', 'zoneA'),
+        headerMockShowAll,
+        followedClubsMock,
+        followedUsersMock,
+      ]),
+    });
+    await waitFor(() => expect(on.current.loading).toBe(false));
+    expect(on.current.vibeCategories.map((c: any) => c.id)).toContain('c2');
   });
 
   it('resolves host names via host_names, publicHosts, and no-match', async () => {

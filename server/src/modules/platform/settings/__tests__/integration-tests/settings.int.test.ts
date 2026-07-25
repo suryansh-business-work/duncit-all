@@ -67,9 +67,16 @@ describe('settingsService integration', () => {
   it('reads and updates branding', async () => {
     const branding = await settingsService.getBranding();
     expect(branding.app_name).toBe('Duncit');
+    // Home vibe tabber defaults to only-categories-with-pods.
+    expect(branding.home_show_all_vibe_categories).toBe(false);
 
     const updated = await settingsService.updateBranding({ support_phone: '+911234567890' });
     expect(updated.support_phone).toBe('+911234567890');
+
+    // The show-all-categories toggle round-trips as a boolean.
+    const toggled = await settingsService.updateBranding({ home_show_all_vibe_categories: true });
+    expect(toggled.home_show_all_vibe_categories).toBe(true);
+    expect((await settingsService.getBranding()).home_show_all_vibe_categories).toBe(true);
   });
 
   it('normalises and clears the "All" tab icon layout', async () => {

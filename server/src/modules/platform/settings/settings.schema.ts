@@ -140,6 +140,8 @@ export const settingsTypeDefs = gql`
     home_all_vibe_icon_url: String!
     "Icon placement + size for the home All tab (null means the default TOP 40x40 look)."
     home_all_vibe_icon_layout: CategoryIconLayout
+    "When true, the home vibe tabber shows every category (even ones with no pods); false shows only categories that have pods."
+    home_show_all_vibe_categories: Boolean!
     home_header_tagline: String!
     app_latest_version: String!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
@@ -182,6 +184,7 @@ export const settingsTypeDefs = gql`
     ios_app_url: String
     home_all_vibe_icon_url: String
     home_all_vibe_icon_layout: CategoryIconLayoutInput
+    home_show_all_vibe_categories: Boolean
     home_header_tagline: String
     app_latest_version: String
   }

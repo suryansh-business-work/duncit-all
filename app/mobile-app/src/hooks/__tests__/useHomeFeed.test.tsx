@@ -85,6 +85,35 @@ describe('useHomeFeed', () => {
     expect(result.current.categoryChips.map((c) => c.id)).toEqual(['cat1']);
   });
 
+  it('shows every vibe category + sub (even with no pods) when showAllVibes is on', () => {
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+      pods: [pod('1', 'c1', future(1))], // only cat1 has a pod
+      categories: [
+        {
+          id: 'cat1',
+          name: 'Has pods',
+          slug: 'c1',
+          icon: '🎵',
+          level: 'CATEGORY',
+          parent_id: null,
+        },
+        { id: 'cat2', name: 'No pods', slug: 'c2', level: 'CATEGORY', parent_id: null },
+        { id: 'sub1', name: 'Empty sub', slug: 's1', level: 'SUB', parent_id: 'cat2' },
+      ],
+    } as never;
+    const filters = { price: 'ALL', date: 'ALL', sort: 'DATE_ASC' } as const;
+    // Default (off): only the pod-bearing category shows.
+    const onlyWithPods = renderHook(() => useHomeFeed('', filters, false)).result.current;
+    expect(onlyWithPods.vibeCategories.map((c) => c.id)).toEqual(['cat1']);
+    // On: every category shows, and the empty category carries its empty sub.
+    const all = renderHook(() => useHomeFeed('', filters, true)).result.current;
+    expect(all.vibeCategories.map((c) => c.id)).toEqual(['cat1', 'cat2']);
+    expect(all.vibeCategories.find((c) => c.id === 'cat2')?.subs.map((s) => s.id)).toEqual([
+      'sub1',
+    ]);
+  });
+
   it('builds two-row vibe categories (sorted, with pod-bearing subcategories)', () => {
     mockHomeState.data = {
       clubs: [

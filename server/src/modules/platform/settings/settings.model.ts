@@ -8,6 +8,13 @@ export interface IAppSettings extends Document {
   time_format: string;
   /** IANA timezone used to format/display dates & times across all apps. */
   time_zone: string;
+  /** Where every app reads "now" from: SERVER | BROWSER | CUSTOM. */
+  time_source: string;
+  /** CUSTOM anchor: the instant the apps' clock should read. */
+  custom_time: Date | null;
+  /** Server's real time when the anchor was saved — the apps tick forward from
+   * here, so a custom clock advances instead of freezing. */
+  custom_time_set_at: Date | null;
   /** Signup birth-year bounds (inclusive), configurable from Admin > Settings. */
   min_birth_year: number;
   max_birth_year: number;
@@ -34,6 +41,9 @@ const appSettingsSchema = new Schema<IAppSettings>(
     date_format: { type: String, default: "dd MMM yyyy" },
     time_format: { type: String, default: "hh:mm a" },
     time_zone: { type: String, default: "Asia/Kolkata" },
+    time_source: { type: String, enum: ["SERVER", "BROWSER", "CUSTOM"], default: "SERVER" },
+    custom_time: { type: Date, default: null },
+    custom_time_set_at: { type: Date, default: null },
     min_birth_year: { type: Number, default: 1940 },
     max_birth_year: { type: Number, default: 2012 },
     draft_retention_days: { type: Number, default: 3, min: 1 },

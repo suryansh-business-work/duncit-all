@@ -35,6 +35,9 @@ const toAppPub = (d: any) => ({
   date_format: d?.date_format ?? "dd MMM yyyy",
   time_format: d?.time_format ?? "hh:mm a",
   time_zone: d?.time_zone ?? DEFAULT_REOPEN_ZONE,
+  time_source: d?.time_source ?? "SERVER",
+  custom_time: d?.custom_time?.toISOString?.() ?? null,
+  custom_time_set_at: d?.custom_time_set_at?.toISOString?.() ?? null,
   min_birth_year: d?.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
   max_birth_year: d?.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
   draft_retention_days: d?.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
@@ -258,6 +261,11 @@ export const settingsService = {
       date_format: doc.date_format ?? "dd MMM yyyy",
       time_format: doc.time_format ?? "hh:mm a",
       time_zone: doc.time_zone ?? DEFAULT_REOPEN_ZONE,
+      time_source: doc.time_source ?? "SERVER",
+      custom_time: doc.custom_time?.toISOString?.() ?? null,
+      custom_time_set_at: doc.custom_time_set_at?.toISOString?.() ?? null,
+      // Stamped per response so clients keep the server clock ticking.
+      server_time: new Date().toISOString(),
       min_birth_year: doc.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
       max_birth_year: doc.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
       draft_retention_days: doc.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
@@ -294,6 +302,8 @@ export const settingsService = {
     date_format?: string;
     time_format?: string;
     time_zone?: string;
+    time_source?: string;
+    custom_time?: string | null;
     min_birth_year?: number;
     max_birth_year?: number;
     draft_retention_days?: number;
@@ -307,6 +317,15 @@ export const settingsService = {
     if (input.date_format !== undefined) update.date_format = input.date_format;
     if (input.time_format !== undefined) update.time_format = input.time_format;
     if (input.time_zone !== undefined) update.time_zone = input.time_zone;
+    if (input.time_source !== undefined) update.time_source = input.time_source;
+    // Saving an anchor stamps the server clock beside it, so every device can
+    // advance the custom clock by the same elapsed amount.
+    if (input.custom_time !== undefined) {
+      const anchor = input.custom_time ? new Date(input.custom_time) : null;
+      const valid = anchor && !Number.isNaN(anchor.getTime()) ? anchor : null;
+      update.custom_time = valid;
+      update.custom_time_set_at = valid ? new Date() : null;
+    }
     if (input.min_birth_year !== undefined)
       update.min_birth_year = input.min_birth_year;
     if (input.max_birth_year !== undefined)

@@ -85,10 +85,12 @@ export function createDateFormatter(settings: Readonly<DateFormatterSettings> = 
   const clock = createClock(settings.clock ?? { source: 'BROWSER' });
   const toDate = timeZoneAware ? toDateZoned : toDateLocal;
 
+  // Parsing and formatting both sit inside the guard: a bad pattern, an unknown
+  // time zone or a hostile date string must render '' rather than crash a page.
   const formatPattern = (input: DateInput, pattern: string): string => {
-    const d = toDate(input);
-    if (!d) return '';
     try {
+      const d = toDate(input);
+      if (!d) return '';
       return timeZoneAware ? formatInTimeZone(d, timeZone, pattern) : fmtFn(d, pattern);
     } catch {
       return '';

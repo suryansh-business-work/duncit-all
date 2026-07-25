@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TIME_SOURCE,
   createClock,
+  resetServerTimeStamp,
   resolveNow,
+  stampServerTime,
   toEpochMs,
   toTimeSource,
 } from '../src/clock';
@@ -109,6 +111,32 @@ describe('resolveNow', () => {
     const before = Date.now();
     const value = resolveNow({ source: 'BROWSER' });
     expect(value).toBeGreaterThanOrEqual(before);
+  });
+});
+
+describe('stampServerTime', () => {
+  it('stamps once per distinct server_time so the clock keeps ticking', () => {
+    resetServerTimeStamp();
+    // Same stamp value on repeat calls — this is what stops the server clock
+    // freezing: elapsed device time keeps accumulating against it.
+    expect(stampServerTime('2026-01-01T00:00:00.000Z', () => 500)).toBe(500);
+    expect(stampServerTime('2026-01-01T00:00:00.000Z', () => 900)).toBe(500);
+    // A fresh server stamp re-syncs.
+    expect(stampServerTime('2026-01-01T00:00:05.000Z', () => 900)).toBe(900);
+  });
+
+  it('returns null when there is no server stamp yet', () => {
+    resetServerTimeStamp();
+    expect(stampServerTime(null)).toBeNull();
+    expect(stampServerTime(undefined)).toBeNull();
+    expect(stampServerTime('')).toBeNull();
+  });
+
+  it('defaults to the real clock when no realNow is injected', () => {
+    resetServerTimeStamp();
+    const before = Date.now();
+    expect(stampServerTime('2026-02-02T00:00:00.000Z')).toBeGreaterThanOrEqual(before);
+    resetServerTimeStamp();
   });
 });
 

@@ -75,6 +75,35 @@ export function resolveNow(input: Readonly<ClockInput>): number {
   return customMs + (reference - setAtMs);
 }
 
+// Single-entry cache: the device time at which the CURRENT server stamp was
+// first seen. Kept outside React so plain functions, hooks and native stores
+// all share it — and so it survives re-renders, which is what lets the server
+// clock tick forward between fetches instead of freezing.
+let lastServerTime: string | null = null;
+let lastReceivedAt = 0;
+
+/**
+ * Device time when this `server_time` value first arrived. Returns null when
+ * there is no server stamp yet, which makes the clock fall back to the device.
+ */
+export function stampServerTime(
+  serverTime: string | null | undefined,
+  realNow: () => number = Date.now,
+): number | null {
+  if (!serverTime) return null;
+  if (serverTime !== lastServerTime) {
+    lastServerTime = serverTime;
+    lastReceivedAt = realNow();
+  }
+  return lastReceivedAt;
+}
+
+/** Test seam: forget the cached stamp. */
+export function resetServerTimeStamp(): void {
+  lastServerTime = null;
+  lastReceivedAt = 0;
+}
+
 export interface Clock {
   /** Current instant in ms, per the configured source. */
   nowMs: () => number;

@@ -35,6 +35,8 @@ export function HomeFeed() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [filters, setFilters] = useState<HomeFilters>(DEFAULT_HOME_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
+  const { data: brandingData } = useBranding();
+  const showAllVibes = brandingData?.branding.home_show_all_vibe_categories ?? false;
   const {
     isLoading,
     hasData,
@@ -46,10 +48,9 @@ export function HomeFeed() {
     previousPods,
     totalPods,
     refetch,
-  } = useHomeFeed(selectedCategoryId, filters);
+  } = useHomeFeed(selectedCategoryId, filters, showAllVibes);
   const filterCount = activeFilterCount(filters, selectedCategoryId);
   const bottomSpace = useBottomNavSpace();
-  const { data: brandingData } = useBranding();
   const { data: meData } = useMe();
   const { primary, onPrimary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();

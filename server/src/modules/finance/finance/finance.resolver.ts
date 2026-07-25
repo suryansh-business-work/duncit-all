@@ -154,13 +154,19 @@ export const financeResolvers = {
     },
     potentialPodEarnings: async (
       _p: unknown,
-      args: { amount: number; venue_id?: string | null; venue_amount?: number | null },
+      args: {
+        pod_amount: number;
+        no_of_spots: number;
+        venue_id?: string | null;
+        venue_amount?: number | null;
+      },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
       return breakdownService.potentialPodEarnings(
         user.id,
-        args.amount,
+        args.pod_amount,
+        args.no_of_spots,
         args.venue_id ?? null,
         args.venue_amount ?? null
       );

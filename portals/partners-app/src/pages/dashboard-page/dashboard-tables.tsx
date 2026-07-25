@@ -2,7 +2,7 @@ import { Box, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import type { DuncitColumn } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
-import { formatINR } from '@duncit/utils';
+import { formatINR, payingAttendees } from '@duncit/utils';
 
 /* Column sets + row shapes for the three "Partner performance" tab tables.
  * Everything here is prop-independent, so it lives at module scope. */
@@ -24,6 +24,7 @@ export interface DashboardHostPodRow {
   pod_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
+  pod_hosts_id?: string[] | null;
   is_active: boolean;
   completed_at?: string | null;
 }
@@ -131,7 +132,8 @@ export const DASHBOARD_HOST_POD_COLUMNS: DuncitColumn<DashboardHostPodRow>[] = [
     headerName: 'Pod earning',
     sortable: false,
     width: 130,
-    valueGetter: (pod) => formatINR(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0)),
+    valueGetter: (pod) =>
+      formatINR(Number(pod.pod_amount ?? 0) * payingAttendees(pod.pod_attendees, pod.pod_hosts_id)),
   },
   {
     field: 'pod_amount',

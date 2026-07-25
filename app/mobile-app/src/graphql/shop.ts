@@ -12,7 +12,7 @@ export const ShopProductsDocument = gql(`
       image_url
       images
       unit_cost
-      available_count
+      pod_available_count
       category_id
       super_category_id
       sub_category_id

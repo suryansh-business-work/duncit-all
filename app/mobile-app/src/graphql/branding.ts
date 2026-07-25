@@ -24,6 +24,7 @@ export const BrandingDocument = gql(`
         width
         height
       }
+      home_show_all_vibe_categories
       home_header_tagline
     }
   }

@@ -91,6 +91,42 @@ describe('inventoryService integration', () => {
     expect(await inventoryService.podsForProduct(new Types.ObjectId().toString())).toEqual([]);
   });
 
+  it('listAvailablePodProducts reports live pod availability so the shop can flag out-of-stock', async () => {
+    const approved = {
+      is_active: true,
+      status: 'ACTIVE',
+      pod_available: true,
+      listing_review_status: 'APPROVED',
+    };
+    const inPodId = new Types.ObjectId();
+    const soldOutId = new Types.ObjectId();
+    const noPodId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertMany([
+      { _id: inPodId, product_name: 'In Pod', sku: 'INP', inventory_count: 0, ...approved },
+      { _id: soldOutId, product_name: 'Sold Out', sku: 'SLD', inventory_count: 50, ...approved },
+      { _id: noPodId, product_name: 'No Pod', sku: 'NOP', inventory_count: 50, ...approved },
+    ] as never);
+    await PodModel.collection.insertOne({
+      _id: new Types.ObjectId(),
+      products_enabled: true,
+      is_active: true,
+      venue_approval_status: 'NONE',
+      pod_date_time: new Date(Date.now() + 86_400_000),
+      product_requests: [
+        { product_id: inPodId, quantity: 8, sold_count: 3 }, // 5 available
+        { product_id: soldOutId, quantity: 4, sold_count: 4 }, // exhausted → 0
+      ],
+    } as never);
+
+    const list = await inventoryService.listAvailablePodProducts();
+    const byName = new Map(list.map((p) => [p.product_name, p.pod_available_count]));
+    // Live pod stock counts even when the catalogue inventory is 0.
+    expect(byName.get('In Pod')).toBe(5);
+    // Exhausted pod stock and products with no live pod are out of stock.
+    expect(byName.get('Sold Out')).toBe(0);
+    expect(byName.get('No Pod')).toBe(0);
+  });
+
   it('exposes podsForProduct to any signed-in buyer (resolver auth passes)', async () => {
     const result = await (inventoryResolvers.Query as any).podsForProduct(
       {},

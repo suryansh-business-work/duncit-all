@@ -13,10 +13,19 @@ import {
   SETTLEMENT_ENGINE_VERSION,
   type SettlementWaterfall,
 } from './settlement.service';
+import { payableSpots } from './breakdown.math';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 
 export type SettlementStatus = 'LIVE' | 'PENDING_APPROVAL' | 'SETTLED';
+
+/** Create-a-Pod earnings projection: what the host would take home if every
+ * PAYABLE spot sells. The host's own seat is free, so payable = total - 1. */
+export interface PodEarningsProjection {
+  total_spots: number;
+  payable_spots: number;
+  waterfall: SettlementWaterfall;
+}
 
 export interface PodFinanceBreakdownView {
   pod_id: string;
@@ -204,17 +213,23 @@ export const breakdownService = {
     return String(venue?.owner_user_id ?? '') === userId;
   },
 
-  /** Potential earnings for a hypothetical GST-inclusive price — the create-pod
-   * preview. Uses the calling host's effective rates (+ the chosen venue's
-   * commission); venue_amount is the picked slot's price (Partners portal). */
+  /** Potential earnings for the create-pod preview. `podAmount` is the
+   * GST-inclusive ticket price PER SPOT; the pod is billed on payable spots
+   * (total - 1) because the host's own seat is free. Uses the calling host's
+   * effective rates (+ the chosen venue's commission); venueAmount is the picked
+   * slot's price (Partners portal). */
   async potentialPodEarnings(
     hostUserId: string,
-    amount: number,
+    podAmount: number,
+    noOfSpots: number,
     venueId?: string | null,
     venueAmount?: number | null
-  ): Promise<SettlementWaterfall> {
-    if (!Number.isFinite(amount) || amount < 0) {
+  ): Promise<PodEarningsProjection> {
+    if (!Number.isFinite(podAmount) || podAmount < 0) {
       throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (!Number.isFinite(noOfSpots) || noOfSpots < 0) {
+      throw new GraphQLError('Spots must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const venuePrice = venueAmount ?? 0;
     if (!Number.isFinite(venuePrice) || venuePrice < 0) {
@@ -224,7 +239,14 @@ export const breakdownService = {
       throw new GraphQLError('Invalid venue', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
-    return waterfallForAmount(amount, venueId ? venuePrice : 0, rates);
+    // The host's spot is free — only (total - 1) spots are ever billed.
+    const billable = payableSpots(noOfSpots);
+    const amount = round2(podAmount * billable);
+    return {
+      total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
+      payable_spots: billable,
+      waterfall: waterfallForAmount(amount, venueId ? venuePrice : 0, rates),
+    };
   },
 
   /** Host Studio dashboard summary — lifetime/pending/this-month payout totals

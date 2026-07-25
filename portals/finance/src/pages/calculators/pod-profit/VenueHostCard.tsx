@@ -43,6 +43,13 @@ export default function VenueHostCard({ inputs, onChange }: Readonly<Props>) {
             max={50}
             hint="Default deduction Duncit takes from the host's amount."
           />
+          <PercentSlider
+            label="Club admin cut — Duncit income"
+            value={inputs.club_admin_percent}
+            onChange={(value) => onChange('club_admin_percent', value)}
+            max={50}
+            hint="Taken off the pool after GST + platform fee, before the venue/host split. Applies to club pods."
+          />
         </Stack>
       </CardContent>
     </Card>

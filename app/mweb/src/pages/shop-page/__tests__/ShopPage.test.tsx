@@ -22,7 +22,7 @@ const product = (over: Record<string, unknown>) => ({
   image_url: null,
   images: [],
   unit_cost: 10,
-  available_count: 5,
+  pod_available_count: 5,
   category_id: null,
   super_category_id: null,
   sub_category_id: null,

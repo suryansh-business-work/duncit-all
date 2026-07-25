@@ -92,9 +92,14 @@ export default function ResultsCard({ results }: Readonly<Props>) {
 
         <SectionLabel text="Collection" />
         <Row
+          label="Payable spots"
+          value={`${results.payable_spots} of ${results.total_spots}`}
+          detail="The host's spot is free — the calculation is based on total spots − 1"
+        />
+        <Row
           label="Total collection"
           value={formatRupees(results.collection_total)}
-          detail="Ticket price × no. of spots — the amount the waterfall runs on"
+          detail={`Ticket price × ${results.payable_spots} payable spots — the amount the waterfall runs on`}
         />
 
         <Divider sx={{ my: 1 }} />
@@ -102,6 +107,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
         <Row label="Platform fee" value={formatRupees(results.platform_fee_amount)} emphasis="primary" />
         <Row label="Venue commission" value={formatRupees(results.venue_commission_amount)} emphasis="primary" />
         <Row label="Host commission" value={formatRupees(results.host_commission_amount)} emphasis="primary" />
+        <Row label="Club admin cut" value={formatRupees(results.club_admin_amount)} emphasis="primary" />
 
         <Divider sx={{ my: 1 }} />
         <SectionLabel text="Payouts" />

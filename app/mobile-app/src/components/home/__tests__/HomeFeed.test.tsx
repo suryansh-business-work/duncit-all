@@ -11,7 +11,9 @@ let mockAds: unknown[] = [];
 jest.mock('@/hooks/useActiveAds', () => ({
   useActiveAds: () => ({ ads: mockAds, loading: false }),
 }));
-let mockBrandingData: { branding: { home_all_vibe_icon_url: string } } | null = {
+let mockBrandingData: {
+  branding: { home_all_vibe_icon_url: string; home_show_all_vibe_categories?: boolean };
+} | null = {
   branding: { home_all_vibe_icon_url: 'https://cdn.duncit/all.png' },
 };
 jest.mock('@/hooks/useBranding', () => ({ useBranding: () => ({ data: mockBrandingData }) }));
@@ -132,6 +134,17 @@ describe('HomeFeed', () => {
   it('hides the create-pod FAB for non-hosts', () => {
     renderWithProviders(<HomeFeed />);
     expect(screen.queryByTestId('home-create-pod-fab')).toBeNull();
+  });
+
+  it('reads the show-all-vibe-categories branding flag when the admin enabled it', () => {
+    mockBrandingData = {
+      branding: {
+        home_all_vibe_icon_url: 'https://cdn.duncit/all.png',
+        home_show_all_vibe_categories: true,
+      },
+    };
+    renderWithProviders(<HomeFeed />);
+    expect(screen.getByTestId('home-feed')).toBeOnTheScreen();
   });
 
   it('shows the skeleton on first load', () => {

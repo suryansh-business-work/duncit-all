@@ -175,6 +175,7 @@ const brandingToPub = (doc: any) => ({
   ios_app_url: doc.ios_app_url ?? "",
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   home_all_vibe_icon_layout: vibeIconLayoutToPub(doc.home_all_vibe_icon_layout),
+  home_show_all_vibe_categories: !!doc.home_show_all_vibe_categories,
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   app_latest_version: doc.app_latest_version ?? "",
   pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({
@@ -455,6 +456,7 @@ export const settingsService = {
         width?: number | null;
         height?: number | null;
       } | null;
+      home_show_all_vibe_categories?: boolean;
     },
   ) {
     const update: any = {};
@@ -465,6 +467,10 @@ export const settingsService = {
     // it (default position, clamp size) before storing; null clears it.
     if (input.home_all_vibe_icon_layout !== undefined) {
       update.home_all_vibe_icon_layout = normalizeVibeIconLayout(input.home_all_vibe_icon_layout);
+    }
+    // Boolean toggle can't ride the string-typed BRANDING_FIELDS loop.
+    if (input.home_show_all_vibe_categories !== undefined) {
+      update.home_show_all_vibe_categories = !!input.home_show_all_vibe_categories;
     }
     const doc = await BrandingModel.findOneAndUpdate(
       { singleton_key: "branding" },

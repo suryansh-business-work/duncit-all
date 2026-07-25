@@ -1,9 +1,12 @@
 import { Box, Typography } from '@mui/material';
+import { payableSpots } from '@duncit/utils';
 
 interface Props {
   amount: number;
   finance: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
   productCost?: number;
+  /** TOTAL spots (capacity). The host's seat is free, so the product cost is
+   * recovered from the payable spots only — see payableSpots. */
   spots?: number;
 }
 
@@ -17,7 +20,10 @@ export default function PriceBreakdown({ amount, finance, productCost = 0, spots
   const net = divisor > 0 ? gross / divisor : gross;
   const fee = net * f;
   const gst = (net + fee) * g;
-  const productShare = productCost > 0 && spots > 0 ? productCost / spots : productCost;
+  // The host's spot is free, so the product cost is spread over the spots that
+  // actually pay (total - 1), never the raw capacity.
+  const billable = payableSpots(spots);
+  const productShare = productCost > 0 && billable > 0 ? productCost / billable : productCost;
   const finalPayout = Math.max(net - productShare, 0);
   const r = (n: number) => n.toFixed(2);
   return (
@@ -51,7 +57,7 @@ export default function PriceBreakdown({ amount, finance, productCost = 0, spots
         <Typography variant="body2" fontWeight={700}>{cur}{r(net)}</Typography>
       </Box>
       <Box>
-        <Typography variant="caption" color="text.secondary">Product cost / spot</Typography>
+        <Typography variant="caption" color="text.secondary">Product cost / payable spot</Typography>
         <Typography variant="body2">{cur}{r(productShare)}</Typography>
       </Box>
       <Box>
@@ -59,7 +65,8 @@ export default function PriceBreakdown({ amount, finance, productCost = 0, spots
         <Typography variant="body2" fontWeight={700} color="primary.main">{cur}{r(finalPayout)}</Typography>
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ gridColumn: '1 / -1' }}>
-        Duncit product cost is divided across spots when spot count is available, then deducted from payout.
+        Duncit product cost is divided across the PAYABLE spots (total − 1, since the host&apos;s spot is
+        free) when a spot count is available, then deducted from payout.
       </Typography>
     </Box>
   );

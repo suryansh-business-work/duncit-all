@@ -36,7 +36,7 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
             value={inputs.no_of_spots}
             onChange={(e) => onChange('no_of_spots', Math.max(0, Math.round(Number(e.target.value))))}
             inputProps={{ min: 0, step: 1 }}
-            helperText="Pod capacity — for physical pods this is the venue space's available spots. The waterfall runs on ticket × spots."
+            helperText="Pod capacity including the host's own seat — for physical pods this is the venue space's available spots. The host's spot is free, so the waterfall runs on ticket × (spots − 1)."
             fullWidth
           />
           <PercentSlider

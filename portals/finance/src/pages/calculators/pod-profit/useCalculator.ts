@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { payableSpots } from '@duncit/utils';
 import type { PodProfitInputs, PodProfitResults } from './types';
 
 const toPaise = (rupees: number) => Math.round(Math.max(0, rupees) * 100);
@@ -10,9 +11,11 @@ const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
  * (`server/src/modules/finance/finance/breakdown.math.ts`) so the estimate
  * always agrees with real pod payouts.
  *
- * The waterfall runs on the FULL collection (ticket price × no. of spots, both
- * GST-inclusive) — exactly how a pod settles: GST is extracted from the
- * collection (`P × g/(100+g)`); the platform fee applies to the net; the venue
+ * The waterfall runs on the FULL collection (ticket price × PAYABLE spots, both
+ * GST-inclusive). The host's own spot is free — they are added to the pod's
+ * attendees on create and never pay — so a 30-spot pod only ever bills 29
+ * guests. GST is extracted from the collection (`P × g/(100+g)`); the platform
+ * fee applies to the net; the venue
  * takes its fixed booked slot price out of the remaining pool ONCE per pod
  * (clamped so the host can never go negative); the host keeps the remainder.
  * Duncit's commission comes out of each side, and duncit_revenue = platform
@@ -23,32 +26,44 @@ const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
  */
 export function useCalculator(inputs: PodProfitInputs): PodProfitResults {
   return useMemo(() => {
-    const spots = Math.max(0, Math.round(inputs.no_of_spots));
+    const totalSpots = Math.max(0, Math.round(inputs.no_of_spots));
+    // The host's spot is free — only (total - 1) spots are ever billed.
+    const spots = payableSpots(totalSpots);
     const amount = toPaise(inputs.pod_amount) * spots;
     const gstPct = clampPercent(inputs.gst_percent);
     const feePct = clampPercent(inputs.platform_fee_percent);
     const hostPct = clampPercent(inputs.host_commission_percent);
     const venuePct = clampPercent(inputs.venue_commission_percent);
 
+    const clubAdminPct = clampPercent(inputs.club_admin_percent);
+
     const gst = Math.round((amount * gstPct) / (100 + gstPct));
     const net = amount - gst;
     const fee = Math.round((net * feePct) / 100);
     const pool = net - fee;
-    const venueAmount = Math.min(toPaise(inputs.venue_amount), pool);
-    const hostAmount = pool - venueAmount;
+    // The club-admin cut comes off the pool right after GST + platform fee
+    // (before the venue/host split) and becomes Duncit revenue — mirrors
+    // breakdown.math.ts. Clamped to the pool so nothing downstream goes negative.
+    const clubAdmin = Math.min(pool, Math.round((pool * clubAdminPct) / 100));
+    const splitPool = pool - clubAdmin;
+    const venueAmount = Math.min(toPaise(inputs.venue_amount), splitPool);
+    const hostAmount = splitPool - venueAmount;
     const venueCommission = Math.round((venueAmount * venuePct) / 100);
     const hostCommission = Math.round((hostAmount * hostPct) / 100);
     const venueReceives = venueAmount - venueCommission;
     const hostReceives = hostAmount - hostCommission;
-    const duncitRevenue = fee + hostCommission + venueCommission;
+    const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;
     const hostEarn = amount === 0 ? 0 : Math.round((hostReceives / amount) * 10000) / 100;
 
     return {
+      total_spots: totalSpots,
+      payable_spots: spots,
       collection_total: toRupees(amount),
       gst_amount: toRupees(gst),
       net_amount: toRupees(net),
       platform_fee_amount: toRupees(fee),
       pool_amount: toRupees(pool),
+      club_admin_amount: toRupees(clubAdmin),
       venue_amount: toRupees(venueAmount),
       venue_commission_amount: toRupees(venueCommission),
       venue_receives: toRupees(venueReceives),

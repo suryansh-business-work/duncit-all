@@ -125,6 +125,10 @@ export interface IBranding extends Document {
   // Icon placement (TOP/BOTTOM/LEFT/RIGHT relative to the label) + size for the
   // "All" tab. null → the default TOP / 40×40 look on each client.
   home_all_vibe_icon_layout?: { position: string; width: number; height: number } | null;
+  // When true, the home "What's your vibe" tabber shows EVERY category (with its
+  // icon) even ones with no pods yet; false (default) shows only categories that
+  // currently have pods. mWeb + mobile.
+  home_show_all_vibe_categories: boolean;
   // Tagline shown in the home header, above the location (mWeb + mobile).
   home_header_tagline: string;
   // Latest released mobile app version (semver, e.g. "1.2.3"). Auto-synced on
@@ -216,6 +220,7 @@ const brandingSchema = new Schema<IBranding>(
     ios_app_url: { type: String, default: "" },
     home_all_vibe_icon_url: { type: String, default: "" },
     home_all_vibe_icon_layout: { type: homeAllVibeIconLayoutSchema, default: null },
+    home_show_all_vibe_categories: { type: Boolean, default: false },
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
     pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },

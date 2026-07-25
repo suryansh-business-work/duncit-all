@@ -3,9 +3,12 @@ import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Button,
+  Divider,
+  FormControlLabel,
   Paper,
   Snackbar,
   Stack,
+  Switch,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -38,9 +41,11 @@ export default function AllVibeIconCard() {
 
   const savedIcon: string = data?.branding?.home_all_vibe_icon_url ?? '';
   const savedLayout: Layout | null = data?.branding?.home_all_vibe_icon_layout ?? null;
+  const savedShowAll: boolean = data?.branding?.home_show_all_vibe_categories ?? false;
 
   const [value, setValue] = useState('');
   const [layout, setLayout] = useState<Layout>(DEFAULT_LAYOUT);
+  const [showAll, setShowAll] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
@@ -48,10 +53,12 @@ export default function AllVibeIconCard() {
   useEffect(() => {
     setValue(savedIcon);
     setLayout(savedLayout ?? DEFAULT_LAYOUT);
-  }, [savedIcon, savedLayout]);
+    setShowAll(savedShowAll);
+  }, [savedIcon, savedLayout, savedShowAll]);
 
   const dirty =
     value !== savedIcon ||
+    showAll !== savedShowAll ||
     JSON.stringify(layout) !== JSON.stringify(savedLayout ?? DEFAULT_LAYOUT);
 
   const save = async () => {
@@ -62,6 +69,7 @@ export default function AllVibeIconCard() {
         variables: {
           input: {
             home_all_vibe_icon_url: value,
+            home_show_all_vibe_categories: showAll,
             // Pick only the input fields — the layout loaded from the query
             // carries Apollo's __typename, which CategoryIconLayoutInput rejects.
             home_all_vibe_icon_layout: {
@@ -138,6 +146,22 @@ export default function AllVibeIconCard() {
             sx={{ maxWidth: 140 }}
           />
         </Stack>
+      </Stack>
+
+      <Divider sx={{ my: 2 }} />
+
+      <Stack spacing={0.5}>
+        <Typography variant="subtitle2">Home page settings</Typography>
+        <FormControlLabel
+          control={
+            <Switch checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
+          }
+          label="Show all categories on Home"
+        />
+        <Typography variant="caption" color="text.secondary">
+          On: the home &quot;What&apos;s your vibe&quot; tabber shows every category (with its icon),
+          even ones with no pods yet. Off: only categories that currently have pods are shown.
+        </Typography>
       </Stack>
 
       {opError && (

@@ -1,5 +1,6 @@
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import { payableSpots } from '@duncit/utils';
 import PriceBreakdown from '../components/PriceBreakdown';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
@@ -23,6 +24,11 @@ export default function PaymentSection() {
     ? getProductRequestTotal(productRequests, products)
     : 0;
   const amountHint = isFree ? 'Free pod — amount must be 0' : 'GROSS price (incl. fee + GST). 0 – 1999.';
+  // The host takes one spot for free, so only (total - 1) spots are ever billed.
+  const billableSpots = payableSpots(Number(noOfSpots) || 0);
+  const spotsHint = isFree
+    ? 'Total spots, including the host’s own seat.'
+    : `The host’s spot is free — the calculation is based on total spots − 1 (${Number(noOfSpots) || 0} − 1 = ${billableSpots}).`;
 
   return (
     <Stack spacing={2}>
@@ -73,7 +79,7 @@ export default function PaymentSection() {
           inputProps={{ min: 0 }}
           fullWidth
           error={!!errors.no_of_spots}
-          helperText={errors.no_of_spots?.message}
+          helperText={errors.no_of_spots?.message ?? spotsHint}
         />
         {config.showIsActive && isEdit && (
           <Stack direction="row" alignItems="center" spacing={1} sx={{ pt: 1, flexShrink: 0 }}>

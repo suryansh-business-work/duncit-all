@@ -233,10 +233,36 @@ describe('breakdownService.canViewPodBreakdown', () => {
 });
 
 describe('breakdownService.potentialPodEarnings', () => {
+  it('bills payable spots (total - 1) because the host seat is free', async () => {
+    const host = await seedHost();
+    // 30 spots at ₹1,000 bills 29 guests — the host's own seat is free.
+    const p = await breakdownService.potentialPodEarnings(String(host._id), 1000, 30);
+    expect(p.total_spots).toBe(30);
+    expect(p.payable_spots).toBe(29);
+    expect(p.waterfall.amount).toBe(29000);
+
+    // A 1-spot pod is host-only: nothing is billable.
+    const solo = await breakdownService.potentialPodEarnings(String(host._id), 1000, 1);
+    expect(solo.payable_spots).toBe(0);
+    expect(solo.waterfall.amount).toBe(0);
+
+    // 0 spots means unlimited/unset — never bill -1.
+    const unset = await breakdownService.potentialPodEarnings(String(host._id), 1000, 0);
+    expect(unset.payable_spots).toBe(0);
+    expect(unset.waterfall.amount).toBe(0);
+  });
+
   it('previews the waterfall with commission overrides and the picked slot price', async () => {
     const host = await seedHost(20); // 20% host commission override
     const venue = await seedVenue(host._id, 5); // 5% venue commission override
-    const w = await breakdownService.potentialPodEarnings(String(host._id), 1000, String(venue._id), 300);
+    // 2 spots → 1 payable → ₹1,000 gross.
+    const { waterfall: w } = await breakdownService.potentialPodEarnings(
+      String(host._id),
+      1000,
+      2,
+      String(venue._id),
+      300
+    );
     expect(w.host_commission_pct).toBe(20);
     expect(w.venue_commission_pct).toBe(5);
     expect(w.venue_amount).toBe(300);
@@ -253,7 +279,13 @@ describe('breakdownService.potentialPodEarnings', () => {
       { $set: { default_club_admin_pct: 10 } },
       { upsert: true }
     );
-    const w = await breakdownService.potentialPodEarnings(String(host._id), 1000, null, 0);
+    const { waterfall: w } = await breakdownService.potentialPodEarnings(
+      String(host._id),
+      1000,
+      2,
+      null,
+      0
+    );
     expect(w.club_admin_pct).toBe(10);
     expect(w.club_admin_amount).toBe(80.51); // pool 805.09 × 10%, off the top
     expect(w.host_amount).toBe(724.58); // pool − club admin (no venue)
@@ -267,21 +299,30 @@ describe('breakdownService.potentialPodEarnings', () => {
 
   it('uses defaults with no venue (venue amount ignored) and rejects bad input', async () => {
     const host = await seedHost();
-    const w = await breakdownService.potentialPodEarnings(String(host._id), 1000, null, 300);
+    const { waterfall: w } = await breakdownService.potentialPodEarnings(
+      String(host._id),
+      1000,
+      2,
+      null,
+      300
+    );
     expect(w.venue_amount).toBe(0); // no venue → no venue money
     expect(w.host_amount).toBe(805.09); // whole pool
     expect(w.host_receives).toBe(724.58);
-    await expect(breakdownService.potentialPodEarnings(String(host._id), -5)).rejects.toThrow(
+    await expect(breakdownService.potentialPodEarnings(String(host._id), -5, 2)).rejects.toThrow(
       /amount/i
     );
     await expect(
-      breakdownService.potentialPodEarnings(String(host._id), Number.NaN)
+      breakdownService.potentialPodEarnings(String(host._id), Number.NaN, 2)
     ).rejects.toThrow(/amount/i);
+    await expect(breakdownService.potentialPodEarnings(String(host._id), 1000, -1)).rejects.toThrow(
+      /spots/i
+    );
     await expect(
-      breakdownService.potentialPodEarnings(String(host._id), 1000, 'bad-id')
+      breakdownService.potentialPodEarnings(String(host._id), 1000, 2, 'bad-id')
     ).rejects.toThrow(/invalid venue/i);
     await expect(
-      breakdownService.potentialPodEarnings(String(host._id), 1000, null, -1)
+      breakdownService.potentialPodEarnings(String(host._id), 1000, 2, null, -1)
     ).rejects.toThrow(/venue amount/i);
   });
 });
@@ -356,8 +397,10 @@ describe('finance resolvers (new breakdown surface)', () => {
   it('potentialPodEarnings + summaries + venue payouts resolve for the signed-in user', async () => {
     const host = await seedHost();
     const ctx = makeContext({ id: String(host._id), roles: ['USER'] });
-    const w = await Q.potentialPodEarnings({}, { amount: 1000 }, ctx);
-    expect(w.host_receives).toBe(724.58); // no venue → whole pool − 10%
+    // 2 spots → 1 payable (host's seat is free) → ₹1,000 gross.
+    const p = await Q.potentialPodEarnings({}, { pod_amount: 1000, no_of_spots: 2 }, ctx);
+    expect(p.payable_spots).toBe(1);
+    expect(p.waterfall.host_receives).toBe(724.58); // no venue → whole pool − 10%
 
     expect((await Q.myHostEarningsSummary({}, {}, ctx)).lifetime_earnings).toBe(0);
     expect((await Q.myVenueEarningsSummary({}, {}, ctx)).lifetime_earnings).toBe(0);

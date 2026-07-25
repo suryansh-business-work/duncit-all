@@ -1,10 +1,11 @@
 export interface PodProfitInputs {
   /** Ticket price paid per spot, GST-inclusive (₹). */
   pod_amount: number;
-  /** Number of spots (pod capacity). Mirrors Pod.no_of_spots — for physical
-   * pods this comes from the venue space's capacity, not a separate entry. The
-   * waterfall runs on pod_amount × spots so the venue's fixed slot price is
-   * counted once for the whole pod. */
+  /** Number of spots (pod capacity, INCLUDING the host's own seat). Mirrors
+   * Pod.no_of_spots — for physical pods this comes from the venue space's
+   * capacity, not a separate entry. The waterfall runs on pod_amount × PAYABLE
+   * spots (total − 1, because the host's spot is free) so the venue's fixed slot
+   * price is counted once for the whole pod. */
   no_of_spots: number;
   /** GST % extracted from the GST-inclusive pod amount. */
   gst_percent: number;
@@ -16,15 +17,24 @@ export interface PodProfitInputs {
   host_commission_percent: number;
   /** Duncit commission % taken from the venue's amount (default deduction). */
   venue_commission_percent: number;
+  /** Club-admin cut % off the pool (after GST + platform fee, before the
+   * venue/host split). Becomes Duncit revenue — mirrors breakdown.math.ts. */
+  club_admin_percent: number;
 }
 
 export interface PodProfitResults {
-  /** Total collection = ticket price × spots (the amount the waterfall runs on). */
+  /** Spots entered (capacity, including the host's own free seat). */
+  total_spots: number;
+  /** Spots actually billed: total − 1, because the host's spot is free. */
+  payable_spots: number;
+  /** Total collection = ticket price × PAYABLE spots (what the waterfall runs on). */
   collection_total: number;
   gst_amount: number;
   net_amount: number;
   platform_fee_amount: number;
   pool_amount: number;
+  /** Club-admin cut off the pool — folded into duncit_revenue_total. */
+  club_admin_amount: number;
   /** The venue's fixed slot price, clamped to the pool. */
   venue_amount: number;
   venue_commission_amount: number;
@@ -49,6 +59,7 @@ export const DEFAULT_INPUTS: PodProfitInputs = {
   venue_amount: 400,
   host_commission_percent: 10,
   venue_commission_percent: 10,
+  club_admin_percent: 0,
 };
 
 export const formatRupees = (value: number): string =>

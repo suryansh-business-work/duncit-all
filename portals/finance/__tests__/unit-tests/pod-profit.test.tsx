@@ -22,11 +22,52 @@ describe('pod-profit types', () => {
 describe('useCalculator', () => {
   const calc = (inputs: PodProfitInputs) => renderHook(() => useCalculator(inputs)).result.current;
 
-  it('runs the full waterfall for the defaults', () => {
+  it('runs the full waterfall for the defaults, billing payable spots only', () => {
     const r = calc(DEFAULT_INPUTS);
-    expect(r.collection_total).toBe(30000);
+    // The host's own spot is free: 30 spots bill 29 guests (₹1,000 × 29).
+    expect(r.total_spots).toBe(30);
+    expect(r.payable_spots).toBe(29);
+    expect(r.collection_total).toBe(29000);
     expect(r.reconciled_total).toBeCloseTo(r.collection_total, 1);
     expect(r.host_earn_percent).toBeGreaterThan(0);
+  });
+
+  it('bills nothing for a host-only pod and never goes negative on 0 spots', () => {
+    const solo = calc({ ...DEFAULT_INPUTS, no_of_spots: 1 });
+    expect(solo.payable_spots).toBe(0);
+    expect(solo.collection_total).toBe(0);
+
+    const unset = calc({ ...DEFAULT_INPUTS, no_of_spots: 0 });
+    expect(unset.payable_spots).toBe(0);
+    expect(unset.collection_total).toBe(0);
+  });
+
+  it('takes the club-admin cut off the pool and folds it into Duncit revenue', () => {
+    // Mirrors server breakdown.math.ts: GST -> platform fee -> club admin ->
+    // venue slot price -> host remainder. Numbers match the server integration
+    // test (₹1,000 gross, 18% GST, 5% fee, 10% club admin, no venue).
+    const r = calc({
+      ...DEFAULT_INPUTS,
+      pod_amount: 1000,
+      no_of_spots: 2, // 1 payable spot -> ₹1,000 gross
+      venue_amount: 0,
+      club_admin_percent: 10,
+      host_commission_percent: 10,
+    });
+    expect(r.collection_total).toBe(1000);
+    expect(r.club_admin_amount).toBe(80.51); // pool 805.09 x 10%
+    expect(r.host_amount).toBe(724.58); // pool - club admin (no venue)
+    expect(r.host_receives).toBe(652.12); // - 10% host commission
+    expect(r.duncit_revenue_total).toBe(195.34); // fee 42.37 + host comm 72.46 + club admin 80.51
+    expect(r.reconciled_total).toBeCloseTo(1000, 2);
+  });
+
+  it('clamps the club-admin cut to the pool so nothing downstream goes negative', () => {
+    const r = calc({ ...DEFAULT_INPUTS, club_admin_percent: 100, venue_amount: 500 });
+    expect(r.club_admin_amount).toBe(r.pool_amount);
+    expect(r.venue_amount).toBe(0);
+    expect(r.host_amount).toBe(0);
+    expect(r.host_receives).toBe(0);
   });
 
   it('returns zeroed host-earn when the collection is zero', () => {

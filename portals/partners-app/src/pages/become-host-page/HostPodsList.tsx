@@ -2,7 +2,7 @@ import { useApolloClient } from '@apollo/client';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
-import { formatINR } from '@duncit/utils';
+import { formatINR, payingAttendees } from '@duncit/utils';
 import { MY_HOST_PODS_TABLE, type PartnerPodRow } from '../pods-page/queries';
 
 function podStatusLabel(pod: PartnerPodRow) {
@@ -25,8 +25,9 @@ const renderStatus = (pod: PartnerPodRow) => (
   <Chip size="small" label={podStatusLabel(pod)} color={podStatusColor(pod)} />
 );
 
+// Hosts sit in pod_attendees but never pay — drop them before earning math.
 const earningValue = (pod: PartnerPodRow) =>
-  formatINR(Number(pod.pod_amount ?? 0) * (pod.pod_attendees?.length ?? 0));
+  formatINR(Number(pod.pod_amount ?? 0) * payingAttendees(pod.pod_attendees, pod.pod_hosts_id));
 
 const COLUMNS: DuncitColumn<PartnerPodRow>[] = [
   {

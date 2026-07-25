@@ -11,7 +11,7 @@ export const SHOP_PRODUCTS = gql`
       image_url
       images
       unit_cost
-      available_count
+      pod_available_count
       category_id
       super_category_id
       sub_category_id
@@ -36,7 +36,7 @@ export interface ShopProduct {
   image_url?: string | null;
   images: string[];
   unit_cost: number;
-  available_count: number;
+  pod_available_count: number;
   category_id?: string | null;
   super_category_id?: string | null;
   sub_category_id?: string | null;

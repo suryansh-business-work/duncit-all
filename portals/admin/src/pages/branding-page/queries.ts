@@ -37,6 +37,44 @@ export const BRANDING_FIELDS = `
   updated_at
 `;
 
+export const OCCASIONAL_ICON_FIELDS = `
+  slug
+  label
+  starts_at
+  ends_at
+  icon_url
+  is_active
+  sort_order
+`;
+
+export const OCCASIONAL_ICONS = gql`
+  query OccasionalIcons {
+    branding {
+      occasional_icons {
+        ${OCCASIONAL_ICON_FIELDS}
+      }
+    }
+  }
+`;
+
+export const UPDATE_OCCASIONAL_ICONS = gql`
+  mutation UpdateOccasionalIcons($input: [OccasionalIconInput!]!) {
+    updateOccasionalIcons(input: $input) {
+      ${OCCASIONAL_ICON_FIELDS}
+    }
+  }
+`;
+
+export interface OccasionalIconRow {
+  slug: string;
+  label: string;
+  starts_at: string;
+  ends_at: string;
+  icon_url: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 export const BRANDING = gql`
   query Branding {
     branding {

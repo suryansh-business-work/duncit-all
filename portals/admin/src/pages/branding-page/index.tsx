@@ -19,6 +19,7 @@ import IdentitySection from './IdentitySection';
 import PlatformAssetsSection from './PlatformAssetsSection';
 import WebsiteAssetsSection from './WebsiteAssetsSection';
 import FontsSection from './FontsSection';
+import OccasionalIconsSection from './OccasionalIconsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
 import { BRANDING, UPDATE_BRANDING, emptyBrandingForm, type BrandingFormState } from './queries';
 
@@ -128,6 +129,13 @@ export default function BrandingPage() {
           subtitle="Header logo, footer logo, favicon + app-store links for duncit.com and its subsites."
         >
           <WebsiteAssetsSection form={form} setForm={setForm} />
+        </BrandingAccordion>
+
+        <BrandingAccordion
+          title="Occasional Icons"
+          subtitle="Festive icon windows that swap the apps’ icons by date — has its own Save."
+        >
+          <OccasionalIconsSection />
         </BrandingAccordion>
 
         <BrandingAccordion

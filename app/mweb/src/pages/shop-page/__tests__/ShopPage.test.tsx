@@ -22,6 +22,7 @@ const product = (over: Record<string, unknown>) => ({
   image_url: null,
   images: [],
   unit_cost: 10,
+  available_count: 5,
   category_id: null,
   super_category_id: null,
   sub_category_id: null,
@@ -119,6 +120,7 @@ describe('ShopPage', () => {
   it('filters by category chip selection', async () => {
     renderPage();
     await screen.findByText('Banana');
+    fireEvent.click(screen.getByLabelText('Filters'));
     fireEvent.click(screen.getByRole('button', { name: 'Sports' }));
     await waitFor(() => expect(screen.queryByText('Apple')).not.toBeInTheDocument());
     expect(screen.getByText('Banana')).toBeInTheDocument();
@@ -128,6 +130,7 @@ describe('ShopPage', () => {
   it('re-sorts by price ascending and descending', async () => {
     renderPage();
     await screen.findByText('Banana');
+    fireEvent.click(screen.getByLabelText('Filters'));
     const combo = screen.getByRole('combobox');
     fireEvent.mouseDown(combo);
     fireEvent.click(await screen.findByText('Price: low to high'));

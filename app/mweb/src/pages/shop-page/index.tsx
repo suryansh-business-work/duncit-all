@@ -1,34 +1,19 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  InputAdornment,
-  MenuItem,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
-import ClubCategoryChips from '../clubs-page/ClubCategoryChips';
 import { useSearchCategories } from '../search-page/useSearchDiscovery';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { usePricing } from '../../hooks/usePricing';
 import PodShopSlider from './PodShopSlider';
 import ShopProductCard from './ShopProductCard';
+import ShopHeaderCart from './ShopHeaderCart';
+import ShopFilterBar from './ShopFilterBar';
 import { useQuickAddToCart } from './useQuickAddToCart';
-import {
-  SHOP_PRODUCTS,
-  SHOP_SORT_OPTIONS,
-  sortShopProducts,
-  type ShopProduct,
-  type ShopSort,
-} from './queries';
+import { SHOP_PRODUCTS, sortShopProducts, type ShopProduct, type ShopSort } from './queries';
 
 const TRUST_ITEMS = [
   { Icon: VerifiedUserRoundedIcon, title: 'Trusted Pods', caption: 'Quality Products' },
@@ -62,8 +47,9 @@ function TrustBar() {
 }
 
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
- * products with category chips, debounced search and sorting. Tapping a product
- * opens its detail page; purchases happen through a pod's shop. */
+ * products with a filter button (category + sort), debounced search and a header
+ * cart. Tapping a product opens its detail page; purchases happen through a
+ * pod's shop. */
 export default function ShopPage() {
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
@@ -114,52 +100,21 @@ export default function ShopPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
-      <Box>
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
           Pod Shop
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
-          Discover. Support. Shop Pods
-        </Typography>
-      </Box>
-      <PodShopSlider />
-      <Stack direction="row" spacing={1} alignItems="center">
-        <TextField
-          size="small"
-          placeholder="Search products or brands…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            flex: 1,
-            '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' },
-          }}
-        />
-        <TextField
-          select
-          size="small"
-          label="Sort"
-          value={sort}
-          onChange={(e) => setSort(e.target.value as ShopSort)}
-          sx={{ minWidth: 168 }}
-        >
-          {SHOP_SORT_OPTIONS.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
+        <ShopHeaderCart />
       </Stack>
-      <ClubCategoryChips
-        categories={categoryOptions}
-        selectedId={categoryId}
-        onSelect={setCategoryId}
+      <PodShopSlider />
+      <ShopFilterBar
+        q={q}
+        onQueryChange={setQ}
+        sort={sort}
+        onSortChange={setSort}
+        categoryId={categoryId}
+        onCategoryChange={setCategoryId}
+        categoryOptions={categoryOptions}
       />
       {products.length === 0 ? (
         <Alert severity="info">No products match your filters.</Alert>

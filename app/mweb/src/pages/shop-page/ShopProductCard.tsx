@@ -26,6 +26,7 @@ export default function ShopProductCard({
   const imageUrl = product.image_url || product.images?.[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
+  const outOfStock = product.available_count <= 0;
   return (
     <Card
       sx={{ position: 'relative', borderRadius: 3, border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
@@ -84,28 +85,45 @@ export default function ShopProductCard({
           }}
         />
       )}
-      <IconButton
-        aria-label={`Add ${product.product_name} to cart`}
-        disabled={adding}
-        onClick={() => onQuickAdd(product)}
-        size="small"
-        sx={{
-          position: 'absolute',
-          top: 6,
-          right: 6,
-          bgcolor: 'primary.main',
-          color: 'primary.contrastText',
-          boxShadow: 2,
-          '&:hover': { bgcolor: 'primary.dark' },
-          '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText' },
-        }}
-      >
-        {adding ? (
-          <CircularProgress size={16} sx={{ color: 'primary.contrastText' }} />
-        ) : (
-          <AddShoppingCartIcon sx={{ fontSize: 18 }} />
-        )}
-      </IconButton>
+      {outOfStock ? (
+        <Chip
+          label="Out of stock"
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            height: 22,
+            fontWeight: 800,
+            fontSize: 11,
+            bgcolor: 'grey.800',
+            color: 'common.white',
+          }}
+        />
+      ) : (
+        <IconButton
+          aria-label={`Add ${product.product_name} to cart`}
+          disabled={adding}
+          onClick={() => onQuickAdd(product)}
+          size="small"
+          sx={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            boxShadow: 2,
+            '&:hover': { bgcolor: 'primary.dark' },
+            '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+          }}
+        >
+          {adding ? (
+            <CircularProgress size={16} sx={{ color: 'primary.contrastText' }} />
+          ) : (
+            <AddShoppingCartIcon sx={{ fontSize: 18 }} />
+          )}
+        </IconButton>
+      )}
     </Card>
   );
 }

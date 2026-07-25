@@ -25,6 +25,7 @@ const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
     image_url: 'http://x/a.jpg',
     images: [],
     unit_cost: 100,
+    available_count: 5,
     category_id: 'cat1',
     super_category_id: 'sup1',
     sub_category_id: null,
@@ -117,6 +118,9 @@ describe('ShopScreen', () => {
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
 
+    // Filters live behind the filter button — reveal them first.
+    fireEvent.press(screen.getByTestId('shop-filter-toggle'));
+
     // Super-category chip narrows to Lifestyle (p1 only; p2 is under Food).
     fireEvent.press(screen.getByTestId('shop-cat-sup1'));
     expect(screen.queryByTestId('shop-product-p2')).toBeNull();
@@ -157,6 +161,15 @@ describe('ShopScreen', () => {
     });
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p3')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('shop-filter-toggle'));
     expect(screen.queryByTestId('shop-cat-all')).toBeNull();
+  });
+
+  it('opens the cart from the header cart button', async () => {
+    mockRequest.mockResolvedValue({ availablePodProducts: [product()] });
+    renderWithProviders(<ShopScreen />);
+    await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('shop-header-cart'));
+    expect(mockNavigate).toHaveBeenCalledWith('Cart');
   });
 });

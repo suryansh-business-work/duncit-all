@@ -26,6 +26,7 @@ export function ShopProductCard({
   const imageUrl = product.image_url || product.images[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
+  const outOfStock = product.available_count <= 0;
   return (
     <YStack
       testID={`shop-product-${product.id}`}
@@ -64,28 +65,45 @@ export function ShopProductCard({
             </Text>
           </XStack>
         ) : null}
-        <YStack
-          testID={`shop-product-add-${product.id}`}
-          role="button"
-          aria-label={`Add ${product.product_name} to cart`}
-          onPress={() => onQuickAdd(product)}
-          position="absolute"
-          top={8}
-          right={8}
-          width={34}
-          height={34}
-          borderRadius={999}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$primary"
-          pressStyle={{ opacity: 0.8 }}
-        >
-          {adding ? (
-            <Spinner size="small" color="$onPrimary" />
-          ) : (
-            <MaterialIcons name="add-shopping-cart" size={18} color="#ffffff" />
-          )}
-        </YStack>
+        {outOfStock ? (
+          <XStack
+            testID={`shop-product-oos-${product.id}`}
+            position="absolute"
+            top={8}
+            right={8}
+            paddingHorizontal={8}
+            paddingVertical={3}
+            borderRadius={999}
+            backgroundColor="rgba(33,33,33,0.85)"
+          >
+            <Text fontSize={10} fontWeight="800" color="#ffffff">
+              Out of stock
+            </Text>
+          </XStack>
+        ) : (
+          <YStack
+            testID={`shop-product-add-${product.id}`}
+            role="button"
+            aria-label={`Add ${product.product_name} to cart`}
+            onPress={() => onQuickAdd(product)}
+            position="absolute"
+            top={8}
+            right={8}
+            width={34}
+            height={34}
+            borderRadius={999}
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor="$primary"
+            pressStyle={{ opacity: 0.8 }}
+          >
+            {adding ? (
+              <Spinner size="small" color="$onPrimary" />
+            ) : (
+              <MaterialIcons name="add-shopping-cart" size={18} color="#ffffff" />
+            )}
+          </YStack>
+        )}
       </YStack>
       <YStack padding={10} gap={2}>
         <Text fontSize={13} fontWeight="800" color="$color" numberOfLines={1}>

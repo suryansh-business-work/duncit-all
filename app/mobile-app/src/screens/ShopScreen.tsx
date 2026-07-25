@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { OptionChipRow } from '@/components/home/HomeFilterParts';
 import { PodShopSlider } from '@/components/shop/PodShopSlider';
+import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
+import { ShopHeaderCart } from '@/components/shop/ShopHeaderCart';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
 import { StackScreen } from '@/components/StackScreen';
 import { ShopProductsDocument } from '@/graphql/shop';
@@ -15,13 +16,14 @@ import { useHomeData } from '@/hooks/useHomeFeed';
 import { useQuickAddToCart } from '@/hooks/useQuickAddToCart';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
+import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { makeCategoryMatcher } from '@/utils/category-match';
 import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 
 export type ShopProduct = ResultOf<typeof ShopProductsDocument>['availablePodProducts'][number];
 
-type ShopSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC';
+export type ShopSort = 'NAME' | 'PRICE_ASC' | 'PRICE_DESC';
 
 const SORT_OPTIONS = [
   ['NAME', 'Name'],
@@ -76,9 +78,10 @@ function TrustBar({ tint }: Readonly<{ tint: string }>) {
  * mWeb's ShopPage. */
 export function ShopScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { muted, primary } = useThemeColors();
+  const { muted, primary, color } = useThemeColors();
   const { categories } = useHomeData();
   const { addingId, add } = useQuickAddToCart();
+  const cartCount = useCartStore(selectCartCount);
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -181,57 +184,30 @@ export function ShopScreen() {
   }
 
   return (
-    <StackScreen title="Pod Shop" testID="shop-screen">
+    <StackScreen
+      title="Pod Shop"
+      testID="shop-screen"
+      right={
+        <ShopHeaderCart
+          count={cartCount}
+          tint={color}
+          onPress={() => navigation.navigate('Cart')}
+        />
+      }
+    >
       <ScrollView flex={1}>
-        <YStack paddingHorizontal={16} paddingTop={8}>
-          <Text testID="shop-subtitle" fontSize={12.5} fontWeight="700" color="$muted">
-            Discover. Support. Shop Pods
-          </Text>
-        </YStack>
         <PodShopSlider />
-        <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
-          <XStack
-            alignItems="center"
-            gap={8}
-            paddingHorizontal={12}
-            height={46}
-            borderRadius={999}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$background"
-          >
-            <MaterialIcons name="search" size={20} color={muted} />
-            <Input
-              testID="shop-search-input"
-              aria-label="Search products"
-              flex={1}
-              unstyled
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search products or brands…"
-              placeholderTextColor="$muted"
-              color="$color"
-              fontSize={15}
-              returnKeyType="search"
-            />
-          </XStack>
-          {categoryOptions.length > 0 ? (
-            <OptionChipRow
-              testIDPrefix="shop-cat"
-              options={[['', 'All'], ...categoryOptions]}
-              value={categoryId}
-              onSelect={setCategoryId}
-              layout="scroll"
-            />
-          ) : null}
-          <OptionChipRow
-            testIDPrefix="shop-sort"
-            options={SORT_OPTIONS}
-            value={sort}
-            onSelect={(value) => setSort(value)}
-            layout="scroll"
-          />
-        </YStack>
+        <ShopFilterBar
+          query={query}
+          onQueryChange={setQuery}
+          categoryOptions={categoryOptions}
+          categoryId={categoryId}
+          onCategoryChange={setCategoryId}
+          sortOptions={SORT_OPTIONS}
+          sort={sort}
+          onSortChange={setSort}
+          muted={muted}
+        />
         {body}
         <TrustBar tint={primary} />
       </ScrollView>

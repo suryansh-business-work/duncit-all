@@ -1,22 +1,27 @@
-import { Box, Card, CardActionArea, Chip, Stack, Typography } from '@mui/material';
+import { Box, Card, CardActionArea, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import type { ShopProduct } from './queries';
 
 interface Props {
   product: ShopProduct;
   priceFormat: (amount: number) => string;
   categoryLabel?: string;
+  adding: boolean;
   onOpen: (id: string) => void;
+  onQuickAdd: (product: ShopProduct) => void;
 }
 
 /** One product tile in the Pod Shop browse grid — category badge, image, name,
  * price and (when reviewed) an average-rating chip. Tapping opens the full
- * product detail page. */
+ * product detail page; the corner button quick-adds to cart via the cheapest pod. */
 export default function ShopProductCard({
   product,
   priceFormat,
   categoryLabel,
+  adding,
   onOpen,
+  onQuickAdd,
 }: Readonly<Props>) {
   const imageUrl = product.image_url || product.images?.[0] || '';
   const summary = product.review_summary;
@@ -79,6 +84,28 @@ export default function ShopProductCard({
           }}
         />
       )}
+      <IconButton
+        aria-label={`Add ${product.product_name} to cart`}
+        disabled={adding}
+        onClick={() => onQuickAdd(product)}
+        size="small"
+        sx={{
+          position: 'absolute',
+          top: 6,
+          right: 6,
+          bgcolor: 'primary.main',
+          color: 'primary.contrastText',
+          boxShadow: 2,
+          '&:hover': { bgcolor: 'primary.dark' },
+          '&.Mui-disabled': { bgcolor: 'primary.main', color: 'primary.contrastText' },
+        }}
+      >
+        {adding ? (
+          <CircularProgress size={16} sx={{ color: 'primary.contrastText' }} />
+        ) : (
+          <AddShoppingCartIcon sx={{ fontSize: 18 }} />
+        )}
+      </IconButton>
     </Card>
   );
 }

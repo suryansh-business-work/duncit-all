@@ -12,6 +12,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { ShopProductsDocument } from '@/graphql/shop';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useHomeData } from '@/hooks/useHomeFeed';
+import { useQuickAddToCart } from '@/hooks/useQuickAddToCart';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
 import { makeCategoryMatcher } from '@/utils/category-match';
@@ -77,6 +78,7 @@ export function ShopScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, primary } = useThemeColors();
   const { categories } = useHomeData();
+  const { addingId, add } = useQuickAddToCart();
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -168,7 +170,9 @@ export function ShopScreen() {
               key={product.id}
               product={product}
               categoryLabel={categoryName(product)}
+              adding={addingId === product.id}
               onOpen={(productId) => navigation.navigate('ProductDetail', { productId })}
+              onQuickAdd={add}
             />
           ))}
         </XStack>
@@ -178,54 +182,56 @@ export function ShopScreen() {
 
   return (
     <StackScreen title="Pod Shop" testID="shop-screen">
-      <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
-        <Text testID="shop-subtitle" fontSize={12.5} fontWeight="700" color="$muted">
-          Discover. Support. Shop Pods
-        </Text>
-        <XStack
-          alignItems="center"
-          gap={8}
-          paddingHorizontal={12}
-          height={46}
-          borderRadius={999}
-          borderWidth={1}
-          borderColor="$borderColor"
-          backgroundColor="$background"
-        >
-          <MaterialIcons name="search" size={20} color={muted} />
-          <Input
-            testID="shop-search-input"
-            aria-label="Search products"
-            flex={1}
-            unstyled
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search products or brands…"
-            placeholderTextColor="$muted"
-            color="$color"
-            fontSize={15}
-            returnKeyType="search"
-          />
-        </XStack>
-        {categoryOptions.length > 0 ? (
+      <ScrollView flex={1}>
+        <YStack paddingHorizontal={16} paddingTop={8}>
+          <Text testID="shop-subtitle" fontSize={12.5} fontWeight="700" color="$muted">
+            Discover. Support. Shop Pods
+          </Text>
+        </YStack>
+        <PodShopSlider />
+        <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
+          <XStack
+            alignItems="center"
+            gap={8}
+            paddingHorizontal={12}
+            height={46}
+            borderRadius={999}
+            borderWidth={1}
+            borderColor="$borderColor"
+            backgroundColor="$background"
+          >
+            <MaterialIcons name="search" size={20} color={muted} />
+            <Input
+              testID="shop-search-input"
+              aria-label="Search products"
+              flex={1}
+              unstyled
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search products or brands…"
+              placeholderTextColor="$muted"
+              color="$color"
+              fontSize={15}
+              returnKeyType="search"
+            />
+          </XStack>
+          {categoryOptions.length > 0 ? (
+            <OptionChipRow
+              testIDPrefix="shop-cat"
+              options={[['', 'All'], ...categoryOptions]}
+              value={categoryId}
+              onSelect={setCategoryId}
+              layout="scroll"
+            />
+          ) : null}
           <OptionChipRow
-            testIDPrefix="shop-cat"
-            options={[['', 'All'], ...categoryOptions]}
-            value={categoryId}
-            onSelect={setCategoryId}
+            testIDPrefix="shop-sort"
+            options={SORT_OPTIONS}
+            value={sort}
+            onSelect={(value) => setSort(value)}
             layout="scroll"
           />
-        ) : null}
-        <OptionChipRow
-          testIDPrefix="shop-sort"
-          options={SORT_OPTIONS}
-          value={sort}
-          onSelect={(value) => setSort(value)}
-          layout="scroll"
-        />
-      </YStack>
-      <ScrollView flex={1}>
-        <PodShopSlider />
+        </YStack>
         {body}
         <TrustBar tint={primary} />
       </ScrollView>

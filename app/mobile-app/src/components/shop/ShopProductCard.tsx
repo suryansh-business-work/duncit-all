@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import type { ShopProduct } from '@/screens/ShopScreen';
@@ -7,13 +7,22 @@ import type { ShopProduct } from '@/screens/ShopScreen';
 interface Props {
   product: ShopProduct;
   categoryLabel?: string;
+  adding: boolean;
   onOpen: (productId: string) => void;
+  onQuickAdd: (product: ShopProduct) => void;
 }
 
 /** One product tile in the Pod Shop browse grid — category badge, image, name,
  * price and (when reviewed) an average rating. Tapping opens the product detail
- * screen. RN twin of mWeb's ShopProductCard. */
-export function ShopProductCard({ product, categoryLabel, onOpen }: Readonly<Props>) {
+ * screen; the corner button quick-adds to cart via the cheapest pod. RN twin of
+ * mWeb's ShopProductCard. */
+export function ShopProductCard({
+  product,
+  categoryLabel,
+  adding,
+  onOpen,
+  onQuickAdd,
+}: Readonly<Props>) {
   const imageUrl = product.image_url || product.images[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
@@ -55,6 +64,28 @@ export function ShopProductCard({ product, categoryLabel, onOpen }: Readonly<Pro
             </Text>
           </XStack>
         ) : null}
+        <YStack
+          testID={`shop-product-add-${product.id}`}
+          role="button"
+          aria-label={`Add ${product.product_name} to cart`}
+          onPress={() => onQuickAdd(product)}
+          position="absolute"
+          top={8}
+          right={8}
+          width={34}
+          height={34}
+          borderRadius={999}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$primary"
+          pressStyle={{ opacity: 0.8 }}
+        >
+          {adding ? (
+            <Spinner size="small" color="$onPrimary" />
+          ) : (
+            <MaterialIcons name="add-shopping-cart" size={18} color="#ffffff" />
+          )}
+        </YStack>
       </YStack>
       <YStack padding={10} gap={2}>
         <Text fontSize={13} fontWeight="800" color="$color" numberOfLines={1}>

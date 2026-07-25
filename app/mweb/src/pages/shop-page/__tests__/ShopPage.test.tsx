@@ -6,6 +6,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ShopPage from '../index';
 import { SHOP_PRODUCTS } from '../queries';
 import { SEARCH_CATEGORIES } from '../../search-page/queries';
+import { CartProvider } from '../../../components/cart/CartContext';
 
 const navigateMock = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -59,9 +60,11 @@ const categoriesMock: MockedResponse = {
 function renderPage(mocks: MockedResponse[] = [productsMock, categoriesMock]) {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <MemoryRouter initialEntries={['/shop']}>
-        <ShopPage />
-      </MemoryRouter>
+      <CartProvider>
+        <MemoryRouter initialEntries={['/shop']}>
+          <ShopPage />
+        </MemoryRouter>
+      </CartProvider>
     </MockedProvider>,
   );
 }

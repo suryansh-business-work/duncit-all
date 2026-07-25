@@ -21,6 +21,7 @@ import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { usePricing } from '../../hooks/usePricing';
 import PodShopSlider from './PodShopSlider';
 import ShopProductCard from './ShopProductCard';
+import { useQuickAddToCart } from './useQuickAddToCart';
 import {
   SHOP_PRODUCTS,
   SHOP_SORT_OPTIONS,
@@ -68,6 +69,7 @@ export default function ShopPage() {
   const { format: priceFormat } = usePricing();
   const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
   const { all, matchesCategory } = useSearchCategories();
+  const { addingId, add } = useQuickAddToCart();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [sort, setSort] = useState<ShopSort>('NAME');
@@ -120,6 +122,7 @@ export default function ShopPage() {
           Discover. Support. Shop Pods
         </Typography>
       </Box>
+      <PodShopSlider />
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField
           size="small"
@@ -158,7 +161,6 @@ export default function ShopPage() {
         selectedId={categoryId}
         onSelect={setCategoryId}
       />
-      <PodShopSlider />
       {products.length === 0 ? (
         <Alert severity="info">No products match your filters.</Alert>
       ) : (
@@ -179,7 +181,9 @@ export default function ShopPage() {
                 product={product}
                 priceFormat={priceFormat}
                 categoryLabel={categoryName(product)}
+                adding={addingId === product.id}
                 onOpen={(id) => navigate(`/product/${id}`)}
+                onQuickAdd={add}
               />
             ))}
           </Box>

@@ -26,6 +26,15 @@ export const BrandingDocument = gql(`
       }
       home_show_all_vibe_categories
       home_header_tagline
+      occasional_icons {
+        slug
+        label
+        starts_at
+        ends_at
+        icon_url
+        is_active
+        sort_order
+      }
     }
   }
 `);

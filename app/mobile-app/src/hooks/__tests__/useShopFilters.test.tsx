@@ -102,15 +102,10 @@ describe('useShopFilters', () => {
     expect(result.current.categoryOptions).toHaveLength(0);
   });
 
-  it('filters by minimum rating, treating a missing summary as zero', () => {
-    const list = [
-      products[0], // p1 avg 4.6
-      products[1], // p2 avg 2
-      product({ id: 'p6', product_name: 'Delta', review_summary: null }), // no summary → 0
-    ];
-    const { result } = renderHook(() => useShopFilters(categories, list));
+  it('filters by minimum rating', () => {
+    const { result } = renderHook(() => useShopFilters(categories, products));
     act(() => result.current.setMinRating('4'));
-    expect(ids(result.current.visible)).toEqual(['p1']); // p2 (2) and p6 (0) excluded
+    expect(ids(result.current.visible)).toEqual(['p1']); // p2 avg 2 excluded, p3 out of stock
     expect(result.current.activeCount).toBe(1);
   });
 

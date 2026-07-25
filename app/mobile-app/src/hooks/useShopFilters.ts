@@ -98,7 +98,7 @@ export function useShopFilters(categories: Category[], products: ShopProduct[]):
     const keep = (p: ShopProduct) => {
       if (!matches(p, effectiveCategoryId)) return false;
       if (!includeOutOfStock && p.available_count <= 0) return false;
-      if (min > 0 && (p.review_summary?.average_rating ?? 0) < min) return false;
+      if (min > 0 && p.review_summary.average_rating < min) return false;
       if (!term) return true;
       return Boolean(
         p.product_name?.toLowerCase().includes(term) || p.brand_name?.toLowerCase().includes(term),

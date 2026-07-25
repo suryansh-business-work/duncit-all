@@ -22,11 +22,24 @@ describe('pod-profit types', () => {
 describe('useCalculator', () => {
   const calc = (inputs: PodProfitInputs) => renderHook(() => useCalculator(inputs)).result.current;
 
-  it('runs the full waterfall for the defaults', () => {
+  it('runs the full waterfall for the defaults, billing payable spots only', () => {
     const r = calc(DEFAULT_INPUTS);
-    expect(r.collection_total).toBe(30000);
+    // The host's own spot is free: 30 spots bill 29 guests (₹1,000 × 29).
+    expect(r.total_spots).toBe(30);
+    expect(r.payable_spots).toBe(29);
+    expect(r.collection_total).toBe(29000);
     expect(r.reconciled_total).toBeCloseTo(r.collection_total, 1);
     expect(r.host_earn_percent).toBeGreaterThan(0);
+  });
+
+  it('bills nothing for a host-only pod and never goes negative on 0 spots', () => {
+    const solo = calc({ ...DEFAULT_INPUTS, no_of_spots: 1 });
+    expect(solo.payable_spots).toBe(0);
+    expect(solo.collection_total).toBe(0);
+
+    const unset = calc({ ...DEFAULT_INPUTS, no_of_spots: 0 });
+    expect(unset.payable_spots).toBe(0);
+    expect(unset.collection_total).toBe(0);
   });
 
   it('returns zeroed host-earn when the collection is zero', () => {

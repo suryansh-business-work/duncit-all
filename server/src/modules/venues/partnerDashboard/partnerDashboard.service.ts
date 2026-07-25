@@ -38,8 +38,19 @@ function parseRange(range: DashboardRange) {
 
 const money = (value: number) => Math.round((Number(value) || 0) * 100) / 100;
 
+/** Hosts are written into pod_attendees on create but never pay, so they must be
+ * dropped before the head count is multiplied by the ticket price. */
+function payingAttendees(pod: any): number {
+  const attendees: string[] = pod.pod_attendees ?? [];
+  if (attendees.length === 0) return 0;
+  const hosts = new Set((pod.pod_hosts_id ?? []).map((id: unknown) => String(id)));
+  return attendees.filter((id) => !hosts.has(String(id))).length;
+}
+
 function podGross(pods: any[]) {
-  return money(pods.reduce((sum, pod) => sum + Number(pod.pod_amount || 0) * (pod.pod_attendees?.length || 0), 0));
+  return money(
+    pods.reduce((sum, pod) => sum + Number(pod.pod_amount || 0) * payingAttendees(pod), 0)
+  );
 }
 
 function releaseTotal(docs: any[]) {

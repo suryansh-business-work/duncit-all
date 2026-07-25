@@ -1,7 +1,10 @@
+import { payingAttendees } from '@duncit/utils';
+
 export interface DashPod {
   pod_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
+  pod_hosts_id?: string[] | null;
 }
 
 export interface MonthPoint {
@@ -26,7 +29,8 @@ export function monthlyPodEarnings(pods: DashPod[], monthsBack = 6, now: Date = 
     if (Number.isNaN(date.getTime())) continue;
     const index = indexByKey.get(`${date.getFullYear()}-${date.getMonth()}`);
     if (index === undefined) continue;
-    buckets[index].earning += Number(pod.pod_amount || 0) * (pod.pod_attendees?.length ?? 0);
+    buckets[index].earning +=
+      Number(pod.pod_amount || 0) * payingAttendees(pod.pod_attendees, pod.pod_hosts_id);
     buckets[index].pods += 1;
   }
   return buckets;

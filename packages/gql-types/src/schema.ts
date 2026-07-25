@@ -297,6 +297,20 @@ export type AppAnalyticsEventType =
   | 'PAGE_VIEW'
   | 'TOUCH';
 
+/**
+ * In-app feedback / problem report from any signed-in user. The server stamps
+ * the authenticated identity and routes it to the feedback channel.
+ */
+export type AppFeedbackInput = {
+  /** JSON array of Block Kit blocks (stringified) the client composed for the body. */
+  blocks_json?: InputMaybe<Scalars['String']['input']>;
+  /** Bug | Idea | Question | Other (free-form, shown as a label). */
+  category: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+  /** Where it was sent from — 'web' | 'ios' | 'android' (labelling only). */
+  platform?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type AppReleaseCommitInput = {
   body?: InputMaybe<Scalars['String']['input']>;
   hash: Scalars['String']['input'];
@@ -663,6 +677,8 @@ export type BrandPickupLocation = {
   owner_kind: PickupOwnerKind;
   phone: Scalars['String']['output'];
   pincode: Scalars['String']['output'];
+  /** Partner-warehouse approval gate: PENDING | APPROVED | REJECTED (Duncit-owned + legacy are APPROVED). */
+  review_status: Scalars['String']['output'];
   shiprocket_pickup_id: Scalars['String']['output'];
   shiprocket_registered: Scalars['Boolean']['output'];
   state: Scalars['String']['output'];
@@ -690,8 +706,12 @@ export type Branding = {
   android_app_url: Scalars['String']['output'];
   app_latest_version: Scalars['String']['output'];
   app_name: Scalars['String']['output'];
+  /** Icon placement + size for the home All tab (null means the default TOP 40x40 look). */
+  home_all_vibe_icon_layout?: Maybe<CategoryIconLayout>;
   home_all_vibe_icon_url: Scalars['String']['output'];
   home_header_tagline: Scalars['String']['output'];
+  /** When true, the home vibe tabber shows every category (even ones with no pods); false shows only categories that have pods. */
+  home_show_all_vibe_categories: Scalars['Boolean']['output'];
   ios_app_url: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   mobile_favicon_url: Scalars['String']['output'];
@@ -704,6 +724,8 @@ export type Branding = {
   mweb_logo_url: Scalars['String']['output'];
   mweb_splash_type: Scalars['String']['output'];
   mweb_splash_url: Scalars['String']['output'];
+  /** Global Pod Shop top slider — admin-managed image/video media (products portal). */
+  pod_shop_slider: Array<PodShopSliderMedia>;
   portals_favicon_url: Scalars['String']['output'];
   portals_font_family: Scalars['String']['output'];
   portals_logo_url: Scalars['String']['output'];
@@ -717,6 +739,47 @@ export type Branding = {
   website_favicon_url: Scalars['String']['output'];
   website_footer_logo_url: Scalars['String']['output'];
   website_header_logo_url: Scalars['String']['output'];
+};
+
+export type Bug = {
+  __typename?: 'Bug';
+  app: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  env_counts: BugEnvCounts;
+  error_name: Scalars['String']['output'];
+  fingerprint: Scalars['String']['output'];
+  first_seen_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_host?: Maybe<Scalars['String']['output']>;
+  last_seen_at: Scalars['String']['output'];
+  last_stack?: Maybe<Scalars['String']['output']>;
+  last_url?: Maybe<Scalars['String']['output']>;
+  message: Scalars['String']['output'];
+  occurrence_count: Scalars['Int']['output'];
+  os?: Maybe<Scalars['String']['output']>;
+  page: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  portal?: Maybe<Scalars['String']['output']>;
+  resolved_at?: Maybe<Scalars['String']['output']>;
+  source: Scalars['String']['output'];
+  /** OPEN | RESOLVED | IGNORED */
+  status: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type BugEnvCounts = {
+  __typename?: 'BugEnvCounts';
+  localhost: Scalars['Int']['output'];
+  production: Scalars['Int']['output'];
+  staging: Scalars['Int']['output'];
+};
+
+export type BugTablePage = {
+  __typename?: 'BugTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Bug>;
+  total: Scalars['Int']['output'];
 };
 
 export type BulkCreateVenueSlotsInput = {
@@ -757,6 +820,10 @@ export type Category = {
   created_at: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
   icon?: Maybe<Scalars['String']['output']>;
+  /** CATEGORY level only: icon layout for the mWeb vibe tabber. */
+  icon_layout_mweb?: Maybe<CategoryIconLayout>;
+  /** CATEGORY level only: icon layout for the native-app vibe tabber. */
+  icon_layout_native?: Maybe<CategoryIconLayout>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
   is_system: Scalars['Boolean']['output'];
@@ -776,6 +843,27 @@ export type CategoryFilterInput = {
   parent_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
 };
+
+/** CATEGORY level only: per-surface icon placement + size for the vibe tabber. */
+export type CategoryIconLayout = {
+  __typename?: 'CategoryIconLayout';
+  height: Scalars['Int']['output'];
+  position: CategoryIconPosition;
+  width: Scalars['Int']['output'];
+};
+
+export type CategoryIconLayoutInput = {
+  height?: InputMaybe<Scalars['Int']['input']>;
+  position?: InputMaybe<CategoryIconPosition>;
+  width?: InputMaybe<Scalars['Int']['input']>;
+};
+
+/** Icon placement relative to the category label in the home vibe tabber. */
+export type CategoryIconPosition =
+  | 'BOTTOM'
+  | 'LEFT'
+  | 'RIGHT'
+  | 'TOP';
 
 export type CategoryLevel =
   | 'CATEGORY'
@@ -1403,6 +1491,8 @@ export type CreateCategoryInput = {
   allow_co_hosts?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
+  icon_layout_mweb?: InputMaybe<CategoryIconLayoutInput>;
+  icon_layout_native?: InputMaybe<CategoryIconLayoutInput>;
   level: CategoryLevel;
   max_co_hosts?: InputMaybe<Scalars['Int']['input']>;
   media?: InputMaybe<Array<CategoryMediaInput>>;
@@ -2552,6 +2642,7 @@ export type EnvCategory =
   | 'RAZORPAY'
   | 'SERVAM'
   | 'SHIPROCKET'
+  | 'SLACK'
   | 'TWILIO';
 
 export type EnvCategoryDef = {
@@ -3439,6 +3530,8 @@ export type InventoryProduct = {
   description: Scalars['String']['output'];
   discount_percent: Scalars['Float']['output'];
   expiry_date?: Maybe<Scalars['String']['output']>;
+  /** Line subtotal (qty x unit price) at/above which this product's delivery is free. null = no offer. */
+  free_delivery_above?: Maybe<Scalars['Float']['output']>;
   height_cm: Scalars['Float']['output'];
   host_request_allowed: Scalars['Boolean']['output'];
   id: Scalars['ID']['output'];
@@ -3466,11 +3559,15 @@ export type InventoryProduct = {
   /** Duncit warehouse (BrandPickupLocation, owner_kind DUNCIT) this product ships from. Required for Duncit-owned products. */
   pickup_location_id?: Maybe<Scalars['ID']['output']>;
   pod_available: Scalars['Boolean']['output'];
+  /** Units currently available across all live pods stocking this product (0 = out of stock in pods). Only meaningful on the Pod Shop list. */
+  pod_available_count: Scalars['Int']['output'];
   product_name: Scalars['String']['output'];
   product_type: ProductType;
   purchase_price: Scalars['Float']['output'];
   requested_count: Scalars['Int']['output'];
   reserved_count: Scalars['Int']['output'];
+  /** Aggregate rating for the Pod Shop catalogue card (average + count + star split). */
+  review_summary: ProductReviewSummary;
   selling_price: Scalars['Float']['output'];
   short_description: Scalars['String']['output'];
   size_label: Scalars['String']['output'];
@@ -3504,6 +3601,7 @@ export type InventoryProductInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   discount_percent?: InputMaybe<Scalars['Float']['input']>;
   expiry_date?: InputMaybe<Scalars['String']['input']>;
+  free_delivery_above?: InputMaybe<Scalars['Float']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
   host_request_allowed?: InputMaybe<Scalars['Boolean']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
@@ -4112,6 +4210,8 @@ export type Mutation = {
   approveVenue: Venue;
   /** Owner approves a pending booking request — the pod goes live. */
   approveVenueSlotRequest: VenueSlot;
+  /** Products portal: approve a partner warehouse so it goes live (usable for shipping). */
+  approveWarehouseRequest: ApprovalRequest;
   archiveInventoryProduct: InventoryProduct;
   assignTicket: Ticket;
   assignUserRoles: User;
@@ -4250,6 +4350,8 @@ export type Mutation = {
   /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
   deleteMyAccount: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
+  /** Delete an own-brand warehouse. Blocked while any product still ships from it. */
+  deleteMyBrandPickupLocation: Scalars['Boolean']['output'];
   deleteMyProductListing: Scalars['Boolean']['output'];
   deleteNotification: Scalars['Boolean']['output'];
   deletePod: Scalars['Boolean']['output'];
@@ -4278,6 +4380,8 @@ export type Mutation = {
   deleteWebsiteNavItem: Scalars['Boolean']['output'];
   /** Admin denies a request. */
   denyRequest: ApprovalRequest;
+  /** Products portal: deny a partner warehouse (stays blocked). */
+  denyWarehouseRequest: ApprovalRequest;
   /** Onboarding staff remove a cancelled meeting from the calendar (kept for audit). */
   dismissMeeting: OnboardingMeeting;
   dummyCheckout: Payment;
@@ -4430,6 +4534,8 @@ export type Mutation = {
   saveLeadSurveyResponse: LeadSurveyEntry;
   /** Create (no id) or update (with id) one of my saved addresses. */
   saveMyAddress: UserAddress;
+  /** Create/update a warehouse on one of the caller's OWN brands (owner_kind/brand_id are forced server-side). */
+  saveMyBrandPickupLocation: BrandPickupLocation;
   savePodDraft: PodDraft;
   savePushSubscription: Scalars['Boolean']['output'];
   seedSuperAdmin: SeedAdminResult;
@@ -4442,6 +4548,8 @@ export type Mutation = {
   sendCrmTestEmail: CrmEmailTestResult;
   sendMarketingCampaign: MarketingCampaign;
   sendPodMessage: PodMessage;
+  /** Post a message to a Slack channel (full message surface). */
+  sendSlackMessage: SlackSendResult;
   sendSupportChatMessage: SupportChatMessage;
   sendTestEmail: EmailTestResult;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
@@ -4450,6 +4558,7 @@ export type Mutation = {
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
   setDefaultMyAddress: UserAddress;
+  setDefaultMyBrandPickupLocation: BrandPickupLocation;
   setDefaultSlotTemplate: SlotTemplate;
   /** Onboarding/admin: deactivate/reactivate a brand — hides it + its products from the marketplace and pod product picker (reversible). */
   setEcommBrandActive: EcommBrand;
@@ -4487,6 +4596,8 @@ export type Mutation = {
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
   submitAddressVerification: Verification;
+  /** Post in-app feedback to Slack. Any signed-in user; identity is server-stamped. */
+  submitAppFeedback: SlackSendResult;
   submitBouncerFeedback: BouncerFeedback;
   submitContactForm: ContactSubmitResult;
   /** Partner: submit an owned brand for onboarding review. */
@@ -4519,6 +4630,10 @@ export type Mutation = {
   subscribeNewsletter: NewsletterSubscribeResult;
   /** Support agents can create a user account on a caller's behalf. */
   supportCreateUser: User;
+  /** Run a shell command in the API container and return its output. SUPER_ADMIN only — host-root-equivalent via the mounted docker socket, and audited. */
+  techExec: TechExecResult;
+  /** Restart one Docker container by name (SUPER_ADMIN / TECH_MANAGER). Audited. */
+  techRestartContainer: TechRestartResult;
   testCommsProvider: CommsProviderTestResult;
   /** Interactive tests — these perform REAL actions (send email, place calls, upload, AI calls). */
   testEnvEmail: EnvTestRichResult;
@@ -4547,6 +4662,7 @@ export type Mutation = {
   updateApprovedVenue: Venue;
   updateBadge: Badge;
   updateBranding: Branding;
+  updateBugStatus: Bug;
   updateCategory: Category;
   updateChallenge: Challenge;
   updateClub: Club;
@@ -4587,11 +4703,14 @@ export type Mutation = {
   updatePod: Pod;
   updatePodIdea: PodIdea;
   updatePodPlan: PodPlan;
+  /** Replace the global Pod Shop slider media (managed from the products portal). */
+  updatePodShopSlider: Array<PodShopSliderMedia>;
   updatePolicy: Policy;
   /** Admin: set the gift shown to users for referring friends. */
   updateReferralGift: ReferralSettings;
   updateRole: Role;
   updateSurvey: Survey;
+  updateTelemetrySettings: TelemetrySettings;
   /** Set a ticket's priority flag (High/Medium/Low) — support agents only. */
   updateTicketPriority: Ticket;
   updateTicketStatus: Ticket;
@@ -4863,6 +4982,12 @@ export type MutationApproveVenueArgs = {
 
 export type MutationApproveVenueSlotRequestArgs = {
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type MutationApproveWarehouseRequestArgs = {
+  id: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -5466,6 +5591,12 @@ export type MutationDeleteMyAddressArgs = {
 };
 
 
+export type MutationDeleteMyBrandPickupLocationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMyProductListingArgs = {
   product_doc_id: Scalars['ID']['input'];
 };
@@ -5599,6 +5730,12 @@ export type MutationDeleteWebsiteNavItemArgs = {
 
 
 export type MutationDenyRequestArgs = {
+  id: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationDenyWarehouseRequestArgs = {
   id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
 };
@@ -6152,6 +6289,13 @@ export type MutationSaveMyAddressArgs = {
 };
 
 
+export type MutationSaveMyBrandPickupLocationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+  id?: InputMaybe<Scalars['ID']['input']>;
+  input: BrandPickupLocationInput;
+};
+
+
 export type MutationSavePodDraftArgs = {
   draft_id?: InputMaybe<Scalars['ID']['input']>;
   input: PodDraftInput;
@@ -6185,6 +6329,11 @@ export type MutationSendPodMessageArgs = {
   pod_id: Scalars['ID']['input'];
   text?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<PodMessageType>;
+};
+
+
+export type MutationSendSlackMessageArgs = {
+  input: SendSlackMessageInput;
 };
 
 
@@ -6224,6 +6373,12 @@ export type MutationSetDefaultEnvEntryArgs = {
 
 
 export type MutationSetDefaultMyAddressArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetDefaultMyBrandPickupLocationArgs = {
+  brand_doc_id: Scalars['ID']['input'];
   id: Scalars['ID']['input'];
 };
 
@@ -6363,6 +6518,11 @@ export type MutationSubmitAddressVerificationArgs = {
 };
 
 
+export type MutationSubmitAppFeedbackArgs = {
+  input: AppFeedbackInput;
+};
+
+
 export type MutationSubmitBouncerFeedbackArgs = {
   input: SubmitBouncerFeedbackInput;
 };
@@ -6480,6 +6640,16 @@ export type MutationSubscribeNewsletterArgs = {
 
 export type MutationSupportCreateUserArgs = {
   input: SupportCreateUserInput;
+};
+
+
+export type MutationTechExecArgs = {
+  command: Scalars['String']['input'];
+};
+
+
+export type MutationTechRestartContainerArgs = {
+  name: Scalars['String']['input'];
 };
 
 
@@ -6612,6 +6782,12 @@ export type MutationUpdateBadgeArgs = {
 
 export type MutationUpdateBrandingArgs = {
   input: UpdateBrandingInput;
+};
+
+
+export type MutationUpdateBugStatusArgs = {
+  bug_id: Scalars['ID']['input'];
+  status: Scalars['String']['input'];
 };
 
 
@@ -6845,6 +7021,11 @@ export type MutationUpdatePodPlanArgs = {
 };
 
 
+export type MutationUpdatePodShopSliderArgs = {
+  input: Array<PodShopSliderMediaInput>;
+};
+
+
 export type MutationUpdatePolicyArgs = {
   input: UpdatePolicyInput;
   policy_doc_id: Scalars['ID']['input'];
@@ -6865,6 +7046,11 @@ export type MutationUpdateRoleArgs = {
 export type MutationUpdateSurveyArgs = {
   id: Scalars['ID']['input'];
   input: UpdateSurveyInput;
+};
+
+
+export type MutationUpdateTelemetrySettingsArgs = {
+  input: UpdateTelemetrySettingsInput;
 };
 
 
@@ -7235,6 +7421,21 @@ export type PartnerDashboardMetrics = {
   product_earning: Scalars['Float']['output'];
   total_earning: Scalars['Float']['output'];
   venue_earning: Scalars['Float']['output'];
+};
+
+/** Owner-scoped e-commerce KPIs. brand_doc_id narrows to one owned brand; omitted = all owned brands. */
+export type PartnerEcommStats = {
+  __typename?: 'PartnerEcommStats';
+  approved_brands: Scalars['Int']['output'];
+  approved_products: Scalars['Int']['output'];
+  /** Gross value of the partner's sold line items (before Duncit commission). */
+  gross_revenue: Scalars['Float']['output'];
+  total_brands: Scalars['Int']['output'];
+  total_items_sold: Scalars['Int']['output'];
+  /** Distinct product orders containing at least one of the partner's brand lines (cancelled/failed/RTO excluded). */
+  total_orders: Scalars['Int']['output'];
+  total_products: Scalars['Int']['output'];
+  total_warehouses: Scalars['Int']['output'];
 };
 
 export type PartnerFaqTopic =
@@ -7653,6 +7854,15 @@ export type PodDraftInput = {
   step?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type PodEarningsProjection = {
+  __typename?: 'PodEarningsProjection';
+  /** Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited). */
+  payable_spots: Scalars['Int']['output'];
+  /** Spots the host entered (physical capacity, including the host's own seat). */
+  total_spots: Scalars['Int']['output'];
+  waterfall: PodFinanceWaterfall;
+};
+
 export type PodFilterInput = {
   club_id?: InputMaybe<Scalars['ID']['input']>;
   /** Only pods with an uploaded reel video (Explore feed). */
@@ -7921,6 +8131,8 @@ export type PodPlanUpdateInput = {
 export type PodProductRequest = {
   __typename?: 'PodProductRequest';
   available_count: Scalars['Int']['output'];
+  /** Live product threshold: line subtotal at/above which its delivery is free (null = no offer). */
+  free_delivery_above?: Maybe<Scalars['Float']['output']>;
   image_url: Scalars['String']['output'];
   images: Array<Scalars['String']['output']>;
   product_id: Scalars['ID']['output'];
@@ -7973,6 +8185,29 @@ export type PodSettlementStatus =
   | 'LIVE'
   | 'PENDING_APPROVAL'
   | 'SETTLED';
+
+/** One media item in the global Pod Shop top slider (image or video). */
+export type PodShopSliderMedia = {
+  __typename?: 'PodShopSliderMedia';
+  cta_label: Scalars['String']['output'];
+  cta_url: Scalars['String']['output'];
+  /** Optional overlay copy + call-to-action shown on the Pod Shop hero slide. */
+  heading: Scalars['String']['output'];
+  order: Scalars['Int']['output'];
+  subheading: Scalars['String']['output'];
+  type: CategoryMediaType;
+  url: Scalars['String']['output'];
+};
+
+export type PodShopSliderMediaInput = {
+  cta_label?: InputMaybe<Scalars['String']['input']>;
+  cta_url?: InputMaybe<Scalars['String']['input']>;
+  heading?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
+  subheading?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<CategoryMediaType>;
+  url: Scalars['String']['input'];
+};
 
 /** Server-side table page for the shared table engine (podsTable / myHostPodsTable). */
 export type PodTablePage = {
@@ -8206,6 +8441,8 @@ export type ProductListingInput = {
   commission_pct: Scalars['Float']['input'];
   delivery_target: ProductListingDeliveryTarget;
   description: Scalars['String']['input'];
+  /** Line subtotal (qty x unit price) at/above which this product's delivery is free. Omit/null = no offer. */
+  free_delivery_above?: InputMaybe<Scalars['Float']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
   image_url: Scalars['String']['input'];
   images?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -8215,6 +8452,8 @@ export type ProductListingInput = {
   length_cm?: InputMaybe<Scalars['Float']['input']>;
   /** Product-level option definitions (e.g. Size, Colour); variants are their combinations. */
   options?: InputMaybe<Array<ProductOptionInput>>;
+  /** Warehouse (BrandPickupLocation of the SAME brand) this product ships from. */
+  pickup_location_id?: InputMaybe<Scalars['ID']['input']>;
   product_name: Scalars['String']['input'];
   size_label?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
@@ -8292,6 +8531,21 @@ export type ProductOwnership =
   | 'BRAND'
   | 'DUNCIT';
 
+/** A pod that currently stocks a catalogue product — the per-pod purchase context (price, stock, delivery) needed to add the product to the cart when there is no pod route context (catalogue / standalone product detail). */
+export type ProductPodOption = {
+  __typename?: 'ProductPodOption';
+  available_count: Scalars['Int']['output'];
+  club_slug: Scalars['String']['output'];
+  /** Live product threshold: line subtotal at/above which delivery is free (null = no offer). */
+  free_delivery_above?: Maybe<Scalars['Float']['output']>;
+  image_url: Scalars['String']['output'];
+  /** The pod's document id — the value that goes on the cart line's pod_id. */
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  product_name: Scalars['String']['output'];
+  unit_cost: Scalars['Float']['output'];
+};
+
 export type ProductReview = {
   __typename?: 'ProductReview';
   comment: Scalars['String']['output'];
@@ -8333,12 +8587,16 @@ export type ProductShippingQuoteInput = {
   items: Array<ProductCartItemInput>;
 };
 
-/** One warehouse's delivery estimate in a product-cart shipping quote. */
+/** One (pod, warehouse) group's delivery estimate in a product-cart shipping quote — each group ships (and is charged) separately. */
 export type ProductShippingQuoteLine = {
   __typename?: 'ProductShippingQuoteLine';
   charge: Scalars['Float']['output'];
   courier_name: Scalars['String']['output'];
+  /** True when every line in this warehouse group met its product's free-delivery threshold (charge = 0). */
+  free: Scalars['Boolean']['output'];
   pickup_pincode: Scalars['String']['output'];
+  /** The pod this shipment group belongs to (null/empty when the cart line carried no pod). */
+  pod_id?: Maybe<Scalars['ID']['output']>;
   /** True when priced live by ShipRocket; false when it fell back to the manual delivery charge. */
   quoted: Scalars['Boolean']['output'];
   warehouse_id: Scalars['ID']['output'];
@@ -8554,6 +8812,8 @@ export type Query = {
   /** Pickup/warehouse locations for a Duncit or brand owner (Products portal). */
   brandPickupLocations: Array<BrandPickupLocation>;
   branding: Branding;
+  bug?: Maybe<Bug>;
+  bugsTable: BugTablePage;
   categories: Array<Category>;
   category?: Maybe<Category>;
   categoryTree: Array<Category>;
@@ -8748,6 +9008,8 @@ export type Query = {
   myApiKeys: Array<ApiKey>;
   myApiKeysTable: ApiKeyTablePage;
   myBadges: Array<UserBadge>;
+  /** Warehouses of one of the caller's OWN brands (partner portal Brand Settings). */
+  myBrandPickupLocations: Array<BrandPickupLocation>;
   /** The signed-in user's own callback request history, newest first. */
   myCallbackRequests: Array<BouncerCallbackRequest>;
   myChatRooms: Array<ChatRoom>;
@@ -8832,6 +9094,7 @@ export type Query = {
   /** Server-side table page (search/filter/sort/paginate) over onboarding meetings. */
   onboardingMeetingsTable: OnboardingMeetingTablePage;
   partnerDashboard: PartnerDashboard;
+  partnerEcommStats: PartnerEcommStats;
   /** Admin Partners list — users holding a partner-portal role (Host / Venue Partner / Product Seller / Club Admin). */
   partnersTable: UserTablePage;
   payment?: Maybe<Payment>;
@@ -8860,6 +9123,8 @@ export type Query = {
   podPlansTable: PodPlanTablePage;
   podSettlementPreview: PodSettlement;
   pods: Array<Pod>;
+  /** Pods that currently stock a catalogue product — per-pod purchase context so a buyer can add the product to the cart from the catalogue / standalone product detail (any signed-in user). */
+  podsForProduct: Array<ProductPodOption>;
   podsTable: PodTablePage;
   policies: Array<Policy>;
   policiesTable: PolicyTablePage;
@@ -8872,7 +9137,7 @@ export type Query = {
   portalModesTable: PortalModeTablePage;
   post?: Maybe<Post>;
   posts: Array<Post>;
-  potentialPodEarnings: PodFinanceWaterfall;
+  potentialPodEarnings: PodEarningsProjection;
   previewCoupon: CouponPreview;
   productListingRequests: Array<InventoryProduct>;
   /** Server-side table sibling of productListingRequests (shared table engine). */
@@ -8930,6 +9195,10 @@ export type Query = {
   searchDiscovery: SearchResults;
   /** Type-ahead suggestions across clubs, categories, pods and activities. */
   searchSuggestions: Array<SearchSuggestion>;
+  /** Channels the Slack bot can see, each with a copyable archive link. */
+  slackChannels: Array<SlackChannel>;
+  /** Whether a Slack bot token is configured (Tech portal). */
+  slackConfigured: Scalars['Boolean']['output'];
   /** Active (non-expired) stories, newest first. Optionally scoped to one author. */
   stories: Array<Post>;
   /** Owner-only list of who viewed a story, newest first (Bug 4). */
@@ -8944,12 +9213,17 @@ export type Query = {
   surveys: Array<Survey>;
   /** Server-side table page (search/filter/sort/paginate) over surveys. */
   surveysTable: SurveyTablePage;
+  /** Recent logs for one container (demuxed) — polled by the restart log panel. */
+  techContainerLogs: Scalars['String']['output'];
   /** Paged/searchable view over techDockerInfo.containers for the shared table engine. */
   techDockerContainersTable: TechDockerContainerTablePage;
   /** Docker daemon + container status (requires the docker socket mounted into the API container). */
   techDockerInfo: TechDockerInfo;
   /** Live host metrics for the Tech portal Server > Info page. Pass sslHost to include that domain's TLS certificate. */
   techServerInfo: TechServerInfo;
+  telemetryDashboard: TelemetryDashboard;
+  telemetryLogsTable: TelemetryLogTablePage;
+  telemetrySettings: TelemetrySettings;
   ticket?: Maybe<Ticket>;
   /** Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent. */
   ticketTranscript: SupportChatTranscript;
@@ -9012,6 +9286,8 @@ export type Query = {
   waUserLead?: Maybe<WaUserLead>;
   /** Generated user leads (paginated, searchable, sortable). */
   waUserLeads: WaUserLeadPage;
+  /** Products portal: partner warehouse-approval requests (optionally by status). */
+  warehouseApprovalRequests: Array<ApprovalRequest>;
   websiteContent: Array<WebsiteContentItem>;
   websiteContentTable: WebsiteContentItemTablePage;
   websiteNav: Array<WebsiteNavItem>;
@@ -9155,6 +9431,16 @@ export type QueryBouncerSosAlertsArgs = {
 export type QueryBrandPickupLocationsArgs = {
   brand_doc_id?: InputMaybe<Scalars['ID']['input']>;
   owner_kind?: InputMaybe<PickupOwnerKind>;
+};
+
+
+export type QueryBugArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryBugsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -9812,6 +10098,11 @@ export type QueryMyApiKeysTableArgs = {
 };
 
 
+export type QueryMyBrandPickupLocationsArgs = {
+  brand_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryMyCallbackRequestsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -9953,6 +10244,11 @@ export type QueryPartnerDashboardArgs = {
 };
 
 
+export type QueryPartnerEcommStatsArgs = {
+  brand_doc_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
 export type QueryPartnersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -10085,6 +10381,11 @@ export type QueryPodsArgs = {
 };
 
 
+export type QueryPodsForProductArgs = {
+  product_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -10136,7 +10437,8 @@ export type QueryPostsArgs = {
 
 
 export type QueryPotentialPodEarningsArgs = {
-  amount: Scalars['Float']['input'];
+  no_of_spots: Scalars['Int']['input'];
+  pod_amount: Scalars['Float']['input'];
   venue_amount?: InputMaybe<Scalars['Float']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -10341,6 +10643,12 @@ export type QuerySurveysTableArgs = {
 };
 
 
+export type QueryTechContainerLogsArgs = {
+  name: Scalars['String']['input'];
+  tail?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryTechDockerContainersTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
@@ -10348,6 +10656,16 @@ export type QueryTechDockerContainersTableArgs = {
 
 export type QueryTechServerInfoArgs = {
   sslHost?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryTelemetryDashboardArgs = {
+  range_days?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryTelemetryLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -10539,6 +10857,11 @@ export type QueryWaUserLeadArgs = {
 
 export type QueryWaUserLeadsArgs = {
   input?: InputMaybe<WaPageInput>;
+};
+
+
+export type QueryWarehouseApprovalRequestsArgs = {
+  status?: InputMaybe<ApprovalStatus>;
 };
 
 
@@ -10822,6 +11145,26 @@ export type SendAppReleaseEmailInput = {
   version: Scalars['String']['input'];
 };
 
+/** Post a message — supports the full Slack message surface. Provide at least one of text/blocks/attachments. */
+export type SendSlackMessageInput = {
+  /** JSON array of legacy attachments (stringified). */
+  attachments_json?: InputMaybe<Scalars['String']['input']>;
+  /** JSON array of Block Kit blocks (stringified). */
+  blocks_json?: InputMaybe<Scalars['String']['input']>;
+  /** Channel ID (e.g. C0123ABCD) — defaults to the configured default channel. */
+  channel?: InputMaybe<Scalars['String']['input']>;
+  icon_emoji?: InputMaybe<Scalars['String']['input']>;
+  link_names?: InputMaybe<Scalars['Boolean']['input']>;
+  mrkdwn?: InputMaybe<Scalars['Boolean']['input']>;
+  reply_broadcast?: InputMaybe<Scalars['Boolean']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
+  /** Reply in a thread (the parent message's ts). */
+  thread_ts?: InputMaybe<Scalars['String']['input']>;
+  unfurl_links?: InputMaybe<Scalars['Boolean']['input']>;
+  unfurl_media?: InputMaybe<Scalars['Boolean']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type ShipRocketInfo = {
   __typename?: 'ShipRocketInfo';
   awb: Scalars['String']['output'];
@@ -10831,6 +11174,25 @@ export type ShipRocketInfo = {
   order_id: Scalars['String']['output'];
   shipment_id: Scalars['String']['output'];
   tracking_status: Scalars['String']['output'];
+};
+
+export type SlackChannel = {
+  __typename?: 'SlackChannel';
+  id: Scalars['ID']['output'];
+  is_member: Scalars['Boolean']['output'];
+  is_private: Scalars['Boolean']['output'];
+  /** Deep archive link to the channel — copy/share to reach it in Slack. */
+  link: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  num_members: Scalars['Int']['output'];
+  topic: Scalars['String']['output'];
+};
+
+export type SlackSendResult = {
+  __typename?: 'SlackSendResult';
+  channel: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+  ts: Scalars['String']['output'];
 };
 
 export type SlotTemplate = {
@@ -11249,6 +11611,13 @@ export type TechDockerInfo = {
   version?: Maybe<Scalars['String']['output']>;
 };
 
+export type TechExecResult = {
+  __typename?: 'TechExecResult';
+  exitCode: Scalars['Int']['output'];
+  stderr: Scalars['String']['output'];
+  stdout: Scalars['String']['output'];
+};
+
 export type TechNetworkInterface = {
   __typename?: 'TechNetworkInterface';
   address: Scalars['String']['output'];
@@ -11268,6 +11637,12 @@ export type TechOsInfo = {
   processUptimeSeconds: Scalars['Float']['output'];
   release: Scalars['String']['output'];
   type: Scalars['String']['output'];
+};
+
+export type TechRestartResult = {
+  __typename?: 'TechRestartResult';
+  error?: Maybe<Scalars['String']['output']>;
+  ok: Scalars['Boolean']['output'];
 };
 
 export type TechServerInfo = {
@@ -11293,6 +11668,75 @@ export type TechSslInfo = {
   valid: Scalars['Boolean']['output'];
   validFrom?: Maybe<Scalars['String']['output']>;
   validTo?: Maybe<Scalars['String']['output']>;
+};
+
+export type TelemetryCountBucket = {
+  __typename?: 'TelemetryCountBucket';
+  count: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+};
+
+export type TelemetryDashboard = {
+  __typename?: 'TelemetryDashboard';
+  active_bugs: Scalars['Int']['output'];
+  by_environment: Array<TelemetryCountBucket>;
+  by_level: Array<TelemetryCountBucket>;
+  by_source: Array<TelemetryCountBucket>;
+  range_days: Scalars['Int']['output'];
+  series: Array<TelemetrySeriesPoint>;
+  top_bugs: Array<Bug>;
+  total_logs: Scalars['Int']['output'];
+};
+
+export type TelemetryError = {
+  __typename?: 'TelemetryError';
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  stack?: Maybe<Scalars['String']['output']>;
+};
+
+export type TelemetryLog = {
+  __typename?: 'TelemetryLog';
+  app: Scalars['String']['output'];
+  component: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  environment: Scalars['String']['output'];
+  error?: Maybe<TelemetryError>;
+  host?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  level: Scalars['String']['output'];
+  os?: Maybe<Scalars['String']['output']>;
+  page: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  portal?: Maybe<Scalars['String']['output']>;
+  /** Normalized surface key (mWeb / mobileApp:ios / portal:crm / server). */
+  source: Scalars['String']['output'];
+  url?: Maybe<Scalars['String']['output']>;
+};
+
+export type TelemetryLogTablePage = {
+  __typename?: 'TelemetryLogTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<TelemetryLog>;
+  total: Scalars['Int']['output'];
+};
+
+export type TelemetrySeriesPoint = {
+  __typename?: 'TelemetrySeriesPoint';
+  count: Scalars['Int']['output'];
+  date: Scalars['String']['output'];
+};
+
+export type TelemetrySettings = {
+  __typename?: 'TelemetrySettings';
+  /** Levels written to the DB (the rest only ship to SigNoz). */
+  persisted_levels: Array<Scalars['String']['output']>;
+  /** Days a persisted log/bug is kept before the daily cleanup deletes it (1..90). */
+  retention_days: Scalars['Int']['output'];
+  /** Master switch for shipping logs to SigNoz (OTLP). */
+  signoz_enabled: Scalars['Boolean']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
 };
 
 export type Ticket = {
@@ -11485,8 +11929,10 @@ export type UpdateBrandingInput = {
   android_app_url?: InputMaybe<Scalars['String']['input']>;
   app_latest_version?: InputMaybe<Scalars['String']['input']>;
   app_name?: InputMaybe<Scalars['String']['input']>;
+  home_all_vibe_icon_layout?: InputMaybe<CategoryIconLayoutInput>;
   home_all_vibe_icon_url?: InputMaybe<Scalars['String']['input']>;
   home_header_tagline?: InputMaybe<Scalars['String']['input']>;
+  home_show_all_vibe_categories?: InputMaybe<Scalars['Boolean']['input']>;
   ios_app_url?: InputMaybe<Scalars['String']['input']>;
   logo_url?: InputMaybe<Scalars['String']['input']>;
   mobile_favicon_url?: InputMaybe<Scalars['String']['input']>;
@@ -11517,6 +11963,8 @@ export type UpdateCategoryInput = {
   allow_co_hosts?: InputMaybe<Scalars['Boolean']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
+  icon_layout_mweb?: InputMaybe<CategoryIconLayoutInput>;
+  icon_layout_native?: InputMaybe<CategoryIconLayoutInput>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   max_co_hosts?: InputMaybe<Scalars['Int']['input']>;
   media?: InputMaybe<Array<CategoryMediaInput>>;
@@ -11704,6 +12152,7 @@ export type UpdateInventoryProductInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   discount_percent?: InputMaybe<Scalars['Float']['input']>;
   expiry_date?: InputMaybe<Scalars['String']['input']>;
+  free_delivery_above?: InputMaybe<Scalars['Float']['input']>;
   height_cm?: InputMaybe<Scalars['Float']['input']>;
   host_request_allowed?: InputMaybe<Scalars['Boolean']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
@@ -11841,6 +12290,12 @@ export type UpdateSurveyInput = {
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UpdateTelemetrySettingsInput = {
+  persisted_levels?: InputMaybe<Array<Scalars['String']['input']>>;
+  retention_days?: InputMaybe<Scalars['Int']['input']>;
+  signoz_enabled?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type UpdateUploadSettingInput = {

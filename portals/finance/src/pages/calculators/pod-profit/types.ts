@@ -1,10 +1,11 @@
 export interface PodProfitInputs {
   /** Ticket price paid per spot, GST-inclusive (₹). */
   pod_amount: number;
-  /** Number of spots (pod capacity). Mirrors Pod.no_of_spots — for physical
-   * pods this comes from the venue space's capacity, not a separate entry. The
-   * waterfall runs on pod_amount × spots so the venue's fixed slot price is
-   * counted once for the whole pod. */
+  /** Number of spots (pod capacity, INCLUDING the host's own seat). Mirrors
+   * Pod.no_of_spots — for physical pods this comes from the venue space's
+   * capacity, not a separate entry. The waterfall runs on pod_amount × PAYABLE
+   * spots (total − 1, because the host's spot is free) so the venue's fixed slot
+   * price is counted once for the whole pod. */
   no_of_spots: number;
   /** GST % extracted from the GST-inclusive pod amount. */
   gst_percent: number;
@@ -19,7 +20,11 @@ export interface PodProfitInputs {
 }
 
 export interface PodProfitResults {
-  /** Total collection = ticket price × spots (the amount the waterfall runs on). */
+  /** Spots entered (capacity, including the host's own free seat). */
+  total_spots: number;
+  /** Spots actually billed: total − 1, because the host's spot is free. */
+  payable_spots: number;
+  /** Total collection = ticket price × PAYABLE spots (what the waterfall runs on). */
   collection_total: number;
   gst_amount: number;
   net_amount: number;

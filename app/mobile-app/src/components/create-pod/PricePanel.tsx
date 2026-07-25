@@ -19,24 +19,25 @@ interface Props {
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Server-computed earnings waterfall (potentialPodEarnings) for the FULL pod
- * collection — the venue's fixed slot price is deducted once, not per booking. */
+ * collection — billed on PAYABLE spots (total − 1, the host's seat is free) with
+ * the venue's fixed slot price deducted once, not per booking. */
 function EarningsRows({
   waterfall,
   symbol,
   venuePicked,
   podAmount,
-  noOfSpots,
+  payableSpots,
 }: Readonly<{
   waterfall: PotentialEarnings;
   symbol: string;
   venuePicked: boolean;
   podAmount: number;
-  noOfSpots: number;
+  payableSpots: number;
 }>) {
   const money = (value: number) => `${symbol}${value.toFixed(2)}`;
   const rows: { label: string; value: string; bold?: boolean; color?: string }[] = [
     {
-      label: `Total collection (${symbol}${round2(podAmount).toLocaleString('en-IN')} × ${noOfSpots})`,
+      label: `Total collection (${symbol}${round2(podAmount).toLocaleString('en-IN')} × ${payableSpots})`,
       value: money(waterfall.amount),
       bold: true,
       color: EARN_GREEN,
@@ -76,14 +77,15 @@ function EarningsRows({
       ))}
       <Row label="You Receive" value={money(waterfall.host_receives)} bold color={EARN_GREEN} />
       <Text fontSize={11.5} color="$muted">
-        For {noOfSpots} pax · {waterfall.host_earn_pct}% of collection
+        For {payableSpots} paying pax · {waterfall.host_earn_pct}% of collection
       </Text>
     </YStack>
   );
 }
 
-/** The host's final calculation for a pod — the server-computed earnings for the
- * full collection (ticket × pax), with the venue's fixed slot price once. mWeb twin. */
+/** The host's final calculation for a pod — the server-computed earnings, billed
+ * on PAYABLE spots (total − 1, the host's own seat is free) with the venue's
+ * fixed slot price deducted once. mWeb twin. */
 export function PricePanel({
   finance,
   slotPrice,
@@ -94,9 +96,11 @@ export function PricePanel({
 }: Readonly<Props>) {
   const venuePicked = isPhysical && slotPrice !== null;
   const ready = podAmount > 0 && noOfSpots > 0;
-  const collection = ready ? round2(podAmount * noOfSpots) : 0;
-  const { waterfall, isLoading } = usePotentialEarnings(
-    collection,
+  // A 1-spot pod is the host's own free seat — there is nothing to bill.
+  const hostOnly = ready && noOfSpots === 1;
+  const { projection, waterfall, isLoading } = usePotentialEarnings(
+    podAmount,
+    noOfSpots,
     venuePicked ? venueId : null,
     venuePicked ? slotPrice : null,
   );
@@ -119,23 +123,34 @@ export function PricePanel({
       <Text fontSize={11.5} fontWeight="800" color="$muted">
         Your take-home for the full pod
       </Text>
+      {noOfSpots > 0 ? (
+        <Text testID="price-panel-host-free-note" fontSize={11.5} color="$muted">
+          Your spot is free — the calculation is based on total spots − 1 ({noOfSpots} − 1 ={' '}
+          {noOfSpots - 1}).
+        </Text>
+      ) : null}
       {ready ? null : (
         <Text fontSize={12.5} color="$muted">
           Set a ticket price and the number of spots to preview your earnings.
         </Text>
       )}
+      {hostOnly ? (
+        <Text testID="price-panel-host-only" fontSize={12.5} color="$muted">
+          This pod only has your own spot, which is free. Add more spots to earn.
+        </Text>
+      ) : null}
       {ready && isLoading ? (
         <Spinner testID="create-pod-earnings-loading" size="small" color="$primary" />
       ) : null}
       {/* Hide the previous waterfall while a new amount is loading, so stale
           money rows never render beside labels built from the live inputs. */}
-      {ready && waterfall && !isLoading ? (
+      {ready && projection && waterfall && !isLoading ? (
         <EarningsRows
           waterfall={waterfall}
           symbol={finance.currency_symbol}
           venuePicked={venuePicked}
           podAmount={podAmount}
-          noOfSpots={noOfSpots}
+          payableSpots={projection.payable_spots}
         />
       ) : null}
       <Text fontSize={11.5} color="$muted">

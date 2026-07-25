@@ -202,6 +202,16 @@ export const financeTypeDefs = /* GraphQL */ `
     host_earn_pct: Float!
   }
 
+  # Create-a-Pod earnings projection. The host's own spot is FREE, so the pod is
+  # billed on payable_spots (= total_spots - 1), never the raw spot count.
+  type PodEarningsProjection {
+    "Spots the host entered (physical capacity, including the host's own seat)."
+    total_spots: Int!
+    "Spots that can actually be sold: total_spots - 1 (0 when unset/unlimited)."
+    payable_spots: Int!
+    waterfall: PodFinanceWaterfall!
+  }
+
   enum PodSettlementStatus {
     LIVE
     PENDING_APPROVAL
@@ -378,10 +388,17 @@ export const financeTypeDefs = /* GraphQL */ `
     # Complete financial breakdown for one pod — frozen snapshot once settled,
     # live at current dynamic rates otherwise. Pod host, venue owner, or admin.
     podFinanceBreakdown(pod_id: ID!): PodFinanceBreakdown!
-    # Potential-earnings preview for a hypothetical GST-inclusive price using
-    # the signed-in host's effective rates. venue_id resolves the venue's
-    # commission %; venue_amount is the picked slot's price (Partners portal).
-    potentialPodEarnings(amount: Float!, venue_id: ID, venue_amount: Float): PodFinanceWaterfall!
+    # Potential-earnings preview for Create-a-Pod, using the signed-in host's
+    # effective rates. pod_amount is the GST-inclusive ticket price PER SPOT and
+    # no_of_spots the total capacity — the server bills (no_of_spots - 1) because
+    # the host's own spot is free. venue_id resolves the venue's commission %;
+    # venue_amount is the picked slot's price (Partners portal).
+    potentialPodEarnings(
+      pod_amount: Float!
+      no_of_spots: Int!
+      venue_id: ID
+      venue_amount: Float
+    ): PodEarningsProjection!
     # Host Studio dashboard earnings summary (signed-in host).
     myHostEarningsSummary: EarningsSummary!
     # Host Studio insights charts (signed-in host): status distribution

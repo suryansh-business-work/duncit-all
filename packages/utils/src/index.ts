@@ -15,3 +15,4 @@ export {
   filterProductsForClub,
   type ClubCategoryKey,
 } from './product-category';
+export { HOST_FREE_SPOT_NOTE, payableSpots, payingAttendees } from './pod-spots';

@@ -19,23 +19,25 @@ import { renderWithProviders } from '@/utils/test-utils';
 const mockedEarnings = usePotentialEarnings as jest.Mock;
 
 // Canonical server waterfall @ GST 18 / fee 5 / commission 10, ₹1000, slot ₹300.
-// Waterfall for the FULL collection: ticket ₹1000 × 30 pax = ₹30,000, with the
-// venue's ₹300 slot price deducted ONCE for the pod (not per booking).
+// The host's own spot is FREE, so a 30-spot pod bills 29 guests: ₹1000 × 29 =
+// ₹29,000, with the venue's ₹300 slot price deducted ONCE (not per booking).
 const waterfall = {
-  amount: 30000,
+  amount: 29000,
   gst_pct: 18,
-  gst_amount: 4576.27,
+  gst_amount: 4423.73,
   platform_fee_pct: 5,
-  platform_fee_amount: 1271.19,
+  platform_fee_amount: 1228.81,
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 300,
-  host_amount: 23852.54,
+  host_amount: 23047.46,
   host_commission_pct: 10,
-  host_commission_amount: 2385.25,
-  host_receives: 21467.29,
-  host_earn_pct: 71.56,
+  host_commission_amount: 2304.75,
+  host_receives: 20742.71,
+  host_earn_pct: 71.53,
 };
+
+const projection = { total_spots: 30, payable_spots: 29, waterfall };
 
 const mockGraphqlRequest = jest.fn();
 jest.mock('@/services/graphql.client', () => ({
@@ -84,7 +86,9 @@ const venue: CreatePodVenue = {
 beforeEach(() => {
   mockGraphqlRequest.mockReset();
   mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [slot, freeSlot] });
-  mockedEarnings.mockReset().mockReturnValue({ waterfall: null, isLoading: false });
+  mockedEarnings
+    .mockReset()
+    .mockReturnValue({ projection: null, waterfall: null, isLoading: false });
 });
 
 function VenueSlotHarness({
@@ -357,7 +361,7 @@ describe('PricingStep', () => {
 
   it('passes the picked venue + slot price to the earnings preview (physical)', () => {
     renderWithProviders(<PricingHarness initial={{ pod_mode: 'PHYSICAL', venue_id: 'v1' }} />);
-    expect(mockedEarnings).toHaveBeenCalledWith(0, 'v1', 400);
+    expect(mockedEarnings).toHaveBeenCalledWith(0, 0, 'v1', 400);
   });
 });
 
@@ -409,7 +413,7 @@ describe('VenueContactCard', () => {
 
 describe('PricePanel', () => {
   it('runs the waterfall on the full collection (ticket × pax) with the venue once', () => {
-    mockedEarnings.mockReturnValue({ waterfall, isLoading: false });
+    mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
     renderWithProviders(
       <PricePanel
         finance={finance}
@@ -422,10 +426,10 @@ describe('PricePanel', () => {
     );
     // The query runs on the total collection (1000 × 30); the venue slot price
     // is passed once, not multiplied by the spot count.
-    expect(mockedEarnings).toHaveBeenCalledWith(30000, 'v1', 300);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 300);
     // en-IN grouping on the ticket price — identical to the mWeb label.
-    expect(screen.getByText('Total collection (₹1,000 × 30)')).toBeOnTheScreen();
-    expect(screen.getByText('₹30000.00')).toBeOnTheScreen();
+    expect(screen.getByText('Total collection (₹1,000 × 29)')).toBeOnTheScreen();
+    expect(screen.getByText('₹29000.00')).toBeOnTheScreen();
     expect(screen.getByText('− GST (18%)')).toBeOnTheScreen();
     expect(screen.getByText('− Platform Fee (5%)')).toBeOnTheScreen();
     expect(screen.getByText('− Venue slot price')).toBeOnTheScreen();
@@ -433,16 +437,18 @@ describe('PricePanel', () => {
     expect(screen.getByText('Your Amount (remainder)')).toBeOnTheScreen();
     expect(screen.getByText('− Your Commission (10%)')).toBeOnTheScreen();
     expect(screen.getByText('You Receive')).toBeOnTheScreen();
-    expect(screen.getByText('₹21467.29')).toBeOnTheScreen();
-    expect(screen.getByText('For 30 pax · 71.56% of collection')).toBeOnTheScreen();
+    expect(screen.getByText('₹20742.71')).toBeOnTheScreen();
+    expect(screen.getByText('For 29 paying pax · 71.53% of collection')).toBeOnTheScreen();
     // The old per-booking framing is gone.
     expect(screen.queryByText(/per booking/)).toBeNull();
     expect(screen.queryByText(/Total take-home/)).toBeNull();
   });
 
   it('shows the club-admin row when a club-admin cut is configured', () => {
+    const clubWaterfall = { ...waterfall, club_admin_pct: 10, club_admin_amount: 800.51 };
     mockedEarnings.mockReturnValue({
-      waterfall: { ...waterfall, club_admin_pct: 10, club_admin_amount: 800.51 },
+      projection: { ...projection, waterfall: clubWaterfall },
+      waterfall: clubWaterfall,
       isLoading: false,
     });
     renderWithProviders(
@@ -459,6 +465,40 @@ describe('PricePanel', () => {
     expect(screen.getByText('₹800.51')).toBeOnTheScreen();
   });
 
+  it('explains that the host spot is free and shows the total − 1 maths', () => {
+    mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
+    renderWithProviders(
+      <PricePanel
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={30}
+        isPhysical
+      />,
+    );
+    expect(screen.getByTestId('price-panel-host-free-note')).toHaveTextContent(
+      'Your spot is free — the calculation is based on total spots − 1 (30 − 1 = 29).',
+    );
+  });
+
+  it('tells a 1-spot host there is nothing to bill (their seat is the free one)', () => {
+    renderWithProviders(
+      <PricePanel
+        finance={finance}
+        slotPrice={null}
+        venueId={null}
+        podAmount={1000}
+        noOfSpots={1}
+        isPhysical={false}
+      />,
+    );
+    expect(screen.getByTestId('price-panel-host-only')).toHaveTextContent(
+      'This pod only has your own spot, which is free. Add more spots to earn.',
+    );
+    expect(screen.queryByTestId('create-pod-earnings')).toBeNull();
+  });
+
   it('shows a hint until both a ticket price and spots are set', () => {
     renderWithProviders(
       <PricePanel
@@ -470,7 +510,7 @@ describe('PricePanel', () => {
         isPhysical={false}
       />,
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(0, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(100, 0, null, null);
     expect(
       screen.getByText('Set a ticket price and the number of spots to preview your earnings.'),
     ).toBeOnTheScreen();
@@ -478,14 +518,16 @@ describe('PricePanel', () => {
   });
 
   it('skips venue rows for a virtual pod and asks without venue args', () => {
+    const virtualWaterfall = {
+      ...waterfall,
+      venue_amount: 0,
+      host_amount: 23347.46,
+      host_receives: 21012.71,
+      host_earn_pct: 72.46,
+    };
     mockedEarnings.mockReturnValue({
-      waterfall: {
-        ...waterfall,
-        venue_amount: 0,
-        host_amount: 24152.54,
-        host_receives: 21737.29,
-        host_earn_pct: 72.46,
-      },
+      projection: { ...projection, waterfall: virtualWaterfall },
+      waterfall: virtualWaterfall,
       isLoading: false,
     });
     renderWithProviders(
@@ -498,13 +540,13 @@ describe('PricePanel', () => {
         isPhysical={false}
       />,
     );
-    expect(mockedEarnings).toHaveBeenCalledWith(30000, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
     expect(screen.queryByText('− Venue slot price')).toBeNull();
-    expect(screen.getByText('₹21737.29')).toBeOnTheScreen();
+    expect(screen.getByText('₹21012.71')).toBeOnTheScreen();
   });
 
   it('shows the earnings spinner while the preview loads', () => {
-    mockedEarnings.mockReturnValue({ waterfall: null, isLoading: true });
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: true });
     renderWithProviders(
       <PricePanel
         finance={finance}
@@ -522,7 +564,7 @@ describe('PricePanel', () => {
   it('hides the previous (stale) waterfall while a new amount is loading', () => {
     // A refetch is in flight: the hook still holds the old waterfall but
     // isLoading is true — only the spinner may render, never stale money rows.
-    mockedEarnings.mockReturnValue({ waterfall, isLoading: true });
+    mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: true });
     renderWithProviders(
       <PricePanel
         finance={finance}
@@ -549,6 +591,6 @@ describe('PricePanel', () => {
       />,
     );
     // Physical but no slot picked → no venue args, on the total collection.
-    expect(mockedEarnings).toHaveBeenCalledWith(300, null, null);
+    expect(mockedEarnings).toHaveBeenCalledWith(100, 3, null, null);
   });
 });

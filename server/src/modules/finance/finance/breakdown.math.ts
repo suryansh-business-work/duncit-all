@@ -89,6 +89,19 @@ export function assertValidRates(rates: BreakdownRates): void {
 }
 
 /**
+ * Spots that can actually be SOLD for a pod. The host takes one seat for free
+ * (they are added to pod_attendees on create and never pay), so a 30-spot pod
+ * only ever bills 29 guests. `no_of_spots = 0` means unlimited/unset — there is
+ * nothing to project, so it bills 0.
+ *
+ * Every earnings projection MUST bill this, never the raw spot count.
+ */
+export function payableSpots(totalSpots: number): number {
+  if (!Number.isFinite(totalSpots) || totalSpots <= 0) return 0;
+  return Math.floor(totalSpots) - 1;
+}
+
+/**
  * Computes the full GST-inclusive breakdown for a pod payment.
  * Pure: same inputs → same output. All arithmetic on paise integers with
  * half-up rounding per line and exact reconciliation.

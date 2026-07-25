@@ -42,6 +42,8 @@ export const PARTNER_DASHBOARD = gql`
       pod_date_time
       pod_amount
       pod_attendees
+
+      pod_hosts_id
       product_cost_total
       completed_at
       is_active
@@ -94,6 +96,8 @@ export const DASHBOARD_HOST_PODS_TABLE = gql`
         pod_date_time
         pod_amount
         pod_attendees
+
+        pod_hosts_id
         is_active
         completed_at
       }

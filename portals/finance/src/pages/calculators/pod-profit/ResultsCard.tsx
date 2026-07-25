@@ -92,9 +92,14 @@ export default function ResultsCard({ results }: Readonly<Props>) {
 
         <SectionLabel text="Collection" />
         <Row
+          label="Payable spots"
+          value={`${results.payable_spots} of ${results.total_spots}`}
+          detail="The host's spot is free — the calculation is based on total spots − 1"
+        />
+        <Row
           label="Total collection"
           value={formatRupees(results.collection_total)}
-          detail="Ticket price × no. of spots — the amount the waterfall runs on"
+          detail={`Ticket price × ${results.payable_spots} payable spots — the amount the waterfall runs on`}
         />
 
         <Divider sx={{ my: 1 }} />

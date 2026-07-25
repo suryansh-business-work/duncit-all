@@ -4,23 +4,29 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 import { PotentialPodEarningsDocument } from '@/graphql/create-pod';
 import { graphqlRequest } from '@/services/graphql.client';
 
-export type PotentialEarnings = ResultOf<
+export type PodEarningsProjection = ResultOf<
   typeof PotentialPodEarningsDocument
 >['potentialPodEarnings'];
 
-/** Debounced server-computed potential-earnings waterfall for the pricing
- * panel. Skips free pods (amount ≤ 0); venue args come from the picked slot. */
+export type PotentialEarnings = PodEarningsProjection['waterfall'];
+
+/** Debounced server-computed potential-earnings projection for the pricing
+ * panel. The SERVER bills payable spots (total − 1, because the host's own seat
+ * is free), so nothing is multiplied here. Skips pods with nothing billable — a
+ * free pod, or a 1-spot pod that is only the host's own free seat. Venue args
+ * come from the picked slot. */
 export function usePotentialEarnings(
-  amount: number,
+  podAmount: number,
+  noOfSpots: number,
   venueId: string | null,
   venueAmount: number | null,
 ) {
-  const [waterfall, setWaterfall] = useState<PotentialEarnings | null>(null);
+  const [projection, setProjection] = useState<PodEarningsProjection | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (amount <= 0) {
-      setWaterfall(null);
+    if (podAmount <= 0 || noOfSpots <= 1) {
+      setProjection(null);
       setIsLoading(false);
       return undefined;
     }
@@ -29,11 +35,16 @@ export function usePotentialEarnings(
     const timer = setTimeout(() => {
       graphqlRequest(
         PotentialPodEarningsDocument,
-        { amount, venue_id: venueId, venue_amount: venueAmount },
+        {
+          pod_amount: podAmount,
+          no_of_spots: noOfSpots,
+          venue_id: venueId,
+          venue_amount: venueAmount,
+        },
         { auth: true },
       )
         .then((res) => {
-          if (active) setWaterfall(res.potentialPodEarnings);
+          if (active) setProjection(res.potentialPodEarnings);
         })
         .catch(() => undefined)
         .finally(() => {
@@ -44,7 +55,7 @@ export function usePotentialEarnings(
       active = false;
       clearTimeout(timer);
     };
-  }, [amount, venueId, venueAmount]);
+  }, [podAmount, noOfSpots, venueId, venueAmount]);
 
-  return { waterfall, isLoading };
+  return { projection, waterfall: projection?.waterfall ?? null, isLoading };
 }

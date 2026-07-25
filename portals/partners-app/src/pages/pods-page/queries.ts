@@ -85,6 +85,8 @@ export interface PartnerPodRow {
   pod_date_time?: string | null;
   pod_amount?: number | null;
   pod_attendees?: string[] | null;
+  /** Hosts sit inside pod_attendees but never pay — see payingAttendees. */
+  pod_hosts_id?: string[] | null;
   is_active: boolean;
   completed_at?: string | null;
 }

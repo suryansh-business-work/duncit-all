@@ -148,10 +148,52 @@ export interface IBranding extends Document {
   app_latest_version: string;
   // Global Pod Shop top slider (image/video), admin-managed from the products
   // portal. Shown above the platform-wide Pod Shop grid on mobile + mWeb.
-  pod_shop_slider: { url: string; type: string; order: number }[];
+  pod_shop_slider: {
+    url: string;
+    type: string;
+    order: number;
+    heading: string;
+    subheading: string;
+    cta_label: string;
+    cta_url: string;
+  }[];
+  /** Festive icon windows; the active one swaps the apps' icons by date. */
+  occasional_icons: {
+    slug: string;
+    label: string;
+    starts_at: Date;
+    ends_at: Date;
+    icon_url: string;
+    is_active: boolean;
+    sort_order: number;
+  }[];
   created_at: Date;
   updated_at: Date;
 }
+
+/** One festive window: while "now" (per the app time source) sits inside it,
+ * the apps swap in this occasion's icons. `slug` doubles as the folder name the
+ * native app loads its bundled icons from. */
+const occasionalIconSchema = new Schema<{
+  slug: string;
+  label: string;
+  starts_at: Date;
+  ends_at: Date;
+  icon_url: string;
+  is_active: boolean;
+  sort_order: number;
+}>(
+  {
+    slug: { type: String, required: true, lowercase: true, trim: true },
+    label: { type: String, default: "" },
+    starts_at: { type: Date, required: true },
+    ends_at: { type: Date, required: true },
+    icon_url: { type: String, default: "" },
+    is_active: { type: Boolean, default: true },
+    sort_order: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
 
 const podShopSliderMediaSchema = new Schema<{
   url: string;
@@ -234,6 +276,7 @@ const brandingSchema = new Schema<IBranding>(
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
     pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },
+    occasional_icons: { type: [occasionalIconSchema], default: [] },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

@@ -115,6 +115,33 @@ export const settingsTypeDefs = gql`
     enabled: Boolean
   }
 
+  """
+  A festive window. While the app clock sits inside [starts_at, ends_at] the
+  apps swap in this occasion's icons. The slug doubles as the folder name the
+  native app loads its pre-bundled icons from.
+  """
+  type OccasionalIcon {
+    slug: String!
+    label: String!
+    starts_at: String!
+    ends_at: String!
+    "Server-hosted icon. Native prefers its bundled copy for this slug."
+    icon_url: String!
+    is_active: Boolean!
+    "Higher wins when windows overlap, so a campaign can sit over a season."
+    sort_order: Int!
+  }
+
+  input OccasionalIconInput {
+    slug: String!
+    label: String
+    starts_at: String!
+    ends_at: String!
+    icon_url: String
+    is_active: Boolean
+    sort_order: Int
+  }
+
   "One media item in the global Pod Shop top slider (image or video)."
   type PodShopSliderMedia {
     url: String!
@@ -173,6 +200,8 @@ export const settingsTypeDefs = gql`
     app_latest_version: String!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
     pod_shop_slider: [PodShopSliderMedia!]!
+    "Festive icon windows; the app clock picks which one is active."
+    occasional_icons: [OccasionalIcon!]!
     updated_at: String
   }
 
@@ -240,5 +269,7 @@ export const settingsTypeDefs = gql`
     updateBranding(input: UpdateBrandingInput!): Branding!
     "Replace the global Pod Shop slider media (managed from the products portal)."
     updatePodShopSlider(input: [PodShopSliderMediaInput!]!): [PodShopSliderMedia!]!
+    "Replace the occasional-icon windows (admin Branding)."
+    updateOccasionalIcons(input: [OccasionalIconInput!]!): [OccasionalIcon!]!
   }
 `;

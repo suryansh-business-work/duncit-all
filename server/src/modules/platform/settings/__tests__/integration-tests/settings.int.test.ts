@@ -59,6 +59,40 @@ describe('settingsService integration', () => {
     await settingsService.updateAppSettings({ time_source: 'SERVER' });
   });
 
+  it('replaces occasional icons, normalising slugs and dropping unusable rows', async () => {
+    const saved = await settingsService.updateOccasionalIcons([
+      {
+        slug: '  Diwali ',
+        label: 'Diwali',
+        starts_at: '2026-11-05T00:00:00.000Z',
+        ends_at: '2026-11-12T00:00:00.000Z',
+        icon_url: ' https://cdn/diwali.png ',
+      },
+      // Dropped: no slug.
+      { slug: '   ', starts_at: '2026-01-01T00:00:00.000Z', ends_at: '2026-01-02T00:00:00.000Z' },
+      // Dropped: unusable dates.
+      { slug: 'junk', starts_at: 'not-a-date', ends_at: '2026-01-02T00:00:00.000Z' },
+      // Dropped: window ends before it starts.
+      { slug: 'backwards', starts_at: '2026-05-02T00:00:00.000Z', ends_at: '2026-05-01T00:00:00.000Z' },
+    ]);
+
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({
+      slug: 'diwali', // trimmed + lowercased so it matches the native asset folder
+      label: 'Diwali',
+      icon_url: 'https://cdn/diwali.png',
+      is_active: true,
+      sort_order: 0,
+    });
+
+    // Readable from the public branding query the apps use.
+    const branding = await settingsService.getBranding();
+    expect(branding.occasional_icons).toEqual(saved);
+
+    // Replacing with an empty list clears them.
+    expect(await settingsService.updateOccasionalIcons([])).toEqual([]);
+  });
+
   it('updates the timezone and re-aligns the reopen-window day boundary', async () => {
     const updated = await settingsService.updateAppSettings({ time_zone: 'America/New_York' });
     expect(updated.time_zone).toBe('America/New_York');

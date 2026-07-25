@@ -190,6 +190,15 @@ const brandingToPub = (doc: any) => ({
     cta_label: m.cta_label ?? "",
     cta_url: m.cta_url ?? "",
   })),
+  occasional_icons: (doc.occasional_icons ?? []).map((o: any) => ({
+    slug: o.slug ?? "",
+    label: o.label ?? "",
+    starts_at: o.starts_at?.toISOString?.() ?? "",
+    ends_at: o.ends_at?.toISOString?.() ?? "",
+    icon_url: o.icon_url ?? "",
+    is_active: o.is_active !== false,
+    sort_order: o.sort_order ?? 0,
+  })),
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
 
@@ -527,6 +536,44 @@ export const settingsService = {
       { new: true, upsert: true },
     );
     return brandingToPub(doc).pod_shop_slider;
+  },
+
+  /** Replace the festive icon windows (admin Branding). Rows with an unusable
+   * slug or date range are dropped rather than stored half-formed. */
+  async updateOccasionalIcons(
+    input: {
+      slug: string;
+      label?: string | null;
+      starts_at: string;
+      ends_at: string;
+      icon_url?: string | null;
+      is_active?: boolean | null;
+      sort_order?: number | null;
+    }[],
+  ) {
+    const rows = (input ?? [])
+      .map((o, i) => ({
+        slug: (o.slug ?? "").trim().toLowerCase(),
+        label: (o.label ?? "").trim(),
+        starts_at: new Date(o.starts_at),
+        ends_at: new Date(o.ends_at),
+        icon_url: (o.icon_url ?? "").trim(),
+        is_active: o.is_active !== false,
+        sort_order: o.sort_order ?? i,
+      }))
+      .filter(
+        (o) =>
+          o.slug !== "" &&
+          !Number.isNaN(o.starts_at.getTime()) &&
+          !Number.isNaN(o.ends_at.getTime()) &&
+          o.ends_at.getTime() >= o.starts_at.getTime(),
+      );
+    const doc = await BrandingModel.findOneAndUpdate(
+      { singleton_key: "branding" },
+      { $set: { occasional_icons: rows } },
+      { new: true, upsert: true },
+    );
+    return brandingToPub(doc).occasional_icons;
   },
 
   async seedDefaults() {

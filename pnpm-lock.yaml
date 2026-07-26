@@ -278,6 +278,9 @@ importers:
       '@duncit/datetime':
         specifier: workspace:*
         version: link:../datetime
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4

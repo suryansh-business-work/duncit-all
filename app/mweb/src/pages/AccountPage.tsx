@@ -25,6 +25,7 @@ import { toDobInput } from './account-page/account-edit';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import SecuritySection from './account-page/SecuritySection';
+import LanguageSection from './account-page/LanguageSection';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -178,6 +179,7 @@ export default function AccountPage() {
 
       <HostsVenuesCard />
 
+      <LanguageSection />
       <SecuritySection />
       <EditAccountDialog
         open={editOpen}

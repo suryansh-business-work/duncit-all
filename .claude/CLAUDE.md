@@ -308,7 +308,13 @@ already exist as a Localization entry AND in that surface's local fallback bundl
 
 39. Fallback icons (ENFORCED) — every project ships `src/fallback-icons/` (native:
 `assets/fallback-icons/`) containing a local copy of **every** name exported by
-`@duncit/fallback-icons`. Server-hosted branding icons can be blank, deleted or offline;
+`@duncit/fallback-icons`. The **17 MUI portals share ONE bundle** at
+`packages/shell/src/fallback-icons/`, because every portal renders its chrome through
+the shell — 17 copies of the same bytes is 17 chances to drift (rule 34). Each portal
+still ships them: Vite compiles the assets into that portal's build. Rendering goes
+through `resolveIconSource(url, bundled, failed)`, and anything showing a remote icon
+must pass `failed` from an `onError` handler — a URL that 404s at request time never
+arrives empty, so a blank-check alone silently renders a broken image. Server-hosted branding icons can be blank, deleted or offline;
 the bundled copy is what renders then. Two compile-time gates enforce this and neither is
 optional: `node scripts/verify-fallback-icons.mjs <dir>` is chained inside each project's
 `build` script (NOT `prebuild` — pnpm ≥8 does not run pre/post scripts), and the manifest

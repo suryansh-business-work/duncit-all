@@ -11,6 +11,7 @@
   "dependencies": {
     "@duncit/app-settings": "workspace:*",
     "@duncit/breadcrumb": "workspace:*",
+    "@duncit/fallback-icons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/theme": "workspace:*",
@@ -54,7 +55,8 @@
     "vitest": "^2.1.9"
   },
   "scripts": {
-    "test": "vitest run",
+    "verify:fallback-icons": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons",
+    "test": "node ../../scripts/verify-fallback-icons.mjs src/fallback-icons && vitest run",
     "test:coverage": "vitest run --coverage"
   }
 }

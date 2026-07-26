@@ -64,9 +64,7 @@ describe('useOccasionIcon', () => {
   });
 
   it('renders the BOUND fallback icon for an unbundled slug with no icon_url', () => {
-    withOccasions([
-      { ...diwali, slug: 'not-bundled', icon_url: '', fallback_icon: 'all-vibe' },
-    ]);
+    withOccasions([{ ...diwali, slug: 'not-bundled', icon_url: '', fallback_icon: 'all-vibe' }]);
     const active = renderHook(() => useOccasionIcon()).result.current;
     // An active occasion must never render nothing.
     expect(active?.source).toBe(FALLBACK_ICONS['all-vibe']);

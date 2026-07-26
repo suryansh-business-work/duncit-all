@@ -945,6 +945,9 @@ importers:
       '@duncit/breadcrumb':
         specifier: workspace:*
         version: link:../breadcrumb
+      '@duncit/fallback-icons':
+        specifier: workspace:*
+        version: link:../fallback-icons
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n

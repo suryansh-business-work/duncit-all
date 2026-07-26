@@ -13,6 +13,14 @@ module.exports = {
     // from there — pin them to this app's own @babel/runtime.
     '^@babel/runtime/(.*)$': '<rootDir>/node_modules/@babel/runtime/$1',
   },
+  // Linked workspace packages (@duncit/datetime, @duncit/fallback-icons) are
+  // compiled from their own source, so their peer imports (date-fns) resolve
+  // by walking up from packages/<name>/ — which finds nothing in CI, where only
+  // app/mobile-app is installed (npm ci). Adding this app's node_modules to the
+  // search path fixes that while leaving normal package resolution intact:
+  // a moduleNameMapper alias to the directory would bypass package.json
+  // "exports" and load date-fns v4's ESM build, which jest cannot parse.
+  modulePaths: ['<rootDir>/node_modules'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

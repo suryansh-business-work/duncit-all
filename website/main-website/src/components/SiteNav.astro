@@ -4,6 +4,11 @@
 // manager); the Policy Hub group is the Legal portal's active policies.
 import BrandLogo from './BrandLogo.astro';
 import { fetchNavGroups, fetchPolicies } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
+
+// Chrome copy from Admin > Localization; link labels stay Navigation-manager
+// content (rule 38).
+const { t } = await getTranslator();
 
 const FALLBACK_GROUPS = [
   {
@@ -85,7 +90,7 @@ const sections = [
     <button
       data-nav-close
       class="w-10 h-10 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition"
-      aria-label="Close menu"
+      aria-label={t('website.nav.closeMenu')}
     >
       <i class="fa-solid fa-xmark text-lg"></i>
     </button>

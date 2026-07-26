@@ -29,6 +29,14 @@ function baseOpts(over: Partial<MountPortalOptions> = {}): MountPortalOptions {
   };
 }
 
+/** The `fallback` prop of the LocaleProvider, found by walking the element
+ * tree — so the assertion does not break when a provider is added above it. */
+function findFallback(node: any): Record<string, string> | null {
+  if (!node?.props) return null;
+  if (node.props.fallback) return node.props.fallback;
+  return findFallback(node.props.children);
+}
+
 describe('mountPortal', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -57,6 +65,28 @@ describe('mountPortal', () => {
     expect(isAuthed()).toBe(false);
     localStorage.setItem('tok_key', '1');
     expect(isAuthed()).toBe(true);
+  });
+
+  it("layers the portal's own copy over the shell chrome bundle", () => {
+    const root = document.createElement('div');
+    root.id = 'root';
+    document.body.appendChild(root);
+
+    mountPortal(
+      baseOpts({
+        i18nFallback: {
+          'crm.leads.title': 'Leads',
+          // A portal may override shared chrome copy without forking it.
+          'shell.profile.title': 'My CRM profile',
+        },
+      }),
+    );
+
+    const fallback = findFallback(renderSpy.mock.calls[0][0]);
+    expect(fallback?.['crm.leads.title']).toBe('Leads');
+    expect(fallback?.['shell.profile.title']).toBe('My CRM profile');
+    // The shell's own keys survive the merge.
+    expect(fallback?.['mweb.common.language']).toBe('Language');
   });
 
   it('throws a clear error when the mount node is missing', () => {

@@ -3,7 +3,12 @@
 // portal (Navigation manager) and the Policy Hub column from the Legal
 // portal's active policies — both baked in at build time with safe fallbacks.
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
+import { getTranslator } from '../lib/i18n';
 
+// Chrome copy comes from Admin > Localization, baked in at build time with the
+// bundled fallback behind it (rule 38). Link labels are NOT translated here —
+// they are content from the Navigation manager, fetched below.
+const { t } = await getTranslator();
 const branding = await fetchBranding();
 const footerLogo = branding.website_footer_logo_url || '/duncit-logo.svg';
 
@@ -56,16 +61,22 @@ const year = new Date().getFullYear();
         <img src={footerLogo} alt={branding.app_name} class="h-16 sm:h-24 w-auto" />
       </a>
       <div class="md:text-right">
-        <p class="font-head font-bold text-ink mb-3">Get Duncit updates</p>
-        <form class="flex gap-2 md:justify-end" id="footerForm">
+        <p class="font-head font-bold text-ink mb-3">{t('website.footer.newsletterTitle')}</p>
+        <form
+          class="flex gap-2 md:justify-end"
+          id="footerForm"
+          data-sending={t('website.footer.sending')}
+          data-subscribed={t('website.footer.subscribed')}
+          data-try-again={t('website.footer.tryAgain')}
+        >
           <input
             type="email"
             required
-            placeholder="Email address"
+            placeholder={t('website.footer.emailPlaceholder')}
             class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm"
           />
           <button class="px-4 py-2.5 rounded-lg bg-ink text-white font-bold text-sm inline-flex items-center gap-2">
-            <i class="fa-solid fa-paper-plane"></i> Notify
+            <i class="fa-solid fa-paper-plane"></i> {t('website.footer.notify')}
           </button>
         </form>
       </div>
@@ -91,7 +102,7 @@ const year = new Date().getFullYear();
         ))
       }
       <div>
-        <h4 class="font-head font-extrabold mb-3">Policy Hub</h4>
+        <h4 class="font-head font-extrabold mb-3">{t('website.footer.policyHub')}</h4>
         <ul class="space-y-2 text-sm text-ink-soft">
           {
             policies.map((policy) => (
@@ -102,13 +113,13 @@ const year = new Date().getFullYear();
               </li>
             ))
           }
-          <li><a href="/policies" class="hover:text-primary font-bold">All policies</a></li>
+          <li><a href="/policies" class="hover:text-primary font-bold">{t('website.footer.allPolicies')}</a></li>
         </ul>
       </div>
     </div>
 
     <div class="mt-10 pt-6 border-t border-ink/10 flex justify-center items-center text-sm text-ink-soft">
-      <span>© {branding.app_name} {year} | All Rights Reserved</span>
+      <span>© {branding.app_name} {year} | {t('website.footer.rights')}</span>
     </div>
   </div>
 </footer>
@@ -118,6 +129,13 @@ const year = new Date().getFullYear();
 
   const GQL_URL = urlConfigs.graphqlUrl;
   const ff = document.getElementById('footerForm') as HTMLFormElement | null;
+  // Copy is resolved at build time in the frontmatter and handed over on the
+  // element — a client script cannot reach the translator itself.
+  const copy = {
+    sending: ff?.dataset.sending ?? '',
+    subscribed: ff?.dataset.subscribed ?? '',
+    tryAgain: ff?.dataset.tryAgain ?? '',
+  };
   ff?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = ff.querySelector('input[type="email"]') as HTMLInputElement;
@@ -127,7 +145,7 @@ const year = new Date().getFullYear();
     const orig = btn?.innerHTML;
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${copy.sending}`;
     }
     try {
       const res = await fetch(GQL_URL, {
@@ -142,16 +160,16 @@ const year = new Date().getFullYear();
       const ok = !!json?.data?.subscribeNewsletter?.ok;
       if (btn) {
         btn.innerHTML = ok
-          ? '<i class="fa-solid fa-check"></i> Subscribed!'
-          : '<i class="fa-solid fa-xmark"></i> Try again';
+          ? `<i class="fa-solid fa-check"></i> ${copy.subscribed}`
+          : `<i class="fa-solid fa-xmark"></i> ${copy.tryAgain}`;
       }
       if (ok) input.value = '';
     } catch {
-      if (btn) btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Try again';
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-xmark"></i> ${copy.tryAgain}`;
     } finally {
       window.setTimeout(() => {
         if (btn) {
-          btn.innerHTML = orig || 'Notify';
+          btn.innerHTML = orig ?? '';
           btn.disabled = false;
         }
       }, 2500);

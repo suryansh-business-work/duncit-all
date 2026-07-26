@@ -285,6 +285,19 @@ already exist as a Localization entry AND in that surface's local fallback bundl
   data, so a screen renders correctly offline and before the API responds. The fallback is
   not optional — a key missing from it is a build failure, exactly like a missing fallback
   icon (rule 39).
+- **The client copy itself lives in `packages/i18n/src/bundles.ts`** — mWeb + native share
+  `MWEB_BUNDLE` (rule 27 forbids them drifting), the portals share `SHELL_BUNDLE`, the
+  Astro sites share `WEBSITE_BUNDLE`. Each surface re-exports the slice it renders, so its
+  copy is still compiled into that build. A portal adds its OWN namespace by passing
+  `i18nFallback` to `mountPortal`, which layers over the shell's. The SERVER keeps its own
+  bundle (`server/src/services/email/email-i18n.ts`) because it has no `@duncit/*` deps,
+  and reports it through `serverTranslationSeed`.
+- **Adding a key: put it in the bundle, then press "Import app keys"** in Admin >
+  Localization > Translations — that seeds every shipped key (client bundles + the server's
+  email keys) against the default locale without overwriting existing translations. Then
+  use it in code.
+- **Email templates** read localized copy as `{{t:<key>}}`; `sendEmail` resolves the
+  recipient's language from their `profile.locale` by address, so no call site passes it.
 - **Applies to every surface:** each portal, mWeb, the native app, the Astro websites and
   the MJML email templates. The websites use the same package, the same admin data and the
   same UI — do not build a website-only localization.

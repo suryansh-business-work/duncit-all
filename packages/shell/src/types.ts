@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { ApolloClient } from '@apollo/client';
 import type { AccentColors, ComponentExtend } from '@duncit/theme';
 import type { UserProviderProps } from '@duncit/user-context';
+import type { FlatCatalogue } from '@duncit/i18n';
 
 /** A sidebar navigation entry. Items with `children` render as a collapsible group. */
 export interface AppNavItem {
@@ -96,6 +97,13 @@ export interface MountPortalOptions {
   wrap?: (node: ReactNode) => ReactNode;
   /** Extra router-level siblings (e.g. admin's NotifyHost). */
   extras?: ReactNode;
+  /**
+   * The portal's OWN local fallback copy, layered over the shell's chrome
+   * bundle (CLAUDE.md rule 38) — flat `namespace.page.key -> text`, the same
+   * shape as the server entries. Without it a portal can only render the keys
+   * the shell itself ships.
+   */
+  i18nFallback?: FlatCatalogue;
   /** Mount element id (default `root`). */
   rootId?: string;
 }

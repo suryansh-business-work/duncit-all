@@ -10,6 +10,8 @@ import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { LocaleProvider } from '@duncit/app-settings';
+import { SHELL_FALLBACK_FLAT } from './i18n/fallback';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
@@ -72,11 +74,13 @@ export function mountPortal(opts: MountPortalOptions): void {
       <ApolloProvider client={apolloClient}>
         <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
           <DuncitThemeProvider accent={config.accent} storageKey={config.colorModeKey} extend={themeExtend}>
+            <LocaleProvider fallback={SHELL_FALLBACK_FLAT}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <GoogleOAuthProvider clientId={googleClientId}>
                 <BrowserRouter>{wrap(routed)}</BrowserRouter>
               </GoogleOAuthProvider>
             </LocalizationProvider>
+            </LocaleProvider>
           </DuncitThemeProvider>
         </UserProvider>
       </ApolloProvider>

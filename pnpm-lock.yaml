@@ -939,15 +939,24 @@ importers:
 
   packages/shell:
     dependencies:
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../app-settings
       '@duncit/breadcrumb':
         specifier: workspace:*
         version: link:../breadcrumb
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@duncit/logs':
         specifier: workspace:*
         version: link:../logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../theme
+      '@duncit/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../user-context

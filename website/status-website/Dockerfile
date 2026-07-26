@@ -29,6 +29,10 @@ COPY portals/developers/package.json ./portals/developers/
 COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/shell/package.json ./packages/shell/
+COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/datetime/package.json ./packages/datetime/
+COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/ui/package.json ./packages/ui/
 COPY packages/geo/package.json ./packages/geo/
 COPY packages/breadcrumb/package.json ./packages/breadcrumb/
 COPY packages/theme/package.json ./packages/theme/

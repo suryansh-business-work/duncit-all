@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.61",
+  "version": "1.5.62",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -47,6 +47,7 @@
     "@duncit/datetime": "file:../../packages/datetime",
     "@duncit/fallback-icons": "file:../../packages/fallback-icons",
     "@duncit/geo": "file:../../packages/geo",
+    "@duncit/i18n": "file:../../packages/i18n",
     "@duncit/logs": "file:../../packages/logs",
     "@duncit/regex": "file:../../packages/regex",
     "@duncit/slack": "file:../../packages/slack",

@@ -58,16 +58,17 @@ export function nestCatalogue(flat: FlatCatalogue | null | undefined): NestedCat
   const out: NestedCatalogue = {};
   for (const [path, value] of Object.entries(flat ?? {})) {
     const parts = path.split('.').filter(Boolean);
-    if (parts.length === 0) continue;
+    const leaf = parts.pop();
+    if (leaf === undefined) continue;
     let node = out;
-    for (const part of parts.slice(0, -1)) {
+    for (const part of parts) {
       const next = node[part];
       // A leaf already occupying this path would be silently shadowed; replace
       // it with a branch so the deeper key is not lost.
       if (!next || typeof next === 'string') node[part] = {};
       node = node[part] as NestedCatalogue;
     }
-    node[parts[parts.length - 1]] = value;
+    node[leaf] = value;
   }
   return out;
 }

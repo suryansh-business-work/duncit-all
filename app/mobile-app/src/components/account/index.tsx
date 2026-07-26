@@ -10,3 +10,4 @@ export { SecuritySection } from './SecuritySection';
 export { ChangePasswordDialog } from './ChangePasswordDialog';
 export { DeleteAccountDialog } from './DeleteAccountDialog';
 export { SecuritySheet } from './SecuritySheet';
+export { LanguageSection } from './LanguageSection';

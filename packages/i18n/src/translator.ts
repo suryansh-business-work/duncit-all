@@ -110,7 +110,10 @@ export function resolveLocale(
   locales: readonly Locale[] | null | undefined,
 ): Locale | null {
   const active = (locales ?? []).filter((l) => l.is_active !== false);
-  if (active.length === 0) return null;
+  // Capturing the first entry here doubles as the empty guard, so the final
+  // fallback needs no extra (unreachable) null branch.
+  const first = active[0];
+  if (!first) return null;
   const wanted = (requested ?? '').trim().toLowerCase();
   const exact = active.find((l) => l.code.toLowerCase() === wanted);
   if (exact) return exact;
@@ -120,5 +123,5 @@ export function resolveLocale(
     ? active.find((l) => l.code.toLowerCase().split('-')[0] === language)
     : undefined;
   if (byLanguage) return byLanguage;
-  return active.find((l) => l.is_default === true) ?? active[0];
+  return active.find((l) => l.is_default === true) ?? first;
 }

@@ -46,10 +46,16 @@ COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/table/package.json ./packages/table/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/slack/package.json ./packages/slack/
+COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/datetime/package.json ./packages/datetime/
+COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
+# The build chain runs scripts/verify-fallback-icons.mjs (rule 39).
+COPY scripts ./scripts
 COPY packages ./packages
 COPY app/mweb ./app/mweb
 RUN pnpm --filter mweb-app build

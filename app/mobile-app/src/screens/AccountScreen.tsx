@@ -10,6 +10,7 @@ import {
   CompletionMeter,
   EditAccountDialog,
   HostsVenuesCard,
+  LanguageSection,
   PrivacyToggleCard,
   SecuritySection,
 } from '@/components/account';
@@ -102,6 +103,8 @@ export function AccountScreen() {
           onPodHistory={() => navigation.navigate('PodHistory')}
         />
 
+        <YStack height={1} backgroundColor="$borderColor" />
+        <LanguageSection />
         <SecuritySection />
       </ScrollView>
     );

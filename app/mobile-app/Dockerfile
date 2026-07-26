@@ -24,6 +24,7 @@ COPY packages/regex ./packages/regex
 COPY packages/slack ./packages/slack
 COPY packages/datetime ./packages/datetime
 COPY packages/fallback-icons ./packages/fallback-icons
+COPY packages/i18n ./packages/i18n
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

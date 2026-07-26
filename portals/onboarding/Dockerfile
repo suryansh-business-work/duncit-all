@@ -48,6 +48,8 @@ COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/table/package.json ./packages/table/
 COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/datetime/package.json ./packages/datetime/
+COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/ui/package.json ./packages/ui/
 

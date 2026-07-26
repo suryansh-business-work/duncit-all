@@ -23,6 +23,7 @@ const blankRow = (sortOrder: number): EditableRow => ({
   starts_at: '',
   ends_at: '',
   icon_url: '',
+  fallback_icon: 'occasion',
   is_active: true,
   sort_order: sortOrder,
 });
@@ -65,6 +66,7 @@ export default function OccasionalIconsSection() {
           starts_at: new Date(r.starts_at).toISOString(),
           ends_at: new Date(r.ends_at).toISOString(),
           icon_url: r.icon_url,
+          fallback_icon: r.fallback_icon,
           is_active: r.is_active,
           sort_order: r.sort_order,
         }));

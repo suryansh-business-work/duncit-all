@@ -127,6 +127,11 @@ export const settingsTypeDefs = gql`
     ends_at: String!
     "Server-hosted icon. Native prefers its bundled copy for this slug."
     icon_url: String!
+    """
+    Which bundled fallback-icon NAME renders when icon_url is blank or fails
+    to load — one of @duncit/fallback-icons FALLBACK_ICON_NAMES.
+    """
+    fallback_icon: String!
     is_active: Boolean!
     "Higher wins when windows overlap, so a campaign can sit over a season."
     sort_order: Int!
@@ -138,6 +143,7 @@ export const settingsTypeDefs = gql`
     starts_at: String!
     ends_at: String!
     icon_url: String
+    fallback_icon: String
     is_active: Boolean
     sort_order: Int
   }

@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useUserData } from '@duncit/user-context';
 import { useBranding } from '../hooks/useBranding';
 import { accountEmail, accountName, initials } from './user-display';
+import { useTranslation } from '../i18n/useTranslation';
 import { ProfileLanguage } from './ProfileLanguage';
 
 const UPDATE_MY_PROFILE = gql`
@@ -49,6 +50,7 @@ function humaniseRole(role: string): string {
  * profile management is identical across all consoles.
  */
 export function ProfilePage() {
+  const { t } = useTranslation();
   const { user, refetch, logout } = useUserData();
   const branding = useBranding();
   const [editing, setEditing] = useState(false);
@@ -131,14 +133,14 @@ export function ProfilePage() {
               </Alert>
             )}
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, letterSpacing: 0.4 }}>
-              ACCESS ROLES
+              {t('shell.profile.accessRoles')}
             </Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
               {roles.length > 0 ? (
                 roles.map((role) => <Chip key={role} label={humaniseRole(role)} size="small" />)
               ) : (
                 <Typography variant="body2" color="text.secondary">
-                  No roles assigned.
+                  {t('shell.profile.noRoles')}
                 </Typography>
               )}
             </Stack>

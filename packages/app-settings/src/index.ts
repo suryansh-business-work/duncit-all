@@ -1,3 +1,4 @@
+export { AppLocaleProvider } from './AppLocaleProvider';
 export { PUBLIC_APP_SETTINGS, useDateFormat } from './useDateFormat';
 export type { DateInput, UseDateFormatOptions } from './useDateFormat';
 export { PUBLIC_FEATURE_FLAGS, useFeatureFlag } from './useFeatureFlag';
@@ -26,12 +27,17 @@ export {
   useTranslation,
 } from './useTranslation';
 export {
+  allFallbackEntries,
   createTranslator,
   flattenCatalogue,
   mergeCatalogues,
   missingKeys,
+  MWEB_BUNDLE,
   nestCatalogue,
   resolveLocale,
+  SHELL_BUNDLE,
+  SURFACE_BUNDLES,
+  WEBSITE_BUNDLE,
   type FlatCatalogue,
   type Locale,
   type NestedCatalogue,

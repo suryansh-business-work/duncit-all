@@ -6,6 +6,7 @@ import SpellcheckIcon from '@mui/icons-material/Spellcheck';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { useDateFormat } from '@duncit/app-settings';
 import TranslationDialog, { type TranslationSubmit } from './TranslationDialog';
+import ImportKeysButton from './ImportKeysButton';
 import { getTranslationColumns } from './translation-columns';
 import {
   LOCALES,
@@ -34,6 +35,12 @@ export default function TranslationsPage() {
   const locales: LocaleRow[] = useMemo(
     () => (localeData?.locales ?? []).filter((l: LocaleRow) => l.is_active),
     [localeData],
+  );
+
+  // Bundled copy is English, so it seeds the default locale's column.
+  const defaultLocale = useMemo(
+    () => locales.find((l) => l.is_default)?.code ?? null,
+    [locales],
   );
 
   const fetchRows = useApolloTableFetch<TranslationRow>(
@@ -83,18 +90,28 @@ export default function TranslationsPage() {
             </Typography>
           </Box>
         </Stack>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          disabled={locales.length === 0}
-          onClick={() => {
-            setEditing(null);
-            setOpError(null);
-            setOpen(true);
-          }}
-        >
-          Add translation
-        </Button>
+        <Stack direction="row" spacing={1.5}>
+          <ImportKeysButton
+            defaultLocale={defaultLocale}
+            onDone={(m) => {
+              setToast(m);
+              refetchRef.current?.();
+            }}
+            onError={setOpError}
+          />
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            disabled={locales.length === 0}
+            onClick={() => {
+              setEditing(null);
+              setOpError(null);
+              setOpen(true);
+            }}
+          >
+            Add translation
+          </Button>
+        </Stack>
       </Stack>
 
       {locales.length === 0 && (

@@ -69,4 +69,29 @@ describe('LanguageSection', () => {
     // write, so the language changes even if that request is slow or fails.
     await waitFor(() => expect(screen.getByText('मेरी प्राथमिकताएँ')).toBeInTheDocument());
   });
+
+  it('flips the document direction for a right-to-left locale', async () => {
+    const rtlLocales: MockedResponse = {
+      request: { query: PUBLIC_LOCALES },
+      result: {
+        data: {
+          publicLocales: [
+            { code: 'en-IN', label: 'English', english_label: 'English (India)', is_rtl: false, is_default: true, sort_order: 0 },
+            { code: 'ar-AE', label: 'العربية', english_label: 'Arabic (UAE)', is_rtl: true, is_default: false, sort_order: 1 },
+          ],
+        },
+      },
+    };
+    renderSection([rtlLocales, catalogueMock('en-IN', []), catalogueMock('ar-AE', [])]);
+
+    await waitFor(() => expect(document.documentElement.dir).toBe('ltr'));
+    expect(document.documentElement.lang).toBe('en-IN');
+
+    fireEvent.mouseDown(await screen.findByLabelText('Language'));
+    fireEvent.click(await screen.findByText(/العربية/));
+
+    // Marking a locale RTL in Admin is meaningless unless the layout flips.
+    await waitFor(() => expect(document.documentElement.dir).toBe('rtl'));
+    expect(document.documentElement.lang).toBe('ar-AE');
+  });
 });

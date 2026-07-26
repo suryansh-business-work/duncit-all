@@ -2,6 +2,7 @@ import { Box, Card, CardActionArea, Chip, CircularProgress, IconButton, Stack, T
 import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import type { ShopProduct } from './queries';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Props {
   product: ShopProduct;
@@ -22,6 +23,7 @@ export default function ShopProductCard({
   onOpen,
   onQuickAdd,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const imageUrl = product.image_url || product.images?.[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
@@ -74,7 +76,7 @@ export default function ShopProductCard({
       </CardActionArea>
       {outOfStock ? (
         <Chip
-          label="Out of stock"
+          label={t('mweb.shop.outOfStock')}
           size="small"
           sx={{
             position: 'absolute',

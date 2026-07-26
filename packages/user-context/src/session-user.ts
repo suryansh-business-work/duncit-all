@@ -28,6 +28,7 @@ export function buildSessionMeQuery(
       last_name
       email
       roles
+      locale
       profile_photo${extra}
     }
   }

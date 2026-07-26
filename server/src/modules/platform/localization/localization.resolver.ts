@@ -2,6 +2,7 @@ import { localizationService } from "./localization.service";
 import type { GraphQLContext } from "@context";
 import { requireRole } from "@middleware/rbac";
 import type { TableQueryInput } from "@utils/table-query";
+import { EMAIL_FALLBACK } from "@services/email/email-i18n";
 
 const ADMIN_READ = ["SUPER_ADMIN", "CITY_ADMIN", "ZONAL_ADMIN", "SUPPORT_USER", "TECH_MANAGER"];
 const ADMIN_WRITE = ["SUPER_ADMIN", "TECH_MANAGER"];
@@ -24,6 +25,10 @@ export const localizationResolvers = {
     ) => {
       requireRole(ctx, ADMIN_READ);
       return localizationService.translationsTable(args.query);
+    },
+    serverTranslationSeed: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_READ);
+      return Object.entries(EMAIL_FALLBACK).map(([key, value]) => ({ key, value }));
     },
   },
   Mutation: {

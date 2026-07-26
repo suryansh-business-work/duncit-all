@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import {
   createTranslator,
@@ -115,6 +115,17 @@ export function LocaleProvider({
     [code, active?.is_rtl, fallback, server],
   );
 
+  // Tell the DOCUMENT what language it is in. `dir` is what actually flips the
+  // layout for a right-to-left locale — an admin can mark a locale RTL, and
+  // without this nothing would happen — and `lang` is what screen readers and
+  // hyphenation read. Guarded for non-DOM hosts (SSR, tests).
+  useEffect(() => {
+    const root = globalThis.document?.documentElement;
+    if (!root) return;
+    root.dir = translator.isRtl ? 'rtl' : 'ltr';
+    root.lang = translator.locale;
+  }, [translator.isRtl, translator.locale]);
+
   const setLocale = useCallback(
     (next: string) => {
       setOverride(next);
@@ -140,14 +151,21 @@ export function LocaleProvider({
 }
 
 /**
- * Translate inside a LocaleProvider. Outside one it still returns a working
- * translator (keys render as themselves) rather than throwing, so a component
- * rendered in isolation — a test, a storybook, an error boundary — never
- * crashes on a missing provider.
+ * Translate inside a LocaleProvider.
+ *
+ * Outside one it still returns a working translator rather than throwing, so a
+ * component rendered in isolation — a test, a storybook, an error boundary —
+ * never crashes on a missing provider. Pass the surface's bundled catalogue so
+ * that path renders real copy instead of raw keys; a surface should do this
+ * through its own thin wrapper (see mWeb's src/i18n/useTranslation) rather than
+ * repeating the argument at every call site.
  */
-export function useTranslation(): LocaleContextValue {
+export function useTranslation(fallback?: FlatCatalogue): LocaleContextValue {
   const context = useContext(LocaleContext);
-  const fallbackTranslator = useMemo(() => createTranslator({ locale: 'en-IN' }), []);
+  const fallbackTranslator = useMemo(
+    () => createTranslator({ locale: 'en-IN', fallback }),
+    [fallback],
+  );
   if (context) return context;
   return {
     t: fallbackTranslator.t,

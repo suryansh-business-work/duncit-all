@@ -27,6 +27,9 @@ export interface LoginScreenConfig {
   bgImage: string;
   /** Logo URL (used in both light and dark mode). */
   logoUrl: string;
+  /** Called when logoUrl fails to load, so the caller can swap in its bundled
+   * copy — a URL that 404s never arrives empty (rule 39). */
+  onLogoError?: () => void;
   /** Privacy policy URL (defaults to the public site). */
   privacyUrl?: string;
   /** Terms of use URL (defaults to the public site). */

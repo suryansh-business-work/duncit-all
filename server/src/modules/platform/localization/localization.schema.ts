@@ -80,6 +80,12 @@ export const localizationTypeDefs = gql`
     publicTranslations(locale: String!): [TranslationEntry!]!
     "Admin table of translation keys, filterable surface-wise and page-wise."
     translationsTable(query: TableQueryInput): TranslationTablePage!
+    """
+    Keys the SERVER itself ships copy for (the MJML email templates), with their
+    bundled English text. The admin merges these with the client surfaces' own
+    bundles when seeding Translations, so email copy is translatable too.
+    """
+    serverTranslationSeed: [TranslationEntry!]!
   }
 
   extend type Mutation {

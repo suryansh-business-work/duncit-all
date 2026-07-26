@@ -79,7 +79,7 @@ export default function LoginScreen({
             <Box sx={(theme) => ({ ...glass(theme), borderRadius: 4, p: { xs: 3, sm: 3.5 } })}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
                 <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box component="img" src={config.logoUrl} alt={config.portalName} sx={{ height: 26, width: 'auto', maxWidth: 110, objectFit: 'contain' }} />
+                  <Box component="img" src={config.logoUrl} alt={config.portalName} onError={config.onLogoError} sx={{ height: 26, width: 'auto', maxWidth: 110, objectFit: 'contain' }} />
                   <Typography variant="subtitle1" sx={{ fontWeight: 800, letterSpacing: 0.2 }}>
                     duncit.com
                   </Typography>

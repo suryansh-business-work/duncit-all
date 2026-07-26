@@ -13,7 +13,7 @@ import { apolloClient } from './apollo';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { ColorModeProvider } from './ColorModeContext';
-import { LocaleProvider } from '@duncit/app-settings';
+import { AppLocaleProvider } from '@duncit/app-settings';
 import { MWEB_FALLBACK_FLAT } from './i18n/fallback';
 import { StudioModeProvider } from './StudioModeContext';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -92,7 +92,7 @@ function mount() {
       <ErrorBoundary>
         <ApolloProvider client={apolloClient}>
           <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
-            <LocaleProvider fallback={MWEB_FALLBACK_FLAT}>
+            <AppLocaleProvider fallback={MWEB_FALLBACK_FLAT}>
             <ColorModeProvider>
               <StudioModeProvider>
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -104,7 +104,7 @@ function mount() {
                 </LocalizationProvider>
               </StudioModeProvider>
             </ColorModeProvider>
-            </LocaleProvider>
+            </AppLocaleProvider>
           </UserProvider>
         </ApolloProvider>
       </ErrorBoundary>

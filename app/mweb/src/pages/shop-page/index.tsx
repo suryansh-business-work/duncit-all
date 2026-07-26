@@ -5,6 +5,7 @@ import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import VerifiedUserRoundedIcon from '@mui/icons-material/VerifiedUserRounded';
 import LocalOfferRoundedIcon from '@mui/icons-material/LocalOfferRounded';
 import LocalShippingRoundedIcon from '@mui/icons-material/LocalShippingRounded';
+import { useTranslation } from '../../i18n/useTranslation';
 import { useSearchCategories } from '../search-page/useSearchDiscovery';
 import { usePricing } from '../../hooks/usePricing';
 import PodShopSlider from './PodShopSlider';
@@ -51,6 +52,7 @@ function TrustBar() {
  * include-out-of-stock and sort), debounced search and a header cart. Tapping a
  * product opens its detail page; purchases happen through a pod's shop. */
 export default function ShopPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { format: priceFormat } = usePricing();
   const { data, loading, error } = useQuery(SHOP_PRODUCTS, { fetchPolicy: 'cache-and-network' });
@@ -71,18 +73,18 @@ export default function ShopPage() {
     <Stack spacing={2} sx={{ py: 0.5 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
-          Pod Shop
+          {t('mweb.shop.title')}
         </Typography>
         <ShopHeaderCart />
       </Stack>
       <PodShopSlider />
       <ShopFilterBar filters={filters} />
       {filters.visible.length === 0 ? (
-        <Alert severity="info">No products match your filters.</Alert>
+        <Alert severity="info">{t('mweb.shop.emptyState')}</Alert>
       ) : (
         <>
           <Typography variant="h6" sx={{ fontWeight: 900 }}>
-            Featured Products
+            {t('mweb.shop.featured')}
           </Typography>
           <Box
             sx={{

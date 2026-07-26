@@ -2,6 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react-native';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLocaleStore } from '@/stores/locale.store';
+import { useMeStore } from '@/stores/me.store';
 
 const hydrate = jest.fn().mockResolvedValue(undefined);
 
@@ -13,8 +14,10 @@ beforeEach(() => {
     locale: 'en-IN',
     isRtl: false,
     hydrated: true,
+    appliedUserLocale: null,
     hydrate,
   });
+  useMeStore.setState({ data: undefined } as never);
 });
 
 describe('useTranslation', () => {
@@ -48,5 +51,27 @@ describe('useTranslation', () => {
     expect(hydrate).not.toHaveBeenCalled();
     expect(typeof result.current.setLocale).toBe('function');
     expect(result.current.isRtl).toBe(false);
+  });
+
+  it("applies the signed-in ACCOUNT's language once `me` resolves", async () => {
+    // `me` lands after the first render, so a hydrate-once guard would never
+    // apply the saved language — the choice would not follow the user to a new
+    // device even though the switcher wrote it server-side.
+    useMeStore.setState({ data: { me: { locale: 'hi-IN' } } } as never);
+    renderHook(() => useTranslation());
+    await waitFor(() => expect(hydrate).toHaveBeenCalledWith('hi-IN'));
+  });
+
+  it('applies each account language exactly once, however many components ask', async () => {
+    useMeStore.setState({ data: { me: { locale: 'hi-IN' } } } as never);
+    // Simulates hydrate having already run for this account.
+    useLocaleStore.setState({ appliedUserLocale: 'hi-IN' });
+
+    renderHook(() => useTranslation());
+    renderHook(() => useTranslation());
+    renderHook(() => useTranslation());
+
+    // The marker lives in the store, not per hook, so three mounts are silent.
+    expect(hydrate).not.toHaveBeenCalled();
   });
 });

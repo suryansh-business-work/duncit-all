@@ -1,5 +1,6 @@
-import { IconButton, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
+import { IconButton, MenuItem, Stack, Switch, TextField, Tooltip, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { FALLBACK_ICON_NAMES } from '@duncit/fallback-icons';
 import MediaPickerField from '../../components/MediaPickerField';
 import type { OccasionalIconRow } from './queries';
 
@@ -87,6 +88,21 @@ export default function OccasionalIconRowFields({
         accept="image/*"
         helperText="Square transparent PNG/SVG, ~96×96px."
       />
+
+      <TextField
+        select
+        label="Fallback icon"
+        value={row.fallback_icon || 'occasion'}
+        onChange={(e) => onChange(index, { fallback_icon: e.target.value })}
+        fullWidth
+        helperText="Bundled artwork each app renders if the icon above is blank or fails to load."
+      >
+        {FALLBACK_ICON_NAMES.map((name) => (
+          <MenuItem key={name} value={name}>
+            {name}
+          </MenuItem>
+        ))}
+      </TextField>
 
       <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
         <Stack direction="row" spacing={2} alignItems="center">

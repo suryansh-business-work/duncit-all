@@ -55,6 +55,9 @@ ENV PUBLIC_GRAPHQL_URL=$PUBLIC_GRAPHQL_URL \
 
 COPY website/main-website ./website/main-website
 COPY packages/logs ./packages/logs
+# The i18n SOURCE, not just its package.json: the site imports @duncit/i18n from
+# an .astro page now, so Vite has to resolve the module during the build.
+COPY packages/i18n ./packages/i18n
 RUN pnpm --filter duncit.com build
 
 # --- runner ---

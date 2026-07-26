@@ -20,6 +20,21 @@ jest.mock('@modules/platform/settings/settings.service', () => ({
   settingsService: { getBranding: () => getBrandingMock() },
 }));
 
+// sendEmail also resolves the recipient's language and its localized `t:` vars;
+// both are mocked for the same reason as branding — no DB in a unit test.
+jest.mock('@modules/platform/localization/localization.service', () => ({
+  localizationService: {
+    defaultLocaleCode: jest.fn().mockResolvedValue('en-IN'),
+    publicTranslations: jest.fn().mockResolvedValue([]),
+  },
+}));
+
+jest.mock('@modules/access/user/user.model', () => ({
+  UserModel: {
+    findOne: () => ({ select: () => ({ lean: () => Promise.resolve(null) }) }),
+  },
+}));
+
 jest.mock('../../../../config/url-configs', () => ({
   getMailConfigs: jest.fn().mockResolvedValue({ from: 'noreply@test', host: '', port: 587 }),
 }));

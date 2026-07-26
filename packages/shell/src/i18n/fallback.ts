@@ -1,4 +1,4 @@
-import { flattenCatalogue, type NestedCatalogue } from '@duncit/i18n';
+import { flattenCatalogue, SHELL_BUNDLE, type NestedCatalogue } from '@duncit/i18n';
 
 /**
  * The portal shell's LOCAL FALLBACK bundle (CLAUDE.md rule 38).
@@ -8,25 +8,11 @@ import { flattenCatalogue, type NestedCatalogue } from '@duncit/i18n';
  * (e.g. `admin.*`) and passes them to mountPortal — this bundle only covers
  * what the shell itself renders.
  *
- * Same nested structure as the server entries and as mWeb/native's bundles, so
- * one parser reads them all.
+ * The copy lives in @duncit/i18n alongside the other surfaces' bundles so the
+ * admin panel can offer every shipped key for translation; it is compiled into
+ * each portal's build all the same.
  */
-export const SHELL_FALLBACK: NestedCatalogue = {
-  mweb: {
-    common: {
-      language: 'Language',
-      languageHint: 'Choose the language for this portal.',
-      languageSaved: 'Language updated',
-    },
-  },
-  shell: {
-    profile: {
-      title: 'Profile',
-      accessRoles: 'ACCESS ROLES',
-      noRoles: 'No roles assigned.',
-    },
-  },
-};
+export const SHELL_FALLBACK: NestedCatalogue = SHELL_BUNDLE;
 
 /** Flat, runtime-ready form of the bundle above. */
 export const SHELL_FALLBACK_FLAT = flattenCatalogue(SHELL_FALLBACK);

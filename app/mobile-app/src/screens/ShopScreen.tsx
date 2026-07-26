@@ -19,6 +19,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export type ShopProduct = ResultOf<typeof ShopProductsDocument>['availablePodProducts'][number];
 
@@ -76,6 +77,7 @@ function TrustBar({ tint }: Readonly<{ tint: string }>) {
  * opens its detail screen; purchases happen through a pod's shop. RN twin of
  * mWeb's ShopPage. */
 export function ShopScreen() {
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted, primary, color } = useThemeColors();
   const { categories } = useHomeData();
@@ -114,7 +116,7 @@ export function ShopScreen() {
   } else if (visible.length === 0) {
     body = (
       <Text testID="shop-empty" padding={24} color="$muted">
-        No products match your filters.
+        {t('mweb.shop.emptyState')}
       </Text>
     );
   } else {
@@ -128,7 +130,7 @@ export function ShopScreen() {
           paddingHorizontal={16}
           paddingTop={8}
         >
-          Featured Products
+          {t('mweb.shop.featured')}
         </Text>
         <XStack flexWrap="wrap" gap={10} padding={16}>
           {visible.map((product) => (
@@ -147,7 +149,7 @@ export function ShopScreen() {
 
   return (
     <StackScreen
-      title="Pod Shop"
+      title={t('mweb.shop.title')}
       testID="shop-screen"
       right={
         <ShopHeaderCart

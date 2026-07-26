@@ -5,6 +5,7 @@ import { Input, Text, XStack, YStack } from 'tamagui';
 import { OptionChipRow, Section } from '@/components/home/HomeFilterParts';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from '@/hooks/useShopFilters';
 import type { ShopSort } from '@/screens/ShopScreen';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   filters: ShopFilters;
@@ -17,6 +18,7 @@ interface Props {
  * behind the button (with an active-count badge) to keep the header clean. RN
  * twin of mWeb's ShopFilterBar. */
 export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <YStack gap={10} paddingHorizontal={16} paddingTop={8}>
@@ -40,7 +42,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
             unstyled
             value={filters.query}
             onChangeText={filters.setQuery}
-            placeholder="Search products or brands…"
+            placeholder={t('mweb.shop.searchPlaceholder')}
             placeholderTextColor="$muted"
             color="$color"
             fontSize={15}
@@ -131,7 +133,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
           <XStack
             testID="shop-oos-toggle"
             role="checkbox"
-            aria-label="Include out of stock"
+            aria-label={t('mweb.shop.includeOutOfStock')}
             aria-checked={filters.includeOutOfStock}
             onPress={() => filters.setIncludeOutOfStock(!filters.includeOutOfStock)}
             alignItems="center"
@@ -144,7 +146,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
               color={filters.includeOutOfStock ? '#2e7d32' : muted}
             />
             <Text fontSize={13} fontWeight="700" color="$color">
-              Include out of stock
+              {t('mweb.shop.includeOutOfStock')}
             </Text>
           </XStack>
           <Section title="Sort">

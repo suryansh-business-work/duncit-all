@@ -11,4 +11,7 @@ export interface DuncitUser {
   last_name?: string | null;
   profile_photo?: string | null;
   roles?: string[] | null;
+  /** The account's saved language (`profile.locale`) — what makes a language
+   * choice follow the user to a new device, not just persist on this one. */
+  locale?: string | null;
 }

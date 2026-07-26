@@ -22,10 +22,15 @@ export function detectVariables(mjml: string): string[] {
   return [...set];
 }
 
+/** Escaped so a var name containing regex metacharacters — such as the dot-path
+ * of a translation key like `t:email.podRefund.title` — matches literally
+ * instead of letting `.` stand for any character. */
+const escapeVarName = (name: string) => name.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+
 export function applyVars(source: string, vars: Record<string, string>): string {
   let out = source;
   for (const [k, v] of Object.entries(vars)) {
-    out = out.replace(new RegExp(String.raw`{{\s*${k}\s*}}`, 'g'), v ?? '');
+    out = out.replace(new RegExp(String.raw`{{\s*${escapeVarName(k)}\s*}}`, 'g'), v ?? '');
   }
   return out;
 }

@@ -47,7 +47,7 @@ export default function PortalLoginPage({
   const [loginMutation, { loading }] = useMutation(loginDocument);
   const [error, setError] = useState<string | null>(null);
   const { mode, toggle } = useColorMode();
-  const { logoUrl } = useBranding();
+  const { logoUrl, onLogoError } = useBranding();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -94,6 +94,7 @@ export default function PortalLoginPage({
     promoText: appConfig.promoText,
     bgImage: appConfig.loginImage,
     logoUrl,
+    onLogoError,
     ...configOverrides,
   };
 

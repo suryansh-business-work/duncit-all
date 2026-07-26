@@ -281,6 +281,9 @@ importers:
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../user-context
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -945,6 +948,9 @@ importers:
       '@duncit/breadcrumb':
         specifier: workspace:*
         version: link:../breadcrumb
+      '@duncit/fallback-icons':
+        specifier: workspace:*
+        version: link:../fallback-icons
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
@@ -1280,6 +1286,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/fallback-icons':
+        specifier: workspace:*
+        version: link:../../packages/fallback-icons
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms

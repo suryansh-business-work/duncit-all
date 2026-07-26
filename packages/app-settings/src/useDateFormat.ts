@@ -1,11 +1,24 @@
 import { gql, useQuery } from '@apollo/client';
-import { format as fmtFn, isToday, isYesterday, parseISO } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
+import {
+  createDateFormatter,
+  stampServerTime,
+  toTimeSource,
+  type DateFormatter,
+} from '@duncit/datetime';
 
 /**
  * Admin-configurable display settings (project rule 11): every rendered date
  * and time routes through these so the format — and, in time-zone-aware mode,
  * the zone — follows the admin panel, never a hardcoded pattern.
+ *
+ * The formatting itself lives in @duncit/datetime so mobile, mWeb and every
+ * portal share ONE implementation; this module is just the Apollo adapter.
+ */
+/**
+ * ONE `PublicAppSettings` operation for the whole monorepo. Surfaces used to
+ * declare their own copies selecting different fields under the same operation
+ * name, which makes Apollo's normalized cache thrash between them — so the
+ * non-date fields other surfaces need live here too.
  */
 export const PUBLIC_APP_SETTINGS = gql`
   query PublicAppSettings {
@@ -13,16 +26,18 @@ export const PUBLIC_APP_SETTINGS = gql`
       date_format
       time_format
       time_zone
+      time_source
+      custom_time
+      custom_time_set_at
+      server_time
+      min_birth_year
+      max_birth_year
+      draft_retention_days
     }
   }
 `;
 
-const FALLBACK_DATE = 'dd MMM yyyy';
-const FALLBACK_TIME_LOCAL = 'hh:mm a';
-const FALLBACK_TIME_ZONED = 'HH:mm';
-const FALLBACK_ZONE = 'Asia/Kolkata';
-
-export type DateInput = string | number | Date | null | undefined;
+export type { DateInput } from '@duncit/datetime';
 
 export interface UseDateFormatOptions {
   /**
@@ -34,70 +49,33 @@ export interface UseDateFormatOptions {
   timeZoneAware?: boolean;
 }
 
-/** Browser-local coercion: ISO strings via parseISO (historic portal behavior). */
-function toDateLocal(input: DateInput): Date | null {
-  if (!input) return null;
-  if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
-  if (typeof input === 'number') return new Date(input);
-  try {
-    return parseISO(input);
-  } catch {
-    return null;
-  }
-}
-
-/** Zone-aware coercion: strings via the Date constructor (historic support behavior). */
-function toDateZoned(input: DateInput): Date | null {
-  if (!input) return null;
-  const d = input instanceof Date ? input : new Date(input);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
 /**
  * `publicAppSettings`-driven date/time formatter.
  *
  * All formatters return '' for empty/invalid input instead of throwing.
  * `dayLabel` returns Today / Yesterday / the configured date pattern;
  * `dayKey` returns a 'yyyy-MM-dd' calendar-day key for grouping.
+ * `now()` respects the admin's time source (server / browser / custom anchor).
  */
-export function useDateFormat(options?: Readonly<UseDateFormatOptions>) {
+export function useDateFormat(options?: Readonly<UseDateFormatOptions>): DateFormatter {
   const timeZoneAware = options?.timeZoneAware === true;
   const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   const settings = data?.publicAppSettings;
-  const fallbackTime = timeZoneAware ? FALLBACK_TIME_ZONED : FALLBACK_TIME_LOCAL;
-  const dateFormat: string = settings?.date_format || FALLBACK_DATE;
-  const timeFormat: string = settings?.time_format || fallbackTime;
-  const timeZone: string = settings?.time_zone || FALLBACK_ZONE;
+  const serverTime: string | null = settings?.server_time ?? null;
 
-  const toDate = timeZoneAware ? toDateZoned : toDateLocal;
-
-  const safeFmt = (input: DateInput, pattern: string): string => {
-    const d = toDate(input);
-    if (!d) return '';
-    try {
-      if (timeZoneAware) return formatInTimeZone(d, timeZone, pattern);
-      return fmtFn(d, pattern);
-    } catch {
-      return '';
-    }
-  };
-
-  const dayLabel = (input: DateInput): string => {
-    const d = toDate(input);
-    if (!d) return '';
-    if (isToday(d)) return 'Today';
-    if (isYesterday(d)) return 'Yesterday';
-    return safeFmt(input, dateFormat);
-  };
-
-  return {
-    dateFormat,
-    timeFormat,
-    timeZone,
-    formatDate: (input: DateInput) => safeFmt(input, dateFormat),
-    formatTime: (input: DateInput) => safeFmt(input, timeFormat),
-    formatDateTime: (input: DateInput) => safeFmt(input, `${dateFormat} · ${timeFormat}`),
-    dayLabel,
-    dayKey: (input: DateInput) => safeFmt(input, 'yyyy-MM-dd'),
-  };
+  return createDateFormatter({
+    dateFormat: settings?.date_format,
+    timeFormat: settings?.time_format,
+    timeZone: settings?.time_zone,
+    timeZoneAware,
+    clock: {
+      source: toTimeSource(settings?.time_source),
+      serverNow: serverTime,
+      // Stamped once per distinct server_time, so the server clock keeps
+      // ticking between fetches instead of freezing at the fetched value.
+      serverNowReceivedAt: stampServerTime(serverTime),
+      customTime: settings?.custom_time ?? null,
+      customTimeSetAt: settings?.custom_time_set_at ?? null,
+    },
+  });
 }

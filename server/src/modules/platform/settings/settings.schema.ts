@@ -1,6 +1,16 @@
 import gql from "graphql-tag";
 
 export const settingsTypeDefs = gql`
+  "Where every app reads the current time from."
+  enum TimeSource {
+    "The server's clock — the default, keeps every device in step."
+    SERVER
+    "Each device's own clock."
+    BROWSER
+    "A fixed anchor set by an admin; the clock runs forward from there."
+    CUSTOM
+  }
+
   type AppSettings {
     jwt_expires_in: String
     jwt_no_expiry: Boolean!
@@ -8,6 +18,12 @@ export const settingsTypeDefs = gql`
     time_format: String!
     "IANA timezone (e.g. Asia/Kolkata) used to display all dates & times."
     time_zone: String!
+    "Where every app reads 'now' from: SERVER, BROWSER or CUSTOM."
+    time_source: TimeSource!
+    "CUSTOM anchor — the instant the apps' clock should read (ISO)."
+    custom_time: String
+    "Server's real time when the CUSTOM anchor was saved (ISO)."
+    custom_time_set_at: String
     "Earliest allowed signup birth year (inclusive)."
     min_birth_year: Int!
     "Latest allowed signup birth year (inclusive)."
@@ -24,6 +40,14 @@ export const settingsTypeDefs = gql`
     time_format: String!
     "IANA timezone (e.g. Asia/Kolkata) used to display all dates & times."
     time_zone: String!
+    "Where every app reads 'now' from: SERVER, BROWSER or CUSTOM."
+    time_source: TimeSource!
+    "CUSTOM anchor — the instant the apps' clock should read (ISO)."
+    custom_time: String
+    "Server's real time when the CUSTOM anchor was saved (ISO)."
+    custom_time_set_at: String
+    "The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking."
+    server_time: String!
     min_birth_year: Int!
     max_birth_year: Int!
     "Days a Create-Pod draft is kept (from last save) before auto-deletion."
@@ -43,6 +67,9 @@ export const settingsTypeDefs = gql`
     date_format: String
     time_format: String
     time_zone: String
+    time_source: TimeSource
+    "CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side."
+    custom_time: String
     min_birth_year: Int
     max_birth_year: Int
     "Days a Create-Pod draft is kept before auto-deletion (min 1)."
@@ -86,6 +113,33 @@ export const settingsTypeDefs = gql`
     name: String
     description: String
     enabled: Boolean
+  }
+
+  """
+  A festive window. While the app clock sits inside [starts_at, ends_at] the
+  apps swap in this occasion's icons. The slug doubles as the folder name the
+  native app loads its pre-bundled icons from.
+  """
+  type OccasionalIcon {
+    slug: String!
+    label: String!
+    starts_at: String!
+    ends_at: String!
+    "Server-hosted icon. Native prefers its bundled copy for this slug."
+    icon_url: String!
+    is_active: Boolean!
+    "Higher wins when windows overlap, so a campaign can sit over a season."
+    sort_order: Int!
+  }
+
+  input OccasionalIconInput {
+    slug: String!
+    label: String
+    starts_at: String!
+    ends_at: String!
+    icon_url: String
+    is_active: Boolean
+    sort_order: Int
   }
 
   "One media item in the global Pod Shop top slider (image or video)."
@@ -146,6 +200,8 @@ export const settingsTypeDefs = gql`
     app_latest_version: String!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
     pod_shop_slider: [PodShopSliderMedia!]!
+    "Festive icon windows; the app clock picks which one is active."
+    occasional_icons: [OccasionalIcon!]!
     updated_at: String
   }
 
@@ -213,5 +269,7 @@ export const settingsTypeDefs = gql`
     updateBranding(input: UpdateBrandingInput!): Branding!
     "Replace the global Pod Shop slider media (managed from the products portal)."
     updatePodShopSlider(input: [PodShopSliderMediaInput!]!): [PodShopSliderMedia!]!
+    "Replace the occasional-icon windows (admin Branding)."
+    updateOccasionalIcons(input: [OccasionalIconInput!]!): [OccasionalIcon!]!
   }
 `;

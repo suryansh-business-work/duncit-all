@@ -6,7 +6,15 @@
     "noImplicitOverride": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      // Linked workspace packages are typechecked from their own SOURCE, so
+      // their peer imports resolve by walking up from packages/<name>/ —
+      // which finds nothing in CI, where only app/mobile-app is installed.
+      // Point them at this app's copy (the jest modulePaths twin).
+      "date-fns": ["./node_modules/date-fns"],
+      "date-fns/*": ["./node_modules/date-fns/*"],
+      "date-fns-tz": ["./node_modules/date-fns-tz"],
+      "date-fns-tz/*": ["./node_modules/date-fns-tz/*"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

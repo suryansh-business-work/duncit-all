@@ -21,3 +21,5 @@ export { useDebouncedValue } from './useDebouncedValue';
 export { mergeSx } from './mergeSx';
 export { ModerationBlockedDialog } from './ModerationBlockedDialog';
 export type { BlockedViolation, ModerationBlockedDialogProps } from './ModerationBlockedDialog';
+export { LanguageSelect } from './LanguageSelect';
+export type { LanguageOption, LanguageSelectProps } from './LanguageSelect';

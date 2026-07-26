@@ -18,6 +18,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useUserData } from '@duncit/user-context';
 import { useBranding } from '../hooks/useBranding';
 import { accountEmail, accountName, initials } from './user-display';
+import { ProfileLanguage } from './ProfileLanguage';
 
 const UPDATE_MY_PROFILE = gql`
   mutation ShellUpdateMyProfile($input: UpdateMyProfileInput!) {
@@ -143,6 +144,8 @@ export function ProfilePage() {
             </Stack>
           </>
         )}
+
+        <ProfileLanguage />
 
         <Divider sx={{ my: 2.5 }} />
 

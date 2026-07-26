@@ -89,6 +89,8 @@ export const userTypeDefs = gql`
 
     profile_photo: String
     bio: String
+    "BCP-47 language the user picked (e.g. en-IN). Drives every surface."
+    locale: String
     profile_links: [ProfileLink!]!
 
     pet_profile: PetProfile
@@ -389,6 +391,8 @@ export const userTypeDefs = gql`
     updateMyProfileVisibility(visibility: ProfileVisibility!): User!
     "Persist the user's selected header location (pass null to clear)."
     setMySelectedLocation(location_id: ID): User!
+    "Persist the signed-in users language. Validated against active locales."
+    setMyLocale(locale: String!): User!
     requestEmailVerificationOtp: OtpRequestResult!
     verifyEmailVerificationOtp(otp: String!): User!
     requestPasswordResetOtp(email: String!): OtpRequestResult!

@@ -12,6 +12,19 @@ module.exports = {
     // node_modules, so babel-jest's injected runtime helpers can't be resolved
     // from there — pin them to this app's own @babel/runtime.
     '^@babel/runtime/(.*)$': '<rootDir>/node_modules/@babel/runtime/$1',
+    // @duncit/datetime is compiled from its own SOURCE, so its `date-fns` peer
+    // resolves by walking up from packages/datetime/ — which finds nothing in
+    // CI, where only app/mobile-app is installed (npm ci).
+    // Both are pinned to the app's CJS entry EXPLICITLY. Pointing at the package
+    // directory (or adding it via modulePaths) bypasses package.json "exports"
+    // and loads the ESM build, which jest cannot parse — that broke 71 suites.
+    // Only bare specifiers are used anywhere, so no subpath mapping is needed.
+    '^date-fns$': '<rootDir>/node_modules/date-fns/index.cjs',
+    // date-fns-tz v3's CJS build requires subpaths like `date-fns/format`, and
+    // jest's resolver ignores package.json "exports" — so those land on the ESM
+    // .js file and blow up. Pin subpaths to their .cjs twin.
+    '^date-fns/([^.]+)$': '<rootDir>/node_modules/date-fns/$1.cjs',
+    '^date-fns-tz$': '<rootDir>/node_modules/date-fns-tz/dist/cjs/index.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

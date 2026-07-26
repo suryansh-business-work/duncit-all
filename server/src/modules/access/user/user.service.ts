@@ -45,6 +45,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { LocationModel } from '@modules/platform/location/location.model';
+import { LocaleModel } from '@modules/platform/localization/localization.model';
 import { UserContactActionModel } from './userContactAction.model';
 import { rbacService } from '@modules/access/rbac/rbac.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
@@ -583,6 +584,8 @@ async function toPublic(u: any) {
     assigned_zones: meta.assigned_zones ?? legacy.assigned_zones ?? [],
     profile_photo: profile.profile_photo ?? legacy.profile_photo ?? null,
     bio: profile.bio ?? legacy.bio ?? null,
+    // Dormant since the schema was written; now the users language choice.
+    locale: profile.locale ?? 'en-IN',
     profile_links: (u.profile_links ?? []).map((link: any) => ({
       label: link.label ?? '',
       url: link.url ?? '',
@@ -1643,6 +1646,26 @@ export const userService = {
     const updated = await UserModel.findByIdAndUpdate(
       user_id,
       { $set: { 'profile.selected_location_id': value } },
+      { new: true }
+    );
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
+  },
+
+  /** Persist the user's language. Validated against the ACTIVE locales so a
+   * removed or disabled language can never be stored. */
+  async setMyLocale(user_id: string, locale: string) {
+    const code = (locale ?? '').trim();
+    if (!code) {
+      throw new GraphQLError('A locale is required', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const exists = await LocaleModel.exists({ code, is_active: true });
+    if (!exists) {
+      throw new GraphQLError('Unsupported locale', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $set: { 'profile.locale': code } },
       { new: true }
     );
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });

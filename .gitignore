@@ -9,6 +9,7 @@ coverage/
 .vite/
 .turbo/
 generated/
+_nm/
 
 # astro build cache (only the root .gitignore is used; inner workspaces inherit)
 .astro/

@@ -25,6 +25,74 @@ describe('settingsService integration', () => {
     expect(pub.time_zone).toBe('Asia/Kolkata');
   });
 
+  it('defaults the time source to SERVER and stamps every public read with server_time', async () => {
+    const pub = await settingsService.getPublicAppSettings();
+    expect(pub.time_source).toBe('SERVER');
+    expect(pub.custom_time).toBeNull();
+    expect(pub.custom_time_set_at).toBeNull();
+    // server_time is the server's clock at response time — clients tick from it.
+    expect(Math.abs(Date.parse(pub.server_time) - Date.now())).toBeLessThan(60_000);
+  });
+
+  it('stamps custom_time_set_at when a custom anchor is saved, and clears both on null', async () => {
+    const before = Date.now();
+    const saved = await settingsService.updateAppSettings({
+      time_source: 'CUSTOM',
+      custom_time: '2030-06-15T10:00:00.000Z',
+    });
+    expect(saved.time_source).toBe('CUSTOM');
+    expect(saved.custom_time).toBe('2030-06-15T10:00:00.000Z');
+    // The save-stamp is the SERVER's real clock, not the anchor.
+    expect(Date.parse(saved.custom_time_set_at as string)).toBeGreaterThanOrEqual(before);
+
+    // An unusable anchor is rejected rather than stored as Invalid Date.
+    const junk = await settingsService.updateAppSettings({ custom_time: 'not-a-date' });
+    expect(junk.custom_time).toBeNull();
+    expect(junk.custom_time_set_at).toBeNull();
+
+    // Clearing the anchor clears its stamp too.
+    await settingsService.updateAppSettings({ custom_time: '2030-06-15T10:00:00.000Z' });
+    const cleared = await settingsService.updateAppSettings({ custom_time: null });
+    expect(cleared.custom_time).toBeNull();
+    expect(cleared.custom_time_set_at).toBeNull();
+
+    await settingsService.updateAppSettings({ time_source: 'SERVER' });
+  });
+
+  it('replaces occasional icons, normalising slugs and dropping unusable rows', async () => {
+    const saved = await settingsService.updateOccasionalIcons([
+      {
+        slug: '  Diwali ',
+        label: 'Diwali',
+        starts_at: '2026-11-05T00:00:00.000Z',
+        ends_at: '2026-11-12T00:00:00.000Z',
+        icon_url: ' https://cdn/diwali.png ',
+      },
+      // Dropped: no slug.
+      { slug: '   ', starts_at: '2026-01-01T00:00:00.000Z', ends_at: '2026-01-02T00:00:00.000Z' },
+      // Dropped: unusable dates.
+      { slug: 'junk', starts_at: 'not-a-date', ends_at: '2026-01-02T00:00:00.000Z' },
+      // Dropped: window ends before it starts.
+      { slug: 'backwards', starts_at: '2026-05-02T00:00:00.000Z', ends_at: '2026-05-01T00:00:00.000Z' },
+    ]);
+
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({
+      slug: 'diwali', // trimmed + lowercased so it matches the native asset folder
+      label: 'Diwali',
+      icon_url: 'https://cdn/diwali.png',
+      is_active: true,
+      sort_order: 0,
+    });
+
+    // Readable from the public branding query the apps use.
+    const branding = await settingsService.getBranding();
+    expect(branding.occasional_icons).toEqual(saved);
+
+    // Replacing with an empty list clears them.
+    expect(await settingsService.updateOccasionalIcons([])).toEqual([]);
+  });
+
   it('updates the timezone and re-aligns the reopen-window day boundary', async () => {
     const updated = await settingsService.updateAppSettings({ time_zone: 'America/New_York' });
     expect(updated.time_zone).toBe('America/New_York');

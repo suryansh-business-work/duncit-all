@@ -103,5 +103,13 @@ export const settingsResolvers = {
       requireRole(ctx, SLIDER_WRITE);
       return settingsService.updatePodShopSlider(args.input);
     },
+    updateOccasionalIcons: async (
+      _p: unknown,
+      args: { input: any[] },
+      ctx: GraphQLContext,
+    ) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return settingsService.updateOccasionalIcons(args.input);
+    },
   },
 };

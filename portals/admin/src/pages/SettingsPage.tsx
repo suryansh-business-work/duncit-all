@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AppearanceSection from './settings-page/AppearanceSection';
 import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
+import TimeSourceSection from './settings-page/TimeSourceSection';
 import BirthYearSection from './settings-page/BirthYearSection';
 
 export default function SettingsPage() {
@@ -16,6 +17,7 @@ export default function SettingsPage() {
       </Box>
       <AppearanceSection />
       <DisplayFormatsSection onToast={setToast} />
+      <TimeSourceSection onToast={setToast} />
       <BirthYearSection onToast={setToast} />
       <Snackbar
         open={!!toast}

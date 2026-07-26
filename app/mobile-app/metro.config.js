@@ -10,6 +10,18 @@ const config = getDefaultConfig(__dirname);
 // with the app's and break the bundle.
 config.watchFolders = [path.resolve(__dirname, '../../packages')];
 
+// Linked workspace packages (@duncit/datetime) are bundled from their own
+// SOURCE, so their peer imports resolve by walking up from packages/<name>/ —
+// which finds nothing in Docker/CI, where only app/mobile-app is installed.
+// extraNodeModules points those names at this app's copy while still letting
+// Metro resolve the package normally (package.json exports honoured); pinning a
+// file instead would bypass exports and load the unusable ESM build.
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  'date-fns': path.resolve(__dirname, 'node_modules/date-fns'),
+  'date-fns-tz': path.resolve(__dirname, 'node_modules/date-fns-tz'),
+};
+
 // Expo SDK 54 enables package exports, so Metro prefers each package's ESM
 // `import` condition. For a few deps that ESM build is unusable under Metro, so
 // we pin them to their CommonJS build:

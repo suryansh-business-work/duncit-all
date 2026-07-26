@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import {
   createTranslator,
@@ -114,6 +114,17 @@ export function LocaleProvider({
     () => createTranslator({ locale: code, isRtl: active?.is_rtl === true, fallback, server }),
     [code, active?.is_rtl, fallback, server],
   );
+
+  // Tell the DOCUMENT what language it is in. `dir` is what actually flips the
+  // layout for a right-to-left locale — an admin can mark a locale RTL, and
+  // without this nothing would happen — and `lang` is what screen readers and
+  // hyphenation read. Guarded for non-DOM hosts (SSR, tests).
+  useEffect(() => {
+    const root = globalThis.document?.documentElement;
+    if (!root) return;
+    root.dir = translator.isRtl ? 'rtl' : 'ltr';
+    root.lang = translator.locale;
+  }, [translator.isRtl, translator.locale]);
 
   const setLocale = useCallback(
     (next: string) => {

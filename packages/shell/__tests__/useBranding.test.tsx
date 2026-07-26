@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 vi.mock('@apollo/client', () => ({ useQuery: vi.fn(), gql: (s: TemplateStringsArray) => s }));
 
@@ -46,7 +46,7 @@ describe('useBranding', () => {
       loading: false,
     } as never);
     const { result } = renderHook(() => useBranding());
-    expect(result.current).toEqual({
+    expect(result.current).toMatchObject({
       logoUrl: '/p.png',
       appName: 'Acme',
       primaryColor: '#123',
@@ -54,6 +54,22 @@ describe('useBranding', () => {
       loading: false,
       isFallbackLogo: false,
     });
+  });
+
+  it('swaps to the bundled logo once the configured URL fails to load', () => {
+    mockQuery.mockReturnValue({
+      data: { branding: { portals_logo_url: 'https://cdn.test/deleted.png' } },
+      loading: false,
+    } as never);
+    const { result, rerender } = renderHook(() => useBranding());
+    expect(result.current.logoUrl).toBe('https://cdn.test/deleted.png');
+
+    // A URL that 404s at request time never arrives empty, so the blank-check
+    // alone would leave a broken image on screen in all 17 portals.
+    act(() => result.current.onLogoError());
+    rerender();
+    expect(result.current.logoUrl).toBe(FALLBACK_ICONS.logo);
+    expect(result.current.isFallbackLogo).toBe(true);
   });
 
   it('falls back to the global logo and clears loading once data exists', () => {

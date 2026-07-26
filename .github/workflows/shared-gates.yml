@@ -1,0 +1,48 @@
+name: Shared Gates
+
+# The two compile-time contracts in CLAUDE.md rules 38 + 39 are enforced by
+# plain node scripts. They were chained into `pnpm test` of the packages that
+# own them, but NOTHING in CI runs a packages/* `test` script — the only
+# recursive invocation is sonar.yml's `test:coverage`, and that fires on `main`
+# only. So both gates were passing by never running.
+#
+# This job runs them directly, on every push and PR, with no path filter: the
+# bundles are shared, so a change anywhere can violate them.
+on:
+  push:
+    branches: [main, master, develop, staging]
+  pull_request:
+    branches: [main, master, develop, staging]
+  workflow_dispatch:
+
+concurrency:
+  group: shared-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: Shared gates (fallback icons + translation keys)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Rule 39: every surface ships a local copy of every fallback icon name.
+      - name: Fallback icons — mWeb
+        run: node scripts/verify-fallback-icons.mjs app/mweb/src/fallback-icons
+
+      - name: Fallback icons — native app
+        run: node scripts/verify-fallback-icons.mjs app/mobile-app/assets/fallback-icons
+
+      - name: Fallback icons — portal shell (all 17 portals)
+        run: node scripts/verify-fallback-icons.mjs packages/shell/src/fallback-icons
+
+      # Rule 38: no shipped translation key that nothing renders.
+      - name: Translation keys are rendered
+        run: node scripts/verify-translation-keys.mjs .

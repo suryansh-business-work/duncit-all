@@ -18,6 +18,7 @@ export const MobileMeDocument = gql(`
       phone_extension
       selected_location_id
       roles
+      locale
     }
   }
 `);

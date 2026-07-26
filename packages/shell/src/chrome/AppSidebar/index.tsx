@@ -26,7 +26,7 @@ export interface AppSidebarProps {
 /** The unified console sidebar: branding, menu search, nav tree, signed-in user. */
 export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigate }: Readonly<AppSidebarProps>) {
   const location = useLocation();
-  const { logoUrl, appName, loading } = useBranding();
+  const { logoUrl, appName, loading, onLogoError } = useBranding();
   const [query, setQuery] = useState('');
   const nav = useMemo(() => filterNav(navItems, query.trim()), [navItems, query]);
   // Expand-all / Collapse-all toggle: `allOpen` flips the label; `expandAll`
@@ -66,6 +66,7 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
             component="img"
             src={logoUrl}
             alt={appName}
+            onError={onLogoError}
             sx={{ height: 26, width: 'auto', maxWidth: 130, objectFit: 'contain' }}
           />
         )}

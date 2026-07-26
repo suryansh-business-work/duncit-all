@@ -42,7 +42,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
   mweb: {
     common: {
       language: 'Language',
-      languageHint: 'Choose the language for this portal.',
       languageSaved: 'Language updated',
     },
   },
@@ -50,6 +49,11 @@ export const SHELL_BUNDLE: NestedCatalogue = {
     profile: {
       accessRoles: 'ACCESS ROLES',
       noRoles: 'No roles assigned.',
+      // NOT mweb.common.languageHint: the portal wording differs from the app's,
+      // and the server stores ONE row per key — a second value for the same key
+      // is unrepresentable, so whichever bundle merged last would silently
+      // overwrite the other surface's copy.
+      languageHint: 'Choose the language for this portal.',
     },
   },
 };

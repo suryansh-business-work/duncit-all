@@ -281,6 +281,9 @@ importers:
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../i18n
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../user-context
     devDependencies:
       '@apollo/client':
         specifier: ^3.10.4

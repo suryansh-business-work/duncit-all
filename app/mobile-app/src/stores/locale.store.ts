@@ -19,6 +19,12 @@ interface LocaleState {
   locale: string;
   isRtl: boolean;
   hydrated: boolean;
+  /**
+   * The account language the last hydrate ran with — `null` when it ran
+   * before `me` resolved. Lives here rather than in the hook so N components
+   * calling useTranslation cause ONE hydrate, not N.
+   */
+  appliedUserLocale: string | null;
   /** Restore the saved choice, then load locales + catalogue. */
   hydrate: (userLocale?: string | null) => Promise<void>;
   /** Switch language: persists locally and reloads the catalogue. */
@@ -57,6 +63,7 @@ export const useLocaleStore = create<LocaleState>((set, get) => {
     locale: DEFAULT_LOCALE,
     isRtl: false,
     hydrated: false,
+    appliedUserLocale: null,
 
     hydrate: async (userLocale) => {
       let stored: string | null = null;
@@ -79,7 +86,13 @@ export const useLocaleStore = create<LocaleState>((set, get) => {
 
       const active = resolveLocale(userLocale ?? stored, locales);
       const code = active?.code ?? DEFAULT_LOCALE;
-      set({ locales, locale: code, isRtl: active?.is_rtl === true, hydrated: true });
+      set({
+        locales,
+        locale: code,
+        isRtl: active?.is_rtl === true,
+        hydrated: true,
+        appliedUserLocale: userLocale ?? null,
+      });
       if (locales.length > 0) await loadCatalogue(code);
     },
 

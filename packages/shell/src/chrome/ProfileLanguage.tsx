@@ -53,7 +53,7 @@ export function ProfileLanguage() {
           options={locales}
           onChange={change}
           label={t('mweb.common.language')}
-          helperText={t('mweb.common.languageHint')}
+          helperText={t('shell.profile.languageHint')}
         />
         {saved && <Alert severity="success">{t('mweb.common.languageSaved')}</Alert>}
         {error && <Alert severity="error">{error}</Alert>}

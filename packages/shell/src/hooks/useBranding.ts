@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { resolveIconSource } from '@duncit/fallback-icons';
 
@@ -23,6 +24,13 @@ export interface BrandingSummary {
   loading: boolean;
   /** True while `logoUrl` is the bundled copy rather than the admin's URL. */
   isFallbackLogo: boolean;
+  /**
+   * Hand this to the `onError` of whatever renders `logoUrl`. A configured URL
+   * that 404s at request time never arrives empty, so the blank-check alone
+   * would leave a broken image on screen — this is what actually engages the
+   * bundled copy (rule 39).
+   */
+  onLogoError: () => void;
 }
 
 /**
@@ -33,10 +41,12 @@ export interface BrandingSummary {
  */
 export function useBranding(): BrandingSummary {
   const { data, loading } = useQuery(BRANDING_SUMMARY, { fetchPolicy: 'cache-first' });
+  const [failed, setFailed] = useState(false);
   const b = data?.branding;
   const { source, isFallback } = resolveIconSource(
     b?.portals_logo_url || b?.logo_url,
     FALLBACK_ICONS.logo,
+    failed,
   );
   return {
     logoUrl: source,
@@ -45,5 +55,6 @@ export function useBranding(): BrandingSummary {
     supportEmail: b?.support_email,
     loading: loading && !b,
     isFallbackLogo: isFallback,
+    onLogoError: () => setFailed(true),
   };
 }

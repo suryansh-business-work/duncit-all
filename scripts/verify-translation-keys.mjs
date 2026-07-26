@@ -31,6 +31,12 @@ const SOURCE_EXT = /\.(tsx?|astro|mjml)$/;
 function bundleKeys(source) {
   const keys = [];
   const path = [];
+  // Prettier wraps a long entry as `key:` / newline / `'value',`. Join those
+  // back onto one line first — otherwise the leaf matches nothing, the key is
+  // skipped WITHOUT a diagnostic, and the gate passes while missing it.
+  // (`key: {` keeps its brace on the same line, so objects are unaffected.)
+  source = source.replace(/:[ \t]*\r?\n[ \t]*/g, ': ');
+
   // The file is a small set of plain object literals, so brace depth plus the
   // `name:` before each brace reconstructs every path without a TS parser.
   for (const raw of source.split('\n')) {
@@ -48,6 +54,18 @@ function bundleKeys(source) {
     }
     const leaf = /^(?:'([^']+)'|(\w+)):\s*['"`]/.exec(line);
     if (leaf) keys.push([...path, leaf[1] ?? leaf[2]].join('.'));
+  }
+
+  // Self-check: every string-valued entry in the file must have produced a key.
+  // Without this, a future formatting change silently shrinks the checked set
+  // and the gate still prints a reassuring pass.
+  const literals = source.match(/^[ \t]*(?:'[^']+'|\w+):[ \t]*['"`]/gm) ?? [];
+  if (literals.length !== keys.length) {
+    console.error(
+      `verify-translation-keys: parsed ${keys.length} keys but the bundle has ` +
+        `${literals.length} string entries — the parser is out of step with the file's format`,
+    );
+    process.exit(1);
   }
   return keys;
 }

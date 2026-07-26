@@ -72,6 +72,17 @@ describe('useLocaleStore.hydrate', () => {
     expect(state.locale).toBe('en-IN');
   });
 
+  it('survives a SUCCESSFUL response that omits publicLocales', async () => {
+    // An older server or a partial response never reaches the catch above, so
+    // this used to crash the first screen that translated anything.
+    mockRequest.mockResolvedValueOnce({});
+    await useLocaleStore.getState().hydrate();
+    const state = useLocaleStore.getState();
+    expect(state.hydrated).toBe(true);
+    expect(state.locales).toEqual([]);
+    expect(state.locale).toBe('en-IN');
+  });
+
   it('clears the catalogue when it cannot be fetched', async () => {
     mockRequest
       .mockResolvedValueOnce({ publicLocales: LOCALES })

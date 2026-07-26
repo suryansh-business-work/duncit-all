@@ -15,8 +15,9 @@
     "src"
   ],
   "scripts": {
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test": "node ../../scripts/verify-translation-keys.mjs ../.. && vitest run",
+    "test:coverage": "vitest run --coverage",
+    "verify:keys": "node ../../scripts/verify-translation-keys.mjs ../.."
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",

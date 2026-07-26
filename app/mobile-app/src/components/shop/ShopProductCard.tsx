@@ -4,6 +4,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import type { ShopProduct } from '@/screens/ShopScreen';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface Props {
   product: ShopProduct;
@@ -17,6 +18,7 @@ interface Props {
  * corner button quick-adds to cart via the cheapest pod (with a light haptic).
  * RN twin of mWeb's ShopProductCard. */
 export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonly<Props>) {
+  const { t } = useTranslation();
   const imageUrl = product.image_url || product.images[0] || '';
   const summary = product.review_summary;
   const hasRating = !!summary && summary.total > 0;
@@ -59,7 +61,7 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
             backgroundColor="rgba(33,33,33,0.85)"
           >
             <Text fontSize={10} fontWeight="800" color="#ffffff">
-              Out of stock
+              {t('mweb.shop.outOfStock')}
             </Text>
           </XStack>
         ) : (

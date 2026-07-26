@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { Alert, Divider, Stack, Typography } from '@mui/material';
 import { LanguageSelect } from '@duncit/ui';
-import { useTranslation } from '@duncit/app-settings';
+import { useTranslation } from '../i18n/useTranslation';
 
 const SET_MY_LOCALE = gql`
   mutation SetMyLocale($locale: String!) {

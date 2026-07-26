@@ -140,14 +140,21 @@ export function LocaleProvider({
 }
 
 /**
- * Translate inside a LocaleProvider. Outside one it still returns a working
- * translator (keys render as themselves) rather than throwing, so a component
- * rendered in isolation — a test, a storybook, an error boundary — never
- * crashes on a missing provider.
+ * Translate inside a LocaleProvider.
+ *
+ * Outside one it still returns a working translator rather than throwing, so a
+ * component rendered in isolation — a test, a storybook, an error boundary —
+ * never crashes on a missing provider. Pass the surface's bundled catalogue so
+ * that path renders real copy instead of raw keys; a surface should do this
+ * through its own thin wrapper (see mWeb's src/i18n/useTranslation) rather than
+ * repeating the argument at every call site.
  */
-export function useTranslation(): LocaleContextValue {
+export function useTranslation(fallback?: FlatCatalogue): LocaleContextValue {
   const context = useContext(LocaleContext);
-  const fallbackTranslator = useMemo(() => createTranslator({ locale: 'en-IN' }), []);
+  const fallbackTranslator = useMemo(
+    () => createTranslator({ locale: 'en-IN', fallback }),
+    [fallback],
+  );
   if (context) return context;
   return {
     t: fallbackTranslator.t,

@@ -69,7 +69,10 @@ export const useLocaleStore = create<LocaleState>((set, get) => {
       let locales: Locale[] = [];
       try {
         const data: LocalesData = await graphqlRequest(PublicLocalesDocument);
-        locales = data.publicLocales;
+        // A REQUEST THAT SUCCEEDS can still omit the field — an older server, or
+        // a partial response with errors. That never reaches the catch, so it
+        // would crash the app on the very first screen that translates.
+        locales = data.publicLocales ?? [];
       } catch {
         locales = [];
       }

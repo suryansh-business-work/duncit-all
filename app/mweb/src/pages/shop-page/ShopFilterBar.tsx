@@ -17,6 +17,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListRoundedIcon from '@mui/icons-material/FilterListRounded';
 import { SHOP_SORT_OPTIONS, type ShopSort } from './queries';
 import { SHOP_RATING_OPTIONS, type ShopFilters } from './useShopFilters';
+import { useTranslation } from '../../i18n/useTranslation';
 
 type Option = readonly [string, string];
 
@@ -66,13 +67,14 @@ const withAll = (options: Option[]): Option[] => [['', 'All'], ...options];
  * behind the button (with an active-count badge) to keep the header clean. Twin
  * of the native ShopFilterBar. */
 export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilters }>) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   return (
     <Box>
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField
           size="small"
-          placeholder="Search products or brands…"
+          placeholder={t('mweb.shop.searchPlaceholder')}
           value={filters.query}
           onChange={(e) => filters.setQuery(e.target.value)}
           InputProps={{
@@ -142,7 +144,7 @@ export default function ShopFilterBar({ filters }: Readonly<{ filters: ShopFilte
                 onChange={(e) => filters.setIncludeOutOfStock(e.target.checked)}
               />
             }
-            label="Include out of stock"
+            label={t('mweb.shop.includeOutOfStock')}
           />
           <TextField
             select

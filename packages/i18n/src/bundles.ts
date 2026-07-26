@@ -19,19 +19,15 @@ import { flattenCatalogue, type NestedCatalogue } from './catalogue';
 export const MWEB_BUNDLE: NestedCatalogue = {
   mweb: {
     common: {
-      save: 'Save',
-      cancel: 'Cancel',
       language: 'Language',
       languageHint: 'Choose the language for the app.',
       languageSaved: 'Language updated',
     },
     account: {
-      title: 'Account',
       preferences: 'Preferences',
     },
     shop: {
       title: 'Pod Shop',
-      subtitle: 'Discover. Support. Shop Pods',
       emptyState: 'No products match your filters.',
       featured: 'Featured Products',
       outOfStock: 'Out of stock',
@@ -52,7 +48,6 @@ export const SHELL_BUNDLE: NestedCatalogue = {
   },
   shell: {
     profile: {
-      title: 'Profile',
       accessRoles: 'ACCESS ROLES',
       noRoles: 'No roles assigned.',
     },

@@ -3811,6 +3811,9 @@ importers:
 
   website/main-website:
     dependencies:
+      '@duncit/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

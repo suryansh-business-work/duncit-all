@@ -11,6 +11,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@fortawesome/fontawesome-free": "^7.2.0",
     "@tailwindcss/vite": "^4.2.2",

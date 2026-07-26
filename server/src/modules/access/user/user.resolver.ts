@@ -255,6 +255,15 @@ export const userResolvers = {
       }
       return userService.setMySelectedLocation(ctx.user.id, args.location_id ?? null);
     },
+    setMyLocale: async (_p: unknown, args: { locale: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.setMyLocale(ctx.user.id, args.locale);
+    },
     requestEmailVerificationOtp: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       if (!ctx.user) {
         const { GraphQLError } = await import('graphql');

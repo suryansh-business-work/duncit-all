@@ -25,6 +25,8 @@ import CouponsPage from './pages/CouponsPage';
 import ReferralsPage from './pages/referrals-page/ReferralsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
 import BrandingPage from './pages/BrandingPage';
+import LocalesPage from './pages/localization-page/LocalesPage';
+import TranslationsPage from './pages/localization-page/TranslationsPage';
 import FaqsPage from './pages/FaqsPage';
 import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
@@ -73,6 +75,8 @@ export default function App() {
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/localization/locales" element={<LocalesPage />} />
+                <Route path="/localization/translations" element={<TranslationsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
             </AppShell>

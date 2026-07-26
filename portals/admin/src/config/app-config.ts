@@ -90,6 +90,14 @@ export const appConfig = {
       ],
     },
     {
+      label: 'Localization',
+      icon: 'translate',
+      children: [
+        { label: 'Locales', to: '/localization/locales', icon: 'language' },
+        { label: 'Translations', to: '/localization/translations', icon: 'spellcheck' },
+      ],
+    },
+    {
       label: 'System',
       icon: 'settings',
       children: [

@@ -26,12 +26,17 @@ export {
   useTranslation,
 } from './useTranslation';
 export {
+  allFallbackEntries,
   createTranslator,
   flattenCatalogue,
   mergeCatalogues,
   missingKeys,
+  MWEB_BUNDLE,
   nestCatalogue,
   resolveLocale,
+  SHELL_BUNDLE,
+  SURFACE_BUNDLES,
+  WEBSITE_BUNDLE,
   type FlatCatalogue,
   type Locale,
   type NestedCatalogue,

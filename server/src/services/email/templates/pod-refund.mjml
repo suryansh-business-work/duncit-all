@@ -16,10 +16,10 @@
     <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
         <mj-text font-size="22px" font-weight="bold" color="#222">
-          Refund initiated, {{name}}
+          {{t:email.podRefund.title}}, {{name}}
         </mj-text>
         <mj-text font-size="14px" color="#555">
-          Your payment for the cancelled pod below has been marked for refund:
+          {{t:email.podRefund.intro}}
         </mj-text>
         <mj-text font-size="16px" color="#3b82f6" font-weight="bold">
           {{pod_title}}
@@ -28,10 +28,10 @@
           {{amount}}
         </mj-text>
         <mj-text font-size="14px" color="#d6455f" font-weight="bold">
-          Reason: {{reason}}
+          {{t:email.podRefund.reason}}: {{reason}}
         </mj-text>
         <mj-text font-size="13px" color="#888">
-          Refunds are settled back to your original payment method. Contact support if you have any questions.
+          {{t:email.podRefund.settlementNote}} {{t:email.common.supportNote}}
         </mj-text>
       </mj-column>
     </mj-section>

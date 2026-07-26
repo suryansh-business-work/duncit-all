@@ -8,6 +8,13 @@ export {
   type NestedCatalogue,
 } from './catalogue';
 export {
+  allFallbackEntries,
+  MWEB_BUNDLE,
+  SHELL_BUNDLE,
+  SURFACE_BUNDLES,
+  WEBSITE_BUNDLE,
+} from './bundles';
+export {
   createTranslator,
   interpolate,
   resolveLocale,

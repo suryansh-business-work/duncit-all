@@ -71,6 +71,21 @@ export const DELETE_TRANSLATION = gql`
   }
 `;
 
+export const SERVER_TRANSLATION_SEED = gql`
+  query ServerTranslationSeed {
+    serverTranslationSeed {
+      key
+      value
+    }
+  }
+`;
+
+export const IMPORT_TRANSLATION_KEYS = gql`
+  mutation ImportTranslationKeys($locale: String!, $entries: [TranslationValueEntry!]!) {
+    importTranslationKeys(locale: $locale, entries: $entries)
+  }
+`;
+
 export interface LocaleRow {
   id: string;
   code: string;

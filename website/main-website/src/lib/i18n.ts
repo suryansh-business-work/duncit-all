@@ -1,4 +1,10 @@
-import { createTranslator, flattenCatalogue, type NestedCatalogue, type Translator } from '@duncit/i18n';
+import {
+  createTranslator,
+  flattenCatalogue,
+  WEBSITE_BUNDLE,
+  type NestedCatalogue,
+  type Translator,
+} from '@duncit/i18n';
 import { urlConfigs } from '../config/url-configs';
 
 /**
@@ -12,27 +18,10 @@ import { urlConfigs } from '../config/url-configs';
  * deploy — the site simply ships its default language.
  */
 
-/** The website's LOCAL FALLBACK bundle. Add a key here AND in Admin >
- * Localization > Translations before using it. */
-export const WEBSITE_FALLBACK: NestedCatalogue = {
-  website: {
-    common: {
-      getStarted: 'Get started',
-      learnMore: 'Learn more',
-      downloadApp: 'Download the app',
-      contactUs: 'Contact us',
-    },
-    nav: {
-      home: 'Home',
-      about: 'About',
-      support: 'Support',
-    },
-    footer: {
-      rights: 'All rights reserved.',
-      followUs: 'Follow us',
-    },
-  },
-};
+/** The website's LOCAL FALLBACK bundle — held in @duncit/i18n with every other
+ * surface's, and baked into this static build. Add a key to the shared bundle
+ * AND in Admin > Localization > Translations before using it. */
+export const WEBSITE_FALLBACK: NestedCatalogue = WEBSITE_BUNDLE;
 
 export const WEBSITE_FALLBACK_FLAT = flattenCatalogue(WEBSITE_FALLBACK);
 

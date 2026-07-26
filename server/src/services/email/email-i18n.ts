@@ -1,0 +1,114 @@
+import { localizationService } from "@modules/platform/localization/localization.service";
+import { UserModel } from "@modules/access/user/user.model";
+
+/**
+ * Localized copy for MJML emails (CLAUDE.md rule 38).
+ *
+ * Templates reference translated text as `{{t:email.<page>.<key>}}`, which is
+ * substituted by the SAME applyVars pass that handles every other variable — so
+ * no template or renderer had to change shape to gain languages.
+ *
+ * The server deliberately has no @duncit/* dependencies, so the merge is done
+ * here rather than through the shared parser package; the resolution ORDER is
+ * identical to it: server text -> this local fallback -> the key.
+ */
+
+/** The email surface's LOCAL FALLBACK bundle — flat, like the runtime form.
+ * Add a key here AND in Admin > Localization > Translations before using it. */
+export const EMAIL_FALLBACK: Record<string, string> = {
+  "email.common.greeting": "Hi",
+  "email.common.regards": "Thanks",
+  "email.common.supportNote":
+    "Contact support if you have any questions.",
+  "email.common.footerNote": "You are receiving this because you use Duncit.",
+  "email.podRefund.title": "Refund initiated",
+  "email.podRefund.intro":
+    "Your payment for the cancelled pod below has been marked for refund:",
+  "email.podRefund.reason": "Reason",
+  "email.podRefund.settlementNote":
+    "Refunds are settled back to your original payment method.",
+};
+
+const PREFIX = "t:";
+
+/** Short TTL so a burst of emails does not re-read the catalogue per send —
+ * the same shape as the brand-logo cache in email.service. */
+const CATALOGUE_TTL_MS = 60_000;
+const catalogueCache = new Map<string, { vars: Record<string, string>; at: number }>();
+
+const recipientCache = new Map<string, { locale: string | null; at: number }>();
+
+/** Test seam: forget cached catalogues and recipient languages. */
+export function resetEmailTranslationCache(): void {
+  catalogueCache.clear();
+  recipientCache.clear();
+}
+
+/**
+ * The saved language of whoever this address belongs to (`profile.locale`).
+ *
+ * Resolving it here — rather than threading a locale through all ~40 send
+ * wrappers and their call sites — is what makes "change my language" apply to
+ * email too, with no change at any call site. A non-user address (admins,
+ * newsletter contacts) and an unreachable DB both yield null, i.e. the
+ * platform default.
+ */
+export async function recipientLocale(to: string): Promise<string | null> {
+  const email = to.trim().toLowerCase();
+  if (!email) return null;
+
+  const cached = recipientCache.get(email);
+  if (cached && Date.now() - cached.at < CATALOGUE_TTL_MS) return cached.locale;
+
+  let locale: string | null = null;
+  try {
+    const user = await UserModel.findOne({ 'auth.email': email })
+      .select('profile.locale')
+      .lean();
+    locale = user?.profile?.locale ?? null;
+  } catch {
+    /* an email must not fail because the user lookup did */
+  }
+  recipientCache.set(email, { locale, at: Date.now() });
+  return locale;
+}
+
+/**
+ * Translation variables for one recipient's language, keyed `t:<key>` so they
+ * drop straight into the existing `{{ }}` substitution.
+ *
+ * A missing or unknown locale falls back to the platform default (which
+ * publicTranslations already merges), and an unreachable catalogue falls back to
+ * the bundle — an email must never ship with a raw key or a blank line.
+ */
+export async function emailTranslationVars(
+  locale?: string | null,
+): Promise<Record<string, string>> {
+  const requested = (locale ?? "").trim();
+  const cached = catalogueCache.get(requested);
+  if (cached && Date.now() - cached.at < CATALOGUE_TTL_MS) return cached.vars;
+
+  const vars: Record<string, string> = {};
+  for (const [key, value] of Object.entries(EMAIL_FALLBACK)) {
+    vars[`${PREFIX}${key}`] = value;
+  }
+
+  // The ENTIRE lookup is guarded, resolving the default locale included: sending
+  // an email must never fail because the localization store is unreachable — the
+  // bundled copy already renders a complete message.
+  try {
+    const code = requested || (await localizationService.defaultLocaleCode());
+    if (!code) return vars;
+    const entries = await localizationService.publicTranslations(code);
+    for (const entry of entries) {
+      // Blank server text counts as untranslated, so the bundle keeps winning.
+      if (entry.value && entry.value.trim() !== "") {
+        vars[`${PREFIX}${entry.key}`] = entry.value;
+      }
+    }
+  } catch {
+    /* fall through to the bundled copy */
+  }
+  catalogueCache.set(requested, { vars, at: Date.now() });
+  return vars;
+}

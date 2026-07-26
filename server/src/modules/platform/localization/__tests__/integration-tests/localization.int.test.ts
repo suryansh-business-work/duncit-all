@@ -1,5 +1,7 @@
 import { localizationService } from '../../localization.service';
+import { localizationResolvers } from '../../localization.resolver';
 import { LocaleModel, TranslationModel } from '../../localization.model';
+import { EMAIL_FALLBACK } from '@services/email/email-i18n';
 
 const seedLocales = async () => {
   await localizationService.upsertLocale({
@@ -177,6 +179,28 @@ describe('localizationService — importTranslationKeys', () => {
     await expect(localizationService.importTranslationKeys('  ', [])).rejects.toThrow(
       /locale code is required/i,
     );
+  });
+});
+
+describe('serverTranslationSeed', () => {
+  it('offers the email keys the server ships copy for', async () => {
+    const ctx = { user: { roles: ['SUPER_ADMIN'] } } as any;
+    const rows = await localizationResolvers.Query.serverTranslationSeed({}, {}, ctx);
+
+    // Every entry must arrive translatable: a key AND the bundled English text.
+    expect(rows.length).toBe(Object.keys(EMAIL_FALLBACK).length);
+    expect(rows.every((r) => r.key.startsWith('email.') && r.value.trim() !== '')).toBe(true);
+
+    // Feeding it straight into the importer is the admin's one-click seed.
+    await seedLocales();
+    expect(await localizationService.importTranslationKeys('en-IN', rows)).toBe(rows.length);
+  });
+
+  it('is admin-only', async () => {
+    const ctx = { user: { roles: ['USER'] } } as any;
+    await expect(
+      localizationResolvers.Query.serverTranslationSeed({}, {}, ctx),
+    ).rejects.toThrow();
   });
 });
 

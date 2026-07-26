@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Image, useWindowDimensions } from 'react-native';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Spinner, YStack } from 'tamagui';
+import { resolveIconSource } from '@duncit/fallback-icons';
 
 import { useBranding } from '@/hooks/useBranding';
+import { FALLBACK_ICONS } from '@/assets/fallback-icons';
 
 /** A remote raster (PNG/JPG) logo renders as an image; everything else (SVG,
- * relative path, empty) falls back to the app-name monogram. */
+ * relative path, empty) is not renderable here and takes the bundled copy. */
 function isRasterUrl(url?: string | null): url is string {
   return !!url && /^https?:\/\//.test(url) && !/\.svg(\?|#|$)/i.test(url);
 }
@@ -13,7 +15,8 @@ function isRasterUrl(url?: string | null): url is string {
 /**
  * Brand logo for the auth screens, fully admin-managed (Branding → 1B Mobile
  * App): the mobile logo wins, then the global logo. When neither is a
- * renderable raster, the app-name monogram renders — no bundled logo files.
+ * renderable raster — or the remote image fails to load — the BUNDLED logo
+ * renders from assets/fallback-icons (rule 39), matching mWeb exactly.
  */
 export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   const { data, isLoading } = useBranding();
@@ -25,6 +28,13 @@ export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   // (mWeb uses width:auto) instead of a fixed box that leaves a gap. Defaults to
   // square so there's no gap before the remote size is known.
   const [aspect, setAspect] = useState(1);
+  const [failed, setFailed] = useState(false);
+
+  const { source, isFallback } = resolveIconSource(
+    isRasterUrl(logoUrl) ? logoUrl : null,
+    FALLBACK_ICONS.logo,
+    failed,
+  );
 
   if (isLoading && !branding) {
     return (
@@ -34,42 +44,23 @@ export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
     );
   }
 
-  if (isRasterUrl(logoUrl)) {
-    // Cap width at 4× height (matches mWeb's maxWidth clamp) for very wide marks,
-    // and never wider than the viewport (minus padding) so a very wide wordmark
-    // can't overflow and clip on a narrow phone.
-    const width = Math.min(size * aspect, size * 4, windowWidth - 48);
-    return (
-      <Image
-        testID="auth-logo-image"
-        source={{ uri: logoUrl }}
-        resizeMode="contain"
-        role="img"
-        aria-label={name}
-        onLoad={(e) => {
-          const src = e.nativeEvent.source;
-          if (src?.width && src?.height) setAspect(src.width / src.height);
-        }}
-        style={{ height: size, width }}
-      />
-    );
-  }
-
+  // Cap width at 4× height (matches mWeb's maxWidth clamp) for very wide marks,
+  // and never wider than the viewport (minus padding) so a very wide wordmark
+  // can't overflow and clip on a narrow phone.
+  const width = Math.min(size * aspect, size * 4, windowWidth - 48);
   return (
-    <YStack
-      testID="auth-logo-mark"
-      width={size}
-      height={size}
-      borderRadius={size * 0.23}
-      backgroundColor="#F82C2E"
-      alignItems="center"
-      justifyContent="center"
+    <Image
+      testID={isFallback ? 'auth-logo-fallback' : 'auth-logo-image'}
+      source={isFallback ? FALLBACK_ICONS.logo : { uri: source as string }}
+      resizeMode="contain"
       role="img"
       aria-label={name}
-    >
-      <Text fontSize={size * 0.5} fontWeight="900" color="#ffffff">
-        {(name[0] ?? 'D').toUpperCase()}
-      </Text>
-    </YStack>
+      onError={() => setFailed(true)}
+      onLoad={(e) => {
+        const src = e.nativeEvent.source;
+        if (src?.width && src?.height) setAspect(src.width / src.height);
+      }}
+      style={{ height: size, width }}
+    />
   );
 }

@@ -59,7 +59,7 @@ describe('SplashOverlay', () => {
     const onDone = jest.fn();
     renderWithProviders(<SplashOverlay onDone={onDone} />);
     expect(screen.getByTestId('splash-overlay')).toBeOnTheScreen();
-    expect(screen.getByTestId('auth-logo-mark')).toBeOnTheScreen();
+    expect(screen.getByTestId('auth-logo-fallback')).toBeOnTheScreen();
 
     act(() => {
       jest.advanceTimersByTime(1600); // display window
@@ -105,7 +105,7 @@ describe('SplashOverlay', () => {
     // A wide wordmark-on-red asset must fit whole — AppImage maps resizeMode
     // "contain" to expo-image's contentFit, never the cropping "cover".
     expect(image.props.contentFit).toBe('contain');
-    expect(screen.queryByTestId('auth-logo-mark')).toBeNull();
+    expect(screen.queryByTestId('auth-logo-fallback')).toBeNull();
   });
 
   it('plays the admin-configured splash video for a longer beat', () => {

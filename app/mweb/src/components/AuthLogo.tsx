@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
+import { resolveIconSource } from '@duncit/fallback-icons';
+import { FALLBACK_ICONS } from '../fallback-icons';
 
 const AUTH_BRANDING = gql`
   query AuthBranding {
@@ -27,28 +29,29 @@ export default function AuthLogo({ tagline }: Readonly<Props>) {
     fetchPolicy: 'cache-first',
   });
   const b = data?.branding;
+  const [failed, setFailed] = useState(false);
 
-  // Admin-managed logo: the mWeb-specific logo wins, then the global one.
-  // Nothing is bundled — when no logo is configured the app name renders.
-  const logoSrc = b?.mweb_logo_url || b?.logo_url || '';
+  // Admin-managed logo: the mWeb-specific logo wins, then the global one. When
+  // neither is set — or the server URL is blank, deleted or unreachable — the
+  // BUNDLED copy renders instead, so a logo is never simply absent (rule 39).
+  const { source } = resolveIconSource(
+    b?.mweb_logo_url || b?.logo_url,
+    FALLBACK_ICONS.logo,
+    failed,
+  );
 
   let logoContent: ReactNode;
   if (loading && !b) {
     logoContent = <Skeleton variant="rounded" width={148} height={48} />;
-  } else if (logoSrc) {
+  } else {
     logoContent = (
       <Box
         component="img"
-        src={logoSrc}
+        src={source}
         alt={b?.app_name ?? 'Duncit'}
+        onError={() => setFailed(true)}
         sx={{ height: 58, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
       />
-    );
-  } else {
-    logoContent = (
-      <Typography variant="h4" sx={{ fontWeight: 950 }}>
-        {b?.app_name ?? 'Duncit'}
-      </Typography>
     );
   }
 

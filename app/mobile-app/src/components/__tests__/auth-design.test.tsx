@@ -177,21 +177,32 @@ describe('AuthLogo', () => {
     });
   });
 
-  it('falls back to the app-name monogram for an SVG/empty logo', () => {
+  it('falls back to the BUNDLED logo for an SVG/empty logo', () => {
     mockedUseBranding.mockReturnValue(
       brandingResult({ data: { branding: { app_name: 'Duncit', logo_url: '/duncit-logo.svg' } } }),
     );
     renderWithProviders(<AuthLogo />);
-    expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();
-    expect(screen.getByText('D')).toBeTruthy();
+    expect(screen.getByTestId('auth-logo-fallback')).toBeTruthy();
   });
 
-  it('renders a D monogram even when branding has no app name', () => {
+  it('renders the bundled logo even when branding has no app name', () => {
     mockedUseBranding.mockReturnValue(
       brandingResult({ data: { branding: { app_name: '', logo_url: '' } } }),
     );
     renderWithProviders(<AuthLogo />);
-    expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();
+    expect(screen.getByTestId('auth-logo-fallback')).toBeTruthy();
+  });
+
+  it('swaps to the bundled logo when the remote image fails to load', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: { branding: { app_name: 'Duncit', logo_url: 'https://cdn.duncit.com/gone.png' } },
+      }),
+    );
+    renderWithProviders(<AuthLogo />);
+    // A deleted or unreachable branding URL errors at render time, not before.
+    fireEvent(screen.getByTestId('auth-logo-image'), 'error');
+    expect(screen.getByTestId('auth-logo-fallback')).toBeTruthy();
   });
 });
 
@@ -210,7 +221,7 @@ describe('AuthScaffold', () => {
     expect(screen.getByTestId('scaffold')).toBeTruthy();
     expect(screen.getByText('back.')).toBeTruthy();
     expect(screen.getByText('Pick up where you left off')).toBeTruthy();
-    expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();
+    expect(screen.getByTestId('auth-logo-fallback')).toBeTruthy();
     expect(screen.getByTestId('scaffold-child')).toBeTruthy();
   });
 });

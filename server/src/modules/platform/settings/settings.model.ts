@@ -164,6 +164,7 @@ export interface IBranding extends Document {
     starts_at: Date;
     ends_at: Date;
     icon_url: string;
+    fallback_icon: string;
     is_active: boolean;
     sort_order: number;
   }[];
@@ -180,6 +181,7 @@ const occasionalIconSchema = new Schema<{
   starts_at: Date;
   ends_at: Date;
   icon_url: string;
+  fallback_icon: string;
   is_active: boolean;
   sort_order: number;
 }>(
@@ -189,6 +191,7 @@ const occasionalIconSchema = new Schema<{
     starts_at: { type: Date, required: true },
     ends_at: { type: Date, required: true },
     icon_url: { type: String, default: "" },
+    fallback_icon: { type: String, default: "occasion" },
     is_active: { type: Boolean, default: true },
     sort_order: { type: Number, default: 0 },
   },

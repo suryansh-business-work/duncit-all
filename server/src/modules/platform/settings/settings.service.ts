@@ -196,6 +196,7 @@ const brandingToPub = (doc: any) => ({
     starts_at: o.starts_at?.toISOString?.() ?? "",
     ends_at: o.ends_at?.toISOString?.() ?? "",
     icon_url: o.icon_url ?? "",
+    fallback_icon: o.fallback_icon || "occasion",
     is_active: o.is_active !== false,
     sort_order: o.sort_order ?? 0,
   })),
@@ -547,6 +548,7 @@ export const settingsService = {
       starts_at: string;
       ends_at: string;
       icon_url?: string | null;
+      fallback_icon?: string | null;
       is_active?: boolean | null;
       sort_order?: number | null;
     }[],
@@ -558,6 +560,11 @@ export const settingsService = {
         starts_at: new Date(o.starts_at),
         ends_at: new Date(o.ends_at),
         icon_url: (o.icon_url ?? "").trim(),
+        // Stored as-is: the canonical name list lives in @duncit/fallback-icons,
+        // which the server cannot import, and a second copy here would drift. The
+        // admin Select constrains the choice; clients resolve an unknown name to
+        // their own default rather than rendering nothing.
+        fallback_icon: (o.fallback_icon ?? "").trim().toLowerCase(),
         is_active: o.is_active !== false,
         sort_order: o.sort_order ?? i,
       }))

@@ -52,6 +52,7 @@ COPY packages/table/package.json ./packages/table/
 COPY packages/app-settings/package.json ./packages/app-settings/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 COPY packages/dialogs/package.json ./packages/dialogs/
 COPY packages/forms/package.json ./packages/forms/
 COPY packages/ui/package.json ./packages/ui/

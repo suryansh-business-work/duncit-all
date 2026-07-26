@@ -1280,6 +1280,9 @@ importers:
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../../packages/dialogs
+      '@duncit/fallback-icons':
+        specifier: workspace:*
+        version: link:../../packages/fallback-icons
       '@duncit/forms':
         specifier: workspace:*
         version: link:../../packages/forms

@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 
+import { FALLBACK_ICONS } from '@/assets/fallback-icons';
 import { useOccasionIcon } from '@/hooks/useOccasionIcon';
 
 const mockBranding = jest.fn();
@@ -62,9 +63,27 @@ describe('useOccasionIcon', () => {
     expect(renderHook(() => useOccasionIcon()).result.current).toBeNull();
   });
 
-  it('returns null for an unbundled slug that also has no icon_url', () => {
-    withOccasions([{ ...diwali, slug: 'not-bundled', icon_url: '' }]);
-    expect(renderHook(() => useOccasionIcon()).result.current).toBeNull();
+  it('renders the BOUND fallback icon for an unbundled slug with no icon_url', () => {
+    withOccasions([
+      { ...diwali, slug: 'not-bundled', icon_url: '', fallback_icon: 'all-vibe' },
+    ]);
+    const active = renderHook(() => useOccasionIcon()).result.current;
+    // An active occasion must never render nothing.
+    expect(active?.source).toBe(FALLBACK_ICONS['all-vibe']);
+    expect(active?.isBundled).toBe(true);
+  });
+
+  it('lands on the generic occasion art when the binding is unset or unknown', () => {
+    withOccasions([{ ...diwali, slug: 'not-bundled', icon_url: '', fallback_icon: '' }]);
+    expect(renderHook(() => useOccasionIcon()).result.current?.source).toBe(
+      FALLBACK_ICONS.occasion,
+    );
+
+    // The DB does not own the name list, so a stale value resolves, not crashes.
+    withOccasions([{ ...diwali, slug: 'not-bundled', icon_url: '', fallback_icon: 'retired' }]);
+    expect(renderHook(() => useOccasionIcon()).result.current?.source).toBe(
+      FALLBACK_ICONS.occasion,
+    );
   });
 
   it('follows the CLOCK, so a custom admin time switches the icon', () => {

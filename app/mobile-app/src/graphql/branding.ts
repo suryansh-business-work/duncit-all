@@ -32,6 +32,7 @@ export const BrandingDocument = gql(`
         starts_at
         ends_at
         icon_url
+        fallback_icon
         is_active
         sort_order
       }

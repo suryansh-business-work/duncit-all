@@ -43,6 +43,7 @@ export const OCCASIONAL_ICON_FIELDS = `
   starts_at
   ends_at
   icon_url
+  fallback_icon
   is_active
   sort_order
 `;
@@ -71,6 +72,8 @@ export interface OccasionalIconRow {
   starts_at: string;
   ends_at: string;
   icon_url: string;
+  /** Bundled fallback-icon NAME used when icon_url is blank or fails. */
+  fallback_icon: string;
   is_active: boolean;
   sort_order: number;
 }

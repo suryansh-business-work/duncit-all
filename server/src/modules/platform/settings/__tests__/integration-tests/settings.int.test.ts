@@ -93,6 +93,27 @@ describe('settingsService integration', () => {
     expect(await settingsService.updateOccasionalIcons([])).toEqual([]);
   });
 
+  it('binds a fallback-icon name, defaulting when the admin sets none', async () => {
+    const saved = await settingsService.updateOccasionalIcons([
+      {
+        slug: 'holi',
+        starts_at: '2027-03-01T00:00:00.000Z',
+        ends_at: '2027-03-05T00:00:00.000Z',
+        fallback_icon: '  All-Vibe ',
+      },
+      {
+        slug: 'unbound',
+        starts_at: '2027-04-01T00:00:00.000Z',
+        ends_at: '2027-04-05T00:00:00.000Z',
+      },
+    ]);
+
+    // Stored normalised; the canonical NAME list is the client package's, so an
+    // unrecognised value is kept here and resolved by the app, not rejected.
+    expect(saved[0].fallback_icon).toBe('all-vibe');
+    expect(saved[1].fallback_icon).toBe('occasion');
+  });
+
   it('updates the timezone and re-aligns the reopen-window day boundary', async () => {
     const updated = await settingsService.updateAppSettings({ time_zone: 'America/New_York' });
     expect(updated.time_zone).toBe('America/New_York');

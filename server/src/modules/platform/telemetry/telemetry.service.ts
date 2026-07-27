@@ -54,6 +54,14 @@ function normalizeMessage(msg: string): string {
     .slice(0, 300);
 }
 
+/**
+ * Groups identical crashes into one bug row. NOT a security primitive — it
+ * hashes no secret and guards nothing, so collision resistance is irrelevant
+ * here and sha1 is deliberate (SonarQube S4790 is reviewed as Safe for this
+ * line). Do not "upgrade" it to sha256: the digest is persisted as
+ * `Bug.fingerprint`, so changing the algorithm re-fingerprints every existing
+ * bug and every open issue silently forks into a duplicate.
+ */
 function fingerprintOf(source: string, page: string, normMsg: string): string {
   return createHash('sha1').update(`${source}|${page}|${normMsg}`).digest('hex');
 }

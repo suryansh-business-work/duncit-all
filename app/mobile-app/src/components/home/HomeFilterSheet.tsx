@@ -13,10 +13,7 @@ import {
   PRICE_OPTIONS,
   SORT_OPTIONS,
   activeFilterCount,
-  type DateFilter,
   type HomeFilters,
-  type PriceFilter,
-  type SortBy,
 } from '@/utils/home-filters';
 
 interface Props {
@@ -114,7 +111,7 @@ export function HomeFilterSheet({
                       testIDPrefix="filter-price"
                       options={PRICE_OPTIONS}
                       value={filters.price}
-                      onSelect={(val) => onChange({ ...filters, price: val as PriceFilter })}
+                      onSelect={(val) => onChange({ ...filters, price: val })}
                     />
                   </Section>
                   <Section title="When">
@@ -122,7 +119,7 @@ export function HomeFilterSheet({
                       testIDPrefix="filter-date"
                       options={DATE_OPTIONS}
                       value={filters.date}
-                      onSelect={(val) => onChange({ ...filters, date: val as DateFilter })}
+                      onSelect={(val) => onChange({ ...filters, date: val })}
                     />
                   </Section>
                   <Section title="Sort by">
@@ -131,7 +128,7 @@ export function HomeFilterSheet({
                       testIDPrefix="filter-sort"
                       options={SORT_OPTIONS}
                       value={filters.sort}
-                      onSelect={(val) => onChange({ ...filters, sort: val as SortBy })}
+                      onSelect={(val) => onChange({ ...filters, sort: val })}
                     />
                   </Section>
                 </YStack>

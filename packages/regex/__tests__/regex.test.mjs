@@ -1,16 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BANK_ACCOUNT_NUMBER,
   DIAL_CODE,
   DIGITS,
   EMAIL,
+  GSTIN,
+  IFSC,
+  isBankAccountNumber,
   isEmail,
+  isGstin,
+  isIfsc,
   isOtp,
+  isPhoneIntl,
   isPhoneNumber,
   isPincode,
+  isPincodeLoose,
+  isUpiId,
   OTP_6,
+  PHONE_INTL,
+  PHONE_INTL_PLUS,
   PHONE_NUMBER,
   PHONE_NUMBER_IN,
   PINCODE,
+  PINCODE_LOOSE,
+  UPI_ID,
 } from '../regex.mjs';
 
 describe('PHONE_NUMBER (bare 10 digits)', () => {
@@ -130,6 +143,124 @@ describe('EMAIL (hardened)', () => {
   });
 });
 
+describe('PHONE_INTL (6–15 digits, no dial code)', () => {
+  it('accepts the shortest and longest allowed lengths', () => {
+    expect(PHONE_INTL.test('123456')).toBe(true);
+    expect(PHONE_INTL.test('123456789012345')).toBe(true);
+  });
+
+  it('rejects too short, too long, a `+`, or separators', () => {
+    expect(PHONE_INTL.test('12345')).toBe(false);
+    expect(PHONE_INTL.test('1234567890123456')).toBe(false);
+    expect(PHONE_INTL.test('+919876543210')).toBe(false);
+    expect(PHONE_INTL.test('98765 43210')).toBe(false);
+  });
+
+  it('still accepts an Indian mobile, so checkout keeps working', () => {
+    expect(PHONE_INTL.test('9876543210')).toBe(true);
+  });
+});
+
+describe('PHONE_INTL_PLUS', () => {
+  it('accepts the same numbers with or without a leading +', () => {
+    expect(PHONE_INTL_PLUS.test('+919876543210')).toBe(true);
+    expect(PHONE_INTL_PLUS.test('919876543210')).toBe(true);
+  });
+
+  it('rejects a bare +, a trailing +, or a double +', () => {
+    expect(PHONE_INTL_PLUS.test('+')).toBe(false);
+    expect(PHONE_INTL_PLUS.test('919876543210+')).toBe(false);
+    expect(PHONE_INTL_PLUS.test('++919876543210')).toBe(false);
+  });
+});
+
+describe('PINCODE_LOOSE (4–10 digits)', () => {
+  it('accepts non-Indian postal codes and a leading zero', () => {
+    expect(PINCODE_LOOSE.test('1234')).toBe(true);
+    expect(PINCODE_LOOSE.test('0123456789')).toBe(true);
+  });
+
+  it('rejects too short, too long, or alphanumeric codes', () => {
+    expect(PINCODE_LOOSE.test('123')).toBe(false);
+    expect(PINCODE_LOOSE.test('01234567891')).toBe(false);
+    expect(PINCODE_LOOSE.test('SW1A1AA')).toBe(false);
+  });
+
+  it('is strictly looser than the Indian PINCODE it must not replace', () => {
+    expect(PINCODE.test('012345')).toBe(false);
+    expect(PINCODE_LOOSE.test('012345')).toBe(true);
+  });
+});
+
+describe('IFSC', () => {
+  it('accepts 4 letters, a literal 0, then 6 alphanumerics', () => {
+    expect(IFSC.test('HDFC0001234')).toBe(true);
+    expect(IFSC.test('SBIN0ABCDEF')).toBe(true);
+  });
+
+  it('rejects a lowercase bank code, a non-zero 5th char, or wrong length', () => {
+    expect(IFSC.test('hdfc0001234')).toBe(false);
+    expect(IFSC.test('HDFC1001234')).toBe(false);
+    expect(IFSC.test('HDFC000123')).toBe(false);
+    expect(IFSC.test('HDFC00012345')).toBe(false);
+  });
+});
+
+describe('UPI_ID', () => {
+  it('accepts a normal VPA and one with dots, dashes and underscores', () => {
+    expect(UPI_ID.test('john@okhdfcbank')).toBe(true);
+    expect(UPI_ID.test('john.doe_1-2@ok.axis')).toBe(true);
+  });
+
+  it('rejects a missing handle, a numeric-leading handle, or a too-short side', () => {
+    expect(UPI_ID.test('john@')).toBe(false);
+    expect(UPI_ID.test('john@1bank')).toBe(false);
+    expect(UPI_ID.test('j@okhdfcbank')).toBe(false);
+    expect(UPI_ID.test('john@ok')).toBe(false);
+  });
+});
+
+describe('BANK_ACCOUNT_NUMBER', () => {
+  it('accepts 6–18 digits', () => {
+    expect(BANK_ACCOUNT_NUMBER.test('123456')).toBe(true);
+    expect(BANK_ACCOUNT_NUMBER.test('123456789012345678')).toBe(true);
+  });
+
+  it('rejects too short, too long, or non-digits', () => {
+    expect(BANK_ACCOUNT_NUMBER.test('12345')).toBe(false);
+    expect(BANK_ACCOUNT_NUMBER.test('1234567890123456789')).toBe(false);
+    expect(BANK_ACCOUNT_NUMBER.test('1234-5678')).toBe(false);
+  });
+});
+
+describe('GSTIN', () => {
+  it('accepts a real 15-character GSTIN', () => {
+    expect(GSTIN.test('29ABCDE1234F1Z5')).toBe(true);
+    expect(GSTIN.test('07AAACS1234K1ZW')).toBe(true);
+  });
+
+  it('requires the literal Z in position 14', () => {
+    expect(GSTIN.test('29ABCDE1234F1A5')).toBe(false);
+  });
+
+  it('rejects lowercase, a non-digit state code, or the wrong length', () => {
+    expect(GSTIN.test('29abcde1234f1z5')).toBe(false);
+    expect(GSTIN.test('2AABCDE1234F1Z5')).toBe(false);
+    expect(GSTIN.test('29ABCDE1234F1Z')).toBe(false);
+    expect(GSTIN.test('29ABCDE1234F1Z55')).toBe(false);
+  });
+
+  it("rejects what mWeb checkout's 14-character pattern accepts — the live defect", () => {
+    const mwebCheckoutPattern = /^\d{2}[A-Z]{5}\d{4}[A-Z][\dA-Z]{2}$/;
+    const fourteenChars = '29ABCDE1234F1Z';
+    expect(fourteenChars).toHaveLength(14);
+    expect(mwebCheckoutPattern.test(fourteenChars)).toBe(true);
+    expect(GSTIN.test(fourteenChars)).toBe(false);
+    // ...and the converse: checkout rejects every genuine GSTIN.
+    expect(mwebCheckoutPattern.test('29ABCDE1234F1Z5')).toBe(false);
+  });
+});
+
 describe('validators', () => {
   it('isPhoneNumber matches PHONE_NUMBER', () => {
     expect(isPhoneNumber('1234567890')).toBe(true);
@@ -149,5 +280,35 @@ describe('validators', () => {
   it('isOtp matches OTP_6', () => {
     expect(isOtp('123456')).toBe(true);
     expect(isOtp('12345')).toBe(false);
+  });
+
+  it('isPhoneIntl matches PHONE_INTL', () => {
+    expect(isPhoneIntl('123456')).toBe(true);
+    expect(isPhoneIntl('12345')).toBe(false);
+  });
+
+  it('isPincodeLoose matches PINCODE_LOOSE', () => {
+    expect(isPincodeLoose('0123')).toBe(true);
+    expect(isPincodeLoose('123')).toBe(false);
+  });
+
+  it('isIfsc matches IFSC', () => {
+    expect(isIfsc('HDFC0001234')).toBe(true);
+    expect(isIfsc('HDFC1001234')).toBe(false);
+  });
+
+  it('isUpiId matches UPI_ID', () => {
+    expect(isUpiId('john@okhdfcbank')).toBe(true);
+    expect(isUpiId('john@')).toBe(false);
+  });
+
+  it('isBankAccountNumber matches BANK_ACCOUNT_NUMBER', () => {
+    expect(isBankAccountNumber('123456')).toBe(true);
+    expect(isBankAccountNumber('12345')).toBe(false);
+  });
+
+  it('isGstin uses the STRICT pattern, not the loose one', () => {
+    expect(isGstin('29ABCDE1234F1Z5')).toBe(true);
+    expect(isGstin('29ABCDE1234F1A5')).toBe(false);
   });
 });

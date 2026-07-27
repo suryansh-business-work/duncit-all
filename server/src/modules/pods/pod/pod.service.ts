@@ -543,7 +543,9 @@ type ClubCategory = {
 
 /** The pod's category is its club's Super + Sub. Null when the club has no full
  * pair yet (legacy clubs) — which imposes no product constraint. */
-async function resolveClubCategory(clubId: unknown): Promise<ClubCategory | null> {
+async function resolveClubCategory(
+  clubId: Types.ObjectId | string | null | undefined
+): Promise<ClubCategory | null> {
   if (!clubId || !Types.ObjectId.isValid(String(clubId))) return null;
   const club = await ClubModel.findById(String(clubId))
     .select('super_category_id category_id')

@@ -61,7 +61,7 @@ export function SavedSortSheet({ open, value, onClose, onSelect }: Readonly<Prop
                   options={SAVED_SORTS}
                   value={value}
                   onSelect={(next) => {
-                    onSelect(next as SavedSort);
+                    onSelect(next);
                     onClose();
                   }}
                 />

@@ -15,7 +15,33 @@ export const EMAIL: RegExp;
 /** One or more digits, nothing else. */
 export const DIGITS: RegExp;
 
+/** Phone digits only, 6–15 long — the ITU E.164 range without a dial code. */
+export const PHONE_INTL: RegExp;
+/** {@link PHONE_INTL} tolerating a leading `+` for a pasted full number. */
+export const PHONE_INTL_PLUS: RegExp;
+/** Postal code, 4–10 digits — non-Indian addresses included. */
+export const PINCODE_LOOSE: RegExp;
+
+/** Indian bank IFSC: 4 letters, a literal `0`, then 6 alphanumerics. */
+export const IFSC: RegExp;
+/** UPI VPA such as `name@bank`. */
+export const UPI_ID: RegExp;
+/** Bank account number: 6–18 digits. */
+export const BANK_ACCOUNT_NUMBER: RegExp;
+/**
+ * GSTIN — 15 characters, with the literal `Z` in position 14. The only correct
+ * pattern; mWeb checkout's 14-character variant rejects every valid GSTIN.
+ */
+export const GSTIN: RegExp;
+
 export function isPhoneNumber(value: string): boolean;
 export function isPincode(value: string): boolean;
 export function isEmail(value: string): boolean;
 export function isOtp(value: string): boolean;
+export function isPhoneIntl(value: string): boolean;
+export function isPincodeLoose(value: string): boolean;
+export function isIfsc(value: string): boolean;
+export function isUpiId(value: string): boolean;
+export function isBankAccountNumber(value: string): boolean;
+/** Strict GSTIN check — see the {@link GSTIN} note before using it at checkout. */
+export function isGstin(value: string): boolean;

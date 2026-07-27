@@ -30,7 +30,8 @@ async function slackCall(method: string, init: RequestInit, token: string): Prom
   });
   const data: any = await res.json().catch(() => ({}));
   if (!data.ok) {
-    throw new GraphQLError(`Slack error: ${data.error ?? `HTTP ${res.status}`}`, {
+    const httpFallback = `HTTP ${res.status}`;
+    throw new GraphQLError(`Slack error: ${data.error ?? httpFallback}`, {
       extensions: { code: 'BAD_GATEWAY' },
     });
   }

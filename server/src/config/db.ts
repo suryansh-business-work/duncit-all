@@ -1,8 +1,13 @@
 import dns from 'node:dns';
-import mongoose from 'mongoose';
+import mongoose, { type ConnectOptions } from 'mongoose';
 import { logs } from '@observability/log';
 
-const DEFAULT_MONGO_DNS = ['8.8.8.8', '1.1.1.1'];
+/**
+ * Documented default for MONGO_DNS_SERVERS: the Google + Cloudflare public
+ * resolvers, in the same comma-separated form the env var takes. Overriding
+ * the env var replaces this list; leaving it unset uses exactly this one.
+ */
+const DEFAULT_MONGO_DNS_SERVERS = '8.8.8.8,1.1.1.1';
 
 /**
  * `mongodb+srv://` needs an SRV + TXT DNS lookup. Some local, VPN or Windows
@@ -15,15 +20,17 @@ function isDnsSrvFailure(message: string): boolean {
   return m.includes('querysrv') || m.includes('querytxt') || m.includes('_mongodb._tcp');
 }
 
-/** DNS servers to use for the Mongo SRV lookup (MONGO_DNS_SERVERS override). */
-function mongoDnsServers(): string[] {
-  const raw = process.env.MONGO_DNS_SERVERS;
-  if (!raw) return DEFAULT_MONGO_DNS;
-  const parsed = raw
+function parseDnsServers(raw: string): string[] {
+  return raw
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  return parsed.length > 0 ? parsed : DEFAULT_MONGO_DNS;
+}
+
+/** DNS servers to use for the Mongo SRV lookup (MONGO_DNS_SERVERS override). */
+function mongoDnsServers(): string[] {
+  const parsed = parseDnsServers(process.env.MONGO_DNS_SERVERS ?? '');
+  return parsed.length > 0 ? parsed : parseDnsServers(DEFAULT_MONGO_DNS_SERVERS);
 }
 
 let dnsOverridden = false;
@@ -52,6 +59,42 @@ function overrideMongoDns(reason: string): void {
   const msg = `Resolving MongoDB SRV via DNS ${servers.join(', ')} (${reason}).`;
   console.info(`ℹ️  ${msg}`);
   logs.server.info('db', 'connectDB', { msg });
+}
+
+function mongoConnectOptions(dbName: string | undefined): ConnectOptions {
+  return {
+    // Mumbai → Mumbai latency to this VPS spikes (TLS handshakes have
+    // been measured at 1–7s). 30s leaves no headroom for replica-set
+    // discovery across 3 shards; bumping to 60s removes spurious
+    // "ServerSelectionTimedOut" failures during startup.
+    serverSelectionTimeoutMS: 60_000,
+    connectTimeoutMS: 60_000,
+    socketTimeoutMS: 60_000,
+    family: 4, // prefer IPv4 — avoids some Atlas SRV resolution issues
+    retryWrites: true,
+    ...(dbName ? { dbName } : {}),
+  };
+}
+
+/** Production is never auto-repointed, so print the manual fix once. */
+function warnSrvHintOnce(): void {
+  if (dnsHintShown) return;
+  dnsHintShown = true;
+  console.warn(
+    `   ↳ DNS SRV lookup was refused. Set MONGO_DNS_SERVERS=${DEFAULT_MONGO_DNS_SERVERS}, ` +
+      'or switch MONGO_URI to a non-SRV standard connection string.',
+  );
+}
+
+/** React to a failed attempt whose cause was the SRV/TXT lookup itself. */
+function handleSrvFailure(message: string, isProd: boolean): void {
+  if (!isDnsSrvFailure(message) || dnsOverridden) return;
+  if (isProd) {
+    warnSrvHintOnce();
+    return;
+  }
+  // Local/dev only — auto-heal so the next attempt uses a public resolver.
+  overrideMongoDns('SRV lookup was refused');
 }
 
 /**
@@ -87,18 +130,7 @@ export async function connectDB(): Promise<void> {
   while (true) {
     attempt += 1;
     try {
-      await mongoose.connect(uri, {
-        // Mumbai → Mumbai latency to this VPS spikes (TLS handshakes have
-        // been measured at 1–7s). 30s leaves no headroom for replica-set
-        // discovery across 3 shards; bumping to 60s removes spurious
-        // "ServerSelectionTimedOut" failures during startup.
-        serverSelectionTimeoutMS: 60_000,
-        connectTimeoutMS: 60_000,
-        socketTimeoutMS: 60_000,
-        family: 4, // prefer IPv4 — avoids some Atlas SRV resolution issues
-        retryWrites: true,
-        ...(dbName ? { dbName } : {}),
-      });
+      await mongoose.connect(uri, mongoConnectOptions(dbName));
       console.info('✅ MongoDB connected');
       logs.server.info('db', 'connectDB', {
         attempt,
@@ -114,20 +146,7 @@ export async function connectDB(): Promise<void> {
         msg: `⚠️  MongoDB connect attempt ${attempt} failed: ${message}`,
       });
 
-      if (isDnsSrvFailure(message) && !dnsOverridden) {
-        if (isProd) {
-          if (!dnsHintShown) {
-            dnsHintShown = true;
-            console.warn(
-              '   ↳ DNS SRV lookup was refused. Set MONGO_DNS_SERVERS=8.8.8.8,1.1.1.1, ' +
-                'or switch MONGO_URI to a non-SRV standard connection string.',
-            );
-          }
-        } else {
-          // Local/dev only — auto-heal so the next attempt uses a public resolver.
-          overrideMongoDns('SRV lookup was refused');
-        }
-      }
+      handleSrvFailure(message, isProd);
       await new Promise((r) => setTimeout(r, nextDelay()));
     }
   }

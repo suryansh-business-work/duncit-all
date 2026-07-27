@@ -162,6 +162,29 @@ jobs:
           echo "lcov reports available to the scanner:"
           find . -name 'lcov.info' -not -path '*/node_modules/*' | sort | sed 's/^/  /'
 
+      # Each runner writes `SF:` paths relative to its OWN workspace, but Sonar
+      # resolves them against the repo root — so `SF:src/Foo.tsx` from a portal
+      # became `<repo>/src/Foo.tsx`, matched nothing, and the coverage was
+      # dropped without any warning. That is why packages/portals/server/website
+      # all reported 0.0% while their own 100% thresholds passed locally.
+      # This rewrites every path to repo-root relative so the scan actually
+      # counts the suites we already have. NOT continue-on-error: silently
+      # scanning with unusable coverage is the exact failure we are fixing.
+      #
+      # The report list itself is DISCOVERED here rather than hand-maintained in
+      # sonar-project.properties. That list had already drifted — five packages
+      # with passing suites (ad-request-form, datetime, fallback-icons, i18n,
+      # slack) were never in it, so their coverage was thrown away too. The
+      # filesystem is the one source of truth (rule 34); a new package needs no
+      # edit here to be counted.
+      - name: Normalize lcov paths
+        if: ${{ !inputs.skip_coverage }}
+        run: |
+          node scripts/normalize-lcov.mjs
+          paths=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | sed 's|^\./||' | sort | paste -sd, -)
+          echo "Reports handed to the scanner: $paths"
+          echo "SONAR_LCOV_PATHS=$paths" >> "$GITHUB_ENV"
+
       # SonarQube keeps a per-file analysis cache; reusing it across runs is the
       # single biggest saving on a repeat scan of the same branch.
       - name: Cache SonarQube analysis
@@ -174,6 +197,11 @@ jobs:
             sonar-cache-${{ runner.os }}-
 
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        with:
+          # The set actually present on disk (see "Normalize lcov paths" above).
+          # Left empty on a skip_coverage run so the scan still publishes rather
+          # than being handed an empty reportPaths and reporting a false 0%.
+          args: ${{ env.SONAR_LCOV_PATHS && format('-Dsonar.javascript.lcov.reportPaths={0}', env.SONAR_LCOV_PATHS) || '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

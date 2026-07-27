@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   PUBLIC_APP_SETTINGS,
@@ -72,12 +72,17 @@ interface PreviewInput {
  */
 export function useClockPreview({ zone, source, customTime, saved }: Readonly<PreviewInput>): string {
   const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
-  const [, setTick] = useState(0);
+  // Re-render trigger only: the preview is recomputed from the clock on every
+  // render, so bumping this each second is what makes it visibly move. This is
+  // useReducer rather than useState because the counter's VALUE is never read —
+  // a useState pair would leave either an unused binding (S1481) or an
+  // asymmetric destructure (S6754); a dispatch-only reducer has neither.
+  const [, tick] = useReducer((n: number) => n + 1, 0);
 
   useEffect(() => {
-    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [tick]);
 
   const serverTime: string | null = data?.publicAppSettings?.server_time ?? null;
   // A pending anchor has no save-stamp yet, so it previews frozen at the chosen

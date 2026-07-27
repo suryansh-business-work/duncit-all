@@ -84,7 +84,8 @@ function ProductLineRow({
   value,
   onInfo,
 }: Readonly<{ line: CartLine; value: string; onInfo: (productId: string) => void }>) {
-  const label = `${line.product_name}${line.variant_label ? ` — ${line.variant_label}` : ''} × ${line.quantity}`;
+  const variant = line.variant_label ? ` — ${line.variant_label}` : '';
+  const label = `${line.product_name}${variant} × ${line.quantity}`;
   return (
     <YStack gap={2}>
       <XStack justifyContent="space-between" alignItems="center" gap={8}>

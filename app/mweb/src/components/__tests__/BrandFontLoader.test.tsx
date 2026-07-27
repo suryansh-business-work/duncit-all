@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import { gql } from '@apollo/client';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -77,12 +77,15 @@ describe('BrandFontLoader', () => {
       </MockedProvider>,
     );
 
-    // allow the query to resolve
-    await waitFor(() => {
-      // nothing to assert on render output; just flush microtasks
-      expect(true).toBe(true);
+    // Deliberately NOT `waitFor(() => expect(injectedLinks()).toHaveLength(0))`:
+    // nothing is injected at t=0 either, so that predicate is already true on the
+    // first poll and the helper returns without ever waiting for the query —
+    // the assertion could never fail (S5914). Flush the mocked response instead,
+    // then assert. The "injects the font" test above proves this same harness
+    // does inject within one flush, so a zero here is a real result.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
     });
-    await new Promise((r) => setTimeout(r, 0));
 
     expect(injectedLinks()).toHaveLength(0);
     expect(injectedStyles()).toHaveLength(0);

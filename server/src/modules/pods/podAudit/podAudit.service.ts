@@ -36,7 +36,9 @@ const TRACKED_FIELDS = [
 
 export type PodAuditSnapshot = Record<string, string>;
 
-const asText = (value: unknown): string => {
+type AuditValue = string | number | boolean | Date | Types.ObjectId | null | undefined;
+
+const asText = (value: AuditValue): string => {
   if (value === null || value === undefined || value === '') return '';
   if (value instanceof Date) return value.toISOString();
   return typeof value === 'object' ? (value as { toString(): string }).toString() : String(value);

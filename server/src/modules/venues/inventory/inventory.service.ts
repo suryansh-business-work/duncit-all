@@ -357,6 +357,9 @@ function validateProductListingInput(input: any) {
   validateVariantsInput(input);
 }
 
+/** Any shape a Mongo id reaches these helpers in (raw input string or a hydrated doc field). */
+type IdLike = Types.ObjectId | string | null | undefined;
+
 /** Nullable ₹ amount: null/undefined/'' → null (offer disabled). */
 const toNullableAmount = (value: unknown) => {
   if (value === null || value === undefined || value === '') return null;
@@ -366,7 +369,7 @@ const toNullableAmount = (value: unknown) => {
 
 /** A partner listing may only ship from a warehouse of its OWN brand
  * (owner_kind BRAND + matching brand_id) — foreign warehouses are rejected. */
-async function assertBrandWarehouse(pickupLocationId: unknown, brandId: unknown) {
+async function assertBrandWarehouse(pickupLocationId: IdLike, brandId: IdLike) {
   if (pickupLocationId === null || pickupLocationId === undefined || pickupLocationId === '') return;
   const id = String(pickupLocationId);
   if (!Types.ObjectId.isValid(id)) {
@@ -710,7 +713,7 @@ function applyInput(target: any, input: any) {
 /** Every Duncit-owned product must ship from a Duncit warehouse (a
  * BrandPickupLocation with owner_kind DUNCIT). The warehouse pincode is the
  * ShipRocket rate/shipment origin, so a missing/invalid one is a hard error. */
-async function assertDuncitWarehouse(pickupLocationId: unknown) {
+async function assertDuncitWarehouse(pickupLocationId: IdLike) {
   const id = pickupLocationId ? String(pickupLocationId) : '';
   if (!id || !Types.ObjectId.isValid(id)) {
     throw new GraphQLError('A warehouse (pickup location) is required', {
@@ -718,7 +721,7 @@ async function assertDuncitWarehouse(pickupLocationId: unknown) {
     });
   }
   const warehouse = await BrandPickupLocationModel.findById(id).select('owner_kind');
-  if (!warehouse || warehouse.owner_kind !== 'DUNCIT') {
+  if (warehouse?.owner_kind !== 'DUNCIT') {
     throw new GraphQLError('Select a valid Duncit warehouse', {
       extensions: { code: 'BAD_USER_INPUT' },
     });

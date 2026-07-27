@@ -43,7 +43,7 @@ const money = (value: number) => Math.round((Number(value) || 0) * 100) / 100;
 function payingAttendees(pod: any): number {
   const attendees: string[] = pod.pod_attendees ?? [];
   if (attendees.length === 0) return 0;
-  const hosts = new Set((pod.pod_hosts_id ?? []).map((id: unknown) => String(id)));
+  const hosts = new Set((pod.pod_hosts_id ?? []).map(String));
   return attendees.filter((id) => !hosts.has(String(id))).length;
 }
 

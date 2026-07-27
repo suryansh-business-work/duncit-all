@@ -61,7 +61,7 @@ export function PodHistorySortSheet({ open, value, onClose, onSelect }: Readonly
                   options={POD_HISTORY_SORTS}
                   value={value}
                   onSelect={(next) => {
-                    onSelect(next as PodHistorySort);
+                    onSelect(next);
                     onClose();
                   }}
                 />

@@ -42,6 +42,21 @@ export function configureLogs(transport: Transport, ctx?: Partial<LogContext>): 
   if (ctx) context = { ...context, ...ctx };
 }
 
+/** Every non-nullish, non-object thrown value — each of these has its own toString(). */
+type ThrownPrimitive = string | number | boolean | bigint | symbol | ((...args: unknown[]) => unknown);
+
+/**
+ * Stand-in for an object JSON.stringify refuses (circular refs, BigInt).
+ *
+ * Deliberately a FIXED string. Interpolating the object yields the useless
+ * "[object Object]" (S6551), but listing its keys instead would put caller field
+ * names — `password`, `refresh_token` — on the wire to SignOz and Mongo, and
+ * would make the telemetry fingerprint key-dependent, forking one bug into a
+ * new row per distinct object shape. Keep this identical to the server's copy
+ * in server/src/observability/log.ts: they are two halves of one wire contract.
+ */
+const UNSERIALIZABLE_MESSAGE = '[unserializable object]';
+
 /** Flatten any thrown value to { name, message, stack } so SignOz shows it all. */
 export function serializeError(err: unknown): SerializedError | undefined {
   if (err === null || err === undefined) return undefined;
@@ -52,10 +67,10 @@ export function serializeError(err: unknown): SerializedError | undefined {
     try {
       return { name: 'Object', message: JSON.stringify(err) };
     } catch {
-      return { name: 'Object', message: String(err) };
+      return { name: 'Object', message: UNSERIALIZABLE_MESSAGE };
     }
   }
-  return { name: typeof err, message: String(err) };
+  return { name: typeof err, message: String(err as ThrownPrimitive) };
 }
 
 function currentHost(): string | undefined {

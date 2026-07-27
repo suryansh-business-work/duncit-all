@@ -207,7 +207,10 @@ export async function getServiceability(args: {
   const data = await srRequest<any>(`/courier/serviceability/?${params.toString()}`, { method: 'GET' });
   const couriers: any[] = data?.data?.available_courier_companies ?? [];
   if (couriers.length === 0) return null;
-  const cheapest = couriers.reduce((min, courier) => (rateOf(courier) < rateOf(min) ? courier : min));
+  const cheapest = couriers.reduce(
+    (min, courier) => (rateOf(courier) < rateOf(min) ? courier : min),
+    couriers[0],
+  );
   return {
     serviceable: true,
     courier_name: String(cheapest.courier_name ?? ''),

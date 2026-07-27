@@ -294,7 +294,8 @@ function dockerPost(path: string, timeoutMs: number): Promise<void> {
             resolve();
             return;
           }
-          reject(new Error(`Docker API responded ${code}${body ? `: ${body.trim()}` : ''}`));
+          const detail = body ? `: ${body.trim()}` : '';
+          reject(new Error(`Docker API responded ${code}${detail}`));
         });
       },
     );
@@ -474,7 +475,8 @@ export const techService = {
         },
         (err, stdout, stderr) => {
           const failure = err as (Error & { code?: number | string }) | null;
-          const exitCode = failure ? (typeof failure.code === 'number' ? failure.code : 1) : 0;
+          const failureExitCode = typeof failure?.code === 'number' ? failure.code : 1;
+          const exitCode = failure ? failureExitCode : 0;
           resolve({ stdout: capOutput(stdout), stderr: capOutput(stderr), exitCode });
         },
       );

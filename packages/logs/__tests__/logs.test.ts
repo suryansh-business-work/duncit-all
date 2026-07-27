@@ -173,10 +173,30 @@ describe('serializeError', () => {
     expect(serializeError(e)?.name).toBe('Error');
   });
 
-  it('stringifies a circular object via String() fallback', () => {
+  it('falls back to a fixed message when JSON.stringify throws', () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
-    expect(serializeError(circular)).toEqual({ name: 'Object', message: '[object Object]' });
+    circular.id = 7;
+    expect(serializeError(circular)).toEqual({
+      name: 'Object',
+      message: '[unserializable object]',
+    });
+  });
+
+  it('never puts the thrown object’s field names on the wire', () => {
+    const circular: Record<string, unknown> = { password: 'hunter2', refresh_token: 'abc' };
+    circular.self = circular;
+    const message = serializeError(circular)?.message ?? '';
+    expect(message).not.toContain('password');
+    expect(message).not.toContain('refresh_token');
+  });
+
+  it('gives every unserializable object the SAME message, so telemetry cannot fork one bug into many', () => {
+    const first: Record<string, unknown> = { a: 1 };
+    first.self = first;
+    const second: Record<string, unknown> = { b: 2, c: 3 };
+    second.self = second;
+    expect(serializeError(first)?.message).toBe(serializeError(second)?.message);
   });
 });
 

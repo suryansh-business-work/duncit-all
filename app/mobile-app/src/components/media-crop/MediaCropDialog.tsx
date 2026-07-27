@@ -79,7 +79,14 @@ function CropPresetChips({ options, selectedKey, suggestedKey, onSelect }: Reado
             testID={`crop-preset-${preset.key}`}
             role="button"
             aria-label={preset.label}
-            aria-selected={selected}
+            // NOT aria-selected: that is invalid ARIA on role=button (S6811), and
+            // swapping the role to "option" to satisfy it is an a11y regression —
+            // React Native maps only "button" to Android's Button class +
+            // setClickable and to iOS's UIAccessibilityTraits::Button, so an
+            // "option" chip stops being announced as activatable on both
+            // platforms. accessibilityState is RN's own channel for selection and
+            // keeps the button semantics intact.
+            accessibilityState={{ selected }}
             onPress={() => onSelect(preset.key)}
             paddingHorizontal={12}
             paddingVertical={6}
@@ -231,26 +238,7 @@ export function MediaCropDialog({
       <ModalThemeScope>
         <YStack flex={1} backgroundColor="rgba(0,0,0,0.92)" testID="media-crop-dialog">
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-            <XStack alignItems="center" justifyContent="space-between" padding={16}>
-              <Text color="#ffffff" fontSize={17} fontWeight="900">
-                {isImage ? 'Crop & upload' : 'Upload video'}
-              </Text>
-              <XStack
-                testID="crop-close"
-                role="button"
-                aria-label="Cancel"
-                onPress={uploading ? undefined : onCancel}
-                width={36}
-                height={36}
-                alignItems="center"
-                justifyContent="center"
-                borderRadius={18}
-                backgroundColor="rgba(255,255,255,0.16)"
-                opacity={uploading ? 0.5 : 1}
-              >
-                <MaterialIcons name="close" size={20} color="#ffffff" />
-              </XStack>
-            </XStack>
+            <CropHeader isImage={isImage} uploading={uploading} onCancel={onCancel} />
 
             <YStack
               flex={1}
@@ -299,53 +287,108 @@ export function MediaCropDialog({
                   {error}
                 </Text>
               ) : null}
-              <XStack gap={12} paddingBottom={8}>
-                <XStack
-                  testID="crop-cancel"
-                  role="button"
-                  aria-label="Cancel"
-                  onPress={uploading ? undefined : onCancel}
-                  flex={1}
-                  height={48}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={999}
-                  borderWidth={1}
-                  borderColor="rgba(255,255,255,0.4)"
-                  opacity={uploading ? 0.6 : 1}
-                  pressStyle={{ opacity: 0.8 }}
-                >
-                  <Text fontSize={14} fontWeight="900" color="#ffffff">
-                    Cancel
-                  </Text>
-                </XStack>
-                <XStack
-                  testID="crop-confirm"
-                  role="button"
-                  aria-label="Upload"
-                  aria-disabled={uploading}
-                  onPress={uploading ? undefined : confirm}
-                  flex={1}
-                  height={48}
-                  alignItems="center"
-                  justifyContent="center"
-                  gap={8}
-                  borderRadius={999}
-                  backgroundColor="$primary"
-                  opacity={uploading ? 0.7 : 1}
-                  pressStyle={{ opacity: 0.85 }}
-                >
-                  {uploading ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
-                    {isImage ? 'Use photo' : 'Upload'}
-                  </Text>
-                </XStack>
-              </XStack>
+              <CropActions
+                isImage={isImage}
+                uploading={uploading}
+                onPrimary={onPrimary}
+                onCancel={onCancel}
+                onConfirm={confirm}
+              />
             </YStack>
           </SafeAreaView>
         </YStack>
       </ModalThemeScope>
     </Modal>
+  );
+}
+
+/** Dialog title + close affordance; both are inert while an upload is running. */
+function CropHeader({
+  isImage,
+  uploading,
+  onCancel,
+}: Readonly<{ isImage: boolean; uploading: boolean; onCancel: () => void }>) {
+  return (
+    <XStack alignItems="center" justifyContent="space-between" padding={16}>
+      <Text color="#ffffff" fontSize={17} fontWeight="900">
+        {isImage ? 'Crop & upload' : 'Upload video'}
+      </Text>
+      <XStack
+        testID="crop-close"
+        role="button"
+        aria-label="Cancel"
+        onPress={uploading ? undefined : onCancel}
+        width={36}
+        height={36}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={18}
+        backgroundColor="rgba(255,255,255,0.16)"
+        opacity={uploading ? 0.5 : 1}
+      >
+        <MaterialIcons name="close" size={20} color="#ffffff" />
+      </XStack>
+    </XStack>
+  );
+}
+
+/** Cancel / Upload footer; both are inert while an upload is running. */
+function CropActions({
+  isImage,
+  uploading,
+  onPrimary,
+  onCancel,
+  onConfirm,
+}: Readonly<{
+  isImage: boolean;
+  uploading: boolean;
+  onPrimary: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}>) {
+  return (
+    <XStack gap={12} paddingBottom={8}>
+      <XStack
+        testID="crop-cancel"
+        role="button"
+        aria-label="Cancel"
+        onPress={uploading ? undefined : onCancel}
+        flex={1}
+        height={48}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={999}
+        borderWidth={1}
+        borderColor="rgba(255,255,255,0.4)"
+        opacity={uploading ? 0.6 : 1}
+        pressStyle={{ opacity: 0.8 }}
+      >
+        <Text fontSize={14} fontWeight="900" color="#ffffff">
+          Cancel
+        </Text>
+      </XStack>
+      <XStack
+        testID="crop-confirm"
+        role="button"
+        aria-label="Upload"
+        aria-disabled={uploading}
+        onPress={uploading ? undefined : onConfirm}
+        flex={1}
+        height={48}
+        alignItems="center"
+        justifyContent="center"
+        gap={8}
+        borderRadius={999}
+        backgroundColor="$primary"
+        opacity={uploading ? 0.7 : 1}
+        pressStyle={{ opacity: 0.85 }}
+      >
+        {uploading ? <Spinner size="small" color={onPrimary} /> : null}
+        <Text fontSize={14} fontWeight="900" color={onPrimary}>
+          {isImage ? 'Use photo' : 'Upload'}
+        </Text>
+      </XStack>
+    </XStack>
   );
 }
 

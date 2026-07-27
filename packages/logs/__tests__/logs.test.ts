@@ -167,6 +167,14 @@ describe('serializeError', () => {
     expect(serializeError(undefined)).toBeUndefined();
   });
 
+  it('handles every remaining primitive exactly as String() would', () => {
+    // These are the branches that replaced `String(err)` — each must produce
+    // byte-identical output, or the log wire contract has quietly changed.
+    for (const value of [true, 7n, Symbol('boom'), function boom() {}] as const) {
+      expect(serializeError(value)).toEqual({ name: typeof value, message: String(value) });
+    }
+  });
+
   it('names an Error with an empty name "Error"', () => {
     const e = new Error('x');
     e.name = '';

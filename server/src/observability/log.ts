@@ -94,9 +94,17 @@ export function serializeError(err: unknown): SerializedError | undefined {
       return { name: 'Object', message: UNSERIALIZABLE_MESSAGE };
     }
   }
-  // Narrowed by the guards above to a non-nullish, non-object value, each of
-  // which has its own toString() — so this never yields '[object Object]'.
-  return { name: typeof err, message: String(err) };
+  // Everything left is a primitive or a function, each with a meaningful
+  // toString(). Sonar does not follow the narrowing the guards above perform:
+  // `String(err)` trips S6551 ("may stringify an object") and asserting the type
+  // to silence it trips S4325 ("assertion changes nothing"). Naming each type
+  // explicitly satisfies both, and every branch produces exactly what
+  // `String(err)` did.
+  if (typeof err === 'string') return { name: 'string', message: err };
+  if (typeof err === 'symbol' || typeof err === 'function') {
+    return { name: typeof err, message: err.toString() };
+  }
+  return { name: typeof err, message: `${err}` };
 }
 
 function toAttributes(record: LogRecord): Record<string, AttrValue> {

@@ -5,7 +5,12 @@ import { ClubRatingModel } from './clubRating.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  escapedSearchRegex,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 import { logs } from '@observability/log';
 
 const slugify = (s: string) =>
@@ -96,10 +101,10 @@ export const clubService = {
   }) {
     const q: any = {};
     if (filter?.search) {
-      q.$or = [
-        { club_name: new RegExp(filter.search, 'i') },
-        { club_id: new RegExp(filter.search, 'i') },
-      ];
+      // ESCAPED: the raw string used to be compiled as a pattern, so a search of
+      // ".*" listed every club and a crafted one could pin the event loop.
+      const rx = escapedSearchRegex(filter.search);
+      q.$or = [{ club_name: rx }, { club_id: rx }];
     }
     if (filter?.category_id) q.category_id = filter.category_id;
     if (filter?.super_category_id) q.super_category_id = filter.super_category_id;

@@ -1,6 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { LocationModel } from './location.model';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  escapedSearchRegex,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 
 const slugify = (s: string) =>
   s
@@ -76,15 +81,19 @@ export const locationService = {
   async list(filter?: { search?: string; is_active?: boolean }) {
     const q: any = {};
     if (filter?.search) {
+      // Built once, from ESCAPED input: `new RegExp(filter.search)` compiled the
+      // caller's string as a pattern, so a search of `.*` matched every row and
+      // a crafted one could pin the event loop against the collection.
+      const rx = escapedSearchRegex(filter.search);
       q.$or = [
-        { location_name: new RegExp(filter.search, 'i') },
-        { country: new RegExp(filter.search, 'i') },
-        { state: new RegExp(filter.search, 'i') },
-        { city: new RegExp(filter.search, 'i') },
-        { location_id: new RegExp(filter.search, 'i') },
-        { location_pincode: new RegExp(filter.search, 'i') },
-        { 'location_zones.zone_name': new RegExp(filter.search, 'i') },
-        { 'location_zones.pincode': new RegExp(filter.search, 'i') },
+        { location_name: rx },
+        { country: rx },
+        { state: rx },
+        { city: rx },
+        { location_id: rx },
+        { location_pincode: rx },
+        { 'location_zones.zone_name': rx },
+        { 'location_zones.pincode': rx },
       ];
     }
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;

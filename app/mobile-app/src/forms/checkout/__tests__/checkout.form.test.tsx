@@ -60,12 +60,22 @@ describe('CheckoutForm', () => {
     expect(screen.queryByText('Riya Sharma')).toBeNull();
   });
 
-  it('blocks submit on invalid billing details', async () => {
+  it('blocks submit on invalid billing details when an address is required', async () => {
     const onSubmit = jest.fn();
-    renderWithProviders(<CheckoutForm initialValues={contact} onSubmit={onSubmit} />);
+    renderWithProviders(
+      <CheckoutForm initialValues={contact} addressRequired onSubmit={onSubmit} />,
+    );
     fireEvent.press(screen.getByTestId('checkout-submit'));
     await waitFor(() => expect(screen.getByTestId('line1-error')).toBeOnTheScreen());
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('pays without an address on the pod checkout (email is enough)', async () => {
+    const onSubmit = jest.fn();
+    renderWithProviders(<CheckoutForm initialValues={contact} onSubmit={onSubmit} />);
+    fireEvent.press(screen.getByTestId('checkout-submit'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(screen.queryByTestId('line1-error')).toBeNull();
   });
 
   it('submits valid details and toggles save-as-main + simulate', async () => {

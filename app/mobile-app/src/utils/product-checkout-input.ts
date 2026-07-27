@@ -20,11 +20,33 @@ export const mapLinesToItems = (lines: CartLine[]): ProductCartItemInput[] =>
 export const productSubtotal = (lines: CartLine[]): number =>
   lines.reduce((sum, line) => sum + line.unit_cost * line.quantity, 0);
 
+/** Contact saved on the picked address-book entry — the parcel goes to this
+ * person, so it wins over the (possibly phone-less) profile contact. */
+export interface PickedContact {
+  name: string;
+  phone: string;
+  email: string;
+}
+
 interface BuildContext {
   items: ProductCartItemInput[];
   mainAddress?: CheckoutMainAddress | null;
   couponCode: string | null;
+  pickedContact?: PickedContact | null;
 }
+
+/** A saved address-book entry carries its own recipient. Returns null when the
+ * buyer picked no address, in which case the form contact is used. */
+export const toPickedContact = (
+  address: { name?: string | null; phone?: string | null; email?: string | null } | null,
+): PickedContact | null =>
+  address
+    ? {
+        name: address.name?.trim() ?? '',
+        phone: address.phone?.trim() ?? '',
+        email: address.email?.trim() ?? '',
+      }
+    : null;
 
 /** Generic payment description for the combined cart, e.g. "Product order · 3 items". */
 export const productOrderDescription = (items: ProductCartItemInput[]): string => {
@@ -47,10 +69,14 @@ export function buildProductCheckoutInput(
   values: CheckoutFormValues,
   ctx: BuildContext,
 ): BuiltProductCheckout {
+  const formPhone = values.phone_number.trim()
+    ? `${values.phone_extension} ${values.phone_number}`.trim()
+    : '';
+  const picked = ctx.pickedContact;
   const shipping_address = {
-    name: values.full_name.trim(),
-    phone: `${values.phone_extension} ${values.phone_number}`.trim(),
-    email: values.email,
+    name: picked?.name || values.full_name.trim(),
+    phone: picked?.phone || formPhone,
+    email: picked?.email || values.email,
     line1: values.line1 ?? '',
     line2: values.line2 ?? '',
     landmark: values.landmark ?? '',

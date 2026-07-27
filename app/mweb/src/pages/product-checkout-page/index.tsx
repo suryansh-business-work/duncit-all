@@ -33,6 +33,8 @@ export default function ProductCheckoutPage() {
   const session = useCheckoutSession({
     couponPodId: null,
     onBeforeSuccess: () => clearAll(),
+    // Products are shipped — the delivery address stays mandatory here.
+    requireAddress: true,
   });
   // The delivery quote follows the chosen saved address (its pincode); until one
   // is picked it falls back to the pincode typed into the billing form.
@@ -119,6 +121,7 @@ export default function ProductCheckoutPage() {
             availableCoupons={session.availableCoupons}
             onApplyCoupon={(code) => session.applyCoupon(subtotal, code)}
             onRemoveCoupon={session.removeCoupon}
+            addressRequired
           />
         </Stack>
       </Box>

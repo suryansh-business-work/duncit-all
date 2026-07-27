@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   checkoutSchema,
+  productCheckoutSchema,
   checkoutDefaults,
   resolveBillingAddress,
   shouldPersistMainAddress,
@@ -23,11 +24,21 @@ import { loadRazorpay, type RazorpaySignature } from './razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
 import type { UserAddress } from '../account-page/address-book-form';
 
+/** Parcel contact taken from the picked address-book entry. */
+export interface PickedContact {
+  name: string;
+  phone: string;
+  email: string;
+}
+
 interface Args {
   /** Pod the coupons/preview are scoped to (null for a global cart). */
   couponPodId: string | null;
   /** Side effect run just before the success screen (e.g. clear the cart pod). */
   onBeforeSuccess?: (payment: any) => void;
+  /** Delivery flows (product checkout) need a billing/delivery address; the pod
+   * membership checkout does not and validates the email only. */
+  requireAddress?: boolean;
 }
 
 /**
@@ -38,7 +49,7 @@ interface Args {
  * amount maths and pay mutations. Amount-dependent bits (coupon preview) take the
  * amount as an argument so either page can drive them.
  */
-export function useCheckoutSession({ couponPodId, onBeforeSuccess }: Args) {
+export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddress = false }: Args) {
   const { data: financeData, loading: financeLoading } = useQuery(PUBLIC_FINANCE);
   const { data: meData, loading: meLoading } = useQuery(CHECKOUT_ME, { fetchPolicy: 'cache-and-network' });
   const { data: couponsData } = useQuery(AVAILABLE_COUPONS, {
@@ -56,10 +67,11 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess }: Args) {
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [pickedContact, setPickedContact] = useState<PickedContact | null>(null);
 
   const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm>({
     defaultValues: checkoutDefaults,
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(requireAddress ? productCheckoutSchema : checkoutSchema),
     mode: 'onTouched',
   });
 
@@ -111,7 +123,14 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess }: Args) {
   };
 
   // Fill the billing/delivery fields from a picked saved address (SavedAddressPicker).
-  const pickAddress = (picked: UserAddress) =>
+  // The address book carries its own parcel contact (name/phone/email), which is
+  // what a delivery should reach — the profile contact may have no phone at all.
+  const pickAddress = (picked: UserAddress) => {
+    setPickedContact({
+      name: picked.name?.trim() ?? '',
+      phone: picked.phone?.trim() ?? '',
+      email: picked.email?.trim() ?? '',
+    });
     reset({
       ...getValues(),
       same_as_main: false,
@@ -124,6 +143,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess }: Args) {
       pincode: picked.pincode,
       country: picked.country || 'India',
     });
+  };
 
   // Best-effort: persist the entered billing address as the main address when the
   // buyer opts in. Never blocks or fails checkout if the profile save errors.
@@ -207,6 +227,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess }: Args) {
     applyCoupon,
     removeCoupon,
     pickAddress,
+    pickedContact,
     availableCoupons: couponsData?.availableCouponsForPod ?? [],
     persistMainAddress,
     verifyRazorpay,

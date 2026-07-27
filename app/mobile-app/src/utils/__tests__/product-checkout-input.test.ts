@@ -3,6 +3,7 @@ import {
   mapLinesToItems,
   productOrderDescription,
   productSubtotal,
+  toPickedContact,
 } from '@/utils/product-checkout-input';
 import type { CartLine } from '@/stores/cart.store';
 import type { CheckoutFormValues } from '@/forms/checkout';
@@ -79,6 +80,26 @@ describe('productOrderDescription', () => {
   });
 });
 
+describe('toPickedContact', () => {
+  it('trims the recipient carried by a picked address', () => {
+    expect(
+      toPickedContact({ name: ' Ravi ', phone: ' +91 9000000000 ', email: ' r@d.com ' }),
+    ).toEqual({ name: 'Ravi', phone: '+91 9000000000', email: 'r@d.com' });
+  });
+
+  it('blanks the parts the address book never filled in', () => {
+    expect(toPickedContact({ name: null, phone: undefined, email: null })).toEqual({
+      name: '',
+      phone: '',
+      email: '',
+    });
+  });
+
+  it('returns null when no address was picked', () => {
+    expect(toPickedContact(null)).toBeNull();
+  });
+});
+
 describe('buildProductCheckoutInput', () => {
   const items = mapLinesToItems([line()]);
 
@@ -130,6 +151,28 @@ describe('buildProductCheckoutInput', () => {
     expect(input.billing).toMatchObject({ line1: 'Main St 1', city: 'Delhi' });
     expect(input.shipping_address).toMatchObject({ line1: '12 Main Street' });
     expect(input.coupon_code).toBe('TEN');
+  });
+
+  it('ships to the picked address-book contact instead of the profile one', () => {
+    const { input } = buildProductCheckoutInput(values, {
+      items,
+      mainAddress: null,
+      couponCode: null,
+      pickedContact: { name: 'Ravi Kumar', phone: '+91 9000000000', email: 'ravi@d.com' },
+    });
+    expect(input.shipping_address).toMatchObject({
+      name: 'Ravi Kumar',
+      phone: '+91 9000000000',
+      email: 'ravi@d.com',
+    });
+  });
+
+  it('leaves the shipping phone empty when the buyer has none on file', () => {
+    const { input } = buildProductCheckoutInput(
+      { ...values, phone_number: '' },
+      { items, mainAddress: null, couponCode: null, pickedContact: null },
+    );
+    expect(input.shipping_address).toMatchObject({ phone: '' });
   });
 
   it('defaults every empty address field and the country, and carries simulate_failure', () => {

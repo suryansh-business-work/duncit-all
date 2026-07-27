@@ -20,6 +20,9 @@ interface BuildContext {
   items: ProductCartItemInput[];
   mainAddress?: PostalAddressParts | null;
   couponCode: string | null;
+  /** Contact saved on the picked address-book entry — the parcel goes to this
+   * person, so it wins over the (possibly phone-less) profile contact. */
+  pickedContact?: { name: string; phone: string; email: string } | null;
 }
 
 /** Generic payment description for the combined cart: `Product order · N items`. */
@@ -35,10 +38,14 @@ export function productOrderDescription(items: ProductCartItemInput[]): string {
 export function buildProductCheckoutInput(values: CheckoutForm, ctx: BuildContext) {
   const { simulate_failure, ...contact } = toCheckoutContact(values);
   const billing = toCheckoutBilling(values, ctx.mainAddress);
+  const formPhone = values.phone_number.trim()
+    ? `${values.phone_extension} ${values.phone_number}`.trim()
+    : '';
+  const picked = ctx.pickedContact;
   const shipping_address = {
-    name: values.full_name,
-    phone: `${values.phone_extension} ${values.phone_number}`.trim(),
-    email: values.email,
+    name: picked?.name || values.full_name,
+    phone: picked?.phone || formPhone,
+    email: picked?.email || values.email,
     line1: values.line1,
     line2: values.line2 || '',
     landmark: values.landmark || '',

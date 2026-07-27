@@ -294,7 +294,11 @@ const userDisplayName = (user: any) =>
  * string from the structured parts for legacy readers + compact displays.
  */
 function buildBuyerFields(input: any, user: any) {
-  const contactPhone = `${input.contact_phone_extension} ${input.contact_phone_number}`.trim();
+  // The phone is optional at checkout: without a number there is no phone at
+  // all, so the dialling code alone is never recorded.
+  const phoneNumber = String(input.contact_phone_number ?? '').trim();
+  const phoneExtension = String(input.contact_phone_extension ?? '').trim();
+  const contactPhone = phoneNumber ? `${phoneExtension} ${phoneNumber}`.trim() : '';
   const name = String(input.contact_name ?? '').trim() || userDisplayName(user);
   const email = String(input.contact_email ?? '').trim().toLowerCase();
   const legacyText = String(input.billing_address ?? '').trim();
@@ -511,7 +515,7 @@ function razorpaySheet(a: RazorpaySheetArgs) {
     name: a.businessName,
     description: a.description,
     prefill_email: a.input.contact_email,
-    prefill_contact: a.input.contact_phone_number,
+    prefill_contact: a.input.contact_phone_number ?? '',
     currency_symbol: a.currencySymbol,
     total: a.total,
     free: a.free,

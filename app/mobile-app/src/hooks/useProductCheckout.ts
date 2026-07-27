@@ -28,7 +28,7 @@ import {
   previewCouponRequest,
   type CouponPreview,
 } from '@/hooks/checkoutRequests';
-import { buildProductCheckoutInput } from '@/utils/product-checkout-input';
+import { buildProductCheckoutInput, type PickedContact } from '@/utils/product-checkout-input';
 
 export type ProductPayment = ResultOf<
   typeof MobileDummyProductCheckoutDocument
@@ -38,6 +38,8 @@ export type ProductPayment = ResultOf<
 export interface ProductPayContext {
   items: ProductCartItemInput[];
   couponCode: string | null;
+  /** Contact from the picked address-book entry (the parcel's recipient). */
+  pickedContact?: PickedContact | null;
 }
 
 /**
@@ -80,6 +82,7 @@ export function useProductCheckout() {
       items: ctx.items,
       mainAddress: me?.address ?? null,
       couponCode: ctx.couponCode,
+      pickedContact: ctx.pickedContact,
     });
 
   const payProduct = async (

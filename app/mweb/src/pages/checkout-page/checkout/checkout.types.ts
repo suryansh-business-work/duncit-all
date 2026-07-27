@@ -23,25 +23,24 @@ const isEmail = (value: string) => z.string().email().safeParse(value).success;
 
 /**
  * Checkout contract — RHF + Zod. Contact details (name/email/phone) plus a
- * structured billing address that may differ from the user's main address. The
- * address fields are only required when "Same as my main address" is unchecked;
- * GSTIN and billing email validate only when provided. Mirrors the server's
- * CheckoutBillingInput rules (payment.validator.ts).
+ * structured billing address that may differ from the user's main address.
+ * Email is the ONLY mandatory contact field: the contact block is read-only
+ * here (it is edited from the profile), so requiring a phone the buyer has not
+ * filled in would dead-end the payment. GSTIN, phone and billing email validate
+ * only when provided. Mirrors the server rules (payment.validator.ts).
  */
-export const checkoutSchema = z
+const checkoutObject = z
   .object({
     full_name: z.string().trim().max(160, 'Name must be 160 characters or fewer'),
     email: z.string().trim().min(1, 'Email is required').email('Enter a valid email').max(254),
     phone_extension: z
       .string()
       .trim()
-      .min(1, 'Phone code is required')
-      .regex(PHONE_EXTENSION_PATTERN, 'Phone code is invalid'),
+      .refine((v) => !v || PHONE_EXTENSION_PATTERN.test(v), 'Phone code is invalid'),
     phone_number: z
       .string()
       .trim()
-      .min(1, 'Phone is required')
-      .regex(PHONE_NUMBER_PATTERN, 'Phone must contain only digits (6-15 digits)'),
+      .refine((v) => !v || PHONE_NUMBER_PATTERN.test(v), 'Phone must contain only digits (6-15 digits)'),
     same_as_main: z.boolean(),
     line1: z.string().trim().max(200, 'Address line 1 must be 200 characters or fewer'),
     line2: z.string().trim().max(200, 'Address line 2 must be 200 characters or fewer'),
@@ -55,31 +54,55 @@ export const checkoutSchema = z
     gstin: z.string().trim().max(20),
     save_as_main: z.boolean(),
     simulate_failure: z.boolean(),
-  })
-  .superRefine((values, ctx) => {
-    if (!values.same_as_main) {
-      if (values.line1.trim().length < 3) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['line1'], message: 'Address line 1 is required' });
-      }
-      if (!values.city.trim()) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'City is required' });
-      }
-      if (!values.state.trim()) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['state'], message: 'State is required' });
-      }
-      if (!PINCODE_PATTERN.test(values.pincode.trim())) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pincode'], message: 'Enter a valid pincode' });
-      }
-    }
-    const gstin = values.gstin.trim().toUpperCase();
-    if (values.has_gstin && gstin && !GSTIN_PATTERN.test(gstin)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['gstin'], message: 'Enter a valid 15-character GSTIN' });
-    }
-    const billingEmail = values.billing_email.trim();
-    if (billingEmail && !isEmail(billingEmail)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['billing_email'], message: 'Enter a valid billing email' });
-    }
   });
+
+type CheckoutObjectValues = z.infer<typeof checkoutObject>;
+
+/** Address parts are only demanded by the flows that ship something, and only
+ * when the buyer is not reusing their saved main address. */
+function addAddressIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx) {
+  if (values.same_as_main) return;
+  if (values.line1.trim().length < 3) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['line1'], message: 'Address line 1 is required' });
+  }
+  if (!values.city.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['city'], message: 'City is required' });
+  }
+  if (!values.state.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['state'], message: 'State is required' });
+  }
+  if (!PINCODE_PATTERN.test(values.pincode.trim())) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pincode'], message: 'Enter a valid pincode' });
+  }
+}
+
+/** GSTIN and the separate billing email are optional everywhere — checked only
+ * once the buyer typed something. */
+function addOptionalFieldIssues(values: CheckoutObjectValues, ctx: z.RefinementCtx) {
+  const gstin = values.gstin.trim().toUpperCase();
+  if (values.has_gstin && gstin && !GSTIN_PATTERN.test(gstin)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['gstin'], message: 'Enter a valid 15-character GSTIN' });
+  }
+  const billingEmail = values.billing_email.trim();
+  if (billingEmail && !isEmail(billingEmail)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['billing_email'], message: 'Enter a valid billing email' });
+  }
+}
+
+/**
+ * Pod membership checkout: nothing is delivered, so email is the only hard
+ * requirement — an empty profile must never block the booking.
+ */
+export const checkoutSchema = checkoutObject.superRefine(addOptionalFieldIssues);
+
+/**
+ * Product checkout: the order is physically delivered, so the address stays
+ * mandatory (the contact for the parcel comes from the saved address book).
+ */
+export const productCheckoutSchema = checkoutObject.superRefine((values, ctx) => {
+  addAddressIssues(values, ctx);
+  addOptionalFieldIssues(values, ctx);
+});
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
@@ -144,9 +167,10 @@ export function resolveBillingAddress(
 
 /** Whether to persist the entered billing address as the buyer's main address on
  * pay: only when they opted in, typed a fresh (not same-as-main) address, and had
- * no saved main address to begin with. */
+ * no saved main address to begin with. An empty address is never saved — the pod
+ * checkout allows one, and the profile mutation would reject it. */
 export function shouldPersistMainAddress(values: CheckoutForm, hasMainAddress: boolean): boolean {
-  return values.save_as_main && !values.same_as_main && !hasMainAddress;
+  return values.save_as_main && !values.same_as_main && !hasMainAddress && !!values.line1.trim();
 }
 
 /** Build the CheckoutBillingInput sent on pay. GSTIN is uppercased and only sent

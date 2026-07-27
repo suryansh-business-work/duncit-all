@@ -36,6 +36,7 @@ export function useProductPayment({ session, items }: Args) {
       items,
       mainAddress: session.me?.address ?? null,
       couponCode: session.coupon?.ok ? session.coupon.code : null,
+      pickedContact: session.pickedContact,
     });
     await session.persistMainAddress(values);
     try {

@@ -11,6 +11,7 @@ import { CheckoutContactFields } from './CheckoutContactFields';
 import {
   checkoutDefaults,
   checkoutSchema,
+  productCheckoutSchema,
   type CheckoutContact,
   type CheckoutFormValues,
   type CheckoutMainAddress,
@@ -27,6 +28,10 @@ export interface CheckoutFormProps {
   loading?: boolean;
   errorMessage?: string | null;
   dummyMode?: boolean;
+  /** Deliveries (product checkout) need a billing/delivery address; the pod
+   * membership checkout validates the email only and never blocks on a
+   * half-filled profile. */
+  addressRequired?: boolean;
   /** Notified with the live delivery pincode — the product checkout uses it to
    * fetch a live shipping quote. Omitted by the pod (membership) checkout. */
   onPincodeChange?: (pincode: string) => void;
@@ -42,13 +47,14 @@ export function CheckoutForm({
   loading,
   errorMessage,
   dummyMode = true,
+  addressRequired = false,
   onPincodeChange,
   onSubmit,
 }: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
   const { control, handleSubmit } = useForm<CheckoutFormValues>({
     values: { ...checkoutDefaults, ...initialValues },
-    resolver: zodResolver(checkoutSchema),
+    resolver: zodResolver(addressRequired ? productCheckoutSchema : checkoutSchema),
     mode: 'onBlur',
   });
   const simulate = useController({ control, name: 'simulate_failure' });
@@ -60,7 +66,11 @@ export function CheckoutForm({
   return (
     <YStack gap={16}>
       <CheckoutContactFields control={control} contact={contact} loading={contactLoading} />
-      <CheckoutBillingSection control={control} mainAddress={mainAddress} />
+      <CheckoutBillingSection
+        control={control}
+        mainAddress={mainAddress}
+        addressRequired={addressRequired}
+      />
 
       {dummyMode ? (
         <XStack

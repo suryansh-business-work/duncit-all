@@ -55,6 +55,8 @@ interface Props {
   fieldSx: SxProps<Theme>;
   mainAddress: PostalAddressParts | null;
   hasMainAddress: boolean;
+  /** Deliveries need the address; the pod membership checkout does not. */
+  addressRequired: boolean;
 }
 
 /**
@@ -64,7 +66,7 @@ interface Props {
  * yet — a "Save this as my main address" checkbox. The accordion header turns red
  * and stays open whenever any billing field fails validation.
  */
-export default function BillingAddressSection({ control, fieldSx, mainAddress, hasMainAddress }: Readonly<Props>) {
+export default function BillingAddressSection({ control, fieldSx, mainAddress, hasMainAddress, addressRequired }: Readonly<Props>) {
   const [open, setOpen] = useState(true);
   const sameAsMain = useWatch({ control, name: 'same_as_main' });
   const { errors } = useFormState({ control });
@@ -88,7 +90,7 @@ export default function BillingAddressSection({ control, fieldSx, mainAddress, h
             control={control}
             names={ADDRESS_NAMES}
             fieldSx={fieldSx}
-            required
+            required={addressRequired}
             pincodeHint="4–10 digits"
           />
         )}

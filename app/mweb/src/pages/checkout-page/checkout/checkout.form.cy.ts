@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkoutSchema,
+  productCheckoutSchema,
   checkoutDefaults,
   toCheckoutContact,
   toCheckoutBilling,
@@ -54,10 +55,9 @@ describe('checkoutSchema', () => {
     expect(checkoutSchema.safeParse(valid).success).toBe(true);
   });
 
-  it('rejects an empty phone field with a digits message', () => {
-    const result = checkoutSchema.safeParse({ ...valid, phone_number: '' });
-    expect(result.success).toBe(false);
-    expect(firstError(result)).toMatch(/phone/i);
+  it('accepts a missing phone — only the email is mandatory', () => {
+    const result = checkoutSchema.safeParse({ ...valid, phone_number: '', phone_extension: '' });
+    expect(result.success).toBe(true);
   });
 
   it('rejects a phone with alphabetic characters', () => {
@@ -68,17 +68,9 @@ describe('checkoutSchema', () => {
     expect(firstError(checkoutSchema.safeParse({ ...valid, email: 'not-an-email' }))).toMatch(/email/i);
   });
 
-  it('requires line1/city/state/pincode when NOT same as main', () => {
-    expect(firstError(checkoutSchema.safeParse({ ...valid, line1: 'ab' }))).toMatch(/address line 1/i);
-    expect(firstError(checkoutSchema.safeParse({ ...valid, city: '' }))).toMatch(/city/i);
-    expect(firstError(checkoutSchema.safeParse({ ...valid, state: '' }))).toMatch(/state/i);
-    expect(firstError(checkoutSchema.safeParse({ ...valid, pincode: '12' }))).toMatch(/pincode/i);
-  });
-
-  it('skips the address requirement when same as main is checked', () => {
+  it('never blocks the pod checkout on a missing billing address', () => {
     const result = checkoutSchema.safeParse({
       ...valid,
-      same_as_main: true,
       line1: '',
       city: '',
       state: '',
@@ -103,6 +95,38 @@ describe('checkoutSchema', () => {
     expect(checkoutSchema.safeParse({ ...valid, billing_email: '' }).success).toBe(true);
     expect(checkoutSchema.safeParse({ ...valid, billing_email: 'billing@acme.io' }).success).toBe(true);
     expect(firstError(checkoutSchema.safeParse({ ...valid, billing_email: 'nope' }))).toMatch(/billing email/i);
+  });
+});
+
+describe('productCheckoutSchema', () => {
+  const firstProductError = (result: ReturnType<typeof productCheckoutSchema.safeParse>) =>
+    result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+
+  it('requires line1/city/state/pincode when NOT same as main', () => {
+    expect(firstProductError(productCheckoutSchema.safeParse({ ...valid, line1: 'ab' }))).toMatch(/address line 1/i);
+    expect(firstProductError(productCheckoutSchema.safeParse({ ...valid, city: '' }))).toMatch(/city/i);
+    expect(firstProductError(productCheckoutSchema.safeParse({ ...valid, state: '' }))).toMatch(/state/i);
+    expect(firstProductError(productCheckoutSchema.safeParse({ ...valid, pincode: '12' }))).toMatch(/pincode/i);
+  });
+
+  it('skips the address requirement when same as main is checked', () => {
+    const result = productCheckoutSchema.safeParse({
+      ...valid,
+      same_as_main: true,
+      line1: '',
+      city: '',
+      state: '',
+      pincode: '',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('still ships without a phone — the parcel contact comes from the address book', () => {
+    expect(productCheckoutSchema.safeParse({ ...valid, phone_number: '' }).success).toBe(true);
+  });
+
+  it('rejects a malformed phone when one was entered', () => {
+    expect(firstProductError(productCheckoutSchema.safeParse({ ...valid, phone_number: '98abcde' }))).toMatch(/digits/i);
   });
 });
 
@@ -177,5 +201,9 @@ describe('shouldPersistMainAddress', () => {
   it('does not save when the checkbox is off or the address mirrors the main one', () => {
     expect(shouldPersistMainAddress({ ...valid, save_as_main: false }, false)).toBe(false);
     expect(shouldPersistMainAddress({ ...valid, save_as_main: true, same_as_main: true }, false)).toBe(false);
+  });
+
+  it('never saves an empty address (the pod checkout allows one)', () => {
+    expect(shouldPersistMainAddress({ ...valid, save_as_main: true, line1: '  ' }, false)).toBe(false);
   });
 });

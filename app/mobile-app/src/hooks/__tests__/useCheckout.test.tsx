@@ -436,6 +436,19 @@ describe('useCheckout', () => {
     );
   });
 
+  it('never saves an empty main address, so a blank pod checkout still pays', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay({ ...values, save_as_main: true, line1: '  ' }, 500);
+    });
+    expect(mockRequest).not.toHaveBeenCalledWith(
+      MobileCheckoutSaveAddressDocument,
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
   it('sends the pod membership amount only — no products or shipping in the input', async () => {
     const { result } = renderHook(() => useCheckout('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));

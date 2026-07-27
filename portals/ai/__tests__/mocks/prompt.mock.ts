@@ -5,6 +5,7 @@ import {
   AI_PROMPTS,
   CREATE_AI_PROMPT,
   DELETE_AI_PROMPT,
+  RESET_AI_PROMPT,
   UPDATE_AI_PROMPT,
 } from '../../src/pages/prompt-library/queries';
 
@@ -18,11 +19,14 @@ import {
 export const makeAiPrompt = (over: Partial<AiPrompt> = {}): AiPrompt => ({
   __typename: 'AiPrompt',
   id: 'p1',
+  key: null,
+  is_system: false,
   name: 'Prompt',
   description: 'A prompt',
   content: 'content that is long enough',
   category: 'General',
   target_model: 'gpt-4o-mini',
+  variables: [],
   token_count: 10,
   is_active: true,
   created_at: '2026-01-01T00:00:00.000Z',
@@ -30,6 +34,17 @@ export const makeAiPrompt = (over: Partial<AiPrompt> = {}): AiPrompt => ({
   updated_at: null,
   ...over,
 });
+
+/** A seeded system prompt — the kind that powers a shipped AI feature. */
+export const makeSystemPrompt = (over: Partial<AiPrompt> = {}): AiPrompt =>
+  makeAiPrompt({
+    id: 'sys-1',
+    key: 'upload.image_scan',
+    is_system: true,
+    name: 'Image upload risk scan',
+    category: 'Moderation',
+    ...over,
+  });
 
 /**
  * The `aiPrompts(filter)` list query. Reusable by default (`maxUsageCount`);
@@ -60,12 +75,21 @@ export const createPromptMock = (
   maxUsageCount: 20,
 });
 
-/** `updateAiPrompt` — echoes the edited id, or a server error when `fail`. */
+/** `updateAiPrompt` — echoes the edited id, or a server error when `fail`.
+ * `capture` receives the sent variables so a spec can assert the payload. */
 export const updatePromptMock = (
-  opts: { fail?: boolean; id?: string; message?: string } = {},
+  opts: {
+    fail?: boolean;
+    id?: string;
+    message?: string;
+    capture?: (variables: Record<string, unknown>) => void;
+  } = {},
 ): MockedResponse => ({
   request: { query: UPDATE_AI_PROMPT },
-  variableMatcher: () => true,
+  variableMatcher: (variables) => {
+    opts.capture?.(variables);
+    return true;
+  },
   result: opts.fail
     ? { errors: [{ message: opts.message ?? 'Update failed' }] }
     : { data: { updateAiPrompt: { __typename: 'AiPrompt', id: opts.id ?? 'p1' } } },
@@ -81,6 +105,25 @@ export const deletePromptMock = (
   result: opts.fail
     ? { errors: [{ message: opts.message ?? 'Cannot delete this prompt' }] }
     : { data: { deleteAiPrompt: true } },
+});
+
+/** `resetAiPrompt` — restores a system prompt's shipped default body. */
+export const resetPromptMock = (
+  id: string,
+  opts: { fail?: boolean; message?: string; content?: string } = {},
+): MockedResponse => ({
+  request: { query: RESET_AI_PROMPT, variables: { id } },
+  result: opts.fail
+    ? { errors: [{ message: opts.message ?? 'Cannot reset this prompt' }] }
+    : {
+        data: {
+          resetAiPrompt: {
+            __typename: 'AiPrompt',
+            id,
+            content: opts.content ?? 'the shipped default body',
+          },
+        },
+      },
 });
 
 /** In-memory `TableQueryState` builder for the promptTableRows unit tests. */

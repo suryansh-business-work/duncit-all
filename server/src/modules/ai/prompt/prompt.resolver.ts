@@ -9,7 +9,14 @@ export const aiPromptResolvers = {
   Query: {
     aiPrompts: (
       _p: unknown,
-      args: { filter?: { is_active?: boolean | null; category?: string | null; search?: string | null } | null },
+      args: {
+        filter?: {
+          is_active?: boolean | null;
+          category?: string | null;
+          search?: string | null;
+          is_system?: boolean | null;
+        } | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, AI_RW);
@@ -36,6 +43,10 @@ export const aiPromptResolvers = {
     deleteAiPrompt: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, AI_RW);
       return aiPromptService.remove(args.id);
+    },
+    resetAiPrompt: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, AI_RW);
+      return aiPromptService.reset(args.id);
     },
   },
 };

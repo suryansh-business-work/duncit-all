@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import PromptDialog from '../../src/pages/prompt-library/PromptDialog';
 import { renderWithProviders } from '../testkit';
-import { createPromptMock, makeAiPrompt, updatePromptMock } from '../mocks';
+import { createPromptMock, makeAiPrompt, makeSystemPrompt, updatePromptMock } from '../mocks';
 
 describe('PromptDialog', () => {
   it('renders nothing interactive when closed', () => {
@@ -46,6 +46,35 @@ describe('PromptDialog', () => {
     fireEvent.click(save);
     await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends only the operator-owned fields for a system prompt', async () => {
+    const onSaved = vi.fn();
+    let sent: Record<string, unknown> = {};
+    renderWithProviders(
+      <PromptDialog open prompt={makeSystemPrompt()} onClose={vi.fn()} onSaved={onSaved} />,
+      {
+        mocks: [
+          updatePromptMock({
+            id: 'sys-1',
+            capture: (variables) => {
+              sent = variables;
+            },
+          }),
+        ],
+      },
+    );
+    const dialog = await screen.findByRole('dialog');
+    const save = within(dialog).getByRole('button', { name: 'Save changes' });
+    await waitFor(() => expect(save).toBeEnabled());
+    fireEvent.click(save);
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    // The catalog owns the identity fields, so they never leave the client.
+    expect(sent.input).toEqual({
+      description: 'A prompt',
+      content: 'content that is long enough',
+      target_model: 'gpt-4o-mini',
+    });
   });
 
   it('surfaces a server error and stays open', async () => {

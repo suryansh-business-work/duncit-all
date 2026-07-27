@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 
 /**
  * Thin OpenAI chat-completions wrapper used as the *agent brain* for CRM AI
@@ -30,7 +31,10 @@ export const openaiService = {
     }
     const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
     const messages: OpenAiChatTurn[] = [
-      { role: 'system', content: input.systemContext || 'You are a helpful Duncit calling assistant.' },
+      {
+        role: 'system',
+        content: input.systemContext || (await getSystemPrompt('crm.call_assistant')),
+      },
       ...(input.history ?? []),
     ];
     try {

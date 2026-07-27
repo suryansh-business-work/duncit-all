@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 import { importRemoteImage, pexelsSearch } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { analyticsService } from '@modules/platform/analytics/analytics.service';
@@ -77,19 +78,15 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
   },
 };
 
+/** The per-entity JSON shape is a machine contract with the parser, so it stays
+ * in code and is injected into the library prompt as a variable. */
 function buildSystemPrompt(entity: Entity, userPrompt?: string | null) {
   const { fields, notes } = SCHEMAS[entity];
-  return [
-    `You generate realistic dummy data for an admin panel of a community-events app called "Duncit".`,
-    `The platform hosts in-person and online "pods" (events) organized by clubs in Indian cities.`,
-    `Return STRICT JSON matching exactly this TypeScript-like shape (no extra keys, no markdown):`,
+  return getSystemPrompt('generate.dummy_data', {
     fields,
     notes,
-    userPrompt
-      ? `User-provided context / topic to bias the generation: """${userPrompt.slice(0, 500)}"""`
-      : `If no topic is given, pick a fresh, varied, fun topic each time (sports, photography, tech, foodies, gaming, music, hiking, pets, finance, books, etc.).`,
-    `Respond with a single JSON object only.`,
-  ].join('\n\n');
+    user_prompt: userPrompt?.trim().slice(0, 500) ?? '',
+  });
 }
 
 export async function generateDummy(entity: Entity, prompt?: string | null): Promise<string> {
@@ -106,7 +103,7 @@ export async function generateDummy(entity: Entity, prompt?: string | null): Pro
     temperature: 0.9,
     response_format: { type: 'json_object' as const },
     messages: [
-      { role: 'system', content: buildSystemPrompt(entity, prompt) },
+      { role: 'system', content: await buildSystemPrompt(entity, prompt) },
       {
         role: 'user',
         content:
@@ -278,11 +275,7 @@ async function generateProductDescription(input: DescribeProductInput): Promise<
     temperature: 0.7,
     response_format: { type: 'json_object' as const },
     messages: [
-      {
-        role: 'system',
-        content:
-          'You write concise marketing copy for inventory products in an Indian community-events app called Duncit. Always return strict JSON with two keys: { "short_description": string (<= 140 chars), "description": string (2-4 sentences) }. No markdown, no extra keys.',
-      },
+      { role: 'system', content: await getSystemPrompt('generate.product_copy') },
       {
         role: 'user',
         content: `Write marketing copy for this product.\n\n${context}`,
@@ -372,11 +365,7 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
     temperature: 0.2,
     response_format: { type: 'json_object' as const },
     messages: [
-      {
-        role: 'system',
-        content:
-          'Return strict JSON only. Generate a comprehensive but practical list of localities, neighbourhoods, and areas for the given city. Each item must include zone_name and pincode as strings. Do not include area codes, IDs, markdown, explanations, or extra keys. Shape: { "zones": [{ "zone_name": string, "pincode": string }] }. Prefer official/common postal PIN codes and remove duplicates.',
-      },
+      { role: 'system', content: await getSystemPrompt('generate.city_zones') },
       {
         role: 'user',
         content: `Country: ${country}\nState: ${state}\nCity: ${city}`,
@@ -464,15 +453,7 @@ async function adminAiChat(prompt: string) {
     model,
     temperature: 0.2,
     messages: [
-      {
-        role: 'system',
-        content: [
-          'You are the Duncit admin assistant. Answer from the provided admin context: platform_stats (live data) and any matched users.',
-          'platform_stats holds REAL totals — users_total, pods_total, clubs_total, venues_total, hosts_total, support tickets (open/total/by status), and pods/clubs broken down by super category. Use these for any count, summary or trend question. Never say data is missing when platform_stats contains it.',
-          'When user context contains profile_url, include that relative admin link exactly.',
-          'Keep answers short, clear and easy to understand. Only ask for a clearer phone/email/name when the question is about a specific person you could not match.',
-        ].join('\n'),
-      },
+      { role: 'system', content: await getSystemPrompt('admin.assistant') },
       {
         role: 'user',
         content: `Admin question: ${prompt.trim()}\n\nAdmin context JSON:\n${JSON.stringify({ platform_stats: platform, users: context }, null, 2)}`,
@@ -511,15 +492,7 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
     temperature: 0.35,
     response_format: { type: 'json_object' as const },
     messages: [
-      {
-        role: 'system',
-        content: [
-          'You write production MJML templates for Duncit admin email and WhatsApp fallback campaigns.',
-          'Return strict JSON only with shape { "mjml": string }.',
-          'The MJML must include an <mjml> root and <mj-body>. Preserve useful {{variables}} from existing MJML.',
-          'Use responsive MJML components only. Do not return markdown.',
-        ].join('\n'),
-      },
+      { role: 'system', content: await getSystemPrompt('generate.email_mjml') },
       {
         role: 'user',
         content: `Instruction: ${prompt}\n\nExisting MJML:\n${(input.current_mjml || '').slice(0, 12000)}`,

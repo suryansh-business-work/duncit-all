@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -92,14 +93,6 @@ export function heuristicSummary(log: Pick<IPodAuditLog, 'action' | 'changes' | 
   return log.note ? `${base} — ${log.note}` : base;
 }
 
-const AI_SYSTEM_PROMPT = [
-  'You are the audit monitor for Duncit, a platform where hosts run social events ("pods").',
-  'You are given one recorded pod action (who did it, what changed, context note).',
-  'Assess how risky the action is for attendees/finances: LOW (routine), MEDIUM (notable — reschedules, venue moves, activation flips), HIGH (refund-relevant: deletions, big price changes, suspicious edits).',
-  'Return STRICT JSON only, no markdown, of shape {"risk":"LOW"|"MEDIUM"|"HIGH","summary":string}.',
-  'The summary is ONE sentence for an operations dashboard describing what happened and why it matters.',
-].join('\n');
-
 function buildAiUserContent(log: IPodAuditLog): string {
   const lines = [
     `Action: ${log.action} (by ${log.source})`,
@@ -147,7 +140,7 @@ export async function reviewLogWithAi(log: IPodAuditLog): Promise<void> {
           max_tokens: 200,
           response_format: { type: 'json_object' as const },
           messages: [
-            { role: 'system', content: AI_SYSTEM_PROMPT },
+            { role: 'system', content: await getSystemPrompt('pod.audit_review') },
             { role: 'user', content: buildAiUserContent(log) },
           ],
         }),

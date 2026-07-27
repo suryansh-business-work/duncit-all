@@ -1,4 +1,6 @@
-import { aiPromptService } from '../../prompt.service';
+import { Types } from 'mongoose';
+import { aiPromptService, getSystemPrompt } from '../../prompt.service';
+import { SYSTEM_PROMPTS, SYSTEM_PROMPT_BY_KEY } from '../../prompt.catalog';
 import { estimateTokens } from '@services/ai/token-estimate';
 
 describe('aiPromptService integration', () => {
@@ -46,5 +48,74 @@ describe('aiPromptService integration', () => {
     const created = await aiPromptService.create({ name: 'Temp', content: 'temp content' });
     expect(await aiPromptService.remove(created!.id)).toBe(true);
     await expect(aiPromptService.remove(created!.id)).rejects.toThrow(/not found/i);
+  });
+});
+
+const IMAGE_SCAN_KEY = 'upload.image_scan';
+
+describe('system prompts (the AI features run on the library)', () => {
+  it('seeds every catalog prompt once and is safe to re-run', async () => {
+    await aiPromptService.seedDefaults();
+    await aiPromptService.seedDefaults();
+
+    const seeded = await aiPromptService.list({ is_system: true });
+    expect(seeded).toHaveLength(SYSTEM_PROMPTS.length);
+    const scan = seeded.find((p) => p!.key === IMAGE_SCAN_KEY);
+    expect(scan!.is_system).toBe(true);
+    expect(scan!.content).toBe(SYSTEM_PROMPT_BY_KEY.get(IMAGE_SCAN_KEY)!.content);
+  });
+
+  it('serves the edited body to the feature and never deletes a system prompt', async () => {
+    await aiPromptService.seedDefaults();
+    const scan = (await aiPromptService.list({ is_system: true })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
+
+    await aiPromptService.update(scan.id, { content: 'Only flag nudity.' });
+    expect(await getSystemPrompt(IMAGE_SCAN_KEY)).toBe('Only flag nudity.');
+
+    await expect(aiPromptService.remove(scan.id)).rejects.toThrow(/cannot be deleted/i);
+  });
+
+  it('keeps the catalog identity fields on edit and on re-seed', async () => {
+    await aiPromptService.seedDefaults();
+    const scan = (await aiPromptService.list({ is_system: true })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
+
+    const edited = await aiPromptService.update(scan.id, {
+      name: 'Renamed',
+      category: 'Elsewhere',
+      is_active: false,
+      content: 'Edited body.',
+    });
+    expect(edited!.name).toBe(scan.name);
+    expect(edited!.category).toBe(scan.category);
+    expect(edited!.is_active).toBe(true);
+    expect(edited!.content).toBe('Edited body.');
+  });
+
+  it('resets a system prompt back to its shipped default', async () => {
+    await aiPromptService.seedDefaults();
+    const scan = (await aiPromptService.list({ is_system: true })).find((p) => p!.key === IMAGE_SCAN_KEY)!;
+    await aiPromptService.update(scan.id, { content: 'Broken.' });
+
+    const reset = await aiPromptService.reset(scan.id);
+    expect(reset!.content).toBe(SYSTEM_PROMPT_BY_KEY.get(IMAGE_SCAN_KEY)!.content);
+
+    const own = await aiPromptService.create({ name: 'Mine', content: 'my own prompt body' });
+    await expect(aiPromptService.reset(own!.id)).rejects.toThrow(/only system prompts/i);
+    await expect(aiPromptService.reset(new Types.ObjectId().toString())).rejects.toThrow(/not found/i);
+  });
+
+  it('fills placeholders and falls back to the catalog before the first seed', async () => {
+    // Nothing seeded yet in this case — the shipped default still renders.
+    const rendered = await getSystemPrompt('release.changelog', { app_name: 'Duncit' });
+    expect(rendered).toContain('"Duncit" Android app');
+    expect(rendered).not.toContain('{{');
+
+    // Only the supplied placeholders are substituted; the rest stay verbatim so
+    // a prompt that talks about "{{variables}}" keeps saying it.
+    await aiPromptService.seedDefaults();
+    const dummy = await getSystemPrompt('generate.dummy_data', { fields: '{ "a": string }' });
+    expect(dummy).toContain('{ "a": string }');
+    expect(dummy).toContain('{{notes}}');
+    expect(await getSystemPrompt('generate.email_mjml')).toContain('{{variables}}');
   });
 });

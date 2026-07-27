@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 
 /** One commit that went into a build. */
 export interface ReleaseCommit {
@@ -91,7 +92,7 @@ function isChangelog(value: unknown): value is Changelog {
   });
 }
 
-function buildPrompt(commits: ReleaseCommit[], meta: ChangelogMeta) {
+async function buildPrompt(commits: ReleaseCommit[], meta: ChangelogMeta) {
   const lines = commits
     .filter((c) => !isMergeCommit(c.subject))
     .map((c) => {
@@ -99,14 +100,7 @@ function buildPrompt(commits: ReleaseCommit[], meta: ChangelogMeta) {
       return `- ${c.subject}${bodyLine}`;
     })
     .join('\n');
-  const system = [
-    `You write concise, friendly release notes for the "${meta.appName}" Android app.`,
-    'Group the given git commits into human-readable bullet points a tester would understand.',
-    'Rewrite terse commit messages into clear plain-English lines; drop internal noise (chore/ci/build/test) unless it is user-visible.',
-    'Return STRICT JSON only, no markdown, exactly this shape:',
-    '{ "headline": string, "intro": string, "sections": [{ "title": string, "items": string[] }] }',
-    'Use at most 5 sections. Keep each bullet under 120 characters. Section titles may start with a relevant emoji.',
-  ].join('\n');
+  const system = await getSystemPrompt('release.changelog', { app_name: meta.appName });
   const user = `App: ${meta.appName}\nVersion: ${meta.version}\nRange: ${meta.rangeLabel ?? 'recent commits'}\n\nCommits:\n${lines}`;
   return { system, user };
 }
@@ -126,7 +120,7 @@ export async function buildChangelog(
 
   const model = (await getRuntimeEnvValue('OPENAI_MODEL')).trim() || 'gpt-4o-mini';
   const base = ((await getRuntimeEnvValue('OPENAI_BASE_URL')).trim() || 'https://api.openai.com/v1').replace(/\/$/, '');
-  const { system, user } = buildPrompt(commits, meta);
+  const { system, user } = await buildPrompt(commits, meta);
 
   try {
     const resp = await fetch(`${base}/chat/completions`, {

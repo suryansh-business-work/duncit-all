@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject, type ReactNode } from 'react';
-import { Box, Chip, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import {
   DuncitTable,
   actionsColumn,
@@ -16,15 +17,25 @@ interface Props {
   toolbarActions?: ReactNode;
   onEdit: (prompt: AiPrompt) => void;
   onDelete: (prompt: AiPrompt) => void;
+  onReset: (prompt: AiPrompt) => void;
 }
 
 const getPromptRowId = (p: AiPrompt) => p.id;
 
+const SYSTEM_DELETE_HINT = 'System prompts power a shipped feature — reset instead of deleting';
+
 const renderName = (p: AiPrompt) => (
   <Box sx={{ lineHeight: 1.2 }}>
-    <Typography variant="body2" fontWeight={700} component="div">
-      {p.name}
-    </Typography>
+    <Stack direction="row" alignItems="center" spacing={0.75}>
+      <Typography variant="body2" fontWeight={700} component="div">
+        {p.name}
+      </Typography>
+      {p.is_system && (
+        <Tooltip title={`Used by the app as "${p.key}"`}>
+          <Chip size="small" color="secondary" variant="outlined" label="System" />
+        </Tooltip>
+      )}
+    </Stack>
     {p.description && (
       <Typography variant="caption" color="text.secondary" component="div">
         {p.description}
@@ -32,6 +43,17 @@ const renderName = (p: AiPrompt) => (
     )}
   </Box>
 );
+
+/** Reset-to-default action, shown only on system rows (which cannot be deleted). */
+function ResetAction({ prompt, onReset }: Readonly<{ prompt: AiPrompt; onReset: (p: AiPrompt) => void }>) {
+  return (
+    <Tooltip title="Restore the shipped default">
+      <IconButton size="small" aria-label={`Reset ${prompt.name}`} onClick={() => onReset(prompt)}>
+        <RestartAltIcon fontSize="small" />
+      </IconButton>
+    </Tooltip>
+  );
+}
 
 const renderCategory = (p: AiPrompt) => <Chip size="small" variant="outlined" label={p.category} />;
 
@@ -54,6 +76,7 @@ export default function PromptsTable({
   toolbarActions,
   onEdit,
   onDelete,
+  onReset,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<AiPrompt>[]>(
     () => [
@@ -91,13 +114,19 @@ export default function PromptsTable({
       activeChipColumn<AiPrompt>(),
       dateColumn<AiPrompt>(),
       actionsColumn<AiPrompt>({
+        width: 140,
         onEdit,
         onDelete,
+        renderExtra: (p) => (p.is_system ? <ResetAction prompt={p} onReset={onReset} /> : null),
         edit: { ariaLabel: (p) => `Edit ${p.name}` },
-        delete: { ariaLabel: (p) => `Delete ${p.name}` },
+        delete: {
+          ariaLabel: (p) => `Delete ${p.name}`,
+          disabled: (p) => p.is_system,
+          disabledTitle: SYSTEM_DELETE_HINT,
+        },
       }),
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, onReset],
   );
 
   return (

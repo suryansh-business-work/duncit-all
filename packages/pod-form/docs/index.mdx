@@ -1,0 +1,138 @@
+---
+name: '@duncit/pod-form'
+summary: 'The full MUI pod create/edit form — Zod schema, GraphQL input builder and editor dialog — shared by the Admin and Partners consoles.'
+category: 'forms'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'PodForm'
+  - 'PodEditorDialog'
+  - 'usePodEditorState'
+  - 'useMediaPickerBridge'
+  - 'makePodSchema'
+  - 'makeNativeParityPodConfig'
+  - 'buildPodInput'
+  - 'podToFormValues'
+  - 'linesToMedia'
+  - 'getProductRequestTotal'
+  - 'blankPodFormValues'
+  - 'filterProductsForClub'
+  - 'POD_TYPES'
+  - 'OCCURRENCES'
+  - 'POD_MODES'
+---
+
+## Why this exists
+
+Admin and Partners both create pods, and for a while both owned a full copy of the form: the same
+club/venue cascade, the same virtual-vs-physical field rules, the same `CreatePodInput` assembly.
+A pod has enough conditional shape — mode, venue slot, place charges, products, finance breakdown,
+reel — that two copies diverge within a release. The symptom is always the same class of bug: a
+field the schema requires in one console and nulls out in the other, so the server rejects a pod
+that the UI said was valid.
+
+One form, one schema, one input builder. The differences between consoles are data, not code: a
+`PodFormConfig` object of booleans. `portals/admin/src/pages/pods-page/` and
+`portals/partners-app/src/pages/pods-page/` now only own their config and their mutations.
+
+## Use it
+
+From `portals/partners-app/src/pages/pods-page/PartnerPodsSection.tsx`:
+
+```tsx
+import { PodForm, blankPodFormValues, buildPodInput, useMediaPickerBridge, type PodFormValues } from '@duncit/pod-form';
+
+const picker = useMediaPickerBridge();
+
+const submit = async (values: PodFormValues, options: { draft: boolean }) => {
+  await createPod({
+    variables: { input: buildPodInput(values, { draft: options.draft, config: PARTNER_POD_CONFIG }) },
+  });
+};
+
+<PodForm
+  initialValues={blankPodFormValues}
+  config={PARTNER_POD_CONFIG}
+  clubs={clubs}
+  venues={venues}
+  products={products}
+  getClubVenueIds={getClubVenueIds}
+  busy={createState.loading}
+  error={opError}
+  onCancel={close}
+  onSubmit={submit}
+  onPickImage={picker.pickImage}
+  onPickVideo={picker.pickVideo}
+/>
+```
+
+## Config is the only fork — never branch on the portal
+
+`PodFormConfig` is the whole compatibility surface: `showHosts`, `requireHosts`,
+`showLocationZone`, `showVenueSlot`, `showPlaceCharges`, `showInventory`, `showFinance`,
+`showIsActive`, `showProducts`, `showReel`. Start from `makeNativeParityPodConfig({ showProducts })`,
+which mirrors the native create-pod flow (venue slots on, place charges on, reel on, hosts optional).
+Club Admin uses it as-is; Admin spreads its extras (`showFinance`, `showInventory`, `showIsActive`,
+`requireHosts: true`) on top.
+
+`requireHosts: false` is not a relaxation to copy casually — the server injects the acting admin as
+host when none is supplied, which is true for the Club Admin path and not the Admin one.
+
+Note `showFinance: false` for Club Admin: anything you add to the finance area is invisible there.
+Copy that reads on every console must not live in a finance-gated section.
+
+## `makePodSchema` and `buildPodInput` are a pair
+
+The schema is built from the same config (`makePodSchema(config)`), so a field that the form hides
+is also a field the schema stops requiring. `buildPodInput` then nulls out exactly what the mode
+and the flags disabled — virtual pods null `venue_id`/`location_id`, physical pods null the meeting
+fields, `pod_hosts_id` becomes `[]` when `showHosts` is off, products only ride along when the pod
+is physical *and* `showProducts` *and* `values.products_enabled`.
+
+Do not hand-build the mutation input from `PodFormValues`. `venue_slot_id` is only emitted when
+`config.showVenueSlot` because `CreatePodInput` has the field and `UpdatePodInput` does not — a
+hand-rolled input is where that asymmetry gets forgotten.
+
+`podToFormValues` is the inverse for edit flows; `linesToMedia` converts the newline-separated
+media textarea into the `{ url, type: 'IMAGE' | 'VIDEO' }` list (extension-driven), and
+`getProductRequestTotal` prices a request list against the product catalogue.
+
+## Dialog vs bare form — pick by who owns the state
+
+- `PodForm` — the form body plus its actions. You own the dialog, the mutations and the values.
+- `PodEditorDialog` + `usePodEditorState` — the whole create/edit dialog with its open/close,
+  initial values and save plumbing. `portals/admin/src/pages/pods-page/usePodEditor.ts` and
+  `portals/partners-app/src/pages/club-admin-club-pods-page/useClubAdminPodEditor.ts` both take this
+  path. If you are writing the dialog boilerplate by hand, you picked the wrong one.
+
+`useMediaPickerBridge` exists because `@duncit/media-picker` is callback-shaped
+(`onPicked(url)`) while the form wants promises (`onPickImage: () => Promise<string | null>`). The
+hook adapts one to the other and hands back ready-made `accept` / `title` dialog props for the kind
+being picked. Do not re-implement the promise bridge at the call site.
+
+## Peer dependencies, not dependencies
+
+Everything — `react`, `@mui/material`, `@mui/x-date-pickers`, `react-hook-form`, `zod`,
+`@hookform/resolvers`, `date-fns`, `@apollo/client` and `@duncit/utils` — is a **peer**. The package
+ships no runtime deps of its own, so a consuming portal must already have all of them; adding this
+package to a portal that lacks `@mui/x-date-pickers` fails at resolve time, not at render.
+
+MUI throughout means this is portal-only. The mobile app's create-pod flow is Tamagui and shares
+nothing here except the shape of the server input.
+
+`clubCategoryKey`, `productMatchesClub` and `filterProductsForClub` are re-exports from
+`@duncit/utils` — the club ⇄ product category match must stay identical in the portals, mWeb and
+native, so it lives there and is only surfaced here for convenience. Import it from either place;
+do not write a second matcher.
+
+## Coverage gate
+
+`vitest.config.ts` sets 100/100/100/100 across all of `src/**` (only barrels are excluded), so a new
+branch anywhere — including `src/types.ts`, which is exercised at runtime through the option lists
+and `blankPodFormValues` — needs a test before it lands. Genuinely unreachable defensive lines are
+marked with `/* v8 ignore next */` and a reason, as in `schema.ts`; add the reason or the gate is
+just being silenced.

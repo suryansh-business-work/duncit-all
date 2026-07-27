@@ -1,0 +1,150 @@
+---
+name: '@duncit/category'
+summary: 'The one Super → Category → Sub cascade picker, sourced strictly from the admin category tree, plus the RHF wrapper and the helpers that rehydrate a saved value.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'packages/club-form'
+  - 'portals/partners-app'
+  - 'portals/onboarding'
+  - 'portals/challenge-portal'
+exports:
+  - 'AdminCategorySelect'
+  - 'RhfAdminCategory'
+  - 'Fieldset'
+  - 'useAdminCategories'
+  - 'ADMIN_CATEGORIES'
+  - 'buildCategoryValue'
+  - 'useCategoryValue'
+  - 'superOptions'
+  - 'categoryOptions'
+  - 'subOptions'
+  - 'EMPTY_CATEGORY'
+  - 'AdminCategoryValue'
+---
+
+## Why this exists
+
+Clubs, venues, products, surveys and challenges all classify against the same admin-managed
+category tree, and each of them used to own a pair of dependent `<Select>`s plus its own
+`query { categories { … } }`. Two costs followed: every screen re-implemented the cascade rules
+(clearing the sub when the super changes, narrowing subs by the middle level), and each one
+persisted a slightly different subset of ids — so a club and a venue that were "the same
+category" did not always agree.
+
+`AdminCategorySelect` emits the **whole** `AdminCategoryValue` — all three ids *and* all three
+names — regardless of which fields a given form persists. That is what stops the drift: the
+middle `CATEGORY` level is always resolved from the tree even when the caller only stores
+`super_id` and `sub_id`.
+
+## Use it
+
+Plain, from `portals/onboarding/src/pages/surveys/ScopePicker.tsx` and the venue sections:
+
+```tsx
+import { AdminCategorySelect, EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+
+<AdminCategorySelect
+  value={value ?? EMPTY_CATEGORY}
+  onChange={setValue}
+  legend="Category"
+  hint="Venues auto-match to this club by location + category."
+  required
+/>
+```
+
+Inside a react-hook-form, from
+`portals/partners-app/src/pages/list-products-page/list-products/CategoryRows.tsx`:
+
+```tsx
+import { EMPTY_CATEGORY, Fieldset, RhfAdminCategory } from '@duncit/category';
+
+const { fields, append, remove } = useFieldArray({ control, name: 'categories' });
+
+<RhfAdminCategory
+  control={control}
+  name={`categories.${index}` as Path<ProductListingValues>}
+  required
+  size="medium"
+/>
+<Button onClick={() => append({ ...EMPTY_CATEGORY })}>Add category</Button>
+```
+
+`RhfAdminCategory` stores the entire `AdminCategoryValue` object at `name` — not an id. Your Zod
+schema must model the object, and `append` must be given `{ ...EMPTY_CATEGORY }` (a spread copy,
+so field-array rows do not share one object).
+
+## `AdminCategorySelect` vs `RhfAdminCategory`
+
+Use `RhfAdminCategory` whenever the form is RHF-driven; it wires `field.onChange` and surfaces
+`fieldState.error.message` on the **sub** field only. Reach for the raw `AdminCategorySelect`
+when the value does not live in the form state — `packages/club-form/src/sections/BasicSection.tsx`
+does exactly this, holding the cascade in local `useState` while persisting only
+`super_category_id` and `category_id`, so the middle level survives editing without being a
+form field.
+
+## Rehydrating a saved value
+
+A stored record usually has just two ids. `useCategoryValue(superId, subId)` reads the tree and
+returns a full value; `buildCategoryValue(categories, superId, subId)` is the pure form for when
+you already have the docs.
+
+```ts
+const value = useCategoryValue(club.super_category_id, club.category_id);
+```
+
+Note the middle level is derived from **the sub's `parent_id`**, not stored. If a sub is
+re-parented in admin, previously saved records start resolving to the new middle — which is the
+intended behaviour, but it means the middle id is never authoritative history.
+
+## The cascade rules, and what they clear
+
+- Picking a **super** resets everything: `onChange({ ...EMPTY_CATEGORY, super_id, super_name })`.
+  A stale sub under a different super is worse than an empty field.
+- Picking a **category** clears `sub_id` / `sub_name` and keeps the super.
+- Picking a **sub** back-fills the middle level from that sub's `parent_id`, so a user can skip
+  the middle dropdown entirely and still end up with a complete value.
+
+`subOptions(categories, categoryId, superId)` has a fallback worth knowing: with a super chosen
+but no middle, it returns every sub whose middle sits under that super. That is what makes the
+skip-the-middle flow work. With neither chosen it returns all subs.
+
+Only the `super` select is enabled by default — `category` and `sub` unlock once `super_id` is
+set. Rendering fewer levels is supported via `fields={['super', 'sub']}`, but the disabled rule
+still keys off `super_id`, so `super` must be in the list or the rest stay locked.
+
+## `Fieldset` lives here, and is shared with `@duncit/location`
+
+`Fieldset` is a semantic `<fieldset>` with a legend and a hint. It is exported from this package
+but is generic chrome used by both the category and location pickers, and directly by
+`CategoryRows`. Pass `legend` to `AdminCategorySelect` and it wraps itself; import `Fieldset`
+directly when you need to group the picker with other fields.
+
+Write the `hint` to say **why** the category matters ("venues auto-match to this club by
+location + category"), not to restate the label. That is the convention the existing call sites
+follow.
+
+## Constraints
+
+Zero runtime dependencies. Apollo, `graphql`, MUI, React and `react-hook-form` are peers, so
+the picker uses the host portal's single Apollo client and MUI instance. `ADMIN_CATEGORIES` is
+fetched `cache-first`, so many pickers on one page share one network request — do not wrap it in
+another query at the call site.
+
+MUI, so web only. The native app does not render this picker; the mobile pod-idea flow builds
+its own Super/Category/Sub cascade against the same server data.
+
+`portals/admin` declares this package in its `package.json` but has no import today — it comes in
+transitively through `@duncit/club-form`. Anything Dockerising a portal that reaches this package
+must COPY its `package.json`, transitive or not.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` under `jsdom`. The pure option builders
+(`superOptions`, `categoryOptions`, `subOptions`) and `buildCategoryValue` carry most of the
+branches and are exported precisely so they can be tested without rendering Autocompletes. Note
+consumers commonly `vi.mock('@duncit/category', …)` — e.g.
+`packages/club-form/__tests__/mocks/categoryMock.tsx` — so a change to the emitted value shape is
+not caught by their tests. Update the mocks in the same change.

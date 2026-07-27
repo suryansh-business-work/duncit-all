@@ -1,0 +1,135 @@
+---
+name: '@duncit/dialogs'
+summary: 'The MUI confirmation dialog and snackbar every portal shares — a promise-based useConfirm() and an imperative notify(), replacing window.confirm/alert.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/crm'
+  - 'portals/finance'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'ConfirmDialog'
+  - 'ConfirmProvider'
+  - 'useConfirm'
+  - 'notify'
+  - 'notifyError'
+  - 'notifySuccess'
+  - 'NotifyHost'
+  - 'NotifyProvider'
+  - 'useNotify'
+---
+
+## Why this exists
+
+Rule 12 bans `window.confirm`, `window.alert` and `window.prompt`. Obeying it portal by portal
+produced thirteen near-identical `ConfirmDialog.tsx` files and about as many local snackbar
+`useState`/`Snackbar` pairs — each with its own defaults for the cancel label, its own idea of
+whether a destructive action is red, and its own busy handling (some disabled the buttons but
+still let a backdrop click close mid-mutation).
+
+`ConfirmDialog` here is the **superset** of all of those variants, which is why it carries
+alias props (`loading` for `busy`, `onCancel` for `onClose`): the portals could adopt it
+without rewriting call sites. New code should use the primary names.
+
+## Use it
+
+Mount the hosts once at the portal root — from `portals/admin/src/main.tsx`, where the shell's
+`mountPortal` takes a wrapper and extra nodes:
+
+```tsx
+import { ConfirmProvider, NotifyHost } from '@duncit/dialogs';
+
+mountPortal({
+  // …
+  wrap: (node) => <ConfirmProvider>{node}</ConfirmProvider>,
+  extras: <NotifyHost />,
+  children: <App />,
+});
+```
+
+Then, anywhere below it — `portals/admin/src/pages/locations-page/LocationsPage.tsx`:
+
+```tsx
+import { useConfirm, notifyError } from '@duncit/dialogs';
+
+const confirm = useConfirm();
+
+const ok = await confirm({
+  title: 'Delete location',
+  message: `Delete location "${loc.location_name}"?`,
+  destructive: true,
+  confirmLabel: 'Delete',
+});
+if (!ok) return;
+```
+
+`confirm()` resolves `true` on the confirm button and `false` on cancel, backdrop or escape.
+It never rejects, so there is no `catch` to forget.
+
+## `useConfirm` vs `ConfirmDialog` — pick by ownership
+
+Use `useConfirm()` when the decision is a **step inside an async handler**: it turns the
+dialog into an `await`, no local `open` state, no `pendingItem` ref to remember what the user
+was deleting.
+
+Reach for `<ConfirmDialog>` directly only when the dialog's open state is already owned by
+something else — a row-level editor, a wizard step, a dialog whose `busy` tracks a specific
+mutation's loading flag. Several CRM pages do exactly this. Rendering `<ConfirmDialog>` where
+`useConfirm()` would do just reintroduces the state you were trying to delete.
+
+## The notify API is event-based, and needs a host
+
+`notify()` dispatches a `duncit:notify` CustomEvent on `window`; `NotifyHost` listens and
+renders the MUI Snackbar. That indirection is what lets `notifyError(...)` be called from a
+plain function — an Apollo `onError`, a util, a store action — with no hook and no context.
+
+Consequences worth knowing:
+
+- **Without a mounted `NotifyHost` the call is a silent no-op.** Nothing throws. If a message
+  never appears, check the portal root first.
+- Mount **one** host per portal. Two hosts render the same snackbar twice.
+- The host holds a single item, not a queue — a second `notify()` replaces the first.
+- `NotifyProvider` is just `children` plus a `NotifyHost`; use whichever fits the root's shape.
+  Most portals pass `<NotifyHost />` through the shell's `extras`.
+- `useNotify()` returns a frozen, module-level object, so its identity is stable across
+  renders and safe in a `useEffect` dependency array. It exists for call sites that prefer a
+  hook — it has no extra powers over the bare `notify`/`notifyError`/`notifySuccess`.
+
+## Confirm-button colour: `confirmColor` wins
+
+`destructive: true` is shorthand for `confirmColor: 'error'`. When both are given,
+`confirmColor` wins and `destructive` is ignored — do not pass both and expect the shorthand
+to apply. For anything other than red, pass `confirmColor` (`'primary' | 'error' | 'warning' |
+'success' | 'inherit'`).
+
+## Busy state closes the exits
+
+Setting `busy` (or its alias `loading`) disables both buttons **and** removes the dialog's
+`onClose`, so the backdrop and escape key cannot dismiss a dialog whose mutation is in flight.
+By default the confirm button grows a 16px spinner; pass `busyLabel` (e.g. `'Deleting…'`) to
+swap the label instead of showing a spinner. Those two are exclusive — a `busyLabel` replaces
+the spinner, it does not sit beside it.
+
+`message` is a `ReactNode`: a plain string is wrapped in `DialogContentText`, anything else
+renders as-is, so a list or a warning `<Alert>` can go straight in. Omitting `message`
+entirely drops the `DialogContent` rather than rendering an empty gap.
+
+## Peers and coverage
+
+MUI, React and React DOM are peer dependencies — the package has no runtime dependencies of
+its own — so the portal supplies the single MUI instance and its theme. `vitest.config.ts`
+enforces 100/100/100/100 over `src/**`; the two genuinely unreachable lines (the SSR guard in
+`notify`, MUI's clickaway close reason) are marked with `/* v8 ignore next */` and a reason,
+which is the only acceptable way to skip a line here.

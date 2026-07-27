@@ -1,0 +1,113 @@
+---
+name: '@duncit/portal-pod-form'
+summary: 'The small pod-content editor dialog (title, description, media) that Admin and Partners both use for a quick edit of a live pod.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'PodContentFormDialog'
+  - 'podContentSchema'
+  - 'PodContentValues'
+  - 'PodField'
+  - 'PodMedia'
+  - 'ReadOnlyContextItem'
+---
+
+## Why this exists
+
+Editing a pod that already exists is not the same job as creating one. A host wants to fix a typo
+in the title or swap a photo on a pod that has attendees, a date and a venue — re-opening the whole
+create form for that invites edits to fields the host is not allowed to change.
+
+So both consoles grew a small "quick edit" dialog: `portals/admin/src/pages/pods-page/QuickEditPodDialog.tsx`
+and the edit path in `portals/partners-app/src/pages/pods-page/PartnerPodsSection.tsx`. Same three
+fields, same Zod rules, same image field-array. Two copies of a validation rule means one of them
+eventually accepts a one-character title that the other rejects.
+
+This package is that dialog, once. Each console keeps only its own mutation.
+
+## Use it
+
+From `portals/admin/src/pages/pods-page/QuickEditPodDialog.tsx`:
+
+```tsx
+import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
+
+const save = async (values: PodContentValues) => {
+  await updateMut({
+    variables: {
+      id: pod.id,
+      input: {
+        pod_title: values.pod_title,
+        pod_description: values.pod_description,
+        pod_images_and_videos: values.pod_images_and_videos.map((m) => ({ url: m.url, type: m.type || 'IMAGE' })),
+      },
+    },
+  });
+};
+
+<PodContentFormDialog
+  open={!!pod}
+  title="Quick edit pod"
+  defaultValues={{
+    pod_title: pod.pod_title || '',
+    pod_description: pod.pod_description || '',
+    pod_images_and_videos: (pod.pod_images_and_videos ?? []).map((m) => ({ url: m.url, type: m.type })),
+  }}
+  editableFields={['pod_title', 'pod_description', 'pod_images_and_videos']}
+  readOnlyContext={[
+    { label: 'Club', value: clubName(pod.club_id) },
+    { label: 'Place', value: pod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(pod.venue_id) },
+  ]}
+  busy={busy}
+  error={error}
+  onClose={onClose}
+  onSubmit={save}
+  onPickImage={onPickImage}
+/>
+```
+
+## Not the same package as `@duncit/pod-form`
+
+The names are close enough to pick the wrong one. They are not variants of each other:
+
+| | `@duncit/pod-form` | `@duncit/portal-pod-form` |
+| --- | --- | --- |
+| Scope | the whole create/edit pod form — mode, venue slot, hosts, products, finance, reel | three content fields |
+| Driven by | a `PodFormConfig` of feature booleans | an `editableFields` array |
+| Emits | a full `CreatePodInput` via `buildPodInput` | plain `PodContentValues` you map yourself |
+
+If you need to change a pod's schedule, venue, price or hosts, this is the wrong package.
+
+## `editableFields` disables — it does not hide
+
+Any `PodField` not listed renders **read-only**, not absent. That is deliberate: the host still sees
+the description they cannot change. Contextual facts that are never editable (date, place, attendee
+count) go in `readOnlyContext` as `{ label, value }` strings — the dialog does no formatting, so
+date strings must already be formatted by the caller with `date-fns` against the admin-configured
+format.
+
+## The caller owns media, the dialog owns the list
+
+`onPickImage` is a promise the host app fulfils with `@duncit/media-picker`; the dialog only appends
+the resolved URL to its `useFieldArray`. It stamps `type: 'IMAGE'` on newly added entries, which is
+why every call site writes `type: m.type || 'IMAGE'` when mapping back to the mutation — existing
+rows can carry a null type from older data.
+
+Omitting `onPickImage` leaves the media list add-button unrendered, so the pick handler is never
+reachable. That unreachable `if (!onPickImage) return;` guard at `PodContentFormDialog.tsx:68` is
+the single branch keeping the package off a 100% branch gate.
+
+## Peer dependencies and the coverage threshold
+
+`react`, `@mui/material`, `@mui/icons-material`, `react-hook-form`, `zod` and `@hookform/resolvers`
+are all peers; the package declares no runtime dependencies of its own. MUI means portal-only —
+nothing here is reusable by the native app.
+
+`vitest.config.ts` requires 100% statements, functions and lines but caps **branches at 95**, which
+is the achieved 20/21 for the defensive guard above. Treat 95 as a ceiling that was measured, not
+slack to spend: a second uncovered branch drops the ratio below it and fails the run.

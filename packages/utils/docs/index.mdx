@@ -1,0 +1,144 @@
+---
+name: '@duncit/utils'
+summary: 'Framework-free browser and money helpers — device id, API error parsing, INR formatting, file download/read, pod spot economics and the shared earnings statement.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/*'
+  - 'packages/ui'
+  - 'packages/shell'
+  - 'packages/pod-form'
+  - 'packages/media-picker'
+  - 'packages/ad-request-form'
+exports:
+  - 'getOrCreateDuid'
+  - 'parseApiError'
+  - 'isNetworkFailureMessage'
+  - 'OFFLINE_MESSAGE'
+  - 'GENERIC_ERROR_MESSAGE'
+  - 'formatMoney'
+  - 'formatINR'
+  - 'base64ToBlob'
+  - 'downloadBlob'
+  - 'downloadBase64File'
+  - 'downloadTextFile'
+  - 'fileToBase64'
+  - 'fileToDataUrl'
+  - 'formatMjml'
+  - 'clubCategoryKey'
+  - 'productMatchesClub'
+  - 'filterProductsForClub'
+  - 'payableSpots'
+  - 'payingAttendees'
+  - 'HOST_FREE_SPOT_NOTE'
+  - 'buildEarningsStatement'
+  - 'formatStatementMoney'
+---
+
+## Why this exists
+
+Each of these modules replaced a byte-for-byte copy that had been pasted into every surface.
+`duid.ts` existed once in mWeb and once in all sixteen portals. `parse-api-error.ts` the same.
+The base64 → Blob → anchor-click download flow was rewritten in admin, finance, crm (twice),
+support and legal. `fileToDataUrl` had eight implementations, one of them inside
+`@duncit/media-picker`. Money formatting had a `formatMoney`, a `money(symbol, v)` and a `fmt`
+in partners-app, finance, products and crm that all rounded differently.
+
+The domain modules are here for a stronger reason: a wrong copy is a wrong number.
+`payableSpots` encodes "the host sits in `pod_attendees` and never pays", and
+`buildEarningsStatement` is the single builder mWeb and the native app both render at
+Create-a-Pod Step 4 — rule 27 says those two screens must be identical, and sharing the builder
+is how that is enforced rather than hoped for.
+
+Zero runtime dependencies, on purpose. `parse-api-error.ts` types the Apollo error
+**structurally**, so this package never has to depend on `@apollo/client`.
+
+## Use it
+
+From `app/mweb/src/apollo.ts` and `portals/crm/src/components/ExcelImportDialog.tsx`:
+
+```ts
+import { getOrCreateDuid, fileToBase64, parseApiError, formatMoney } from '@duncit/utils';
+
+headers.set('x-duncit-duid', getOrCreateDuid());
+
+try {
+  const base64 = await fileToBase64(file);
+  await importLeads({ variables: { file: base64 } });
+} catch (err) {
+  setError(parseApiError(err));
+}
+
+formatMoney(125000);                                   // "₹1,25,000"
+formatMoney(1250, { symbol, decimals: 2, grouping: false }); // "₹1250.00"
+formatMoney(125000, { compact: true });                // "₹1.3L" — rounds to 1 decimal
+```
+
+And the Step-4 statement, identically in `app/mweb/.../price-panel/index.tsx` and
+`app/mobile-app/src/components/create-pod/price-panel/index.tsx`:
+
+```ts
+import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
+
+const statement = buildEarningsStatement(waterfall, { has_venue: !!slotId, symbol });
+```
+
+## `fileToBase64` vs `fileToDataUrl` — they are not interchangeable
+
+Two behavioural families exist because two families of server calls exist:
+
+- `fileToDataUrl` resolves the **full** `data:<mime>;base64,…` URL (support, website-app,
+  mWeb, media-picker payloads).
+- `fileToBase64` resolves the **bare** base64 with the prefix stripped (crm, finance payloads).
+
+Pick the one the endpoint you are calling already received. Swapping them ships a payload the
+server cannot decode, and nothing type-checks the difference — both are `Promise<string>`.
+
+## The host's spot is free — never bill the raw capacity
+
+`payableSpots(total)` is `total − 1`, and returns `0` for `0` (unlimited/unset) and `1`
+(host-only) rather than going negative. Every money figure derived from a spot count must go
+through it: a 30-spot pod can only ever sell 29 seats. The server mirrors this in
+`server/src/modules/finance/finance/breakdown.math.ts`; if the two ever disagree, Create-a-Pod,
+the finance calculator and the real settlement disagree by exactly one ticket.
+
+`payingAttendees(attendeeIds, hostIds)` is the head-count equivalent — hosts are written into
+`pod_attendees` at creation, so counting the array raw over-states income by one ticket per host.
+
+`HOST_FREE_SPOT_NOTE` is the copy that must sit next to any spots-driven figure.
+
+## The earnings statement adds no math
+
+`buildEarningsStatement` takes the `potentialPodEarnings` waterfall **verbatim**. It sums the
+server's own lines for section subtotals, formats the formula strings, and sets `reconciled`
+when all three audit identities hold. It does not compute a fee, a rate or a tax anywhere.
+
+If a number looks wrong, the fix belongs in the server waterfall, not here — re-deriving it
+client-side is how the two surfaces started disagreeing in the first place. GST is charged once
+and extracted from the GST-inclusive collection, so the statement shows the real taxable base
+rather than inventing per-charge tax rows.
+
+## Metro, Docker and the `dist/` build
+
+The exports map points `import`/`types`/`react-native` at `src/index.ts` and only `require` at
+`dist/index.js`. Metro compiles the TypeScript source directly — which means the native app
+builds this package from source and the **whole directory** must be present in the image:
+
+```dockerfile
+COPY packages/utils ./packages/utils      # app/mobile-app/Dockerfile — NOT just package.json
+```
+
+The Vite portals need only `COPY packages/utils/package.json`, because pnpm resolves the
+workspace link and Vite reads the source through it. Getting this backwards passes locally and
+fails only in the deploy build.
+
+## Adding a helper
+
+`src/index.ts` is a pure re-export barrel and is coverage-excluded; everything else is under a
+100/100/100/100 vitest gate. A new helper needs its branches tested before it will build, and it
+must stay framework-free — no React, no MUI, no Tamagui, no Apollo. If a helper needs one of
+those, it belongs in `@duncit/ui` (MUI) or the consuming app, not here.

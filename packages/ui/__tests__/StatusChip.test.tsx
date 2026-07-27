@@ -7,6 +7,9 @@ const colorClass = (root: HTMLElement) =>
     c.startsWith('MuiChip-color'),
   );
 
+const chipColorClass = (color: string) =>
+  `MuiChip-color${color.charAt(0).toUpperCase()}${color.slice(1)}`;
+
 describe('STATUS_CHIP_COLORS', () => {
   it('maps the shared approval vocabulary, including the SUBMITTED=info split', () => {
     expect(STATUS_CHIP_COLORS).toMatchObject({
@@ -18,6 +21,26 @@ describe('STATUS_CHIP_COLORS', () => {
       SUBMITTED: 'info',
     });
   });
+
+  it('contains exactly those six statuses, so the per-status cases below are exhaustive', () => {
+    expect(Object.keys(STATUS_CHIP_COLORS).toSorted((a, b) => a.localeCompare(b))).toEqual([
+      'APPROVED',
+      'DENIED',
+      'DRAFT',
+      'PENDING',
+      'REJECTED',
+      'SUBMITTED',
+    ]);
+  });
+
+  it.each(Object.entries(STATUS_CHIP_COLORS))(
+    'renders %s as a %s chip so the three hand-rolled copies can adopt this map',
+    (status, color) => {
+      const { container } = render(<StatusChip status={status} />);
+      expect(screen.getByText(status)).toBeInTheDocument();
+      expect(colorClass(container)).toBe(chipColorClass(color));
+    },
+  );
 });
 
 describe('StatusChip', () => {

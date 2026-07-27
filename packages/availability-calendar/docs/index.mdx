@@ -1,0 +1,142 @@
+---
+name: '@duncit/availability-calendar'
+summary: 'The venue slot calendar and its day editor — a prop-driven Day/Week/Month grid with per-day A/P/B counts, shared by the Partner and Onboarding portals.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/partners-app'
+  - 'portals/onboarding'
+exports:
+  - 'AvailabilityCalendar'
+  - 'DayDrawer'
+  - 'RecurringAvailabilityDialog'
+  - 'CalendarView'
+  - 'VenueSlotRow'
+  - 'VenueSlotStatus'
+  - 'NewSlotInput'
+---
+
+## Why this exists
+
+The same venue availability screen exists twice, for two different actors on two different
+mutation sets. A venue owner manages their own slots in the Partner portal
+(`portals/partners-app/src/pages/venue-availability-page/VenueAvailabilityPage.tsx`, wired to
+`createVenueSlots` / `updateVenueSlot` / `deleteVenueSlot`). An operations user manages any
+venue's slots from the Onboarding portal
+(`portals/onboarding/src/pages/venue-details-page/VenueSlotAvailabilityTab.tsx`, wired to the
+role-gated `adminVenueSlots` / `adminCreateVenueSlots` / … equivalents).
+
+The grid, the day-cell colour rules, the past/beyond-window disabling and the add-slot form are
+identical in both. They were the copy. The GraphQL is not, and is deliberately left at the call
+site — the components take callbacks, never a client.
+
+## Use it
+
+From `VenueSlotAvailabilityTab.tsx`:
+
+```tsx
+import {
+  AvailabilityCalendar,
+  DayDrawer,
+  type NewSlotInput,
+  type VenueSlotRow,
+} from '@duncit/availability-calendar';
+
+<AvailabilityCalendar
+  month={month}
+  slots={data?.adminVenueSlots ?? []}
+  selectedDate={selectedDate}
+  onSelect={setSelectedDate}
+/>
+
+<DayDrawer
+  open={!!selectedDate}
+  date={selectedDate}
+  slots={slotsForSelected}
+  onClose={() => setSelectedDate(null)}
+  onCreate={handleCreate}          // (input: NewSlotInput) => Promise<void>
+  onToggleBlock={handleToggleBlock}
+  onDelete={handleDelete}
+/>
+```
+
+Every handler returns a promise; `DayDrawer` awaits it and keeps its own busy/error state, so
+the page only has to fire the mutation and `refetch()`.
+
+## `month` is the anchor, `selectedDate` only highlights
+
+This trips people up. `AvailabilityCalendar` derives the visible cells from **`month`**, not
+from `selectedDate`:
+
+- `view="month"` → the 6×7 grid around `startOfMonth(month)`
+- `view="week"` → the seven days of `startOfWeek(month)`
+- `view="day"` → the single day `month`
+
+So in week and day view the host must move `month` itself. The Partner page keeps a single
+`anchor` state and shifts it by month / 7 days / 1 day depending on the view. `selectedDate`
+does nothing but draw the selected cell and open the drawer.
+
+The Partner page also anchors on `new Date()` rather than the 1st of the month — anchoring on
+the 1st opens Day view on a past date, which the calendar then renders non-interactive.
+
+## Disabled days, and the 60-day cap
+
+Days before today are non-interactive. So are days after the optional `maxDate` — that is how
+the Partner portal enforces the booking window (`addDays(startOfDay(new Date()), 60)`). Both
+render dimmed with `tabIndex={-1}` and `aria-disabled`.
+
+`holidays` is an array of `'yyyy-MM-dd'` strings (the Partner page reads
+`venue.settings.holidays`); those cells go red and show a LEAVE tag, and `DayDrawer` accepts
+`isHoliday` to disable adding slots on them.
+
+The calendar's `maxDate` is a UX guard only. `DayDrawer` and `RecurringAvailabilityDialog` both
+carry their own `MAX_FUTURE_DAYS = 60` constant mirroring the server cap, and the server is the
+real backstop. If the server cap changes, three places change.
+
+## Day badges are `A` / `P` / `B` / `×`
+
+`AVAILABLE`, `PENDING`, `BOOKED`, `BLOCKED`. **`PENDING` means a host's booking request is
+waiting on the venue's approval** — it is not "draft". `DayDrawer` treats `BOOKED` and
+`PENDING` as locked: you cannot block or delete them from the day editor, because a pending
+request must be decided in Slot Requests instead. Do not add an escape hatch here; deleting a
+slot out from under a live request is the bug that rule exists to prevent.
+
+## `RecurringAvailabilityDialog` is exported but currently unused
+
+It generates one slot per day across a date range with a fixed daily window, skipping past
+windows and anything beyond +60 days so a range that overruns the cap does not fail as a batch.
+It hands the whole array to `onAdd(slots: NewSlotInput[])`.
+
+The Partner portal does **not** use it — it renders its own, much larger
+`src/pages/venue-availability-page/recurring/RecurringAvailabilityDialog.tsx` (day-of-week
+picker, space pricing, templates, bulk actions, venue-rule accordions). So this export has no
+consumer today. Before extending it, check whether the Partner version is what you actually
+want; before deleting it, check the Onboarding portal has not adopted it since.
+
+## `VenueSlotRow` — the package type is the narrow one
+
+`portals/partners-app/src/pages/venue-availability-page/queries.ts` declares its own
+`VenueSlotRow` that adds optional `space_label` and `capacity`. The optionality is what keeps
+it assignable to this package's type. If you add a **required** field to either shape, the two
+stop being compatible and the Partner page stops compiling — widen the package type instead of
+duplicating a third row shape.
+
+## Constraints
+
+Zero runtime dependencies; MUI, `@mui/x-date-pickers`, `date-fns`, React and `react-dom` are
+peers supplied by the consuming portal. Nothing here imports Apollo, and it should stay that
+way — the moment a query moves inside, the Onboarding portal (which uses entirely different,
+role-gated operations) can no longer share it.
+
+This is a web/MUI package with no native twin; venue availability is a partner-console feature
+and does not exist in the mobile app.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` (barrels excluded) under `jsdom`. The
+branchy helpers — `cellColors`, `cellShape`, `buildCells`, the locked-status rules — are why the
+components are decomposed into module-scope `DayCell` / `DayHeader` / `DayBadges` / `CountBadge`
+sub-components rather than nested ternaries. Keep new branches in named helpers so they stay
+testable without rendering the whole grid.

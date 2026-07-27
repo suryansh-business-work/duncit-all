@@ -1,0 +1,170 @@
+---
+name: '@duncit/table'
+summary: 'The one server-driven table every portal renders — AG Grid rows inside MUI chrome, with search, sort, column filters, pagination and persisted column prefs.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/challenge-portal'
+  - 'portals/crm'
+  - 'portals/developers'
+  - 'portals/finance'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'DuncitTable'
+  - 'useTableQuery'
+  - 'useTablePrefs'
+  - 'makeApolloTableFetch'
+  - 'useApolloTableFetch'
+  - 'tableQueryToGql'
+  - 'buildAgTheme'
+  - 'filterChipLabel'
+  - 'actionsColumn'
+  - 'activeChipColumn'
+  - 'dateColumn'
+  - 'formatDateCell'
+  - 'DEFAULT_DATE_FORMAT'
+  - 'EM_DASH'
+  - 'DuncitColumn'
+  - 'TableFetch'
+  - 'TableQueryState'
+  - 'TablePage'
+---
+
+## Why this exists
+
+Fifteen portals each had their own list page: a `<TextField>` search wired to a hand-rolled
+debounce, a `<Table>` or a raw `<AgGridReact>`, a `<TablePagination>`, and a `useEffect` that
+turned all of that into GraphQL variables. Every one of them had its own idea of what page 1
+meant, its own sort-direction naming, and its own handling of "search changed, reset to page 1".
+
+Rule 37 is the outcome: if a portal renders a table, it renders `DuncitTable`. One query state
+shape (`TableQueryState`), one server contract (`TableQueryInput` via `tableQueryToGql`), one
+place where a pagination bug gets fixed.
+
+MUI owns the chrome — toolbar, progress bar, error `Alert`, `TablePagination`. AG Grid owns
+only the rows.
+
+## Use it
+
+From `portals/finance/src/pages/finance/backout-refund-page/BackoutRefundTable.tsx`:
+
+```tsx
+import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
+
+const columns: DuncitColumn<BackoutRefundRequest>[] = [
+  { field: 'backout_no', headerName: 'Backout ID', cellRenderer: renderBackoutNo },
+  {
+    field: 'backout_status',
+    headerName: 'Status',
+    filter: { type: 'select', options: BACKOUT_STATUS_OPTIONS },
+    cellRenderer: renderBackoutStatus,
+  },
+  { field: 'joined_at', headerName: 'Joined', hide: true, sortable: false, width: 170 },
+  { field: 'actions', headerName: 'Actions', sortable: false, width: 110, cellRenderer: renderActions },
+];
+
+<DuncitTable<BackoutRefundRequest>
+  tableId="finance-backout-refunds"
+  columns={columns}
+  fetchRows={fetchRows}
+  getRowId={(row) => row.id}
+  onRowClick={onRowClick}
+  emptyText="No backout refund requests yet."
+  searchPlaceholder="Search by Backout ID"
+  defaultSort={{ field: 'created_at', dir: 'desc' }}
+  refetchRef={refetchRef}
+/>;
+```
+
+`fetchRows` is the only data path. Build it with the Apollo bridge rather than by hand:
+
+```ts
+import { useApolloTableFetch } from '@duncit/table';
+
+const fetchRows = useApolloTableFetch<PodRow>(client, PODS_TABLE, 'podsTable', {
+  extraFilters: clubId ? [{ field: 'club_id', op: 'eq', value: clubId }] : undefined,
+}, [clubId]);
+```
+
+## `tableId` is a persistence namespace, not a label
+
+Column visibility, column order and density are written to `localStorage` under
+`duncit-table-cols:<tableId>` and `duncit-table-density:<tableId>`. Two tables sharing a
+`tableId` will fight over each other's column prefs, and a user who hid a column on one page
+will find it hidden on the other. Prefix it with the portal (`finance-backout-refunds`,
+`admin-users`) and never reuse it.
+
+Storage is wrapped in try/catch on every read and write — private mode or a full quota simply
+means prefs do not persist, not that the table breaks.
+
+## `externalFilters` vs a column `filter`
+
+Both narrow the query, and picking the wrong one produces a UI the user cannot explain.
+
+- A column `filter` is **user-driven**: it renders a control in the filter popover and shows a
+  removable chip. Use it for anything the user should be able to clear.
+- `externalFilters` are **page-driven** — a tab, a URL param, a page-level select. They are
+  compared by value, reset to page 1 when they change, and deliberately render **no chip**,
+  because a chip the user can dismiss would drop the page's own scoping.
+
+`ApolloTableFetchOptions.extraFilters` is the third variant: pinned filters applied inside the
+fetch bridge, invisible to the table entirely. Use it for scoping the user must never see or
+alter (tenant, ownership).
+
+## `makeApolloTableFetch` vs `useApolloTableFetch`
+
+Same function; the hook wraps it in `useMemo`. Inside a component always use the hook — a fresh
+`fetchRows` identity on every render re-triggers the table's fetch effect and the table loops.
+The `deps` array lists the reactive values your `options` close over (the client, query and
+`resultKey` identities are tracked for you). Use `makeApolloTableFetch` only outside React.
+
+Neither takes an `@apollo/client` dependency: `TableGqlClient` is a structural type covering
+just the `query` method, which a real `ApolloClient` satisfies as-is. Default fetch policy is
+`network-only`, which is the only policy any table uses today.
+
+If your server query takes legacy flat arguments instead of `TableQueryInput` (the support
+portal lists), pass `buildVariables` to replace `tableQueryToGql` wholesale rather than
+reshaping the state.
+
+## Column helpers — use them instead of re-deriving cells
+
+`dateColumn()` defaults to the hidden `created_at` column with a `d MMM yyyy` format
+(`DEFAULT_DATE_FORMAT`) and an em-dash fallback for null. `formatDateCell(iso, format)` is the
+same formatting on its own, and `EM_DASH` is the empty-value character every table uses so
+blanks look identical across portals. `actionsColumn()` and `activeChipColumn()` cover the two
+cell shapes that repeated most.
+
+Dates go through `date-fns` (a peer dependency), never `toLocaleDateString` — rule 11.
+
+## Peer dependencies and AG Grid registration
+
+Everything heavy is a **peer**: `@mui/material`, `@mui/icons-material`, `@mui/x-date-pickers`,
+`ag-grid-community`, `ag-grid-react`, `date-fns`, `react`, `react-dom`. The package itself has
+no runtime dependencies, so it never pulls a second copy of React or MUI into a portal bundle.
+A portal adding `@duncit/table` must already have those installed.
+
+`src/agGridSetup.ts` calls `ModuleRegistry.registerModules([AllCommunityModule])` **once** at
+package module scope, imported at the top of `DuncitTable.tsx`. Do not register AG Grid modules
+again in a portal — a second registration is at best redundant and at worst a version conflict.
+
+## The jsdom auto-height workaround
+
+AG Grid's per-cell `autoHeight` measures real rendered layout so multi-line cells never clip.
+jsdom reports no layout at all, and AG Grid silently drops every row past the first couple —
+which looks exactly like a broken fetch in a test.
+
+`DuncitTable` detects jsdom via the user agent and skips the measurement pass there. If you are
+writing a table test and rows are missing, this is why the real browser and the test can differ;
+it is a test-environment accommodation, not behaviour to depend on.

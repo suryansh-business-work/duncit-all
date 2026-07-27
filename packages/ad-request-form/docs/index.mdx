@@ -1,0 +1,131 @@
+---
+name: '@duncit/ad-request-form'
+summary: 'The ad-request form, its Zod contract, the live cost estimate card and the ads vocabulary — one copy for every portal that lets someone buy an ad.'
+category: 'forms'
+zeroDeps: false
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/ads-portal'
+  - 'portals/partners-app'
+exports:
+  - 'AdRequestForm'
+  - 'EstimateCard'
+  - 'AdMediaField'
+  - 'adRequestSchema'
+  - 'blankAdRequestValues'
+  - 'toSubmitAdRequestInput'
+  - 'AD_POSITION_OPTIONS'
+  - 'AD_PRICING_KEY_BY_POSITION'
+  - 'AD_STATUS_COLORS'
+  - 'adPositionLabel'
+  - 'formatAdCost'
+---
+
+## Why this exists
+
+Two surfaces submit the same `submitAdRequest` mutation: the Ads portal's **Create Ad**
+page (`portals/ads-portal/src/pages/create-ad-page/CreateAdPage.tsx`) and the Partner
+portal's **Run ad** dialog on a product row
+(`portals/partners-app/src/pages/list-products-page/RunAdDialog.tsx`). Before this package
+each one owned a form, a Zod schema and its own copy of the placement list — so a rule the
+server enforces (title 3–120, duration 1–30 days, http(s) redirect only) had to be fixed
+twice, and a new placement had to be added twice.
+
+The vocabulary moved here too. `portals/ads-portal/src/pages/ads/ad-options.ts` is now a
+one-line `export * from '@duncit/ad-request-form'` re-export, kept only so existing
+relative imports in that portal keep resolving.
+
+## Use it
+
+From `CreateAdPage.tsx`, verbatim in shape:
+
+```tsx
+import {
+  AdRequestForm,
+  EstimateCard,
+  blankAdRequestValues,
+  toSubmitAdRequestInput,
+  type AdRequestFormValues,
+} from '@duncit/ad-request-form';
+
+const [draft, setDraft] = useState<AdRequestFormValues>(blankAdRequestValues);
+
+const handleSubmit = async (values: AdRequestFormValues) => {
+  const result = await submitAdRequest({
+    variables: { input: toSubmitAdRequestInput(values) },
+  });
+  notifySuccess(`Ad request submitted · Trace ID ${result.data?.submitAdRequest.trace_id}`);
+};
+
+<AdRequestForm
+  initialValues={draft}
+  busy={saving}
+  errorMessage={formError}
+  onValuesChange={setDraft}
+  onSubmit={handleSubmit}
+/>
+<EstimateCard
+  pricing={pricingData?.adPricing}
+  loading={pricingLoading}
+  position={draft.position}
+  durationDays={draft.duration_days}
+/>
+```
+
+Note `blankAdRequestValues` is passed **as a function** to `useState` — it calls
+`new Date().toISOString()` for `start_at`, so calling it during render on every pass would
+produce a new default each time.
+
+## `onValuesChange` is the whole point of the split
+
+The form and the estimate are separate components on purpose: the estimate has to react to
+`position` and `duration_days` while the user is still typing. `AdRequestForm` subscribes to
+RHF's `watch()` and pushes the whole value object up through `onValuesChange`; the page holds
+that as state and feeds `EstimateCard`. Do not try to render the estimate inside the form —
+the Partner dialog lays them out side by side in its own `Grid`, and the Ads page makes the
+estimate `position: sticky`.
+
+`toSubmitAdRequestInput` re-runs `adRequestSchema.parse` before mapping. That is deliberate:
+it normalises `start_at` to an ISO string and drops empty `redirect_url` / `target_audience`
+rather than sending `''`, which the server would treat as a supplied value.
+
+## Pricing keys — use the map, do not build the string
+
+The `AdPricing` payload has one field per placement (`home_bottom_per_day`, …). Resolve it
+with `AD_PRICING_KEY_BY_POSITION[position]`. Lower-casing the enum value works today by
+coincidence and breaks the first time a placement name stops being a straight snake_case of
+its enum.
+
+`formatAdCost(value, symbol)` wraps `formatMoney` from `@duncit/utils` with the ads rule:
+whole amounts render with no decimals, fractional ones with two. Use it for every ad money
+figure so the estimate and the approval queue agree.
+
+## A live duplicate: `portals/marketing/src/lib/ad-positions.ts`
+
+The Marketing portal (Ads approvals + Ads pricing settings) still carries its own
+`AdPosition` union, its own `AdPricingPriceField` union and its own `AD_POSITIONS` array with
+the same nine labels. It predates this package and has not been migrated. It is a real drift
+risk — adding a placement here without editing that file leaves the pricing settings page
+unable to price it. If you add a placement, change both, or better, migrate Marketing onto
+`AD_POSITION_OPTIONS` + `AD_PRICING_KEY_BY_POSITION` in the same change.
+
+`AD_STATUS_COLORS` is typed `StatusColorMap` from `@duncit/ui`, so it drops straight into the
+shared status chip — do not hand-map statuses to MUI colours at the call site.
+
+## Peer dependencies
+
+MUI, `@mui/x-date-pickers`, `react-hook-form`, `@hookform/resolvers`, `zod` and `date-fns` are
+**peers**, not dependencies — the consuming portal supplies them so there is exactly one React
+and one MUI in the tree. `@duncit/forms`, `@duncit/ui`, `@duncit/media-picker` and
+`@duncit/utils` are real workspace dependencies; a portal adopting this package must have
+those resolvable, and any Dockerfile building it needs their `package.json` files copied in.
+
+This is an MUI package. It is web-only by construction and has no native twin — the mobile app
+does not sell ads.
+
+## Coverage
+
+`vitest.config.ts` sets no thresholds, so this package is **not** on the 100% gate. The
+schema is exercised by `src/ad-request.types.test.ts`; the real form flows are covered from
+the consuming portals (`portals/ads-portal/__tests__/unit-tests/CreateAdPage.test.tsx`).

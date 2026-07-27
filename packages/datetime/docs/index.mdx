@@ -1,0 +1,133 @@
+---
+name: '@duncit/datetime'
+summary: 'One application clock and one date/time formatter, both driven by the admin panel, usable from React Native, the browser and Node.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mobile-app'
+  - 'packages/app-settings'
+exports:
+  - 'createDateFormatter'
+  - 'createClock'
+  - 'resolveNow'
+  - 'stampServerTime'
+  - 'toTimeSource'
+  - 'toEpochMs'
+  - 'resolveActiveOccasion'
+  - 'FALLBACK_DATE_FORMAT'
+  - 'FALLBACK_TIME_FORMAT'
+  - 'FALLBACK_TIME_ZONE'
+---
+
+## Why this exists
+
+Project rule 11 says every rendered date follows the admin panel's format, zone and time
+source. That only holds if there is one implementation. There were several: the portals'
+`useDateFormat` did its own `parseISO` + `format`, the support portal did its own
+`formatInTimeZone`, and mobile had plain `formatDate`/`formatDateTime` helpers built on
+`new Date()`. They disagreed on the fallback time pattern — a zoned 24h default on one side,
+`hh:mm a` on the other — so mWeb and the portals rendered different times while settings were
+still loading.
+
+It also fixes a subtler bug: `now`. Reading `Date.now()` directly means an admin's CUSTOM time
+anchor moves the displayed dates but not "Today", not countdowns, and not which occasion icon
+set is live. The clock lives here so all of that moves together.
+
+Kept framework-free and dependency-free on purpose (date-fns are **peers**) so React Native,
+the browser and the Node server can all import the same file. Adding a React import here would
+break the Node consumers.
+
+## Use it
+
+From `packages/app-settings/src/useDateFormat.ts` — the Apollo adapter that every web surface
+goes through:
+
+```ts
+import { createDateFormatter, stampServerTime, toTimeSource } from '@duncit/datetime';
+
+const settings = data?.publicAppSettings;
+const serverTime: string | null = settings?.server_time ?? null;
+
+const fmt = createDateFormatter({
+  dateFormat: settings?.date_format,
+  timeFormat: settings?.time_format,
+  timeZone: settings?.time_zone,
+  timeZoneAware,
+  clock: {
+    source: toTimeSource(settings?.time_source),
+    serverNow: serverTime,
+    // Stamped once per distinct server_time, so the server clock keeps
+    // ticking between fetches instead of freezing at the fetched value.
+    serverNowReceivedAt: stampServerTime(serverTime),
+    customTime: settings?.custom_time ?? null,
+    customTimeSetAt: settings?.custom_time_set_at ?? null,
+  },
+});
+
+fmt.formatDate(pod.starts_at); // '' when the input is empty or invalid
+fmt.dayLabel(message.created_at); // 'Today' | 'Yesterday' | the configured pattern
+fmt.now(); // the application clock, not the device clock
+```
+
+`createDateFormatter` is pure — it never fetches. Fetching is the adapter's job
+(`@duncit/app-settings` for web, the zustand store in `app/mobile-app/src/utils/app-formatter.ts`
+for native).
+
+## `stampServerTime` is stateful, and that is the point
+
+The SERVER clock must keep ticking between settings fetches. `stampServerTime(serverTime)`
+records the device time at which a *distinct* `server_time` string first arrived, in a
+module-level single-entry cache deliberately kept outside React so hooks, plain functions and
+native stores share it and it survives re-renders. `resolveNow` then returns
+`serverNow + (deviceNow − receivedAt)`.
+
+Call it on every render with the current `server_time` — repeat calls with the same string are
+free and return the original stamp. Do **not** pass `Date.now()` as `serverNowReceivedAt`
+yourself; that re-anchors on every render and the clock freezes at the fetched value. Tests
+that need a clean slate call `resetServerTimeStamp()`.
+
+## Which formatter method
+
+| Need | Method |
+| --- | --- |
+| The admin's date pattern | `formatDate` |
+| The admin's time pattern | `formatTime` |
+| Both, joined with ` · ` | `formatDateTime` |
+| Today / Yesterday / date | `dayLabel` |
+| Grouping key, `yyyy-MM-dd` | `dayKey` |
+| A genuine one-off pattern | `formatPattern(input, pattern)` |
+
+Every one of them returns `''` for empty or invalid input rather than throwing — parsing and
+formatting both sit inside the guard, so a hostile date string, an unknown IANA zone or a bad
+pattern renders empty instead of blanking a page. Reserve `formatPattern` for real one-offs; a
+hardcoded pattern is exactly what rule 11 forbids.
+
+## date-fns v2 and v4 must both work
+
+The portals and mWeb are on date-fns v2, the mobile app on v4. Only the API present in both is
+used: `format`, `parseISO` and `formatInTimeZone`. Do not reach for `utcToZonedTime` /
+`toZonedTime` — they were renamed across `date-fns-tz` majors and will resolve on one surface
+and fail on the other.
+
+## `timeZoneAware` changes parsing, not just output
+
+With `timeZoneAware: false` (the web default) strings are parsed with `parseISO`, matching the
+portals' historic behaviour. With it `true` — what mobile uses — strings go through the `Date`
+constructor and output is rendered via `formatInTimeZone` in the admin's zone. Mobile sets it
+so a pod at 6pm IST reads 6pm on both mWeb and native (rule 27), regardless of device zone.
+
+## Occasions ride the same clock
+
+`resolveActiveOccasion(windows, clock.nowMs())` picks the festive icon set covering the
+*application* instant, so a custom admin time switches the icons too. Inactive windows and
+windows with unusable dates are skipped; when several overlap the highest `sort_order` wins,
+ties breaking on the later start — that is how a short campaign layers over a long season.
+Native uses `slug` as its local asset folder name, so slugs are not free to rename.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 across `src/**`. The fallback branches — missing
+`serverNow`, a CUSTOM anchor with no save-stamp, an invalid date — are each covered, because
+every one of them is a path a misconfigured admin setting can actually reach in production.

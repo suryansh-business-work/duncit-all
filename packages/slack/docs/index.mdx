@@ -1,0 +1,118 @@
+---
+name: '@duncit/slack'
+summary: 'Block Kit builders, the message-input serializer and the GraphQL operation source for every Slack message Duncit sends.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/tech'
+exports:
+  - 'buildAppFeedbackInput'
+  - 'buildFeedbackBlocks'
+  - 'FEEDBACK_CATEGORIES'
+  - 'buildSlackMessageInput'
+  - 'SEND_SLACK_MESSAGE_SDL'
+  - 'SUBMIT_APP_FEEDBACK_SDL'
+  - 'SLACK_CHANNELS_SDL'
+  - 'SLACK_CONFIGURED_SDL'
+  - 'header'
+  - 'section'
+  - 'fields'
+  - 'divider'
+  - 'context'
+  - 'image'
+  - 'button'
+  - 'actions'
+  - 'mrkdwn'
+  - 'plainText'
+---
+
+## Why this exists
+
+Three surfaces post to Slack: the Tech console's Slack page, mWeb's "Report a Problem"
+(`app/mweb/src/pages/support-hub/FeedbackPage.tsx`) and the native Feedback screen
+(`app/mobile-app/src/components/support/FeedbackForm.tsx`). Rule 27 says mWeb and the app must be
+identical, and "identical" for a Slack post means the same Block Kit JSON, the same category list
+and the same mutation document — three things that are trivially easy to write twice and slightly
+differently.
+
+The blocks, the category tuple and the GraphQL operation strings all live here. `portals/tech/src/pages/slack/queries.ts`
+is now four lines of `gql(...)` around imported SDL, and both feedback twins call the same
+`buildAppFeedbackInput`.
+
+## Use it
+
+From `app/mweb/src/pages/support-hub/FeedbackPage.tsx`:
+
+```ts
+import { gql, useMutation } from '@apollo/client';
+import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
+
+const SUBMIT_APP_FEEDBACK = gql(SUBMIT_APP_FEEDBACK_SDL);
+
+const [submit] = useMutation(SUBMIT_APP_FEEDBACK);
+await submit({ variables: { input: buildAppFeedbackInput({ ...values, platform: 'web' }) } });
+```
+
+The category list is data too — `app/mweb/src/forms/feedback/feedback.form.tsx` and the native
+`FeedbackForm.tsx` both render `FEEDBACK_CATEGORIES` rather than hard-coding four strings.
+
+## No `gql` here, on purpose
+
+The package exports operation **source strings**, not parsed documents. Consumers wrap them with
+their own tag: `const SEND_SLACK_MESSAGE = gql(SEND_SLACK_MESSAGE_SDL)`. That keeps `@apollo/client`
+and `graphql` out of the dependency tree entirely, which is what lets Metro (native), Vite (mWeb and
+tech) and Node all consume the same file.
+
+`package.json` declares **no dependencies at all** — only devDependencies — and sets a
+`react-native` entry pointing at the same TS source. Do not add a runtime dep. The moment this
+package needs `graphql`, native has to bundle it and the server can no longer mirror the contract.
+
+The server keeps its own Slack implementation because it ships in a self-contained Docker image with
+no `@duncit/*` workspace deps; the types here (`SendSlackMessageInput`, `AppFeedbackInput`,
+`SlackChannel`) mirror its GraphQL shapes, so a server-side field rename must be applied in both
+places in the same commit.
+
+## `buildSlackMessageInput` vs `buildAppFeedbackInput`
+
+They are not interchangeable:
+
+| | `buildSlackMessageInput` | `buildAppFeedbackInput` |
+| --- | --- | --- |
+| Mutation | `sendSlackMessage` | `submitAppFeedback` |
+| Who can call it | staff, via the Tech console | any signed-in user |
+| Channel | the caller chooses | the **server** routes it |
+| Identity | caller-supplied `username` / `icon_emoji` | the **server** stamps the real user |
+
+Never send user feedback through `sendSlackMessage`. Client-chosen channel and username are exactly
+the fields `submitAppFeedback` refuses to accept, because a client that can pick both can post as
+anyone into anything.
+
+`buildSlackMessageInput` does two things you must not redo by hand: it JSON-serializes `blocks` and
+`attachments` into `blocks_json` / `attachments_json`, and it drops `undefined` keys so the mutation
+input carries only what you set. An empty array serializes to nothing at all rather than `"[]"` —
+send `text` if you want a message with no blocks.
+
+## Block builders
+
+`header`, `section`, `fields`, `divider`, `context`, `image`, `button`, `actions` all return plain
+objects. `section` and `context` accept either a raw string (coerced to `mrkdwn`) or an explicit
+`SlackTextObject` — pass `plainText(...)` when you specifically want unformatted text, since the
+string shorthand always means mrkdwn.
+
+`button` returns a block **element**, not a block. It has to be wrapped: `actions([button('Open', { url })])`.
+Its options are camelCase (`actionId`, `style`) and are translated to Slack's `action_id` on the way
+out; unset options are omitted rather than sent as `undefined`.
+
+`SlackBlock` carries an index signature deliberately, so the builders can attach block-specific keys
+without a type per block kind. That means a typo in a hand-written block object will not fail
+`tsc` — compose through the builders and the shape stays right.
+
+## Coverage gate
+
+`vitest.config.ts` sets 100/100/100/100 over `src/**` with only the barrels excluded. Everything here
+is pure and synchronous, so there is no excuse for an uncovered branch: a new builder option needs a
+test for both the set and unset path before it lands.

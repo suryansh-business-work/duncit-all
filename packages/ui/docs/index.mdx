@@ -1,0 +1,150 @@
+---
+name: '@duncit/ui'
+summary: 'The MUI primitives every portal used to hand-roll — KPI stat card, status chip, label/value row, page and back headers, the query guard trio and a debounce hook.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'packages/shell'
+  - 'packages/ad-request-form'
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/challenge-portal'
+  - 'portals/crm'
+  - 'portals/finance'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'StatCard'
+  - 'usageColor'
+  - 'StatusChip'
+  - 'STATUS_CHIP_COLORS'
+  - 'InfoRow'
+  - 'PageHeader'
+  - 'BackHeader'
+  - 'BackButton'
+  - 'QueryGuard'
+  - 'useDebouncedValue'
+  - 'mergeSx'
+  - 'ModerationBlockedDialog'
+  - 'LanguageSelect'
+  - 'StatusColorMap'
+  - 'StatCardLayout'
+  - 'InfoRowVariant'
+---
+
+## Why this exists
+
+Every portal dashboard had a KPI tile. Every detail page had a label/value row, a spinner, an
+error `Alert` and a "not found" `Alert`, in that order. Every list page had a `useState` +
+`useEffect` + `setTimeout` debounce for its search box. None of them were quite the same: the
+tile was `SummaryTiles` in admin, `StatGrid` in ads-portal, a KPI card in crm; the guard trio
+was re-typed on every page that loads one entity.
+
+This package holds one copy of each. It is the MUI layer above `@duncit/utils`, which is the
+package's only runtime dependency — `QueryGuard` uses `parseApiError` from it rather than
+re-deriving the message.
+
+## Use it
+
+From `portals/ads-portal/src/pages/ads/AdDetailsPage.tsx` and
+`portals/admin/src/pages/dashboard/SummaryTiles.tsx`:
+
+```tsx
+import { BackHeader, QueryGuard, StatusChip, StatCard } from '@duncit/ui';
+
+<BackHeader title={ad.title} eyebrow="Ad" backTo="/ads" actions={<EditButton />} />
+
+<QueryGuard loading={loading && !ad} error={error} notFound={!ad}>
+  {() => (
+    <>
+      <StatusChip status={ad.status} />
+      <StatCard label="Total spend" value={formatINR(ad.spend)} layout="split" />
+    </>
+  )}
+</QueryGuard>;
+```
+
+`children` accepts a **function** as well as a node. Pass a function whenever the content
+dereferences the entity — it defers evaluation past the `notFound` branch, so
+`{() => <div>{ad.title}</div>}` cannot throw on a null `ad`.
+
+## `StatusChip` — the default map has already drifted
+
+`STATUS_CHIP_COLORS` is the repo-wide default for the approval vocabulary
+(`APPROVED`/`REJECTED`/`DENIED`/`PENDING`/`DRAFT`/`SUBMITTED`). Several portals genuinely
+disagree with it today: onboarding cards and products `brandStatus` render `SUBMITTED` as
+warning, products renders `DRAFT` as default.
+
+When migrating one of those call sites, pass a full `colorMap` that preserves the colours it
+shows now. `colorMap` is a **full replacement, not a merge** — that is deliberate, so a domain
+vocabulary (refund, meeting, campaign, lead stage) stays exactly as authored. To change one
+entry of the default, spread it:
+
+```tsx
+<StatusChip status={s} colorMap={{ ...STATUS_CHIP_COLORS, SUBMITTED: 'warning' }} />
+```
+
+Silently adopting the defaults during a migration is a visual regression that no test catches.
+
+## Picking a layout instead of writing a new component
+
+`StatCard` and `InfoRow` are supersets of the shapes that already existed, selected by a
+`layout` / `variant` prop. Reach for one of these before adding a component:
+
+| Component | Value | Where it came from |
+| --- | --- | --- |
+| `StatCard` | `default` | finance, tech, partners-app, onboarding, crm dashboards |
+| `StatCard` | `valueFirst` | support, challenge-portal dashboards |
+| `StatCard` | `split` | admin `SummaryTiles` |
+| `InfoRow` | `stacked` | dialog / detail `Field` rows |
+| `InfoRow` | `inline` | fixed-width label then value |
+| `InfoRow` | `split` | space-between label/value, `bold` for total rows |
+
+`usageColor(percent)` is the tech server convention for a usage bar: `error` at ≥90,
+`warning` at ≥75, otherwise `success`.
+
+## `mergeSx` — always merge, never overwrite
+
+Every component here takes an `sx` override and merges it through `mergeSx(defaults, override)`,
+which flattens both sides into an array so later entries win. That is what lets a caller tweak
+one property without losing the component's built-in styles.
+
+If you add a component to this package, route its `sx` prop through `mergeSx` too. Spreading
+(`{ ...defaults, ...sx }`) silently drops the defaults whenever a caller passes an array or a
+callback `sx`, which MUI fully supports.
+
+## Peer dependencies, including the router
+
+`react`, `react-dom`, `@mui/material`, `@mui/icons-material` and `react-router-dom` are all
+peers — nothing here bundles a second React or MUI. The router peer is easy to miss: `BackButton`
+renders `component={RouterLink}` when given `to`, so a `BackHeader`/`BackButton` used with `to`
+**must be inside a router context** or it throws. Pass `onClick`/`onBack` instead if there is no
+router (that path renders a plain `<Button>`).
+
+## `useDebouncedValue` is not needed inside a table
+
+`DuncitTable` already debounces its own search box before `fetchRows` sees the query state.
+Use `useDebouncedValue` for the standalone filter inputs that sit outside a table — adding it on
+top of a `DuncitTable` search only stacks two delays.
+
+## Localization and coverage
+
+`LanguageSelect` renders each option as its own endonym plus the English name, so a user who has
+switched into a script they cannot read can still switch back — and it renders **nothing** when
+fewer than two languages are configured. Any user-facing string you add to this package must
+come from a Localization key with a fallback bundle entry first (rule 38); the defaults here
+(`'Not found.'`, `'Back'`, `'Language'`) are prop-overridable for exactly that reason.
+
+`vitest.config.ts` gates at 100/100/100/100 with the barrels excluded, and every layout /
+variant branch has to be exercised — a new `StatCardLayout` value ships with the test that
+renders it.

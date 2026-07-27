@@ -49,6 +49,47 @@ describe('parseApiError', () => {
   it('falls back when the error object is empty', () => {
     expect(parseApiError({})).toBe(GENERIC_ERROR_MESSAGE);
   });
+
+  it('reads the message off a real Error instance', () => {
+    expect(parseApiError(new Error('Boom'))).toBe('Boom');
+    expect(parseApiError(new TypeError('Failed to fetch'))).toBe(OFFLINE_MESSAGE);
+  });
+
+  it('ranks networkError above graphQLErrors and message', () => {
+    expect(
+      parseApiError({
+        networkError: { message: 'Failed to fetch' },
+        graphQLErrors: [{ message: 'Bad input' }],
+        message: 'plain',
+      }),
+    ).toBe(OFFLINE_MESSAGE);
+  });
+
+  it('ranks graphQLErrors above the plain message', () => {
+    expect(parseApiError({ graphQLErrors: [{ message: 'Bad input' }], message: 'plain' })).toBe(
+      'Bad input',
+    );
+  });
+
+  it('ignores a null networkError and falls through', () => {
+    expect(parseApiError({ networkError: null, message: 'Nope' })).toBe('Nope');
+    expect(parseApiError({ networkError: null })).toBe(GENERIC_ERROR_MESSAGE);
+  });
+
+  it('falls back for an empty-string message rather than rendering nothing', () => {
+    expect(parseApiError({ message: '' })).toBe(GENERIC_ERROR_MESSAGE);
+    expect(parseApiError({ message: '' }, 'Custom')).toBe('Custom');
+  });
+
+  it('falls back for falsy non-object errors', () => {
+    expect(parseApiError(0, 'Custom')).toBe('Custom');
+    expect(parseApiError('', 'Custom')).toBe('Custom');
+    expect(parseApiError(false, 'Custom')).toBe('Custom');
+  });
+
+  it('falls back for a bare string error — it carries no .message', () => {
+    expect(parseApiError('Boom')).toBe(GENERIC_ERROR_MESSAGE);
+  });
 });
 
 describe('isNetworkFailureMessage', () => {

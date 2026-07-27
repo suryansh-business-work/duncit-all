@@ -1,0 +1,124 @@
+---
+name: '@duncit/auth-tokens'
+summary: 'The brand design tokens — colour scales, light/dark mode palettes, auth visuals, radii and typography — as plain JSON, read by the mWeb MUI theme and the mobile Tamagui config.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+exports:
+  - 'brand'
+  - 'neutral'
+  - 'semantic'
+  - 'surface'
+  - 'light'
+  - 'dark'
+  - 'auth'
+  - 'radii'
+  - 'typography'
+---
+
+## Why this exists
+
+mWeb builds a MUI theme; the mobile app builds a Tamagui theme. Both start from the same
+brand palette, and before this package each held its own copy — `app/mweb/src/theme.ts` had
+the hex scales inline, the mobile side had them again in its tailwind/NativeWind config. Any
+brand tweak was two edits, and "two edits" reliably means one edit.
+
+Now `packages/auth-tokens/tokens.json` is the only place a hex value is written.
+`app/mweb/src/theme.ts` imports `{ brand, neutral, semantic, surface }` from here;
+`app/mobile-app/tamagui.config.ts` imports `{ dark, light, semantic, typography }`. There is
+no build step — it is JSON plus two three-line view modules.
+
+## Use it
+
+`app/mobile-app/tamagui.config.ts`:
+
+```ts
+import { dark, light, semantic, typography } from '@duncit/auth-tokens';
+
+const brandLight = {
+  background: light.bg,
+  color: light.ink,
+  borderColor: light.border,
+  primary: light.primary,
+  onPrimary: light.onPrimary,
+  danger: semantic.error,
+};
+```
+
+`app/mweb/src/theme.ts`:
+
+```ts
+import { brand, neutral, semantic, surface } from '@duncit/auth-tokens';
+
+export const tokens = { brand, neutral, semantic, surface };
+const PRIMARY = tokens.brand[500];
+```
+
+A default export of the whole object also exists (`import tokens from '@duncit/auth-tokens'`),
+but prefer named imports — they are statically analysable, so a bundler can drop the groups a
+surface does not use.
+
+## The three files, and why the data is in JSON
+
+| File | Read by |
+| --- | --- |
+| `tokens.json` | the only data. Every other file re-exports it. |
+| `tokens.mjs` | Vite/Rollup (mWeb) and Metro (mobile runtime) via `exports.import` |
+| `tokens.cjs` | Node build-time configs and Jest via `exports.require` |
+| `tokens.d.ts` | `tsc` — the type surface (`ColorScale`, `ModeColors`, `AuthVisuals`, …) |
+
+The data was moved into JSON to fix a real bundler failure: with the values written directly
+in `tokens.cjs`, Vite's dev server threw *"does not provide an export named 'default'"*. A JSON
+module has a clean default export in every toolchain, so both views just re-export it.
+
+Do not add values to `tokens.mjs` or `tokens.cjs`. Add them to `tokens.json`, add the named
+binding to the destructure in `tokens.mjs`, and declare it in `tokens.d.ts`.
+`__tests__/tokens.test.ts` asserts the CJS and ESM views are identity-equal to the JSON, so a
+group added to one and not the other fails there rather than in a bundle.
+
+## Keep it zero-dependency and framework-free
+
+`package.json` has no `dependencies` at all, and it must stay that way. The mobile app is a
+**standalone npm project, not a pnpm workspace member** — it links this package with
+`"@duncit/auth-tokens": "file:../../packages/auth-tokens"` and `metro.config.js` widens
+`watchFolders` to `../../packages` specifically for it. A dependency added here would have to
+resolve inside that isolated install, where the monorepo root `node_modules` is deliberately
+not on the resolution path (mixing pnpm's React copy with the app's breaks the bundle).
+
+For the same reason, nothing here may import React, MUI or Tamagui. It is data that both
+theme layers consume, not a theme.
+
+## Docker and CI
+
+Both mobile Dockerfiles COPY this package explicitly —
+`COPY packages/auth-tokens ./packages/auth-tokens` in `app/mobile-app/Dockerfile` and
+`Dockerfile.android`, with matching allowlist entries in `Dockerfile.android.dockerignore`.
+A `file:` dependency that is not COPYed fails the image build while passing locally. Adding a
+new `@duncit/*` dependency to the mobile app means editing both Dockerfiles and the
+dockerignore in the same commit.
+
+`app/mobile-app/.eslintrc.js` turns `import/no-unresolved` off partly because of this — the
+eslint import resolver cannot follow the `file:` dep in an isolated CI install. `tsc --noEmit`
+is the authoritative import check there.
+
+## `auth` is more than colours
+
+`auth` carries the login-screen visuals: `accent`, a three-colour `avatars` tuple,
+`avatarRing`, `bgGradient` / `cardGradient` (each with a `light` and `dark` three-stop tuple),
+and `legal.termsUrl` / `legal.privacyUrl`. `app/mobile-app/src/components/LegalLinks` opens
+those URLs directly. They are configuration, not business data — a legal URL change belongs in
+`tokens.json`, not hardcoded next to a `Linking.openURL` call.
+
+Note the gradients are typed as fixed-length triples (`[string, string, string]`). Adding a
+fourth stop is a type change, not a data change.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 and, unusually, measures `tokens.mjs` and `tokens.cjs`
+directly — there is no `src/` directory. The tests spot-check concrete values
+(`brand[500] === '#ff5757'`, `radii.pill === 999`) as well as structure, so a token rename is
+caught rather than silently shipped as a missing colour.

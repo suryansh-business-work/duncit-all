@@ -1,0 +1,126 @@
+---
+name: '@duncit/club-form'
+summary: 'The one MUI Club create/edit form — sections, Zod schema and GraphQL input builder — shared by the admin portal and the club-admin partner page.'
+category: 'forms'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'ClubForm'
+  - 'makeClubSchema'
+  - 'buildClubInput'
+  - 'clubToFormValues'
+  - 'linesToMedia'
+  - 'cleanBullets'
+  - 'cleanFaqs'
+  - 'blankClubFormValues'
+---
+
+## Why this exists
+
+A Club is edited from two places: the admin portal's `ClubsPage` dialog and the club-admin's
+own edit page in `partners-app`. Before this package each held its own copy of the field list,
+its own `validateClub`, and its own hand-built `CreateClubInput`. The two drifted the moment a
+field was added on one side — a club saved from partners-app could silently lose `faqs` or
+`locality` because that page's input builder never learned about them.
+
+Now both mount the same `<ClubForm>` and both call the same `buildClubInput`, so the two
+surfaces can only differ in the ways `ClubFormConfig` explicitly permits.
+
+## Use it
+
+From `portals/partners-app/src/pages/club-admin-edit-club-page/ClubAdminEditClubPage.tsx` —
+the club-admin flow hides the governance sections and reuses everything else:
+
+```tsx
+import {
+  ClubForm,
+  buildClubInput,
+  clubToFormValues,
+  type ClubFormConfig,
+  type ClubFormValues,
+} from '@duncit/club-form';
+
+// Club admins edit page content only — governance fields stay admin-only.
+const PARTNER_CLUB_CONFIG: ClubFormConfig = {
+  showAdmins: false,
+  showVerified: false,
+  showIsActive: false,
+};
+
+<ClubForm
+  initialValues={clubToFormValues(club)}
+  config={PARTNER_CLUB_CONFIG}
+  onPickImage={openMediaPicker}
+  busy={saving}
+  error={opError}
+  onCancel={close}
+  onSubmit={(values, { draft }) =>
+    updateClub({ variables: { input: buildClubInput(values, { draft, config: PARTNER_CLUB_CONFIG }) } })
+  }
+/>;
+```
+
+Pass the **same** config object to `<ClubForm>` and to `buildClubInput`. The component uses it
+to decide which sections render; the builder uses it to decide which keys are allowed into the
+mutation input. Passing two different configs is how a hidden field ends up being written
+anyway.
+
+## `config` gates sections, not validation
+
+`makeClubSchema(config)` takes the config but deliberately ignores it: the required fields and
+their messages are identical for every consumer, ported 1:1 from the admin's old
+`clubValidation.ts`. Only rendering is conditional.
+
+So `showAdmins: false` does not make `admin_user_ids` unvalidated — it was never required. If
+you find yourself wanting a config flag to relax a rule, that means the two surfaces disagree
+about what a valid Club is, which is the drift this package exists to prevent.
+
+## Which builder to call
+
+| You have | Call |
+| --- | --- |
+| A `Club` from the server, want form state | `clubToFormValues(club)` |
+| Form state, want a Create/UpdateClubInput | `buildClubInput(values, { draft, config })` |
+| A brand-new club | `blankClubFormValues` (spread it, never mutate it) |
+
+`blankClubFormValues` is a module-level object, not a factory. Spread it
+(`{ ...blankClubFormValues, club_name }`); assigning into it poisons every later create.
+
+`linesToMedia`, `cleanBullets` and `cleanFaqs` are the pieces `buildClubInput` is made of and
+are exported for tests and for AI-fill paths that need to normalise one field. Prefer
+`buildClubInput` for anything that will be sent to the server.
+
+## Draft vs final submit
+
+`onSubmit` receives `(values, { draft })`. A draft submit — offered on create only — skips the
+Zod resolver entirely and hands over `getValues()`, because a draft is allowed to be
+incomplete. `buildClubInput` translates that into `is_active: !draft` on create; on **edit**
+`draft` is ignored and the toggled `is_active` wins. Do not add your own active/inactive logic
+at the call site.
+
+## Media picker is optional, and changes the UI
+
+Omitting `onPickImage` falls back to a plain newline-separated URL textarea. That fallback is a
+real supported mode (it is what the form renders with no picker wired), not a degraded state —
+`feature_text` and `moments_text` are newline text in the form values either way, and
+`linesToMedia` classifies each URL as `VIDEO` for `.mp4/.mov/.webm` and `IMAGE` otherwise.
+
+## Peer dependencies, not dependencies
+
+MUI, React, react-hook-form, Zod, `@hookform/resolvers`, Apollo and `graphql` are all peers.
+The package resolves them from the consuming portal so there is exactly one MUI and one
+react-hook-form instance in the bundle — two copies of RHF means `FormProvider` context does
+not reach the sections and every field silently reads `undefined`. Its only real dependencies
+are `@duncit/category` and `@duncit/location`, which supply the cascade pickers in the Basic
+section.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 over `src/**` (index barrels excluded). A new branch in
+a section component fails the package's own `test:coverage`, so add the test with the branch.
+The admin portal additionally keeps `club.form.cy.ts` exercising `buildClubInput` and
+`clubToFormValues` against portal-shaped data.

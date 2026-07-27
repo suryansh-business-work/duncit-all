@@ -1,0 +1,132 @@
+---
+name: '@duncit/theme'
+summary: 'The Duncit console design system — design tokens, the MUI theme builder, every component override, and a drop-in provider with persisted light/dark mode.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'packages/shell'
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/challenge-portal'
+  - 'portals/crm'
+  - 'portals/developers'
+  - 'portals/employee'
+  - 'portals/finance'
+  - 'portals/hr'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'tokens'
+  - 'Tokens'
+  - 'createDuncitTheme'
+  - 'buildTheme'
+  - 'buildThemeCtx'
+  - 'buildComponents'
+  - 'ComponentExtend'
+  - 'DuncitThemeProvider'
+  - 'useColorMode'
+  - 'AccentColors'
+  - 'ColorMode'
+  - 'ThemeCtx'
+---
+
+## Why this exists
+
+Every portal used to call `createTheme` in its own `main.tsx` with its own hex codes, its own
+border radius and its own `MuiButton` override. Eighteen copies of "what a Duncit card looks
+like" drift the moment one of them is touched: a slightly different border in dark mode, a
+different `MuiPaper` elevation, a chip that is `rounded` here and `square` there.
+
+Now there is one theme and one set of overrides. **Only the brand `accent` differs per portal.**
+Everything else — ink, muted text, borders, surfaces, the app background gradient — is derived
+from `tokens` by `buildThemeCtx`, so no override file contains a literal colour.
+
+## Use it
+
+From `packages/shell/src/mountPortal.tsx`, which is how all eighteen portals get their theme:
+
+```tsx
+import { DuncitThemeProvider } from '@duncit/theme';
+
+<DuncitThemeProvider
+  accent={config.accent}
+  storageKey={config.colorModeKey}
+  extend={themeExtend}
+>
+  {children}
+</DuncitThemeProvider>;
+```
+
+Reading or flipping the mode from a component (`packages/shell/src/chrome/AppHeader.tsx`):
+
+```tsx
+import { tokens, useColorMode } from '@duncit/theme';
+
+const { mode, toggle } = useColorMode();
+<IconButton onClick={toggle} sx={{ color: tokens.dark.ink }} />;
+```
+
+## Do not call `createTheme` in a portal
+
+`DuncitThemeProvider` already builds the theme, applies `CssBaseline` and provides the colour
+mode. A portal that calls `createDuncitTheme` and wraps its own `ThemeProvider` gets a second
+theme object and loses the persisted mode toggle.
+
+`createDuncitTheme(mode, accent, extend)` is for tests, Storybook-style previews, and the
+provider itself. `buildTheme` is a **back-compat alias for the same function** — portals
+historically imported that name. Prefer `createDuncitTheme` in new code; do not treat them as
+two variants.
+
+## `extend`, not a fork
+
+A portal that needs an override requiring its own dependency — CRM's `MuiDataGrid` is the live
+case — passes `extend: (ctx) => ({ MuiDataGrid: … })`. It receives the same derived `ThemeCtx`,
+so the one-off override uses the same ink, border and surface values as everything else, and
+the shared package never grows a dependency only one portal has.
+
+The extend result is spread **last** in `buildComponents`, so it wins over the shared overrides
+for the same component key. That is deliberate, and also why it should stay small: an `extend`
+that redefines `MuiButton` has re-introduced exactly the drift this package removed.
+
+## `storageKey` must be unique per portal
+
+The chosen mode is persisted to `localStorage` under `storageKey` (default
+`duncit_color_mode`). All portals are served from `*.duncit.com` subdomains, so two portals
+sharing a key would only be an issue on a shared origin — but tests share one jsdom origin,
+which is why every shell test passes its own key (`hdr_light`, `shell_test`). Pass
+`config.colorModeKey`, never the default.
+
+`defaultMode` is `'dark'`. It applies only on first load when nothing is stored.
+
+## Never hardcode a colour or a size
+
+`tokens` is the single source of truth: the neutral ramp, the semantic status colours, light
+surfaces, their dark counterparts, radii and fonts. Component styles read them through
+`ThemeCtx` (`ctx.ink`, `ctx.border`, `ctx.surface`, `ctx.appBg`, `ctx.surfaceGradient`), which
+`buildThemeCtx(mode, accent)` computes once per theme build.
+
+If you need a colour in a portal, take it from `tokens` or from the MUI theme — a hex literal
+in a `sx` prop is the drift starting over. If the value genuinely does not exist yet, add it to
+`tokens` so every surface gets it.
+
+## Scope: consoles only
+
+This is the **console** design system. mWeb and the public Astro websites are deliberately not
+consumers — mWeb has its own MUI theme, and the native app uses Tamagui (rule 29). Do not
+import `@duncit/theme` into either; the token values are tuned for dense admin surfaces, not
+for the member-facing product.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 with `src/index.ts` and the `src/**/index.ts` barrels
+excluded. Adding a component override means adding the test that renders it in both modes —
+every override builder branches on `ctx.isDark`, so a light-only test cannot pass the gate.

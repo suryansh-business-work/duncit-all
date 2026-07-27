@@ -1,0 +1,151 @@
+---
+name: '@duncit/app-settings'
+summary: 'The Apollo adapter for admin-configured display settings — one PublicAppSettings query, the shared date formatter, feature flags and the locale provider.'
+category: 'platform'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'packages/shell'
+  - 'portals/admin'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/website-app'
+exports:
+  - 'useDateFormat'
+  - 'PUBLIC_APP_SETTINGS'
+  - 'useFeatureFlag'
+  - 'PUBLIC_FEATURE_FLAGS'
+  - 'LocaleProvider'
+  - 'AppLocaleProvider'
+  - 'useTranslation'
+  - 'PUBLIC_LOCALES'
+  - 'PUBLIC_TRANSLATIONS'
+---
+
+## Why this exists
+
+Two separate problems, both caused by copies.
+
+**One query, many field sets.** Every surface that renders a date needed
+`publicAppSettings`, so several declared their own `query PublicAppSettings { … }` selecting
+different fields. Apollo normalizes by operation, so two components asking for the same
+operation with different selections make the cache thrash — one write drops the fields the
+other needed and both refetch. `PUBLIC_APP_SETTINGS` here is the single document, and it
+selects the union: date/time format, zone, time source, custom-clock anchor, server time,
+birth-year bounds and draft retention. Adding a public setting means adding a field here, not
+a second query.
+
+**One formatter, many wrappers.** The formatting itself is not in this package — it lives in
+`@duncit/datetime`, which the mobile app also uses. This package is only the Apollo adapter
+that feeds admin settings into `createDateFormatter`. That split is what keeps mWeb and native
+rendering the same wall-clock string (rule 27) even though native talks to the server through
+`graphql-request` and has no Apollo at all.
+
+## Use it
+
+`portals/admin/src/components/DateField.tsx`, and every other portal date field:
+
+```tsx
+import { useDateFormat } from '@duncit/app-settings';
+
+const fmt = useDateFormat();          // browser-local zone, 'hh:mm a' default
+const fmtTz = useDateFormat({ timeZoneAware: true }); // admin's IANA zone, 'HH:mm'
+
+fmt.date(row.created_at);   // configured date pattern
+fmt.dayLabel(row.start_at); // Today / Yesterday / the pattern
+fmt.dayKey(row.start_at);   // 'yyyy-MM-dd', for grouping
+fmt.now();                  // respects the admin's time source
+```
+
+Mounting localization — `app/mweb/src/main.tsx` and `packages/shell/src/mountPortal.tsx` both
+do exactly this:
+
+```tsx
+import { AppLocaleProvider } from '@duncit/app-settings';
+import { MWEB_FALLBACK_FLAT } from './i18n/fallback';
+
+<AppLocaleProvider fallback={MWEB_FALLBACK_FLAT}>
+  <App />
+</AppLocaleProvider>
+```
+
+## `useDateFormat()` vs `useDateFormat({ timeZoneAware: true })`
+
+They are not interchangeable and the default is the *less* correct one for shared content.
+
+- Default (`timeZoneAware` unset) formats in the **browser's** zone, default time pattern
+  `hh:mm a`. Fine for "when did this row change on my screen".
+- `{ timeZoneAware: true }` formats via `date-fns-tz` in the admin-configured `time_zone`
+  (falling back to `Asia/Kolkata`), default time pattern `HH:mm`. This is what mWeb's
+  `useDateFormat` in `app/mweb/src/utils/dateFormat.ts` passes, so a pod's start time reads
+  the same for a host in Delhi and an attendee abroad.
+
+Anything a *second* person also sees — pod times, slot times, event windows — must be
+time-zone aware. All formatters return `''` for empty or unparseable input rather than
+throwing, so no call site needs a guard.
+
+## `AppLocaleProvider` vs `LocaleProvider`
+
+`LocaleProvider` is the primitive: it takes `fallback`, an optional `userLocale` and an
+optional `onLocaleChange`. `AppLocaleProvider` is `LocaleProvider` pre-wired to
+`useUserData().user?.locale` from `@duncit/user-context`, so the language follows the
+**account** and not the browser.
+
+Use `AppLocaleProvider` unless you are rendering above the `UserProvider` — it must sit inside
+one. The bug it fixed is easy to reintroduce: the switcher already wrote `profile.locale`
+server-side, but nothing read it back, so the same user on a new device silently got the
+device language again.
+
+Locale precedence is: in-session override → the signed-in user's saved language → the value in
+`localStorage` (`duncit_locale`) → the device language → `en-IN`. The in-session override wins
+so switching language is instant and does not wait on the profile write.
+
+`LocaleProvider` also stamps `document.documentElement.dir` and `.lang`. `dir` is what actually
+flips layout for a locale an admin marked RTL — without the provider mounted, marking a locale
+RTL does nothing visible.
+
+## `useTranslation` does not throw outside a provider
+
+It returns a working translator built from the `fallback` you pass, so a component rendered in
+a test or inside an error boundary shows real copy rather than raw keys — but only if the
+fallback reaches it. Do not call `useTranslation()` bare at a call site. Each surface ships a
+thin wrapper that supplies its bundle once, e.g. `packages/shell/src/i18n/useTranslation.ts`:
+
+```ts
+import { useTranslation as useSharedTranslation } from '@duncit/app-settings';
+import { SHELL_FALLBACK_FLAT } from './fallback';
+
+export function useTranslation() {
+  return useSharedTranslation(SHELL_FALLBACK_FLAT);
+}
+```
+
+A portal's own namespace comes from the `i18nFallback` it passes to `mountPortal`, which the
+provider layers over the shell bundle. Never add `i18next` or a second `t()` (rule 38).
+
+## Re-exports: import from here, not from the transitive package
+
+The index deliberately re-exports the `@duncit/datetime` clock/formatter surface
+(`createClock`, `createDateFormatter`, `resolveNow`, `TIME_SOURCES`, `toTimeSource`, …) and the
+`@duncit/i18n` core (`createTranslator`, `MWEB_BUNDLE`, `SHELL_BUNDLE`, `WEBSITE_BUNDLE`,
+`flattenCatalogue`, `missingKeys`, …). A portal that already depends on `@duncit/app-settings`
+should import them from here rather than adding a second workspace dependency it would then
+also have to add to a Dockerfile COPY line.
+
+## Not for the mobile app
+
+Apollo, `graphql`, `date-fns` and `date-fns-tz` are **peers** — the surface supplies them.
+The native app has no Apollo client (`graphql-request`) and is not a consumer; it takes
+`@duncit/datetime` and `@duncit/i18n` directly. Do not add this package to
+`app/mobile-app/package.json` to reuse a hook — extract the shared part down into `datetime`
+or `i18n` instead.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` (index and barrel files excluded), in a
+`node` environment. A new branch here — an extra fallback, an added option — needs a test in
+`__tests__/` in the same change or the package's `test:coverage` fails.

@@ -1,0 +1,148 @@
+---
+name: '@duncit/location'
+summary: 'The one MUI cascading Country → State → City → Locality picker, sourced strictly from the admin Location DB, plus its RHF wrapper and map embed helpers.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'packages/club-form'
+  - 'portals/crm'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+exports:
+  - 'AdminLocationSelect'
+  - 'RhfAdminLocation'
+  - 'useAdminLocations'
+  - 'useLocationValueFromId'
+  - 'buildLocationValue'
+  - 'buildLocationValueFromNames'
+  - 'ADMIN_LOCATIONS'
+  - 'EMPTY_LOCATION'
+  - 'AdminLocationValue'
+  - 'countryOptions'
+  - 'stateOptions'
+  - 'cityOptions'
+  - 'localityOptions'
+  - 'cityPincode'
+  - 'MapEmbedCard'
+  - 'buildMapQuery'
+  - 'mapEmbedUrl'
+  - 'mapSearchUrl'
+  - 'Fieldset'
+---
+
+## Why this exists
+
+A venue, a club and a CRM lead all have to land on the **same** admin location row, or the
+platform cannot match a venue to a club in that locality later. Every form that let a user type a
+city was a form that produced `Bangalore`, `Bengaluru` and `bengaluru ` as three distinct places.
+
+So the picker is strict: four dropdowns, no free text, every option read from the admin-managed
+Location DB. `portals/partners-app` (register venue), `portals/onboarding` (admin venue create),
+`portals/crm` (lead location field) and `packages/club-form` all render this one component, so a
+change to the cascade rules lands in all four at once.
+
+Runtime deps are zero — MUI, Apollo, React and react-hook-form are **peer** dependencies,
+supplied by the host portal so there is exactly one copy of each in the bundle.
+
+## Use it
+
+Uncontrolled/controlled form value, as in
+`portals/partners-app/src/pages/register-venue-page/sections/VenueDetailsSection.tsx`:
+
+```tsx
+import { AdminLocationSelect, Fieldset, MapEmbedCard, type AdminLocationValue } from '@duncit/location';
+
+const locValue: AdminLocationValue = {
+  location_id: values.location_id ?? '',
+  country: values.country ?? '',
+  country_code: values.country_code ?? '',
+  state: values.state ?? '',
+  state_code: values.state_code ?? '',
+  city: values.city ?? '',
+  locality: values.locality ?? '',
+  pincode: values.postal_code ?? '',
+};
+
+<AdminLocationSelect value={locValue} onChange={handleLocationChange} disabled={locked} />
+```
+
+When the form stores the whole object under one field, use the react-hook-form wrapper instead
+and let Zod validate that object (typically: require `location_id`). From
+`__tests__/RhfAdminLocation.test.tsx`:
+
+```tsx
+import { RhfAdminLocation } from '@duncit/location';
+
+<RhfAdminLocation control={control} name="location" />
+```
+
+It takes every `AdminLocationSelect` prop except `value`, `onChange` and `errors` — those three
+come from the `Controller` — and renders a field-level error message on the City dropdown.
+
+## Which entry point to pick
+
+| You have | Use |
+| --- | --- |
+| One RHF field holding the whole value | `RhfAdminLocation` |
+| Flat form fields (`city`, `state`, …) | `AdminLocationSelect` with a manual `value`/`onChange` |
+| A persisted `location_id` on an edit form | `useLocationValueFromId(id, locality)` |
+| Persisted country/state/city **names** | `buildLocationValueFromNames(locations, names)` |
+| Your own bespoke field layout | `useAdminLocations()` + the `*Options` helpers |
+
+`portals/crm`'s `LocationField` is the last row: it renders `cityOptions` and `localityOptions`
+itself inside a `Fieldset`, rather than taking the full four-level cascade.
+
+## Hydration: id vs names
+
+`useLocationValueFromId` returns `EMPTY_LOCATION` until the admin list has loaded, then fills in
+country/state/city/pincode from the matched doc. Do not treat that first empty render as "the
+user cleared the field" — an effect that writes it back into the form will blank a saved value.
+
+`buildLocationValueFromNames` matches case-insensitively on city (narrowed by state and country
+when present) and, when **nothing** matches an admin row, deliberately returns the saved names
+with an empty `location_id` rather than an empty value. A profile saved before a city existed in
+the Location DB still shows what the user typed instead of silently going blank — but it has no
+`location_id`, which is exactly what a Zod `location_id` requirement should catch on save.
+
+## `@duncit/location` vs `@duncit/geo`
+
+`@duncit/geo` is the offline country/state dataset used by the mWeb and native **profile**
+forms; it has no cities and no admin linkage. Anything that must line up with admin — venue,
+club, pod locality — uses this package. Swapping one for the other produces records that cannot
+be matched.
+
+Note also that this package is MUI-only, so it is a portal/mWeb component. The native app cannot
+import it (rule 29); a native equivalent has to be built on Tamagui against the same
+`ADMIN_LOCATIONS` query.
+
+## The query is shared on purpose
+
+`useAdminLocations` runs `ADMIN_LOCATIONS` with `fetchPolicy: 'cache-first'`, so the small,
+rarely-changing list is fetched once per session and reused by every location field on the page.
+Do not re-declare the query in a portal with `network-only` — that turns one request into one per
+field. `ADMIN_LOCATIONS` is exported for tests and `MockedProvider` mocks; import it rather than
+re-writing the document, or the mock will not match.
+
+The query filters `is_active: true`, so a deactivated admin location disappears from new forms
+while records already pointing at its id keep rendering through `buildLocationValue`.
+
+## Map helpers
+
+`buildMapQuery(parts, lat, lng)` returns `"lat,lng"` when **both** coordinates are present and
+otherwise joins the trimmed, non-empty address parts with `", "` — so a blank locality in the
+middle never produces `"Indiranagar, , Bengaluru"`. `mapEmbedUrl` builds the iframe `src` and
+`mapSearchUrl` the "open in Maps" deep link; `MapEmbedCard` renders both together and takes
+`parts` / `lat` / `lng` / `query` directly.
+
+`mapEmbedUrl` works **without** an API key: with no `apiKey` it falls back to the keyless
+`maps.google.com?output=embed` map (zoom 14 instead of 15). Do not gate the map behind a
+configured key — pass `hideWhenKeyMissing` on the card only when a keyed map is genuinely
+required.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` (barrels excluded) in a `jsdom` environment
+with `__tests__/setup.ts`. A new branch in the cascade — a level that clears its children, a
+disabled state — needs a test in the same commit or the package gate fails.

@@ -1,0 +1,140 @@
+---
+name: '@duncit/media-picker'
+summary: 'The one ImageKit + Pexels media dialog, the upload plumbing behind it, and the ready-made MUI upload fields every portal and mWeb render.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/crm'
+  - 'portals/finance'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/website-app'
+  - 'packages/ad-request-form'
+exports:
+  - 'MediaPickerDialog'
+  - 'SingleImageUploadField'
+  - 'AttachmentUploadField'
+  - 'AttachmentPreview'
+  - 'useImagekitDirectUpload'
+  - 'useImagekitBase64Upload'
+  - 'directUploadToImagekit'
+  - 'uploadImageToImagekit'
+  - 'compressUploadedVideo'
+  - 'useUploadSettings'
+  - 'validateFile'
+  - 'describeAttachment'
+---
+
+## Why this exists
+
+Every surface that lets a user attach an image had its own copy of the same three things: a
+`<Dialog>` with device / Pexels-photo / Pexels-video tabs, an `uploadImage` mutation call, and a
+size check. Eleven copies of the upload path means eleven places that keep a stale cap after
+Admin > Upload Settings changes one.
+
+The copies are now re-export shims — `app/mweb/src/components/MediaPickerDialog.tsx`,
+`portals/admin/src/components/MediaPickerDialog.tsx`, `portals/marketing/...`,
+`portals/onboarding/...` are all literally `export { default } from '@duncit/media-picker';`.
+The GraphQL documents live here too (`UPLOAD_IMAGE`, `GET_IMAGEKIT_AUTH`, `UPLOAD_SETTINGS`), so
+a portal never hand-rolls the upload mutation; `portals/admin/src/pages/upload-settings/queries.ts`
+re-exports `UPLOAD_SETTINGS` rather than declaring it again.
+
+## Use it
+
+The ready-made field is the common case — it owns the file input, the preview, the ImageKit
+upload and the error text. From `portals/crm/src/forms/fields/ImageUploadField.tsx`:
+
+```tsx
+import { SingleImageUploadField } from '@duncit/media-picker';
+
+<SingleImageUploadField
+  variant="avatar"
+  label={label}
+  value={field.value ?? ''}
+  onChange={field.onChange}
+  folder="crm"
+  shape="square"
+  maxBytes={8 * 1024 * 1024}
+  oversizeMessage={() => 'Max 8MB. Compress and try again.'}
+  fallbackMimeType="image/png"
+  uploadTestId={`upload-${name}`}
+/>
+```
+
+For a free-form pick (device, Pexels photo or Pexels video) render the dialog itself:
+
+```tsx
+import MediaPickerDialog from '@duncit/media-picker';
+
+<MediaPickerDialog
+  open={open}
+  onClose={close}
+  onPicked={(url) => form.setValue('image_url', url)}
+  folder="/pods"
+  surface="PORTALS"
+/>
+```
+
+## Two upload paths — pick the right one
+
+| Export | Transport | Use for |
+| --- | --- | --- |
+| `useImagekitBase64Upload` / `uploadImageToImagekit` | base64 through the `uploadImage` server mutation | images, small files |
+| `useImagekitDirectUpload` / `directUploadToImagekit` | signed auth from `getImagekitAuth`, then a direct XHR to ImageKit | videos, reels, anything large |
+
+The base64 path is bounded by the API request-body limit and a 50 MB server-side video cap. Pod
+reels and status videos exceed both, so `app/mweb/src/pages/create-pod-page/create-pod/fields/PodReelAccordion.tsx`
+uses the direct path and gets real byte progress:
+
+```tsx
+const { upload, uploading } = useImagekitDirectUpload();
+const rawUrl = await upload(file, '/pods/reels', setPct);
+const url = await compressUploadedVideo(client, rawUrl, '/pods/reels', 'MWEB', setPct);
+```
+
+`compressUploadedVideo` runs **after** the raw upload — it takes the uploaded URL, not the `File`.
+
+## Upload Settings are admin data, not constants
+
+`validateFile` carries static fallbacks (15 MB image, 100 MB video, 50 MB document) but takes a
+`FileCaps` override. `useUploadSettings(surface)` loads the admin-managed row for
+`'PORTALS' | 'MOBILE' | 'MWEB'`; it returns `null` until the query resolves, and a component that
+treats `null` as "no limits" will accept a file the server then rejects. Pass the caps down, or let
+`SingleImageUploadField` / `MediaPickerDialog` do it — they already read the settings for the
+`surface` you give them.
+
+Crop presets come from the same row. Use `croppablePresets` to filter out the disabled ones and
+`presetAspect` for the aspect ratio — a preset with `width: 0, height: 0` means *No Crop* and must
+not be divided.
+
+## MUI only — this package must never reach the native app
+
+`@mui/material`, `@mui/icons-material`, `@apollo/client` and `react` are **peer** dependencies, and
+`react-easy-crop` is a real dependency. The mobile app cannot import any of it; native media
+picking is a separate Tamagui/Expo path. Nothing here is safe to put behind a shared "media" export
+that both twins consume.
+
+## Attachments vs images
+
+`SingleImageUploadField` is images only. Documents (venue papers, pod bills) go through
+`AttachmentUploadField` with `ATTACHMENT_ACCEPT_ALL`, as in
+`app/mweb/src/pages/host-manage-page/pod-complete/BillUploadField.tsx`. To render an already-stored
+attachment, use `AttachmentPreview`; to classify a bare URL first, `describeAttachment(url)` returns
+the `image | video | doc` kind, display name and extension. Do not re-derive that from the URL
+string at the call site — the extension normalisation (`jpeg` → `jpg`) lives in one place.
+
+## Coverage gate
+
+`vitest.config.ts` sets 100/100/100/100, but `coverage.include` is `['src/utils.ts']` only. The
+gate is real for the pure validation logic; the MUI/Apollo dialog is covered by the portals'
+Cypress flows instead. Adding a new pure helper to `src/utils.ts` therefore requires tests for
+every branch, while adding one to a `.tsx` does not — an asymmetry worth knowing before you decide
+where a helper goes.

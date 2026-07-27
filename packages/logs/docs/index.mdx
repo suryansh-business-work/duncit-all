@@ -1,0 +1,145 @@
+---
+name: '@duncit/logs'
+summary: 'One structured logger for every surface — logs.<app>.<level>(page, component, detail) — that stamps environment, platform, url and a serialized error and ships it to SignOz.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'packages/shell'
+  - 'portals/*'
+  - 'website/*'
+exports:
+  - 'logs'
+  - 'createLogger'
+  - 'configureLogs'
+  - 'httpTransport'
+  - 'consoleTransport'
+  - 'serializeError'
+  - 'detectEnvironment'
+  - 'APPS'
+  - 'PORTALS'
+  - 'WEBSITES'
+  - 'LogRecord'
+  - 'LogDetail'
+---
+
+## Why this exists
+
+`console.error(e)` in twenty-five workspaces is twenty-five different shapes on the wire. The
+tech portal's Bugs view fingerprints an issue by **source + page + normalized message**; that
+only works if every surface emits the same record, with the same attribute names, from web,
+React Native, an Astro site and the server.
+
+So there is one record type (`LogRecord`), one funnel (`emit`), and the identity of every console
+lives in one list (`PORTALS`, `WEBSITES` in `src/config.ts`). Add a portal there and it gets a
+`logs.portal.<name>` logger automatically — there is nowhere else to register it.
+
+Zero runtime dependencies, and a `react-native` entry in package.json, because the same module is
+imported by Vite portals, Metro (`app/mobile-app`) and Astro builds.
+
+## Use it
+
+Configure the transport once, at startup. mWeb (`app/mweb/src/main.tsx`) and the shell
+(`packages/shell/src/mountPortal.tsx`) let the browser supply environment/url/host:
+
+```ts
+import { configureLogs, httpTransport } from '@duncit/logs';
+
+configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')), {
+  platform: 'web',
+  portal: config.key,
+});
+```
+
+Native has no `location`, so `app/mobile-app/App.tsx` derives them from the API base URL:
+
+```ts
+configureLogs(httpTransport(`${appConfig.apiUrl}/logs`), {
+  platform: 'native',
+  os: DEVICE_OS,                                   // 'ios' | 'android' | 'web'
+  environment: detectEnvironment(appConfig.apiUrl),
+  url: () => appConfig.apiUrl,
+  host: () => new URL(appConfig.apiUrl).host,
+});
+```
+
+Then log from any file — `(page, component, detail)`:
+
+```ts
+import { logs } from '@duncit/logs';
+
+logs.mWeb.error('ProfileAvatar', 'onFileChange', { error });
+logs.mobileApp.warn('useUploadSettings', 'fetch', { error, surface });
+logs.portal.crm.info('leads-page', 'export', { count });
+```
+
+Or bind a file-level logger once, which is the preferred form in a portal:
+
+```ts
+const log = createLogger('portal', 'crm');
+log.error('/checkout', 'PaymentForm', { error, orderId });
+```
+
+## The detail bag: `error` is special, everything else is `data`
+
+`emit` pulls `error` (or the alias `err`) out of the detail object, runs it through
+`serializeError`, and puts the **rest** in `record.data`. So:
+
+```ts
+log.error('/checkout', 'PaymentForm', { error: e, orderId });
+// → record.error = { name, message, stack }, record.data = { orderId }
+```
+
+Pass the thrown value under `error`, never as a pre-formatted string — you lose the stack, and
+the Bugs view fingerprint changes with every interpolated id, forking one bug into thousands of
+rows.
+
+`serializeError` handles non-`Error` throws too: a plain object becomes `JSON.stringify`'d, and a
+circular/BigInt object becomes the **fixed** string `'[unserializable object]'`. That constant is
+deliberate — listing the object's keys would put caller field names like `password` and
+`refresh_token` on the wire, and would make the fingerprint key-dependent. It must stay byte-
+identical to the server's copy in `server/src/observability/log.ts`; the two are halves of one
+wire contract.
+
+## Logging never throws, and never blocks
+
+`emit` wraps everything in `try {} catch {}`, and `httpTransport` fires a `keepalive` POST whose
+promise is `.catch()`-swallowed. A dead ingest endpoint degrades to nothing — it must never take
+a screen down. Do not `await` a log call; the level functions return `void`.
+
+Before `configureLogs` runs, the active transport is `consoleTransport`, so logs emitted during
+module init are still visible locally rather than lost.
+
+## `logs.*` vs `createLogger`
+
+| | Use |
+| --- | --- |
+| `logs.mWeb` / `logs.mobileApp` / `logs.server` | the three fixed apps |
+| `logs.portal.<key>` / `logs.website.<key>` | a portal or Astro site, key from `PORTALS`/`WEBSITES` |
+| `createLogger(app, portal?)` | a bound per-file `log`, or a workspace not in the lists |
+
+`configureLogs({ portal })` stamps the portal identity on records whose bound logger did **not**
+set one, so a shared package logging via a generic logger still carries the portal it ran in.
+
+## `detectEnvironment` — one classifier, no per-app string checks
+
+`localhost` / `127.*` / `*.local` / `::1` / empty → `'localhost'`; any host containing `staging`
+→ `'staging'`; everything else → `'production'`. It accepts a bare host **or** a full URL, and
+strips a trailing `:port`. That last rule is what makes `staging.crm.duncit.com` (rule 32's
+replica stack) land in its own SignOz bucket instead of polluting production.
+
+Do not re-implement the check in an app — pass the API URL to `detectEnvironment`, as native
+does.
+
+## Coverage and Docker
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` with barrels excluded, so a new branch in
+`detectEnvironment` or `serializeError` needs a test in the same commit.
+
+`packages/logs/dist/` is gitignored and irrelevant: package.json resolves `main`, `module`,
+`react-native` and `types` to `./src/index.ts`. Services that consume it in Docker must `COPY
+packages/logs/package.json` (and its `src/`) into the build context, or the image fails to
+install while the local build passes.

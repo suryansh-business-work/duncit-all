@@ -1,0 +1,56 @@
+---
+import { getCollection, render } from 'astro:content';
+import DocsLayout from '../layouts/DocsLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('packages');
+  return entries.map((entry) => ({
+    params: { slug: entry.id.split('/')[0] },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const dir = entry.id.split('/')[0];
+
+const tags = [
+  entry.data.zeroDeps ? 'zero runtime deps' : null,
+  entry.data.frameworkFree ? 'framework-free' : null,
+  entry.data.coverageGate ? '100% coverage gate' : null,
+  `packages/${dir}`,
+].filter(Boolean);
+---
+
+<DocsLayout title={entry.data.name} subtitle={entry.data.summary} activeDir={dir}>
+  <ul class="tags">
+    {tags.map((tag) => <li>{tag}</li>)}
+  </ul>
+
+  {
+    entry.data.exports.length > 0 && (
+      <>
+        <h2>Exports</h2>
+        <p>
+          {entry.data.exports.map((name, index) => (
+            <>
+              {index > 0 && ', '}
+              <code>{name}</code>
+            </>
+          ))}
+        </p>
+      </>
+    )
+  }
+
+  {
+    entry.data.consumers.length > 0 && (
+      <>
+        <h2>Imported by</h2>
+        <p>{entry.data.consumers.join(', ')}</p>
+      </>
+    )
+  }
+
+  <Content />
+</DocsLayout>

@@ -1,0 +1,55 @@
+---
+import { getCollection } from 'astro:content';
+import DocsLayout from '../layouts/DocsLayout.astro';
+
+const entries = await getCollection('packages');
+const rows = entries
+  .map((entry) => ({ dir: entry.id.split('/')[0], ...entry.data }))
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const categories = [...new Set(rows.map((row) => row.category))].sort((a, b) => a.localeCompare(b));
+const zeroDepCount = rows.filter((row) => row.zeroDeps).length;
+const gatedCount = rows.filter((row) => row.coverageGate).length;
+---
+
+<DocsLayout
+  title="Shared packages"
+  subtitle={`${rows.length} packages, ${zeroDepCount} with no runtime dependency, ${gatedCount} holding their own 100% coverage gate. Each page is generated from the MDX that package ships in its own docs/ folder.`}
+>
+  <p>
+    Before adding a helper anywhere, check here first — anything used in more than two places belongs
+    in one of these, not copied a third time.
+  </p>
+
+  {
+    categories.map((category) => (
+      <section>
+        <h2>{category}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Package</th>
+              <th>What it gives you</th>
+              <th>Used by</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows
+              .filter((row) => row.category === category)
+              .map((row) => (
+                <tr>
+                  <td>
+                    <a href={`/${row.dir}`}>{row.name}</a>
+                    {row.zeroDeps && <div style="font-size:11px;opacity:.6">zero deps</div>}
+                    {row.frameworkFree && <div style="font-size:11px;opacity:.6">framework-free</div>}
+                  </td>
+                  <td>{row.summary}</td>
+                  <td style="font-size:13px">{row.consumers.join(', ') || '—'}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </section>
+    ))
+  }
+</DocsLayout>

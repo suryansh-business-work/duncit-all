@@ -1,0 +1,141 @@
+---
+name: '@duncit/forms'
+summary: 'The RHF + Zod scaffold every portal form is built from: MUI text fields wired to react-hook-form, reusable Zod field rules, and the shared validation patterns.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/crm'
+  - 'portals/marketing'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/tech'
+  - 'portals/website-app'
+  - 'packages/ad-request-form'
+exports:
+  - 'RhfTextField'
+  - 'FormField'
+  - 'zodRules'
+  - 'validationRules'
+  - 'optionalText'
+  - 'requiredText'
+  - 'optionalUrl'
+  - 'SLUG_KEY_PATTERN'
+  - 'PERSON_NAME_PATTERN'
+  - 'PHONE_NUMBER_PATTERN'
+  - 'GSTIN_PATTERN'
+---
+
+## Why this exists
+
+Rule 10 puts every portal on react-hook-form + Zod, and every portal arrived there separately.
+The result was a `components/FormField.tsx` in admin, another in crm, another in support — and
+a `forms/validation` module in each holding its own `email`, `password` and `personName` Zod
+builders. Same rules, different error strings, and a fix to the email length cap landed in one
+portal at a time.
+
+The rules here are the **union** of those copies, which is why several take an options object:
+crm reported "too long" before "enter a valid email" and support used `required_error` rather
+than `min(1)`. Both spellings survive as flags (`lengthFirst`, `requiredError`) so the portals
+could adopt one module without changing a single user-visible message.
+
+## Use it
+
+Schema — `portals/admin/src/pages/users-page/create-user/create-user.form.ts`:
+
+```ts
+import { z } from 'zod';
+import { zodRules } from '@duncit/forms';
+
+export const createUserSchema = z.object({
+  first_name: zodRules.personName('First name'),
+  last_name: zodRules.personName('Last name'),
+  email: zodRules.optionalEmail('Email'),
+  phone_extension: zodRules.phoneExtension('Phone code'),
+  phone_number: zodRules.phoneNumber('Phone number'),
+  city: zodRules.optionalText('City', 80),
+  zone: zodRules.optionalText('Zone', 80),
+});
+```
+
+Field — the dialog that renders it:
+
+```tsx
+import { RhfTextField } from '@duncit/forms';
+
+<RhfTextField control={control} name="first_name" label="First name" hint="As on ID" />;
+```
+
+Every rule takes the field's **label** as its first argument and builds the message from it, so
+`personName('First name')` says "First name is required". Pass the label the user actually
+sees, not the schema key.
+
+## `RhfTextField` vs `FormField`
+
+`RhfTextField` is the one to use in new code. `FormField` is the legacy wrapper kept for the
+portals that adopted it first — crm's lead-form sections are all built on it — and it differs
+in two ways:
+
+- `control` is **optional**; it falls back to the surrounding `FormProvider`. `RhfTextField`
+  always takes an explicit `control`.
+- It has an `errorMode`: `'always'` (default, the admin/crm behaviour) surfaces the error
+  immediately; `'touchedOrDirty'` waits for interaction (the support behaviour).
+
+Do not migrate a working `FormField` call site just to change the import — the error-display
+timing is user-visible and `RhfTextField` has no `errorMode`.
+
+Both default `fullWidth` to `true` and both coerce `value ?? ''`, because an uncontrolled MUI
+input that later receives a value logs React's controlled/uncontrolled warning. Both also fall
+back to `' '` for `helperText`, so the field's height does not jump when an error appears —
+supply a real `hint` instead of relying on that space.
+
+## Rule options exist to preserve messages, not to configure behaviour
+
+| Option | What it changes |
+| --- | --- |
+| `email(label, { lengthFirst })` | Runs the 254-char cap before the format check, so over-long garbage reports "too long" |
+| `password(label, { required })` | Prepends `min(1, '<label> is required')` |
+| `password(label, { requiredError })` | Puts the required message on the base string — only differs when the parsed value is `undefined` |
+| `optionalText` / `optionalUrl` `{ defaultEmpty }` | Appends `.default('')` so `undefined` parses to `''` |
+
+Reach for one only when matching an existing portal's wording. A new form should take the
+defaults; adding a fourth spelling of "email is required" is the thing this package exists to
+stop.
+
+`optionalEmail` is a union with `z.literal('')`, so blank passes and a filled value is
+lowercased. It is not `email().optional()` — that would reject `''`, which is what an empty
+MUI input actually submits.
+
+`optionalUrl(label, allowRelative)` accepts `http:`, `https:`, `mailto:` and `tel:` only, plus
+a leading-slash relative path when `allowRelative` is true. It parses with `URL` rather than a
+regex, so a protocol outside that set fails even though it looks well-formed.
+
+## Patterns here vs `@duncit/regex`
+
+`src/patterns.ts` is the superset of the per-portal `forms/validation` constants, copied
+verbatim so no portal's validation changed on adoption. That means some of it overlaps
+`@duncit/regex` — `PHONE_NUMBER_PATTERN` is `/^\d{6,15}$/`, the same range as that package's
+`PHONE_INTL`.
+
+Rule of thumb: if a rule is shared with mWeb, native or the server, the pattern belongs in
+`@duncit/regex` (which is zero-dep and framework-free and ships prebuilt for Metro). These
+exports are for portal leaf-form schemas — `SLUG_KEY_PATTERN` for role and pod-plan keys,
+`PAN_PATTERN`, `AADHAR_PATTERN`, `GSTIN_PATTERN`, `OTP_PATTERN`, `POSTAL_CODE_PATTERN`.
+
+`GSTIN_PATTERN` here is the correct 15-character form with the literal `Z` in position 14 —
+the same shape as `@duncit/regex`'s `GSTIN`, and **not** mWeb checkout's 14-character variant,
+which rejects every valid GSTIN. Do not copy that one in.
+
+## Peers and coverage
+
+MUI, React, react-hook-form and Zod are peer dependencies — the package has no runtime
+dependencies. Two copies of react-hook-form in a bundle means `FormField`'s `FormProvider`
+lookup finds a different context than the one `useForm` populated, and every field silently
+renders empty; keeping RHF a peer is what prevents that.
+
+`vitest.config.ts` enforces 100/100/100/100 over `src/**`. Every option flag above is a branch,
+so adding one means adding its test.

@@ -23,4 +23,5 @@ packages:
   - portals/developers
   - website/status-website
   - website/earnwith-website
+  - docs-site
   - packages/*

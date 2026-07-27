@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+      # `staging` is where rule 32 says everything is verified before it reaches
+      # main, so scanning only main meant the gate could not be checked until
+      # after the merge that was supposed to depend on it. This is the same
+      # thing the workflow_dispatch escape hatch below was added to do by hand.
+      # SonarQube Community has no branch analysis, so a staging scan replaces
+      # the project's single analysis — which is the intent: staging is what is
+      # about to become main. The concurrency group above cancels a superseded
+      # scan, so a burst of staging pushes still costs one run.
+      - staging
   # Run it by hand from the Actions tab ("Run workflow") against ANY branch —
   # the automatic scan only fires on main, so without this a staging cleanup is
   # invisible in SonarQube until it is merged.

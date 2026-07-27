@@ -42,9 +42,6 @@ export function configureLogs(transport: Transport, ctx?: Partial<LogContext>): 
   if (ctx) context = { ...context, ...ctx };
 }
 
-/** Every non-nullish, non-object thrown value — each of these has its own toString(). */
-type ThrownPrimitive = string | number | boolean | bigint | symbol | ((...args: unknown[]) => unknown);
-
 /**
  * Stand-in for an object JSON.stringify refuses (circular refs, BigInt).
  *
@@ -70,7 +67,9 @@ export function serializeError(err: unknown): SerializedError | undefined {
       return { name: 'Object', message: UNSERIALIZABLE_MESSAGE };
     }
   }
-  return { name: typeof err, message: String(err as ThrownPrimitive) };
+  // Narrowed by the guards above to a non-nullish, non-object value, each of
+  // which has its own toString() — so this never yields '[object Object]'.
+  return { name: typeof err, message: String(err) };
 }
 
 function currentHost(): string | undefined {

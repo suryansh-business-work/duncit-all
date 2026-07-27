@@ -186,6 +186,19 @@ jobs:
       # slack) were never in it, so their coverage was thrown away too. The
       # filesystem is the one source of truth (rule 34); a new package needs no
       # edit here to be counted.
+      # The new-code period is PREVIOUS_VERSION, but no sonar.projectVersion was
+      # ever passed — so Sonar had no previous version to diff against and
+      # treated the ENTIRE codebase as new: 184,333 "new" lines, which is why
+      # new_coverage read as a whole-repo figure instead of a figure for the code
+      # actually being changed. The repo already carries a per-commit version
+      # (rule 33) and deploy.yml reads it exactly this way.
+      #
+      # NOTE: the first analysis carrying a version has nothing before it to
+      # compare with, so the new-code window only becomes meaningful from the
+      # scan after this one.
+      - name: Resolve project version
+        run: echo "SONAR_PROJECT_VERSION=$(node -p "require('./app/mobile-app/app.json').expo.version")" >> "$GITHUB_ENV"
+
       - name: Normalize lcov paths
         if: ${{ !inputs.skip_coverage }}
         run: |
@@ -210,7 +223,9 @@ jobs:
           # The set actually present on disk (see "Normalize lcov paths" above).
           # Left empty on a skip_coverage run so the scan still publishes rather
           # than being handed an empty reportPaths and reporting a false 0%.
-          args: ${{ env.SONAR_LCOV_PATHS && format('-Dsonar.javascript.lcov.reportPaths={0}', env.SONAR_LCOV_PATHS) || '' }}
+          args: >-
+            -Dsonar.projectVersion=${{ env.SONAR_PROJECT_VERSION }}
+            ${{ env.SONAR_LCOV_PATHS && format('-Dsonar.javascript.lcov.reportPaths={0}', env.SONAR_LCOV_PATHS) || '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client';
 import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 import { usePricing } from '../../../../hooks/usePricing';
 import { POTENTIAL_POD_EARNINGS, type EarningsProjection } from './queries';
 import ChargesAccordion from './ChargesAccordion';
@@ -17,8 +18,6 @@ interface Props {
   venueId: string | null;
   isPhysical: boolean;
 }
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Debounced (400ms) copy of the pricing inputs so typing doesn't spam the API.
  * Both are primitives, so the effect only re-runs on a real value change. */
@@ -55,8 +54,8 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
   const projection: EarningsProjection | undefined = data?.potentialPodEarnings;
   const w = projection?.waterfall;
 
-  const money = (value: number) => `${currency}${round2(value).toLocaleString('en-IN')}`;
-  const fmt = (value: number) => `${currency}${(Number(value) || 0).toFixed(2)}`;
+  // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
+  const fmt = (value: number) => formatStatementMoney(value, currency);
 
   const breakdown = () => {
     if (podAmount <= 0 || noOfSpots <= 0) {
@@ -80,21 +79,31 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
     if (!w || !projection || stale) {
       return loading || stale ? <CircularProgress size={18} /> : null;
     }
+    // Every number below is a server waterfall value — the statement builder
+    // only groups them and spells out the formulas.
+    const statement = buildEarningsStatement(w, { has_venue: hasVenue, symbol: currency });
     return (
       <Stack spacing={1.25}>
-        <Stack direction="row" justifyContent="space-between" spacing={2}>
-          <Typography variant="body2" fontWeight={800}>
-            Total collection ({money(podAmount)} × {projection.payable_spots})
-          </Typography>
-          <Typography variant="body2" fontWeight={900} color="success.main">
-            {fmt(w.amount)}
+        <Stack spacing={0.25}>
+          <Stack direction="row" justifyContent="space-between" spacing={2}>
+            <Typography variant="body2" fontWeight={800}>
+              Total collection ({fmt(podAmount)} × {projection.payable_spots})
+            </Typography>
+            <Typography variant="body2" fontWeight={900} color="success.main">
+              {fmt(w.amount)}
+            </Typography>
+          </Stack>
+          <Typography variant="caption" color="text.secondary" data-testid="price-panel-included-gst">
+            {statement.collection.included_gst_note}
           </Typography>
         </Stack>
-        <ChargesAccordion waterfall={w} hasVenue={hasVenue} money={fmt} />
+        <ChargesAccordion statement={statement} money={fmt} />
         <PayoutCard
           amount={fmt(w.host_receives)}
           payingPax={projection.payable_spots}
           earnPct={w.host_earn_pct}
+          collection={fmt(statement.net_payout.collection)}
+          totalDeductions={fmt(statement.net_payout.total_deductions)}
         />
       </Stack>
     );

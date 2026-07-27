@@ -1,63 +1,27 @@
 import { useState, type ReactNode } from 'react';
-import { Box, ButtonBase, Collapse, Stack, Typography } from '@mui/material';
+import { Alert, Box, ButtonBase, Collapse, Stack, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
-import type { EarningsWaterfall } from './queries';
+import type { EarningsStatement, StatementLine } from '@duncit/utils';
 
-const round2 = (n: number) => Math.round(n * 100) / 100;
-
-export interface ChargeLine {
-  label: string;
-  value: number;
-}
-
-/** The two nested charge groups + their totals, grouped exactly as settled:
- * platform-side lines vs the venue-side lines. Without a venue the Duncit
- * commission joins the platform group (there is no venue group to carry it). */
-export function buildChargeGroups(w: EarningsWaterfall, hasVenue: boolean) {
-  const gstLines: ChargeLine[] = [
-    { label: `GST (${w.gst_pct}%)`, value: w.gst_amount },
-    { label: `Platform Fee (${w.platform_fee_pct}%)`, value: w.platform_fee_amount },
-  ];
-  if (w.club_admin_amount > 0) {
-    gstLines.push({ label: `Club Admin (${w.club_admin_pct}%)`, value: w.club_admin_amount });
-  }
-  if (!hasVenue) {
-    gstLines.push({
-      label: `Duncit Commission (${w.host_commission_pct}%)`,
-      value: w.host_commission_amount,
-    });
-  }
-  const venueLines: ChargeLine[] = hasVenue
-    ? [
-        { label: 'Venue slot price', value: w.venue_amount },
-        {
-          label: `Duncit Commission from Venue (${w.host_commission_pct}%)`,
-          value: w.host_commission_amount,
-        },
-      ]
-    : [];
-  const sum = (lines: ChargeLine[]) => round2(lines.reduce((total, line) => total + line.value, 0));
-  return {
-    gstLines,
-    venueLines,
-    gstTotal: sum(gstLines),
-    venueTotal: sum(venueLines),
-    totalDeductions: round2(w.amount - w.host_receives),
-  };
-}
-
-function ChargeRow({ label, value, money }: Readonly<{ label: string; value: number; money: (n: number) => string }>) {
+/** One auditable row: label + amount, with the formula that produced it
+ * underneath. Context rows (the taxable base) render muted, not bold. */
+function ChargeRow({ line, money }: Readonly<{ line: StatementLine; money: (n: number) => string }>) {
   return (
-    <Stack direction="row" justifyContent="space-between" spacing={2} sx={{ px: 1.5, py: 0.75 }}>
-      <Typography variant="body2" color="text.secondary">
-        • {label}
+    <Box sx={{ px: 1.5, py: 0.75 }}>
+      <Stack direction="row" justifyContent="space-between" spacing={2}>
+        <Typography variant="body2" color={line.deduction ? 'text.primary' : 'text.secondary'}>
+          {line.label}
+        </Typography>
+        <Typography variant="body2" fontWeight={line.deduction ? 700 : 500}>
+          {money(line.amount)}
+        </Typography>
+      </Stack>
+      <Typography variant="caption" color="text.secondary" component="div">
+        Formula: {line.formula}
       </Typography>
-      <Typography variant="body2" fontWeight={700}>
-        {money(value)}
-      </Typography>
-    </Stack>
+    </Box>
   );
 }
 
@@ -65,13 +29,12 @@ interface SectionProps {
   title: string;
   amount: string;
   tint: string;
-  defaultOpen?: boolean;
   children: ReactNode;
 }
 
-/** One collapsible charge group — a real button header with a rotating chevron. */
-function ChargeSection({ title, amount, tint, defaultOpen = false, children }: Readonly<SectionProps>) {
-  const [open, setOpen] = useState(defaultOpen);
+/** One collapsible charge section — a real button header with a rotating chevron. */
+function ChargeSection({ title, amount, tint, children }: Readonly<SectionProps>) {
+  const [open, setOpen] = useState(false);
   return (
     <Box sx={{ borderRadius: 2, overflow: 'hidden', bgcolor: tint }}>
       <ButtonBase
@@ -100,18 +63,18 @@ function ChargeSection({ title, amount, tint, defaultOpen = false, children }: R
 }
 
 interface Props {
-  waterfall: EarningsWaterfall;
-  hasVenue: boolean;
+  statement: EarningsStatement;
   money: (value: number) => string;
 }
 
-/** "Govt. and other charges" — the collapsible deductions tree between the
- * collection line and the payout card. Group totals stay visible on the
- * headers, so the full charge picture reads without opening anything. */
-export default function ChargesAccordion({ waterfall, hasVenue, money }: Readonly<Props>) {
+/**
+ * "Govt. and other charges" — the auditable deductions tree. Every section
+ * keeps its subtotal on the header; every row carries the exact formula the
+ * server used, so each value can be verified by hand.
+ */
+export default function ChargesAccordion({ statement, money }: Readonly<Props>) {
   const theme = useTheme();
   const [open, setOpen] = useState(true);
-  const groups = buildChargeGroups(waterfall, hasVenue);
 
   return (
     <Box
@@ -131,7 +94,7 @@ export default function ChargesAccordion({ waterfall, hasVenue, money }: Readonl
         </Stack>
         <Stack direction="row" alignItems="center" spacing={0.5}>
           <Typography variant="subtitle2" fontWeight={900}>
-            {money(groups.totalDeductions)}
+            {money(statement.total_deductions)}
           </Typography>
           <ExpandMoreIcon
             fontSize="small"
@@ -141,34 +104,35 @@ export default function ChargesAccordion({ waterfall, hasVenue, money }: Readonl
       </ButtonBase>
       <Collapse in={open} unmountOnExit>
         <Stack spacing={1} sx={{ px: 1, pb: 1 }}>
-          <ChargeSection
-            title="1. GST and other charges"
-            amount={money(groups.gstTotal)}
-            tint={alpha(theme.palette.info.main, 0.08)}
-          >
-            {groups.gstLines.map((line) => (
-              <ChargeRow key={line.label} label={line.label} value={line.value} money={money} />
-            ))}
-          </ChargeSection>
-          {hasVenue && (
+          {statement.sections.map((section) => (
             <ChargeSection
-              title="2. Venue charges"
-              amount={money(groups.venueTotal)}
-              tint={alpha(theme.palette.warning.main, 0.1)}
+              key={section.key}
+              title={section.title}
+              amount={money(section.total)}
+              tint={
+                section.key === 'venue'
+                  ? alpha(theme.palette.warning.main, 0.1)
+                  : alpha(theme.palette.info.main, 0.08)
+              }
             >
-              {groups.venueLines.map((line) => (
-                <ChargeRow key={line.label} label={line.label} value={line.value} money={money} />
+              {section.lines.map((line) => (
+                <ChargeRow key={line.key} line={line} money={money} />
               ))}
             </ChargeSection>
-          )}
+          ))}
           <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, pt: 0.5 }}>
             <Typography variant="body2" fontWeight={800}>
               Total deductions
             </Typography>
             <Typography variant="body2" fontWeight={900}>
-              {money(groups.totalDeductions)}
+              {money(statement.total_deductions)}
             </Typography>
           </Stack>
+          {!statement.reconciled && (
+            <Alert severity="warning" data-testid="price-panel-reconcile-warning">
+              These figures do not reconcile — refresh, or contact support if this persists.
+            </Alert>
+          )}
         </Stack>
       </Collapse>
     </Box>

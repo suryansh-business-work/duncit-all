@@ -1,5 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
 import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
 import type { CreatePodFinance } from '../create-pod.types';
@@ -19,8 +20,6 @@ interface Props {
   noOfSpots: number;
   isPhysical: boolean;
 }
-
-const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** The host's final calculation for a pod — the server-computed earnings, billed
  * on PAYABLE spots (total − 1, the host's own seat is free) with the venue's
@@ -45,7 +44,11 @@ export function PricePanel({
     venuePicked ? slotPrice : null,
   );
   const symbol = finance.currency_symbol;
-  const money = (value: number) => `${symbol}${value.toFixed(2)}`;
+  // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
+  const money = (value: number) => formatStatementMoney(value, symbol);
+  const statement = waterfall
+    ? buildEarningsStatement(waterfall, { has_venue: venuePicked, symbol })
+    : null;
 
   return (
     <YStack
@@ -98,22 +101,28 @@ export function PricePanel({
       ) : null}
       {/* Hide the previous waterfall while a new amount is loading, so stale
           money rows never render beside labels built from the live inputs. */}
-      {ready && projection && waterfall && !isLoading ? (
+      {ready && projection && waterfall && statement && !isLoading ? (
         <YStack gap={10} testID="create-pod-earnings">
-          <XStack justifyContent="space-between" gap={12}>
-            <Text fontSize={13} fontWeight="800" color="$color" flexShrink={1}>
-              Total collection ({symbol}
-              {round2(podAmount).toLocaleString('en-IN')} × {projection.payable_spots})
+          <YStack gap={2}>
+            <XStack justifyContent="space-between" gap={12}>
+              <Text fontSize={13} fontWeight="800" color="$color" flexShrink={1}>
+                Total collection ({money(podAmount)} × {projection.payable_spots})
+              </Text>
+              <Text fontSize={13} fontWeight="900" color={EARN_GREEN}>
+                {money(waterfall.amount)}
+              </Text>
+            </XStack>
+            <Text testID="price-panel-included-gst" fontSize={10.5} color="$muted">
+              {statement.collection.included_gst_note}
             </Text>
-            <Text fontSize={13} fontWeight="900" color={EARN_GREEN}>
-              {money(waterfall.amount)}
-            </Text>
-          </XStack>
-          <ChargesAccordion waterfall={waterfall} hasVenue={venuePicked} money={money} />
+          </YStack>
+          <ChargesAccordion statement={statement} money={money} />
           <PayoutCard
             amount={money(waterfall.host_receives)}
             payingPax={projection.payable_spots}
             earnPct={waterfall.host_earn_pct}
+            collection={money(statement.net_payout.collection)}
+            totalDeductions={money(statement.net_payout.total_deductions)}
           />
         </YStack>
       ) : null}

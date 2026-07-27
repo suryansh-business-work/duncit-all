@@ -3,23 +3,32 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { PotentialEarnings } from '@/hooks/usePotentialEarnings';
-import { buildChargeGroups, type ChargeLine } from './charge-groups';
+import type { EarningsStatement, StatementLine } from '@duncit/utils';
 
-/** Subtle group tints — platform-side vs venue-side (works on both themes). */
-const GST_TINT = 'rgba(99,102,241,0.10)';
+/** Subtle section tints — venue-side vs everything else (both themes). */
+const DEFAULT_TINT = 'rgba(99,102,241,0.10)';
 const VENUE_TINT = 'rgba(245,158,11,0.12)';
 
-function ChargeRow({ line, money }: Readonly<{ line: ChargeLine; money: (n: number) => string }>) {
+/** One auditable row: label + amount with the formula that produced it
+ * underneath. Context rows (the taxable base) render muted, not bold. */
+function ChargeRow({
+  line,
+  money,
+}: Readonly<{ line: StatementLine; money: (n: number) => string }>) {
   return (
-    <XStack justifyContent="space-between" gap={12} paddingHorizontal={12} paddingVertical={6}>
-      <Text fontSize={12.5} color="$muted" flexShrink={1}>
-        • {line.label}
+    <YStack paddingHorizontal={12} paddingVertical={6} gap={2}>
+      <XStack justifyContent="space-between" gap={12}>
+        <Text fontSize={12.5} color={line.deduction ? '$color' : '$muted'} flexShrink={1}>
+          {line.label}
+        </Text>
+        <Text fontSize={12.5} fontWeight={line.deduction ? '700' : '500'} color="$color">
+          {money(line.amount)}
+        </Text>
+      </XStack>
+      <Text fontSize={10.5} color="$muted">
+        Formula: {line.formula}
       </Text>
-      <Text fontSize={12.5} fontWeight="700" color="$color">
-        {money(line.value)}
-      </Text>
-    </XStack>
+    </YStack>
   );
 }
 
@@ -31,7 +40,7 @@ interface SectionProps {
   children: ReactNode;
 }
 
-/** One collapsible charge group — pressable header with a rotating chevron. */
+/** One collapsible charge section — pressable header with a rotating chevron. */
 function ChargeSection({ title, amount, tint, testID, children }: Readonly<SectionProps>) {
   const { muted } = useThemeColors();
   const [open, setOpen] = useState(false);
@@ -79,18 +88,16 @@ function ChargeSection({ title, amount, tint, testID, children }: Readonly<Secti
 }
 
 interface Props {
-  waterfall: PotentialEarnings;
-  hasVenue: boolean;
+  statement: EarningsStatement;
   money: (value: number) => string;
 }
 
-/** "Govt. and other charges" — the collapsible deductions tree between the
- * collection line and the payout card. Group totals stay on the headers, so
- * the full charge picture reads without opening anything. mWeb twin. */
-export function ChargesAccordion({ waterfall, hasVenue, money }: Readonly<Props>) {
+/** "Govt. and other charges" — the auditable deductions tree. Every section
+ * keeps its subtotal on the header and every row carries the exact formula the
+ * server used, so each value can be verified by hand. mWeb twin. */
+export function ChargesAccordion({ statement, money }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
   const [open, setOpen] = useState(true);
-  const groups = buildChargeGroups(waterfall, hasVenue);
 
   return (
     <YStack
@@ -120,7 +127,7 @@ export function ChargesAccordion({ waterfall, hasVenue, money }: Readonly<Props>
         </XStack>
         <XStack alignItems="center" gap={4}>
           <Text fontSize={13.5} fontWeight="900" color="$color">
-            {money(groups.totalDeductions)}
+            {money(statement.total_deductions)}
           </Text>
           <MaterialIcons
             name="expand-more"
@@ -132,36 +139,32 @@ export function ChargesAccordion({ waterfall, hasVenue, money }: Readonly<Props>
       </XStack>
       {open ? (
         <YStack gap={8} paddingHorizontal={8} paddingBottom={8}>
-          <ChargeSection
-            title="1. GST and other charges"
-            amount={money(groups.gstTotal)}
-            tint={GST_TINT}
-            testID="price-panel-gst-group"
-          >
-            {groups.gstLines.map((line) => (
-              <ChargeRow key={line.label} line={line} money={money} />
-            ))}
-          </ChargeSection>
-          {hasVenue ? (
+          {statement.sections.map((section) => (
             <ChargeSection
-              title="2. Venue charges"
-              amount={money(groups.venueTotal)}
-              tint={VENUE_TINT}
-              testID="price-panel-venue-group"
+              key={section.key}
+              title={section.title}
+              amount={money(section.total)}
+              tint={section.key === 'venue' ? VENUE_TINT : DEFAULT_TINT}
+              testID={`price-panel-${section.key}-group`}
             >
-              {groups.venueLines.map((line) => (
-                <ChargeRow key={line.label} line={line} money={money} />
+              {section.lines.map((line) => (
+                <ChargeRow key={line.key} line={line} money={money} />
               ))}
             </ChargeSection>
-          ) : null}
+          ))}
           <XStack justifyContent="space-between" paddingHorizontal={12} paddingTop={2}>
             <Text fontSize={13} fontWeight="800" color="$color">
               Total deductions
             </Text>
             <Text fontSize={13} fontWeight="900" color="$color">
-              {money(groups.totalDeductions)}
+              {money(statement.total_deductions)}
             </Text>
           </XStack>
+          {statement.reconciled ? null : (
+            <Text testID="price-panel-reconcile-warning" fontSize={11.5} color="$danger">
+              These figures do not reconcile — refresh, or contact support if this persists.
+            </Text>
+          )}
         </YStack>
       ) : null}
     </YStack>

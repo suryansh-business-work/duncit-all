@@ -21,8 +21,10 @@ export const POTENTIAL_POD_EARNINGS = gql`
         amount
         gst_pct
         gst_amount
+        net_amount
         platform_fee_pct
         platform_fee_amount
+        pool_amount
         club_admin_pct
         club_admin_amount
         venue_amount
@@ -36,25 +38,11 @@ export const POTENTIAL_POD_EARNINGS = gql`
   }
 `;
 
-/** The waterfall fields the panel renders (all server-computed rupees). */
-export interface EarningsWaterfall {
-  amount: number;
-  gst_pct: number;
-  gst_amount: number;
-  platform_fee_pct: number;
-  platform_fee_amount: number;
-  club_admin_pct: number;
-  club_admin_amount: number;
-  venue_amount: number;
-  host_amount: number;
-  host_commission_pct: number;
-  host_commission_amount: number;
-  host_receives: number;
-  host_earn_pct: number;
-}
+/** The waterfall shape the shared statement builder consumes (server rupees). */
+export type { EarningsWaterfall } from '@duncit/utils';
 
 export interface EarningsProjection {
   total_spots: number;
   payable_spots: number;
-  waterfall: EarningsWaterfall;
+  waterfall: import('@duncit/utils').EarningsWaterfall;
 }

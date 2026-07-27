@@ -51,9 +51,11 @@ export function parseApiError(err: unknown, fallback: string = GENERIC_ERROR_MES
     return 'Network error. Please try again.';
   }
 
-  // GraphQL-level errors
-  if (e.graphQLErrors?.length) {
-    return e.graphQLErrors[0].message;
+  // GraphQL-level errors (index access is guarded — the native app compiles
+  // this source under noUncheckedIndexedAccess).
+  const firstGraphQLError = e.graphQLErrors?.[0];
+  if (firstGraphQLError) {
+    return firstGraphQLError.message;
   }
 
   // Plain Error or string

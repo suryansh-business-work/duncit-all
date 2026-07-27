@@ -10,12 +10,21 @@ interface Props {
   amount: string;
   payingPax: number;
   earnPct: number;
+  /** The Net Payout audit line: collection − deductions = the amount shown. */
+  collection: string;
+  totalDeductions: string;
 }
 
 /** The final payout — the strongest element on the card: big green take-home,
  * the paying-pax count and the share-of-collection chip, with the estimates
  * note inside so the payout and its caveat read as one unit. mWeb twin. */
-export function PayoutCard({ amount, payingPax, earnPct }: Readonly<Props>) {
+export function PayoutCard({
+  amount,
+  payingPax,
+  earnPct,
+  collection,
+  totalDeductions,
+}: Readonly<Props>) {
   return (
     <YStack
       testID="price-panel-payout"
@@ -53,6 +62,32 @@ export function PayoutCard({ amount, payingPax, earnPct }: Readonly<Props>) {
           {amount}
         </Text>
       </XStack>
+      <YStack testID="price-panel-net-payout" gap={2} paddingHorizontal={4}>
+        <XStack justifyContent="space-between">
+          <Text fontSize={11.5} color="$muted">
+            Total Collection
+          </Text>
+          <Text fontSize={11.5} fontWeight="700" color="$color">
+            {collection}
+          </Text>
+        </XStack>
+        <XStack justifyContent="space-between">
+          <Text fontSize={11.5} color="$muted">
+            − Total Deductions
+          </Text>
+          <Text fontSize={11.5} fontWeight="700" color="$color">
+            {totalDeductions}
+          </Text>
+        </XStack>
+        <XStack justifyContent="space-between">
+          <Text fontSize={11.5} fontWeight="800" color="$color">
+            = You will receive
+          </Text>
+          <Text fontSize={11.5} fontWeight="900" color={EARN_GREEN}>
+            {amount}
+          </Text>
+        </XStack>
+      </YStack>
       <YStack
         borderWidth={1}
         borderColor={PAYOUT_BORDER}

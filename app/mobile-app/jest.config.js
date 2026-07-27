@@ -25,6 +25,10 @@ module.exports = {
     // .js file and blow up. Pin subpaths to their .cjs twin.
     '^date-fns/([^.]+)$': '<rootDir>/node_modules/date-fns/$1.cjs',
     '^date-fns-tz$': '<rootDir>/node_modules/date-fns-tz/dist/cjs/index.js',
+    // @duncit/utils' `require` condition points at its gitignored dist/ build —
+    // pin jest straight at the TS SOURCE entry (babel-jest transforms it), the
+    // same code Metro bundles via the `import` condition.
+    '^@duncit/utils$': '<rootDir>/../../packages/utils/src/index.ts',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

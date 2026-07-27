@@ -6,12 +6,15 @@ interface Props {
   amount: string;
   payingPax: number;
   earnPct: number;
+  /** The Net Payout audit line: collection − deductions = the amount shown. */
+  collection: string;
+  totalDeductions: string;
 }
 
 /** The final payout — the strongest element on the card: big green take-home,
- * the paying-pax count and the share-of-collection chip, with the estimates
- * note inside so the payout and its caveat read as one unit. */
-export default function PayoutCard({ amount, payingPax, earnPct }: Readonly<Props>) {
+ * the paying-pax count, the share-of-collection chip and the Net Payout
+ * arithmetic (collection − deductions), with the estimates note inside. */
+export default function PayoutCard({ amount, payingPax, earnPct, collection, totalDeductions }: Readonly<Props>) {
   const theme = useTheme();
   return (
     <Box
@@ -46,6 +49,32 @@ export default function PayoutCard({ amount, payingPax, earnPct }: Readonly<Prop
         <Typography variant="h5" fontWeight={900} color="success.main" sx={{ whiteSpace: 'nowrap' }}>
           {amount}
         </Typography>
+      </Stack>
+      <Stack spacing={0.25} sx={{ mt: 1.25, px: 0.5 }} data-testid="price-panel-net-payout">
+        <Stack direction="row" justifyContent="space-between">
+          <Typography variant="caption" color="text.secondary">
+            Total Collection
+          </Typography>
+          <Typography variant="caption" fontWeight={700}>
+            {collection}
+          </Typography>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between">
+          <Typography variant="caption" color="text.secondary">
+            − Total Deductions
+          </Typography>
+          <Typography variant="caption" fontWeight={700}>
+            {totalDeductions}
+          </Typography>
+        </Stack>
+        <Stack direction="row" justifyContent="space-between">
+          <Typography variant="caption" fontWeight={800}>
+            = You will receive
+          </Typography>
+          <Typography variant="caption" fontWeight={900} color="success.main">
+            {amount}
+          </Typography>
+        </Stack>
       </Stack>
       <Box
         sx={{

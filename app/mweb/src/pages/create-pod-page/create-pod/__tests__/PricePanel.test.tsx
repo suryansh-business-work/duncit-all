@@ -4,7 +4,6 @@ import { MockedProvider } from '@apollo/client/testing';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
 import PricePanel, { POTENTIAL_POD_EARNINGS } from '../price-panel';
-import { buildChargeGroups } from '../price-panel/ChargesAccordion';
 
 // Structurally identical to the hook's private document so Apollo matches it.
 const PUBLIC_FINANCE = gql`
@@ -38,8 +37,10 @@ const waterfall = {
   amount: 29000,
   gst_pct: 18,
   gst_amount: 4423.73,
+  net_amount: 24576.27,
   platform_fee_pct: 5,
   platform_fee_amount: 1228.81,
+  pool_amount: 23347.46,
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 300,
@@ -70,43 +71,7 @@ function setup(podAmount: number, noOfSpots = 0) {
   );
 }
 
-describe('buildChargeGroups', () => {
-  it('groups platform-side vs venue-side charges and reconciles the total', () => {
-    const groups = buildChargeGroups(waterfall, true);
-    expect(groups.gstLines.map((l) => l.label)).toEqual(['GST (18%)', 'Platform Fee (5%)']);
-    expect(groups.venueLines.map((l) => l.label)).toEqual([
-      'Venue slot price',
-      'Duncit Commission from Venue (10%)',
-    ]);
-    expect(groups.gstTotal).toBe(5652.54);
-    expect(groups.venueTotal).toBe(2604.75);
-    // Total deductions = collection − payout; the groups must sum to it.
-    expect(groups.totalDeductions).toBe(8257.29);
-    expect(Math.round((groups.gstTotal + groups.venueTotal) * 100) / 100).toBe(
-      groups.totalDeductions,
-    );
-  });
-
-  it('folds the Duncit commission and club-admin cut into the platform group without a venue', () => {
-    const clubWaterfall = {
-      ...waterfall,
-      venue_amount: 0,
-      club_admin_pct: 3,
-      club_admin_amount: 700.42,
-    };
-    const groups = buildChargeGroups(clubWaterfall, false);
-    expect(groups.gstLines.map((l) => l.label)).toEqual([
-      'GST (18%)',
-      'Platform Fee (5%)',
-      'Club Admin (3%)',
-      'Duncit Commission (10%)',
-    ]);
-    expect(groups.venueLines).toEqual([]);
-    expect(groups.venueTotal).toBe(0);
-  });
-});
-
-describe('PricePanel (potentialPodEarnings)', () => {
+describe('PricePanel (auditable earnings statement)', () => {
   it('renders the header, subtitle and free-spot message', () => {
     setup(1000, 30);
     expect(screen.getByTestId('create-pod-price-panel')).toBeInTheDocument();
@@ -117,53 +82,75 @@ describe('PricePanel (potentialPodEarnings)', () => {
     );
   });
 
-  it('bills payable spots (total − 1) and groups the charges under accordions', async () => {
+  it('shows the collection with en-IN formatting and the included-GST disclosure', async () => {
     setup(1000, 30);
-    // The payout card is the strongest element: total take-home + pax + share.
-    expect(await screen.findByText('You will receive')).toBeInTheDocument();
-    expect(screen.getByText('₹20742.71')).toBeInTheDocument();
-    expect(screen.getByText('For 29 paying pax')).toBeInTheDocument();
-    expect(screen.getByText('71.53% of collection')).toBeInTheDocument();
-    // 29 paying guests, not 30 — the label must match what the server billed.
-    expect(screen.getByText('Total collection (₹1,000 × 29)')).toBeInTheDocument();
-    expect(screen.getByText('₹29000.00')).toBeInTheDocument();
-    // The main accordion header carries the total deductions.
+    expect(await screen.findByText('Total collection (₹1,000.00 × 29)')).toBeInTheDocument();
+    expect(screen.getAllByText('₹29,000.00').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId('price-panel-included-gst')).toHaveTextContent(
+      'Includes GST ₹4,423.73 — prices are GST-inclusive',
+    );
+  });
+
+  it('shows every section with its subtotal and the exact total deductions', async () => {
+    setup(1000, 30);
+    await screen.findByText('You will receive');
     expect(screen.getByText('Govt. and other charges')).toBeInTheDocument();
-    expect(screen.getAllByText('₹8257.29').length).toBeGreaterThanOrEqual(1);
+    // Total deductions = collection − payout, on the header and the footer row.
+    expect(screen.getAllByText('₹8,257.29').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Total deductions')).toBeInTheDocument();
-    // Group headers with their totals.
-    expect(screen.getByText('1. GST and other charges')).toBeInTheDocument();
-    expect(screen.getByText('2. Venue charges')).toBeInTheDocument();
-    expect(screen.getByText('₹5652.54')).toBeInTheDocument();
-    expect(screen.getByText('₹2604.75')).toBeInTheDocument();
-    expect(screen.getByText(/Estimates at today's rates/)).toBeInTheDocument();
+    expect(screen.getByText('Taxes')).toBeInTheDocument();
+    expect(screen.getByText('₹4,423.73')).toBeInTheDocument();
+    expect(screen.getByText('Platform Charges')).toBeInTheDocument();
+    expect(screen.getByText('₹1,228.81')).toBeInTheDocument();
+    expect(screen.getByText('Venue Charges')).toBeInTheDocument();
+    expect(screen.getByText('₹2,604.75')).toBeInTheDocument();
+    // Reconciled statement → no warning.
+    expect(screen.queryByTestId('price-panel-reconcile-warning')).not.toBeInTheDocument();
     // The old commission naming is gone.
     expect(screen.queryByText(/Your Commission/)).not.toBeInTheDocument();
   });
 
-  it('expands a charge group to reveal its rows', async () => {
+  it('reveals the taxable base, rates and formulas inside each section', async () => {
     setup(1000, 30);
     await screen.findByText('You will receive');
-    // Sub-groups start collapsed; the row detail appears after a click.
-    fireEvent.click(screen.getByRole('button', { name: /1\. GST and other charges/ }));
-    expect(screen.getByText('• GST (18%)')).toBeVisible();
-    expect(screen.getByText('₹4423.73')).toBeVisible();
-    expect(screen.getByText('• Platform Fee (5%)')).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: /2\. Venue charges/ }));
-    expect(screen.getByText('• Venue slot price')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: /Taxes/ }));
+    // The GST row shows its taxable base and the formula that produced it.
+    expect(screen.getByText('Taxable Amount')).toBeVisible();
+    expect(screen.getByText('₹24,576.27')).toBeVisible();
+    expect(screen.getByText('GST @18%')).toBeVisible();
+    expect(screen.getByText('Formula: ₹24,576.27 × 18%')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: /Platform Charges/ }));
+    expect(screen.getByText('Platform Fee @5%')).toBeVisible();
+    expect(screen.getByText('Formula: ₹24,576.27 × 5%')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: /Venue Charges/ }));
+    expect(screen.getByText('Venue Slot Price')).toBeVisible();
     expect(screen.getByText('₹300.00')).toBeVisible();
-    expect(screen.getByText('• Duncit Commission from Venue (10%)')).toBeVisible();
-    expect(screen.getByText('₹2304.75')).toBeVisible();
+    expect(screen.getByText('Formula: Fixed booked slot price (deducted once per pod)')).toBeVisible();
+    expect(screen.getByText('Duncit Commission from Venue @10%')).toBeVisible();
+    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeVisible();
+  });
+
+  it('renders the Net Payout arithmetic inside the payout card', async () => {
+    setup(1000, 30);
+    await screen.findByText('You will receive');
+    const netPayout = screen.getByTestId('price-panel-net-payout');
+    expect(netPayout).toHaveTextContent('Total Collection');
+    expect(netPayout).toHaveTextContent('− Total Deductions');
+    expect(netPayout).toHaveTextContent('₹8,257.29');
+    expect(netPayout).toHaveTextContent('= You will receive');
+    expect(netPayout).toHaveTextContent('₹20,742.71');
+    expect(screen.getByText('For 29 paying pax')).toBeInTheDocument();
+    expect(screen.getByText('71.53% of collection')).toBeInTheDocument();
+    expect(screen.getByText(/Estimates at today's rates/)).toBeInTheDocument();
   });
 
   it('collapses the main charges accordion', async () => {
     setup(1000, 30);
     await screen.findByText('You will receive');
     fireEvent.click(screen.getByRole('button', { name: /Govt\. and other charges/ }));
-    // Headers collapse away (unmounted after the exit transition); payout stays.
-    await waitFor(() =>
-      expect(screen.queryByText('1. GST and other charges')).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByText('Taxes')).not.toBeInTheDocument());
     expect(screen.getByText('You will receive')).toBeVisible();
   });
 
@@ -178,7 +165,6 @@ describe('PricePanel (potentialPodEarnings)', () => {
       screen.getByText('Set a ticket price and the number of spots to preview your earnings.'),
     ).toBeInTheDocument();
     expect(screen.queryByText('You will receive')).not.toBeInTheDocument();
-    // With no spots there is nothing to explain either.
     expect(screen.queryByTestId('price-panel-host-free-note')).not.toBeInTheDocument();
   });
 
@@ -197,7 +183,7 @@ describe('PricePanel (potentialPodEarnings)', () => {
     expect(screen.queryByText('You will receive')).not.toBeInTheDocument();
   });
 
-  it('renders a Club Admin row inside the platform group when a cut applies', async () => {
+  it('renders the Club Charges section with the pool-based formula when a cut applies', async () => {
     const clubProjection = {
       ...projection,
       waterfall: { ...waterfall, club_admin_pct: 3, club_admin_amount: 700.42 },
@@ -217,12 +203,13 @@ describe('PricePanel (potentialPodEarnings)', () => {
       </MockedProvider>,
     );
     await screen.findByText('You will receive');
-    fireEvent.click(screen.getByRole('button', { name: /1\. GST and other charges/ }));
-    expect(screen.getByText('• Club Admin (3%)')).toBeVisible();
-    expect(screen.getByText('₹700.42')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: /Club Charges/ }));
+    expect(screen.getByText('Club Admin Fee @3%')).toBeVisible();
+    expect(screen.getAllByText('₹700.42').length).toBeGreaterThanOrEqual(2); // header total + row
+    expect(screen.getByText('Formula: ₹23,347.46 × 3%')).toBeVisible();
   });
 
-  it('omits the venue group for a non-physical pod (commission joins the platform group)', async () => {
+  it('folds the Duncit commission into Platform Charges for a non-physical pod', async () => {
     const onlineProjection = { ...projection, waterfall: { ...waterfall, venue_amount: 0 } };
     render(
       <MockedProvider
@@ -242,8 +229,8 @@ describe('PricePanel (potentialPodEarnings)', () => {
       </MockedProvider>,
     );
     expect(await screen.findByText('You will receive')).toBeInTheDocument();
-    expect(screen.queryByText('2. Venue charges')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /1\. GST and other charges/ }));
-    expect(screen.getByText('• Duncit Commission (10%)')).toBeVisible();
+    expect(screen.queryByText('Venue Charges')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Platform Charges/ }));
+    expect(screen.getByText('Duncit Commission @10%')).toBeVisible();
   });
 });

@@ -25,8 +25,10 @@ const waterfall = {
   amount: 29000,
   gst_pct: 18,
   gst_amount: 4423.73,
+  net_amount: 24576.27,
   platform_fee_pct: 5,
   platform_fee_amount: 1228.81,
+  pool_amount: 23347.46,
   club_admin_pct: 0,
   club_admin_amount: 0,
   venue_amount: 300,
@@ -427,21 +429,31 @@ describe('PricePanel', () => {
     // The query runs on the total collection (1000 × 30); the venue slot price
     // is passed once, not multiplied by the spot count.
     expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, 'v1', 300);
-    // en-IN grouping on the ticket price — identical to the mWeb label.
-    expect(screen.getByText('Total collection (₹1,000 × 29)')).toBeOnTheScreen();
-    expect(screen.getByText('₹29000.00')).toBeOnTheScreen();
+    // ₹X,XXX.XX everywhere — identical to the mWeb statement.
+    expect(screen.getByText('Total collection (₹1,000.00 × 29)')).toBeOnTheScreen();
+    expect(screen.getAllByText('₹29,000.00').length).toBeGreaterThanOrEqual(1);
+    // The GST included in the collection is disclosed up front.
+    expect(screen.getByTestId('price-panel-included-gst')).toHaveTextContent(
+      'Includes GST ₹4,423.73 — prices are GST-inclusive',
+    );
     // The main accordion carries the total deductions on its header.
     expect(screen.getByText('Govt. and other charges')).toBeOnTheScreen();
-    expect(screen.getAllByText('₹8257.29').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('₹8,257.29').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Total deductions')).toBeOnTheScreen();
-    // Group headers show their totals without opening anything.
-    expect(screen.getByText('1. GST and other charges')).toBeOnTheScreen();
-    expect(screen.getByText('₹5652.54')).toBeOnTheScreen();
-    expect(screen.getByText('2. Venue charges')).toBeOnTheScreen();
-    expect(screen.getByText('₹2604.75')).toBeOnTheScreen();
-    // The payout card is the strongest element.
+    // Section headers show their subtotals without opening anything.
+    expect(screen.getByText('Taxes')).toBeOnTheScreen();
+    expect(screen.getByText('₹4,423.73')).toBeOnTheScreen();
+    expect(screen.getByText('Platform Charges')).toBeOnTheScreen();
+    expect(screen.getByText('₹1,228.81')).toBeOnTheScreen();
+    expect(screen.getByText('Venue Charges')).toBeOnTheScreen();
+    expect(screen.getByText('₹2,604.75')).toBeOnTheScreen();
+    expect(screen.queryByTestId('price-panel-reconcile-warning')).toBeNull();
+    // The payout card is the strongest element, with the Net Payout arithmetic.
     expect(screen.getByText('You will receive')).toBeOnTheScreen();
-    expect(screen.getByText('₹20742.71')).toBeOnTheScreen();
+    expect(screen.getAllByText('₹20,742.71').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId('price-panel-net-payout')).toBeOnTheScreen();
+    expect(screen.getByText('= You will receive')).toBeOnTheScreen();
+    expect(screen.getByText('− Total Deductions')).toBeOnTheScreen();
     expect(screen.getByText('For 29 paying pax')).toBeOnTheScreen();
     expect(screen.getByText('71.53% of collection')).toBeOnTheScreen();
     // The old commission naming is gone.
@@ -461,27 +473,34 @@ describe('PricePanel', () => {
         isPhysical
       />,
     );
-    // Sub-groups start collapsed; rows appear on press.
-    expect(screen.queryByText('• GST (18%)')).toBeNull();
-    fireEvent.press(screen.getByTestId('price-panel-gst-group'));
-    expect(screen.getByText('• GST (18%)')).toBeOnTheScreen();
-    expect(screen.getByText('₹4423.73')).toBeOnTheScreen();
-    expect(screen.getByText('• Platform Fee (5%)')).toBeOnTheScreen();
+    // Sections start collapsed; each row reveals its base, rate and formula.
+    expect(screen.queryByText('GST @18%')).toBeNull();
+    fireEvent.press(screen.getByTestId('price-panel-taxes-group'));
+    expect(screen.getByText('Taxable Amount')).toBeOnTheScreen();
+    expect(screen.getByText('₹24,576.27')).toBeOnTheScreen();
+    expect(screen.getByText('GST @18%')).toBeOnTheScreen();
+    expect(screen.getByText('Formula: ₹24,576.27 × 18%')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('price-panel-platform-group'));
+    expect(screen.getByText('Platform Fee @5%')).toBeOnTheScreen();
+    expect(screen.getByText('Formula: ₹24,576.27 × 5%')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('price-panel-venue-group'));
-    expect(screen.getByText('• Venue slot price')).toBeOnTheScreen();
+    expect(screen.getByText('Venue Slot Price')).toBeOnTheScreen();
     expect(screen.getByText('₹300.00')).toBeOnTheScreen();
-    expect(screen.getByText('• Duncit Commission from Venue (10%)')).toBeOnTheScreen();
-    expect(screen.getByText('₹2304.75')).toBeOnTheScreen();
-    // Pressing again closes the group.
+    expect(
+      screen.getByText('Formula: Fixed booked slot price (deducted once per pod)'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Duncit Commission from Venue @10%')).toBeOnTheScreen();
+    expect(screen.getByText('Formula: ₹23,047.46 × 10% (your remainder)')).toBeOnTheScreen();
+    // Pressing again closes the section.
     fireEvent.press(screen.getByTestId('price-panel-venue-group'));
-    expect(screen.queryByText('• Venue slot price')).toBeNull();
-    // Collapsing the main accordion hides the groups; the payout stays.
+    expect(screen.queryByText('Venue Slot Price')).toBeNull();
+    // Collapsing the main accordion hides the sections; the payout stays.
     fireEvent.press(screen.getByTestId('price-panel-charges-header'));
-    expect(screen.queryByText('1. GST and other charges')).toBeNull();
+    expect(screen.queryByText('Taxes')).toBeNull();
     expect(screen.getByText('You will receive')).toBeOnTheScreen();
   });
 
-  it('shows the club-admin row inside the platform group when a cut is configured', () => {
+  it('shows the Club Charges section with the pool-based formula when a cut is configured', () => {
     const clubWaterfall = { ...waterfall, club_admin_pct: 10, club_admin_amount: 800.51 };
     mockedEarnings.mockReturnValue({
       projection: { ...projection, waterfall: clubWaterfall },
@@ -498,9 +517,10 @@ describe('PricePanel', () => {
         isPhysical
       />,
     );
-    fireEvent.press(screen.getByTestId('price-panel-gst-group'));
-    expect(screen.getByText('• Club Admin (10%)')).toBeOnTheScreen();
-    expect(screen.getByText('₹800.51')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('price-panel-club-group'));
+    expect(screen.getByText('Club Admin Fee @10%')).toBeOnTheScreen();
+    expect(screen.getAllByText('₹800.51').length).toBeGreaterThanOrEqual(2); // header + row
+    expect(screen.getByText('Formula: ₹23,347.46 × 10%')).toBeOnTheScreen();
   });
 
   it('explains that the host spot is free (remaining available slots)', () => {
@@ -582,11 +602,11 @@ describe('PricePanel', () => {
       />,
     );
     expect(mockedEarnings).toHaveBeenCalledWith(1000, 30, null, null);
-    // No venue group; the Duncit commission joins the platform group instead.
-    expect(screen.queryByText('2. Venue charges')).toBeNull();
-    fireEvent.press(screen.getByTestId('price-panel-gst-group'));
-    expect(screen.getByText('• Duncit Commission (10%)')).toBeOnTheScreen();
-    expect(screen.getByText('₹21012.71')).toBeOnTheScreen();
+    // No venue section; the Duncit commission joins Platform Charges instead.
+    expect(screen.queryByText('Venue Charges')).toBeNull();
+    fireEvent.press(screen.getByTestId('price-panel-platform-group'));
+    expect(screen.getByText('Duncit Commission @10%')).toBeOnTheScreen();
+    expect(screen.getAllByText('₹21,012.71').length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows the earnings spinner while the preview loads', () => {

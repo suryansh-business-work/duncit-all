@@ -86,7 +86,7 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<P
     return () => clearTimeout(t);
   }, [venueBillAmount]);
 
-  const { data, loading } = useQuery(POD_SETTLEMENT_PREVIEW, {
+  const { data, loading, error } = useQuery(POD_SETTLEMENT_PREVIEW, {
     variables: { pod_id: podId, venue_bill_amount: amount },
     fetchPolicy: 'cache-and-network',
   });
@@ -95,7 +95,13 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<P
 
   const body = () => {
     if (!s) {
-      return loading ? <CircularProgress size={18} /> : <Typography variant="caption" color="text.secondary">Enter a bill to preview your share.</Typography>;
+      if (loading) return <CircularProgress size={18} />;
+      // Show the server's reason instead of silently hiding the calculation.
+      return (
+        <Typography variant="caption" color={error ? 'error' : 'text.secondary'} data-testid="settlement-preview-error">
+          {error?.graphQLErrors[0]?.message ?? error?.message ?? 'Enter a bill to preview your share.'}
+        </Typography>
+      );
     }
     return (
       <Stack spacing={0.5}>
@@ -109,7 +115,7 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<P
   return (
     <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.08)' }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 0.5 }}>
-        Your share (after Finance approval)
+        Your share (credited to your wallet on completion)
       </Typography>
       <Divider sx={{ mb: 1 }} />
       {body()}

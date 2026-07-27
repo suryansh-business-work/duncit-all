@@ -138,7 +138,7 @@ export default function CompletePodDialog({
               {pod && <SettlementPreview podId={pod.id} venueBillAmount={venueBillAmount} />}
               <RhfTextField control={control} name="notes" label="Notes" multiline minRows={2} />
               <Button type="submit" variant="contained" disabled={busy}>
-                {busy ? 'Submitting…' : 'Submit for approval'}
+                {busy ? 'Completing…' : 'Complete pod'}
               </Button>
             </Stack>
           </form>

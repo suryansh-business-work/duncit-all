@@ -1,6 +1,6 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type PaymentReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT';
+export type PaymentReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT' | 'CLUB_ADMIN';
 export type PaymentReleaseStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 export type PaymentReleaseApprovalType = 'FULL' | 'PARTIAL';
 
@@ -47,6 +47,8 @@ export interface IPaymentRelease extends Document {
   pod_id: Types.ObjectId;
   pod_title: string;
   venue_id?: Types.ObjectId | null;
+  /** The beneficiary USER: the host on HOST_PAYMENT, the club's admin on
+   * CLUB_ADMIN releases (VENUE_BILLING resolves through venue_id instead). */
   host_user_id?: Types.ObjectId | null;
   beneficiary_name: string;
   beneficiary_email: string;
@@ -103,7 +105,7 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
 const paymentReleaseSchema = new Schema<IPaymentRelease>(
   {
     release_id: { type: String, required: true, unique: true, index: true },
-    kind: { type: String, enum: ['VENUE_BILLING', 'HOST_PAYMENT'], required: true, index: true },
+    kind: { type: String, enum: ['VENUE_BILLING', 'HOST_PAYMENT', 'CLUB_ADMIN'], required: true, index: true },
     status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING', index: true },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true, index: true },
     pod_title: { type: String, required: true, trim: true },

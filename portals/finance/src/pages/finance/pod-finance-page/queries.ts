@@ -40,6 +40,8 @@ export const POD_FINANCE_BREAKDOWN = gql`
         platform_fee_pct
         platform_fee_amount
         pool_amount
+        club_admin_pct
+        club_admin_amount
         venue_amount
         venue_commission_pct
         venue_commission_amount
@@ -69,6 +71,8 @@ export interface PodFinanceWaterfall {
   platform_fee_pct: number;
   platform_fee_amount: number;
   pool_amount: number;
+  club_admin_pct: number;
+  club_admin_amount: number;
   venue_amount: number;
   venue_commission_pct: number;
   venue_commission_amount: number;

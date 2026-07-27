@@ -6,7 +6,7 @@ export { ProductRequestsField, productRequestTotal } from './ProductRequestsFiel
 export { SlotPicker } from './SlotPicker';
 export { VenuePicker } from './VenuePicker';
 export { VenueContactCard } from './VenueContactCard';
-export { PricePanel } from './PricePanel';
+export { PricePanel } from './price-panel';
 export { PodTypeCards } from './PodTypeCards';
 export { SpotsStepper } from './SpotsStepper';
 export { TermsAgreement } from './TermsAgreement';

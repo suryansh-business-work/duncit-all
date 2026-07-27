@@ -44,7 +44,9 @@ describe('SettlementSummary', () => {
     expect(screen.getByText('₹270.00')).toBeOnTheScreen();
     expect(screen.getByText('₹454.58')).toBeOnTheScreen();
     expect(screen.getByText('₹122.88')).toBeOnTheScreen();
-    expect(screen.getByText('Your share (after Finance approval)')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Your share (credited to your wallet on completion)'),
+    ).toBeOnTheScreen();
   });
 
   it('skips the venue lines for a venue-less pod', () => {

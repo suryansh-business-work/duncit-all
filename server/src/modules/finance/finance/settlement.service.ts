@@ -195,12 +195,11 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
 
   const fs = await getFinanceSettings();
   const collected = await collectedForPod(pod._id);
+  // The bill is evidence (and the legacy venue-amount fallback) — it may
+  // legitimately exceed a small pod's collection (offline venue costs). The
+  // paise engine clamps the venue amount to the pool, so a large bill can never
+  // create money; rejecting it here used to dead-end free/low-collection pods.
   const venueBill = Math.max(0, round2(venueBillAmount));
-  if (venueBill > collected) {
-    throw new GraphQLError('Venue bill cannot exceed the amount collected for this pod', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
-  }
 
   const hasVenue = !!pod.venue_id;
   const rates = await resolveEffectiveRates({

@@ -13,7 +13,7 @@ import {
 export interface ReleaseSummaryRelease {
   id: string;
   release_id: string;
-  kind: 'HOST_PAYMENT' | 'VENUE_BILLING';
+  kind: 'HOST_PAYMENT' | 'VENUE_BILLING' | 'CLUB_ADMIN';
   status: string;
   amount_requested: number;
 }
@@ -26,19 +26,20 @@ export interface ReleaseSummary {
 const KIND_LABELS: Record<ReleaseSummaryRelease['kind'], string> = {
   HOST_PAYMENT: 'Host payout',
   VENUE_BILLING: 'Venue payout',
+  CLUB_ADMIN: 'Club admin payout',
 };
 
-/** Shown after Complete-a-Pod submit: the pending payout releases created. */
+/** Shown after Complete-a-Pod submit: the payout releases created + credited. */
 export default function ReleaseSummaryDialog({
   summary,
   onClose,
 }: Readonly<{ summary: ReleaseSummary | null; onClose: () => void }>) {
   return (
     <Dialog open={!!summary} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>Pod submitted for Finance approval</DialogTitle>
+      <DialogTitle>Pod completed — payouts released</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Payouts stay pending until Finance approves them.
+          Each payout below has been credited to its beneficiary&apos;s wallet.
         </Typography>
         <List dense disablePadding>
           {(summary?.releases ?? []).map((release) => (

@@ -128,9 +128,12 @@ describe('breakdownService.podFinanceBreakdown', () => {
       isAdmin: false,
     });
 
+    // Completion is the trigger now: the releases auto-approve, so the pod is
+    // SETTLED and stamped complete immediately.
     let view = await breakdownService.podFinanceBreakdown(String(pod._id));
-    expect(view.settlement_status).toBe('PENDING_APPROVAL');
+    expect(view.settlement_status).toBe('SETTLED');
     expect(view.frozen).toBe(true);
+    expect(view.completed_at).not.toBeNull();
     expect(view.waterfall.host_receives).toBe(454.58);
     expect(view.waterfall.venue_receives).toBe(270);
 
@@ -147,16 +150,9 @@ describe('breakdownService.podFinanceBreakdown', () => {
       { $set: { platform_fee_pct: 5, default_host_commission_pct: 10 } }
     );
 
-    // Finance approval → SETTLED, pod stamped complete.
     const rel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
-    await paymentReleaseService.review(
-      String(rel!._id),
-      { status: 'APPROVED', approval_type: 'FULL' },
-      new Types.ObjectId().toString()
-    );
-    view = await breakdownService.podFinanceBreakdown(String(pod._id));
-    expect(view.settlement_status).toBe('SETTLED');
-    expect(view.completed_at).not.toBeNull();
+    expect(rel!.status).toBe('APPROVED');
+    expect(rel!.approval_reason).toBe('Auto-approved on pod completion');
   });
 
   it('handles a hostless, venueless, zero-collected pod (all-zero waterfall)', async () => {
@@ -335,19 +331,8 @@ describe('earnings summaries', () => {
       isAdmin: false,
     });
 
-    // Before approval: everything pending.
-    let hostSummary = await breakdownService.hostEarningsSummary(String(host._id));
-    expect(hostSummary.pending_amount).toBe(454.58);
-    expect(hostSummary.lifetime_earnings).toBe(0);
-    expect(hostSummary.pods_completed).toBe(0);
-
-    const hostRel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
-    const venueRel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'VENUE_BILLING' });
-    const reviewer = new Types.ObjectId().toString();
-    await paymentReleaseService.review(String(hostRel!._id), { status: 'APPROVED', approval_type: 'FULL' }, reviewer);
-    await paymentReleaseService.review(String(venueRel!._id), { status: 'APPROVED', approval_type: 'FULL' }, reviewer);
-
-    hostSummary = await breakdownService.hostEarningsSummary(String(host._id));
+    // Completion auto-approves every release: nothing stays pending.
+    const hostSummary = await breakdownService.hostEarningsSummary(String(host._id));
     expect(hostSummary.lifetime_earnings).toBe(454.58);
     expect(hostSummary.pending_amount).toBe(0);
     expect(hostSummary.pods_completed).toBe(1);
@@ -480,21 +465,17 @@ describe('breakdownService.dashboardStats', () => {
       id: String(host._id),
       isAdmin: false,
     });
+    // Completion auto-approves both releases (host + venue).
     const hostRel = await PaymentReleaseModel.findOne({ pod_id: pod._id, kind: 'HOST_PAYMENT' });
-    await paymentReleaseService.review(
-      String(hostRel!._id),
-      { status: 'APPROVED', approval_type: 'FULL' },
-      new Types.ObjectId().toString()
-    );
+    expect(hostRel!.status).toBe('APPROVED');
 
     let stats = await breakdownService.dashboardStats();
     expect(stats.total_revenue.total).toBeGreaterThanOrEqual(1000);
     expect(stats.total_revenue.this_month).toBeGreaterThanOrEqual(1000);
     expect(stats.gst_collected.this_month).toBeGreaterThanOrEqual(152.54);
     expect(stats.duncit_revenue.this_month).toBeGreaterThanOrEqual(122.88);
-    expect(stats.completed_payouts.this_month).toBeGreaterThanOrEqual(454.58);
-    // Venue release still pending.
-    expect(stats.pending_payouts.total).toBeGreaterThanOrEqual(270);
+    // Both payouts (host 454.58 + venue 270) complete immediately.
+    expect(stats.completed_payouts.this_month).toBeGreaterThanOrEqual(724.58);
     // Nothing last month yet → +100% growth branch.
     expect(stats.total_revenue.mom_change_pct).toBe(100);
 

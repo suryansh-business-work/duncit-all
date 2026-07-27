@@ -125,6 +125,8 @@ export const financeTypeDefs = /* GraphQL */ `
   enum PaymentReleaseKind {
     VENUE_BILLING
     HOST_PAYMENT
+    "The club-admin cut of a completed pod, paid to the club's admin user."
+    CLUB_ADMIN
   }
 
   enum PaymentReleaseStatus {

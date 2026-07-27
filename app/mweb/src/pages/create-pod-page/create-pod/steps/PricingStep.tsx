@@ -2,7 +2,7 @@ import { Controller } from 'react-hook-form';
 import { Alert, FormControlLabel, InputAdornment, Stack, Switch, TextField } from '@mui/material';
 import PlaceChargesField from '../fields/PlaceChargesField';
 import ProductRequestsField from '../fields/ProductRequestsField';
-import PricePanel from '../PricePanel';
+import PricePanel from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
 import SpotsStepper from '../SpotsStepper';
 import TermsAgreement from '../TermsAgreement';

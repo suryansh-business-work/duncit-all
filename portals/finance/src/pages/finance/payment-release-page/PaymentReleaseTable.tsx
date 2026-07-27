@@ -10,6 +10,7 @@ import type { PaymentReleaseRow } from './queries';
 const KIND_OPTIONS = [
   { value: 'VENUE_BILLING', label: 'Venue Billing' },
   { value: 'HOST_PAYMENT', label: 'Host Payment' },
+  { value: 'CLUB_ADMIN', label: 'Club Admin' },
 ];
 
 const STATUS_OPTIONS = [

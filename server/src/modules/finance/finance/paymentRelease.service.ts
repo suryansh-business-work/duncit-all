@@ -96,6 +96,27 @@ const RELEASE_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { created_at: -1 },
 };
 
+/**
+ * The club-admin beneficiary for a pod: pod.club_id → the club's FIRST admin
+ * user. Best-effort — a pod whose club has no admin (or an admin without an
+ * email) simply has no club-admin payout, it must never block completion.
+ */
+async function clubAdminBeneficiary(pod: any) {
+  if (!pod.club_id) return null;
+  const { ClubModel } = await import('@modules/pods/club/club.model');
+  const club = await ClubModel.findById(pod.club_id).select('admin_user_ids club_name');
+  const adminId = club?.admin_user_ids?.[0];
+  if (!adminId) return null;
+  const admin = await UserModel.findById(adminId);
+  if (!admin?.email) return null;
+  return {
+    host_user_id: admin._id,
+    name:
+      [admin.first_name, admin.last_name].filter(Boolean).join(' ').trim() || String(admin.email),
+    email: String(admin.email),
+  };
+}
+
 async function beneficiaryFor(kind: PaymentReleaseKind, pod: any, hostUserId?: string | null) {
   if (kind === 'VENUE_BILLING') {
     if (!pod.venue_id) throw new GraphQLError('This pod has no venue billing target', { extensions: { code: 'BAD_USER_INPUT' } });
@@ -128,9 +149,35 @@ async function beneficiaryFor(kind: PaymentReleaseKind, pod: any, hostUserId?: s
 // v2 snapshot: the party's legacy statement lines + the full waterfall, frozen
 // at completion time so rate changes never rewrite history. `party` picks which
 // side is "this beneficiary's": share_amount = the party's pool money (venue's
-// booked slot price / host's remainder), share_pct = its % of the pool.
-const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE') => {
+// booked slot price / host's remainder / the club-admin cut), share_pct = its %
+// of the pool. The club-admin party has no commission of its own — its cut is
+// paid out whole.
+const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE' | 'CLUB_ADMIN') => {
   const w = s.waterfall;
+  if (party === 'CLUB_ADMIN') {
+    return {
+      collected_total: s.collected_total,
+      venue_bill: s.venue_bill,
+      gst_pct: 0,
+      gst_amount: 0,
+      duncit_pct: 0,
+      duncit_amount: 0,
+      payout_pct: w.club_admin_pct,
+      payout_amount: w.club_admin_amount,
+      version: SETTLEMENT_ENGINE_VERSION,
+      net_amount: w.net_amount,
+      platform_fee_pct: w.platform_fee_pct,
+      platform_fee_amount: w.platform_fee_amount,
+      pool_amount: w.pool_amount,
+      club_admin_pct: w.club_admin_pct,
+      club_admin_amount: w.club_admin_amount,
+      share_pct: w.club_admin_pct,
+      share_amount: w.club_admin_amount,
+      commission_pct: 0,
+      commission_amount: 0,
+      duncit_revenue: w.duncit_revenue,
+    };
+  }
   const isHost = party === 'HOST';
   const legacy = isHost ? s.host : s.venue!;
   const shareAmount = isHost ? w.host_amount : w.venue_amount;
@@ -159,6 +206,18 @@ const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE') => {
   };
 };
 
+function statementTypeLabel(kind: PaymentReleaseKind): string {
+  if (kind === 'HOST_PAYMENT') return 'host commission';
+  if (kind === 'CLUB_ADMIN') return 'club admin payout';
+  return 'venue payout';
+}
+
+function payoutLabel(kind: PaymentReleaseKind): string {
+  if (kind === 'HOST_PAYMENT') return 'Your Commission';
+  if (kind === 'CLUB_ADMIN') return 'Club Admin Payout';
+  return 'Your Payout';
+}
+
 // On approval, email the beneficiary their payout statement. When the release
 // carries a settlement breakdown (the host-completion flow), a payout PDF is
 // generated and attached with the reconciled lines. Best-effort.
@@ -169,11 +228,14 @@ async function notifyApproval(doc: IPaymentRelease) {
     const cur = fs.currency_symbol;
     const money = (n: number) => `${cur}${(Number(n) || 0).toFixed(2)}`;
     const isHost = doc.kind === 'HOST_PAYMENT';
+    const isClubAdmin = doc.kind === 'CLUB_ADMIN';
     const tmpl = isHost ? fs.invoice_templates.host : fs.invoice_templates.venue;
     const b = doc.breakdown;
     const payout = doc.approved_amount ?? b?.payout_amount ?? doc.amount_requested;
     const attachments = [];
-    if (b) {
+    // The payout PDF renders HOST/VENUE statements; the club-admin cut ships as
+    // a plain statement email (no PDF template for it).
+    if (b && !isClubAdmin) {
       const pdf = await generatePayoutPdf({
         statement_type: isHost ? 'HOST' : 'VENUE',
         title: tmpl.label,
@@ -213,12 +275,12 @@ async function notifyApproval(doc: IPaymentRelease) {
       vars: {
         name: doc.beneficiary_name,
         pod_title: doc.pod_title,
-        statement_type: isHost ? 'host commission' : 'venue payout',
+        statement_type: statementTypeLabel(doc.kind),
         venue_bill: money(b?.venue_bill ?? 0),
         gst_amount: money(b?.gst_amount ?? 0),
         duncit_label: isHost ? 'Duncit Taken' : 'Duncit Cut',
         duncit_amount: money(b?.duncit_amount ?? 0),
-        payout_label: isHost ? 'Your Commission' : 'Your Payout',
+        payout_label: payoutLabel(doc.kind),
         payout_amount: money(payout),
         approval_type: doc.approval_type ?? 'FULL',
         reason: doc.approval_reason ?? '',
@@ -266,9 +328,11 @@ async function sendProductInvoices(doc: IPaymentRelease) {
   }
 }
 
-// Side effects of an APPROVED review.
+// Side effects of an APPROVED release — the wallet leg of every payout. Each
+// kind credits ITS beneficiary's wallet: the host, the venue's owner user, or
+// the club's admin user. Idempotent per release_id in the wallet service.
 async function applyApproval(doc: IPaymentRelease) {
-  // Finance approval is the moment the pod is officially completed.
+  // Approval is the moment the pod is officially completed (first release wins).
   const stamped = await PodModel.updateOne(
     { _id: doc.pod_id, completed_at: null },
     { $set: { completed_at: new Date() } }
@@ -281,26 +345,45 @@ async function applyApproval(doc: IPaymentRelease) {
     });
   }
   const payout = doc.approved_amount ?? doc.amount_requested;
-  if (doc.kind !== 'HOST_PAYMENT') {
-    // Venue billing: credit the venue owner's wallet so they can withdraw too,
-    // mirroring the host payout. Idempotent per release_id in the wallet service.
-    if (doc.venue_id) {
-      const venue = await VenueModel.findById(doc.venue_id).select('owner_user_id');
-      const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
-      if (ownerId) {
-        const { walletService } = await import('@modules/finance/wallet/wallet.service');
-        await walletService.creditPodPayout(ownerId, payout, {
-          pod_id: doc.pod_id,
-          release_id: doc.release_id,
-          reason: `Venue payout for ${doc.pod_title}`,
-        });
-      }
+  const { walletService } = await import('@modules/finance/wallet/wallet.service');
+
+  if (doc.kind === 'VENUE_BILLING') {
+    // Venue money goes to the venue owner's wallet.
+    const venue = doc.venue_id
+      ? await VenueModel.findById(doc.venue_id).select('owner_user_id')
+      : null;
+    const ownerId = venue?.owner_user_id ? String(venue.owner_user_id) : null;
+    if (ownerId) {
+      await walletService.creditPodPayout(ownerId, payout, {
+        pod_id: doc.pod_id,
+        release_id: doc.release_id,
+        reason: `Venue payout for ${doc.pod_title}`,
+      });
+    } else {
+      // A venue without a linked owner user gets a statement but no wallet —
+      // loud in the logs so Finance can fix the venue record, never silent.
+      logs.server.warn('paymentRelease', 'applyApproval', {
+        release_id: doc.release_id,
+        msg: 'venue payout approved but the venue has no owner_user_id — wallet credit skipped',
+      });
     }
     return;
   }
-  // The host's commission is credited to their wallet to withdraw later.
+
+  if (doc.kind === 'CLUB_ADMIN') {
+    // The club-admin cut goes to the club admin's wallet.
+    if (doc.host_user_id) {
+      await walletService.creditPodPayout(String(doc.host_user_id), payout, {
+        pod_id: doc.pod_id,
+        release_id: doc.release_id,
+        reason: `Club admin payout for ${doc.pod_title}`,
+      });
+    }
+    return;
+  }
+
+  // HOST_PAYMENT: the host's money is credited to their wallet to withdraw later.
   if (doc.host_user_id) {
-    const { walletService } = await import('@modules/finance/wallet/wallet.service');
     await walletService.creditPodPayout(String(doc.host_user_id), payout, {
       pod_id: doc.pod_id,
       release_id: doc.release_id,
@@ -308,6 +391,24 @@ async function applyApproval(doc: IPaymentRelease) {
     });
   }
   await sendProductInvoices(doc);
+}
+
+/**
+ * Approve a release without a manual Finance review — pod completion is the
+ * trigger and the money moves automatically. The release keeps the full
+ * approval trail (reviewer = the completing actor, reason recorded) so the
+ * Finance portal history reads exactly like a manual approval.
+ */
+async function autoApprove(doc: IPaymentRelease, actorId: string) {
+  doc.status = 'APPROVED';
+  doc.approval_type = 'FULL';
+  doc.approved_amount = doc.amount_requested;
+  doc.approval_reason = 'Auto-approved on pod completion';
+  doc.reviewed_by = new Types.ObjectId(actorId);
+  doc.reviewed_at = new Date();
+  await doc.save();
+  await applyApproval(doc);
+  await notifyApproval(doc);
 }
 
 export const paymentReleaseService = {
@@ -494,6 +595,40 @@ export const paymentReleaseService = {
           breakdown: settlementToBreakdown(settlement, 'VENUE'),
         })
       );
+    }
+
+    // The club-admin cut is disbursed to the club's admin user — best-effort:
+    // a club without an admin keeps the cut inside Duncit revenue as before.
+    if (settlement.waterfall.club_admin_amount > 0) {
+      const clubAdmin = await clubAdminBeneficiary(pod);
+      if (clubAdmin) {
+        releases.push(
+          await PaymentReleaseModel.create({
+            release_id: releaseId(),
+            kind: 'CLUB_ADMIN',
+            pod_id: pod._id,
+            pod_title: pod.pod_title,
+            venue_id: null,
+            host_user_id: clubAdmin.host_user_id,
+            beneficiary_name: clubAdmin.name,
+            beneficiary_email: clubAdmin.email,
+            amount_requested: settlement.waterfall.club_admin_amount,
+            bill_url: '',
+            evidence_media: [],
+            notes: clean(input.notes),
+            requested_by: new Types.ObjectId(actor.id),
+            requested_at: new Date(),
+            breakdown: settlementToBreakdown(settlement, 'CLUB_ADMIN'),
+          })
+        );
+      }
+    }
+
+    // Completion is the trigger: every payout is approved and credited to the
+    // beneficiary wallets right here — host, venue owner and club admin — no
+    // manual Finance step in between. The releases stay as the audit trail.
+    for (const doc of releases) {
+      await autoApprove(doc, actor.id);
     }
 
     return { settlement, releases: releases.map(toPub) };

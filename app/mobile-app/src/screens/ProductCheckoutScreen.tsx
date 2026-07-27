@@ -30,7 +30,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useCartStore } from '@/stores/cart.store';
 import { buildBreakup, round2 } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
-import { mapLinesToItems, productSubtotal } from '@/utils/product-checkout-input';
+import { mapLinesToItems, productSubtotal, toPickedContact } from '@/utils/product-checkout-input';
 import type { RootStackParamList } from '@/navigation/types';
 
 type CheckoutAddress = ResultOf<typeof MyAddressesDocument>['myAddresses'][number];
@@ -147,7 +147,11 @@ export function ProductCheckoutScreen() {
   // that here so the "You pay" amount always equals the charged amount.
   const discountedPay = coupon?.ok ? round2(coupon.final_total + shippingTotal) : null;
   const effectiveTotal = discountedPay ?? breakup?.total ?? amount;
-  const payContext = { items, couponCode: appliedCode };
+  const payContext = {
+    items,
+    couponCode: appliedCode,
+    pickedContact: toPickedContact(pickedAddress),
+  };
 
   const finishSuccess = (result: NonNullable<ProductPayment>) => {
     clearAll();
@@ -280,6 +284,7 @@ export function ProductCheckoutScreen() {
           loading={submitting}
           errorMessage={error}
           dummyMode={dummyMode}
+          addressRequired
           onPincodeChange={setDeliveryPincode}
           onSubmit={submit}
         />

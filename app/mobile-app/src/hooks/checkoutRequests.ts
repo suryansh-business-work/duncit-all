@@ -19,13 +19,15 @@ interface SavedAddressHolder {
 }
 
 /** Persist the entered billing address as the user's main address when opted in.
- * The opt-in only applies when there is no saved main address yet. Shared by the
- * pod-membership and standalone-product checkouts. */
+ * The opt-in only applies when there is no saved main address yet. An empty
+ * address is never saved — the pod checkout allows one, and the profile mutation
+ * would reject it and take the payment down with it. Shared by the pod-membership
+ * and standalone-product checkouts. */
 export async function maybeSaveMainAddress(
   values: CheckoutFormValues,
   me: SavedAddressHolder | null | undefined,
 ): Promise<void> {
-  if (!values.save_as_main || me?.address?.line1) return;
+  if (!values.save_as_main || me?.address?.line1 || !values.line1.trim()) return;
   await graphqlRequest(
     MobileCheckoutSaveAddressDocument,
     {

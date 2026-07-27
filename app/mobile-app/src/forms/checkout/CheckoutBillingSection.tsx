@@ -69,11 +69,18 @@ interface BillingBodyProps {
   control: Control<CheckoutFormValues>;
   mainAddress: CheckoutMainAddress | null;
   sameAsMain: boolean;
+  /** Deliveries need the address; the pod membership checkout does not. */
+  addressRequired: boolean;
 }
 
 /** Address portion of the Billing accordion: same-as-main toggle + summary/editable
  * when a main address exists, else editable fields + a "save as main" toggle. */
-function BillingAddress({ control, mainAddress, sameAsMain }: Readonly<BillingBodyProps>) {
+function BillingAddress({
+  control,
+  mainAddress,
+  sameAsMain,
+  addressRequired,
+}: Readonly<BillingBodyProps>) {
   if (mainAddress?.line1) {
     return (
       <YStack gap={12}>
@@ -89,7 +96,7 @@ function BillingAddress({ control, mainAddress, sameAsMain }: Readonly<BillingBo
           <AddressFields
             control={control}
             names={ADDRESS_NAMES}
-            required
+            required={addressRequired}
             pincodeHint="4–10 digits"
           />
         )}
@@ -110,10 +117,20 @@ function BillingAddress({ control, mainAddress, sameAsMain }: Readonly<BillingBo
 }
 
 /** Full Billing accordion body: address block + the optional billing email. */
-function BillingBody({ control, mainAddress, sameAsMain }: Readonly<BillingBodyProps>) {
+function BillingBody({
+  control,
+  mainAddress,
+  sameAsMain,
+  addressRequired,
+}: Readonly<BillingBodyProps>) {
   return (
     <YStack gap={12}>
-      <BillingAddress control={control} mainAddress={mainAddress} sameAsMain={sameAsMain} />
+      <BillingAddress
+        control={control}
+        mainAddress={mainAddress}
+        sameAsMain={sameAsMain}
+        addressRequired={addressRequired}
+      />
       <FormTextField
         control={control}
         name="billing_email"
@@ -162,6 +179,7 @@ function GstBody({ control }: Readonly<{ control: Control<CheckoutFormValues> }>
 export interface CheckoutBillingSectionProps {
   control: Control<CheckoutFormValues>;
   mainAddress: CheckoutMainAddress | null;
+  addressRequired?: boolean;
 }
 
 /** Billing + GST as two accordions: "Billing address" (default open, red when its
@@ -169,6 +187,7 @@ export interface CheckoutBillingSectionProps {
 export function CheckoutBillingSection({
   control,
   mainAddress,
+  addressRequired = false,
 }: Readonly<CheckoutBillingSectionProps>) {
   const sameAsMain = useWatch({ control, name: 'same_as_main' });
   const { errors } = useFormState({ control });
@@ -186,7 +205,12 @@ export function CheckoutBillingSection({
         open={billingOpen || hasBillingError}
         onToggle={() => setBillingOpen((open) => !open)}
       >
-        <BillingBody control={control} mainAddress={mainAddress} sameAsMain={sameAsMain} />
+        <BillingBody
+          control={control}
+          mainAddress={mainAddress}
+          sameAsMain={sameAsMain}
+          addressRequired={addressRequired}
+        />
       </Accordion>
       <Accordion
         testID="gst-accordion"

@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 import type { ModerationViolation } from './moderation.rules';
 
 /** Pod content submitted for moderation. `image_urls` are the uploaded cover
@@ -10,15 +11,6 @@ export interface ModeratePodInput {
   pod_hashtag?: string[] | null;
   image_urls?: string[] | null;
 }
-
-const SYSTEM_PROMPT = [
-  'You are the content-safety reviewer for Duncit, a platform where hosts create social events ("pods").',
-  'Review the pod a host wants to publish and flag anything that breaks community guidelines.',
-  'Disallowed in ANY text field (title, description, info, hashtags): phone numbers, email addresses, external or payment links/URLs, payment handles (UPI, Paytm, GPay, PhonePe, bank/IFSC/QR), requests to contact off-platform, sexual/explicit/adult wording, hate speech, harassment, abusive or offensive language, scams, and illegal activity.',
-  'Disallowed in images: nudity, sexual content, gore/graphic violence, or otherwise unsafe/unwanted imagery.',
-  'Return STRICT JSON only, no markdown, of shape: {"violations":[{"field":string,"type":string,"message":string,"evidence":string}]}.',
-  '"field" is one of: pod_title, pod_description, pod_info, pod_hashtag, image. "type" is a short SCREAMING_SNAKE code (e.g. PHONE, EMAIL, LINK, PAYMENT, ABUSE, NUDITY, HATE, SCAM). "message" tells the host in one sentence what to fix. "evidence" is the offending snippet (or the image URL). Return an empty array when everything is clean.',
-].join('\n');
 
 /** Build the multimodal user turn: the text block + up to 4 image parts. */
 function buildUserContent(input: ModeratePodInput): unknown[] {
@@ -60,13 +52,14 @@ function parseAiViolations(content: string): ModerationViolation[] {
  * obvious violations. Uses the 'gpt-4o' model explicitly (NOT the OPENAI_MODEL
  * default, which is gpt-4o-mini) for the deepest analysis and vision support.
  */
-async function callAiModeration(systemPrompt: string, userContent: unknown[]): Promise<ModerationViolation[]> {
+async function callAiModeration(promptKey: string, userContent: unknown[]): Promise<ModerationViolation[]> {
   try {
     const [apiKey, baseUrl] = await Promise.all([
       getRuntimeEnvValue('OPENAI_API_KEY'),
       getRuntimeEnvValue('OPENAI_BASE_URL'),
     ]);
     if (!apiKey) return [];
+    const systemPrompt = await getSystemPrompt(promptKey);
     const base = (baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '');
     const res = await fetch(`${base}/chat/completions`, {
       method: 'POST',
@@ -91,7 +84,7 @@ async function callAiModeration(systemPrompt: string, userContent: unknown[]): P
 }
 
 export const aiModeratePod = (input: ModeratePodInput): Promise<ModerationViolation[]> =>
-  callAiModeration(SYSTEM_PROMPT, buildUserContent(input));
+  callAiModeration('moderation.pod', buildUserContent(input));
 
 /** One variant's moderatable text (labels + description). */
 export interface ModerateProductVariant {
@@ -108,15 +101,6 @@ export interface ModerateProductInput {
   image_urls?: string[] | null;
 }
 
-const PRODUCT_SYSTEM_PROMPT = [
-  'You are the content-safety reviewer for Duncit, a marketplace where brands list products for sale.',
-  'Review the product a brand wants to submit for approval and flag anything that breaks community guidelines.',
-  'Disallowed in ANY text field (product name, variant labels, descriptions): phone numbers, email addresses, external or payment links/URLs, payment handles (UPI, Paytm, GPay, PhonePe, bank/IFSC/QR), requests to contact off-platform, sexual/explicit/adult wording, hate speech, harassment, abusive or offensive language, scams, counterfeit or illegal goods, and clearly misleading claims.',
-  'Disallowed in images: nudity, sexual content, gore/graphic violence, or otherwise unsafe/unwanted imagery.',
-  'Return STRICT JSON only, no markdown, of shape: {"violations":[{"field":string,"type":string,"message":string,"evidence":string}]}.',
-  '"field" is one of: product_name, description, image. "type" is a short SCREAMING_SNAKE code (e.g. PHONE, EMAIL, LINK, PAYMENT, ABUSE, NUDITY, HATE, SCAM, COUNTERFEIT). "message" tells the brand in one sentence what to fix. "evidence" is the offending snippet (or image URL). Return an empty array when everything is clean.',
-].join('\n');
-
 function buildProductUserContent(input: ModerateProductInput): unknown[] {
   const variantLines = (input.variants ?? []).flatMap((variant, index) => {
     const bits = [variant.option_label, variant.size_label, variant.description].filter(Boolean);
@@ -131,4 +115,4 @@ function buildProductUserContent(input: ModerateProductInput): unknown[] {
 }
 
 export const aiModerateProduct = (input: ModerateProductInput): Promise<ModerationViolation[]> =>
-  callAiModeration(PRODUCT_SYSTEM_PROMPT, buildProductUserContent(input));
+  callAiModeration('moderation.product', buildProductUserContent(input));

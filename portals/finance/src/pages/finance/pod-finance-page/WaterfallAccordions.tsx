@@ -54,6 +54,14 @@ function buildSteps(breakdown: PodFinanceBreakdown): WaterfallStep[] {
       caption: 'Net amount minus the platform fee — split between the venue and the host.',
     },
   ];
+  if (w.club_admin_amount > 0) {
+    steps.push({
+      key: 'club-admin',
+      title: '4b. Club Admin Cut (−)',
+      amount: `− ${money(sym, w.club_admin_amount)}`,
+      caption: `${w.club_admin_pct.toFixed(2)}% of the pool, paid to the club's admin on completion (booked inside Duncit revenue).`,
+    });
+  }
   if (breakdown.has_venue) {
     steps.push({
       key: 'venue',

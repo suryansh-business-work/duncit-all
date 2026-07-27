@@ -1,4 +1,5 @@
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 
 /**
  * First-line AI responder for "Chat with Us". The assistant answers common
@@ -19,14 +20,6 @@ export interface SupportAiResult {
   reply: string;
   handoff: boolean;
 }
-
-const SYSTEM_PROMPT = [
-  'You are "Duncit Assistant", the first-line support chatbot for Duncit, an app for discovering and joining social events ("pods") at venues and clubs.',
-  'Help with general questions: how to find/join pods, bookings, payments and refunds basics, account/profile, the app in general.',
-  'Be warm, concise (2-4 sentences), and use simple Indian English.',
-  'Hand off to a human support executive when: the user explicitly asks for a human/agent; the issue needs account-specific action you cannot take (refund a payment, cancel a booking, change account data, safety/SOS, legal/abuse); or you cannot confidently resolve it after clarifying.',
-  'Reply ONLY as a strict JSON object: {"reply": string, "handoff": boolean}. "reply" is your message to the user (may be empty when handing off). Set "handoff" true when a human should take over.',
-].join('\n');
 
 const HANDOFF: SupportAiResult = { reply: '', handoff: true };
 
@@ -53,7 +46,10 @@ export async function aiSupportReply(history: SupportAiTurn[]): Promise<SupportA
         temperature: 0.3,
         max_tokens: 300,
         response_format: { type: 'json_object' as const },
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history],
+        messages: [
+          { role: 'system', content: await getSystemPrompt('support.assistant') },
+          ...history,
+        ],
       }),
     });
     if (!res.ok) return HANDOFF;

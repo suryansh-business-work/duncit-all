@@ -60,6 +60,6 @@ describe('SettlementPreview (waterfall v2)', () => {
     expect(screen.getByText('₹454.58')).toBeInTheDocument();
     expect(screen.getByText('Duncit revenue')).toBeInTheDocument();
     expect(screen.getByText('₹122.88')).toBeInTheDocument();
-    expect(screen.getByText('Your share (after Finance approval)')).toBeInTheDocument();
+    expect(screen.getByText('Your share (credited to your wallet on completion)')).toBeInTheDocument();
   });
 });

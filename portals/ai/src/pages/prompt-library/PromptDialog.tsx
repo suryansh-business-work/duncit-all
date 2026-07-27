@@ -12,7 +12,9 @@ interface Props {
   onSaved: () => void;
 }
 
-/** Create / edit a Prompt Library entry, wrapping the Formik form with GraphQL. */
+/** Create / edit a Prompt Library entry, wrapping the RHF form with GraphQL. On a
+ * system prompt only the operator-owned fields are sent — the server ignores the
+ * rest, and sending them would just be noise. */
 export default function PromptDialog({ open, prompt, onClose, onSaved }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [createPrompt, { loading: creating }] = useMutation(CREATE_AI_PROMPT);
@@ -20,15 +22,20 @@ export default function PromptDialog({ open, prompt, onClose, onSaved }: Readonl
 
   const submit = async (values: PromptFormValues) => {
     setError(null);
-    const input = {
-      name: values.name,
+    const owned = {
       /* v8 ignore next -- description is always a string from the RHF/zod form (default '') */
       description: values.description ?? '',
       content: values.content,
-      category: values.category,
       target_model: values.target_model,
-      is_active: values.is_active,
     };
+    const input = prompt?.is_system
+      ? owned
+      : {
+          ...owned,
+          name: values.name,
+          category: values.category,
+          is_active: values.is_active,
+        };
     try {
       if (prompt) await updatePrompt({ variables: { id: prompt.id, input } });
       else await createPrompt({ variables: { input } });
@@ -61,6 +68,8 @@ export default function PromptDialog({ open, prompt, onClose, onSaved }: Readonl
                 }
               : undefined
           }
+          systemPrompt={!!prompt?.is_system}
+          variables={prompt?.variables ?? []}
           submitting={creating || updating}
           submitLabel={prompt ? 'Save changes' : 'Add'}
           onSubmit={submit}

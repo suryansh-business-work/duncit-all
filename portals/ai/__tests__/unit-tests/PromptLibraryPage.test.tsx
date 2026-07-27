@@ -7,6 +7,8 @@ import {
   createPromptMock,
   deletePromptMock,
   makeAiPrompt,
+  makeSystemPrompt,
+  resetPromptMock,
 } from '../mocks';
 
 const rows = [
@@ -90,6 +92,62 @@ describe('PromptLibraryPage', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(screen.getByText('Alpha')).toBeInTheDocument();
+  });
+
+  it('marks a system prompt and refuses to delete it', async () => {
+    const system = makeSystemPrompt({ name: 'Image upload risk scan' });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock([system])] });
+    await waitFor(() => expect(screen.getByText('Image upload risk scan')).toBeInTheDocument());
+    expect(screen.getByText('System')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete Image upload risk scan' })).toBeDisabled();
+  });
+
+  it('resets a system prompt through the confirmation dialog', async () => {
+    const system = makeSystemPrompt({ name: 'Image upload risk scan' });
+    renderWithProviders(<PromptLibraryPage />, {
+      mocks: [aiPromptsListMock([system]), resetPromptMock('sys-1')],
+    });
+    await waitFor(() => expect(screen.getByText('Image upload risk scan')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Image upload risk scan' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/Restore the shipped default/)).toBeInTheDocument();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Reset' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('surfaces a reset error', async () => {
+    const system = makeSystemPrompt({ name: 'Image upload risk scan' });
+    renderWithProviders(<PromptLibraryPage />, {
+      mocks: [aiPromptsListMock([system]), resetPromptMock('sys-1', { fail: true })],
+    });
+    await waitFor(() => expect(screen.getByText('Image upload risk scan')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Image upload risk scan' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Reset' }));
+    expect(await screen.findByText(/cannot reset this prompt/i)).toBeInTheDocument();
+  });
+
+  it('cancels the reset confirmation without resetting', async () => {
+    renderWithProviders(<PromptLibraryPage />, {
+      mocks: [aiPromptsListMock([makeSystemPrompt({ name: 'Image upload risk scan' })])],
+    });
+    await waitFor(() => expect(screen.getByText('Image upload risk scan')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Image upload risk scan' }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('locks the identity fields when editing a system prompt', async () => {
+    const system = makeSystemPrompt({ name: 'Image upload risk scan', variables: ['fields'] });
+    renderWithProviders(<PromptLibraryPage />, { mocks: [aiPromptsListMock([system])] });
+    await waitFor(() => expect(screen.getByText('Image upload risk scan')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Image upload risk scan' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByLabelText(/Name/i)).toBeDisabled();
+    expect(within(dialog).getByLabelText(/Category/i)).toBeDisabled();
+    expect(within(dialog).queryByLabelText('Active')).not.toBeInTheDocument();
+    expect(within(dialog).getByTestId('prompt-variables')).toHaveTextContent('{{fields}}');
   });
 
   it('surfaces a delete error and dismisses it', async () => {

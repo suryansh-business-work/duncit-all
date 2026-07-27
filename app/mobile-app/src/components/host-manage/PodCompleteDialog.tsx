@@ -43,7 +43,11 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
   });
 
   const billAmount = Number(watch('venue_bill_amount')) || 0;
-  const { settlement, isLoading } = useSettlementPreview(pod?.id ?? null, billAmount);
+  const {
+    settlement,
+    isLoading,
+    error: previewError,
+  } = useSettlementPreview(pod?.id ?? null, billAmount);
 
   const submit = handleSubmit(async (values) => {
     /* istanbul ignore next -- the dialog only mounts with a pod */
@@ -98,7 +102,8 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                   <YStack gap={12} paddingBottom={6}>
                     <Text fontSize={12.5} color="$muted">
                       Upload party photos/videos (with the Duncit banner)
-                      {hasVenue ? ' and the venue bill' : ''}. Paid after Finance approves.
+                      {hasVenue ? ' and the venue bill' : ''}. Payouts are credited to the wallets
+                      on completion.
                     </Text>
                     {hasVenue ? (
                       <>
@@ -136,6 +141,11 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                       )}
                     />
                     <SettlementSummary settlement={settlement} isLoading={isLoading} />
+                    {previewError && !settlement && !isLoading ? (
+                      <Text testID="pod-complete-preview-error" fontSize={12.5} color="$danger">
+                        {previewError}
+                      </Text>
+                    ) : null}
                     {error ? (
                       <Text testID="pod-complete-error" fontSize={12.5} color="$danger">
                         {error}
@@ -167,7 +177,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                   <XStack
                     testID="pod-complete-submit"
                     role="button"
-                    aria-label="Submit for approval"
+                    aria-label="Complete pod"
                     aria-disabled={busy}
                     onPress={busy ? undefined : () => fireAndForget(submit())}
                     flex={1}
@@ -182,7 +192,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                   >
                     {busy ? <Spinner size="small" color={onPrimary} /> : null}
                     <Text fontSize={14} fontWeight="900" color="$onPrimary">
-                      {busy ? 'Submitting…' : 'Submit for approval'}
+                      {busy ? 'Completing…' : 'Complete pod'}
                     </Text>
                   </XStack>
                 </XStack>

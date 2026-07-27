@@ -42,6 +42,11 @@ export interface PromptFormProps {
   initialValues?: Partial<PromptFormValues>;
   submitting?: boolean;
   submitLabel?: string;
+  /** A system prompt powers a shipped feature: its identity (name, category) and
+   * always-on status belong to the server catalog, so only the body is editable. */
+  systemPrompt?: boolean;
+  /** Placeholder names the feature fills in at call time, shown as edit hints. */
+  variables?: string[];
   onSubmit: (values: PromptFormValues) => Promise<void> | void;
   onCancel?: () => void;
 }

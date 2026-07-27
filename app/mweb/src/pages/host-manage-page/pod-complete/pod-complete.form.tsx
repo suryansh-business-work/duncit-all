@@ -117,8 +117,8 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
       <DialogContent dividers>
         <Stack component="form" id="pod-complete-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
-            Upload your party photos/videos (with the Duncit banner) and the venue bill. Your commission is paid after
-            Finance approves.
+            Upload your party photos/videos (with the Duncit banner) and the venue bill. Your
+            payout is credited to your wallet as soon as the pod is completed.
           </Typography>
           {hasVenue && (
             <>
@@ -173,7 +173,7 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
           disabled={completeState.loading}
           sx={{ borderRadius: 999, fontWeight: 900 }}
         >
-          {completeState.loading ? 'Submitting…' : 'Submit for approval'}
+          {completeState.loading ? 'Completing…' : 'Complete pod'}
         </Button>
       </DialogActions>
     </Dialog>

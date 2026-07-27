@@ -7,10 +7,13 @@ import { graphqlRequest } from '@/services/graphql.client';
 export type PodSettlement = ResultOf<typeof PodSettlementPreviewDocument>['podSettlementPreview'];
 
 /** Debounced live preview of the reconciled host/venue split for a pod, given
- * the venue bill the host is typing. Used by the Complete Pod dialog. */
+ * the venue bill the host is typing. Used by the Complete Pod dialog. The
+ * server's error message is surfaced — a swallowed error rendered as a silent
+ * blank is exactly how "the calculation doesn't appear". */
 export function useSettlementPreview(podId: string | null, venueBillAmount: number) {
   const [settlement, setSettlement] = useState<PodSettlement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!podId) return undefined;
@@ -23,9 +26,17 @@ export function useSettlementPreview(podId: string | null, venueBillAmount: numb
         { auth: true },
       )
         .then((res) => {
-          if (active) setSettlement(res.podSettlementPreview);
+          if (active) {
+            setSettlement(res.podSettlementPreview);
+            setError(null);
+          }
         })
-        .catch(() => undefined)
+        .catch((err: unknown) => {
+          if (active) {
+            setSettlement(null);
+            setError(err instanceof Error ? err.message : 'Could not load the settlement preview');
+          }
+        })
         .finally(() => {
           if (active) setIsLoading(false);
         });
@@ -36,5 +47,5 @@ export function useSettlementPreview(podId: string | null, venueBillAmount: numb
     };
   }, [podId, venueBillAmount]);
 
-  return { settlement, isLoading };
+  return { settlement, isLoading, error };
 }

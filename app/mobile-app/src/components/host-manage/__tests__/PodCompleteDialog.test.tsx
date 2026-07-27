@@ -5,8 +5,9 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+const mockPreview = { settlement: null as unknown, isLoading: false, error: null as string | null };
 jest.mock('@/hooks/useSettlementPreview', () => ({
-  useSettlementPreview: () => ({ settlement: null, isLoading: false }),
+  useSettlementPreview: () => mockPreview,
 }));
 jest.mock('@/hooks/useMediaUpload', () => ({
   useMediaUpload: (_folder: string, onUploaded: (url: string) => void) => ({
@@ -42,12 +43,34 @@ const addPartyMedia = async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPreview.settlement = null;
+  mockPreview.isLoading = false;
+  mockPreview.error = null;
   mockRequest.mockResolvedValue({
     completePodSettlement: { settlement: { host: { payout_amount: 1 } }, releases: [] },
   });
 });
 
 describe('PodCompleteDialog', () => {
+  it('shows the settlement-preview error instead of a silent blank', () => {
+    mockPreview.error = 'Only a host of this pod can do that';
+    renderWithProviders(
+      <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={jest.fn()} />,
+    );
+    expect(screen.getByTestId('pod-complete-preview-error')).toHaveTextContent(
+      'Only a host of this pod can do that',
+    );
+  });
+
+  it('hides the preview error while a fresh preview is loading', () => {
+    mockPreview.error = 'stale error';
+    mockPreview.isLoading = true;
+    renderWithProviders(
+      <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={jest.fn()} />,
+    );
+    expect(screen.queryByTestId('pod-complete-preview-error')).toBeNull();
+  });
+
   it('renders nothing without a pod', () => {
     renderWithProviders(
       <PodCompleteDialog pod={null} onClose={jest.fn()} onCompleted={jest.fn()} />,
@@ -132,7 +155,7 @@ describe('PodCompleteDialog', () => {
     );
     await addPartyMedia();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
-    await waitFor(() => expect(screen.getByText('Submitting…')).toBeOnTheScreen());
+    await waitFor(() => expect(screen.getByText('Completing…')).toBeOnTheScreen());
     fireEvent.press(screen.getByTestId('pod-complete-cancel'));
     expect(onClose).not.toHaveBeenCalled();
     await waitFor(async () => {

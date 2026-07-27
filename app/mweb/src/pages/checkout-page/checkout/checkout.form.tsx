@@ -13,6 +13,7 @@ interface Props {
   hasMainAddress: boolean;
   contact: CheckoutContact | null;
   contactLoading: boolean;
+  addressRequired: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export default function CheckoutFields({
   hasMainAddress,
   contact,
   contactLoading,
+  addressRequired,
 }: Readonly<Props>) {
   return (
     <>
@@ -38,6 +40,7 @@ export default function CheckoutFields({
         hasMainAddress={hasMainAddress}
         contact={contact}
         contactLoading={contactLoading}
+        addressRequired={addressRequired}
       />
       {dummyMode && (
         <Controller

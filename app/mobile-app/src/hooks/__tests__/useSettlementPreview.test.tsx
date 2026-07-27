@@ -40,12 +40,46 @@ describe('useSettlementPreview', () => {
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('swallows a failed preview', async () => {
-    mockRequest.mockRejectedValue(new Error('down'));
+  it('surfaces the server error message on a failed preview', async () => {
+    mockRequest.mockRejectedValue(new Error('Only a host of this pod can do that'));
     const { result } = renderHook(() => useSettlementPreview('p1', 0));
     act(() => jest.advanceTimersByTime(350));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.settlement).toBeNull();
+    expect(result.current.error).toBe('Only a host of this pod can do that');
+  });
+
+  it('falls back to a generic message for a non-Error rejection, and clears on success', async () => {
+    mockRequest.mockRejectedValueOnce('boom');
+    const { result, rerender } = renderHook(
+      ({ bill }: { bill: number }) => useSettlementPreview('p1', bill),
+      { initialProps: { bill: 0 } },
+    );
+    act(() => jest.advanceTimersByTime(350));
+    await waitFor(() => expect(result.current.error).toBe('Could not load the settlement preview'));
+
+    // The next successful fetch clears the error.
+    mockRequest.mockResolvedValue(preview);
+    rerender({ bill: 100 });
+    act(() => jest.advanceTimersByTime(350));
+    await waitFor(() => expect(result.current.settlement).not.toBeNull());
+    expect(result.current.error).toBeNull();
+  });
+
+  it('ignores a rejection after unmount', async () => {
+    let reject!: (reason: unknown) => void;
+    mockRequest.mockReturnValue(
+      new Promise((_r, rej) => {
+        reject = rej;
+      }),
+    );
+    const { result, unmount } = renderHook(() => useSettlementPreview('p1', 0));
+    act(() => jest.advanceTimersByTime(350));
+    unmount();
+    await act(async () => {
+      reject(new Error('late'));
+    });
+    expect(result.current.error).toBeNull();
   });
 
   it('ignores a resolution after unmount', async () => {

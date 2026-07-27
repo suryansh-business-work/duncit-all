@@ -82,7 +82,7 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       testID="settlement-summary"
     >
       <Text fontSize={13} fontWeight="900" color="$color">
-        Your share (after Finance approval)
+        Your share (credited to your wallet on completion)
       </Text>
       {body}
     </YStack>

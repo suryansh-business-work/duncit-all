@@ -91,6 +91,28 @@ describe('productCheckoutInput helpers', () => {
     expect('simulate_failure' in input).toBe(false);
   });
 
+  it('ships to the picked address-book contact instead of the profile one', () => {
+    const { input } = buildProductCheckoutInput(form, {
+      items: mapLinesToItems([line()]),
+      mainAddress: null,
+      couponCode: null,
+      pickedContact: { name: 'Ravi Kumar', phone: '+91 9000000000', email: 'ravi@example.com' },
+    });
+    expect(input.shipping_address).toMatchObject({
+      name: 'Ravi Kumar',
+      phone: '+91 9000000000',
+      email: 'ravi@example.com',
+    });
+  });
+
+  it('leaves the shipping phone empty when the buyer has none on file', () => {
+    const { input } = buildProductCheckoutInput(
+      { ...form, phone_number: '' },
+      { items: mapLinesToItems([line()]), mainAddress: null, couponCode: null },
+    );
+    expect(input.shipping_address.phone).toBe('');
+  });
+
   it('passes a null coupon through unchanged', () => {
     const { input } = buildProductCheckoutInput(form, {
       items: mapLinesToItems([line()]),

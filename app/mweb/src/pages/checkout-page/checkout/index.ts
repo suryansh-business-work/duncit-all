@@ -1,6 +1,7 @@
 export { default as CheckoutFields } from './checkout.form';
 export {
   checkoutSchema,
+  productCheckoutSchema,
   checkoutDefaults,
   toCheckoutContact,
   toCheckoutBilling,

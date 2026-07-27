@@ -13,7 +13,7 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<S
     return () => clearTimeout(timer);
   }, [venueBillAmount]);
 
-  const { data, loading } = useQuery(POD_SETTLEMENT_PREVIEW, {
+  const { data, loading, error } = useQuery(POD_SETTLEMENT_PREVIEW, {
     variables: { pod_id: podId, venue_bill_amount: amount },
     fetchPolicy: 'cache-and-network',
   });
@@ -21,9 +21,12 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<S
 
   const body = () => {
     if (!s) {
-      return loading ? <CircularProgress size={18} /> : (
-        <Typography variant="caption" color="text.secondary">
-          Preview unavailable.
+      if (loading) return <CircularProgress size={18} />;
+      // Never swallow the server's reason — a hidden error here is exactly how
+      // "the calculation doesn't appear" bugs are born.
+      return (
+        <Typography variant="caption" color={error ? 'error' : 'text.secondary'}>
+          {error?.graphQLErrors[0]?.message ?? error?.message ?? 'Preview unavailable.'}
         </Typography>
       );
     }
@@ -32,7 +35,7 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<S
       <Stack spacing={1}>
         <FinanceWaterfallList symbol={s.currency_symbol} lines={lines} />
         <Typography variant="caption" color="text.secondary">
-          Payouts are released after Finance approval.
+          Payouts are credited to the beneficiary wallets when the pod is completed.
         </Typography>
       </Stack>
     );

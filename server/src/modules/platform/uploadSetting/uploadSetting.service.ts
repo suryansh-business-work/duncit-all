@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   LEGACY_MOBILE_MWEB_SURFACE,
@@ -178,17 +179,6 @@ export const uploadSettingService = {
   },
 };
 
-const IMAGE_SCAN_PROMPT = [
-  'You are the upload monitor for Duncit, a social events platform.',
-  'You are shown ONE image a user just uploaded. Assess how risky it is to show',
-  'publicly: LOW (routine, safe), MEDIUM (borderline — suggestive, aggressive,',
-  'spammy or heavily-watermarked content), HIGH (nudity, violence, hate symbols,',
-  'illegal activity, or personal data like ID documents in a public folder).',
-  'Return STRICT JSON only, no markdown, of shape',
-  '{"risk":"LOW"|"MEDIUM"|"HIGH","summary":string} — the summary is one short',
-  'sentence for an operations dashboard.',
-].join('\n');
-
 /** Parse the strict-JSON AI verdict; null on any shape mismatch. */
 export function parseScanVerdict(content: string): { risk: 'LOW' | 'MEDIUM' | 'HIGH'; summary: string } | null {
   try {
@@ -225,7 +215,7 @@ export async function reviewImageWithAi(log: IMediaScanLog): Promise<void> {
           max_tokens: 200,
           response_format: { type: 'json_object' as const },
           messages: [
-            { role: 'system', content: IMAGE_SCAN_PROMPT },
+            { role: 'system', content: await getSystemPrompt('upload.image_scan') },
             {
               role: 'user',
               content: [

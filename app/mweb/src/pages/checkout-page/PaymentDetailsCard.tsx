@@ -36,6 +36,9 @@ interface Props {
   availableCoupons: AvailableCoupon[];
   onApplyCoupon: (code?: string) => void;
   onRemoveCoupon: () => void;
+  /** Products are delivered, so their checkout demands an address; the pod
+   * membership checkout keeps it optional and never blocks on it. */
+  addressRequired?: boolean;
 }
 
 export default function PaymentDetailsCard({
@@ -59,6 +62,7 @@ export default function PaymentDetailsCard({
   availableCoupons,
   onApplyCoupon,
   onRemoveCoupon,
+  addressRequired = false,
 }: Readonly<Props>) {
   const discounted = effectiveTotal < total;
   const theme = useTheme();
@@ -101,6 +105,7 @@ export default function PaymentDetailsCard({
             hasMainAddress={hasMainAddress}
             contact={contact}
             contactLoading={contactLoading}
+            addressRequired={addressRequired}
           />
           <CouponField
             code={couponCode}

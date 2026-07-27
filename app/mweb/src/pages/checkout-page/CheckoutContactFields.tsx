@@ -13,13 +13,14 @@ interface Props {
   hasMainAddress: boolean;
   contact: CheckoutContact | null;
   contactLoading: boolean;
+  addressRequired: boolean;
 }
 
 /**
  * Checkout contact + billing block: a read-only contact summary (edited from the
  * profile, not here) over the Billing address and GST details accordions.
  */
-export default function CheckoutContactFields({ control, fieldSx, mainAddress, hasMainAddress, contact, contactLoading }: Readonly<Props>) {
+export default function CheckoutContactFields({ control, fieldSx, mainAddress, hasMainAddress, contact, contactLoading, addressRequired }: Readonly<Props>) {
   return (
     <Stack spacing={1.5}>
       <ContactSummaryCard control={control} contact={contact} loading={contactLoading} />
@@ -28,6 +29,7 @@ export default function CheckoutContactFields({ control, fieldSx, mainAddress, h
         fieldSx={fieldSx}
         mainAddress={mainAddress}
         hasMainAddress={hasMainAddress}
+        addressRequired={addressRequired}
       />
       <GstSection control={control} fieldSx={fieldSx} />
     </Stack>

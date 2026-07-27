@@ -137,7 +137,7 @@ describe('PodCompleteForm', () => {
 
   it('renders without the venue bill field when the pod has no venue', () => {
     renderForm(podNoVenue);
-    expect(screen.getByText('Complete pod')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Complete pod' })).toBeInTheDocument();
     expect(screen.queryByRole('spinbutton', { name: /venue bill amount/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText('media-text')).toBeInTheDocument();
     expect(screen.getByTestId('settlement-preview')).toHaveTextContent('preview:pod-1:0');
@@ -191,7 +191,7 @@ describe('PodCompleteForm', () => {
     };
     const { onCompleted } = renderForm(podNoVenue, [mock]);
     fireEvent.change(screen.getByLabelText('media-text'), { target: { value: 'http://x.jpg' } });
-    fireEvent.click(screen.getByRole('button', { name: /submit for approval/i }));
+    fireEvent.click(screen.getByRole('button', { name: /complete pod/i }));
     await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
   });
 
@@ -212,7 +212,7 @@ describe('PodCompleteForm', () => {
     };
     const { onCompleted } = renderForm(podNoVenue, [mock]);
     fireEvent.change(screen.getByLabelText('media-text'), { target: { value: 'http://y.jpg' } });
-    fireEvent.click(screen.getByRole('button', { name: /submit for approval/i }));
+    fireEvent.click(screen.getByRole('button', { name: /complete pod/i }));
     expect(await screen.findByText(/settlement failed/i)).toBeInTheDocument();
     expect(onCompleted).not.toHaveBeenCalled();
   });

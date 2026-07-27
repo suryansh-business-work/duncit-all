@@ -1,44 +1,14 @@
 import { useEffect, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
-import { Card, CircularProgress, Stack, Typography } from '@mui/material';
+import { useQuery } from '@apollo/client';
+import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
-import { usePricing } from '../../../hooks/usePricing';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { usePricing } from '../../../../hooks/usePricing';
+import { POTENTIAL_POD_EARNINGS, type EarningsProjection } from './queries';
+import ChargesAccordion from './ChargesAccordion';
+import PayoutCard from './PayoutCard';
 
-/** Server-side potential-earnings waterfall. The server bills payable spots
- * (total − 1, the host's own seat is free) — no money math happens here. */
-export const POTENTIAL_POD_EARNINGS = gql`
-  query PotentialPodEarnings(
-    $pod_amount: Float!
-    $no_of_spots: Int!
-    $venue_id: ID
-    $venue_amount: Float
-  ) {
-    potentialPodEarnings(
-      pod_amount: $pod_amount
-      no_of_spots: $no_of_spots
-      venue_id: $venue_id
-      venue_amount: $venue_amount
-    ) {
-      total_spots
-      payable_spots
-      waterfall {
-        amount
-        gst_pct
-        gst_amount
-        platform_fee_pct
-        platform_fee_amount
-        club_admin_pct
-        club_admin_amount
-        venue_amount
-        host_amount
-        host_commission_pct
-        host_commission_amount
-        host_receives
-        host_earn_pct
-      }
-    }
-  }
-`;
+export { POTENTIAL_POD_EARNINGS };
 
 interface Props {
   slotPrice: number | null;
@@ -61,10 +31,13 @@ function useDebouncedInputs(podAmount: number, noOfSpots: number) {
   return inputs;
 }
 
-/** The host's final calculation for a pod. The server owns every number: it
+/**
+ * The host's final calculation for a pod. The server owns every number: it
  * bills PAYABLE spots (total − 1, because the host's own seat is free) and
  * deducts the venue's fixed slot price once for the pod — not once per booking —
- * matching how the pod is actually settled. */
+ * matching how the pod is actually settled. Charges are grouped in a
+ * collapsible tree; the payout card is the strongest element.
+ */
 export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, isPhysical }: Readonly<Props>) {
   const { currency } = usePricing();
   const sent = useDebouncedInputs(podAmount, noOfSpots);
@@ -79,7 +52,7 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
     skip: sent.podAmount <= 0 || sent.noOfSpots <= 1,
     fetchPolicy: 'cache-and-network',
   });
-  const projection = data?.potentialPodEarnings;
+  const projection: EarningsProjection | undefined = data?.potentialPodEarnings;
   const w = projection?.waterfall;
 
   const money = (value: number) => `${currency}${round2(value).toLocaleString('en-IN')}`;
@@ -108,32 +81,28 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
       return loading || stale ? <CircularProgress size={18} /> : null;
     }
     return (
-      <Stack spacing={0.75}>
-        <Row
-          label={`Total collection (${money(podAmount)} × ${projection.payable_spots})`}
-          value={fmt(w.amount)}
-          bold
-          color="success.main"
+      <Stack spacing={1.25}>
+        <Stack direction="row" justifyContent="space-between" spacing={2}>
+          <Typography variant="body2" fontWeight={800}>
+            Total collection ({money(podAmount)} × {projection.payable_spots})
+          </Typography>
+          <Typography variant="body2" fontWeight={900} color="success.main">
+            {fmt(w.amount)}
+          </Typography>
+        </Stack>
+        <ChargesAccordion waterfall={w} hasVenue={hasVenue} money={fmt} />
+        <PayoutCard
+          amount={fmt(w.host_receives)}
+          payingPax={projection.payable_spots}
+          earnPct={w.host_earn_pct}
         />
-        <Row label={`− GST (${w.gst_pct}%)`} value={fmt(w.gst_amount)} />
-        <Row label={`− Platform Fee (${w.platform_fee_pct}%)`} value={fmt(w.platform_fee_amount)} />
-        {w.club_admin_amount > 0 && (
-          <Row label={`− Club Admin (${w.club_admin_pct}%)`} value={fmt(w.club_admin_amount)} />
-        )}
-        {hasVenue && <Row label="− Venue slot price" value={fmt(w.venue_amount)} />}
-        <Row label="Your Amount (remainder)" value={fmt(w.host_amount)} />
-        <Row label={`− Your Commission (${w.host_commission_pct}%)`} value={fmt(w.host_commission_amount)} />
-        <Row label="You Receive" value={fmt(w.host_receives)} bold color="success.main" />
-        <Typography variant="caption" color="text.secondary">
-          For {projection.payable_spots} paying pax · {w.host_earn_pct}% of collection
-        </Typography>
       </Stack>
     );
   };
 
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }} data-testid="create-pod-price-panel">
-      <Stack spacing={1}>
+      <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} alignItems="center">
           <InsightsIcon color="primary" fontSize="small" />
           <Typography variant="subtitle2" fontWeight={900}>
@@ -144,29 +113,18 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
           Your take-home for the full pod
         </Typography>
         {noOfSpots > 0 && (
-          <Typography variant="caption" color="text.secondary" data-testid="price-panel-host-free-note">
-            Your spot is free — the calculation is based on total spots − 1 ({noOfSpots} − 1 ={' '}
-            {noOfSpots - 1}).
-          </Typography>
+          <Alert
+            severity="success"
+            icon={<InfoOutlinedIcon fontSize="small" />}
+            sx={{ borderRadius: 2.5, py: 0.25 }}
+            data-testid="price-panel-host-free-note"
+          >
+            Your spot is free — that is why the total calculation is based on the remaining
+            available slots.
+          </Alert>
         )}
         {breakdown()}
-        <Typography variant="caption" color="text.secondary">
-          Estimates at today&apos;s rates — final settlement happens after the pod completes.
-        </Typography>
       </Stack>
     </Card>
-  );
-}
-
-function Row({ label, value, bold = false, color }: Readonly<{ label: string; value: string; bold?: boolean; color?: string }>) {
-  return (
-    <Stack direction="row" justifyContent="space-between" spacing={2}>
-      <Typography variant="body2" color={bold ? 'text.primary' : 'text.secondary'} fontWeight={bold ? 800 : 500}>
-        {label}
-      </Typography>
-      <Typography variant="body2" color={color} fontWeight={bold ? 900 : 700}>
-        {value}
-      </Typography>
-    </Stack>
   );
 }

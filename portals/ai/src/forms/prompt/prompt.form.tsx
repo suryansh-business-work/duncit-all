@@ -1,11 +1,22 @@
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button, Chip, FormControlLabel, Stack, Switch } from '@mui/material';
+import { Alert, Button, Chip, FormControlLabel, Stack, Switch } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import { estimateTokens } from '../../utils/estimate-tokens';
 import { promptInitialValues, promptSchema, type PromptFormProps, type PromptFormValues } from './prompt.types';
 
 export { promptSchema };
+
+/** Placeholders the feature substitutes at call time — keep them in the body. */
+function VariableHints({ variables }: Readonly<{ variables: string[] }>) {
+  if (variables.length === 0) return null;
+  return (
+    <Alert severity="info" data-testid="prompt-variables">
+      Keep these placeholders in the text — the feature fills them in:{' '}
+      {variables.map((v) => `{{${v}}}`).join(', ')}
+    </Alert>
+  );
+}
 
 /**
  * Create / edit a Prompt Library entry. The token size of `content` is shown live
@@ -15,6 +26,8 @@ export default function PromptForm({
   initialValues,
   submitting,
   submitLabel = 'Save',
+  systemPrompt = false,
+  variables = [],
   onSubmit,
   onCancel,
 }: Readonly<PromptFormProps>) {
@@ -31,10 +44,28 @@ export default function PromptForm({
   return (
     <form noValidate data-testid="prompt-form" onSubmit={submit}>
       <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-        <RhfTextField control={control} name="name" label="Name" required hint='A short label, e.g. "Article summarizer"' />
+        <VariableHints variables={variables} />
+        <RhfTextField
+          control={control}
+          name="name"
+          label="Name"
+          required
+          disabled={systemPrompt}
+          hint={
+            systemPrompt
+              ? 'Named by the feature that runs this prompt'
+              : 'A short label, e.g. "Article summarizer"'
+          }
+        />
         <RhfTextField control={control} name="description" label="Description" hint="Optional — what this prompt is for" />
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-          <RhfTextField control={control} name="category" label="Category" hint="e.g. Summarization, Classification" />
+          <RhfTextField
+            control={control}
+            name="category"
+            label="Category"
+            disabled={systemPrompt}
+            hint="e.g. Summarization, Classification"
+          />
           <RhfTextField control={control} name="target_model" label="Model" hint="Optional target model, e.g. gpt-4o-mini" />
         </Stack>
         <RhfTextField
@@ -54,16 +85,18 @@ export default function PromptForm({
             label={`≈ ${estimateTokens(content)} tokens`}
             data-testid="prompt-token-count"
           />
-          <Controller
-            control={control}
-            name="is_active"
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} name="is_active" />}
-                label="Active"
-              />
-            )}
-          />
+          {!systemPrompt && (
+            <Controller
+              control={control}
+              name="is_active"
+              render={({ field }) => (
+                <FormControlLabel
+                  control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} name="is_active" />}
+                  label="Active"
+                />
+              )}
+            />
+          )}
         </Stack>
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           {onCancel && (

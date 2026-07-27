@@ -7,7 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChipSelectField } from '../ChipSelectField';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTypeCards } from '../PodTypeCards';
-import { PricePanel } from '../PricePanel';
+import { PricePanel } from '../price-panel';
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';

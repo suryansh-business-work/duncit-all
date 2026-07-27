@@ -71,6 +71,12 @@ async function bootstrap() {
   await safeSeed('category', () => categoryService.seedDefaults());
   await safeSeed('vapid', () => notificationService.ensureVapid());
   await safeSeed('policy', () => policyService.seedDefaults());
+  // Every AI feature reads its system prompt from the AI portal's Prompt
+  // Library; this puts the shipped defaults there on first boot.
+  await safeSeed('aiPrompts', async () => {
+    const { aiPromptService } = await import('@modules/ai/prompt/prompt.service');
+    await aiPromptService.seedDefaults();
+  });
   await safeSeed('emailTemplates', async () => {
     const { emailTemplateService } = await import('@modules/content/emailTemplate/emailTemplate.service');
     await emailTemplateService.seedDefaults();

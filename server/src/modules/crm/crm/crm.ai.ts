@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 import * as C from './crm.constants';
 import { VenueLeadModel, HostLeadModel } from './crm.model';
 import { WebsitePageModel } from '@modules/crm/websitePage/websitePage.model';
@@ -174,14 +175,10 @@ async function buildLeadContext(entity: CrmAiEntity, leadId: string): Promise<st
 export async function leadAiChat(entity: CrmAiEntity, leadId: string, messages: ChatMessage[]): Promise<string> {
   if (!messages?.length) throw new GraphQLError('A message is required', { extensions: { code: 'BAD_USER_INPUT' } });
   const context = await buildLeadContext(entity, leadId);
-  const system = [
-    `You are a CRM assistant helping an agent work a ${entity === 'VENUE_LEAD' ? 'venue' : 'host'} lead.`,
-    'Use ONLY the CRM data, reminders and website content provided below. Do NOT use outside knowledge, browse the web, or invent any facts. If the answer is not in the context, say you do not have that information.',
-    'Respond in clean, minimal HTML using only these tags: <p>, <br>, <ul>, <ol>, <li>, <b>, <strong>, <i>, <em>, <a href>. No markdown, no scripts, no styles, no heading tags.',
-    'Be concise and practical (suggest next steps, draft messages, summarise) when asked.',
-    '',
+  const system = await getSystemPrompt('crm.lead_chat', {
+    lead_kind: entity === 'VENUE_LEAD' ? 'venue' : 'host',
     context,
-  ].join('\n');
+  });
   return chatText([{ role: 'system', content: system }, ...messages.map((m) => ({ role: m.role, content: m.content }))]);
 }
 
@@ -189,15 +186,7 @@ export async function parseCrmLeadText(entity: CrmAiEntity, text: string): Promi
   if (!text?.trim()) {
     throw new GraphQLError('Text input is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const system = [
-    'You extract structured CRM lead data from unstructured Indian English / Hindi-English text.',
-    'Return STRICT JSON matching the shape below. Only include keys with confident values; omit unknown keys.',
-    'Phone numbers must be digit-only without country code (use the user country code field separately if asked).',
-    'For enum-style fields, pick the closest match from the allowed list. Do not invent new values.',
-    'Respond with a single JSON object only — no markdown.',
-    '',
-    SHAPES[entity],
-  ].join('\n');
+  const system = await getSystemPrompt('crm.parse_lead', { shape: SHAPES[entity] });
   return chatJson(system, `Parse the following ${entity} description:\n\n${text.slice(0, 6000)}`);
 }
 
@@ -210,14 +199,6 @@ export async function parseCrmLeadsText(entity: CrmAiEntity, text: string): Prom
   if (!text?.trim()) {
     throw new GraphQLError('Text input is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const system = [
-    'You extract MULTIPLE structured CRM lead records from unstructured Indian English / Hindi-English text.',
-    'The text may describe several leads (e.g. a list, a table, multiple paragraphs). Return one record per distinct lead.',
-    'Return STRICT JSON of shape { "records": Shape[] } where each element matches the shape below.',
-    'Only include keys with confident values; omit unknown keys. Phone numbers digit-only, no country code.',
-    'For enum-style fields pick the closest allowed value; do not invent values. No markdown.',
-    '',
-    `Shape = ${SHAPES[entity]}`,
-  ].join('\n');
+  const system = await getSystemPrompt('crm.parse_leads', { shape: SHAPES[entity] });
   return chatJson(system, `Extract every ${entity} from the following text:\n\n${text.slice(0, 8000)}`);
 }

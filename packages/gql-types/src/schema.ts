@@ -218,7 +218,9 @@ export type AiProductDescribeInput = {
 
 /**
  * A reusable prompt in the AI Prompt Library. `token_count` is derived from
- * `content` on every read, so it stays in sync with edits.
+ * `content` on every read, so it stays in sync with edits. A row with a
+ * `key` is a SYSTEM prompt: it powers a shipped AI feature, is seeded from the
+ * server catalog and cannot be deleted — only its body is operator-owned.
  */
 export type AiPrompt = {
   __typename?: 'AiPrompt';
@@ -229,15 +231,21 @@ export type AiPrompt = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   is_active: Scalars['Boolean']['output'];
+  is_system: Scalars['Boolean']['output'];
+  /** Stable catalog id of a system prompt; null for operator-created prompts. */
+  key?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
   target_model: Scalars['String']['output'];
   token_count: Scalars['Int']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
+  /** Placeholder names the feature fills in at call time, without the braces. */
+  variables: Array<Scalars['String']['output']>;
 };
 
 export type AiPromptFilter = {
   category?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_system?: InputMaybe<Scalars['Boolean']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -328,6 +336,10 @@ export type AppReleaseEmailResult = {
 
 export type AppSettings = {
   __typename?: 'AppSettings';
+  /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
+  custom_time?: Maybe<Scalars['String']['output']>;
+  /** Server's real time when the CUSTOM anchor was saved (ISO). */
+  custom_time_set_at?: Maybe<Scalars['String']['output']>;
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
@@ -340,6 +352,8 @@ export type AppSettings = {
   /** Earliest allowed signup birth year (inclusive). */
   min_birth_year: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
+  /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
+  time_source: TimeSource;
   /** IANA timezone (e.g. Asia/Kolkata) used to display all dates & times. */
   time_zone: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
@@ -724,6 +738,8 @@ export type Branding = {
   mweb_logo_url: Scalars['String']['output'];
   mweb_splash_type: Scalars['String']['output'];
   mweb_splash_url: Scalars['String']['output'];
+  /** Festive icon windows; the app clock picks which one is active. */
+  occasional_icons: Array<OccasionalIcon>;
   /** Global Pod Shop top slider — admin-managed image/video media (products portal). */
   pod_shop_slider: Array<PodShopSliderMedia>;
   portals_favicon_url: Scalars['String']['output'];
@@ -3847,6 +3863,24 @@ export type LegalDocumentVersion = {
   updated_by_name: Scalars['String']['output'];
 };
 
+/** A language/country the platform can render in. */
+export type Locale = {
+  __typename?: 'Locale';
+  /** BCP-47 tag — the stable id used everywhere, including profile.locale. */
+  code: Scalars['String']['output'];
+  english_label: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  /** The source language every other locale falls back to. Exactly one. */
+  is_default: Scalars['Boolean']['output'];
+  /** Right-to-left script — flips document direction on the clients. */
+  is_rtl: Scalars['Boolean']['output'];
+  /** Endonym shown in the language switcher. */
+  label: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
 export type Location = {
   __typename?: 'Location';
   /** Count of active clubs currently operating in this city (Home location selector). */
@@ -4312,6 +4346,7 @@ export type Mutation = {
   declineVenueSlotRequest: VenueSlot;
   /**  Admin-only: delete an adjustment. Returns the recomputed score.  */
   deleteAdjustment: HealthScore;
+  /** Deleting a system prompt is refused — reset it instead. */
   deleteAiPrompt: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
@@ -4346,6 +4381,7 @@ export type Mutation = {
   deleteJobApplication: Scalars['Boolean']['output'];
   deleteLeadSurveyEntry: Scalars['Boolean']['output'];
   deleteLegalDocument: Scalars['Boolean']['output'];
+  deleteLocale: Scalars['Boolean']['output'];
   deleteLocation: Scalars['Boolean']['output'];
   /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
   deleteMyAccount: Scalars['Boolean']['output'];
@@ -4368,6 +4404,7 @@ export type Mutation = {
   deleteRole: Scalars['Boolean']['output'];
   deleteSlotTemplate: Scalars['Boolean']['output'];
   deleteSurvey: Scalars['Boolean']['output'];
+  deleteTranslation: Scalars['Boolean']['output'];
   deleteUser: Scalars['Boolean']['output'];
   deleteUserActivityDay: Scalars['Boolean']['output'];
   deleteUserActivityYear: Scalars['Boolean']['output'];
@@ -4424,6 +4461,12 @@ export type Mutation = {
    * Returns the final ImageKit URL.
    */
   importRemoteMediaToImagekit: UploadedImage;
+  /**
+   * Bulk-add keys for a surface from a fallback bundle, so a new page's strings
+   * appear in the admin automatically instead of being typed by hand. Existing
+   * keys keep their translations; only missing ones are created.
+   */
+  importTranslationKeys: Scalars['Int']['output'];
   incrementPodHits: Pod;
   /** Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts. */
   inviteCoHost: Pod;
@@ -4504,6 +4547,8 @@ export type Mutation = {
   requestWithdrawal: WalletWithdrawal;
   /** Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling). */
   rescheduleMyMeeting: OnboardingMeeting;
+  /** Restore a system prompt's shipped default body. */
+  resetAiPrompt: AiPrompt;
   resetPasswordWithOtp: Scalars['Boolean']['output'];
   resolveBouncerSos: BouncerSosAlert;
   /** The user (or an agent) marks the chat resolved — same as close, owner-allowed. */
@@ -4565,6 +4610,8 @@ export type Mutation = {
   setFeatureFlag: FeatureFlag;
   setHostActive: Host;
   setHostDeductions: Scalars['Boolean']['output'];
+  /** Persist the signed-in users language. Validated against active locales. */
+  setMyLocale: User;
   /** Persist the user's selected header location (pass null to clear). */
   setMySelectedLocation: User;
   setPodIdeaStatus: PodIdea;
@@ -4700,6 +4747,8 @@ export type Mutation = {
   updateMyProductSettings: InventoryProduct;
   updateMyProfile: User;
   updateMyProfileVisibility: User;
+  /** Replace the occasional-icon windows (admin Branding). */
+  updateOccasionalIcons: Array<OccasionalIcon>;
   updatePod: Pod;
   updatePodIdea: PodIdea;
   updatePodPlan: PodPlan;
@@ -4727,6 +4776,8 @@ export type Mutation = {
    * signature failures by keeping the private-key upload on the API server.
    */
   uploadImageToImagekit: UploadedImage;
+  upsertLocale: Locale;
+  upsertTranslation: Translation;
   verifyEmailVerificationOtp: User;
   verifyEventTicketQr: EventTicketVerifyResult;
   verifyRazorpayPayment: Payment;
@@ -5576,6 +5627,11 @@ export type MutationDeleteLegalDocumentArgs = {
 };
 
 
+export type MutationDeleteLocaleArgs = {
+  code: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteLocationArgs = {
   location_doc_id: Scalars['ID']['input'];
 };
@@ -5677,6 +5733,11 @@ export type MutationDeleteSlotTemplateArgs = {
 
 export type MutationDeleteSurveyArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteTranslationArgs = {
+  key: Scalars['String']['input'];
 };
 
 
@@ -5875,6 +5936,12 @@ export type MutationImportRemoteMediaToImagekitArgs = {
   fileName?: InputMaybe<Scalars['String']['input']>;
   folder?: InputMaybe<Scalars['String']['input']>;
   remoteUrl: Scalars['String']['input'];
+};
+
+
+export type MutationImportTranslationKeysArgs = {
+  entries: Array<TranslationValueEntry>;
+  locale: Scalars['String']['input'];
 };
 
 
@@ -6165,6 +6232,11 @@ export type MutationRescheduleMyMeetingArgs = {
 };
 
 
+export type MutationResetAiPromptArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationResetPasswordWithOtpArgs = {
   input: ResetPasswordInput;
 };
@@ -6409,6 +6481,11 @@ export type MutationSetHostActiveArgs = {
 export type MutationSetHostDeductionsArgs = {
   host_commission_pct: Scalars['Float']['input'];
   user_id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetMyLocaleArgs = {
+  locale: Scalars['String']['input'];
 };
 
 
@@ -7003,6 +7080,11 @@ export type MutationUpdateMyProfileVisibilityArgs = {
 };
 
 
+export type MutationUpdateOccasionalIconsArgs = {
+  input: Array<OccasionalIconInput>;
+};
+
+
 export type MutationUpdatePodArgs = {
   input: UpdatePodInput;
   pod_doc_id: Scalars['ID']['input'];
@@ -7117,6 +7199,16 @@ export type MutationUploadImageToImagekitArgs = {
   folder?: InputMaybe<Scalars['String']['input']>;
   mimeType?: InputMaybe<Scalars['String']['input']>;
   surface?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationUpsertLocaleArgs = {
+  input: UpsertLocaleInput;
+};
+
+
+export type MutationUpsertTranslationArgs = {
+  input: UpsertTranslationInput;
 };
 
 
@@ -7275,6 +7367,40 @@ export type NotificationTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Notification>;
   total: Scalars['Int']['output'];
+};
+
+/**
+ * A festive window. While the app clock sits inside [starts_at, ends_at] the
+ * apps swap in this occasion's icons. The slug doubles as the folder name the
+ * native app loads its pre-bundled icons from.
+ */
+export type OccasionalIcon = {
+  __typename?: 'OccasionalIcon';
+  ends_at: Scalars['String']['output'];
+  /**
+   * Which bundled fallback-icon NAME renders when icon_url is blank or fails
+   * to load — one of @duncit/fallback-icons FALLBACK_ICON_NAMES.
+   */
+  fallback_icon: Scalars['String']['output'];
+  /** Server-hosted icon. Native prefers its bundled copy for this slug. */
+  icon_url: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  /** Higher wins when windows overlap, so a campaign can sit over a season. */
+  sort_order: Scalars['Int']['output'];
+  starts_at: Scalars['String']['output'];
+};
+
+export type OccasionalIconInput = {
+  ends_at: Scalars['String']['input'];
+  fallback_icon?: InputMaybe<Scalars['String']['input']>;
+  icon_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  label?: InputMaybe<Scalars['String']['input']>;
+  slug: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+  starts_at: Scalars['String']['input'];
 };
 
 export type OnboardingMeeting = {
@@ -7531,6 +7657,8 @@ export type PaymentReleaseFilterInput = {
 };
 
 export type PaymentReleaseKind =
+  /** The club-admin cut of a completed pod, paid to the club's admin user. */
+  | 'CLUB_ADMIN'
   | 'HOST_PAYMENT'
   | 'VENUE_BILLING';
 
@@ -8679,6 +8807,10 @@ export type PublicAd = {
 
 export type PublicAppSettings = {
   __typename?: 'PublicAppSettings';
+  /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
+  custom_time?: Maybe<Scalars['String']['output']>;
+  /** Server's real time when the CUSTOM anchor was saved (ISO). */
+  custom_time_set_at?: Maybe<Scalars['String']['output']>;
   date_format: Scalars['String']['output'];
   /** Days a Create-Pod draft is kept (from last save) before auto-deletion. */
   draft_retention_days: Scalars['Int']['output'];
@@ -8686,7 +8818,11 @@ export type PublicAppSettings = {
   max_backout_attempts: Scalars['Int']['output'];
   max_birth_year: Scalars['Int']['output'];
   min_birth_year: Scalars['Int']['output'];
+  /** The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking. */
+  server_time: Scalars['String']['output'];
   time_format: Scalars['String']['output'];
+  /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
+  time_source: TimeSource;
   /** IANA timezone (e.g. Asia/Kolkata) used to display all dates & times. */
   time_zone: Scalars['String']['output'];
 };
@@ -8965,6 +9101,8 @@ export type Query = {
   legalDocumentStatsTable: LegalDocumentTypeCountTablePage;
   legalDocuments: Array<LegalDocument>;
   legalDocumentsTable: LegalDocumentTablePage;
+  /** Every locale, for admin lists. */
+  locales: Array<Locale>;
   location?: Maybe<Location>;
   locations: Array<Location>;
   locationsTable: LocationTablePage;
@@ -9161,10 +9299,18 @@ export type Query = {
   publicHosts: Array<Host>;
   /** Public read of a single product (any signed-in user) — powers the product-detail view on a pod's shop. */
   publicInventoryProduct?: Maybe<InventoryProduct>;
+  /** Active locales only — the language switcher on every surface. */
+  publicLocales: Array<Locale>;
   publicPartnerFaqs: Array<Faq>;
   publicPodPlans: Array<PodPlan>;
   publicPolicies: Array<Policy>;
   publicRoles: Array<PublicRole>;
+  /**
+   * Flat key/value catalogue for one locale, merged over the default locale so a
+   * partially translated locale still returns complete text. Clients merge this
+   * over their bundled fallback, so a key missing here still renders.
+   */
+  publicTranslations: Array<TranslationEntry>;
   publicUserProfile?: Maybe<PublicProfile>;
   publicUsersByIds: Array<PublicProfile>;
   /** Public single-venue detail (APPROVED + active only). */
@@ -9195,6 +9341,12 @@ export type Query = {
   searchDiscovery: SearchResults;
   /** Type-ahead suggestions across clubs, categories, pods and activities. */
   searchSuggestions: Array<SearchSuggestion>;
+  /**
+   * Keys the SERVER itself ships copy for (the MJML email templates), with their
+   * bundled English text. The admin merges these with the client surfaces' own
+   * bundles when seeding Translations, so email copy is translatable too.
+   */
+  serverTranslationSeed: Array<TranslationEntry>;
   /** Channels the Slack bot can see, each with a copyable archive link. */
   slackChannels: Array<SlackChannel>;
   /** Whether a Slack bot token is configured (Tech portal). */
@@ -9228,6 +9380,8 @@ export type Query = {
   /** Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent. */
   ticketTranscript: SupportChatTranscript;
   tickets: TicketPage;
+  /** Admin table of translation keys, filterable surface-wise and page-wise. */
+  translationsTable: TranslationTablePage;
   /** Upload rules for the calling client's surface (any signed-in user). */
   uploadSettings: UploadSetting;
   user?: Maybe<User>;
@@ -10509,6 +10663,11 @@ export type QueryPublicPartnerFaqsArgs = {
 };
 
 
+export type QueryPublicTranslationsArgs = {
+  locale: Scalars['String']['input'];
+};
+
+
 export type QueryPublicUserProfileArgs = {
   user_id: Scalars['ID']['input'];
 };
@@ -10689,6 +10848,11 @@ export type QueryTicketsArgs = {
   sort_by?: InputMaybe<Scalars['String']['input']>;
   sort_dir?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<TicketStatus>;
+};
+
+
+export type QueryTranslationsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -11835,10 +11999,59 @@ export type TicketStatus =
   | 'PENDING'
   | 'RESOLVED';
 
+/** Where every app reads the current time from. */
+export type TimeSource =
+  /** Each device's own clock. */
+  | 'BROWSER'
+  /** A fixed anchor set by an admin; the clock runs forward from there. */
+  | 'CUSTOM'
+  /** The server's clock — the default, keeps every device in step. */
+  | 'SERVER';
+
 /** Export format for support chat / ticket transcripts. */
 export type TranscriptFormat =
   | 'DOCX'
   | 'TXT';
+
+/** A translation key with every locale's text — one row in the admin table. */
+export type Translation = {
+  __typename?: 'Translation';
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  key: Scalars['String']['output'];
+  /** Second key segment, e.g. 'shop' — lets the admin filter page-wise. */
+  page: Scalars['String']['output'];
+  /** First key segment, e.g. 'mweb' — lets the admin filter portal-wise. */
+  surface: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+  values: Array<TranslationEntry>;
+};
+
+/** One translated string for one locale. */
+export type TranslationEntry = {
+  __typename?: 'TranslationEntry';
+  key: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine. */
+export type TranslationTablePage = {
+  __typename?: 'TranslationTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<Translation>;
+  total: Scalars['Int']['output'];
+};
+
+export type TranslationValueEntry = {
+  key: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
+
+export type TranslationValueInput = {
+  locale: Scalars['String']['input'];
+  value: Scalars['String']['input'];
+};
 
 /** One row of the user's unified support history (every category in one list). */
 export type UnifiedSupportTicket = {
@@ -11886,6 +12099,8 @@ export type UpdateAiPromptInput = {
 };
 
 export type UpdateAppSettingsInput = {
+  /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
+  custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;
   /** Days a Create-Pod draft is kept before auto-deletion (min 1). */
   draft_retention_days?: InputMaybe<Scalars['Int']['input']>;
@@ -11896,6 +12111,7 @@ export type UpdateAppSettingsInput = {
   max_birth_year?: InputMaybe<Scalars['Int']['input']>;
   min_birth_year?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
+  time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -12401,6 +12617,23 @@ export type UploadedImage = {
   url: Scalars['String']['output'];
 };
 
+export type UpsertLocaleInput = {
+  code: Scalars['String']['input'];
+  english_label?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  is_rtl?: InputMaybe<Scalars['Boolean']['input']>;
+  label: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type UpsertTranslationInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  key: Scalars['String']['input'];
+  /** Only the locales supplied are written; others keep their existing text. */
+  values?: InputMaybe<Array<TranslationValueInput>>;
+};
+
 export type User = {
   __typename?: 'User';
   /** The saved main postal address (prefills checkout billing). */
@@ -12431,6 +12664,8 @@ export type User = {
   last_login_at?: Maybe<Scalars['String']['output']>;
   last_login_provider?: Maybe<AuthProvider>;
   last_name: Scalars['String']['output'];
+  /** BCP-47 language the user picked (e.g. en-IN). Drives every surface. */
+  locale?: Maybe<Scalars['String']['output']>;
   onboarding_survey_completed: Scalars['Boolean']['output'];
   pet_profile?: Maybe<PetProfile>;
   phone_extension: Scalars['String']['output'];

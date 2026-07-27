@@ -503,7 +503,11 @@ describe('LiveChatScreen — reopen + transcript', () => {
     fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'Need more help');
     fireEvent.press(screen.getByTestId('reopen-submit'));
     await waitFor(() => expect(reopen).toHaveBeenCalledWith('Need more help'));
-    await waitFor(() => expect(screen.queryByTestId('reopen-reason-modal')).toBeNull());
+    // The modal unmounts after the reopen promise settles — on a loaded CI
+    // runner that can exceed waitFor's default 1s window, so give it room.
+    await waitFor(() => expect(screen.queryByTestId('reopen-reason-modal')).toBeNull(), {
+      timeout: 10_000,
+    });
   });
 
   it('re-opens with no reason (optional, B11)', async () => {

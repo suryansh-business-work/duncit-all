@@ -4,6 +4,7 @@ export { CheckoutContactFields } from './CheckoutContactFields';
 export { CheckoutBillingSection } from './CheckoutBillingSection';
 export {
   checkoutSchema,
+  productCheckoutSchema,
   checkoutDefaults,
   type CheckoutContact,
   type CheckoutFormValues,

@@ -116,7 +116,7 @@ describe('OpenInAppBanner', () => {
     expect(assigned).toBe('duncit://pods?ref=x');
   });
 
-  it('dismisses and persists dismissal, then stays hidden on re-render', async () => {
+  it('dismisses without persisting, so a fresh load shows the banner again', async () => {
     setUserAgent(ANDROID_UA);
     const { unmount } = renderBanner([storeMock(null, 'https://play.google.com/app')]);
 
@@ -126,10 +126,51 @@ describe('OpenInAppBanner', () => {
     await waitFor(() =>
       expect(screen.queryByTestId('open-in-app-banner')).not.toBeInTheDocument(),
     );
-    expect(localStorage.getItem('duncit:app-banner-dismissed')).toBe('1');
+    expect(Object.keys(localStorage)).toHaveLength(0);
 
+    // A reload remounts the component with no stored flag — the bar is back.
     unmount();
     renderBanner([storeMock(null, 'https://play.google.com/app')]);
-    expect(screen.queryByTestId('open-in-app-banner')).not.toBeInTheDocument();
+    expect(await screen.findByTestId('open-in-app-banner')).toBeInTheDocument();
+  });
+
+  it('sits above the bottom nav and publishes its height for other overlays', async () => {
+    setUserAgent(ANDROID_UA);
+    renderBanner([storeMock(null, 'https://play.google.com/app')]);
+
+    const banner = await screen.findByTestId('open-in-app-banner');
+    expect(banner).toHaveStyle({
+      bottom: 'calc(12px + var(--duncit-bottom-nav-overlay-offset, env(safe-area-inset-bottom, 0px)))',
+    });
+    expect(
+      document.documentElement.style.getPropertyValue('--duncit-app-banner-offset'),
+    ).not.toBe('');
+  });
+
+  it('renders both actions at the same height and lets the copy wrap', async () => {
+    setUserAgent(ANDROID_UA);
+    renderBanner([storeMock(null, 'https://play.google.com/app')]);
+
+    const open = await screen.findByRole('button', { name: 'Open' });
+    const getApp = await screen.findByRole('link', { name: 'Get app' });
+    expect(open).toHaveStyle({ height: '44px' });
+    expect(getApp).toHaveStyle({ height: '44px' });
+    expect(screen.getByText('Duncit is better in the app')).not.toHaveStyle({
+      textOverflow: 'ellipsis',
+    });
+  });
+
+  it('clears the published offset once dismissed', async () => {
+    setUserAgent(ANDROID_UA);
+    renderBanner([storeMock(null, 'https://play.google.com/app')]);
+
+    await screen.findByTestId('open-in-app-banner');
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+    await waitFor(() =>
+      expect(
+        document.documentElement.style.getPropertyValue('--duncit-app-banner-offset'),
+      ).toBe(''),
+    );
   });
 });

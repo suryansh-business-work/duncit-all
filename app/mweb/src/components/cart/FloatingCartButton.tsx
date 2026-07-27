@@ -24,7 +24,8 @@ export default function FloatingCartButton() {
       sx={{
         position: 'fixed',
         right: 16,
-        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 14px)',
+        bottom:
+          'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 14px + var(--duncit-app-banner-offset, 0px))',
         zIndex: (theme) => theme.zIndex.appBar + 2,
       }}
     >

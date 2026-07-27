@@ -23,6 +23,8 @@ import { CartProvider } from './components/cart/CartContext';
 import FloatingCartButton from './components/cart/FloatingCartButton';
 
 const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
+/** Height the app-install bar reserves at the bottom (0 when it is not shown). */
+const APP_BANNER_CONTENT_OFFSET = 'var(--duncit-app-banner-offset, 0px)';
 
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');
@@ -34,6 +36,8 @@ export default function App() {
   const isSignupSurvey = location.pathname.startsWith('/signup-survey');
   const showAppHeader = isAuthed;
   const showBottomNav = isAuthed && !isSignupSurvey;
+  const navPadBottom = showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : '0px';
+  const contentPadBottom = fullBleed ? 0 : `calc(${navPadBottom} + ${APP_BANNER_CONTENT_OFFSET})`;
 
   const [splashOpen, setSplashOpen] = useState(
     () => globalThis.window !== undefined && !sessionStorage.getItem('duncit_splash_shown')
@@ -112,7 +116,7 @@ export default function App() {
             flex: 1,
             minHeight: 0,
             boxSizing: 'border-box',
-            pb: !fullBleed && showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : 0,
+            pb: contentPadBottom,
             animation: 'duncit-soft-enter 180ms ease-out both',
           }}
         >

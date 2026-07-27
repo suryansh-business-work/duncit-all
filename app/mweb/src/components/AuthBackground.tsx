@@ -9,6 +9,10 @@ interface Props {
   children: React.ReactNode;
 }
 
+/** Auth screens scroll inside this fixed frame, so the app-install bar (fixed to
+ * the viewport) would cover their last rows without this extra bottom room. */
+const BANNER_OFFSET = 'var(--duncit-app-banner-offset, 0px)';
+
 export default function AuthBackground({ children }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -22,6 +26,10 @@ export default function AuthBackground({ children }: Readonly<Props>) {
         justifyContent: 'center',
         alignItems: 'safe center',
         py: { xs: 2, sm: 4 },
+        pb: {
+          xs: `calc(${theme.spacing(2)} + ${BANNER_OFFSET})`,
+          sm: `calc(${theme.spacing(4)} + ${BANNER_OFFSET})`,
+        },
         px: 2,
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',

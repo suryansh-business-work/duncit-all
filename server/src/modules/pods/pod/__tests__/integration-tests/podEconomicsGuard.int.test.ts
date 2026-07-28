@@ -31,7 +31,7 @@ const makeVirtualInput = (over: Record<string, unknown> = {}) => ({
   pod_mode: 'VIRTUAL',
   meeting_url: 'https://meet.example.com/x',
   pod_description: 'desc',
-  pod_type: 'NON_NATIVE_PAID',
+  pod_type: 'PAID',
   pod_amount: 1000,
   no_of_spots: 2,
   pod_date_time: inDays(1),
@@ -76,7 +76,7 @@ async function seedDeclinedPod(over: Record<string, unknown> = {}) {
     location_id: new Types.ObjectId(),
     pod_description: 'An evening of poetry and calm conversations',
     pod_date_time: new Date(inDays(2)),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 1000,
     no_of_spots: 5,
     pod_images_and_videos: [IMG],
@@ -95,7 +95,7 @@ describe('createPod economics guard', () => {
 
   it('still creates free pods untouched by the guard', async () => {
     const pod = await podService.create(
-      makeVirtualInput({ pod_type: 'NATIVE_FREE', pod_amount: 0 })
+      makeVirtualInput({ pod_type: 'FREE', pod_amount: 0 })
     );
     expect(pod!.pod_amount).toBe(0);
   });

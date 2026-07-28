@@ -58,7 +58,11 @@ async function seedDeclinedPod(over: Record<string, unknown> = {}) {
     location_id: new Types.ObjectId(),
     pod_description: 'An evening of poetry and calm conversations',
     pod_date_time: new Date(inDays(2)),
-    pod_type: 'NATIVE_FREE',
+    // Physical pod → must be PAID (FREE is virtual-only), priced so the
+    // resubmit economics guard clears the ₹400 seeded slot price.
+    pod_type: 'PAID',
+    pod_amount: 500,
+    no_of_spots: 5,
     pod_images_and_videos: [{ url: 'https://img/pod.jpg', type: 'IMAGE' }],
     is_active: false,
     venue_approval_status: 'DECLINED',
@@ -215,7 +219,10 @@ describe('portal editing works at any stage (club admin + admin)', () => {
       location_id: new Types.ObjectId(),
       pod_description: 'Fast games',
       pod_date_time: new Date(inDays(2)),
-      pod_type: 'NATIVE_FREE',
+      // Physical pod → PAID (FREE is virtual-only).
+      pod_type: 'PAID',
+      pod_amount: 500,
+      no_of_spots: 5,
       ...over,
     });
     return { pod, adminUserId: String(adminUser) };

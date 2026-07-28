@@ -54,7 +54,7 @@ const podInput = (hostId: string, clubId: string, over: Record<string, unknown> 
   pod_mode: 'VIRTUAL',
   meeting_url: 'https://meet.example.com/x',
   pod_description: 'desc',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
   pod_images_and_videos: [IMG],
   ...over,

@@ -53,7 +53,7 @@ async function seedPod(hostIds: Types.ObjectId[], venueId?: Types.ObjectId, venu
     venue_slot_id: venueSlotId ?? null,
     pod_description: 'desc',
     pod_date_time: new Date(),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
   });
 }
 

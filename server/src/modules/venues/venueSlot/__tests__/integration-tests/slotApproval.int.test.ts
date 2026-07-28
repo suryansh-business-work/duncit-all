@@ -28,7 +28,7 @@ async function seedPod(over: Record<string, unknown> = {}) {
     club_id: new Types.ObjectId(),
     pod_description: 'An evening of poetry',
     pod_date_time: new Date(inDays(2)),
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     is_active: false,
     venue_approval_status: 'PENDING',
     ...over,

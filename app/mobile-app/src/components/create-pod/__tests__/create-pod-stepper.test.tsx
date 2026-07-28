@@ -207,7 +207,9 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
     );
   }
   press('create-pod-submit');
-  await screen.findByTestId('create-pod-type-FREE');
+  // The Paid card is the one constant on the pricing step — FREE is virtual-only,
+  // so a physical pod never renders a Free card.
+  await screen.findByTestId('create-pod-paid');
   // Accept the Organizer Terms gate so the final publish validates.
   press('create-pod-terms');
 }
@@ -254,13 +256,16 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-venue-v1');
     press('create-pod-submit');
 
-    // Step 4: pricing + products + price panel.
-    await screen.findByTestId('create-pod-type-FREE');
+    // Step 4: pricing + products + price panel. This pod is PHYSICAL, so it is
+    // always PAID — the Free card is not offered and Paid is preselected.
+    await screen.findByTestId('create-pod-paid');
+    expect(screen.queryByTestId('create-pod-free')).toBeNull();
+    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-pressed', true);
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
     press('products-enabled-toggle');
     press('products-enabled-toggle');
-    press('create-pod-type-PAID');
-    press('create-pod-type-FREE');
+    // Pressing the already-selected Paid card is a no-op — it stays PAID.
+    press('create-pod-paid');
 
     // Accept the Organizer Terms gate, then publish.
     press('create-pod-terms');
@@ -271,6 +276,7 @@ describe('CreatePodStepper', () => {
     expect(input.pod_title).toBe('Sunday community hike');
     expect(input.venue_slot_id).toBe('s1');
     expect(input.location_id).toBe('l1');
+    expect(input.pod_type).toBe('PAID');
   });
 
   it('publishes a virtual pod (no venue, no slot, no place charges)', async () => {
@@ -603,7 +609,7 @@ describe('CreatePodStepper', () => {
 
   it('resumes at the provided step and clamps out-of-range drafts', () => {
     setup({ initialStep: 3, initialValues: { ...initialValues, pod_title: 'Resumed' } });
-    expect(screen.getByTestId('create-pod-type-FREE')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
   });
 
   it('hides the products section and clears stale product values when gated off', () => {
@@ -618,7 +624,7 @@ describe('CreatePodStepper', () => {
       },
     });
     expect(screen.getByText('Step 4 of 4')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-type-FREE')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
     expect(screen.queryByTestId('products-enabled-toggle')).toBeNull();
   });
 
@@ -638,6 +644,6 @@ describe('CreatePodStepper', () => {
         product_requests: [{ product_id: 'p1', quantity: 2 }],
       },
     });
-    expect(screen.getByTestId('create-pod-type-FREE')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-paid')).toBeOnTheScreen();
   });
 });

@@ -70,7 +70,6 @@ export function VenuePendingCard({
           {venue.venue_name}
         </Text>
         <XStack
-          testID="venue-pending-badge"
           alignItems="center"
           gap={4}
           paddingHorizontal={8}
@@ -80,7 +79,7 @@ export function VenuePendingCard({
           borderColor={badgeColor}
         >
           <MaterialIcons name={badge.icon} size={14} color={badgeColor} />
-          <Text fontSize={11} fontWeight="900" color={badgeColor}>
+          <Text testID="venue-pending-badge" fontSize={11} fontWeight="900" color={badgeColor}>
             {badge.label}
           </Text>
         </XStack>

@@ -40,7 +40,7 @@ async function seedPod(hostId: Types.ObjectId, venueId?: Types.ObjectId, venueSl
     venue_slot_id: venueSlotId ?? null,
     pod_description: 'desc',
     pod_date_time: new Date(),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
   });
 }
 
@@ -180,7 +180,7 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
         club_id: new Types.ObjectId(),
         pod_description: 'desc',
         pod_date_time: new Date(),
-        pod_type: 'NON_NATIVE_PAID',
+        pod_type: 'PAID',
       });
       await seedPayment(pod._id, 1000);
       const s = await computePodSettlement(String(pod._id), 0);
@@ -278,7 +278,7 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
         club_id: club._id,
         pod_description: 'desc',
         pod_date_time: new Date(),
-        pod_type: 'NON_NATIVE_PAID',
+        pod_type: 'PAID',
       });
       await seedPayment(pod._id, 1000);
 

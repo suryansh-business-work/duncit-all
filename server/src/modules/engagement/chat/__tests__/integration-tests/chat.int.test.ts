@@ -37,7 +37,7 @@ async function seedPod(
     pod_description: 'desc',
     pod_date_time: new Date('2026-08-01T18:00:00Z'),
     pod_end_date_time: new Date('2026-08-01T20:00:00Z'),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
     is_active: true,
   });
 }

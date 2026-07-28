@@ -77,7 +77,7 @@ async function seedPod(over: Record<string, unknown> = {}) {
     club_id: new Types.ObjectId(),
     pod_description: 'Calm conversations',
     pod_date_time: new Date(Date.now() + 86_400_000),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 1000,
     no_of_spots: 3,
     pod_images_and_videos: [{ url: 'https://img/pod.jpg', type: 'IMAGE' }],
@@ -225,7 +225,7 @@ describe('hostPodPendingView — the host sees the full waiting-screen data', ()
       pod_mode: 'VIRTUAL',
       meeting_platform: 'Zoom',
       meeting_url: 'https://zoom.us/j/1',
-      pod_type: 'NATIVE_FREE',
+      pod_type: 'FREE',
       pod_amount: 0,
       venue_approval_status: 'NONE',
     });

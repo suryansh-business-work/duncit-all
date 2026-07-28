@@ -16,7 +16,7 @@ async function seedPod(clubId: string, whenMs: number, attendees: string[] = [])
     club_id: new Types.ObjectId(clubId),
     pod_attendees: attendees.map((id) => new Types.ObjectId(id)),
     pod_date_time: new Date(Date.now() + whenMs),
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     is_active: true,
   } as never);
 }

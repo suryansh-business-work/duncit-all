@@ -18,7 +18,7 @@ const seedPod = (over: Record<string, unknown> = {}) =>
     pod_title: 'E2E Backout Pod',
     club_id: new Types.ObjectId(),
     pod_description: 'desc',
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_date_time: new Date(Date.now() + 86_400_000),
     no_of_spots: 5,
     is_active: true,

@@ -5,10 +5,10 @@ import { CategoryMediaType, PodVenueApproval } from '@/generated/graphql/graphql
 import { usePodPendingView, type PodPendingView } from '@/hooks/usePodPendingView';
 import { renderWithProviders } from '@/utils/test-utils';
 
-let routeParams: { podId: string } | undefined = { podId: 'p1' };
+let mockRouteParams: { podId: string } | undefined = { podId: 'p1' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn() }),
-  useRoute: () => ({ params: routeParams }),
+  useRoute: () => ({ params: mockRouteParams }),
 }));
 jest.mock('@/hooks/usePodPendingView', () => ({ usePodPendingView: jest.fn() }));
 const mockedUse = usePodPendingView as jest.Mock;
@@ -49,7 +49,7 @@ const view: PodPendingView = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  routeParams = { podId: 'p1' };
+  mockRouteParams = { podId: 'p1' };
 });
 
 describe('PodPendingScreen', () => {
@@ -82,7 +82,7 @@ describe('PodPendingScreen', () => {
   });
 
   it('omits the venue and admin cards when neither is on file', () => {
-    routeParams = undefined;
+    mockRouteParams = undefined;
     mockedUse.mockReturnValue({
       view: { ...view, venue: null, club_admin: null },
       isLoading: false,

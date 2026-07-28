@@ -31,7 +31,8 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
 
 describe('PodTypeCards', () => {
   it('switches between the free and paid families and no-ops on the same family', () => {
-    renderWithProviders(<PodTypeHarness initial={{ pod_type: 'FREE' }} />);
+    // FREE is virtual-only, so the harness must be VIRTUAL for both cards to exist.
+    renderWithProviders(<PodTypeHarness initial={{ pod_mode: 'VIRTUAL', pod_type: 'FREE' }} />);
     fireEvent.press(screen.getByTestId('create-pod-paid'));
     expect(screen.getByTestId('pt-readout')).toHaveTextContent('PAID');
     fireEvent.press(screen.getByTestId('create-pod-free'));
@@ -39,6 +40,12 @@ describe('PodTypeCards', () => {
     // Pressing the already-selected family is a no-op.
     fireEvent.press(screen.getByTestId('create-pod-free'));
     expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
+  });
+
+  it('hides the Free card for a physical pod — physical pods are always paid', () => {
+    renderWithProviders(<PodTypeHarness initial={{ pod_mode: 'PHYSICAL', pod_type: 'PAID' }} />);
+    expect(screen.queryByTestId('create-pod-free')).toBeNull();
+    expect(screen.getByTestId('create-pod-paid')).toBeTruthy();
   });
 });
 

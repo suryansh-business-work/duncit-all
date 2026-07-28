@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.90",
+  "version": "1.5.91",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -40,7 +40,8 @@
     "build:local:ios": "node scripts/build-local-ios.js",
     "upload:slack": "node scripts/upload-slack.js",
     "ci": "npm run test:coverage && npm run typecheck && npm run lint",
-    "verify:fallback-icons": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons"
+    "verify:fallback-icons": "node ../../scripts/verify-fallback-icons.mjs assets/fallback-icons",
+    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts"
   },
   "dependencies": {
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",

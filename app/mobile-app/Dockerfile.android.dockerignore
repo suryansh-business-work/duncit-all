@@ -40,7 +40,6 @@
 **/__tests__
 app/mobile-app/e2e
 app/mobile-app/e2e-web
-app/mobile-app/playwright-report
 server/src/modules/**/__tests__
 
 # ── Monorepo areas the Android build never reads (context shrink only) ───────

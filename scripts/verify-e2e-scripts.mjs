@@ -34,7 +34,9 @@ function workspaceDirs() {
       }
     }
   }
-  for (const solo of ['app/mweb', 'server', 'docs-site']) {
+  // app/mobile-app is a standalone npm workspace (own package-lock, outside pnpm),
+  // so pnpm-workspace.yaml never lists it and the audit used to skip it silently.
+  for (const solo of ['app/mweb', 'app/mobile-app', 'server', 'docs-site']) {
     if (fs.existsSync(path.join(ROOT, solo, 'package.json'))) dirs.push(solo);
   }
   return dirs.sort((a, b) => a.localeCompare(b));

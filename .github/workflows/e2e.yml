@@ -169,13 +169,62 @@ jobs:
           --filter duncit-docs --filter server e2e
 
   # ---------------------------------------------------------------------------
+  # The native app's web e2e. It gets its own job rather than a matrix leg
+  # because app/mobile-app is a STANDALONE npm workspace — it has its own
+  # package-lock.json, pnpm-workspace.yaml never lists it, and every step in the
+  # `browser` matrix is a pnpm command.
+  #
+  # Without this the suite was shipped and never executed: not in the matrix,
+  # not visible to the auditor, and its script was named `test:e2e:web` so
+  # nothing invoked it. Four specs that always pass because they never run are
+  # exactly the false green this gate exists to prevent.
+  # ---------------------------------------------------------------------------
+  native-web:
+    name: e2e (app/mobile-app, web)
+    needs: audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: app/mobile-app/package-lock.json
+
+      - name: Install
+        working-directory: app/mobile-app
+        run: npm ci
+
+      - name: Type-check Cypress specs
+        working-directory: app/mobile-app
+        run: npx tsc --noEmit -p __tests__/e2e/tsconfig.json
+
+      # Expo's web export is the same target native.duncit.com ships. It is the
+      # slow step (Metro bundles the whole app), hence the 40-minute budget and
+      # the heap bump the app's own scripts already use.
+      - name: Export web build
+        working-directory: app/mobile-app
+        run: npm run export:web
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      # cypress.config.ts defaults baseUrl to http://localhost:2022.
+      - name: Serve the export and run Cypress
+        working-directory: app/mobile-app
+        run: |
+          npx --yes serve dist -l 2022 &
+          npx --yes wait-on http://localhost:2022 --timeout 120000
+          npm run e2e
+
+  # ---------------------------------------------------------------------------
   # A single check other workflows (and branch protection) can require. It is
   # `needs`-ed on every e2e job and re-asserts their results, because a `needs`
   # alone would let a SKIPPED upstream count as success.
   # ---------------------------------------------------------------------------
   e2e-gate:
     name: E2E gate
-    needs: [audit, browser, no-surface]
+    needs: [audit, browser, no-surface, native-web]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -184,9 +233,11 @@ jobs:
           echo "audit=${{ needs.audit.result }}"
           echo "browser=${{ needs.browser.result }}"
           echo "no-surface=${{ needs.no-surface.result }}"
+          echo "native-web=${{ needs.native-web.result }}"
           if [ "${{ needs.audit.result }}" != "success" ] ||
              [ "${{ needs.browser.result }}" != "success" ] ||
-             [ "${{ needs.no-surface.result }}" != "success" ]; then
+             [ "${{ needs.no-surface.result }}" != "success" ] ||
+             [ "${{ needs.native-web.result }}" != "success" ]; then
             echo "::error::E2E failed. This gate is blocking by design — fix the suite, do not bypass it."
             exit 1
           fi

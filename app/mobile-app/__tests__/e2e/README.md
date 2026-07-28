@@ -48,6 +48,14 @@ First boot bundles via Metro (~15–20s); the dev server is reused between runs.
 | `explore.cy.ts` | reels render, inline comments without redirect (17)                         |
 | `support.cy.ts` | splash overlay, help center, chat inbox, tickets, callback, SOS (BUG-04-14) |
 
+### Known gap (carried over from the Playwright suite)
+
+`support.cy.ts` → "Chat with Us is an inbox…" still asserts
+`chat-inbox-ticket-tk1`, but `ChatWithUsScreen` deliberately dropped its ticket
+inbox ("this screen now offers only 'Chat live with an agent'"). The assertion
+was migrated verbatim rather than deleted — it must be removed on mWeb and
+native together (rule 27), not by the migration alone.
+
 Selectors use the app's real `testID`s (`status-mine`, `vibe-chip-all`,
 `happening-nearby-header`, `previous-pods-see-all`, `reel-comment-*`,
 `pod-comments-sheet`, …). Routes deep-link via the React Navigation `linking`

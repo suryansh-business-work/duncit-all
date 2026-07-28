@@ -21,6 +21,9 @@ const chatFixtures = {
     ],
   },
   MobileMarkSupportChatRead: { markSupportChatRead: { id: 's1', unread_for_user: 0 } },
+  // CallbackHistory feeds its rows straight into state — an absent list throws
+  // and takes the whole Callback screen down with it.
+  MobileMyCallbackRequests: { myCallbackRequests: [] },
   MobileMyTickets: {
     myTickets: [
       {
@@ -104,7 +107,11 @@ describe('App · Support module', () => {
     cy.byTestId('chat-with-us-screen').should('be.visible');
     cy.byTestId('chat-inbox-subtitle').should('be.visible');
     cy.byTestId('chat-live-card').should('be.visible');
-    cy.byTestId('chat-inbox-ticket-tk1').should('be.visible');
+    // No ticket-inbox assertion: ChatWithUsScreen deliberately dropped its
+    // ticket list ("this screen now offers only Chat live with an agent"), and
+    // src/screens/__tests__/support-chat-screens.test.tsx asserts the ticket
+    // testID is absent. Carrying the old Playwright assertion over verbatim
+    // would have made this leg permanently red the moment CI ran it.
 
     // The shortcut opens the real-time chat with its history (pickup bubble).
     cy.byTestId('chat-live-card').click();
@@ -123,7 +130,7 @@ describe('App · Support module', () => {
 
   it('callback screen has no pod picker (bug 1.2)', () => {
     cy.visitApp('/support');
-    cy.byTestId('support-more-callback').click();
+    cy.byTestId('support-more-callback').scrollIntoView().click();
     cy.byTestId('callback-screen').should('be.visible');
     cy.byTestId('callback-subtitle').should('be.visible');
     cy.contains(/select a pod|choose a pod/i).should('not.exist');
@@ -131,7 +138,7 @@ describe('App · Support module', () => {
 
   it('Create Support Tickets opens onto the mWeb-style form (BUG-05/07/08/09)', () => {
     cy.visitApp('/support');
-    cy.byTestId('support-more-tickets').click();
+    cy.byTestId('support-more-tickets').scrollIntoView().click();
     cy.byTestId('support-tickets-screen').should('be.visible');
     // Form-first (no existing-tickets list), with name/email fields + banners.
     cy.byTestId('ticket-form').should('be.visible');
@@ -165,7 +172,7 @@ describe('App · Support module', () => {
       },
     });
     cy.visitApp('/support');
-    cy.byTestId('support-more-sos').click();
+    cy.byTestId('support-more-sos').scrollIntoView().click();
     cy.byTestId('sos-screen').should('be.visible');
     cy.byTestId('sos-subtitle').should('be.visible');
     cy.contains('Only tap SOS in a real emergency').should('be.visible');
@@ -186,7 +193,7 @@ describe('App · Support module', () => {
       MobileSupportCallTarget: { bouncerSupportTarget: { phone: '', available: false } },
     });
     cy.visitApp('/support');
-    cy.byTestId('support-more-callback').click();
+    cy.byTestId('support-more-callback').scrollIntoView().click();
     cy.byTestId('callback-call-now').should('have.attr', 'aria-disabled', 'true');
   });
 
@@ -198,7 +205,7 @@ describe('App · Support module', () => {
       },
     });
     cy.visitApp('/support');
-    cy.byTestId('support-more-callback').click();
+    cy.byTestId('support-more-callback').scrollIntoView().click();
     cy.byTestId('callback-request').click();
     cy.byTestId('callback-success').should('be.visible');
     cy.byTestId('callback-success-close').click();

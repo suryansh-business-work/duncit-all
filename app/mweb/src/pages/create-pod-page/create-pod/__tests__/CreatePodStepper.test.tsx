@@ -93,7 +93,7 @@ const validVirtual = (over: Partial<CreatePodFormValues> = {}): CreatePodFormVal
   meeting_url: 'https://zoom.us/j/123',
   pod_description: 'A sufficiently long description of the pod.',
   pod_date_time: future,
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   media_text: 'https://cdn.example.com/cover.jpg',
   what_this_pod_offers: ['Great fun'],

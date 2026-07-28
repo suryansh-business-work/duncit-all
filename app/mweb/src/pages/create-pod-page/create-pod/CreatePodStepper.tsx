@@ -33,6 +33,7 @@ import BasicsStep from './steps/BasicsStep';
 import LocationClubStep from './steps/LocationClubStep';
 import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
 import PricingStep from './steps/PricingStep';
+import { useEarningsPreview } from './price-panel';
 import { useQuery } from '@apollo/client';
 import { filterProductsForClub } from '@duncit/utils';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
@@ -226,11 +227,21 @@ export default function CreatePodStepper({
   });
   const selectedSlot = (slotsQuery.data?.venueAvailableSlots ?? []).find((slot) => slot.id === slotId) ?? null;
 
+  // Step-4 money lives here so the footer can block Create Pod on the same two
+  // rules the panel renders (zero earnings / venue price not covered).
+  const preview = useEarningsPreview({
+    slotPrice: selectedSlot ? selectedSlot.price : null,
+    podAmount: Number(form.watch('pod_amount')) || 0,
+    noOfSpots: Number(form.watch('no_of_spots')) || 0,
+    venueId: venueId || null,
+    isPhysical: podMode === 'PHYSICAL',
+  });
+
   const steps = [
     <BasicsStep key="basics" form={form} />,
     <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} hostCategories={hostCategories} />,
     <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} />,
-    <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} selectedSlot={selectedSlot} />,
+    <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} />,
   ];
 
   return (
@@ -249,6 +260,7 @@ export default function CreatePodStepper({
         isFirst={step === 0}
         isLast={isLast}
         busy={busy}
+        submitDisabled={preview.blocked}
         onBack={() => goTo(step - 1)}
         onNext={() => {
           next().catch(() => undefined);

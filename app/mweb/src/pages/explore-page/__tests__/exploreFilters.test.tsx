@@ -143,17 +143,16 @@ describe('filterExplorePods', () => {
     expect(titles).toEqual(['Match', 'Virtual']);
   });
 
-  it('price filters: FREE, PAID, PREMIUM', () => {
+  // Pod types are FREE | PAID — the legacy native/premium tiers are gone.
+  it('price filters: FREE, PAID', () => {
     const pods = [
-      makePod({ pod_type: 'FREE_NATIVE', pod_title: 'free' }),
-      makePod({ pod_type: 'NATIVE_PAID', pod_title: 'paid' }),
-      makePod({ pod_type: 'NATIVE_PAID_PREMIUM', pod_title: 'premium' }),
+      makePod({ pod_type: 'FREE', pod_title: 'free' }),
+      makePod({ pod_type: 'PAID', pod_title: 'paid' }),
     ];
     const clubs = [makeClub()];
     expect(run(pods, clubs, baseFilters({ price: 'FREE' })).map((p) => p.pod_title)).toEqual(['free']);
     expect(run(pods, clubs, baseFilters({ price: 'PAID' })).map((p) => p.pod_title)).toEqual(['paid']);
-    expect(run(pods, clubs, baseFilters({ price: 'PREMIUM' })).map((p) => p.pod_title)).toEqual(['premium']);
-    expect(run(pods, clubs, baseFilters({ price: 'ALL' }))).toHaveLength(3);
+    expect(run(pods, clubs, baseFilters({ price: 'ALL' }))).toHaveLength(2);
   });
 
   it('date filters: TODAY, TOMORROW, WEEK, MONTH', () => {

@@ -8,6 +8,8 @@ interface Props {
   isFirst: boolean;
   isLast: boolean;
   busy: boolean;
+  /** Step-4 pricing rules failed — Create Pod stays disabled until they clear. */
+  submitDisabled?: boolean;
   onBack: () => void;
   onNext: () => void;
   onSubmit: () => void;
@@ -20,12 +22,14 @@ export default function StepFooterBar({
   isFirst,
   isLast,
   busy,
+  submitDisabled = false,
   onBack,
   onNext,
   onSubmit,
 }: Readonly<Props>) {
   let primaryLabel = 'Next';
   if (isLast) primaryLabel = busy ? 'Creating…' : 'Create Pod';
+  const primaryDisabled = busy || (isLast && submitDisabled);
   return (
     <Box
       sx={{
@@ -67,7 +71,7 @@ export default function StepFooterBar({
           <Button
             variant="contained"
             fullWidth
-            disabled={busy}
+            disabled={primaryDisabled}
             onClick={isLast ? onSubmit : onNext}
             endIcon={isLast ? undefined : <ArrowForwardIosIcon sx={{ fontSize: 14 }} />}
             sx={{ flex: 2, fontWeight: 900 }}

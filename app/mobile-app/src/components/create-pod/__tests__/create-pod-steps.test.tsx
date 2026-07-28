@@ -7,7 +7,11 @@ import { VenueSlotStep } from '@/components/create-pod/steps/VenueSlotStep';
 import { PricingStep } from '@/components/create-pod/steps/PricingStep';
 import { SlotPicker } from '@/components/create-pod/SlotPicker';
 import { VenueContactCard } from '@/components/create-pod/VenueContactCard';
-import { PricePanel } from '@/components/create-pod/price-panel';
+import {
+  PricePanel,
+  usePodPricing,
+  type PodPricingInput,
+} from '@/components/create-pod/price-panel';
 import {
   blankCreatePodForm,
   type CreatePodFormValues,
@@ -338,19 +342,37 @@ describe('VenueSlotStep', () => {
   });
 });
 
+// The stepper owns Step 4's money state (it gates Create Pod), so the harnesses
+// derive it the same way the real container does.
 function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
   const form = useForm<CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
+  });
+  const pricing = usePodPricing({
+    podAmount: Number(form.watch('pod_amount_text')) || 0,
+    noOfSpots: Number(form.watch('no_of_spots_text')) || 0,
+    venueId: form.watch('venue_id') || null,
+    slotPrice: slot.price,
+    isPhysical: form.watch('pod_mode') === 'PHYSICAL',
   });
   return (
     <PricingStep
       form={form}
       products={[]}
       showProducts={false}
-      selectedSlot={slot}
       finance={finance}
+      pricing={pricing}
     />
   );
+}
+
+/** Renders the panel from the same hook the stepper uses, so the existing
+ * `usePotentialEarnings` argument assertions still describe real behaviour. */
+function PriceHarness({
+  finance: financeSettings,
+  ...input
+}: Readonly<PodPricingInput & { finance: typeof finance }>) {
+  return <PricePanel finance={financeSettings} pricing={usePodPricing(input)} />;
 }
 
 describe('PricingStep', () => {
@@ -417,7 +439,7 @@ describe('PricePanel', () => {
   it('runs the waterfall on the full collection and groups charges under accordions', () => {
     mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={300}
         venueId="v1"
@@ -464,7 +486,7 @@ describe('PricePanel', () => {
   it('expands the charge groups to reveal their rows, and collapses the tree', () => {
     mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={300}
         venueId="v1"
@@ -508,7 +530,7 @@ describe('PricePanel', () => {
       isLoading: false,
     });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={300}
         venueId="v1"
@@ -526,7 +548,7 @@ describe('PricePanel', () => {
   it('explains that the host spot is free (remaining available slots)', () => {
     mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: false });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={300}
         venueId="v1"
@@ -545,7 +567,7 @@ describe('PricePanel', () => {
 
   it('tells a 1-spot host there is nothing to bill (their seat is the free one)', () => {
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={null}
         venueId={null}
@@ -562,7 +584,7 @@ describe('PricePanel', () => {
 
   it('shows a hint until both a ticket price and spots are set', () => {
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={null}
         venueId={null}
@@ -592,7 +614,7 @@ describe('PricePanel', () => {
       isLoading: false,
     });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={null}
         venueId={null}
@@ -612,7 +634,7 @@ describe('PricePanel', () => {
   it('shows the earnings spinner while the preview loads', () => {
     mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: true });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={300}
         venueId="v1"
@@ -630,7 +652,7 @@ describe('PricePanel', () => {
     // isLoading is true — only the spinner may render, never stale money rows.
     mockedEarnings.mockReturnValue({ projection, waterfall, isLoading: true });
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={300}
         venueId="v1"
@@ -645,7 +667,7 @@ describe('PricePanel', () => {
 
   it('asks without venue args until a slot is picked (physical)', () => {
     renderWithProviders(
-      <PricePanel
+      <PriceHarness
         finance={finance}
         slotPrice={null}
         venueId="v1"

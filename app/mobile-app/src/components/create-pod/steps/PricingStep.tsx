@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -6,36 +7,34 @@ import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTypeCards } from '../PodTypeCards';
-import { PricePanel } from '../price-panel';
+import {
+  PricePanel,
+  SuggestedPriceLink,
+  SuggestedPricesModal,
+  ZeroEarningsNotice,
+  type PodPricingState,
+} from '../price-panel';
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
-import type {
-  CreatePodFinance,
-  CreatePodForm,
-  CreatePodProduct,
-  CreatePodSlot,
-} from '../create-pod.types';
+import type { CreatePodFinance, CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   products: CreatePodProduct[];
   showProducts: boolean;
-  selectedSlot: CreatePodSlot | null;
   finance: CreatePodFinance;
+  /** Step 4's shared money state, owned by the stepper (it gates Create Pod). */
+  pricing: PodPricingState;
 }
 
-/** Step 4 — Free/Paid cards, ticket price, spots stepper, the slot-cost / GST /
- * earnings panel, optional products and the Organizer Terms gate. mWeb twin. */
-export function PricingStep({
-  form,
-  products,
-  showProducts,
-  selectedSlot,
-  finance,
-}: Readonly<Props>) {
+/** Step 4 — Free/Paid cards, ticket price (with its suggested-price helper and
+ * zero-earnings guard), spots stepper, the slot-cost / GST / earnings panel,
+ * optional products and the Organizer Terms gate. mWeb twin. */
+export function PricingStep({ form, products, showProducts, finance, pricing }: Readonly<Props>) {
   const { control, watch, setValue } = form;
   const { color } = useThemeColors();
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const isFree = watch('pod_type') === 'FREE';
   const productsEnabled = watch('products_enabled');
@@ -55,7 +54,9 @@ export function PricingStep({
         keyboardType="numeric"
         editable={!isFree}
         hint={isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.'}
+        labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}
       />
+      {pricing.zeroEarnings ? <ZeroEarningsNotice /> : null}
       <Controller
         control={control}
         name="no_of_spots_text"
@@ -68,14 +69,7 @@ export function PricingStep({
           />
         )}
       />
-      <PricePanel
-        finance={finance}
-        slotPrice={selectedSlot ? selectedSlot.price : null}
-        venueId={watch('venue_id') || null}
-        podAmount={Number(watch('pod_amount_text')) || 0}
-        noOfSpots={Number(watch('no_of_spots_text')) || 0}
-        isPhysical={isPhysical}
-      />
+      <PricePanel finance={finance} pricing={pricing} />
       <FormTextField control={control} name="payment_terms" label="Payment terms" multiline />
       {isPhysical ? (
         <Controller
@@ -124,6 +118,14 @@ export function PricingStep({
         </>
       ) : null}
       <TermsAgreement form={form} />
+      <SuggestedPricesModal
+        open={suggestionsOpen}
+        onClose={() => setSuggestionsOpen(false)}
+        noOfSpots={pricing.noOfSpots}
+        venueId={pricing.venuePicked ? pricing.venueId : null}
+        venueAmount={pricing.venuePicked ? pricing.slotPrice : null}
+        symbol={finance.currency_symbol}
+      />
     </YStack>
   );
 }

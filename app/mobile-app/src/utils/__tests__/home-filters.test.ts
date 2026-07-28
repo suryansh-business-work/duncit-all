@@ -11,7 +11,7 @@ import {
 
 describe('home-filters', () => {
   it('exposes the selectable option lists', () => {
-    expect(PRICE_OPTIONS.map(([v]) => v)).toEqual(['ALL', 'FREE', 'PAID', 'PREMIUM']);
+    expect(PRICE_OPTIONS.map(([v]) => v)).toEqual(['ALL', 'FREE', 'PAID']);
     expect(DATE_OPTIONS.length).toBe(5);
     expect(SORT_OPTIONS.length).toBe(4);
   });
@@ -30,18 +30,16 @@ describe('home-filters', () => {
 
   describe('matchesPrice', () => {
     it('lets everything through for ALL', () => {
-      expect(matchesPrice({ pod_type: 'NATIVE_PAID' }, 'ALL')).toBe(true);
+      expect(matchesPrice({ pod_type: 'PAID' }, 'ALL')).toBe(true);
     });
-    it('matches free, paid and premium buckets', () => {
-      expect(matchesPrice({ pod_type: 'NATIVE_FREE' }, 'FREE')).toBe(true);
-      expect(matchesPrice({ pod_type: 'NATIVE_PAID' }, 'PAID')).toBe(true);
-      expect(matchesPrice({ pod_type: 'NON_NATIVE_PAID' }, 'PAID')).toBe(true);
-      expect(matchesPrice({ pod_type: 'NATIVE_PAID_PREMIUM' }, 'PREMIUM')).toBe(true);
+    it('matches the free and paid buckets', () => {
+      expect(matchesPrice({ pod_type: 'FREE' }, 'FREE')).toBe(true);
+      expect(matchesPrice({ pod_type: 'PAID' }, 'PAID')).toBe(true);
     });
     it('rejects mismatches and missing types', () => {
-      expect(matchesPrice({ pod_type: 'NATIVE_PAID' }, 'FREE')).toBe(false);
+      expect(matchesPrice({ pod_type: 'PAID' }, 'FREE')).toBe(false);
       expect(matchesPrice({ pod_type: null }, 'PAID')).toBe(false);
-      expect(matchesPrice({}, 'PREMIUM')).toBe(false);
+      expect(matchesPrice({}, 'PAID')).toBe(false);
     });
   });
 

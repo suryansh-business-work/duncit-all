@@ -55,7 +55,7 @@ const PODS = [
     id: 'p_past',
     club_id: 'club1',
     pod_date_time: isoDaysFromNow(-2),
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 100,
     pod_hosts_id: ['h1'],
     host_names: ['Alice'],
@@ -64,7 +64,7 @@ const PODS = [
     id: 'p_future3',
     club_id: 'club1',
     pod_date_time: isoDaysFromNow(3),
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_amount: 0,
     pod_hosts_id: ['me1'],
     host_names: null,
@@ -73,7 +73,7 @@ const PODS = [
     id: 'p_future10',
     club_id: 'club1',
     pod_date_time: isoDaysFromNow(10),
-    pod_type: 'NATIVE_PAID_PREMIUM',
+    pod_type: 'PAID',
     pod_amount: 500,
     pod_hosts_id: ['h1'],
     host_names: [],
@@ -82,7 +82,7 @@ const PODS = [
     id: 'p_future40',
     club_id: 'club2',
     pod_date_time: isoDaysFromNow(40),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 250,
     pod_hosts_id: ['h2'],
     host_names: null,
@@ -91,7 +91,7 @@ const PODS = [
     id: 'p_music',
     club_id: 'club3',
     pod_date_time: isoDaysFromNow(2),
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 50,
     pod_hosts_id: [],
     host_names: null,
@@ -100,7 +100,7 @@ const PODS = [
     id: 'p_nodate',
     club_id: 'club1',
     pod_date_time: null,
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 10,
     pod_hosts_id: ['unknown'],
     host_names: null,
@@ -110,7 +110,7 @@ const PODS = [
     id: 'p_orphan',
     club_id: 'ghost',
     pod_date_time: isoDaysFromNow(1),
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 10,
     pod_hosts_id: [],
     host_names: null,
@@ -331,7 +331,7 @@ describe('useHomeData', () => {
           ...baseParams,
           superCategorySlug: 'sports',
           categoryId: 'c1',
-          priceFilter: 'PREMIUM',
+          priceFilter: 'PAID',
           dateFilter: 'MONTH',
           sortBy: 'PRICE_DESC',
         }),
@@ -347,7 +347,7 @@ describe('useHomeData', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    // Only PREMIUM pods within a month under sports/c1 -> p_future10
+    // Only PAID pods within a month under sports/c1 -> p_future10
     const activeIds = result.current.activePods.map((p: any) => p.id);
     expect(activeIds).toEqual(['p_future10']);
 

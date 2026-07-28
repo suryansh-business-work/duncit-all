@@ -75,6 +75,7 @@ const SearchPage = lazy(() => import('../pages/search-page'));
 const PreviousPodsPage = lazy(() => import('../pages/PreviousPodsPage'));
 const HappeningNearbyPage = lazy(() => import('../pages/HappeningNearbyPage'));
 const CreatePodPage = lazy(() => import('../pages/create-pod-page'));
+const PodPendingPage = lazy(() => import('../pages/pod-pending-page'));
 const EarnPage = lazy(() => import('../pages/earn-page'));
 const ProductsManagePage = lazy(() => import('../pages/products-manage-page'));
 const SavedItemsPage = lazy(() => import('../pages/SavedItemsPage'));
@@ -138,6 +139,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/host/wallet" element={withAuth(<WalletPage />)} />
         <Route path="/create-pod" element={withAuth(<CreatePodPage />)} />
         <Route path="/create-pod/:draftId" element={withAuth(<CreatePodPage />)} />
+        <Route path="/host/pod-pending/:podId" element={withAuth(<PodPendingPage />)} />
         <Route path="/earn" element={withAuth(<EarnPage />)} />
         <Route path="/products/manage" element={withAuth(<ProductsManagePage />)} />
         <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />

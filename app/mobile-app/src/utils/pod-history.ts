@@ -109,7 +109,7 @@ export function canRejoin(item: PodMembership): boolean {
 
 /** Price caption for a pod — "Free pod" or "Paid pod ₹<amount>". */
 export function podPriceCaption(podType?: string | null, amount?: number | null): string {
-  return podType?.includes('FREE') ? 'Free pod' : `Paid pod ₹${amount ?? 0}`;
+  return podType === 'FREE' ? 'Free pod' : `Paid pod ₹${amount ?? 0}`;
 }
 
 /** De-duplicate memberships by pod (keep the first per pod) — mWeb list behaviour. */

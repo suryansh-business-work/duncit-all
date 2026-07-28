@@ -63,10 +63,6 @@ const toPub = (m: IPodMember) => ({
   updated_at: m.updated_at?.toISOString?.() ?? '',
 });
 
-function isFreePodType(t: string) {
-  return t === 'NATIVE_FREE' || t === 'NON_NATIVE_FREE';
-}
-
 const isPodFull = (pod: any) =>
   pod.no_of_spots > 0 && (pod.pod_attendees?.length ?? 0) >= pod.no_of_spots;
 
@@ -415,7 +411,7 @@ export const podMemberService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    if (!isFreePodType(pod.pod_type)) {
+    if (pod.pod_type !== 'FREE') {
       throw new GraphQLError('This pod is paid. Use checkout to book.', {
         extensions: { code: 'BAD_REQUEST' },
       });

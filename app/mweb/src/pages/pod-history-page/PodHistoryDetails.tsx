@@ -122,7 +122,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
                 {pod?.pod_date_time ? formatDateTime(pod.pod_date_time) : 'Date not available'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {pod?.pod_type?.includes('FREE') ? 'Free pod' : `Paid pod ${format(pod?.pod_amount ?? 0)}`}
+                {pod?.pod_type === 'FREE' ? 'Free pod' : `Paid pod ${format(pod?.pod_amount ?? 0)}`}
               </Typography>
             </Box>
           </Stack>

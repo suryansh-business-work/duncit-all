@@ -18,7 +18,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
   const navigate = useNavigate();
   const { format } = usePricing();
   const [expanded, setExpanded] = useState(false);
-  const isFree = pod.pod_type?.includes('FREE');
+  const isFree = pod.pod_type === 'FREE';
   const description: string = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
 

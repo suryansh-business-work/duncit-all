@@ -96,9 +96,20 @@ function refineSchedule(values: CreatePodFormValues, ctx: z.RefinementCtx) {
   }
 }
 
+/** Creation only accepts the new FREE/PAID pair, and FREE is virtual-only. */
+function refinePodType(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_type !== 'FREE' && values.pod_type !== 'PAID') {
+    // TODO(i18n)
+    ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Choose Free or Paid' });
+  } else if (values.pod_mode === 'PHYSICAL' && values.pod_type === 'FREE') {
+    // TODO(i18n)
+    ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Physical pods must be Paid' });
+  }
+}
+
 /** Pricing, products, media and the Organizer Terms gate on the publish step. */
 function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx) {
-  if (values.pod_type.includes('FREE') && Number(values.pod_amount_text) !== 0) {
+  if (values.pod_type === 'FREE' && Number(values.pod_amount_text) !== 0) {
     ctx.addIssue({
       code: 'custom',
       path: ['pod_amount_text'],
@@ -188,6 +199,7 @@ export const createPodSchema = z
     refineVenue(values, ctx);
     refineMeeting(values, ctx);
     refineSchedule(values, ctx);
+    refinePodType(values, ctx);
     refinePublish(values, ctx);
   });
 
@@ -385,10 +397,23 @@ export function serializeDraft(values: CreatePodFormValues, step: number) {
   };
 }
 
+/** Coerces any stored pod type onto the FREE/PAID pair (physical pods are
+ * always PAID — FREE is virtual-only). */
+export function normalizePodType(type: string, mode: string): string {
+  if (mode === 'PHYSICAL') return 'PAID';
+  return type === 'FREE' ? 'FREE' : 'PAID';
+}
+
 /** Rebuilds form values from a stored draft payload. */
 export function hydrateDraft(payload: string): CreatePodFormValues {
   try {
-    return { ...blankCreatePodForm, ...(JSON.parse(payload) as Partial<CreatePodFormValues>) };
+    const values = {
+      ...blankCreatePodForm,
+      ...(JSON.parse(payload) as Partial<CreatePodFormValues>),
+    };
+    // Old drafts may carry retired pod types — coerce onto FREE/PAID.
+    values.pod_type = normalizePodType(values.pod_type, values.pod_mode);
+    return values;
   } catch {
     return blankCreatePodForm;
   }

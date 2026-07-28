@@ -110,7 +110,7 @@ export function ExplorePodOverlay({
   bottom = 150,
 }: Readonly<ExplorePodOverlayProps>) {
   const [expanded, setExpanded] = useState(false);
-  const isFree = pod.pod_type.includes('FREE');
+  const isFree = pod.pod_type === 'FREE';
   const description = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
   const toggleCaption = () => setExpanded((v) => !v);

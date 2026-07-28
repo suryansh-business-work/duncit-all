@@ -30,6 +30,7 @@ import {
   type TableEntityConfig,
   type TableQueryInput,
 } from '@utils/table-query';
+import { LEGACY_POD_TYPE_MAP } from './pod-type.migration';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
@@ -172,6 +173,22 @@ const POD_TABLE_CONFIG: TableEntityConfig = {
   defaultSort: { pod_date_time: -1 },
 };
 
+/** Table filter values are string-typed, and released app binaries in the
+ * field may still send the legacy pod_type values — coerce them to FREE/PAID
+ * at the boundary so their filters keep matching instead of returning nothing. */
+function coerceLegacyPodTypeFilters(input?: TableQueryInput | null): TableQueryInput | null | undefined {
+  if (!input?.filters?.length) return input;
+  const filters = input.filters.map((f) => {
+    if (f.field !== 'pod_type') return f;
+    return {
+      ...f,
+      value: f.value == null ? f.value : LEGACY_POD_TYPE_MAP[f.value] ?? f.value,
+      values: f.values == null ? f.values : f.values.map((v) => LEGACY_POD_TYPE_MAP[v] ?? v),
+    };
+  });
+  return { ...input, filters };
+}
+
 const MEET_ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
 
 /** `length` lowercase letters from a CSPRNG (used for placeholder meeting codes). */
@@ -185,13 +202,30 @@ function notFound(): never {
   throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 }
 
+const WRITABLE_POD_TYPES = new Set<PodType>(['FREE', 'PAID']);
+
+/** Creation and price-changing edits accept only FREE or PAID, and FREE is
+ * virtual-only — a physical pod must be PAID. */
+function assertWritablePodType(type: PodType, mode: PodMode) {
+  if (!WRITABLE_POD_TYPES.has(type)) {
+    throw new GraphQLError('pod_type must be FREE or PAID', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (mode === 'PHYSICAL' && type === 'FREE') {
+    throw new GraphQLError('Physical pods must be paid — free pods are only available for virtual pods', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
 function validateAmount(type: PodType, amount: number) {
   if (amount < 0 || amount > 1999) {
     throw new GraphQLError('pod_amount must be between 0 and 1999', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  if ((type === 'NATIVE_FREE' || type === 'NON_NATIVE_FREE') && amount !== 0) {
+  if (type === 'FREE' && amount !== 0) {
     throw new GraphQLError('Free pods must have amount 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
@@ -848,10 +882,21 @@ function applyDatesForUpdate(doc: any, input: any) {
 /** Shared full-edit core (admin/club-admin update + host resubmit): validates
  * and writes the incoming fields onto the loaded doc. The caller saves. */
 async function applyPodEditCore(doc: any, input: any) {
+  const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
+  // A supplied pod_type must follow the FREE/PAID rules; when untouched, a
+  // stored FREE pod still cannot be flipped to physical without becoming PAID.
+  if (input.pod_type === undefined) {
+    if (nextMode === 'PHYSICAL' && doc.pod_type === 'FREE') {
+      throw new GraphQLError('Physical pods must be paid — free pods are only available for virtual pods', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+  } else {
+    assertWritablePodType(input.pod_type, nextMode);
+  }
   if (input.pod_type !== undefined || input.pod_amount !== undefined) {
     validateAmount(input.pod_type ?? doc.pod_type, input.pod_amount ?? doc.pod_amount);
   }
-  const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
   validateMeetingDetails(nextMode, input, doc);
   validatePodDatesForUpdate(input, doc);
   if (input.reel_url !== undefined) input.reel_url = normalizeReelUrl(input.reel_url);
@@ -986,7 +1031,7 @@ export const podService = {
     const { docs, total, page, page_size } = await runTableQuery<any>(
       PodModel,
       baseFilter,
-      input,
+      coerceLegacyPodTypeFilters(input),
       POD_TABLE_CONFIG
     );
     const slugMap = await loadClubSlugMap(docs);
@@ -1004,7 +1049,7 @@ export const podService = {
     const { docs, total, page, page_size } = await runTableQuery<any>(
       PodModel,
       { pod_hosts_id: new Types.ObjectId(userId) },
-      input,
+      coerceLegacyPodTypeFilters(input),
       POD_TABLE_CONFIG
     );
     const slugMap = await loadClubSlugMap(docs);
@@ -1062,6 +1107,7 @@ export const podService = {
     }
     validateHasImage(input.pod_images_and_videos);
     const podMode = normalizePodMode(input.pod_mode);
+    assertWritablePodType(input.pod_type, podMode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
 
     const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(input, podMode);

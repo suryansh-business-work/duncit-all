@@ -69,7 +69,7 @@ export function PodDetailsScreen() {
   const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
-  const isFree = pod?.pod_type?.includes('FREE') ?? false;
+  const isFree = pod?.pod_type === 'FREE';
   // The viewer hosts THIS pod (pod-specific, independent of their active studio
   // role) — swaps the booking CTA for the Host Studio entry. Mirrors mWeb.
   const isPodHost = !!viewerId && (pod?.pod_hosts_id ?? []).includes(viewerId);

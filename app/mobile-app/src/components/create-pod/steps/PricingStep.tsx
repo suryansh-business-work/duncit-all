@@ -4,19 +4,17 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { ChipSelectField } from '../ChipSelectField';
 import { PlaceChargesField } from '../PlaceChargesField';
 import { PodTypeCards } from '../PodTypeCards';
 import { PricePanel } from '../price-panel';
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
-import {
-  POD_TYPES,
-  type CreatePodFinance,
-  type CreatePodForm,
-  type CreatePodProduct,
-  type CreatePodSlot,
+import type {
+  CreatePodFinance,
+  CreatePodForm,
+  CreatePodProduct,
+  CreatePodSlot,
 } from '../create-pod.types';
 
 interface Props {
@@ -39,7 +37,7 @@ export function PricingStep({
   const { control, watch, setValue } = form;
   const { color } = useThemeColors();
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
-  const isFree = watch('pod_type').includes('FREE');
+  const isFree = watch('pod_type') === 'FREE';
   const productsEnabled = watch('products_enabled');
   const toggleProducts = () => {
     const next = !productsEnabled;
@@ -50,22 +48,6 @@ export function PricingStep({
   return (
     <YStack gap={14}>
       <PodTypeCards form={form} />
-      <Controller
-        control={control}
-        name="pod_type"
-        render={({ field }) => (
-          <ChipSelectField
-            label="Pod type"
-            options={[...POD_TYPES]}
-            value={field.value}
-            onChange={(next) => {
-              field.onChange(next);
-              if (next.includes('FREE')) setValue('pod_amount_text', '0');
-            }}
-            testID="create-pod-type"
-          />
-        )}
-      />
       <FormTextField
         control={control}
         name="pod_amount_text"

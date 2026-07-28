@@ -18,9 +18,14 @@ export function podDateLabel(pod: HomePod): string {
   return Number.isNaN(date.getTime()) ? 'Date pending' : format(date, 'EEE, d MMM · h:mm a');
 }
 
-/** "Free" for any free pod type, else the rupee amount. */
+/** "Free" for a free pod, else the rupee amount. */
 export function podPriceLabel(pod: HomePod): string {
-  return pod.pod_type.includes('FREE') ? 'Free' : `₹${pod.pod_amount}`;
+  return pod.pod_type === 'FREE' ? 'Free' : `₹${pod.pod_amount}`;
+}
+
+/** "Free" / "Paid" from the pod type. */
+export function podTypeLabel(type: string): string {
+  return type === 'FREE' ? 'Free' : 'Paid'; // TODO(i18n)
 }
 
 /** "label · detail" from the optional place fields. */

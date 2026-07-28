@@ -81,7 +81,6 @@ export default function FilterBar({
               ['ALL', 'All'],
               ['FREE', 'Free'],
               ['PAID', 'Paid'],
-              ['PREMIUM', 'Premium'],
             ] as const
           ).map(([val, lbl]) => (
             <Chip

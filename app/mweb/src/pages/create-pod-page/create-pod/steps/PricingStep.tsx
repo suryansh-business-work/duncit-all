@@ -25,7 +25,7 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
     setValue,
     formState: { errors },
   } = form;
-  const isFree = watch('pod_type').includes('FREE');
+  const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const productsEnabled = watch('products_enabled');
 

@@ -11,6 +11,7 @@ import {
   filterHostPods,
   type HostPodsFilters,
 } from '@/utils/host-pods-filters';
+import { podTypeLabel } from '@/utils/pod-format';
 import { isVenueRejected, VENUE_REJECTED_NOTE, venueApprovalChip } from '@/utils/venue-approval';
 import { HostPodRow } from './HostPodRow';
 import { HostPodsFilterSheet } from './HostPodsFilterSheet';
@@ -92,7 +93,7 @@ export function HostPodsSection() {
             title={pod.pod_title}
             when={formatWhen(pod.pod_date_time)}
             zoneName={pod.zone_name}
-            typeLabel={pod.pod_type.replaceAll('_', ' ')}
+            typeLabel={podTypeLabel(pod.pod_type)}
             approval={venueApprovalChip(pod.venue_approval_status)}
             rejectedNote={rejected ? VENUE_REJECTED_NOTE : null}
             onOpen={() => openPod(pod.club_slug, pod.pod_id)}

@@ -9,7 +9,7 @@ interface Props {
 
 /** Compact fixed-width pod card used inside the horizontal Pods Schedule rails. */
 export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<Props>) {
-  const isFree = pod.pod_type?.includes('FREE');
+  const isFree = pod.pod_type === 'FREE';
   const cover = pod.pod_images_and_videos?.[0]?.url;
   const dateLabel = pod.pod_date_time
     ? new Date(pod.pod_date_time)

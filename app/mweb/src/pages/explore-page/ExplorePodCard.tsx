@@ -55,7 +55,7 @@ export default function ExplorePodCard({
   const { format } = usePricing();
   // Expired pods can't be joined — the join rail + CTA become an "expired" notice.
   const expired = isPodExpired(pod.pod_date_time);
-  const ctaSubtitle = pod.pod_type?.includes('FREE')
+  const ctaSubtitle = pod.pod_type === 'FREE'
     ? 'Free spot'
     : `${format(pod.pod_amount)} · Confirm with UPI`;
   const [liked, setLiked] = useState<boolean>(!!pod.liked_by_me);

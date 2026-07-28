@@ -128,6 +128,6 @@ export const DELETE_STORY_POST = gql`
   }
 `;
 
-export type PriceFilter = 'ALL' | 'FREE' | 'PAID' | 'PREMIUM';
+export type PriceFilter = 'ALL' | 'FREE' | 'PAID';
 export type DateFilter = 'ALL' | 'TODAY' | 'TOMORROW' | 'WEEK' | 'MONTH';
 export type SortBy = 'DATE_ASC' | 'DATE_DESC' | 'PRICE_ASC' | 'PRICE_DESC';

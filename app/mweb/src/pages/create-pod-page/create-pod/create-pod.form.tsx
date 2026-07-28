@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  POD_TYPE_VALUES,
   blankCreatePodForm,
   type CreatePodClub,
   type CreatePodFormValues,
@@ -101,7 +102,15 @@ export const createPodSchema = z
     if (values.pod_end_date_time && values.pod_end_date_time <= values.pod_date_time) {
       ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: 'End must be after start' });
     }
-    if (values.pod_type.includes('FREE') && values.pod_amount !== 0) {
+    if (!POD_TYPE_VALUES.has(values.pod_type)) {
+      // TODO(i18n)
+      ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Select Free or Paid' });
+    }
+    if (values.pod_mode === 'PHYSICAL' && values.pod_type === 'FREE') {
+      // TODO(i18n)
+      ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Physical pods must be paid' });
+    }
+    if (values.pod_type === 'FREE' && values.pod_amount !== 0) {
       ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: 'Free pods must have amount 0' });
     }
     if (values.products_enabled && values.product_requests.length === 0) {
@@ -278,6 +287,13 @@ export function serializeDraft(values: CreatePodFormValues, step: number) {
   };
 }
 
+/** Maps a stored pod type onto the two creation values — old drafts may
+ * carry retired values that creation no longer accepts. */
+const normalizePodType = (podType: string | undefined) => {
+  if (!podType) return blankCreatePodForm.pod_type;
+  return podType.includes('FREE') ? 'FREE' : 'PAID';
+};
+
 /** Rebuilds form values from a stored draft payload, reviving Date fields. */
 export function hydrateDraft(payload: string): CreatePodFormValues {
   try {
@@ -285,6 +301,7 @@ export function hydrateDraft(payload: string): CreatePodFormValues {
     return {
       ...blankCreatePodForm,
       ...parsed,
+      pod_type: normalizePodType(parsed.pod_type),
       pod_date_time: parsed.pod_date_time ? new Date(parsed.pod_date_time) : null,
       pod_end_date_time: parsed.pod_end_date_time ? new Date(parsed.pod_end_date_time) : null,
     };

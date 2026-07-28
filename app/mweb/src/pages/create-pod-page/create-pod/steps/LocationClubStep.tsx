@@ -96,7 +96,21 @@ export default function LocationClubStep({ form, clubs, locations, hostCategorie
           control={control}
           name="pod_mode"
           render={({ field }) => (
-            <ToggleButtonGroup exclusive fullWidth color="primary" value={field.value} onChange={(_e, next) => next && field.onChange(next)}>
+            <ToggleButtonGroup
+              exclusive
+              fullWidth
+              color="primary"
+              value={field.value}
+              onChange={(_e, next) => {
+                if (!next) return;
+                field.onChange(next);
+                // Physical pods can only be Paid — a Free virtual pod switching
+                // to Physical must not carry FREE to submit.
+                if (next === 'PHYSICAL' && watch('pod_type') === 'FREE') {
+                  setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
+                }
+              }}
+            >
               <ToggleButton value="PHYSICAL" sx={{ py: 1.25, fontWeight: 800 }}><DirectionsRunIcon fontSize="small" sx={{ mr: 1 }} /> Physical</ToggleButton>
               <ToggleButton value="VIRTUAL" sx={{ py: 1.25, fontWeight: 800 }}><VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual</ToggleButton>
             </ToggleButtonGroup>

@@ -59,6 +59,13 @@ async function bootstrap() {
     const { userService } = await import('@modules/access/user/user.service');
     await userService.ensureSuperAdmin();
   });
+  // Data migration: collapse legacy pod_type values (NATIVE_* / NON_NATIVE_*)
+  // to FREE/PAID before traffic is served — the GraphQL enum no longer
+  // carries the legacy values, so unmigrated docs would fail to resolve.
+  await safeSeed('podTypeMigration', async () => {
+    const { migrateLegacyPodTypes } = await import('@modules/pods/pod/pod-type.migration');
+    await migrateLegacyPodTypes();
+  });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire

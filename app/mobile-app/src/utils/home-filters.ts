@@ -4,7 +4,7 @@
  * and identical to the website (mWeb ↔ mobile parity, CLAUDE.md #27).
  */
 
-export type PriceFilter = 'ALL' | 'FREE' | 'PAID' | 'PREMIUM';
+export type PriceFilter = 'ALL' | 'FREE' | 'PAID';
 export type DateFilter = 'ALL' | 'TODAY' | 'TOMORROW' | 'WEEK' | 'MONTH';
 export type SortBy = 'DATE_ASC' | 'DATE_DESC' | 'PRICE_ASC' | 'PRICE_DESC';
 
@@ -22,10 +22,9 @@ export const DEFAULT_HOME_FILTERS: HomeFilters = {
 
 /** Selectable options (value + label) — shared by the filter sheet UI. */
 export const PRICE_OPTIONS: readonly (readonly [PriceFilter, string])[] = [
-  ['ALL', 'All'],
-  ['FREE', 'Free'],
-  ['PAID', 'Paid'],
-  ['PREMIUM', 'Premium'],
+  ['ALL', 'All'], // TODO(i18n)
+  ['FREE', 'Free'], // TODO(i18n)
+  ['PAID', 'Paid'], // TODO(i18n)
 ];
 
 export const DATE_OPTIONS: readonly (readonly [DateFilter, string])[] = [
@@ -60,10 +59,7 @@ interface PricePod {
 /** Price bucket match — mirrors mWeb's pod_type checks exactly. */
 export function matchesPrice(pod: PricePod, price: PriceFilter): boolean {
   if (price === 'ALL') return true;
-  const type = pod.pod_type ?? '';
-  if (price === 'FREE') return type.includes('FREE');
-  if (price === 'PAID') return type === 'NATIVE_PAID' || type === 'NON_NATIVE_PAID';
-  return type === 'NATIVE_PAID_PREMIUM';
+  return (pod.pod_type ?? '') === price;
 }
 
 function startOfDay(d: Date): Date {

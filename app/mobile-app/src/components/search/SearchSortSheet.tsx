@@ -61,7 +61,7 @@ export function SearchSortSheet({ open, value, onClose, onSelect }: Readonly<Pro
                   options={SEARCH_SORT_OPTIONS}
                   value={value}
                   onSelect={(next) => {
-                    onSelect(next as SearchSort);
+                    onSelect(next);
                     onClose();
                   }}
                 />

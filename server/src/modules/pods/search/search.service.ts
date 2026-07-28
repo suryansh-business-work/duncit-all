@@ -1,9 +1,9 @@
 import { Types } from 'mongoose';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
-import { mapClubToPublic } from '@modules/pods/club/club.service';
+import { mapClubToPublic } from '@modules/clubs/club/club.service';
 import { mapPodToPublic, loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;

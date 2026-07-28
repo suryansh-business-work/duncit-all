@@ -214,7 +214,15 @@ describe('UserProvider — logout & reload', () => {
     renderProvider({ isAuthed: () => false });
     const ctx = captured as UserDataContextValue;
     vi.stubGlobal('window', undefined);
-    expect(() => ctx.reloadApp()).not.toThrow();
+    try {
+      expect(() => ctx.reloadApp()).not.toThrow();
+    } finally {
+      // Restore inside the test: the shared afterEach in __tests__/setup.ts calls
+      // testing-library `cleanup()`, and react-dom reads `window.event` while
+      // unmounting. Leaving `window` undefined until the file-level afterEach
+      // crashes cleanup and corrupts React's internals for every later test.
+      vi.unstubAllGlobals();
+    }
   });
 });
 

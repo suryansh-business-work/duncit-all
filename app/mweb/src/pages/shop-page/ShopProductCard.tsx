@@ -64,10 +64,10 @@ export default function ShopProductCard({
               <Stack direction="row" alignItems="center" spacing={0.25}>
                 <StarRoundedIcon sx={{ fontSize: 16, color: '#f5a623' }} />
                 <Typography variant="caption" sx={{ fontWeight: 800 }}>
-                  {summary!.average_rating.toFixed(1)}
+                  {summary.average_rating.toFixed(1)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  ({summary!.total})
+                  ({summary.total})
                 </Typography>
               </Stack>
             )}

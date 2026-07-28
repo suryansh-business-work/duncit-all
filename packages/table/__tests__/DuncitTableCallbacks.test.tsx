@@ -7,23 +7,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // events, covering the controlled-sort echo guard and the row-click target filter.
 type SortChanged = (event: { api: { getColumnState: () => Array<{ colId: string; sort: string | null }> } }) => void;
 type RowClicked = (event: { data?: unknown; event?: { target?: unknown } }) => void;
+type RowStyleFn = (params: { data?: unknown }) => Record<string, string> | undefined;
+
+type GridProps = {
+  onSortChanged?: SortChanged;
+  onRowClicked?: RowClicked;
+  getRowStyle?: RowStyleFn;
+};
 
 const { captured, mockExport } = vi.hoisted(() => ({
-  captured: {} as { onSortChanged?: SortChanged; onRowClicked?: RowClicked },
+  captured: {} as GridProps,
   mockExport: vi.fn(),
 }));
 
 vi.mock('ag-grid-react', async () => {
   const react = await import('react');
   return {
-    AgGridReact: react.forwardRef(
-      (props: { onSortChanged?: SortChanged; onRowClicked?: RowClicked }, ref: React.Ref<unknown>) => {
-        captured.onSortChanged = props.onSortChanged;
-        captured.onRowClicked = props.onRowClicked;
-        react.useImperativeHandle(ref, () => ({ api: { exportDataAsCsv: mockExport } }));
-        return react.createElement('div', { 'data-testid': 'ag-grid-stub' });
-      },
-    ),
+    AgGridReact: react.forwardRef((props: GridProps, ref: React.Ref<unknown>) => {
+      captured.onSortChanged = props.onSortChanged;
+      captured.onRowClicked = props.onRowClicked;
+      captured.getRowStyle = props.getRowStyle;
+      react.useImperativeHandle(ref, () => ({ api: { exportDataAsCsv: mockExport } }));
+      return react.createElement('div', { 'data-testid': 'ag-grid-stub' });
+    }),
   };
 });
 
@@ -53,6 +59,7 @@ beforeEach(() => {
   mockExport.mockClear();
   captured.onSortChanged = undefined;
   captured.onRowClicked = undefined;
+  captured.getRowStyle = undefined;
 });
 
 describe('DuncitTable controlled sort echo guard', () => {
@@ -152,6 +159,45 @@ describe('DuncitTable row-click target filter', () => {
     expect(() =>
       captured.onRowClicked?.({ data: { id: 'p1', name: 'x' }, event: { target: document.createElement('div') } }),
     ).not.toThrow();
+  });
+});
+
+describe('DuncitTable getRowStyle bridge', () => {
+  it('passes the row through to the caller style fn, and skips rows with no data', async () => {
+    const getRowStyle = vi.fn((row: Person) => ({ background: row.id === 'p1' ? 'red' : 'blue' }));
+    render(
+      <DuncitTable<Person>
+        tableId="rowstyle"
+        columns={columns}
+        fetchRows={makeFetch()}
+        getRowId={(row) => row.id}
+        getRowStyle={getRowStyle}
+      />,
+    );
+    await screen.findByTestId('ag-grid-stub');
+    const row = { id: 'p1', name: 'Person 1' };
+
+    // Row data present -> the caller's fn receives the row and its style is returned.
+    expect(captured.getRowStyle?.({ data: row })).toEqual({ background: 'red' });
+    expect(getRowStyle).toHaveBeenCalledWith(row);
+
+    // AG Grid also renders data-less rows (loading / full-width) -> undefined, fn not called.
+    getRowStyle.mockClear();
+    expect(captured.getRowStyle?.({ data: undefined })).toBeUndefined();
+    expect(getRowStyle).not.toHaveBeenCalled();
+  });
+
+  it('returns undefined for every row when no getRowStyle prop is supplied', async () => {
+    render(
+      <DuncitTable<Person>
+        tableId="rowstyle-none"
+        columns={columns}
+        fetchRows={makeFetch()}
+        getRowId={(row) => row.id}
+      />,
+    );
+    await screen.findByTestId('ag-grid-stub');
+    expect(captured.getRowStyle?.({ data: { id: 'p1', name: 'Person 1' } })).toBeUndefined();
   });
 });
 

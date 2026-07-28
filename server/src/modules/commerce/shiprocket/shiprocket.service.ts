@@ -144,7 +144,7 @@ function buildShipGroups(
   for (const lines of linesByPodProduct.values()) {
     const { pod_id: podId, product_id: productId } = lines[0];
     const product = productById.get(productId);
-    if (!product || product.delivery_target !== 'SHIPROCKET') continue;
+    if (product?.delivery_target !== 'SHIPROCKET') continue;
     const qty = lines.reduce((sum, line) => sum + line.quantity, 0);
     if (qty <= 0) continue;
     const warehouseId = product.pickup_location_id ? String(product.pickup_location_id) : '';

@@ -1,0 +1,218 @@
+---
+name: '@duncit/breadcrumb'
+summary: 'The console breadcrumb: a trail built from the current route plus the portal nav tree, with a hook for pages to swap the opaque id tail for real labels.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'packages/shell'
+exports:
+  - 'AppBreadcrumbs'
+  - 'AppBreadcrumbsProps'
+  - 'BreadcrumbProvider'
+  - 'useSetBreadcrumbs'
+  - 'BreadcrumbNavItem'
+  - 'Crumb'
+---
+
+## Why this exists
+
+Seventeen portals, seventeen chances to hand-write a breadcrumb per page — and a hand-written
+breadcrumb goes stale the moment a route moves. This package derives the trail instead: it
+walks the portal's existing nav tree looking for the deepest item whose `to` prefixes the
+current pathname, uses that item's parent chain as the trail, and humanises whatever path
+segments are left over.
+
+It is mounted exactly once, in `packages/shell/src/chrome/AppShell.tsx`, so every portal gets
+the breadcrumb without writing a line — and re-exported from `packages/shell/src/index.ts` so a
+page never imports this package directly.
+
+The types are declared locally on purpose. `BreadcrumbNavItem` is structurally compatible with
+the shell's `AppNavItem` but is not imported from it, so this package carries no dependency
+back on `@duncit/shell` — that cycle is what would stop it being usable anywhere else.
+
+## Use it
+
+Mounting (already done for you, in `AppShell.tsx`):
+
+```tsx
+import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
+
+<BreadcrumbProvider>
+  <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
+  {children}
+</BreadcrumbProvider>
+```
+
+From a detail page, to replace the generic tail with the real entity name — import it from the
+shell, not from here:
+
+```tsx
+import { useSetBreadcrumbs } from '@duncit/shell';
+
+useSetBreadcrumbs(club ? [{ label: club.name }] : null);
+// renders: Onboarding › Clubs › Acme Club   (instead of  … › Detail)
+```
+
+Pass `null` (or an empty array) while the entity is loading; the override clears itself on
+unmount, so no cleanup is needed.
+
+## Sample data
+
+The package's main input is the portal nav tree. This one is shaped like the Onboarding
+portal's, using the real `BreadcrumbNavItem` fields (`label`, `to`, `children`):
+
+```ts
+import type { BreadcrumbNavItem } from '@duncit/breadcrumb';
+
+export const onboardingNav: BreadcrumbNavItem[] = [
+  { label: 'Dashboard', to: '/' },
+  {
+    label: 'Onboarding',
+    children: [
+      { label: 'Clubs', to: '/clubs' },
+      { label: 'Venues', to: '/venues' },
+      { label: 'Venue Leads', to: '/venues/leads' },
+    ],
+  },
+  {
+    label: 'Calculators',
+    to: '/calculators',
+    children: [{ label: 'Pod Profit', to: '/calculators/pod-profit' }],
+  },
+];
+```
+
+## Worked examples
+
+Rendered with `<AppBreadcrumbs nav={onboardingNav} appName="Onboarding" />` inside a
+`MemoryRouter` at each pathname. `→` is the crumb's `href`; the leaf is always plain text.
+
+| Pathname | Rendered trail |
+| --- | --- |
+| `/` | *nothing* — the component returns `null` |
+| `/login` | *nothing* — returns `null` |
+| `/clubs` | `Onboarding → /` › `Clubs` (text) |
+| `/clubs/652f1c3a9d4b2e0011ac77e1` | `Onboarding → /` › `Clubs → /clubs` › `Detail` (text) |
+| `/venues/leads/9f8b2c14-6f0d-4a3e-9c2b-7d51e2a6b310` | `Onboarding → /` › `Venue Leads → /venues/leads` › `Detail` (text) |
+| `/calculators/pod-profit` | `Onboarding → /` › `Calculators → /calculators` › `Pod Profit` (text) |
+| `/settings/kyc-review/652f1c3a9d4b2e0011ac77e1` | `Onboarding → /` › `Settings → /settings` › `Kyc Review → /settings/kyc-review` › `Detail` (text) |
+
+Three things fall straight out of that table. `Venue Leads` beats `Venues` because
+`findBestNavMatch` takes the **longest** matching `to`. Both a 24-char Mongo id and a uuid
+collapse to `Detail`. And `/settings/...` matches no nav item at all, so the trail is built
+from the raw path segments — which is where `Kyc Review` comes from, and why `labelMap`
+exists:
+
+```tsx
+<AppBreadcrumbs nav={onboardingNav} appName="Onboarding" labelMap={{ 'kyc-review': 'KYC Review' }} />
+// /settings/kyc-review  →  Onboarding › Settings › KYC Review
+```
+
+With a page override, on `/clubs/652f1c3a9d4b2e0011ac77e1`:
+
+```tsx
+useSetBreadcrumbs(club ? [{ label: club.name }] : null);
+// Onboarding › Clubs › Acme Club          ← "Detail" is replaced, not appended to
+```
+
+An override may carry several crumbs, and its own links survive — except on the leaf, whose
+`to` is always stripped. On `/clubs/652f1c3a9d4b2e0011ac77e1/members/44`:
+
+```tsx
+useSetBreadcrumbs([
+  { label: 'Acme Club', to: '/clubs/652f1c3a9d4b2e0011ac77e1' },
+  { label: 'Members' },
+]);
+// Onboarding → /  ›  Clubs → /clubs  ›  Acme Club → /clubs/652f1c3a9d4b2e0011ac77e1  ›  Members (text)
+```
+
+Note that both `/clubs/<id>` segments — `<id>` **and** `members/44` — were replaced by the
+two override crumbs. The override owns the entire tail after `Clubs`.
+
+## API reference
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `AppBreadcrumbs` | `({ nav, appName, labelMap? }) => JSX.Element \| null` | Renders `null` on `/` and `/login`. Needs a router (`useLocation`, `RouterLink`). |
+| `BreadcrumbProvider` | `({ children }: { children: ReactNode })` | Holds the current override. Mount above **both** the breadcrumb and the routed pages. |
+| `useSetBreadcrumbs` | `(crumbs: Crumb[] \| null \| undefined) => void` | Replaces the tail after the deepest matched nav item; clears on unmount. A no-op without a provider — silently. |
+| `BreadcrumbNavItem` | `{ label: string; to?: string; children?: BreadcrumbNavItem[] }` | Structurally compatible with the shell's `AppNavItem`, declared locally to avoid a dependency cycle. |
+| `Crumb` | `{ label: string; to?: string }` | One rendered segment; the leaf has no `to`. |
+
+### `AppBreadcrumbs` props
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `nav` | `BreadcrumbNavItem[]` | yes | — | The portal's nav tree, walked recursively for the deepest `to` that prefixes the pathname. |
+| `appName` | `string` | yes | — | Label of the home crumb (which always links to `/`). |
+| `labelMap` | `Record<string, string>` | no | `undefined` | Route-segment → label overrides, for segments that title-case badly (`kyc`, `sos`). Passed through by the shell as `breadcrumbLabelMap`. |
+
+## Live preview
+
+There is no live preview on this page, and one would be misleading anyway: `AppBreadcrumbs`
+renders only inside a router, and what it renders depends entirely on the current pathname.
+The docs-site preview islands (`docs-site/src/components/Preview.astro`) mount without a
+router by design — the existing examples avoid `to`/`backTo` for exactly this reason. If a
+preview is added later it has to bring its own `MemoryRouter` and a pathname switcher, at
+which point it would show the same seven rows the table above already gives you as text.
+
+## What the override actually replaces
+
+`useSetBreadcrumbs` does **not** append to the trail. It replaces every segment **after the
+deepest matched nav item**. So on `/clubs/652f…`, the nav match supplies `Clubs` and the
+override supplies everything past it. If you pass three crumbs, you get three segments there.
+
+The last crumb in the finished list always has its `to` stripped — the leaf is plain text, never
+a link, including when the override supplies a `to` for it.
+
+## Opaque ids collapse to "Detail"
+
+`humanise` (internal) checks a segment against a 24-char Mongo hex pattern and a loose uuid
+pattern, and renders `Detail` for either. Anything else is de-slugged and title-cased:
+`pod-profit` → `Pod Profit`. That is why an un-overridden detail route reads
+`Calculators › Pod Profit › Detail` rather than showing a raw ObjectId.
+
+If a portal has a segment that title-cases badly (`kyc`, `sos`), fix it with `labelMap` rather
+than by special-casing in the page: `AppShell` takes a `breadcrumbLabelMap` prop that is passed
+straight through. No portal sets it today, so it is untested in practice — the first one to use
+it should add a test.
+
+## Matching rules worth knowing
+
+`findBestNavMatch` (internal) picks the **longest** matching `to`, so a nested item wins over
+its parent. A nav item matches when the pathname equals it or starts with `` `${to}/` `` — a
+plain `startsWith` would make `/pods` match `/pods-archive`, which is exactly the bug the
+trailing slash avoids. The root item `to: '/'` matches only the exact path `/`, so it never
+swallows every route.
+
+`AppBreadcrumbs` renders `null` on `/` and `/login`. Do not add a "Home › Home" special case;
+the home crumb is already the first entry of every other trail.
+
+## The provider is optional, deliberately
+
+`useBreadcrumbOverride` is read with `useContext(...) ?? null`, so `AppBreadcrumbs` renders the
+plain route/nav trail when no `BreadcrumbProvider` is above it, and `useSetBreadcrumbs` is a
+no-op. That keeps a page rendered in isolation — a test, an error boundary — from crashing on a
+missing provider. It also means a missing provider fails **silently**: if your override is not
+showing, check that `BreadcrumbProvider` is above both the breadcrumb and the routed page.
+
+`useSetBreadcrumbs` keys its effect on a serialised `label|to` string rather than the array
+identity, so passing a fresh array literal every render does not loop.
+
+## Constraints
+
+Zero runtime dependencies. MUI, `@mui/icons-material`, React and `react-router-dom` are peers —
+`react-router-dom` in particular, because `useLocation` and the `RouterLink` component must come
+from the *host's* router instance or the crumbs will not navigate.
+
+Web only. There is no native twin: the mobile app uses stack navigation, and a breadcrumb is
+console chrome.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` under `jsdom`. Most of the logic is in the
+pure helpers (`humanise`, `findBestNavMatch`, `useCrumbs`'s `appendTail` / `appendSegments`) —
+they are internal, not exported from the index, so cover them by rendering `AppBreadcrumbs` at
+the relevant pathname rather than by widening the public surface to make them testable.

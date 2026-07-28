@@ -71,6 +71,21 @@ jest.mock('expo-video', () => ({
   VideoView: (props) => require('react').createElement(require('react-native').View, props),
 }));
 
+// The header cart (rendered by AppHeader and every StackScreen back-bar) reads
+// the active route through the navigation container ref. Unit tests render
+// components with no <NavigationContainer> — and many of them mock
+// @react-navigation/native down to useNavigation, so the real ref module cannot
+// even be constructed. Default it to a detached ref: never ready, no route.
+// Specs that assert cart routing override this with their own jest.mock.
+jest.mock('@/navigation/navigationRef', () => ({
+  navigationRef: {
+    isReady: () => false,
+    getCurrentRoute: () => undefined,
+    navigate: jest.fn(),
+    addListener: () => () => undefined,
+  },
+}));
+
 // Reanimated 3: install the official jest helpers (worklets run on the JS
 // thread; animations resolve immediately under fake timers).
 require('react-native-reanimated').setUpTests();

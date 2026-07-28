@@ -5,7 +5,7 @@ import { MarketingCampaignModel, type IMarketingCampaign } from './marketing.mod
 import { UserModel } from '@modules/access/user/user.model';
 import { NewsletterSubscriberModel } from '@modules/crm/newsletter/newsletter.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { applyVars, detectVariables, renderMjml } from '@modules/content/emailTemplate/emailTemplate.service';
 import { sendHtmlEmail } from '@services/email/email.service';

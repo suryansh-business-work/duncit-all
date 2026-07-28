@@ -92,7 +92,7 @@ export function LocaleProvider({
   const locales: Locale[] = localeData?.publicLocales ?? [];
 
   const deviceLocale =
-    typeof globalThis.navigator === 'undefined' ? null : globalThis.navigator.language;
+    globalThis.navigator === undefined ? null : globalThis.navigator.language;
   const requested = override ?? userLocale ?? storedLocale() ?? deviceLocale;
   const active = resolveLocale(requested, locales);
   const code = active?.code ?? 'en-IN';

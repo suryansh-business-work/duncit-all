@@ -2,8 +2,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'cypress';
 import { resolveTestEnv } from './test.config';
+import { registerCoverageTasks } from './coverage-tasks';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
+const portalRoot = path.resolve(here, '../..');
 const env = resolveTestEnv();
 
 export default defineConfig({
@@ -16,6 +18,11 @@ export default defineConfig({
     env: {
       graphqlUrl: env.graphqlUrl,
       useMocks: env.useMocks,
+    },
+    // Istanbul E2E coverage -> `.nyc_output` (see coverage-tasks.ts). Only
+    // produces data when the app is served with `VITE_COVERAGE=true`.
+    setupNodeEvents(on) {
+      registerCoverageTasks(on, portalRoot);
     },
     specPattern: path.join(here, 'specs/**/*.cy.{ts,tsx}'),
     supportFile: path.join(here, 'support/e2e.ts'),

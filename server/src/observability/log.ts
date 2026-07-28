@@ -71,18 +71,48 @@ const logger: Logger = logsApi.getLogger('duncit-app-logs');
 
 type AttrValue = string | number | boolean;
 
+/**
+ * Every thrown value that is not null, not undefined and not an object. Each of
+ * these has a meaningful toString(), so String() over this union can never
+ * produce '[object Object]'.
+ */
+type Stringifiable = string | number | boolean | bigint | symbol | ((...args: unknown[]) => unknown);
+
+/**
+ * A real type predicate, not an assertion.
+ *
+ * This is what lets String() below receive a concrete non-object union, so
+ * S6551 is satisfied by the TYPE rather than by an `as` cast — which S4325 would
+ * reject in turn. Narrowing through plain early-returns does not satisfy the
+ * rule; a predicate does. Keep this identical in both halves of the wire
+ * contract.
+ */
+function isStringifiable(value: unknown): value is Stringifiable {
+  return value !== null && typeof value !== 'object' && typeof value !== 'undefined';
+}
+
+/**
+ * Stand-in for an object JSON.stringify refuses (circular refs, BigInt).
+ *
+ * Deliberately a FIXED string. Interpolating the object yields the useless
+ * "[object Object]" (S6551), but listing its keys instead would put caller field
+ * names — `password`, `refresh_token` — on the wire to SignOz and Mongo, and
+ * would make `Bug.fingerprint` key-dependent, forking one bug into a new row per
+ * distinct object shape. Keep this identical to the client's copy in
+ * packages/logs/src/logs.ts: they are two halves of one wire contract.
+ */
+const UNSERIALIZABLE_MESSAGE = '[unserializable object]';
+
 /** Flatten any thrown value to { name, message, stack }. */
 export function serializeError(err: unknown): SerializedError | undefined {
   if (err === null || err === undefined) return undefined;
   if (err instanceof Error) return { name: err.name || 'Error', message: err.message, stack: err.stack };
-  if (typeof err === 'object') {
-    try {
-      return { name: 'Object', message: JSON.stringify(err) };
-    } catch {
-      return { name: 'Object', message: String(err) };
-    }
+  if (isStringifiable(err)) return { name: typeof err, message: String(err) };
+  try {
+    return { name: 'Object', message: JSON.stringify(err) };
+  } catch {
+    return { name: 'Object', message: UNSERIALIZABLE_MESSAGE };
   }
-  return { name: typeof err, message: String(err) };
 }
 
 function toAttributes(record: LogRecord): Record<string, AttrValue> {
@@ -168,6 +198,26 @@ function levelFns(base: { app: string; portal?: string }) {
 /** Server-side structured logger: logs.server.error(page, component, { error, ... }). */
 export const logs = { server: levelFns({ app: 'server' }) };
 
+/** Clamp a raw wire value to one of an enum's members; undefined when it isn't one. */
+function clampEnum<T extends string>(value: unknown, allowed: ReadonlySet<T>): T | undefined {
+  return typeof value === 'string' && allowed.has(value as T) ? (value as T) : undefined;
+}
+
+/** A wire field is only trusted when it arrived as a string. */
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+/** Rebuild the { name, message, stack } triple the frontend already flattened. */
+function parseRemoteError(value: SerializedError | undefined): SerializedError | undefined {
+  if (!value || typeof value !== 'object' || typeof value.message !== 'string') return undefined;
+  return {
+    name: String(value.name || 'Error'),
+    message: String(value.message),
+    stack: typeof value.stack === 'string' ? value.stack : undefined,
+  };
+}
+
 /**
  * Ingest a structured log forwarded by a frontend (POST /logs). Fully defensive:
  * validates the shape, clamps enums, forwards the app/portal/platform/environment/
@@ -177,36 +227,18 @@ export function ingestRemoteLog(raw: unknown): void {
   if (!raw || typeof raw !== 'object') return;
   const r = raw as Partial<LogRecord>;
   if (typeof r.app !== 'string' || typeof r.page !== 'string' || typeof r.component !== 'string') return;
-  const level: LogLevel = typeof r.level === 'string' && LEVELS.has(r.level) ? r.level : 'info';
-  const platform: Platform =
-    typeof r.platform === 'string' && PLATFORMS.has(r.platform) ? r.platform : 'web';
-  const os: DeviceOS | undefined =
-    typeof r.os === 'string' && DEVICE_OSES.has(r.os as DeviceOS) ? (r.os as DeviceOS) : undefined;
-  const environment: Environment =
-    typeof r.environment === 'string' && ENVIRONMENTS.has(r.environment) ? r.environment : 'production';
-  const error =
-    r.error && typeof r.error === 'object' && typeof (r.error as SerializedError).message === 'string'
-      ? {
-          name: String((r.error as SerializedError).name || 'Error'),
-          message: String((r.error as SerializedError).message),
-          stack:
-            typeof (r.error as SerializedError).stack === 'string'
-              ? (r.error as SerializedError).stack
-              : undefined,
-        }
-      : undefined;
   emitStructured({
     app: r.app,
-    portal: typeof r.portal === 'string' ? r.portal : undefined,
-    platform,
-    os,
-    environment,
-    url: typeof r.url === 'string' ? r.url : undefined,
-    host: typeof r.host === 'string' ? r.host : undefined,
-    level,
+    portal: optionalString(r.portal),
+    platform: clampEnum(r.platform, PLATFORMS) ?? 'web',
+    os: clampEnum(r.os, DEVICE_OSES),
+    environment: clampEnum(r.environment, ENVIRONMENTS) ?? 'production',
+    url: optionalString(r.url),
+    host: optionalString(r.host),
+    level: clampEnum(r.level, LEVELS) ?? 'info',
     page: r.page,
     component: r.component,
-    error,
+    error: parseRemoteError(r.error),
     data: r.data && typeof r.data === 'object' ? r.data : undefined,
   });
 }

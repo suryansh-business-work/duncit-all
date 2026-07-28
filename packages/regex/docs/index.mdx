@@ -1,0 +1,197 @@
+---
+name: '@duncit/regex'
+summary: 'Validation patterns and their matching predicates, shared by every surface that validates user input.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/*'
+  - 'server'
+exports:
+  - 'PHONE_NUMBER'
+  - 'PHONE_NUMBER_IN'
+  - 'PHONE_INTL'
+  - 'PHONE_INTL_PLUS'
+  - 'DIAL_CODE'
+  - 'PINCODE'
+  - 'PINCODE_LOOSE'
+  - 'OTP_6'
+  - 'EMAIL'
+  - 'DIGITS'
+  - 'IFSC'
+  - 'UPI_ID'
+  - 'BANK_ACCOUNT_NUMBER'
+  - 'GSTIN'
+  - 'isPhoneNumber'
+  - 'isPhoneIntl'
+  - 'isPincode'
+  - 'isPincodeLoose'
+  - 'isEmail'
+  - 'isOtp'
+  - 'isIfsc'
+  - 'isUpiId'
+  - 'isBankAccountNumber'
+  - 'isGstin'
+---
+
+## Why this exists
+
+A regex copied into a form is a regex that will drift. The IFSC pattern was written three
+times, the UPI pattern three times, `/^\d{6,15}$/` five times, and `/^\d{4,10}$/` five more.
+Each copy is a place where a fix lands in one file and not the others.
+
+Ships prebuilt `regex.cjs`, `regex.mjs` and `regex.d.ts` so Metro, Vite and `tsc` all resolve
+it without a build step. Already a dependency of both apps — importing it costs no Dockerfile
+change.
+
+## Use it
+
+```ts
+import { IFSC, isIfsc, PHONE_INTL } from '@duncit/regex';
+
+// as a predicate
+if (!isIfsc(value)) return 'Enter a valid IFSC code';
+
+// or straight into a Zod schema
+const schema = z.object({
+  ifsc: z.string().regex(IFSC, 'Enter a valid IFSC code'),
+  phone: z.string().regex(PHONE_INTL, 'Enter a valid phone number'),
+});
+```
+
+None of the patterns carry the `g` flag, so `.test()` is safe to call repeatedly on the same
+object — a lockstep test asserts this rather than trusting it.
+
+## Sample data
+
+A partner-onboarding submission — every field this package validates, in one object:
+
+```ts
+const applicant = {
+  full_name: 'Ananya Iyer',
+  email: 'ananya.iyer@duncit.com',
+  dial_code: '+91',
+  phone: '9876543210',          // India: exactly 10 digits
+  otp: '480912',
+  pincode: '560103',            // India: exactly 6, first digit 1–9
+  country_pincode: '94107',     // shipping abroad: 4–10 digits
+  intl_phone: '14155552671',    // checkout abroad: 6–15 digits, no '+'
+  ifsc: 'HDFC0001234',
+  upi_id: 'ananya.iyer@okhdfcbank',
+  account_number: '50100234567890',
+  gstin: '29ABCDE1234F1Z5',
+};
+```
+
+## Worked examples
+
+Run against `applicant` above — these are the actual returned booleans.
+
+```ts
+isPhoneNumber(applicant.phone)                // true
+isEmail(applicant.email)                      // true
+isOtp(applicant.otp)                          // true
+isPincode(applicant.pincode)                  // true
+isPincodeLoose(applicant.country_pincode)     // true
+isPhoneIntl(applicant.intl_phone)             // true
+isIfsc(applicant.ifsc)                        // true
+isUpiId(applicant.upi_id)                     // true
+isBankAccountNumber(applicant.account_number) // true
+isGstin(applicant.gstin)                      // true
+```
+
+The rejections are the interesting half:
+
+```ts
+isPhoneNumber('98765')          // false — 5 digits, not 10
+isEmail('ananya@duncit')        // false — no dotted domain
+isIfsc('hdfc0001234')           // false — IFSC is UPPERCASE only; uppercase before validating
+isGstin('29ABCDE1234F1Z')       // false — 14 chars, one short
+isPincode('012345')             // false — an Indian PIN never starts with 0
+isPhoneIntl('+14155552671')     // false — PHONE_INTL is digits only…
+PHONE_INTL_PLUS.test('+14155552671') // true  — …use this one for a pasted full number
+DIAL_CODE.test('+91')           // true
+```
+
+`isIfsc('hdfc0001234')` returning `false` is the one that bites: none of the patterns are
+case-insensitive, so a form must `.toUpperCase()` on change (or in a Zod `.transform()`)
+before it validates.
+
+Straight into a schema:
+
+```ts
+const payoutSchema = z.object({
+  ifsc: z.string().transform((v) => v.toUpperCase()).refine(isIfsc, 'Enter a valid IFSC code'),
+  account_number: z.string().regex(BANK_ACCOUNT_NUMBER, 'Enter a valid account number'),
+  upi_id: z.string().regex(UPI_ID, 'Enter a valid UPI ID'),
+});
+```
+
+## API
+
+Every pattern is a plain `RegExp` with no flags; every validator is
+`(value: string) => boolean` and has no default arguments.
+
+| Pattern | Source | Validator | Accepts |
+| --- | --- | --- | --- |
+| `PHONE_NUMBER` | `/^\d{10}$/` | `isPhoneNumber` | India mobile, no dial code |
+| `PHONE_NUMBER_IN` | `/^[6-9]\d{9}$/` | — | India mobile, stricter (starts 6–9) |
+| `PHONE_INTL` | `/^\d{6,15}$/` | `isPhoneIntl` | ITU E.164 range, digits only |
+| `PHONE_INTL_PLUS` | `/^\+?\d{6,15}$/` | — | as above, tolerating a pasted `+` |
+| `DIAL_CODE` | `/^\+?\d{1,4}$/` | — | `+91`, `1`, `971` |
+| `PINCODE` | `/^[1-9]\d{5}$/` | `isPincode` | India PIN, exactly 6 |
+| `PINCODE_LOOSE` | `/^\d{4,10}$/` | `isPincodeLoose` | any postal code, 4–10 digits |
+| `OTP_6` | `/^\d{6}$/` | `isOtp` | 6-digit numeric OTP |
+| `EMAIL` | `/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/` | `isEmail` | one `@`, dotted domain, no spaces |
+| `DIGITS` | `/^\d+$/` | — | digits only, any length |
+| `IFSC` | `/^[A-Z]{4}0[A-Z0-9]{6}$/` | `isIfsc` | 4 letters, literal `0`, 6 alphanumerics |
+| `UPI_ID` | `/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/` | `isUpiId` | `name@bank` |
+| `BANK_ACCOUNT_NUMBER` | `/^\d{6,18}$/` | `isBankAccountNumber` | 6–18 digits |
+| `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
+
+`EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`
+so the `\.` separator never overlaps a label. Both are linear; neither can be made to
+backtrack.
+
+## No live preview
+
+Patterns and predicates only — there is nothing to render. The worked examples above are
+the whole surface.
+
+## Indian vs international — do not mix these up
+
+`PHONE_NUMBER` and `PINCODE` are **India-only**: exactly 10 digits and exactly 6 digits.
+Checkout and shipping accept foreign numbers and postal codes, so they use `PHONE_INTL`
+(6–15 digits) and `PINCODE_LOOSE` (4–10 digits) instead.
+
+Swapping one family for the other would reject input that is valid today. That is why the
+international patterns were added as **new names** rather than by loosening the existing ones.
+
+| Field | India-only | International |
+| --- | --- | --- |
+| Phone | `PHONE_NUMBER`, `PHONE_NUMBER_IN` | `PHONE_INTL`, `PHONE_INTL_PLUS` |
+| Postal code | `PINCODE` | `PINCODE_LOOSE` |
+
+## GSTIN — there is only one correct pattern
+
+A GSTIN is 15 characters: 2 state digits, the 10-character PAN, an entity code, a literal
+`Z`, then a checksum. `GSTIN` is that.
+
+mWeb checkout carries a different pattern — `/^\d{2}[A-Z]{5}\d{4}[A-Z][\dA-Z]{2}$/` — which
+matches **14** characters. That is one short of a GSTIN, so it rejects every valid one and
+the field cannot be filled in today. It is a live defect, not a permissive variant, which is
+why it was deliberately **not** exported as an alternative. Migrating checkout onto `GSTIN`
+is a bug fix and should land with its own test.
+
+## Adding a pattern
+
+Three files must change together — `regex.cjs`, `regex.mjs` and `regex.d.ts`. Until recently
+that was enforced only by a comment asking politely; `__tests__/lockstep.test.mjs` now checks
+that all three expose the same names, that every pattern's source and flags match across the
+CJS and ESM entry points, and that each validator returns the same answer from both.
+
+Add new names. Never edit an existing pattern in place — something is already validating
+against it, and a tightened pattern rejects data that is live in production.

@@ -1,0 +1,321 @@
+---
+name: '@duncit/i18n'
+summary: 'The one t() — catalogue parsing, locale resolution and the shipped fallback copy for every surface, with zero runtime dependencies.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mobile-app'
+  - 'packages/app-settings'
+  - 'packages/shell'
+  - 'website/main-website'
+exports:
+  - 'createTranslator'
+  - 'resolveLocale'
+  - 'interpolate'
+  - 'flattenCatalogue'
+  - 'nestCatalogue'
+  - 'mergeCatalogues'
+  - 'missingKeys'
+  - 'MWEB_BUNDLE'
+  - 'SHELL_BUNDLE'
+  - 'WEBSITE_BUNDLE'
+  - 'SURFACE_BUNDLES'
+  - 'allFallbackEntries'
+---
+
+## Why this exists
+
+Rule 38 forbids a second `t()`. Adding `i18next` to a portal and `react-intl` to mWeb would give
+the platform two resolution orders, two plural rules and two ideas of what a missing key renders
+as — while the copy itself is administered from one place, Admin → Localization.
+
+So there is one parser, and it has **zero runtime dependencies** on purpose. The same module is
+imported by React (portals via `@duncit/shell`), React Native (`app/mobile-app`, hence the
+`react-native` entry in package.json) and an Astro **build step**
+(`website/main-website/src/lib/i18n.ts`, which resolves copy at build time because the site is
+static). A React dependency here would break the Astro build and Metro alike.
+
+The fallback copy lives here too, not in each surface: mWeb and native must be identical
+(rule 27), and two hand-kept copies of the same `mweb.*` strings is exactly how they diverge.
+
+## Use it
+
+Native and mWeb build their translator from the same core (`app/mobile-app/src/hooks/useTranslation.ts`,
+`packages/app-settings/src/useTranslation.tsx`):
+
+```ts
+import { createTranslator, flattenCatalogue, MWEB_BUNDLE } from '@duncit/i18n';
+
+const MWEB_FALLBACK_FLAT = flattenCatalogue(MWEB_BUNDLE);
+
+const { t, has, isRtl } = createTranslator({
+  locale: 'hi-IN',
+  isRtl: false,
+  fallback: MWEB_FALLBACK_FLAT,   // bundled, always present
+  server: serverEntriesForLocale, // fetched from Admin > Localization
+  defaultCatalogue: defaultLocaleEntries,
+});
+
+t('mweb.shop.emptyState');
+t('cart.items', { count: 2 });               // reads cart.items.other
+t('mweb.common.languageSaved', { vars: { name } });
+```
+
+`resolveLocale` picks which locale to hand it, from `profile.locale` and the platform's list:
+
+```ts
+import { resolveLocale } from '@duncit/i18n';
+
+const active = resolveLocale(profile.locale, localesFromServer); // Locale | null
+```
+
+## Sample data
+
+The three inputs: the platform's locales, an authored (nested) bundle, and the flat rows the
+server returns for one locale.
+
+```ts
+/** publicLocales — what the admin has configured. */
+const locales = [
+  { code: 'en-IN', label: 'English', english_label: 'English (India)', is_rtl: false, is_active: true,  is_default: true  },
+  { code: 'hi-IN', label: 'हिन्दी',   english_label: 'Hindi (India)',   is_rtl: false, is_active: true,  is_default: false },
+  { code: 'ar-AE', label: 'العربية',  english_label: 'Arabic (UAE)',    is_rtl: true,  is_active: true,  is_default: false },
+  { code: 'ta-IN', label: 'தமிழ்',    english_label: 'Tamil (India)',   is_rtl: false, is_active: false, is_default: false },
+];
+
+/** A surface's shipped fallback, in the nested shape humans author. */
+const authored = {
+  mweb: {
+    shop: {
+      title: 'Pod Shop',
+      emptyState: 'No products match your filters.',
+      cartItems: { one: '{count} item in cart', other: '{count} items in cart' },
+    },
+  },
+};
+
+/** publicTranslations(locale: 'hi-IN') — note the blank value the admin left. */
+const server = {
+  'mweb.shop.title': 'पॉड शॉप',
+  'mweb.shop.emptyState': '   ',
+};
+```
+
+## Worked examples
+
+Real outputs from running the exports against the fixtures above.
+
+### Picking a locale
+
+```ts
+resolveLocale('hi-IN', locales)?.code   // 'hi-IN'
+resolveLocale('hi',    locales)?.code   // 'hi-IN'  — language match when the region is absent
+resolveLocale('ta-IN', locales)?.code   // 'en-IN'  — Tamil is is_active: false
+resolveLocale('fr-FR', locales)?.code   // 'en-IN'  — unsupported → the default
+resolveLocale(null,    [])              // null     — nothing configured yet
+```
+
+It never returns a locale the platform has switched off, which is what stops a user who
+picked Tamil last month being stranded when it is disabled.
+
+### Catalogue shape
+
+```ts
+flattenCatalogue(authored)
+// {
+//   'mweb.shop.title':             'Pod Shop',
+//   'mweb.shop.emptyState':        'No products match your filters.',
+//   'mweb.shop.cartItems.one':     '{count} item in cart',
+//   'mweb.shop.cartItems.other':   '{count} items in cart',
+// }
+
+nestCatalogue(flattenCatalogue(authored))   // round-trips back to `authored`
+```
+
+```ts
+mergeCatalogues(flattenCatalogue(authored), server)
+// {
+//   'mweb.shop.title':           'पॉड शॉप',                        ← server wins
+//   'mweb.shop.emptyState':      'No products match your filters.',← blank server value IGNORED
+//   'mweb.shop.cartItems.one':   '{count} item in cart',
+//   'mweb.shop.cartItems.other': '{count} items in cart',
+// }
+
+missingKeys(flattenCatalogue(authored), server)
+// ['mweb.shop.cartItems.one', 'mweb.shop.cartItems.other', 'mweb.shop.emptyState']
+```
+
+`missingKeys` counts the whitespace-only `emptyState` as missing — which is the answer the
+admin's "untranslated" view needs, and the same reason `mergeCatalogues` refused it. An empty
+admin field can never blank the UI.
+
+### Translating
+
+```ts
+const t = createTranslator({
+  locale: 'hi-IN',
+  fallback: flattenCatalogue(authored),
+  server,
+  defaultCatalogue: flattenCatalogue(authored),
+  onMissing: (key, locale) => console.warn(`missing ${key} @ ${locale}`),
+});
+
+t.t('mweb.shop.title')                        // 'पॉड शॉप'
+t.t('mweb.shop.emptyState')                   // 'No products match your filters.'
+t.t('mweb.shop.cartItems', { count: 1 })      // '1 item in cart'
+t.t('mweb.shop.cartItems', { count: 7 })      // '7 items in cart'
+t.t('mweb.shop.unknown')                      // 'mweb.shop.unknown'  + onMissing fires
+t.t('mweb.shop.unknown', { defaultValue: 'Sold out' })  // 'Sold out' + onMissing fires
+
+t.has('mweb.shop.title')   // true
+t.has('nope')              // false
+t.locale                   // 'hi-IN'
+t.isRtl                    // false
+```
+
+A missing key renders **as the key** — visible and greppable, never blank. `onMissing` still
+fires when a `defaultValue` is supplied, so a default cannot hide the gap from your dev logs.
+
+```ts
+interpolate('Hi {name}, {count} pods near {city}', { name: 'Ananya', count: 4 })
+// 'Hi Ananya, 4 pods near {city}'
+```
+
+`{city}` survives verbatim because no value was given. A placeholder is never replaced with
+`"undefined"` — the sentence stays obviously wrong in review instead of silently corrupting.
+
+### The shipped bundles
+
+```ts
+Object.keys(SURFACE_BUNDLES)          // ['mweb', 'shell', 'website']
+
+flattenCatalogue(MWEB_BUNDLE)
+// {
+//   'mweb.common.language':          'Language',
+//   'mweb.common.languageHint':      'Choose the language for the app.',
+//   'mweb.common.languageSaved':     'Language updated',
+//   'mweb.account.preferences':      'Preferences',
+//   'mweb.shop.title':               'Pod Shop',
+//   'mweb.shop.emptyState':          'No products match your filters.',
+//   'mweb.shop.featured':            'Featured Products',
+//   'mweb.shop.outOfStock':          'Out of stock',
+//   'mweb.shop.includeOutOfStock':   'Include out of stock',
+//   'mweb.shop.searchPlaceholder':   'Search products or brands…',
+// }
+
+Object.keys(allFallbackEntries()).length   // 23
+```
+
+23 is every shipped client key across all three bundles, deduplicated — exactly what Admin >
+Localization > Translations > **Import app keys** seeds against the default locale.
+
+## API
+
+### Catalogue
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `flattenCatalogue` | `(input: NestedCatalogue \| null \| undefined) => FlatCatalogue` | Nested → dot-paths. Non-string leaves and arrays are dropped, never coerced. |
+| `nestCatalogue` | `(flat: FlatCatalogue \| null \| undefined) => NestedCatalogue` | Dot-paths → nested, for authoring and the admin editor. |
+| `mergeCatalogues` | `(fallback, server) => FlatCatalogue` | Server over fallback; blank server values ignored. |
+| `missingKeys` | `(reference, candidate) => string[]` | Keys in `reference` absent or blank in `candidate`, sorted. |
+
+`Locale`: `code` (BCP-47, required), `label` (endonym, required), `english_label?`,
+`is_rtl?`, `is_active?`, `is_default?`. `is_active` is only falsy when explicitly `false`.
+
+### Translator
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `createTranslator` | `(input: TranslatorInput) => Translator` | Builds `{ locale, isRtl, t, has, catalogue }`. |
+| `resolveLocale` | `(requested, locales) => Locale \| null` | Exact code → language match → default → first active. |
+| `interpolate` | `(template: string, vars?: TranslateVars) => string` | `{name}` substitution; unmatched placeholders survive. |
+
+| `TranslatorInput` field | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `locale` | `string` | yes | — | Active locale code. |
+| `isRtl` | `boolean` | no | `false` | Only `true` counts as RTL. |
+| `fallback` | `FlatCatalogue \| null` | no | `{}` | The surface's shipped bundle — the floor. |
+| `server` | `FlatCatalogue \| null` | no | `{}` | Entries fetched for the active locale. |
+| `defaultCatalogue` | `FlatCatalogue \| null` | no | `{}` | Merged catalogue of the default locale. |
+| `onMissing` | `(key, locale) => void` | no | — | Fires once per miss, including when `defaultValue` is used. |
+
+| `TranslateOptions` field | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `count` | `number` | no | Selects the `.one` / `.other` sibling key. Also injected as `{count}`. |
+| `vars` | `Record<string, string \| number>` | no | Placeholder values. |
+| `defaultValue` | `string` | no | Literal used when the key resolves nowhere. Prefer adding the key. |
+
+### Bundles
+
+| Export | Type | Meaning |
+| --- | --- | --- |
+| `MWEB_BUNDLE` | `NestedCatalogue` | `mweb.*` — shared by mWeb **and** native (rule 27). |
+| `SHELL_BUNDLE` | `NestedCatalogue` | `shell.*` chrome, shared by all 17 MUI portals. |
+| `WEBSITE_BUNDLE` | `NestedCatalogue` | `website.*` for the Astro sites. |
+| `SURFACE_BUNDLES` | `Record<string, NestedCatalogue>` | All three, keyed `mweb` / `shell` / `website`. |
+| `allFallbackEntries` | `() => Record<string, string>` | Every shipped key, flat and deduplicated. |
+
+## No live preview
+
+Framework-free — the React binding lives in `@duncit/app-settings` (`LocaleProvider`,
+`useTranslation`, `AppLocaleProvider`), so there is no component here to mount. The worked
+examples are the real translator output.
+
+## Resolution order — and why the fallback is not optional
+
+`t()` tries, in order:
+
+1. the active locale's **merged** catalogue — `mergeCatalogues(fallback, server)`;
+2. the default locale's catalogue (`defaultCatalogue`);
+3. an explicit `options.defaultValue`;
+4. **the key itself** — visible and greppable, never blank.
+
+`mergeCatalogues` treats the bundled fallback as the floor and lets server values win, but
+**ignores blank server values**, so an empty field in the admin panel cannot wipe a screen. That
+is why a surface must ship its bundle: before the API answers, and offline, step 1 is all there
+is. A key absent from the bundle renders as a raw dot-path.
+
+`interpolate` leaves an unmatched `{placeholder}` verbatim rather than substituting
+`"undefined"` — a missing var is meant to be obvious in review.
+
+## Plurals are sibling keys, not an API
+
+There is no plural function. `t(key, { count })` looks up `key.one` / `key.other` and falls back
+to `key` if neither exists. The admin therefore edits `cart.items.one` and `cart.items.other` as
+two ordinary rows. `count` is also injected as a `{count}` var automatically, so
+`'{count} items'` works with no extra `vars`.
+
+## Adding a key: bundle first, then code
+
+1. Add it to the right nested bundle in `src/bundles.ts` — `MWEB_BUNDLE` (mWeb **and** native),
+   `SHELL_BUNDLE` (portal chrome), `WEBSITE_BUNDLE` (Astro sites).
+2. Press **Import app keys** in Admin → Localization → Translations. That seeds every shipped
+   key (client bundles via `allFallbackEntries`, plus the server's email keys) against the
+   default locale without overwriting existing translations.
+3. Then use it in code.
+
+Shipping the literal first and "localizing later" is a review rejection.
+
+A portal adds its **own** namespace by passing `i18nFallback` to `mountPortal`; that layers over
+`SHELL_BUNDLE` rather than being added to it.
+
+## The gate that will fail you
+
+`npm test` in this package runs `node scripts/verify-translation-keys.mjs` **before** vitest.
+It scans `app/`, `packages/`, `portals/` and `website/` for `t('…')` call sites and fails if a
+key in `bundles.ts` is never rendered anywhere. An unused key is worse than a missing one — an
+admin sees it, pays to translate it, and the translation appears on no screen.
+
+Coverage is 100/100/100/100 on `src/**` with the barrels excluded (`src/index.ts`,
+`src/**/index.ts`), so `catalogue.ts`, `translator.ts` and `bundles.ts` are each fully covered.
+
+## The server keeps its own copy — deliberately
+
+`server/src/services/email/email-i18n.ts` holds the email keys, because the server image has no
+`@duncit/*` dependencies and must stay self-contained for Docker. It is not drift: the server
+reports its bundle through the `serverTranslationSeed` query, so "Import app keys" seeds client
+and email keys together. MJML templates read copy as `{{t:<key>}}` and `sendEmail` resolves the
+recipient's language from `profile.locale` — no call site passes a locale.

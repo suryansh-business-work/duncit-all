@@ -28,10 +28,11 @@ describe('PriceBreakdown', () => {
         spots={4}
       />,
     );
-    // productShare = 100 / 4 = 25.00
-    expect(screen.getByText('₹25.00')).toBeInTheDocument();
-    // final payout = 200 - 25 = 175.00
-    expect(screen.getByText('₹175.00')).toBeInTheDocument();
+    // the host's spot is free, so 4 total spots = 3 payable spots
+    // productShare = 100 / 3 = 33.33
+    expect(screen.getByText('₹33.33')).toBeInTheDocument();
+    // final payout = 200 - 33.33 = 166.67
+    expect(screen.getByText('₹166.67')).toBeInTheDocument();
   });
 
   it('uses the full product cost when spots are zero and clamps payout at 0', () => {

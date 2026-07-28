@@ -1,0 +1,348 @@
+---
+name: '@duncit/availability-calendar'
+summary: 'The venue slot calendar and its day editor — a prop-driven Day/Week/Month grid with per-day A/P/B counts, shared by the Partner and Onboarding portals.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/partners-app'
+  - 'portals/onboarding'
+exports:
+  - 'AvailabilityCalendar'
+  - 'DayDrawer'
+  - 'RecurringAvailabilityDialog'
+  - 'CalendarView'
+  - 'VenueSlotRow'
+  - 'VenueSlotStatus'
+  - 'NewSlotInput'
+---
+
+## Why this exists
+
+The same venue availability screen exists twice, for two different actors on two different
+mutation sets. A venue owner manages their own slots in the Partner portal
+(`portals/partners-app/src/pages/venue-availability-page/VenueAvailabilityPage.tsx`, wired to
+`createVenueSlots` / `updateVenueSlot` / `deleteVenueSlot`). An operations user manages any
+venue's slots from the Onboarding portal
+(`portals/onboarding/src/pages/venue-details-page/VenueSlotAvailabilityTab.tsx`, wired to the
+role-gated `adminVenueSlots` / `adminCreateVenueSlots` / … equivalents).
+
+The grid, the day-cell colour rules, the past/beyond-window disabling and the add-slot form are
+identical in both. They were the copy. The GraphQL is not, and is deliberately left at the call
+site — the components take callbacks, never a client.
+
+## Use it
+
+From `VenueSlotAvailabilityTab.tsx`:
+
+```tsx
+import {
+  AvailabilityCalendar,
+  DayDrawer,
+  type NewSlotInput,
+  type VenueSlotRow,
+} from '@duncit/availability-calendar';
+
+<AvailabilityCalendar
+  month={month}
+  slots={data?.adminVenueSlots ?? []}
+  selectedDate={selectedDate}
+  onSelect={setSelectedDate}
+/>
+
+<DayDrawer
+  open={!!selectedDate}
+  date={selectedDate}
+  slots={slotsForSelected}
+  onClose={() => setSelectedDate(null)}
+  onCreate={handleCreate}          // (input: NewSlotInput) => Promise<void>
+  onToggleBlock={handleToggleBlock}
+  onDelete={handleDelete}
+/>
+```
+
+Every handler returns a promise; `DayDrawer` awaits it and keeps its own busy/error state, so
+the page only has to fire the mutation and `refetch()`.
+
+## Sample data
+
+The main input is a `VenueSlotRow[]` — the venue's slots for the visible range. Real field
+names, one row per status so every badge and every locked rule shows up:
+
+```ts
+import type { NewSlotInput, VenueSlotRow } from '@duncit/availability-calendar';
+
+export const venueSlots: VenueSlotRow[] = [
+  {
+    id: '66c1e4f27a83b90012de4411',
+    venue_id: '66b0a3d15e91c70011cf2280',
+    start_at: '2026-07-30T09:00:00.000+05:30',
+    end_at: '2026-07-30T11:00:00.000+05:30',
+    price: 1500,
+    status: 'AVAILABLE',
+    booked_by_pod_id: null,
+    booked_pod_title: null,
+    notes: 'Studio A — 20 seats',
+    created_at: '2026-07-20T06:12:44.000Z',
+  },
+  {
+    id: '66c1e4f27a83b90012de4412',
+    venue_id: '66b0a3d15e91c70011cf2280',
+    start_at: '2026-07-30T12:00:00.000+05:30',
+    end_at: '2026-07-30T14:00:00.000+05:30',
+    price: 1500,
+    status: 'PENDING',
+    booked_by_pod_id: '66c0119a4b2e0011ac77e10',
+    booked_pod_title: 'Weekend Pottery Pod',
+    notes: '',
+    created_at: '2026-07-20T06:12:44.000Z',
+  },
+  {
+    id: '66c1e4f27a83b90012de4413',
+    venue_id: '66b0a3d15e91c70011cf2280',
+    start_at: '2026-07-30T18:00:00.000+05:30',
+    end_at: '2026-07-30T20:00:00.000+05:30',
+    price: 2200,
+    status: 'BOOKED',
+    booked_by_pod_id: '66c0119a4b2e0011ac77e22',
+    booked_pod_title: 'Sunset Sound Bath',
+    notes: '',
+    created_at: '2026-07-21T04:02:10.000Z',
+  },
+  {
+    id: '66c1e4f27a83b90012de4414',
+    venue_id: '66b0a3d15e91c70011cf2280',
+    start_at: '2026-07-31T09:00:00.000+05:30',
+    end_at: '2026-07-31T11:00:00.000+05:30',
+    price: 1500,
+    status: 'BLOCKED',
+    booked_by_pod_id: null,
+    booked_pod_title: null,
+    notes: 'Deep clean',
+    created_at: '2026-07-21T04:02:10.000Z',
+  },
+];
+
+/** What DayDrawer's add-slot form hands back through onCreate. */
+export const newSlot: NewSlotInput = {
+  start_at: '2026-08-01T10:00:00.000+05:30',
+  end_at: '2026-08-01T12:00:00.000+05:30',
+  price: 1800,
+  notes: 'Studio B',
+};
+```
+
+## Worked examples
+
+Rendered under jsdom, anchored on a "today" of 28 Jul 2026 (so the slots above sit two and
+three days out), with `maxDate={addDays(today, 60)}`.
+
+```tsx
+<AvailabilityCalendar
+  month={today}
+  view="month"
+  slots={venueSlots}
+  selectedDate={new Date('2026-07-30')}
+  onSelect={setSelectedDate}
+  holidays={['2026-08-02']}
+  maxDate={addDays(startOfDay(new Date()), 60)}
+/>
+```
+
+```text
+weekday header : Sun Mon Tue Wed Thu Fri Sat
+cells rendered : 35            ← 5 rows; the grid stops early when the month is covered
+cell "30"      : "30 1A 1P 1B"   aria-disabled=false  tabindex=0
+cell "31"      : "31 1×"         aria-disabled=false  tabindex=0
+cell "28"      : (28 Jun, past)  aria-disabled=true   tabindex=-1
+```
+
+So the badges are counts, not flags: a day with three slots in three states renders `1A`,
+`1P` and `1B` side by side. A `BLOCKED` slot shows as `1×`. A day with no slots renders no
+badges at all. Past days — and days after `maxDate` — carry `aria-disabled="true"` and
+`tabIndex={-1}`, so they are skipped by keyboard navigation, not merely greyed.
+
+`DayDrawer` for 30 Jul, given those first three slots:
+
+```tsx
+<LocalizationProvider dateAdapter={AdapterDateFns}>
+  <DayDrawer
+    open
+    date={new Date('2026-07-30')}
+    slots={venueSlots.slice(0, 3)}
+    onClose={close}
+    onCreate={handleCreate}
+    onToggleBlock={handleToggleBlock}
+    onDelete={handleDelete}
+  />
+</LocalizationProvider>
+```
+
+```text
+Availability
+Thursday, 30 Jul 2026
+
+Existing slots
+  09:00 AM – 11:00 AM   ₹1500  AVAILABLE  Studio A — 20 seats     [Block] [Delete]
+  12:00 PM – 02:00 PM   ₹1500  PENDING    Requested by pod: Weekend Pottery Pod
+                                          Awaiting your decision — approve or decline it
+                                          under Slot Requests.
+  06:00 PM – 08:00 PM   ₹2200  BOOKED     Booked by pod: Sunset Sound Bath
+
+Add a new slot
+  Start · End · Price (₹) (“Leave 0 for a free slot”) · Notes (optional)   [Add slot]
+
+buttons: Close, Block, Delete, Choose time ×2, Add slot
+```
+
+Only the `AVAILABLE` row has action buttons. `PENDING` and `BOOKED` are locked — there is no
+Block and no Delete on them, which is the rule that stops a slot being deleted out from under
+a live booking request.
+
+Two things this output makes concrete. `DayDrawer` renders MUI X `TimePicker`s, so it
+**must** sit under a `LocalizationProvider` — without one it throws *"Can not find the date
+and time pickers localization context"*. And it renders inside a MUI `Drawer` portal, so it
+is not in the calendar's DOM subtree.
+
+## API reference
+
+### `AvailabilityCalendar`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `month` | `Date` | yes | — | The **anchor**. Month view builds the grid around `startOfMonth(month)`; week view uses `startOfWeek(month)`; day view is that single day. |
+| `slots` | `VenueSlotRow[]` | yes | — | Slots for the visible range; bucketed per day into A/P/B/× counts. |
+| `selectedDate` | `Date \| null` | yes | — | Highlight only — it never moves the visible range. |
+| `onSelect` | `(date: Date) => void` | yes | — | Fired on click or Enter/Space on an enabled cell. |
+| `view` | `'month' \| 'week' \| 'day'` | no | `'month'` | Which cells to build. |
+| `holidays` | `string[]` | no | `[]` | `'yyyy-MM-dd'` venue-leave dates: red cell plus a `LEAVE` tag. |
+| `maxDate` | `Date` | no | no upper bound | Latest selectable day (the Partner portal passes `addDays(startOfDay(new Date()), 60)`). |
+
+### `DayDrawer`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `open` | `boolean` | yes | — | Drawer visibility. |
+| `date` | `Date \| null` | yes | — | The day being edited; also the date the new slot's times are combined with. |
+| `slots` | `VenueSlotRow[]` | yes | — | Slots to list for that day. |
+| `onClose` | `() => void` | yes | — | Close handler. |
+| `onCreate` | `(input: NewSlotInput) => Promise<void>` | yes | — | Awaited; the drawer owns the busy/error state around it. |
+| `onToggleBlock` | `(slot: VenueSlotRow) => Promise<void>` | yes | — | Block ⇄ unblock. Never offered for `BOOKED`/`PENDING`. |
+| `onDelete` | `(slotId: string) => Promise<void>` | yes | — | Delete. Same lock rule. |
+| `isHoliday` | `boolean` | no | `false` | Disables adding slots on a venue-leave day. |
+
+### `RecurringAvailabilityDialog`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `open` | `boolean` | yes | — | Dialog visibility. |
+| `onClose` | `() => void` | yes | — | Close handler. |
+| `onAdd` | `(slots: NewSlotInput[]) => Promise<void>` | yes | — | Receives the whole generated batch: one slot per day across the range, past windows and anything beyond `MAX_FUTURE_DAYS` (60) skipped rather than failing the batch. |
+
+### Types
+
+| Type | Shape | Notes |
+| --- | --- | --- |
+| `VenueSlotRow` | `{ id, venue_id, start_at, end_at, price, status, booked_by_pod_id, booked_pod_title, notes, created_at }` | All strings except `price: number`; `booked_by_pod_id` / `booked_pod_title` are `string \| null`. The Partner portal's own row adds **optional** `space_label` / `capacity` — keep any addition optional or the two stop being assignable. |
+| `VenueSlotStatus` | `'AVAILABLE' \| 'PENDING' \| 'BOOKED' \| 'BLOCKED'` | `PENDING` = a host's request awaiting the venue's approval, **not** a draft. |
+| `NewSlotInput` | `{ start_at: string; end_at: string; price: number; notes: string }` | ISO strings; `price: 0` means a free slot. |
+| `CalendarView` | `'month' \| 'week' \| 'day'` | — |
+
+## Live preview
+
+There is no live preview on this page yet. `docs-site` mounts real React islands via
+`src/components/Preview.astro`, but it declares only `@duncit/ui` and `@duncit/dialogs` as
+dependencies; a calendar preview also needs `@duncit/availability-calendar`,
+`@mui/x-date-pickers` and `date-fns` in that workspace, and the island would have to wrap
+itself in a `LocalizationProvider` (see above). Once those land, the slot is the same shape
+`@duncit/ui` uses:
+
+```mdx
+import Preview from '@docs/components/Preview.astro';
+import { VenueMonthGrid } from '@docs/components/examples/VenueMonthGrid.tsx';
+import venueMonthGridSource from '@docs/components/examples/VenueMonthGrid.tsx?raw';
+
+<Preview title="AvailabilityCalendar — A/P/B/× day badges" code={venueMonthGridSource}>
+  <VenueMonthGrid client:load />
+</Preview>
+```
+
+The example would need no server: the components take slots and callbacks, never a client.
+Until then, the rendered output above is the real thing, not a sketch.
+
+## `month` is the anchor, `selectedDate` only highlights
+
+This trips people up. `AvailabilityCalendar` derives the visible cells from **`month`**, not
+from `selectedDate`:
+
+- `view="month"` → the 6×7 grid around `startOfMonth(month)`
+- `view="week"` → the seven days of `startOfWeek(month)`
+- `view="day"` → the single day `month`
+
+So in week and day view the host must move `month` itself. The Partner page keeps a single
+`anchor` state and shifts it by month / 7 days / 1 day depending on the view. `selectedDate`
+does nothing but draw the selected cell and open the drawer.
+
+The Partner page also anchors on `new Date()` rather than the 1st of the month — anchoring on
+the 1st opens Day view on a past date, which the calendar then renders non-interactive.
+
+## Disabled days, and the 60-day cap
+
+Days before today are non-interactive. So are days after the optional `maxDate` — that is how
+the Partner portal enforces the booking window (`addDays(startOfDay(new Date()), 60)`). Both
+render dimmed with `tabIndex={-1}` and `aria-disabled`.
+
+`holidays` is an array of `'yyyy-MM-dd'` strings (the Partner page reads
+`venue.settings.holidays`); those cells go red and show a LEAVE tag, and `DayDrawer` accepts
+`isHoliday` to disable adding slots on them.
+
+The calendar's `maxDate` is a UX guard only. `DayDrawer` and `RecurringAvailabilityDialog` both
+carry their own `MAX_FUTURE_DAYS = 60` constant mirroring the server cap, and the server is the
+real backstop. If the server cap changes, three places change.
+
+## Day badges are `A` / `P` / `B` / `×`
+
+`AVAILABLE`, `PENDING`, `BOOKED`, `BLOCKED`. **`PENDING` means a host's booking request is
+waiting on the venue's approval** — it is not "draft". `DayDrawer` treats `BOOKED` and
+`PENDING` as locked: you cannot block or delete them from the day editor, because a pending
+request must be decided in Slot Requests instead. Do not add an escape hatch here; deleting a
+slot out from under a live request is the bug that rule exists to prevent.
+
+## `RecurringAvailabilityDialog` is exported but currently unused
+
+It generates one slot per day across a date range with a fixed daily window, skipping past
+windows and anything beyond +60 days so a range that overruns the cap does not fail as a batch.
+It hands the whole array to `onAdd(slots: NewSlotInput[])`.
+
+The Partner portal does **not** use it — it renders its own, much larger
+`src/pages/venue-availability-page/recurring/RecurringAvailabilityDialog.tsx` (day-of-week
+picker, space pricing, templates, bulk actions, venue-rule accordions). So this export has no
+consumer today. Before extending it, check whether the Partner version is what you actually
+want; before deleting it, check the Onboarding portal has not adopted it since.
+
+## `VenueSlotRow` — the package type is the narrow one
+
+`portals/partners-app/src/pages/venue-availability-page/queries.ts` declares its own
+`VenueSlotRow` that adds optional `space_label` and `capacity`. The optionality is what keeps
+it assignable to this package's type. If you add a **required** field to either shape, the two
+stop being compatible and the Partner page stops compiling — widen the package type instead of
+duplicating a third row shape.
+
+## Constraints
+
+Zero runtime dependencies; MUI, `@mui/x-date-pickers`, `date-fns`, React and `react-dom` are
+peers supplied by the consuming portal. Nothing here imports Apollo, and it should stay that
+way — the moment a query moves inside, the Onboarding portal (which uses entirely different,
+role-gated operations) can no longer share it.
+
+This is a web/MUI package with no native twin; venue availability is a partner-console feature
+and does not exist in the mobile app.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 on `src/**` (barrels excluded) under `jsdom`. The
+branchy helpers — `cellColors`, `cellShape`, `buildCells`, the locked-status rules — are why the
+components are decomposed into module-scope `DayCell` / `DayHeader` / `DayBadges` / `CountBadge`
+sub-components rather than nested ternaries. Keep new branches in named helpers so they stay
+testable without rendering the whole grid.

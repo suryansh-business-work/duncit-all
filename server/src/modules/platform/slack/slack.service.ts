@@ -27,7 +27,7 @@ function parseJsonArray(raw: string | null | undefined, field: string): unknown[
 }
 
 const optionalBool = (v: unknown): boolean | undefined => (v == null ? undefined : !!v);
-const optionalStr = (v: unknown): string | undefined => {
+const optionalStr = (v: string | null | undefined): string | undefined => {
   const s = String(v ?? '').trim();
   return s || undefined;
 };

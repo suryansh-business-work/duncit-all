@@ -1,0 +1,308 @@
+---
+name: '@duncit/forms'
+summary: 'The RHF + Zod scaffold every portal form is built from: MUI text fields wired to react-hook-form, reusable Zod field rules, and the shared validation patterns.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/crm'
+  - 'portals/marketing'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/tech'
+  - 'portals/website-app'
+  - 'packages/ad-request-form'
+exports:
+  - 'RhfTextField'
+  - 'FormField'
+  - 'zodRules'
+  - 'validationRules'
+  - 'optionalText'
+  - 'requiredText'
+  - 'optionalUrl'
+  - 'SLUG_KEY_PATTERN'
+  - 'PERSON_NAME_PATTERN'
+  - 'PHONE_NUMBER_PATTERN'
+  - 'GSTIN_PATTERN'
+---
+
+## Why this exists
+
+Rule 10 puts every portal on react-hook-form + Zod, and every portal arrived there separately.
+The result was a `components/FormField.tsx` in admin, another in crm, another in support — and
+a `forms/validation` module in each holding its own `email`, `password` and `personName` Zod
+builders. Same rules, different error strings, and a fix to the email length cap landed in one
+portal at a time.
+
+The rules here are the **union** of those copies, which is why several take an options object:
+crm reported "too long" before "enter a valid email" and support used `required_error` rather
+than `min(1)`. Both spellings survive as flags (`lengthFirst`, `requiredError`) so the portals
+could adopt one module without changing a single user-visible message.
+
+## Use it
+
+Schema — `portals/admin/src/pages/users-page/create-user/create-user.form.ts`:
+
+```ts
+import { z } from 'zod';
+import { zodRules } from '@duncit/forms';
+
+export const createUserSchema = z.object({
+  first_name: zodRules.personName('First name'),
+  last_name: zodRules.personName('Last name'),
+  email: zodRules.optionalEmail('Email'),
+  phone_extension: zodRules.phoneExtension('Phone code'),
+  phone_number: zodRules.phoneNumber('Phone number'),
+  city: zodRules.optionalText('City', 80),
+  zone: zodRules.optionalText('Zone', 80),
+});
+```
+
+Field — the dialog that renders it:
+
+```tsx
+import { RhfTextField } from '@duncit/forms';
+
+<RhfTextField control={control} name="first_name" label="First name" hint="As on ID" />;
+```
+
+Every rule takes the field's **label** as its first argument and builds the message from it, so
+`personName('First name')` says "First name is required". Pass the label the user actually
+sees, not the schema key.
+
+## Sample data
+
+The main input is a form's values object. This is the admin create-user payload, with the
+field names the schema above actually uses — one valid, one deliberately broken.
+
+```ts
+export const validCreateUser = {
+  first_name: '  Aarav ',            // untrimmed on purpose — the rules trim
+  last_name: "O'Neill",
+  email: '  Aarav.Mehta@Example.COM ',
+  phone_extension: '+91',
+  phone_number: '9820011223',
+  city: 'Mumbai',
+};
+
+export const invalidCreateUser = {
+  first_name: '9Aarav',              // digits are not allowed to lead a name
+  last_name: "O'Neill",
+  email: 'not-an-email',
+  phone_extension: '+91',
+  phone_number: '98200',             // 5 digits, the rule wants 6–15
+  city: 'Mumbai',
+};
+```
+
+## Worked examples
+
+Actual `safeParse` output from running `createUserSchema` (the schema in "Use it") against
+those two fixtures.
+
+```ts
+createUserSchema.safeParse(validCreateUser);
+// {
+//   success: true,
+//   data: {
+//     first_name: 'Aarav',                    ← trimmed
+//     last_name: "O'Neill",
+//     email: 'aarav.mehta@example.com',       ← trimmed AND lowercased
+//     phone_extension: '+91',
+//     phone_number: '9820011223',
+//     city: 'Mumbai',
+//   },
+// }
+
+createUserSchema.safeParse(invalidCreateUser).error.issues.map((i) => [i.path.join('.'), i.message]);
+// [
+//   ['first_name',   'First name can use letters, spaces, apostrophes, periods and hyphens only'],
+//   ['email',        'Invalid input'],
+//   ['phone_number', 'Phone number must contain only digits (6-15 digits)'],
+// ]
+```
+
+That `'Invalid input'` is not a typo and it is worth knowing before you ship a form:
+`optionalEmail` is a **union** with `z.literal('')`, and Zod reports a failed union with its
+own generic message rather than the branch's `Enter a valid email`. If the field is required,
+use `zodRules.email(...)` — it produces the specific message:
+
+```ts
+zodRules.optionalEmail('Email').safeParse('');       // { success: true, data: '' }
+zodRules.email('Email').safeParse('x'.repeat(300));  // 'Enter a valid email'  ← format first
+zodRules.email('Email', { lengthFirst: true })
+  .safeParse('x'.repeat(300));                       // 'Email is too long'    ← cap first
+```
+
+The rest of the builders, with their real messages:
+
+```ts
+zodRules.password('Password').safeParse('abc');      // 'Password must be at least 8 characters'
+zodRules.requiredText('Bio', 10, 200).safeParse('too short');
+                                                     // 'Bio must be at least 10 characters'
+zodRules.optionalText('City', 5).safeParse('Bengaluru');
+                                                     // 'City must be 5 characters or fewer'
+
+optionalUrl('Link').safeParse('mailto:a@b.com');     // { success: true, data: 'mailto:a@b.com' }
+optionalUrl('Link').safeParse('ftp://x.com');        // 'Link must be a valid URL'
+optionalUrl('Link').safeParse('/pods/123');          // 'Link must be a valid URL'
+optionalUrl('Link', true).safeParse('/pods/123');    // { success: true, data: '/pods/123' }
+```
+
+And the patterns, as booleans:
+
+```ts
+PERSON_NAME_PATTERN.test("O'Neill");        // true
+PERSON_NAME_PATTERN.test('9Aarav');         // false
+PHONE_NUMBER_PATTERN.test('9820011223');    // true
+PHONE_NUMBER_PATTERN.test('98200');         // false
+SLUG_KEY_PATTERN.test('club-admin');        // true
+SLUG_KEY_PATTERN.test('Club Admin');        // false
+PAN_PATTERN.test('AAPFU0939F');             // true
+GSTIN_PATTERN.test('27AAPFU0939F1ZV');      // true
+OTP_PATTERN.test('482913');                 // true
+POSTAL_CODE_PATTERN.test('400 001');        // true
+```
+
+## API reference
+
+### `RhfTextField<T>`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | — | The `useForm` control. Always explicit here. |
+| `name` | `Path<T>` | yes | — | Typed field name. |
+| `hint` | `string` | no | `' '` | Helper text shown while the field has no error (the blank keeps the height stable). |
+| …rest | `TextFieldProps` minus `name`/`value`/`onChange`/`onBlur`/`error`/`helperText` | no | `fullWidth: true` | Everything else goes to MUI `TextField`. |
+
+### `FormField<T>` (legacy)
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `name` | `Path<T>` | yes | — | Typed field name. |
+| `control` | `Control<T>` | no | surrounding `FormProvider` | Omit it inside a `FormProvider`. |
+| `hint` | `string` | no | `' '` | Helper text with no error. |
+| `errorMode` | `'always' \| 'touchedOrDirty'` | no | `'always'` | `'always'` = admin/crm behaviour; `'touchedOrDirty'` = support behaviour. |
+| …rest | `TextFieldProps` (same omissions) | no | `fullWidth: true` | Passed to MUI `TextField`. |
+
+### `zodRules` (also exported as `validationRules`)
+
+| Rule | Signature | Produces |
+| --- | --- | --- |
+| `email` | `(label = 'Email', { lengthFirst? }) => ZodString` | Trimmed, lowercased, required, `.email()`, max 254. `lengthFirst` swaps the cap ahead of the format check. |
+| `optionalEmail` | `(label = 'Email') => ZodUnion` | `''` passes; a filled value is trimmed, max 254, validated and lowercased. |
+| `password` | `(label = 'Password', { required?, requiredError? }) => ZodString` | Min 8, max 128. `required` prepends `min(1)`; `requiredError` puts the message on `required_error` instead. |
+| `personName` | `(label: string) => ZodString` | Trimmed, required, `PERSON_NAME_PATTERN`. |
+| `phoneNumber` | `(label = 'Phone number') => ZodString` | Trimmed, `PHONE_NUMBER_PATTERN` (6–15 digits). |
+| `phoneExtension` | `(label = 'Phone code') => ZodString` | Trimmed, `PHONE_EXTENSION_PATTERN` (optional `+`, 1–5 digits). |
+| `optionalText` | `(label, max: number, { defaultEmpty? }) => ZodString` | Trimmed, capped. `defaultEmpty` appends `.default('')`. Also a top-level export. |
+| `requiredText` | `(label, min: number, max: number) => ZodString` | Trimmed with both bounds. Also a top-level export. |
+| `optionalUrl` | `(label, allowRelative = false, { defaultEmpty? }) => ZodEffects` | `''` passes; otherwise parsed with `URL` and restricted to `http:`, `https:`, `mailto:`, `tel:` (plus a leading-slash path when `allowRelative`). Also a top-level export. |
+
+Every rule takes the **label the user sees** as its first argument and builds its message from
+it, so pass `'First name'`, not `'first_name'`.
+
+### Patterns
+
+| Constant | Pattern | Matches |
+| --- | --- | --- |
+| `PERSON_NAME_PATTERN` | `/^[A-Za-z][A-Za-z .'-]{0,59}$/` | Letter-led name, up to 60 chars. |
+| `PHONE_NUMBER_PATTERN` | `/^\d{6,15}$/` | Digits only. |
+| `PHONE_EXTENSION_PATTERN` | `/^\+?\d{1,5}$/` | Country code, `+` optional. |
+| `SLUG_KEY_PATTERN` | `/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/` | Role and pod-plan keys. |
+| `PAN_PATTERN` | `/^[A-Z]{5}\d{4}[A-Z]$/` | Indian PAN. |
+| `AADHAR_PATTERN` | `/^\d{12}$/` | Aadhaar. |
+| `GSTIN_PATTERN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | 15-char GSTIN with the literal `Z`. |
+| `OTP_PATTERN` | `/^\d{4,8}$/` | OTP codes. |
+| `POSTAL_CODE_PATTERN` | `/^[\dA-Za-z -]{3,12}$/` | Postal / ZIP codes. |
+
+## Live preview
+
+No live preview on this page yet. The docs site renders real React islands through
+`docs-site/src/components/Preview.astro`, but it declares only `@duncit/ui` and
+`@duncit/dialogs` as dependencies — a preview of a form needs `@duncit/forms` plus
+`react-hook-form`, `zod` and `@hookform/resolvers` in that workspace. When they land, this
+page slots one in the same way `@duncit/ui` does:
+
+```mdx
+import Preview from '@docs/components/Preview.astro';
+import { CreateUserFormDemo } from '@docs/components/examples/CreateUserFormDemo.tsx';
+import createUserFormSource from '@docs/components/examples/CreateUserFormDemo.tsx?raw';
+
+<Preview title="RhfTextField + zodRules — live validation" code={createUserFormSource}>
+  <CreateUserFormDemo client:load />
+</Preview>
+```
+
+A form preview is worth having precisely because the messages above only appear on submit —
+until it exists, the worked examples are the exact strings the user reads.
+
+## `RhfTextField` vs `FormField`
+
+`RhfTextField` is the one to use in new code. `FormField` is the legacy wrapper kept for the
+portals that adopted it first — crm's lead-form sections are all built on it — and it differs
+in two ways:
+
+- `control` is **optional**; it falls back to the surrounding `FormProvider`. `RhfTextField`
+  always takes an explicit `control`.
+- It has an `errorMode`: `'always'` (default, the admin/crm behaviour) surfaces the error
+  immediately; `'touchedOrDirty'` waits for interaction (the support behaviour).
+
+Do not migrate a working `FormField` call site just to change the import — the error-display
+timing is user-visible and `RhfTextField` has no `errorMode`.
+
+Both default `fullWidth` to `true` and both coerce `value ?? ''`, because an uncontrolled MUI
+input that later receives a value logs React's controlled/uncontrolled warning. Both also fall
+back to `' '` for `helperText`, so the field's height does not jump when an error appears —
+supply a real `hint` instead of relying on that space.
+
+## Rule options exist to preserve messages, not to configure behaviour
+
+| Option | What it changes |
+| --- | --- |
+| `email(label, { lengthFirst })` | Runs the 254-char cap before the format check, so over-long garbage reports "too long" |
+| `password(label, { required })` | Prepends `min(1, '<label> is required')` |
+| `password(label, { requiredError })` | Puts the required message on the base string — only differs when the parsed value is `undefined` |
+| `optionalText` / `optionalUrl` `{ defaultEmpty }` | Appends `.default('')` so `undefined` parses to `''` |
+
+Reach for one only when matching an existing portal's wording. A new form should take the
+defaults; adding a fourth spelling of "email is required" is the thing this package exists to
+stop.
+
+`optionalEmail` is a union with `z.literal('')`, so blank passes and a filled value is
+lowercased. It is not `email().optional()` — that would reject `''`, which is what an empty
+MUI input actually submits.
+
+`optionalUrl(label, allowRelative)` accepts `http:`, `https:`, `mailto:` and `tel:` only, plus
+a leading-slash relative path when `allowRelative` is true. It parses with `URL` rather than a
+regex, so a protocol outside that set fails even though it looks well-formed.
+
+## Patterns here vs `@duncit/regex`
+
+`src/patterns.ts` is the superset of the per-portal `forms/validation` constants, copied
+verbatim so no portal's validation changed on adoption. That means some of it overlaps
+`@duncit/regex` — `PHONE_NUMBER_PATTERN` is `/^\d{6,15}$/`, the same range as that package's
+`PHONE_INTL`.
+
+Rule of thumb: if a rule is shared with mWeb, native or the server, the pattern belongs in
+`@duncit/regex` (which is zero-dep and framework-free and ships prebuilt for Metro). These
+exports are for portal leaf-form schemas — `SLUG_KEY_PATTERN` for role and pod-plan keys,
+`PAN_PATTERN`, `AADHAR_PATTERN`, `GSTIN_PATTERN`, `OTP_PATTERN`, `POSTAL_CODE_PATTERN`.
+
+`GSTIN_PATTERN` here is the correct 15-character form with the literal `Z` in position 14 —
+the same shape as `@duncit/regex`'s `GSTIN`, and **not** mWeb checkout's 14-character variant,
+which rejects every valid GSTIN. Do not copy that one in.
+
+## Peers and coverage
+
+MUI, React, react-hook-form and Zod are peer dependencies — the package has no runtime
+dependencies. Two copies of react-hook-form in a bundle means `FormField`'s `FormProvider`
+lookup finds a different context than the one `useForm` populated, and every field silently
+renders empty; keeping RHF a peer is what prevents that.
+
+`vitest.config.ts` enforces 100/100/100/100 over `src/**`. Every option flag above is a branch,
+so adding one means adding its test.

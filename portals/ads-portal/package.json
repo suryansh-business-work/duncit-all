@@ -13,7 +13,11 @@
     "preview": "vite preview",
     "test:forms": "vitest run",
     "test:forms:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "build:e2e": "tsc -b && vite build --mode e2e",
+    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts",
+    "test:e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts",
+    "test:e2e:open": "cypress open --config-file __tests__/e2e/cypress.config.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
@@ -48,13 +52,15 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0",
     "@duncit/gql-types": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
+    "@types/node": "^20.12.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "cross-env": "^10.1.0",
+    "cypress": "^15.16.0",
     "jsdom": "^24.1.3",
     "typescript": "^5.4.5",
     "vite": "^5.2.11",

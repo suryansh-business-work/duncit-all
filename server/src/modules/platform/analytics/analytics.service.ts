@@ -4,7 +4,7 @@ import { AppEventModel, type IAppEvent } from './appEvent.model';
 import type { RecordAppEventDTO } from './analytics.validator';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { HostModel } from '@modules/venues/host/host.model';

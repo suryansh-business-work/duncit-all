@@ -1,0 +1,399 @@
+---
+name: '@duncit/ui'
+summary: 'The MUI primitives every portal used to hand-roll — KPI stat card, status chip, label/value row, page and back headers, the query guard trio and a debounce hook.'
+category: 'ui'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'packages/shell'
+  - 'packages/ad-request-form'
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/challenge-portal'
+  - 'portals/crm'
+  - 'portals/finance'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'StatCard'
+  - 'usageColor'
+  - 'StatusChip'
+  - 'STATUS_CHIP_COLORS'
+  - 'InfoRow'
+  - 'PageHeader'
+  - 'BackHeader'
+  - 'BackButton'
+  - 'QueryGuard'
+  - 'useDebouncedValue'
+  - 'mergeSx'
+  - 'ModerationBlockedDialog'
+  - 'LanguageSelect'
+  - 'StatusColorMap'
+  - 'StatCardLayout'
+  - 'InfoRowVariant'
+---
+
+import Preview from '@docs/components/Preview.astro';
+import { DashboardTiles } from '@docs/components/examples/DashboardTiles.tsx';
+import dashboardTilesSource from '@docs/components/examples/DashboardTiles.tsx?raw';
+import { PodDetailHeader } from '@docs/components/examples/PodDetailHeader.tsx';
+import podDetailHeaderSource from '@docs/components/examples/PodDetailHeader.tsx?raw';
+import { QueryGuardStates } from '@docs/components/examples/QueryGuardStates.tsx';
+import queryGuardStatesSource from '@docs/components/examples/QueryGuardStates.tsx?raw';
+
+## Why this exists
+
+Every portal dashboard had a KPI tile. Every detail page had a label/value row, a spinner, an
+error `Alert` and a "not found" `Alert`, in that order. Every list page had a `useState` +
+`useEffect` + `setTimeout` debounce for its search box. None of them were quite the same: the
+tile was `SummaryTiles` in admin, `StatGrid` in ads-portal, a KPI card in crm; the guard trio
+was re-typed on every page that loads one entity.
+
+This package holds one copy of each. It is the MUI layer above `@duncit/utils`, which is the
+package's only runtime dependency — `QueryGuard` uses `parseApiError` from it rather than
+re-deriving the message.
+
+## Use it
+
+From `portals/ads-portal/src/pages/ads/AdDetailsPage.tsx` and
+`portals/admin/src/pages/dashboard/SummaryTiles.tsx`:
+
+```tsx
+import { BackHeader, QueryGuard, StatusChip, StatCard } from '@duncit/ui';
+
+<BackHeader title={ad.title} eyebrow="Ad" backTo="/ads" actions={<EditButton />} />
+
+<QueryGuard loading={loading && !ad} error={error} notFound={!ad}>
+  {() => (
+    <>
+      <StatusChip status={ad.status} />
+      <StatCard label="Total spend" value={formatINR(ad.spend)} layout="split" />
+    </>
+  )}
+</QueryGuard>;
+```
+
+`children` accepts a **function** as well as a node. Pass a function whenever the content
+dereferences the entity — it defers evaluation past the `notFound` branch, so
+`{() => <div>{ad.title}</div>}` cannot throw on a null `ad`.
+
+<Preview
+  title="Detail-page header — BackHeader, StatusChip, InfoRow"
+  code={podDetailHeaderSource}
+  note="Every element below is the real export, not a mock-up. The back arrow uses onBack rather than backTo, so no router has to be mounted."
+>
+  <PodDetailHeader client:load />
+</Preview>
+
+<Preview
+  title="QueryGuard — all four branches"
+  code={queryGuardStatesSource}
+  note="Switch states to see the trio. The error text comes from parseApiError reading the GraphQL error shape — nothing formats it at the call site."
+>
+  <QueryGuardStates client:load />
+</Preview>
+
+## Sample data
+
+The "input" to this package is a props object, so here is a realistic one — the finance
+dashboard's KPI row and a pod detail page's rows, using the real prop names from
+`StatCardProps` / `InfoRowProps` / `StatusChipProps`.
+
+```ts
+import type { StatCardProps, InfoRowProps, StatusColorMap } from '@duncit/ui';
+
+export const dashboardTiles: StatCardProps[] = [
+  { label: 'Pods completed', value: 128, hint: '+12 this week', hintColor: 'success.main', layout: 'split' },
+  { label: 'Host payouts due', value: '₹1,24,500', hint: '9 wallets', layout: 'default' },
+  { label: 'Storage used', value: '73.4 GB', sub: '/ 80 GB', percent: 92, layout: 'default' },
+  { label: 'Open refunds', value: 4, layout: 'valueFirst', loading: false },
+];
+
+export const podDetailRows: InfoRowProps[] = [
+  { label: 'Pod ID', value: 'DUN-POD-10241', variant: 'stacked' },
+  { label: 'Venue', value: 'Bandra Studio, Mumbai', variant: 'inline', labelWidth: 120 },
+  { label: 'Spots', value: '11 / 12', variant: 'split' },
+  { label: 'Host earnings', value: '₹8,250', variant: 'split', bold: true },
+];
+
+/** The support portal's own vocabulary — a full replacement, not a merge. */
+export const ticketStatusColors: StatusColorMap = {
+  OPEN: 'info',
+  IN_PROGRESS: 'warning',
+  ESCALATED: 'error',
+  RESOLVED: 'success',
+  CLOSED: 'default',
+};
+```
+
+## Worked examples
+
+Real values, produced by running the exports (jsdom + `@testing-library/react`), not
+paraphrased.
+
+`usageColor` — the tech server's usage-bar convention:
+
+```ts
+usageColor(42);  // 'success'
+usageColor(78);  // 'warning'
+usageColor(91);  // 'error'
+usageColor(100); // 'error'
+```
+
+`mergeSx` — never a spread, always an array, so a caller's override wins without dropping
+the component's defaults:
+
+```ts
+mergeSx({ p: 2 });
+// { p: 2 }                                   ← no override, defaults returned as-is
+
+mergeSx({ p: 2, borderRadius: 3 }, { p: 0 });
+// [{ p: 2, borderRadius: 3 }, { p: 0 }]      ← borderRadius survives; p is overridden
+
+mergeSx({ p: 2 }, [{ mb: 1 }, { color: 'red' }]);
+// [{ p: 2 }, { mb: 1 }, { color: 'red' }]    ← an array override is flattened, not nested
+```
+
+`STATUS_CHIP_COLORS` and what a rendered `StatusChip` resolves to:
+
+```ts
+STATUS_CHIP_COLORS;
+// {
+//   APPROVED: 'success', REJECTED: 'error', DENIED: 'error',
+//   PENDING: 'warning',  DRAFT: 'warning',  SUBMITTED: 'info',
+// }
+```
+
+```tsx
+<StatusChip status="PENDING" />
+// <Chip> class MuiChip-colorWarning, label "PENDING"
+
+<StatusChip status="ESCALATED" />
+// MuiChip-colorDefault — an unmapped status falls back to `fallbackColor` ('default')
+
+<StatusChip status="SUBMITTED" colorMap={{ ...STATUS_CHIP_COLORS, SUBMITTED: 'warning' }} />
+// MuiChip-colorWarning
+```
+
+`QueryGuard`, all four branches (the error text is `parseApiError`'s, from `@duncit/utils`):
+
+```tsx
+<QueryGuard loading>{() => <PodBody />}</QueryGuard>
+// → a centred <CircularProgress /> in a Stack with py: 6
+
+<QueryGuard error={{ graphQLErrors: [{ message: 'Pod not found' }] }}>…</QueryGuard>
+// → <Alert severity="error">Pod not found</Alert>
+
+<QueryGuard error={new Error('Network request failed')}>…</QueryGuard>
+// → <Alert severity="error">Unable to connect to server. Please check your internet
+//    connection and try again.</Alert>       ← parseApiError recognises the offline shape
+
+<QueryGuard notFound notFoundText="This pod no longer exists." notFoundSeverity="warning">…</QueryGuard>
+// → <Alert severity="warning">This pod no longer exists.</Alert>  (MuiAlert-standardWarning)
+
+<QueryGuard>{() => <div>Weekend Pottery Pod</div>}</QueryGuard>
+// → Weekend Pottery Pod
+```
+
+`LanguageSelect` with a single configured language renders **nothing** — the container comes
+back as an empty string, not a one-option dropdown:
+
+```tsx
+render(<LanguageSelect value="en" options={[{ code: 'en', label: 'English' }]} onChange={fn} />);
+// container.innerHTML === ''
+```
+
+## Props reference
+
+### `StatCard`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `ReactNode` | yes | — | The KPI's name. |
+| `value` | `ReactNode` | yes | — | The number/amount rendered large. |
+| `layout` | `'default' \| 'valueFirst' \| 'split'` | no | `'default'` | Which of the three drifted portal shapes to render. |
+| `hint` | `ReactNode` | no | — | Caption under the value (e.g. "+12% vs last week"). |
+| `hintColor` | `string` | no | — | Theme colour path for the hint (`'success.main'`). |
+| `icon` | `ReactNode` | no | — | MUI icon element. |
+| `iconColor` | `string` | no | — | Theme colour path applied to the icon wrapper. |
+| `iconBox` | `StatCardIconBox` | no | — | Tinted rounded box: `{ color, alpha=0.16, size=40, radius=1.5 }`. |
+| `iconPlacement` | `'start' \| 'end'` | no | `'end'` | Icon side in the `default` layout's header row. |
+| `percent` | `number` | no | — | 0–100; renders a `LinearProgress` usage bar under the value. |
+| `progressColor` | `'primary' \| 'success' \| 'warning' \| 'error'` | no | `usageColor(percent)` | Bar colour override. |
+| `sub` | `string` | no | — | Small text on the value baseline (`/ 80 GB`). |
+| `valueVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Value typography. |
+| `valueWeight` | `number` | no | `800` | Value font weight. |
+| `valueColor` | `string` | no | — | Theme colour path for the value. |
+| `valueNoWrap` | `boolean` | no | `false` | Ellipsize a long value. |
+| `labelVariant` | `'overline' \| 'caption' \| 'body2'` | no | `'overline'` (`'body2'` in `valueFirst`) | Label typography. |
+| `labelWeight` | `number` | no | — | Label font weight. |
+| `loading` | `boolean` | no | `false` | Replaces the value with a `Skeleton`. |
+| `skeletonProps` | `SkeletonProps` | no | `variant="text"`, w 90, h 40 | Skeleton overrides. |
+| `to` | `string` | no | — | Wraps the body in a `CardActionArea` `RouterLink` (**needs a router**). |
+| `onClick` | `() => void` | no | — | Wraps the body in a clickable `CardActionArea`. |
+| `cardVariant` | `'outlined' \| 'elevation'` | no | `'outlined'` | MUI `Card` variant. |
+| `sx` / `contentSx` / `headerSx` / `labelSx` / `valueSx` / `hintSx` | `SxProps<Theme>` | no | — | Slot-level style overrides, merged via `mergeSx`. |
+
+### `StatusChip`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `status` | `string` | yes | — | The raw status; also the chip label unless `label` is given. |
+| `colorMap` | `StatusColorMap` | no | `STATUS_CHIP_COLORS` | **Full replacement** map of status → MUI colour. |
+| `fallbackColor` | `StatusChipColor` | no | `'default'` | Colour for a status missing from the map. |
+| `label` | `ChipProps['label']` | no | `status` | Display label. |
+| …rest | `ChipProps` minus `color`/`label` | no | `size="small"` | Anything else goes to MUI `Chip`. |
+
+### `InfoRow`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `label` | `ReactNode` | yes | — | Row label. |
+| `value` | `ReactNode` | yes | — | Row value. No built-in empty fallback — keep your `value \|\| '—'`. |
+| `variant` | `'stacked' \| 'inline' \| 'split'` | no | `'stacked'` | Which detail-row shape to render. |
+| `labelWidth` | `number` | no | `96` | `inline` only: label `minWidth` in px. |
+| `labelVariant` | `'caption' \| 'body2' \| 'overline'` | no | `'caption'` (`'body2'` for inline/split) | Label typography. |
+| `labelWeight` / `valueWeight` | `number` | no | `700` / `600` | Font weights (both forced to `900` when `bold`). |
+| `bold` | `boolean` | no | `false` | `split` only: total-row styling. |
+| `boldColor` | `string` | no | — | `split` + `bold`: accent colour for the value. |
+| `sx` / `labelSx` / `valueSx` | `SxProps<Theme>` | no | — | Style overrides. |
+
+### `PageHeader`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `title` | `ReactNode` | yes | — | Page title. |
+| `subtitle` | `ReactNode` | no | — | Secondary line under the title. |
+| `actions` | `ReactNode` | no | — | Right-hand slot; switches the block to a space-between row. |
+| `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography. |
+| `titleWeight` | `number` | no | `800` | Title font weight. |
+| `sx` | `SxProps<Theme>` | no | — | Wrapper style. |
+
+### `BackHeader` / `BackButton`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `title` | `ReactNode` | yes | — | Entity title. |
+| `eyebrow` | `ReactNode` | no | — | Line above the title; a string renders as `overline`. |
+| `eyebrowWeight` | `number` | no | `900` | Weight for a string eyebrow. |
+| `actions` | `ReactNode` | no | — | Right-aligned action slot. |
+| `onBack` | `() => void` | no | — | Back handler (no router needed). |
+| `backTo` | `string` | no | — | Router link target — **requires a router context**. |
+| `backAriaLabel` | `string` | no | `'Back'` | `aria-label` on the icon button. |
+| `backSize` | `'small' \| 'medium'` | no | `'small'` | Icon button size. |
+| `titleVariant` | `'h4' \| 'h5' \| 'h6'` | no | `'h5'` | Title typography. |
+| `titleNoWrap` | `boolean` | no | `false` | Ellipsize a long title. |
+| `sx` / `backSx` / `titleSx` | `SxProps<Theme>` | no | — | Style overrides. |
+| `children` (`BackButton`) | `ReactNode` | yes | — | Button label, e.g. "Back to Venue Leads". |
+
+### `QueryGuard`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `loading` | `boolean` | no | `false` | Pass `loading && !entity` so a refetch keeps stale data on screen. |
+| `error` | `unknown` | no | — | Any error shape; text comes from `parseApiError`. |
+| `errorText` | `string` | no | — | Precomputed text; overrides `parseApiError`. |
+| `notFound` | `boolean` | no | `false` | Query finished, entity missing. |
+| `notFoundText` | `ReactNode` | no | `'Not found.'` | Not-found copy (localize it, rule 38). |
+| `notFoundSeverity` | `'info' \| 'warning'` | no | `'info'` | Not-found `Alert` severity. |
+| `spinnerSize` | `number` | no | MUI default (40) | `CircularProgress` size. |
+| `spinnerSx` | `SxProps<Theme>` | no | `{ py: 6 }` | Spinner wrapper style. |
+| `children` | `ReactNode \| (() => ReactNode)` | no | — | Pass a **function** whenever the content dereferences the entity. |
+
+### `LanguageSelect`, `ModerationBlockedDialog` and the two helpers
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `LanguageSelect` | `({ value, options, onChange, label?, helperText?, disabled?, size?, fullWidth? })` | `options: readonly LanguageOption[]` where `LanguageOption = { code, label, english_label? }`. Renders `null` under two options. `label` defaults to `'Language'`, `size` to `'small'`, `fullWidth` to `true`. |
+| `ModerationBlockedDialog` | `({ violations, onJump, onClose, title?, description? })` | `violations: BlockedViolation[]` = `{ id, message, type, stepIndex, stepTitle }`. Open state is derived — it renders when `violations.length > 0`. `onJump(stepIndex)` moves the wizard. |
+| `useDebouncedValue` | `<T>(value: T, delayMs = 300) => T` | Standalone filter inputs only — `DuncitTable` already debounces its own search. |
+| `usageColor` | `(percent: number) => 'success' \| 'warning' \| 'error'` | `error` ≥ 90, `warning` ≥ 75, else `success`. |
+| `mergeSx` | `(defaults: SxProps<Theme>, override?: SxProps<Theme>) => SxProps<Theme>` | Returns `defaults` untouched when `override` is falsy. |
+
+## `StatusChip` — the default map has already drifted
+
+`STATUS_CHIP_COLORS` is the repo-wide default for the approval vocabulary
+(`APPROVED`/`REJECTED`/`DENIED`/`PENDING`/`DRAFT`/`SUBMITTED`). Several portals genuinely
+disagree with it today: onboarding cards and products `brandStatus` render `SUBMITTED` as
+warning, products renders `DRAFT` as default.
+
+When migrating one of those call sites, pass a full `colorMap` that preserves the colours it
+shows now. `colorMap` is a **full replacement, not a merge** — that is deliberate, so a domain
+vocabulary (refund, meeting, campaign, lead stage) stays exactly as authored. To change one
+entry of the default, spread it:
+
+```tsx
+<StatusChip status={s} colorMap={{ ...STATUS_CHIP_COLORS, SUBMITTED: 'warning' }} />
+```
+
+Silently adopting the defaults during a migration is a visual regression that no test catches.
+
+## Picking a layout instead of writing a new component
+
+`StatCard` and `InfoRow` are supersets of the shapes that already existed, selected by a
+`layout` / `variant` prop. Reach for one of these before adding a component:
+
+| Component | Value | Where it came from |
+| --- | --- | --- |
+| `StatCard` | `default` | finance, tech, partners-app, onboarding, crm dashboards |
+| `StatCard` | `valueFirst` | support, challenge-portal dashboards |
+| `StatCard` | `split` | admin `SummaryTiles` |
+| `InfoRow` | `stacked` | dialog / detail `Field` rows |
+| `InfoRow` | `inline` | fixed-width label then value |
+| `InfoRow` | `split` | space-between label/value, `bold` for total rows |
+
+`usageColor(percent)` is the tech server convention for a usage bar: `error` at ≥90,
+`warning` at ≥75, otherwise `success`.
+
+<Preview
+  title="StatCard — one tile per layout"
+  code={dashboardTilesSource}
+  note="The first tile passes percent={82} with no progressColor, so the bar colours itself from usageColor(82) → warning. The usage bar belongs to the default layout only — percent is ignored by valueFirst and split."
+>
+  <DashboardTiles client:load />
+</Preview>
+
+## `mergeSx` — always merge, never overwrite
+
+Every component here takes an `sx` override and merges it through `mergeSx(defaults, override)`,
+which flattens both sides into an array so later entries win. That is what lets a caller tweak
+one property without losing the component's built-in styles.
+
+If you add a component to this package, route its `sx` prop through `mergeSx` too. Spreading
+(`{ ...defaults, ...sx }`) silently drops the defaults whenever a caller passes an array or a
+callback `sx`, which MUI fully supports.
+
+## Peer dependencies, including the router
+
+`react`, `react-dom`, `@mui/material`, `@mui/icons-material` and `react-router-dom` are all
+peers — nothing here bundles a second React or MUI. The router peer is easy to miss: `BackButton`
+renders `component={RouterLink}` when given `to`, so a `BackHeader`/`BackButton` used with `to`
+**must be inside a router context** or it throws. Pass `onClick`/`onBack` instead if there is no
+router (that path renders a plain `<Button>`).
+
+## `useDebouncedValue` is not needed inside a table
+
+`DuncitTable` already debounces its own search box before `fetchRows` sees the query state.
+Use `useDebouncedValue` for the standalone filter inputs that sit outside a table — adding it on
+top of a `DuncitTable` search only stacks two delays.
+
+## Localization and coverage
+
+`LanguageSelect` renders each option as its own endonym plus the English name, so a user who has
+switched into a script they cannot read can still switch back — and it renders **nothing** when
+fewer than two languages are configured. Any user-facing string you add to this package must
+come from a Localization key with a fallback bundle entry first (rule 38); the defaults here
+(`'Not found.'`, `'Back'`, `'Language'`) are prop-overridable for exactly that reason.
+
+`vitest.config.ts` gates at 100/100/100/100 with the barrels excluded, and every layout /
+variant branch has to be exercised — a new `StatCardLayout` value ships with the test that
+renders it.

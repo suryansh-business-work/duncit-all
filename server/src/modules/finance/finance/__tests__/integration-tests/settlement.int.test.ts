@@ -265,7 +265,7 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     try {
       const clubAdmin = await seedHost();
       const host = await seedHost(10);
-      const { ClubModel } = await import('@modules/pods/club/club.model');
+      const { ClubModel } = await import('@modules/clubs/club/club.model');
       const club = await ClubModel.create({
         club_id: `club-${++seq}`,
         club_name: `Club ${seq}`,

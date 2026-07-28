@@ -59,10 +59,11 @@ module.exports = {
     '!src/**/index.ts',
     '!src/**/__tests__/**',
     '!src/**/*.socket.ts',
-    // Host-metrics gatherer: os / fs.statfs / Docker-socket I/O bound to the
-    // runtime environment (like the *.socket.ts files); validated via its
-    // role-gated resolver below, not unit coverage.
-    '!src/modules/platform/tech/tech.service.ts',
+    // NOTE: src/modules/platform/tech/tech.service.ts used to be excluded here
+    // as "runtime-environment bound, validated via its role-gated resolver, not
+    // unit coverage". It now has unit tests that mock os / fs.statfs / the
+    // Docker socket and reach 100% on all four metrics, so the exclusion was
+    // removed rather than left to hide a file that is genuinely covered.
   ],
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/generated/'],
   coverageDirectory: '<rootDir>/coverage',

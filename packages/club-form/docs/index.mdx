@@ -1,0 +1,338 @@
+---
+name: '@duncit/club-form'
+summary: 'The one MUI Club create/edit form — sections, Zod schema and GraphQL input builder — shared by the admin portal and the club-admin partner page.'
+category: 'forms'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'ClubForm'
+  - 'makeClubSchema'
+  - 'buildClubInput'
+  - 'clubToFormValues'
+  - 'linesToMedia'
+  - 'cleanBullets'
+  - 'cleanFaqs'
+  - 'blankClubFormValues'
+---
+
+## Why this exists
+
+A Club is edited from two places: the admin portal's `ClubsPage` dialog and the club-admin's
+own edit page in `partners-app`. Before this package each held its own copy of the field list,
+its own `validateClub`, and its own hand-built `CreateClubInput`. The two drifted the moment a
+field was added on one side — a club saved from partners-app could silently lose `faqs` or
+`locality` because that page's input builder never learned about them.
+
+Now both mount the same `<ClubForm>` and both call the same `buildClubInput`, so the two
+surfaces can only differ in the ways `ClubFormConfig` explicitly permits.
+
+## Use it
+
+From `portals/partners-app/src/pages/club-admin-edit-club-page/ClubAdminEditClubPage.tsx` —
+the club-admin flow hides the governance sections and reuses everything else:
+
+```tsx
+import {
+  ClubForm,
+  buildClubInput,
+  clubToFormValues,
+  type ClubFormConfig,
+  type ClubFormValues,
+} from '@duncit/club-form';
+
+// Club admins edit page content only — governance fields stay admin-only.
+const PARTNER_CLUB_CONFIG: ClubFormConfig = {
+  showAdmins: false,
+  showVerified: false,
+  showIsActive: false,
+};
+
+<ClubForm
+  initialValues={clubToFormValues(club)}
+  config={PARTNER_CLUB_CONFIG}
+  onPickImage={openMediaPicker}
+  busy={saving}
+  error={opError}
+  onCancel={close}
+  onSubmit={(values, { draft }) =>
+    updateClub({ variables: { input: buildClubInput(values, { draft, config: PARTNER_CLUB_CONFIG }) } })
+  }
+/>;
+```
+
+Pass the **same** config object to `<ClubForm>` and to `buildClubInput`. The component uses it
+to decide which sections render; the builder uses it to decide which keys are allowed into the
+mutation input. Passing two different configs is how a hidden field ends up being written
+anyway.
+
+## Sample data
+
+A complete Club as the admin dialog holds it, mid-edit. The deliberately messy entries — a
+whitespace-only bullet, an FAQ with a blank question — are there because that is what a real
+`useFieldArray` looks like after a user adds a row and moves on.
+
+```ts
+import { blankClubFormValues, type ClubFormConfig, type ClubFormValues } from '@duncit/club-form';
+
+export const ADMIN_CLUB_CONFIG: ClubFormConfig = {
+  showAdmins: true,
+  showVerified: true,
+  showIsActive: true,
+};
+
+export const PARTNER_CLUB_CONFIG: ClubFormConfig = {
+  showAdmins: false,
+  showVerified: false,
+  showIsActive: false,
+};
+
+export const bakersClub: ClubFormValues = {
+  ...blankClubFormValues,
+  club_id: 'bengaluru-bakers-collective',
+  club_name: 'Bengaluru Bakers Collective',
+  club_description: 'A weekend baking community for home bakers in South Bengaluru.',
+  super_category_id: '66f1a2b3c4d5e6f708192d01',
+  category_id: '66f1a2b3c4d5e6f708192d33',
+  location_id: '66f1a2b3c4d5e6f708192a6e',
+  locality: 'Indiranagar',
+  feature_text:
+    'https://ik.imagekit.io/duncit/clubs/bakers-hero.jpg\nhttps://ik.imagekit.io/duncit/clubs/bakers-intro.mp4',
+  moments_text: 'https://ik.imagekit.io/duncit/clubs/moments-01.jpg',
+  community_link: 'https://chat.whatsapp.com/BbKeNQ2ZmT9AbCdEfGhIjK',
+  group_link: 'https://chat.whatsapp.com/LmNoPqRsTuV1WxYzAbCdEf',
+  who_we_are: ['Home bakers', '  ', 'Pastry hobbyists'],
+  what_we_do: ['Weekend bake-alongs', 'Ingredient group buys'],
+  perks: ['Discounted flour from partner mills'],
+  values: ['Share the recipe, always'],
+  faqs: [
+    { question: 'Do I need my own oven?', answer: 'No — the venue oven is included in every pod.' },
+    { question: '  ', answer: 'dropped because the question is blank' },
+  ],
+  admin_user_ids: ['66f1a2b3c4d5e6f708192a7f'],
+  is_verified: true,
+  is_active: true,
+};
+```
+
+## Worked examples
+
+### `buildClubInput(bakersClub, { draft: false, config: ADMIN_CLUB_CONFIG })`
+
+```js
+{
+  club_name: 'Bengaluru Bakers Collective',
+  club_description: 'A weekend baking community for home bakers in South Bengaluru.',
+  club_feature_images_and_videos: [
+    { url: 'https://ik.imagekit.io/duncit/clubs/bakers-hero.jpg', type: 'IMAGE' },
+    { url: 'https://ik.imagekit.io/duncit/clubs/bakers-intro.mp4', type: 'VIDEO' }
+  ],
+  club_moments: [
+    { url: 'https://ik.imagekit.io/duncit/clubs/moments-01.jpg', type: 'IMAGE' }
+  ],
+  club_whats_app_community_link: 'https://chat.whatsapp.com/BbKeNQ2ZmT9AbCdEfGhIjK',
+  club_whats_app_group_link: 'https://chat.whatsapp.com/LmNoPqRsTuV1WxYzAbCdEf',
+  who_we_are: ['Home bakers', 'Pastry hobbyists'],   // the blank bullet is gone
+  what_we_do: ['Weekend bake-alongs', 'Ingredient group buys'],
+  perks: ['Discounted flour from partner mills'],
+  values: ['Share the recipe, always'],
+  faqs: [
+    { question: 'Do I need my own oven?', answer: 'No — the venue oven is included in every pod.' }
+  ],                                                 // the question-less FAQ is gone
+  location_id: '66f1a2b3c4d5e6f708192a6e',
+  locality: 'Indiranagar',
+  category_id: '66f1a2b3c4d5e6f708192d33',
+  super_category_id: '66f1a2b3c4d5e6f708192d01',
+  is_active: true,
+  admin_user_ids: ['66f1a2b3c4d5e6f708192a7f'],      // only because showAdmins
+  is_verified: true,                                 // only because showVerified
+  club_id: 'bengaluru-bakers-collective'             // only on create (no values.id)
+}
+```
+
+### The same club, saved by a **club admin** (`PARTNER_CLUB_CONFIG`, editing)
+
+`buildClubInput({ ...bakersClub, id: '66f1a2b3c4d5e6f708192e10', is_active: false }, { config: PARTNER_CLUB_CONFIG })`
+— the diff against the input above:
+
+```js
+{
+  // …every content field identical…
+  is_active: false      // edit path: the toggled value wins, `draft` is ignored
+  // admin_user_ids  — ABSENT (showAdmins: false)
+  // is_verified     — ABSENT (showVerified: false)
+  // club_id         — ABSENT (values.id is set, so this is an update)
+}
+```
+
+"Absent", not `null`. That is the point of the flag gate: a hidden governance field is never sent,
+so a club admin's save cannot clear the admin list or drop the verified badge.
+
+### The normalisers, individually
+
+```js
+linesToMedia(bakersClub.feature_text)
+// [ { url: '…/bakers-hero.jpg',  type: 'IMAGE' },
+//   { url: '…/bakers-intro.mp4', type: 'VIDEO' } ]
+
+cleanBullets(bakersClub.who_we_are)
+// ['Home bakers', 'Pastry hobbyists']
+
+cleanFaqs(bakersClub.faqs)
+// [ { question: 'Do I need my own oven?', answer: 'No — the venue oven is included in every pod.' } ]
+```
+
+### `makeClubSchema(config).safeParse(...)` on a nearly-empty club
+
+Parsing `{ ...blankClubFormValues, club_name: 'Bengaluru Bakers Collective', community_link: 'whatsapp-group' }`:
+
+```js
+[
+  { path: 'club_description',  message: 'A short description is required' },
+  { path: 'super_category_id', message: 'Select a super category' },
+  { path: 'category_id',       message: 'Select a sub category' },
+  { path: 'location_id',       message: 'Select the club location' },
+  { path: 'feature_text',      message: 'Add at least one feature image' },
+  { path: 'community_link',    message: 'Enter a valid link (https://…)' },
+  { path: 'group_link',        message: 'WhatsApp group link is required' },
+  { path: 'who_we_are',        message: 'Add at least one "Who we are" point' },
+  { path: 'what_we_do',        message: 'Add at least one "What we do" point' },
+  { path: 'perks',             message: 'Add at least one perk' },
+  { path: 'values',            message: 'Add at least one value' }
+]
+```
+
+Two links, two different messages: a **blank** link reports "is required", a **present but
+malformed** one reports "Enter a valid link". The identical list comes back for
+`ADMIN_CLUB_CONFIG` — `makeClubSchema` takes the config and ignores it on purpose.
+
+### `clubToFormValues(club)` — the inverse
+
+Given a server Club, the fields that change shape:
+
+```js
+{
+  id: '66f1a2b3c4d5e6f708192e10',                                  // Mongo doc id, present on edit
+  feature_text: 'https://ik.imagekit.io/duncit/clubs/bakers-hero.jpg',  // media[] → newline text
+  moments_text: '',                                                // empty list → empty string
+  group_link: '',                                                  // absent server field → ''
+  what_we_do: [], perks: [], values: []                            // absent lists → []
+}
+```
+
+## Props / API
+
+### `<ClubForm>` — `ClubFormProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `initialValues` | `ClubFormValues` | yes | — | Seed values; the form `reset()`s whenever this identity changes. |
+| `config` | `ClubFormConfig` | yes | — | Which governance sections render. Pass the **same** object to `buildClubInput`. |
+| `initialAdmins` | `ClubAdmin[]` | no | `[]` | Pre-assigned admins, to seed labelled chips in the picker. |
+| `onPickImage` | `(folder?: string) => Promise<string \| null>` | no | `undefined` | Rich media picker; omit for the newline-URL textarea. |
+| `busy` | `boolean` | no | `false` | Disables the actions while the mutation runs. |
+| `error` | `string \| null` | no | `undefined` | Server error rendered as an `Alert`. |
+| `onCancel` | `() => void` | yes | — | Close/dismiss handler. |
+| `onSubmit` | `(values: ClubFormValues, options: { draft: boolean }) => Promise<void> \| void` | yes | — | Final save runs the resolver; a draft submits `getValues()` unvalidated. |
+| `onReady` | `(methods: UseFormReturn<ClubFormValues>) => void` | no | `undefined` | Hands the RHF methods up (admin AI-fill). |
+
+The form validates on **blur** (`mode: 'onBlur'`), not on change.
+
+### `ClubFormConfig`
+
+| Flag | Type | Turns on |
+| --- | --- | --- |
+| `showAdmins` | `boolean` | Club Admins picker + the read-only auto-matched venues panel, and the `admin_user_ids` key in the input. |
+| `showVerified` | `boolean` | Verified-badge toggle, and the `is_verified` key in the input. |
+| `showIsActive` | `boolean` | Active/inactive toggle (only meaningful while editing). |
+
+### Functions
+
+| Export | Signature | Returns |
+| --- | --- | --- |
+| `makeClubSchema` | `(config: ClubFormConfig) => ClubSchema` | The Zod contract. The config argument is accepted and ignored. |
+| `buildClubInput` | `(values: ClubFormValues, { draft?, config }) => Record<string, unknown>` | Create/UpdateClubInput. `draft` defaults to `false`. |
+| `clubToFormValues` | `(club: any) => ClubFormValues` | Form values, blank-defaulted. |
+| `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list (`.mp4/.mov/.webm` → `VIDEO`). |
+| `cleanBullets` | `(items: string[]) => string[]` | Trimmed, blanks dropped. |
+| `cleanFaqs` | `(items: ClubFaqValue[]) => ClubFaqValue[]` | Trimmed pairs; a row missing either half is dropped. |
+| `blankClubFormValues` | `ClubFormValues` | Module-level constant — spread it, never mutate it. |
+
+### Value types
+
+| Type | Shape |
+| --- | --- |
+| `ClubFaqValue` | `{ question: string; answer: string }` |
+| `ClubAdmin` | `{ id: string; name: string; avatar_url?: string \| null }` |
+| `ClubFormData` | `{ config, initialAdmins, onPickImage }` — what the sections read from context. |
+
+## Live preview
+
+No live preview on this page yet. `docs-site` has the `<Preview>` island runtime, but the Basic
+section of this form renders `@duncit/category` and `@duncit/location`, and both fetch their options
+through Apollo — mounted without a client they render as permanently-loading dropdowns, which is a
+worse lie than no preview at all.
+
+The slot needs a `MockedProvider` (or a mocked-link Apollo client) in `docs-site` seeded with
+`ADMIN_CATEGORIES` and `ADMIN_LOCATIONS`; both queries are exported for exactly that. Once it
+exists, the preview mounts `<ClubForm initialValues={bakersClub} config={PARTNER_CLUB_CONFIG} …>`
+from the sample above.
+
+## `config` gates sections, not validation
+
+`makeClubSchema(config)` takes the config but deliberately ignores it: the required fields and
+their messages are identical for every consumer, ported 1:1 from the admin's old
+`clubValidation.ts`. Only rendering is conditional.
+
+So `showAdmins: false` does not make `admin_user_ids` unvalidated — it was never required. If
+you find yourself wanting a config flag to relax a rule, that means the two surfaces disagree
+about what a valid Club is, which is the drift this package exists to prevent.
+
+## Which builder to call
+
+| You have | Call |
+| --- | --- |
+| A `Club` from the server, want form state | `clubToFormValues(club)` |
+| Form state, want a Create/UpdateClubInput | `buildClubInput(values, { draft, config })` |
+| A brand-new club | `blankClubFormValues` (spread it, never mutate it) |
+
+`blankClubFormValues` is a module-level object, not a factory. Spread it
+(`{ ...blankClubFormValues, club_name }`); assigning into it poisons every later create.
+
+`linesToMedia`, `cleanBullets` and `cleanFaqs` are the pieces `buildClubInput` is made of and
+are exported for tests and for AI-fill paths that need to normalise one field. Prefer
+`buildClubInput` for anything that will be sent to the server.
+
+## Draft vs final submit
+
+`onSubmit` receives `(values, { draft })`. A draft submit — offered on create only — skips the
+Zod resolver entirely and hands over `getValues()`, because a draft is allowed to be
+incomplete. `buildClubInput` translates that into `is_active: !draft` on create; on **edit**
+`draft` is ignored and the toggled `is_active` wins. Do not add your own active/inactive logic
+at the call site.
+
+## Media picker is optional, and changes the UI
+
+Omitting `onPickImage` falls back to a plain newline-separated URL textarea. That fallback is a
+real supported mode (it is what the form renders with no picker wired), not a degraded state —
+`feature_text` and `moments_text` are newline text in the form values either way, and
+`linesToMedia` classifies each URL as `VIDEO` for `.mp4/.mov/.webm` and `IMAGE` otherwise.
+
+## Peer dependencies, not dependencies
+
+MUI, React, react-hook-form, Zod, `@hookform/resolvers`, Apollo and `graphql` are all peers.
+The package resolves them from the consuming portal so there is exactly one MUI and one
+react-hook-form instance in the bundle — two copies of RHF means `FormProvider` context does
+not reach the sections and every field silently reads `undefined`. Its only real dependencies
+are `@duncit/category` and `@duncit/location`, which supply the cascade pickers in the Basic
+section.
+
+## Coverage
+
+`vitest.config.ts` sets 100/100/100/100 over `src/**` (index barrels excluded). A new branch in
+a section component fails the package's own `test:coverage`, so add the test with the branch.
+The admin portal additionally keeps `club.form.cy.ts` exercising `buildClubInput` and
+`clubToFormValues` against portal-shaped data.

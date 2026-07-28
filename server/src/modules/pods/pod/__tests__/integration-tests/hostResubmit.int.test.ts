@@ -1,8 +1,8 @@
 import { Types } from 'mongoose';
 import { podService } from '../../pod.service';
 import { PodModel } from '../../pod.model';
-import { clubAdminService } from '@modules/pods/clubAdmin/clubAdmin.service';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { clubAdminService } from '@modules/clubs/clubAdmin/clubAdmin.service';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';

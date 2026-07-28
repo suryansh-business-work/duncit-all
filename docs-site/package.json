@@ -1,0 +1,34 @@
+{
+  "name": "duncit-docs",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Browsable reference for every @duncit/* shared package. Reads the MDX each package ships in its own docs/ folder, so the docs live next to the code they describe.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "e2e": "node ../scripts/e2e-no-surface.mjs duncit-docs"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.0",
+    "@astrojs/react": "^4.4.0",
+    "@duncit/dialogs": "workspace:*",
+    "@duncit/theme": "workspace:*",
+    "@duncit/ui": "workspace:*",
+    "@duncit/utils": "workspace:*",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "astro": "^5.18.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.23.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0"
+  }
+}

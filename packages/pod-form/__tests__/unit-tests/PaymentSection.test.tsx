@@ -81,7 +81,7 @@ describe('PaymentSection', () => {
       products_enabled: true,
       product_requests: [{ product_id: 'p1', quantity: 2 }],
     });
-    expect(screen.getByText('Product cost / spot')).toBeInTheDocument();
+    expect(screen.getByText('Product cost / payable spot')).toBeInTheDocument();
   });
 
   it('hides the breakdown for a free pod even with finance enabled', () => {

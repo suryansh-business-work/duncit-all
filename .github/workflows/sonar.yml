@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+      # `staging` is where rule 32 says everything is verified before it reaches
+      # main, so scanning only main meant the gate could not be checked until
+      # after the merge that was supposed to depend on it. This is the same
+      # thing the workflow_dispatch escape hatch below was added to do by hand.
+      # SonarQube Community has no branch analysis, so a staging scan replaces
+      # the project's single analysis — which is the intent: staging is what is
+      # about to become main. The concurrency group above cancels a superseded
+      # scan, so a burst of staging pushes still costs one run.
+      - staging
   # Run it by hand from the Actions tab ("Run workflow") against ANY branch —
   # the automatic scan only fires on main, so without this a staging cleanup is
   # invisible in SonarQube until it is merged.
@@ -162,6 +171,42 @@ jobs:
           echo "lcov reports available to the scanner:"
           find . -name 'lcov.info' -not -path '*/node_modules/*' | sort | sed 's/^/  /'
 
+      # Each runner writes `SF:` paths relative to its OWN workspace, but Sonar
+      # resolves them against the repo root — so `SF:src/Foo.tsx` from a portal
+      # became `<repo>/src/Foo.tsx`, matched nothing, and the coverage was
+      # dropped without any warning. That is why packages/portals/server/website
+      # all reported 0.0% while their own 100% thresholds passed locally.
+      # This rewrites every path to repo-root relative so the scan actually
+      # counts the suites we already have. NOT continue-on-error: silently
+      # scanning with unusable coverage is the exact failure we are fixing.
+      #
+      # The report list itself is DISCOVERED here rather than hand-maintained in
+      # sonar-project.properties. That list had already drifted — five packages
+      # with passing suites (ad-request-form, datetime, fallback-icons, i18n,
+      # slack) were never in it, so their coverage was thrown away too. The
+      # filesystem is the one source of truth (rule 34); a new package needs no
+      # edit here to be counted.
+      # The new-code period is PREVIOUS_VERSION, but no sonar.projectVersion was
+      # ever passed — so Sonar had no previous version to diff against and
+      # treated the ENTIRE codebase as new: 184,333 "new" lines, which is why
+      # new_coverage read as a whole-repo figure instead of a figure for the code
+      # actually being changed. The repo already carries a per-commit version
+      # (rule 33) and deploy.yml reads it exactly this way.
+      #
+      # NOTE: the first analysis carrying a version has nothing before it to
+      # compare with, so the new-code window only becomes meaningful from the
+      # scan after this one.
+      - name: Resolve project version
+        run: echo "SONAR_PROJECT_VERSION=$(node -p "require('./app/mobile-app/app.json').expo.version")" >> "$GITHUB_ENV"
+
+      - name: Normalize lcov paths
+        if: ${{ !inputs.skip_coverage }}
+        run: |
+          node scripts/normalize-lcov.mjs
+          paths=$(find . -name 'lcov.info' -not -path '*/node_modules/*' | sed 's|^\./||' | sort | paste -sd, -)
+          echo "Reports handed to the scanner: $paths"
+          echo "SONAR_LCOV_PATHS=$paths" >> "$GITHUB_ENV"
+
       # SonarQube keeps a per-file analysis cache; reusing it across runs is the
       # single biggest saving on a repeat scan of the same branch.
       - name: Cache SonarQube analysis
@@ -174,6 +219,13 @@ jobs:
             sonar-cache-${{ runner.os }}-
 
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        with:
+          # The set actually present on disk (see "Normalize lcov paths" above).
+          # Left empty on a skip_coverage run so the scan still publishes rather
+          # than being handed an empty reportPaths and reporting a false 0%.
+          args: >-
+            -Dsonar.projectVersion=${{ env.SONAR_PROJECT_VERSION }}
+            ${{ env.SONAR_LCOV_PATHS && format('-Dsonar.javascript.lcov.reportPaths={0}', env.SONAR_LCOV_PATHS) || '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

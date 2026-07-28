@@ -199,9 +199,10 @@ async function probeSlack(str: ConfigStr): Promise<TestResult> {
     },
   });
   const data = (await res.json().catch(() => ({}))) as { ok?: boolean; team?: string; error?: string };
+  const reason = data.error ? `: ${data.error}` : '';
   return data.ok
     ? { ok: true, message: `Slack workspace "${data.team ?? ''}" connected` }
-    : { ok: false, message: `Slack rejected the token${data.error ? `: ${data.error}` : ''}` };
+    : { ok: false, message: `Slack rejected the token${reason}` };
 }
 
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {

@@ -5,7 +5,7 @@ import { supportChatService } from './supportChat.service';
 import type { TranscriptFormat } from '@modules/support/transcript';
 import { listMyUnifiedSupportTickets } from './unifiedTickets.service';
 import { userService } from '@modules/access/user/user.service';
-import { registerSchema } from '@modules/access/user/user.validator';
+import { registerSchema } from '@modules/access/auth/auth.validator';
 import { validate } from '@utils/validate';
 
 const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];

@@ -3,7 +3,7 @@ import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getSystemPrompt } from '@modules/ai/prompt/prompt.service';
 import { UserModel } from '@modules/access/user/user.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   PodAuditLogModel,
@@ -36,7 +36,9 @@ const TRACKED_FIELDS = [
 
 export type PodAuditSnapshot = Record<string, string>;
 
-const asText = (value: unknown): string => {
+type AuditValue = string | number | boolean | Date | Types.ObjectId | null | undefined;
+
+const asText = (value: AuditValue): string => {
   if (value === null || value === undefined || value === '') return '';
   if (value instanceof Date) return value.toISOString();
   return typeof value === 'object' ? (value as { toString(): string }).toString() : String(value);

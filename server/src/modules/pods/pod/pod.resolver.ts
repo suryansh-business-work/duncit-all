@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
 import { coHostService } from './coHost.service';
-import { clubService } from '@modules/pods/club/club.service';
+import { clubService } from '@modules/clubs/club/club.service';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 import { UserModel } from '@modules/access/user/user.model';

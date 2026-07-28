@@ -1,0 +1,325 @@
+---
+name: '@duncit/slack'
+summary: 'Block Kit builders, the message-input serializer and the GraphQL operation source for every Slack message Duncit sends.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/tech'
+exports:
+  - 'buildAppFeedbackInput'
+  - 'buildFeedbackBlocks'
+  - 'FEEDBACK_CATEGORIES'
+  - 'buildSlackMessageInput'
+  - 'SEND_SLACK_MESSAGE_SDL'
+  - 'SUBMIT_APP_FEEDBACK_SDL'
+  - 'SLACK_CHANNELS_SDL'
+  - 'SLACK_CONFIGURED_SDL'
+  - 'header'
+  - 'section'
+  - 'fields'
+  - 'divider'
+  - 'context'
+  - 'image'
+  - 'button'
+  - 'actions'
+  - 'mrkdwn'
+  - 'plainText'
+---
+
+## Why this exists
+
+Three surfaces post to Slack: the Tech console's Slack page, mWeb's "Report a Problem"
+(`app/mweb/src/pages/support-hub/FeedbackPage.tsx`) and the native Feedback screen
+(`app/mobile-app/src/components/support/FeedbackForm.tsx`). Rule 27 says mWeb and the app must be
+identical, and "identical" for a Slack post means the same Block Kit JSON, the same category list
+and the same mutation document — three things that are trivially easy to write twice and slightly
+differently.
+
+The blocks, the category tuple and the GraphQL operation strings all live here. `portals/tech/src/pages/slack/queries.ts`
+is now four lines of `gql(...)` around imported SDL, and both feedback twins call the same
+`buildAppFeedbackInput`.
+
+## Use it
+
+From `app/mweb/src/pages/support-hub/FeedbackPage.tsx`:
+
+```ts
+import { gql, useMutation } from '@apollo/client';
+import { SUBMIT_APP_FEEDBACK_SDL, buildAppFeedbackInput } from '@duncit/slack';
+
+const SUBMIT_APP_FEEDBACK = gql(SUBMIT_APP_FEEDBACK_SDL);
+
+const [submit] = useMutation(SUBMIT_APP_FEEDBACK);
+await submit({ variables: { input: buildAppFeedbackInput({ ...values, platform: 'web' }) } });
+```
+
+The category list is data too — `app/mweb/src/forms/feedback/feedback.form.tsx` and the native
+`FeedbackForm.tsx` both render `FEEDBACK_CATEGORIES` rather than hard-coding four strings.
+
+## Sample data
+
+Two real inputs: an in-app feedback submission, and a finance notification.
+
+```ts
+/** What the "Report a problem" form collects. The client never sends identity. */
+const feedback = {
+  category: 'Bug',
+  message: 'Cart badge still shows 3 after I emptied the cart on the Pod Shop screen.',
+  platform: 'android',
+};
+
+/** The settlement a Finance approval posts about. */
+const settlement = {
+  settlement_id: 'DUN-STL-2291',
+  pod_id: 'DUN-POD-8842',
+  club_name: 'Bandra Badminton Club',
+  host_name: 'Ananya Iyer',
+  payout: '₹13,211.18',
+  venue: 'Smash Arena, Bandra',
+  approved_by: 'finance@duncit.com',
+  channel: 'C08FIN2291',
+};
+```
+
+## Worked examples
+
+### Feedback
+
+```ts
+FEEDBACK_CATEGORIES        // ['Bug', 'Idea', 'Question', 'Other']
+
+buildFeedbackBlocks(feedback)
+```
+
+```json
+[
+  { "type": "header",  "text": { "type": "plain_text", "text": "📝 Bug", "emoji": true } },
+  { "type": "section", "text": { "type": "mrkdwn",
+      "text": "Cart badge still shows 3 after I emptied the cart on the Pod Shop screen." } }
+]
+```
+
+```ts
+buildAppFeedbackInput(feedback)
+```
+
+```json
+{
+  "category": "Bug",
+  "message": "Cart badge still shows 3 after I emptied the cart on the Pod Shop screen.",
+  "platform": "android",
+  "blocks_json": "[{\"type\":\"header\",\"text\":{\"type\":\"plain_text\",\"text\":\"📝 Bug\",\"emoji\":true}},{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"Cart badge still shows 3 after I emptied the cart on the Pod Shop screen.\"}}]"
+}
+```
+
+That object is the whole `submitAppFeedback` variable. There is no channel and no user —
+the server picks the channel and stamps the real identity, which is why the mutation is safe
+for any signed-in user. mWeb and native both call this same builder, so both produce a
+byte-identical post (rule 27).
+
+### A rich message
+
+```ts
+const blocks = [
+  header('Settlement approved'),
+  section(`*Pod* ${settlement.pod_id} — ${settlement.club_name}`),
+  fields([
+    `*Host*\n${settlement.host_name}`,
+    `*Payout*\n${settlement.payout}`,
+    `*Venue*\n${settlement.venue}`,
+    `*Approved by*\n${settlement.approved_by}`,
+  ]),
+  divider(),
+  context([`Settlement \`${settlement.settlement_id}\` · 28 Jul 2026`]),
+  actions([
+    button('Open in Finance', {
+      url: `https://finance.duncit.com/settlements/${settlement.settlement_id}`,
+      style: 'primary',
+      actionId: 'open_settlement',
+    }),
+  ]),
+];
+```
+
+`blocks` is Block Kit JSON, e.g. the `fields` and `actions` entries:
+
+```json
+{
+  "type": "section",
+  "fields": [
+    { "type": "mrkdwn", "text": "*Host*\nAnanya Iyer" },
+    { "type": "mrkdwn", "text": "*Payout*\n₹13,211.18" },
+    { "type": "mrkdwn", "text": "*Venue*\nSmash Arena, Bandra" },
+    { "type": "mrkdwn", "text": "*Approved by*\nfinance@duncit.com" }
+  ]
+}
+{
+  "type": "actions",
+  "elements": [
+    {
+      "type": "button",
+      "text": { "type": "plain_text", "text": "Open in Finance", "emoji": true },
+      "url": "https://finance.duncit.com/settlements/DUN-STL-2291",
+      "action_id": "open_settlement",
+      "style": "primary"
+    }
+  ]
+}
+```
+
+Collapse it into the mutation input:
+
+```ts
+buildSlackMessageInput({
+  channel: settlement.channel,
+  text: `Settlement ${settlement.settlement_id} approved — ${settlement.payout} to ${settlement.host_name}`,
+  blocks,
+  username: 'Duncit Finance',
+  icon_emoji: ':moneybag:',
+  unfurl_links: false,
+})
+// {
+//   channel: 'C08FIN2291',
+//   text: 'Settlement DUN-STL-2291 approved — ₹13,211.18 to Ananya Iyer',
+//   blocks_json: '[{"type":"header",…}]',   ← the array, stringified
+//   unfurl_links: false,
+//   icon_emoji: ':moneybag:',
+//   username: 'Duncit Finance'
+// }
+```
+
+Two behaviours worth knowing: unset options are **removed**, not sent as `undefined`, and an
+empty array is dropped entirely rather than serialised to `'[]'` —
+
+```ts
+buildSlackMessageInput({ channel: 'C08FIN2291', text: 'ping', blocks: [] })
+// { channel: 'C08FIN2291', text: 'ping' }        ← no blocks_json key at all
+```
+
+### Individual builders
+
+```ts
+mrkdwn('*bold*')                 // { type: 'mrkdwn', text: '*bold*' }
+plainText('Approve')             // { type: 'plain_text', text: 'Approve', emoji: true }
+plainText('Approve', false)      // { type: 'plain_text', text: 'Approve', emoji: false }
+divider()                        // { type: 'divider' }
+image('https://ik.imagekit.io/duncit/pods/8842.jpg', 'Pod cover')
+// { type: 'image', image_url: 'https://ik.imagekit.io/duncit/pods/8842.jpg', alt_text: 'Pod cover' }
+button('Dismiss')                // { type: 'button', text: { type: 'plain_text', text: 'Dismiss', emoji: true } }
+```
+
+`section` and `context` accept a bare string (wrapped as `mrkdwn`) or a text object, so
+`section('*Pod* …')` and `section(mrkdwn('*Pod* …'))` are the same block.
+
+## API
+
+### Builders
+
+| Export | Signature | Returns |
+| --- | --- | --- |
+| `mrkdwn` | `(text: string) => SlackTextObject` | `{ type: 'mrkdwn', text }` |
+| `plainText` | `(text: string, emoji?: boolean) => SlackTextObject` | `emoji` defaults to `true` |
+| `header` | `(text: string) => SlackBlock` | `header` block with a `plain_text` title |
+| `section` | `(text: string \| SlackTextObject) => SlackBlock` | `section` block; strings become `mrkdwn` |
+| `fields` | `(values: string[]) => SlackBlock` | two-column `section` of `mrkdwn` fields |
+| `divider` | `() => SlackBlock` | `{ type: 'divider' }` |
+| `context` | `(elements: Array<string \| SlackTextObject>) => SlackBlock` | small-print `context` block |
+| `image` | `(imageUrl: string, altText: string) => SlackBlock` | `image` block |
+| `button` | `(text: string, options?: SlackButtonOptions) => SlackBlock` | button element; only the keys you set appear |
+| `actions` | `(elements: SlackBlock[]) => SlackBlock` | `actions` row |
+
+`SlackButtonOptions`: `url?`, `value?`, `actionId?` (emitted as `action_id`), `style?`
+(`'primary' | 'danger'`). All optional, all omitted from the output when unset.
+
+### Message + feedback
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `buildSlackMessageInput` | `(opts: SlackMessageOptions) => SendSlackMessageInput` | Arrays → JSON strings, `undefined` keys dropped. |
+| `buildFeedbackBlocks` | `({ category, message }) => SlackBlock[]` | The shared feedback body. |
+| `buildAppFeedbackInput` | `({ category, message, platform? }) => AppFeedbackInput` | The whole `submitAppFeedback` variable. |
+| `FEEDBACK_CATEGORIES` | `readonly ['Bug','Idea','Question','Other']` | Categories the in-app form offers. |
+
+`SlackMessageOptions` — every field optional: `channel`, `text`, `blocks`, `attachments`,
+`thread_ts`, `reply_broadcast`, `mrkdwn`, `unfurl_links`, `unfurl_media`, `link_names`,
+`icon_emoji`, `username`. `blocks`/`attachments` become `blocks_json`/`attachments_json`;
+everything else passes through unchanged.
+
+### Operation sources
+
+| Export | Operation |
+| --- | --- |
+| `SEND_SLACK_MESSAGE_SDL` | `mutation SendSlackMessage($input: SendSlackMessageInput!)` → `{ ok, channel, ts }` |
+| `SUBMIT_APP_FEEDBACK_SDL` | `mutation SubmitAppFeedback($input: AppFeedbackInput!)` → `{ ok, channel, ts }` |
+| `SLACK_CHANNELS_SDL` | `query SlackChannels` → `{ id, name, is_private, is_member, num_members, topic, link }` |
+| `SLACK_CONFIGURED_SDL` | `query SlackConfigured` → `Boolean` |
+
+Plain strings, not `DocumentNode` — see the next section for why.
+
+## No live preview
+
+The rendering happens in Slack, not here. What this package produces is JSON, and the JSON
+above is the real output; paste any `blocks` array into Slack's Block Kit Builder to see it
+laid out. The in-app feedback **form** is MUI in mWeb and Tamagui in native, and lives in
+those surfaces, not in this package.
+
+## No `gql` here, on purpose
+
+The package exports operation **source strings**, not parsed documents. Consumers wrap them with
+their own tag: `const SEND_SLACK_MESSAGE = gql(SEND_SLACK_MESSAGE_SDL)`. That keeps `@apollo/client`
+and `graphql` out of the dependency tree entirely, which is what lets Metro (native), Vite (mWeb and
+tech) and Node all consume the same file.
+
+`package.json` declares **no dependencies at all** — only devDependencies — and sets a
+`react-native` entry pointing at the same TS source. Do not add a runtime dep. The moment this
+package needs `graphql`, native has to bundle it and the server can no longer mirror the contract.
+
+The server keeps its own Slack implementation because it ships in a self-contained Docker image with
+no `@duncit/*` workspace deps; the types here (`SendSlackMessageInput`, `AppFeedbackInput`,
+`SlackChannel`) mirror its GraphQL shapes, so a server-side field rename must be applied in both
+places in the same commit.
+
+## `buildSlackMessageInput` vs `buildAppFeedbackInput`
+
+They are not interchangeable:
+
+| | `buildSlackMessageInput` | `buildAppFeedbackInput` |
+| --- | --- | --- |
+| Mutation | `sendSlackMessage` | `submitAppFeedback` |
+| Who can call it | staff, via the Tech console | any signed-in user |
+| Channel | the caller chooses | the **server** routes it |
+| Identity | caller-supplied `username` / `icon_emoji` | the **server** stamps the real user |
+
+Never send user feedback through `sendSlackMessage`. Client-chosen channel and username are exactly
+the fields `submitAppFeedback` refuses to accept, because a client that can pick both can post as
+anyone into anything.
+
+`buildSlackMessageInput` does two things you must not redo by hand: it JSON-serializes `blocks` and
+`attachments` into `blocks_json` / `attachments_json`, and it drops `undefined` keys so the mutation
+input carries only what you set. An empty array serializes to nothing at all rather than `"[]"` —
+send `text` if you want a message with no blocks.
+
+## Block builders
+
+`header`, `section`, `fields`, `divider`, `context`, `image`, `button`, `actions` all return plain
+objects. `section` and `context` accept either a raw string (coerced to `mrkdwn`) or an explicit
+`SlackTextObject` — pass `plainText(...)` when you specifically want unformatted text, since the
+string shorthand always means mrkdwn.
+
+`button` returns a block **element**, not a block. It has to be wrapped: `actions([button('Open', { url })])`.
+Its options are camelCase (`actionId`, `style`) and are translated to Slack's `action_id` on the way
+out; unset options are omitted rather than sent as `undefined`.
+
+`SlackBlock` carries an index signature deliberately, so the builders can attach block-specific keys
+without a type per block kind. That means a typo in a hand-written block object will not fail
+`tsc` — compose through the builders and the shape stays right.
+
+## Coverage gate
+
+`vitest.config.ts` sets 100/100/100/100 over `src/**` with only the barrels excluded. Everything here
+is pure and synchronous, so there is no excuse for an uncovered branch: a new builder option needs a
+test for both the set and unset path before it lands.

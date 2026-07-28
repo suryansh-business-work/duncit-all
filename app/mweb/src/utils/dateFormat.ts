@@ -1,9 +1,5 @@
 import { useQuery } from '@apollo/client';
-import {
-  PUBLIC_APP_SETTINGS,
-  useDateFormat as useSharedDateFormat,
-  type DateInput,
-} from '@duncit/app-settings';
+import { PUBLIC_APP_SETTINGS, useDateFormat as useSharedDateFormat } from '@duncit/app-settings';
 
 /**
  * mWeb's date/time entry point. The implementation lives in @duncit/datetime
@@ -12,7 +8,7 @@ import {
  * mWeb-specific settings hooks and preserves the existing import paths.
  */
 export { PUBLIC_APP_SETTINGS };
-export type { DateInput };
+export type { DateInput } from '@duncit/app-settings';
 
 const FALLBACK_DRAFT_RETENTION_DAYS = 3;
 const FALLBACK_MIN_BIRTH_YEAR = 1940;

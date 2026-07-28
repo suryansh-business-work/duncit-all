@@ -103,7 +103,7 @@ const RELEASE_TABLE_CONFIG: TableEntityConfig = {
  */
 async function clubAdminBeneficiary(pod: any) {
   if (!pod.club_id) return null;
-  const { ClubModel } = await import('@modules/pods/club/club.model');
+  const { ClubModel } = await import('@modules/clubs/club/club.model');
   const club = await ClubModel.findById(pod.club_id).select('admin_user_ids club_name');
   const adminId = club?.admin_user_ids?.[0];
   if (!adminId) return null;

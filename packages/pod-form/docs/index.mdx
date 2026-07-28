@@ -1,0 +1,402 @@
+---
+name: '@duncit/pod-form'
+summary: 'The full MUI pod create/edit form — Zod schema, GraphQL input builder and editor dialog — shared by the Admin and Partners consoles.'
+category: 'forms'
+zeroDeps: false
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'PodForm'
+  - 'PodEditorDialog'
+  - 'usePodEditorState'
+  - 'useMediaPickerBridge'
+  - 'makePodSchema'
+  - 'makeNativeParityPodConfig'
+  - 'buildPodInput'
+  - 'podToFormValues'
+  - 'linesToMedia'
+  - 'getProductRequestTotal'
+  - 'blankPodFormValues'
+  - 'filterProductsForClub'
+  - 'POD_TYPES'
+  - 'OCCURRENCES'
+  - 'POD_MODES'
+---
+
+## Why this exists
+
+Admin and Partners both create pods, and for a while both owned a full copy of the form: the same
+club/venue cascade, the same virtual-vs-physical field rules, the same `CreatePodInput` assembly.
+A pod has enough conditional shape — mode, venue slot, place charges, products, finance breakdown,
+reel — that two copies diverge within a release. The symptom is always the same class of bug: a
+field the schema requires in one console and nulls out in the other, so the server rejects a pod
+that the UI said was valid.
+
+One form, one schema, one input builder. The differences between consoles are data, not code: a
+`PodFormConfig` object of booleans. `portals/admin/src/pages/pods-page/` and
+`portals/partners-app/src/pages/pods-page/` now only own their config and their mutations.
+
+## Use it
+
+From `portals/partners-app/src/pages/pods-page/PartnerPodsSection.tsx`:
+
+```tsx
+import { PodForm, blankPodFormValues, buildPodInput, useMediaPickerBridge, type PodFormValues } from '@duncit/pod-form';
+
+const picker = useMediaPickerBridge();
+
+const submit = async (values: PodFormValues, options: { draft: boolean }) => {
+  await createPod({
+    variables: { input: buildPodInput(values, { draft: options.draft, config: PARTNER_POD_CONFIG }) },
+  });
+};
+
+<PodForm
+  initialValues={blankPodFormValues}
+  config={PARTNER_POD_CONFIG}
+  clubs={clubs}
+  venues={venues}
+  products={products}
+  getClubVenueIds={getClubVenueIds}
+  busy={createState.loading}
+  error={opError}
+  onCancel={close}
+  onSubmit={submit}
+  onPickImage={picker.pickImage}
+  onPickVideo={picker.pickVideo}
+/>
+```
+
+## Sample data
+
+A physical, paid, weekly pod with a venue slot, a reel, place charges and one product request —
+the shape a Club Admin actually submits. Every key is a real `PodFormValues` field; spread
+`blankPodFormValues` so a field added later cannot go missing.
+
+```ts
+import { blankPodFormValues, type PodFormValues } from '@duncit/pod-form';
+
+export const sourdoughPod: PodFormValues = {
+  ...blankPodFormValues,
+  pod_title: 'Sunday Sourdough Workshop',
+  club_id: '66f1a2b3c4d5e6f708192a3b',
+  pod_mode: 'PHYSICAL',
+  venue_id: '66f1a2b3c4d5e6f708192a4c',
+  venue_slot_id: '66f1a2b3c4d5e6f708192a5d',
+  location_id: '66f1a2b3c4d5e6f708192a6e',
+  pod_hosts_id: ['66f1a2b3c4d5e6f708192a7f'],
+  pod_description: 'Hands-on levain build, shaping and bake. Take home two loaves.',
+  pod_date_time: new Date('2026-08-09T05:00:00.000Z'),
+  pod_end_date_time: new Date('2026-08-09T08:30:00.000Z'),
+  pod_type: 'NATIVE_PAID',
+  pod_amount: 1499,
+  pod_occurrence: 'WEEKLY',
+  no_of_spots: 12,
+  pod_info: 'Aprons provided. Please arrive 10 minutes early.',
+  pod_hashtag_text: '#sourdough #baking, #bengaluru',
+  media_text:
+    'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg\nhttps://ik.imagekit.io/duncit/pods/sourdough-tour.mp4',
+  reel_url: 'https://ik.imagekit.io/duncit/reels/sourdough-reel.mp4',
+  payment_terms: 'Full refund up to 24 hours before start.',
+  what_this_pod_offers: ['Two loaves to take home', 'Starter culture jar'],
+  available_perks: ['Filter coffee on the house'],
+  place_charges: [{ label: 'Oven cleaning', amount: 400, note: 'Charged once per pod' }],
+  products_enabled: true,
+  product_requests: [{ product_id: '66f1a2b3c4d5e6f708192b01', quantity: 12 }],
+  is_active: true,
+};
+
+// The approved-product catalogue the products section prices against.
+export const products = [
+  { id: '66f1a2b3c4d5e6f708192b01', product_name: 'Baker apron', unit_cost: 250 },
+  { id: '66f1a2b3c4d5e6f708192b02', product_name: 'Banneton basket', unit_cost: 600 },
+];
+```
+
+## Worked examples
+
+### `makeNativeParityPodConfig({ showProducts: true })`
+
+```js
+{
+  showHosts: true,        requireHosts: false,
+  showLocationZone: false, showVenueSlot: true,
+  showPlaceCharges: true,  showInventory: false,
+  showFinance: false,      showIsActive: false,
+  showProducts: true,      showReel: true
+}
+```
+
+### `buildPodInput(sourdoughPod, { draft: false, config })`
+
+Note what the builder did on its own: `pod_hashtag_text` became a `pod_hashtag` **array** with the
+`#` stripped, `media_text` became typed media (`.mp4` → `VIDEO`), the `Date` objects became ISO
+strings, and `venue_slot_id` is present **only** because `config.showVenueSlot` is on.
+
+```js
+{
+  pod_title: 'Sunday Sourdough Workshop',
+  club_id: '66f1a2b3c4d5e6f708192a3b',
+  pod_mode: 'PHYSICAL',
+  venue_id: '66f1a2b3c4d5e6f708192a4c',
+  location_id: '66f1a2b3c4d5e6f708192a6e',
+  zone_name: null,
+  meeting_platform: null,
+  meeting_url: null,
+  meeting_notes: null,
+  pod_hosts_id: ['66f1a2b3c4d5e6f708192a7f'],
+  pod_description: 'Hands-on levain build, shaping and bake. Take home two loaves.',
+  pod_date_time: '2026-08-09T05:00:00.000Z',
+  pod_end_date_time: '2026-08-09T08:30:00.000Z',
+  pod_type: 'NATIVE_PAID',
+  pod_amount: 1499,
+  pod_occurrence: 'WEEKLY',
+  no_of_spots: 12,
+  pod_info: 'Aprons provided. Please arrive 10 minutes early.',
+  pod_hashtag: ['sourdough', 'baking', 'bengaluru'],
+  pod_images_and_videos: [
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg', type: 'IMAGE' },
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-tour.mp4', type: 'VIDEO' }
+  ],
+  reel_url: 'https://ik.imagekit.io/duncit/reels/sourdough-reel.mp4',
+  payment_terms: 'Full refund up to 24 hours before start.',
+  what_this_pod_offers: ['Two loaves to take home', 'Starter culture jar'],
+  available_perks: ['Filter coffee on the house'],
+  place_charges: [{ label: 'Oven cleaning', amount: 400, note: 'Charged once per pod' }],
+  products_enabled: true,
+  product_requests: [{ product_id: '66f1a2b3c4d5e6f708192b01', quantity: 12 }],
+  is_active: true,
+  venue_slot_id: '66f1a2b3c4d5e6f708192a5d'
+}
+```
+
+### The same values as a **virtual draft**
+
+`buildPodInput({ ...sourdoughPod, pod_mode: 'VIRTUAL', meeting_platform: 'Google Meet', meeting_url: 'https://meet.google.com/abc-defg-hij', meeting_notes: 'Link opens 10 min early.' }, { draft: true, config })`
+— only the keys the mode changed:
+
+```js
+{
+  pod_mode: 'VIRTUAL',
+  venue_id: null,          // physical-only fields nulled
+  location_id: null,
+  venue_slot_id: null,
+  meeting_platform: 'Google Meet',
+  meeting_url: 'https://meet.google.com/abc-defg-hij',
+  meeting_notes: 'Link opens 10 min early.',
+  place_charges: [],       // place charges are physical-only
+  products_enabled: false, // products are physical-only, regardless of the flag
+  product_requests: [],
+  is_active: false         // draft: true ⇒ is_active: !draft
+}
+```
+
+That is the rule worth remembering: switching a pod to `VIRTUAL` **silently drops** its products
+and place charges at build time even though the form values still hold them.
+
+### `linesToMedia(sourdoughPod.media_text)`
+
+```js
+[
+  { url: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg', type: 'IMAGE' },
+  { url: 'https://ik.imagekit.io/duncit/pods/sourdough-tour.mp4', type: 'VIDEO' }
+]
+```
+
+### `getProductRequestTotal(sourdoughPod.product_requests, products)`
+
+```js
+3000   // 12 × unit_cost 250
+```
+
+A `product_id` with no catalogue match contributes `0` rather than throwing — an unapproved product
+quietly prices as free, so validate the ids before trusting the total.
+
+### `makePodSchema(config).safeParse(...)` on a half-filled form
+
+Parsing `{ ...blankPodFormValues, pod_title: 'Su', club_id: '…a3b', pod_description: 'Too short', venue_id: '…a4c' }`:
+
+```js
+[
+  { path: 'pod_title',     message: 'Title is too short' },
+  { path: 'pod_description', message: 'Add a longer description' },
+  { path: 'venue_slot_id', message: 'Pick an available slot' },
+  { path: 'pod_date_time', message: 'Start date/time required' },
+  { path: 'media_text',    message: 'At least one image is required' }
+]
+```
+
+The slot rule is conditional in a way worth knowing: `venue_slot_id` is only required while
+`pod_date_time` is **also** empty. An edited pod that keeps its already-booked slot dates never
+forces a re-pick, which is why the same values with a date set report no slot error.
+
+### `podToFormValues(pod)` — the inverse
+
+Given a server pod with `pod_hashtag: ['sourdough', 'baking']` and one image, the round-trip fields:
+
+```js
+{
+  pod_id: 'DUN-POD-10421',
+  pod_hashtag_text: 'sourdough baking',                    // array → space-joined text
+  media_text: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg',  // media → newline text
+  pod_date_time: Date('2026-08-09T05:00:00.000Z'),         // ISO → Date for the MUI X picker
+  pod_type: 'NATIVE_FREE',                                 // absent fields fall back to the blank
+  pod_hosts_id: []
+}
+```
+
+Every key absent from the server pod comes back as its `blankPodFormValues` default, **not**
+`undefined` — that is what keeps the RHF fields controlled.
+
+## Props / API
+
+### `<PodForm>` — `PodFormProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `initialValues` | `PodFormValues` | yes | — | Seed values; the form `reset()`s whenever this identity changes. |
+| `config` | `PodFormConfig` | yes | — | Feature flags gating both sections and schema branches. |
+| `clubs` | `any[]` | yes | — | Club options for the club select. |
+| `venues` | `any[]` | yes | — | Venue options, narrowed by the selected club. |
+| `users` | `any[]` | no | `[]` | Local host options when `searchHosts` is not supplied. |
+| `products` | `any[]` | no | `[]` | Approved product catalogue for the products section. |
+| `finance` | `PodFormFinance` | no | `undefined` | `platform_fee_pct` / `gst_pct` / `currency_symbol` for the live breakdown. |
+| `getClubVenueIds` | `(club: any) => string[]` | yes | — | Portal-specific accessor for a club's linked venue ids. |
+| `meetingPlatforms` | `PodOption[]` | no | `undefined` | Renders the meeting platform as a select instead of free text. |
+| `onGenerateMeetingLink` | `(input: GenerateMeetingLinkInput) => Promise<string>` | no | `undefined` | Shows an auto-generate button next to the meeting link. |
+| `onPickImage` | `() => Promise<string \| null>` | no | `undefined` | Swaps the media textarea for a rich picker. |
+| `onPickVideo` | `() => Promise<string \| null>` | no | `undefined` | Swaps the reel URL input for a video picker. |
+| `searchHosts` | `SearchPodHosts` | no | `undefined` | Server-backed host search (e.g. `clubAdminHostSearch`). |
+| `dateTimeFormat` | `string` | no | `undefined` | MUI X display format, from the admin app settings (rule 11). |
+| `busy` | `boolean` | no | `false` | Disables the actions while a mutation is in flight. |
+| `error` | `string \| null` | no | `undefined` | Server error rendered as an `Alert` above the actions. |
+| `onCancel` | `() => void` | yes | — | Close/dismiss handler. |
+| `onSubmit` | `(values, { draft }) => Promise<void> \| void` | yes | — | Final or draft submit; a draft skips the Zod resolver. |
+| `onReady` | `(methods: UseFormReturn<PodFormValues>) => void` | no | `undefined` | Hands the RHF methods up (admin AI-fill). |
+| `hideDraftOnEdit` | `boolean` | no | `undefined` | Hides "Save as Draft" once a pod exists. |
+
+### `<PodEditorDialog>` — `PodEditorDialogProps`
+
+Takes every `PodForm` prop except `onCancel`, plus:
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `open` | `boolean` | yes | — | Dialog visibility. |
+| `editing` | `boolean` | yes | — | Drives the "New Pod" / "Edit Pod" title. |
+| `onClose` | `() => void` | yes | — | Close handler. |
+| `titleExtras` | `ReactNode` | no | `undefined` | Extra title-row content (admin AI-fill button). |
+| `intro` | `ReactNode` | no | `undefined` | Content above the form (club-admin host alert). |
+
+### Functions and hooks
+
+| Export | Signature | Returns |
+| --- | --- | --- |
+| `makeNativeParityPodConfig` | `({ showProducts }: { showProducts: boolean }) => PodFormConfig` | The native-parity flag set. |
+| `makePodSchema` | `(config: PodFormConfig) => PodSchema` | A Zod object with config-gated `superRefine`s. |
+| `buildPodInput` | `(values: PodFormValues, { draft?, config }) => Record<string, unknown>` | The GraphQL create/update input. |
+| `podToFormValues` | `(pod: any) => PodFormValues` | Form values, blank-defaulted. |
+| `linesToMedia` | `(text: string) => { url: string; type: 'IMAGE' \| 'VIDEO' }[]` | Typed media list. |
+| `getProductRequestTotal` | `(requests: PodProductRequest[], products: any[]) => number` | Sum of `unit_cost × quantity`. |
+| `usePodEditorState` | `(args: UsePodEditorStateArgs) => …` | `{ open, initialValues, editingPod, busy, opError, openCreate, openEdit, submit, close }` |
+| `useMediaPickerBridge` | `() => …` | `{ pickerOpen, pickerKind, pickImage, pickVideo, settlePicker, accept, title }` |
+
+`useMediaPickerBridge()` returns `accept: 'image/*,video/*'` and `title: 'Add pod image'` while
+picking an image, and `accept: 'video/*'` / `title: 'Pick reel video'` while picking the reel — pass
+them straight to `MediaPickerDialog`.
+
+### `PodFormConfig` flags
+
+| Flag | Type | Default | Turns on |
+| --- | --- | --- | --- |
+| `showHosts` | `boolean` | — | Host multi-select. |
+| `requireHosts` | `boolean` | `true` | The min-1 host rule (Club Admin sets `false`). |
+| `showLocationZone` | `boolean` | — | Reserved; no editor exists yet. |
+| `showVenueSlot` | `boolean` | — | Slot picker **and** the `venue_slot_id` key in the input. |
+| `showPlaceCharges` | `boolean` | — | Per-venue place charges editor. |
+| `showInventory` | `boolean` | — | Feeds product cost into the price breakdown. |
+| `showFinance` | `boolean` | — | Live fee/GST/payout breakdown. |
+| `showIsActive` | `boolean` | — | Active toggle (edit only). |
+| `showProducts` | `boolean` | — | Approved-products section + its rules. |
+| `showReel` | `boolean` | `false` | Explore reel `reel_url` field. |
+
+## Live preview
+
+There is **no live preview on this page yet**, and it is not an oversight. `docs-site` now ships a
+`<Preview>` component that mounts a real React island, but `PodForm` is not mountable from a static
+page as it stands: the hosts, clubs and venue-slot sections read through Apollo, and the date fields
+need a `LocalizationProvider` with `AdapterDateFns`. A preview here means adding a mocked Apollo
+provider plus the `@mui/x-date-pickers` peer to `docs-site` first.
+
+When that lands, the slot is one section, mounting `<PodForm>` with `sourdoughPod` above as
+`initialValues` and `makeNativeParityPodConfig({ showProducts: true })` as `config`. Until then the
+worked examples above are the honest version — a screenshot or a fake would go stale silently.
+
+## Config is the only fork — never branch on the portal
+
+`PodFormConfig` is the whole compatibility surface: `showHosts`, `requireHosts`,
+`showLocationZone`, `showVenueSlot`, `showPlaceCharges`, `showInventory`, `showFinance`,
+`showIsActive`, `showProducts`, `showReel`. Start from `makeNativeParityPodConfig({ showProducts })`,
+which mirrors the native create-pod flow (venue slots on, place charges on, reel on, hosts optional).
+Club Admin uses it as-is; Admin spreads its extras (`showFinance`, `showInventory`, `showIsActive`,
+`requireHosts: true`) on top.
+
+`requireHosts: false` is not a relaxation to copy casually — the server injects the acting admin as
+host when none is supplied, which is true for the Club Admin path and not the Admin one.
+
+Note `showFinance: false` for Club Admin: anything you add to the finance area is invisible there.
+Copy that reads on every console must not live in a finance-gated section.
+
+## `makePodSchema` and `buildPodInput` are a pair
+
+The schema is built from the same config (`makePodSchema(config)`), so a field that the form hides
+is also a field the schema stops requiring. `buildPodInput` then nulls out exactly what the mode
+and the flags disabled — virtual pods null `venue_id`/`location_id`, physical pods null the meeting
+fields, `pod_hosts_id` becomes `[]` when `showHosts` is off, products only ride along when the pod
+is physical *and* `showProducts` *and* `values.products_enabled`.
+
+Do not hand-build the mutation input from `PodFormValues`. `venue_slot_id` is only emitted when
+`config.showVenueSlot` because `CreatePodInput` has the field and `UpdatePodInput` does not — a
+hand-rolled input is where that asymmetry gets forgotten.
+
+`podToFormValues` is the inverse for edit flows; `linesToMedia` converts the newline-separated
+media textarea into the `{ url, type: 'IMAGE' | 'VIDEO' }` list (extension-driven), and
+`getProductRequestTotal` prices a request list against the product catalogue.
+
+## Dialog vs bare form — pick by who owns the state
+
+- `PodForm` — the form body plus its actions. You own the dialog, the mutations and the values.
+- `PodEditorDialog` + `usePodEditorState` — the whole create/edit dialog with its open/close,
+  initial values and save plumbing. `portals/admin/src/pages/pods-page/usePodEditor.ts` and
+  `portals/partners-app/src/pages/club-admin-club-pods-page/useClubAdminPodEditor.ts` both take this
+  path. If you are writing the dialog boilerplate by hand, you picked the wrong one.
+
+`useMediaPickerBridge` exists because `@duncit/media-picker` is callback-shaped
+(`onPicked(url)`) while the form wants promises (`onPickImage: () => Promise<string | null>`). The
+hook adapts one to the other and hands back ready-made `accept` / `title` dialog props for the kind
+being picked. Do not re-implement the promise bridge at the call site.
+
+## Peer dependencies, not dependencies
+
+Everything — `react`, `@mui/material`, `@mui/x-date-pickers`, `react-hook-form`, `zod`,
+`@hookform/resolvers`, `date-fns`, `@apollo/client` and `@duncit/utils` — is a **peer**. The package
+ships no runtime deps of its own, so a consuming portal must already have all of them; adding this
+package to a portal that lacks `@mui/x-date-pickers` fails at resolve time, not at render.
+
+MUI throughout means this is portal-only. The mobile app's create-pod flow is Tamagui and shares
+nothing here except the shape of the server input.
+
+`clubCategoryKey`, `productMatchesClub` and `filterProductsForClub` are re-exports from
+`@duncit/utils` — the club ⇄ product category match must stay identical in the portals, mWeb and
+native, so it lives there and is only surfaced here for convenience. Import it from either place;
+do not write a second matcher.
+
+## Coverage gate
+
+`vitest.config.ts` sets 100/100/100/100 across all of `src/**` (only barrels are excluded), so a new
+branch anywhere — including `src/types.ts`, which is exercised at runtime through the option lists
+and `blankPodFormValues` — needs a test before it lands. Genuinely unreachable defensive lines are
+marked with `/* v8 ignore next */` and a reason, as in `schema.ts`; add the reason or the gate is
+just being silenced.

@@ -84,7 +84,7 @@ export function mergeCatalogues(
   fallback: FlatCatalogue | null | undefined,
   server: FlatCatalogue | null | undefined,
 ): FlatCatalogue {
-  const merged: FlatCatalogue = { ...(fallback ?? {}) };
+  const merged: FlatCatalogue = { ...fallback };
   for (const [key, value] of Object.entries(server ?? {})) {
     if (typeof value === 'string' && value.trim() !== '') merged[key] = value;
   }

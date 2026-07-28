@@ -46,3 +46,42 @@ jobs:
       # Rule 38: no shipped translation key that nothing renders.
       - name: Translation keys are rendered
         run: node scripts/verify-translation-keys.mjs .
+
+  # ---------------------------------------------------------------------------
+  # The shared packages hold the code every surface depends on, and until now no
+  # CI job ran their suites at all — apps-ci, portals-ci and websites-ci are each
+  # scoped to their own matrix, and sonar.yml's recursive run fires on `main`
+  # only AND swallows failures with continue-on-error. Nine tests were sitting
+  # broken on staging (pod-form x2, user-context x7) with every check green.
+  #
+  # These thresholds are the packages' own — this job only makes them count.
+  # ---------------------------------------------------------------------------
+  packages:
+    name: Shared packages (tests + coverage thresholds + docs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # No --no-bail and no continue-on-error: a package that misses its own
+      # declared threshold must fail the build, which is the whole point.
+      - name: Package suites + coverage thresholds
+        run: pnpm --filter "./packages/**" --if-present test:coverage
+
+      # The docs site reads packages/*/docs/index.mdx through a strict content
+      # collection, so this is also what validates that frontmatter. Without it
+      # a malformed doc only breaks for whoever next runs `pnpm docs`.
+      - name: Docs site builds
+        run: pnpm --filter duncit-docs build

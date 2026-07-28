@@ -1,0 +1,249 @@
+import { userService } from '@modules/access/user/user.service';
+import {
+  updateMyProfileSchema,
+  petProfileSchema,
+  interestCategoryIdsSchema,
+} from './profile.validator';
+import { validate } from '@utils/validate';
+import type { GraphQLContext } from '@context';
+
+// A stable @handle for follow lists. There is no real username field yet, so we
+// derive one from the name plus a short id suffix (kept deterministic + unique).
+function deriveUsername(u: any): string {
+  const base = String(u.first_name || u.full_name || 'user')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+  const suffix = String(u.user_id ?? '').slice(-4);
+  return `${base || 'user'}${suffix}`;
+}
+
+// Shape a public profile and apply privacy. A PRIVATE profile hides its
+// bio/city/zone (and, via can_view_content, its posts/stories) from anyone who
+// is not the owner or a follower. Name + avatar always stay visible.
+function toPublicProfile(u: any, viewerId: string | null = null, isFollowing = false) {
+  if (!u) return null;
+  const isPrivate = (u.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
+  const isOwner = !!viewerId && viewerId === u.user_id;
+  const canView = isOwner || !isPrivate || isFollowing;
+  return {
+    user_id: u.user_id,
+    username: deriveUsername(u),
+    full_name: u.full_name ?? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim(),
+    first_name: u.first_name ?? null,
+    last_name: u.last_name ?? null,
+    profile_photo: u.profile_photo ?? null,
+    bio: canView ? (u.bio ?? null) : null,
+    city: canView ? (u.city ?? null) : null,
+    zone: canView ? (u.zone ?? null) : null,
+    followers_count: u.followers_count ?? 0,
+    following_count: u.following_count ?? 0,
+    is_private: isPrivate,
+    is_following: isFollowing,
+    can_view_content: canView,
+  };
+}
+
+// Resolve a list of user ids to public profiles, tagging which ones the viewer
+// already follows (drives the Follow/Following button in the follow lists).
+async function mapPublicProfiles(ids: string[], viewerId: string | null) {
+  const clean = ids.filter(Boolean);
+  if (clean.length === 0) return [];
+  const users = await Promise.all(clean.map((id) => userService.getById(id).catch(() => null)));
+  const following = viewerId
+    ? new Set(await userService.listFollowingUserIds(viewerId))
+    : new Set<string>();
+  return users
+    .filter(Boolean)
+    .map((u) => toPublicProfile(u, viewerId, following.has((u as any).user_id)));
+}
+
+export const profileResolvers = {
+  Query: {
+    me: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      if (!ctx.user) return null;
+      return userService.me(ctx.user.id);
+    },
+    mySavedPods: async (
+      _p: unknown,
+      args: { search?: string | null; category_id?: string | null; sort?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.listSavedPods(ctx.user.id, {
+        search: args.search,
+        categoryId: args.category_id,
+        sort: args.sort,
+      });
+    },
+    publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }, ctx: GraphQLContext) =>
+      mapPublicProfiles(args.user_ids ?? [], ctx.user?.id ?? null),
+    publicUserProfile: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      const u = await userService.getById(args.user_id).catch(() => null);
+      if (!u) return null;
+      const viewerId = ctx.user?.id ?? null;
+      const isFollowing = viewerId ? await userService.isFollowing(viewerId, u.user_id) : false;
+      return toPublicProfile(u, viewerId, isFollowing);
+    },
+    followersOf: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      const ids = await userService.listFollowerUserIds(args.user_id);
+      return mapPublicProfiles(ids, ctx.user?.id ?? null);
+    },
+    followingOf: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      const ids = await userService.listFollowingUserIds(args.user_id);
+      return mapPublicProfiles(ids, ctx.user?.id ?? null);
+    },
+  },
+  Mutation: {
+    updateMyProfile: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(updateMyProfileSchema, args.input);
+      return userService.updateMyProfile(ctx.user.id, data);
+    },
+    updateMyProfileVisibility: async (
+      _p: unknown,
+      args: { visibility: 'PUBLIC' | 'PRIVATE' },
+      ctx: GraphQLContext
+    ) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.updateMyProfileVisibility(ctx.user.id, args.visibility);
+    },
+    setMySelectedLocation: async (
+      _p: unknown,
+      args: { location_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.setMySelectedLocation(ctx.user.id, args.location_id ?? null);
+    },
+    setMyLocale: async (_p: unknown, args: { locale: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.setMyLocale(ctx.user.id, args.locale);
+    },
+    requestEmailVerificationOtp: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.requestEmailVerificationOtp(ctx.user.id);
+    },
+    verifyEmailVerificationOtp: async (_p: unknown, args: { otp: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.verifyEmailVerificationOtp(ctx.user.id, args.otp);
+    },
+    updateMyPetProfile: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(petProfileSchema, args.input);
+      return userService.updateMyPetProfile(ctx.user.id, data);
+    },
+    updateMyInterests: async (_p: unknown, args: { category_ids: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const categoryIds = await validate(interestCategoryIdsSchema, args.category_ids);
+      return userService.updateMyInterests(ctx.user.id, categoryIds as string[]);
+    },
+    toggleSavedPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.toggleSavedPod(ctx.user.id, args.pod_doc_id);
+    },
+    followPod: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.followPod(ctx.user.id, args.pod_id);
+    },
+    unfollowPod: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.unfollowPod(ctx.user.id, args.pod_id);
+    },
+    followClub: async (_p: unknown, args: { club_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.followClub(ctx.user.id, args.club_id);
+    },
+    unfollowClub: async (_p: unknown, args: { club_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.unfollowClub(ctx.user.id, args.club_id);
+    },
+    followUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.followUser(ctx.user.id, args.user_id);
+    },
+    unfollowUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.unfollowUser(ctx.user.id, args.user_id);
+    },
+  },
+};

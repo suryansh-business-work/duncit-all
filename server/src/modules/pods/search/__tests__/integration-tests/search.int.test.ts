@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 import { searchService } from '../../search.service';
-import { clubService } from '@modules/pods/club/club.service';
+import { clubService } from '@modules/clubs/club/club.service';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';

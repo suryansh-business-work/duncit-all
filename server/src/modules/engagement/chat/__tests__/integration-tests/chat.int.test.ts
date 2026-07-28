@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { chatService } from '../../chat.service';
 import { chatResolvers } from '../../chat.resolver';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { makeContext } from '@test/harness';
 

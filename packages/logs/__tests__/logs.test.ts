@@ -167,16 +167,44 @@ describe('serializeError', () => {
     expect(serializeError(undefined)).toBeUndefined();
   });
 
+  it('handles every remaining primitive exactly as String() would', () => {
+    // These are the branches that replaced `String(err)` — each must produce
+    // byte-identical output, or the log wire contract has quietly changed.
+    for (const value of [true, 7n, Symbol('boom'), function boom() {}] as const) {
+      expect(serializeError(value)).toEqual({ name: typeof value, message: String(value) });
+    }
+  });
+
   it('names an Error with an empty name "Error"', () => {
     const e = new Error('x');
     e.name = '';
     expect(serializeError(e)?.name).toBe('Error');
   });
 
-  it('stringifies a circular object via String() fallback', () => {
+  it('falls back to a fixed message when JSON.stringify throws', () => {
     const circular: Record<string, unknown> = {};
     circular.self = circular;
-    expect(serializeError(circular)).toEqual({ name: 'Object', message: '[object Object]' });
+    circular.id = 7;
+    expect(serializeError(circular)).toEqual({
+      name: 'Object',
+      message: '[unserializable object]',
+    });
+  });
+
+  it('never puts the thrown object’s field names on the wire', () => {
+    const circular: Record<string, unknown> = { password: 'hunter2', refresh_token: 'abc' };
+    circular.self = circular;
+    const message = serializeError(circular)?.message ?? '';
+    expect(message).not.toContain('password');
+    expect(message).not.toContain('refresh_token');
+  });
+
+  it('gives every unserializable object the SAME message, so telemetry cannot fork one bug into many', () => {
+    const first: Record<string, unknown> = { a: 1 };
+    first.self = first;
+    const second: Record<string, unknown> = { b: 2, c: 3 };
+    second.self = second;
+    expect(serializeError(first)?.message).toBe(serializeError(second)?.message);
   });
 });
 

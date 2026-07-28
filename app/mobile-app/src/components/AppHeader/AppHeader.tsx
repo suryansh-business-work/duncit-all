@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
+import { HeaderCartButton } from '@/components/cart/HeaderCartButton';
 import { LogoutButton } from '@/components/LogoutButton';
 import { NotificationsBell } from '@/components/notifications';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
@@ -88,6 +89,10 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             <MaterialIcons name="search" size={24} color={ink} />
           </XStack>
         ) : null}
+        {/* The cart entry point rides in the header on every screen (it used to
+         * float over the content); it hides itself when there is nothing to
+         * open. */}
+        {minimal ? null : <HeaderCartButton />}
         {minimal ? null : <NotificationsBell />}
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>

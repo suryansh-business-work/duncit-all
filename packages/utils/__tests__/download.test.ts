@@ -64,6 +64,21 @@ describe('downloadBase64File', () => {
     const blob = createObjectURL.mock.calls[0][0] as unknown as Blob;
     expect(blob.type).toBe('application/pdf');
   });
+
+  // Pins the signature against mWeb's private fork, which takes
+  // (filename, base64, mime). If the arguments are ever swapped to match it,
+  // the payload below decodes to the filename and this test fails.
+  it('takes (base64, filename, mime) in that order', async () => {
+    downloadBase64File(btoa('payload-bytes'), 'statement.pdf', 'application/pdf');
+    expect(clickedAnchors[0].download).toBe('statement.pdf');
+    const blob = createObjectURL.mock.calls[0][0] as unknown as Blob;
+    const text = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.readAsText(blob);
+    });
+    expect(text).toBe('payload-bytes');
+  });
 });
 
 describe('downloadTextFile', () => {

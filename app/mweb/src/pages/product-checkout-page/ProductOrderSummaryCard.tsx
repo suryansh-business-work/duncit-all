@@ -73,7 +73,8 @@ function LineRow({
   fmt,
   onInfo,
 }: Readonly<{ line: CartLine; fmt: (value: number) => string; onInfo: (productId: string) => void }>) {
-  const label = `${line.product_name}${line.variant_label ? ` — ${line.variant_label}` : ''} × ${line.quantity}`;
+  const variant = line.variant_label ? ` — ${line.variant_label}` : '';
+  const label = `${line.product_name}${variant} × ${line.quantity}`;
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
       <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>

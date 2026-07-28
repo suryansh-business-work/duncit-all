@@ -20,7 +20,7 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import { connectDB } from '../src/config/db';
-import { ClubModel } from '../src/modules/pods/club/club.model';
+import { ClubModel } from '../src/modules/clubs/club/club.model';
 import { VenueModel } from '../src/modules/venues/venue/venue.model';
 
 const dryRun = process.argv.includes('--dry-run');

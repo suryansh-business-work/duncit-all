@@ -21,7 +21,8 @@
   ],
   "scripts": {
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/auth-tokens"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",

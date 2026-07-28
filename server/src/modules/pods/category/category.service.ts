@@ -40,8 +40,9 @@ const layoutToPub = (layout?: ICategoryIconLayout | null) =>
         height: layout.height ?? DEFAULT_CATEGORY_ICON_SIZE,
       }
     : null;
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { escapedSearchRegex } from '@utils/table-query';
 import { FaqModel } from '@modules/support/faq/faq.model';
 import { FaqSubmissionModel } from '@modules/support/faq/faqSubmission.model';
 import { ActiveUserPingModel } from '@modules/platform/analytics/activeUser.model';
@@ -154,7 +155,9 @@ export const categoryService = {
     const q: any = {};
     if (filter?.level) q.level = filter.level;
     if (filter?.parent_id !== undefined) q.parent_id = filter.parent_id || null;
-    if (filter?.search) q.name = new RegExp(filter.search, 'i');
+    // ESCAPED: the raw string used to be compiled as a pattern, so a search of
+    // ".*" listed every category and a crafted one could pin the event loop.
+    if (filter?.search) q.name = escapedSearchRegex(filter.search);
     const docs = await CategoryModel.find(q).sort({ sort_order: 1, name: 1 });
     return docs.map(toPub);
   },

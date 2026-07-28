@@ -1,90 +1,10 @@
 import * as yup from 'yup';
 import { STATUSES } from './user.constants';
 
-const phoneRegex = /^\d{6,15}$/;
-const extRegex = /^\+?\d{1,5}$/;
-
-export const registerSchema = yup.object({
-  first_name: yup.string().min(1).max(60).required(),
-  // last_name is optional: the simplified signup collects a single "Name" that
-  // may be a single word, so the surname can be empty.
-  last_name: yup.string().min(1).max(60).optional(),
-  email: yup.string().email().required(),
-  // Phone is no longer collected at signup; it is gathered later (profile).
-  phone_number: yup
-    .string()
-    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
-    .optional(),
-  phone_extension: yup
-    .string()
-    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
-    .optional(),
-  password: yup.string().min(8).max(100).required(),
-  dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
-  city: yup.string().optional(),
-  zone: yup.string().optional(),
-});
-
-export const loginSchema = yup.object({
-  email: yup.string().email().required(),
-  password: yup.string().min(8).required(),
-  // Which portal the login request comes from (appConfig.key). Optional —
-  // consumer apps omit it; consoles send it so access can be enforced.
-  portal_key: yup.string().max(64).optional(),
-});
-
-export const requestPasswordResetSchema = yup.object({
-  email: yup.string().email().required(),
-});
-
-export const resetPasswordSchema = yup.object({
-  email: yup.string().email().required(),
-  otp: yup
-    .string()
-    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
-    .required(),
-  new_password: yup.string().min(8).max(100).required(),
-});
-
-// Change password (user knows their current password). Step 1 verifies the
-// current password and emails an OTP; step 2 confirms the OTP + sets the new one.
-export const requestPasswordChangeSchema = yup.object({
-  current_password: yup.string().min(8).max(100).required(),
-});
-
-export const changePasswordSchema = yup.object({
-  otp: yup
-    .string()
-    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
-    .required(),
-  new_password: yup.string().min(8).max(100).required(),
-});
-
-// Self-serve account deletion: confirmed with a 6-digit email OTP.
-export const deleteMyAccountSchema = yup.object({
-  otp: yup
-    .string()
-    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
-    .required(),
-});
-
-export const googleSignupSchema = yup.object({
-  id_token: yup.string().min(20).required(),
-  // Token-only Google signup: the account is created from the verified Google
-  // profile and the user lands straight on the survey. Phone/dob are optional
-  // and collected later.
-  phone_number: yup
-    .string()
-    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
-    .optional(),
-  phone_extension: yup
-    .string()
-    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
-    .optional(),
-  dob: yup.date().max(new Date(), 'DOB must be in the past').optional(),
-  city: yup.string().optional(),
-  zone: yup.string().optional(),
-});
+// Shared by the auth (signup) and profile (self-service edit) validators too —
+// one definition so the three surfaces can never drift apart.
+export const phoneRegex = /^\d{6,15}$/;
+export const extRegex = /^\+?\d{1,5}$/;
 
 export const createUserSchema = yup.object({
   first_name: yup.string().min(1).max(60).required(),
@@ -120,77 +40,6 @@ export const updateUserSchema = yup.object({
   host_commission_pct: yup.number().min(0).max(100).optional(),
 });
 
-const profileLinkSchema = yup.object({
-  label: yup.string().trim().min(1).max(40).required(),
-  url: yup.string().trim().url().max(2048).required(),
-});
-
-// Structured main postal address — reused by the profile update. Every part is
-// optional (users fill it gradually); lengths guard the DB fields.
-export const postalAddressSchema = yup.object({
-  line1: yup.string().trim().max(200).optional(),
-  line2: yup.string().trim().max(200).optional(),
-  landmark: yup.string().trim().max(160).optional(),
-  city: yup.string().trim().max(120).optional(),
-  state: yup.string().trim().max(120).optional(),
-  pincode: yup.string().trim().max(12).optional(),
-  country: yup.string().trim().max(80).optional(),
-});
-
-export const updateMyProfileSchema = yup.object({
-  first_name: yup.string().min(1).max(60).optional(),
-  last_name: yup.string().min(1).max(60).optional(),
-  bio: yup.string().max(500).optional(),
-  profile_photo: yup.string().url().optional(),
-  profile_links: yup.array().of(profileLinkSchema).max(5).optional(),
-  // Location + DOB are accepted by the GraphQL input and mapped in the service;
-  // they must be declared here or `validate({ stripUnknown: true })` drops them.
-  city: yup.string().max(80).optional(),
-  state: yup.string().max(80).optional(),
-  zone: yup.string().max(80).optional(),
-  country: yup.string().max(80).optional(),
-  dob: yup
-    .string()
-    .matches(/^$|^\d{4}-\d{2}-\d{2}$/, { message: 'Use the format YYYY-MM-DD', excludeEmptyString: true })
-    .optional(),
-  // Contact + WhatsApp numbers: previously undeclared, so edits were silently
-  // dropped before reaching the service (the numbers-not-saving bug).
-  phone_number: yup
-    .string()
-    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
-    .optional(),
-  phone_extension: yup
-    .string()
-    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
-    .optional(),
-  whatsapp_number: yup
-    .string()
-    .matches(phoneRegex, { message: 'Invalid WhatsApp number', excludeEmptyString: true })
-    .optional(),
-  whatsapp_extension: yup
-    .string()
-    .matches(extRegex, { message: 'Invalid WhatsApp extension', excludeEmptyString: true })
-    .optional(),
-  // The saved main postal address; every part optional so partial edits are ok.
-  address: postalAddressSchema.optional(),
-});
-
-export const petProfileSchema = yup.object({
-  name: yup.string().max(60).nullable().optional(),
-  species: yup.string().max(40).nullable().optional(),
-  breed: yup.string().max(60).nullable().optional(),
-  age: yup.number().min(0).max(100).nullable().optional(),
-  photo_url: yup.string().url().nullable().optional(),
-  bio: yup.string().max(500).nullable().optional(),
-});
-
-export const interestCategoryIdsSchema = yup
-  .array()
-  .of(yup.string().required())
-  .min(1, 'Select at least one interest')
-  .max(60, 'Select fewer interests')
-  .required();
-
 export const recordUserContactActionSchema = yup.object({
   user_id: yup.string().required(),
   type: yup.string().oneOf(['CALL', 'EMAIL']).required(),
@@ -208,17 +57,7 @@ export const startRecordedUserCallSchema = yup.object({
   notes: yup.string().trim().max(2000).default(''),
 });
 
-export type RegisterDTO = yup.InferType<typeof registerSchema>;
-export type LoginDTO = yup.InferType<typeof loginSchema>;
-export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetSchema>;
-export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
-export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
-export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;
-export type DeleteMyAccountDTO = yup.InferType<typeof deleteMyAccountSchema>;
-export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;
 export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
 export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;
-export type UpdateMyProfileDTO = yup.InferType<typeof updateMyProfileSchema>;
-export type PetProfileDTO = yup.InferType<typeof petProfileSchema>;
 export type RecordUserContactActionDTO = yup.InferType<typeof recordUserContactActionSchema>;
 export type StartRecordedUserCallDTO = yup.InferType<typeof startRecordedUserCallSchema>;

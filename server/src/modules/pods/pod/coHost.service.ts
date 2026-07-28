@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { CategoryModel } from '@modules/pods/category/category.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel, type CoHostStatus, type IPod } from './pod.model';

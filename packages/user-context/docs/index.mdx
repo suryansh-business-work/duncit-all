@@ -1,0 +1,385 @@
+---
+name: '@duncit/user-context'
+summary: 'Session plumbing shared by mWeb and every portal — the cached user provider, the `me` bootstrap, the login screen, and the maintenance/under-development gate.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'packages/shell'
+  - 'packages/app-settings'
+  - 'portals/admin'
+  - 'portals/ads-portal'
+  - 'portals/ai'
+  - 'portals/challenge-portal'
+  - 'portals/crm'
+  - 'portals/developers'
+  - 'portals/employee'
+  - 'portals/finance'
+  - 'portals/hr'
+  - 'portals/legal'
+  - 'portals/marketing'
+  - 'portals/onboarding'
+  - 'portals/partners-app'
+  - 'portals/products'
+  - 'portals/support'
+  - 'portals/tech'
+  - 'portals/website-app'
+exports:
+  - 'UserProvider'
+  - 'useUserData'
+  - 'DuncitUser'
+  - 'readCachedUser'
+  - 'writeCachedUser'
+  - 'clearAllStorages'
+  - 'AUTH_CHANGED_EVENT'
+  - 'emitAuthChanged'
+  - 'buildSessionMeQuery'
+  - 'createSessionUserLoader'
+  - 'LoginScreen'
+  - 'LoginForm'
+  - 'loginSchema'
+  - 'loginInitialValues'
+  - 'PortalModeGate'
+  - 'MaintenanceScreen'
+  - 'UnderDevelopmentScreen'
+  - 'UserDataNotLoadedDialog'
+---
+
+## Why this exists
+
+Every portal's `main.tsx` used to declare its own `SessionMe` query, its own `loadUser`, its own
+`localStorage` user cache and its own logout that guessed at which keys to clear. Nineteen
+copies of "who is signed in" is nineteen places for a stale cache, a missed field or a logout
+that leaves a token behind.
+
+`UserProvider` hydrates from `localStorage` **synchronously** on mount, so a refresh never
+flashes a logged-out shell before `me` resolves — that flash was the visible symptom the copies
+each fixed differently, or not at all.
+
+## Use it
+
+`packages/shell/src/mountPortal.tsx` wires it for all eighteen portals; `app/mweb/src/main.tsx`
+does the same by hand:
+
+```tsx
+import { UserProvider, PortalModeGate } from '@duncit/user-context';
+
+const isAuthed = () => !!localStorage.getItem(config.tokenKey);
+
+<UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
+  <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit">
+    <App />
+  </PortalModeGate>
+</UserProvider>;
+```
+
+`loadUser` comes from the shared bootstrap rather than a hand-written query:
+
+```ts
+import { createSessionUserLoader } from '@duncit/user-context';
+
+// portals/crm/src/main.tsx — the default SessionMe selection
+const loadUser = createSessionUserLoader(apolloClient);
+
+// portals/partners-app/src/main.tsx — same selection, own operation name
+createSessionUserLoader(apolloClient, { operationName: 'PartnerSessionMe' });
+
+// portals/admin/src/main.tsx — a genuinely richer query
+createSessionUserLoader(apolloClient, { query: ADMIN_ME });
+```
+
+Reading the user in a component (`packages/shell/src/chrome/ProfilePage.tsx`):
+
+```tsx
+import { useUserData } from '@duncit/user-context';
+
+const { user, refetch, logout } = useUserData();
+```
+
+## Sample data
+
+The `me` payload every portal caches, and the login config one portal supplies:
+
+```ts
+/** Exactly what buildSessionMeQuery() selects. */
+const sessionUser = {
+  user_id: 'usr_9f2c41',
+  full_name: 'Ananya Iyer',
+  first_name: 'Ananya',
+  last_name: 'Iyer',
+  email: 'ananya.iyer@duncit.com',
+  roles: ['HOST', 'CLUB_ADMIN'],
+  locale: 'hi-IN',
+  profile_photo: 'https://ik.imagekit.io/duncit/avatars/usr_9f2c41.jpg',
+};
+
+/** portals/finance — the only per-portal content the shared login design needs. */
+const financeLoginConfig = {
+  brandName: 'Duncit Finance',
+  portalName: 'Finance',
+  tagline: 'Settlements, wallets and payouts in one place.',
+  promoTitle: 'Every rupee, accounted for',
+  promoText: 'Approve a pod and every wallet is credited automatically.',
+  bgImage: 'https://ik.imagekit.io/duncit/login/finance-bg.jpg',
+  logoUrl: 'https://ik.imagekit.io/duncit/branding/logo-2026.svg',
+  contactEmail: 'admin@duncit.com',
+};
+```
+
+## Worked examples
+
+### The cache round-trip
+
+```ts
+writeCachedUser(sessionUser);
+
+localStorage.getItem('duncit_user')
+// '{"user_id":"usr_9f2c41","full_name":"Ananya Iyer","first_name":"Ananya","last_name":"Iyer",
+//   "email":"ananya.iyer@duncit.com","roles":["HOST","CLUB_ADMIN"],"locale":"hi-IN",
+//   "profile_photo":"https://ik.imagekit.io/duncit/avatars/usr_9f2c41.jpg"}'
+
+readCachedUser()      // the object back, unchanged
+```
+
+Corrupted JSON is dropped rather than thrown, so the next write lands cleanly:
+
+```ts
+localStorage.setItem('duncit_user', '{not json');
+readCachedUser()                       // null
+localStorage.getItem('duncit_user')    // null — the bad entry was removed
+```
+
+A second portal on the same origin uses its own key:
+
+```ts
+writeCachedUser(sessionUser, 'partners_user');   // writes to 'partners_user'
+readCachedUser('partners_user');                 // reads it back
+```
+
+```ts
+clearAllStorages();
+localStorage.length   // 0  — sessionStorage too. No auth, no session, no cache left behind.
+```
+
+### `buildSessionMeQuery`
+
+```ts
+print(buildSessionMeQuery())
+```
+
+```graphql
+query SessionMe {
+  me {
+    user_id
+    full_name
+    first_name
+    last_name
+    email
+    roles
+    locale
+    profile_photo
+  }
+}
+```
+
+Partners-app renames the operation and appends its own fields — it does not fork the query:
+
+```ts
+print(buildSessionMeQuery('PartnerSessionMe', ['partner_type', 'company_name']))
+```
+
+```graphql
+query PartnerSessionMe {
+  me {
+    user_id
+    full_name
+    first_name
+    last_name
+    email
+    roles
+    locale
+    profile_photo
+    partner_type
+    company_name
+  }
+}
+```
+
+`extraFields` are appended inside the `me` selection, so a new standard field (`locale` was
+one) reaches every portal by editing one builder.
+
+### The login schema
+
+```ts
+loginInitialValues        // { email: '', password: '' }
+
+await loginSchema.validate({ email: 'nope', password: '' }, { abortEarly: false });
+// throws — err.errors === ['Enter a valid e-mail address', 'Password is required']
+
+await loginSchema.validate({ email: 'ananya.iyer@duncit.com', password: 'correct-horse' });
+// → { email: 'ananya.iyer@duncit.com', password: 'correct-horse' }
+```
+
+### Events
+
+```ts
+AUTH_CHANGED_EVENT   // 'duncit:auth-changed'
+emitAuthChanged();   // dispatches it on window; UserProvider reloads `me` immediately
+```
+
+Call it from wherever the token is set or cleared. Without it a client-side login leaves the
+header and sidebar empty until a manual refresh, because `storage` events only fire in
+*other* tabs.
+
+## API
+
+### Context
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `UserProvider` | React component | Hydrates from cache, loads `me`, owns logout. |
+| `useUserData` | `<T = DuncitUser>() => UserDataContextValue<T>` | **Throws** outside a `UserProvider`. |
+
+| `UserProviderProps` | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `isAuthed` | `() => boolean` | yes | — | Whether a token is present; decides if `me` loads. |
+| `loadUser` | `() => Promise<DuncitUser \| null>` | yes | — | App fetcher — pass `createSessionUserLoader(client)`. |
+| `onLogout` | `() => void` | no | `window.location.href = '/login'` | Post-logout navigation. |
+| `storageKey` | `string` | no | `'duncit_user'` | Cache key; unique per portal on a shared origin. |
+| `autoMountFailureDialog` | `boolean` | no | `true` | Render the recovery dialog itself. |
+| `children` | `ReactNode` | yes | — | |
+
+| `UserDataContextValue` member | Type | Meaning |
+| --- | --- | --- |
+| `user` | `T \| null` | Current user; hydrated synchronously from cache on mount. |
+| `loading` | `boolean` | A `me` load is in flight. |
+| `error` | `Error \| null` | Last load failure. Transient — the cached user is kept. |
+| `refetch` | `() => Promise<T \| null>` | Re-runs `loadUser`; refreshes state **and** cache. |
+| `update` | `(patch: Partial<T> \| ((cur: T \| null) => T \| null)) => void` | Local merge + persist. Never calls the server. |
+| `setUser` | `(user: T \| null) => void` | Wholesale replace, e.g. after login. |
+| `logout` | `() => void` | Clears both storages, then navigates. |
+| `hasLoadFailure` | `boolean` | Authed, first attempt finished, and no user at all — fresh or cached. |
+| `reloadApp` | `() => void` | Hard page reload, used by the recovery dialog. |
+
+`refetch` keeps the cached user when the server returns `null` or throws, so a 502 during a
+deploy never yanks an active session. Only `logout()` clears storage.
+
+### Session loading
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `buildSessionMeQuery` | `(operationName?: string, extraFields?: readonly string[]) => DocumentNode` | `'SessionMe'`, `[]` | The standard `me` query. |
+| `createSessionUserLoader` | `(client, options?: SessionUserLoaderOptions) => () => Promise<DuncitUser \| null>` | — | Network-only `me` fetch; the `loadUser` `UserProvider` wants. |
+
+`SessionUserLoaderOptions`: `operationName?`, `extraFields?`, `query?` (a full override, e.g.
+admin's richer `ADMIN_ME` — wins over the built query).
+
+### Storage and events
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `readCachedUser` | `(storageKey?: string) => DuncitUser \| null` | `'duncit_user'` | `null` on SSR, empty storage or corrupt JSON. |
+| `writeCachedUser` | `(user: DuncitUser \| null, storageKey?: string) => void` | `'duncit_user'` | `null` removes the entry. |
+| `clearAllStorages` | `() => void` | — | Wipes `localStorage` **and** `sessionStorage`. |
+| `AUTH_CHANGED_EVENT` | `'duncit:auth-changed'` | — | Same-tab auth signal. |
+| `emitAuthChanged` | `() => void` | — | Dispatch it after setting or clearing the token. |
+
+Every storage helper is guarded for SSR and private mode; none of them throw.
+
+### Screens
+
+| Export | Props | Meaning |
+| --- | --- | --- |
+| `LoginScreen` | `config: LoginScreenConfig`, `mode: PaletteMode`, `onToggleMode: () => void`, `onSubmit: (values) => Promise<void> \| void`, `loading?`, `errorMessage?`, `footerSlot?` | The shared login design. |
+| `LoginForm` | `onSubmit`, `onForgotPassword`, `loading?` | Just the fields, if a portal frames them itself. |
+| `UserDataNotLoadedDialog` | `open: boolean`, `onReload: () => void`, `onLogout: () => void`, `errorMessage?: string \| null` | Recovery dialog; auto-mounted by `UserProvider`. |
+| `PortalModeGate` | `portalKey: string`, `graphqlUrl: string`, `appName?`, `pollMs?` (60000), `children` | Blocks the app when Tech switches the portal off Live. **Fails open.** |
+| `MaintenanceScreen` / `UnderDevelopmentScreen` | `appName?` | The blocking screens. |
+| `glass` | `(theme: Theme) => sx object` | Frosted-glass surface used by the login and promo cards. |
+
+`LoginScreenConfig` — required: `brandName`, `portalName`, `tagline`, `promoTitle`,
+`promoText`, `bgImage`, `logoUrl`. Optional: `onLogoError` (swap in the bundled copy per rule
+39), `privacyUrl`, `termsUrl`, `contactEmail`.
+
+## No live preview
+
+The components here are real MUI, but none of them can mount as an isolated docs island:
+importing the package entry pulls `session-user.ts` → `@apollo/client`, and `LoginScreen`
+additionally needs Formik, Yup and a `PaletteMode` owner. Faking all of that would preview a
+harness rather than the package.
+
+To see the login screen as shipped, open any portal's `/login` — https://finance.duncit.com/
+is the one whose config is quoted above. The recovery dialog and the two portal-mode screens
+are covered by the package's own tests in `__tests__/`.
+
+If the docs site later gains an Apollo `MockedProvider` island wrapper, `LoginScreen` and
+`UserDataNotLoadedDialog` are the two worth adding a `<Preview>` for, in that order — the
+sample data above is already the right shape for both.
+
+## `update` vs `refetch` vs `setUser`
+
+Three ways to change the user, and picking wrong either wastes a round trip or shows stale data.
+
+- **`update(patch)`** — local-only merge, persisted to `localStorage`. **Does not call the
+  server.** Use it after a mutation that already returned the new value.
+- **`refetch()`** — re-runs `loadUser`, refreshing both memory and the cache. Use it when the
+  server changed something you did not receive back.
+- **`setUser(user)`** — wholesale replacement, e.g. straight after login. `setUser(null)` clears
+  without redirecting.
+- **`logout()`** — `clearAllStorages()` plus navigation to the login page. It wipes
+  `localStorage` **and** `sessionStorage` entirely; no preference survives a logout, by design.
+
+## Same-tab login needs `emitAuthChanged`
+
+A portal logs in with a client-side navigation, no page reload. `UserProvider` is mounted once
+above the router, so it never re-runs its initial load and the header and sidebar stay empty
+until the user manually refreshes. `storage` events do not help — they only fire in *other* tabs.
+
+So the session helpers dispatch `AUTH_CHANGED_EVENT` (`'duncit:auth-changed'`) on the window
+whenever the token is set or cleared, and the provider reloads. Any code path that writes or
+removes the auth token must call `emitAuthChanged()`; `packages/shell/src/lib/session.ts` is the
+reference call site.
+
+## `PortalModeGate` fails open on purpose
+
+The gate polls `portalMode(key:)` every 60s with a plain unauthenticated `fetch` — no Apollo
+dependency — and swaps in `MaintenanceScreen` or `UnderDevelopmentScreen` when the Tech portal
+takes a portal off Live.
+
+Any network error keeps the app **rendered**. A server blip must never lock every user out of
+every portal simultaneously, which is exactly what a fail-closed gate would do. It also re-polls,
+so apps recover on their own when set back to Live without anyone reloading.
+
+## The login form is still Formik + Yup
+
+`login.form.tsx` uses `useFormik` and `yup`, and `formik`/`yup` are declared peer dependencies.
+That predates rule 30 (React Hook Form + Zod) and is the one place in the shared packages that
+has not migrated. Do not copy this pattern into a new form, and do not add a *second* form here
+in the old style — a migration of this file is its own change, with `login.form.cy.tsx` updated
+alongside it.
+
+`loginSchema` and `loginInitialValues` are exported so a surface can reuse the validation
+without the screen; `LoginScreen` is the full page, `LoginForm` just the fields.
+
+## `buildSessionMeQuery` — extend, do not fork
+
+The default selection is `user_id`, `full_name`, `first_name`, `last_name`, `email`, `roles`,
+`locale`, `profile_photo`. Need more? Pass `extraFields`, which appends to that selection. Only
+pass a full `query` override when the shape genuinely differs (admin's richer `ADMIN_ME`); a
+hand-written `me` query in a portal is how a field ends up missing on one surface only.
+
+The loader is `fetchPolicy: 'network-only'` — the `localStorage` cache is the fast path, so
+serving `me` from the Apollo cache on top of it would just be a second layer of staleness.
+
+## Storage is always guarded
+
+`readCachedUser`, `writeCachedUser` and `clearAllStorages` all check `globalThis.window` and wrap
+every access in try/catch. Private mode, a blocked origin, a full quota or corrupted JSON all
+degrade to "no cache", never to a thrown error at mount. Corrupted JSON is additionally *removed*
+so the next write replaces it cleanly. Do not touch `localStorage` for the user object directly —
+go through these.
+
+Coverage is gated at 100/100/100/100, with `src/types.ts` and the `*.cy.tsx` Cypress component
+tests excluded (those run under Cypress, not vitest).

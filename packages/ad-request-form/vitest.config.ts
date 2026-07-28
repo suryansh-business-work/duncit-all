@@ -11,7 +11,13 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**'],
-      exclude: ['src/index.ts', 'src/**/*.d.ts'],
+      // Co-located *.test.ts files sit under src/, so they land inside `include`
+      // and measure themselves. They do not inflate the figure (a test file is
+      // fully executed), but they do not belong in the denominator either.
+      exclude: ['src/index.ts', 'src/**/*.d.ts', 'src/**/*.test.{ts,tsx}'],
+      // This package reached 100% without a threshold to hold it there, which
+      // means nothing would have caught it slipping. Now something does.
+      thresholds: { lines: 100, statements: 100, functions: 100, branches: 100 },
     },
   },
 });

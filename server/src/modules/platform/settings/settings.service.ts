@@ -257,6 +257,54 @@ const DEFAULT_FLAGS: {
   },
 ];
 
+type AppSettingsUpdateInput = {
+  jwt_expires_in?: string | null;
+  jwt_no_expiry?: boolean;
+  date_format?: string;
+  time_format?: string;
+  time_zone?: string;
+  time_source?: string;
+  custom_time?: string | null;
+  min_birth_year?: number;
+  max_birth_year?: number;
+  draft_retention_days?: number;
+  max_backout_attempts?: number;
+};
+
+/** Fields copied to the update as-is when the caller supplied them. */
+const APP_SETTING_PASSTHROUGH_FIELDS = [
+  "jwt_no_expiry",
+  "jwt_expires_in",
+  "date_format",
+  "time_format",
+  "time_zone",
+  "time_source",
+  "min_birth_year",
+  "max_birth_year",
+] as const;
+
+/** Saving an anchor stamps the server clock beside it, so every device can
+ * advance the custom clock by the same elapsed amount. */
+const customTimeUpdate = (raw: string | null) => {
+  const anchor = raw ? new Date(raw) : null;
+  const valid = anchor && !Number.isNaN(anchor.getTime()) ? anchor : null;
+  return { custom_time: valid, custom_time_set_at: valid ? new Date() : null };
+};
+
+const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
+  const update: any = {};
+  for (const field of APP_SETTING_PASSTHROUGH_FIELDS) {
+    if (input[field] !== undefined) update[field] = input[field];
+  }
+  if (input.custom_time !== undefined)
+    Object.assign(update, customTimeUpdate(input.custom_time));
+  if (input.draft_retention_days !== undefined)
+    update.draft_retention_days = cleanRetentionDays(input.draft_retention_days);
+  if (input.max_backout_attempts !== undefined)
+    update.max_backout_attempts = cleanMaxBackoutAttempts(input.max_backout_attempts);
+  return update;
+};
+
 export const settingsService = {
   async getAppSettings() {
     let doc = await AppSettingsModel.findOne({ singleton_key: "app" });
@@ -306,44 +354,8 @@ export const settingsService = {
     };
   },
 
-  async updateAppSettings(input: {
-    jwt_expires_in?: string | null;
-    jwt_no_expiry?: boolean;
-    date_format?: string;
-    time_format?: string;
-    time_zone?: string;
-    time_source?: string;
-    custom_time?: string | null;
-    min_birth_year?: number;
-    max_birth_year?: number;
-    draft_retention_days?: number;
-    max_backout_attempts?: number;
-  }) {
-    const update: any = {};
-    if (input.jwt_no_expiry !== undefined)
-      update.jwt_no_expiry = input.jwt_no_expiry;
-    if (input.jwt_expires_in !== undefined)
-      update.jwt_expires_in = input.jwt_expires_in;
-    if (input.date_format !== undefined) update.date_format = input.date_format;
-    if (input.time_format !== undefined) update.time_format = input.time_format;
-    if (input.time_zone !== undefined) update.time_zone = input.time_zone;
-    if (input.time_source !== undefined) update.time_source = input.time_source;
-    // Saving an anchor stamps the server clock beside it, so every device can
-    // advance the custom clock by the same elapsed amount.
-    if (input.custom_time !== undefined) {
-      const anchor = input.custom_time ? new Date(input.custom_time) : null;
-      const valid = anchor && !Number.isNaN(anchor.getTime()) ? anchor : null;
-      update.custom_time = valid;
-      update.custom_time_set_at = valid ? new Date() : null;
-    }
-    if (input.min_birth_year !== undefined)
-      update.min_birth_year = input.min_birth_year;
-    if (input.max_birth_year !== undefined)
-      update.max_birth_year = input.max_birth_year;
-    if (input.draft_retention_days !== undefined)
-      update.draft_retention_days = cleanRetentionDays(input.draft_retention_days);
-    if (input.max_backout_attempts !== undefined)
-      update.max_backout_attempts = cleanMaxBackoutAttempts(input.max_backout_attempts);
+  async updateAppSettings(input: AppSettingsUpdateInput) {
+    const update = buildAppSettingsUpdate(input);
     const doc = await AppSettingsModel.findOneAndUpdate(
       { singleton_key: "app" },
       { $set: update },

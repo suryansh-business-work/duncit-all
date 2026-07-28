@@ -12,7 +12,7 @@ import {
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useUploadSettings } from '@/hooks/useUploadSettings';
+import { useUploadSettings, type MobileUploadSettings } from '@/hooks/useUploadSettings';
 import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface Review {
@@ -56,6 +56,135 @@ function Stars({
   );
 }
 
+type ReviewUpload = ReturnType<typeof useMediaUpload>;
+
+/** Photo attachments for the write-review form: the staged thumbnails, the
+ * picker trigger and the crop/upload dialog. */
+function ReviewPhotos({
+  images,
+  upload,
+  settings,
+  primary,
+}: Readonly<{
+  images: string[];
+  upload: ReviewUpload;
+  settings: MobileUploadSettings | null;
+  primary: string;
+}>) {
+  const uploadBusy = upload.uploading;
+  return (
+    <>
+      {images.length > 0 ? (
+        <XStack gap={6}>
+          {images.map((u) => (
+            <AppImage
+              key={u}
+              source={{ uri: u }}
+              style={{ width: 56, height: 56, borderRadius: 8 }}
+            />
+          ))}
+        </XStack>
+      ) : null}
+      <XStack
+        testID="review-add-photo"
+        role="button"
+        onPress={uploadBusy ? undefined : () => void upload.pick()}
+        alignItems="center"
+        gap={6}
+        opacity={uploadBusy ? 0.6 : 1}
+      >
+        <MaterialIcons name="add-photo-alternate" size={18} color={primary} />
+        <Text fontSize={13} fontWeight="700" color={primary}>
+          {uploadBusy ? 'Uploading…' : 'Add photo'}
+        </Text>
+      </XStack>
+      <MediaCropDialog
+        media={upload.pending}
+        settings={settings}
+        uploading={upload.uploading}
+        stage={upload.stage}
+        progress={upload.progress}
+        error={upload.error}
+        onConfirm={upload.confirm}
+        onCancel={upload.cancel}
+      />
+    </>
+  );
+}
+
+/** One posted review — author + stars, comment, photos, the seller reply and
+ * the thumbs-up/down vote row. */
+function ReviewCard({
+  review,
+  ink,
+  primary,
+  onVote,
+}: Readonly<{
+  review: Review;
+  ink: string;
+  primary: string;
+  onVote: (id: string, value: number, current: number) => void;
+}>) {
+  return (
+    <YStack gap={4} paddingTop={10} borderTopWidth={1} borderColor="$borderColor">
+      <XStack gap={6} alignItems="center">
+        <Text fontSize={13} fontWeight="800" color={ink}>
+          {review.user_name}
+        </Text>
+        <Stars value={review.rating} size={14} />
+      </XStack>
+      {review.comment ? (
+        <Text fontSize={13} color={ink}>
+          {review.comment}
+        </Text>
+      ) : null}
+      {review.images.length > 0 ? (
+        <XStack gap={6}>
+          {review.images.map((u) => (
+            <AppImage
+              key={u}
+              source={{ uri: u }}
+              style={{ width: 56, height: 56, borderRadius: 8 }}
+            />
+          ))}
+        </XStack>
+      ) : null}
+      {review.seller_reply ? (
+        <YStack gap={2} padding={8} backgroundColor="$color2" borderRadius={8}>
+          <Text fontSize={11} fontWeight="800" color={primary}>
+            Seller response
+          </Text>
+          <Text fontSize={13} color={ink}>
+            {review.seller_reply}
+          </Text>
+        </YStack>
+      ) : null}
+      <XStack gap={4} alignItems="center">
+        <YStack
+          testID={`review-up-${review.id}`}
+          role="button"
+          onPress={() => onVote(review.id, 1, review.my_vote)}
+        >
+          <MaterialIcons name="thumb-up" size={16} color={review.my_vote === 1 ? primary : MUTED} />
+        </YStack>
+        <Text fontSize={12} color="$muted">
+          {review.up_votes}
+        </Text>
+        <YStack
+          testID={`review-down-${review.id}`}
+          role="button"
+          onPress={() => onVote(review.id, -1, review.my_vote)}
+        >
+          <MaterialIcons name="thumb-down" size={16} color={review.my_vote === -1 ? DOWN : MUTED} />
+        </YStack>
+        <Text fontSize={12} color="$muted">
+          {review.down_votes}
+        </Text>
+      </XStack>
+    </YStack>
+  );
+}
+
 /** Ratings & reviews — the RN twin of mWeb's ProductReviews: summary, a write
  * form (stars + comment), the list with images + seller reply and thumbs voting. */
 export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
@@ -70,7 +199,6 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
   const [error, setError] = useState('');
   const settings = useUploadSettings();
   const upload = useMediaUpload('/product-reviews', (url) => setImages((prev) => [...prev, url]));
-  const uploadBusy = upload.uploading;
 
   const load = () => {
     setLoading(true);
@@ -146,40 +274,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
           placeholder="Share your experience (optional)"
           minHeight={60}
         />
-        {images.length > 0 ? (
-          <XStack gap={6}>
-            {images.map((u) => (
-              <AppImage
-                key={u}
-                source={{ uri: u }}
-                style={{ width: 56, height: 56, borderRadius: 8 }}
-              />
-            ))}
-          </XStack>
-        ) : null}
-        <XStack
-          testID="review-add-photo"
-          role="button"
-          onPress={uploadBusy ? undefined : () => void upload.pick()}
-          alignItems="center"
-          gap={6}
-          opacity={uploadBusy ? 0.6 : 1}
-        >
-          <MaterialIcons name="add-photo-alternate" size={18} color={primary} />
-          <Text fontSize={13} fontWeight="700" color={primary}>
-            {uploadBusy ? 'Uploading…' : 'Add photo'}
-          </Text>
-        </XStack>
-        <MediaCropDialog
-          media={upload.pending}
-          settings={settings}
-          uploading={upload.uploading}
-          stage={upload.stage}
-          progress={upload.progress}
-          error={upload.error}
-          onConfirm={upload.confirm}
-          onCancel={upload.cancel}
-        />
+        <ReviewPhotos images={images} upload={upload} settings={settings} primary={primary} />
         {error ? (
           <Text testID="review-error" color="$danger" fontSize={12}>
             {error}
@@ -201,62 +296,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
         <Spinner testID="reviews-loading" color="$primary" />
       ) : null}
       {reviews.map((r) => (
-        <YStack key={r.id} gap={4} paddingTop={10} borderTopWidth={1} borderColor="$borderColor">
-          <XStack gap={6} alignItems="center">
-            <Text fontSize={13} fontWeight="800" color={ink}>
-              {r.user_name}
-            </Text>
-            <Stars value={r.rating} size={14} />
-          </XStack>
-          {r.comment ? (
-            <Text fontSize={13} color={ink}>
-              {r.comment}
-            </Text>
-          ) : null}
-          {r.images.length > 0 ? (
-            <XStack gap={6}>
-              {r.images.map((u) => (
-                <AppImage
-                  key={u}
-                  source={{ uri: u }}
-                  style={{ width: 56, height: 56, borderRadius: 8 }}
-                />
-              ))}
-            </XStack>
-          ) : null}
-          {r.seller_reply ? (
-            <YStack gap={2} padding={8} backgroundColor="$color2" borderRadius={8}>
-              <Text fontSize={11} fontWeight="800" color={primary}>
-                Seller response
-              </Text>
-              <Text fontSize={13} color={ink}>
-                {r.seller_reply}
-              </Text>
-            </YStack>
-          ) : null}
-          <XStack gap={4} alignItems="center">
-            <YStack
-              testID={`review-up-${r.id}`}
-              role="button"
-              onPress={() => vote(r.id, 1, r.my_vote)}
-            >
-              <MaterialIcons name="thumb-up" size={16} color={r.my_vote === 1 ? primary : MUTED} />
-            </YStack>
-            <Text fontSize={12} color="$muted">
-              {r.up_votes}
-            </Text>
-            <YStack
-              testID={`review-down-${r.id}`}
-              role="button"
-              onPress={() => vote(r.id, -1, r.my_vote)}
-            >
-              <MaterialIcons name="thumb-down" size={16} color={r.my_vote === -1 ? DOWN : MUTED} />
-            </YStack>
-            <Text fontSize={12} color="$muted">
-              {r.down_votes}
-            </Text>
-          </XStack>
-        </YStack>
+        <ReviewCard key={r.id} review={r} ink={ink} primary={primary} onVote={vote} />
       ))}
       {!loading && reviews.length === 0 ? (
         <Text fontSize={13} color="$muted">

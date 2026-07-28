@@ -30,6 +30,15 @@ const DEFAULTS: TelemetrySettingsForm = {
   retention_days: 30,
 };
 
+type PersistedLevels = TelemetrySettingsForm['persisted_levels'];
+
+/** Add or remove one level, keeping the field's declared order. */
+const toggleLevel = (
+  levels: PersistedLevels,
+  level: PersistedLevels[number],
+  checked: boolean,
+): PersistedLevels => (checked ? [...levels, level] : levels.filter((l) => l !== level));
+
 export default function TelemetryLogsSettingsPage() {
   const { data, loading, error, refetch } = useQuery(TELEMETRY_SETTINGS, {
     fetchPolicy: 'cache-and-network',
@@ -109,11 +118,7 @@ export default function TelemetryLogsSettingsPage() {
                       <Checkbox
                         checked={field.value.includes(lvl)}
                         onChange={(e) =>
-                          field.onChange(
-                            e.target.checked
-                              ? [...field.value, lvl]
-                              : field.value.filter((l) => l !== lvl),
-                          )
+                          field.onChange(toggleLevel(field.value, lvl, e.target.checked))
                         }
                       />
                     }

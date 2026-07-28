@@ -71,6 +71,36 @@ const COLUMNS: DuncitColumn<DockerContainer>[] = [
   },
 ];
 
+/** Per-row Restart action. */
+function RestartCell({
+  container,
+  onRestart,
+}: Readonly<{ container: DockerContainer; onRestart: (name: string) => void }>) {
+  return (
+    <Button
+      size="small"
+      variant="outlined"
+      color="warning"
+      startIcon={<RestartAltIcon fontSize="small" />}
+      onClick={() => onRestart(container.name || container.id)}
+      sx={{ whiteSpace: 'nowrap' }}
+    >
+      Restart
+    </Button>
+  );
+}
+
+/** The action column, built at module scope so the cell renderer is never a
+ * component defined inside a component. */
+const actionsColumn = (onRestart: (name: string) => void): DuncitColumn<DockerContainer> => ({
+  field: 'actions',
+  headerName: '',
+  sortable: false,
+  width: 130,
+  valueGetter: (c) => c.state,
+  cellRenderer: (c: DockerContainer) => <RestartCell container={c} onRestart={onRestart} />,
+});
+
 interface Props {
   fetchRows: TableFetch<DockerContainer>;
   refetchRef: MutableRefObject<(() => void) | null>;
@@ -87,28 +117,7 @@ export default function DockerContainersTable({
   onRestart,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<DockerContainer>[]>(
-    () => [
-      ...COLUMNS,
-      {
-        field: 'actions',
-        headerName: '',
-        sortable: false,
-        width: 130,
-        valueGetter: (c) => c.state,
-        cellRenderer: (c: DockerContainer) => (
-          <Button
-            size="small"
-            variant="outlined"
-            color="warning"
-            startIcon={<RestartAltIcon fontSize="small" />}
-            onClick={() => onRestart(c.name || c.id)}
-            sx={{ whiteSpace: 'nowrap' }}
-          >
-            Restart
-          </Button>
-        ),
-      },
-    ],
+    () => [...COLUMNS, actionsColumn(onRestart)],
     [onRestart],
   );
 

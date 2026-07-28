@@ -100,7 +100,9 @@
     "prepare": "husky || true",
     "sonar:issues": "node scripts/sonar-issues.mjs",
     "sonar:issues:high": "node scripts/sonar-issues.mjs --severity=HIGH",
-    "sonar:scan": "gh workflow run \"SonarQube Scan\" --ref $(git rev-parse --abbrev-ref HEAD)"
+    "sonar:scan": "gh workflow run \"SonarQube Scan\" --ref $(git rev-parse --abbrev-ref HEAD)",
+    "docs": "pnpm --filter duncit-docs dev",
+    "docs:build": "pnpm --filter duncit-docs build"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.1",

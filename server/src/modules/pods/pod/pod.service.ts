@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { LocationModel } from '@modules/platform/location/location.model';
@@ -23,7 +23,12 @@ import {
 import { getUrlConfigs } from '@config/url-configs';
 import { moderationService } from '@modules/moderation/moderation.service';
 import { assertInvitable } from './coHost.service';
-import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import {
+  escapedSearchRegex,
+  runTableQuery,
+  type TableEntityConfig,
+  type TableQueryInput,
+} from '@utils/table-query';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
 import type { PodAuditSource } from '@modules/pods/podAudit/podAudit.model';
 import { logs } from '@observability/log';
@@ -543,7 +548,9 @@ type ClubCategory = {
 
 /** The pod's category is its club's Super + Sub. Null when the club has no full
  * pair yet (legacy clubs) — which imposes no product constraint. */
-async function resolveClubCategory(clubId: unknown): Promise<ClubCategory | null> {
+async function resolveClubCategory(
+  clubId: Types.ObjectId | string | null | undefined
+): Promise<ClubCategory | null> {
   if (!clubId || !Types.ObjectId.isValid(String(clubId))) return null;
   const club = await ClubModel.findById(String(clubId))
     .select('super_category_id category_id')
@@ -952,7 +959,9 @@ export const podService = {
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     // Explore reels: only pods that actually uploaded a reel video.
     if (filter?.has_reel) q.reel_url = { $nin: [null, ''] };
-    if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
+    // ESCAPED: the raw string used to be compiled as a pattern, so a search of
+    // ".*" listed every pod and a crafted one could pin the event loop.
+    if (filter?.search) q.pod_title = escapedSearchRegex(filter.search);
     if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
     // A pod awaiting the venue owner's slot approval is NOT live. Hide it from
     // every non-review caller so it can never surface in discovery (or via an

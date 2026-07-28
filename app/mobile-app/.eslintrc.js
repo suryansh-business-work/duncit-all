@@ -11,7 +11,7 @@ module.exports = {
     '.expo/',
     'expo-env.d.ts',
     'src/generated/',
-    'e2e-web/',
+    'cypress-artifacts/',
   ],
   rules: {
     'prettier/prettier': 'warn',

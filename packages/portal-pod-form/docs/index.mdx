@@ -1,0 +1,233 @@
+---
+name: '@duncit/portal-pod-form'
+summary: 'The small pod-content editor dialog (title, description, media) that Admin and Partners both use for a quick edit of a live pod.'
+category: 'forms'
+zeroDeps: true
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'portals/admin'
+  - 'portals/partners-app'
+exports:
+  - 'PodContentFormDialog'
+  - 'podContentSchema'
+  - 'PodContentValues'
+  - 'PodField'
+  - 'PodMedia'
+  - 'ReadOnlyContextItem'
+---
+
+## Why this exists
+
+Editing a pod that already exists is not the same job as creating one. A host wants to fix a typo
+in the title or swap a photo on a pod that has attendees, a date and a venue — re-opening the whole
+create form for that invites edits to fields the host is not allowed to change.
+
+So both consoles grew a small "quick edit" dialog: `portals/admin/src/pages/pods-page/QuickEditPodDialog.tsx`
+and the edit path in `portals/partners-app/src/pages/pods-page/PartnerPodsSection.tsx`. Same three
+fields, same Zod rules, same image field-array. Two copies of a validation rule means one of them
+eventually accepts a one-character title that the other rejects.
+
+This package is that dialog, once. Each console keeps only its own mutation.
+
+## Use it
+
+From `portals/admin/src/pages/pods-page/QuickEditPodDialog.tsx`:
+
+```tsx
+import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
+
+const save = async (values: PodContentValues) => {
+  await updateMut({
+    variables: {
+      id: pod.id,
+      input: {
+        pod_title: values.pod_title,
+        pod_description: values.pod_description,
+        pod_images_and_videos: values.pod_images_and_videos.map((m) => ({ url: m.url, type: m.type || 'IMAGE' })),
+      },
+    },
+  });
+};
+
+<PodContentFormDialog
+  open={!!pod}
+  title="Quick edit pod"
+  defaultValues={{
+    pod_title: pod.pod_title || '',
+    pod_description: pod.pod_description || '',
+    pod_images_and_videos: (pod.pod_images_and_videos ?? []).map((m) => ({ url: m.url, type: m.type })),
+  }}
+  editableFields={['pod_title', 'pod_description', 'pod_images_and_videos']}
+  readOnlyContext={[
+    { label: 'Club', value: clubName(pod.club_id) },
+    { label: 'Place', value: pod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(pod.venue_id) },
+  ]}
+  busy={busy}
+  error={error}
+  onClose={onClose}
+  onSubmit={save}
+  onPickImage={onPickImage}
+/>
+```
+
+## Sample data
+
+`PodContentValues` is the whole input — three fields, no config object. Note the third media row
+carries `type: null`: that is real data, written before the dialog started stamping `'IMAGE'`.
+
+```ts
+import type { PodContentValues } from '@duncit/portal-pod-form';
+
+export const podContent: PodContentValues = {
+  pod_title: 'Sunday Sourdough Workshop',
+  pod_description: 'Hands-on levain build, shaping and bake. Take home two loaves.',
+  pod_images_and_videos: [
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg', type: 'IMAGE' },
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-tour.mp4', type: 'VIDEO' },
+    { url: 'https://ik.imagekit.io/duncit/pods/legacy-upload.jpg', type: null },
+  ],
+};
+
+export const readOnlyContext = [
+  { label: 'Club', value: 'Bengaluru Bakers Collective' },
+  { label: 'Place', value: 'Third Wave Coffee, Indiranagar' },
+  { label: 'When', value: '09 Aug 2026, 10:30 AM' },
+  { label: 'Spots', value: '8 of 12 taken' },
+];
+```
+
+## Worked examples
+
+### `podContentSchema.parse(...)` on valid values
+
+Passing the sample with a padded title (`'  Sunday Sourdough Workshop  '`) returns:
+
+```js
+{
+  pod_title: 'Sunday Sourdough Workshop',   // .trim() is part of the schema, not the UI
+  pod_description: 'Hands-on levain build, shaping and bake. Take home two loaves.',
+  pod_images_and_videos: [
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg', type: 'IMAGE' },
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-tour.mp4', type: 'VIDEO' },
+    { url: 'https://ik.imagekit.io/duncit/pods/legacy-upload.jpg', type: null }
+  ]
+}
+```
+
+`type` is `z.string().nullish()`, so a `null` from older data survives the parse untouched — which
+is exactly why every call site writes `type: m.type || 'IMAGE'` when mapping back to the mutation.
+
+### The failure cases
+
+`safeParse({ pod_title: 'S', pod_description: '   ', pod_images_and_videos: [] })`:
+
+```js
+[
+  { path: 'pod_title',      message: 'Name must be at least 2 characters' },
+  { path: 'pod_description', message: 'Description is required' }
+]
+```
+
+An **empty** media list is valid — the schema requires an array, not a non-empty one. A pod can be
+saved with every image removed, so if your surface needs at least one, enforce it at the call site.
+
+A blank URL inside a row is not valid, and the error is per-row:
+
+```js
+[
+  { path: 'pod_images_and_videos.0.url', message: 'String must contain at least 1 character(s)' }
+]
+```
+
+That message is Zod's default (`z.string().min(1)` carries no custom text), so it will read
+untranslated next to the two hand-written messages — worth knowing before you surface it.
+
+## Props / API
+
+### `<PodContentFormDialog>`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `open` | `boolean` | yes | — | Dialog visibility. |
+| `title` | `string` | no | `'Edit pod'` | Dialog heading. |
+| `defaultValues` | `PodContentValues` | yes | — | Seed values; the form `reset()`s each time `open` flips true. |
+| `editableFields` | `PodField[]` | yes | — | Which fields accept input; the rest render **read-only**. |
+| `readOnlyContext` | `ReadOnlyContextItem[]` | no | `[]` | `{ label, value }` facts shown above the fields; the dialog formats nothing. |
+| `busy` | `boolean` | no | `false` | Disables the actions while the mutation runs. |
+| `error` | `string \| null` | no | `undefined` | Server error rendered as an `Alert`. |
+| `onClose` | `() => void` | yes | — | Close handler. |
+| `onSubmit` | `(values: PodContentValues) => void \| Promise<void>` | yes | — | Called with schema-validated values. |
+| `onPickImage` | `() => Promise<string \| null>` | no | `undefined` | Media picker; **omitting it hides the add-image button entirely**. |
+
+### Types and the schema
+
+| Export | Shape | Meaning |
+| --- | --- | --- |
+| `podContentSchema` | `ZodObject` | The three-field contract; `.parse` trims title and description. |
+| `PodContentValues` | `z.infer<typeof podContentSchema>` | `{ pod_title, pod_description, pod_images_and_videos }`. |
+| `PodField` | `'pod_title' \| 'pod_description' \| 'pod_images_and_videos'` | The `editableFields` vocabulary — all three values, no more. |
+| `PodMedia` | `{ url: string; type?: string \| null }` | One media row. |
+| `ReadOnlyContextItem` | `{ label: string; value: string }` | One context line; both already-formatted strings. |
+
+### Validation rules, in full
+
+| Field | Rule | Message |
+| --- | --- | --- |
+| `pod_title` | trimmed, min 2 | `Name must be at least 2 characters` |
+| `pod_description` | trimmed, min 1 | `Description is required` |
+| `pod_images_and_videos[].url` | min 1 | Zod default |
+| `pod_images_and_videos[].type` | `string`, nullish | — |
+
+## Live preview
+
+`docs-site` can now mount live React islands via `<Preview>`, but this dialog is not previewed here
+yet. It is close to previewable — no Apollo, no date adapter — so the only blockers are adding
+`@duncit/portal-pod-form` (plus its `react-hook-form` / `zod` / `@hookform/resolvers` peers) to
+`docs-site`, and a small wrapper holding the `open` state so the reader can reopen it after closing.
+
+The slot is a single `<Preview>` mounting the dialog with `podContent` as `defaultValues`,
+`editableFields={['pod_title', 'pod_description']}` so a reader can *see* what "disabled, not
+hidden" looks like, and `readOnlyContext` from the sample above. Until then, treat the worked
+examples as the contract.
+
+## Not the same package as `@duncit/pod-form`
+
+The names are close enough to pick the wrong one. They are not variants of each other:
+
+| | `@duncit/pod-form` | `@duncit/portal-pod-form` |
+| --- | --- | --- |
+| Scope | the whole create/edit pod form — mode, venue slot, hosts, products, finance, reel | three content fields |
+| Driven by | a `PodFormConfig` of feature booleans | an `editableFields` array |
+| Emits | a full `CreatePodInput` via `buildPodInput` | plain `PodContentValues` you map yourself |
+
+If you need to change a pod's schedule, venue, price or hosts, this is the wrong package.
+
+## `editableFields` disables — it does not hide
+
+Any `PodField` not listed renders **read-only**, not absent. That is deliberate: the host still sees
+the description they cannot change. Contextual facts that are never editable (date, place, attendee
+count) go in `readOnlyContext` as `{ label, value }` strings — the dialog does no formatting, so
+date strings must already be formatted by the caller with `date-fns` against the admin-configured
+format.
+
+## The caller owns media, the dialog owns the list
+
+`onPickImage` is a promise the host app fulfils with `@duncit/media-picker`; the dialog only appends
+the resolved URL to its `useFieldArray`. It stamps `type: 'IMAGE'` on newly added entries, which is
+why every call site writes `type: m.type || 'IMAGE'` when mapping back to the mutation — existing
+rows can carry a null type from older data.
+
+Omitting `onPickImage` leaves the media list add-button unrendered, so the pick handler is never
+reachable. That unreachable `if (!onPickImage) return;` guard at `PodContentFormDialog.tsx:68` is
+the single branch keeping the package off a 100% branch gate.
+
+## Peer dependencies and the coverage threshold
+
+`react`, `@mui/material`, `@mui/icons-material`, `react-hook-form`, `zod` and `@hookform/resolvers`
+are all peers; the package declares no runtime dependencies of its own. MUI means portal-only —
+nothing here is reusable by the native app.
+
+`vitest.config.ts` requires 100% statements, functions and lines but caps **branches at 95**, which
+is the achieved 20/21 for the defensive guard above. Treat 95 as a ceiling that was measured, not
+slack to spend: a second uncovered branch drops the ratio below it and fails the run.

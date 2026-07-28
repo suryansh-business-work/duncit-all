@@ -18,8 +18,19 @@ export function toTimeSource(value: string | null | undefined): TimeSource {
   return TIME_SOURCES.includes(value as TimeSource) ? (value as TimeSource) : DEFAULT_TIME_SOURCE;
 }
 
+/** Anything that can name an instant: ISO string, epoch ms, Date, or an explicit null. */
+export type Instant = string | number | Date | null;
+
+/**
+ * {@link Instant} or nothing at all — the shape a *parameter* takes.
+ *
+ * Optional properties use `Instant` and let `?` supply the `undefined`;
+ * writing `foo?: InstantInput` would declare `foo?: … | undefined` (S4623).
+ */
+export type InstantInput = Instant | undefined;
+
 /** Milliseconds since epoch, or null when the input is not a usable instant. */
-export function toEpochMs(value: string | number | Date | null | undefined): number | null {
+export function toEpochMs(value: InstantInput): number | null {
   if (value === null || value === undefined || value === '') return null;
   const ms = value instanceof Date ? value.getTime() : new Date(value).getTime();
   return Number.isNaN(ms) ? null : ms;
@@ -28,13 +39,13 @@ export function toEpochMs(value: string | number | Date | null | undefined): num
 export interface ClockInput {
   source: TimeSource;
   /** Server's `now` from the settings response (ISO). */
-  serverNow?: string | number | Date | null;
+  serverNow?: Instant;
   /** Real device time when that response was received (Date.now()). */
   serverNowReceivedAt?: number | null;
   /** Admin's custom anchor instant (ISO) — CUSTOM source only. */
-  customTime?: string | number | Date | null;
+  customTime?: Instant;
   /** Server's real time when the anchor was saved (ISO) — CUSTOM source only. */
-  customTimeSetAt?: string | number | Date | null;
+  customTimeSetAt?: Instant;
   /** Injectable real clock; defaults to Date.now. Tests pass their own. */
   realNow?: () => number;
 }

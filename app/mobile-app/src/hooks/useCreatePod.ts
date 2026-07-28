@@ -89,7 +89,12 @@ export function useCreatePod(draftId?: string) {
     return res.savePodDraft.id;
   };
   const publish = async (id: string, input: ReturnType<typeof buildCreatePodInput>) => {
-    await graphqlRequest(PublishPodDraftDocument, { draft_id: id, input }, { auth: true });
+    const res = await graphqlRequest(
+      PublishPodDraftDocument,
+      { draft_id: id, input },
+      { auth: true },
+    );
+    return res.publishPodDraft;
   };
   // AI + rules moderation preflight run when the host taps "Create Pod".
   const moderate = async (

@@ -22,6 +22,7 @@ import { ShopScreen } from '@/screens/ShopScreen';
 import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { ProductCheckoutScreen } from '@/screens/ProductCheckoutScreen';
 import { CreatePodScreen } from '@/screens/CreatePodScreen';
+import { PodPendingScreen } from '@/screens/PodPendingScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { HostApplyScreen } from '@/screens/HostApplyScreen';
@@ -103,6 +104,7 @@ export function RootNavigator() {
       <Stack.Screen name="Verification" component={VerificationScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="CreatePod" component={CreatePodScreen} />
+      <Stack.Screen name="PodPending" component={PodPendingScreen} />
       <Stack.Screen name="RegisterVenue" component={RegisterVenueScreen} />
       <Stack.Screen name="VenueManage" component={VenueManageScreen} />
       <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />

@@ -214,6 +214,16 @@ export const financeTypeDefs = /* GraphQL */ `
     waterfall: PodFinanceWaterfall!
   }
 
+  """
+  One row of the Create-a-Pod Step-4 "Suggested Ticket Prices" table: an ₹x99
+  candidate ticket price and the host's projected payout at that price (every
+  payable spot sold, all deductions applied at the caller's effective rates).
+  """
+  type SuggestedTicketPrice {
+    price: Float!
+    host_receives: Float!
+  }
+
   enum PodSettlementStatus {
     LIVE
     PENDING_APPROVAL
@@ -401,6 +411,14 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_id: ID
       venue_amount: Float
     ): PodEarningsProjection!
+    """
+    Suggested ₹x99 ticket prices for Create-a-Pod Step 4 — the same input
+    surface as potentialPodEarnings minus the ticket price. Walks 99, 199, 299…
+    and returns the first candidates whose projected host payout is strictly
+    positive: up to 5 rows, fewer near the ₹99,999 cap, empty when no candidate
+    earns the host anything. A ₹0-or-negative payout is never suggested.
+    """
+    suggestedTicketPrices(no_of_spots: Int!, venue_id: ID, venue_amount: Float): [SuggestedTicketPrice!]!
     # Host Studio dashboard earnings summary (signed-in host).
     myHostEarningsSummary: EarningsSummary!
     # Host Studio insights charts (signed-in host): status distribution

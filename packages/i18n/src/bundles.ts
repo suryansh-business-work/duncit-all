@@ -26,6 +26,27 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     account: {
       preferences: 'Preferences',
     },
+    createPod: {
+      step4: {
+        noEarningsTitle: 'No Earnings Generated',
+        noEarningsDescription:
+          'Based on the current Ticket Price, your estimated earnings are ₹0 after applicable deductions. Please increase the Ticket Price to earn from this Pod.',
+        venueShortfall:
+          'Your venue price is greater than the total Pod value. Please increase the Ticket Price so that the total Pod value is equal to or greater than the Venue Price.',
+        suggestedPriceLink: 'Suggested Price',
+        suggestedPriceModalTitle: 'Suggested Ticket Prices',
+        suggestedPriceColumn: 'Suggested Price',
+        whatYouGetColumn: 'What You Get',
+        close: 'Close',
+        tierFirst: 'Most affordable option for attendees, with a small earning for you.',
+        tierSecond: 'A balanced price point between affordability and your earnings.',
+        tierThird: 'Better earnings while keeping the Pod accessible to attendees.',
+        tierFourth: 'Premium pricing with strong earnings on every spot.',
+        tierFifth: 'Best suited for high-value, exclusive Pod experiences.',
+        recommendationNote:
+          'We recommend choosing a price that balances affordability for attendees with meaningful earnings for you. Prices ending in ₹99 tend to perform best.',
+      },
+    },
     shop: {
       title: 'Pod Shop',
       emptyState: 'No products match your filters.',

@@ -191,11 +191,13 @@ export const DeletePodDraftDocument = gql(`
   }
 `);
 
-/** Validates + creates the real pod, then deletes the draft. */
+/** Validates + creates the real pod, then deletes the draft. The venue-approval
+ * status routes the host: PENDING → waiting screen, else Host Management. */
 export const PublishPodDraftDocument = gql(`
   mutation MobilePublishPodDraft($draft_id: ID!, $input: CreatePodInput!) {
     publishPodDraft(draft_id: $draft_id, input: $input) {
       id
+      venue_approval_status
     }
   }
 `);

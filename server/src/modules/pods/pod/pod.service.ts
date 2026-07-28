@@ -14,6 +14,7 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import { breakdownService } from '@modules/finance/finance/breakdown.service';
 import {
   sendPodCancelledEmail,
   sendPodRefundEmail,
@@ -1070,6 +1071,16 @@ export const podService = {
     const venueLocation = podMode === 'PHYSICAL'
       ? await resolveVenueLocation(input)
       : { venue_id: null, location_id: null, zone_name: null };
+    // API-side mirror of the Step-4 UI rules: a paid pod must cover the venue's
+    // slot price and leave the host a positive projected payout (finance owns
+    // the math). Free pods are exempt; the slot price is the venue's money.
+    await breakdownService.assertViablePodEconomics({
+      hostUserId: String(input.pod_hosts_id[0]),
+      podAmount: input.pod_amount ?? 0,
+      noOfSpots: input.no_of_spots ?? 0,
+      venueId: venueLocation.venue_id,
+      venueAmount: slotDoc ? slotDoc.price : 0,
+    });
     const clubCategory = await resolveClubCategory(input.club_id);
     const productRequests = await buildProductRequests(
       !!input.products_enabled,
@@ -1246,6 +1257,21 @@ export const podService = {
     // request must move to a new slot (or the host's own venue / a plain
     // location). assertPartnerVenue enforces exactly that split.
     await applyResubmitPhysicalVenue(doc, input, slotDoc, nextMode, userId);
+
+    // Same Step-4 economics guard as create, on the MERGED (input over stored)
+    // values — a resubmitted paid pod must still cover its venue price and
+    // leave the host a positive projected payout.
+    const resubmitVenueId =
+      nextMode === 'PHYSICAL'
+        ? input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null)
+        : null;
+    await breakdownService.assertViablePodEconomics({
+      hostUserId: userId,
+      podAmount: input.pod_amount ?? doc.pod_amount ?? 0,
+      noOfSpots: input.no_of_spots ?? doc.no_of_spots ?? 0,
+      venueId: resubmitVenueId,
+      venueAmount: slotDoc ? slotDoc.price : 0,
+    });
 
     const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);

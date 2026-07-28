@@ -49,6 +49,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Verification: 'verification',
       Wallet: 'host/wallet',
       CreatePod: 'create-pod',
+      PodPending: 'host/pod-pending/:podId',
       Earn: 'earn',
       RegisterVenue: 'register-venue',
       VenueManage: 'venues/manage',

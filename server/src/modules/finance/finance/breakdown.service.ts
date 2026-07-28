@@ -27,6 +27,19 @@ export interface PodEarningsProjection {
   waterfall: SettlementWaterfall;
 }
 
+/** One row of the Step-4 "Suggested Ticket Prices" table. */
+export interface SuggestedTicketPrice {
+  price: number;
+  host_receives: number;
+}
+
+// ₹x99 candidate ladder for suggestedTicketPrices: 99, 199, 299, … capped so a
+// pathological venue price can never spin the loop unbounded.
+const SUGGESTED_PRICE_FIRST = 99;
+const SUGGESTED_PRICE_STEP = 100;
+const SUGGESTED_PRICE_CAP = 99_999;
+const SUGGESTED_PRICE_COUNT = 5;
+
 export interface PodFinanceBreakdownView {
   pod_id: string;
   pod_title: string;
@@ -139,6 +152,27 @@ function waterfallFromSnapshot(hostRelease: IPaymentRelease, venueRelease: IPaym
   };
 }
 
+/** Shared input validation for the create-pod money previews
+ * (potentialPodEarnings / suggestedTicketPrices). Returns the venue price that
+ * actually applies: the given amount with a venue selected, 0 otherwise. */
+function assertPreviewInputs(
+  noOfSpots: number,
+  venueId?: string | null,
+  venueAmount?: number | null
+): number {
+  if (!Number.isFinite(noOfSpots) || noOfSpots < 0) {
+    throw new GraphQLError('Spots must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const venuePrice = venueAmount ?? 0;
+  if (!Number.isFinite(venuePrice) || venuePrice < 0) {
+    throw new GraphQLError('Venue amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (venueId && !Types.ObjectId.isValid(venueId)) {
+    throw new GraphQLError('Invalid venue', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return venueId ? venuePrice : 0;
+}
+
 export const breakdownService = {
   /**
    * The complete financial breakdown for one pod. Settled/submitted pods with a
@@ -228,16 +262,7 @@ export const breakdownService = {
     if (!Number.isFinite(podAmount) || podAmount < 0) {
       throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    if (!Number.isFinite(noOfSpots) || noOfSpots < 0) {
-      throw new GraphQLError('Spots must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const venuePrice = venueAmount ?? 0;
-    if (!Number.isFinite(venuePrice) || venuePrice < 0) {
-      throw new GraphQLError('Venue amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    if (venueId && !Types.ObjectId.isValid(venueId)) {
-      throw new GraphQLError('Invalid venue', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
+    const venuePrice = assertPreviewInputs(noOfSpots, venueId, venueAmount);
     const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
     // The host's spot is free — only (total - 1) spots are ever billed.
     const billable = payableSpots(noOfSpots);
@@ -245,8 +270,84 @@ export const breakdownService = {
     return {
       total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
       payable_spots: billable,
-      waterfall: waterfallForAmount(amount, venueId ? venuePrice : 0, rates),
+      // PREVIEW: the venue's fixed price is NEVER auto-reduced to fit the pool
+      // — a shortfall renders as negative host earnings so the clients can show
+      // the real gap. Settlement keeps the legacy clamp (see breakdown.math).
+      waterfall: waterfallForAmount(amount, venuePrice, rates, { clampVenueToPool: false }),
     };
+  },
+
+  /** Step-4 "Suggested Ticket Prices": walks the ₹x99 ladder (99, 199, 299, …)
+   * at the caller's effective rates and returns the first candidates whose
+   * projected host payout is STRICTLY positive (an exactly-₹0 payout is never
+   * suggested) — up to 5 rows, fewer near the ₹99,999 cap, empty when no
+   * candidate earns the host anything (unset spots, or a venue price no
+   * candidate can cover). Same input surface as potentialPodEarnings minus the
+   * ticket price. */
+  async suggestedTicketPrices(
+    hostUserId: string,
+    noOfSpots: number,
+    venueId?: string | null,
+    venueAmount?: number | null
+  ): Promise<SuggestedTicketPrice[]> {
+    const venuePrice = assertPreviewInputs(noOfSpots, venueId, venueAmount);
+    const billable = payableSpots(noOfSpots);
+    if (billable <= 0) return [];
+    const rates = await resolveEffectiveRates({ hostUserId, venueId: venueId ?? null });
+    const rows: SuggestedTicketPrice[] = [];
+    for (
+      let price = SUGGESTED_PRICE_FIRST;
+      price <= SUGGESTED_PRICE_CAP && rows.length < SUGGESTED_PRICE_COUNT;
+      price += SUGGESTED_PRICE_STEP
+    ) {
+      const waterfall = waterfallForAmount(round2(price * billable), venuePrice, rates, {
+        clampVenueToPool: false,
+      });
+      if (waterfall.host_receives > 0) {
+        rows.push({ price, host_receives: waterfall.host_receives });
+      }
+    }
+    return rows;
+  },
+
+  /**
+   * Create/edit guard shared by createPod, createPartnerPod and
+   * hostResubmitPod: a PAID pod must (a) fully cover the venue's fixed slot
+   * price with its total pod value (ticket price × payable spots) and (b)
+   * leave the host a strictly positive projected payout. Free pods (amount 0)
+   * are exempt. Settlement NEVER calls this — legacy shortfall pods keep
+   * settling under the clamped engine unchanged.
+   */
+  async assertViablePodEconomics(input: {
+    hostUserId: string | null;
+    podAmount: number;
+    noOfSpots: number;
+    venueId?: string | null;
+    venueAmount?: number | null;
+  }): Promise<void> {
+    const podAmount = Number(input.podAmount) || 0;
+    if (podAmount <= 0) return;
+    const venuePrice = input.venueId ? Math.max(0, Number(input.venueAmount) || 0) : 0;
+    const totalPodValue = round2(podAmount * payableSpots(Number(input.noOfSpots) || 0));
+    if (totalPodValue < venuePrice) {
+      throw new GraphQLError(
+        'Total pod value is less than the venue price. Increase the ticket price so the pod covers the venue.',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
+    const rates = await resolveEffectiveRates({
+      hostUserId: input.hostUserId,
+      venueId: input.venueId ?? null,
+    });
+    const { host_receives } = waterfallForAmount(totalPodValue, venuePrice, rates, {
+      clampVenueToPool: false,
+    });
+    if (host_receives <= 0) {
+      throw new GraphQLError(
+        'Estimated host earnings are ₹0 for this ticket price. Increase the ticket price to earn from this pod.',
+        { extensions: { code: 'BAD_USER_INPUT' } }
+      );
+    }
   },
 
   /** Host Studio dashboard summary — lifetime/pending/this-month payout totals

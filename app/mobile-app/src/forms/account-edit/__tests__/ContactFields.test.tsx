@@ -37,6 +37,8 @@ describe('ContactFields', () => {
     // The whatsapp country-code picker is locked while mirroring.
     fireEvent.press(screen.getByTestId('whatsapp-code-trigger'));
     expect(screen.queryByTestId('whatsapp-code-sheet')).toBeNull();
+    // ...and so is the number itself — it only ever mirrors the contact number.
+    expect(screen.getByTestId('field-whatsapp_number')).toHaveProp('editable', false);
   });
 
   it('defaults the toggle OFF when the numbers differ', () => {
@@ -47,6 +49,8 @@ describe('ContactFields', () => {
     // The whatsapp country-code picker opens when not mirroring.
     fireEvent.press(screen.getByTestId('whatsapp-code-trigger'));
     expect(screen.getByTestId('whatsapp-code-sheet')).toBeOnTheScreen();
+    // The number is typeable again once it no longer mirrors.
+    expect(screen.getByTestId('field-whatsapp_number')).toHaveProp('editable', true);
   });
 
   it('mirrors the contact number live while the toggle is on (bug 3)', async () => {

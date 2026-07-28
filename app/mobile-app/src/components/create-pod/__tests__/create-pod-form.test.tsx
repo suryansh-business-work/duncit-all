@@ -126,6 +126,35 @@ describe('createPodSchema', () => {
     expect(issuesOf(valid({ no_of_spots_text: '-2' }))).toContain('no_of_spots_text');
   });
 
+  it('accepts only the FREE/PAID pair and keeps FREE virtual-only', () => {
+    const messagesFor = (over: Partial<CreatePodFormValues>) => {
+      const result = createPodSchema.safeParse(valid(over));
+      return result.success
+        ? []
+        : result.error.issues.filter((i) => i.path[0] === 'pod_type').map((i) => i.message);
+    };
+    // Retired types (and anything else) are no longer a valid choice.
+    expect(messagesFor({ pod_type: 'NATIVE_FREE' })).toEqual(['Choose Free or Paid']);
+    // An unset type also trips the base `min(1)` rule, so assert on the family choice.
+    expect(messagesFor({ pod_type: '' })).toContain('Choose Free or Paid');
+    // FREE is virtual-only, so a physical pod may not be free.
+    expect(messagesFor({ pod_type: 'FREE', pod_amount_text: '0' })).toEqual([
+      'Physical pods must be Paid',
+    ]);
+    // The two legal combinations raise nothing.
+    expect(messagesFor({ pod_type: 'PAID' })).toEqual([]);
+    expect(
+      messagesFor({
+        pod_type: 'FREE',
+        pod_amount_text: '0',
+        pod_mode: 'VIRTUAL',
+        venue_id: '',
+        venue_slot_id: '',
+        meeting_url: 'https://meet.duncit.com/x',
+      }),
+    ).toEqual([]);
+  });
+
   it('forces free pods to amount 0 and gates enabled products', () => {
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount_text: '100' }))).toContain(
       'pod_amount_text',
@@ -219,5 +248,16 @@ describe('draft serialize/hydrate', () => {
     expect(draft.step).toBe(3);
     expect(hydrateDraft(draft.payload).what_this_pod_offers).toEqual(['A']);
     expect(hydrateDraft('not-json')).toEqual(blankCreatePodForm);
+  });
+
+  it('coerces a retired pod type from an old draft onto the FREE/PAID pair', () => {
+    const asDraft = (over: Record<string, unknown>) =>
+      hydrateDraft(JSON.stringify({ ...blankCreatePodForm, ...over })).pod_type;
+    // A physical pod is always PAID, whatever the old draft stored.
+    expect(asDraft({ pod_mode: 'PHYSICAL', pod_type: 'NATIVE_FREE' })).toBe('PAID');
+    expect(asDraft({ pod_mode: 'PHYSICAL', pod_type: 'FREE' })).toBe('PAID');
+    // A virtual pod keeps FREE and maps every retired paid type onto PAID.
+    expect(asDraft({ pod_mode: 'VIRTUAL', pod_type: 'FREE' })).toBe('FREE');
+    expect(asDraft({ pod_mode: 'VIRTUAL', pod_type: 'NATIVE_PAID' })).toBe('PAID');
   });
 });

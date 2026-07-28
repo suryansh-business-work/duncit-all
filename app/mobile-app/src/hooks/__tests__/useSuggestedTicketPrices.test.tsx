@@ -63,4 +63,20 @@ describe('useSuggestedTicketPrices', () => {
     });
     expect(result.current.prices).toEqual([]);
   });
+
+  it('ignores a rejection that lands after unmount', async () => {
+    let reject!: (reason: unknown) => void;
+    mockRequest.mockReturnValue(
+      new Promise((_r, rj) => {
+        reject = rj;
+      }),
+    );
+    const { result, unmount } = renderHook(() => useSuggestedTicketPrices(true, 30, null, null));
+    unmount();
+    await act(async () => {
+      reject(new Error('down'));
+    });
+    expect(result.current.error).toBe(false);
+    expect(result.current.isLoading).toBe(true);
+  });
 });

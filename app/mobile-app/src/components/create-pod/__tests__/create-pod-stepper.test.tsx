@@ -289,6 +289,38 @@ describe('CreatePodStepper', () => {
     expect(onPublish.mock.calls[0]?.[1].venue_slot_id).toBeNull();
   });
 
+  it('publishes a free virtual pod and drops FREE when the mode flips back to physical', async () => {
+    const { onPublish } = setup();
+    await fillToPricing('VIRTUAL');
+    // A virtual pod may be Free; picking it locks the ticket price at zero.
+    press('create-pod-free');
+    expect(screen.getByTestId('create-pod-free')).toHaveProp('aria-pressed', true);
+    expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('editable', false);
+    expect(screen.getByTestId('pod_amount_text-hint')).toHaveTextContent('Free pods are ₹0.');
+
+    // Back to the location step and flip to Physical — FREE is virtual-only, so
+    // the pick must not survive the switch.
+    press('create-pod-back');
+    await screen.findByTestId('field-meeting_url');
+    press('create-pod-back');
+    await screen.findByTestId('create-pod-mode-PHYSICAL');
+    press('create-pod-mode-PHYSICAL');
+    press('create-pod-submit');
+    // Finish the physical path and confirm the pod is back on Paid.
+    await screen.findByTestId('create-pod-venue-v1');
+    press('create-pod-venue-v1');
+    press('create-pod-space-Whole venue');
+    await screen.findByTestId('create-pod-slot-s1');
+    press('create-pod-slot-s1');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-paid');
+    expect(screen.queryByTestId('create-pod-free')).toBeNull();
+    expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-pressed', true);
+    press('create-pod-submit');
+    await waitFor(() => expect(onPublish).toHaveBeenCalled());
+    expect(onPublish.mock.calls[0]?.[1].pod_type).toBe('PAID');
+  });
+
   it('shows clubs from every category when the host has no linked categories', async () => {
     setup({ hostCategories: [] });
     await fillBasics();

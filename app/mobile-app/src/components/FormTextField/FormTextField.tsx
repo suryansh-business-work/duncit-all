@@ -50,6 +50,7 @@ export function FormTextField<T extends FieldValues>({
   hint,
   labelAction,
   secureTextEntry,
+  editable,
   ...inputProps
 }: Readonly<FormTextFieldProps<T>>) {
   const { field, fieldState } = useController({ control, name });
@@ -83,6 +84,10 @@ export function FormTextField<T extends FieldValues>({
           onBlur={field.onBlur}
           secureTextEntry={isSecure && !visible}
           aria-label={label}
+          // Tamagui's <Input> recomputes `editable` as `!disabled && !readOnly`
+          // *after* spreading incoming props, so a passed `editable` never
+          // reaches the host TextInput. Translate it to the prop it honours.
+          readOnly={editable === false}
           {...inputProps}
         />
         {isSecure ? (

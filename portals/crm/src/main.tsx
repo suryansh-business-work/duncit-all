@@ -7,8 +7,6 @@ import { appConfig } from './config/app-config';
 import { dataGrid } from './theme';
 import App from './App';
 
-const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
-
 const loadUser = createSessionUserLoader(apolloClient);
 
 mountPortal({
@@ -21,7 +19,6 @@ mountPortal({
   },
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
-  googleClientId: GOOGLE_CLIENT_ID,
   logsPortal: logs.portal.crm,
   loadUser,
   themeExtend: dataGrid,

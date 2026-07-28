@@ -92,17 +92,12 @@ export interface RichTestResult {
   data?: string | null;
 }
 
-export type EnvCategory =
-  | 'EMAIL'
-  | 'IMAGEKIT'
-  | 'PEXELS'
-  | 'GOOGLE_OAUTH'
-  | 'GOOGLE_MAPS'
-  | 'TWILIO'
-  | 'OPENAI'
-  | 'GEMINI'
-  | 'SERVAM'
-  | 'RAZORPAY';
+/**
+ * The category key as sent by the server's `envCategories` query. Deliberately
+ * NOT a client-side union: the server owns the catalogue (CATEGORY_FIELDS in
+ * envEntry.fields.ts), so a new category must appear here with no portal edit.
+ */
+export type EnvCategory = string;
 
 export interface EnvFieldDef {
   name: string;
@@ -120,121 +115,6 @@ export interface EnvCategoryDef {
   fields: EnvFieldDef[];
   docUrl?: string | null;
 }
-
-const f = (name: string, label: string, extra: Partial<EnvFieldDef> = {}): EnvFieldDef => ({
-  name,
-  label,
-  secret: false,
-  number: false,
-  bool: false,
-  ...extra,
-});
-
-/**
- * Static category definitions (tabs + form fields) mirroring the server's
- * CATEGORY_FIELDS. Used so the tabs, the Add button and the form ALWAYS work,
- * even while the envCategories query is loading or the API is briefly
- * unavailable (e.g. during a deploy). The query, when present, overrides this.
- */
-export const CATEGORY_DEFS: EnvCategoryDef[] = [
-  {
-    category: 'EMAIL',
-    label: 'Email (SMTP)',
-    docUrl: 'https://support.google.com/a/answer/176600',
-    fields: [
-      f('host', 'SMTP Host', { hint: 'e.g. smtp.gmail.com' }),
-      f('port', 'Port', { number: true, hint: '465 (SSL) or 587 (TLS)' }),
-      f('user', 'Username', { hint: 'Full mailbox address' }),
-      f('password', 'Password', { secret: true, hint: 'SMTP password or app password' }),
-      f('secure', 'Use TLS', { bool: true }),
-      f('from_address', 'From Address', { hint: 'no-reply@yourdomain.com' }),
-      f('from_name', 'From Name'),
-      f('reply_to', 'Reply-To'),
-    ],
-  },
-  {
-    category: 'IMAGEKIT',
-    label: 'ImageKit',
-    docUrl: 'https://imagekit.io/dashboard/developer/api-keys',
-    fields: [
-      f('public_key', 'Public Key', { hint: 'public_xxxxxxxxxxxxxxxx' }),
-      f('private_key', 'Private Key', { secret: true, hint: 'private_xxxxxxxxxxxxxxxx' }),
-      f('url_endpoint', 'URL Endpoint', { hint: 'https://ik.imagekit.io/your_id' }),
-    ],
-  },
-  {
-    category: 'PEXELS',
-    label: 'Pexels',
-    docUrl: 'https://www.pexels.com/api/',
-    fields: [f('api_key', 'API Key', { secret: true, hint: '56-char alphanumeric key' })],
-  },
-  {
-    category: 'GOOGLE_OAUTH',
-    label: 'Google OAuth',
-    docUrl: 'https://console.cloud.google.com/apis/credentials',
-    fields: [
-      f('client_id', 'OAuth Client ID', { hint: 'xxxxxx.apps.googleusercontent.com' }),
-      f('client_secret', 'OAuth Client Secret', { secret: true, hint: 'GOCSPX-xxxxxxxxxxxxxxxx' }),
-    ],
-  },
-  {
-    category: 'GOOGLE_MAPS',
-    label: 'Google Map',
-    docUrl: 'https://console.cloud.google.com/google/maps-apis/credentials',
-    fields: [f('maps_api_key', 'Maps API Key', { secret: true, hint: 'AIzaSy... (39 chars)' })],
-  },
-  {
-    category: 'TWILIO',
-    label: 'Twilio',
-    docUrl: 'https://console.twilio.com/',
-    fields: [
-      f('account_sid', 'Account SID', { hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' }),
-      f('auth_token', 'Auth Token', { secret: true, hint: '32-char hex token' }),
-      f('phone_number', 'Phone Number', { phone: true, hint: 'E.164, e.g. +14155552671 — caller ID for outbound calls' }),
-      f('agent_phone_number', 'Agent Phone Number (optional)', { phone: true, hint: 'Fallback agent leg for Call Through Portal; the logged-in user’s own phone is used first' }),
-    ],
-  },
-  {
-    category: 'OPENAI',
-    label: 'OpenAI',
-    docUrl: 'https://platform.openai.com/api-keys',
-    fields: [
-      f('base_url', 'Base URL (optional)', { hint: 'https://api.openai.com/v1' }),
-      f('model', 'Model (default gpt-4o-mini)', { hint: 'e.g. gpt-4o-mini' }),
-      f('api_key', 'API Key', { secret: true, hint: 'sk-proj-... or sk-...' }),
-    ],
-  },
-  {
-    category: 'GEMINI',
-    label: 'Gemini',
-    docUrl: 'https://aistudio.google.com/app/apikey',
-    fields: [
-      f('model', 'Model (default gemini-1.5-flash)', { hint: 'e.g. gemini-1.5-flash' }),
-      f('api_key', 'API Key', { secret: true, hint: 'AIzaSy... (39 chars)' }),
-    ],
-  },
-  {
-    category: 'SERVAM',
-    label: 'Servam AI (Sarvam)',
-    docUrl: 'https://dashboard.sarvam.ai/admin',
-    fields: [
-      f('api_key', 'API Key', { secret: true, hint: 'Sarvam subscription key (sk_...)' }),
-      f('base_url', 'Base URL (optional)', { hint: 'https://api.sarvam.ai' }),
-      f('tts_model', 'TTS Model (default bulbul:v2)', { hint: 'e.g. bulbul:v2' }),
-      f('default_voice', 'Default Voice', { hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' }),
-    ],
-  },
-  {
-    category: 'RAZORPAY',
-    label: 'Razorpay',
-    docUrl: 'https://dashboard.razorpay.com/app/keys',
-    fields: [
-      f('key_id', 'Key ID', { hint: 'Test: rzp_test_xxxxxxxx · Live: rzp_live_xxxxxxxx (public)' }),
-      f('key_secret', 'Key Secret', { secret: true, hint: 'Razorpay API key secret (test or live)' }),
-      f('webhook_secret', 'Webhook Secret (optional)', { secret: true, hint: 'Used to verify Razorpay webhooks' }),
-    ],
-  },
-];
 
 export interface EnvEntry {
   id: string;

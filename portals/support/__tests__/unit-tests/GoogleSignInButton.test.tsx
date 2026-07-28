@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
+import { setGoogleClientId } from '@duncit/shell';
 import { renderWithProviders } from '../testkit';
 
 const glogin = vi.hoisted(() => ({ props: null as any }));
@@ -18,7 +19,7 @@ vi.mock('@react-oauth/google', () => ({
 }));
 
 afterEach(() => {
-  vi.unstubAllEnvs();
+  setGoogleClientId('');
   localStorage.clear();
 });
 
@@ -28,14 +29,8 @@ describe('GoogleSignInButton', () => {
     expect(screen.getByText(/google sign-in not configured/i)).toBeInTheDocument();
   });
 
-  it('treats the placeholder client id as unconfigured', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'your_client_id_here');
-    renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} />);
-    expect(screen.getByText(/google sign-in not configured/i)).toBeInTheDocument();
-  });
-
   it('renders the Google button and forwards a credential', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const onCredential = vi.fn();
     renderWithProviders(<GoogleSignInButton onCredential={onCredential} />);
     fireEvent.click(screen.getByTestId('glogin'));
@@ -43,7 +38,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('ignores a success response with no credential and a Google error', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const onCredential = vi.fn();
     renderWithProviders(<GoogleSignInButton onCredential={onCredential} />);
     glogin.props.onSuccess({});
@@ -52,7 +47,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('uses the light Google theme + overlay and recomputes width on resize', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const light = createTheme({ palette: { mode: 'light' } });
     const { container } = render(
       <ThemeProvider theme={light}>
@@ -67,7 +62,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('uses the dark Google theme + overlay when the MUI palette is dark', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const dark = createTheme({ palette: { mode: 'dark' } });
     const { container } = render(
       <ThemeProvider theme={dark}>

@@ -40,6 +40,14 @@ export const createSession = (_tokenKey: string, _roles: unknown, _fullName: str
   accessDeniedMessage: 'access denied',
 });
 
+/** Mirrors the shell's runtime Google client-id store (set at boot from the
+ *  Tech portal env), so components reading it can be driven from a test. */
+let googleClientId = '';
+export const getGoogleClientId = () => googleClientId;
+export const setGoogleClientId = (next?: string | null) => {
+  googleClientId = next?.trim() ?? '';
+};
+
 export const createApolloClient = (_opts: any) => ({});
 export const parseEnvRoles = (_env: unknown, def: string[]) => def;
 export const mountPortal = vi.fn();

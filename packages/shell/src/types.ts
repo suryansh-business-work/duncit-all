@@ -79,7 +79,11 @@ export interface MountPortalOptions {
   apolloClient: ApolloClient<unknown>;
   /** Server GraphQL URL — also used to derive the `/logs` ingest + PortalModeGate. */
   graphqlUrl: string;
-  /** Google OAuth client id (blank disables Google sign-in). */
+  /**
+   * Optional Google OAuth client id override. The id normally comes from the
+   * server at runtime (the Tech portal's env store); this is only the fallback
+   * used when the server has none. Blank on both sides disables Google sign-in.
+   */
   googleClientId?: string;
   /** The portal's `logs.portal.<x>` sink. Structured logging is now done at the
    * file level (`logs.portal.<x>.error(...)`), so this is no longer wired into a

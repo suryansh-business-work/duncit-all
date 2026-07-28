@@ -14,9 +14,10 @@ vi.mock('@react-oauth/google', () => ({
 }));
 
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
+import { setGoogleClientId } from '@duncit/shell';
 
 afterEach(() => {
-  vi.unstubAllEnvs();
+  setGoogleClientId('');
 });
 
 describe('GoogleSignInButton', () => {
@@ -25,14 +26,8 @@ describe('GoogleSignInButton', () => {
     expect(screen.getByText(/Google sign-in not configured/)).toBeInTheDocument();
   });
 
-  it('renders the fallback for the placeholder client id', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'your_client_id_here');
-    render(<GoogleSignInButton onCredential={vi.fn()} />);
-    expect(screen.getByText(/Google sign-in not configured/)).toBeInTheDocument();
-  });
-
   it('renders the SDK button (light theme) and forwards a credential', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-id');
+    setGoogleClientId('real-id');
     const onCredential = vi.fn();
     g.res = { credential: 'tok-123' };
     render(<GoogleSignInButton onCredential={onCredential} />);
@@ -44,7 +39,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('ignores a success without a credential and an onError', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-id');
+    setGoogleClientId('real-id');
     const onCredential = vi.fn();
     g.res = {};
     render(<GoogleSignInButton onCredential={onCredential} />);
@@ -54,14 +49,14 @@ describe('GoogleSignInButton', () => {
   });
 
   it('shows the loading overlay in the light theme', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-id');
+    setGoogleClientId('real-id');
     render(<GoogleSignInButton onCredential={vi.fn()} loading />);
     expect(screen.getByText('gl-theme:outline')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('uses the dark Google theme and shows the loading overlay', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-id');
+    setGoogleClientId('real-id');
     render(
       <ThemeProvider theme={createTheme({ palette: { mode: 'dark' } })}>
         <GoogleSignInButton onCredential={vi.fn()} loading text="continue_with" />

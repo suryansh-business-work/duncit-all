@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
+import { setGoogleClientId } from '@duncit/shell';
 import { renderWithProviders } from '../testkit';
 
 const glogin = vi.hoisted(() => ({ props: null as unknown as Record<string, any> }));
@@ -18,7 +19,7 @@ vi.mock('@react-oauth/google', () => ({
 }));
 
 afterEach(() => {
-  vi.unstubAllEnvs();
+  setGoogleClientId('');
 });
 
 describe('GoogleSignInButton', () => {
@@ -28,14 +29,8 @@ describe('GoogleSignInButton', () => {
     expect(screen.queryByTestId('glogin')).not.toBeInTheDocument();
   });
 
-  it('treats the placeholder client id as unconfigured', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'your_client_id_here');
-    renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} />);
-    expect(screen.getByText(/google sign-in not configured/i)).toBeInTheDocument();
-  });
-
   it('renders the Google button and forwards a credential (custom text)', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const onCredential = vi.fn();
     renderWithProviders(<GoogleSignInButton onCredential={onCredential} text="continue_with" />);
     expect(glogin.props.text).toBe('continue_with');
@@ -45,7 +40,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('ignores a success response with no credential and a Google error', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const onCredential = vi.fn();
     renderWithProviders(<GoogleSignInButton onCredential={onCredential} />);
     glogin.props.onSuccess({});
@@ -54,7 +49,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('shows a loading overlay and recomputes width on resize', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const { container } = renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} loading />);
     expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
     fireEvent(window, new Event('resize'));
@@ -62,7 +57,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('removes the resize listener on unmount', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const removeSpy = vi.spyOn(window, 'removeEventListener');
     const { unmount } = renderWithProviders(<GoogleSignInButton onCredential={vi.fn()} />);
     unmount();
@@ -74,7 +69,7 @@ describe('GoogleSignInButton', () => {
   // the `isDark` ternaries (Google theme + loading-overlay background) is only
   // credited reliably when both outcomes are hit within a single test body.
   it('switches the Google theme and overlay background with the MUI color mode', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const renderMode = (mode: 'light' | 'dark') =>
       render(
         <ThemeProvider theme={createTheme({ palette: { mode } })}>

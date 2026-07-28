@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { GoogleLogin } from '@react-oauth/google';
+import { getGoogleClientId } from '@duncit/shell';
 
 interface Props {
   onCredential: (idToken: string) => void;
@@ -15,11 +16,13 @@ interface Props {
  * The package renders the Google-styled button with the G logo and theme
  * variants — there is nothing to bundle locally. The button automatically
  * switches between the light and dark Google themes to match MUI's color
- * mode, and falls back to a plain MUI tile if no `VITE_GOOGLE_CLIENT_ID`
- * is configured so dev environments fail loud, not silent.
+ * mode, and falls back to a plain MUI tile when no Google client id is
+ * configured in the Tech portal, so a missing credential fails loud, not
+ * silent. The id itself is resolved at runtime by `@duncit/shell` — nothing
+ * about it is baked into this build.
  */
 export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Readonly<Props>) {
-  const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim();
+  const clientId = getGoogleClientId();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [width, setWidth] = useState<number>(320);
@@ -34,7 +37,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
     return () => window.removeEventListener('resize', compute);
   }, []);
 
-  if (!clientId || clientId === 'your_client_id_here') {
+  if (!clientId) {
     return (
       <Box
         sx={{
@@ -51,7 +54,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
         }}
       >
         <Typography variant="body2" fontWeight={700}>
-          Google sign-in not configured (VITE_GOOGLE_CLIENT_ID missing)
+          Google sign-in not configured
         </Typography>
       </Box>
     );

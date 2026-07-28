@@ -23,9 +23,15 @@ export const linking: LinkingOptions<RootStackParamList> = {
   // replays it after sign-in, the native twin of mWeb's `?redirect`.
   getStateFromPath: (path, options) => {
     const bookingId = bookingIdFromPath(path);
-    if (bookingId && !useAuthStore.getState().token) {
+    // Park whenever the Booking screen is NOT in the rendered stack — that is
+    // signed out (Login only) AND signed in with the survey still pending
+    // (Survey only). Checking the token alone covered the first case only: a
+    // user mid-survey had the link silently dropped by React Navigation, with
+    // nothing parked to replay once RootNavigator swapped in the app stack.
+    const { token, surveyCompleted } = useAuthStore.getState();
+    if (bookingId && (!token || !surveyCompleted)) {
       rememberPendingBooking(bookingId);
-      return getStateFromPath('/login', options);
+      return getStateFromPath(token ? '/survey' : '/login', options);
     }
     return getStateFromPath(path, options);
   },

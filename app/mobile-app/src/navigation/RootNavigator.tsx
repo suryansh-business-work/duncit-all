@@ -87,10 +87,16 @@ export function RootNavigator() {
 
   // Replay a booking deep link that arrived while signed out (linking.ts parked
   // it and routed to Login) — the native twin of mWeb's `?redirect` return.
+  //
+  // Readiness is checked BEFORE consuming. consume() clears the parked id, so
+  // doing it first threw the link away whenever the navigator was not ready on
+  // the render where token/surveyCompleted flipped — and these deps never fire
+  // again, so the deep link was lost for good. Cold start then log in was
+  // exactly that path.
   useEffect(() => {
-    if (!token || !surveyCompleted) return;
+    if (!token || !surveyCompleted || !navigationRef.isReady()) return;
     const bookingId = consumePendingBooking();
-    if (bookingId && navigationRef.isReady()) {
+    if (bookingId) {
       navigationRef.navigate('Booking', { bookingId });
     }
   }, [token, surveyCompleted]);

@@ -33,6 +33,24 @@ const duncitRevenue = () => cy.contains('Total Duncit revenue').siblings('h4');
 
 const DEFAULT_DUNCIT_REVENUE = '₹3,563.56';
 
+/**
+ * Replace a numeric field's contents in a single edit — the Cypress equivalent
+ * of the Playwright original's `locator.fill()`.
+ *
+ * `.clear().type(next)` is NOT equivalent on this page: every input is a
+ * controlled `<TextField type="number">` whose `onChange` coerces through
+ * `Number(e.target.value)`, so clearing re-renders the field as "0" and the
+ * digits that follow land *around* that zero (30 -> clear -> "0" -> "10" ->
+ * "100"). Selecting the existing text and overtyping keeps the DOM value and the
+ * React state byte-identical after every keystroke, so the caret never jumps.
+ * The trailing assertion makes a future regression fail here instead of silently
+ * feeding a different number into the waterfall expectations below.
+ */
+const setNumber = (label: string, next: string) => {
+  numberField(label).type(`{selectall}${next}`);
+  return numberField(label).should('have.value', next);
+};
+
 describe('Pod profit calculator', () => {
   beforeEach(() => {
     cy.mockGraphql(baseMocks());
@@ -42,8 +60,13 @@ describe('Pod profit calculator', () => {
 
   it('renders the full waterfall for the default pod', () => {
     cy.contains('Total Duncit revenue').should('be.visible');
-    cy.contains('Total collection').should('be.visible');
-    cy.contains('Reconciles to collection').should('be.visible');
+    cy.contains('p', 'Total collection').should('be.visible');
+    // The results card is `position: sticky`, and Cypress hit-tests a sticky
+    // element's centre against the viewport before calling it visible. At
+    // 1280x800 the card's last row starts below the fold, so it has to be
+    // scrolled to first — Playwright's `toBeVisible()` (the original assertion)
+    // only checked CSS/box geometry and never the viewport.
+    cy.contains('p', 'Reconciles to collection').scrollIntoView().should('be.visible');
 
     // ₹1000 × 30 spots, but the host's spot is free -> 29 payable spots.
     rowValue('Payable spots').should('have.text', '29 of 30');
@@ -53,9 +76,9 @@ describe('Pod profit calculator', () => {
   });
 
   it('recalculates the whole waterfall when the pod pricing inputs change', () => {
-    numberField('Ticket price per spot (GST-inclusive)').clear().type('1500');
-    numberField('No. of spots').clear().type('10');
-    numberField('Venue fixed cost').clear().type('500');
+    setNumber('Ticket price per spot (GST-inclusive)', '1500');
+    setNumber('No. of spots', '10');
+    setNumber('Venue fixed cost', '500');
 
     // ₹1500 × 9 payable spots = ₹13,500 collection, GST 18%, fee 5%,
     // venue ₹500 (−10%), host keeps the rest (−10%).
@@ -90,11 +113,11 @@ describe('Pod profit calculator', () => {
 
   it('clamps a percent typed above its maximum', () => {
     // GST is capped at 28%.
-    percentInput('GST').clear().type('40').should('have.value', '28');
+    percentInput('GST').type('{selectall}40').should('have.value', '28');
   });
 
   it('clamps a venue price above the pool and zeroes the host', () => {
-    numberField('Venue fixed cost').clear().type('1000000');
+    setNumber('Venue fixed cost', '1000000');
 
     // Venue takes the whole ₹23,347.46 pool (−10% commission), host gets nothing.
     rowValue('Venue receives').should('have.text', '₹21,012.71');
@@ -103,7 +126,7 @@ describe('Pod profit calculator', () => {
   });
 
   it('handles a zero spot count without dividing by zero', () => {
-    numberField('No. of spots').clear().type('0');
+    setNumber('No. of spots', '0');
 
     rowValue('Payable spots').should('have.text', '0 of 0');
     rowValue('Total collection').should('have.text', '₹0.00');
@@ -111,8 +134,8 @@ describe('Pod profit calculator', () => {
   });
 
   it('resets the inputs back to the defaults', () => {
-    numberField('Ticket price per spot (GST-inclusive)').clear().type('1500');
-    numberField('No. of spots').clear().type('10');
+    setNumber('Ticket price per spot (GST-inclusive)', '1500');
+    setNumber('No. of spots', '10');
 
     cy.contains('button', 'Reset').click();
 

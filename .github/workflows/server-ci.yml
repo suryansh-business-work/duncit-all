@@ -35,7 +35,6 @@ jobs:
       # mongod. Left unset, mongodb-memory-server picks a version at runtime and
       # the cache would miss on any upstream release.
       MONGOMS_VERSION: 7.0.14
-      MONGOMS_DOWNLOAD_DIR: ~/.cache/mongodb-binaries
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -55,11 +54,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # test/global-setup.ts calls MongoMemoryServer.create(), which downloads a
-      # mongod binary from fastdl.mongodb.org on a cold runner. Nothing cached
-      # it, so every run depended on that fetch succeeding — and when the runner
-      # could not reach external registries the job failed at ~4 minutes with a
-      # bare "exit code 1", while the identical suite passed locally off a warm
-      # cache. Pinning the version keeps the cache key stable.
+      # mongod binary from fastdl.mongodb.org on a cold runner.
+      #
+      # MONGOMS_DOWNLOAD_DIR must be set HERE, not in the job's `env:` block:
+      # Actions does not shell-expand values, and mongodb-memory-server feeds
+      # the value straight to path.resolve() (DryMongoBinary.generatePaths), so
+      # a literal "~/.cache/..." lands in "<cwd>/~/.cache/..." — inside server/,
+      # not the home directory actions/cache saves. The two never met and the
+      # cache could never hit. Deriving both from $HOME keeps them one path.
+      - name: Resolve the mongod cache directory
+        run: echo "MONGOMS_DOWNLOAD_DIR=$HOME/.cache/mongodb-binaries" >> "$GITHUB_ENV"
+
       - name: Cache mongodb-memory-server binary
         uses: actions/cache@v5
         with:
@@ -70,8 +75,22 @@ jobs:
       # Unit + integration + e2e suites against the in-memory Mongo. Serial
       # (--runInBand): the suites share that instance and flake in parallel.
       - name: Test (jest --runInBand)
+        id: test
         working-directory: server
-        run: pnpm run test:ci
+        # `tee` keeps the output for the annotation step below. The runner's
+        # default shell already sets `-o pipefail`, so jest's exit code is still
+        # the step's exit code and nothing here can mask a failure.
+        run: pnpm run test:ci 2>&1 | tee jest.log
+
+      # A failed step used to surface only "Process completed with exit code 1".
+      # Step logs need a token to read, so that bare line was the whole public
+      # record of the failure. This republishes the actual jest failures as
+      # annotations and a job summary, which the run page and the public
+      # check-runs API both serve.
+      - name: Report the failing tests
+        if: failure() && steps.test.outcome == 'failure'
+        working-directory: server
+        run: node scripts/ci-jest-annotations.mjs jest.log
 
       - name: Typecheck
         working-directory: server

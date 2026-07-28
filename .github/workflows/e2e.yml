@@ -46,16 +46,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
-      # setup-node reads the root package.json's `packageManager: pnpm@9.15.0`
-      # and resolves pnpm even when no cache is requested, so without this the
-      # job dies with "Unable to locate executable file: pnpm" before the audit
-      # ever runs. Every other job in the repo already sets pnpm up first.
-      - uses: pnpm/action-setup@v4.4.0
-        with:
-          run_install: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
+      # Deliberately NO setup-node and NO pnpm here. The audit is plain ESM that
+      # only reads package.json files, and the runner already ships Node.
+      # setup-node resolves the root `packageManager: pnpm@9.15.0` even with no
+      # cache requested ("Unable to locate executable file: pnpm"), and adding
+      # pnpm/action-setup to satisfy it then failed the job on a cache path that
+      # does not exist because nothing installs. Removing both fixes the cause
+      # rather than the symptom.
       - name: Audit e2e scripts
         run: node scripts/verify-e2e-scripts.mjs
 
@@ -203,6 +200,17 @@ jobs:
         working-directory: app/mobile-app
         run: npm ci
 
+      # src/generated/** is gitignored (root .gitignore, `generated/`), so a
+      # fresh checkout has no typed GraphQL operations and Metro cannot resolve
+      # `@/generated/graphql` — 84 source files import it and the export dies on
+      # the first one (AccountScreen.tsx). apps-ci.yml already does this before
+      # its build; this job was written without it, which is why the export step
+      # exited 1 the first time CI ran it. The schema comes from the server's
+      # tracked *.schema.ts files, so no server needs to be running.
+      - name: Generate GraphQL types
+        working-directory: app/mobile-app
+        run: npm run codegen
+
       - name: Type-check Cypress specs
         working-directory: app/mobile-app
         run: npx tsc --noEmit -p __tests__/e2e/tsconfig.json
@@ -217,10 +225,18 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=8192
 
       # cypress.config.ts defaults baseUrl to http://localhost:2022.
+      #
+      # `--single` is NOT optional: app.json sets `web.output: "single"`, so the
+      # export is one index.html and React Navigation resolves /explore,
+      # /support/chat, /support/all … client-side (src/navigation/linking.ts).
+      # A plain `serve dist` looks for those as real files and answers 404, so
+      # every spec that visits a deep route died in `cy.visit()` before the app
+      # ever booted. SPA fallback is what the real host does; this makes the
+      # static server match it.
       - name: Serve the export and run Cypress
         working-directory: app/mobile-app
         run: |
-          npx --yes serve dist -l 2022 &
+          npx --yes serve dist --single -l 2022 &
           npx --yes wait-on http://localhost:2022 --timeout 120000
           npm run e2e
 

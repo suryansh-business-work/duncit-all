@@ -226,9 +226,19 @@ describe('techService.serverInfo — OS, memory, disk and network', () => {
 
   it('statfs the drive root on Windows', async () => {
     osMock.platform.mockReturnValue('win32');
-    const info = await techService.serverInfo();
-    expect(info.disk.path).toMatch(/^[A-Za-z]:\\$/);
-    expect(statfsMock).toHaveBeenCalledWith(info.disk.path);
+    // process.cwd() is the one host boundary buildDisk still reads, and faking
+    // os.platform() alone does not fake it. On a POSIX runner the real cwd
+    // starts with "/", so the drive-root split yields "" and the path becomes a
+    // lone "\" — this assertion passed only on a Windows machine and failed on
+    // every Linux CI run. Fake the cwd and assert the exact root.
+    const cwd = jest.spyOn(process, 'cwd').mockReturnValue('D:\\srv\\duncit\\server');
+    try {
+      const info = await techService.serverInfo();
+      expect(info.disk.path).toBe('D:\\');
+      expect(statfsMock).toHaveBeenCalledWith('D:\\');
+    } finally {
+      cwd.mockRestore();
+    }
   });
 
   it('degrades to a zeroed disk when statfs is not permitted', async () => {

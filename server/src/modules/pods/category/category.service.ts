@@ -40,7 +40,7 @@ const layoutToPub = (layout?: ICategoryIconLayout | null) =>
         height: layout.height ?? DEFAULT_CATEGORY_ICON_SIZE,
       }
     : null;
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { escapedSearchRegex } from '@utils/table-query';
 import { FaqModel } from '@modules/support/faq/faq.model';

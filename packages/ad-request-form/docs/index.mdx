@@ -77,6 +77,222 @@ Note `blankAdRequestValues` is passed **as a function** to `useState` — it cal
 `new Date().toISOString()` for `start_at`, so calling it during render on every pass would
 produce a new default each time.
 
+## Sample data
+
+A partner buying a two-week Explore Scroll placement, plus the `adPricing` payload the estimate
+reads. The pricing shape is `AdPricing` — one `*_per_day` key per placement, all nine required.
+
+```ts
+import type { AdPricing, AdRequestFormValues } from '@duncit/ad-request-form';
+
+export const bakingKitAd: AdRequestFormValues = {
+  ad_title: 'Monsoon Baking Kit — 20% off',
+  ad_description: 'Flour, banneton and a scraper in one box. Delivered across Bengaluru in 48 hours.',
+  ad_type: 'IMAGE',
+  media_url: 'https://ik.imagekit.io/duncit/ads/monsoon-baking-kit.jpg',
+  position: 'EXPLORE_SCROLL',
+  start_at: '2026-08-10T00:00:00.000Z',
+  duration_days: 14,
+  redirect_url: 'https://duncit.com/shop/monsoon-baking-kit',
+  target_audience: 'Home bakers in Bengaluru, 22-45',
+};
+
+export const adPricing: AdPricing = {
+  auto_per_day: 250,
+  home_bottom_per_day: 400,
+  sidebar_per_day: 180,
+  explore_scroll_per_day: 320,
+  status_per_day: 500,
+  venue_list_per_day: 150,
+  club_list_per_day: 150,
+  pod_list_per_day: 200,
+  pod_details_per_day: 275,
+  currency_symbol: '₹',
+};
+```
+
+## Worked examples
+
+### `blankAdRequestValues()`
+
+```js
+{
+  ad_title: '',
+  ad_description: '',
+  ad_type: 'IMAGE',
+  media_url: '',
+  position: 'AUTO',
+  start_at: <the moment you called it>,   // new Date().toISOString() — fresh on every call
+  duration_days: 7,
+  redirect_url: '',
+  target_audience: ''
+}
+```
+
+That `start_at` is why it is a **function**, and why `useState(blankAdRequestValues)` passes the
+reference rather than calling it.
+
+### `toSubmitAdRequestInput(bakingKitAd)`
+
+```js
+{
+  ad_title: 'Monsoon Baking Kit — 20% off',
+  ad_description: 'Flour, banneton and a scraper in one box. Delivered across Bengaluru in 48 hours.',
+  ad_type: 'IMAGE',
+  media_url: 'https://ik.imagekit.io/duncit/ads/monsoon-baking-kit.jpg',
+  position: 'EXPLORE_SCROLL',
+  start_at: '2026-08-10T00:00:00.000Z',
+  duration_days: 14,
+  redirect_url: 'https://duncit.com/shop/monsoon-baking-kit',
+  target_audience: 'Home bakers in Bengaluru, 22-45'
+}
+```
+
+With both optionals blank (`redirect_url: ''`, `target_audience: ''`) the two keys are **omitted
+entirely**, not sent as empty strings:
+
+```js
+{
+  ad_title: 'Monsoon Baking Kit — 20% off',
+  ad_description: 'Flour, banneton and a scraper in one box. Delivered across Bengaluru in 48 hours.',
+  ad_type: 'IMAGE',
+  media_url: 'https://ik.imagekit.io/duncit/ads/monsoon-baking-kit.jpg',
+  position: 'EXPLORE_SCROLL',
+  start_at: '2026-08-10T00:00:00.000Z',
+  duration_days: 14
+}
+```
+
+### Pricing the same request
+
+```js
+const key = AD_PRICING_KEY_BY_POSITION[bakingKitAd.position];
+// 'explore_scroll_per_day'
+
+adPricing[key];                                  // 320
+adPricing[key] * bakingKitAd.duration_days;      // 4480
+formatAdCost(4480, adPricing.currency_symbol);   // '₹4,480'
+formatAdCost(320.5, '₹');                        // '₹320.50'
+```
+
+Whole amounts render with no decimals, fractional with two — that split is the whole reason
+`formatAdCost` exists rather than a bare `formatMoney` call.
+
+### Labels
+
+```js
+adPositionLabel('EXPLORE_SCROLL');   // 'Explore Scroll'
+adPositionLabel('NEWSLETTER');       // 'NEWSLETTER'  ← unknown values pass through unchanged
+adTypeLabel('VIDEO');                // 'Video'
+```
+
+`adPositionLabel` never throws on an unrecognised placement; it returns the raw enum. If a portal
+starts displaying SCREAMING_SNAKE in the UI, that is a placement missing from `AD_POSITION_OPTIONS`.
+
+### `AD_STATUS_COLORS`
+
+```js
+{ PENDING: 'warning', APPROVED: 'info', LIVE: 'success', REJECTED: 'error', EXPIRED: 'default' }
+```
+
+Typed `StatusColorMap` from `@duncit/ui`, so it drops straight into the shared status chip.
+
+### `adRequestSchema.safeParse(...)` on a bad request
+
+Parsing the sample with `ad_title: 'Ad'`, `media_url: ''`, `start_at: '2020-01-01T00:00:00.000Z'`,
+`duration_days: 45`, `redirect_url: 'duncit.com/shop'`:
+
+```js
+[
+  { path: 'ad_title',      message: 'Ad title must be at least 3 characters' },
+  { path: 'media_url',     message: 'Upload the ad media' },
+  { path: 'start_at',      message: 'Ad start date must be today or later' },
+  { path: 'duration_days', message: 'Ad duration can be at most 30 days (1 month)' },
+  { path: 'redirect_url',  message: 'Redirect URL must be a valid http(s) link' }
+]
+```
+
+`toSubmitAdRequestInput` calls `.parse`, not `.safeParse` — it **throws** on invalid values. It is
+the last line of defence after the resolver, not a validation entry point.
+
+## Props / API
+
+### `<AdRequestForm>` — `AdRequestFormProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `initialValues` | `AdRequestFormValues` | yes | — | Seed values for the RHF form. |
+| `busy` | `boolean` | yes | — | Disables the submit button while the mutation runs. |
+| `errorMessage` | `string \| null` | no | `undefined` | Server error rendered above the actions. |
+| `onValuesChange` | `(values: AdRequestFormValues) => void` | yes | — | Fires on every `watch()` tick — this is what feeds `EstimateCard`. |
+| `onSubmit` | `(values: AdRequestFormValues) => Promise<void> \| void` | yes | — | Called with schema-valid values. |
+| `submitLabel` | `string` | no | `undefined` | Overrides the submit button text (e.g. `'Submit Product Ad'`). |
+
+### `<EstimateCard>`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `pricing` | `AdPricing \| null` | no | `undefined` | The `adPricing` payload. Missing or null renders the skeleton. |
+| `loading` | `boolean` | yes | — | Renders three skeleton rows instead of figures. |
+| `position` | `AdPosition` | yes | — | Which per-day rate to read. |
+| `durationDays` | `number` | yes | — | Multiplier; `1` renders "1 day", anything else "N days". |
+
+### `<AdMediaField>`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `adType` | `AdMediaType` | yes | — | Scopes the shared `MediaPickerDialog` to images or video. |
+| `value` | `string` | yes | — | Current media URL; drives the inline preview. |
+| `onChange` | `(url: string) => void` | yes | — | Receives the picked URL. |
+| `error` | `boolean` | no | `undefined` | Error styling. |
+| `helperText` | `string` | no | `undefined` | Text under the field. |
+| `required` | `boolean` | no | `undefined` | Renders the red required asterisk. |
+
+### Functions and constants
+
+| Export | Signature / value | Meaning |
+| --- | --- | --- |
+| `adRequestSchema` | `ZodObject` | The contract; mirrors the server's `SubmitAdRequestInput` rules. |
+| `blankAdRequestValues` | `() => AdRequestFormValues` | Factory — `start_at` is "now", so never a shared constant. |
+| `toSubmitAdRequestInput` | `(values) => SubmitAdRequestInput` | Re-parses, then maps; **throws** on invalid input. |
+| `AD_MEDIA_TYPE_OPTIONS` | `[{ value, label }]` | `IMAGE`, `VIDEO`. |
+| `AD_POSITION_OPTIONS` | `[{ value, label }]` | The nine placements, in menu order. |
+| `AD_STATUS_OPTIONS` | `[{ value, label }]` | `PENDING`, `APPROVED`, `LIVE`, `REJECTED`, `EXPIRED`. |
+| `AD_PRICING_KEY_BY_POSITION` | `Record<AdPosition, AdPricingRateKey>` | Placement → pricing field. Use it; do not lower-case the enum. |
+| `AD_STATUS_COLORS` | `StatusColorMap` | Status → MUI chip colour. |
+| `adPositionLabel` | `(position: string) => string` | Label, or the raw value if unknown. |
+| `adTypeLabel` | `(type: string) => string` | Label, or the raw value if unknown. |
+| `formatAdCost` | `(value: number, symbol: string) => string` | `formatMoney` with the whole/fractional decimals rule. |
+
+### Schema rules, in full
+
+| Field | Rule | Message on failure |
+| --- | --- | --- |
+| `ad_title` | required, 3–120 | `Ad title must be at least 3 characters` |
+| `ad_description` | required, 10–1000 | `Ad description must be at least 10 characters` |
+| `ad_type` | `IMAGE \| VIDEO` | `Ad type is required` |
+| `media_url` | trimmed, min 1 | `Upload the ad media` |
+| `position` | one of the nine placements | `Ad position is required` |
+| `start_at` | parseable date, today or later | `Ad start date must be today or later` |
+| `duration_days` | integer 1–30 | `Ad duration can be at most 30 days (1 month)` |
+| `redirect_url` | optional; `http:`/`https:` only | `Redirect URL must be a valid http(s) link` |
+| `target_audience` | optional, ≤ 500, defaults to `''` | `Target audience must be 500 characters or fewer` |
+
+## Live preview
+
+No live preview here yet, though `EstimateCard` is the closest thing in this set to previewable —
+it takes four plain props, renders pure MUI plus `InfoRow` from `@duncit/ui`, and needs no Apollo,
+no router and no form context. `docs-site` has the `<Preview>` island runtime; what is missing is
+`@duncit/ad-request-form` in its dependencies.
+
+When that lands, add two `<Preview>` blocks: `<EstimateCard pricing={adPricing} loading={false}
+position="EXPLORE_SCROLL" durationDays={14} />` — which renders the `₹4,480` computed above — and
+the same card with `loading` true, so the skeleton state is visible.
+
+`AdRequestForm` itself is a heavier lift: it pulls `@mui/x-date-pickers` and `@duncit/media-picker`,
+so previewing it means a `LocalizationProvider` in the island and a picker that opens against real
+upload config. Do the estimate card first.
+
 ## `onValuesChange` is the whole point of the split
 
 The form and the estimate are separate components on purpose: the estimate has to react to

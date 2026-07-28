@@ -8,8 +8,8 @@ jest.mock('@modules/access/user/user.service', () => ({
 }));
 
 import { userService } from '@modules/access/user/user.service';
-import { clubService } from '@modules/pods/club/club.service';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { clubService } from '@modules/clubs/club/club.service';
+import { ClubModel } from '@modules/clubs/club/club.model';
 
 const addRole = userService.addRole as jest.Mock;
 const removeRole = userService.removeRole as jest.Mock;

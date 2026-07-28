@@ -58,6 +58,106 @@ useSetBreadcrumbs(club ? [{ label: club.name }] : null);
 Pass `null` (or an empty array) while the entity is loading; the override clears itself on
 unmount, so no cleanup is needed.
 
+## Sample data
+
+The package's main input is the portal nav tree. This one is shaped like the Onboarding
+portal's, using the real `BreadcrumbNavItem` fields (`label`, `to`, `children`):
+
+```ts
+import type { BreadcrumbNavItem } from '@duncit/breadcrumb';
+
+export const onboardingNav: BreadcrumbNavItem[] = [
+  { label: 'Dashboard', to: '/' },
+  {
+    label: 'Onboarding',
+    children: [
+      { label: 'Clubs', to: '/clubs' },
+      { label: 'Venues', to: '/venues' },
+      { label: 'Venue Leads', to: '/venues/leads' },
+    ],
+  },
+  {
+    label: 'Calculators',
+    to: '/calculators',
+    children: [{ label: 'Pod Profit', to: '/calculators/pod-profit' }],
+  },
+];
+```
+
+## Worked examples
+
+Rendered with `<AppBreadcrumbs nav={onboardingNav} appName="Onboarding" />` inside a
+`MemoryRouter` at each pathname. `→` is the crumb's `href`; the leaf is always plain text.
+
+| Pathname | Rendered trail |
+| --- | --- |
+| `/` | *nothing* — the component returns `null` |
+| `/login` | *nothing* — returns `null` |
+| `/clubs` | `Onboarding → /` › `Clubs` (text) |
+| `/clubs/652f1c3a9d4b2e0011ac77e1` | `Onboarding → /` › `Clubs → /clubs` › `Detail` (text) |
+| `/venues/leads/9f8b2c14-6f0d-4a3e-9c2b-7d51e2a6b310` | `Onboarding → /` › `Venue Leads → /venues/leads` › `Detail` (text) |
+| `/calculators/pod-profit` | `Onboarding → /` › `Calculators → /calculators` › `Pod Profit` (text) |
+| `/settings/kyc-review/652f1c3a9d4b2e0011ac77e1` | `Onboarding → /` › `Settings → /settings` › `Kyc Review → /settings/kyc-review` › `Detail` (text) |
+
+Three things fall straight out of that table. `Venue Leads` beats `Venues` because
+`findBestNavMatch` takes the **longest** matching `to`. Both a 24-char Mongo id and a uuid
+collapse to `Detail`. And `/settings/...` matches no nav item at all, so the trail is built
+from the raw path segments — which is where `Kyc Review` comes from, and why `labelMap`
+exists:
+
+```tsx
+<AppBreadcrumbs nav={onboardingNav} appName="Onboarding" labelMap={{ 'kyc-review': 'KYC Review' }} />
+// /settings/kyc-review  →  Onboarding › Settings › KYC Review
+```
+
+With a page override, on `/clubs/652f1c3a9d4b2e0011ac77e1`:
+
+```tsx
+useSetBreadcrumbs(club ? [{ label: club.name }] : null);
+// Onboarding › Clubs › Acme Club          ← "Detail" is replaced, not appended to
+```
+
+An override may carry several crumbs, and its own links survive — except on the leaf, whose
+`to` is always stripped. On `/clubs/652f1c3a9d4b2e0011ac77e1/members/44`:
+
+```tsx
+useSetBreadcrumbs([
+  { label: 'Acme Club', to: '/clubs/652f1c3a9d4b2e0011ac77e1' },
+  { label: 'Members' },
+]);
+// Onboarding → /  ›  Clubs → /clubs  ›  Acme Club → /clubs/652f1c3a9d4b2e0011ac77e1  ›  Members (text)
+```
+
+Note that both `/clubs/<id>` segments — `<id>` **and** `members/44` — were replaced by the
+two override crumbs. The override owns the entire tail after `Clubs`.
+
+## API reference
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `AppBreadcrumbs` | `({ nav, appName, labelMap? }) => JSX.Element \| null` | Renders `null` on `/` and `/login`. Needs a router (`useLocation`, `RouterLink`). |
+| `BreadcrumbProvider` | `({ children }: { children: ReactNode })` | Holds the current override. Mount above **both** the breadcrumb and the routed pages. |
+| `useSetBreadcrumbs` | `(crumbs: Crumb[] \| null \| undefined) => void` | Replaces the tail after the deepest matched nav item; clears on unmount. A no-op without a provider — silently. |
+| `BreadcrumbNavItem` | `{ label: string; to?: string; children?: BreadcrumbNavItem[] }` | Structurally compatible with the shell's `AppNavItem`, declared locally to avoid a dependency cycle. |
+| `Crumb` | `{ label: string; to?: string }` | One rendered segment; the leaf has no `to`. |
+
+### `AppBreadcrumbs` props
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `nav` | `BreadcrumbNavItem[]` | yes | — | The portal's nav tree, walked recursively for the deepest `to` that prefixes the pathname. |
+| `appName` | `string` | yes | — | Label of the home crumb (which always links to `/`). |
+| `labelMap` | `Record<string, string>` | no | `undefined` | Route-segment → label overrides, for segments that title-case badly (`kyc`, `sos`). Passed through by the shell as `breadcrumbLabelMap`. |
+
+## Live preview
+
+There is no live preview on this page, and one would be misleading anyway: `AppBreadcrumbs`
+renders only inside a router, and what it renders depends entirely on the current pathname.
+The docs-site preview islands (`docs-site/src/components/Preview.astro`) mount without a
+router by design — the existing examples avoid `to`/`backTo` for exactly this reason. If a
+preview is added later it has to bring its own `MemoryRouter` and a pathname switcher, at
+which point it would show the same seven rows the table above already gives you as text.
+
 ## What the override actually replaces
 
 `useSetBreadcrumbs` does **not** append to the trail. It replaces every segment **after the

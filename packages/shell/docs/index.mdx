@@ -103,6 +103,204 @@ const authed = createAuthed({ getToken, wrap: (el) => <AppShell>{el}</AppShell> 
 <Route path="/profile" element={authed(<ProfilePage />)} />
 ```
 
+## Sample data
+
+A portal's `appConfig` is the main input, and a nav tree is the piece every other feature derives
+from. This is the shape `portals/admin/src/config/app-config.ts` holds.
+
+```ts
+import { parseEnvRoles, type AppConfig, type AppNavItem } from '@duncit/shell';
+
+export const nav: AppNavItem[] = [
+  { label: 'Dashboard', to: '/', icon: 'dashboard' },
+  {
+    label: 'Pods',
+    icon: 'group',
+    children: [
+      { label: 'All Pods', to: '/pods' },
+      { label: 'Pod Ideas', to: '/pod-ideas' },
+    ],
+  },
+  { label: 'Clubs', to: '/clubs', icon: 'diversity_3' },
+  { label: 'Settings', icon: 'settings', children: [{ label: 'Branding', to: '/settings/branding' }] },
+];
+
+export const appConfig: AppConfig = {
+  key: 'admin',
+  name: 'Admin',
+  fullName: 'Duncit Admin',
+  tokenKey: 'admin_token',
+  colorModeKey: 'admin_color_mode',
+  tagline: 'Run the platform',
+  portalLabel: 'Admin Console',
+  promoTitle: 'One console for every club, pod and payout',
+  promoText: 'Approve pods, settle wallets and keep the category tree clean.',
+  loginImage: 'https://ik.imagekit.io/duncit/portals/admin-login.jpg',
+  requiredRoles: parseEnvRoles(import.meta.env.VITE_REQUIRED_ROLES, ['ADMIN', 'CLUB_ADMIN']),
+  nav,
+  modules: [
+    { title: 'Payout runs', description: 'Bulk-settle host wallets', icon: 'account_balance_wallet' },
+  ],
+};
+```
+
+`AppConfig` extends `PortalBootConfig`, so this one object feeds `mountPortal`, `createSession` and
+`AppShell` — there is no second config to keep in sync.
+
+## Worked examples
+
+### `deriveSearchItems(nav)`
+
+The header search is derived, never hand-written. Group headers (no `to`) contribute nothing
+themselves but become the `section` of their children:
+
+```js
+[
+  { label: 'Dashboard', to: '/' },
+  { label: 'All Pods',  to: '/pods',              section: 'Pods' },
+  { label: 'Pod Ideas', to: '/pod-ideas',         section: 'Pods' },
+  { label: 'Clubs',     to: '/clubs' },
+  { label: 'Branding',  to: '/settings/branding', section: 'Settings' }
+]
+```
+
+Top-level items get **no** `section` key at all, not `section: undefined` — the flattening is
+depth-aware, so a group nested two deep takes its immediate parent's label.
+
+### `createSession('admin_token', ['ADMIN', 'CLUB_ADMIN'], 'Duncit Admin')`
+
+```js
+SUPER_ROLE                              // 'SUPER_ADMIN'
+
+session.hasAppAccess(['ADMIN'])         // true   — matches a required role
+session.hasAppAccess(['SUPER_ADMIN'])   // true   — passes every console, always
+session.hasAppAccess(['HOST'])          // false
+session.hasAppAccess([])                // false  — an empty role list is never access
+session.hasAppAccess(null)              // false
+
+session.accessDeniedMessage()
+// 'You do not have access to Duncit Admin. Please contact your administrator.'
+```
+
+The `SUPER_ADMIN` bypass lives here and nowhere else. A portal writing
+`roles.includes('SUPER_ADMIN')` locally is a second copy of the rule.
+
+### Redirect safety — `getSafeRedirectPath`
+
+```js
+redirectPathFromLocation({ pathname: '/pods', search: '?edit=DUN-POD-10421', hash: '#media' })
+// '/pods?edit=DUN-POD-10421#media'
+
+getSafeRedirectPath('/pods?edit=DUN-POD-10421')     // '/pods?edit=DUN-POD-10421'
+getSafeRedirectPath('//evil.example.com')           // ''  ← protocol-relative
+getSafeRedirectPath('https://evil.example.com/pods')// ''  ← absolute, off-origin
+getSafeRedirectPath('/login?denied=1')              // ''  ← would bounce back to auth
+getSafeRedirectPath(null)                           // ''
+```
+
+Every rejection returns `''`, never `undefined` and never a thrown error — so the call site's
+`getSafeRedirectPath(param) || '/'` fallback is the whole handling you need.
+
+### `parseEnvRoles(raw, fallback)`
+
+```js
+parseEnvRoles('ADMIN, CLUB_ADMIN , ', ['ADMIN'])   // ['ADMIN', 'CLUB_ADMIN']   ← trimmed, blanks dropped
+parseEnvRoles('', ['ADMIN'])                        // ['ADMIN']                 ← falls back
+parseEnvRoles(undefined, ['ADMIN'])                 // ['ADMIN']                 ← non-string falls back
+```
+
+An env value that parses to **nothing** falls back rather than yielding `[]`, which matters because
+`hasAppAccess([])` is `false` for everyone — an empty required-roles list would otherwise lock a
+console shut for all non-super users.
+
+## Props / API
+
+### `mountPortal(options)` — `MountPortalOptions`
+
+| Option | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `config` | `PortalBootConfig` | yes | — | Portal key, name, token/color-mode keys, accent, nav. |
+| `apolloClient` | `ApolloClient<unknown>` | yes | — | The portal's configured client. |
+| `graphqlUrl` | `string` | yes | — | Also derives the `/logs` ingest URL and the `PortalModeGate`. |
+| `googleClientId` | `string` | no | `undefined` | Blank disables Google sign-in. |
+| `logsPortal` | `LevelFns` | no | `undefined` | The portal's `logs.portal.<x>` sink. |
+| `loadUser` | `UserProviderProps['loadUser']` | yes | — | Network-only `me` loader. |
+| `userStorageKey` | `string` | no | `` `${config.key}_user` `` | Override for the user-cache key. |
+| `children` | `ReactNode` | yes | — | The portal's route tree. |
+| `themeExtend` | `ComponentExtend` | no | `undefined` | Per-portal MUI override (e.g. CRM's DataGrid). |
+| `wrap` | `(node: ReactNode) => ReactNode` | no | `undefined` | Wraps the routed content in extra providers. |
+| `extras` | `ReactNode` | no | `undefined` | Router-level siblings (e.g. admin's `NotifyHost`). |
+| `i18nFallback` | `FlatCatalogue` | no | `undefined` | The portal's own flat fallback, layered over `SHELL_FALLBACK_FLAT`. |
+| `rootId` | `string` | no | `'root'` | Mount element id. **Throws** when the node is missing. |
+
+### `<AppShell>` — `AppShellProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `config` | `AppShellPortalConfig` | yes | — | `{ name, fullName?, footerCaption? }` — three fields only; pass your `appConfig` directly. |
+| `nav` | `AppNavItem[]` | yes | — | Sidebar tree. |
+| `searchItems` | `SearchItem[]` | no | derived from `nav` | Header search entries. |
+| `user` | `ShellUser` | no | `undefined` | Signed-in user for the header and sidebar card. |
+| `onLogout` | `() => void` | yes | — | Logout handler. |
+| `profileTo` | `string` | no | `undefined` | Profile route; omit to hide the Profile menu item. |
+| `hasAccess` | `boolean` | no | `undefined` | `false` **with a loaded user** redirects to `/login?denied=1`. |
+| `loading` | `boolean` | no | `undefined` | Shows the boot spinner until the user arrives. |
+| `onDenied` | `() => void` | no | `undefined` | Called before the denied redirect (clear the token here). |
+| `breadcrumbLabelMap` | `Record<string, string>` | no | `undefined` | Route-segment → label overrides. |
+| `children` | `ReactNode` | yes | — | The routed page. |
+
+### `<HeaderSearch>` — `HeaderSearchProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `items` | `SearchItem[]` | no | `undefined` | Explicit entries; wins over `nav`. |
+| `nav` | `AppNavItem[]` | no | `undefined` | Derived via `deriveSearchItems` when `items` is empty. |
+| `placeholder` | `string` | no | `'Search'` | Input placeholder. |
+| `autoFocus` | `boolean` | no | `undefined` | Focus on mount. |
+| `disableSlashShortcut` | `boolean` | no | `undefined` | Overlays opt out; the header instance owns `/`. |
+| `onNavigated` | `() => void` | no | `undefined` | Fires after navigating to a result. |
+
+### Functions and hooks
+
+| Export | Signature | Returns |
+| --- | --- | --- |
+| `createSession` | `(tokenKey, requiredRoles?, fullName?) => PortalSession` | `{ getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage }`. Defaults: `[]`, `'this console'`. |
+| `createAuthed` | `({ getToken, wrap }: CreateAuthedOptions) => (element: JSX.Element) => JSX.Element` | The `authed(element)` route-table helper; `wrap` absorbs per-portal chrome drift. |
+| `createApolloClient` | `(options: CreateApolloClientOptions) => ApolloClient` | Client with `apolloErrorLink` attached. |
+| `deriveSearchItems` | `(nav: AppNavItem[], section?: string) => SearchItem[]` | Flattened search entries. |
+| `getSafeRedirectPath` | `(value?: string \| null) => string` | The path, or `''` if unsafe. |
+| `redirectPathFromLocation` | `(location: RedirectLocation) => string` | `pathname + search + hash`. |
+| `parseEnvRoles` | `(raw: unknown, fallback?: string[]) => string[]` | Parsed roles, or the fallback. |
+| `useBranding` | `() => BrandingSummary` | Server branding for the chrome. |
+| `useColorMode` | `() => …` | Light/dark mode, re-exported from `@duncit/theme`. |
+
+### Config types
+
+| Type | Key fields |
+| --- | --- |
+| `PortalBootConfig` | `key`, `name`, `tokenKey`, `colorModeKey`, `accent?`, `fullName?`, `nav?`, `searchItems?`, `requiredRoles?`, `footerCaption?` (default `© Duncit`) |
+| `AppConfig` | `PortalBootConfig` + `fullName`, `tagline`, `promoTitle`, `promoText`, `portalLabel`, `loginImage`, `requiredRoles`, `nav`, `modules?` |
+| `AppNavItem` | `{ label, to?, icon?, children? }` — `children` renders a collapsible group |
+| `SearchItem` | `{ label, to, keywords?, section? }` |
+| `AppModule` | `{ title, description, icon }` — a "Coming soon" dashboard card |
+
+## Live preview
+
+There is no live preview on this page, and unlike the form packages that is not a temporary
+limitation worth working around. The shell's components are the *outermost* layer of a running
+console: `AppShell` calls `useNavigate`, the sidebar and header read the user context, `AppIcon`
+resolves branding through Apollo, and `mountPortal` calls `createRoot` on a real DOM node and
+**throws** when it is missing. Mounting any of it inside a docs page means recreating a portal
+inside a portal — at which point the preview is testing the harness, not the shell.
+
+The honest preview of `@duncit/shell` is a running console. Every one of the seventeen listed above
+*is* that preview; open any of them and the header, sidebar, breadcrumbs, search and profile page on
+screen are this package.
+
+`docs-site` does have the `<Preview>` island runtime, so the small leaf pieces —
+`AccountSummaryCard`, `SidebarUserCard` — could be mounted with a plain user object once the
+package is a `docs-site` dependency. Those are worth adding. The full shell is not.
+
 ## `mountPortal` owns the provider stack — do not re-nest it
 
 It renders, in order: `ApolloProvider` → `UserProvider` → `DuncitThemeProvider` →

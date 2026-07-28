@@ -83,6 +83,157 @@ const log = createLogger('portal', 'crm');
 log.error('/checkout', 'PaymentForm', { error, orderId });
 ```
 
+## Sample data
+
+The two inputs a caller controls: the one-time context, and the per-call detail bag.
+
+```ts
+/** Set once at startup — Finance portal, staging. */
+const context = {
+  platform: 'web' as const,
+  portal: 'finance',
+  environment: 'staging' as const,
+  url: () => 'https://staging.finance.duncit.com/settlements/DUN-STL-2291',
+  host: () => 'staging.finance.duncit.com',
+};
+
+/** The detail bag for one failed settlement approval. */
+const detail = {
+  error: new Error('Wallet credit failed for host usr_9f2'),
+  settlement_id: 'DUN-STL-2291',
+  pod_id: 'DUN-POD-8842',
+  amount: 13211.18,
+};
+```
+
+## Worked examples
+
+Capture the transport instead of POSTing, and the record is exactly what SignOz receives.
+
+```ts
+const captured: LogRecord[] = [];
+configureLogs((record) => captured.push(record), context);
+
+const log = createLogger('portal', 'finance');
+log.error('/settlements/DUN-STL-2291', 'SettlementApproveButton', detail);
+```
+
+`captured[0]`:
+
+```json
+{
+  "app": "portal",
+  "portal": "finance",
+  "platform": "web",
+  "environment": "staging",
+  "url": "https://staging.finance.duncit.com/settlements/DUN-STL-2291",
+  "host": "staging.finance.duncit.com",
+  "level": "error",
+  "page": "/settlements/DUN-STL-2291",
+  "component": "SettlementApproveButton",
+  "error": {
+    "name": "Error",
+    "message": "Wallet credit failed for host usr_9f2",
+    "stack": "Error: Wallet credit failed for host usr_9f2\n    at approveSettlement (settlements.tsx:88:11)"
+  },
+  "data": {
+    "settlement_id": "DUN-STL-2291",
+    "pod_id": "DUN-POD-8842",
+    "amount": 13211.18
+  },
+  "timestamp": "2026-07-28T09:42:11.412Z"
+}
+```
+
+The caller supplied five things (`page`, `component`, `error`, and two ids). The other nine
+attributes were stamped for them — that is the entire point of configuring once.
+
+A different bound logger under the same context keeps its own `app`/`portal` but inherits
+the resolved environment and URL:
+
+```ts
+logs.portal.crm.warn('/leads', 'ExcelImportDialog', { rows: 412, skipped: 7 });
+// → { app: 'portal', portal: 'crm', level: 'warn', page: '/leads',
+//     component: 'ExcelImportDialog', data: { rows: 412, skipped: 7 },
+//     environment: 'staging', url: '…', host: '…', platform: 'web', timestamp: '…' }
+```
+
+Note there is **no** `error` key at all when the detail bag has none — not `error: null`.
+
+### `serializeError` flattens anything thrown
+
+```ts
+serializeError(new TypeError('podId is not defined'))
+// { name: 'TypeError', message: 'podId is not defined', stack: 'TypeError: podId…' }
+
+serializeError('boom')            // { name: 'string', message: 'boom' }
+serializeError(404)               // { name: 'number', message: '404' }
+serializeError({ code: 'E_FULL' })// { name: 'Object',  message: '{"code":"E_FULL"}' }
+serializeError(null)              // undefined
+```
+
+A circular or BigInt-bearing object returns the fixed `'[unserializable object]'` rather
+than its key names — key names would put caller field names (`password`, `refresh_token`) on
+the wire and would fork one bug into a new telemetry row per object shape.
+
+### `detectEnvironment`
+
+```ts
+detectEnvironment('staging.crm.duncit.com')            // 'staging'
+detectEnvironment('crm.duncit.com')                    // 'production'
+detectEnvironment('https://staging.mweb.duncit.com/shop') // 'staging'  — full URLs work
+detectEnvironment('localhost:5173')                    // 'localhost'  — port stripped
+detectEnvironment('127.0.0.1:3000')                    // 'localhost'
+detectEnvironment('dev.local')                         // 'localhost'
+detectEnvironment('::1')                               // 'localhost'
+detectEnvironment('')                                  // 'localhost'
+```
+
+An empty or unknown host classifies as `localhost`, never `production` — a misconfigured
+build cannot pollute the production environment filter.
+
+## API
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `configureLogs` | `(transport: Transport, ctx?: Partial<LogContext>) => void` | `consoleTransport`, `{ platform: 'web' }` | Set the process-wide sink and context. Call once at startup. |
+| `createLogger` | `(app: string, portal?: string) => LevelFns` | — | A bound file/surface logger. |
+| `logs` | `{ server, mWeb, mobileApp, portal.<key>, website.<key> }` | — | Pre-bound loggers for every console. |
+| `serializeError` | `(err: unknown) => SerializedError \| undefined` | — | Flattens any thrown value. |
+| `httpTransport` | `(endpoint: string) => Transport` | — | Fire-and-forget `keepalive` POST. Never throws, never blocks. |
+| `consoleTransport` | `Transport` | — | Default sink; mirrors to the console so logs are not lost before configuration. |
+| `detectEnvironment` | `(hostOrUrl?: string \| null) => Environment` | — | `localhost` / `staging` / `production`. |
+| `APPS` | `readonly ['server','mWeb','mobileApp']` | — | App keys. |
+| `PORTALS` | 17 keys | — | `admin, crm, finance, tech, support, website-app, legal, ai, products, marketing, onboarding, hr, employee, ads-portal, partners-app, challenge-portal, developers-portal` |
+| `WEBSITES` | `readonly ['duncit','partners','ads','status','earnwith']` | — | Astro site keys. |
+
+Every level function has the same shape:
+`(page: string, component: string, detail?: LogDetail) => void` — `page` and `component` are
+required positionally, `detail` is optional.
+
+### `LogContext`
+
+| Field | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `platform` | `'web' \| 'native' \| 'server'` | yes | `'web'` | Runtime; drives the SignOz platform filter. |
+| `os` | `'ios' \| 'android' \| 'web'` | no | unset | Native device OS; leave unset on web/server. |
+| `portal` | `string` | no | unset | Stamped on records whose bound logger set none. |
+| `environment` | `Environment \| (() => Environment)` | no | `detectEnvironment(host)` | Fixed value or a resolver. |
+| `url` | `() => string \| undefined` | no | `location.href` | Resolved per emit, so SPA navigation is reflected. |
+| `host` | `() => string \| undefined` | no | `location.hostname` | Resolved per emit. |
+
+### `LogRecord` — what a transport receives
+
+`app`, `portal?`, `platform`, `os?`, `environment`, `url?`, `host?`, `level`, `page`,
+`component`, `timestamp` (ISO-8601), `error?` (`{ name, message, stack? }`), `data?`. Every
+field is sent to SignOz as a filterable attribute.
+
+## No live preview
+
+No UI — a logger's observable output is the record, which is printed above verbatim. To see
+it in a real app, point `configureLogs` at an array as in the first example, or use the Tech
+portal's Logs view.
+
 ## The detail bag: `error` is special, everything else is `data`
 
 `emit` pulls `error` (or the alias `err`) out of the detail object, runs it through

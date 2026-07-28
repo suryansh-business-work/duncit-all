@@ -55,6 +55,115 @@ const stateNames = useMemo(
 **name**, not the ISO code, while `getStatesForCountry` keys off the code. Skipping the lookup
 and passing the name straight through silently yields an empty state list.
 
+## Sample data
+
+The package ships the data — you do not supply it. What a consumer holds is the profile /
+address row it is populating, which stores **names**, not codes:
+
+```ts
+/** A saved shipping address, exactly as the profile stores it. */
+const address = {
+  line1: 'Flat 1204, Sea Breeze Apartments',
+  line2: 'Carter Road',
+  city: 'Mumbai',
+  state: 'Maharashtra',      // the state NAME
+  country: 'India',          // the country NAME — this is what you look up
+  pincode: '400050',
+};
+```
+
+## Worked examples
+
+Real values, read straight out of the shipped dataset.
+
+```ts
+COUNTRY_OPTIONS.length          // 249
+
+COUNTRY_OPTIONS.slice(0, 5)
+// [
+//   { name: 'India',          isoCode: 'IN', flag: '🇮🇳' },   ← pinned first
+//   { name: 'Afghanistan',    isoCode: 'AF', flag: '🇦🇫' },
+//   { name: 'Åland Islands',  isoCode: 'AX', flag: '🇦🇽' },
+//   { name: 'Albania',        isoCode: 'AL', flag: '🇦🇱' },
+//   { name: 'Algeria',        isoCode: 'DZ', flag: '🇩🇿' },
+// ]
+```
+
+India sits at index 0 and the remaining 248 are alphabetical — `Åland Islands` sorting
+between Afghanistan and Albania is `localeCompare`, not a bug.
+
+Resolving the saved address:
+
+```ts
+findCountryByName(address.country)
+// { name: 'India', isoCode: 'IN', flag: '🇮🇳' }
+
+findCountryByName('United Arab Emirates')
+// { name: 'United Arab Emirates', isoCode: 'AE', flag: '🇦🇪' }
+
+findCountryByName('Wakanda')     // undefined
+findCountryByName(undefined)     // undefined
+```
+
+Then the dependent state select:
+
+```ts
+const states = getStatesForCountry(findCountryByName(address.country)?.isoCode);
+
+states.length                    // 36
+states.slice(0, 4)
+// [
+//   { name: 'Andaman and Nicobar Islands', isoCode: 'AN', countryCode: 'IN' },
+//   { name: 'Andhra Pradesh',              isoCode: 'AP', countryCode: 'IN' },
+//   { name: 'Arunachal Pradesh',           isoCode: 'AR', countryCode: 'IN' },
+//   { name: 'Assam',                       isoCode: 'AS', countryCode: 'IN' },
+// ]
+
+states.find((s) => s.name === address.state)
+// { name: 'Maharashtra', isoCode: 'MH', countryCode: 'IN' }
+
+getStatesForCountry('US').length // 62 — includes DC and the territories
+getStatesForCountry('SG').length // 5
+getStatesForCountry('ZZ')        // []  unknown code
+getStatesForCountry()            // []  nothing selected yet
+```
+
+`getStatesForCountry` returning `[]` rather than throwing is what lets a country select
+render before anything is chosen, and lets a country with no sub-divisions simply hide the
+state field:
+
+```tsx
+const states = getStatesForCountry(countryCode);
+{states.length > 0 && (
+  <TextField select label="State" value={state} onChange={onStateChange}>
+    {states.map((s) => <MenuItem key={s.isoCode} value={s.name}>{s.name}</MenuItem>)}
+  </TextField>
+)}
+```
+
+## API
+
+| Export | Type | Meaning |
+| --- | --- | --- |
+| `COUNTRY_OPTIONS` | `GeoCountry[]` | All 249 countries, India first then alphabetical. A module constant — built once at import. |
+| `getStatesForCountry` | `(countryCode?: string) => GeoState[]` | States for an ISO alpha-2 code, alphabetical. `[]` when the code is unknown or omitted. |
+| `findCountryByName` | `(name?: string) => GeoCountry \| undefined` | Exact-match name lookup — the profile stores names, not codes. |
+
+| Type | Fields |
+| --- | --- |
+| `GeoCountry` | `name: string`, `isoCode: string` (ISO-3166 alpha-2), `flag: string` (emoji, derived from `isoCode`) |
+| `GeoState` | `name: string`, `isoCode: string`, `countryCode: string` |
+
+There are no options objects and no defaults beyond `countryCode` being optional. `name` is
+the display value and the stored value; `isoCode` is what you pass back into
+`getStatesForCountry`.
+
+## No live preview
+
+Plain data and three lookups — no component. A country/state pair renders through MUI
+`TextField select` in the portals and Tamagui in native, so the markup belongs to the
+consumer, not here.
+
 ## `@duncit/geo` vs `@duncit/location` — pick the right one
 
 These are not alternatives and must not be swapped.

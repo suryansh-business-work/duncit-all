@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 import { Types } from 'mongoose';
 import { startTestServer, signToken, type TestServer } from '@test/harness';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 
 let server: TestServer;

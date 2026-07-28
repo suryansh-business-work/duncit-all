@@ -76,6 +76,182 @@ const { fields, append, remove } = useFieldArray({ control, name: 'categories' }
 schema must model the object, and `append` must be given `{ ...EMPTY_CATEGORY }` (a spread copy,
 so field-array rows do not share one object).
 
+## Sample data
+
+A slice of the admin tree as `ADMIN_CATEGORIES` returns it — flat, three levels linked by
+`parent_id`. This is exactly the array you would hand a `MockedProvider` in a test.
+
+```ts
+import type { CategoryDoc } from '@duncit/category';
+
+export const categories: CategoryDoc[] = [
+  { id: '66f1a2b3c4d5e6f708192d01', name: 'Food & Drink', slug: 'food-drink', level: 'SUPER', parent_id: null },
+  { id: '66f1a2b3c4d5e6f708192d02', name: 'Fitness',      slug: 'fitness',    level: 'SUPER', parent_id: null },
+
+  { id: '66f1a2b3c4d5e6f708192d11', name: 'Baking',  slug: 'baking',  level: 'CATEGORY', parent_id: '66f1a2b3c4d5e6f708192d01' },
+  { id: '66f1a2b3c4d5e6f708192d12', name: 'Coffee',  slug: 'coffee',  level: 'CATEGORY', parent_id: '66f1a2b3c4d5e6f708192d01' },
+  { id: '66f1a2b3c4d5e6f708192d13', name: 'Running', slug: 'running', level: 'CATEGORY', parent_id: '66f1a2b3c4d5e6f708192d02' },
+
+  { id: '66f1a2b3c4d5e6f708192d33', name: 'Sourdough',       slug: 'sourdough',       level: 'SUB', parent_id: '66f1a2b3c4d5e6f708192d11' },
+  { id: '66f1a2b3c4d5e6f708192d34', name: 'Cake Decorating', slug: 'cake-decorating', level: 'SUB', parent_id: '66f1a2b3c4d5e6f708192d11' },
+  { id: '66f1a2b3c4d5e6f708192d35', name: 'Latte Art',       slug: 'latte-art',       level: 'SUB', parent_id: '66f1a2b3c4d5e6f708192d12' },
+  { id: '66f1a2b3c4d5e6f708192d36', name: 'Trail Running',   slug: 'trail-running',   level: 'SUB', parent_id: '66f1a2b3c4d5e6f708192d13' },
+];
+```
+
+## Worked examples
+
+### The option builders
+
+```js
+superOptions(categories)
+// [ { value: '…d02', label: 'Fitness' },
+//   { value: '…d01', label: 'Food & Drink' } ]        ← sorted by label, not by tree order
+```
+
+Every builder sorts with `localeCompare`, so "Fitness" precedes "Food & Drink" regardless of how
+admin ordered them. Do not re-sort at the call site.
+
+```js
+categoryOptions(categories, '66f1a2b3c4d5e6f708192d01')   // under Food & Drink
+// [ { value: '…d11', label: 'Baking' },
+//   { value: '…d12', label: 'Coffee' } ]
+
+categoryOptions(categories, '')                            // no super chosen ⇒ every middle
+// [ { value: '…d11', label: 'Baking' },
+//   { value: '…d12', label: 'Coffee' },
+//   { value: '…d13', label: 'Running' } ]
+```
+
+### `subOptions` and the skip-the-middle fallback
+
+```js
+subOptions(categories, '66f1a2b3c4d5e6f708192d11', '66f1a2b3c4d5e6f708192d01')  // middle = Baking
+// [ { value: '…d34', label: 'Cake Decorating' },
+//   { value: '…d33', label: 'Sourdough' } ]
+
+subOptions(categories, '', '66f1a2b3c4d5e6f708192d01')   // super only ⇒ every sub under it
+// [ { value: '…d34', label: 'Cake Decorating' },
+//   { value: '…d35', label: 'Latte Art' },              ← from Coffee, the other middle
+//   { value: '…d33', label: 'Sourdough' } ]
+
+subOptions(categories, '', '')                            // nothing chosen ⇒ every sub
+// [ 'Cake Decorating', 'Latte Art', 'Sourdough', 'Trail Running' ]
+```
+
+The middle row is the one that makes the flow work: a user can open the Sub dropdown straight after
+picking a super and still land on a complete value, because picking the sub back-fills the middle
+from its `parent_id`.
+
+### `buildCategoryValue(categories, superId, subId)`
+
+Rehydrating a Club that stored only `super_category_id` and `category_id`:
+
+```js
+buildCategoryValue(categories, '66f1a2b3c4d5e6f708192d01', '66f1a2b3c4d5e6f708192d33')
+// {
+//   super_id:      '66f1a2b3c4d5e6f708192d01', super_name:    'Food & Drink',
+//   category_id:   '66f1a2b3c4d5e6f708192d11', category_name: 'Baking',   ← derived, never stored
+//   sub_id:        '66f1a2b3c4d5e6f708192d33', sub_name:      'Sourdough'
+// }
+```
+
+When the sub has since been deleted from admin, the super survives and everything below it empties —
+the value does **not** collapse to `EMPTY_CATEGORY`:
+
+```js
+buildCategoryValue(categories, '66f1a2b3c4d5e6f708192d01', 'deleted-id')
+// {
+//   super_id: '66f1a2b3c4d5e6f708192d01', super_name: 'Food & Drink',
+//   category_id: '', category_name: '', sub_id: '', sub_name: ''
+// }
+```
+
+Note the asymmetry: an unknown **super** id is passed through into `super_id` (with an empty
+`super_name`), while an unknown **sub** id is dropped to `''`. A Zod rule that requires `sub_id` is
+what catches a re-parented or deleted category on the next save.
+
+### `EMPTY_CATEGORY`
+
+```js
+{ super_id: '', super_name: '', category_id: '', category_name: '', sub_id: '', sub_name: '' }
+```
+
+Always spread it (`{ ...EMPTY_CATEGORY }`) when seeding a `useFieldArray` row — the module-level
+object is shared, and appending it directly makes every row the same object.
+
+## Props / API
+
+### `<AdminCategorySelect>` — `AdminCategorySelectProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `value` | `AdminCategoryValue` | yes | — | The whole structured value — all three ids and names. |
+| `onChange` | `(value: AdminCategoryValue) => void` | yes | — | Receives the full value on every pick. |
+| `fields` | `CategoryLevel[]` | no | `['super','category','sub']` | Which levels render. `'super'` must stay in the list or the rest never unlock. |
+| `required` | `boolean` | no | `false` | Marks every rendered level required. |
+| `disabled` | `boolean` | no | `false` | Disables all levels. |
+| `size` | `'small' \| 'medium'` | no | `'small'` | MUI size passed to each `Autocomplete`. |
+| `direction` | `'row' \| 'column'` | no | `'column'` | Stack direction. |
+| `labels` | `Partial<Record<CategoryLevel, string>>` | no | Super Category / Category / Sub Category | Per-level label overrides. |
+| `errors` | `Partial<Record<CategoryLevel, string>>` | no | `undefined` | Per-level error text. |
+| `legend` | `string` | no | `undefined` | Setting it wraps the fields in a `<Fieldset>`. |
+| `hint` | `string` | no | `undefined` | Fieldset hint — say *why* the category matters. |
+
+### `<RhfAdminCategory>`
+
+Takes every `AdminCategorySelect` prop except `value`, `onChange` and `errors`, plus:
+
+| Prop | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `control` | `Control<T>` | yes | The RHF control. |
+| `name` | `Path<T>` | yes | Field holding the **whole** `AdminCategoryValue` object. |
+
+It renders `fieldState.error.message` on the **sub** level only, and falls back to `EMPTY_CATEGORY`
+when the field value is nullish.
+
+### `<Fieldset>`
+
+| Prop | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `legend` | `string` | yes | Text on the fieldset border. |
+| `hint` | `string` | no | Helper line under the legend. |
+| `children` | `ReactNode` | yes | Rendered inside a `Stack` with `spacing={2}`. |
+
+### Functions, hooks and constants
+
+| Export | Signature / value | Returns |
+| --- | --- | --- |
+| `useAdminCategories` | `() => { categories, loading, error }` | The tree, `cache-first`. `categories` is `[]` until it loads. |
+| `ADMIN_CATEGORIES` | `DocumentNode` | The query — import it for mocks rather than re-writing it. |
+| `buildCategoryValue` | `(categories, superId, subId) => AdminCategoryValue` | Pure rehydration. |
+| `useCategoryValue` | `(superId?, subId?) => AdminCategoryValue` | Hook form; `EMPTY_CATEGORY` when both ids are falsy. |
+| `superOptions` | `(categories) => Option[]` | SUPER docs, label-sorted. |
+| `categoryOptions` | `(categories, superId) => Option[]` | CATEGORY docs under a super (all when `superId` is `''`). |
+| `subOptions` | `(categories, categoryId, superId) => Option[]` | SUB docs, with the skip-the-middle fallback. |
+| `EMPTY_CATEGORY` | `AdminCategoryValue` | The all-empty value. Spread it. |
+
+### Value types
+
+| Type | Shape |
+| --- | --- |
+| `CategoryLevel` | `'super' \| 'category' \| 'sub'` |
+| `CategoryDoc` | `{ id, name, slug, level: 'SUPER' \| 'CATEGORY' \| 'SUB', parent_id?: string \| null }` |
+| `AdminCategoryValue` | `{ super_id, super_name, category_id, category_name, sub_id, sub_name }` |
+| `Option` | `{ label: string; value: string }` |
+
+## Live preview
+
+No live preview yet. The blocker is specific: `AdminCategorySelect` calls `useAdminCategories()`
+internally, so a mounted island with no Apollo client in scope throws, and one with a real client
+would hit the production API from a docs page. Neither is acceptable.
+
+`docs-site` has the `<Preview>` island runtime; what it needs next is a `MockedProvider` wrapper
+seeded with `ADMIN_CATEGORIES` → the `categories` array above. `ADMIN_CATEGORIES` is exported from
+this package for exactly that reason. Once the wrapper exists the preview is a three-line island,
+and the reader gets to *see* the cascade unlock — which is the one thing the worked examples cannot
+show. `<Fieldset>` is previewable today with no mocking at all and is the sensible first one to add.
+
 ## `AdminCategorySelect` vs `RhfAdminCategory`
 
 Use `RhfAdminCategory` whenever the form is RHF-driven; it wires `field.onChange` and surfaces

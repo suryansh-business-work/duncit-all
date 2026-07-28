@@ -83,6 +83,222 @@ import MediaPickerDialog from '@duncit/media-picker';
 />
 ```
 
+## Sample data
+
+The admin-managed `UploadSettings` row is the input that drives everything — caps, formats and
+crop presets. This is a realistic `PORTALS` row, with the real field names:
+
+```ts
+import type { UploadSettings } from '@duncit/media-picker';
+
+export const portalUploadSettings: UploadSettings = {
+  id: '66b21f8e5c1a4d0012ab90f3',
+  surface: 'PORTALS',
+  max_image_mb: 8,
+  max_video_mb: 60,
+  allowed_image_formats: ['jpg', 'png', 'webp'],
+  allowed_video_formats: ['mp4', 'mov'],
+  image_compression_enabled: true,
+  image_quality: 82,
+  image_max_dimension: 2400,
+  video_compression_enabled: true,
+  video_crf: 26,
+  video_max_height: 1080,
+  ai_image_monitoring_enabled: true,
+  default_crop_key: 'RATIO_16_9',
+  crop_presets: [
+    { key: 'NO_CROP',     label: 'No crop',        width: 0,    height: 0,    enabled: true },
+    { key: 'RATIO_16_9',  label: 'Wide 16:9',      width: 1920, height: 1080, enabled: true },
+    { key: 'RATIO_1_1',   label: 'Square 1:1',     width: 1080, height: 1080, enabled: true },
+    { key: 'POD_FEATURE', label: 'Pod feature 4:5',width: 1080, height: 1350, enabled: true },
+    { key: 'STORY_9_16',  label: 'Story 9:16',     width: 1080, height: 1920, enabled: false },
+  ],
+};
+
+/** What validateFile wants — derived from the settings row, never hardcoded. */
+export const portalCaps = {
+  maxImageMb: portalUploadSettings.max_image_mb,
+  maxVideoMb: portalUploadSettings.max_video_mb,
+  allowedImageFormats: portalUploadSettings.allowed_image_formats,
+  allowedVideoFormats: portalUploadSettings.allowed_video_formats,
+};
+```
+
+## Worked examples
+
+Real return values, from running the exports against that row.
+
+`validateFile(file, policy, caps)` returns **`null` when the file is fine** and a message
+otherwise — the message is what you show the user verbatim:
+
+```ts
+const imagesOnly = { allowImage: true, allowVideo: false, allowDocuments: false };
+const anything  = { allowImage: true, allowVideo: true,  allowDocuments: true  };
+
+validateFile(jpg2MB,   imagesOnly, portalCaps); // null
+validateFile(jpg12MB,  imagesOnly, portalCaps); // 'Image is too large (max 8 MB)'
+validateFile(heic1KB,  imagesOnly, portalCaps); // 'Image format not allowed (allowed: jpg, png, webp)'
+validateFile(mp4_20MB, imagesOnly, portalCaps); // 'Please choose an image or video file'
+validateFile(mp4_20MB, anything,   portalCaps); // null
+validateFile(mp4_90MB, anything,   portalCaps); // 'Video is too large (max 60 MB)'
+validateFile(mp4_90MB, anything);               // null  ← no caps = the static 100 MB fallback
+validateFile(pdf4MB,   anything,   portalCaps); // null
+validateFile(pdf4MB,   imagesOnly, portalCaps); // 'Please choose an image or video file'
+```
+
+The fourth line is the whole point of the `policy` argument: an `accept="image/*"` picker
+rejects a video even though the video itself is legal — the old admin copy accepted it. And
+the seventh line is the trap in "Upload Settings are admin data": with `caps` omitted (which
+is what `useUploadSettings` returning `null` gives you) a 90 MB video passes the client check
+and is then rejected by the server.
+
+`describeAttachment(url)` — classification from the URL alone:
+
+```ts
+describeAttachment('https://ik.imagekit.io/duncit/pods/weekend-pottery-hero.JPEG?tr=w-400');
+// { url: '…', name: 'weekend-pottery-hero.JPEG', ext: 'jpeg', kind: 'image' }
+describeAttachment('https://ik.imagekit.io/duncit/pods/reels/pottery-reel.mp4');
+// { url: '…', name: 'pottery-reel.mp4', ext: 'mp4', kind: 'video' }
+describeAttachment('https://ik.imagekit.io/duncit/support/venue-agreement.pdf');
+// { url: '…', name: 'venue-agreement.pdf', ext: 'pdf', kind: 'doc' }
+describeAttachment('https://ik.imagekit.io/duncit/misc/no-extension');
+// { url: '…', name: 'no-extension', ext: '', kind: 'doc' }   ← unknown falls back to doc
+```
+
+The query string is stripped before the basename is read, and `ext` is lowercased but **not**
+rewritten — `.JPEG` reports `ext: 'jpeg'`. The `jpeg → jpg` normalisation is inside
+`validateFile`'s format check, not here.
+
+```ts
+isVideoUpload('clip.mkv', '');           // true   ← browsers report no MIME for .mkv
+isVideoUpload('clip.mp4', 'video/mp4');  // true
+isVideoUpload('photo.jpg', 'image/jpeg');// false
+typeLabel('pdf');                        // 'PDF'
+typeLabel('');                           // 'FILE'
+```
+
+Crop helpers, against `portalUploadSettings.crop_presets`:
+
+```ts
+croppablePresets(presets).map((p) => p.key);
+// ['RATIO_16_9', 'RATIO_1_1', 'POD_FEATURE']
+// NO_CROP is 0×0 and STORY_9_16 is disabled — both drop out.
+
+presetAspect({ key: 'RATIO_16_9',  width: 1920, height: 1080, … }); // 1.7777777777777777
+presetAspect({ key: 'POD_FEATURE', width: 1080, height: 1350, … }); // 0.8
+presetAspect({ key: 'NO_CROP',     width: 0,    height: 0,    … }); // 1  ← guarded, never a divide-by-zero
+
+suggestPresetKey(4032, 3024, presets); // 'RATIO_1_1'    (4:3 source is closer to 1.0 than to 1.78)
+suggestPresetKey(1080, 1920, presets); // 'POD_FEATURE'  (STORY_9_16 would be exact but is disabled)
+suggestPresetKey(0, 0, presets);       // null           (unknown source size)
+
+formatBytes(512);        // '512 B'
+formatBytes(663552);     // '648 KB'
+formatBytes(13002342);   // '12.4 MB'
+formatDuration(9);       // '0:09'
+formatDuration(75);      // '1:15'
+formatDuration(0);       // ''
+```
+
+`pickBestVideoFile` picks HD first, then the widest at or under 1080p:
+
+```ts
+pickBestVideoFile({
+  video_files: [
+    { quality: 'sd', width: 640,  height: 360,  link: 'a.mp4' },
+    { quality: 'hd', width: 1920, height: 1080, link: 'b.mp4' },
+    { quality: 'hd', width: 3840, height: 2160, link: 'c.mp4' },
+  ],
+});
+// { quality: 'hd', width: 1920, height: 1080, link: 'b.mp4' }   ← the 4K entry is skipped
+```
+
+## API reference
+
+### `MediaPickerDialog` (also the default export)
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `open` | `boolean` | yes | — | Dialog visibility. |
+| `onClose` | `() => void` | yes | — | Close handler. |
+| `onPicked` | `(url: string) => void` | yes | — | Fires with the final stored URL. |
+| `folder` | `string` | no | — | ImageKit folder, e.g. `'/pods'`, `'/branding'`. |
+| `title` | `string` | no | — | Dialog heading. |
+| `accept` | `string` | no | images + videos | Comma-separated MIME list. |
+| `allowDocuments` | `boolean` | no | derived from `accept` | Pass `false` to force-disable documents even for a pdf accept list. |
+| `surface` | `'PORTALS' \| 'MOBILE' \| 'MWEB'` | no | — | Which Upload Settings row drives sizes, formats and crop presets. |
+
+### `SingleImageUploadField`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `value` | `string` | yes | — | Current URL (controlled). |
+| `onChange` | `(url: string) => void` | yes | — | New URL after upload/removal. |
+| `folder` | `string` | yes | — | ImageKit folder. |
+| `variant` | `'url-adornment' \| 'url-button' \| 'avatar'` | no | `'url-adornment'` | Chrome: website-app field, finance field, or crm avatar (no URL paste). |
+| `label` / `helperText` | `string` | no | — | Field copy. |
+| `error` | `boolean` | no | `false` | External error flag (url variants forward it to the `TextField`). |
+| `disabled` | `boolean` | no | `false` | Disable the field. |
+| `accept` | `string` | no | `'image/*'` | File-input accept list. |
+| `maxBytes` | `number \| null` | no | 15 MB | Per-file cap; `null` disables it. |
+| `oversizeMessage` | `(file: File) => string` | no | built-in | Custom over-size copy. |
+| `fallbackMimeType` | `string` | no | — | Used when the browser reports an empty `file.type`. |
+| `shape` | `'circle' \| 'square'` | no | `'circle'` | `avatar` variant only. |
+| `uploadTestId` | `string` | no | — | `data-testid` on the upload button. |
+| `buttonLabel` | `string` | no | `'Upload'` | `url-button` variant's idle label. |
+
+### `AttachmentUploadField`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `value` | `string[]` | yes | — | Current attachment URLs. |
+| `onChange` | `(next: string[]) => void` | yes | — | New list. |
+| `folder` | `string` | no | `'/support'` | ImageKit folder. |
+| `max` | `number` | no | `5` | Maximum attachments. |
+| `accept` | `string` | no | `'image/*'` | Use `ATTACHMENT_ACCEPT_ALL` for documents. |
+| `maxBytes` | `number` | no | 15 MB | Per-file cap. |
+| `videoMaxBytes` | `number` | no | — | Tighter video cap (mWeb support uses 50 MB). |
+| `allowDocuments` | `boolean` | no | `false` | Let the server accept PDF/office files. |
+| `strategy` | `'base64' \| 'direct'` | no | `'base64'` | Server mutation vs signed direct-to-ImageKit. |
+| `multiple` | `boolean` | no | `true` | Several files per pick. |
+| `previewSize` | `number` | no | 64 | Thumbnail edge in px. |
+| `previewVariant` | `'chip' \| 'card'` | no | `'chip'` | Non-image preview shape. |
+| `errorVariant` | `'text' \| 'chip'` | no | `'text'` | Caption vs dismissible chip. |
+| `label` / `buttonLabel` / `buttonSx` / `disabled` | — | no | — | Field chrome. |
+| `oversizeMessage` / `videoOversizeMessage` | `(file: File) => string` / `string` | no | built-in | Custom over-size copy. |
+
+### Upload plumbing and helpers
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `uploadImageToImagekit` | `(client, file, options?) => Promise<ImagekitUploadResult>` | Base64 through the server `uploadImage` mutation. Throws when the server returns no URL. |
+| `useImagekitBase64Upload` | `() => { upload(file, options?), uploading }` | Hook form; takes the client from Apollo context. |
+| `directUploadToImagekit` | `(client, file, folder, onProgress?) => Promise<string>` | Signed `getImagekitAuth` then a direct XHR. Rejects with *"Cannot upload: a real file (Blob) is required."* for a non-Blob. |
+| `useImagekitDirectUpload` | `() => { upload(file, folder, onProgress?), uploading }` | Real byte progress, for videos/reels. |
+| `UploadImageOptions` | `{ folder?, allowDocuments?, fileName?, fallbackMimeType?, onProgress?, surface?, crop?, cropPreset? }` | `onProgress` is cosmetic on this path — it fires once with `55` after the read. |
+| `ImagekitUploadResult` | `{ url: string; fileId?: string \| null; thumbnailUrl?: string \| null }` | — |
+| `compressUploadedVideo` | `(client, remoteUrl, folder, surface, onProgress?, trim?) => Promise<string>` | Runs **after** the raw upload — takes the uploaded URL, not the `File`. |
+| `useUploadSettings` | `(surface = 'PORTALS') => UploadSettings \| null` | `cache-first`; `null` while loading or on failure. |
+| `validateFile` | `(file, policy: FilePolicy, caps?: FileCaps) => string \| null` | `FilePolicy = { allowImage, allowVideo, allowDocuments }`; `FileCaps = { maxImageMb?, maxVideoMb?, allowedImageFormats?, allowedVideoFormats? }`. Static fallbacks: 15 MB image, 100 MB video, 50 MB document. |
+| `describeAttachment` | `(url: string) => AttachmentInfo` | `{ url, name, ext, kind }` with `kind: 'image' \| 'video' \| 'doc'`. |
+| `isVideoUpload` / `typeLabel` | `(fileName, mimeType) => boolean` / `(ext) => string` | MIME **or** extension; `'FILE'` for an empty ext. |
+| `croppablePresets` / `presetAspect` / `suggestPresetKey` | see examples above | `presetAspect` returns `1` for a 0-height preset, so *No Crop* never divides by zero. |
+| `formatBytes` / `formatDuration` | `(bytes) => string` / `(seconds) => string` | `'12.4 MB'`, `'1:15'`; `formatDuration` returns `''` for 0 or a non-finite input. |
+| `ATTACHMENT_ACCEPT_ALL` | `string` | `image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv` |
+| `UPLOAD_IMAGE` / `GET_IMAGEKIT_AUTH` / `UPLOAD_SETTINGS` | GraphQL documents | Re-export these; never re-declare the upload mutation in a portal. |
+
+## Live preview
+
+No live preview on this page. Every component here needs an `ApolloProvider` — the dialog
+reads Upload Settings, the fields call the upload mutation — and the docs-site preview islands
+are static, dependency-free React with no client and no server. A preview that mocked the
+Apollo client would be showing you a mock-up of an upload, which is worse than no preview: the
+one thing a reader wants to see is whether the real cap rejects their file, and that is what
+the `validateFile` examples above show with real return values.
+
+The pure helpers (`validateFile`, `describeAttachment`, the crop utilities) are the part worth
+previewing, and they have no UI.
+
 ## Two upload paths — pick the right one
 
 | Export | Transport | Use for |

@@ -25,6 +25,16 @@ exports:
   - 'UPI_ID'
   - 'BANK_ACCOUNT_NUMBER'
   - 'GSTIN'
+  - 'isPhoneNumber'
+  - 'isPhoneIntl'
+  - 'isPincode'
+  - 'isPincodeLoose'
+  - 'isEmail'
+  - 'isOtp'
+  - 'isIfsc'
+  - 'isUpiId'
+  - 'isBankAccountNumber'
+  - 'isGstin'
 ---
 
 ## Why this exists
@@ -54,6 +64,102 @@ const schema = z.object({
 
 None of the patterns carry the `g` flag, so `.test()` is safe to call repeatedly on the same
 object — a lockstep test asserts this rather than trusting it.
+
+## Sample data
+
+A partner-onboarding submission — every field this package validates, in one object:
+
+```ts
+const applicant = {
+  full_name: 'Ananya Iyer',
+  email: 'ananya.iyer@duncit.com',
+  dial_code: '+91',
+  phone: '9876543210',          // India: exactly 10 digits
+  otp: '480912',
+  pincode: '560103',            // India: exactly 6, first digit 1–9
+  country_pincode: '94107',     // shipping abroad: 4–10 digits
+  intl_phone: '14155552671',    // checkout abroad: 6–15 digits, no '+'
+  ifsc: 'HDFC0001234',
+  upi_id: 'ananya.iyer@okhdfcbank',
+  account_number: '50100234567890',
+  gstin: '29ABCDE1234F1Z5',
+};
+```
+
+## Worked examples
+
+Run against `applicant` above — these are the actual returned booleans.
+
+```ts
+isPhoneNumber(applicant.phone)                // true
+isEmail(applicant.email)                      // true
+isOtp(applicant.otp)                          // true
+isPincode(applicant.pincode)                  // true
+isPincodeLoose(applicant.country_pincode)     // true
+isPhoneIntl(applicant.intl_phone)             // true
+isIfsc(applicant.ifsc)                        // true
+isUpiId(applicant.upi_id)                     // true
+isBankAccountNumber(applicant.account_number) // true
+isGstin(applicant.gstin)                      // true
+```
+
+The rejections are the interesting half:
+
+```ts
+isPhoneNumber('98765')          // false — 5 digits, not 10
+isEmail('ananya@duncit')        // false — no dotted domain
+isIfsc('hdfc0001234')           // false — IFSC is UPPERCASE only; uppercase before validating
+isGstin('29ABCDE1234F1Z')       // false — 14 chars, one short
+isPincode('012345')             // false — an Indian PIN never starts with 0
+isPhoneIntl('+14155552671')     // false — PHONE_INTL is digits only…
+PHONE_INTL_PLUS.test('+14155552671') // true  — …use this one for a pasted full number
+DIAL_CODE.test('+91')           // true
+```
+
+`isIfsc('hdfc0001234')` returning `false` is the one that bites: none of the patterns are
+case-insensitive, so a form must `.toUpperCase()` on change (or in a Zod `.transform()`)
+before it validates.
+
+Straight into a schema:
+
+```ts
+const payoutSchema = z.object({
+  ifsc: z.string().transform((v) => v.toUpperCase()).refine(isIfsc, 'Enter a valid IFSC code'),
+  account_number: z.string().regex(BANK_ACCOUNT_NUMBER, 'Enter a valid account number'),
+  upi_id: z.string().regex(UPI_ID, 'Enter a valid UPI ID'),
+});
+```
+
+## API
+
+Every pattern is a plain `RegExp` with no flags; every validator is
+`(value: string) => boolean` and has no default arguments.
+
+| Pattern | Source | Validator | Accepts |
+| --- | --- | --- | --- |
+| `PHONE_NUMBER` | `/^\d{10}$/` | `isPhoneNumber` | India mobile, no dial code |
+| `PHONE_NUMBER_IN` | `/^[6-9]\d{9}$/` | — | India mobile, stricter (starts 6–9) |
+| `PHONE_INTL` | `/^\d{6,15}$/` | `isPhoneIntl` | ITU E.164 range, digits only |
+| `PHONE_INTL_PLUS` | `/^\+?\d{6,15}$/` | — | as above, tolerating a pasted `+` |
+| `DIAL_CODE` | `/^\+?\d{1,4}$/` | — | `+91`, `1`, `971` |
+| `PINCODE` | `/^[1-9]\d{5}$/` | `isPincode` | India PIN, exactly 6 |
+| `PINCODE_LOOSE` | `/^\d{4,10}$/` | `isPincodeLoose` | any postal code, 4–10 digits |
+| `OTP_6` | `/^\d{6}$/` | `isOtp` | 6-digit numeric OTP |
+| `EMAIL` | `/^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)+$/` | `isEmail` | one `@`, dotted domain, no spaces |
+| `DIGITS` | `/^\d+$/` | — | digits only, any length |
+| `IFSC` | `/^[A-Z]{4}0[A-Z0-9]{6}$/` | `isIfsc` | 4 letters, literal `0`, 6 alphanumerics |
+| `UPI_ID` | `/^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9.-]{2,64}$/` | `isUpiId` | `name@bank` |
+| `BANK_ACCOUNT_NUMBER` | `/^\d{6,18}$/` | `isBankAccountNumber` | 6–18 digits |
+| `GSTIN` | `/^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/` | `isGstin` | 15 chars, literal `Z` at 14 |
+
+`EMAIL` and `UPI_ID` are bounded on both sides deliberately — the domain labels exclude `.`
+so the `\.` separator never overlaps a label. Both are linear; neither can be made to
+backtrack.
+
+## No live preview
+
+Patterns and predicates only — there is nothing to render. The worked examples above are
+the whole surface.
 
 ## Indian vs international — do not mix these up
 

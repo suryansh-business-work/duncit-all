@@ -46,6 +46,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
+      # setup-node reads the root package.json's `packageManager: pnpm@9.15.0`
+      # and resolves pnpm even when no cache is requested, so without this the
+      # job dies with "Unable to locate executable file: pnpm" before the audit
+      # ever runs. Every other job in the repo already sets pnpm up first.
+      - uses: pnpm/action-setup@v4.4.0
+        with:
+          run_install: false
       - uses: actions/setup-node@v5
         with:
           node-version: 24

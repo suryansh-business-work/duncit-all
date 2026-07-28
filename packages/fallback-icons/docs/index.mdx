@@ -64,6 +64,119 @@ return {
 native it is the `require()` module id. It never touches the DOM, has no dependencies and no
 framework, so the same function serves React, React Native and a plain Node script.
 
+## Sample data
+
+A project's manifest and the branding row it is defending against. The manifest is a real
+`FallbackIconManifest<T>`, so it must name all six icons or `tsc` fails.
+
+```ts
+import type { FallbackIconManifest } from '@duncit/fallback-icons';
+
+/** app/mweb/src/fallback-icons/index.ts — every name, mapped to a bundled asset. */
+export const bundled: FallbackIconManifest<string> = {
+  logo:          '/src/fallback-icons/logo.svg',
+  favicon:       '/src/fallback-icons/favicon.svg',
+  splash:        '/src/fallback-icons/splash.png',
+  'all-vibe':    '/src/fallback-icons/all-vibe.svg',
+  placeholder:   '/src/fallback-icons/placeholder.svg',
+  occasion:      '/src/fallback-icons/occasion.svg',
+};
+
+/** The server branding row — note two of the three fields are unusable. */
+const branding = {
+  logo_url:          'https://ik.imagekit.io/duncit/branding/logo-2026.svg',
+  mweb_favicon_url:  '',      // admin cleared the field
+  splash_url:        null,    // never set
+};
+```
+
+On native the value type changes but the names do not:
+`FallbackIconManifest<number>`, holding `require('../../assets/fallback-icons/logo.png')`
+module ids.
+
+## Worked examples
+
+```ts
+FALLBACK_ICON_NAMES
+// ['logo', 'favicon', 'splash', 'all-vibe', 'placeholder', 'occasion']
+
+resolveIconSource(branding.logo_url, bundled.logo)
+// { source: 'https://ik.imagekit.io/duncit/branding/logo-2026.svg', isFallback: false }
+
+resolveIconSource(branding.mweb_favicon_url, bundled.favicon)
+// { source: '/src/fallback-icons/favicon.svg', isFallback: true }   ← empty string
+
+resolveIconSource(branding.splash_url, bundled.splash)
+// { source: '/src/fallback-icons/splash.png', isFallback: true }    ← null
+
+resolveIconSource('   ', bundled.placeholder)
+// { source: '/src/fallback-icons/placeholder.svg', isFallback: true } ← whitespace is trimmed
+```
+
+The case that only `failed` catches — a URL that is present, non-blank, and 404s:
+
+```ts
+resolveIconSource(branding.logo_url, bundled.logo)               // isFallback: false  ← still tries
+resolveIconSource(branding.logo_url, bundled.logo, /* failed */ true)
+// { source: '/src/fallback-icons/logo.svg', isFallback: true }
+```
+
+Wired up, that is an `onError` flipping one piece of state:
+
+```tsx
+const [failed, setFailed] = useState(false);
+const { source, isFallback } = resolveIconSource(branding.logo_url, bundled.logo, failed);
+
+<img
+  src={source}
+  alt="Duncit"
+  onError={() => setFailed(true)}   // without this, a dead URL is retried forever
+/>
+```
+
+Narrowing an admin-supplied binding:
+
+```ts
+toFallbackIconName('occasion')   // 'occasion'
+toFallbackIconName('banner')     // null — not in the contract
+toFallbackIconName(undefined)    // null
+```
+
+## API
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `FALLBACK_ICON_NAMES` | `readonly ['logo','favicon','splash','all-vibe','placeholder','occasion']` | — | The contract. Six names, `as const`. |
+| `resolveIconSource` | `<T>(url: string \| null \| undefined, fallback: T, failed?: boolean) => { source: string \| T; isFallback: boolean }` | `failed = false` | Pick the URL or the bundled copy. |
+| `toFallbackIconName` | `(value: string \| null \| undefined) => FallbackIconName \| null` | — | Narrow an untrusted string. |
+| `FallbackIconName` | `'logo' \| 'favicon' \| 'splash' \| 'all-vibe' \| 'placeholder' \| 'occasion'` | — | Union of the names. |
+| `FallbackIconManifest<T>` | `Record<FallbackIconName, T>` | — | A project's bundle. Missing name → `tsc` error; missing file → bundler error. |
+
+| `resolveIconSource` argument | Required | Falls back when |
+| --- | --- | --- |
+| `url` | yes (may be `null`/`undefined`) | it is `null`, `undefined`, `''`, or whitespace-only |
+| `fallback` | yes | — (it is the fallback) |
+| `failed` | no, `false` | it is `true` — the URL errored at runtime |
+
+`source` is typed `string | T`, so on native it is `string | number` and React Native's
+`Image` accepts either without a cast.
+
+| Name | Stands in for |
+| --- | --- |
+| `logo` | `logo_url` and every per-surface `*_logo_url` |
+| `favicon` | every per-surface `*_favicon_url` |
+| `splash` | every per-surface `*_splash_url` |
+| `all-vibe` | the synthetic "All" tab icon in the home vibe tabber |
+| `placeholder` | any image that fails to load (products, media) |
+| `occasion` | a festive occasion with no art of its own |
+
+## No live preview
+
+The exports are a name list and two pure functions — the rendering is an `<img>` (web) or
+`<Image>` (native) in the consuming surface, with the `onError` wiring shown above. A preview
+would have to ship its own broken URL to demonstrate anything, which is what the worked
+examples do more directly.
+
 ## The `failed` argument is not optional in practice
 
 Passing only `(url, bundled)` checks that the URL is non-blank after trimming. A URL that

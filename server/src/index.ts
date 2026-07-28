@@ -17,7 +17,7 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { connectDB } from './config/db';
 import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
-import { rbacService } from '@modules/access/rbac/rbac.service';
+import { rbacService } from '@modules/access/role/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
 import { categoryService } from '@modules/pods/category/category.service';

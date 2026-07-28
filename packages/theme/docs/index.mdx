@@ -75,6 +75,170 @@ const { mode, toggle } = useColorMode();
 <IconButton onClick={toggle} sx={{ color: tokens.dark.ink }} />;
 ```
 
+## Live preview
+
+import Preview from '@docs/components/Preview.astro';
+import { ThemedControls } from '@docs/components/examples/ThemedControls.tsx';
+import themedControlsSource from '@docs/components/examples/ThemedControls.tsx?raw';
+
+<Preview
+  title="MUI controls under createDuncitTheme('light', financeAccent)"
+  code={themedControlsSource}
+  note="Only `financeAccent` is portal-specific. The pill radius, the 30px chip height, the input focus ring, the Nunito face and the alert treatment all come from `tokens` via the shared overrides."
+>
+  <ThemedControls client:load />
+</Preview>
+
+Swap `financeAccent` for `tokens.defaultAccent` and every green above turns Duncit red —
+nothing else in the file changes. That is the whole contract of this package.
+
+## Sample data
+
+A portal supplies exactly one object:
+
+```ts
+/** portals/finance/src/main.tsx */
+const financeAccent = {
+  light:  '#86efac',
+  main:   '#22c55e',
+  hover:  '#16a34a',
+  active: '#15803d',
+};
+```
+
+## Worked examples
+
+### What the accent derives
+
+```ts
+buildThemeCtx('dark', financeAccent)
+```
+
+```json
+{
+  "mode": "dark",
+  "isDark": true,
+  "accent": { "light": "#86efac", "main": "#22c55e", "hover": "#16a34a", "active": "#15803d" },
+  "primary": "#22c55e",
+  "primaryLight": "#86efac",
+  "primaryHover": "#16a34a",
+  "primaryActive": "#15803d",
+  "ink": "#f4f6fb",
+  "muted": "#9aa3b2",
+  "border": "rgba(255,255,255,0.10)",
+  "bg": "#0b1220",
+  "surface": "#111a2e",
+  "appBg": "radial-gradient(circle at 8% 0%, rgba(34, 197, 94, 0.2), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139, 92, 246, 0.18), transparent 32%), linear-gradient(180deg, #100d18 0%, #08070b 100%)",
+  "surfaceGradient": "linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(34, 197, 94, 0.06) 100%)",
+  "white": "#ffffff",
+  "t": "…the whole tokens object"
+}
+```
+
+Sixteen derived values from four. The accent leaks into `appBg` and `surfaceGradient` as
+alpha washes — which is why a portal must never hand-roll its background.
+
+The light-mode counterparts of the same call:
+
+```ts
+const ctx = buildThemeCtx('light', financeAccent);
+ctx.ink      // '#111827'
+ctx.bg       // '#f8fafc'
+ctx.surface  // '#ffffff'
+ctx.border   // '#e5e7eb'
+ctx.muted    // '#6b7280'
+```
+
+### The built theme
+
+```ts
+const theme = createDuncitTheme('dark', financeAccent);
+
+theme.palette.mode        // 'dark'
+theme.palette.primary     // { light: '#86efac', main: '#22c55e', dark: '#15803d', contrastText: '#ffffff' }
+theme.palette.background  // { default: '#0b1220', paper: '#111a2e' }
+theme.palette.text        // { primary: '#f4f6fb', secondary: '#9aa3b2',
+                          //   disabled: 'rgba(255, 255, 255, 0.5)', icon: 'rgba(255, 255, 255, 0.5)' }
+theme.shape.borderRadius  // 6   — tokens.radius.sm
+theme.typography.fontFamily
+// '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+```
+
+21 components are overridden — this is the list a portal inherits without asking:
+
+```
+MuiCssBaseline, MuiAppBar, MuiPaper, MuiCard, MuiDialog, MuiDivider, MuiButton,
+MuiIconButton, MuiTextField, MuiSelect, MuiFormLabel, MuiFormHelperText,
+MuiOutlinedInput, MuiChip, MuiTooltip, MuiTable, MuiTableHead, MuiTableCell,
+MuiListItemButton, MuiAlert, MuiAvatar
+```
+
+`extend` adds to that set rather than replacing it:
+
+```ts
+const crmTheme = createDuncitTheme('light', crmAccent, () => ({
+  MuiDataGrid: { styleOverrides: { root: { border: 0 } } },
+}));
+Object.keys(crmTheme.components).includes('MuiDataGrid');  // true
+```
+
+### The tokens themselves
+
+```ts
+tokens.defaultAccent
+// { light: '#ff9e9e', main: '#ff5757', hover: '#f03e3e', active: '#d92d2d' }
+
+tokens.radius
+// { xs: 4, sm: 6, md: 8, lg: 10 }
+
+tokens.size
+// { buttonPadX: 18, buttonPadY: 9, buttonLgPadX: 20, buttonLgPadY: 11, chipHeight: 30,
+//   chipPadX: 6, touchTarget: 44, scrollbar: 8, helperGap: 5, headerHeight: 48, drawerWidth: 256 }
+
+tokens.font.size
+// { body1: '0.95rem', body2: '0.875rem', caption: '0.75rem', buttonLg: '0.92rem', tooltip: '0.75rem' }
+
+tokens.font.weight
+// { regular: 400, medium: 600, semibold: 700, bold: 800 }
+```
+
+`touchTarget: 44` and `drawerWidth: 256` are in here for the same reason the colours are: a
+portal that hardcodes `44` is a portal that will not follow when the token moves.
+
+## API
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `createDuncitTheme` | `(mode?: ColorMode, accent?: AccentColors, extend?: ComponentExtend) => Theme` | `'light'`, `tokens.defaultAccent`, — | Build the shared MUI theme. |
+| `buildTheme` | alias of `createDuncitTheme` | — | Back-compat name some portals import. |
+| `buildThemeCtx` | `(mode: ColorMode, accent: AccentColors) => ThemeCtx` | — | The derived context every override builder reads. |
+| `buildComponents` | `(ctx: ThemeCtx, extend?: ComponentExtend) => Components` | — | The 21 overrides, plus anything `extend` adds. |
+| `DuncitThemeProvider` | React component | — | Theme + `CssBaseline` + persisted colour mode. |
+| `useColorMode` | `() => { mode, toggle, set }` | `{ mode: 'light', … no-ops }` outside a provider | Read and flip the mode. |
+| `tokens` | `Tokens` (const object) | — | Colours, radii, sizes, fonts. The only place a literal lives. |
+
+### `DuncitThemeProvider` props
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `accent` | `AccentColors` | no | `tokens.defaultAccent` | The portal's brand accent. |
+| `storageKey` | `string` | no | `'duncit_color_mode'` | localStorage key for the mode — **must be unique per portal**. |
+| `defaultMode` | `'light' \| 'dark'` | no | `'dark'` | Mode on first load when nothing is stored. |
+| `extend` | `ComponentExtend` | no | — | Extra MUI overrides needing a portal-only dependency. |
+| `children` | `ReactNode` | yes | — | The app. |
+
+### `AccentColors`
+
+| Field | Type | Required | Used for |
+| --- | --- | --- | --- |
+| `light` | `string` | yes | `palette.primary.light`, `ctx.primaryLight` |
+| `main` | `string` | yes | `palette.primary.main`, and every derived gradient |
+| `hover` | `string` | yes | `ctx.primaryHover` |
+| `active` | `string` | yes | `palette.primary.dark`, `ctx.primaryActive` |
+
+`ColorMode` is MUI's `PaletteMode` (`'light' | 'dark'`). `ComponentExtend` is
+`(ctx: ThemeCtx) => Components<Theme>`, merged over the shared set.
+
 ## Do not call `createTheme` in a portal
 
 `DuncitThemeProvider` already builds the theme, applies `CssBaseline` and provides the colour

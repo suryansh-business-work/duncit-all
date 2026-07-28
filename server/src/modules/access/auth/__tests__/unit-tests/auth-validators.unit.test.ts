@@ -6,7 +6,7 @@ import {
   requestPasswordChangeSchema,
   changePasswordSchema,
   deleteMyAccountSchema,
-} from '../../user.validator';
+} from '../../auth.validator';
 
 describe('auth validators — simplified signup contract', () => {
   it('registerSchema accepts a payload with no phone and no last_name', async () => {

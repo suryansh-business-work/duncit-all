@@ -11,7 +11,7 @@ import {
 import { PodAuditLogModel } from '../../podAudit.model';
 import { podService } from '@modules/pods/pod/pod.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 

@@ -1,6 +1,9 @@
-import { assertPortalLogin } from '../../user.portalGate';
-import { PORTAL_GATE_EXEMPT_KEYS, PORTAL_ROLE_REQUIREMENTS } from '../../user.constants';
-import { loginSchema } from '../../user.validator';
+import {
+  assertPortalLogin,
+  PORTAL_GATE_EXEMPT_KEYS,
+  PORTAL_ROLE_REQUIREMENTS,
+} from '@modules/portals';
+import { loginSchema } from '@modules/access/auth/auth.validator';
 
 describe('assertPortalLogin — server-side portal login gate', () => {
   it('allows login when portal_key is absent or blank', () => {
@@ -41,8 +44,34 @@ describe('assertPortalLogin — server-side portal login gate', () => {
     }
   });
 
-  it('fails open for an unknown portal key (map not yet updated)', () => {
-    expect(() => assertPortalLogin('brand-new-portal', ['USER'])).not.toThrow();
+  it('fails CLOSED for an unknown portal key (map not yet updated)', () => {
+    expect(() => assertPortalLogin('brand-new-portal', ['USER'])).toThrow(
+      'You do not have access to this portal'
+    );
+    try {
+      assertPortalLogin('brand-new-portal', ['TECH_MANAGER']);
+      throw new Error('expected assertPortalLogin to throw');
+    } catch (err: any) {
+      expect(err.extensions?.code).toBe('FORBIDDEN');
+    }
+  });
+
+  it('still lets SUPER_ADMIN into an unknown portal key', () => {
+    expect(() => assertPortalLogin('brand-new-portal', ['SUPER_ADMIN'])).not.toThrow();
+  });
+
+  it('covers every portal key the clients ship with a map or exempt entry', () => {
+    // Fail-closed only works if the server map stays in step with the portal
+    // clients' own appConfig.key values (portals/<name>/src/config/app-config.ts).
+    const shippedPortalKeys = [
+      'admin', 'ads', 'ai', 'challenge', 'crm', 'developers', 'employee',
+      'finance', 'hr', 'legal', 'marketing', 'onboarding', 'partners',
+      'products', 'support', 'tech', 'website-app',
+    ];
+    for (const key of shippedPortalKeys) {
+      const known = PORTAL_GATE_EXEMPT_KEYS.has(key) || Boolean(PORTAL_ROLE_REQUIREMENTS[key]);
+      expect({ key, known }).toEqual({ key, known: true });
+    }
   });
 });
 

@@ -4,7 +4,7 @@ import { logs } from '@observability/log';
 import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { ProductOrderModel } from '@modules/commerce/productOrder/productOrder.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';

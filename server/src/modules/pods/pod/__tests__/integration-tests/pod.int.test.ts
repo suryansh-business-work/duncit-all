@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 import { podService } from '../../pod.service';
 import { podResolvers } from '../../pod.resolver';
 import { PodModel } from '../../pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { makeContext } from '@test/harness';

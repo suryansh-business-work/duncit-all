@@ -12,23 +12,20 @@ import {
   UserSavedPodModel,
   UserInterestModel,
 } from './relations';
+import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
 import type {
   LoginDTO,
   RegisterDTO,
   GoogleSignupDTO,
-  CreateUserDTO,
-  UpdateUserDTO,
-  UpdateMyProfileDTO,
-  PetProfileDTO,
-  StartRecordedUserCallDTO,
   RequestPasswordResetDTO,
   ResetPasswordDTO,
   RequestPasswordChangeDTO,
   ChangePasswordDTO,
   DeleteMyAccountDTO,
-} from './user.validator';
-import { verifyGoogleIdToken } from './user.google';
-import { assertPortalLogin } from './user.portalGate';
+} from '@modules/access/auth/auth.validator';
+import type { UpdateMyProfileDTO, PetProfileDTO } from '@modules/access/profile/profile.validator';
+import { verifyGoogleIdToken } from '@modules/access/auth/auth.google';
+import { assertPortalLogin } from '@modules/portals';
 import {
   sendWelcomeEmail,
   sendAdminCredentialsEmail,
@@ -43,11 +40,11 @@ import {
 import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { LocaleModel } from '@modules/platform/localization/localization.model';
 import { UserContactActionModel } from './userContactAction.model';
-import { rbacService } from '@modules/access/rbac/rbac.service';
+import { rbacService } from '@modules/access/role/rbac.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 import { toPostalAddress } from '@utils/address';
@@ -411,7 +408,7 @@ async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
         const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
         await ecommBrandService.revokeApprovalForUser(userId);
       } else if (role === 'CLUB_ADMIN') {
-        const { clubService } = await import('@modules/pods/club/club.service');
+        const { clubService } = await import('@modules/clubs/club/club.service');
         await clubService.revokeAdminForUser(userId);
       }
     } catch (err) {

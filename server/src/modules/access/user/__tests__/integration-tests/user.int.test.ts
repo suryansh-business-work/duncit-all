@@ -15,7 +15,7 @@ jest.mock("@services/email/email.service", () => ({
 import { userService } from "../../user.service";
 import { UserModel } from "../../user.model";
 import { UserRoleModel } from "../../relations";
-import { RoleModel } from "@modules/access/rbac/rbac.model";
+import { RoleModel } from "@modules/access/role/rbac.model";
 import { LocationModel } from "@modules/platform/location/location.model";
 import { Types } from "mongoose";
 

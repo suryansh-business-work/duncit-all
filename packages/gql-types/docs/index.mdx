@@ -75,6 +75,128 @@ The `Partial<T>` override + full literal shape is the pattern across all sevente
 factory returns a complete, schema-valid object, and each test overrides only the field it cares
 about.
 
+## Sample data
+
+A typed mock of the pod earnings projection — the payload Create-a-Pod Step 4 and the finance
+calculator both render. Every field name below comes from the generated
+`PodFinanceWaterfall` / `PodEarningsProjection`, and this file **compiles**:
+
+```ts
+import type { PodEarningsProjection, PodFinanceWaterfall } from '@duncit/gql-types';
+
+export const waterfall: PodFinanceWaterfall = {
+  __typename: 'PodFinanceWaterfall',
+  version: 3,
+  amount: 29000,
+  gst_pct: 18,
+  gst_amount: 4423.73,
+  net_amount: 24576.27,
+  platform_fee_pct: 10,
+  platform_fee_amount: 2457.63,
+  pool_amount: 22118.64,
+  club_admin_pct: 5,
+  club_admin_amount: 1105.93,
+  venue_amount: 6000,
+  venue_commission_pct: 8,
+  venue_commission_amount: 480,
+  venue_receives: 5520,
+  host_amount: 15012.71,
+  host_commission_pct: 12,
+  host_commission_amount: 1801.53,
+  host_receives: 13211.18,
+  host_earn_pct: 45.56,
+  duncit_revenue: 5844.89,
+};
+
+export const projection: PodEarningsProjection = {
+  __typename: 'PodEarningsProjection',
+  total_spots: 30,      // physical capacity, including the host's own seat
+  payable_spots: 29,    // total_spots − 1
+  waterfall,
+};
+```
+
+Feed `waterfall` straight into `buildEarningsStatement` from `@duncit/utils` — the two
+packages agree by construction, because both read the same generated field names.
+
+An input type, for a mutation mock:
+
+```ts
+import type { AppFeedbackInput } from '@duncit/gql-types';
+
+export const feedback: AppFeedbackInput = {
+  category: 'Bug',
+  message: 'Cart badge still shows 3 after I emptied the cart.',
+  platform: 'android',
+  // blocks_json is InputMaybe<string> — omit it and the mock still typechecks
+};
+```
+
+## Worked examples
+
+There is no runtime to call: the package erases at build time. What it "returns" is a
+typecheck result, so the worked example is the error you get when a mock drifts.
+
+Drop one field from `projection`:
+
+```ts
+export const stale: PodEarningsProjection = {
+  __typename: 'PodEarningsProjection',
+  total_spots: 30,
+  waterfall,
+};
+```
+
+`tsc --noEmit` says, verbatim:
+
+```
+error TS2741: Property 'payable_spots' is missing in type
+'{ __typename: "PodEarningsProjection"; total_spots: number; waterfall: PodFinanceWaterfall; }'
+but required in type 'PodEarningsProjection'.
+```
+
+That is the whole product. `payable_spots` was added to the schema when the host-free-spot
+rule landed; a hand-written mock would have kept billing 30 seats and the test would have
+gone on passing. Here it is a build failure in the portal that owns the mock.
+
+The same mechanism catches the two other drift shapes:
+
+- A **renamed** field — `TS2353: Object literal may only specify known properties`.
+- A **retyped** field (`Int` → `Float`, nullable → non-null) — `TS2322` on assignment.
+
+Nothing catches a *removed* field you never used, which is correct: your mock was already
+right.
+
+## API
+
+`export * from './schema'` — one barrel over the codegen output. There are **1520 exported
+types**; they are not listed here because the schema is the list. Look a type up by its
+GraphQL name: a `Pod` in SDL is `Pod` in TypeScript, `PodFilterInput` is `PodFilterInput`.
+
+| Helper | Definition | Use |
+| --- | --- | --- |
+| `Maybe<T>` | `T \| null` | Every nullable output field. |
+| `InputMaybe<T>` | `T \| null` | Every optional input field. |
+| `Scalars` | `{ ID, String, Boolean, Int, Float }` each `{ input; output }` | What the object types are built from. |
+| `Exact<T>` | `{ [K in keyof T]: T[K] }` | Operation variables. |
+| `MakeOptional<T, K>` / `MakeMaybe<T, K>` / `MakeEmpty<T, K>` | see source | Codegen plumbing. |
+| `Incremental<T>` | `T \| { … }` | Defer/stream support. |
+
+Reading a generated field: `Scalars['Float']['output']` is `number`,
+`Maybe<Scalars['String']['output']>` is `string | null`,
+`InputMaybe<Scalars['ID']['input']>` is `string | null` **and** optional (`?:`) on the
+property. So a required output field is plain, and an optional input can simply be omitted —
+as `blocks_json` is above.
+
+`__typename` is `?: 'TypeName'` on every object type. Keep it in mocks; Apollo's cache
+normalizes on it, and an object without one is cached as a distinct entity.
+
+## No live preview
+
+Types only — the whole package erases at build time, so there is nothing to render and
+nothing to log. The "output" shown above is the compiler's, which is the only output this
+package has.
+
 ## Always keep `__typename`
 
 Codegen runs with `skipTypename: false`, so every object type carries `__typename`. Keep it in

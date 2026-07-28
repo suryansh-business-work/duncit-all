@@ -20,8 +20,8 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import { connectDB } from '../src/config/db';
-import { RoleModel } from '../src/modules/access/rbac/rbac.model';
-import { rbacService } from '../src/modules/access/rbac/rbac.service';
+import { RoleModel } from '../src/modules/access/role/rbac.model';
+import { rbacService } from '../src/modules/access/role/rbac.service';
 import { ROLE_CATALOG } from '../src/modules/access/user/user.constants';
 
 const dryRun = process.argv.includes('--dry-run');

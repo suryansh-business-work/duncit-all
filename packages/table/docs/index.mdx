@@ -98,6 +98,254 @@ const fetchRows = useApolloTableFetch<PodRow>(client, PODS_TABLE, 'podsTable', {
 }, [clubId]);
 ```
 
+## Sample data
+
+Two fixtures cover everything this package takes: the column list and the query state the
+table hands to `fetchRows`. Field names are the real ones from `DuncitColumn` /
+`TableQueryState`.
+
+```ts
+import type { DuncitColumn, TableQueryState } from '@duncit/table';
+
+export interface PayoutRow {
+  id: string;
+  payout_no: string;
+  host_name: string;
+  amount: number;
+  payout_status: 'PENDING' | 'PAID';
+  is_active: boolean;
+  created_at: string;
+}
+
+export const payoutRows: PayoutRow[] = [
+  {
+    id: '66c1e4f27a83b90012de4411',
+    payout_no: 'DUN-PAY-10241',
+    host_name: 'Aarav Mehta',
+    amount: 8250,
+    payout_status: 'PENDING',
+    is_active: true,
+    created_at: '2026-07-28T09:15:00.000Z',
+  },
+  {
+    id: '66c1e4f27a83b90012de4412',
+    payout_no: 'DUN-PAY-10240',
+    host_name: 'Nikita Rao',
+    amount: 12400,
+    payout_status: 'PAID',
+    is_active: false,
+    created_at: '2026-07-27T11:40:00.000Z',
+  },
+];
+
+export const payoutColumns: DuncitColumn<PayoutRow>[] = [
+  { field: 'payout_no', headerName: 'Payout ID', filter: { type: 'text' } },
+  { field: 'host_name', headerName: 'Host', filter: { type: 'text' } },
+  { field: 'amount', headerName: 'Amount (₹)', filter: { type: 'number' }, width: 140 },
+  {
+    field: 'payout_status',
+    headerName: 'Status',
+    filter: {
+      type: 'select',
+      multiple: true,
+      options: [
+        { value: 'PENDING', label: 'Pending' },
+        { value: 'PAID', label: 'Paid' },
+      ],
+    },
+  },
+  { field: 'is_active', headerName: 'Active', filter: { type: 'boolean' }, width: 110 },
+];
+
+/** What the table hands to fetchRows after a search, a sort and four filters. */
+export const payoutQuery: TableQueryState = {
+  search: 'aarav',
+  page: 2,
+  pageSize: 25,
+  sortBy: 'created_at',
+  sortDir: 'desc',
+  filters: [
+    { field: 'payout_status', op: 'in', values: ['PENDING', 'PAID'] },
+    { field: 'amount', op: 'between', values: ['500', '5000'] },
+    { field: 'is_active', op: 'is_true' },
+    { field: 'host_name', op: 'contains', value: 'aarav' },
+  ],
+};
+```
+
+## Worked examples
+
+Every output below was produced by running the export against the fixtures above.
+
+`tableQueryToGql(payoutQuery)` — the exact `TableQueryInput` variables object. Note that it
+**always emits both `value` and `values`**, filling the unused one with `null`, so the server
+sees one stable shape:
+
+```json
+{
+  "query": {
+    "search": "aarav",
+    "page": 2,
+    "page_size": 25,
+    "sort_by": "created_at",
+    "sort_dir": "desc",
+    "filters": [
+      { "field": "payout_status", "op": "in",       "value": null,    "values": ["PENDING", "PAID"] },
+      { "field": "amount",        "op": "between",  "value": null,    "values": ["500", "5000"] },
+      { "field": "is_active",     "op": "is_true",  "value": null,    "values": null },
+      { "field": "host_name",     "op": "contains", "value": "aarav", "values": null }
+    ]
+  }
+}
+```
+
+An empty search is sent as `null`, not `''` (`search: q.search || null`).
+
+`filterChipLabel(payoutColumns, filter)` — one chip per applied filter, labelled from the
+column's `headerName`:
+
+```ts
+payoutQuery.filters.map((f) => filterChipLabel(payoutColumns, f));
+// [
+//   'Status: PENDING, PAID',
+//   'Amount (₹): 500 – 5000',   ← en dash, from the `between` op
+//   'Active: Yes',              ← is_true / is_false render as Yes / No
+//   'Host contains aarav',
+// ]
+```
+
+`formatDateCell` and `dateColumn()`:
+
+```ts
+formatDateCell('2026-07-28T09:15:00.000Z');                    // '28 Jul 2026'
+formatDateCell('2026-07-28T09:15:00.000Z', 'dd/MM/yyyy HH:mm'); // '28/07/2026 14:45' (IST)
+formatDateCell(null);                                           // '—'  (EM_DASH)
+DEFAULT_DATE_FORMAT;                                            // 'd MMM yyyy'
+```
+
+`date-fns` formats in the **viewer's** timezone, which is why the second line reads 14:45 for
+a 09:15 UTC timestamp on an IST machine. Never hand-roll this with `toLocaleDateString`
+(rule 11).
+
+```ts
+dateColumn<PayoutRow>();
+// {
+//   field: 'created_at',
+//   headerName: 'Created',
+//   hide: true,
+//   width: 130,
+//   filter: { type: 'date' },
+//   valueGetter: [Function],
+// }
+
+const col = dateColumn<PayoutRow>();
+col.valueGetter({ created_at: '2026-07-28T09:15:00.000Z' }); // '28 Jul 2026'
+col.valueGetter({ created_at: null });                       // '—'
+```
+
+`activeChipColumn()` returns both a chip renderer and a text `valueGetter`, so the column is
+still sortable/exportable as words:
+
+```ts
+activeChipColumn<PayoutRow>();
+// {
+//   field: 'is_active',
+//   headerName: 'Status',
+//   width: 110,
+//   filter: { type: 'boolean' },
+//   cellRenderer: [Function],   ← <Chip size="small" color="success|default" />
+//   valueGetter: [Function],
+// }
+
+col.valueGetter({ is_active: true });  // 'Active'
+col.valueGetter({ is_active: false }); // 'Inactive'
+```
+
+`makeApolloTableFetch` with a pinned `extraFilters` — the pinned filter is **appended after**
+the user's own filters and never becomes a chip:
+
+```ts
+const fetchRows = makeApolloTableFetch<PayoutRow>(client, PAYOUTS_TABLE, 'payoutsTable', {
+  extraFilters: [{ field: 'club_id', op: 'eq', value: '652f1c3a9d4b2e0011ac77e1' }],
+});
+
+await fetchRows(payoutQuery);
+// client.query called with fetchPolicy 'network-only' and variables:
+//   query.filters = [ …the four filters above…,
+//                     { field: 'club_id', op: 'eq', value: '652f1c3a9d4b2e0011ac77e1', values: null } ]
+// returns { rows: [...], total: 137 }   ← unwrapped from data.payoutsTable
+```
+
+## API reference
+
+### `DuncitTable<T>`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `tableId` | `string` | yes | — | Persistence namespace for column prefs + density. Never reuse one. |
+| `columns` | `ReadonlyArray<DuncitColumn<T>>` | yes | — | Column definitions. |
+| `fetchRows` | `TableFetch<T>` | yes | — | `(q: TableQueryState) => Promise<TablePage<T>>` — the only data path. |
+| `getRowId` | `(row: T) => string` | yes | — | Stable row identity for AG Grid. |
+| `onRowClick` | `(row: T) => void` | no | — | Row click handler. |
+| `getRowStyle` | `(row: T) => RowStyle \| undefined` | no | — | Per-row inline style (e.g. tint a low-stock row). |
+| `toolbarActions` | `ReactNode` | no | — | Right-aligned toolbar extras, e.g. a "+ Create" button. |
+| `emptyText` | `string` | no | — | Empty-state copy. |
+| `defaultSort` | `{ field: string; dir: 'asc' \| 'desc' }` | no | unsorted | Initial sort. |
+| `defaultPageSize` | `10 \| 25 \| 50 \| 100` | no | `25` | Initial page size. |
+| `searchPlaceholder` | `string` | no | — | Search box placeholder. |
+| `refetchRef` | `MutableRefObject<(() => void) \| null>` | no | — | Filled with the table's `refetch` so a parent can reload after a mutation. |
+| `externalFilters` | `ReadonlyArray<TableFilterValue>` | no | — | Page-driven filters (tab/URL/select). Compared by value, reset to page 1, **no chip**. |
+
+### Data types
+
+| Type | Shape | Notes |
+| --- | --- | --- |
+| `TableQueryState` | `{ search: string; page: number; pageSize: number; sortBy: string \| null; sortDir: TableSortDir; filters: TableFilterValue[] }` | `page` is **1-based**; `search` is already debounced (400 ms) by the time `fetchRows` sees it. |
+| `TableFilterValue` | `{ field: string; op: TableFilterOp; value?: string; values?: string[] }` | `values` carries `in` lists and `between` pairs; everything is stringified (ISO for dates). |
+| `TableFilterOp` | `'eq' \| 'ne' \| 'in' \| 'contains' \| 'gte' \| 'lte' \| 'between' \| 'is_true' \| 'is_false'` | — |
+| `TablePage<T>` | `{ rows: T[]; total: number }` | `total` drives `TablePagination`, so it must be the unpaged count. |
+| `TableFetch<T>` | `(q: TableQueryState) => Promise<TablePage<T>>` | — |
+| `DuncitColumn<T>` | `{ field; headerName; sortable?; filter?; width?; flex?; minWidth?; hide?; valueGetter?; cellRenderer? }` | `field` is both the server sort/filter key and the row accessor. `sortable` defaults to `true`; no `filter` means not filterable; `hide` hides by default but keeps it in the column menu. |
+| `DuncitColumnFilter` | `{ type: 'text' } \| { type: 'select'; options; multiple? } \| { type: 'number' } \| { type: 'date' } \| { type: 'boolean' }` | `number` renders min/max → `gte`/`lte`/`between`; `date` renders from/to MUI X pickers → `between` with ISO values. |
+
+### Hooks and helpers
+
+| Export | Signature | Notes |
+| --- | --- | --- |
+| `useTableQuery` | `<T>({ fetchRows, defaultSort?, defaultPageSize?, externalFilters? }) => UseTableQueryResult<T>` | The state machine behind the table: `{ rows, total, loading, error, query, searchInput, setSearchInput, setPage, setPageSize, setSort, setFilters, refetch }`. A monotonic sequence guard drops stale responses. |
+| `useTablePrefs` | `(tableId: string) => { hiddenOverrides: Record<string, boolean>; toggleColumn; resetColumns; density; toggleDensity }` | Reads/writes `localStorage`, every access wrapped in try/catch. Density defaults to `'standard'`. |
+| `makeApolloTableFetch` | `<Row>(client, query, resultKey, options?) => TableFetch<Row>` | Outside React only. `options`: `extraFilters`, `mapQuery`, `extraVariables`, `buildVariables`, `mapRow`, `fetchPolicy` (default `'network-only'`). |
+| `useApolloTableFetch` | `<Row>(client, query, resultKey, options?, deps?) => TableFetch<Row>` | The same thing memoized — **always** this one inside a component. |
+| `TableGqlClient` | `{ query(options: { query: unknown; variables?: Record<string, unknown>; fetchPolicy?: string }): Promise<{ data: unknown }> }` | Structural, so the package needs no `@apollo/client` dependency. |
+| `tableQueryToGql` | `(q: TableQueryState) => { query: {...} }` | The single client→server mapping. |
+| `filterChipLabel` | `<T>(columns, filter: TableFilterValue) => string` | Falls back to `filter.field` when no column matches. |
+| `dateColumn` | `<T>(options?: DateColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'created_at'`, `headerName 'Created'`, `hide true`, `width 130`, `filterable true`, `format 'd MMM yyyy'`. `formatDate` wins over `format`. |
+| `activeChipColumn` | `<T>(options?: ActiveChipColumnOptions<T>) => DuncitColumn<T>` | Defaults: `field 'is_active'`, `headerName 'Status'`, `width 110`, labels `Active`/`Inactive`, `filterable true`. |
+| `actionsColumn` | `<T>(options: ActionsColumnOptions<T>) => DuncitColumn<T>` | Edit/Delete icon buttons; each side takes `RowActionOptions` (`title`, `ariaLabel`, `color`, `icon`, `disabled`, `disabledTitle`), all accepting a `(row) => string`. |
+| `formatDateCell` | `(iso: string \| null \| undefined, dateFormat?: string) => string` | `EM_DASH` when empty. |
+| `buildAgTheme` | `(muiTheme: Theme, density: 'compact' \| 'standard')` | Maps the live MUI theme onto AG Grid's Theming API — zero CSS imports, light and dark both work. |
+| `DEFAULT_DATE_FORMAT` / `EM_DASH` | `'d MMM yyyy'` / `'—'` | The shared date pattern and empty-cell character. |
+
+## Live preview
+
+There is no live preview on this page yet. `docs-site` mounts real React islands via
+`src/components/Preview.astro`, but it only declares `@duncit/ui` and `@duncit/dialogs` as
+dependencies today — a preview here also needs `@duncit/table` plus its AG Grid peers in
+that workspace. Once they are added, this page slots one in exactly like `@duncit/ui` does:
+
+```mdx
+import Preview from '@docs/components/Preview.astro';
+import { PayoutsTableDemo } from '@docs/components/examples/PayoutsTableDemo.tsx';
+import payoutsTableSource from '@docs/components/examples/PayoutsTableDemo.tsx?raw';
+
+<Preview title="DuncitTable — search, filter chips, pagination" code={payoutsTableSource}>
+  <PayoutsTableDemo client:load />
+</Preview>
+```
+
+The demo's `fetchRows` would resolve from the `payoutRows` fixture above, so the preview
+needs no server. Until then the worked examples are the real output.
+
 ## `tableId` is a persistence namespace, not a label
 
 Column visibility, column order and density are written to `localStorage` under

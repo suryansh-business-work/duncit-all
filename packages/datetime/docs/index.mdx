@@ -75,6 +75,220 @@ fmt.now(); // the application clock, not the device clock
 (`@duncit/app-settings` for web, the zustand store in `app/mobile-app/src/utils/app-formatter.ts`
 for native).
 
+## Sample data
+
+The `publicAppSettings` payload the server actually returns, plus the occasion windows an
+admin has configured:
+
+```ts
+const publicAppSettings = {
+  date_format: 'dd MMM yyyy',
+  time_format: 'hh:mm a',
+  time_zone: 'Asia/Kolkata',
+  time_source: 'SERVER',
+  server_time: '2026-07-28T09:42:11.000Z',
+  custom_time: null,
+  custom_time_set_at: null,
+  min_birth_year: 1940,
+  max_birth_year: 2010,
+  draft_retention_days: 30,
+};
+
+const occasions = [
+  { slug: 'diwali',            label: 'Diwali',            starts_at: '2026-11-01T00:00:00.000Z', ends_at: '2026-11-12T23:59:59.000Z', is_active: true,  sort_order: 10 },
+  { slug: 'monsoon-season',    label: 'Monsoon',           starts_at: '2026-06-01T00:00:00.000Z', ends_at: '2026-09-30T23:59:59.000Z', is_active: true,  sort_order: 1  },
+  { slug: 'independence-day',  label: 'Independence Day',  starts_at: '2026-08-14T00:00:00.000Z', ends_at: '2026-08-16T23:59:59.000Z', is_active: true,  sort_order: 20 },
+  { slug: 'holi',              label: 'Holi',              starts_at: '2026-03-03T00:00:00.000Z', ends_at: '2026-03-05T23:59:59.000Z', is_active: false, sort_order: 15 },
+];
+
+const podStart = '2026-08-02T12:30:00.000Z';   // 18:00 IST
+```
+
+## Worked examples
+
+Real outputs, produced by running the exports against the fixtures above. The clock is
+pinned so they are reproducible: the settings response arrived at device time
+`1_769_593_331_000` and the device has since moved 45 seconds.
+
+### The clock
+
+```ts
+const realNow = () => 1_769_593_331_000 + 45_000;
+
+const clock = createClock({
+  source: toTimeSource(publicAppSettings.time_source),   // 'SERVER'
+  serverNow: publicAppSettings.server_time,
+  serverNowReceivedAt: 1_769_593_331_000,
+  realNow,
+});
+
+clock.source                 // 'SERVER'
+clock.now().toISOString()    // '2026-07-28T09:42:56.000Z'  — server time + the 45s elapsed
+
+resolveNow({ source: 'BROWSER', realNow })   // 1769593376000 — the device's own (wrong) clock
+```
+
+The BROWSER result is nearly half a year off the SERVER one. That gap is the whole reason
+the clock exists: a device with a wrong clock must not decide whether a pod has started.
+
+CUSTOM anchors, with and without a save-stamp:
+
+```ts
+// Anchor saved at a known server instant → it ticks forward with the server clock.
+resolveNow({
+  source: 'CUSTOM',
+  customTime: '2026-12-25T00:00:00.000Z',
+  customTimeSetAt: '2026-07-28T09:42:11.000Z',
+  serverNow: publicAppSettings.server_time,
+  serverNowReceivedAt: 1_769_593_331_000,
+  realNow,
+})                                    // → 2026-12-25T00:00:45.000Z
+
+// No save-stamp → the anchor is frozen.
+resolveNow({ source: 'CUSTOM', customTime: '2026-12-25T00:00:00.000Z', realNow })
+                                      // → 2026-12-25T00:00:00.000Z
+```
+
+Coercion and narrowing:
+
+```ts
+toEpochMs('2026-07-28T09:42:11.000Z')  // 1785231731000
+toEpochMs('')                          // null
+toEpochMs('not a date')                // null
+
+toTimeSource('CUSTOM')                 // 'CUSTOM'
+toTimeSource('nonsense')               // 'SERVER'  — DEFAULT_TIME_SOURCE
+TIME_SOURCES                           // ['SERVER', 'BROWSER', 'CUSTOM']
+```
+
+`stampServerTime` returns the stamp of the *first* sighting of a given string:
+
+```ts
+resetServerTimeStamp();
+stampServerTime('2026-07-28T09:42:11.000Z', () => 1000)  // 1000
+stampServerTime('2026-07-28T09:42:11.000Z', () => 9999)  // 1000  — same string, original stamp
+stampServerTime(null)                                    // null  — falls back to the device
+```
+
+### The formatter
+
+```ts
+const fmt = createDateFormatter({
+  dateFormat: publicAppSettings.date_format,
+  timeFormat: publicAppSettings.time_format,
+  timeZone: publicAppSettings.time_zone,
+  timeZoneAware: true,
+  clock: { source: 'SERVER', serverNow: publicAppSettings.server_time, serverNowReceivedAt: 1_769_593_331_000, realNow },
+});
+
+fmt.formatDate(podStart)                          // '02 Aug 2026'
+fmt.formatTime(podStart)                          // '06:00 PM'   — 12:30 UTC in Asia/Kolkata
+fmt.formatDateTime(podStart)                      // '02 Aug 2026 · 06:00 PM'
+fmt.dayKey(podStart)                              // '2026-08-02'
+fmt.formatPattern(podStart, 'EEEE, d MMMM')       // 'Sunday, 2 August'
+
+fmt.dayLabel(new Date(fmt.clock.nowMs()))         // 'Today'
+fmt.dayLabel(new Date(fmt.clock.nowMs() - 86400000)) // 'Yesterday'
+fmt.dayLabel(podStart)                            // '02 Aug 2026'
+
+fmt.formatDate(null)                              // ''
+fmt.formatDate('garbage')                         // ''
+```
+
+`06:00 PM` is the payoff of `timeZoneAware: true`. With it `false` the same input renders in
+whatever zone the device happens to be in, which is how the same pod showed two start times
+on two phones.
+
+With no settings at all, the fallbacks still produce real output — nothing renders blank
+while the query is in flight:
+
+```ts
+createDateFormatter().formatDate(podStart)        // '02 Aug 2026'
+FALLBACK_DATE_FORMAT                              // 'dd MMM yyyy'
+FALLBACK_TIME_FORMAT                              // 'hh:mm a'
+FALLBACK_TIME_ZONE                                // 'Asia/Kolkata'
+```
+
+### Occasions
+
+```ts
+const at = (iso: string) => Date.parse(iso);
+
+resolveActiveOccasion(occasions, at('2026-07-28T09:42:11Z'))?.slug  // 'monsoon-season'
+resolveActiveOccasion(occasions, at('2026-08-15T09:42:11Z'))?.slug  // 'independence-day'
+resolveActiveOccasion(occasions, at('2026-11-05T09:42:11Z'))?.slug  // 'diwali'
+resolveActiveOccasion(occasions, at('2026-03-04T09:42:11Z'))        // null — Holi is is_active: false
+```
+
+On 15 August the Monsoon window (`sort_order: 1`) and Independence Day (`sort_order: 20`)
+both cover the instant; the higher `sort_order` wins, which is how a short campaign layers
+over a long season. Ties break on the later `starts_at`.
+
+## API
+
+### Clock
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `createClock` | `(input: ClockInput) => Clock` | — | `{ nowMs(), now(), source }` for the configured source. |
+| `resolveNow` | `(input: ClockInput) => number` | — | The current instant in ms, one shot. |
+| `toEpochMs` | `(value: string \| number \| Date \| null \| undefined) => number \| null` | — | `null` for anything unusable. |
+| `toTimeSource` | `(value: string \| null \| undefined) => TimeSource` | `'SERVER'` | Narrows an untrusted string. |
+| `stampServerTime` | `(serverTime: string \| null \| undefined, realNow?: () => number) => number \| null` | `Date.now` | Device time of a distinct `server_time`'s first arrival. |
+| `resetServerTimeStamp` | `() => void` | — | Test seam; clears the module cache. |
+| `TIME_SOURCES` | `readonly TimeSource[]` | — | `['SERVER','BROWSER','CUSTOM']`. |
+| `DEFAULT_TIME_SOURCE` | `TimeSource` | — | `'SERVER'`. |
+
+`ClockInput` fields — `source` is the only required one:
+
+| Field | Type | Required | Meaning |
+| --- | --- | --- | --- |
+| `source` | `'SERVER' \| 'BROWSER' \| 'CUSTOM'` | yes | Which clock to read. |
+| `serverNow` | `string \| number \| Date \| null` | no | `server_time` from the settings response. |
+| `serverNowReceivedAt` | `number \| null` | no | Device time that response arrived — pass `stampServerTime(...)`. |
+| `customTime` | `string \| number \| Date \| null` | no | CUSTOM anchor instant. |
+| `customTimeSetAt` | `string \| number \| Date \| null` | no | Server time the anchor was saved; omit to freeze it. |
+| `realNow` | `() => number` | no (`Date.now`) | Injectable real clock for tests. |
+
+Any source falls back to the device clock when its inputs are missing, so a misconfigured
+setting can never render a 1970 date.
+
+### Formatter
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `createDateFormatter` | `(settings?: DateFormatterSettings) => DateFormatter` | Pure; never fetches. |
+| `FALLBACK_DATE_FORMAT` | `'dd MMM yyyy'` | Used when `dateFormat` is empty. |
+| `FALLBACK_TIME_FORMAT` | `'hh:mm a'` | Used when `timeFormat` is empty. |
+| `FALLBACK_TIME_ZONE` | `'Asia/Kolkata'` | Used when `timeZone` is empty. |
+
+| `DateFormatterSettings` field | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `dateFormat` | `string \| null` | `FALLBACK_DATE_FORMAT` | date-fns pattern from the admin panel. |
+| `timeFormat` | `string \| null` | `FALLBACK_TIME_FORMAT` | date-fns time pattern. |
+| `timeZone` | `string \| null` | `FALLBACK_TIME_ZONE` | IANA zone; only used when `timeZoneAware`. |
+| `timeZoneAware` | `boolean` | `false` | Format in `timeZone` via date-fns-tz instead of the device zone. |
+| `clock` | `ClockInput` | `{ source: 'BROWSER' }` | Drives `now`, `dayLabel` and occasion matching. |
+
+`DateFormatter` members: `formatDate`, `formatTime`, `formatDateTime`, `dayLabel`, `dayKey`,
+`formatPattern(input, pattern)`, `now()`, plus the resolved `dateFormat` / `timeFormat` /
+`timeZone` / `clock`. Every formatter takes `string | number | Date | null | undefined`.
+
+### Occasions
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `resolveActiveOccasion` | `<T extends OccasionWindow>(occasions, nowMs: number) => T \| null` | Highest `sort_order` among the windows covering `nowMs`. |
+
+`OccasionWindow`: `slug` (required), `label?`, `starts_at?`, `ends_at?`, `is_active?`,
+`sort_order?`. Windows with `is_active: false` or an unusable date are skipped; the generic
+returns *your* object, so extra fields survive.
+
+## No live preview
+
+Pure functions with no UI. The `<Preview>` runtime mounts React islands; there is nothing
+here to mount, and the worked examples above show the real return values instead.
+
 ## `stampServerTime` is stateful, and that is the point
 
 The SERVER clock must keep ticking between settings fetches. `stampServerTime(serverTime)`

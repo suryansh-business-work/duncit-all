@@ -88,6 +88,173 @@ Anything a *second* person also sees — pod times, slot times, event windows �
 time-zone aware. All formatters return `''` for empty or unparseable input rather than
 throwing, so no call site needs a guard.
 
+## Sample data
+
+The three server payloads these hooks read. All are real response shapes.
+
+```ts
+/** publicAppSettings — one operation for the whole monorepo. */
+const publicAppSettings = {
+  date_format: 'dd MMM yyyy',
+  time_format: 'hh:mm a',
+  time_zone: 'Asia/Kolkata',
+  time_source: 'SERVER',
+  custom_time: null,
+  custom_time_set_at: null,
+  server_time: '2026-07-28T09:42:11.000Z',
+  min_birth_year: 1940,
+  max_birth_year: 2010,
+  draft_retention_days: 30,
+};
+
+/** publicFeatureFlags */
+const publicFeatureFlags = [
+  { key: 'shop.pod_shop',              enabled: true  },
+  { key: 'pods.backout_keep_my_spot',  enabled: true  },
+  { key: 'ads.self_serve_checkout',    enabled: false },
+];
+
+/** publicLocales */
+const publicLocales = [
+  { code: 'en-IN', label: 'English', english_label: 'English (India)', is_rtl: false, is_default: true,  sort_order: 1 },
+  { code: 'hi-IN', label: 'हिन्दी',   english_label: 'Hindi (India)',   is_rtl: false, is_default: false, sort_order: 2 },
+  { code: 'ar-AE', label: 'العربية',  english_label: 'Arabic (UAE)',    is_rtl: true,  is_default: false, sort_order: 3 },
+];
+
+const podStart = '2026-08-02T12:30:00.000Z';   // 18:00 IST
+```
+
+## Worked examples
+
+Outputs below come from running the hooks with `useQuery` stubbed to return the payloads
+above — the same technique the package's own tests use.
+
+### `useDateFormat`
+
+```ts
+const fmt = useDateFormat({ timeZoneAware: true });
+
+fmt.dateFormat                              // 'dd MMM yyyy'
+fmt.timeFormat                              // 'hh:mm a'
+fmt.timeZone                                // 'Asia/Kolkata'
+fmt.clock.source                            // 'SERVER'
+
+fmt.formatDate(podStart)                    // '02 Aug 2026'
+fmt.formatTime(podStart)                    // '06:00 PM'
+fmt.formatDateTime(podStart)                // '02 Aug 2026 · 06:00 PM'
+fmt.dayKey(podStart)                        // '2026-08-02'
+fmt.formatPattern(podStart, 'EEE d MMM, h:mm aaa')  // 'Sun 2 Aug, 6:00 pm'
+fmt.formatDate(null)                        // ''
+```
+
+While the query is still in flight the hook returns a **working** formatter, not an empty
+one — nothing renders blank on first paint:
+
+```ts
+// data === undefined
+const bare = useDateFormat();
+bare.dateFormat            // 'dd MMM yyyy'   (FALLBACK_DATE_FORMAT)
+bare.timeFormat            // 'hh:mm a'
+bare.timeZone              // 'Asia/Kolkata'
+bare.formatDate(podStart)  // '02 Aug 2026'
+```
+
+### `useFeatureFlag`
+
+```ts
+useFeatureFlag('shop.pod_shop')             // true
+useFeatureFlag('ads.self_serve_checkout')   // false
+useFeatureFlag('chat.voice_notes')          // false — key absent on the server
+useFeatureFlag('chat.voice_notes', true)    // true  — your default wins for an absent key
+
+// while loading, with no cached data:
+useFeatureFlag('shop.pod_shop')             // false
+useFeatureFlag('shop.pod_shop', true)       // true
+```
+
+An unknown key and a still-loading query both return `defaultValue`. Default to `false` for
+anything that must not flash on before the server confirms it.
+
+### `useTranslation`
+
+```tsx
+<LocaleProvider fallback={MWEB_FALLBACK} userLocale={user?.locale}>
+  <App />
+</LocaleProvider>
+```
+
+```ts
+const { t, has, locale, isRtl, locales, setLocale } = useTranslation();
+
+locale                    // 'hi-IN'  — from publicLocales + the user's saved locale
+isRtl                     // false
+locales.map((l) => l.code)// ['en-IN', 'hi-IN', 'ar-AE']
+t('mweb.shop.title')      // 'पॉड शॉप' when translated, else the fallback bundle's 'Pod Shop'
+has('mweb.shop.unknown')  // false
+setLocale('ar-AE')        // switches instantly, persists locally, calls onLocaleChange
+```
+
+Selecting `ar-AE` also sets `document.documentElement.dir = 'rtl'` and `lang = 'ar-AE'` —
+that effect is what actually flips the layout when an admin marks a locale RTL.
+
+Outside a provider the hook still returns a working translator rather than throwing, so a
+component rendered in a test or an error boundary never crashes:
+
+```ts
+const { t, locale, locales } = useTranslation(MWEB_FALLBACK);
+locale     // 'en-IN'
+locales    // []
+t('mweb.shop.title')  // 'Pod Shop' — from the bundle you passed
+```
+
+Pass the bundle. Calling `useTranslation()` bare outside a provider renders raw keys.
+
+## API
+
+### Hooks
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `useDateFormat` | `(options?: { timeZoneAware?: boolean }) => DateFormatter` | `timeZoneAware: false` | Formatter driven by `publicAppSettings`. |
+| `useFeatureFlag` | `(key: string, defaultValue?: boolean) => boolean` | `false` | Returns `defaultValue` while loading and for unknown keys. |
+| `useTranslation` | `(fallback?: FlatCatalogue) => LocaleContextValue` | — | `{ t, has, locale, isRtl, locales, setLocale }`. Never throws. |
+
+### Providers
+
+| Component | Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| `LocaleProvider` | `fallback` | `FlatCatalogue` | yes | — | The surface's bundled catalogue. |
+| | `userLocale` | `string \| null` | no | — | The signed-in account's saved language; wins over a local choice. |
+| | `onLocaleChange` | `(code: string) => void` | no | — | Wire to the `setMyLocale` mutation to persist server-side. |
+| | `children` | `ReactNode` | yes | — | |
+| `AppLocaleProvider` | `fallback` | `FlatCatalogue` | yes | — | Same, but reads `userLocale` from `useUserData()`. |
+| | `children` | `ReactNode` | yes | — | Must sit inside a `UserProvider`. |
+
+Locale precedence: local override → `userLocale` → `localStorage['duncit_locale']` →
+`navigator.language` → the platform default.
+
+### Operations
+
+| Export | Operation | Selects |
+| --- | --- | --- |
+| `PUBLIC_APP_SETTINGS` | `query PublicAppSettings` | `date_format, time_format, time_zone, time_source, custom_time, custom_time_set_at, server_time, min_birth_year, max_birth_year, draft_retention_days` |
+| `PUBLIC_FEATURE_FLAGS` | `query PublicFeatureFlags` | `key, enabled` |
+| `PUBLIC_LOCALES` | `query PublicLocales` | `code, label, english_label, is_rtl, is_default, sort_order` |
+| `PUBLIC_TRANSLATIONS` | `query PublicTranslations($locale: String!)` | `key, value` |
+
+All four use `fetchPolicy: 'cache-first'`. Do **not** redeclare `PublicAppSettings` in a
+surface selecting a different field set — same operation name, different selection, and
+Apollo's normalized cache thrashes between them. That is why the non-date fields live in
+this one document.
+
+## No live preview
+
+`AppLocaleProvider` and `LocaleProvider` render no markup of their own — they are context,
+and the hooks return values rather than elements. The docs-site preview runtime mounts React
+islands with no Apollo client, and every export here needs one, so a preview would have to
+fake the very thing the package exists to do. The worked examples above run the real hooks
+against the real payloads instead.
+
 ## `AppLocaleProvider` vs `LocaleProvider`
 
 `LocaleProvider` is the primitive: it takes `fallback`, an optional `userLocale` and an

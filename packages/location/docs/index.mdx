@@ -81,6 +81,249 @@ import { RhfAdminLocation } from '@duncit/location';
 It takes every `AdminLocationSelect` prop except `value`, `onChange` and `errors` — those three
 come from the `Controller` — and renders a field-level error message on the City dropdown.
 
+## Sample data
+
+Four `LocationDoc`s as `ADMIN_LOCATIONS` returns them. One doc = one **city**; its localities are
+the embedded `location_zones`. Whitefield deliberately has no pincode and Dubai has no city
+pincode — both are real states in the admin DB and both change what the helpers return.
+
+```ts
+import type { LocationDoc } from '@duncit/location';
+
+export const locations: LocationDoc[] = [
+  {
+    id: '66f1a2b3c4d5e6f708192a6e',
+    location_name: 'Bengaluru',
+    country: 'India', country_code: 'IN',
+    state: 'Karnataka', state_code: 'KA',
+    city: 'Bengaluru',
+    location_pincode: '560001',
+    location_zones: [
+      { zone_name: 'Indiranagar',  zone_code: 'IND', pincode: '560038' },
+      { zone_name: 'Koramangala',  zone_code: 'KOR', pincode: '560034' },
+      { zone_name: 'Whitefield',   zone_code: 'WFD', pincode: null },
+    ],
+    is_active: true,
+  },
+  {
+    id: '66f1a2b3c4d5e6f708192a6f',
+    location_name: 'Mysuru',
+    country: 'India', country_code: 'IN',
+    state: 'Karnataka', state_code: 'KA',
+    city: 'Mysuru', location_pincode: '570001', location_zones: [], is_active: true,
+  },
+  {
+    id: '66f1a2b3c4d5e6f708192a70',
+    location_name: 'Pune',
+    country: 'India', country_code: 'IN',
+    state: 'Maharashtra', state_code: 'MH',
+    city: 'Pune', location_pincode: '411001',
+    location_zones: [{ zone_name: 'Baner', zone_code: 'BNR', pincode: '411045' }],
+    is_active: true,
+  },
+  {
+    id: '66f1a2b3c4d5e6f708192a71',
+    location_name: 'Dubai',
+    country: 'United Arab Emirates', country_code: 'AE',
+    state: 'Dubai', state_code: 'DU',
+    city: 'Dubai', location_pincode: null,
+    location_zones: [{ zone_name: 'Business Bay', zone_code: 'BB', pincode: null }],
+    is_active: true,
+  },
+];
+```
+
+## Worked examples
+
+### The cascade, one level at a time
+
+```js
+countryOptions(locations)
+// [ { value: 'IN', label: 'India' },
+//   { value: 'AE', label: 'United Arab Emirates' } ]     ← value is the country_code
+
+stateOptions(locations, 'IN')
+// [ { value: 'Karnataka',  label: 'Karnataka' },
+//   { value: 'Maharashtra', label: 'Maharashtra' } ]     ← value is the state NAME, not the code
+
+cityOptions(locations, 'IN', 'Karnataka')
+// [ { value: 'Bengaluru', label: 'Bengaluru', location_id: '66f1a2b3c4d5e6f708192a6e' },
+//   { value: 'Mysuru',    label: 'Mysuru',    location_id: '66f1a2b3c4d5e6f708192a6f' } ]
+
+localityOptions(locations, '66f1a2b3c4d5e6f708192a6e')
+// [ { value: 'Indiranagar', label: 'Indiranagar', pincode: '560038' },
+//   { value: 'Koramangala', label: 'Koramangala', pincode: '560034' },
+//   { value: 'Whitefield',  label: 'Whitefield',  pincode: ''       } ]  ← null → ''
+```
+
+`stateOptions` returns the state **name** as its value because `state_code` is not always set in the
+admin DB. That is why `AdminLocationValue` carries both `state` and `state_code` and why matching on
+the code alone loses rows.
+
+`cityOptions` is the only builder that carries `location_id` — the city *is* the document, and that
+id is what every consumer persists.
+
+### `buildLocationValue` — the pincode fallback
+
+```js
+buildLocationValue(locations, '66f1a2b3c4d5e6f708192a6e', 'Indiranagar')
+// { location_id: '66f1a2b3c4d5e6f708192a6e', country: 'India', country_code: 'IN',
+//   state: 'Karnataka', state_code: 'KA', city: 'Bengaluru',
+//   locality: 'Indiranagar', pincode: '560038' }         ← the ZONE pincode
+
+buildLocationValue(locations, '66f1a2b3c4d5e6f708192a6e', 'Whitefield')
+// { …, locality: 'Whitefield', pincode: '560001' }       ← zone has none ⇒ the CITY pincode
+```
+
+An id with no matching doc keeps the id and the requested locality, and blanks the rest, so a saved
+record renders as "something is selected but unresolved" rather than as empty:
+
+```js
+buildLocationValue(locations, '66f1a2b3c4d5e6f7081ffff0', 'Indiranagar')
+// { location_id: '66f1a2b3c4d5e6f7081ffff0', country: '', country_code: '', state: '',
+//   state_code: '', city: '', locality: 'Indiranagar', pincode: '' }
+```
+
+Note that a **locality** that does not exist on the matched doc is silently dropped to `''`, while
+an unmatched **location_id** is kept. The two failure modes differ; don't assume either.
+
+### `buildLocationValueFromNames` — for forms that stored strings
+
+```js
+buildLocationValueFromNames(locations, {
+  country: 'India', state: 'Karnataka', city: 'bengaluru', locality: 'Koramangala',
+})
+// { location_id: '66f1a2b3c4d5e6f708192a6e', country: 'India', country_code: 'IN',
+//   state: 'Karnataka', state_code: 'KA', city: 'Bengaluru',
+//   locality: 'Koramangala', pincode: '560034' }
+```
+
+The lower-case `'bengaluru'` matched, and the value came back with the admin **canonical** casing
+plus a `location_id` the record never stored. That upgrade path is the point of the helper.
+
+With no admin row for the city, the saved names survive and `location_id` stays empty:
+
+```js
+buildLocationValueFromNames(locations, { country: 'India', state: 'Goa', city: 'Panaji' })
+// { location_id: '', country: 'India', country_code: '', state: 'Goa', state_code: '',
+//   city: 'Panaji', locality: '', pincode: '' }
+```
+
+A Zod `location_id` requirement is what should catch this on save — the field is deliberately not
+blanked, so the user still sees what they typed.
+
+### Map helpers
+
+```js
+buildMapQuery(['Third Wave Coffee', '  ', 'Indiranagar', 'Bengaluru'])
+// 'Third Wave Coffee, Indiranagar, Bengaluru'        ← the blank part is dropped, no ", ,"
+
+buildMapQuery(['Indiranagar', 'Bengaluru'], 12.9784, 77.6408)
+// '12.9784,77.6408'                                  ← both coords present ⇒ parts ignored
+
+mapEmbedUrl('Third Wave Coffee, Indiranagar, Bengaluru')
+// 'https://maps.google.com/maps?q=Third%20Wave%20Coffee%2C%20Indiranagar%2C%20Bengaluru&z=14&output=embed'
+
+mapEmbedUrl('12.9784,77.6408', { apiKey: 'AIza-EXAMPLE-KEY', zoom: 17 })
+// 'https://www.google.com/maps/embed/v1/place?key=AIza-EXAMPLE-KEY&q=12.9784%2C77.6408&zoom=17'
+
+mapEmbedUrl('')
+// ''                                                 ← empty query ⇒ empty src, never a broken iframe
+
+mapSearchUrl('Third Wave Coffee, Indiranagar, Bengaluru')
+// 'https://www.google.com/maps/search/?api=1&query=Third%20Wave%20Coffee%2C%20Indiranagar%2C%20Bengaluru'
+```
+
+Default zoom differs by strategy: **15** keyed, **14** keyless.
+
+### `EMPTY_LOCATION`
+
+```js
+{ location_id: '', country: '', country_code: '', state: '',
+  state_code: '', city: '', locality: '', pincode: '' }
+```
+
+## Props / API
+
+### `<AdminLocationSelect>` — `AdminLocationSelectProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `value` | `AdminLocationValue` | yes | — | The whole structured value. |
+| `onChange` | `(value: AdminLocationValue) => void` | yes | — | Receives the full value on every pick. |
+| `fields` | `LocationLevel[]` | no | `['country','state','city','locality']` | Which levels render. |
+| `required` | `boolean` | no | `false` | Marks every rendered level required. |
+| `disabled` | `boolean` | no | `false` | Disables all levels (used while a venue is locked). |
+| `size` | `'small' \| 'medium'` | no | `'small'` | MUI size for each `Autocomplete`. |
+| `direction` | `'row' \| 'column'` | no | `'column'` | Stack direction. |
+| `labels` | `Partial<Record<LocationLevel, string>>` | no | Country / State / City / Locality | Per-level label overrides. |
+| `errors` | `Partial<Record<LocationLevel, string>>` | no | `undefined` | Per-level error text. |
+| `legend` | `string` | no | `undefined` | Setting it wraps the fields in a `<Fieldset>`. |
+| `hint` | `string` | no | `undefined` | Fieldset hint — say what maps from the location. |
+
+### `<RhfAdminLocation>`
+
+Every `AdminLocationSelect` prop except `value`, `onChange` and `errors`, plus `control: Control<T>`
+and `name: Path<T>` (the field holding the whole `AdminLocationValue`). The field-level error
+renders on the **City** dropdown.
+
+### `<MapEmbedCard>` — `MapEmbedCardProps`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `title` | `string` | no | `'Map preview'` | iframe title (accessibility) and the default heading. |
+| `parts` | `readonly MapQueryPart[]` | no | `undefined` | Address fragments joined with `", "`. |
+| `lat` / `lng` | `number \| null` | no | `undefined` | When **both** are set, the query becomes `"lat,lng"` and `parts` is ignored. |
+| `query` | `string \| null` | no | `undefined` | Pre-built query; overrides `parts`/`lat`/`lng` when non-empty. |
+| `apiKey` | `string \| null` | no | `undefined` | Uses the keyed Embed API when set (unless `keyless`). |
+| `keyless` | `boolean` | no | `undefined` | Forces the always-working `output=embed` map. |
+| `zoom` | `number` | no | `15` keyed / `14` keyless | Map zoom. |
+| `heading` | `ReactNode` | no | `title` | Header label. |
+| `buttonLabel` | `ReactNode` | no | `'Open in Maps'` | Deep-link button text. |
+| `hideWhenKeyMissing` | `boolean` | no | `false` | Render nothing (instead of the fallback message) when a keyed map is required but the key is absent. |
+| `missingKeyFallback` | `ReactNode` | no | "Add VITE_GOOGLE_MAP_API…" | Shown in place of the iframe in that case. |
+
+### Functions, hooks and constants
+
+| Export | Signature | Returns |
+| --- | --- | --- |
+| `useAdminLocations` | `() => { locations, loading, error }` | The admin list, `cache-first`, filtered to `is_active: true`. |
+| `ADMIN_LOCATIONS` | `DocumentNode` | The query — import it for mocks. |
+| `buildLocationValue` | `(locations, locationId, locality?) => AdminLocationValue` | Pure rehydration from an id. `locality` defaults to `''`. |
+| `useLocationValueFromId` | `(locationId?, locality?) => AdminLocationValue` | Hook form; `EMPTY_LOCATION` until the list loads. |
+| `buildLocationValueFromNames` | `(locations, { country?, state?, city?, locality? }) => AdminLocationValue` | Case-insensitive city match, else the saved names. |
+| `countryOptions` | `(locations) => Option[]` | Distinct countries, `value` = `country_code`. |
+| `stateOptions` | `(locations, countryCode) => Option[]` | Distinct states, `value` = state **name**. |
+| `cityOptions` | `(locations, countryCode, state) => CityOption[]` | Cities, each carrying its `location_id`. |
+| `localityOptions` | `(locations, locationId) => LocalityOption[]` | The city's zones, each with a `pincode` (`''` when null). |
+| `cityPincode` | `(locations, locationId) => string` | The city doc's `location_pincode`, or `''`. |
+| `buildMapQuery` | `(parts?, lat?, lng?) => string` | `"lat,lng"` or the joined parts; `''` when neither. |
+| `mapEmbedUrl` | `(query, { apiKey?, zoom? }?) => string` | The iframe `src`; `''` for an empty query. |
+| `mapSearchUrl` | `(query) => string` | The "open in Maps" deep link. |
+
+### Value types
+
+| Type | Shape |
+| --- | --- |
+| `LocationLevel` | `'country' \| 'state' \| 'city' \| 'locality'` |
+| `LocationZone` | `{ zone_name: string; zone_code?: string \| null; pincode?: string \| null }` |
+| `LocationDoc` | `{ id, location_name?, country, country_code, state, state_code, city, location_pincode?, location_zones?, is_active? }` |
+| `AdminLocationValue` | `{ location_id, country, country_code, state, state_code, city, locality, pincode }` |
+| `Option` / `CityOption` / `LocalityOption` | `{ label, value }` / `+ location_id` / `+ pincode` |
+| `MapQueryPart` | `string \| null \| undefined` |
+
+## Live preview
+
+No live preview yet, and the reason is the same as `@duncit/category`: `AdminLocationSelect` calls
+`useAdminLocations()` itself, so an island without an Apollo client throws and one with a real
+client would call the production API from a docs page.
+
+`docs-site` has the `<Preview>` island runtime. The missing piece is a `MockedProvider` wrapper
+seeded with `ADMIN_LOCATIONS` → the `locations` array above — which is precisely why that query is
+exported. `<MapEmbedCard>` is the exception: it takes plain props, needs no Apollo, and works
+keyless, so it can be previewed as soon as this package is a `docs-site` dependency. Add that one
+first, with `parts={['Third Wave Coffee', 'Indiranagar', 'Bengaluru']}` from the example above.
+
 ## Which entry point to pick
 
 | You have | Use |

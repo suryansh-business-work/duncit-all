@@ -1,4 +1,4 @@
-import { verifyGoogleIdToken } from '../../user.google';
+import { verifyGoogleIdToken } from '../../auth.google';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 
 jest.mock('@config/runtimeEnv', () => ({ getRuntimeEnvValue: jest.fn() }));

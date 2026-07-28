@@ -32,7 +32,7 @@ jest.mock('@modules/venues/brandPickupLocation/brandPickupLocation.model', () =>
 jest.mock('@modules/pods/pod/pod.model', () => ({
   PodModel: { find: jest.fn(), countDocuments: jest.fn() },
 }));
-jest.mock('@modules/pods/club/club.model', () => ({ ClubModel: { find: jest.fn() } }));
+jest.mock('@modules/clubs/club/club.model', () => ({ ClubModel: { find: jest.fn() } }));
 jest.mock('@modules/commerce/productOrder/productOrder.model', () => ({
   ProductOrderModel: { find: jest.fn() },
 }));
@@ -51,7 +51,7 @@ import type { AuthUser } from '@context';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { inventoryService } from '../../inventory.service';
 import { InventoryProductModel } from '../../inventory.model';
 import { InventoryActivityLogModel } from '../../inventoryActivityLog.model';

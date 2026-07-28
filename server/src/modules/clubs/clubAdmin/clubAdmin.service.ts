@@ -1,12 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { ClubModel } from '@modules/pods/club/club.model';
-import { mapClubToPublic, clubService } from '@modules/pods/club/club.service';
+import { ClubModel } from '@modules/clubs/club/club.model';
+import { mapClubToPublic, clubService } from '@modules/clubs/club/club.service';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { podService } from '@modules/pods/pod/pod.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
-import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
+import { ClubRatingModel } from '@modules/clubs/club/clubRating.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { UserModel } from '@modules/access/user/user.model';
 import { HostModel } from '@modules/venues/host/host.model';

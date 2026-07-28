@@ -3,7 +3,7 @@ import { coHostService } from '../../coHost.service';
 import { podService } from '../../pod.service';
 import { PodModel } from '../../pod.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 

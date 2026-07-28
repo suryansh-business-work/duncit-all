@@ -5,7 +5,7 @@ jest.mock('@modules/engagement/notification/notification.service', () => ({
   notificationService: { create: (...args: unknown[]) => create(...args) },
 }));
 
-import { userService } from '../../user.service';
+import { userService } from '@modules/access/user/user.service';
 import { logs } from '@observability/log';
 
 describe('profile privacy helpers (no DB)', () => {

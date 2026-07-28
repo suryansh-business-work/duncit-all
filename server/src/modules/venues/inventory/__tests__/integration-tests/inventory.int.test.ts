@@ -3,7 +3,7 @@ import { inventoryService } from '../../inventory.service';
 import { inventoryResolvers } from '../../inventory.resolver';
 import { InventoryProductModel } from '../../inventory.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
 import { UserModel } from '@modules/access/user/user.model';

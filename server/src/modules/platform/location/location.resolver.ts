@@ -1,5 +1,5 @@
 import { locationService } from './location.service';
-import { clubService } from '@modules/pods/club/club.service';
+import { clubService } from '@modules/clubs/club/club.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 

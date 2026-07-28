@@ -87,6 +87,283 @@ import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 const statement = buildEarningsStatement(waterfall, { has_venue: !!slotId, symbol });
 ```
 
+## Sample data
+
+One fixture per family, using the real field names. Copy it into a scratch file and the
+worked examples below reproduce exactly.
+
+```ts
+/** The `potentialPodEarnings` waterfall, verbatim from the server (rupees). */
+const waterfall = {
+  amount: 29000,                  // 29 payable spots × ₹1,000
+  gst_pct: 18,
+  gst_amount: 4423.73,
+  net_amount: 24576.27,
+  platform_fee_pct: 10,
+  platform_fee_amount: 2457.63,
+  pool_amount: 22118.64,
+  club_admin_pct: 5,
+  club_admin_amount: 1105.93,
+  venue_amount: 6000,
+  host_amount: 15012.71,
+  host_commission_pct: 12,
+  host_commission_amount: 1801.53,
+  host_receives: 13211.18,
+  host_earn_pct: 45.56,
+};
+
+/** A club and the product-picker options offered against it. */
+const club = {
+  _id: 'clb_7742',
+  name: 'Bandra Badminton Club',
+  super_category_id: 'sc_sports',
+  category_id: 'sub_badminton',   // a club's Sub lives in category_id
+};
+
+const products = [
+  { _id: 'prd_101', name: 'Yonex Astrox 88D Pro',
+    categories: [{ super_category_id: 'sc_sports', sub_category_id: 'sub_badminton' }] },
+  { _id: 'prd_102', name: 'Cosco Football Size 5',
+    categories: [{ super_category_id: 'sc_sports', sub_category_id: 'sub_football' }] },
+  { _id: 'prd_103', name: 'Duncit Cotton Tee' },   // no category data at all
+];
+
+/** The two Apollo error shapes `parseApiError` is fed in production. */
+const offlineError = { message: 'Failed to fetch', networkError: { message: 'Failed to fetch' }, graphQLErrors: [] };
+const rejectedError = { message: 'GraphQL error', graphQLErrors: [{ message: 'Pod DUN-POD-8842 is already full' }] };
+```
+
+## Worked examples
+
+Every output below was produced by running the real export against the fixtures above.
+
+### Money
+
+```ts
+formatMoney(125000)                                    // '₹1,25,000'
+formatMoney(1250, { decimals: 2, grouping: false })    // '₹1250.00'   (finance `money(symbol, v)`)
+formatMoney(125000, { compact: true })                 // '₹1.3L'
+formatMoney(2450000, { compact: true })                // '₹24.5L'
+formatMoney(99999,  { compact: true })                 // '₹99,999'    below the 1-lakh threshold
+formatMoney(1500, { symbol: '$', decimals: 2 })        // '$1,500.00'
+
+formatINR(125000)                                      // '₹1,25,000'
+formatINR(0)                                           // '₹0'
+formatStatementMoney(13211.18, '₹')                    // '₹13,211.18'
+```
+
+`compact` only engages at an absolute value of ₹1,00,000 or more — `99999` still groups in
+full. That threshold is why a "compact" dashboard tile and a detail row can legitimately show
+the same number two ways.
+
+### Pod spot economics
+
+```ts
+[30, 1, 0, 12.7].map(payableSpots)                     // [29, 0, 0, 11]
+
+payingAttendees(
+  ['usr_9f2', 'usr_a13', 'usr_b77', 'usr_c04'],        // pod_attendees
+  ['usr_9f2'],                                         // hosts
+)                                                      // 3
+
+HOST_FREE_SPOT_NOTE
+// 'Your spot is free — the calculation is based on total spots − 1.'
+```
+
+A 30-spot pod bills 29. `1` (host only) and `0` (unlimited/unset) both bill nothing rather
+than going negative, and a fractional count floors before subtracting.
+
+### API errors
+
+```ts
+parseApiError(offlineError)
+// 'Unable to connect to server. Please check your internet connection and try again.'
+
+parseApiError(rejectedError)
+// 'Pod DUN-POD-8842 is already full'
+
+parseApiError(null)
+// 'Something went wrong. Please try again.'
+
+parseApiError({}, 'Could not load your pods.')
+// 'Could not load your pods.'
+```
+
+### Cart entry point
+
+```ts
+deriveCartEntry(3, '/shop')
+// { visible: true,  count: 3,   badge: '3',   label: 'Open cart (3 items)' }
+
+deriveCartEntry(0, '/shop')
+// { visible: false, count: 0,   badge: '0',   label: 'Open cart (0 items)' }
+
+deriveCartEntry(120, '/cart')
+// { visible: false, count: 120, badge: '99+', label: 'Open cart (120 items)' }
+
+cartBadgeLabel(99)   // '99'
+cartBadgeLabel(100)  // '99+'
+
+isCartFlowRoute('/shop')                  // false
+isCartFlowRoute('/cart')                  // true
+isCartFlowRoute('/product-checkout/pod-1')// true
+isCartFlowRoute('ProductCheckout')        // true  — native screen name, same answer
+isCartFlowRoute('/pod/DUN-POD-8842')      // false
+```
+
+The web path and the native screen name reduce to the same key, which is what keeps the
+header identical on both surfaces (rule 27).
+
+### Club ↔ product matching
+
+```ts
+clubCategoryKey(club)
+// { superId: 'sc_sports', subId: 'sub_badminton' }
+
+clubCategoryKey({ _id: 'clb_0001', name: 'Legacy Club' })
+// null — no Super+Sub, so no filter is applied
+
+filterProductsForClub(products, club).map((p) => p._id)
+// ['prd_101', 'prd_103']
+
+productMatchesClub(products[1], clubCategoryKey(club))   // false — football, not badminton
+```
+
+`prd_103` survives because it carries **no** category data. A missing query field degrades to
+"show all", never "hide all"; the server still enforces the gate on submit.
+
+### The Step-4 earnings statement
+
+```ts
+const statement = buildEarningsStatement(waterfall, { has_venue: true, symbol: '₹' });
+```
+
+Returns, exactly:
+
+```json
+{
+  "collection": {
+    "label": "Total collection",
+    "amount": 29000,
+    "included_gst_note": "Includes GST ₹4,423.73 — prices are GST-inclusive"
+  },
+  "sections": [
+    {
+      "key": "taxes",
+      "title": "Taxes",
+      "lines": [
+        { "key": "taxable", "label": "Taxable Amount", "amount": 24576.27,
+          "formula": "₹29,000.00 − ₹4,423.73 GST (prices are GST-inclusive)", "deduction": false },
+        { "key": "gst", "label": "GST @18%", "amount": 4423.73,
+          "formula": "₹24,576.27 × 18%", "deduction": true }
+      ],
+      "total": 4423.73
+    },
+    {
+      "key": "platform",
+      "title": "Platform Charges",
+      "lines": [
+        { "key": "platform-fee", "label": "Platform Fee @10%", "amount": 2457.63,
+          "formula": "₹24,576.27 × 10%", "deduction": true }
+      ],
+      "total": 2457.63
+    },
+    {
+      "key": "club",
+      "title": "Club Charges",
+      "lines": [
+        { "key": "club-admin", "label": "Club Admin Fee @5%", "amount": 1105.93,
+          "formula": "₹22,118.64 × 5%", "deduction": true }
+      ],
+      "total": 1105.93
+    },
+    {
+      "key": "venue",
+      "title": "Venue Charges",
+      "lines": [
+        { "key": "venue-slot", "label": "Venue Slot Price", "amount": 6000,
+          "formula": "Fixed booked slot price (deducted once per pod)", "deduction": true },
+        { "key": "venue-commission", "label": "Duncit Commission from Venue @12%", "amount": 1801.53,
+          "formula": "₹15,012.71 × 12% (your remainder)", "deduction": true }
+      ],
+      "total": 7801.53
+    }
+  ],
+  "total_deductions": 15788.82,
+  "net_payout": { "collection": 29000, "total_deductions": 15788.82, "receives": 13211.18 },
+  "reconciled": true
+}
+```
+
+Three things to read off that output:
+
+- The `taxable` line has `deduction: false` — it is context, and the Taxes section total
+  (`4423.73`) is the GST alone. A renderer that sums every line will over-state the section.
+- `has_venue: false` moves the commission: the Venue section disappears and a
+  `duncit-commission` line joins **Platform Charges** instead, so the same money is never
+  dropped or double-counted. With `venue_amount: 0`, `host_amount: 21012.71`,
+  `host_commission_amount: 2521.53` and `host_receives: 18491.18` the platform total becomes
+  `4979.16` and `total_deductions` becomes `10508.82`.
+- `reconciled: true` means all three audit identities held within ±₹0.02. If it comes back
+  `false`, the server waterfall is inconsistent — do not "fix" it here.
+
+## API
+
+### Money
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `formatINR` | `(value: number) => string` | — | Whole-rupee INR via `Intl`, `en-IN` grouping. |
+| `formatMoney` | `(value: number, options?: FormatMoneyOptions) => string` | `{}` | Superset formatter covering every portal variant. |
+| `FormatMoneyOptions.symbol` | `string` | `'₹'` | Currency prefix; pass a server-provided symbol. |
+| `FormatMoneyOptions.decimals` | `number` | `0` | Fixed fraction digits. |
+| `FormatMoneyOptions.grouping` | `boolean` | `true` | `false` reproduces the plain `toFixed` family. |
+| `FormatMoneyOptions.compact` | `boolean` | `false` | `₹1.2L` notation at \|value\| ≥ 1,00,000. |
+| `formatStatementMoney` | `(value: number, symbol: string) => string` | — | The one `₹X,XXX.XX` format both Step-4 surfaces render. |
+
+### Pod economics
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `payableSpots` | `(totalSpots: number) => number` | `total − 1`; never negative. |
+| `payingAttendees` | `(attendeeIds, hostIds) => number` | Attendees minus hosts; both args accept `null`/`undefined`. |
+| `HOST_FREE_SPOT_NOTE` | `string` | Copy to render beside any spots-driven figure. |
+| `buildEarningsStatement` | `(w: EarningsWaterfall, o: EarningsStatementOptions) => EarningsStatement` | Formats the server waterfall; adds no math. |
+| `EarningsStatementOptions.has_venue` | `boolean` (required) | Renders the Venue Charges section. |
+| `EarningsStatementOptions.symbol` | `string` (required) | Symbol used inside the formula strings. |
+
+### Errors
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `parseApiError` | `(err: unknown, fallback?: string) => string` | `GENERIC_ERROR_MESSAGE` | Apollo/network error → user-facing message. |
+| `isNetworkFailureMessage` | `(message: string) => boolean` | — | True for "Failed to fetch" / "Network request failed" / "Load failed". |
+| `OFFLINE_MESSAGE` | `string` | — | Connectivity copy. |
+| `GENERIC_ERROR_MESSAGE` | `string` | — | Catch-all copy. |
+
+### Cart, files, categories
+
+| Export | Signature | Default | Meaning |
+| --- | --- | --- | --- |
+| `deriveCartEntry` | `(count: number, route: string) => CartEntry` | — | `{ visible, count, badge, label }` for the header entry point. |
+| `cartBadgeLabel` | `(count: number) => string` | — | Capped badge text. |
+| `isCartFlowRoute` | `(route: string) => boolean` | — | True on cart / checkout / product-checkout, web path or native name. |
+| `CART_BADGE_MAX` | `99` | — | Cap before `99+`. |
+| `fileToDataUrl` | `(file: Blob) => Promise<string>` | — | Full `data:<mime>;base64,…` URL. |
+| `fileToBase64` | `(file: Blob) => Promise<string>` | — | Bare base64, prefix stripped. |
+| `base64ToBlob` / `downloadBlob` / `downloadBase64File` / `downloadTextFile` | see source | — | The browser download flow, once. |
+| `clubCategoryKey` | `(club) => ClubCategoryKey \| null` | — | Super+Sub pair, `null` for legacy clubs. |
+| `productMatchesClub` | `(product, key) => boolean` | — | `true` when `key` is `null` or the product has no category data. |
+| `filterProductsForClub` | `(products, club) => products` | — | The product-picker filter. |
+| `getOrCreateDuid` | `() => string` | — | Per-device analytics id; `''` outside a browser. |
+| `formatMjml` | `(mjml: string) => string` | — | Pretty-prints an MJML template. |
+
+## No live preview
+
+Framework-free by contract — there is no component to mount, so the page shows real
+return values instead. The `<Preview>` runtime in `docs-site` is for MUI packages
+(`@duncit/ui`, `@duncit/dialogs`, `@duncit/theme`).
+
 ## `fileToBase64` vs `fileToDataUrl` — they are not interchangeable
 
 Two behavioural families exist because two families of server calls exist:

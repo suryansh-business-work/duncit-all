@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { LocationModel } from '@modules/platform/location/location.model';

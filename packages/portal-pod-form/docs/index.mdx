@@ -71,6 +71,126 @@ const save = async (values: PodContentValues) => {
 />
 ```
 
+## Sample data
+
+`PodContentValues` is the whole input — three fields, no config object. Note the third media row
+carries `type: null`: that is real data, written before the dialog started stamping `'IMAGE'`.
+
+```ts
+import type { PodContentValues } from '@duncit/portal-pod-form';
+
+export const podContent: PodContentValues = {
+  pod_title: 'Sunday Sourdough Workshop',
+  pod_description: 'Hands-on levain build, shaping and bake. Take home two loaves.',
+  pod_images_and_videos: [
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg', type: 'IMAGE' },
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-tour.mp4', type: 'VIDEO' },
+    { url: 'https://ik.imagekit.io/duncit/pods/legacy-upload.jpg', type: null },
+  ],
+};
+
+export const readOnlyContext = [
+  { label: 'Club', value: 'Bengaluru Bakers Collective' },
+  { label: 'Place', value: 'Third Wave Coffee, Indiranagar' },
+  { label: 'When', value: '09 Aug 2026, 10:30 AM' },
+  { label: 'Spots', value: '8 of 12 taken' },
+];
+```
+
+## Worked examples
+
+### `podContentSchema.parse(...)` on valid values
+
+Passing the sample with a padded title (`'  Sunday Sourdough Workshop  '`) returns:
+
+```js
+{
+  pod_title: 'Sunday Sourdough Workshop',   // .trim() is part of the schema, not the UI
+  pod_description: 'Hands-on levain build, shaping and bake. Take home two loaves.',
+  pod_images_and_videos: [
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-hero.jpg', type: 'IMAGE' },
+    { url: 'https://ik.imagekit.io/duncit/pods/sourdough-tour.mp4', type: 'VIDEO' },
+    { url: 'https://ik.imagekit.io/duncit/pods/legacy-upload.jpg', type: null }
+  ]
+}
+```
+
+`type` is `z.string().nullish()`, so a `null` from older data survives the parse untouched — which
+is exactly why every call site writes `type: m.type || 'IMAGE'` when mapping back to the mutation.
+
+### The failure cases
+
+`safeParse({ pod_title: 'S', pod_description: '   ', pod_images_and_videos: [] })`:
+
+```js
+[
+  { path: 'pod_title',      message: 'Name must be at least 2 characters' },
+  { path: 'pod_description', message: 'Description is required' }
+]
+```
+
+An **empty** media list is valid — the schema requires an array, not a non-empty one. A pod can be
+saved with every image removed, so if your surface needs at least one, enforce it at the call site.
+
+A blank URL inside a row is not valid, and the error is per-row:
+
+```js
+[
+  { path: 'pod_images_and_videos.0.url', message: 'String must contain at least 1 character(s)' }
+]
+```
+
+That message is Zod's default (`z.string().min(1)` carries no custom text), so it will read
+untranslated next to the two hand-written messages — worth knowing before you surface it.
+
+## Props / API
+
+### `<PodContentFormDialog>`
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `open` | `boolean` | yes | — | Dialog visibility. |
+| `title` | `string` | no | `'Edit pod'` | Dialog heading. |
+| `defaultValues` | `PodContentValues` | yes | — | Seed values; the form `reset()`s each time `open` flips true. |
+| `editableFields` | `PodField[]` | yes | — | Which fields accept input; the rest render **read-only**. |
+| `readOnlyContext` | `ReadOnlyContextItem[]` | no | `[]` | `{ label, value }` facts shown above the fields; the dialog formats nothing. |
+| `busy` | `boolean` | no | `false` | Disables the actions while the mutation runs. |
+| `error` | `string \| null` | no | `undefined` | Server error rendered as an `Alert`. |
+| `onClose` | `() => void` | yes | — | Close handler. |
+| `onSubmit` | `(values: PodContentValues) => void \| Promise<void>` | yes | — | Called with schema-validated values. |
+| `onPickImage` | `() => Promise<string \| null>` | no | `undefined` | Media picker; **omitting it hides the add-image button entirely**. |
+
+### Types and the schema
+
+| Export | Shape | Meaning |
+| --- | --- | --- |
+| `podContentSchema` | `ZodObject` | The three-field contract; `.parse` trims title and description. |
+| `PodContentValues` | `z.infer<typeof podContentSchema>` | `{ pod_title, pod_description, pod_images_and_videos }`. |
+| `PodField` | `'pod_title' \| 'pod_description' \| 'pod_images_and_videos'` | The `editableFields` vocabulary — all three values, no more. |
+| `PodMedia` | `{ url: string; type?: string \| null }` | One media row. |
+| `ReadOnlyContextItem` | `{ label: string; value: string }` | One context line; both already-formatted strings. |
+
+### Validation rules, in full
+
+| Field | Rule | Message |
+| --- | --- | --- |
+| `pod_title` | trimmed, min 2 | `Name must be at least 2 characters` |
+| `pod_description` | trimmed, min 1 | `Description is required` |
+| `pod_images_and_videos[].url` | min 1 | Zod default |
+| `pod_images_and_videos[].type` | `string`, nullish | — |
+
+## Live preview
+
+`docs-site` can now mount live React islands via `<Preview>`, but this dialog is not previewed here
+yet. It is close to previewable — no Apollo, no date adapter — so the only blockers are adding
+`@duncit/portal-pod-form` (plus its `react-hook-form` / `zod` / `@hookform/resolvers` peers) to
+`docs-site`, and a small wrapper holding the `open` state so the reader can reopen it after closing.
+
+The slot is a single `<Preview>` mounting the dialog with `podContent` as `defaultValues`,
+`editableFields={['pod_title', 'pod_description']}` so a reader can *see* what "disabled, not
+hidden" looks like, and `readOnlyContext` from the sample above. Until then, treat the worked
+examples as the contract.
+
 ## Not the same package as `@duncit/pod-form`
 
 The names are close enough to pick the wrong one. They are not variants of each other:

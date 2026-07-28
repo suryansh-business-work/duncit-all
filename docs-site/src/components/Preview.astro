@@ -1,0 +1,98 @@
+---
+/**
+ * Frames one live example: a titled surface, the REAL component rendered as a
+ * React island, and the exact source that produced it.
+ *
+ * `code` is meant to be fed from a `?raw` import of the example module, so the
+ * snippet on the page is the file that is actually running — it cannot drift
+ * the way a hand-copied block does.
+ *
+ * The stage is deliberately pinned to a light surface: the islands mount MUI's
+ * default (light) theme, so a dark page background would show light-theme
+ * components on the wrong canvas.
+ */
+interface Props {
+  /** What this example demonstrates. */
+  title: string;
+  /** Exact source of the rendered example (import it with `?raw`). */
+  code: string;
+  /** One line telling the reader what to look at. */
+  note?: string;
+}
+
+const { title, code, note } = Astro.props;
+---
+
+<figure class="preview">
+  <figcaption class="preview-head">
+    <span class="preview-badge">live</span>
+    <span class="preview-title">{title}</span>
+  </figcaption>
+
+  <div class="preview-stage"><slot /></div>
+
+  {note && <p class="preview-note">{note}</p>}
+
+  <pre class="preview-code"><code>{code.trim()}</code></pre>
+</figure>
+
+<style>
+  figure.preview {
+    margin: 20px 0 28px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  figure.preview .preview-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  figure.preview .preview-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #fff;
+    background: var(--accent);
+    border-radius: 999px;
+    padding: 2px 8px;
+  }
+  figure.preview .preview-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  /* MUI's default theme is light; keep the canvas under it light too. */
+  figure.preview .preview-stage {
+    color-scheme: light;
+    background: #ffffff;
+    color: #14161a;
+    padding: 22px 18px;
+  }
+  figure.preview .preview-note {
+    margin: 0;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+  }
+  figure.preview pre.preview-code {
+    margin: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--code-bg);
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  figure.preview pre.preview-code code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+</style>

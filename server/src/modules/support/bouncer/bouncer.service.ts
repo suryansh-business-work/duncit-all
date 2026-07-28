@@ -15,7 +15,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
-import { ClubModel } from '@modules/pods/club/club.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { getIo } from '@realtime/io';

@@ -31,7 +31,7 @@ jest.mock('@modules/venues/brandPickupLocation/brandPickupLocation.model', () =>
 jest.mock('@modules/pods/pod/pod.model', () => ({
   PodModel: { find: jest.fn(), countDocuments: jest.fn() },
 }));
-jest.mock('@modules/pods/club/club.model', () => ({ ClubModel: { find: jest.fn() } }));
+jest.mock('@modules/clubs/club/club.model', () => ({ ClubModel: { find: jest.fn() } }));
 jest.mock('@modules/commerce/productOrder/productOrder.model', () => ({
   ProductOrderModel: { find: jest.fn() },
 }));

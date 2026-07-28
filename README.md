@@ -1,4 +1,6 @@
-# 🚀 Duncit — Full Stack Monorepo (React + GraphQL + Node.js)
+# 🚀 Duncit 
+
+[![Quality Gate Status](https://sonarqube.duncit.com/api/project_badges/measure?project=suryansh-business-work_duncit-all_4f460a81-a423-455b-81e3-8792ab4b2046&metric=alert_status&token=sqb_40009a2dfbfba7c97e338334befafc258e14732d)](https://sonarqube.duncit.com/dashboard?id=suryansh-business-work_duncit-all_4f460a81-a423-455b-81e3-8792ab4b2046)
 
 ## 📌 Overview
 

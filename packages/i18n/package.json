@@ -17,7 +17,8 @@
   "scripts": {
     "test": "node ../../scripts/verify-translation-keys.mjs ../.. && vitest run",
     "test:coverage": "vitest run --coverage",
-    "verify:keys": "node ../../scripts/verify-translation-keys.mjs ../.."
+    "verify:keys": "node ../../scripts/verify-translation-keys.mjs ../..",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/i18n"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",

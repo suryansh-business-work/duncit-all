@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { AppHeader } from '@/components/AppHeader';
+import { useCartStore, type CartLine } from '@/stores/cart.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -36,9 +37,28 @@ jest.mock('@/components/AccountButton', () => {
   return { AccountButton: () => <V testID="account-button" /> };
 });
 
+/** The header now carries the cart entry point (it used to float over content). */
+const seedCart = (quantity: number) => {
+  const line: CartLine = {
+    pod_id: 'p1',
+    pod_title: 'Sunset Jam',
+    club_slug: 'club-one',
+    product_id: 'a',
+    variant_id: '',
+    variant_label: '',
+    product_name: 'Alpha Tee',
+    image_url: '',
+    unit_cost: 100,
+    quantity,
+    max_quantity: 10,
+  };
+  useCartStore.setState({ lines: [line], hydrated: true });
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
   useStudioModeStore.setState({ mode: 'USER' });
+  useCartStore.setState({ lines: [], hydrated: true });
   mockUseMe.mockReturnValue({ data: { me: { roles: ['HOST'] } } });
 });
 
@@ -101,6 +121,31 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('header-search')).toBeNull();
     expect(screen.queryByTestId('header-location')).toBeNull();
     expect(screen.getByTestId('header-studio-badge')).toBeOnTheScreen();
+  });
+
+  it('carries the cart entry point once the cart has items', () => {
+    seedCart(3);
+    renderWithProviders(<AppHeader />);
+    expect(screen.getByTestId('header-cart-count')).toHaveTextContent('3');
+    expect(screen.getByLabelText('Open cart (3 items)')).toBeOnTheScreen();
+  });
+
+  it('shows no cart entry point while the cart is empty', () => {
+    renderWithProviders(<AppHeader />);
+    expect(screen.queryByTestId('header-cart')).toBeNull();
+  });
+
+  it('keeps the cart entry point in a studio mode, where the fab used to float', () => {
+    seedCart(2);
+    useStudioModeStore.setState({ mode: 'HOST' });
+    renderWithProviders(<AppHeader />);
+    expect(screen.getByTestId('header-cart')).toBeOnTheScreen();
+  });
+
+  it('hides the cart entry point in minimal (survey) mode', () => {
+    seedCart(2);
+    renderWithProviders(<AppHeader minimal />);
+    expect(screen.queryByTestId('header-cart')).toBeNull();
   });
 
   it('treats a missing user as no roles, so any persisted studio falls back to User', () => {

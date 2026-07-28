@@ -9,6 +9,7 @@
     "dev:staging": "cross-env VITE_GRAPHQL_URL=https://staging.server.duncit.com/graphql vite",
     "dev:local:main": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
     "dev:local:staging": "cross-env VITE_GRAPHQL_URL=http://localhost:2001/graphql vite",
+    "dev:coverage": "cross-env VITE_COVERAGE=true vite",
     "build": "tsc -b && vite build",
     "build:e2e": "tsc -b && vite build --mode e2e",
     "preview": "vite preview",
@@ -20,11 +21,10 @@
     "test:e2e:open": "cypress open --config-file __tests__/e2e/cypress.config.ts",
     "test:forms": "vitest run",
     "test:forms:watch": "vitest",
-    "test:pw": "playwright test",
-    "test:pw:ui": "playwright test --ui",
     "coverage:report": "nyc report --reporter=text --reporter=html --reporter=text-summary",
     "coverage:check": "nyc check-coverage",
-    "coverage:all": "playwright test && vitest run --coverage --config vitest.coverage.config.ts && node scripts/merge-coverage.mjs && nyc report --reporter=text --reporter=text-summary && nyc check-coverage"
+    "coverage:all": "pnpm test:e2e && vitest run --coverage --config vitest.coverage.config.ts && node scripts/merge-coverage.mjs && nyc report --reporter=text --reporter=text-summary && nyc check-coverage",
+    "e2e": "cypress run --config-file __tests__/e2e/cypress.config.ts"
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
@@ -71,9 +71,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "cross-env": "^10.1.0",
     "@duncit/gql-types": "workspace:*",
-    "@playwright/test": "1.60.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^14.3.1",
     "@types/node": "^20.12.12",
@@ -82,6 +80,7 @@
     "@vitejs/plugin-react": "^4.3.0",
     "@vitest/coverage-istanbul": "1.6.1",
     "@vitest/coverage-v8": "^1.6.1",
+    "cross-env": "^10.1.0",
     "cypress": "^15.16.0",
     "jsdom": "^24.1.3",
     "nyc": "^18.0.0",

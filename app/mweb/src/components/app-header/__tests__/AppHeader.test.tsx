@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { MockedProvider } from '@apollo/client/testing';
 import AppHeader from '../AppHeader';
+import { CartProvider, type CartLine } from '../../cart/CartContext';
 import {
   HEADER_DATA,
   PUBLIC_POLICIES,
@@ -168,12 +169,32 @@ const baseProps = {
   onZoneChange: vi.fn(),
 };
 
+/** The header now carries the cart entry point, so it needs the cart provider. */
+function seedCart(quantity: number) {
+  const line: CartLine = {
+    pod_id: 'pod-1',
+    pod_title: 'Pod One',
+    club_slug: 'club-one',
+    product_id: 'prod-1',
+    variant_id: '',
+    variant_label: '',
+    product_name: 'Widget',
+    image_url: '',
+    unit_cost: 100,
+    quantity,
+    max_quantity: 10,
+  };
+  localStorage.setItem('mweb_cart_lines', JSON.stringify([line]));
+}
+
 function renderHeader(props: Partial<typeof baseProps> & { minimal?: boolean } = {}, mocks: any[] = [headerMock(), policiesMock]) {
   const merged = { ...baseProps, onSuperCategoryChange: vi.fn(), onLocationChange: vi.fn(), onZoneChange: vi.fn(), ...props };
   const utils = render(
     <MockedProvider mocks={mocks} addTypename={false}>
       <MemoryRouter initialEntries={['/']}>
-        <AppHeader {...merged} />
+        <CartProvider>
+          <AppHeader {...merged} />
+        </CartProvider>
       </MemoryRouter>
     </MockedProvider>
   );
@@ -186,6 +207,7 @@ describe('AppHeader', () => {
     mockSetMode.mockReset();
     mockNavigate.mockReset();
     studioModeValue = 'USER';
+    localStorage.clear();
   });
 
   it('renders greeting, search, tabs and email-verify alert in USER mode', async () => {
@@ -258,7 +280,9 @@ describe('AppHeader', () => {
     render(
       <MockedProvider mocks={[headerMock(), policiesMock]} addTypename={false}>
         <MemoryRouter initialEntries={['/?menu=open']}>
-          <AppHeader {...baseProps} onSuperCategoryChange={vi.fn()} onLocationChange={vi.fn()} onZoneChange={vi.fn()} />
+          <CartProvider>
+            <AppHeader {...baseProps} onSuperCategoryChange={vi.fn()} onLocationChange={vi.fn()} onZoneChange={vi.fn()} />
+          </CartProvider>
         </MemoryRouter>
       </MockedProvider>
     );
@@ -324,6 +348,35 @@ describe('AppHeader', () => {
     const { props } = renderHeader({ selectedSuperCategory: '' });
     await screen.findByTestId('greeting');
     await waitFor(() => expect(props.onSuperCategoryChange).toHaveBeenCalledWith('all'));
+  });
+
+  it('carries the cart entry point once the cart has items, and opens the cart', async () => {
+    seedCart(3);
+    renderHeader();
+    await screen.findByTestId('greeting');
+    fireEvent.click(screen.getByRole('button', { name: 'Open cart (3 items)' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/cart');
+  });
+
+  it('shows no cart entry point while the cart is empty', async () => {
+    renderHeader();
+    await screen.findByTestId('greeting');
+    expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
+  });
+
+  it('keeps the cart entry point in a studio mode, where the fab used to float', async () => {
+    seedCart(2);
+    studioModeValue = 'HOST';
+    renderHeader();
+    await screen.findByText('Host Studio');
+    expect(screen.getByRole('button', { name: 'Open cart (2 items)' })).toBeInTheDocument();
+  });
+
+  it('hides the cart entry point in minimal (survey) mode', async () => {
+    seedCart(2);
+    renderHeader({ minimal: true });
+    await screen.findByTestId('survey-actions');
+    expect(screen.queryByRole('button', { name: /open cart/i })).toBeNull();
   });
 
   it('does not render the verify alert when the email is already verified', async () => {

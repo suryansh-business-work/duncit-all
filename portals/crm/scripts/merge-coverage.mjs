@@ -2,8 +2,8 @@ import { cp, access } from 'node:fs/promises';
 import path from 'node:path';
 
 // Fold vitest's istanbul coverage into `.nyc_output` so a single `nyc` pass
-// merges it with the Playwright E2E coverage before the 100% gate. Run AFTER
-// `playwright test` (whose global-setup wipes `.nyc_output`) and the istanbul
+// merges it with the Cypress E2E coverage before the 100% gate. Run AFTER
+// `cypress run` (whose `before:run` hook wipes `.nyc_output`) and the istanbul
 // vitest run.
 const vitestJson = path.resolve('coverage/vitest/coverage-final.json');
 try {

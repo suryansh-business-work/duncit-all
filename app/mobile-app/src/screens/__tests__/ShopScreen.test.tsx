@@ -2,6 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ShopScreen, sortShopProducts, type ShopProduct } from '@/screens/ShopScreen';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useCartStore } from '@/stores/cart.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
@@ -13,6 +14,16 @@ jest.mock('@/hooks/useHomeFeed', () => ({
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
+}));
+// The header cart in the StackScreen back-bar routes through the container ref.
+const mockRefNavigate = jest.fn();
+jest.mock('@/navigation/navigationRef', () => ({
+  navigationRef: {
+    isReady: () => true,
+    getCurrentRoute: () => ({ name: 'Shop' }),
+    navigate: (name: string) => mockRefNavigate(name),
+    addListener: () => () => undefined,
+  },
 }));
 
 const mockRequest = graphqlRequest as jest.Mock;
@@ -37,7 +48,9 @@ const product = (over: Partial<ShopProduct> = {}): ShopProduct =>
 beforeEach(() => {
   jest.useFakeTimers();
   mockNavigate.mockClear();
+  mockRefNavigate.mockClear();
   mockRequest.mockReset();
+  useCartStore.setState({ lines: [], hydrated: true });
   mockCategories = [
     { id: 'sup1', name: 'Lifestyle', level: 'SUPER', parent_id: null },
     { id: 'sup2', name: 'Food', level: 'SUPER', parent_id: null },
@@ -153,10 +166,36 @@ describe('ShopScreen', () => {
   });
 
   it('opens the cart from the header cart button', async () => {
+    useCartStore.setState({
+      lines: [
+        {
+          pod_id: 'p1',
+          pod_title: 'Sunset Jam',
+          club_slug: 'club-one',
+          product_id: 'p1',
+          variant_id: '',
+          variant_label: '',
+          product_name: 'Alpha Tee',
+          image_url: '',
+          unit_cost: 100,
+          quantity: 2,
+          max_quantity: 5,
+        },
+      ],
+      hydrated: true,
+    });
     mockRequest.mockResolvedValue({ availablePodProducts: [product()] });
     renderWithProviders(<ShopScreen />);
     await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
-    fireEvent.press(screen.getByTestId('shop-header-cart'));
-    expect(mockNavigate).toHaveBeenCalledWith('Cart');
+    expect(screen.getByTestId('header-cart-count')).toHaveTextContent('2');
+    fireEvent.press(screen.getByTestId('header-cart'));
+    expect(mockRefNavigate).toHaveBeenCalledWith('Cart');
+  });
+
+  it('shows no cart entry point on the shop while the cart is empty', async () => {
+    mockRequest.mockResolvedValue({ availablePodProducts: [product()] });
+    renderWithProviders(<ShopScreen />);
+    await waitFor(() => expect(screen.getByTestId('shop-product-p1')).toBeOnTheScreen());
+    expect(screen.queryByTestId('header-cart')).toBeNull();
   });
 });

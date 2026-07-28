@@ -7,7 +7,6 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { PodShopSlider } from '@/components/shop/PodShopSlider';
 import { ShopFilterBar } from '@/components/shop/ShopFilterBar';
-import { ShopHeaderCart } from '@/components/shop/ShopHeaderCart';
 import { ShopProductCard } from '@/components/shop/ShopProductCard';
 import { StackScreen } from '@/components/StackScreen';
 import { ShopProductsDocument } from '@/graphql/shop';
@@ -16,7 +15,6 @@ import { useQuickAddToCart } from '@/hooks/useQuickAddToCart';
 import { useShopFilters } from '@/hooks/useShopFilters';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { graphqlRequest } from '@/services/graphql.client';
-import { selectCartCount, useCartStore } from '@/stores/cart.store';
 import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -79,10 +77,9 @@ function TrustBar({ tint }: Readonly<{ tint: string }>) {
 export function ShopScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { muted, primary, color } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const { categories } = useHomeData();
   const { addingId, add } = useQuickAddToCart();
-  const cartCount = useCartStore(selectCartCount);
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -147,18 +144,10 @@ export function ShopScreen() {
     );
   }
 
+  // The cart entry point comes from the StackScreen back-bar now — it is the
+  // same header cart every other screen shows.
   return (
-    <StackScreen
-      title={t('mweb.shop.title')}
-      testID="shop-screen"
-      right={
-        <ShopHeaderCart
-          count={cartCount}
-          tint={color}
-          onPress={() => navigation.navigate('Cart')}
-        />
-      }
-    >
+    <StackScreen title={t('mweb.shop.title')} testID="shop-screen">
       <ScrollView flex={1}>
         <PodShopSlider />
         <ShopFilterBar filters={filters} sortOptions={SORT_OPTIONS} muted={muted} />

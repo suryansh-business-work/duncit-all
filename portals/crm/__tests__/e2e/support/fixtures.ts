@@ -14,6 +14,20 @@ export const adminUser = {
   profile_photo: '',
 };
 
+/**
+ * A signed-in user carrying NO CRM role. `AppShell` computes `hasAccess` from
+ * `hasAppAccess(user.roles)` and redirects to `/login?denied=1` when it is
+ * false — this fixture is what drives that branch.
+ */
+export const noAccessUser = {
+  ...adminUser,
+  user_id: 'u-no-access',
+  full_name: 'No Access',
+  first_name: 'No',
+  last_name: 'Access',
+  roles: ['HOST'],
+};
+
 export const branding = {
   __typename: 'Branding',
   app_name: 'Duncit CRM',

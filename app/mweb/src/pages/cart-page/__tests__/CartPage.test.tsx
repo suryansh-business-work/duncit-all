@@ -4,7 +4,7 @@ import { MockedProvider } from '@apollo/client/testing';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CartProvider, useCart, type CartLineMeta } from '../../../components/cart/CartContext';
-import FloatingCartButton from '../../../components/cart/FloatingCartButton';
+import HeaderCartButton from '../../../components/cart/HeaderCartButton';
 import CartPage from '../../CartPage';
 
 const meta = (over: Partial<CartLineMeta> = {}): CartLineMeta => ({
@@ -37,7 +37,7 @@ const renderCart = (lines: Array<{ meta: CartLineMeta; qty: number }> = []) =>
       <CartProvider>
         <MemoryRouter initialEntries={['/cart']}>
           <Seed lines={lines} />
-          <FloatingCartButton />
+          <HeaderCartButton />
           <Routes>
             <Route path="/cart" element={<CartPage />} />
             <Route path="/shop" element={<div>SHOP</div>} />
@@ -106,10 +106,10 @@ describe('CartPage + CartContext', () => {
     expect(screen.getAllByText('Free delivery')).toHaveLength(1);
   });
 
-  it('persists lines to localStorage and the floating button badges the count', () => {
+  it('persists lines to localStorage and the header cart badges the count', () => {
     renderCart([{ meta: meta(), qty: 2 }]);
     expect(JSON.parse(localStorage.getItem('mweb_cart_lines') ?? '[]')).toHaveLength(1);
-    // On /cart the floating button hides; the count still drove its render logic.
+    // On /cart the header cart hides; the count still drove its render logic.
     expect(screen.queryByRole('button', { name: /open cart/i })).not.toBeInTheDocument();
   });
 });

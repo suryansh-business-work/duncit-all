@@ -2,7 +2,6 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { CartScreen } from '@/screens/CartScreen';
 import { useCartStore, type CartLine } from '@/stores/cart.store';
-import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/services/cart', () => ({
@@ -12,17 +11,18 @@ jest.mock('@/services/cart', () => ({
 }));
 
 const mockNavigate = jest.fn();
-let mockRouteName: string | null = 'Home';
 // CartScreen navigates via the useNavigation hook.
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: mockNavigate }),
 }));
-// FloatingCartButton lives outside the navigator and navigates via the container ref.
+// The StackScreen back-bar carries the header cart, which reads the active
+// route (and navigates) through the container ref — parked on Cart here, which
+// is where the cart screen actually runs, so the entry point stays hidden.
 jest.mock('@/navigation/navigationRef', () => ({
   navigationRef: {
-    getCurrentRoute: () => (mockRouteName === null ? undefined : { name: mockRouteName }),
-    // Lazy: the factory is hoisted above `mockNavigate`, so read it at call time.
-    navigate: (name: string) => mockNavigate(name),
+    isReady: () => true,
+    getCurrentRoute: () => ({ name: 'Cart' }),
+    navigate: jest.fn(),
     addListener: () => () => undefined,
   },
 }));
@@ -44,7 +44,6 @@ const line = (over: Partial<CartLine> = {}): CartLine => ({
 
 beforeEach(() => {
   mockNavigate.mockClear();
-  mockRouteName = 'Home';
   useCartStore.setState({ lines: [], hydrated: true });
 });
 
@@ -149,36 +148,11 @@ describe('CartScreen', () => {
   });
 });
 
-describe('FloatingCartButton', () => {
-  it('hides when the cart is empty and on the Cart/Checkout screens', () => {
-    renderWithProviders(<FloatingCartButton />);
-    expect(screen.queryByTestId('floating-cart-button')).toBeNull();
-
-    useCartStore.setState({ lines: [line()], hydrated: true });
-    mockRouteName = 'Cart';
-    renderWithProviders(<FloatingCartButton />);
-    expect(screen.queryByTestId('floating-cart-button')).toBeNull();
-  });
-
-  it('shows the badge count and opens the cart', () => {
-    useCartStore.setState({ lines: [line({ quantity: 2 })], hydrated: true });
-    renderWithProviders(<FloatingCartButton />);
-    expect(screen.getByTestId('floating-cart-count')).toHaveTextContent('2');
-    fireEvent.press(screen.getByTestId('floating-cart-button'));
-    expect(mockNavigate).toHaveBeenCalledWith('Cart');
-  });
-
-  it('caps the badge at 99+', () => {
-    useCartStore.setState({ lines: [line({ quantity: 120, max_quantity: 200 })], hydrated: true });
-    renderWithProviders(<FloatingCartButton />);
-    expect(screen.getByTestId('floating-cart-count')).toHaveTextContent('99+');
-  });
-
-  it('still renders while the navigation state has not settled yet', () => {
-    useCartStore.setState({ lines: [line()], hydrated: true });
-    mockRouteName = null; // navigation state undefined during container start-up
-    renderWithProviders(<FloatingCartButton />);
-    expect(screen.getByTestId('floating-cart-button')).toBeOnTheScreen();
+describe('the cart screen carries no cart entry point of its own', () => {
+  it('keeps the header cart hidden on Cart, however full the cart is', () => {
+    useCartStore.setState({ lines: [line({ quantity: 4 })], hydrated: true });
+    renderWithProviders(<CartScreen />);
+    expect(screen.queryByTestId('header-cart')).toBeNull();
   });
 });
 

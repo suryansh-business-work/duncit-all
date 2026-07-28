@@ -8,7 +8,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "e2e": "node ../scripts/e2e-no-surface.mjs duncit-docs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",

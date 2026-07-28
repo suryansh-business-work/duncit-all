@@ -23,7 +23,14 @@ declare global {
     interface Chainable {
       mockGraphql(map: GraphQLMockMap): Chainable<void>;
       login(opts?: { email?: string; password?: string }): Chainable<void>;
-      seedAuth(token?: string): Chainable<void>;
+      /**
+       * Visit `path` with a session token already in `localStorage`, so
+       * `RequireAuth` renders the route instead of bouncing to `/login`.
+       * The token is written in `onBeforeLoad` — i.e. BEFORE the app's own
+       * scripts run — which is the only point early enough for the route
+       * guard to see it (a post-visit `cy.window()` write is too late).
+       */
+      visitAuthed(path: string, token?: string): Chainable<void>;
       /**
        * Open a MUI `select` (or multi-select) located by its floating label
        * text, then click an option whose text matches `optionText`.
@@ -100,10 +107,14 @@ Cypress.Commands.add('mockGraphql', (map: GraphQLMockMap) => {
   }).as('graphql');
 });
 
-Cypress.Commands.add('seedAuth', (token = 'cypress-test-token') => {
-  // CRM stores its auth token at localStorage[`crm_token`] (see appConfig).
-  cy.window().then((win) => {
-    win.localStorage.setItem('crm_token', token);
+// CRM stores its auth token at localStorage[`crm_token`] (see appConfig).
+const TOKEN_KEY = 'crm_token';
+
+Cypress.Commands.add('visitAuthed', (path: string, token = 'cypress-test-token') => {
+  cy.visit(path, {
+    onBeforeLoad(win) {
+      win.localStorage.setItem(TOKEN_KEY, token);
+    },
   });
 });
 

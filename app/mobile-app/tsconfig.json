@@ -18,5 +18,7 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "e2e", "e2e-web", "android", "ios", "dist"]
+  // `__tests__/e2e` is the Cypress suite: it has its own tsconfig (chai globals
+  // clash with jest's here) and is typechecked by the same `typecheck` script.
+  "exclude": ["node_modules", "e2e", "__tests__/e2e", "android", "ios", "dist"]
 }

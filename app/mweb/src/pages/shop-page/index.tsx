@@ -10,7 +10,6 @@ import { useSearchCategories } from '../search-page/useSearchDiscovery';
 import { usePricing } from '../../hooks/usePricing';
 import PodShopSlider from './PodShopSlider';
 import ShopProductCard from './ShopProductCard';
-import ShopHeaderCart from './ShopHeaderCart';
 import ShopFilterBar from './ShopFilterBar';
 import { useQuickAddToCart } from './useQuickAddToCart';
 import { useShopFilters } from './useShopFilters';
@@ -49,8 +48,8 @@ function TrustBar() {
 
 /** Pod Shop — the platform-wide browse catalogue of approved, pod-available
  * products with a filter button (Super → Category → Sub cascade, rating,
- * include-out-of-stock and sort), debounced search and a header cart. Tapping a
- * product opens its detail page; purchases happen through a pod's shop. */
+ * include-out-of-stock and sort) and debounced search. Tapping a product opens
+ * its detail page; purchases happen through a pod's shop. */
 export default function ShopPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -71,12 +70,10 @@ export default function ShopPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
-          {t('mweb.shop.title')}
-        </Typography>
-        <ShopHeaderCart />
-      </Stack>
+      {/* The cart lives in the app header now, on every page — not just here. */}
+      <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+        {t('mweb.shop.title')}
+      </Typography>
       <PodShopSlider />
       <ShopFilterBar filters={filters} />
       {filters.visible.length === 0 ? (

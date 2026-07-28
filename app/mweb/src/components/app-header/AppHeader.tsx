@@ -17,6 +17,7 @@ import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
 import StudioSwitchDialog from './profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from './SuperCategoryTabs';
+import HeaderCartButton from '../cart/HeaderCartButton';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
@@ -213,6 +214,10 @@ export default function AppHeader({
 
               </>
             )}
+            {/* The cart entry point rides in the header on every page (it used
+             * to float over the content); it hides itself when there is nothing
+             * to open. */}
+            <HeaderCartButton />
             <HeaderNotificationsBell onToast={handleNotifToast} />
 
             <Tooltip title={me?.full_name ?? 'Account'}>

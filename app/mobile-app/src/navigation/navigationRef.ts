@@ -3,10 +3,10 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 import type { RootStackParamList } from '@/navigation/types';
 
 /**
- * Container-level navigation handle for components rendered OUTSIDE any navigator.
- * The global FloatingCartButton overlay is a sibling of RootNavigator, so it has
- * no navigator ancestor — useNavigation / useNavigationState would throw there
- * ("Couldn't get the navigation state"). The container ref works from anywhere
- * inside <NavigationContainer>.
+ * Container-level navigation handle for components that must work from ANY
+ * position in the tree. The global HeaderCartButton renders both from the tab
+ * header and from a stack back-bar and needs the active route name in both, so
+ * it reads the container ref rather than a navigator hook (useNavigation /
+ * useNavigationState throw when there is no navigator ancestor).
  */
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();

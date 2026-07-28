@@ -16,6 +16,10 @@ concurrency:
 
 permissions:
   contents: read
+  # The e2e-gate job below reads this commit's check runs to confirm the E2E
+  # workflow passed before anything is built or shipped.
+  checks: read
+  actions: read
 
 env:
   IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -50,10 +54,94 @@ env:
 
 jobs:
   # -----------------------------------------------------------
+  # E2E GATE.
+  #
+  # Before this job existed, exactly one deploy path was gated on tests:
+  # `build-crm` waited on `crm-tests`. Every other console — and mWeb — shipped
+  # without any end-to-end check, because the e2e workflow was deliberately
+  # "decoupled from deploy.yml so a flaky e2e never bounces a healthy production
+  # service". That is precisely a job whose failure nothing depends on: e2e
+  # could be red for weeks and production would keep updating.
+  #
+  # This waits for the `E2E gate` check that e2e.yml publishes for THIS commit
+  # and fails the deploy if it is not green. e2e.yml owns the suites; this job
+  # owns nothing but the verdict, so there is one e2e implementation, not two.
+  #
+  # A missing E2E run is treated as a FAILURE, not as "nothing to wait for" —
+  # otherwise the gate would be bypassable by never running the suite, which is
+  # the same hole in a new shape. On `workflow_dispatch` run the E2E workflow
+  # for the commit first (or re-run it) and then dispatch the deploy.
+  # -----------------------------------------------------------
+  e2e-gate:
+    name: E2E must be green
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Wait for the E2E gate on ${{ github.sha }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          CHECK_NAME='E2E gate'
+          DEADLINE=$(( $(date +%s) + 40*60 ))
+
+          # Deliberately NO `|| true` on the API call. Swallowing a transport
+          # error here would look exactly like "the check has not appeared yet"
+          # and would quietly burn the whole timeout; worse, any future edit
+          # that turned the timeout into a pass would hand back the very bypass
+          # this job exists to close. An API failure is surfaced and retried a
+          # bounded number of times, then fails the deploy.
+          api_failures=0
+          while :; do
+            if payload=$(gh api "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
+                  --jq ".check_runs[] | select(.name == \"$CHECK_NAME\") | \"\(.status) \(.conclusion // \"pending\")\"" \
+                  | tail -1); then
+              api_failures=0
+            else
+              api_failures=$(( api_failures + 1 ))
+              echo "::warning::check-runs API call failed (${api_failures}/5)."
+              if [ "$api_failures" -ge 5 ]; then
+                echo "::error::Cannot read the '$CHECK_NAME' check for $SHA. Deploy blocked."
+                exit 1
+              fi
+              sleep 20
+              continue
+            fi
+
+            status=${payload%% *}
+            conclusion=${payload##* }
+            echo "E2E gate: status='${status:-none}' conclusion='${conclusion:-none}'"
+
+            if [ "${status:-}" = "completed" ]; then
+              if [ "$conclusion" = "success" ]; then
+                echo "E2E is green — proceeding with the deploy."
+                exit 0
+              fi
+              echo "::error::E2E concluded '$conclusion' for $SHA. Deploy blocked."
+              exit 1
+            fi
+
+            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+              echo "::error::Timed out waiting for the '$CHECK_NAME' check on $SHA."
+              echo "::error::A deploy is never allowed to proceed without a green E2E run."
+              exit 1
+            fi
+            sleep 20
+          done
+
+  # -----------------------------------------------------------
   # Decide which services need to be (re)built based on changed paths.
   # On manual dispatch the input wins.
   # -----------------------------------------------------------
   changes:
+    # EVERY build job needs `changes`, and `deploy` needs every build job — so
+    # this single edge puts the whole workflow behind the e2e gate. A red e2e
+    # skips `changes`, which skips all 26 builds, which skips the deploy. There
+    # is deliberately no `if: always()` or `continue-on-error` anywhere on that
+    # path: a failure here must stop the release, not annotate it.
+    needs: e2e-gate
     runs-on: ubuntu-latest
     outputs:
       server: ${{ steps.filter.outputs.server }}

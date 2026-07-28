@@ -33,7 +33,7 @@ export default defineConfig({
     include: ['src/**/*.{cy,test,spec}.{ts,tsx}', '__tests__/unit-tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
-      // istanbul output (json) is merged with the Playwright E2E coverage by nyc
+      // istanbul output (json) is merged with the Cypress E2E coverage by nyc
       // so component-level defensive branches the E2E flows can't reach still count.
       provider: 'istanbul',
       all: true,

@@ -1,0 +1,8 @@
+# Cypress run artifacts (screenshots / videos / downloads). Tests should never
+# depend on prior-run output so these are local-only.
+cypress-artifacts/
+
+# Raw istanbul maps written per test by the Cypress coverage task and consumed
+# by `nyc` (coverage:all). Regenerated on every run — committing them lets a
+# deleted spec keep propping up the coverage gate.
+.nyc_output/

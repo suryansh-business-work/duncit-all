@@ -27,7 +27,6 @@ import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { useCartStore } from '@/stores/cart.store';
-import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import config, { createBrandConfig } from './tamagui.config';
 import { configureLogs, httpTransport, detectEnvironment } from '@duncit/logs';
 import { config as appConfig } from '@/constants/config';
@@ -120,7 +119,6 @@ export default function App() {
                 >
                   <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
                   <RootNavigator />
-                  <FloatingCartButton />
                 </NavigationContainer>
                 <SplashOverlay />
                 <ForceUpdateGate />

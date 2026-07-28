@@ -67,7 +67,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 }));
 
-/** Total units across the cart — drives the floating button badge. */
+/** Total units across the cart — drives the header cart badge. */
 export const selectCartCount = (state: CartState): number =>
   state.lines.reduce((sum, line) => sum + line.quantity, 0);
 

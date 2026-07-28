@@ -17,6 +17,13 @@ export {
 } from './product-category';
 export { HOST_FREE_SPOT_NOTE, payableSpots, payingAttendees } from './pod-spots';
 export {
+  CART_BADGE_MAX,
+  cartBadgeLabel,
+  deriveCartEntry,
+  isCartFlowRoute,
+  type CartEntry,
+} from './cart-entry';
+export {
   buildEarningsStatement,
   formatStatementMoney,
   type EarningsStatement,

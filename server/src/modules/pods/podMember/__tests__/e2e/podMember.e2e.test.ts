@@ -2,6 +2,7 @@ import { gql } from 'graphql-request';
 import { Types } from 'mongoose';
 import { startTestServer, adminToken, signToken, type TestServer } from '@test/harness';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { PodMemberModel } from '../../podMember.model';
 
 let server: TestServer;
@@ -164,6 +165,53 @@ describe('podMember e2e', () => {
     expect(row!.backout_no).toMatch(/^DUN-BKO-\d{6}$/);
     expect(row!.backout_status).toBe('IN_PROCESS');
     expect(row!.events).toEqual([expect.objectContaining({ status: 'IN_PROCESS', backout_count: 1 })]);
+  });
+
+  it('serves a booking deep link only to the user who owns the booking', async () => {
+    const club = await ClubModel.create({
+      club_id: `e2e-club-${Math.random().toString(36).slice(2)}`,
+      club_name: 'E2E Booking Club',
+      super_category_id: new Types.ObjectId(),
+      category_id: new Types.ObjectId(),
+    });
+    const pod = await seedPod({ club_id: club._id, pod_title: 'E2E Booking Pod' });
+    const ownerId = new Types.ObjectId().toString();
+    await seedJoined(pod, ownerId);
+    const booking = await PodMemberModel.findOne({
+      pod_id: pod._id,
+      user_id: new Types.ObjectId(ownerId),
+    });
+
+    const QUERY = gql`
+      query ($id: ID!) {
+        bookingDetail(booking_id: $id) {
+          id
+          club_slug
+          pod_slug
+          pod_title
+        }
+      }
+    `;
+    const vars = { id: String(booking!._id) };
+
+    const owner = server.client(signToken({ id: ownerId }));
+    const mine = await owner.request<{
+      bookingDetail: { club_slug: string; pod_slug: string; pod_title: string };
+    }>(QUERY, vars);
+    expect(mine.bookingDetail).toMatchObject({
+      club_slug: club.club_id,
+      pod_slug: pod.pod_id,
+      pod_title: 'E2E Booking Pod',
+    });
+
+    // Someone else's booking — rejected by the resolver, not by the client.
+    const stranger = server.client(signToken({ id: new Types.ObjectId().toString() }));
+    await expect(stranger.request(QUERY, vars)).rejects.toThrow(
+      /You are not authorized to view this booking/
+    );
+
+    // Signed out — no booking detail at all.
+    await expect(server.client().request(QUERY, vars)).rejects.toThrow();
   });
 
   it('lets a member rejoin a pod they backed out of, without payment', async () => {

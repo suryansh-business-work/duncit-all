@@ -24,7 +24,9 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
     <YStack
       testID="price-panel-charges"
       borderWidth={1}
-      borderColor="$borderColor"
+      // The whole tree carries the failure, exactly like the mWeb twin, so the
+      // blocked venue section is findable while the accordion is collapsed.
+      borderColor={venueShortfall ? '$danger' : '$borderColor'}
       borderRadius={12}
       overflow="hidden"
     >

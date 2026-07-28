@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { MainTabs } from '@/navigation/MainTabs';
+import { BookingScreen } from '@/screens/BookingScreen';
 import { AccountScreen } from '@/screens/AccountScreen';
 import { AccountHealthScreen } from '@/screens/AccountHealthScreen';
 import { VenueHealthScreen } from '@/screens/VenueHealthScreen';
@@ -65,6 +67,8 @@ import { ListProductScreen } from '@/screens/ListProductScreen';
 import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
+import { consumePendingBooking } from './pendingBooking';
+import { navigationRef } from './navigationRef';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -80,6 +84,16 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function RootNavigator() {
   const token = useAuthStore((s) => s.token);
   const surveyCompleted = useAuthStore((s) => s.surveyCompleted);
+
+  // Replay a booking deep link that arrived while signed out (linking.ts parked
+  // it and routed to Login) — the native twin of mWeb's `?redirect` return.
+  useEffect(() => {
+    if (!token || !surveyCompleted) return;
+    const bookingId = consumePendingBooking();
+    if (bookingId && navigationRef.isReady()) {
+      navigationRef.navigate('Booking', { bookingId });
+    }
+  }, [token, surveyCompleted]);
 
   const signedInScreens = surveyCompleted ? (
     <>
@@ -97,6 +111,7 @@ export function RootNavigator() {
       <Stack.Screen name="Saved" component={SavedScreen} />
       <Stack.Screen name="PodHistory" component={PodHistoryScreen} />
       <Stack.Screen name="PodHistoryDetails" component={PodHistoryDetailsScreen} />
+      <Stack.Screen name="Booking" component={BookingScreen} />
       <Stack.Screen name="BecomeHost" component={BecomeHostScreen} />
       <Stack.Screen name="HostManage" component={HostManageScreen} />
       <Stack.Screen name="HostApply" component={HostApplyScreen} />

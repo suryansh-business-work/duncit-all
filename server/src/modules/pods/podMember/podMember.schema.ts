@@ -119,6 +119,22 @@ export const podMemberTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "One booking resolved from a booking deep link (the receipt email's View Booking CTA)."
+  type BookingDetail {
+    "PodMember id — the booking identifier carried in the deep link."
+    id: ID!
+    pod_id: ID!
+    "Club slug — first path segment of the canonical pod URL."
+    club_slug: String!
+    "Pod slug — second path segment of the canonical pod URL."
+    pod_slug: String!
+    pod_title: String!
+    pod_date_time: String
+    status: MembershipStatus!
+    joined_at: String!
+    payment_id: ID
+  }
+
   "Server-side table page for the shared table engine (backoutRefundRequestsTable)."
   type BackoutRefundRequestTablePage {
     rows: [BackoutRefundRequest!]!
@@ -132,6 +148,8 @@ export const podMemberTypeDefs = /* GraphQL */ `
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
     podMembers(pod_doc_id: ID!, status: MembershipStatus): [PodMember!]!
     referralLookup(token: String!): PodMember
+    "Resolve a booking deep link. Only the user who owns the booking may read it."
+    bookingDetail(booking_id: ID!): BookingDetail!
     "Finance-only: every Backout request ever raised (all statuses, for audit)."
     backoutRefundRequests: [BackoutRefundRequest!]!
     backoutRefundRequestsTable(query: TableQueryInput): BackoutRefundRequestTablePage!

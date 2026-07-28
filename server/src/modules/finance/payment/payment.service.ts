@@ -8,7 +8,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/finance.model';
 import { sendEmail } from '@services/email/email.service';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
-import { getUrlConfigs } from '@config/url-configs';
+import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import {
   createRazorpayOrder,
   getRazorpayKeys,
@@ -523,9 +523,11 @@ function razorpaySheet(a: RazorpaySheetArgs) {
   };
 }
 
-/** Books the slot + records the PodMember row + evaluates badges for a paid pod. */
-async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
-  if (!pod) return;
+/** Books the slot + records the PodMember row + evaluates badges for a paid pod.
+ * Returns the booking (PodMember) id so the receipt email can deep-link to it. */
+async function bookPodForPayment(pod: any, userId: any, paymentDocId: string): Promise<string | null> {
+  if (!pod) return null;
+  let bookingId: string | null = null;
   try {
     if (!pod.pod_attendees.some((u: any) => String(u) === String(userId))) {
       pod.pod_attendees.push(userId);
@@ -536,7 +538,8 @@ async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
   }
   try {
     const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
-    await podMemberService.recordPaidJoin(String(pod._id), String(userId), paymentDocId);
+    const member = await podMemberService.recordPaidJoin(String(pod._id), String(userId), paymentDocId);
+    bookingId = member?._id ? String(member._id) : null;
   } catch (e) {
     logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'PodMember record failed' });
   }
@@ -546,6 +549,7 @@ async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
   } catch {
     /* noop */
   }
+  return bookingId;
 }
 
 /** Multi-line bill-to address for the invoice, composed from the frozen billing
@@ -623,7 +627,7 @@ function invoiceBillTo(doc: IPayment) {
  * an invoice number + paid_at set. Best-effort — failures here never fail payment. */
 async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) {
   const pod = doc.pod_id ? await PodModel.findById(doc.pod_id) : null;
-  await bookPodForPayment(pod, doc.user_id, String(doc._id));
+  const bookingId = await bookPodForPayment(pod, doc.user_id, String(doc._id));
   // Fulfilment: create the product order(s) for any add-on products bought.
   // Best-effort + idempotent — never fail a paid checkout on a fulfilment hiccup.
   try {
@@ -656,6 +660,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       invoice_logo_url: fs.invoice_logo_url,
     });
     const urlConfigs = await getUrlConfigs();
+    const bookingUrl = bookingId ? bookingLinkUrl(urlConfigs.appUrl, bookingId) : urlConfigs.appUrl;
     await sendEmail({
       to: doc.user_email,
       subject: `Payment Receipt — ${doc.invoice_no}`,
@@ -669,7 +674,11 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
         invoice_no: doc.invoice_no || '',
         payment_id: doc.payment_id,
         amount: `${fs.currency_symbol}${doc.total.toFixed(2)}`,
-        app_url: urlConfigs.appUrl,
+        booking_url: bookingUrl,
+        // Templates already cached in the DB still carry the old `{{app_url}}`
+        // CTA, so it has to resolve to the same deep link (the disk template is
+        // only imported once, never re-synced).
+        app_url: bookingUrl,
       },
       attachments: [
         {

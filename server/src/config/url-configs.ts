@@ -56,6 +56,16 @@ export async function getUrlConfigs() {
   };
 }
 
+/**
+ * Canonical deep link to a single booking — mWeb's `/booking/:bookingId` route,
+ * which resolves the booking server-side (ownership enforced there) and forwards
+ * to that pod's detail page. Android App Links hand the very same URL to the
+ * installed app, so email CTAs work identically on web and native (rule 27).
+ */
+export function bookingLinkUrl(appUrl: string, bookingId: string) {
+  return `${appUrl.replace(/\/+$/, '')}/booking/${bookingId}`;
+}
+
 export async function getMailConfigs() {
   return (await getUrlConfigs()).mail;
 }

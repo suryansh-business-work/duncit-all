@@ -22,6 +22,8 @@ export type RootStackParamList = {
   Saved: undefined;
   PodHistory: undefined;
   PodHistoryDetails: { membershipId: string };
+  /** Booking deep link from the receipt email; forwards to the pod detail. */
+  Booking: { bookingId: string };
   BecomeHost: undefined;
   HostManage: undefined;
   HostApply: undefined;
@@ -97,6 +99,7 @@ export type MenuRoute = Exclude<
   | 'PodDetails'
   | 'ClubDetails'
   | 'PodHistoryDetails'
+  | 'Booking'
   | 'VenueHealth'
   | 'PublicProfile'
   | 'PostDetail'

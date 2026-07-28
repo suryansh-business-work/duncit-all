@@ -1,6 +1,8 @@
-import type { LinkingOptions } from '@react-navigation/native';
+import { getStateFromPath, type LinkingOptions } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 
+import { bookingIdFromPath, rememberPendingBooking } from '@/navigation/pendingBooking';
+import { useAuthStore } from '@/stores/auth.store';
 import type { RootStackParamList } from '@/navigation/types';
 
 /**
@@ -15,6 +17,18 @@ export const linking: LinkingOptions<RootStackParamList> = {
   // /.well-known/assetlinks.json served from mweb.duncit.com with the Play
   // signing cert's SHA-256 fingerprint.
   prefixes: [Linking.createURL('/'), 'https://mweb.duncit.com'],
+  // A booking link that lands while signed out would resolve to a screen the
+  // auth-gated stack has not rendered, and React Navigation would silently drop
+  // it. Park the booking id and send the user to Login instead — RootNavigator
+  // replays it after sign-in, the native twin of mWeb's `?redirect`.
+  getStateFromPath: (path, options) => {
+    const bookingId = bookingIdFromPath(path);
+    if (bookingId && !useAuthStore.getState().token) {
+      rememberPendingBooking(bookingId);
+      return getStateFromPath('/login', options);
+    }
+    return getStateFromPath(path, options);
+  },
   config: {
     screens: {
       Login: 'login',
@@ -41,6 +55,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Saved: 'saved',
       PodHistory: 'pod-history',
       PodHistoryDetails: 'pod-history/:membershipId',
+      // Booking deep link from the payment-receipt email — resolves the booking
+      // server-side and forwards to its pod detail screen.
+      Booking: 'booking/:bookingId',
       PreviousPods: 'previous-pods',
       BecomeHost: 'become-host',
       HostManage: 'host/manage',

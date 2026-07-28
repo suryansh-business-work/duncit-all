@@ -27,6 +27,9 @@ const BACKOUT_LIMIT_MESSAGE = 'You have reached the maximum number of Backout at
 const REPLACEMENT_CONFIRMED_MESSAGE =
   'A replacement has been confirmed — this Backout request can no longer be cancelled.';
 
+/** Spec copy — someone other than the booking's owner opened a booking link. */
+export const BOOKING_FORBIDDEN_MESSAGE = 'You are not authorized to view this booking.';
+
 const newToken = () => `ref_${crypto.randomBytes(8).toString('hex')}`;
 
 const iso = (v?: Date | null) => (v instanceof Date ? v.toISOString() : null);
@@ -389,6 +392,41 @@ export const podMemberService = {
     if (status) q.status = status;
     const docs = await PodMemberModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
+  },
+
+  /**
+   * Resolve a booking deep link (the receipt email's "View Booking" CTA) into
+   * the pod it points at. Ownership is enforced HERE, before any booking field
+   * leaves the server — a client hiding the screen is not access control.
+   */
+  async getBookingForUser(bookingId: string, userId: string) {
+    const member = Types.ObjectId.isValid(bookingId)
+      ? await PodMemberModel.findById(bookingId)
+      : null;
+    if (!member) {
+      throw new GraphQLError('Booking not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    if (String(member.user_id) !== String(userId)) {
+      throw new GraphQLError(BOOKING_FORBIDDEN_MESSAGE, { extensions: { code: 'FORBIDDEN' } });
+    }
+    // Soft-deleted pods still resolve — a cancelled pod's booking must stay
+    // reachable from the email exactly like Pod History keeps showing it.
+    const { podService } = await import('@modules/pods/pod/pod.service');
+    const pod = await podService.getById(String(member.pod_id), { includeDeleted: true });
+    if (!pod) {
+      throw new GraphQLError('Booking not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    return {
+      id: String(member._id),
+      pod_id: String(member.pod_id),
+      club_slug: pod.club_slug,
+      pod_slug: pod.pod_id,
+      pod_title: pod.pod_title,
+      pod_date_time: pod.pod_date_time,
+      status: member.status,
+      joined_at: iso(member.joined_at) ?? '',
+      payment_id: member.payment_id ? String(member.payment_id) : null,
+    };
   },
 
   async listForPod(podDocId: string, status?: string) {

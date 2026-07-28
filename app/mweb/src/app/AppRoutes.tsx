@@ -76,6 +76,7 @@ const PreviousPodsPage = lazy(() => import('../pages/PreviousPodsPage'));
 const HappeningNearbyPage = lazy(() => import('../pages/HappeningNearbyPage'));
 const CreatePodPage = lazy(() => import('../pages/create-pod-page'));
 const PodPendingPage = lazy(() => import('../pages/pod-pending-page'));
+const BookingPage = lazy(() => import('../pages/booking-page'));
 const EarnPage = lazy(() => import('../pages/earn-page'));
 const ProductsManagePage = lazy(() => import('../pages/products-manage-page'));
 const SavedItemsPage = lazy(() => import('../pages/SavedItemsPage'));
@@ -151,6 +152,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/pod-plans" element={withAuth(<PodPlansPage />)} />
         <Route path="/pod-history" element={withAuth(<PodHistoryPage />)} />
         <Route path="/pod-history/:membershipId" element={withAuth(<PodHistoryDetailsPage />)} />
+        {/* Booking deep link from the payment-receipt email — resolves the
+            booking server-side and forwards to its pod detail page. */}
+        <Route path="/booking/:bookingId" element={withAuth(<BookingPage />)} />
         <Route path="/support" element={withAuth(<SupportHubPage />)} />
         <Route path="/support/sos" element={withAuth(<SosPage />)} />
         <Route path="/support/callback" element={withAuth(<CallbackPage />)} />

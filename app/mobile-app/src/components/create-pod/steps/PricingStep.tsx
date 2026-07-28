@@ -14,6 +14,7 @@ import {
   ZeroEarningsNotice,
   type PodPricingState,
 } from '../price-panel';
+import { TICKET_PRICE_LABEL } from '../price-panel/step4-copy';
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
@@ -50,7 +51,7 @@ export function PricingStep({ form, products, showProducts, finance, pricing }: 
       <FormTextField
         control={control}
         name="pod_amount_text"
-        label="Ticket price (₹ per person)"
+        label={TICKET_PRICE_LABEL}
         keyboardType="numeric"
         editable={!isFree}
         hint={isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.'}

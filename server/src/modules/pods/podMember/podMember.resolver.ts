@@ -41,6 +41,10 @@ export const podMemberResolvers = {
       podMemberService.listForPod(args.pod_doc_id, args.status),
     referralLookup: async (_p: unknown, args: { token: string }) =>
       podMemberService.lookupReferral(args.token),
+    bookingDetail: async (_p: unknown, args: { booking_id: string }, ctx: GraphQLContext) => {
+      const uid = requireUser(ctx);
+      return podMemberService.getBookingForUser(args.booking_id, uid);
+    },
     backoutRefundRequests: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return podMemberService.listBackoutRefunds();

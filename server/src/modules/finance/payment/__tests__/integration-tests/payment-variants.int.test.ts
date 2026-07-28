@@ -15,6 +15,8 @@ import { PaymentModel } from '../../payment.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { sendEmail } from '@services/email/email.service';
 
 let seq = 0;
 
@@ -163,5 +165,29 @@ describe('variant-aware checkout pricing', () => {
       String(user._id)
     );
     expect(res.status).toBe('SUCCESS');
+  });
+});
+
+describe('payment-receipt "View Booking" CTA', () => {
+  it('deep-links to the booking the payment created', async () => {
+    const user = await seedUser();
+    const product = await seedVariantProduct();
+    const pod = await seedPodWith(product);
+
+    const res = await paymentService.dummyCheckout(
+      buyInput(pod._id, [{ product_id: String(product._id), quantity: 1 }]),
+      String(user._id)
+    );
+    expect(res.status).toBe('SUCCESS');
+
+    const member = await PodMemberModel.findOne({ pod_id: pod._id, user_id: user._id });
+    expect(member).toBeTruthy();
+
+    const receipt = (sendEmail as jest.Mock).mock.calls
+      .map(([opts]) => opts)
+      .find((opts) => opts.template === 'payment-receipt');
+    expect(receipt.vars.booking_url).toMatch(new RegExp(`/booking/${String(member!._id)}$`));
+    // DB-cached copies of the template still reference {{app_url}} — same target.
+    expect(receipt.vars.app_url).toBe(receipt.vars.booking_url);
   });
 });

@@ -3,6 +3,7 @@ import { podMemberService } from '../../podMember.service';
 import { PodMemberModel } from '../../podMember.model';
 import { BackoutRequestModel } from '../../backoutRequest.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { AppSettingsModel } from '@modules/platform/settings/settings.model';
@@ -963,5 +964,68 @@ describe('processBackoutRefund (finance — one refund per request)', () => {
 
     const row = await podMemberService.processBackoutRefund(String(request._id));
     expect(row.refund_status).toBe('PROCESSED');
+  });
+});
+
+describe('getBookingForUser — booking deep link (receipt email CTA)', () => {
+  const seedBooking = async () => {
+    const club = await ClubModel.create({
+      club_id: `club-${Math.random().toString(36).slice(2)}`,
+      club_name: 'Booking Club',
+      super_category_id: new Types.ObjectId(),
+      category_id: new Types.ObjectId(),
+    });
+    const pod = await makePodDoc({ club_id: club._id, pod_title: 'Sunset Rooftop Jam' });
+    const owner = new Types.ObjectId();
+    const member = await joinMember(pod, owner);
+    return { club, pod, owner, member };
+  };
+
+  it('returns the pod slugs the deep link forwards to, for the owner', async () => {
+    const { club, pod, owner, member } = await seedBooking();
+
+    const booking = await podMemberService.getBookingForUser(String(member._id), String(owner));
+
+    expect(booking).toMatchObject({
+      id: String(member._id),
+      pod_id: String(pod._id),
+      club_slug: club.club_id,
+      pod_slug: pod.pod_id,
+      pod_title: 'Sunset Rooftop Jam',
+      status: 'JOINED',
+    });
+  });
+
+  it('refuses anyone who does not own the booking', async () => {
+    const { member } = await seedBooking();
+    const stranger = new Types.ObjectId().toString();
+
+    await expect(podMemberService.getBookingForUser(String(member._id), stranger)).rejects.toThrow(
+      'You are not authorized to view this booking.'
+    );
+  });
+
+  it('rejects a malformed or unknown booking id', async () => {
+    const { owner } = await seedBooking();
+
+    await expect(podMemberService.getBookingForUser('not-an-id', String(owner))).rejects.toThrow(
+      /booking not found/i
+    );
+    await expect(
+      podMemberService.getBookingForUser(new Types.ObjectId().toString(), String(owner))
+    ).rejects.toThrow(/booking not found/i);
+  });
+
+  it('still resolves after the pod was soft-deleted, and 404s once it is gone', async () => {
+    const { pod, owner, member } = await seedBooking();
+    await PodModel.updateOne({ _id: pod._id }, { $set: { deleted_at: new Date() } });
+
+    const booking = await podMemberService.getBookingForUser(String(member._id), String(owner));
+    expect(booking.pod_slug).toBe(pod.pod_id);
+
+    await PodModel.deleteOne({ _id: pod._id });
+    await expect(
+      podMemberService.getBookingForUser(String(member._id), String(owner))
+    ).rejects.toThrow(/booking not found/i);
   });
 });

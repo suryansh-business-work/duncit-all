@@ -16,6 +16,9 @@ export const ZERO_EARNINGS_BODY =
 export const VENUE_SHORTFALL_MESSAGE =
   'Your venue price is greater than the total Pod value. Please increase the Ticket Price so that the total Pod value is equal to or greater than the Venue Price.';
 
+/** Ticket Price field label — the Suggested Price link sits to its right. */
+export const TICKET_PRICE_LABEL = 'Ticket price (₹ per person)';
+
 /** The "Suggested Price" link beside the Ticket Price label, and its modal. */
 export const SUGGESTED_PRICES_LINK = 'Suggested Price';
 export const SUGGESTED_PRICES_TITLE = 'Suggested Ticket Prices';

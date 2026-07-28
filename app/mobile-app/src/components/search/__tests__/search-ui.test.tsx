@@ -18,7 +18,7 @@ const pod = (id = 'p1') => ({
   pod_id: `pod-${id}`,
   pod_title: 'Sunset Yoga',
   pod_date_time: '2030-01-01T00:00:00.000Z',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   no_of_spots: 4,
   host_names: [],

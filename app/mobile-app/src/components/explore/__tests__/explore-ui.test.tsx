@@ -66,7 +66,7 @@ const pod = (id: string) =>
     pod_title: `Pod ${id}`,
     pod_description: 'A fun pod',
     pod_date_time: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_amount: 0,
     pod_attendees: ['u1'],
     no_of_spots: 5,
@@ -239,7 +239,7 @@ describe('ExplorePodCard', () => {
         pod={
           {
             ...(pod('2') as Record<string, unknown>),
-            pod_type: 'NATIVE_PAID',
+            pod_type: 'PAID',
             pod_amount: 250,
           } as never
         }

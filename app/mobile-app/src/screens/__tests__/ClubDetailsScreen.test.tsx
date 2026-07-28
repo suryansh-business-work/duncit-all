@@ -64,7 +64,7 @@ const pod = {
   pod_id: 'pod-1',
   pod_title: 'Morning Run',
   pod_date_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   pod_attendees: [],
   no_of_spots: 10,

@@ -44,7 +44,7 @@ const pods = [
   // future + paid
   { id: 'p1', pod_date_time: iso(5), pod_type: 'PAID', pod_hosts_id: ['h'], pod_attendees: ['a'] },
   // past + free
-  { id: 'p2', pod_date_time: iso(-5), pod_type: 'FREE_POD', pod_hosts_id: ['h'], pod_attendees: [] },
+  { id: 'p2', pod_date_time: iso(-5), pod_type: 'FREE', pod_hosts_id: ['h'], pod_attendees: [] },
   // no date
   { id: 'p3', pod_date_time: null, pod_type: 'PAID', pod_hosts_id: ['h'], pod_attendees: ['a', 'b'] },
 ];

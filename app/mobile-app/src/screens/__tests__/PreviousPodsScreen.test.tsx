@@ -21,7 +21,7 @@ const pod = {
   club_slug: 's',
   no_of_spots: 4,
   pod_amount: 0,
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: '2020-01-01T00:00:00.000Z',
   pod_images_and_videos: [],
   host_names: [],

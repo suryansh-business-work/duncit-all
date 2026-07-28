@@ -16,7 +16,7 @@ const podWith = (over: Record<string, unknown>) =>
     pod_id: 'pod-1',
     pod_title: 'Pod',
     pod_date_time: '2026-06-10T18:30:00.000Z',
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 250,
     pod_attendees: ['u1', 'u2'],
     no_of_spots: 0,

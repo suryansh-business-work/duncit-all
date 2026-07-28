@@ -79,7 +79,7 @@ const pod = (over: Record<string, unknown> = {}) => ({
 
 const exploreData = (over: Record<string, unknown> = {}) => ({
   me: { user_id: 'user-1', saved_pod_ids: ['pod-2'] },
-  pods: [pod(), pod({ id: 'pod-2', pod_id: 'DUN-2', pod_title: 'Beach Party', pod_type: 'NATIVE_PAID', pod_amount: 500 })],
+  pods: [pod(), pod({ id: 'pod-2', pod_id: 'DUN-2', pod_title: 'Beach Party', pod_type: 'PAID', pod_amount: 500 })],
   clubs: [{ id: 'club-1', club_id: 'C1', club_name: 'Club One', is_verified: true, super_category_id: 'super-1', category_id: 'cat-child' }],
   superCategories: [{ id: 'super-1', slug: 'nightlife' }],
   categories: [
@@ -171,7 +171,7 @@ describe('ExplorePage', () => {
     await screen.findByTestId('filter-sheet');
     expect(screen.getByText('active:0')).toBeInTheDocument();
     fireEvent.click(screen.getByText('set-paid'));
-    // PAID keeps only the NATIVE_PAID pod; active filter count becomes 1.
+    // PAID keeps only the PAID pod; active filter count becomes 1.
     await waitFor(() => expect(screen.getByText('active:1')).toBeInTheDocument());
     expect(screen.getByText('results:1')).toBeInTheDocument();
     expect(screen.getByText('count:1')).toBeInTheDocument();

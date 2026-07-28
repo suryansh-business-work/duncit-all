@@ -207,7 +207,7 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
     );
   }
   press('create-pod-submit');
-  await screen.findByTestId('create-pod-type-NATIVE_FREE');
+  await screen.findByTestId('create-pod-type-FREE');
   // Accept the Organizer Terms gate so the final publish validates.
   press('create-pod-terms');
 }
@@ -255,12 +255,12 @@ describe('CreatePodStepper', () => {
     press('create-pod-submit');
 
     // Step 4: pricing + products + price panel.
-    await screen.findByTestId('create-pod-type-NATIVE_FREE');
+    await screen.findByTestId('create-pod-type-FREE');
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
     press('products-enabled-toggle');
     press('products-enabled-toggle');
-    press('create-pod-type-NATIVE_PAID');
-    press('create-pod-type-NATIVE_FREE');
+    press('create-pod-type-PAID');
+    press('create-pod-type-FREE');
 
     // Accept the Organizer Terms gate, then publish.
     press('create-pod-terms');
@@ -603,7 +603,7 @@ describe('CreatePodStepper', () => {
 
   it('resumes at the provided step and clamps out-of-range drafts', () => {
     setup({ initialStep: 3, initialValues: { ...initialValues, pod_title: 'Resumed' } });
-    expect(screen.getByTestId('create-pod-type-NATIVE_FREE')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-type-FREE')).toBeOnTheScreen();
   });
 
   it('hides the products section and clears stale product values when gated off', () => {
@@ -618,7 +618,7 @@ describe('CreatePodStepper', () => {
       },
     });
     expect(screen.getByText('Step 4 of 4')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-type-NATIVE_FREE')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-type-FREE')).toBeOnTheScreen();
     expect(screen.queryByTestId('products-enabled-toggle')).toBeNull();
   });
 
@@ -638,6 +638,6 @@ describe('CreatePodStepper', () => {
         product_requests: [{ product_id: 'p1', quantity: 2 }],
       },
     });
-    expect(screen.getByTestId('create-pod-type-NATIVE_FREE')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-type-FREE')).toBeOnTheScreen();
   });
 });

@@ -36,7 +36,7 @@ const membership = (over: Record<string, unknown> = {}): PodMembership =>
       pod_date_time: '2026-06-10T10:00:00Z',
       pod_end_date_time: null,
       pod_amount: 500,
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       no_of_spots: 4,
       pod_images_and_videos: [],
     },
@@ -58,11 +58,11 @@ describe('refundLabel', () => {
 
 describe('podPriceCaption', () => {
   it('labels free pods', () => {
-    expect(podPriceCaption('NATIVE_FREE', 0)).toBe('Free pod');
+    expect(podPriceCaption('FREE', 0)).toBe('Free pod');
   });
 
   it('labels paid pods with the amount', () => {
-    expect(podPriceCaption('NATIVE_PAID', 500)).toBe('Paid pod ₹500');
+    expect(podPriceCaption('PAID', 500)).toBe('Paid pod ₹500');
   });
 
   it('defaults the amount to 0 and treats null type as paid', () => {

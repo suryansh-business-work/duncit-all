@@ -29,7 +29,7 @@ const pod = {
   club_slug: 'jam',
   no_of_spots: 8,
   pod_amount: 0,
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: '2026-06-07T18:30:00.000Z',
   pod_images_and_videos: [],
   host_names: [],

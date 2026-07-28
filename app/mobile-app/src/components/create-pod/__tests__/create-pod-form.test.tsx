@@ -127,7 +127,7 @@ describe('createPodSchema', () => {
   });
 
   it('forces free pods to amount 0 and gates enabled products', () => {
-    expect(issuesOf(valid({ pod_type: 'NATIVE_FREE', pod_amount_text: '100' }))).toContain(
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount_text: '100' }))).toContain(
       'pod_amount_text',
     );
     expect(issuesOf(valid({ products_enabled: true, product_requests: [] }))).toContain(

@@ -13,25 +13,25 @@ const iso = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
 
 const upcoming: FilterablePod = {
   pod_mode: 'PHYSICAL',
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   pod_date_time: iso(DAY),
   pod_end_date_time: iso(DAY + HOUR),
 };
 const live: FilterablePod = {
   pod_mode: 'VIRTUAL',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: iso(-HOUR),
   pod_end_date_time: iso(HOUR),
 };
 const ended: FilterablePod = {
   pod_mode: 'PHYSICAL',
-  pod_type: 'NON_NATIVE_PAID',
+  pod_type: 'PAID',
   pod_date_time: iso(-10 * HOUR),
   pod_end_date_time: null,
 };
 const undated: FilterablePod = {
   pod_mode: 'VIRTUAL',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: null,
   pod_end_date_time: null,
 };

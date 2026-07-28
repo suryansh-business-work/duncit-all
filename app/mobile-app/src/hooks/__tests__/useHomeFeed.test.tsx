@@ -28,7 +28,7 @@ const pod = (id: string, clubId: string, date: string) =>
     pod_id: `p-${id}`,
     pod_title: `Pod ${id}`,
     pod_date_time: date,
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_amount: 0,
     no_of_spots: 4,
     host_names: [],
@@ -222,7 +222,7 @@ describe('useHomeFeed filters (bug 6)', () => {
         {
           id: 'free',
           club_id: 'c1',
-          pod_type: 'NATIVE_FREE',
+          pod_type: 'FREE',
           pod_amount: 0,
           pod_date_time: future(2),
           location_id: null,
@@ -230,7 +230,7 @@ describe('useHomeFeed filters (bug 6)', () => {
         {
           id: 'paid',
           club_id: 'c1',
-          pod_type: 'NATIVE_PAID',
+          pod_type: 'PAID',
           pod_amount: 500,
           pod_date_time: future(1),
           location_id: null,

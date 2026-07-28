@@ -31,14 +31,14 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
 
 describe('PodTypeCards', () => {
   it('switches between the free and paid families and no-ops on the same family', () => {
-    renderWithProviders(<PodTypeHarness initial={{ pod_type: 'NATIVE_FREE' }} />);
+    renderWithProviders(<PodTypeHarness initial={{ pod_type: 'FREE' }} />);
     fireEvent.press(screen.getByTestId('create-pod-paid'));
-    expect(screen.getByTestId('pt-readout')).toHaveTextContent('NATIVE_PAID');
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('PAID');
     fireEvent.press(screen.getByTestId('create-pod-free'));
-    expect(screen.getByTestId('pt-readout')).toHaveTextContent('NATIVE_FREE');
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
     // Pressing the already-selected family is a no-op.
     fireEvent.press(screen.getByTestId('create-pod-free'));
-    expect(screen.getByTestId('pt-readout')).toHaveTextContent('NATIVE_FREE');
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
   });
 });
 

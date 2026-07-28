@@ -140,7 +140,7 @@ const pod = {
   meeting_platform: null,
   meeting_url: null,
   meeting_notes: null,
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   no_of_spots: 5,
   zone_name: null,

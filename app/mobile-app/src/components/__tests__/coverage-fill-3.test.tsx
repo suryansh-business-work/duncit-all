@@ -20,7 +20,7 @@ const basePod = {
   pod_attendees: ['u1'],
   no_of_spots: 4,
   pod_hits: 8,
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   pod_amount: 199,
   pod_occurrence: 'ONE_TIME',
   pod_date_time: '2026-06-02T13:30:00.000Z',

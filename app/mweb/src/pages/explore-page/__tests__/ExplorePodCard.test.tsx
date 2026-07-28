@@ -139,7 +139,7 @@ describe('ExplorePodCard', () => {
   });
 
   it('shows the free-spot CTA subtitle for FREE pods', () => {
-    setup({ pod: { pod_type: 'FREE_EVENT' } });
+    setup({ pod: { pod_type: 'FREE' } });
     expect(screen.getByText('Free spot')).toBeInTheDocument();
   });
 

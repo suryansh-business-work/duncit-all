@@ -62,10 +62,19 @@ async function bootstrap() {
   // Data migration: collapse legacy pod_type values (NATIVE_* / NON_NATIVE_*)
   // to FREE/PAID before traffic is served — the GraphQL enum no longer
   // carries the legacy values, so unmigrated docs would fail to resolve.
-  await safeSeed('podTypeMigration', async () => {
-    const { migrateLegacyPodTypes } = await import('@modules/pods/pod/pod-type.migration');
-    await migrateLegacyPodTypes();
-  });
+  //
+  // EXPLICITLY GATED, never implicit. An earlier version ran unconditionally on
+  // every boot, and a local `pnpm dev` with .env pointing at the live cluster
+  // rewrote production data that the DEPLOYED enum could not represent — a
+  // production outage from a dev-machine boot. Data migrations only run when
+  // the environment says so; deploy.yml sets this for the release that ships
+  // the new enum, local dev never does.
+  if (process.env.RUN_POD_TYPE_MIGRATION === '1') {
+    await safeSeed('podTypeMigration', async () => {
+      const { migrateLegacyPodTypes } = await import('@modules/pods/pod/pod-type.migration');
+      await migrateLegacyPodTypes();
+    });
+  }
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   // Telemetry: seed the singleton, prime the log-funnel runtime flags, then wire

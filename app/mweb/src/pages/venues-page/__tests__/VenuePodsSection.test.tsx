@@ -48,7 +48,7 @@ const pod = (id: string, over: Record<string, unknown> = {}) => ({
   pod_title: `Pod ${id}`,
   pod_date_time: iso(5 * DAY),
   pod_end_date_time: iso(5 * DAY + 2 * HOUR),
-  pod_type: ['PAID'],
+  pod_type: 'PAID',
   pod_amount: 500,
   pod_attendees: 3,
   no_of_spots: 10,
@@ -65,7 +65,7 @@ const pod = (id: string, over: Record<string, unknown> = {}) => ({
 // Live now => SOON rail; far future => UPCOMING; ended => PREVIOUS.
 const livePod = pod('live', {
   pod_title: 'Live Jam',
-  pod_type: ['FREE'],
+  pod_type: 'FREE',
   pod_date_time: iso(-HOUR),
   pod_end_date_time: iso(HOUR),
 });

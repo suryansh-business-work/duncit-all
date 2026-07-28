@@ -1,6 +1,8 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type PodType = 'NATIVE_FREE' | 'NATIVE_PAID' | 'NATIVE_PAID_PREMIUM' | 'NON_NATIVE_FREE' | 'NON_NATIVE_PAID';
+/** FREE is virtual-only — physical pods must be PAID. Legacy values are
+ * collapsed to these two by the boot-time migration (pod-type.migration.ts). */
+export type PodType = 'FREE' | 'PAID';
 export type PodOccurrence = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALTERNATE_DAY' | 'WEEKENDS_ONLY';
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 /** Venue's decision on the pod's slot request. NONE = no approval needed
@@ -188,7 +190,7 @@ const podSchema = new Schema<IPod>(
     pod_end_date_time: { type: Date, default: null },
     pod_type: {
       type: String,
-      enum: ['NATIVE_FREE', 'NATIVE_PAID', 'NATIVE_PAID_PREMIUM', 'NON_NATIVE_FREE', 'NON_NATIVE_PAID'],
+      enum: ['FREE', 'PAID'],
       required: true,
     },
     pod_amount: { type: Number, default: 0, min: 0, max: 1999 },

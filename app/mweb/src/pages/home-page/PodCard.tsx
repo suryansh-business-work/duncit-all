@@ -26,7 +26,7 @@ export default function PodCard({
   hostName?: string | null;
   showPlace?: boolean;
 }>) {
-  const isFree = pod.pod_type?.includes('FREE');
+  const isFree = pod.pod_type === 'FREE';
   const { format } = usePricing();
   const placeText = showPlace ? [pod.place_label, pod.place_detail].filter(Boolean).join(' - ') : '';
   // Pods whose date has passed can no longer be booked, so the "Book" CTA is

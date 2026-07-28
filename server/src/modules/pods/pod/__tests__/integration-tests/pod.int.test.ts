@@ -12,7 +12,7 @@ const makePod = (over: Record<string, unknown> = {}) => ({
   pod_title: 'Test pod',
   club_id: new Types.ObjectId(),
   pod_description: 'desc',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: new Date(Date.now() + 86_400_000),
   is_active: true,
   ...over,
@@ -27,7 +27,7 @@ const makeVirtualInput = (hostId: Types.ObjectId, over: Record<string, unknown> 
   pod_mode: 'VIRTUAL',
   meeting_url: 'https://meet.example.com/x',
   pod_description: 'desc',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
   pod_images_and_videos: [IMG],
   ...over,
@@ -180,11 +180,11 @@ describe('podService integration', () => {
       expect(updated?.pod_title).toBe('Renamed');
       // The free-pod invariant still holds on edit: a free type cannot carry a price.
       await expect(
-        podService.update(id, { pod_type: 'NATIVE_FREE', pod_amount: 500 })
+        podService.update(id, { pod_type: 'FREE', pod_amount: 500 })
       ).rejects.toThrow(/Free pods must have amount 0/i);
       // …and the price ceiling is re-checked too.
       await expect(
-        podService.update(id, { pod_type: 'NATIVE_PAID', pod_amount: 5000 })
+        podService.update(id, { pod_type: 'PAID', pod_amount: 5000 })
       ).rejects.toThrow(/between 0 and 1999/i);
     });
 

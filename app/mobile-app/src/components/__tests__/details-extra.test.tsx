@@ -20,7 +20,7 @@ const pod = {
   pod_attendees: ['u1', 'u2'],
   no_of_spots: 5,
   pod_amount: 200,
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   pod_occurrence: 'ONE_TIME',
   payment_terms: 'Pay at venue',
   place_charges: [{ label: 'Entry', amount: 100, note: 'per head' }],

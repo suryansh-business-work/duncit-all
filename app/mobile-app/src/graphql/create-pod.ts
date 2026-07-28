@@ -137,6 +137,21 @@ export const PotentialPodEarningsDocument = gql(`
   }
 `);
 
+/** The ₹x99 ticket-price ladder behind Step 4's "Suggested Ticket Prices"
+ * modal — same inputs as the earnings preview, minus the price itself. */
+export const SuggestedTicketPricesDocument = gql(`
+  query MobileSuggestedTicketPrices($no_of_spots: Int!, $venue_id: ID, $venue_amount: Float) {
+    suggestedTicketPrices(
+      no_of_spots: $no_of_spots
+      venue_id: $venue_id
+      venue_amount: $venue_amount
+    ) {
+      price
+      host_receives
+    }
+  }
+`);
+
 /** Open availability slots on a venue partner's calendar (step 3). */
 export const VenueAvailableSlotsDocument = gql(`
   query MobileVenueAvailableSlots($venue_id: ID!) {
@@ -191,11 +206,13 @@ export const DeletePodDraftDocument = gql(`
   }
 `);
 
-/** Validates + creates the real pod, then deletes the draft. */
+/** Validates + creates the real pod, then deletes the draft. The venue-approval
+ * status routes the host: PENDING → waiting screen, else Host Management. */
 export const PublishPodDraftDocument = gql(`
   mutation MobilePublishPodDraft($draft_id: ID!, $input: CreatePodInput!) {
     publishPodDraft(draft_id: $draft_id, input: $input) {
       id
+      venue_approval_status
     }
   }
 `);

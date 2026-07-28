@@ -28,7 +28,7 @@ const seedPod = (clubId: unknown, over: Record<string, unknown> = {}) =>
     pod_title: 'Pod',
     club_id: clubId,
     pod_description: 'desc',
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_date_time: new Date(Date.now() + 86_400_000),
     is_active: true,
     ...over,

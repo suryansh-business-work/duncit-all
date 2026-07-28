@@ -3,7 +3,28 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import { gql } from '@apollo/client';
 import { describe, expect, it } from 'vitest';
-import PricePanel, { POTENTIAL_POD_EARNINGS } from '../price-panel';
+import PricePanel, {
+  POTENTIAL_POD_EARNINGS,
+  useEarningsPreview,
+  type EarningsPreview,
+} from '../price-panel';
+
+interface HarnessProps {
+  slotPrice: number | null;
+  podAmount: number;
+  noOfSpots: number;
+  venueId: string | null;
+  isPhysical: boolean;
+  onPreview?: (preview: EarningsPreview) => void;
+}
+
+/** The panel is now fed by the shared Step-4 preview hook (the stepper owns it
+ * so the footer can block Create Pod), so the test drives the hook. */
+function Harness({ onPreview, ...input }: Readonly<HarnessProps>) {
+  const preview = useEarningsPreview(input);
+  onPreview?.(preview);
+  return <PricePanel preview={preview} />;
+}
 
 // Structurally identical to the hook's private document so Apollo matches it.
 const PUBLIC_FINANCE = gql`
@@ -66,7 +87,7 @@ const venueMocks = [
 function setup(podAmount: number, noOfSpots = 0) {
   return render(
     <MockedProvider mocks={venueMocks} addTypename={false}>
-      <PricePanel slotPrice={300} podAmount={podAmount} noOfSpots={noOfSpots} venueId="v1" isPhysical />
+      <Harness slotPrice={300} podAmount={podAmount} noOfSpots={noOfSpots} venueId="v1" isPhysical />
     </MockedProvider>,
   );
 }
@@ -199,7 +220,7 @@ describe('PricePanel (auditable earnings statement)', () => {
         ]}
         addTypename={false}
       >
-        <PricePanel slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical />
+        <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical />
       </MockedProvider>,
     );
     await screen.findByText('You will receive');
@@ -225,7 +246,7 @@ describe('PricePanel (auditable earnings statement)', () => {
         ]}
         addTypename={false}
       >
-        <PricePanel slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical={false} />
+        <Harness slotPrice={300} podAmount={1000} noOfSpots={30} venueId="v1" isPhysical={false} />
       </MockedProvider>,
     );
     expect(await screen.findByText('You will receive')).toBeInTheDocument();

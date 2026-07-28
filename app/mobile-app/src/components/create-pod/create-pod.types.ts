@@ -1,12 +1,10 @@
 /** Option lists + form value shape for the host Create Pod stepper. */
 import type { UseFormReturn } from 'react-hook-form';
 
+/** The only pod types — FREE is virtual-only, physical pods are always PAID. */
 export const POD_TYPES = [
-  { value: 'NATIVE_FREE', label: 'Native - Free' },
-  { value: 'NATIVE_PAID', label: 'Native - Paid' },
-  { value: 'NATIVE_PAID_PREMIUM', label: 'Native - Paid Premium' },
-  { value: 'NON_NATIVE_FREE', label: 'Non-native - Free' },
-  { value: 'NON_NATIVE_PAID', label: 'Non-native - Paid' },
+  { value: 'FREE', label: 'Free' }, // TODO(i18n)
+  { value: 'PAID', label: 'Paid' }, // TODO(i18n)
 ] as const;
 
 export interface PodProductRequest {
@@ -78,7 +76,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
   pod_info: '',
   pod_date_time_text: '',
   pod_end_date_time_text: '',
-  pod_type: 'NATIVE_FREE',
+  // Default mode is PHYSICAL, which only allows PAID (FREE is virtual-only).
+  pod_type: 'PAID',
   pod_amount_text: '0',
   no_of_spots_text: '0',
   pod_hashtag_text: '',

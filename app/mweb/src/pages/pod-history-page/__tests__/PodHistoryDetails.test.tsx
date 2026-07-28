@@ -73,7 +73,7 @@ const basePod = (over: Record<string, unknown> = {}) => ({
   pod_date_time: '2099-08-01T10:00:00.000Z',
   pod_end_date_time: '2099-08-01T12:00:00.000Z',
   pod_amount: 500,
-  pod_type: 'PAID_POD',
+  pod_type: 'PAID',
   is_deleted: false,
   no_of_spots: 10,
   pod_images_and_videos: [{ url: 'https://img/x.jpg', type: 'IMAGE' }],
@@ -146,7 +146,7 @@ describe('PodHistoryDetails', () => {
   });
 
   it('shows the free-pod label and event icon fallback when no image', () => {
-    renderIt(baseItem({ pod: basePod({ pod_type: 'FREE_POD', pod_images_and_videos: [] }) }));
+    renderIt(baseItem({ pod: basePod({ pod_type: 'FREE', pod_images_and_videos: [] }) }));
     expect(screen.getByText('Free pod')).toBeInTheDocument();
   });
 

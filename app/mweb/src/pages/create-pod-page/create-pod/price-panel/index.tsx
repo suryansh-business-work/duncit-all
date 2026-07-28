@@ -1,33 +1,20 @@
-import { useEffect, useState } from 'react';
-import { useQuery } from '@apollo/client';
 import { Alert, Card, CircularProgress, Stack, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 import { usePricing } from '../../../../hooks/usePricing';
-import { POTENTIAL_POD_EARNINGS, type EarningsProjection } from './queries';
+import { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 import ChargesAccordion from './ChargesAccordion';
 import PayoutCard from './PayoutCard';
+import { VENUE_SHORTFALL_MESSAGE } from './pricingCopy';
+import type { EarningsPreview } from './useEarningsPreview';
 
-export { POTENTIAL_POD_EARNINGS };
+export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES };
+export { useEarningsPreview, type EarningsPreview } from './useEarningsPreview';
+export { default as TicketPriceField } from './TicketPriceField';
 
 interface Props {
-  slotPrice: number | null;
-  podAmount: number;
-  noOfSpots: number;
-  venueId: string | null;
-  isPhysical: boolean;
-}
-
-/** Debounced (400ms) copy of the pricing inputs so typing doesn't spam the API.
- * Both are primitives, so the effect only re-runs on a real value change. */
-function useDebouncedInputs(podAmount: number, noOfSpots: number) {
-  const [inputs, setInputs] = useState({ podAmount, noOfSpots });
-  useEffect(() => {
-    const t = setTimeout(() => setInputs({ podAmount, noOfSpots }), 400);
-    return () => clearTimeout(t);
-  }, [podAmount, noOfSpots]);
-  return inputs;
+  preview: EarningsPreview;
 }
 
 /**
@@ -37,21 +24,9 @@ function useDebouncedInputs(podAmount: number, noOfSpots: number) {
  * matching how the pod is actually settled. Charges are grouped in a
  * collapsible tree; the payout card is the strongest element.
  */
-export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, isPhysical }: Readonly<Props>) {
+export default function PricePanel({ preview }: Readonly<Props>) {
   const { currency } = usePricing();
-  const sent = useDebouncedInputs(podAmount, noOfSpots);
-  const hasVenue = isPhysical && slotPrice !== null;
-  const { data, loading } = useQuery(POTENTIAL_POD_EARNINGS, {
-    variables: {
-      pod_amount: sent.podAmount,
-      no_of_spots: sent.noOfSpots,
-      venue_id: hasVenue ? venueId : null,
-      venue_amount: hasVenue ? slotPrice : null,
-    },
-    skip: sent.podAmount <= 0 || sent.noOfSpots <= 1,
-    fetchPolicy: 'cache-and-network',
-  });
-  const projection: EarningsProjection | undefined = data?.potentialPodEarnings;
+  const { podAmount, noOfSpots, projection, loading, stale, hasVenue, venueShortfall } = preview;
   const w = projection?.waterfall;
 
   // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
@@ -75,7 +50,6 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
     }
     // During the debounce window the previous waterfall would render beside
     // labels built from the live inputs — treat it as loading instead.
-    const stale = sent.podAmount !== podAmount || sent.noOfSpots !== noOfSpots;
     if (!w || !projection || stale) {
       return loading || stale ? <CircularProgress size={18} /> : null;
     }
@@ -97,7 +71,11 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
             {statement.collection.included_gst_note}
           </Typography>
         </Stack>
-        <ChargesAccordion statement={statement} money={fmt} />
+        <ChargesAccordion
+          statement={statement}
+          money={fmt}
+          venueError={venueShortfall ? VENUE_SHORTFALL_MESSAGE : null}
+        />
         <PayoutCard
           amount={fmt(w.host_receives)}
           payingPax={projection.payable_spots}

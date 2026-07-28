@@ -115,7 +115,7 @@ export default function PodDetailsPage() {
     };
   });
 
-  const isFree = pod.pod_type?.includes('FREE');
+  const isFree = pod.pod_type === 'FREE';
   const isPodHost = (pod.pod_hosts_id ?? []).includes(data?.me?.user_id);
   const media = pod.pod_images_and_videos ?? [];
   const supportSubject = `Support - ${pod.pod_title}`;

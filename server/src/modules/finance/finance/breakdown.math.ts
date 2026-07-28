@@ -44,6 +44,18 @@ export interface BreakdownRates {
   club_admin_percent: number;
 }
 
+/** Behaviour switches for `computePodFinanceBreakdown`. */
+export interface BreakdownOptions {
+  /**
+   * Default `true` (SETTLEMENT behaviour): the venue amount is clamped to the
+   * pool so the host side never goes negative — legacy shortfall pods keep
+   * settling exactly as before. Pass `false` for the create-pod PREVIEW: the
+   * venue keeps its full fixed price and host_amount / host_receives go
+   * negative honestly so clients can render the real shortfall.
+   */
+  clampVenueToPool?: boolean;
+}
+
 export interface PodFinanceBreakdown {
   /** What the customer paid, GST-inclusive (paise). */
   amount_paise: number;
@@ -53,7 +65,9 @@ export interface PodFinanceBreakdown {
   pool_paise: number;
   /** Club-admin cut taken off the pool after GST + platform fee (paise). */
   club_admin_paise: number;
-  /** The venue's booked slot price, clamped to the pool (paise). */
+  /** The venue's booked slot price — clamped to the pool by default
+   * (settlement), or its full fixed price when `clampVenueToPool` is false
+   * (create-pod preview). */
   venue_amount_paise: number;
   venue_commission_paise: number;
   venue_receives_paise: number;
@@ -108,11 +122,15 @@ export function payableSpots(totalSpots: number): number {
  *
  * @param amountPaise      what customers paid in total (GST-inclusive)
  * @param venueAmountPaise the venue's booked slot price (0 when no venue)
+ * @param options          clampVenueToPool defaults to true (settlement); the
+ *                         create-pod preview passes false so a venue-price
+ *                         shortfall surfaces as negative host earnings.
  */
 export function computePodFinanceBreakdown(
   amountPaise: number,
   venueAmountPaise: number,
-  rates: BreakdownRates
+  rates: BreakdownRates,
+  options?: BreakdownOptions
 ): PodFinanceBreakdown {
   if (!Number.isInteger(amountPaise) || amountPaise < 0) {
     throw new Error(`Invalid amount_paise: ${amountPaise} (must be a non-negative integer)`);
@@ -134,10 +152,16 @@ export function computePodFinanceBreakdown(
   const clubAdmin = Math.min(pool, Math.round((pool * rates.club_admin_percent) / 100));
   const splitPool = pool - clubAdmin;
   // The venue's fixed price comes off what remains; the host owns the rest.
-  const venueAmount = Math.min(venueAmountPaise, splitPool);
+  // Settlement (default) clamps it to the pool; the preview keeps the full
+  // price so hostAmount goes negative honestly on a shortfall.
+  const clampVenueToPool = options?.clampVenueToPool ?? true;
+  const venueAmount = clampVenueToPool ? Math.min(venueAmountPaise, splitPool) : venueAmountPaise;
   const hostAmount = splitPool - venueAmount;
   const venueCommission = Math.round((venueAmount * rates.venue_commission_percent) / 100);
-  const hostCommission = Math.round((hostAmount * rates.host_commission_percent) / 100);
+  // No commission is charged on a non-positive host side — the shortfall passes
+  // through whole (and the reconciliation invariant still holds exactly).
+  const hostCommission =
+    hostAmount > 0 ? Math.round((hostAmount * rates.host_commission_percent) / 100) : 0;
   const venueReceives = venueAmount - venueCommission;
   const hostReceives = hostAmount - hostCommission;
   const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;

@@ -62,7 +62,7 @@ describe('ExplorePodOverlay', () => {
     const pod = {
       pod_title: 'Jam',
       pod_description: 'desc',
-      pod_type: 'NATIVE_PAID',
+      pod_type: 'PAID',
       pod_amount: 200,
       pod_date_time: '2026-06-10T18:30:00.000Z',
       place_label: 'Cafe',
@@ -188,7 +188,7 @@ describe('ClubBody', () => {
         pod_title: 'Run',
         pod_date_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         pod_end_date_time: null,
-        pod_type: 'NATIVE_FREE',
+        pod_type: 'FREE',
         pod_amount: 0,
         no_of_spots: 5,
         host_names: [],
@@ -242,7 +242,7 @@ describe('ClubBody', () => {
         pod_title: 'Old Run',
         pod_date_time: '2026-06-02T06:30:00.000Z',
         pod_end_date_time: '2026-06-02T08:30:00.000Z',
-        pod_type: 'NATIVE_FREE',
+        pod_type: 'FREE',
         pod_amount: 0,
         no_of_spots: 5,
         host_names: [],
@@ -302,7 +302,7 @@ describe('empty / minimal branches', () => {
     const full = {
       pod_title: 'Jam',
       pod_description: 'desc',
-      pod_type: 'NATIVE_FREE',
+      pod_type: 'FREE',
       pod_amount: 0,
       pod_date_time: '2026-06-10T18:30:00.000Z',
       pod_attendees: ['u1'],
@@ -320,7 +320,7 @@ describe('empty / minimal branches', () => {
     const minimal = {
       pod_title: 'Bare',
       pod_description: '',
-      pod_type: 'NATIVE_FREE',
+      pod_type: 'FREE',
       pod_amount: 0,
       pod_date_time: '2026-06-10T18:30:00.000Z',
       pod_attendees: [],
@@ -340,7 +340,7 @@ describe('empty / minimal branches', () => {
     const pod = {
       pod_title: 'Bare',
       pod_description: '',
-      pod_type: 'NATIVE_FREE',
+      pod_type: 'FREE',
       pod_amount: 0,
       pod_date_time: '',
       place_label: null,

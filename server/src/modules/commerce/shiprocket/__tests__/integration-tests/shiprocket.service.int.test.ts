@@ -38,7 +38,7 @@ const seedPod = (productId: any, snapshotUnitCost: number) =>
     club_id: new Types.ObjectId(),
     pod_description: 'd',
     pod_date_time: new Date(Date.now() + 86400_000),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 500,
     products_enabled: true,
     product_requests: [

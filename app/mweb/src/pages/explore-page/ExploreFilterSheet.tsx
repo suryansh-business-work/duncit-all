@@ -16,7 +16,7 @@ interface ExploreFilterSheetProps {
 
 const PRESETS: Array<[ExplorePreset, string]> = [['ALL', 'All'], ['TONIGHT', 'Tonight'], ['TRENDING', 'Trending'], ['NEAR', 'Near me']];
 const SORTS: Array<[ExploreSort, string]> = [['SOONEST', 'Soonest'], ['TRENDING', 'Trending'], ['PRICE_LOW', 'Price low'], ['PRICE_HIGH', 'Price high']];
-const PRICES: Array<[ExplorePriceFilter, string]> = [['ALL', 'All'], ['FREE', 'Free'], ['PAID', 'Paid'], ['PREMIUM', 'Premium']];
+const PRICES: Array<[ExplorePriceFilter, string]> = [['ALL', 'All'], ['FREE', 'Free'], ['PAID', 'Paid']]; // TODO(i18n)
 const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'Any time'], ['TODAY', 'Today'], ['TOMORROW', 'Tomorrow'], ['WEEK', 'This week'], ['MONTH', 'This month']];
 
 function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items: Array<[T, string]>; value: T; onChange: (value: T) => void }>) {

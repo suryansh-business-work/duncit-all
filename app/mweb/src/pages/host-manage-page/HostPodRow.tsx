@@ -57,8 +57,9 @@ export default function HostPodRow({ pod, onComplete, onEdit, onDelete }: Readon
         )}
         <Chip
           size="small"
-          label={pod.pod_type?.replace(/_/g, ' ')}
-          color={pod.pod_type?.includes('FREE') ? 'success' : 'primary'}
+          // TODO(i18n)
+          label={pod.pod_type === 'FREE' ? 'Free' : 'Paid'}
+          color={pod.pod_type === 'FREE' ? 'success' : 'primary'}
           variant="outlined"
         />
         <Tooltip title="Complete pod">

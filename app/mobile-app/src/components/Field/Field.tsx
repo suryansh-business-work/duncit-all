@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Text, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { FieldLabel } from './FieldLabel';
@@ -19,6 +19,9 @@ export interface FieldProps {
   testID?: string;
   /** Vertical gap between the label, control and helper. */
   gap?: number;
+  /** Trailing control rendered on the label line, right-aligned (e.g. a
+   * "Suggested Price" link). Omitted, the label keeps its plain layout. */
+  labelAction?: ReactNode;
 }
 
 /**
@@ -35,6 +38,7 @@ export function Field({
   error,
   testID,
   gap = 6,
+  labelAction,
 }: Readonly<FieldProps>) {
   let helper: ReactNode = null;
   if (error) {
@@ -53,9 +57,18 @@ export function Field({
     );
   }
 
+  const fieldLabel = <FieldLabel label={label} required={required} testID={testID} />;
+
   return (
     <YStack gap={gap}>
-      <FieldLabel label={label} required={required} testID={testID} />
+      {labelAction ? (
+        <XStack alignItems="center" justifyContent="space-between" gap={10}>
+          {fieldLabel}
+          {labelAction}
+        </XStack>
+      ) : (
+        fieldLabel
+      )}
       {children}
       {helper}
     </YStack>

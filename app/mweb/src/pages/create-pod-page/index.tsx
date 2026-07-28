@@ -99,7 +99,7 @@ const SAVE_POD_DRAFT = gql`
 `;
 const PUBLISH_POD_DRAFT = gql`
   mutation PublishPodDraft($draft_id: ID!, $input: CreatePodInput!) {
-    publishPodDraft(draft_id: $draft_id, input: $input) { id }
+    publishPodDraft(draft_id: $draft_id, input: $input) { id venue_approval_status }
   }
 `;
 const MODERATE_POD_CONTENT = gql`
@@ -153,8 +153,15 @@ export default function CreatePodPage() {
     return res.data.savePodDraft.id as string;
   };
   const publish = async (id: string, input: any) => {
-    await publishMut({ variables: { draft_id: id, input } });
-    navigate('/host/manage');
+    const res = await publishMut({ variables: { draft_id: id, input } });
+    const created = res.data.publishPodDraft;
+    // A pod holding a venue slot awaits the venue's decision — land the host on
+    // the waiting page instead of Host Management (native twin, rule 27).
+    if (created.venue_approval_status === 'PENDING') {
+      navigate(`/host/pod-pending/${created.id}`);
+    } else {
+      navigate('/host/manage');
+    }
   };
   const moderate = async (input: any) => {
     const res = await moderateMut({ variables: { input } });

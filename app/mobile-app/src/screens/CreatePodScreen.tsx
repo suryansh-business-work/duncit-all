@@ -4,6 +4,7 @@ import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { CreatePodStepper } from '@/components/create-pod';
+import { PodVenueApproval } from '@/generated/graphql/graphql';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { useCreatePod } from '@/hooks/useCreatePod';
@@ -13,7 +14,8 @@ import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Host-only Create Pod screen — reached from the Home "+" button or by resuming
  * a draft from Host Management. The draft autosaves; finishing the last step
- * publishes the pod, refreshes the feed and lands the host on Hosts Management. */
+ * publishes the pod, refreshes the feed and lands the host on Hosts Management —
+ * or on the venue-approval waiting screen when the slot request is PENDING. */
 export function CreatePodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
@@ -71,9 +73,15 @@ export function CreatePodScreen() {
               onSaveDraft={saveDraft}
               onModerate={moderate}
               onPublish={async (id, input) => {
-                await publish(id, input);
+                const created = await publish(id, input);
                 fireAndForget(useHomeStore.getState().fetch(true));
-                navigation.replace('HostManage');
+                // A pod holding a venue slot awaits the venue's decision — land
+                // the host on the waiting screen instead of Host Management.
+                if (created.venue_approval_status === PodVenueApproval.Pending) {
+                  navigation.replace('PodPending', { podId: created.id });
+                } else {
+                  navigation.replace('HostManage');
+                }
               }}
             />
           </Reveal>

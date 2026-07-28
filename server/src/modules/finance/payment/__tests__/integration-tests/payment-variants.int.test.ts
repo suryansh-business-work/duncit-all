@@ -48,7 +48,7 @@ async function seedPodWith(product: any, row: Record<string, any> = {}) {
     club_id: new Types.ObjectId(),
     pod_description: 'desc',
     pod_date_time: new Date(Date.now() + 86400_000),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 1000,
     products_enabled: true,
     product_requests: [

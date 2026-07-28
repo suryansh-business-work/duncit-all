@@ -337,7 +337,7 @@ describe('venueService integration', () => {
     // A live pod blocks the delete.
     const pod = await PodModel.create({
       pod_id: 'p1', pod_title: 'P', pod_hosts_id: [owner], club_id: new Types.ObjectId(),
-      venue_id: venue._id, pod_description: 'd', pod_date_time: new Date(), pod_type: 'NATIVE_FREE',
+      venue_id: venue._id, pod_description: 'd', pod_date_time: new Date(), pod_type: 'FREE',
     });
     await expect(venueService.deleteVenue(vid)).rejects.toThrow(/pod\(s\) attached/i);
 

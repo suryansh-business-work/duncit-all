@@ -10,7 +10,7 @@ const basePod = (over: Record<string, unknown> = {}) => ({
   pod_title: 'Sunset Yoga',
   pod_date_time: '2026-08-01T10:00:00.000Z',
   zone_name: 'North Zone',
-  pod_type: 'FREE_POD',
+  pod_type: 'FREE',
   venue_approval_status: 'APPROVED',
   ...over,
 });
@@ -49,9 +49,16 @@ describe('HostPodRow', () => {
     expect(screen.getByText('—')).toBeInTheDocument();
   });
 
-  it('renders the pod type chip with underscores replaced', () => {
-    renderRow(basePod({ pod_type: 'PAID_POD' }));
-    expect(screen.getByText('PAID POD')).toBeInTheDocument();
+  it('renders Paid for a paid pod', () => {
+    // Pod types collapsed to FREE | PAID, so the chip is a plain label now —
+    // there are no underscores left to replace.
+    renderRow(basePod({ pod_type: 'PAID' }));
+    expect(screen.getByText('Paid')).toBeInTheDocument();
+  });
+
+  it('renders Free for a free pod', () => {
+    renderRow(basePod({ pod_type: 'FREE' }));
+    expect(screen.getByText('Free')).toBeInTheDocument();
   });
 
   it('fires the complete, edit and delete callbacks', () => {

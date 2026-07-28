@@ -1,10 +1,8 @@
 export const podTypeDefs = /* GraphQL */ `
+  "FREE is virtual-only — physical pods must be PAID."
   enum PodType {
-    NATIVE_FREE
-    NATIVE_PAID
-    NATIVE_PAID_PREMIUM
-    NON_NATIVE_FREE
-    NON_NATIVE_PAID
+    FREE
+    PAID
   }
 
   enum PodOccurrence {

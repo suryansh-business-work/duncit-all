@@ -1,4 +1,4 @@
-export type ExplorePriceFilter = 'ALL' | 'FREE' | 'PAID' | 'PREMIUM';
+export type ExplorePriceFilter = 'ALL' | 'FREE' | 'PAID';
 export type ExploreDateFilter = 'ALL' | 'TODAY' | 'TOMORROW' | 'WEEK' | 'MONTH';
 export type ExplorePreset = 'ALL' | 'TRENDING' | 'NEAR' | 'TONIGHT';
 export type ExploreSort = 'SOONEST' | 'TRENDING' | 'PRICE_LOW' | 'PRICE_HIGH';
@@ -62,10 +62,8 @@ function categoryMatches(club: any, categoryId: string, parentById: Map<string, 
 }
 
 function priceMatches(pod: any, price: ExplorePriceFilter) {
-  if (price === 'FREE') return !!pod.pod_type?.includes('FREE');
-  if (price === 'PAID') return pod.pod_type === 'NATIVE_PAID' || pod.pod_type === 'NON_NATIVE_PAID';
-  if (price === 'PREMIUM') return pod.pod_type === 'NATIVE_PAID_PREMIUM';
-  return true;
+  if (price === 'ALL') return true;
+  return pod.pod_type === price;
 }
 
 // Virtual pods are location-independent — never filtered out by city/zone (bug 10).

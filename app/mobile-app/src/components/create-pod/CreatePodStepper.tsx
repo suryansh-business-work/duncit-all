@@ -30,6 +30,7 @@ import type {
   PodModerationResult,
   PodModerationViolation,
 } from './create-pod.types';
+import { usePodPricing } from './price-panel';
 import { BasicsStep } from './steps/BasicsStep';
 import { LocationClubStep } from './steps/LocationClubStep';
 import { VenueSlotStep } from './steps/VenueSlotStep';
@@ -221,6 +222,17 @@ export function CreatePodStepper({
   const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? form.watch('venue_id') : '');
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
 
+  // Step 4's money state lives HERE because it gates the Create Pod button: a
+  // ₹0 projected payout, or a pod worth less than the venue slot, blocks
+  // publishing. The panel renders from the same object, so both always agree.
+  const pricing = usePodPricing({
+    podAmount: Number(form.watch('pod_amount_text')) || 0,
+    noOfSpots: Number(form.watch('no_of_spots_text')) || 0,
+    venueId: form.watch('venue_id') || null,
+    slotPrice: selectedSlot ? selectedSlot.price : null,
+    isPhysical: podMode === 'PHYSICAL',
+  });
+
   const steps = [
     <BasicsStep key="basics" form={form} />,
     <LocationClubStep
@@ -242,8 +254,8 @@ export function CreatePodStepper({
       form={form}
       products={availableProducts}
       showProducts={showProducts}
-      selectedSlot={selectedSlot}
       finance={finance}
+      pricing={pricing}
     />,
   ];
 
@@ -282,6 +294,7 @@ export function CreatePodStepper({
             testID="create-pod-submit"
             label={isLast ? submitLabel : 'Next'}
             loading={busy}
+            disabled={isLast && pricing.blocked}
             onPress={() => (isLast ? fireAndForget(submit()) : fireAndForget(next()))}
           />
         </YStack>

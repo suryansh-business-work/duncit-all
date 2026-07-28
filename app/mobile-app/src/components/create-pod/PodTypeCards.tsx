@@ -45,39 +45,50 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
   );
 }
 
-/** Free / Paid selector cards for Step 4. Selecting a card sets the free/paid
- * family default; the exact pod type stays refinable below. mWeb twin. */
+/** Free / Paid selector cards for Step 4 — the pod-type selector. FREE is
+ * virtual-only, so physical pods only see the Paid card. mWeb twin. */
 export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
-  const isFree = form.watch('pod_type').includes('FREE');
+  const isFree = form.watch('pod_type') === 'FREE';
+  const isPhysical = form.watch('pod_mode') === 'PHYSICAL';
+  const typeError = form.formState.errors.pod_type?.message;
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
     if (free) {
-      form.setValue('pod_type', 'NATIVE_FREE', { shouldDirty: true });
+      form.setValue('pod_type', 'FREE', { shouldDirty: true });
       form.setValue('pod_amount_text', '0', { shouldDirty: true, shouldValidate: true });
     } else {
-      form.setValue('pod_type', 'NATIVE_PAID', { shouldDirty: true, shouldValidate: true });
+      form.setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
     }
   };
 
   return (
-    <XStack gap={12}>
-      <TypeCard
-        testID="create-pod-free"
-        label="Free"
-        caption="No ticket charge"
-        icon="volunteer-activism"
-        selected={isFree}
-        onPress={() => choose(true)}
-      />
-      <TypeCard
-        testID="create-pod-paid"
-        label="Paid"
-        caption="Charge per person"
-        icon="payments"
-        selected={!isFree}
-        onPress={() => choose(false)}
-      />
-    </XStack>
+    <YStack gap={6}>
+      <XStack gap={12}>
+        {isPhysical ? null : (
+          <TypeCard
+            testID="create-pod-free"
+            label="Free" // TODO(i18n)
+            caption="No ticket charge" // TODO(i18n)
+            icon="volunteer-activism"
+            selected={isFree}
+            onPress={() => choose(true)}
+          />
+        )}
+        <TypeCard
+          testID="create-pod-paid"
+          label="Paid" // TODO(i18n)
+          caption={isPhysical ? 'Physical pods are always paid' : 'Charge per person'} // TODO(i18n)
+          icon="payments"
+          selected={!isFree}
+          onPress={() => choose(false)}
+        />
+      </XStack>
+      {typeError ? (
+        <Text testID="pod_type-error" fontSize={12} color="$danger">
+          {typeError}
+        </Text>
+      ) : null}
+    </YStack>
   );
 }

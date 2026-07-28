@@ -2,10 +2,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
-import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
 import type { CreatePodFinance } from '../create-pod.types';
 import { ChargesAccordion } from './ChargesAccordion';
 import { EARN_GREEN, PayoutCard } from './PayoutCard';
+import type { PodPricingState } from './usePodPricing';
 
 const FREE_NOTE_BG = 'rgba(34,197,94,0.08)';
 const FREE_NOTE_BORDER = 'rgba(34,197,94,0.30)';
@@ -14,35 +14,18 @@ const HOST_FREE_NOTE =
 
 interface Props {
   finance: CreatePodFinance;
-  slotPrice: number | null;
-  venueId: string | null;
-  podAmount: number;
-  noOfSpots: number;
-  isPhysical: boolean;
+  /** Step 4's shared money state — the stepper owns it so this panel and the
+   * Create Pod button read the exact same projection and guards. */
+  pricing: PodPricingState;
 }
 
 /** The host's final calculation for a pod — the server-computed earnings, billed
  * on PAYABLE spots (total − 1, the host's own seat is free) with the venue's
  * fixed slot price deducted once. Charges are grouped in a collapsible tree and
  * the payout card is the strongest element. mWeb twin. */
-export function PricePanel({
-  finance,
-  slotPrice,
-  venueId,
-  podAmount,
-  noOfSpots,
-  isPhysical,
-}: Readonly<Props>) {
-  const venuePicked = isPhysical && slotPrice !== null;
-  const ready = podAmount > 0 && noOfSpots > 0;
-  // A 1-spot pod is the host's own free seat — there is nothing to bill.
-  const hostOnly = ready && noOfSpots === 1;
-  const { projection, waterfall, isLoading } = usePotentialEarnings(
-    podAmount,
-    noOfSpots,
-    venuePicked ? venueId : null,
-    venuePicked ? slotPrice : null,
-  );
+export function PricePanel({ finance, pricing }: Readonly<Props>) {
+  const { projection, waterfall, isLoading, venuePicked, ready, hostOnly, podAmount, noOfSpots } =
+    pricing;
   const symbol = finance.currency_symbol;
   // ONE currency format everywhere on the card: ₹X,XXX.XX (en-IN grouping).
   const money = (value: number) => formatStatementMoney(value, symbol);
@@ -116,7 +99,11 @@ export function PricePanel({
               {statement.collection.included_gst_note}
             </Text>
           </YStack>
-          <ChargesAccordion statement={statement} money={money} />
+          <ChargesAccordion
+            statement={statement}
+            money={money}
+            venueShortfall={pricing.venueShortfall}
+          />
           <PayoutCard
             amount={money(waterfall.host_receives)}
             payingPax={projection.payable_spots}
@@ -129,3 +116,9 @@ export function PricePanel({
     </YStack>
   );
 }
+
+export { isVenueShortfall, totalPodValue, usePodPricing } from './usePodPricing';
+export type { PodPricingInput, PodPricingState } from './usePodPricing';
+export { SuggestedPriceLink } from './SuggestedPriceLink';
+export { SuggestedPricesModal } from './SuggestedPricesModal';
+export { ZeroEarningsNotice } from './ZeroEarningsNotice';

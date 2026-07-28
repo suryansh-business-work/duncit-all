@@ -56,7 +56,7 @@ export const clubs = [
 ];
 
 const podBase = {
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   pod_attendees: ['a1'],
   no_of_spots: 10,

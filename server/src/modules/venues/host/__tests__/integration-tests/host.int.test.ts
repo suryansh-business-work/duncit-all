@@ -198,7 +198,7 @@ describe('hostService integration', () => {
     const host = await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Del', status: 'APPROVED' });
     const pod = await PodModel.create({
       pod_id: 'hp1', pod_title: 'P', pod_hosts_id: [host.user_id], club_id: new Types.ObjectId(),
-      pod_description: 'd', pod_date_time: new Date(), pod_type: 'NATIVE_FREE',
+      pod_description: 'd', pod_date_time: new Date(), pod_type: 'FREE',
     });
     await expect(hostService.deleteHost(String(host._id))).rejects.toThrow(/still hosts/i);
 

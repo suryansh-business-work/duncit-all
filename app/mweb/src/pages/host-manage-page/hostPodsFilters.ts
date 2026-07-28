@@ -60,7 +60,7 @@ function timeMatches(pod: FilterablePod, time: HostTimeFilter): boolean {
 
 function priceMatches(pod: FilterablePod, price: HostPriceFilter): boolean {
   if (price === 'ALL') return true;
-  const isFree = pod.pod_type.includes('FREE');
+  const isFree = pod.pod_type === 'FREE';
   return price === 'FREE' ? isFree : !isFree;
 }
 

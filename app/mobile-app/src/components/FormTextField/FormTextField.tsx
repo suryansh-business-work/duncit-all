@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
 import type { TextInputProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -31,6 +31,8 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
   required?: boolean;
   /** Muted helper text shown below the field when there is no error (mirrors MUI helperText). */
   hint?: string;
+  /** Trailing control rendered on the label line, right-aligned. */
+  labelAction?: ReactNode;
 }
 
 /**
@@ -46,7 +48,9 @@ export function FormTextField<T extends FieldValues>({
   label,
   required,
   hint,
+  labelAction,
   secureTextEntry,
+  editable,
   ...inputProps
 }: Readonly<FormTextFieldProps<T>>) {
   const { field, fieldState } = useController({ control, name });
@@ -61,6 +65,7 @@ export function FormTextField<T extends FieldValues>({
       required={required}
       error={hasError ? fieldState.error?.message : undefined}
       hint={hint}
+      labelAction={labelAction}
       testID={name}
     >
       <XStack position="relative" alignItems="center">
@@ -79,6 +84,10 @@ export function FormTextField<T extends FieldValues>({
           onBlur={field.onBlur}
           secureTextEntry={isSecure && !visible}
           aria-label={label}
+          // Tamagui's <Input> recomputes `editable` as `!disabled && !readOnly`
+          // *after* spreading incoming props, so a passed `editable` never
+          // reaches the host TextInput. Translate it to the prop it honours.
+          readOnly={editable === false}
           {...inputProps}
         />
         {isSecure ? (

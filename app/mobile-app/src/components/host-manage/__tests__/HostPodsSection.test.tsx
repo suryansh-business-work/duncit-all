@@ -96,7 +96,7 @@ const pods = [
     pod_end_date_time: null,
     pod_mode: 'PHYSICAL',
     zone_name: 'HSR',
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
   },
   {
     id: 'p2',
@@ -107,7 +107,7 @@ const pods = [
     pod_end_date_time: null,
     pod_mode: 'VIRTUAL',
     zone_name: null,
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
   },
   {
     id: 'p3',
@@ -118,7 +118,7 @@ const pods = [
     pod_end_date_time: null,
     pod_mode: 'PHYSICAL',
     zone_name: null,
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
   },
   // A venue-rejected pod: shows the status + note and edits via resubmission.
   {
@@ -130,7 +130,7 @@ const pods = [
     pod_end_date_time: null,
     pod_mode: 'PHYSICAL',
     zone_name: null,
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     venue_approval_status: 'DECLINED',
   },
   // A pod still awaiting the venue's decision: warning chip, normal edit.
@@ -143,7 +143,7 @@ const pods = [
     pod_end_date_time: null,
     pod_mode: 'PHYSICAL',
     zone_name: null,
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     venue_approval_status: 'PENDING',
   },
 ];

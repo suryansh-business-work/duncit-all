@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Linking } from 'react-native';
 import { fireEvent, screen } from '@testing-library/react-native';
 import { Text, XStack } from 'tamagui';
@@ -11,10 +12,12 @@ import { SpotsStepper } from '@/components/create-pod/SpotsStepper';
 import { TermsAgreement } from '@/components/create-pod/TermsAgreement';
 import { VenueContactCard } from '@/components/create-pod/VenueContactCard';
 import { VenuePicker } from '@/components/create-pod/VenuePicker';
+import { createPodSchema } from '@/components/create-pod/create-pod.form';
 import {
   blankCreatePodForm,
   type CreatePodFormValues,
 } from '@/components/create-pod/create-pod.types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { renderWithProviders } from '@/utils/test-utils';
 
 function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
@@ -29,16 +32,48 @@ function PodTypeHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
   );
 }
 
+// Same resolver the stepper uses, so the rendered error is the schema's own copy.
+function PodTypeErrorHarness() {
+  const form = useForm<CreatePodFormValues>({
+    resolver: zodResolver(createPodSchema),
+    defaultValues: { ...blankCreatePodForm, pod_mode: 'PHYSICAL', pod_type: 'FREE' },
+  });
+  return (
+    <>
+      <PodTypeCards form={form} />
+      <Text testID="pt-validate" onPress={() => fireAndForget(form.trigger('pod_type'))}>
+        validate
+      </Text>
+    </>
+  );
+}
+
 describe('PodTypeCards', () => {
   it('switches between the free and paid families and no-ops on the same family', () => {
-    renderWithProviders(<PodTypeHarness initial={{ pod_type: 'NATIVE_FREE' }} />);
+    // FREE is virtual-only, so the harness must be VIRTUAL for both cards to exist.
+    renderWithProviders(<PodTypeHarness initial={{ pod_mode: 'VIRTUAL', pod_type: 'FREE' }} />);
     fireEvent.press(screen.getByTestId('create-pod-paid'));
-    expect(screen.getByTestId('pt-readout')).toHaveTextContent('NATIVE_PAID');
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('PAID');
     fireEvent.press(screen.getByTestId('create-pod-free'));
-    expect(screen.getByTestId('pt-readout')).toHaveTextContent('NATIVE_FREE');
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
     // Pressing the already-selected family is a no-op.
     fireEvent.press(screen.getByTestId('create-pod-free'));
-    expect(screen.getByTestId('pt-readout')).toHaveTextContent('NATIVE_FREE');
+    expect(screen.getByTestId('pt-readout')).toHaveTextContent('FREE');
+  });
+
+  it('hides the Free card for a physical pod — physical pods are always paid', () => {
+    renderWithProviders(<PodTypeHarness initial={{ pod_mode: 'PHYSICAL', pod_type: 'PAID' }} />);
+    expect(screen.queryByTestId('create-pod-free')).toBeNull();
+    expect(screen.getByTestId('create-pod-paid')).toBeTruthy();
+  });
+
+  it('surfaces the pod-type validation error under the cards', async () => {
+    renderWithProviders(<PodTypeErrorHarness />);
+    expect(screen.queryByTestId('pod_type-error')).toBeNull();
+    fireEvent.press(screen.getByTestId('pt-validate'));
+    expect(await screen.findByTestId('pod_type-error')).toHaveTextContent(
+      'Physical pods must be Paid',
+    );
   });
 });
 

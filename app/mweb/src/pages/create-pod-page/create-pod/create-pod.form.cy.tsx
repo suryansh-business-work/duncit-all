@@ -73,9 +73,9 @@ describe('createPodSchema', () => {
   });
 
   it('forces free pods to amount 0 and caps paid amounts', () => {
-    expect(issuesOf(valid({ pod_type: 'NATIVE_FREE', pod_amount: 100 }))).toContain('pod_amount');
-    expect(issuesOf(valid({ pod_type: 'NATIVE_PAID', pod_amount: 2500 }))).toContain('pod_amount');
-    expect(createPodSchema.safeParse(valid({ pod_type: 'NATIVE_PAID', pod_amount: 499 })).success).toBe(true);
+    expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 100 }))).toContain('pod_amount');
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount: 2500 }))).toContain('pod_amount');
+    expect(createPodSchema.safeParse(valid({ pod_type: 'PAID', pod_amount: 499 })).success).toBe(true);
   });
 
   it('requires at least one product when products are enabled', () => {

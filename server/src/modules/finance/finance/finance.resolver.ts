@@ -171,6 +171,19 @@ export const financeResolvers = {
         args.venue_amount ?? null
       );
     },
+    suggestedTicketPrices: async (
+      _p: unknown,
+      args: { no_of_spots: number; venue_id?: string | null; venue_amount?: number | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return breakdownService.suggestedTicketPrices(
+        user.id,
+        args.no_of_spots,
+        args.venue_id ?? null,
+        args.venue_amount ?? null
+      );
+    },
     myHostEarningsSummary: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return breakdownService.hostEarningsSummary(user.id);

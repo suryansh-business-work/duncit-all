@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Alert, Box, ButtonBase, Collapse, Stack, Typography } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import type { EarningsStatement, StatementLine } from '@duncit/utils';
@@ -29,14 +29,23 @@ interface SectionProps {
   title: string;
   amount: string;
   tint: string;
+  /** Always-visible error under the header (the venue-shortfall rule). */
+  error?: string | null;
   children: ReactNode;
 }
 
 /** One collapsible charge section — a real button header with a rotating chevron. */
-function ChargeSection({ title, amount, tint, children }: Readonly<SectionProps>) {
+function ChargeSection({ title, amount, tint, error, children }: Readonly<SectionProps>) {
   const [open, setOpen] = useState(false);
   return (
-    <Box sx={{ borderRadius: 2, overflow: 'hidden', bgcolor: tint }}>
+    <Box
+      sx={{
+        borderRadius: 2,
+        overflow: 'hidden',
+        bgcolor: tint,
+        ...(error ? { border: '1px solid', borderColor: 'error.main' } : null),
+      }}
+    >
       <ButtonBase
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
@@ -55,6 +64,11 @@ function ChargeSection({ title, amount, tint, children }: Readonly<SectionProps>
           />
         </Stack>
       </ButtonBase>
+      {error && (
+        <Alert severity="error" sx={{ mx: 0.5, mb: 0.5 }} data-testid="price-panel-venue-error">
+          {error}
+        </Alert>
+      )}
       <Collapse in={open} unmountOnExit>
         <Box sx={{ bgcolor: 'background.paper', mx: 0.5, mb: 0.5, borderRadius: 1.5 }}>{children}</Box>
       </Collapse>
@@ -62,9 +76,20 @@ function ChargeSection({ title, amount, tint, children }: Readonly<SectionProps>
   );
 }
 
+/** Section background: the failing venue section wins, then the venue's own
+ * warning tint, then the neutral info tint. */
+function sectionTint(theme: Theme, isVenue: boolean, hasError: boolean): string {
+  if (hasError) return alpha(theme.palette.error.main, 0.12);
+  if (isVenue) return alpha(theme.palette.warning.main, 0.1);
+  return alpha(theme.palette.info.main, 0.08);
+}
+
 interface Props {
   statement: EarningsStatement;
   money: (value: number) => string;
+  /** Set when the pod value does not cover the venue's slot price — paints the
+   * Venue Charges section red and states the rule inside it. */
+  venueError?: string | null;
 }
 
 /**
@@ -72,14 +97,19 @@ interface Props {
  * keeps its subtotal on the header; every row carries the exact formula the
  * server used, so each value can be verified by hand.
  */
-export default function ChargesAccordion({ statement, money }: Readonly<Props>) {
+export default function ChargesAccordion({ statement, money, venueError }: Readonly<Props>) {
   const theme = useTheme();
   const [open, setOpen] = useState(true);
 
   return (
     <Box
       data-testid="price-panel-charges"
-      sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2.5, overflow: 'hidden' }}
+      sx={{
+        border: '1px solid',
+        borderColor: venueError ? 'error.main' : 'divider',
+        borderRadius: 2.5,
+        overflow: 'hidden',
+      }}
     >
       <ButtonBase
         onClick={() => setOpen((value) => !value)}
@@ -104,22 +134,23 @@ export default function ChargesAccordion({ statement, money }: Readonly<Props>) 
       </ButtonBase>
       <Collapse in={open} unmountOnExit>
         <Stack spacing={1} sx={{ px: 1, pb: 1 }}>
-          {statement.sections.map((section) => (
-            <ChargeSection
-              key={section.key}
-              title={section.title}
-              amount={money(section.total)}
-              tint={
-                section.key === 'venue'
-                  ? alpha(theme.palette.warning.main, 0.1)
-                  : alpha(theme.palette.info.main, 0.08)
-              }
-            >
-              {section.lines.map((line) => (
-                <ChargeRow key={line.key} line={line} money={money} />
-              ))}
-            </ChargeSection>
-          ))}
+          {statement.sections.map((section) => {
+            const isVenue = section.key === 'venue';
+            const error = isVenue ? venueError ?? null : null;
+            return (
+              <ChargeSection
+                key={section.key}
+                title={section.title}
+                amount={money(section.total)}
+                tint={sectionTint(theme, isVenue, !!error)}
+                error={error}
+              >
+                {section.lines.map((line) => (
+                  <ChargeRow key={line.key} line={line} money={money} />
+                ))}
+              </ChargeSection>
+            );
+          })}
           <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, pt: 0.5 }}>
             <Typography variant="body2" fontWeight={800}>
               Total deductions

@@ -24,7 +24,7 @@ async function seedPod(hostId: Types.ObjectId) {
     club_id: new Types.ObjectId(),
     pod_description: 'd',
     pod_date_time: new Date(),
-    pod_type: 'NON_NATIVE_PAID',
+    pod_type: 'PAID',
   });
 }
 async function seedHostRelease(hostId: Types.ObjectId, podId: Types.ObjectId, amount: number) {

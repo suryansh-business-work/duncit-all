@@ -37,7 +37,7 @@ const makePodDoc = (over: Record<string, unknown> = {}) =>
     pod_title: 'Backout pod',
     club_id: new Types.ObjectId(),
     pod_description: 'desc',
-    pod_type: 'NATIVE_FREE',
+    pod_type: 'FREE',
     pod_date_time: new Date(Date.now() + 86_400_000),
     no_of_spots: 5,
     is_active: true,
@@ -140,7 +140,7 @@ describe('expired pod booking guard', () => {
   });
 
   it('rejects joinFree for a paid pod and is idempotent for a joined member', async () => {
-    const paid = await makePodDoc({ pod_type: 'NATIVE_PAID' });
+    const paid = await makePodDoc({ pod_type: 'PAID' });
     const user = new Types.ObjectId().toString();
     await expect(podMemberService.joinFree(String(paid._id), user)).rejects.toThrow(/paid/i);
 

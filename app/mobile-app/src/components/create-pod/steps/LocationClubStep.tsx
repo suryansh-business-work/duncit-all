@@ -37,7 +37,7 @@ const locationLabel = (location: CreatePodLocation) =>
 /** Step 2 — pod city + locality (chosen in the header location picker, which
  * shows the club count per locality), the host category, the pod mode and the club. */
 export function LocationClubStep({ form, clubs, locations, hostCategories }: Readonly<Props>) {
-  const { control, setValue, watch } = form;
+  const { control, getValues, setValue, watch } = form;
   const { primary } = useThemeColors();
   const locationId = watch('location_id');
   const locality = watch('locality');
@@ -114,7 +114,14 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
             label="Mode"
             options={MODES}
             value={field.value}
-            onChange={field.onChange}
+            onChange={(next) => {
+              field.onChange(next);
+              // FREE is virtual-only — a VIRTUAL+FREE pick must not survive
+              // the switch to PHYSICAL.
+              if (next === 'PHYSICAL' && getValues('pod_type') !== 'PAID') {
+                setValue('pod_type', 'PAID', { shouldDirty: true });
+              }
+            }}
             testID="create-pod-mode"
           />
         )}

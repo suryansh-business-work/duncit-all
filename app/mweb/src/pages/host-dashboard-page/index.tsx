@@ -42,7 +42,7 @@ export default function HostDashboardPage() {
   const upcoming = pods.filter(
     (p: any) => p.pod_date_time && new Date(p.pod_date_time).getTime() > Date.now(),
   ).length;
-  const paid = pods.filter((p: any) => !p.pod_type?.includes('FREE')).length;
+  const paid = pods.filter((p: any) => p.pod_type !== 'FREE').length;
   const stats = [
     { label: 'Pods', value: loadingPods ? '—' : pods.length },
     { label: 'Upcoming', value: loadingPods ? '—' : upcoming },

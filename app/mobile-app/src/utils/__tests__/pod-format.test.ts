@@ -23,7 +23,7 @@ const base = {
   no_of_spots: 0,
   pod_amount: 0,
   pod_date_time: '',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_images_and_videos: [],
   host_names: [],
   place_label: null,
@@ -51,8 +51,8 @@ describe('pod-format', () => {
   });
 
   it('labels free pods as Free and paid pods in rupees', () => {
-    expect(podPriceLabel(withPod({ pod_type: 'NATIVE_FREE' }))).toBe('Free');
-    expect(podPriceLabel(withPod({ pod_type: 'NATIVE_PAID', pod_amount: 250 }))).toBe('₹250');
+    expect(podPriceLabel(withPod({ pod_type: 'FREE' }))).toBe('Free');
+    expect(podPriceLabel(withPod({ pod_type: 'PAID', pod_amount: 250 }))).toBe('₹250');
   });
 
   it('joins place label and detail, or returns empty', () => {

@@ -33,7 +33,7 @@ const pod = {
   pod_id: 'pod-1',
   pod_title: 'Sunset Jam',
   pod_date_time: '2026-06-10T18:30:00.000Z',
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   no_of_spots: 4,
   host_names: [],

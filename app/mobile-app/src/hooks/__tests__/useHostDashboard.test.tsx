@@ -27,8 +27,8 @@ function route(doc: unknown) {
   if (doc === HostDashboardPodsDocument)
     return Promise.resolve({
       pods: [
-        { id: 'p1', pod_date_time: future, pod_type: 'NATIVE_PAID' },
-        { id: 'p2', pod_date_time: past, pod_type: 'NATIVE_FREE' },
+        { id: 'p1', pod_date_time: future, pod_type: 'PAID' },
+        { id: 'p2', pod_date_time: past, pod_type: 'FREE' },
       ],
     });
   return Promise.resolve({});

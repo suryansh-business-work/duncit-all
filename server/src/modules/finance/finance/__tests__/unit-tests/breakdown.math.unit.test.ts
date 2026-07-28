@@ -78,6 +78,50 @@ describe('computePodFinanceBreakdown', () => {
     expect(b.host_earn_percent).toBe(0);
   });
 
+  it('clamps identically when clampVenueToPool is passed explicitly as true', () => {
+    const clamped = computePodFinanceBreakdown(100000, 500000, DEFAULT_RATES, {
+      clampVenueToPool: true,
+    });
+    expect(clamped).toEqual(computePodFinanceBreakdown(100000, 500000, DEFAULT_RATES));
+  });
+
+  describe('clampVenueToPool: false (create-pod preview)', () => {
+    const unclamped = (amountPaise: number, venueAmountPaise: number) =>
+      computePodFinanceBreakdown(amountPaise, venueAmountPaise, DEFAULT_RATES, {
+        clampVenueToPool: false,
+      });
+
+    it('keeps the venue full price and lets the host side go negative honestly', () => {
+      const b = unclamped(100000, 500000); // slot price ≫ pool of 805.09
+      expect(b.venue_amount_paise).toBe(500000); // NEVER auto-reduced
+      expect(b.venue_commission_paise).toBe(50000); // 10% of the full price
+      expect(b.venue_receives_paise).toBe(450000);
+      expect(b.host_amount_paise).toBe(80509 - 500000); // the real shortfall
+      expect(b.host_commission_paise).toBe(0); // no commission on a shortfall
+      expect(b.host_receives_paise).toBe(80509 - 500000);
+      expect(b.host_earn_percent).toBeLessThan(0);
+      // The reconciliation invariant holds even through a negative host side.
+      expect(
+        b.gst_paise + b.host_receives_paise + b.venue_receives_paise + b.duncit_revenue_paise
+      ).toBe(100000);
+      expect(b.venue_amount_paise + b.host_amount_paise + b.club_admin_paise).toBe(b.pool_paise);
+    });
+
+    it('matches the clamped result exactly while the pool covers the venue', () => {
+      expect(unclamped(100000, 30000)).toEqual(
+        computePodFinanceBreakdown(100000, 30000, DEFAULT_RATES)
+      );
+      expect(unclamped(100000, 0)).toEqual(computePodFinanceBreakdown(100000, 0, DEFAULT_RATES));
+    });
+
+    it('shows the venue full price on a free pod (whole price is the shortfall)', () => {
+      const b = unclamped(0, 30000);
+      expect(b.venue_amount_paise).toBe(30000);
+      expect(b.host_receives_paise).toBe(-30000);
+      expect(b.host_earn_percent).toBe(0); // amount 0 → percent stays 0
+    });
+  });
+
   it('returns all-zero lines for a free (100%-coupon) pod', () => {
     const b = invariant(0, 30000);
     expect(b.venue_amount_paise).toBe(0); // clamped to the empty pool

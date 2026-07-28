@@ -1,47 +1,32 @@
 import { Controller } from 'react-hook-form';
-import { Alert, FormControlLabel, InputAdornment, Stack, Switch, TextField } from '@mui/material';
+import { Alert, FormControlLabel, Stack, Switch, TextField } from '@mui/material';
 import PlaceChargesField from '../fields/PlaceChargesField';
 import ProductRequestsField from '../fields/ProductRequestsField';
-import PricePanel from '../price-panel';
+import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-panel';
 import PodTypeCards from '../PodTypeCards';
 import SpotsStepper from '../SpotsStepper';
 import TermsAgreement from '../TermsAgreement';
-import type { CreatePodForm, CreatePodProduct, CreatePodSlot } from '../create-pod.types';
+import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   products: CreatePodProduct[];
   showProducts: boolean;
-  selectedSlot: CreatePodSlot | null;
+  preview: EarningsPreview;
 }
 
 /** Step 4 — Free/Paid cards, ticket price, spots stepper, the slot-cost / GST /
  * earnings panel, optional products and the Organizer Terms publish gate. */
-export default function PricingStep({ form, products, showProducts, selectedSlot }: Readonly<Props>) {
-  const {
-    control,
-    register,
-    watch,
-    setValue,
-    formState: { errors },
-  } = form;
-  const isFree = watch('pod_type').includes('FREE');
+export default function PricingStep({ form, products, showProducts, preview }: Readonly<Props>) {
+  const { control, register, watch, setValue } = form;
+  const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const productsEnabled = watch('products_enabled');
 
   return (
     <Stack spacing={2}>
       <PodTypeCards form={form} />
-      <TextField
-        label="Ticket price (per person)"
-        type="number"
-        fullWidth
-        disabled={isFree}
-        InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-        error={!!errors.pod_amount}
-        helperText={errors.pod_amount?.message ?? (isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.')}
-        {...register('pod_amount', { valueAsNumber: true })}
-      />
+      <TicketPriceField form={form} preview={preview} isFree={isFree} />
       <Controller
         control={control}
         name="no_of_spots"
@@ -49,13 +34,7 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
           <SpotsStepper value={Number(field.value) || 0} onChange={field.onChange} error={fieldState.error?.message} readOnly={isPhysical} />
         )}
       />
-      <PricePanel
-        slotPrice={selectedSlot ? selectedSlot.price : null}
-        podAmount={Number(watch('pod_amount')) || 0}
-        noOfSpots={Number(watch('no_of_spots')) || 0}
-        venueId={watch('venue_id') || null}
-        isPhysical={isPhysical}
-      />
+      <PricePanel preview={preview} />
       <TextField
         label="Payment terms"
         fullWidth

@@ -62,7 +62,7 @@ export function ExplorePodCard({
   const expired = isPodExpired(pod.pod_date_time);
   // Free pods need no payment, so the "Confirm with UPI" copy is hidden for them.
   const paidSubtitle = `${podPriceLabel(pod)} · Confirm with UPI`;
-  const ctaSubtitle = pod.pod_type.includes('FREE') ? 'Free spot' : paidSubtitle;
+  const ctaSubtitle = pod.pod_type === 'FREE' ? 'Free spot' : paidSubtitle;
 
   const share = async () => {
     try {

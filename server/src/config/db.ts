@@ -113,6 +113,19 @@ export async function connectDB(): Promise<void> {
   }
   // Staging shares the cluster but isolates its data in its own database.
   const dbName = process.env.MONGO_DB_NAME;
+  if (!dbName) {
+    // Mongo then falls back to the URI's default database — `test` on a bare
+    // SRV URI. That is not hypothetical: the deployed API's data lives in
+    // `test` for exactly this reason, and a dev machine pointing MONGO_URI at
+    // the live cluster silently shares production's database. Loud, not fatal:
+    // making it fatal would take the deployed server (which also omits it)
+    // down on the next restart.
+    console.warn(
+      'WARNING: MONGO_DB_NAME is not set — connecting to the URI default database ' +
+        "(usually `test`). If this URI is a shared/live cluster, you are pointing at " +
+        'LIVE data. Set MONGO_DB_NAME in server/.env.',
+    );
+  }
   const isProd = process.env.NODE_ENV === 'production';
 
   // Explicit opt-in (any environment): apply the override before connecting.

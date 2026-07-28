@@ -50,7 +50,7 @@ const api = (over: Record<string, unknown> = {}) => ({
   initialDraftId: 'd1',
   saveDraft: jest.fn().mockResolvedValue('d1'),
   moderate: jest.fn().mockResolvedValue({ allowed: true, violations: [] }),
-  publish: jest.fn().mockResolvedValue(undefined),
+  publish: jest.fn().mockResolvedValue({ id: 'pod-1', venue_approval_status: 'NONE' }),
   ...over,
 });
 
@@ -78,6 +78,17 @@ describe('CreatePodScreen', () => {
     fireEvent.press(screen.getByTestId('mock-publish'));
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('HostManage'));
     expect(screenApi.publish).toHaveBeenCalledWith('draft-1', {});
+    expect(mockFetch).toHaveBeenCalledWith(true);
+  });
+
+  it('lands on the waiting screen when the venue slot request is PENDING', async () => {
+    const screenApi = api({
+      publish: jest.fn().mockResolvedValue({ id: 'pod-2', venue_approval_status: 'PENDING' }),
+    });
+    mockedUse.mockReturnValue(screenApi);
+    renderWithProviders(<CreatePodScreen />);
+    fireEvent.press(screen.getByTestId('mock-publish'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('PodPending', { podId: 'pod-2' }));
     expect(mockFetch).toHaveBeenCalledWith(true);
   });
 });

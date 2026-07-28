@@ -16,7 +16,7 @@ const makePod = (id: string, title: string, startMs: number, endMs: number | nul
   pod_title: title,
   pod_date_time: new Date(now + startMs).toISOString(),
   pod_end_date_time: endMs === null ? null : new Date(now + endMs).toISOString(),
-  pod_type: 'NATIVE_FREE',
+  pod_type: 'FREE',
   pod_amount: 0,
   pod_attendees: [],
   no_of_spots: 5,

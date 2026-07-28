@@ -20,7 +20,7 @@ const overviewPod = {
   pod_attendees: ['u1', 'u2'],
   no_of_spots: 4,
   pod_hits: 8,
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   pod_amount: 199,
   pod_occurrence: 'ONE_TIME',
   pod_date_time: '2000-01-01T00:00:00.000Z',
@@ -51,7 +51,7 @@ describe('PodInfo', () => {
       ...overviewPod,
       host_names: [],
       no_of_spots: 0,
-      pod_type: 'NATIVE_FREE',
+      pod_type: 'FREE',
       pod_date_time: future(5 * 24 * 60 * 60 * 1000),
     } as never;
     renderWithProviders(<PodInfo pod={pod as never} categoryCrumbs={[]} />);

@@ -60,11 +60,7 @@ function matchesCategory(club: any, categoryId: string, isDescendantOf: IsDescen
 
 function matchesPrice(pod: any, priceFilter: PriceFilter): boolean {
   if (priceFilter === 'ALL') return true;
-  const t = pod.pod_type as string;
-  if (priceFilter === 'FREE') return !!t?.includes('FREE');
-  if (priceFilter === 'PAID') return t === 'NATIVE_PAID' || t === 'NON_NATIVE_PAID';
-  if (priceFilter === 'PREMIUM') return t === 'NATIVE_PAID_PREMIUM';
-  return true;
+  return pod.pod_type === priceFilter;
 }
 
 function matchesDate(pod: any, dateFilter: DateFilter, b: DateBounds): boolean {

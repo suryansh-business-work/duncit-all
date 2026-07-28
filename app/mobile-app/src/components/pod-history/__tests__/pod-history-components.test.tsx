@@ -25,7 +25,7 @@ const basePod = {
   pod_date_time: '2026-06-10T10:00:00Z',
   pod_end_date_time: null,
   pod_amount: 500,
-  pod_type: 'NATIVE_PAID',
+  pod_type: 'PAID',
   no_of_spots: 4,
   pod_images_and_videos: [] as { url: string; type: string }[],
 };
@@ -292,7 +292,7 @@ describe('PodHistoryDetails', () => {
           pod: {
             ...basePod,
             pod_images_and_videos: [{ url: 'http://i', type: 'IMAGE' }],
-            pod_type: 'NATIVE_FREE',
+            pod_type: 'FREE',
           },
         })}
         backingOut={false}

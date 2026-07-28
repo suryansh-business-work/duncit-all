@@ -8,6 +8,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from './finance.model';
 import {
   computePodFinanceBreakdown,
+  type BreakdownOptions,
   type BreakdownRates,
   type PodFinanceBreakdown,
 } from './breakdown.math';
@@ -163,17 +164,21 @@ export function toWaterfall(b: PodFinanceBreakdown): SettlementWaterfall {
 
 /** Waterfall for an arbitrary GST-inclusive rupee amount + venue slot price at
  * the given rates — powers the create-pod potential-earnings preview and live
- * pod breakdowns. */
+ * pod breakdowns. `options.clampVenueToPool: false` (preview) keeps the venue's
+ * full price so a shortfall shows as negative host earnings; settlement callers
+ * omit it and keep the legacy clamp. */
 export function waterfallForAmount(
   amountRupees: number,
   venueAmountRupees: number,
-  rates: BreakdownRates
+  rates: BreakdownRates,
+  options?: BreakdownOptions
 ): SettlementWaterfall {
   return toWaterfall(
     computePodFinanceBreakdown(
       Math.max(0, toPaise(amountRupees)),
       Math.max(0, toPaise(venueAmountRupees)),
-      rates
+      rates,
+      options
     )
   );
 }

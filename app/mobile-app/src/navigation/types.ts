@@ -28,6 +28,8 @@ export type RootStackParamList = {
   HostDashboard: undefined;
   Wallet: undefined;
   CreatePod: { draftId?: string } | undefined;
+  /** Post-create waiting screen while the venue slot request is PENDING. */
+  PodPending: { podId: string };
   RegisterVenue: undefined;
   VenueManage: undefined;
   VenueEarnings: undefined;
@@ -83,6 +85,7 @@ export type MenuRoute = Exclude<
   keyof RootStackParamList,
   | 'Menu'
   | 'CreatePod'
+  | 'PodPending'
   | 'Policy'
   | 'TicketDetails'
   | 'Login'

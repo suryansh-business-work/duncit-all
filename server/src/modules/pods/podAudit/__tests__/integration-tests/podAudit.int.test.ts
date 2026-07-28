@@ -29,7 +29,7 @@ const seedPod = (over: Record<string, unknown> = {}) =>
     location_id: new Types.ObjectId(),
     pod_description: 'A relaxed evening jam session',
     pod_date_time: inDays(2),
-    pod_type: 'NATIVE_PAID',
+    pod_type: 'PAID',
     pod_amount: 500,
     ...over,
   });

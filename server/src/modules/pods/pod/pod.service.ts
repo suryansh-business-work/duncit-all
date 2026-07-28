@@ -775,16 +775,27 @@ function meetingFieldsForCreate(
   };
 }
 
-/** Atomic book/hold — if a concurrent request snatched the slot between our
+/**
+ * Atomic book/hold — if a concurrent request snatched the slot between our
  * status check and now, this throws CONFLICT and we roll the pod back so
- * the caller can retry with a different slot. */
+ * the caller can retry with a different slot.
+ *
+ * ONLY the slot claim decides whether the pod survives. Telling the venue about
+ * it does not: the notification and the email used to sit inside this try, on
+ * the request path, so publishing a pod waited on SMTP — and a slow or
+ * unreachable mail host hung `publishPodDraft` until the client timed out. Worse,
+ * a mail failure landed in the catch below and DELETED a pod that was already
+ * created and whose slot was already held.
+ *
+ * They are now fired after the claim succeeds, and their failures are logged
+ * rather than thrown. A venue that was not emailed still has the request in its
+ * approval queue; a pod deleted because SMTP blipped is unrecoverable.
+ */
 async function bookOrHoldSlotForPod(doc: any, slotDoc: any, needsVenueApproval: boolean) {
   if (!slotDoc) return;
   try {
     if (needsVenueApproval) {
       await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
-      await notifyVenueSlotRequested(doc, slotDoc);
-      await emailVenueSlotRequested(doc, slotDoc);
     } else {
       await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
     }
@@ -792,6 +803,15 @@ async function bookOrHoldSlotForPod(doc: any, slotDoc: any, needsVenueApproval: 
     await doc.deleteOne();
     throw e;
   }
+
+  if (!needsVenueApproval) return;
+  // Fire-and-forget: never block the publish response, never fail the pod.
+  notifyVenueSlotRequested(doc, slotDoc).catch((error) =>
+    logs.server.error('pods', 'notifyVenueSlotRequested', { error, pod_id: String(doc._id) })
+  );
+  emailVenueSlotRequested(doc, slotDoc).catch((error) =>
+    logs.server.error('pods', 'emailVenueSlotRequested', { error, pod_id: String(doc._id) })
+  );
 }
 
 /** An edit only re-checks the pod window when the incoming start/end actually

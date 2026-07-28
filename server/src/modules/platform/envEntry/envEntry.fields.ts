@@ -42,7 +42,12 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'account_sid', label: 'Account SID', hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
     { name: 'auth_token', label: 'Auth Token', secret: true, hint: '32-char hex token' },
     { name: 'phone_number', label: 'Phone Number', phone: true, hint: 'E.164, e.g. +14155552671 — caller ID for outbound calls' },
-    { name: 'agent_phone_number', label: 'Agent Phone Number', phone: true, hint: 'E.164 — agent leg dialled for "Call Through Portal"' },
+    {
+      name: 'agent_phone_number',
+      label: 'Agent Phone Number (optional)',
+      phone: true,
+      hint: 'E.164 — agent leg dialled for "Call Through Portal"; falls back to the logged-in user’s profile phone',
+    },
   ],
   OPENAI: [
     { name: 'base_url', label: 'Base URL (optional)', hint: 'https://api.openai.com/v1' },
@@ -60,8 +65,8 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'default_voice', label: 'Default Voice', hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' },
   ],
   RAZORPAY: [
-    { name: 'key_id', label: 'Key ID', hint: 'rzp_live_xxxxxxxx or rzp_test_xxxxxxxx (public)' },
-    { name: 'key_secret', label: 'Key Secret', secret: true, hint: 'Razorpay API key secret' },
+    { name: 'key_id', label: 'Key ID', hint: 'Test: rzp_test_xxxxxxxx · Live: rzp_live_xxxxxxxx (public)' },
+    { name: 'key_secret', label: 'Key Secret', secret: true, hint: 'Razorpay API key secret (test or live)' },
     {
       name: 'webhook_secret',
       label: 'Webhook Secret (optional)',

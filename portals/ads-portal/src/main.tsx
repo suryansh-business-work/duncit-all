@@ -6,8 +6,6 @@ import { apolloClient } from './apollo';
 import { appConfig } from './config/app-config';
 import App from './App';
 
-const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
-
 mountPortal({
   config: {
     key: appConfig.key,
@@ -18,7 +16,6 @@ mountPortal({
   },
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,
-  googleClientId: GOOGLE_CLIENT_ID,
   logsPortal: logs.portal['ads-portal'],
   loadUser: createSessionUserLoader(apolloClient),
   children: <App />,

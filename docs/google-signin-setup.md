@@ -74,6 +74,11 @@ server resolves it from the **Tech portal**, so you set it in **one place**:
 
 Make the GOOGLE_OAUTH entry **active + default** so `getRuntimeEnvValue` picks it up.
 
+The 17 MUI portals read the same runtime value: `mountPortal` (`@duncit/shell`) runs the
+`publicClientConfig` query before its first render and stores the id, so no portal build
+bakes one in. With nothing configured there, the portal mounts no `GoogleOAuthProvider`
+and the sign-in button renders its "not configured" tile.
+
 > **Bundled env is a fallback only.** `VITE_GOOGLE_CLIENT_ID` / `VITE_GOOGLE_MAP_API`
 > (mWeb) and `EXPO_PUBLIC_GOOGLE_CLIENT_ID` / `EXPO_PUBLIC_GOOGLE_MAP_API` (native) are
 > used only for local dev / offline before the server responds. The server value wins

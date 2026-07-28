@@ -42,6 +42,8 @@ export { createSession, SUPER_ROLE, type PortalSession } from './lib/session';
 export { createApolloClient, apolloErrorLink, type CreateApolloClientOptions } from './lib/apollo';
 export { getSafeRedirectPath, redirectPathFromLocation, type RedirectLocation } from './lib/redirect';
 export { parseEnvRoles } from './lib/env-roles';
+// The Google OAuth client id the server resolves from the Tech portal env store.
+export { getGoogleClientId, setGoogleClientId, loadGoogleClientId } from './lib/google-client-id';
 
 // Auth route guard + `authed()` route-table helper (previously in every App.tsx).
 export { RequireAuth, createAuthed, type RequireAuthProps, type CreateAuthedOptions } from './auth/RequireAuth';

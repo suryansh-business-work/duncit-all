@@ -24,30 +24,25 @@ vi.mock('@react-oauth/google', () => ({
 }));
 
 import GoogleSignInButton from '../../src/components/GoogleSignInButton';
+import { setGoogleClientId } from '@duncit/shell';
 
 const withTheme = (mode: 'light' | 'dark', ui: React.ReactElement) =>
   render(<ThemeProvider theme={createTheme({ palette: { mode } })}>{ui}</ThemeProvider>);
 
 describe('GoogleSignInButton', () => {
   afterEach(() => {
-    vi.unstubAllEnvs();
+    setGoogleClientId('');
   });
 
   it('renders the not-configured fallback when the client id is missing', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', '');
+    setGoogleClientId('');
     withTheme('light', <GoogleSignInButton onCredential={vi.fn()} />);
     expect(screen.getByText(/Google sign-in not configured/)).toBeInTheDocument();
     expect(screen.queryByTestId('google-login')).not.toBeInTheDocument();
   });
 
-  it('renders the fallback for the placeholder client id', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'your_client_id_here');
-    withTheme('light', <GoogleSignInButton onCredential={vi.fn()} />);
-    expect(screen.getByText(/Google sign-in not configured/)).toBeInTheDocument();
-  });
-
   it('fires onCredential only when Google returns a credential', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const onCredential = vi.fn();
     withTheme('light', <GoogleSignInButton onCredential={onCredential} text="continue_with" />);
 
@@ -67,34 +62,34 @@ describe('GoogleSignInButton', () => {
   });
 
   it('defaults the text prop to signin_with', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     withTheme('light', <GoogleSignInButton onCredential={vi.fn()} />);
     expect(googleProps.current?.text).toBe('signin_with');
   });
 
   it('uses the dark Google theme in dark mode and shows the loading overlay', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     withTheme('dark', <GoogleSignInButton onCredential={vi.fn()} loading />);
     expect(googleProps.current?.theme).toBe('filled_black');
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('shows the loading overlay with the light tint in light mode', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     withTheme('light', <GoogleSignInButton onCredential={vi.fn()} loading />);
     expect(googleProps.current?.theme).toBe('outline');
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('measures the host width when the element is present', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     // clientWidth is 0 in jsdom → Math.max(0,240)=240 (lower clamp branch).
     withTheme('light', <GoogleSignInButton onCredential={vi.fn()} />);
     expect(googleProps.current?.width).toBe(240);
   });
 
   it('keeps the default width when the host element is not found', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const getSpy = vi.spyOn(document, 'getElementById').mockReturnValue(null);
     withTheme('light', <GoogleSignInButton onCredential={vi.fn()} />);
     // `if (el)` false branch → setWidth never runs, keeps the 320 default.
@@ -103,7 +98,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('recomputes width on window resize and cleans up on unmount', () => {
-    vi.stubEnv('VITE_GOOGLE_CLIENT_ID', 'real-client-id');
+    setGoogleClientId('real-client-id');
     const removeSpy = vi.spyOn(window, 'removeEventListener');
     const { unmount } = withTheme('light', <GoogleSignInButton onCredential={vi.fn()} />);
     fireEvent(window, new Event('resize'));

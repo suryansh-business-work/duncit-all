@@ -18,6 +18,7 @@ import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { PortalBranding } from './PortalBranding';
+import { loadGoogleClientId } from './lib/google-client-id';
 import type { MountPortalOptions } from './types';
 
 const identity = (node: ReactNode): ReactNode => node;
@@ -29,6 +30,10 @@ const identity = (node: ReactNode): ReactNode => node;
  * portal only supplies its route tree and a few config values. The chrome
  * (header + sidebar + breadcrumbs) is the Shell's `AppShell`, which the
  * portal's `<App />` wraps its authed routes in.
+ *
+ * The Google OAuth client id is fetched from the server (which sources it from
+ * the Tech portal's env store) before the first render, exactly as mWeb and the
+ * native app do — no portal bakes it in at build time.
  */
 export function mountPortal(opts: MountPortalOptions): void {
   const {
@@ -74,21 +79,34 @@ export function mountPortal(opts: MountPortalOptions): void {
   const mountNode = document.getElementById(rootId);
   if (!mountNode) throw new Error(`mountPortal: #${rootId} mount node not found`);
 
-  ReactDOM.createRoot(mountNode).render(
-    <React.StrictMode>
-      <ApolloProvider client={apolloClient}>
-        <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
-          <DuncitThemeProvider accent={config.accent} storageKey={config.colorModeKey} extend={themeExtend}>
-            <AppLocaleProvider fallback={fallback}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <GoogleOAuthProvider clientId={googleClientId}>
-                <BrowserRouter>{wrap(routed)}</BrowserRouter>
-              </GoogleOAuthProvider>
-            </LocalizationProvider>
-            </AppLocaleProvider>
-          </DuncitThemeProvider>
-        </UserProvider>
-      </ApolloProvider>
-    </React.StrictMode>,
-  );
+  const render = (clientId: string) => {
+    // With no client id configured in the Tech portal there is nothing to sign
+    // in with, so the provider is left out entirely — the sign-in button reads
+    // the same empty value and renders its "not configured" state.
+    const router = <BrowserRouter>{wrap(routed)}</BrowserRouter>;
+    const withGoogle = clientId ? <GoogleOAuthProvider clientId={clientId}>{router}</GoogleOAuthProvider> : router;
+
+    ReactDOM.createRoot(mountNode).render(
+      <React.StrictMode>
+        <ApolloProvider client={apolloClient}>
+          <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={userStorageKey ?? `${config.key}_user`}>
+            <DuncitThemeProvider accent={config.accent} storageKey={config.colorModeKey} extend={themeExtend}>
+              <AppLocaleProvider fallback={fallback}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                {withGoogle}
+              </LocalizationProvider>
+              </AppLocaleProvider>
+            </DuncitThemeProvider>
+          </UserProvider>
+        </ApolloProvider>
+      </React.StrictMode>,
+    );
+  };
+
+  // Resolve the runtime client id first (capped at 3s inside the loader), then
+  // render once. `googleClientId` is only the fallback for when the server has
+  // none; if resolution itself blows up, render with that fallback.
+  loadGoogleClientId(apolloClient, googleClientId)
+    .then(render)
+    .catch(() => render(googleClientId));
 }

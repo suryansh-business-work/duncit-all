@@ -18,11 +18,15 @@ import * as theme from '../../src/theme';
  * are not, so this keeps them green).
  */
 describe('module barrels & GraphQL documents', () => {
-  it('builds the static env category catalogue', () => {
-    expect(envQueries.CATEGORY_DEFS.length).toBeGreaterThan(0);
-    expect(envQueries.CATEGORY_DEFS.find((c) => c.category === 'EMAIL')?.docUrl).toMatch(/^https?:\/\//);
-    // VOBIZ was removed from the catalogue.
-    expect(envQueries.CATEGORY_DEFS.find((c) => (c.category as string) === 'VOBIZ')).toBeUndefined();
+  it('asks the server for the whole category catalogue', () => {
+    // The portal keeps NO static catalogue: tabs, labels, docUrl and field defs
+    // all come from this query, so a server-side category needs no portal edit.
+    const doc = JSON.stringify(envQueries.ENV_CATEGORIES);
+    expect(doc).toContain('envCategories');
+    for (const field of ['category', 'label', 'docUrl', 'fields', 'hint', 'secret']) {
+      expect(doc).toContain(field);
+    }
+    expect((envQueries as Record<string, unknown>).CATEGORY_DEFS).toBeUndefined();
     expect(envQueries.ENV_ENTRIES).toBeDefined();
     expect(portalEnvQueries.PORTAL_LIST).toBeDefined();
   });

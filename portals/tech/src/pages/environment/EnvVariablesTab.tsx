@@ -1,10 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Button, Stack, Tab, Tabs } from '@mui/material';
+import { Button, LinearProgress, Stack, Tab, Tabs } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import {
-  CATEGORY_DEFS,
   CREATE_ENV_ENTRY,
   DELETE_ENV_ENTRY,
   ENV_CATEGORIES,
@@ -26,7 +25,8 @@ export default function EnvVariablesTab() {
   const confirm = useConfirm();
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
-  const [category, setCategory] = useState<EnvCategory>('EMAIL');
+  // null = "no tab picked yet"; the first server category is used until then.
+  const [category, setCategory] = useState<EnvCategory | null>(null);
   const [editing, setEditing] = useState<EnvEntry | null>(null);
   const [creating, setCreating] = useState(false);
   const [testing, setTesting] = useState<EnvEntry | null>(null);
@@ -37,29 +37,28 @@ export default function EnvVariablesTab() {
   const [deleteMut] = useMutation(DELETE_ENV_ENTRY);
   const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
 
+  // The server's catalogue is the ONLY source of tabs and form fields, so a
+  // category added server-side shows up here with no portal change.
+  const categories = catData?.envCategories ?? [];
+  const active = category ?? categories[0]?.category ?? '';
+
   // Server-paged rows for the active category tab; the tab pins a category filter.
   const fetchRows = useApolloTableFetch<EnvEntry>(
     client,
     ENV_ENTRIES_TABLE,
     'envEntriesTable',
-    { extraFilters: [{ field: 'category', op: 'eq', value: category }] },
-    [category],
+    { extraFilters: [{ field: 'category', op: 'eq', value: active }] },
+    [active],
   );
 
-  // Prefer the server definition (authoritative); fall back to the static one so
-  // the tabs, Add button and form always work even if the query hasn't loaded.
-  const categories = catData?.envCategories ?? [];
-  const def = useMemo(
-    () => categories.find((c) => c.category === category) ?? CATEGORY_DEFS.find((c) => c.category === category),
-    [categories, category]
-  );
+  const def = useMemo(() => categories.find((c) => c.category === active), [categories, active]);
   const busy = createState.loading || updateState.loading;
-  /* v8 ignore next -- def is always defined for a CATEGORY_DEFS-backed tab, so the ?? fallback is defensive only */
-  const addLabel = def?.label ?? '';
+
+  // No catalogue yet (first load / API briefly unavailable): nothing can be
+  // rendered without the server's definitions, so show progress instead.
+  if (!def) return <LinearProgress />;
 
   const handleSubmit = async (values: EnvEntryFormValues) => {
-    /* v8 ignore next -- def is always defined for a CATEGORY_DEFS-backed tab, and the form only renders when def is truthy */
-    if (!def) return;
     try {
       const config = toConfigPairs(def, values);
       const base = { name: values.name.trim(), description: values.description.trim(), is_default: values.is_default, is_active: values.is_active, config };
@@ -67,7 +66,7 @@ export default function EnvVariablesTab() {
         await updateMut({ variables: { id: editing.id, input: base } });
         notify(`${values.name} updated`, 'success');
       } else {
-        await createMut({ variables: { input: { ...base, category } } });
+        await createMut({ variables: { input: { ...base, category: active } } });
         notify(`${values.name} created`, 'success');
       }
       setEditing(null);
@@ -101,17 +100,17 @@ export default function EnvVariablesTab() {
 
   return (
     <Stack spacing={2}>
-      <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto">
-        {CATEGORY_DEFS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
+      <Tabs value={active} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto">
+        {categories.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
       </Tabs>
       {/* key remounts the table per category so the page/query state resets with the tab. */}
       <EnvEntriesTable
-        key={category}
+        key={active}
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
           <Button size="small" startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
-            Add {addLabel}
+            Add {def.label}
           </Button>
         }
         onEdit={setEditing}
@@ -120,17 +119,16 @@ export default function EnvVariablesTab() {
         onTest={setTesting}
       />
 
-      {def && (
-        <EnvEntryForm
-          open={creating || !!editing}
-          def={def}
-          initial={editing}
-          busy={busy}
-          onClose={() => { setCreating(false); setEditing(null); }}
-          onSubmit={handleSubmit}
-          onTest={(e) => { setEditing(null); setTesting(e); }}
-        />
-      )}
+      <EnvEntryForm
+        open={creating || !!editing}
+        def={def}
+        initial={editing}
+        busy={busy}
+        onClose={() => { setCreating(false); setEditing(null); }}
+        onSubmit={handleSubmit}
+        onTest={(e) => { setEditing(null); setTesting(e); }}
+      />
+
 
       <TestDrawer entry={testing} onClose={() => setTesting(null)} />
     </Stack>

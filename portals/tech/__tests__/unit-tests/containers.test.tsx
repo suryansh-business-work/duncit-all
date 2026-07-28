@@ -137,6 +137,9 @@ import EnvVariablesTab from '../../src/pages/environment/EnvVariablesTab';
 import PortalMappingTab from '../../src/pages/environment/PortalMappingTab';
 
 const catDef = makeEnvCategoryDef({ category: 'EMAIL', label: 'Email', fields: [{ name: 'host', label: 'Host', secret: false, number: false, bool: false }] });
+const twilioDef = makeEnvCategoryDef({ category: 'TWILIO', label: 'Twilio' });
+// The tabs/fields are driven entirely by the server's envCategories query.
+const serverCategories = { envCategories: [catDef, twilioDef] };
 
 beforeEach(() => {
   notify.mockReset();
@@ -144,7 +147,7 @@ beforeEach(() => {
   refetchSpy.mockReset();
   a.run.mockReset();
   a.run.mockResolvedValue({ data: {} });
-  a.queryData = undefined;
+  a.queryData = serverCategories;
   a.mutLoading = false;
   a.clientQuery.mockReset();
   st.assignRefetch = true;
@@ -162,7 +165,20 @@ describe('EnvironmentPage (tabs)', () => {
 });
 
 describe('EnvVariablesTab', () => {
-  it('creates an entry (fallback category def) and refetches', async () => {
+  it('shows progress until the server sends its category catalogue', () => {
+    a.queryData = undefined;
+    const { container } = render(<EnvVariablesTab />);
+    expect(container.querySelector('.MuiLinearProgress-root')).toBeInTheDocument();
+    expect(screen.queryByTestId('env-table')).not.toBeInTheDocument();
+  });
+
+  it('renders a tab per server category, including ones the portal never listed', () => {
+    a.queryData = { envCategories: [catDef, makeEnvCategoryDef({ category: 'SLACK', label: 'Slack' })] };
+    render(<EnvVariablesTab />);
+    expect(screen.getByRole('tab', { name: 'Slack' })).toBeInTheDocument();
+  });
+
+  it('creates an entry and refetches', async () => {
     render(<EnvVariablesTab />);
     fireEvent.click(screen.getByRole('button', { name: /Add Email/i }));
     fireEvent.click(screen.getByRole('button', { name: 'form-submit' }));

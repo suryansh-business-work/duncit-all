@@ -43,6 +43,26 @@ export function configureLogs(transport: Transport, ctx?: Partial<LogContext>): 
 }
 
 /**
+ * Every thrown value that is not null, not undefined and not an object. Each of
+ * these has a meaningful toString(), so String() over this union can never
+ * produce '[object Object]'.
+ */
+type Stringifiable = string | number | boolean | bigint | symbol | ((...args: unknown[]) => unknown);
+
+/**
+ * A real type predicate, not an assertion.
+ *
+ * This is what lets String() below receive a concrete non-object union, so
+ * S6551 is satisfied by the TYPE rather than by an `as` cast — which S4325 would
+ * reject in turn. Narrowing through plain early-returns does not satisfy the
+ * rule; a predicate does. Keep this identical in both halves of the wire
+ * contract.
+ */
+function isStringifiable(value: unknown): value is Stringifiable {
+  return value !== null && typeof value !== 'object' && typeof value !== 'undefined';
+}
+
+/**
  * Stand-in for an object JSON.stringify refuses (circular refs, BigInt).
  *
  * Deliberately a FIXED string. Interpolating the object yields the useless
@@ -60,24 +80,12 @@ export function serializeError(err: unknown): SerializedError | undefined {
   if (err instanceof Error) {
     return { name: err.name || 'Error', message: err.message, stack: err.stack };
   }
-  if (typeof err === 'object') {
-    try {
-      return { name: 'Object', message: JSON.stringify(err) };
-    } catch {
-      return { name: 'Object', message: UNSERIALIZABLE_MESSAGE };
-    }
+  if (isStringifiable(err)) return { name: typeof err, message: String(err) };
+  try {
+    return { name: 'Object', message: JSON.stringify(err) };
+  } catch {
+    return { name: 'Object', message: UNSERIALIZABLE_MESSAGE };
   }
-  // Everything left is a primitive or a function, each with a meaningful
-  // toString(). Sonar does not follow the narrowing the guards above perform:
-  // `String(err)` trips S6551 ("may stringify an object") and asserting the type
-  // to silence it trips S4325 ("assertion changes nothing"). Naming each type
-  // explicitly satisfies both, and every branch produces exactly what
-  // `String(err)` did.
-  if (typeof err === 'string') return { name: 'string', message: err };
-  if (typeof err === 'symbol' || typeof err === 'function') {
-    return { name: typeof err, message: err.toString() };
-  }
-  return { name: typeof err, message: `${err}` };
 }
 
 function currentHost(): string | undefined {

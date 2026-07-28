@@ -322,3 +322,38 @@ is typed `FallbackIconManifest<T>` so a missing NAME fails `tsc`. Assets live un
 (or native `assets/`), never `public/` — Vite copies `public/` blind and never verifies it.
 Do not rely on the bundler alone: a static import only fails Rollup/Metro if that module is
 reachable from an entry, so an unimported manifest silently passes.
+
+40. Code duplication (ENFORCED) — **anything used in more than TWO places lives in a
+shared `@duncit/*` package, not a third copy.** This is rule 34 made operational:
+
+- **Before writing ANY helper, hook, constant map, regex, schema or component: check
+  the package docs first** — `pnpm docs` (http://localhost:2500), or read
+  `packages/<name>/docs/index.mdx` directly. Every package documents its real
+  exports with sample data and worked examples. If it exists, IMPORT it; writing a
+  local copy of an existing export is a review rejection.
+- **Where things belong** (the map, so nobody invents a new home):
+  validation patterns → `@duncit/regex` · Zod rules/patterns + RHF fields →
+  `@duncit/forms` · money/format/download/pod-economics → `@duncit/utils` ·
+  dates/clock → `@duncit/datetime` (admin-configured format via
+  `@duncit/app-settings`) · portal chrome/boot/session → `@duncit/shell` · tables →
+  `@duncit/table` · dialogs/confirm → `@duncit/dialogs` · status chips/small UI →
+  `@duncit/ui` · GraphQL types/enums → `@duncit/gql-types` · logging →
+  `@duncit/logs` · localization → `@duncit/i18n`.
+- **The mWeb ↔ native pair (rule 27) shares LOGIC, never UI**: pure derivations,
+  filters, state machines and constants go in a framework-free package both apps
+  import; the MUI and Tamagui components stay separate and thin. A file whose
+  header comment names its "twin" in the other app is the exact failure mode this
+  rule exists to stop.
+- **Extending beats creating**: prefer adding to an existing package over a new
+  one. A new package needs: its own 100% coverage thresholds in vitest/jest
+  config, a `docs/index.mdx` (the docs build in CI validates it), an `e2e` script
+  (the e2e audit fails without it), and — if the native app or a Docker-built
+  surface consumes it — the matching `COPY` lines in the affected Dockerfiles
+  (both mobile Dockerfiles for native; the failure only shows in deploy, never
+  locally).
+- **Server is the boundary**: `server/src` imports zero `@duncit/*` packages by
+  design. Server-side duplication consolidates into `server/src/utils/*` or the
+  owning module — never into a package the Docker image would need.
+- The audit that measured all of this (55 clusters, ~19k duplicated lines, the
+  live bugs drift caused) is `docs/duplication-audit.md` — read it before
+  proposing a new shared package; it likely already names the right home.

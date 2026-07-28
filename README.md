@@ -1,224 +1,135 @@
-# 🚀 Duncit — Full Stack Monorepo (React + GraphQL + Node.js)
+# 🚀 Duncit — Full Stack Monorepo
 
-## 📌 Overview
+React + GraphQL + Node.js, one pnpm workspace, ~30 deployed surfaces.
 
-Full-stack monorepo using pnpm workspaces:
-
-- **web-ui/app** — User-facing React + Vite app
-- **web-ui/admin** — Admin React + Vite dashboard
-- **server** — Node.js + TypeScript GraphQL API (Apollo Server v4) backed by MongoDB
-
-Cross-cutting:
-
-- **GraphQL Code Generator** for shared types & React hooks
-- **Yup** for validation (frontend + backend)
-- **MJML** for transactional email templates
-- **JWT** for authentication
-
-## 🏗️ Project Structure
+## 🏗️ What lives where
 
 ```
-duncit/
-├── web-ui/
-│   ├── app/        # User app (Vite, port 5173)
-│   └── admin/      # Admin app (Vite, port 5174)
-├── server/         # GraphQL API (port 2001)
-│   └── src/
-│       ├── modules/<name>/
-│       │   ├── <name>.schema.ts
-│       │   ├── <name>.resolver.ts
-│       │   ├── <name>.service.ts
-│       │   ├── <name>.model.ts
-│       │   └── <name>.validator.ts
-│       └── services/email/templates/*.mjml
-├── package.json    # workspaces root
-└── tsconfig.base.json
+duncit-all/
+├── app/
+│   ├── mweb/            # User-facing mobile web (React + MUI, port 2003)
+│   └── mobile-app/      # Native app (Expo + Tamagui) — STANDALONE npm workspace,
+│                        #   its own package-lock.json; use npm here, not pnpm
+├── server/              # GraphQL API (Apollo v4 + MongoDB, port 2001)
+├── portals/             # 17 internal consoles (React + MUI): admin, crm, finance,
+│                        #   tech, support, products, onboarding, marketing, legal,
+│                        #   ai, ads-portal, partners-app, website-app, hr, employee,
+│                        #   challenge-portal, developers
+├── website/             # 5 public Astro sites: main, partners, ads, status, earnwith
+├── packages/            # 27 shared @duncit/* packages — see `pnpm docs`
+├── docs-site/           # Browsable package reference (Astro + MDX + live previews)
+├── scripts/             # Repo-wide gates and tooling (all *.mjs, run by CI)
+└── .claude/CLAUDE.md    # THE coding standards — read before writing code
 ```
 
-## 🚀 Getting Started
+### Server architecture (`server/src`)
 
-### 1. Install dependencies (from repo root)
+Domain modules under `modules/`, one folder per concern:
+
+```
+modules/
+├── access/        auth/ (login, signup, forgot/reset password)
+│                  profile/  role/  user/  addressBook/  verification/ …
+├── clubs/         club, clubAdmin
+├── pods/          pod, podMember, category, search, ticket …
+├── portals/       the portal login gate + role map (deliberately flat)
+├── finance/       money waterfall, payments, settlement
+├── crm/ platform/ venues/ support/ engagement/ commerce/ content/ …
+```
+
+Cross-cutting: `config/ middleware/ observability/ realtime/ services/ utils/`.
+Path aliases (`@modules/*`, `@utils/*`, …) are defined in BOTH `server/tsconfig.json`
+and `server/jest.config.js` — change one, change both.
+
+## 🧰 Tech
+
+| Surface | Stack |
+|---|---|
+| mWeb + 17 portals | React, **MUI**, @mui/icons-material, React Hook Form + **Zod** |
+| Native app | Expo, **Tamagui**, @expo/vector-icons, RHF + Zod |
+| Websites | **Astro** + Tailwind |
+| API | Apollo Server v4, Mongoose, GraphQL Code Generator |
+| Dates | date-fns, admin-configured format via `@duncit/app-settings` |
+| E2E | **Cypress only** (Playwright was removed repo-wide) |
+
+Rule-of-thumb pair: mWeb and native must behave **identically** (CLAUDE.md rule 27);
+share the logic through `@duncit/*` packages, never the UI primitives.
+
+## 📦 Shared packages — check here BEFORE writing a helper
+
+27 packages under `packages/`, each documented with live previews, realistic sample
+data and worked examples:
 
 ```bash
-pnpm install
+pnpm docs          # browse at http://localhost:2500
+pnpm docs:build    # what CI runs
 ```
 
-### 2. Configure server env
+Anything used in more than two places belongs in one of these — see CLAUDE.md
+rule 40. The full duplication audit that drove this lives in
+[docs/duplication-audit.md](docs/duplication-audit.md).
 
-Copy `server/.env.example` → `server/.env` and edit:
-
-```
-PORT=2001
-MONGO_URI=mongodb://localhost:27017/duncit
-JWT_SECRET=your-secret
-```
-
-### 3. Start MongoDB
-
-Local development requires a running MongoDB instance before the server can boot.
+## 🚀 Getting started
 
 ```bash
-# start MongoDB before running the server or pnpm run:all
+pnpm install                       # everything except the native app
+cd app/mobile-app && npm ci        # the native app (standalone npm)
+
+# server needs Mongo + env
+cp server/.env.example server/.env # set MONGO_URI, JWT_SECRET
 mongod
+
+pnpm dev:server                    # http://localhost:2001/graphql
+pnpm dev:app                       # mWeb  → :2003
+pnpm dev:admin                     # admin → :2002  (dev:<portal> for the rest)
+pnpm run:all                       # the whole stack
+pnpm kill-ports:all                # release every port
 ```
 
-If you use a `.env` file, create `server/.env` from `server/.env.example` and set `MONGO_URI`.
+### Pointing a local portal at a live backend
 
-### 4. Run the stack
-
-In separate terminals:
+Every portal (all 17 + mWeb) ships target-specific dev scripts that set
+`VITE_GRAPHQL_URL`, so no file editing:
 
 ```bash
-# server  → http://localhost:2001/graphql
-pnpm dev:server
-
-# user app → http://localhost:2003
-pnpm dev:app
-
-# admin app → http://localhost:2002
-pnpm dev:admin
+pnpm --filter tech dev              # → localhost:2001 (needs a local server)
+pnpm --filter tech dev:main         # → server.duncit.com          (production API)
+pnpm --filter tech dev:staging      # → staging.server.duncit.com  (staging API)
+pnpm --filter server dev:staging    # local API on the duncit-staging DB
 ```
 
-To run every project at once:
+If the API isn't up, every request fails with `net::ERR_CONNECTION_REFUSED` and
+login won't work — start the server first.
 
-```bash
-pnpm run:all
-```
+## ✅ Testing & CI gates — none of these are optional
 
-To release all local project ports:
+| Gate | Command | Enforced by |
+|---|---|---|
+| Unit + coverage | `pnpm --filter <ws> test:coverage` | per-workspace thresholds; `app/mobile-app` and most packages gate at **100/100/100/100** |
+| Shared packages | `pnpm --filter "./packages/**" test:coverage` | `shared-gates.yml` — a package missing its own threshold fails the build |
+| E2E (Cypress) | `pnpm e2e` in any workspace | `e2e.yml` → the **E2E gate** check; all 53 workspaces declare an `e2e` script (audited), and deploys are blocked behind the gate |
+| Fallback icons / i18n keys | `scripts/verify-*.mjs` | `shared-gates.yml` |
+| Docs build | `pnpm docs:build` | `shared-gates.yml` (strict MDX frontmatter) |
+| SonarQube | scans `staging` and `main` | quality gate: 0 new violations, hotspots 100% reviewed |
 
-```bash
-pnpm kill-ports:all
-```
+E2E rules worth knowing: no `--if-present`, no `paths:` filter, no
+`continue-on-error` — a suite that never ran can never look green.
 
-### 5. Choosing which backend a portal talks to
-
-A locally-running portal (`pnpm dev` / `pnpm dev:<portal>`) targets **`http://localhost:2001/graphql`** by
-default, so it needs a local server running (steps 2–4). If the API isn't up you'll see every GraphQL request
-fail with `net::ERR_CONNECTION_REFUSED` and login won't work.
-
-Every portal (all 17 + mWeb) also ships target-specific dev scripts — the web equivalent of the mobile app's
-`start:local` / `start:main` / `start:staging`. They set `VITE_GRAPHQL_URL` (via `cross-env`) so you can point a
-local portal at a live or local API without editing any file:
-
-```bash
-# from a portal, e.g. tech
-pnpm --filter tech dev            # default → http://localhost:2001/graphql  (needs a local server)
-pnpm --filter tech dev:main       # → https://server.duncit.com/graphql          (production API + DB)
-pnpm --filter tech dev:staging    # → https://staging.server.duncit.com/graphql  (staging API + DB)
-pnpm --filter tech dev:local:main    # → http://localhost:2001/graphql, pair with server `dev:main`
-pnpm --filter tech dev:local:staging # → http://localhost:2001/graphql, pair with server `dev:staging`
-```
-
-The local server chooses its **database** the same way (default = main; `duncit-staging` for staging):
-
-```bash
-pnpm --filter server dev          # main database (URI default)
-pnpm --filter server dev:main     # main database (explicit alias)
-pnpm --filter server dev:staging  # MONGO_DB_NAME=duncit-staging
-```
-
-| Portal script         | GraphQL endpoint                            | Pair the server with       | Data source          |
-| --------------------- | ------------------------------------------- | -------------------------- | -------------------- |
-| `dev`                 | `http://localhost:2001/graphql`             | `dev` / `dev:main`         | your local server    |
-| `dev:main`            | `https://server.duncit.com/graphql`         | — (remote)                 | **production DB**    |
-| `dev:staging`         | `https://staging.server.duncit.com/graphql` | — (remote)                 | staging DB           |
-| `dev:local:main`      | `http://localhost:2001/graphql`             | `pnpm --filter server dev:main`    | local server, main DB    |
-| `dev:local:staging`   | `http://localhost:2001/graphql`             | `pnpm --filter server dev:staging` | local server, `duncit-staging` |
-
-> **Which do I want?** To log in with an existing account (e.g. an admin/partner that already exists), the
-> quickest path is `dev:main` — it uses the production API + DB, no local server required. The `dev:local:*`
-> modes need `server/.env` populated with a valid `MONGO_URI` and a running local server.
->
-> **Mobile app** (`app/mobile-app`, npm) has the same switch: `npm run start:local | start:main | start:staging`.
-
-## 🔄 GraphQL Codegen
-
-```bash
-pnpm codegen
-```
-
-Generates:
-
-- `server/src/generated/graphql.ts` — backend resolver types
-- `web-ui/app/src/generated/graphql.ts` — frontend hooks
-- `web-ui/admin/src/generated/graphql.ts` — admin frontend hooks
-
-> Add `.graphql` operation files inside each frontend's `src/` (e.g. `src/graphql/auth.graphql`) before running codegen to populate hooks.
-
-## 🔁 Development Flow
+## 🌿 Branch & deploy flow (enforced by hooks)
 
 ```
-UI (App/Admin)
-   ↓ GraphQL Query/Mutation
-Resolver
-   ↓ Yup validation
-Service Layer
-   ↓
-MongoDB / Email
+feature branch → staging → PR → main
 ```
 
-## 📦 Module Structure (Backend)
+- Pushing `staging` deploys the full replica stack to `https://staging.<sub>.duncit.com`.
+- Merging to `main` deploys production. **Never push main directly** (pre-push hook blocks it).
+- The pre-commit hook bumps the app version on every commit
+  (`app/mobile-app/app.json` is the source of truth).
 
-Each feature lives under `server/src/modules/<name>/`:
+## 📐 Coding standards
 
-| File | Responsibility |
-|------|----------------|
-| `*.schema.ts` | GraphQL SDL types |
-| `*.resolver.ts` | Apollo resolvers (thin) |
-| `*.service.ts` | Business logic |
-| `*.model.ts` | Mongoose model |
-| `*.validator.ts` | Yup input schemas |
-
-## 📧 Email Templates (MJML)
-
-Location: `server/src/services/email/templates/`
-
-Use `sendEmail({ to, subject, template, vars })` from `server/src/services/email/email.service.ts`. In dev (no `SMTP_HOST`), nodemailer uses a JSON transport that just logs.
-
-## 🛡️ Best Practices
-
-- Keep business logic in services; resolvers stay thin
-- Always validate at the GraphQL boundary (Yup)
-- Re-run `pnpm codegen` after schema changes
-- Reuse Yup schemas in frontend forms
-
-## 📦 Scripts
-
-Root:
-
-```bash
-pnpm dev:server      # start API
-pnpm dev:app         # start user app
-pnpm dev:admin       # start admin app
-pnpm dev:website     # start website
-pnpm dev:partners-app
-pnpm dev:partners-website
-pnpm run:all         # start all projects
-pnpm kill-ports:all  # release all project ports
-pnpm build           # build all workspaces
-pnpm codegen         # generate GraphQL types
-```
-
-Per-portal backend targeting (any of the 17 portals + mWeb — see [§5](#5-choosing-which-backend-a-portal-talks-to)):
-
-```bash
-pnpm --filter <portal> dev              # localhost:2001 (default)
-pnpm --filter <portal> dev:main         # server.duncit.com          (production)
-pnpm --filter <portal> dev:staging      # staging.server.duncit.com  (staging)
-pnpm --filter <portal> dev:local:main   # localhost:2001, + server dev:main
-pnpm --filter <portal> dev:local:staging# localhost:2001, + server dev:staging
-pnpm --filter server   dev:staging      # local API on the duncit-staging DB
-```
-
-## 🔮 Future Improvements
-
-- JWT refresh tokens
-- Redis caching
-- Docker Compose
-- CI/CD pipeline
-- Full RBAC
-
-## 💡 Tip
-
-If something breaks: check the GraphQL schema, re-run codegen, verify env variables.
+They live in [.claude/CLAUDE.md](.claude/CLAUDE.md) and are enforced by SonarQube +
+CI, not by review goodwill. The short version: no hardcoded user-facing text
+(localization keys first), no duplicate code (rule 40: 2+ places → shared package),
+MUI on web / Tamagui on native, RHF + Zod for every form, no `.tsx` over 200 lines,
+and every workspace's coverage threshold is a floor — not a target.

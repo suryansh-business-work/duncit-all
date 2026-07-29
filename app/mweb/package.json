@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.5.118",
+  "version": "1.5.119",
   "private": true,
   "type": "module",
   "scripts": {
@@ -29,10 +29,11 @@
     "@duncit/geo": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
-    "@duncit/onboarding": "workspace:*",
     "@duncit/media-picker": "workspace:*",
+    "@duncit/onboarding": "workspace:*",
     "@duncit/regex": "workspace:*",
     "@duncit/slack": "workspace:*",
+    "@duncit/tours": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
@@ -59,6 +60,7 @@
     "react-dom": "^18.3.1",
     "react-easy-crop": "^5.0.8",
     "react-hook-form": "^7.54.0",
+    "react-joyride": "^3.2.0",
     "react-quill": "^2.0.0",
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",

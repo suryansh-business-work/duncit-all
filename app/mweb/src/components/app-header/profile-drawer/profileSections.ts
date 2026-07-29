@@ -15,6 +15,7 @@ export type ProfileIconKey =
   | 'ideas'
   | 'plans'
   | 'faqs'
+  | 'tour'
   | 'shop'
   | 'orders'
   | 'addresses'
@@ -54,6 +55,7 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
     { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
     { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
+    { key: 'tour', label: 'Tour Guide', caption: '', icon: 'tour', to: '/tour-guide' },
     { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
   ];
   if (showPodPlans) {

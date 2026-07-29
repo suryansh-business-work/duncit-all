@@ -14,6 +14,7 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import ExploreIcon from '@mui/icons-material/Explore';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -27,6 +28,7 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   ideas: <LightbulbIcon />,
   plans: <CategoryIcon />,
   faqs: <HelpOutlineIcon />,
+  tour: <ExploreIcon />,
   shop: <StorefrontIcon />,
   orders: <LocalShippingIcon />,
   addresses: <HomeWorkIcon />,

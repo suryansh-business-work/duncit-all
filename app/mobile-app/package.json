@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.118",
+  "version": "1.5.119",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -53,6 +53,7 @@
     "@duncit/onboarding": "file:../../packages/onboarding",
     "@duncit/regex": "file:../../packages/regex",
     "@duncit/slack": "file:../../packages/slack",
+    "@duncit/tours": "file:../../packages/tours",
     "@duncit/utils": "file:../../packages/utils",
     "@expo/vector-icons": "^15.0.3",
     "@graphql-typed-document-node/core": "^3.2.0",

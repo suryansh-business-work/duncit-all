@@ -90,6 +90,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Referral: 'referral',
       HappeningNearby: 'happening-nearby',
       Faqs: 'faqs',
+      TourGuide: 'tour-guide',
       PodPlans: 'pod-plans',
       Policies: 'policies',
       SupportTickets: 'support/tickets',

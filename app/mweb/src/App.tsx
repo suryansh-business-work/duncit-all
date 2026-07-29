@@ -20,6 +20,7 @@ import { useBrandingAssets } from './hooks/useBrandingAssets';
 import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 import { StatusUploadProvider } from './components/status-upload/StatusUploadProvider';
 import { CartProvider } from './components/cart/CartContext';
+import { TourProvider } from './tours/TourContext';
 
 const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
 /** Height the app-install bar reserves at the bottom (0 when it is not shown). */
@@ -65,6 +66,7 @@ export default function App() {
   return (
     <StatusUploadProvider>
     <CartProvider>
+    <TourProvider>
     <Box
       sx={isAuthed ? {
         height: '100dvh',
@@ -130,6 +132,7 @@ export default function App() {
       <BrandFontLoader />
       <NotifyHost />
     </Box>
+    </TourProvider>
     </CartProvider>
     </StatusUploadProvider>
   );

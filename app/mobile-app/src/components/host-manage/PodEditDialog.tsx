@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -87,90 +86,93 @@ export function PodEditDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               borderRadius={20}
               padding={18}
             >
-              <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={10}>
-                  Edit pod
-                </Text>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                  <YStack gap={12} paddingBottom={6}>
-                    <FormTextField
-                      control={control}
-                      name="pod_title"
-                      label="Title"
-                      required
-                      hint="3–120 characters"
-                    />
-                    <FormTextField
-                      control={control}
-                      name="pod_description"
-                      label="Description"
-                      multiline
-                      required
-                      hint="At least 10 characters"
-                    />
-                    <Controller
-                      control={control}
-                      name="media_text"
-                      render={({ field, fieldState }) => (
-                        <MediaUploadField
-                          value={field.value}
-                          onChange={field.onChange}
-                          error={fieldState.error?.message}
-                          label="Media"
-                        />
-                      )}
-                    />
-                    {error ? (
-                      <Text testID="pod-edit-error" fontSize={12.5} color="$danger">
-                        {error}
-                      </Text>
-                    ) : null}
-                  </YStack>
-                </ScrollView>
-                <XStack gap={12} paddingTop={12}>
-                  <XStack
-                    testID="pod-edit-cancel"
-                    role="button"
-                    aria-label="Cancel"
-                    aria-disabled={busy}
-                    onPress={dismiss}
-                    flex={1}
-                    height={46}
-                    alignItems="center"
-                    justifyContent="center"
-                    borderRadius={12}
-                    borderWidth={1}
-                    borderColor="$borderColor"
-                    opacity={busy ? 0.6 : 1}
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    <Text fontSize={14} fontWeight="800" color="$color">
-                      Cancel
+              {/* Header, scroller and footer are direct children of the capped
+                  card on purpose. Any view in between (a SafeAreaView used to
+                  sit here) is unshrinkable — RN defaults flexShrink to 0 — so it
+                  sizes to its full content, leaves the ScrollView unbounded, and
+                  spills the upload box and the buttons outside the card. */}
+              <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={10}>
+                Edit pod
+              </Text>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <YStack gap={12} paddingBottom={6}>
+                  <FormTextField
+                    control={control}
+                    name="pod_title"
+                    label="Title"
+                    required
+                    hint="3–120 characters"
+                  />
+                  <FormTextField
+                    control={control}
+                    name="pod_description"
+                    label="Description"
+                    multiline
+                    required
+                    hint="At least 10 characters"
+                  />
+                  <Controller
+                    control={control}
+                    name="media_text"
+                    render={({ field, fieldState }) => (
+                      <MediaUploadField
+                        value={field.value}
+                        onChange={field.onChange}
+                        error={fieldState.error?.message}
+                        label="Media"
+                      />
+                    )}
+                  />
+                  {error ? (
+                    <Text testID="pod-edit-error" fontSize={12.5} color="$danger">
+                      {error}
                     </Text>
-                  </XStack>
-                  <XStack
-                    testID="pod-edit-save"
-                    role="button"
-                    aria-label="Save changes"
-                    aria-disabled={busy}
-                    onPress={busy ? undefined : () => fireAndForget(submit())}
-                    flex={1}
-                    height={46}
-                    alignItems="center"
-                    justifyContent="center"
-                    gap={8}
-                    borderRadius={12}
-                    backgroundColor="$primary"
-                    opacity={busy ? 0.7 : 1}
-                    pressStyle={{ opacity: 0.85 }}
-                  >
-                    {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                    <Text fontSize={14} fontWeight="900" color="$onPrimary">
-                      {busy ? 'Saving…' : 'Save changes'}
-                    </Text>
-                  </XStack>
+                  ) : null}
+                </YStack>
+              </ScrollView>
+              <XStack gap={12} paddingTop={12}>
+                <XStack
+                  testID="pod-edit-cancel"
+                  role="button"
+                  aria-label="Cancel"
+                  aria-disabled={busy}
+                  onPress={dismiss}
+                  flex={1}
+                  height={46}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={12}
+                  borderWidth={1}
+                  borderColor="$borderColor"
+                  opacity={busy ? 0.6 : 1}
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  <Text fontSize={14} fontWeight="800" color="$color">
+                    Cancel
+                  </Text>
                 </XStack>
-              </SafeAreaView>
+                <XStack
+                  testID="pod-edit-save"
+                  role="button"
+                  aria-label="Save changes"
+                  aria-disabled={busy}
+                  onPress={busy ? undefined : () => fireAndForget(submit())}
+                  flex={1}
+                  height={46}
+                  alignItems="center"
+                  justifyContent="center"
+                  gap={8}
+                  borderRadius={12}
+                  backgroundColor="$primary"
+                  opacity={busy ? 0.7 : 1}
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  {busy ? <Spinner size="small" color={onPrimary} /> : null}
+                  <Text fontSize={14} fontWeight="900" color="$onPrimary">
+                    {busy ? 'Saving…' : 'Save changes'}
+                  </Text>
+                </XStack>
+              </XStack>
             </YStack>
           </YStack>
         </KeyboardScreen>

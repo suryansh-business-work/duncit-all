@@ -218,11 +218,14 @@ export default function AppHeader({
              * to float over the content); it hides itself when there is nothing
              * to open. */}
             <HeaderCartButton />
-            <HeaderNotificationsBell onToast={handleNotifToast} />
+            <Box data-tour="home-notifications" component="span" sx={{ display: 'inline-flex' }}>
+              <HeaderNotificationsBell onToast={handleNotifToast} />
+            </Box>
 
             <Tooltip title={me?.full_name ?? 'Account'}>
               <IconButton
                 onClick={openMenu}
+                data-tour="home-profile"
                 sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
                 aria-label="Open account menu"
               >

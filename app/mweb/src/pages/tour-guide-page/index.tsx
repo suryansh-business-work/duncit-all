@@ -72,7 +72,10 @@ export default function TourGuidePage() {
                     size="small"
                     data-testid={`tour-start-${tour.id}`}
                     startIcon={done ? <ReplayIcon /> : <PlayArrowIcon />}
-                    onClick={() => startTour(tour.id)}
+                    onClick={() => {
+                      startTour(tour.id);
+                      navigate(tour.path);
+                    }}
                     sx={{ flexShrink: 0 }}
                   >
                     {done ? 'Restart' : 'Start'}

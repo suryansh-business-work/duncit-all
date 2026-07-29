@@ -86,11 +86,14 @@ describe('productMatchesClub', () => {
     expect(productMatchesClub(product, KEY)).toBe(true);
   });
 
-  it('degrades to "show all" for a product carrying no category data at all', () => {
-    expect(productMatchesClub({ name: 'Legacy tee' }, KEY)).toBe(true);
-    expect(productMatchesClub({ categories: [] }, KEY)).toBe(true);
-    expect(productMatchesClub({ categories: 'not-an-array' }, KEY)).toBe(true);
-    expect(productMatchesClub(null, KEY)).toBe(true);
+  // The picker used to show these, then the save rejected them with
+  // "<product> does not belong to this pod's category" — pod.service grants no
+  // such exemption. Hiding them is what keeps the client and the server aligned.
+  it('rejects a product carrying no category data at all, exactly like the server', () => {
+    expect(productMatchesClub({ name: 'Legacy tee' }, KEY)).toBe(false);
+    expect(productMatchesClub({ categories: [] }, KEY)).toBe(false);
+    expect(productMatchesClub({ categories: 'not-an-array' }, KEY)).toBe(false);
+    expect(productMatchesClub(null, KEY)).toBe(false);
   });
 });
 
@@ -105,11 +108,8 @@ describe('filterProductsForClub', () => {
   };
   const uncategorised = { id: 'p3' };
 
-  it('keeps only products in the club category, plus uncategorised ones', () => {
-    expect(filterProductsForClub([matching, other, uncategorised], CLUB)).toEqual([
-      matching,
-      uncategorised,
-    ]);
+  it('keeps only products in the club category, dropping uncategorised ones', () => {
+    expect(filterProductsForClub([matching, other, uncategorised], CLUB)).toEqual([matching]);
   });
 
   it('applies no filter when the club has no category pair', () => {

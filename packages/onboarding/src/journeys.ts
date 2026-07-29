@@ -19,6 +19,7 @@ export const EARN_JOURNEYS: readonly EarnJourney[] = [
     nativeRoute: 'BecomeHost',
     // In-app: Host Studio → "Ready to Host More Experiences" → Apply Now.
     cta: {
+      target: 'internal',
       label: 'Ready to host more experiences?',
       internalTo: '/host/manage',
       internalRoute: 'HostManage',
@@ -32,7 +33,7 @@ export const EARN_JOURNEYS: readonly EarnJourney[] = [
     iconKey: 'venue',
     surveyPath: '/survey/venue',
     nativeRoute: 'RegisterVenue',
-    cta: { label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
+    cta: { target: 'partner', label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
   },
   {
     role: 'ECOMM_MANAGER',
@@ -42,7 +43,7 @@ export const EARN_JOURNEYS: readonly EarnJourney[] = [
     iconKey: 'ecomm',
     surveyPath: '/survey/ecomm',
     nativeRoute: 'ListProduct',
-    cta: { label: 'Ready to add another brand?', partnerPath: '/ecomm-brand' },
+    cta: { target: 'partner', label: 'Ready to add another brand?', partnerPath: '/ecomm-brand' },
   },
   {
     role: 'CLUB_ADMIN',
@@ -52,7 +53,7 @@ export const EARN_JOURNEYS: readonly EarnJourney[] = [
     iconKey: 'club',
     surveyPath: '/survey/club_admin',
     nativeRoute: 'BeClubAdmin',
-    cta: { label: 'Manage your clubs', partnerPath: '/club-admin/dashboard' },
+    cta: { target: 'partner', label: 'Manage your clubs', partnerPath: '/club-admin/dashboard' },
   },
 ];
 

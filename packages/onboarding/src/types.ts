@@ -13,18 +13,30 @@ export interface EarnMeeting {
   reschedule_count?: number | null;
 }
 
-/** Where a journey's "next step" CTA sends an already-approved user. Exactly one
- * of these is set per journey: in-app when the surface owns the destination,
- * partner-portal when it does not. */
-export interface EarnJourneyCta {
-  label: string;
-  /** Path inside mWeb (`/host/manage`) — native maps it via `nativeRoute`. */
-  internalTo?: string;
-  /** Native stack screen for the same destination as `internalTo`. */
-  internalRoute?: string;
-  /** Path on the partner portal, opened as an external deep link. */
-  partnerPath?: string;
-}
+/**
+ * Where a journey's "next step" CTA sends an already-approved user. A union
+ * rather than three optional fields, so "in-app OR partner portal, never
+ * neither" is a type guarantee: after a consumer handles the in-app case and
+ * returns, `partnerPath` narrows to a string and needs no second guard — which
+ * would otherwise be an unreachable branch under the 100% coverage gate.
+ */
+export type EarnJourneyCta =
+  | {
+      /** Discriminant. Truthiness alone cannot narrow this — an empty string is
+       * falsy, so TS would keep both members alive and force a dead guard. */
+      target: 'internal';
+      label: string;
+      /** Path inside mWeb (`/host/manage`). */
+      internalTo: string;
+      /** Native stack screen for the same destination as `internalTo`. */
+      internalRoute: string;
+    }
+  | {
+      target: 'partner';
+      label: string;
+      /** Path on the partner portal, opened as an external deep link. */
+      partnerPath: string;
+    };
 
 /**
  * A journey's identity and copy. Deliberately holds no icon element and no

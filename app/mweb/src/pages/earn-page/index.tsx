@@ -64,13 +64,11 @@ export default function EarnPage() {
   // Approved-user next step: an in-app route (host) or the Partner Portal
   // (venue/ecomm/club — opening the deep link there preserves it through login).
   const runCta = (cta: EarnJourneyCta) => {
-    if (cta.internalTo) {
+    if (cta.target === 'internal') {
       navigate(cta.internalTo);
       return;
     }
-    if (cta.partnerPath) {
-      globalThis.window.location.replace(partnerPortalUrl(cta.partnerPath));
-    }
+    globalThis.window.location.replace(partnerPortalUrl(cta.partnerPath));
   };
 
   return (

@@ -77,8 +77,16 @@ jobs:
 
       # No --no-bail and no continue-on-error: a package that misses its own
       # declared threshold must fail the build, which is the whole point.
+      #
+      # --workspace-concurrency=1 because running ~26 vitest instances at once,
+      # each with its own worker pool, intermittently killed the runner with
+      # "FATAL ERROR: v8::ToLocalChecked Empty MaybeLocal" — a V8 OOM, not a test
+      # failure. It was reproducible only by luck: the same commit passed on the
+      # push event and failed on the pull_request event. Serialising costs a
+      # little wall-clock on a gate that is nowhere near the critical path, and
+      # buys a signal that means what it says.
       - name: Package suites + coverage thresholds
-        run: pnpm --filter "./packages/**" --if-present test:coverage
+        run: pnpm --workspace-concurrency=1 --filter "./packages/**" --if-present test:coverage
 
       # The docs site reads packages/*/docs/index.mdx through a strict content
       # collection, so this is also what validates that frontmatter. Without it

@@ -11,7 +11,8 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ReplayIcon from '@mui/icons-material/Replay';
-import { TOURS, isTourCompleted } from '@duncit/tours';
+import { gql, useQuery } from '@apollo/client';
+import { isTourCompleted, toursForRoles } from '@duncit/tours';
 import { useTours } from '../../tours/useTours';
 
 /**
@@ -22,9 +23,22 @@ import { useTours } from '../../tours/useTours';
  * page. Starting a tour navigates to the screen it runs on and arms it; the
  * Joyride runtime picks it up when that screen mounts.
  */
+const TOUR_ROLES = gql`
+  query TourRoles {
+    me {
+      user_id
+      roles
+    }
+  }
+`;
+
 export default function TourGuidePage() {
   const navigate = useNavigate();
   const { completed, startTour } = useTours();
+  const { data } = useQuery(TOUR_ROLES, { fetchPolicy: 'cache-first' });
+  // Create Pod walks through a screen a non-host cannot open, so it is hidden
+  // rather than offered as a dead end.
+  const tours = toursForRoles(data?.me?.roles ?? []);
 
   return (
     <Stack
@@ -45,7 +59,7 @@ export default function TourGuidePage() {
         </Typography>
       </Stack>
       <Stack spacing={1.5}>
-        {TOURS.map((tour) => {
+        {tours.map((tour) => {
           const done = isTourCompleted(completed, tour.id);
           return (
             <Card key={tour.id} variant="outlined" sx={{ borderRadius: 3 }}>

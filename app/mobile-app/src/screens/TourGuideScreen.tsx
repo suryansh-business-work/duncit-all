@@ -2,9 +2,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
-import { TOURS, isTourCompleted } from '@duncit/tours';
+import { isTourCompleted, toursForRoles, type TourId } from '@duncit/tours';
 
 import { StackScreen } from '@/components/StackScreen';
+import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useToursStore } from '@/stores/tours.store';
 import type { RootStackParamList } from '@/navigation/types';
@@ -19,8 +20,10 @@ export function TourGuideScreen() {
   const { muted, primary } = useThemeColors();
   const completed = useToursStore((s) => s.completed);
   const startTour = useToursStore((s) => s.startTour);
+  // Create Pod walks through a screen a non-host cannot open.
+  const tours = toursForRoles(useMe().data?.me?.roles ?? []);
 
-  const run = (id: (typeof TOURS)[number]['id'], route: string) => {
+  const run = (id: TourId, route: string) => {
     startTour(id);
     navigation.navigate(route as keyof RootStackParamList as never);
   };
@@ -32,7 +35,7 @@ export function TourGuideScreen() {
           <Text fontSize={13} color="$muted">
             Take a guided walkthrough of any screen, as often as you like.
           </Text>
-          {TOURS.map((tour) => {
+          {tours.map((tour) => {
             const done = isTourCompleted(completed, tour.id);
             return (
               <XStack

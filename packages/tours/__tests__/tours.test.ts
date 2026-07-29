@@ -4,6 +4,7 @@ import {
   HOME_TOUR_ID,
   TOURS,
   findTour,
+  toursForRoles,
   isTourCompleted,
   markTourCompleted,
   readCompletedTours,
@@ -61,9 +62,40 @@ describe('TOURS registry', () => {
     ]);
   });
 
+  // Navigating to a screen that needs params crashes on route.params being
+  // undefined — PodDetails reads .podId off it. Every landing must open cold.
+  it('lands every tour on a screen that opens with no params', () => {
+    const needsParams = new Set(['PodDetails', 'ChatRoom', 'Checkout', 'PodPending', 'Policy']);
+    for (const tour of TOURS) {
+      expect(needsParams.has(tour.nativeRoute)).toBe(false);
+    }
+  });
+
+  it('gates Create Pod behind the host role and leaves the rest open', () => {
+    expect(findTour('create-pod')!.requiredRole).toBe('HOST');
+    const gated = TOURS.filter((t) => t.requiredRole);
+    expect(gated.map((t) => t.id)).toEqual(['create-pod']);
+  });
+
   it('resolves a tour by id and shrugs off an unknown one', () => {
     expect(findTour('club')?.title).toBe('Club Page');
     expect(findTour('retired-tour')).toBeUndefined();
+  });
+});
+
+describe('toursForRoles', () => {
+  it('hides Create Pod from someone who cannot create a pod', () => {
+    const ids = toursForRoles([]).map((t) => t.id);
+    expect(ids).not.toContain('create-pod');
+    expect(ids).toContain('home');
+  });
+
+  it('shows it to a host', () => {
+    expect(toursForRoles(['HOST']).map((t) => t.id)).toContain('create-pod');
+  });
+
+  it('ignores unrelated roles', () => {
+    expect(toursForRoles(['VENUE_OWNER']).map((t) => t.id)).not.toContain('create-pod');
   });
 });
 

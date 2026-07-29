@@ -1,5 +1,5 @@
 export type { TourDefinition, TourId, TourStep } from './types';
-export { HOME_TOUR_ID, TOURS, findTour } from './registry';
+export { HOME_TOUR_ID, TOURS, findTour, toursForRoles } from './registry';
 export {
   isTourCompleted,
   markTourCompleted,

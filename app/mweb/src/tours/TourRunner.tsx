@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTheme } from '@mui/material';
 import { Joyride, STATUS, type EventData, type Step } from 'react-joyride';
 import { findTour } from '@duncit/tours';
+import { useLocation } from 'react-router-dom';
 import { useTours } from './TourContext';
 
 /** Anchors are declared as `data-tour="<anchor>"` on the element they describe. */
@@ -32,6 +33,7 @@ function resolveSteps(anchors: readonly { anchor: string; title: string; body: s
  */
 export function TourRunner() {
   const theme = useTheme();
+  const location = useLocation();
   const { activeTourId, finishTour } = useTours();
   const [steps, setSteps] = useState<Step[]>([]);
 
@@ -48,14 +50,13 @@ export function TourRunner() {
     // The destination route is still mounting when a tour is started from the
     // Tour Guide centre, so resolve on the next tick rather than immediately.
     const timer = globalThis.setTimeout(() => {
-      const resolved = resolveSteps(tour.steps);
-      setSteps(resolved);
-      // Nothing on this screen to point at — end rather than leave a dead tour
-      // armed. Not marked complete: the user never saw it.
-      if (resolved.length === 0) finishTour(tour.id);
+      // Nothing here to point at yet? Stay armed rather than end. A tour that
+      // describes a detail screen lands on the list that leads there, and fires
+      // when the user opens one — ending here would make it unusable.
+      setSteps(resolveSteps(tour.steps));
     }, 350);
     return () => globalThis.clearTimeout(timer);
-  }, [activeTourId, finishTour]);
+  }, [activeTourId, finishTour, location.pathname]);
 
   if (!activeTourId || steps.length === 0) return null;
 
@@ -80,6 +81,11 @@ export function TourRunner() {
         arrowColor: theme.palette.background.paper,
       }}
       onEvent={handleEvent}
+      styles={{
+        // Without this the tooltip renders beneath the app content.
+        floater: { zIndex: theme.zIndex.modal + 1 },
+        overlay: { zIndex: theme.zIndex.modal },
+      }}
       locale={{ back: 'Previous', close: 'Close', last: 'Finish', next: 'Next', skip: 'Skip' }}
     />
   );

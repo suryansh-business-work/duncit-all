@@ -59,7 +59,7 @@ export const TOURS: readonly TourDefinition[] = [
     title: 'Club Page',
     caption: 'Following a club and finding its pods',
     path: '/clubs',
-    nativeRoute: 'Clubs',
+    nativeRoute: 'Home',
     steps: [
       {
         anchor: 'club-header',
@@ -82,8 +82,8 @@ export const TOURS: readonly TourDefinition[] = [
     id: 'pod-details',
     title: 'Pod Details',
     caption: 'Reading a pod and booking a spot',
-    path: '/pod',
-    nativeRoute: 'PodDetails',
+    path: '/',
+    nativeRoute: 'Home',
     steps: [
       {
         anchor: 'pod-summary',
@@ -108,6 +108,7 @@ export const TOURS: readonly TourDefinition[] = [
     caption: 'Hosting your own pod, step by step',
     path: '/create-pod',
     nativeRoute: 'CreatePod',
+    requiredRole: 'HOST',
     steps: [
       {
         anchor: 'create-pod-basics',
@@ -180,4 +181,13 @@ export const TOURS: readonly TourDefinition[] = [
  * — a stored completion for a retired tour must not throw. */
 export function findTour(id: string): TourDefinition | undefined {
   return TOURS.find((tour) => tour.id === id);
+}
+
+/**
+ * The tours a viewer may see. A role-gated tour is hidden outright rather than
+ * shown-and-disabled: Create Pod walks through a screen a non-host cannot open,
+ * so offering it is a dead end.
+ */
+export function toursForRoles(roles: readonly string[]): TourDefinition[] {
+  return TOURS.filter((tour) => !tour.requiredRole || roles.includes(tour.requiredRole));
 }

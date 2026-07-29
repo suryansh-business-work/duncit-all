@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useQuery } from '@apollo/client';
 import {
+  APPROVED_HOSTS,
   APPROVED_VENUES,
   CLUBS,
   FINANCE_FOR_PODS,
@@ -16,6 +17,7 @@ export default function usePodPageData() {
   const { data: venuesData } = useQuery(APPROVED_VENUES);
   const { data: inventoryData } = useQuery(INVENTORY_PRODUCTS);
   const { data: usersData } = useQuery(USERS);
+  const { data: approvedHostsData } = useQuery(APPROVED_HOSTS);
   const { data: financeData } = useQuery(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
 
   const clubs = clubsData?.clubs ?? [];
@@ -41,6 +43,9 @@ export default function usePodPageData() {
     approvedVenues,
     inventoryProducts: inventoryData?.inventoryProducts ?? [],
     users: usersData?.users ?? [],
+    /** Host-column options for the pod form. `users` above stays the full
+     * directory — the complete-pod dialog labels historical hosts from it. */
+    approvedHosts: approvedHostsData?.hosts ?? [],
     finance: financeData?.publicFinanceSettings,
     clubName,
     locName,

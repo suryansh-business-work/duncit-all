@@ -241,6 +241,17 @@ export const USERS = gql`
     }
   }
 `;
+/** Host-column options. Only an approved host may be assigned to a pod — the
+ * same population `clubAdminHostSearch` serves the Club Admin pod form. */
+export const APPROVED_HOSTS = gql`
+  query ApprovedHostsForPods {
+    hosts(status: APPROVED) {
+      user_id
+      full_name
+      email
+    }
+  }
+`;
 export const CREATE = gql`
   mutation CreatePod($input: CreatePodInput!) {
     createPod(input: $input) {

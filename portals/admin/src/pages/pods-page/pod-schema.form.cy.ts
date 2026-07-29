@@ -4,6 +4,7 @@ import { makePodSchema, type PodFormConfig } from '@duncit/pod-form';
 const adminConfig: PodFormConfig = {
   showHosts: true,
   requireHosts: true,
+  singleHost: true,
   showLocationZone: true,
   showVenueSlot: true,
   showPlaceCharges: true,
@@ -82,6 +83,10 @@ describe('makePodSchema (admin config)', () => {
 
   it('rejects empty pod_hosts_id when hosts are shown', () => {
     expect(messagesFor({ ...base, pod_hosts_id: [] })).toMatch(/host/i);
+  });
+
+  it('rejects a second host — a pod is settled against exactly one', () => {
+    expect(messagesFor({ ...base, pod_hosts_id: ['host-1', 'host-2'] })).toMatch(/only one host/i);
   });
 
   it('requires a slot only while the dates are missing (slot picker on)', () => {

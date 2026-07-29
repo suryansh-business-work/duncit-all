@@ -82,6 +82,28 @@ describe('makePodSchema', () => {
     expect(res.success).toBe(true);
   });
 
+  it('rejects a second host when singleHost is on', () => {
+    const paths = errorPaths(
+      makeConfig({ showHosts: true, singleHost: true }),
+      validValues({ pod_hosts_id: ['u1', 'u2'] }),
+    );
+    expect(paths).toContain('pod_hosts_id');
+  });
+
+  it('accepts exactly one host when singleHost is on', () => {
+    const res = makePodSchema(makeConfig({ showHosts: true, singleHost: true })).safeParse(
+      validValues({ pod_hosts_id: ['u1'] }),
+    );
+    expect(res.success).toBe(true);
+  });
+
+  it('allows several hosts when singleHost is off', () => {
+    const res = makePodSchema(makeConfig({ showHosts: true })).safeParse(
+      validValues({ pod_hosts_id: ['u1', 'u2'] }),
+    );
+    expect(res.success).toBe(true);
+  });
+
   it('requires a venue for physical pods', () => {
     const paths = errorPaths(makeConfig(), validValues({ venue_id: '' }));
     expect(paths).toContain('venue_id');

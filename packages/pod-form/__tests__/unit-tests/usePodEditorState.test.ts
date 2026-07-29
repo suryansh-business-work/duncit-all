@@ -43,6 +43,22 @@ describe('usePodEditorState', () => {
     expect(result.current.initialValues.pod_title).toBe('Existing');
   });
 
+  it('collapses a legacy multi-host pod to its first host when singleHost is on', () => {
+    const { result } = renderHook(() =>
+      usePodEditorState(baseArgs({ config: makeConfig({ showHosts: true, singleHost: true }) })),
+    );
+    act(() => result.current.openEdit({ id: 'doc-3', pod_hosts_id: ['u1', 'u2'] }));
+    expect(result.current.initialValues.pod_hosts_id).toEqual(['u1']);
+  });
+
+  it('keeps every host when singleHost is off', () => {
+    const { result } = renderHook(() =>
+      usePodEditorState(baseArgs({ config: makeConfig({ showHosts: true }) })),
+    );
+    act(() => result.current.openEdit({ id: 'doc-4', pod_hosts_id: ['u1', 'u2'] }));
+    expect(result.current.initialValues.pod_hosts_id).toEqual(['u1', 'u2']);
+  });
+
   it('creates a pod and reports the save meta', async () => {
     const submitCreate = vi.fn().mockResolvedValue({ id: 'new' });
     const onSaved = vi.fn();

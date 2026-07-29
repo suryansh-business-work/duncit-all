@@ -17,7 +17,8 @@ interface Props {
   clubs: any[];
   venues: any[];
   inventoryProducts: any[];
-  users: any[];
+  /** Host-column options — approved hosts only. */
+  hosts: any[];
   onSubmit: (values: PodFormValues, options: { draft: boolean }) => Promise<void> | void;
   finance?: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
   onPickImage: () => Promise<string | null>;
@@ -38,7 +39,7 @@ export default function PodFormDialog({
   clubs,
   venues,
   inventoryProducts,
-  users,
+  hosts,
   onSubmit,
   finance,
   onPickImage,
@@ -58,7 +59,7 @@ export default function PodFormDialog({
       error={opError}
       clubs={clubs}
       venues={venues}
-      users={users}
+      users={hosts}
       products={inventoryProducts}
       finance={finance}
       getClubVenueIds={getClubVenueIds}

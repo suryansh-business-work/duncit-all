@@ -49,8 +49,13 @@ export default function usePodEditorState({
   };
 
   const openEdit = (pod: any) => {
+    const values = podToFormValues(pod);
+    // A pod saved before the single-host rule can still carry several ids, and
+    // only the first is ever paid or rendered. Hydrate the field with exactly
+    // what it will save, so the picker never shows one host while holding two.
+    if (config.singleHost) values.pod_hosts_id = values.pod_hosts_id.slice(0, 1);
     setEditingPod(pod);
-    setInitialValues(podToFormValues(pod));
+    setInitialValues(values);
     setOpError(null);
     setOpen(true);
   };

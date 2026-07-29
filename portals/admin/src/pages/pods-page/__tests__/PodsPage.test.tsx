@@ -87,6 +87,10 @@ vi.mock('../usePodPageData', () => ({
     approvedVenues: [{ id: 'venue1', venue_name: 'Lotus Studio' }],
     inventoryProducts: [],
     users: [{ user_id: 'u1', full_name: 'Jane Doe' }],
+    approvedHosts: [
+      { user_id: 'u1', full_name: 'Jane Doe' },
+      { user_id: 'u2', full_name: 'Raj Mehta' },
+    ],
     finance: { currency_symbol: '₹' },
     clubName: (id: string) => `Club<${id}>`,
     locName: (id: string) => `Loc<${id}>`,
@@ -181,13 +185,20 @@ vi.mock('../ReleaseSummaryDialog', () => ({
 }));
 
 vi.mock('../PodFormDialog', () => ({
-  default: (props: { open: boolean; editing: boolean; config: Record<string, unknown>; clubs: unknown[] }) => (
+  default: (props: {
+    open: boolean;
+    editing: boolean;
+    config: Record<string, unknown>;
+    clubs: unknown[];
+    hosts: { user_id: string }[];
+  }) => (
     <div
       data-testid="pod-form-dialog"
       data-open={String(props.open)}
       data-editing={String(props.editing)}
       data-config={JSON.stringify(props.config)}
       data-club-count={props.clubs.length}
+      data-host-ids={props.hosts.map((h) => h.user_id).join(',')}
     />
   ),
 }));
@@ -323,11 +334,19 @@ describe('PodsPage / pod form config', () => {
     expect(config).toEqual({
       nativeParity: true,
       requireHosts: true,
+      singleHost: true,
       showLocationZone: true,
       showInventory: true,
       showFinance: true,
       showIsActive: true,
     });
+  });
+
+  it('feeds the host column with approved hosts, not the whole user directory', () => {
+    renderPage();
+    expect(screen.getByTestId('pod-form-dialog')).toHaveAttribute('data-host-ids', 'u1,u2');
+    // The complete-pod dialog still labels historical hosts from the full directory.
+    expect(screen.getByTestId('complete-user-count')).toHaveTextContent('1');
   });
 
   it('hands the same config to the editor hook that the dialog renders', () => {

@@ -11,7 +11,7 @@ const routeNames = (path: string) => stateFor(path)?.routes.map((r) => r.name);
 
 describe('navigation + web-fonts config', () => {
   afterEach(() => {
-    useAuthStore.setState({ token: null });
+    useAuthStore.setState({ token: null, surveyCompleted: true });
     consumePendingBooking();
   });
 
@@ -43,6 +43,14 @@ describe('navigation + web-fonts config', () => {
   it('parks a signed-out booking link and sends the user to Login', () => {
     expect(routeNames('/booking/bk-1')).toEqual(['Login']);
     expect(consumePendingBooking()).toBe('bk-1');
+  });
+
+  it('parks a booking link for a signed-in user with the survey still pending', () => {
+    // The Booking screen is not in the rendered stack mid-survey either, so the
+    // link has to be parked and replayed — not dropped by React Navigation.
+    useAuthStore.setState({ token: 'jwt', surveyCompleted: false });
+    expect(routeNames('/booking/bk-2')).toEqual(['Survey']);
+    expect(consumePendingBooking()).toBe('bk-2');
   });
 
   it('leaves non-booking paths alone while signed out', () => {

@@ -85,8 +85,20 @@ export default function BackoutRefundInfoCards({ request, sym }: Readonly<Props>
       <InfoCard title="Member">
         <InfoRow variant="split" label="Name" value={request.user_name ?? '—'} />
         <InfoRow variant="split" label="Email" value={request.user_email ?? '—'} />
+        <InfoRow variant="split" label="Phone" value={request.user_phone ?? '—'} />
+        <InfoRow variant="split" label="User ID" value={request.user_id} />
         <InfoRow variant="split" label="Joined" value={fmtDate(request.joined_at)} />
         <InfoRow variant="split" label="Backed out" value={fmtDate(request.backed_out_at)} />
+      </InfoCard>
+
+      <InfoCard title="Replacement">
+        <InfoRow variant="split" label="Name" value={request.replacement_user_name ?? '—'} />
+        <InfoRow variant="split" label="Email" value={request.replacement_user_email ?? '—'} />
+        <InfoRow variant="split" label="User ID" value={request.replacement_user_id ?? '—'} />
+        <Typography variant="caption" color="text.secondary">
+          The member whose join closed this Backout. Blank on requests filled
+          before Duncit started recording it.
+        </Typography>
       </InfoCard>
 
       <InfoCard title="Payment">

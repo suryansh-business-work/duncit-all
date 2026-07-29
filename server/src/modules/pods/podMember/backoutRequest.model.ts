@@ -28,6 +28,12 @@ export interface IBackoutRequest extends Document {
   /** 1-based backout attempt for this user+pod (each request = one attempt). */
   attempt_no: number;
   status: BackoutStatus;
+  /**
+   * The member whose join closed this request (set once, with SPOT_FILLED).
+   * Null on CANCELLED/IN_PROCESS requests and on any request filled before
+   * this was recorded — Finance renders those as "—".
+   */
+  replacement_user_id: Types.ObjectId | null;
   /** Refund snapshot taken at request time (what the user was shown). */
   payment_amount: number | null;
   deduction_pct: number;
@@ -57,6 +63,7 @@ const backoutRequestSchema = new Schema<IBackoutRequest>(
     payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
     attempt_no: { type: Number, required: true, min: 1 },
     status: { type: String, enum: BACKOUT_STATUSES, default: 'IN_PROCESS', index: true },
+    replacement_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     payment_amount: { type: Number, default: null },
     deduction_pct: { type: Number, default: 0 },
     refund_amount: { type: Number, default: null },

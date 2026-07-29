@@ -159,6 +159,29 @@ describe('EarnScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
   });
 
+  // Native used to build this copy itself and omitted the request id, so a
+  // phone user could not quote it to support while a web user could. Both now
+  // render it from @duncit/onboarding.
+  it('names the request id in the blocked-card notice, like mWeb', async () => {
+    mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
+    mockRequest.mockResolvedValue({
+      myMeetings: [
+        {
+          id: 'm1',
+          kind: 'HOST',
+          status: 'SCHEDULED',
+          request_no: 'DUN-MTG-000042',
+          requested_at: null,
+          scheduled_at: null,
+        },
+      ],
+    });
+    renderWithProviders(<EarnScreen />);
+    await waitFor(() =>
+      expect(screen.getByText(/\(Request ID: DUN-MTG-000042\)/)).toBeOnTheScreen(),
+    );
+  });
+
   it('shows the notice without a time when the meeting has no date', async () => {
     mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
     mockRequest.mockResolvedValue({

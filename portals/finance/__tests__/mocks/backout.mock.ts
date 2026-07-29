@@ -176,12 +176,16 @@ interface DetailRequestMock {
   user_id: string;
   user_name: string | null;
   user_email: string | null;
+  user_phone: string | null;
   status: string;
   backout_status: string;
   attempt_no: number;
   backout_attempts_used: number;
   max_backout_attempts: number;
   replacement_confirmed: boolean;
+  replacement_user_id: string | null;
+  replacement_user_name: string | null;
+  replacement_user_email: string | null;
   joined_at: string;
   backed_out_at: string | null;
   refund_status: string;
@@ -225,12 +229,16 @@ export const makeBackoutDetail = (over: Partial<DetailRequestMock> = {}): Detail
   user_id: 'u1',
   user_name: 'Riya',
   user_email: 'riya@x.com',
+  user_phone: '+91 9876543210',
   status: 'BACKED_OUT',
   backout_status: 'SPOT_FILLED',
   attempt_no: 1,
   backout_attempts_used: 1,
   max_backout_attempts: 3,
   replacement_confirmed: true,
+  replacement_user_id: 'u2',
+  replacement_user_name: 'Priya',
+  replacement_user_email: 'priya@x.com',
   joined_at: '2024-01-01T09:00:00Z',
   backed_out_at: '2024-01-02T09:00:00Z',
   refund_status: 'PENDING',

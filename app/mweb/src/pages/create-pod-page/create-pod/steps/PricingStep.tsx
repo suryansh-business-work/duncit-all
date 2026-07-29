@@ -76,8 +76,10 @@ export default function PricingStep({ form, products, showProducts, preview }: R
               />
             )}
           />
+          {/* `products` arrives already filtered to the pod's club category, so
+              empty means "none in this category", not "none at all". */}
           {productsEnabled && products.length === 0 && (
-            <Alert severity="info">No approved products are available to attach right now.</Alert>
+            <Alert severity="info">No products available for this category.</Alert>
           )}
           {productsEnabled && (
             <Controller

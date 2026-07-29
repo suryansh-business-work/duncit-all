@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { filterProductsForClub } from '@/utils/pod-product-category';
+import { filterProductsForClub } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,

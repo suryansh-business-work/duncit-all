@@ -341,6 +341,51 @@ describe('Suggested Ticket Prices', () => {
   });
 });
 
+describe('Step 4 products — category empty state', () => {
+  // `products` reaches this step already filtered to the pod's club category
+  // (CreatePodStepper -> filterProductsForClub), so an empty list means the
+  // category has nothing to attach — not that the catalogue is empty.
+  const renderProducts = (products: unknown[]) => {
+    const { result } = renderHook(() =>
+      useForm<CreatePodFormValues>({
+        defaultValues: { ...blankCreatePodForm, ...paidPod, products_enabled: true },
+      }),
+    );
+    return renderWithProviders(
+      <PricingStep
+        form={result.current}
+        products={products as never}
+        showProducts
+        finance={finance}
+        pricing={
+          {
+            podAmount: 0,
+            noOfSpots: 0,
+            payableSpots: 0,
+            slotPrice: 0,
+            venueTotal: 0,
+            isVenueShortfall: false,
+          } as never
+        }
+      />,
+    );
+  };
+
+  it('tells the host when the pod category has no attachable products', () => {
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
+    renderProducts([]);
+    expect(screen.getByTestId('products-empty')).toHaveTextContent(
+      'No products available for this category.',
+    );
+  });
+
+  it('shows no empty state once the category has products', () => {
+    mockedEarnings.mockReturnValue({ projection: null, waterfall: null, isLoading: false });
+    renderProducts([{ id: 'p1', product_name: 'Shuttle', unit_cost: 100, available_count: 5 }]);
+    expect(screen.queryByTestId('products-empty')).toBeNull();
+  });
+});
+
 describe('Create Pod button gating', () => {
   const setup = () =>
     renderWithProviders(

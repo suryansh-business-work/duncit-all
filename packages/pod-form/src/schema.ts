@@ -47,6 +47,11 @@ function refineVenue(values: PodFormValues, ctx: z.RefinementCtx, config: PodFor
   if (config.showHosts && (config.requireHosts ?? true) && values.pod_hosts_id.length < 1) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_hosts_id'], message: 'Add at least one host' });
   }
+  // `openEdit` already collapses a legacy multi-host pod, so the picker cannot
+  // reach this — it is the invariant for anything else calling buildPodInput.
+  if (config.showHosts && config.singleHost && values.pod_hosts_id.length > 1) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['pod_hosts_id'], message: 'Select only one host' });
+  }
   if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_id'], message: 'Select a venue' });
   }

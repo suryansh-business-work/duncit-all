@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getSafeRedirectPath } from '../utils/redirect';
 import {
   Alert,
   Box,
@@ -20,6 +21,7 @@ import SubmitFooter from './signup-survey/SubmitFooter';
 
 export default function SignupSurveyPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data, loading, error } = useQuery(SURVEY_DATA, {
     fetchPolicy: 'cache-and-network',
   });
@@ -81,7 +83,9 @@ export default function SignupSurveyPage() {
     try {
       await surveySchema.validate({ category_ids }, { abortEarly: false });
       await saveInterests({ variables: { category_ids } });
-      navigate('/');
+      // The survey is a gate: resume whatever deep link sent the user to login
+      // (an emailed /booking/:id) instead of dumping them on the home page.
+      navigate(getSafeRedirectPath(new URLSearchParams(location.search).get('redirect')) || '/');
     } catch (e: any) {
       setOpError(e?.errors?.[0] ?? e.message ?? 'Could not save your interests');
     }

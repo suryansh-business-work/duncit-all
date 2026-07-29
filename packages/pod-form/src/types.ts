@@ -56,7 +56,7 @@ export interface PodFormValues {
  * admin-only sections off and turn the venue-slot picker on.
  */
 export interface PodFormConfig {
-  /** Multi-select host picker + `pod_hosts_id` min-1 rule. */
+  /** Host picker + `pod_hosts_id` min-1 rule. */
   showHosts: boolean;
   /** Reserved location/zone editing (no editor exists in either source form yet). */
   showLocationZone: boolean;
@@ -79,6 +79,13 @@ export interface PodFormConfig {
    * turns it off — the server injects the acting admin when none is supplied.
    */
   requireHosts?: boolean;
+  /**
+   * Exactly one host: the picker becomes a single-select and more than one id
+   * is a validation error. Admin turns it on (finance settles against
+   * `pod_hosts_id[0]`, so a second host is never paid). Off when omitted —
+   * Club Admin keeps assigning several.
+   */
+  singleHost?: boolean;
 }
 
 /** A host option in the assign-host pickers. */

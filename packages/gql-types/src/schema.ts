@@ -474,10 +474,19 @@ export type BackoutRefundRequest = {
   refund_threshold_pct: Scalars['Int']['output'];
   /** True once a replacement booked the released seat (Spot Filled). */
   replacement_confirmed: Scalars['Boolean']['output'];
+  replacement_user_email?: Maybe<Scalars['String']['output']>;
+  /**
+   * The member whose join closed this request. Null while the request is open
+   * and on requests filled before this was recorded.
+   */
+  replacement_user_id?: Maybe<Scalars['ID']['output']>;
+  replacement_user_name?: Maybe<Scalars['String']['output']>;
   status: MembershipStatus;
   user_email?: Maybe<Scalars['String']['output']>;
   user_id: Scalars['ID']['output'];
   user_name?: Maybe<Scalars['String']['output']>;
+  /** Contact number of the member being refunded (null when none is on file). */
+  user_phone?: Maybe<Scalars['String']['output']>;
 };
 
 /** Server-side table page for the shared table engine (backoutRefundRequestsTable). */
@@ -552,6 +561,23 @@ export type BillingDetails = {
   phone: Scalars['String']['output'];
   pincode: Scalars['String']['output'];
   state: Scalars['String']['output'];
+};
+
+/** One booking resolved from a booking deep link (the receipt email's View Booking CTA). */
+export type BookingDetail = {
+  __typename?: 'BookingDetail';
+  /** Club slug — first path segment of the canonical pod URL. */
+  club_slug: Scalars['String']['output'];
+  /** PodMember id — the booking identifier carried in the deep link. */
+  id: Scalars['ID']['output'];
+  joined_at: Scalars['String']['output'];
+  payment_id?: Maybe<Scalars['ID']['output']>;
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  /** Pod slug — second path segment of the canonical pod URL. */
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  status: MembershipStatus;
 };
 
 export type BouncerActor = {
@@ -3294,6 +3320,74 @@ export type HostPodDeleteImpact = {
   refund_total: Scalars['Float']['output'];
   /** SUCCESS payments that will be marked for refund on delete. */
   refundable_payment_count: Scalars['Int']['output'];
+};
+
+/**
+ * Club-admin contact card ("Need help?"). Carries PII, so it is only ever
+ * served through hostPodPendingView (pod hosts / co-hosts).
+ */
+export type HostPodPendingClubAdmin = {
+  __typename?: 'HostPodPendingClubAdmin';
+  email?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  /** Dialable number with its extension when stored (e.g. "+91 9876543210"). */
+  phone?: Maybe<Scalars['String']['output']>;
+  profile_photo?: Maybe<Scalars['String']['output']>;
+  user_id: Scalars['ID']['output'];
+  /**
+   * WhatsApp number with its extension — the client strips non-digits to build
+   * the wa.me link. Null when the admin has no WhatsApp number on file.
+   */
+  whatsapp?: Maybe<Scalars['String']['output']>;
+};
+
+/**
+ * Venue contact card for the host's post-create waiting screen. Carries PII, so
+ * it is only ever served through hostPodPendingView (pod hosts / co-hosts).
+ */
+export type HostPodPendingVenue = {
+  __typename?: 'HostPodPendingVenue';
+  /**
+   * Single-line postal address (line1, line2, locality, city, state, pincode,
+   * country — blanks skipped). Null when the venue has no address on file.
+   */
+  address?: Maybe<Scalars['String']['output']>;
+  /**
+   * The venue owner — the person who decides the slot request. Null when the
+   * venue has no owner name on file.
+   */
+  contact_person?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  /** Latitude for the 'View on Map' link. Null when the venue is not geocoded. */
+  lat?: Maybe<Scalars['Float']['output']>;
+  lng?: Maybe<Scalars['Float']['output']>;
+  /** Dialable number as stored on the venue (no extension is collected for it). */
+  phone?: Maybe<Scalars['String']['output']>;
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/**
+ * Everything the post-create waiting screen renders. The venue's decision is
+ * pod.venue_approval_status — the query works at ANY approval status so the
+ * screen can poll and flip once the venue approves or declines.
+ */
+export type HostPodPendingView = {
+  __typename?: 'HostPodPendingView';
+  /** The pod's club category name (empty when the club has none). */
+  category_name: Scalars['String']['output'];
+  /** The club's first assigned admin. Null when the club has none. */
+  club_admin?: Maybe<HostPodPendingClubAdmin>;
+  currency_symbol: Scalars['String']['output'];
+  /**
+   * Projected host payout for this pod — the earnings waterfall's
+   * host_receives, billed on payable spots (total - 1, host's seat is free).
+   */
+  expected_earnings: Scalars['Float']['output'];
+  /** The pod itself, in the same public shape as the pod query. */
+  pod: Pod;
+  /** Null for virtual pods and location-only pods (no venue attached). */
+  venue?: Maybe<HostPodPendingVenue>;
 };
 
 export type HostRequest = {
@@ -8346,12 +8440,10 @@ export type PodTablePage = {
   total: Scalars['Int']['output'];
 };
 
+/** FREE is virtual-only — physical pods must be PAID. */
 export type PodType =
-  | 'NATIVE_FREE'
-  | 'NATIVE_PAID'
-  | 'NATIVE_PAID_PREMIUM'
-  | 'NON_NATIVE_FREE'
-  | 'NON_NATIVE_PAID';
+  | 'FREE'
+  | 'PAID';
 
 /** Venue's decision on the pod's slot request — PENDING pods are offline until APPROVED. */
 export type PodVenueApproval =
@@ -8937,6 +9029,8 @@ export type Query = {
   backoutRefundRequestsTable: BackoutRefundRequestTablePage;
   badge?: Maybe<Badge>;
   badges: Array<Badge>;
+  /** Resolve a booking deep link. Only the user who owns the booking may read it. */
+  bookingDetail: BookingDetail;
   /** A single callback request by id — backs the agent callback detail page (deep-linkable). */
   bouncerCallbackRequest?: Maybe<BouncerCallbackRequest>;
   bouncerCallbackRequests: BouncerCallbackRequestPage;
@@ -9072,6 +9166,12 @@ export type Query = {
   hostLeads: Array<HostLead>;
   hostLeadsTable: HostLeadTablePage;
   hostPodDeleteImpact: HostPodDeleteImpact;
+  /**
+   * Host-only view backing the waiting screen shown after creating a pod whose
+   * venue slot request is PENDING. Only the pod's hosts and its non-declined
+   * co-hosts may read it — venue/admin contact details are PII.
+   */
+  hostPodPendingView: HostPodPendingView;
   hostRequest?: Maybe<HostRequest>;
   hostRequests: Array<HostRequest>;
   hostRequestsTable: HostRequestTablePage;
@@ -9355,6 +9455,14 @@ export type Query = {
   stories: Array<Post>;
   /** Owner-only list of who viewed a story, newest first (Bug 4). */
   storyViewers: Array<StoryView>;
+  /**
+   * Suggested ₹x99 ticket prices for Create-a-Pod Step 4 — the same input
+   * surface as potentialPodEarnings minus the ticket price. Walks 99, 199, 299…
+   * and returns the first candidates whose projected host payout is strictly
+   * positive: up to 5 rows, fewer near the ₹99,999 cap, empty when no candidate
+   * earns the host anything. A ₹0-or-negative payout is never suggested.
+   */
+  suggestedTicketPrices: Array<SuggestedTicketPrice>;
   supportChatMessages: Array<SupportChatMessage>;
   supportChatSessions: SupportChatSessionPage;
   /** Transcript of a chat (.txt or .docx) — accessible to its owner or a support agent. */
@@ -9544,6 +9652,11 @@ export type QueryBadgeArgs = {
 
 export type QueryBadgesArgs = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryBookingDetailArgs = {
+  booking_id: Scalars['ID']['input'];
 };
 
 
@@ -10032,6 +10145,11 @@ export type QueryHostLeadsTableArgs = {
 
 
 export type QueryHostPodDeleteImpactArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryHostPodPendingViewArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -10757,6 +10875,13 @@ export type QueryStoriesArgs = {
 
 export type QueryStoryViewersArgs = {
   post_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QuerySuggestedTicketPricesArgs = {
+  no_of_spots: Scalars['Int']['input'];
+  venue_amount?: InputMaybe<Scalars['Float']['input']>;
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
 
@@ -11500,6 +11625,17 @@ export type SubmitJobApplicationInput = {
 export type SubscribeNewsletterInput = {
   email: Scalars['String']['input'];
   source?: InputMaybe<NewsletterSource>;
+};
+
+/**
+ * One row of the Create-a-Pod Step-4 "Suggested Ticket Prices" table: an ₹x99
+ * candidate ticket price and the host's projected payout at that price (every
+ * payable spot sold, all deductions applied at the caller's effective rates).
+ */
+export type SuggestedTicketPrice = {
+  __typename?: 'SuggestedTicketPrice';
+  host_receives: Scalars['Float']['output'];
+  price: Scalars['Float']['output'];
 };
 
 export type SuperCategoryCount = {

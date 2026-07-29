@@ -102,6 +102,14 @@ export function PricingStep({ form, products, showProducts, finance, pricing }: 
               Attach products to this pod
             </Text>
           </XStack>
+          {/* `products` arrives already filtered to the pod's club category, so
+              empty means "none in this category", not "none at all". Twin of
+              mWeb's PricingStep alert (rule 27). */}
+          {productsEnabled && products.length === 0 ? (
+            <Text testID="products-empty" fontSize={13} color="$muted">
+              No products available for this category.
+            </Text>
+          ) : null}
           {productsEnabled ? (
             <Controller
               control={control}

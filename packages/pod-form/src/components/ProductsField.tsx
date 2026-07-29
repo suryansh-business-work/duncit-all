@@ -1,6 +1,6 @@
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Button, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Button, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { getProductRequestTotal } from '../build-input';
 import type { PodFormValues } from '../types';
@@ -75,6 +75,11 @@ export default function ProductsField({ products }: Readonly<Props>) {
           </Stack>
         );
       })}
+      {/* `products` is already narrowed to the pod's club category by
+          ProductsSection, so empty means none in this category. */}
+      {products.length === 0 && (
+        <Alert severity="info">No products available for this category.</Alert>
+      )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
         <Button startIcon={<AddIcon />} onClick={() => append({ product_id: '', quantity: 1 })} disabled={products.length === 0} variant="outlined">
           Add approved product

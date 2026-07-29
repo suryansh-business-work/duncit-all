@@ -79,6 +79,40 @@ describe('BasicSection', () => {
     expect(screen.getAllByText(/Alice/).length).toBeGreaterThanOrEqual(1);
   });
 
+  it('renders a single-select host field that replaces the id instead of appending', async () => {
+    const user = userEvent.setup();
+    const ref = renderBasic(
+      makeData({ clubs: CLUBS, users: USERS, config: makeConfig({ showHosts: true, singleHost: true }) }),
+    );
+    // A brand-new pod starts with no host, so nothing is selected yet.
+    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('combobox', { name: /Host/ }));
+    await user.click(within(await screen.findByRole('listbox')).getByText('Alice'));
+    expect(ref.current?.getValues('pod_hosts_id')).toEqual(['u1']);
+    // Picking again swaps the host rather than adding a second one.
+    await user.click(screen.getByRole('combobox', { name: /Host/ }));
+    await user.click(within(await screen.findByRole('listbox')).getByText('bob@x.com'));
+    expect(ref.current?.getValues('pod_hosts_id')).toEqual(['u2']);
+  });
+
+  it('shows only the first host of an already multi-host pod in the single-select', () => {
+    renderBasic(
+      makeData({ clubs: CLUBS, users: USERS, config: makeConfig({ showHosts: true, singleHost: true }) }),
+      { pod_hosts_id: ['u1', 'u2'] },
+    );
+    expect(screen.getByRole('combobox', { name: /Host/ })).toHaveTextContent('Alice');
+    expect(screen.queryByText('bob@x.com')).not.toBeInTheDocument();
+  });
+
+  it('labels a single host that is no longer in the options instead of rendering blank', () => {
+    renderBasic(
+      makeData({ clubs: CLUBS, users: USERS, config: makeConfig({ showHosts: true, singleHost: true }) }),
+      // A host whose approval was revoked drops out of the option list.
+      { pod_hosts_id: ['revokedhost'] },
+    );
+    expect(screen.getByRole('combobox', { name: /Host/ })).toHaveTextContent('revoke');
+  });
+
   it('shows club and host validation errors', () => {
     const ref = renderBasic(
       makeData({ clubs: CLUBS, users: USERS, config: makeConfig({ showHosts: true }) }),

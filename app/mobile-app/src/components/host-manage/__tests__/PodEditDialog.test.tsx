@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PodEditDialog } from '@/components/host-manage/PodEditDialog';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -107,5 +108,28 @@ describe('PodEditDialog', () => {
     renderWithProviders(<PodEditDialog pod={pod} onClose={onClose} onSaved={jest.fn()} />);
     fireEvent.press(screen.getByTestId('pod-edit-cancel'));
     expect(onClose).toHaveBeenCalled();
+  });
+
+  // The card caps its height at 86%, but RN defaults flexShrink to 0, so ANY
+  // view between the card and the ScrollView sizes to its full content and
+  // spills the upload box and the buttons onto the backdrop outside the card.
+  // jest runs no layout pass, so these assert the structure that makes the
+  // overflow impossible rather than the pixels.
+  describe('layout contract', () => {
+    it('puts no unshrinkable wrapper between the capped card and the scroller', () => {
+      renderWithProviders(<PodEditDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
+      expect(screen.UNSAFE_queryAllByType(SafeAreaView)).toHaveLength(0);
+    });
+
+    it('keeps the action buttons outside the scroller so they stay pinned', () => {
+      renderWithProviders(<PodEditDialog pod={pod} onClose={jest.fn()} onSaved={jest.fn()} />);
+      let node = screen.getByTestId('pod-edit-save').parent;
+      const crossed: string[] = [];
+      while (node) {
+        if (typeof node.type === 'string') crossed.push(node.type);
+        node = node.parent;
+      }
+      expect(crossed).not.toContain('RCTScrollView');
+    });
   });
 });

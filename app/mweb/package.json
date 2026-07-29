@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.5.106",
+  "version": "1.5.117",
   "private": true,
   "type": "module",
   "scripts": {
@@ -29,6 +29,7 @@
     "@duncit/geo": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/onboarding": "workspace:*",
     "@duncit/media-picker": "workspace:*",
     "@duncit/regex": "workspace:*",
     "@duncit/slack": "workspace:*",

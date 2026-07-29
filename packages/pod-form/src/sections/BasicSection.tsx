@@ -2,22 +2,17 @@ import { MenuItem, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mu
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { useFormContext, useWatch } from 'react-hook-form';
+import HostSelectField from '../components/HostSelectField';
 import HostsField from '../components/HostsField';
 import RhfTextField from '../components/RhfTextField';
 import { usePodFormData } from '../context';
 import type { PodFormValues } from '../types';
 
 export default function BasicSection() {
-  const { config, clubs, users, searchHosts } = usePodFormData();
+  const { config, clubs, searchHosts } = usePodFormData();
   const { control, register, setValue, formState: { errors } } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const clubId = useWatch({ control, name: 'club_id' });
-  const hosts = useWatch({ control, name: 'pod_hosts_id' });
-
-  const userName = (id: string) => {
-    const user = users.find((u) => u.user_id === id);
-    return user?.full_name || user?.email || id.slice(0, 6);
-  };
 
   const handleClubChange = (value: string) => {
     setValue('club_id', value, { shouldValidate: true });
@@ -70,32 +65,7 @@ export default function BasicSection() {
         ))}
       </TextField>
       {config.showHosts && searchHosts && <HostsField />}
-      {config.showHosts && !searchHosts && (
-        <TextField
-          select
-          label="Hosts"
-          value={hosts}
-          onChange={(event) => {
-            const v = event.target.value as unknown as string[] | string;
-            /* v8 ignore next -- defensive: the MUI multi-select always yields a string[] */
-            setValue('pod_hosts_id', typeof v === 'string' ? v.split(',') : v, { shouldValidate: true });
-          }}
-          SelectProps={{
-            multiple: true,
-            renderValue: (sel: unknown) => (sel as string[]).map(userName).join(', '),
-          }}
-          fullWidth
-          required
-          error={!!errors.pod_hosts_id}
-          helperText={errors.pod_hosts_id?.message}
-        >
-          {users.map((u) => (
-            <MenuItem key={u.user_id} value={u.user_id}>
-              {u.full_name || u.email}
-            </MenuItem>
-          ))}
-        </TextField>
-      )}
+      {config.showHosts && !searchHosts && <HostSelectField />}
       <TextField
         label="Hashtags (space or comma separated)"
         fullWidth

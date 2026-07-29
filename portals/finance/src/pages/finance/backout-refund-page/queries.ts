@@ -81,12 +81,16 @@ export const BACKOUT_REFUND_DETAIL = gql`
       user_id
       user_name
       user_email
+      user_phone
       status
       backout_status
       attempt_no
       backout_attempts_used
       max_backout_attempts
       replacement_confirmed
+      replacement_user_id
+      replacement_user_name
+      replacement_user_email
       joined_at
       backed_out_at
       refund_status
@@ -251,7 +255,16 @@ export interface BackoutRefundDetailPod {
   club: BackoutRefundClub | null;
 }
 
+/**
+ * The detail query asks for more than a list row: the contact details Finance
+ * needs to action the refund, and the member whose join closed the request.
+ * These stay off `BACKOUT_REFUND_ROW_FIELDS` — the table renders none of them.
+ */
 export interface BackoutRefundDetail extends Omit<BackoutRefundRequest, 'pod'> {
+  user_phone: string | null;
+  replacement_user_id: string | null;
+  replacement_user_name: string | null;
+  replacement_user_email: string | null;
   events: BackoutEvent[];
   pod: BackoutRefundDetailPod | null;
 }

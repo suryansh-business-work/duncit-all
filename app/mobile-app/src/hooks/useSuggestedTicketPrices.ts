@@ -24,7 +24,16 @@ export function useSuggestedTicketPrices(
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (!enabled || noOfSpots <= 1) return undefined;
+    // Clear before bailing out, or the previous ladder survives the bail: open
+    // the modal at 5 spots, close it, drop to 1 spot, reopen — without this the
+    // stale 5-spot suggestions are still on screen. mWeb re-keys on the query
+    // variables and gets [] back, so this is what keeps the two surfaces equal.
+    if (!enabled || noOfSpots <= 1) {
+      setPrices([]);
+      setIsLoading(false);
+      setError(false);
+      return undefined;
+    }
     let active = true;
     setIsLoading(true);
     setError(false);

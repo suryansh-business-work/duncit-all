@@ -261,7 +261,7 @@ Every key absent from the server pod comes back as its `blankPodFormValues` defa
 | `config` | `PodFormConfig` | yes | — | Feature flags gating both sections and schema branches. |
 | `clubs` | `any[]` | yes | — | Club options for the club select. |
 | `venues` | `any[]` | yes | — | Venue options, narrowed by the selected club. |
-| `users` | `any[]` | no | `[]` | Local host options when `searchHosts` is not supplied. |
+| `users` | `any[]` | no | `[]` | Local host options when `searchHosts` is not supplied. Admin passes its approved hosts here (`hosts(status: APPROVED)`), not the user directory. |
 | `products` | `any[]` | no | `[]` | Approved product catalogue for the products section. |
 | `finance` | `PodFormFinance` | no | `undefined` | `platform_fee_pct` / `gst_pct` / `currency_symbol` for the live breakdown. |
 | `getClubVenueIds` | `(club: any) => string[]` | yes | — | Portal-specific accessor for a club's linked venue ids. |
@@ -311,8 +311,9 @@ them straight to `MediaPickerDialog`.
 
 | Flag | Type | Default | Turns on |
 | --- | --- | --- | --- |
-| `showHosts` | `boolean` | — | Host multi-select. |
+| `showHosts` | `boolean` | — | Host picker. |
 | `requireHosts` | `boolean` | `true` | The min-1 host rule (Club Admin sets `false`). |
+| `singleHost` | `boolean` | `false` | One host only: single-select picker + the max-1 rule (Admin sets `true`). |
 | `showLocationZone` | `boolean` | — | Reserved; no editor exists yet. |
 | `showVenueSlot` | `boolean` | — | Slot picker **and** the `venue_slot_id` key in the input. |
 | `showPlaceCharges` | `boolean` | — | Per-venue place charges editor. |
@@ -336,15 +337,25 @@ worked examples above are the honest version — a screenshot or a fake would go
 
 ## Config is the only fork — never branch on the portal
 
-`PodFormConfig` is the whole compatibility surface: `showHosts`, `requireHosts`,
+`PodFormConfig` is the whole compatibility surface: `showHosts`, `requireHosts`, `singleHost`,
 `showLocationZone`, `showVenueSlot`, `showPlaceCharges`, `showInventory`, `showFinance`,
 `showIsActive`, `showProducts`, `showReel`. Start from `makeNativeParityPodConfig({ showProducts })`,
 which mirrors the native create-pod flow (venue slots on, place charges on, reel on, hosts optional).
 Club Admin uses it as-is; Admin spreads its extras (`showFinance`, `showInventory`, `showIsActive`,
-`requireHosts: true`) on top.
+`requireHosts: true`, `singleHost: true`) on top.
 
 `requireHosts: false` is not a relaxation to copy casually — the server injects the acting admin as
 host when none is supplied, which is true for the Club Admin path and not the Admin one.
+
+`singleHost: true` + `requireHosts: true` is how Admin gets *exactly* one host. It matters because
+settlement pays `pod_hosts_id[0]` and nobody else (`settlement.service.ts`), so a second host is a
+host who never gets paid; extra hosts belong in `co_hosts`. Club Admin deliberately leaves it off.
+
+Opening an older pod that still carries two ids, `usePodEditorState.openEdit` collapses
+`pod_hosts_id` to its first entry — the picker can only *show* one id, so hydrating two would leave
+the field displaying one host while the form held another, and MUI suppresses the `onChange` when you
+re-pick the option already on screen, so there would be no way to correct it. The `'Select only one
+host'` schema rule stays as the invariant for any other caller of `buildPodInput`.
 
 Note `showFinance: false` for Club Admin: anything you add to the finance area is invisible there.
 Copy that reads on every console must not live in a finance-gated section.

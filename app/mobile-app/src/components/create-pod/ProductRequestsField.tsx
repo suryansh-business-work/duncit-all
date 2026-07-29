@@ -46,6 +46,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
   const update = (idx: number, patch: Partial<PodProductRequest>) =>
     onChange(value.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
   const add = () => onChange([...value, { product_id: '', quantity: 1 }]);
+  const noProducts = products.length === 0;
   const remove = (idx: number) => {
     keys.current.splice(idx, 1);
     onChange(value.filter((_, i) => i !== idx));
@@ -112,13 +113,17 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
           </XStack>
         </YStack>
       ))}
+      {/* Nothing to pick means an added row could never be filled — mWeb's
+          ProductRequestsField disables the same button (rule 27). */}
       <XStack
         testID="product-add"
         role="button"
         aria-label="Add product"
-        onPress={add}
+        aria-disabled={noProducts}
+        onPress={noProducts ? undefined : add}
         alignItems="center"
         gap={4}
+        opacity={noProducts ? 0.5 : 1}
         pressStyle={{ opacity: 0.7 }}
       >
         <MaterialIcons name="add" size={18} color={primary} />

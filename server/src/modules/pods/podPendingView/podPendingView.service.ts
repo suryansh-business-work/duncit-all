@@ -7,6 +7,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { contactNumber } from '@utils/contact';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { breakdownService } from '@modules/finance/finance/breakdown.service';
 
@@ -15,16 +16,6 @@ const joinParts = (parts: Array<string | null | undefined>) =>
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(', ');
-
-/** "+<ext> <number>" when an extension is stored, else the bare number. */
-const contactNumber = (extension?: string | null, number?: string | null): string | null => {
-  const num = (number ?? '').trim();
-  if (!num) return null;
-  const ext = (extension ?? '').trim();
-  if (!ext) return num;
-  const prefix = ext.startsWith('+') ? ext : `+${ext}`;
-  return `${prefix} ${num}`;
-};
 
 /** The pod's hosts, plus co-hosts who have not declined, may read the view. */
 function assertCanView(doc: IPod, userId: string): void {

@@ -23,7 +23,20 @@ export default function BookingPage() {
   const booking = data?.bookingDetail;
 
   if (booking) {
-    return <Navigate to={podUrl(booking.club_slug, booking.pod_slug)} replace />;
+    // podUrl falls back to '/' when either slug is empty, and club_slug /
+    // pod_slug are non-null Strings that CAN be '' for a legacy slug-less pod.
+    // Silently landing on the home page is the "generic landing" this deep link
+    // exists to avoid, so say what went wrong instead of pretending it worked.
+    const target = podUrl(booking.club_slug, booking.pod_slug);
+    if (target === '/') {
+      return (
+        <Alert severity="warning" data-testid="booking-error">
+          {/* TODO(i18n) — ships as a literal until this feature is localized. */}
+          This pod is no longer available to view.
+        </Alert>
+      );
+    }
+    return <Navigate to={target} replace />;
   }
   if (error) {
     return (

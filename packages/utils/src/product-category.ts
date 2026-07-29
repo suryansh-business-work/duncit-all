@@ -19,17 +19,17 @@ export function clubCategoryKey(club: any): ClubCategoryKey | null {
   return { superId, subId };
 }
 
-const hasCategoryData = (product: any): boolean =>
-  (Array.isArray(product?.categories) && product.categories.length > 0) ||
-  Boolean(product?.super_category_id && product?.sub_category_id);
-
 /** A product matches a club when any of its category rows (or its flat legacy
- * fields) has the club's Super + Sub. A product carrying no category data at all
- * is treated as a match (the server still enforces the gate on submit) so a
- * missing query field degrades to "show all", never "hide all". */
+ * fields) has the club's Super + Sub.
+ *
+ * A product carrying no category data at all does NOT match. That mirrors
+ * `productMatchesClubCategory` in pod.service, which is the gate that actually
+ * decides whether the pod saves: it has no such exemption, so offering these in
+ * the picker only led the host to a "<product> does not belong to this pod's
+ * category" failure at publish. Showing nothing is better than showing
+ * something the save will reject. */
 export function productMatchesClub(product: any, key: ClubCategoryKey | null): boolean {
   if (!key) return true;
-  if (!hasCategoryData(product)) return true;
   const target = `${key.superId}|${key.subId}`;
   const rows =
     Array.isArray(product?.categories) && product.categories.length > 0

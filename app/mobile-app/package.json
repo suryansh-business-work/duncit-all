@@ -1,6 +1,6 @@
 {
   "name": "duncit-mobile",
-  "version": "1.5.106",
+  "version": "1.5.117",
   "private": true,
   "main": "index.js",
   "packageManager": "npm@10.9.2",
@@ -50,6 +50,7 @@
     "@duncit/geo": "file:../../packages/geo",
     "@duncit/i18n": "file:../../packages/i18n",
     "@duncit/logs": "file:../../packages/logs",
+    "@duncit/onboarding": "file:../../packages/onboarding",
     "@duncit/regex": "file:../../packages/regex",
     "@duncit/slack": "file:../../packages/slack",
     "@duncit/utils": "file:../../packages/utils",

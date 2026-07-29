@@ -26,6 +26,7 @@ COPY packages/datetime ./packages/datetime
 COPY packages/fallback-icons ./packages/fallback-icons
 COPY packages/i18n ./packages/i18n
 COPY packages/utils ./packages/utils
+COPY packages/onboarding ./packages/onboarding
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

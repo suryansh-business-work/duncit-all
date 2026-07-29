@@ -397,7 +397,8 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
 
     await podMemberService.backout(String(pod._id), String(buyer._id));
     // Pod now 1/2 with one backout in process — a new join takes the released seat.
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    const replacement = new Types.ObjectId().toString();
+    await podMemberService.joinFree(String(pod._id), replacement);
 
     const member = await PodMemberModel.findOne({ user_id: buyer._id });
     expect(member!.status).toBe('BACKED_OUT');
@@ -407,6 +408,8 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     const request = await BackoutRequestModel.findOne({ user_id: buyer._id });
     expect(request!.status).toBe('SPOT_FILLED');
     expect(request!.events.map((e) => e.status)).toEqual(['IN_PROCESS', 'SPOT_FILLED']);
+    // Finance needs to know WHO closed the request, not just that it closed.
+    expect(String(request!.replacement_user_id)).toBe(replacement);
 
     // Email + in-app/push fired with the refund line.
     expect(notifyCreate).toHaveBeenCalledWith(
@@ -482,6 +485,7 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     expect(member!.status).toBe('BACKED_OUT');
     const request = await BackoutRequestModel.findOne({ user_id: user });
     expect(request!.status).toBe('CANCELLED'); // terminal states never mutate
+    expect(request!.replacement_user_id).toBeNull(); // ...including the replacement
   });
 
   it('fills backouts on paid joins recorded by the payment flow', async () => {
@@ -497,6 +501,8 @@ describe('spot fill — replacement books the released seat (Item 1)', () => {
     await podMemberService.recordPaidJoin(String(pod._id), String(replacement), String(payment._id));
 
     expect((await PodMemberModel.findOne({ user_id: user }))!.status).toBe('BACKED_OUT');
+    const request = await BackoutRequestModel.findOne({ user_id: user });
+    expect(String(request!.replacement_user_id)).toBe(String(replacement));
   });
 
   it('recordPaidJoin is idempotent and survives a missing pod or fill failure', async () => {
@@ -583,7 +589,10 @@ describe('redeemReferral', () => {
 
     const referrer = await PodMemberModel.findOne({ user_id: owner._id });
     expect(referrer!.status).toBe('BACKED_OUT');
-    expect((await BackoutRequestModel.findOne({ user_id: owner._id }))!.status).toBe('SPOT_FILLED');
+    const request = await BackoutRequestModel.findOne({ user_id: owner._id });
+    expect(request!.status).toBe('SPOT_FILLED');
+    // The replacement is the friend who redeemed, NOT the referrer who backed out.
+    expect(String(request!.replacement_user_id)).toBe(friend);
   });
 });
 
@@ -738,16 +747,24 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
   it('lists every request with Backout ID, status, timeline and per-request refund state', async () => {
     await setDeductionPct(10);
     const pod = await makePodDoc({ no_of_spots: 2 });
-    const buyer = await makeUser();
+    // Extension stored bare (extRegex allows it) — Finance must still get a
+    // dialable "+91 …", not "91 …".
+    const buyer = await makeUser({
+      auth: { email: 'buyer@x.com', phone: { number: '9876543210', extension: '91' } },
+    });
     const payment = await makePayment(buyer._id);
     await joinMember(pod, buyer._id, { source: 'PAID', payment_id: payment._id });
     await joinMember(pod, new Types.ObjectId());
 
-    // Attempt 1: cancelled. Attempt 2: spot filled.
+    // Attempt 1: cancelled. Attempt 2: spot filled by a known user.
+    const replacement = await makeUser({
+      auth: { email: 'priya@x.com' },
+      profile: { first_name: 'Priya', last_name: 'Nair' },
+    });
     await podMemberService.backout(String(pod._id), String(buyer._id));
     await podMemberService.cancelBackout(String(pod._id), String(buyer._id));
     await podMemberService.backout(String(pod._id), String(buyer._id));
-    await podMemberService.joinFree(String(pod._id), new Types.ObjectId().toString());
+    await podMemberService.joinFree(String(pod._id), String(replacement._id));
 
     const rows = await podMemberService.listBackoutRefunds();
     expect(rows).toHaveLength(2);
@@ -757,6 +774,11 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
     expect(cancelled).toMatchObject({
       user_name: 'Asha Rao',
       user_email: 'buyer@x.com',
+      user_phone: '+91 9876543210',
+      // An open/cancelled request was never filled, so there is nobody to name.
+      replacement_user_id: null,
+      replacement_user_name: null,
+      replacement_user_email: null,
       attempt_no: 1,
       backout_attempts_used: 2,
       max_backout_attempts: 3,
@@ -773,6 +795,9 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
     expect(filled).toMatchObject({
       attempt_no: 2,
       replacement_confirmed: true,
+      replacement_user_id: String(replacement._id),
+      replacement_user_name: 'Priya Nair',
+      replacement_user_email: 'priya@x.com',
       refund_status: 'PENDING',
       payment_currency: '₹',
       payment_status: 'SUCCESS',
@@ -795,6 +820,7 @@ describe('backout refund requests (finance — Items 3/4/5)', () => {
       refund_status: 'NOT_ELIGIBLE',
       status: 'BACKOUT_IN_PROCESS', // derived from the request when the member is gone
       user_name: null,
+      user_phone: null, // no user doc at all → no contact number
       payment_amount: null,
     });
     expect(row.joined_at).toBe(row.created_at); // joined_at falls back to the request time

@@ -152,6 +152,15 @@ describe('BackoutRefundDetailPage', () => {
     expect(screen.getByTestId('backout-attempts-metric')).toHaveTextContent('1 / 3');
     expect(screen.getByTestId('replacement-confirmed-metric')).toHaveTextContent('Yes');
 
+    // Member card — the contact details Finance needs to action the refund.
+    expect(screen.getByText('+91 9876543210')).toBeInTheDocument();
+    expect(screen.getByText('u1')).toBeInTheDocument();
+
+    // Replacement card — who closed this Backout.
+    expect(screen.getByText('Priya')).toBeInTheDocument();
+    expect(screen.getByText('priya@x.com')).toBeInTheDocument();
+    expect(screen.getByText('u2')).toBeInTheDocument();
+
     // Horizontal timeline: chronological, immutable events with count + time.
     expect(screen.getByTestId('backout-event-0')).toHaveTextContent('Backout In Process');
     expect(screen.getByTestId('backout-event-1')).toHaveTextContent('Spot Filled');
@@ -167,6 +176,10 @@ describe('BackoutRefundDetailPage', () => {
         makeBackoutDetail({
           backout_status: 'IN_PROCESS',
           replacement_confirmed: false,
+          replacement_user_id: null,
+          replacement_user_name: null,
+          replacement_user_email: null,
+          user_phone: null,
           refund_amount: null,
           events: [],
         }),
@@ -174,6 +187,9 @@ describe('BackoutRefundDetailPage', () => {
     );
     expect(await screen.findByTestId('replacement-confirmed-metric')).toHaveTextContent('No');
     expect(screen.getByText('No lifecycle events recorded for this request.')).toBeInTheDocument();
+    // An open request has no replacement yet, and this member has no phone.
+    expect(screen.queryByText('Priya')).not.toBeInTheDocument();
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(4);
   });
 
   it('renders a pod with an image but all other fields null', async () => {

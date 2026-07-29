@@ -40,6 +40,7 @@ export default function PodsPage() {
     () => ({
       ...makeNativeParityPodConfig({ showProducts: productsFlag }),
       requireHosts: true,
+      singleHost: true,
       showLocationZone: true,
       showInventory: true,
       showFinance: true,
@@ -126,7 +127,7 @@ export default function PodsPage() {
         clubs={lookups.clubs}
         venues={lookups.approvedVenues}
         inventoryProducts={lookups.inventoryProducts}
-        users={lookups.users}
+        hosts={lookups.approvedHosts}
         onSubmit={editor.submit}
         finance={lookups.finance}
         onPickImage={picker.pickImage}

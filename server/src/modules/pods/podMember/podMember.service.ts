@@ -16,6 +16,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
 import { sendBackoutSpotFilledEmail, sendPodRefundEmail } from '@services/email/email.service';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
 
 // Legacy display constant kept for schema compatibility (refund_threshold_pct).
@@ -107,6 +108,7 @@ async function assertNoBackoutInProcess(podId: Types.ObjectId, uid: Types.Object
 const fullName = (user: any) =>
   `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
 
+
 /** Best-effort in-app + push (Notification Center fan-out) to one user. */
 async function notifyUserInApp(userId: string, title: string, body: string) {
   const { notificationService } = await import('@modules/engagement/notification/notification.service');
@@ -181,7 +183,7 @@ async function notifyRefundProcessed(request: IBackoutRequest, payment: any) {
 }
 
 /** Terminal transition: a replacement consumed the released seat. */
-async function markSpotFilled(pod: any, member: IPodMember) {
+async function markSpotFilled(pod: any, member: IPodMember, replacementUserId: string) {
   const request = member.active_backout_id
     ? await BackoutRequestModel.findById(member.active_backout_id)
     : null;
@@ -190,6 +192,9 @@ async function markSpotFilled(pod: any, member: IPodMember) {
   await member.save();
   if (request?.status === 'IN_PROCESS') {
     request.status = 'SPOT_FILLED';
+    // Who Finance can point at when the refund is questioned. Recorded with
+    // the transition so it can never disagree with the SPOT_FILLED event.
+    request.replacement_user_id = new Types.ObjectId(replacementUserId);
     request.events.push({ status: 'SPOT_FILLED', backout_count: request.attempt_no, at: new Date() });
     await request.save();
   }
@@ -202,7 +207,7 @@ async function markSpotFilled(pod: any, member: IPodMember) {
  * demand actually needed it: taken + in-process > total spots. Pods with
  * unlimited spots (0) have no seat scarcity, so nothing to fill.
  */
-async function fillBackoutsAfterJoin(pod: any) {
+async function fillBackoutsAfterJoin(pod: any, joiningUserId: string) {
   const spots = pod.no_of_spots ?? 0;
   if (spots <= 0) return;
   const inProcess = await PodMemberModel.find({ pod_id: pod._id, status: 'BACKOUT_IN_PROCESS' }).sort({
@@ -211,7 +216,7 @@ async function fillBackoutsAfterJoin(pod: any) {
   let overflow = (pod.pod_attendees?.length ?? 0) + inProcess.length - spots;
   for (const member of inProcess) {
     if (overflow <= 0) break;
-    await markSpotFilled(pod, member);
+    await markSpotFilled(pod, member, joiningUserId);
     overflow -= 1;
   }
 }
@@ -240,6 +245,7 @@ const toBackoutRefund = (
   payment: any,
   maxAttempts: number,
   attemptsUsed: number,
+  replacement: any,
 ) => ({
   id: String(request._id),
   backout_no: request.backout_no,
@@ -247,12 +253,16 @@ const toBackoutRefund = (
   user_id: String(request.user_id),
   user_name: fullName(user) || null,
   user_email: user?.auth?.email ?? null,
+  user_phone: userContactNumber(user),
   status: member?.status ?? MEMBER_STATUS_BY_REQUEST[request.status],
   backout_status: request.status,
   attempt_no: request.attempt_no,
   backout_attempts_used: attemptsUsed,
   max_backout_attempts: maxAttempts,
   replacement_confirmed: request.status === 'SPOT_FILLED',
+  replacement_user_id: request.replacement_user_id ? String(request.replacement_user_id) : null,
+  replacement_user_name: fullName(replacement) || null,
+  replacement_user_email: replacement?.auth?.email ?? null,
   joined_at: iso(member?.joined_at) ?? iso(request.created_at) ?? '',
   backed_out_at: iso(request.created_at),
   refund_status: requestRefundStatus(request),
@@ -311,11 +321,18 @@ async function attemptsUsedMap(requests: IBackoutRequest[]): Promise<Map<string,
 async function hydrateBackoutRequests(requests: IBackoutRequest[]) {
   if (requests.length === 0) return [];
   const memberIds = [...new Set(requests.map((r) => String(r.member_id)))];
-  const userIds = [...new Set(requests.map((r) => String(r.user_id)))];
+  // Members and replacements resolve from the same batch — one query, no N+1.
+  const userIds = [
+    ...new Set(
+      requests.flatMap((r) => [String(r.user_id), r.replacement_user_id && String(r.replacement_user_id)]).filter(Boolean) as string[],
+    ),
+  ];
   const paymentIds = requests.map((r) => r.payment_id).filter(Boolean).map(String);
   const [members, users, payments, attempts, maxAttempts] = await Promise.all([
     PodMemberModel.find({ _id: { $in: memberIds } }),
-    UserModel.find({ _id: { $in: userIds } }).select('profile.first_name profile.last_name auth.email'),
+    UserModel.find({ _id: { $in: userIds } }).select(
+      'profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension',
+    ),
     PaymentModel.find({ _id: { $in: paymentIds } }).select('total currency_symbol status'),
     attemptsUsedMap(requests),
     settingsService.getMaxBackoutAttempts(),
@@ -331,6 +348,7 @@ async function hydrateBackoutRequests(requests: IBackoutRequest[]) {
       r.payment_id ? paymentById.get(String(r.payment_id)) : null,
       maxAttempts,
       attempts.get(`${r.pod_id}:${r.user_id}`) ?? 0,
+      r.replacement_user_id ? userById.get(String(r.replacement_user_id)) : null,
     ),
   );
 }
@@ -483,7 +501,7 @@ export const podMemberService = {
     });
 
     await addAttendee(pod, userId);
-    await fillBackoutsAfterJoin(pod);
+    await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     try {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');
@@ -645,8 +663,9 @@ export const podMemberService = {
     await addAttendee(pod, userId);
     // The vacated seat is consumed like any other join — the oldest in-process
     // backout (usually the referrer's) flips to Spot Filled and becomes
-    // refund-eligible for Finance to process.
-    await fillBackoutsAfterJoin(pod);
+    // refund-eligible for Finance to process. The joiner is the redeemer, not
+    // `refDoc.user_id` — that is the referrer, i.e. usually the backer-out.
+    await fillBackoutsAfterJoin(pod, userId);
 
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     return toPub(doc);
@@ -683,7 +702,7 @@ export const podMemberService = {
     // consumed. Best-effort: a fill failure must not fail the booking.
     try {
       const pod = await PodModel.findById(podDocId);
-      if (pod) await fillBackoutsAfterJoin(pod);
+      if (pod) await fillBackoutsAfterJoin(pod, userId);
     } catch (e) {
       logs.server.warn('podMember', 'joinPaid', { error: e, msg: 'Backout fill (paid join) failed' });
     }
@@ -742,7 +761,7 @@ export const podMemberService = {
     await membership.save();
 
     await addAttendee(pod, userId);
-    await fillBackoutsAfterJoin(pod);
+    await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     try {
       const { ticketService } = await import('@modules/pods/ticket/ticket.service');

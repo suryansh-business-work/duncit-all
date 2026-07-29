@@ -89,6 +89,8 @@ export const podMemberTypeDefs = /* GraphQL */ `
     user_id: ID!
     user_name: String
     user_email: String
+    "Contact number of the member being refunded (null when none is on file)."
+    user_phone: String
     status: MembershipStatus!
     "Lifecycle status of this Backout request."
     backout_status: BackoutStatus!
@@ -100,6 +102,13 @@ export const podMemberTypeDefs = /* GraphQL */ `
     max_backout_attempts: Int!
     "True once a replacement booked the released seat (Spot Filled)."
     replacement_confirmed: Boolean!
+    """
+    The member whose join closed this request. Null while the request is open
+    and on requests filled before this was recorded.
+    """
+    replacement_user_id: ID
+    replacement_user_name: String
+    replacement_user_email: String
     joined_at: String!
     backed_out_at: String
     refund_status: RefundStatus!

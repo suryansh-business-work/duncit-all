@@ -13,6 +13,18 @@ import {
 interface TourState {
   completed: TourId[];
   activeTourId: TourId | null;
+  /**
+   * Anchors currently mounted on screen.
+   *
+   * spotlight-tour spotlights by POSITION in the steps array, so a step whose
+   * element is not on screen has nothing to highlight and draws an empty
+   * overlay — the "blank tour". Tracking what is mounted lets the provider
+   * build steps only for anchors that exist, the same way mWeb drops steps
+   * whose selector finds nothing.
+   */
+  mountedAnchors: string[];
+  registerAnchor: (anchor: string) => void;
+  unregisterAnchor: (anchor: string) => void;
   /** Load this user's completions. Called once the signed-in user is known. */
   hydrate: (userId: string) => Promise<void>;
   startTour: (id: TourId) => void;
@@ -30,6 +42,15 @@ interface TourState {
 export const useToursStore = create<TourState>((set, get) => ({
   completed: [],
   activeTourId: null,
+  mountedAnchors: [],
+
+  registerAnchor: (anchor) =>
+    set((s) =>
+      s.mountedAnchors.includes(anchor) ? s : { mountedAnchors: [...s.mountedAnchors, anchor] },
+    ),
+
+  unregisterAnchor: (anchor) =>
+    set((s) => ({ mountedAnchors: s.mountedAnchors.filter((a) => a !== anchor) })),
 
   hydrate: async (userId) => {
     try {

@@ -60,6 +60,9 @@ importers:
       '@duncit/media-picker':
         specifier: workspace:*
         version: link:../../packages/media-picker
+      '@duncit/onboarding':
+        specifier: workspace:*
+        version: link:../../packages/onboarding
       '@duncit/regex':
         specifier: workspace:*
         version: link:../../packages/regex
@@ -867,6 +870,18 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+
+  packages/onboarding:
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3

@@ -1,0 +1,95 @@
+---
+name: '@duncit/onboarding'
+summary: 'The four Earn With Duncit journeys and the state machine that decides whether each one is open, locked or already held.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/partners-app'
+exports:
+  - 'EARN_JOURNEYS'
+  - 'earnBoxState'
+  - 'meetingNotice'
+  - 'partnerPortalUrl'
+  - 'PARTNER_PORTAL_URL'
+  - 'IN_PROCESS_LABEL'
+  - 'ALREADY_ENABLED_LABEL'
+  - 'MEETING_SCHEDULED_LABEL'
+---
+
+# @duncit/onboarding
+
+Everything about *which* Earn With Duncit journeys a user may start, and *why* a
+journey is closed. No UI, no GraphQL client, no framework — mWeb renders MUI,
+native renders Tamagui and the partner portal renders the shell, but all three
+have to agree on the answer.
+
+## Why it exists
+
+mWeb and native each carried their own copy of this logic, and they had already
+drifted: native's blocked-card copy omitted the `request_no`, so a user on the
+phone could not quote their request id to support while a user on the web could.
+Adding a third copy for the partner portal would have tripled that. One
+implementation, three renderers.
+
+## The journeys
+
+`EARN_JOURNEYS` is the ordered source of truth. Each entry carries its identity
+(`role`, `kind`), its copy, an `iconKey` and **both** route shapes, because the
+same journey is a path on the web and a stack screen on native:
+
+```js
+{
+  role: 'VENUE_OWNER',
+  kind: 'VENUE',
+  title: 'By registering your venue',
+  description: 'List your space as a Duncit venue and host pods or rent it out.',
+  iconKey: 'venue',
+  surveyPath: '/survey/venue',      // mWeb + partner portal
+  nativeRoute: 'RegisterVenue',     // native stack
+  cta: { label: 'Ready to register another venue?', partnerPath: '/register-venue/new' },
+}
+```
+
+`iconKey` is a string, never an icon element — MUI, `@expo/vector-icons` and the
+shell's `AppIcon` are three different icon sets, so each surface maps the key
+itself.
+
+## The state machine
+
+`earnBoxState(journey, roles, meetings)` returns what the card should show. It
+mirrors the server's `reapplyBlockReason`, which is what actually refuses a
+duplicate application — if you change one, change both.
+
+| Condition | Result |
+| --- | --- |
+| user holds `journey.role` | locked, `approved: true` — render the next-step CTA |
+| a `REQUESTED` / `SCHEDULED` meeting for `journey.kind` | locked, `scheduledMeeting` set so the surface can offer reschedule / cancel |
+| a `DONE` meeting still at `NONE` / `PENDING` approval | locked, "Onboarding in process." |
+| approved meeting, onboarded record `DRAFT` / `SUBMITTED` | locked, still under review |
+| anything else — including a rejected record | open |
+
+Order matters: holding the role wins over any meeting history, because an
+approved partner usually still has an old meeting row.
+
+```js
+earnBoxState(EARN_JOURNEYS[0], ['HOST'], []);
+// → { disabled: true, disabledLabel: 'Already enabled', approved: true, … }
+
+earnBoxState(EARN_JOURNEYS[0], [], [{ id: 'm1', kind: 'HOST', status: 'SCHEDULED', request_no: 'DUN-MTG-000001' }]);
+// → { disabled: true, disabledLabel: 'Meeting scheduled', scheduledMeeting: {…},
+//     description: 'You already have an onboarding meeting (Request ID: DUN-MTG-000001) scheduled for this…' }
+```
+
+A rejected record deliberately re-opens the journey — that is how a user
+re-applies after being turned down.
+
+## What is NOT here
+
+The GraphQL documents. Each surface declares its own `myMeetings` selection
+against its own client (Apollo on the web, `graphqlRequest` on native), and this
+package stays dependency-free so native can import it without pulling a client.
+`EarnMeeting` is the shape they must all select.

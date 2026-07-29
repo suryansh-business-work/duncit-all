@@ -23,7 +23,12 @@ ARG BUILD_TYPE=apk
 # ── Stage 1: JS deps + codegen ──────────────────────────────────────────────
 FROM node:24-slim AS js-builder
 WORKDIR /repo
-ENV CI=1 EXPO_NO_TELEMETRY=1
+# CYPRESS_INSTALL_BINARY=0: `npm ci` installs devDependencies, so Cypress's
+# postinstall fired and downloaded its ~100MB browser bundle into an image that
+# builds an APK and never runs a browser test. It was pure waste and, worse, a
+# network dependency that fails the whole build when the download does — which
+# is exactly how it failed. The e2e suites run on CI runners, not in here.
+ENV CI=1 EXPO_NO_TELEMETRY=1 CYPRESS_INSTALL_BINARY=0
 
 # `file:` workspace deps — must exist BEFORE `npm ci` resolves them (and Metro
 # resolves them via watchFolders during the Gradle JS bundle). They change

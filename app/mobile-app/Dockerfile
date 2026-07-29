@@ -11,7 +11,10 @@
 # --- builder ---
 FROM public.ecr.aws/docker/library/node:24 AS builder
 WORKDIR /repo
-ENV CI=1
+# CYPRESS_INSTALL_BINARY=0 for the same reason as Dockerfile.android: `npm ci`
+# pulls devDependencies, and this image does an expo web export — it never runs
+# a browser test, so downloading the Cypress binary is cost and flakiness only.
+ENV CI=1 CYPRESS_INSTALL_BINARY=0
 
 # Shared design-token package (file: dep + metro watchFolders) and the server
 # GraphQL SDL that codegen reads (self-contained `export const … = gql\`…\``).

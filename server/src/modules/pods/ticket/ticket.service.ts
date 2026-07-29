@@ -10,7 +10,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { generateTicketPdf } from '@services/ticket/ticket.pdf';
 import { sendEmail } from '@services/email/email.service';
-import { getUrlConfigs } from '@config/url-configs';
+import { bookingLinkUrl, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -160,6 +160,10 @@ export const ticketService = {
   async email(t: ITicket) {
     const pdf = await pdfFor(t);
     const urls = await getUrlConfigs();
+    // A free join never reaches finalizePaidPayment, so this is the ONLY booking
+    // email such a member gets — without the deep link the whole feature is
+    // invisible on free pods.
+    const bookingUrl = bookingLinkUrl(urls.appUrl, String(t.membership_id));
     const venueLine =
       t.snapshot?.pod_mode === 'VIRTUAL'
         ? t.snapshot?.meeting_platform || 'Online'
@@ -174,7 +178,11 @@ export const ticketService = {
         date_label: dateLabel(t.snapshot?.pod_date_time),
         venue_line: venueLine,
         ticket_code: t.ticket_code,
-        app_url: urls.appUrl,
+        booking_url: bookingUrl,
+        // Templates already cached in the DB still carry the old `{{app_url}}`
+        // CTA, so it has to resolve to the same deep link (the disk template is
+        // only imported once, never re-synced). Same alias as payment-receipt.
+        app_url: bookingUrl,
       },
       attachments: [
         {

@@ -8,6 +8,7 @@ import { type LoginFormValues } from '../../forms/login';
 import { parseApiError } from '../../utils/parseApiError';
 import {
   getSafeRedirectPath,
+  postAuthPath,
   redirectPathFromLocation,
   type RedirectLocation,
 } from '../../utils/redirect';
@@ -33,7 +34,7 @@ export default function LoginPage() {
     const redirect =
       getSafeRedirectPath(params.get('redirect')) ||
       getSafeRedirectPath(stateFrom ? redirectPathFromLocation(stateFrom) : '');
-    navigate(user?.onboarding_survey_completed === false ? '/signup-survey' : redirect || '/', {
+    navigate(postAuthPath(user?.onboarding_survey_completed !== false, redirect), {
       replace: true,
     });
   };

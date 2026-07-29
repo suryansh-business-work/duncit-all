@@ -1,7 +1,10 @@
+jest.mock('@services/email/email.service', () => ({ sendEmail: jest.fn().mockResolvedValue(undefined) }));
+
 import { Types } from 'mongoose';
 import { ticketService } from '../../ticket.service';
 import { TicketModel } from '../../ticket.model';
 import { signTicketToken } from '../../ticket.token';
+import { sendEmail } from '@services/email/email.service';
 
 const podId = new Types.ObjectId();
 const userId = new Types.ObjectId();
@@ -127,5 +130,25 @@ describe('ticketService integration', () => {
     expect(page2.total).toBe(3);
     expect(page2.page).toBe(2);
     expect(page2.page_size).toBe(1);
+  });
+
+  // A free join never reaches finalizePaidPayment, so the ticket email is the
+  // ONLY booking email such a member gets. It used to link at the bare app
+  // origin, which is exactly the "opens mWeb but does not navigate to the pod"
+  // complaint — on free pods the deep link was simply absent.
+  describe('event-ticket "View Booking" CTA', () => {
+    it('deep-links to the booking, not the app root', async () => {
+      (sendEmail as jest.Mock).mockClear();
+      const membership_id = new Types.ObjectId();
+      const ticket = await makeTicket({ membership_id });
+
+      await ticketService.email(ticket as never);
+
+      const [opts] = (sendEmail as jest.Mock).mock.calls.at(-1) as [Record<string, any>];
+      expect(opts.template).toBe('event-ticket');
+      expect(opts.vars.booking_url).toMatch(new RegExp(`/booking/${String(membership_id)}$`));
+      // Templates cached in the DB still render the old {{app_url}} CTA.
+      expect(opts.vars.app_url).toBe(opts.vars.booking_url);
+    });
   });
 });

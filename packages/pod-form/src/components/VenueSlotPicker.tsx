@@ -3,13 +3,15 @@ import { gql, useQuery } from '@apollo/client';
 import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { format } from 'date-fns';
 
-const VENUE_AVAILABLE_SLOTS = gql`
+export const VENUE_AVAILABLE_SLOTS = gql`
   query VenueAvailableSlotsForPicker($venue_id: ID!, $from: String) {
     venueAvailableSlots(venue_id: $venue_id, from: $from) {
       id
       start_at
       end_at
       notes
+      # Guests the booked space holds — the ceiling on the pod's spots.
+      capacity
     }
   }
 `;
@@ -19,6 +21,7 @@ interface Slot {
   start_at: string;
   end_at: string;
   notes: string;
+  capacity?: number | null;
 }
 
 interface Props {

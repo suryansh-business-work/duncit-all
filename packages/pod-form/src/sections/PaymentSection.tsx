@@ -1,6 +1,7 @@
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
-import { MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Box, MenuItem, Slider, Stack, Switch, TextField, Typography } from '@mui/material';
 import { payableSpots } from '@duncit/utils';
+import { useSpotsBounds } from '../useSpotsBounds';
 import PriceBreakdown from '../components/PriceBreakdown';
 import PlaceChargesField from '../components/PlaceChargesField';
 import { getProductRequestTotal } from '../build-input';
@@ -23,6 +24,15 @@ export default function PaymentSection() {
   const productCost = config.showInventory && productsEnabled
     ? getProductRequestTotal(productRequests, products)
     : 0;
+  // The activity's minimum and the booked space's capacity. A slider only when
+  // both ends are real — otherwise the number field, still floored.
+  const spots = useSpotsBounds();
+  const boundsHint = (() => {
+    if (spots.slidable) {
+      return `This activity needs at least ${spots.min}, and the space booked holds ${spots.max}.`;
+    }
+    return spots.min > 0 ? `This activity needs at least ${spots.min} people.` : undefined;
+  })();
   const amountHint = isFree ? 'Free pod — amount must be 0' : 'GROSS price (incl. fee + GST). 0 – 1999.';
   // The host takes one spot for free, so only (total - 1) spots are ever billed.
   const billableSpots = payableSpots(Number(noOfSpots) || 0);
@@ -71,16 +81,42 @@ export default function PaymentSection() {
           error={!!errors.pod_amount}
           fullWidth
         />
-        <TextField
-          label="No. of spots"
-          type="number"
-          value={noOfSpots}
-          onChange={(event) => setValue('no_of_spots', Number(event.target.value) || 0, { shouldValidate: true })}
-          inputProps={{ min: 0 }}
-          fullWidth
-          error={!!errors.no_of_spots}
-          helperText={errors.no_of_spots?.message ?? spotsHint}
-        />
+        {spots.slidable ? (
+          <Box sx={{ flex: 1, minWidth: 200 }} data-testid="pod-spots-slider">
+            <Typography variant="caption" color="text.secondary">
+              No. of spots
+            </Typography>
+            <Slider
+              value={Math.max(spots.min, Math.min(spots.max, Number(noOfSpots) || 0))}
+              min={spots.min}
+              max={spots.max}
+              step={1}
+              marks={[
+                { value: spots.min, label: String(spots.min) },
+                { value: spots.max, label: String(spots.max) },
+              ]}
+              valueLabelDisplay="on"
+              // Single-value slider, so `next` is always a number.
+              onChange={(_e, next) => setValue('no_of_spots', next as number, { shouldValidate: true })}
+              aria-label="No. of spots"
+            />
+            <Typography variant="caption" color={errors.no_of_spots ? 'error' : 'text.secondary'}>
+              {errors.no_of_spots?.message ?? boundsHint}
+            </Typography>
+          </Box>
+        ) : (
+          <TextField
+            label="No. of spots"
+            type="number"
+            value={noOfSpots}
+            onChange={(event) => setValue('no_of_spots', Number(event.target.value) || 0, { shouldValidate: true })}
+            // Floored by the activity's minimum even with no venue to cap it.
+            inputProps={{ min: spots.min }}
+            fullWidth
+            error={!!errors.no_of_spots}
+            helperText={errors.no_of_spots?.message ?? boundsHint ?? spotsHint}
+          />
+        )}
         {config.showIsActive && isEdit && (
           <Stack direction="row" alignItems="center" spacing={1} sx={{ pt: 1, flexShrink: 0 }}>
             <Switch checked={isActive} onChange={(_, v) => setValue('is_active', v)} />

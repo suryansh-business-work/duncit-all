@@ -7,18 +7,24 @@ import { MediaUploadField } from '../MediaUploadField';
 import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import { ReelUploadField } from '../ReelUploadField';
-import type { CreatePodForm } from '../create-pod.types';
+import { HostCategoryField } from './HostCategoryField';
+import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
+  hostCategories: CreatePodHostCategory[];
 }
 
 /** Step 1 — Pod Basics: title, description, cover media, hashtags and the
  * required "what this pod offers" list, with optional extras (info, perks). */
-export function BasicsStep({ form }: Readonly<Props>) {
+export function BasicsStep({ form, hostCategories }: Readonly<Props>) {
   const { control } = form;
   return (
     <YStack gap={14}>
+      {/* First field of the form: the category scopes the clubs on step 2 AND
+          the products on step 4, so it is picked before the title. mWeb twin
+          (rule 27). */}
+      <HostCategoryField form={form} hostCategories={hostCategories} />
       <FormTextField
         control={control}
         name="pod_title"

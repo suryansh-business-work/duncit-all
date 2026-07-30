@@ -14,6 +14,9 @@ interface Props {
   onChange: (value: string) => void;
   error?: string;
   emptyHint?: string;
+  /** Guidance shown under the label, before the choices — what this pick means,
+   * not what went wrong (that is `error`). */
+  hint?: string;
   required?: boolean;
   testID: string;
 }
@@ -27,12 +30,18 @@ export function ChipSelectField({
   onChange,
   error,
   emptyHint,
+  hint,
   required,
   testID,
 }: Readonly<Props>) {
   return (
     <YStack gap={6}>
       <FieldLabel label={label} required={required} testID={testID} />
+      {hint ? (
+        <Text testID={`${testID}-hint`} fontSize={12} color="$muted">
+          {hint}
+        </Text>
+      ) : null}
       {options.length === 0 ? (
         <Text testID={`${testID}-empty`} fontSize={12.5} color="$muted">
           {emptyHint ?? 'No options available.'}

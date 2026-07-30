@@ -66,7 +66,10 @@ export const createPodSchema = z
   .object({
     location_id: z.string().min(1, 'Select a location'),
     locality: z.string(),
-    host_category_key: z.string(),
+    // Required in the SCHEMA, not just by a marker on the label: a pod without
+    // a category can't be matched to clubs or products, and the stepper's own
+    // guard only fired when the host already had categories to choose from.
+    host_category_key: z.string().min(1, 'Select a category'),
     pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
     club_id: z.string().min(1, 'Select a club'),
     pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),

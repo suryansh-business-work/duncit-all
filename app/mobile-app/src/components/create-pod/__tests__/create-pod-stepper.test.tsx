@@ -232,8 +232,9 @@ describe('CreatePodStepper', () => {
     // Step 2: default location card + auto category + club filter.
     await screen.findByTestId('create-pod-location-label');
     expect(screen.getByTestId('create-pod-location-label')).toHaveTextContent(/Pune/);
-    // The sole host category is auto-selected and shown as a chip.
-    expect(screen.getByText('Sports › Running › Trail')).toBeOnTheScreen();
+    // The picker is a step-1 field now, so it is off screen here — but the sole
+    // host category was auto-selected and still scopes this step's club list.
+    expect(screen.queryByTestId('create-pod-category')).toBeNull();
     // Category + location filter: c1 & c2 (l1 + Sports) stay; c3 (other city),
     // c4 (other category) and c5 (no category) all drop out.
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
@@ -353,21 +354,20 @@ describe('CreatePodStepper', () => {
     expect(screen.getByTestId('products-empty')).toBeOnTheScreen();
   });
 
-  it('shows clubs from every category when the host has no linked categories', async () => {
+  // A host with no approved category cannot publish an uncategorised pod: the
+  // category is required by the schema, so step 1 holds them. Previously the
+  // gate only ran when the host HAD categories, so exactly the host who could
+  // not pick one was the host allowed to skip it.
+  it('holds a host with no approved categories on step 1', async () => {
     setup({ hostCategories: [] });
     await fillBasics();
+    // Nothing to choose from — the field says why instead of showing chips.
+    expect(screen.getByTestId('create-pod-category-empty')).toHaveTextContent(
+      'Assigned after host onboarding',
+    );
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
-    // No category gate → any club in the pod city shows, incl. c4 (other category).
-    expect(screen.getByTestId('create-pod-club-c4')).toBeOnTheScreen();
-    // The empty-state hint replaces the category picker.
-    expect(screen.getByTestId('create-pod-category-empty')).toBeOnTheScreen();
-    // Different-city clubs still drop for a physical pod.
-    expect(screen.queryByTestId('create-pod-club-c3')).toBeNull();
-    // With no categories, Next is not gated on a category pick — a club advances.
-    press('create-pod-club-c1');
-    press('create-pod-submit');
-    await screen.findByTestId('create-pod-venue-v1');
+    await waitFor(() => expect(screen.getByTestId('create-pod-category-error')).toBeOnTheScreen());
+    expect(screen.queryByTestId('create-pod-location-label')).toBeNull();
   });
 
   it('makes multi-category hosts pick a category before leaving step 1', async () => {
@@ -399,6 +399,10 @@ describe('CreatePodStepper', () => {
     // The picker sits above the title, so it is on screen from step 1 and the
     // gate fires there — a host no longer fills a whole step before being told.
     await fillBasics();
+    // The hint says what the pick means, before anything has gone wrong.
+    expect(screen.getByTestId('create-pod-category-hint')).toHaveTextContent(
+      'In which you want to host your session',
+    );
     press('create-pod-submit');
     await waitFor(() => expect(screen.getByTestId('create-pod-category-error')).toBeOnTheScreen());
     expect(screen.queryByTestId('create-pod-location-label')).toBeNull();

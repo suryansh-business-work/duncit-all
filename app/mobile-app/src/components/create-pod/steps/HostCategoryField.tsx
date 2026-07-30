@@ -1,9 +1,11 @@
 import { Controller } from 'react-hook-form';
-import { Text, YStack } from 'tamagui';
 
 import { ChipSelectField } from '../ChipSelectField';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
+
+/** Why the host is picking, not what went wrong. Twin: the mWeb field. */
+export const CATEGORY_HINT = 'In which you want to host your session';
 
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]
@@ -32,28 +34,20 @@ export function HostCategoryField({ form, hostCategories }: Readonly<Props>) {
     setValue('venue_slot_id', '', { shouldDirty: true });
   };
 
-  if (hostCategories.length === 0) {
-    return (
-      <YStack gap={6}>
-        <Text fontSize={14} fontWeight="500" color="$color">
-          Category
-        </Text>
-        <Text testID="create-pod-category-empty" fontSize={12.5} color="$muted">
-          Assigned after host onboarding
-        </Text>
-      </YStack>
-    );
-  }
-
   return (
     <Controller
       control={control}
       name="host_category_key"
       render={({ field, fieldState }) => (
         <ChipSelectField
-          label="Your category"
+          label="Select Category"
+          hint={CATEGORY_HINT}
           required
           options={categoryOptions}
+          // A host with no approved category has nothing to pick, and the
+          // schema now blocks the step rather than letting them publish an
+          // uncategorised pod.
+          emptyHint="Assigned after host onboarding"
           value={field.value}
           onChange={pickCategory}
           error={fieldState.error?.message}

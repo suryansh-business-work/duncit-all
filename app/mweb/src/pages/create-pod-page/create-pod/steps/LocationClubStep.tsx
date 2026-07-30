@@ -12,20 +12,19 @@ import LocationDialog from '../../../../components/app-header/LocationDialog';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import ClubPreview from '../ClubPreview';
-import HostCategoryField from './HostCategoryField';
-import type { CreatePodClub, CreatePodForm, CreatePodHostCategory, CreatePodLocation } from '../create-pod.types';
+import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
   clubs: CreatePodClub[];
   locations: CreatePodLocation[];
-  hostCategories: CreatePodHostCategory[];
 }
 
 /** Step 2 — pod location + locality (chosen in the header-style location picker,
- * which shows the club count per locality), the host category, the pod mode and
- * the club. */
-export default function LocationClubStep({ form, clubs, locations, hostCategories }: Readonly<Props>) {
+ * which shows the club count per locality), the pod mode and the club. The
+ * category moved above the page title, so the club list arrives already scoped
+ * to it. */
+export default function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
   const {
     control,
     setValue,
@@ -87,8 +86,6 @@ export default function LocationClubStep({ form, clubs, locations, hostCategorie
           parts={[location.location_name, location.city, location.state, location.country]}
         />
       )}
-
-      <HostCategoryField form={form} hostCategories={hostCategories} />
 
       <Box>
         <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ display: 'block', mb: 0.75 }}>Pod mode</Typography>

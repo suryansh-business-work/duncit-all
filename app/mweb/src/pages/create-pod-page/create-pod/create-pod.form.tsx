@@ -142,8 +142,8 @@ export const createPodSchema = z
 
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
-  ['pod_title', 'pod_description', 'media_text', 'reel_url', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
-  ['location_id', 'locality', 'host_category_key', 'pod_mode', 'club_id'],
+  ['host_category_key', 'pod_title', 'pod_description', 'media_text', 'reel_url', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
+  ['location_id', 'locality', 'pod_mode', 'club_id'],
   ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
   ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];

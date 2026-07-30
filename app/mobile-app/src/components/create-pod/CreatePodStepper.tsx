@@ -32,6 +32,7 @@ import type {
   PodModerationViolation,
 } from './create-pod.types';
 import { usePodPricing } from './price-panel';
+import { HostCategoryField } from './steps/HostCategoryField';
 import { BasicsStep } from './steps/BasicsStep';
 import { LocationClubStep } from './steps/LocationClubStep';
 import { VenueSlotStep } from './steps/VenueSlotStep';
@@ -146,7 +147,8 @@ export function CreatePodStepper({
   };
   const next = async () => {
     if (!(await form.trigger(STEP_FIELDS[step]))) return;
-    if (step === 1 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
+    // The category now sits above the title, so it gates the FIRST step.
+    if (step === 0 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
       form.setError('host_category_key', { type: 'required', message: 'Select your category' });
       return;
     }
@@ -260,13 +262,7 @@ export function CreatePodStepper({
 
   const steps = [
     <BasicsStep key="basics" form={form} />,
-    <LocationClubStep
-      key="location"
-      form={form}
-      clubs={clubsForLocation}
-      locations={locations}
-      hostCategories={hostCategories}
-    />,
+    <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} />,
     <VenueSlotStep
       key="venue"
       form={form}
@@ -287,6 +283,10 @@ export function CreatePodStepper({
 
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
+      {/* Above the title on purpose: the category scopes the clubs on step 2 AND
+          the products on step 4, so the host picks it before anything else
+          rather than discovering it half way through. mWeb twin (rule 27). */}
+      <HostCategoryField form={form} hostCategories={hostCategories} />
       <StepHeader step={step} />
       {steps[step]}
       {error ? (

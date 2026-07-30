@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { useForm } from 'react-hook-form';
 
 import { ClubPreview } from '@/components/create-pod/ClubPreview';
+import { HostCategoryField } from '@/components/create-pod/steps/HostCategoryField';
 import { LocationClubStep } from '@/components/create-pod/steps/LocationClubStep';
 import {
   blankCreatePodForm,
@@ -60,8 +61,13 @@ function Harness({
   const form = useForm<CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
+  // The category picker moved above the page title, so the stepper renders it
+  // beside the step rather than inside it — mirror that here.
   return (
-    <LocationClubStep form={form} clubs={clubs} locations={locations} hostCategories={categories} />
+    <>
+      <HostCategoryField form={form} hostCategories={categories} />
+      <LocationClubStep form={form} clubs={clubs} locations={locations} />
+    </>
   );
 }
 

@@ -9,13 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
 import { ClubSearchField } from '../ClubSearchField';
-import { HostCategoryField } from './HostCategoryField';
-import type {
-  CreatePodClub,
-  CreatePodForm,
-  CreatePodHostCategory,
-  CreatePodLocation,
-} from '../create-pod.types';
+import type { CreatePodClub, CreatePodForm, CreatePodLocation } from '../create-pod.types';
 
 const MODES = [
   { value: 'PHYSICAL', label: 'Physical' },
@@ -26,7 +20,6 @@ interface Props {
   form: CreatePodForm;
   clubs: CreatePodClub[];
   locations: CreatePodLocation[];
-  hostCategories: CreatePodHostCategory[];
 }
 
 const locationLabel = (location: CreatePodLocation) =>
@@ -35,8 +28,9 @@ const locationLabel = (location: CreatePodLocation) =>
     : location.location_name;
 
 /** Step 2 — pod city + locality (chosen in the header location picker, which
- * shows the club count per locality), the host category, the pod mode and the club. */
-export function LocationClubStep({ form, clubs, locations, hostCategories }: Readonly<Props>) {
+ * shows the club count per locality), the pod mode and the club. The category
+ * moved above the page title, so the club list arrives already scoped to it. */
+export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
   const { control, getValues, setValue, watch } = form;
   const { primary } = useThemeColors();
   const locationId = watch('location_id');
@@ -103,8 +97,6 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
           height={170}
         />
       ) : null}
-
-      <HostCategoryField form={form} hostCategories={hostCategories} />
 
       <Controller
         control={control}

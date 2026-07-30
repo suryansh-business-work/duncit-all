@@ -89,6 +89,8 @@ export const hostTypeDefs = /* GraphQL */ `
     "Admin/onboarding table page over all hosts (shared table engine)."
     hostsTable(query: TableQueryInput): HostTablePage!
     host(host_doc_id: ID!): Host
+    "The host profile behind a user, or null when they have never onboarded."
+    hostByUser(user_id: ID!): Host
     publicHosts: [Host!]!
   }
 
@@ -107,6 +109,12 @@ export const hostTypeDefs = /* GraphQL */ `
       step3: HostStep3Input!
       submit: Boolean
     ): Host!
+    """
+    Replace a host's operating categories and nothing else. adminUpdateHost
+    requires the whole step1/2/3 payload, so a caller that only wants to set
+    categories would have to round-trip every other field to use it.
+    """
+    adminSetHostCategories(host_doc_id: ID!, categories: [HostCategoryInput!]!): Host!
     adminUpdateHost(
       host_doc_id: ID!
       step1: HostStep1Input!

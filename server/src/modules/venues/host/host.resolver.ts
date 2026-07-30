@@ -25,6 +25,10 @@ export const hostResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.table(args.query);
     },
+    hostByUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.getByUser(args.user_id);
+    },
     host: async (_p: unknown, args: { host_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.getById(args.host_doc_id);
@@ -75,6 +79,14 @@ export const hostResolvers = {
         step3: args.step3,
         submit: args.submit,
       });
+    },
+    adminSetHostCategories: async (
+      _p: unknown,
+      args: { host_doc_id: string; categories: any[] },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.adminSetCategories(args.host_doc_id, args.categories);
     },
     adminUpdateHost: async (
       _p: unknown,

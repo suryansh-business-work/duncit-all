@@ -221,6 +221,14 @@ export const hostService = {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
     return h ? toPub(h) : null;
   },
+  /** An admin looking up the host profile behind a user. Null is a real answer:
+   * granting the HOST role does not create a profile, so a user can hold the
+   * role with nothing to attach categories to. */
+  async getByUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
+    return h ? toPub(h) : null;
+  },
   async list(
     filter?: { status?: string; activeOnly?: boolean },
     opts?: { withCommission?: boolean; redacted?: boolean }
@@ -354,6 +362,21 @@ export const hostService = {
       h.status = 'SUBMITTED';
       h.submitted_at = new Date();
     }
+    await h.save();
+    return toPub(h);
+  },
+  /**
+   * Replace ONLY a host's operating categories.
+   *
+   * `adminUpdate` can do this too, but it demands the full step1/2/3 payload —
+   * so a caller who just wants to set categories has to round-trip every other
+   * host field and risks clobbering anything its query did not select. The
+   * admin's Roles dialog needs exactly this and nothing else.
+   */
+  async adminSetCategories(id: string, categories: any[]) {
+    const h = await HostModel.findById(id);
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    h.host_categories = (await normalizeHostCategories(categories, h.host_categories ?? [])) as any;
     await h.save();
     return toPub(h);
   },

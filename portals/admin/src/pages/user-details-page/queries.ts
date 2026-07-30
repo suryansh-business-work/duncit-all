@@ -82,6 +82,36 @@ export const ASSIGN_ROLES = gql`
   }
 `;
 
+/**
+ * The host profile behind a user, if any. Categories live HERE, not on the role
+ * — granting HOST does not create a profile — so the Roles dialog can only edit
+ * them once Onboarding has created one.
+ */
+export const USER_HOST_PROFILE = gql`
+  query AdminUserHostProfile($user_id: ID!) {
+    hostByUser(user_id: $user_id) {
+      id
+      status
+      host_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
+    }
+  }
+`;
+
+export const SET_HOST_CATEGORIES = gql`
+  mutation AdminSetHostCategories($host_doc_id: ID!, $categories: [HostCategoryInput!]!) {
+    adminSetHostCategories(host_doc_id: $host_doc_id, categories: $categories) {
+      id
+    }
+  }
+`;
+
 export const DELETE_USER = gql`
   mutation DeleteUser($user_id: ID!) {
     deleteUser(user_id: $user_id)

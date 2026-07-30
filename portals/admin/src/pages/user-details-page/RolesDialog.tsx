@@ -16,7 +16,9 @@ import {
   Typography,
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import type { AdminCategoryValue } from '@duncit/category';
 import { PORTAL_ACCESS, type PortalAccess } from '../../constants/portalAccess';
+import HostCategoriesSection, { type HostProfileSummary } from './HostCategoriesSection';
 
 const cleanHost = (u: string) => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
@@ -27,6 +29,10 @@ interface Props {
   toggleRole: (key: string) => void;
   saveRoles: () => void;
   busy: boolean;
+  /** Null when this user has never onboarded as a host. */
+  hostProfile: HostProfileSummary | null;
+  hostCategories: AdminCategoryValue[];
+  setHostCategories: (next: AdminCategoryValue[]) => void;
 }
 
 function PortalCard({
@@ -111,7 +117,12 @@ export default function RolesDialog({
   toggleRole,
   saveRoles,
   busy,
+  hostProfile,
+  hostCategories,
+  setHostCategories,
 }: Readonly<Props>) {
+  // Categories only mean anything for a host, so the section appears with the role.
+  const isHost = selectedRoles.has('HOST');
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Portal Access</DialogTitle>
@@ -129,6 +140,13 @@ export default function RolesDialog({
             />
           ))}
         </Stack>
+        {isHost && (
+          <HostCategoriesSection
+            hostProfile={hostProfile}
+            rows={hostCategories}
+            setRows={setHostCategories}
+          />
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

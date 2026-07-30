@@ -8,6 +8,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from './finance.model';
 import {
   computePodFinanceBreakdown,
+  payingAttendees,
   type BreakdownOptions,
   type BreakdownRates,
   type PodFinanceBreakdown,
@@ -74,6 +75,10 @@ export interface PodSettlement {
   venue: SettlementParty | null;
   has_venue: boolean;
   waterfall: SettlementWaterfall;
+  /** Guests who actually attended and paid — the host's own free seat excluded.
+   * A completed pod settles on what it COLLECTED, so this is the head count
+   * behind every figure above, and it is what the host is shown. */
+  paying_attendees: number;
 }
 
 /** Engine version stamped on new settlement snapshots — v2 = venue slot price
@@ -255,5 +260,8 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
     venue,
     has_venue: hasVenue,
     waterfall,
+    // The head count behind `collected` — the host sits in pod_attendees and
+    // never paid, so their seat is dropped.
+    paying_attendees: payingAttendees(pod.pod_attendees, pod.pod_hosts_id),
   };
 }

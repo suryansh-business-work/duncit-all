@@ -46,5 +46,7 @@ export interface PodSettlement {
   currency_symbol: string;
   collected_total: number;
   has_venue: boolean;
+  /** Guests who actually paid — the host's free seat excluded. */
+  paying_attendees: number;
   waterfall: PodFinanceWaterfall;
 }

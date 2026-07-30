@@ -6,7 +6,7 @@ import { usePricing } from '../../../../hooks/usePricing';
 import { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES } from './queries';
 import ChargesAccordion from './ChargesAccordion';
 import PayoutCard from './PayoutCard';
-import { VENUE_SHORTFALL_MESSAGE } from './pricingCopy';
+import { EARNINGS_ESTIMATE_NOTE, VENUE_SHORTFALL_MESSAGE } from './pricingCopy';
 import type { EarningsPreview } from './useEarningsPreview';
 
 export { POTENTIAL_POD_EARNINGS, SUGGESTED_TICKET_PRICES };
@@ -111,6 +111,9 @@ export default function PricePanel({ preview }: Readonly<Props>) {
           </Alert>
         )}
         {breakdown()}
+        <Typography variant="caption" color="text.secondary" data-testid="price-panel-estimate-note">
+          {EARNINGS_ESTIMATE_NOTE}
+        </Typography>
       </Stack>
     </Card>
   );

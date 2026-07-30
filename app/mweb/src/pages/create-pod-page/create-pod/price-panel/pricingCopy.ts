@@ -53,6 +53,14 @@ export function tierDescription(index: number): string {
   return SUGGESTED_PRICE_TIERS[index] ?? '';
 }
 
+/**
+ * Under the earnings panel. The projection multiplies the spots the host CHOSE,
+ * but a completed pod settles on what it actually collected — so this says so
+ * before they read the number as a promise.
+ */
+export const EARNINGS_ESTIMATE_NOTE =
+  'This is an estimate based on the spots you set. When you complete the pod we recalculate it on the people who actually attended — your own spot is always free.';
+
 /** The highlighted recommendation under the suggestions table. */
 export const SUGGESTED_PRICES_NOTE =
   'Choose an optimal ticket price for your Pod to maximize both participation and revenue.';

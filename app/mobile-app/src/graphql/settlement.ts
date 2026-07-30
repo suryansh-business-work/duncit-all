@@ -7,6 +7,7 @@ export const PodSettlementPreviewDocument = gql(`
       currency_symbol
       collected_total
       has_venue
+      paying_attendees
       waterfall {
         amount
         gst_pct

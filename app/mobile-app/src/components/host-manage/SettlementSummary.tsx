@@ -58,6 +58,13 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
     );
     body = (
       <YStack gap={4}>
+        {/* The head count these figures come from. A completed pod settles on
+            what it actually collected, so this is real attendance, not the
+            spots the host planned for — and their own seat was free. mWeb twin. */}
+        <Text testID="settlement-attendees" fontSize={12} color="$muted">
+          Based on {settlement.paying_attendees} paying{' '}
+          {settlement.paying_attendees === 1 ? 'attendee' : 'attendees'} — your own spot is free.
+        </Text>
         {lines.map((line) => (
           <SettlementRow key={line.label} symbol={settlement.currency_symbol} line={line} />
         ))}

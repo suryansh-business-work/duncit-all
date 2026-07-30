@@ -348,6 +348,12 @@ export const financeTypeDefs = /* GraphQL */ `
     venue: PodSettlementParty
     has_venue: Boolean!
     waterfall: PodFinanceWaterfall!
+    """
+    Guests who actually attended and paid — the host's own free seat excluded.
+    A completed pod settles on what it COLLECTED, so this is the head count
+    behind every figure above.
+    """
+    paying_attendees: Int!
   }
 
   type PodSettlementResult {

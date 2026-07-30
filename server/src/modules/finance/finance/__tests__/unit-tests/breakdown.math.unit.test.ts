@@ -1,6 +1,7 @@
 import {
   assertValidRates,
   computePodFinanceBreakdown,
+  payingAttendees,
   type BreakdownRates,
 } from '../../breakdown.math';
 
@@ -196,5 +197,39 @@ describe('assertValidRates', () => {
     expect(() =>
       assertValidRates({ ...DEFAULT_RATES, venue_commission_percent: undefined as unknown as number })
     ).toThrow(/venue_commission_percent/);
+  });
+});
+
+// A completed pod settles on what it COLLECTED, so the head count shown beside
+// those figures has to be the people who actually paid — never the raw
+// pod_attendees list, which always contains the host.
+describe('payingAttendees', () => {
+  it('drops the host from the attendee list', () => {
+    expect(payingAttendees(['host-1', 'g1', 'g2'], ['host-1'])).toBe(2);
+  });
+
+  it('drops every host on a co-hosted pod', () => {
+    expect(payingAttendees(['host-1', 'host-2', 'g1'], ['host-1', 'host-2'])).toBe(1);
+  });
+
+  it('compares by value, so ObjectIds and strings match', () => {
+    const objectId = { toString: () => 'host-1' };
+    expect(payingAttendees([objectId, 'g1'] as unknown[], ['host-1'])).toBe(1);
+  });
+
+  it('counts everyone when the pod lists no hosts', () => {
+    expect(payingAttendees(['g1', 'g2'], [])).toBe(2);
+    expect(payingAttendees(['g1'], null)).toBe(1);
+    expect(payingAttendees(['g1'], undefined)).toBe(1);
+  });
+
+  it('returns zero for an empty or missing attendee list', () => {
+    expect(payingAttendees([], ['host-1'])).toBe(0);
+    expect(payingAttendees(null, ['host-1'])).toBe(0);
+    expect(payingAttendees(undefined, ['host-1'])).toBe(0);
+  });
+
+  it('returns zero when the only attendee is the host', () => {
+    expect(payingAttendees(['host-1'], ['host-1'])).toBe(0);
   });
 });

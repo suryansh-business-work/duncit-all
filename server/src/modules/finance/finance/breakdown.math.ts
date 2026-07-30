@@ -116,6 +116,27 @@ export function payableSpots(totalSpots: number): number {
 }
 
 /**
+ * Attendees who actually PAID: everyone on the pod minus its host(s).
+ *
+ * `payableSpots` projects from capacity BEFORE the pod runs; this counts who
+ * really turned up, which is what a completed pod settles on. Hosts are written
+ * into `pod_attendees` when the pod is created and never pay, so counting the
+ * raw list would over-state the head count by one per host.
+ *
+ * Mirrors `payingAttendees` in @duncit/utils — the server imports no @duncit/*
+ * package by design, so the rule is stated in both places.
+ */
+export function payingAttendees(
+  attendeeIds: readonly unknown[] | null | undefined,
+  hostIds: readonly unknown[] | null | undefined
+): number {
+  const attendees = attendeeIds ?? [];
+  if (attendees.length === 0) return 0;
+  const hosts = new Set((hostIds ?? []).map((id) => String(id)));
+  return attendees.filter((id) => !hosts.has(String(id))).length;
+}
+
+/**
  * Computes the full GST-inclusive breakdown for a pod payment.
  * Pure: same inputs → same output. All arithmetic on paise integers with
  * half-up rounding per line and exact reconciliation.

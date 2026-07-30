@@ -9,6 +9,7 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       currency_symbol
       collected_total
       has_venue
+      paying_attendees
       waterfall {
         version
         amount
@@ -105,6 +106,13 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<P
     }
     return (
       <Stack spacing={0.5}>
+        {/* The head count these figures come from. A completed pod settles on
+            what it actually collected, so this is real attendance, not the
+            spots the host planned for — and their own seat was free. */}
+        <Typography variant="caption" color="text.secondary" data-testid="settlement-attendees">
+          Based on {s.paying_attendees} paying{' '}
+          {s.paying_attendees === 1 ? 'attendee' : 'attendees'} — your own spot is free.
+        </Typography>
         {settlementLines(s).map((line) => (
           <Row key={line.label} symbol={s.currency_symbol} line={line} />
         ))}

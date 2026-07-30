@@ -32,9 +32,12 @@ const mocks: MockedResponse[] = [
     result: {
       data: {
         categories: [
-          { __typename: 'Category', id: 'sup-1', name: 'Food', slug: 'food', level: 'SUPER', parent_id: null },
-          { __typename: 'Category', id: 'cat-1', name: 'Cafe', slug: 'cafe', level: 'CATEGORY', parent_id: 'sup-1' },
-          { __typename: 'Category', id: 'sub-1', name: 'Coffee', slug: 'coffee', level: 'SUB', parent_id: 'cat-1' },
+          // `min_pax` is part of ADMIN_CATEGORIES' selection — omitting it makes
+          // Apollo refuse to write the result to the cache, so the cascade
+          // renders empty and these assertions pass or fail on timing.
+          { __typename: 'Category', id: 'sup-1', name: 'Food', slug: 'food', level: 'SUPER', parent_id: null, min_pax: null },
+          { __typename: 'Category', id: 'cat-1', name: 'Cafe', slug: 'cafe', level: 'CATEGORY', parent_id: 'sup-1', min_pax: null },
+          { __typename: 'Category', id: 'sub-1', name: 'Coffee', slug: 'coffee', level: 'SUB', parent_id: 'cat-1', min_pax: 4 },
         ],
       },
     },

@@ -218,7 +218,31 @@ jobs:
             sonar-cache-${{ runner.os }}-${{ github.ref_name }}-
             sonar-cache-${{ runner.os }}-
 
+      # The probe job ran BEFORE the two coverage jobs — twenty-odd minutes ago.
+      # A manually-managed VPS can die inside that window, and then the scan
+      # fails for precisely the "no good reason" the probe was added to avoid
+      # (the probe only ever guarded the START of the run). Ask again at the one
+      # moment that matters. This does NOT swallow scanner errors: if the server
+      # answers, the scan runs and any real failure still reds the pipeline.
+      - name: Re-check SonarQube availability
+        id: recheck
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "$SONAR_HOST_URL/api/server/version" || echo "000")
+          if [ "$code" = "200" ]; then
+            echo "up=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ inputs.fail_on_unreachable }}" = "true" ]; then
+              echo "::error::SonarQube went down after the probe (HTTP $code)."
+              exit 1
+            fi
+            echo "::warning::SonarQube went down after the probe (HTTP $code) — skipping the scan."
+          fi
+
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        if: steps.recheck.outputs.up == 'true'
         with:
           # The set actually present on disk (see "Normalize lcov paths" above).
           # Left empty on a skip_coverage run so the scan still publishes rather

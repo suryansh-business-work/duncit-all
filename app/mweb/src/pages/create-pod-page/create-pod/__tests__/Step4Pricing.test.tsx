@@ -68,11 +68,13 @@ function previewWith(overrides: Partial<EarningsPreview>): EarningsPreview {
     noOfSpots: 3,
     venueId: 'v1',
     isPhysical: true,
+    isFree: false,
     projection: { total_spots: 3, payable_spots: 2, waterfall: shortfallWaterfall },
     loading: false,
     stale: false,
     hasVenue: true,
     ready: true,
+    priceMissing: false,
     zeroEarnings: false,
     venueShortfall: false,
     blocked: false,
@@ -82,7 +84,14 @@ function previewWith(overrides: Partial<EarningsPreview>): EarningsPreview {
 
 describe('Step-4 pricing guards', () => {
   it('flags a venue shortfall only for a priced, multi-spot physical pod', () => {
-    const base = { podAmount: 100, noOfSpots: 3, slotPrice: 500, venueId: 'v1', isPhysical: true };
+    const base = {
+      podAmount: 100,
+      noOfSpots: 3,
+      slotPrice: 500,
+      venueId: 'v1',
+      isPhysical: true,
+      isFree: false,
+    };
     // ₹100 × 2 payable spots = ₹200 < ₹500.
     expect(isVenueShortfall(base)).toBe(true);
     // ₹300 × 2 = ₹600 ≥ ₹500.

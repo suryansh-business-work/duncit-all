@@ -5,7 +5,9 @@ import { Text, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useAppVersionStore } from '@/stores/app-version.store';
+import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { appVersion } from '@/utils/app-version';
 import { isOutdated } from '@/utils/semver';
@@ -18,16 +20,27 @@ import { isOutdated } from '@/utils/semver';
 const FALLBACK_STORE_URL = 'https://play.google.com/store/apps/details?id=com.duncit.mobile';
 
 /**
+ * Tech Portal -> Feature Flags -> "Force App Update". ON (the seeded default)
+ * enforces the update screen; OFF lets an outdated build keep running. Read at
+ * runtime from the server, so flipping it takes effect without an app release.
+ */
+const FORCE_APP_UPDATE_FLAG = 'force_app_update';
+
+/**
  * Full-screen, NON-DISMISSABLE force-update gate. Renders over the whole app
  * (absolute inset + high zIndex, modelled on <SplashOverlay/>) whenever the
  * running build is behind the server's `latest_version`; otherwise it renders
  * null and the app passes through untouched. There is no close/skip — the block
  * is intentional and covers everything below it.
  *
+ * The Tech Portal's "Force App Update" flag is the master switch: with it OFF,
+ * an outdated build is never blocked.
+ *
  * CAVEAT: the DB `latest_version` is bumped on every deploy, but the Play Store
  * build publishes on its own cadence. This gate blocks purely on the DB value —
  * so if the DB is ahead of the currently-published Play Store build, users see
- * the block with no update yet available. This is the chosen product behaviour.
+ * the block with no update yet available. That is the chosen product behaviour,
+ * and the feature flag is the escape hatch when it bites.
  */
 export function ForceUpdateGate() {
   // Colours are selected from the SAME scheme source AppBackground uses
@@ -36,6 +49,12 @@ export function ForceUpdateGate() {
   const scheme = useThemeStore((s) => s.scheme);
   const tokens = scheme === 'dark' ? dark : light;
   const info = useAppVersionStore((s) => s.data)?.appVersionInfo;
+  // The kill-switch. `true` is the fallback so a database that predates the
+  // seed still enforces, and `flagsLoaded` holds the gate back until the real
+  // answer lands — otherwise an app with the flag OFF flashes the block for as
+  // long as the flags take to arrive.
+  const enforced = useFeatureFlag(FORCE_APP_UPDATE_FLAG, true);
+  const flagsLoaded = useFeatureFlagsStore((s) => s.data !== undefined);
   const current = appVersion();
   const latest = info?.latest_version ?? '';
   // Computed unconditionally (before the guard) so the CTA URL is always defined
@@ -47,6 +66,10 @@ export function ForceUpdateGate() {
   // development unblocked (the baked version trails the DB `latest_version`).
   /* istanbul ignore next -- jest runs a native platform, so this web short-circuit is never exercised */
   if (Platform.OS === 'web') return null;
+
+  // Same fail-safe stance as an unreachable `appVersionInfo`: no answer from the
+  // server means nobody gets locked out.
+  if (!flagsLoaded || !enforced) return null;
 
   if (!isOutdated(current, latest)) return null;
 

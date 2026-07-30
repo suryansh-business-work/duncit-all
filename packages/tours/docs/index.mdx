@@ -1,0 +1,86 @@
+---
+name: '@duncit/tours'
+summary: 'Guided-tour definitions, step copy and per-user completion state, shared by mWeb (React Joyride) and the native app.'
+category: 'domain'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+exports:
+  - 'TOURS'
+  - 'HOME_TOUR_ID'
+  - 'findTour'
+  - 'tourStorageKey'
+  - 'readCompletedTours'
+  - 'serializeCompletedTours'
+  - 'markTourCompleted'
+  - 'isTourCompleted'
+  - 'shouldAutoStartHomeTour'
+---
+
+# @duncit/tours
+
+What each guided tour says and which tours a user has already seen. No overlay,
+no storage, no framework — mWeb renders React Joyride and native renders
+`react-native-spotlight-tour`, two libraries with different geometry and
+animation, but the *content and sequence* are written once here.
+
+That split is deliberate. Rule 27 asks mWeb and native to match, and with two
+different tour libraries pixel parity is not achievable; identical steps in an
+identical order is.
+
+## Adding a tour
+
+One entry in `TOURS`, plus the matching anchors on the screen. Neither overlay
+changes — that is the "extensible for future screens" requirement:
+
+```js
+{
+  id: 'club',
+  title: 'Club Page',
+  caption: 'Following a club and finding its pods',
+  path: '/clubs',            // mWeb route
+  nativeRoute: 'Clubs',      // native stack screen
+  steps: [
+    { anchor: 'club-follow', title: 'Follow', body: 'Following puts this club’s new pods in front of you…' },
+  ],
+}
+```
+
+`anchor` is the contract between copy and screen. mWeb tags the element
+`data-tour="club-follow"`; native registers the same string with the tour-guide
+provider. Anchors are unique across every tour, which the suite asserts — a
+duplicate would make a step highlight the wrong element on whichever screen
+rendered first.
+
+## Completion state
+
+```js
+tourStorageKey('66f1a2…')          // 'duncit.tours.completed.66f1a2…'
+readCompletedTours(raw)            // TourId[] — never throws
+markTourCompleted(completed, 'home')
+shouldAutoStartHomeTour(completed, isFirstSignup)
+```
+
+**Keyed by user id, and that matters.** Every other persisted flag in these apps
+is device-scoped with no user id, so a second person signing in on the same
+phone or browser inherits the first person's state. For a "show this once" flag
+that is the difference between a new user getting their tour and silently never
+seeing it.
+
+`readCompletedTours` treats anything unreadable — absent, empty, malformed JSON,
+a tampered array — as "none completed". A corrupt value must not cost a user
+their tour and must never throw during app start.
+
+Skipping counts as completed. The brief says "shown once by default", and a user
+who dismissed the tour has been shown it; restarting is always available from
+the Tour Guide centre.
+
+## What is NOT here
+
+Storage itself. mWeb passes `localStorage`, native passes AsyncStorage, and the
+package stays dependency-free so native can import it without pulling a web API.
+The auto-start decision is a pure function of (completed, isFirstSignup) — each
+surface supplies both.

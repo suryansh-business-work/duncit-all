@@ -32,7 +32,7 @@ describe('profileSections', () => {
 
   it('builds the manage list (account rows only) without Pod Plans by default', () => {
     const labels = buildManageItems(false).map((i) => i.label);
-    expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'FAQs']);
+    expect(labels).toEqual(['Manage Account', 'Saved Items', 'Verification', 'Tour Guide', 'FAQs']);
   });
 
   it('inserts Pod Plans before FAQs when the flag is on', () => {
@@ -41,6 +41,7 @@ describe('profileSections', () => {
       'Manage Account',
       'Saved Items',
       'Verification',
+      'Tour Guide',
       'Pod Plans',
       'FAQs',
     ]);

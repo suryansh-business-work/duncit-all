@@ -81,6 +81,13 @@ export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
       icon: 'verified-user',
       route: 'Verification',
     },
+    {
+      key: 'tour',
+      label: 'Tour Guide',
+      caption: '',
+      icon: 'explore',
+      route: 'TourGuide',
+    },
     { key: 'faqs', label: 'FAQs', caption: '', icon: 'help-outline', route: 'Faqs' },
   ];
   if (showPodPlans) {

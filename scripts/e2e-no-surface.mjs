@@ -39,6 +39,7 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/logs', 'transport library, no DOM'],
   ['@duncit/media-picker', 'library — rendered end-to-end by admin + support'],
   ['@duncit/onboarding', 'pure Earn rules, no DOM — driven end-to-end by mWeb + partners-app'],
+  ['@duncit/tours', 'tour definitions + completion state, no DOM — the overlays live in mWeb + native'],
   ['@duncit/pod-form', 'library — rendered end-to-end by mWeb'],
   ['@duncit/portal-pod-form', 'library — rendered end-to-end by admin + challenge-portal'],
   ['@duncit/regex', 'zero-dep regex/validators, no DOM'],

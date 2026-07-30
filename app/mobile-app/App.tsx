@@ -16,6 +16,7 @@ import { useBrandFont } from '@/hooks/useBrandFont';
 import { setWebFavicon } from '@/services/web-favicon';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { linking } from '@/navigation/linking';
@@ -118,7 +119,11 @@ export default function App() {
                   linking={linking}
                 >
                   <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-                  <RootNavigator />
+                  {/* Inside NavigationContainer so a tour survives the
+                      navigation that takes the user to its screen. */}
+                  <NativeTourProvider>
+                    <RootNavigator />
+                  </NativeTourProvider>
                 </NavigationContainer>
                 <SplashOverlay />
                 <ForceUpdateGate />

@@ -21,6 +21,8 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   venue_space_label: 'Whole venue',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time: future(),
+  // The blank default is invalid on purpose — a paid pod must carry a price.
+  pod_amount: 499,
   media_text: 'https://cdn/img.jpg',
   what_this_pod_offers: ['Guided trail'],
   agreed_to_terms: true,
@@ -76,6 +78,26 @@ describe('createPodSchema', () => {
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount: 100 }))).toContain('pod_amount');
     expect(issuesOf(valid({ pod_type: 'PAID', pod_amount: 2500 }))).toContain('pod_amount');
     expect(createPodSchema.safeParse(valid({ pod_type: 'PAID', pod_amount: 499 })).success).toBe(true);
+  });
+
+  it('blocks a paid pod until the host enters a ticket price above ₹0', () => {
+    // The field ships blank, so an untouched paid pod cannot be published.
+    expect(blankCreatePodForm.pod_amount).toBeNull();
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount: null }))).toContain('pod_amount');
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount: 0 }))).toContain('pod_amount');
+    // A free pod is the only pod that may sit at ₹0.
+    expect(
+      createPodSchema.safeParse(
+        valid({
+          pod_type: 'FREE',
+          pod_amount: 0,
+          pod_mode: 'VIRTUAL',
+          venue_id: '',
+          venue_slot_id: '',
+          meeting_url: 'https://meet.duncit.com/x',
+        }),
+      ).success,
+    ).toBe(true);
   });
 
   it('requires at least one product when products are enabled', () => {

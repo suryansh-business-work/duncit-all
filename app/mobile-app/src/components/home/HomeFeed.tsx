@@ -14,6 +14,7 @@ import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useBranding } from '@/hooks/useBranding';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { TourAnchor } from '@/tours/TourAnchor';
 import { useHomeStore } from '@/stores/home.store';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -91,30 +92,34 @@ export function HomeFeed() {
             <StatusRail userName={userName} userPhoto={userPhoto} />
           </Reveal>
           <Reveal index={1}>
-            <HomeVibeChips
-              categories={vibeCategories}
-              selectedId={selectedCategoryId}
-              onSelect={setSelectedCategoryId}
-              allIcon={brandingData?.branding.home_all_vibe_icon_url}
-              allLayout={brandingData?.branding.home_all_vibe_icon_layout}
-              action={
-                <HomeFilterButton
-                  count={filterCount}
-                  disabled={!hasContent}
-                  onPress={() => setFilterOpen(true)}
-                />
-              }
-            />
+            <TourAnchor tour="home" anchor="home-categories">
+              <HomeVibeChips
+                categories={vibeCategories}
+                selectedId={selectedCategoryId}
+                onSelect={setSelectedCategoryId}
+                allIcon={brandingData?.branding.home_all_vibe_icon_url}
+                allLayout={brandingData?.branding.home_all_vibe_icon_layout}
+                action={
+                  <HomeFilterButton
+                    count={filterCount}
+                    disabled={!hasContent}
+                    onPress={() => setFilterOpen(true)}
+                  />
+                }
+              />
+            </TourAnchor>
           </Reveal>
           <YStack gap={16}>
             <Reveal index={2}>
               <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
             </Reveal>
             <Reveal index={3}>
-              <HomeFeaturedPods
-                pods={featuredPods}
-                onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
-              />
+              <TourAnchor tour="home" anchor="home-pods">
+                <HomeFeaturedPods
+                  pods={featuredPods}
+                  onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                />
+              </TourAnchor>
             </Reveal>
             {isEmpty ? (
               <Reveal index={4} scale>
@@ -130,16 +135,23 @@ export function HomeFeed() {
                 </Text>
               </Reveal>
             ) : (
-              clubsWithPods.map(({ club, pods }, sectionIndex) => (
-                <Reveal key={club.id} index={4 + sectionIndex}>
-                  <ClubSection
-                    club={club}
-                    pods={pods}
-                    onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
-                    onOpenClub={(c) => openClub(c.club_id)}
-                  />
-                </Reveal>
-              ))
+              // One anchor around the whole club list: the Clubs step describes
+              // what clubs are, so it highlights the region rather than picking
+              // an arbitrary row.
+              <TourAnchor tour="home" anchor="home-clubs">
+                <YStack gap={16}>
+                  {clubsWithPods.map(({ club, pods }, sectionIndex) => (
+                    <Reveal key={club.id} index={4 + sectionIndex}>
+                      <ClubSection
+                        club={club}
+                        pods={pods}
+                        onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                        onOpenClub={(c) => openClub(c.club_id)}
+                      />
+                    </Reveal>
+                  ))}
+                </YStack>
+              </TourAnchor>
             )}
             <Reveal index={5}>
               <PreviousPodsRail

@@ -90,6 +90,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         followedPosts={followedPosts}
         followedUsers={followedUsers}
       />
+      <Box data-tour="home-categories">
       <HomeVibeChips
         categories={vibeCategories}
         selectedId={categoryId}
@@ -97,6 +98,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         allIcon={branding?.home_all_vibe_icon_url}
         allLayout={branding?.home_all_vibe_icon_layout}
         action={
+          <Box data-tour="home-filters" component="span">
           <FilterMenu
             open={filtersOpen}
             onOpenChange={setFiltersOpen}
@@ -112,8 +114,10 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             locationId={locationId}
             disabled={noContent}
           />
+          </Box>
         }
       />
+      </Box>
       <Stack spacing={1.75}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
           <Stack
@@ -162,22 +166,28 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             See all
           </Button>
         </Stack>
-        <HomeFeaturedPods pods={featuredPods} />
-        <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
+        <Box data-tour="home-pods">
+          <HomeFeaturedPods pods={featuredPods} />
+        </Box>
+        <Box data-tour="home-search">
+          <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
+        </Box>
 
         {clubs.length === 0 ? (
           <Alert severity="info">
             No clubs in this category {locationId ? 'for the selected city' : ''} yet.
           </Alert>
         ) : (
-          clubs.map((club: any) => (
-            <ClubSection
-              key={club.id}
-              club={club}
-              clubPods={podsByClub.get(club.id) ?? []}
-              hostNameOf={hostNameOf}
-            />
-          ))
+          <Box data-tour="home-clubs">
+            {clubs.map((club: any) => (
+              <ClubSection
+                key={club.id}
+                club={club}
+                clubPods={podsByClub.get(club.id) ?? []}
+                hostNameOf={hostNameOf}
+              />
+            ))}
+          </Box>
         )}
         <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} />
         <AdSlot position="HOME_BOTTOM" variant="banner" />

@@ -46,7 +46,8 @@ export interface CreatePodFormValues {
   pod_date_time: Date | null;
   pod_end_date_time: Date | null;
   pod_type: string;
-  pod_amount: number;
+  /** Blank (null) until the host types a price — ₹0 is only valid for a FREE pod. */
+  pod_amount: number | null;
   no_of_spots: number;
   pod_hashtag_text: string;
   media_text: string;
@@ -81,7 +82,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   pod_end_date_time: null,
   // Default mode is PHYSICAL, and physical pods can only be PAID.
   pod_type: 'PAID',
-  pod_amount: 0,
+  pod_amount: null,
   no_of_spots: 0,
   pod_hashtag_text: '',
   media_text: '',

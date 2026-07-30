@@ -3,12 +3,19 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { useAppVersionStore } from '@/stores/app-version.store';
+import { useFeatureFlagsStore } from '@/stores/feature-flags.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { appVersion } from '@/utils/app-version';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/utils/app-version', () => ({ appVersion: jest.fn(() => '1.0.0') }));
 const mockedAppVersion = appVersion as jest.Mock;
+
+// The gate's flag lookup triggers the one-shot flags fetch. Every test drives
+// the store directly, so the request must never resolve behind their backs.
+jest.mock('@/services/graphql.client', () => ({
+  graphqlRequest: jest.fn(() => new Promise(() => undefined)),
+}));
 
 const setVersionInfo = (latest: string, androidUrl: string) =>
   useAppVersionStore.setState({
@@ -21,10 +28,22 @@ const setVersionInfo = (latest: string, androidUrl: string) =>
     },
   });
 
+/** Seeds the server's public flag set — `undefined` leaves it still loading. */
+const setForceUpdateFlag = (enabled: boolean | undefined) =>
+  useFeatureFlagsStore.setState({
+    data:
+      enabled === undefined
+        ? undefined
+        : { publicFeatureFlags: [{ key: 'force_app_update', enabled }] },
+  });
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockedAppVersion.mockReturnValue('1.0.0');
   useAppVersionStore.setState({ data: undefined, isLoading: false, error: undefined });
+  useFeatureFlagsStore.setState({ data: undefined, isLoading: false, error: undefined });
+  // The flag ships ON, so the existing behaviour is what most tests assert.
+  setForceUpdateFlag(true);
   useThemeStore.setState({ scheme: 'light' });
 });
 
@@ -73,5 +92,28 @@ describe('ForceUpdateGate', () => {
     // data undefined (fail-safe): latest reads as empty, gate stays open.
     renderWithProviders(<ForceUpdateGate />);
     expect(screen.queryByTestId('force-update-gate')).toBeNull();
+  });
+});
+
+describe('ForceUpdateGate — the Force App Update feature flag', () => {
+  it('never blocks an outdated build while the flag is off', () => {
+    setForceUpdateFlag(false);
+    setVersionInfo('2.0.0', 'https://play.google.com/store/apps/details?id=com.duncit.mobile');
+    renderWithProviders(<ForceUpdateGate />);
+    expect(screen.queryByTestId('force-update-gate')).toBeNull();
+  });
+
+  it('holds the block back until the flags land, so an off flag never flashes it', () => {
+    setForceUpdateFlag(undefined);
+    setVersionInfo('2.0.0', 'https://play.google.com/store/apps/details?id=com.duncit.mobile');
+    renderWithProviders(<ForceUpdateGate />);
+    expect(screen.queryByTestId('force-update-gate')).toBeNull();
+  });
+
+  it('still enforces when the server has no such flag (a database predating the seed)', () => {
+    useFeatureFlagsStore.setState({ data: { publicFeatureFlags: [] } });
+    setVersionInfo('2.0.0', 'https://play.google.com/store/apps/details?id=com.duncit.mobile');
+    renderWithProviders(<ForceUpdateGate />);
+    expect(screen.getByTestId('force-update-gate')).toBeOnTheScreen();
   });
 });

@@ -94,6 +94,7 @@ function shortfallInput(over: Partial<Parameters<typeof isVenueShortfall>[0]>) {
     venueId: 'v1',
     slotPrice: 400,
     isPhysical: true,
+    isFree: false,
     ...over,
   };
 }
@@ -116,6 +117,7 @@ describe('usePodPricing', () => {
     venueId: 'v1',
     slotPrice: 300,
     isPhysical: true,
+    isFree: false,
   };
 
   it('blocks Create Pod when the projected payout is ₹0 or less', () => {
@@ -171,6 +173,22 @@ describe('usePodPricing', () => {
     const { result } = renderHook(() => usePodPricing({ ...input, noOfSpots: 1, slotPrice: null }));
     expect(result.current.hostOnly).toBe(true);
   });
+
+  // The Ticket Price field ships blank, so an untouched paid pod reads as ₹0 —
+  // publishing stays blocked until the host types a price of their own.
+  it('blocks a paid pod while the ticket price is still blank', () => {
+    const { result } = renderHook(() => usePodPricing({ ...input, podAmount: 0 }));
+    expect(result.current.priceMissing).toBe(true);
+    expect(result.current.blocked).toBe(true);
+  });
+
+  it('exempts a free pod, whose price is legitimately ₹0', () => {
+    const { result } = renderHook(() =>
+      usePodPricing({ ...input, podAmount: 0, isFree: true, slotPrice: null }),
+    );
+    expect(result.current.priceMissing).toBe(false);
+    expect(result.current.blocked).toBe(false);
+  });
 });
 
 function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormValues> }>) {
@@ -183,6 +201,7 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
     venueId: form.watch('venue_id') || null,
     slotPrice: 400,
     isPhysical: form.watch('pod_mode') === 'PHYSICAL',
+    isFree: form.watch('pod_type') === 'FREE',
   });
   return (
     <PricingStep

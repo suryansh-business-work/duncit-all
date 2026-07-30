@@ -50,6 +50,7 @@ export type RootStackParamList = {
   PodIdeas: undefined;
   Referral: undefined;
   Faqs: undefined;
+  TourGuide: undefined;
   PodPlans: undefined;
   Policies: undefined;
   SupportTickets: { podId?: string; podTitle?: string } | undefined;

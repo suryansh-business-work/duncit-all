@@ -235,6 +235,7 @@ export default function CreatePodStepper({
     noOfSpots: Number(form.watch('no_of_spots')) || 0,
     venueId: venueId || null,
     isPhysical: podMode === 'PHYSICAL',
+    isFree: form.watch('pod_type') === 'FREE',
   });
 
   const steps = [

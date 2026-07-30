@@ -302,6 +302,18 @@ describe('settingsService integration', () => {
     const flags = await settingsService.listPublicFlags();
     expect(flags.length).toBeGreaterThanOrEqual(6);
     expect(flags.every((f) => typeof f.enabled === 'boolean')).toBe(true);
+    // The native force-update screen is gated on this flag, so it ships ON —
+    // adding the toggle must not silently stop enforcing updates.
+    expect(flags.find((f) => f.key === 'force_app_update')?.enabled).toBe(true);
+  });
+
+  it('leaves an operator-disabled force_app_update alone on the next boot', async () => {
+    await settingsService.seedDefaults();
+    const flag = await settingsService.getFlag('force_app_update');
+    await settingsService.setFlagEnabled(flag!.id, false);
+    // $setOnInsert only — re-seeding must never revive a flag Tech turned off.
+    await settingsService.seedDefaults();
+    expect((await settingsService.getFlag('force_app_update'))?.enabled).toBe(false);
   });
 
   it('serves the featureFlagsTable page with search, filters, sort and paging', async () => {

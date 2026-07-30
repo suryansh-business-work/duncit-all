@@ -15,13 +15,14 @@ interface HarnessProps {
   noOfSpots: number;
   venueId: string | null;
   isPhysical: boolean;
+  isFree?: boolean;
   onPreview?: (preview: EarningsPreview) => void;
 }
 
 /** The panel is now fed by the shared Step-4 preview hook (the stepper owns it
  * so the footer can block Create Pod), so the test drives the hook. */
-function Harness({ onPreview, ...input }: Readonly<HarnessProps>) {
-  const preview = useEarningsPreview(input);
+function Harness({ onPreview, isFree = false, ...input }: Readonly<HarnessProps>) {
+  const preview = useEarningsPreview({ ...input, isFree });
   onPreview?.(preview);
   return <PricePanel preview={preview} />;
 }

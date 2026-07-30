@@ -2,6 +2,7 @@ import { parse } from 'date-fns';
 import { z } from 'zod';
 
 import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
+import { TICKET_PRICE_MIN, TICKET_PRICE_REQUIRED } from './price-panel/step4-copy';
 import {
   blankCreatePodForm,
   type CreatePodClub,
@@ -107,15 +108,30 @@ function refinePodType(values: CreatePodFormValues, ctx: z.RefinementCtx) {
   }
 }
 
-/** Pricing, products, media and the Organizer Terms gate on the publish step. */
-function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx) {
-  if (values.pod_type === 'FREE' && Number(values.pod_amount_text) !== 0) {
-    ctx.addIssue({
-      code: 'custom',
-      path: ['pod_amount_text'],
-      message: 'Free pods must have amount 0',
-    });
+/** The ticket price is blank until the host types one, so a PAID pod can never
+ * be published at ₹0 by default — only a FREE pod (whose field is locked to 0)
+ * may carry no price. mWeb twin (rule 27). */
+function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  const amount = values.pod_amount_text.trim();
+  if (values.pod_type === 'FREE') {
+    if (Number(amount) !== 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['pod_amount_text'],
+        message: 'Free pods must have amount 0',
+      });
+    }
+    return;
   }
+  if (!amount) {
+    ctx.addIssue({ code: 'custom', path: ['pod_amount_text'], message: TICKET_PRICE_REQUIRED });
+  } else if (Number(amount) <= 0) {
+    ctx.addIssue({ code: 'custom', path: ['pod_amount_text'], message: TICKET_PRICE_MIN });
+  }
+}
+
+/** Products, media and the Organizer Terms gate on the publish step. */
+function refinePublish(values: CreatePodFormValues, ctx: z.RefinementCtx) {
   if (values.products_enabled && values.product_requests.length === 0) {
     ctx.addIssue({
       code: 'custom',
@@ -200,6 +216,7 @@ export const createPodSchema = z
     refineMeeting(values, ctx);
     refineSchedule(values, ctx);
     refinePodType(values, ctx);
+    refineTicketPrice(values, ctx);
     refinePublish(values, ctx);
   });
 

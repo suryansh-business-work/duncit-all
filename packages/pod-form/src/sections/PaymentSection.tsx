@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Box, MenuItem, Slider, Stack, Switch, TextField, Typography } from '@mui/material';
 import { payableSpots } from '@duncit/utils';
@@ -33,6 +34,16 @@ export default function PaymentSection() {
     }
     return spots.min > 0 ? `This activity needs at least ${spots.min} people.` : undefined;
   })();
+  // The control clamps what it DISPLAYS to the activity's minimum, so without
+  // this the form could still hold a smaller number than the admin was shown and
+  // save it. Raise to the floor once the floor is known; never lower, so a
+  // legitimately larger pod is left alone. (Sections stay mounted when the
+  // accordion is collapsed, so this runs regardless.)
+  useEffect(() => {
+    if (spots.min > 0 && (Number(getValues('no_of_spots')) || 0) < spots.min) {
+      setValue('no_of_spots', spots.min, { shouldValidate: true });
+    }
+  }, [spots.min]); // eslint-disable-line react-hooks/exhaustive-deps
   const amountHint = isFree ? 'Free pod — amount must be 0' : 'GROSS price (incl. fee + GST). 0 – 1999.';
   // The host takes one spot for free, so only (total - 1) spots are ever billed.
   const billableSpots = payableSpots(Number(noOfSpots) || 0);

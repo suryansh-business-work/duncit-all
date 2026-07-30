@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useFormContext, useWatch, type UseFormSetValue } from 'react-hook-form';
 import { usePodFormData } from './context';
 import { filterProductsForClub, pruneProductRequests } from './product-category';
-import { useSpotsBounds } from './useSpotsBounds';
 import type { PodFormValues } from './types';
 
 /** A VIRTUAL pod has no venue, place charges or products — clear them. */
@@ -32,7 +31,6 @@ function clearVirtualFields(values: PodFormValues, setValue: UseFormSetValue<Pod
  */
 export default function CascadeEffect() {
   const { clubs, products, getClubVenueIds } = usePodFormData();
-  const spots = useSpotsBounds();
   const { control, getValues, setValue } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const clubId = useWatch({ control, name: 'club_id' });
@@ -71,16 +69,6 @@ export default function CascadeEffect() {
       setValue('product_requests', []);
     }
   }, [productsEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // The spots control clamps what it DISPLAYS to the activity's minimum, so
-  // without this the form could still hold a smaller number than the admin was
-  // shown and save it. Raise the value to the floor as soon as the floor is
-  // known; never lower it, so a legitimately larger pod is left alone.
-  useEffect(() => {
-    if (spots.min > 0 && (Number(getValues('no_of_spots')) || 0) < spots.min) {
-      setValue('no_of_spots', spots.min, { shouldValidate: true });
-    }
-  }, [spots.min]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Switching club switches which products the pod may carry, so rows the new
   // club does not offer are dropped. Without this they survive unrenderable and

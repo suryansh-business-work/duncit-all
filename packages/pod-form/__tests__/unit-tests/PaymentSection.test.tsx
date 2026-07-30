@@ -206,6 +206,9 @@ describe('PaymentSection — spots bounds', () => {
       'aria-valuenow',
       '4',
     );
+    // And the FORM holds 4 too — displaying the floor while storing 0 would let
+    // an admin save a number they were never shown.
+    expect(ref.current?.getValues('no_of_spots')).toBe(4);
     act(() => {
       ref.current?.setError('no_of_spots', { type: 'custom', message: 'Too few for this activity' });
     });

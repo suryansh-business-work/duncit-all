@@ -138,8 +138,12 @@ export default function CategoriesPage() {
     }
   };
 
+  // minHeight, not height: the page was pinned to the viewport, so every row the
+  // settings card above gained came straight out of the three columns until they
+  // were too short to work in. Now the columns keep their height and the PAGE
+  // scrolls instead.
   return (
-    <Stack spacing={3} sx={{ height: 'calc(100vh - 140px)' }}>
+    <Stack spacing={3} sx={{ minHeight: 'calc(100vh - 140px)' }}>
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <CategoryIcon color="primary" />

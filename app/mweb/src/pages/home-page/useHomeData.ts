@@ -352,7 +352,10 @@ export function useHomeData({
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
     const subsByParent = new Map<string, any[]>();
     cats
-      .filter((c: any) => c.level === 'SUB' && isVisible(c))
+      // inScope here too: without it every SUB in the catalogue is bucketed
+      // whenever the admin toggle is on, and only the parent lookup below keeps
+      // the out-of-super ones off screen. Same rule on both branches (rule 27).
+      .filter((c: any) => c.level === 'SUB' && inScope(c) && isVisible(c))
       .forEach((s: any) => {
         const arr = subsByParent.get(s.parent_id) ?? [];
         arr.push(s);

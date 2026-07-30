@@ -114,6 +114,29 @@ describe('useHomeFeed', () => {
     ]);
   });
 
+  // showAllVibes turns off the has-pods test, which was the ONLY thing keeping
+  // other super categories' chips off screen — so switching it on used to show
+  // every category in the catalogue under whichever super the user picked.
+  it('keeps showAllVibes inside the selected super category', () => {
+    mockedSuper.mockReturnValue({ selectedSuperId: 'sup-sports' });
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: 'sup-sports' }],
+      pods: [pod('1', 'c1', future(1))],
+      categories: [
+        { id: 'sup-sports', name: 'Sports', slug: 'sp', level: 'SUPER', parent_id: null },
+        { id: 'sup-pets', name: 'Pets', slug: 'pt', level: 'SUPER', parent_id: null },
+        { id: 'cat1', name: 'Badminton', slug: 'c1', level: 'CATEGORY', parent_id: 'sup-sports' },
+        { id: 'cat2', name: 'Dog walks', slug: 'c2', level: 'CATEGORY', parent_id: 'sup-pets' },
+        { id: 'sub1', name: 'Singles', slug: 's1', level: 'SUB', parent_id: 'cat1' },
+        { id: 'sub2', name: 'Puppies', slug: 's2', level: 'SUB', parent_id: 'cat2' },
+      ],
+    } as never;
+    const filters = { price: 'ALL', date: 'ALL', sort: 'DATE_ASC' } as const;
+    const all = renderHook(() => useHomeFeed('', filters, true)).result.current;
+    expect(all.vibeCategories.map((c) => c.id)).toEqual(['cat1']);
+    expect(all.vibeCategories[0]?.subs.map((s) => s.id)).toEqual(['sub1']);
+  });
+
   it('builds two-row vibe categories (sorted, with pod-bearing subcategories)', () => {
     mockHomeState.data = {
       clubs: [

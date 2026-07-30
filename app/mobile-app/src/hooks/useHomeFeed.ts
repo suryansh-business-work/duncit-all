@@ -44,11 +44,18 @@ export interface VibeCategory {
 /** Structured two-row vibe filter: CATEGORY chips, each carrying its SUB chips.
  * Only categories/subs that actually have pods (directly or via a descendant)
  * in the current scope are kept — unless `showAllVibes` is on (admin toggle),
- * which keeps every category/sub (with its icon) even ones with no pods. */
+ * which keeps every category/sub (with its icon) even ones with no pods.
+ *
+ * Everything here is scoped to the selected Super Category. That scoping used to
+ * be missing entirely: with `showAllVibes` off it was masked, because a chip
+ * only survived if it had pods and the pod set was already super-scoped. Turn
+ * the admin toggle ON and `isVisible` was always true, so every category from
+ * EVERY super category appeared under whichever super the user had picked. */
 function deriveVibeCategories(
   allChips: HomeCategory[],
   podCategoryIds: Set<string | null | undefined>,
   showAllVibes: boolean,
+  selectedSuperId: string | null,
 ): VibeCategory[] {
   const parentById = new Map(allChips.map((c) => [c.id, c.parent_id ?? null]));
   const isDescendant = (childId: string, ancestorId: string) => {
@@ -67,12 +74,13 @@ function deriveVibeCategories(
     return false;
   };
   const isVisible = (chipId: string) => showAllVibes || chipHasPods(chipId);
+  const inSuper = (chipId: string) => !selectedSuperId || isDescendant(chipId, selectedSuperId);
   const categories = allChips
-    .filter((c) => c.level === 'CATEGORY' && isVisible(c.id))
+    .filter((c) => c.level === 'CATEGORY' && inSuper(c.id) && isVisible(c.id))
     .sort((a, b) => a.name.localeCompare(b.name));
   const subsByParent = new Map<string, HomeCategory[]>();
   allChips
-    .filter((c) => c.level === 'SUB' && isVisible(c.id))
+    .filter((c) => c.level === 'SUB' && inSuper(c.id) && isVisible(c.id))
     .forEach((s) => {
       const key = s.parent_id ?? '';
       const arr = subsByParent.get(key) ?? [];
@@ -143,7 +151,12 @@ function deriveHome(
     allPods.filter(inScope).map((p) => clubsById.get(p.club_id)?.category_id),
   );
   const categoryChips = allChips.filter((c) => podCategoryIds.has(c.id));
-  const vibeCategories = deriveVibeCategories(allChips, podCategoryIds, showAllVibes);
+  const vibeCategories = deriveVibeCategories(
+    allChips,
+    podCategoryIds,
+    showAllVibes,
+    selectedSuperId,
+  );
   // Whether this city/scope has any pods at all (pre category/price/date filter)
   // — drives disabling the Filter + Search controls when there's nothing to act on.
   const hasContent = allPods.some(inScope);

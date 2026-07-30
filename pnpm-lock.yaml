@@ -897,6 +897,9 @@ importers:
 
   packages/pod-form:
     dependencies:
+      '@duncit/category':
+        specifier: workspace:*
+        version: link:../category
       '@duncit/utils':
         specifier: workspace:*
         version: link:../utils

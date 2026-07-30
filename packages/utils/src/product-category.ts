@@ -9,8 +9,12 @@ export interface ClubCategoryKey {
   subId: string;
 }
 
-/** The club's Super + Sub pair, or null when it lacks one (legacy clubs) — in
- * which case no product filter is applied. A club's Sub is stored in category_id. */
+/** The club's Super + Sub pair, or null when it lacks one (legacy clubs) or when
+ * no club is picked yet. A club's Sub is stored in category_id.
+ *
+ * A null key means "this pod has no category", and every consumer below treats
+ * that as matching NOTHING. It used to mean "no filter", which is how a pod
+ * under a category-less club came to offer the entire catalogue. */
 export function clubCategoryKey(club: any): ClubCategoryKey | null {
   if (!club) return null;
   const superId = club.super_category_id ? String(club.super_category_id) : '';
@@ -29,7 +33,9 @@ export function clubCategoryKey(club: any): ClubCategoryKey | null {
  * category" failure at publish. Showing nothing is better than showing
  * something the save will reject. */
 export function productMatchesClub(product: any, key: ClubCategoryKey | null): boolean {
-  if (!key) return true;
+  // No pod category => nothing to match against => nothing matches. The server
+  // gate says the same, so the picker never offers what the save would reject.
+  if (!key) return false;
   const target = `${key.superId}|${key.subId}`;
   const rows =
     Array.isArray(product?.categories) && product.categories.length > 0
@@ -43,9 +49,33 @@ export function productMatchesClub(product: any, key: ClubCategoryKey | null): b
   );
 }
 
-/** Filter the product picker options to those matching the selected club. */
+/** Filter the product picker options to those matching the selected club.
+ *
+ * A pod with no resolvable category offers NOTHING — the caller renders "No
+ * products available for this category." That is deliberate: the alternative
+ * (offering everything) let a badminton product be attached to an unrelated
+ * pod, and the server rejects exactly what this now hides. */
 export function filterProductsForClub(products: any[], club: any): any[] {
   const key = clubCategoryKey(club);
-  if (!key) return products;
+  if (!key) return [];
   return products.filter((product) => productMatchesClub(product, key));
+}
+
+/** Drop already-picked product rows that the current club no longer offers.
+ *
+ * The host can pick products on Step 4 and then change the club (or their host
+ * category) on an earlier step. Without this the row survives, renders blank
+ * because its option is gone, and publishing dies on the server's category
+ * gate with no visible cause. Shared so mWeb, native and the portal pod-form
+ * prune identically (rules 27 + 40).
+ *
+ * Returns the SAME array reference when nothing is dropped, so callers can use
+ * it as an effect guard without looping. */
+export function pruneProductRequests<T extends { product_id: string }>(
+  requests: T[],
+  availableProducts: { id: string }[],
+): T[] {
+  const offered = new Set(availableProducts.map((product) => String(product.id)));
+  const kept = requests.filter((request) => offered.has(String(request.product_id)));
+  return kept.length === requests.length ? requests : kept;
 }

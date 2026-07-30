@@ -72,7 +72,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
             options={options}
             value={row.product_id}
             onChange={(id) => update(idx, { product_id: id })}
-            emptyHint="No products available."
+            emptyHint="No products available for this category."
             testID={`product-${idx}`}
           />
           <XStack alignItems="center" gap={10}>

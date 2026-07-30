@@ -35,7 +35,7 @@ import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
 import PricingStep from './steps/PricingStep';
 import { useEarningsPreview } from './price-panel';
 import { useQuery } from '@apollo/client';
-import { filterProductsForClub } from '@duncit/utils';
+import { filterProductsForClub, pruneProductRequests } from '@duncit/utils';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
@@ -216,6 +216,18 @@ export default function CreatePodStepper({
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
   // Only offer products whose category matches the selected club (Super + Sub).
   const availableProducts = filterProductsForClub(products, selectedClub) as CreatePodProduct[];
+
+  // Changing the club (or the host category, which clears the club) changes what
+  // Step 4 may offer, so any row the new club no longer offers has to go — it
+  // would otherwise render blank, price at ₹0 and die on the server's category
+  // gate at publish with nothing on screen explaining why. Native twin.
+  useEffect(() => {
+    const requests = form.getValues('product_requests');
+    const kept = pruneProductRequests(requests, availableProducts);
+    if (kept !== requests) form.setValue('product_requests', kept, { shouldDirty: true });
+    // availableProducts is derived from club_id, so that is the real trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clubId, form]);
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const venueId = form.watch('venue_id');

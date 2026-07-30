@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { filterProductsForClub } from '@duncit/utils';
+import { filterProductsForClub, pruneProductRequests } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
@@ -211,10 +211,22 @@ export function CreatePodStepper({
   });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
-  const selectedClub = clubs.find((club) => club.id === form.watch('club_id')) ?? null;
+  const clubId = form.watch('club_id');
+  const selectedClub = clubs.find((club) => club.id === clubId) ?? null;
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
   // Only offer products whose category matches the selected club (Super + Sub).
   const availableProducts = filterProductsForClub(products, selectedClub);
+
+  // Changing the club (or the host category, which clears the club) changes what
+  // Step 4 may offer, so any row the new club no longer offers has to go — it
+  // would otherwise render blank, price at ₹0 and die on the server's category
+  // gate at publish with nothing on screen explaining why. mWeb twin.
+  useEffect(() => {
+    const requests = form.getValues('product_requests');
+    const kept = pruneProductRequests(requests, availableProducts);
+    if (kept !== requests) form.setValue('product_requests', kept, { shouldDirty: true });
+    // availableProducts is derived from club_id, so that is the real trigger.
+  }, [clubId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const podMode = form.watch('pod_mode');

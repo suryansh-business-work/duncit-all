@@ -332,6 +332,24 @@ describe('CreatePodStepper', () => {
     expect(onPublish.mock.calls[0]?.[1].pod_type).toBe('PAID');
   });
 
+  // Step 4 only offers products in the pod's category, so a row carried in from
+  // a draft (or from a club the host has since changed) must be dropped — left
+  // in place it renders blank and the publish dies on the server category gate.
+  it('drops a picked product the pod category no longer offers', async () => {
+    setup({
+      initialStep: 3,
+      initialValues: {
+        ...initialValues,
+        club_id: 'c1',
+        products_enabled: true,
+        product_requests: [{ product_id: 'p1', quantity: 1 }],
+      },
+    });
+    await screen.findByTestId('create-pod-paid');
+    expect(screen.queryByTestId('product-0')).toBeNull();
+    expect(screen.getByTestId('products-empty')).toBeOnTheScreen();
+  });
+
   it('shows clubs from every category when the host has no linked categories', async () => {
     setup({ hostCategories: [] });
     await fillBasics();

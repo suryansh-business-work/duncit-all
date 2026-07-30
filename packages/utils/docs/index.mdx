@@ -221,16 +221,26 @@ clubCategoryKey(club)
 // { superId: 'sc_sports', subId: 'sub_badminton' }
 
 clubCategoryKey({ _id: 'clb_0001', name: 'Legacy Club' })
-// null — no Super+Sub, so no filter is applied
+// null — no Super+Sub, so this pod has no category at all
 
 filterProductsForClub(products, club).map((p) => p._id)
-// ['prd_101', 'prd_103']
+// ['prd_101']
 
 productMatchesClub(products[1], clubCategoryKey(club))   // false — football, not badminton
+
+pruneProductRequests(values.product_requests, filterProductsForClub(products, club))
+// drops rows whose product the newly-picked club no longer offers
 ```
 
-`prd_103` survives because it carries **no** category data. A missing query field degrades to
-"show all", never "hide all"; the server still enforces the gate on submit.
+Both helpers **fail closed**. A null key means "this pod has no category", so nothing matches
+and the picker renders `No products available for this category.` — it does *not* fall back to
+the whole catalogue. `prd_103` is dropped for the same reason: it carries no category data.
+
+That mirrors the server gate in `pod.service`, which rejects exactly this set on submit, so the
+picker can never offer something the save would refuse.
+
+`pruneProductRequests` returns the **same array reference** when nothing is dropped, which lets
+a caller use it directly as an effect guard without looping.
 
 ### The Step-4 earnings statement
 

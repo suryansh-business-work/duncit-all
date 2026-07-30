@@ -598,11 +598,17 @@ async function resolveClubCategory(
 }
 
 /** A product may attach to a pod only when one of its category rows (or its flat
- * legacy fields) matches the pod's club at the Super + Sub level. When the club
- * has no full pair, no constraint applies (graceful for legacy clubs). */
+ * legacy fields) matches the pod's club at the Super + Sub level.
+ *
+ * FAILS CLOSED. A pod whose club carries no category pair has nothing to match
+ * against, so it accepts NO products. This used to return true, which meant any
+ * caller pointing at a category-less club — or at a club_id that does not
+ * resolve at all — could attach a product from any category through the API.
+ * Mirrors `productMatchesClub` in @duncit/utils, which hides the same set in the
+ * picker so the client never offers what this rejects. */
 function productMatchesClubCategory(product: any, clubCategory: ClubCategory | null): boolean {
   if (!clubCategory?.super_category_id || !clubCategory?.sub_category_id) {
-    return true;
+    return false;
   }
   const target = `${clubCategory.super_category_id}|${clubCategory.sub_category_id}`;
   const rows = Array.isArray(product.categories) && product.categories.length > 0
@@ -630,6 +636,15 @@ async function buildProductRequests(
   const compact = Array.from(requestMap(rawItems).entries())
     .map(([productId, quantity]) => ({ productId, quantity }))
     .filter((item) => item.quantity > 0);
+  // Nothing can be matched against a pod that has no category, so say THAT
+  // rather than blaming each product for not belonging to a category the pod
+  // never had. Reached when the club carries no Super+Sub pair, or when the
+  // club_id does not resolve to a club at all.
+  if (compact.length > 0 && (!clubCategory?.super_category_id || !clubCategory?.sub_category_id)) {
+    throw new GraphQLError("This pod's club has no category, so no products can be attached to it", {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
   const next = [];
   for (const item of compact) {
     const product = await InventoryProductModel.findById(item.productId);

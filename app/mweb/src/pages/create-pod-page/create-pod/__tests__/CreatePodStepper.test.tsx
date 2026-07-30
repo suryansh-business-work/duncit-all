@@ -13,10 +13,11 @@ vi.mock('../../../../hooks/useFeatureFlag', () => ({
   useFeatureFlag: () => flagState.value,
 }));
 
-// filterProductsForClub is a pure helper covered elsewhere — pass products through.
-vi.mock('@duncit/utils', () => ({
-  filterProductsForClub: (products: unknown[]) => products,
-}));
+// NOT mocked: @duncit/utils is pure and its category filter is the behaviour
+// this stepper exists to enforce. It used to be stubbed to a pass-through, which
+// meant mWeb had zero coverage of the pod-category product rule while the native
+// twin had real tests (rule 27). The dedicated cases live in
+// ProductCategoryFilter.test.tsx.
 
 // The blocked-content dialog: render each violation and expose jump/close.
 vi.mock('@duncit/ui', () => ({

@@ -30,7 +30,6 @@ import type {
   PodModerationResult,
   PodModerationViolation,
 } from './create-pod.types';
-import HostCategoryField from './steps/HostCategoryField';
 import BasicsStep from './steps/BasicsStep';
 import LocationClubStep from './steps/LocationClubStep';
 import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
@@ -149,10 +148,6 @@ export default function CreatePodStepper({
     if (!(await form.trigger(STEP_FIELDS[step]))) return;
     // The category now sits above the title, so it gates the FIRST step — a host
     // should not fill a whole pod out and only then be told to pick one.
-    if (step === 0 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
-      form.setError('host_category_key', { type: 'required', message: 'Select your category' });
-      return;
-    }
     goTo(step + 1);
   };
 
@@ -266,7 +261,7 @@ export default function CreatePodStepper({
   });
 
   const steps = [
-    <BasicsStep key="basics" form={form} />,
+    <BasicsStep key="basics" form={form} hostCategories={hostCategories} />,
     <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} />,
     <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} />,
     <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} />,
@@ -274,10 +269,6 @@ export default function CreatePodStepper({
 
   return (
     <Stack spacing={2.5}>
-      {/* Above the title on purpose: the category scopes the clubs on step 2 AND
-          the products on step 4, so the host picks it before anything else
-          rather than discovering it half way through. Native twin (rule 27). */}
-      <HostCategoryField form={form} hostCategories={hostCategories} />
       <StepHero
         step={step}
         total={STEP_TITLES.length}

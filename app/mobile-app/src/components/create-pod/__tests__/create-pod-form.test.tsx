@@ -20,6 +20,9 @@ const futureText = (() => {
 
 const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => ({
   ...blankCreatePodForm,
+  // A pod always belongs to one of the host's approved categories — the picker
+  // above the title is required.
+  host_category_key: 'sc-sports|sub-hiking',
   pod_title: 'Sunday community hike',
   club_id: 'club-1',
   venue_id: 'venue-1',

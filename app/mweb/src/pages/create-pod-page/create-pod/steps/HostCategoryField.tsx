@@ -3,6 +3,9 @@ import { requiredLabel } from '../../../../forms/components/requiredLabel';
 import { hostCategoryKeyOf } from '../create-pod.form';
 import type { CreatePodForm, CreatePodHostCategory } from '../create-pod.types';
 
+/** Why the host is picking, not what went wrong. Twin: the native field. */
+export const CATEGORY_HINT = 'In which you want to host your session';
+
 const categoryPath = (category: CreatePodHostCategory) =>
   [category.super_category_name, category.category_name, category.sub_category_name]
     .filter(Boolean)
@@ -34,7 +37,15 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" fontWeight={800}>
-        {requiredLabel('Your category', true)}
+        {requiredLabel('Select Category', true)}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        display="block"
+        data-testid="create-pod-category-hint"
+      >
+        {CATEGORY_HINT}
       </Typography>
       <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
         {hostCategories.length > 0 ? (

@@ -40,7 +40,9 @@ function Harness({ withErrors = false }: { withErrors?: boolean }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return <BasicsStep form={form as any} />;
+  // The category picker is the step's first field now; these tests cover the
+  // rest of Pod Basics, so it renders with nothing to choose from.
+  return <BasicsStep form={form as any} hostCategories={[]} />;
 }
 
 function renderStep(withErrors = false) {

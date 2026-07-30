@@ -7,6 +7,7 @@ import MomentLightbox from '../../components/moments/MomentLightbox';
 import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
 import { STORY_RING_GRADIENT } from '../home-page/HomeStatusTile';
 import { RECORD_STORY_VIEW } from '../home-page/queries';
+import { isStoryLive } from '@duncit/utils';
 import { CLUB_STORIES } from '../ClubDetailsPage/clubDetailsQueries';
 
 interface ClubStory {
@@ -14,6 +15,7 @@ interface ClubStory {
   image_url: string;
   media_type: string;
   caption: string;
+  expires_at?: string | null;
   seen_by_me?: boolean;
   author?: { user_id: string; full_name?: string | null; profile_photo?: string | null } | null;
 }
@@ -33,9 +35,14 @@ export default function ClubStoriesSection({ clubId }: Readonly<Props>) {
     variables: { id: clubId },
     skip: !clubId,
     fetchPolicy: 'cache-and-network',
+    // Club pages stay open for a while — keep the 24h expiry honest without a
+    // reload. The server filter is authoritative; this catches the boundary.
+    pollInterval: 60_000,
   });
   const [recordView] = useMutation(RECORD_STORY_VIEW);
-  const stories = data?.clubStories ?? [];
+  // A story crossing its 24h boundary while this screen is open (or served
+  // stale from the Apollo cache) must disappear, not linger until a reload.
+  const stories = (data?.clubStories ?? []).filter((s) => isStoryLive(s.expires_at));
   const moments = stories.map((s) => ({ url: s.image_url, type: s.media_type }));
 
   // Mark the story at `index` viewed (idempotent server-side; the mutation

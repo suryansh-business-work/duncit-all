@@ -39,6 +39,25 @@ describe('postService integration', () => {
     expect((await postService.getById(created.id))?.caption).toBe('Hello');
   });
 
+  // The list queries filter expired stories and the TTL index eventually
+  // deletes them — but a direct id used to stay resolvable during the sweep
+  // lag, so an expired story lingered for anyone holding its link.
+  it('makes an expired story unreachable by direct id too', async () => {
+    const owner = new Types.ObjectId().toString();
+    const story = await postService.create(owner, { image_url: img, kind: 'STORY' });
+    expect(await postService.getById(story.id)).not.toBeNull();
+
+    await PostModel.updateOne(
+      { _id: story.id },
+      { $set: { expires_at: new Date(Date.now() - 60_000) } }
+    );
+    expect(await postService.getById(story.id)).toBeNull();
+
+    // A permanent POST has no expiry and always resolves.
+    const post = await postService.create(owner, { image_url: img });
+    expect(await postService.getById(post.id)).not.toBeNull();
+  });
+
   it('toggles a like and adds a comment', async () => {
     // Own author so this test's fire-and-forget notifications never collide
     // with the dedicated notification assertions below.

@@ -31,12 +31,33 @@ describe('useHostPayouts', () => {
     expect(result.current.symbol).toBe('Rs');
   });
 
-  it('swallows a load failure (list stays empty, default symbol)', async () => {
+  // A failed load must be distinguishable from "no payouts yet" — it used to be
+  // swallowed, so a network blip told a host with completed pods they had none.
+  it('surfaces a load failure through error (list stays empty, default symbol)', async () => {
     mockRequest.mockRejectedValue(new Error('down'));
     const { result } = renderHook(() => useHostPayouts());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.payouts).toEqual([]);
     expect(result.current.symbol).toBe('₹');
+    expect(result.current.error).toBe('down');
+  });
+
+  it('falls back to a generic message for a non-Error rejection', async () => {
+    mockRequest.mockRejectedValue('nope');
+    const { result } = renderHook(() => useHostPayouts());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBe('Could not load your payouts');
+  });
+
+  it('clears the error once a refetch succeeds', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('down')).mockResolvedValue(data);
+    const { result } = renderHook(() => useHostPayouts());
+    await waitFor(() => expect(result.current.error).toBe('down'));
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(result.current.error).toBeNull();
+    expect(result.current.payouts).toHaveLength(1);
   });
 
   it('refetch re-requests on demand', async () => {

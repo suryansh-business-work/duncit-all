@@ -91,4 +91,26 @@ describe('buildMyStatusViewer', () => {
     expect(viewer?.label).toBe('Me');
     expect(viewer?.slides).toHaveLength(1);
   });
+
+  // The 24h rule holds even when the feed was fetched before the boundary — an
+  // expired story never becomes a slide, and a rail of only-expired stories is
+  // no rail at all.
+  it('drops stories past their 24h expiry', () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const future = new Date(Date.now() + 60_000).toISOString();
+    const viewer = buildMyStatusViewer({
+      full_name: 'Me',
+      my_stories: [
+        { id: 's-old', image_url: 'old.jpg', media_type: 'IMAGE', expires_at: past },
+        { id: 's-live', image_url: 'live.jpg', media_type: 'IMAGE', expires_at: future },
+      ],
+    });
+    expect((viewer?.slides ?? []).map((s) => s.id)).toEqual(['s-live']);
+    expect(
+      buildMyStatusViewer({
+        full_name: 'Me',
+        my_stories: [{ id: 's-old', image_url: 'old.jpg', media_type: 'IMAGE', expires_at: past }],
+      }),
+    ).toBeNull();
+  });
 });

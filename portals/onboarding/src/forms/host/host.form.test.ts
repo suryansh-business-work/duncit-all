@@ -46,6 +46,12 @@ describe('host step schemas', () => {
   it('validates step3', () => {
     expect(isValid(hostStep3Schema, step3)).toBe(true);
     expect(isValid(hostStep3Schema, { ...step3, full_address: 'x' })).toBe(false);
+    // Police verification is optional at onboarding — a reviewer may approve
+    // before the document arrives. Length is still capped when present.
+    expect(isValid(hostStep3Schema, { ...step3, police_verification_url: '' })).toBe(true);
+    expect(
+      isValid(hostStep3Schema, { ...step3, police_verification_url: 'x'.repeat(1001) }),
+    ).toBe(false);
   });
 
   it('validates edit and create wrappers', () => {
@@ -64,16 +70,19 @@ describe('host initial values + variable mappers', () => {
     expect(values.status).toBe('APPROVED');
   });
 
-  it('builds edit values from a host, formatting dob', () => {
+  it('builds edit values from a host, formatting dob and showing the local phone digits', () => {
     const values = hostEditInitialValues({
       full_name: 'Asha',
       email: 'asha@duncit.com',
-      phone: '+91',
+      // The meeting flow stores "+91 9876543210" — the dialog shows the bare
+      // 10 digits (and the old spaced form would fail its own phone rule).
+      phone: '+91 9876543210',
       dob: '1990-05-01T00:00:00.000Z',
       status: 'SUBMITTED',
       bank_account: { payout_method: 'UPI', upi_id: 'asha@okhdfc' },
       tags: ['vip'],
     });
+    expect(values.step1.phone).toBe('9876543210');
     expect(values.step1.dob).toBe('1990-05-01');
     expect(values.status).toBe('SUBMITTED');
     expect(values.step3.tags).toEqual(['vip']);

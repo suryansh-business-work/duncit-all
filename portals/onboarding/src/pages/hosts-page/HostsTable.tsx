@@ -5,6 +5,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Link as RouterLink } from 'react-router-dom';
 import { Chip, IconButton, Link, Tooltip, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
+import { nationalPhoneDigits } from '@duncit/utils';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type HostCategoryRow, type HostRow } from './queries';
@@ -58,7 +59,9 @@ const renderHost = (h: HostRow) => (
 const renderContact = (h: HostRow) => (
   <>
     <Typography variant="body2">{h.email || '—'}</Typography>
-    <Typography variant="caption" color="text.secondary" display="block">{h.phone || '—'}</Typography>
+    <Typography variant="caption" color="text.secondary" display="block">
+      {nationalPhoneDigits(h.phone) || '—'}
+    </Typography>
   </>
 );
 

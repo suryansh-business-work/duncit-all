@@ -26,7 +26,6 @@ export default function HostVerificationSection() {
             : ' '
         }
         folder="/hosts/docs"
-        required
       />
       <TextField label="Full address" multiline minRows={2} required {...tfProps('step3.full_address')} />
       <TextField

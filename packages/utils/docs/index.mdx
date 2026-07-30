@@ -29,6 +29,8 @@ exports:
   - 'fileToBase64'
   - 'fileToDataUrl'
   - 'formatMjml'
+  - 'nationalPhoneDigits'
+  - 'isStoryLive'
   - 'clubCategoryKey'
   - 'productMatchesClub'
   - 'filterProductsForClub'
@@ -363,10 +365,12 @@ Three things to read off that output:
 | `fileToBase64` | `(file: Blob) => Promise<string>` | — | Bare base64, prefix stripped. |
 | `base64ToBlob` / `downloadBlob` / `downloadBase64File` / `downloadTextFile` | see source | — | The browser download flow, once. |
 | `clubCategoryKey` | `(club) => ClubCategoryKey \| null` | — | Super+Sub pair, `null` for legacy clubs. |
-| `productMatchesClub` | `(product, key) => boolean` | — | `true` when `key` is `null` or the product has no category data. |
+| `productMatchesClub` | `(product, key) => boolean` | — | Fails closed: `false` when `key` is `null` or the product has no category data. |
 | `filterProductsForClub` | `(products, club) => products` | — | The product-picker filter. |
 | `getOrCreateDuid` | `() => string` | — | Per-device analytics id; `''` outside a browser. |
 | `formatMjml` | `(mjml: string) => string` | — | Pretty-prints an MJML template. |
+| `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
+| `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |
 
 ## No live preview
 

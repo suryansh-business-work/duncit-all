@@ -424,6 +424,9 @@ async function draftFromMeeting(doc: any, who?: { name: string; email: string })
     email: who?.email ?? '',
     phone: doc.contact_phone ?? '',
     category,
+    // The seeded host category records which meeting granted it — the same
+    // linkage the HOSTREQ flow keeps in host_categories.request_no.
+    request_no: doc.request_no ?? null,
   };
   if (doc.kind === 'HOST') {
     const { hostService } = await import('@modules/venues/host/host.service');

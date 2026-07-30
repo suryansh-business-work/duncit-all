@@ -1,11 +1,22 @@
+import type React from 'react';
 import { screen } from '@testing-library/react-native';
 
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
-import { useHostPayouts } from '@/hooks/useHostPayouts';
 import { renderWithProviders } from '@/utils/test-utils';
 
-jest.mock('@/hooks/useHostPayouts', () => ({ useHostPayouts: jest.fn() }));
-const mockedUse = useHostPayouts as jest.Mock;
+type ShareProps = React.ComponentProps<typeof HostShareSection>;
+
+// The section refetches whenever the screen regains focus — capture the
+// listener so tests can fire it like the navigator would.
+const focusListeners: (() => void)[] = [];
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    addListener: (_event: string, cb: () => void) => {
+      focusListeners.push(cb);
+      return () => undefined;
+    },
+  }),
+}));
 
 const withBreakdown = {
   id: 'r1',
@@ -95,28 +106,49 @@ const api = (over: Record<string, unknown> = {}) => ({
   payouts: [withBreakdown, withoutBreakdown, pendingPayout, waterfallPayout, zeroPayout],
   symbol: '₹',
   isLoading: false,
-  refetch: jest.fn(),
+  error: null,
+  refetch: jest.fn().mockResolvedValue(undefined),
   ...over,
 });
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  focusListeners.length = 0;
+});
 
 describe('HostShareSection', () => {
   it('shows the loading state', () => {
-    mockedUse.mockReturnValue(api({ payouts: [], isLoading: true }));
-    renderWithProviders(<HostShareSection />);
+    renderWithProviders(
+      <HostShareSection {...(api({ payouts: [], isLoading: true }) as unknown as ShareProps)} />,
+    );
     expect(screen.getByTestId('host-share-loading')).toBeOnTheScreen();
   });
 
-  it('shows the empty state', () => {
-    mockedUse.mockReturnValue(api({ payouts: [] }));
-    renderWithProviders(<HostShareSection />);
+  it('shows the empty state only when the load actually succeeded', () => {
+    renderWithProviders(<HostShareSection {...(api({ payouts: [] }) as unknown as ShareProps)} />);
     expect(screen.getByTestId('host-share-empty')).toBeOnTheScreen();
   });
 
+  // A network failure used to render the empty copy — telling a host with
+  // completed pods that they had none.
+  it('shows the error instead of the empty copy when the load failed', () => {
+    renderWithProviders(
+      <HostShareSection {...(api({ payouts: [], error: 'down' }) as unknown as ShareProps)} />,
+    );
+    expect(screen.getByTestId('host-share-error')).toHaveTextContent('down');
+    expect(screen.queryByTestId('host-share-empty')).toBeNull();
+  });
+
+  it('refetches whenever the screen regains focus', () => {
+    const props = api({ payouts: [] });
+    renderWithProviders(<HostShareSection {...(props as unknown as ShareProps)} />);
+    expect(focusListeners).toHaveLength(1);
+    focusListeners[0]?.();
+    expect(props.refetch).toHaveBeenCalledTimes(1);
+  });
+
   it('renders payouts with and without a breakdown', () => {
-    mockedUse.mockReturnValue(api());
-    renderWithProviders(<HostShareSection />);
+    renderWithProviders(<HostShareSection {...(api() as unknown as ShareProps)} />);
     // Approved payout uses approved_amount and shows the breakdown lines.
     expect(screen.getByText('₹800.00')).toBeOnTheScreen();
     expect(screen.getByText('Duncit Taken (70%)')).toBeOnTheScreen();

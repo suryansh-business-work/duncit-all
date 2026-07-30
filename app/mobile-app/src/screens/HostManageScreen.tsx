@@ -11,6 +11,8 @@ import { HostApplyBanner } from '@/components/host-manage/HostApplyBanner';
 import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
+import { useHostPayouts } from '@/hooks/useHostPayouts';
+import { fireAndForget } from '@/utils/fire-and-forget';
 import { STEP_TITLES } from '@/components/create-pod';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
@@ -29,6 +31,9 @@ export function HostManageScreen() {
   const { danger, color: ink } = useThemeColors();
   const { draftRetentionDays } = useAppSettings();
   const { drafts, isLoading, remove } = useHostDrafts();
+  // Owned here (not inside HostShareSection) so completing a pod in the pods
+  // section can refetch the share list it just changed.
+  const payoutsApi = useHostPayouts();
   const [target, setTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -79,9 +84,11 @@ export function HostManageScreen() {
 
           <HostApplyBanner />
 
-          <HostPodsSection />
+          {/* Completing a pod creates the payout the share section lists, so
+              the screen owns the hook and threads the refetch across. */}
+          <HostPodsSection onPodCompleted={() => fireAndForget(payoutsApi.refetch())} />
 
-          <HostShareSection />
+          <HostShareSection {...payoutsApi} />
 
           <Text fontSize={16} fontWeight="900" color="$color">
             Draft pods

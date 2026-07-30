@@ -163,6 +163,10 @@ export const postService = {
   async getById(id: string, viewerId?: string | null) {
     assertId(id);
     const doc = await PostModel.findById(id);
+    // The list queries filter expired stories and the TTL index eventually
+    // deletes them, but a direct id stays resolvable during the sweep lag —
+    // an expired story must be gone by EVERY route, not just the rails.
+    if (doc?.kind === 'STORY' && doc.expires_at && doc.expires_at <= new Date()) return null;
     return doc ? toPub(doc, viewerId) : null;
   },
 

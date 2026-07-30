@@ -29,9 +29,15 @@ function formatWhen(value?: string | null) {
   return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
 }
 
+interface HostPodsSectionProps {
+  /** Fired after a pod completes — the screen refetches the Host Share list,
+   * which the completion just added a payout to. */
+  onPodCompleted?: () => void;
+}
+
 /** "Your pods" — every pod this host runs, with a Type/Time/Price filter and the
  * host's self-service Complete/Edit/Delete actions (2). */
-export function HostPodsSection() {
+export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProps>) {
   const { openPod } = useDetailNav();
   const { color: ink, onPrimary } = useThemeColors();
   const { pods, isLoading, refetch } = useHostPods();
@@ -148,6 +154,7 @@ export function HostPodsSection() {
         onCompleted={() => {
           setCompletePod(null);
           refetch().catch(() => undefined);
+          onPodCompleted?.();
         }}
       />
     </YStack>

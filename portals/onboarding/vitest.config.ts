@@ -89,7 +89,6 @@ export default defineConfig({
         // Apollo pods-at-venue list (useQuery + dateFormat hook); e2e-validated.
         'src/pages/venue-details-page/VenuePodsTab.tsx',
         'src/pages/user-details-page/UserHealthSection/AdjustHealthDialog.tsx',
-        'src/components/AdminHostCreateDialog.tsx',
         'src/components/AdminVenueCreateDialog.tsx',
         'src/components/admin-venue-create-dialog/AdminVenueCreateDialog.tsx',
         // Create/edit form-section UI that lives inside the excluded dialogs:

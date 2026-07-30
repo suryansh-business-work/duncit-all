@@ -10,6 +10,9 @@ export const ADMIN_CATEGORIES = gql`
       slug
       level
       parent_id
+      # SUB level only — the fewest people the activity needs. Consumers that
+      # size a pod read it from here rather than issuing a second query.
+      min_pax
     }
   }
 `;

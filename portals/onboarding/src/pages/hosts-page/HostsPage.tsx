@@ -5,7 +5,7 @@ import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
-import { APPROVE, DELETE_HOST, HOSTS_TABLE, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, type HostRow } from './queries';
+import { ADMIN_SET_HOST_CATEGORIES, APPROVE, DELETE_HOST, HOSTS_TABLE, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, type HostRow } from './queries';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
@@ -17,6 +17,7 @@ export default function HostsPage() {
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
   const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
+  const [setHostCategories, { loading: savingCategories }] = useMutation(ADMIN_SET_HOST_CATEGORIES);
   const lifecycle = useEntityLifecycle(SET_HOST_ACTIVE, DELETE_HOST, refresh);
   const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
@@ -33,7 +34,15 @@ export default function HostsPage() {
     setTagsText((host.tags ?? []).join(', '));
   };
 
-  const doApprove = async () => {
+  const doApprove = async (commissionPct: number) => {
+    // Approval applies the commission the dialog showed (15% default) unless the
+    // host already carries that exact override — the reviewer saw the number
+    // next to the Approve button, so persisting it is not a surprise.
+    if ((active.host_commission_pct ?? 0) !== commissionPct) {
+      await setHostDeductions({
+        variables: { user_id: active.user_id, host_commission_pct: commissionPct },
+      });
+    }
     await approve({ variables: { id: active.id, notes, tags: parseTags() } });
     setActive(null);
     setNotes('');
@@ -46,6 +55,22 @@ export default function HostsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
+    refresh();
+  };
+  const doSaveCategories = async (categories: { super_category_id: string; category_id: string; sub_category_id: string }[]) => {
+    const { data } = await setHostCategories({
+      variables: {
+        host_doc_id: active.id,
+        // Ids only — the server re-validates the triple and denormalizes names.
+        categories: categories.map((c) => ({
+          super_category_id: c.super_category_id,
+          category_id: c.category_id,
+          sub_category_id: c.sub_category_id,
+        })),
+      },
+    });
+    const saved = data?.adminSetHostCategories?.host_categories ?? [];
+    setActive((current: any) => (current ? { ...current, host_categories: saved } : current));
     refresh();
   };
   const doSaveCommission = async (commissionPct: number) => {
@@ -113,6 +138,8 @@ export default function HostsPage() {
         onApprove={doApprove}
         onReject={doReject}
         onSaveCommission={doSaveCommission}
+        onSaveCategories={doSaveCategories}
+        savingCategories={savingCategories}
         savingCommission={savingCommission}
       />
 

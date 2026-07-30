@@ -40,6 +40,11 @@ export interface ICategory extends Document {
   /** SUB level only: how many co-hosts a single pod may carry (1-5). Only
    * meaningful while allow_co_hosts is true. */
   max_co_hosts: number;
+  /** SUB level only: the fewest people this activity needs to work (a doubles
+   * game needs 4). The host cannot go below it when sizing a pod — their spots
+   * slider starts here and runs up to the venue's capacity. 0 = unset, which
+   * imposes no floor. */
+  min_pax: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -47,6 +52,10 @@ export interface ICategory extends Document {
 /** Bounds for ICategory.max_co_hosts — shared with the schema + validators. */
 export const MIN_CO_HOSTS = 1;
 export const MAX_CO_HOSTS = 5;
+
+/** Bounds for ICategory.min_pax. 0 means "no minimum set for this activity". */
+export const MIN_PAX_FLOOR = 0;
+export const MIN_PAX_CEILING = 50;
 
 const mediaSchema = new Schema<ICategoryMedia>(
   {
@@ -89,6 +98,14 @@ const categorySchema = new Schema<ICategory>(
       default: MIN_CO_HOSTS,
       min: MIN_CO_HOSTS,
       max: MAX_CO_HOSTS,
+    },
+    // Set per SUB-category by an admin. The default of 0 leaves every existing
+    // sub-category exactly as it is today — no floor on pod size.
+    min_pax: {
+      type: Number,
+      default: MIN_PAX_FLOOR,
+      min: MIN_PAX_FLOOR,
+      max: MIN_PAX_CEILING,
     },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

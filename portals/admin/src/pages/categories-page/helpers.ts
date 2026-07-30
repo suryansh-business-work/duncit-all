@@ -52,6 +52,7 @@ export function buildUpdateInput(
       ...base,
       allow_co_hosts: form.allow_co_hosts,
       max_co_hosts: form.max_co_hosts,
+      min_pax: form.min_pax,
     };
   }
   // Icon layout is a CATEGORY-only concept; the server rejects it elsewhere.
@@ -81,6 +82,7 @@ export function buildCreateInput(
       ...base,
       allow_co_hosts: form.allow_co_hosts,
       max_co_hosts: form.max_co_hosts,
+      min_pax: form.min_pax,
     };
   }
   if (level === 'CATEGORY') {

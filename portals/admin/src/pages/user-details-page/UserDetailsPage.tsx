@@ -127,6 +127,9 @@ export default function UserDetailsPage() {
         toggleRole={s.toggleRole}
         saveRoles={s.saveRoles}
         busy={s.busy}
+        hostProfile={s.hostProfile}
+        hostCategories={s.hostCategories}
+        setHostCategories={s.setHostCategories}
       />
 
       <DeleteUserDialog

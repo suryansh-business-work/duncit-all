@@ -14,6 +14,8 @@ import {
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
+import HostReviewCategories from './HostReviewCategories';
+import type { HostCategoryValue } from '../../forms/host';
 
 interface Props {
   active: any;
@@ -22,10 +24,14 @@ interface Props {
   tagsText: string;
   setTagsText: (v: string) => void;
   onClose: () => void;
-  onApprove: () => void;
+  /** Receives the dialog's current commission so approval persists what the
+   * reviewer SAW (the 15% default included), not a value they never looked at. */
+  onApprove: (commissionPct: number) => void;
   onReject: () => void;
   onSaveCommission: (commissionPct: number) => void;
   savingCommission: boolean;
+  onSaveCategories: (categories: HostCategoryValue[]) => void;
+  savingCategories: boolean;
 }
 
 const STATUS_COLOR: StatusColorMap = {
@@ -61,10 +67,15 @@ export default function HostReviewDialog({
   onReject,
   onSaveCommission,
   savingCommission,
+  onSaveCategories,
+  savingCategories,
 }: Readonly<Props>) {
-  const [commission, setCommission] = useState('0');
+  // 15% is the standard host commission a reviewer applies at onboarding.
+  // `||` (not `??`) is deliberate: a stored 0 means "no override yet", so the
+  // dialog re-seeds it to the 15% default rather than showing 0.
+  const [commission, setCommission] = useState('15');
   useEffect(() => {
-    setCommission(String(active?.host_commission_pct ?? 0));
+    setCommission(String(active?.host_commission_pct || 15));
   }, [active]);
 
   const commissionValid = (() => {
@@ -133,7 +144,8 @@ export default function HostReviewDialog({
               Host commission
             </Typography>
             <Typography variant="caption" color="text.secondary" display="block">
-              The commission Duncit takes from this host&apos;s payouts. 0 = inherit default.
+              The commission Duncit takes from this host&apos;s payouts. Defaults to 15%. Set 0 to
+              inherit the global default.
             </Typography>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
               <TextField
@@ -143,7 +155,7 @@ export default function HostReviewDialog({
                 value={commission}
                 onChange={(e) => setCommission(e.target.value)}
                 error={!commissionValid}
-                helperText="0 = inherit default"
+                helperText="Defaults to 15%. 0 = inherit default."
                 inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Host commission percentage' }}
                 InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                 sx={{ maxWidth: 220 }}
@@ -158,6 +170,14 @@ export default function HostReviewDialog({
               </Button>
             </Stack>
           </Paper>
+
+          <HostReviewCategories
+            // Remount per host so local edit state never leaks across rows.
+            key={active?.id ?? 'none'}
+            categories={(active?.host_categories ?? []) as HostCategoryValue[]}
+            onSave={onSaveCategories}
+            saving={savingCategories}
+          />
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -165,7 +185,11 @@ export default function HostReviewDialog({
         <Button color="error" variant="outlined" onClick={onReject} disabled={!notes.trim()}>
           Reject
         </Button>
-        <Button variant="contained" color="success" onClick={onApprove}>
+        <Button
+          variant="contained"
+          color="success"
+          onClick={() => onApprove(commissionValid ? Number(commission) : 15)}
+        >
           Approve
         </Button>
       </DialogActions>

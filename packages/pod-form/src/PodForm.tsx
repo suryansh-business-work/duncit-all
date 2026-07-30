@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, DialogActions } from '@mui/material';
 import { makePodSchema } from './schema';
 import { PodFormDataProvider } from './context';
 import CascadeEffect from './CascadeEffect';
+import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
+import PodCategoryFilter from './PodCategoryFilter';
 import PodSections from './PodSections';
 import type {
   GenerateMeetingLinkInput,
@@ -81,10 +83,24 @@ export default function PodForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [methods]);
 
+  // The pod's category comes from its club, so this picker persists nothing of
+  // its own — it just narrows which clubs are offered, and does it above every
+  // section so the category is chosen first (same order as the host apps).
+  const [categoryFilter, setCategoryFilter] = useState<AdminCategoryValue>(EMPTY_CATEGORY);
+  const clubsInCategory = useMemo(() => {
+    const key = { superId: categoryFilter.super_id, subId: categoryFilter.sub_id };
+    if (!key.superId || !key.subId) return clubs;
+    return clubs.filter(
+      (club: any) =>
+        String(club?.super_category_id ?? '') === key.superId &&
+        String(club?.category_id ?? '') === key.subId,
+    );
+  }, [clubs, categoryFilter.super_id, categoryFilter.sub_id]);
+
   const data: PodFormData = useMemo(
     () => ({
       config,
-      clubs,
+      clubs: clubsInCategory,
       venues,
       users,
       products,
@@ -97,7 +113,7 @@ export default function PodForm({
       searchHosts,
       dateTimeFormat,
     }),
-    [config, clubs, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateTimeFormat],
+    [config, clubsInCategory, venues, users, products, finance, getClubVenueIds, meetingPlatforms, onGenerateMeetingLink, onPickImage, onPickVideo, searchHosts, dateTimeFormat],
   );
 
   const submit = methods.handleSubmit(async (values) => {
@@ -114,6 +130,12 @@ export default function PodForm({
       <PodFormDataProvider value={data}>
         <form noValidate onSubmit={submit}>
           <CascadeEffect />
+          <PodCategoryFilter
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            matchCount={clubsInCategory.length}
+            clubCount={clubs.length}
+          />
           <PodSections />
           {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
           <DialogActions sx={{ px: 0, pb: 0, pt: 2 }}>

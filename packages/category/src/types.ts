@@ -8,6 +8,8 @@ export interface CategoryDoc {
   slug: string;
   level: 'SUPER' | 'CATEGORY' | 'SUB';
   parent_id?: string | null;
+  /** SUB level only: the fewest people this activity needs. 0 = no minimum. */
+  min_pax?: number | null;
 }
 
 /**

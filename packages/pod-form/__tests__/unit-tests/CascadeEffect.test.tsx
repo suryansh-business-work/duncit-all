@@ -29,16 +29,29 @@ describe('CascadeEffect', () => {
   });
 
   it('clears all physical/product fields when switching to virtual', () => {
-    const ref = mount({
-      pod_mode: 'PHYSICAL',
-      venue_id: 'v1',
-      venue_slot_id: 's1',
-      location_id: 'l1',
-      zone_name: 'z1',
-      place_charges: [{ label: 'Entry', amount: 10, note: '' }],
-      products_enabled: true,
-      product_requests: [{ product_id: 'p1', quantity: 1 }],
-    });
+    const ref = mount(
+      {
+        pod_mode: 'PHYSICAL',
+        venue_id: 'v1',
+        venue_slot_id: 's1',
+        location_id: 'l1',
+        zone_name: 'z1',
+        place_charges: [{ label: 'Entry', amount: 10, note: '' }],
+        products_enabled: true,
+        club_id: 'c1',
+        product_requests: [{ product_id: 'p1', quantity: 1 }],
+      },
+      // The club must offer p1 (or the category prune empties the list before
+      // the mode switch can) AND link v1 (or the venue-link effect clears the
+      // venue fields on mount) — either would stop this testing what it means to.
+      makeData({
+        clubs: [{ id: 'c1', club_name: 'Club', super_category_id: 'sup-1', category_id: 'sub-1' }],
+        products: [
+          { id: 'p1', product_name: 'Shuttles', categories: [{ super_category_id: 'sup-1', sub_category_id: 'sub-1' }] },
+        ],
+        getClubVenueIds: () => ['v1'],
+      } as never),
+    );
     act(() => ref.current?.setValue('pod_mode', 'VIRTUAL'));
     expect(ref.current?.getValues('venue_id')).toBe('');
     expect(ref.current?.getValues('venue_slot_id')).toBe('');
@@ -90,8 +103,36 @@ describe('CascadeEffect', () => {
     expect(ref.current?.getValues('product_requests')).toEqual([]);
   });
 
-  it('keeps product requests while products are enabled', () => {
-    const ref = mount({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] });
+  // A club stores its Sub-category in `category_id`; a product belongs when a
+  // category row carries the same Super + Sub.
+  const badmintonData = (clubSub: string) =>
+    makeData({
+      clubs: [{ id: 'c1', club_name: 'Club', super_category_id: 'sup-1', category_id: clubSub }],
+      products: [
+        { id: 'p1', product_name: 'Shuttles', categories: [{ super_category_id: 'sup-1', sub_category_id: 'sub-1' }] },
+      ],
+    } as never);
+
+  it('keeps product requests while products are enabled and the club still offers them', () => {
+    const ref = mount(
+      { products_enabled: true, club_id: 'c1', product_requests: [{ product_id: 'p1', quantity: 2 }] },
+      badmintonData('sub-1'),
+    );
     expect(ref.current?.getValues('product_requests')).toEqual([{ product_id: 'p1', quantity: 2 }]);
+  });
+
+  // Picking a club in another category has to take its products with it —
+  // otherwise the row renders blank and the save dies on the server gate.
+  it('drops a product row the selected club does not offer', () => {
+    const ref = mount(
+      { products_enabled: true, club_id: 'c1', product_requests: [{ product_id: 'p1', quantity: 2 }] },
+      badmintonData('sub-2'),
+    );
+    expect(ref.current?.getValues('product_requests')).toEqual([]);
+  });
+
+  it('leaves an empty request list alone', () => {
+    const ref = mount({ products_enabled: true, club_id: 'c1', product_requests: [] }, badmintonData('sub-1'));
+    expect(ref.current?.getValues('product_requests')).toEqual([]);
   });
 });

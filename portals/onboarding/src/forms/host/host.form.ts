@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { nationalPhoneDigits } from '@duncit/utils';
 import { AADHAR_PATTERN, PAN_PATTERN, PERSON_NAME_PATTERN } from '../validation/rules';
 import { blankBankAccountValues, normalizeBankAccountValues } from '../validation/bankAccount';
 import type { BankAccountValues } from '../validation/bankAccount';
@@ -63,7 +64,9 @@ export const hostStep2Schema = z.object({
 });
 
 export const hostStep3Schema = z.object({
-  police_verification_url: requiredText('Police verification', 1, 1000),
+  // Optional at onboarding — a reviewer may approve before the document
+  // arrives; the URL is still length-capped when present.
+  police_verification_url: z.string().trim().max(1000, 'Police verification must be 1000 characters or fewer').default(''),
   full_address: requiredText('Address', 5, 500),
   bank_account: hostBankAccountSchema,
   tags: z.array(z.string().trim().max(40)).default([]),
@@ -112,7 +115,7 @@ export function hostEditInitialValues(host: any): HostEditValues {
     step1: {
       full_name: host?.full_name ?? '',
       email: host?.email ?? '',
-      phone: host?.phone ?? '',
+      phone: nationalPhoneDigits(host?.phone ?? ''),
       dob: dateOnly(host?.dob),
     },
     step2: {

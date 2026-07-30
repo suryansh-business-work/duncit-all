@@ -599,6 +599,112 @@ describe('meeting decide (onboarding self-approve)', () => {
     spy.mockRestore();
   });
 
+  // The gate survey's Super → Category → Sub rides the meeting document; the
+  // approval seeds it onto the drafted host. It used to be dropped on the
+  // floor, which is why meeting-onboarded hosts saw "Assigned after host
+  // onboarding" in Create-a-Pod.
+  it('seeds the survey category (with the meeting request_no) onto the drafted host', async () => {
+    const { CategoryModel } = await import('@modules/pods/category/category.model');
+    const superCat = await CategoryModel.create({ name: 'Sports', slug: 'sports-m1', level: 'SUPER' });
+    const cat = await CategoryModel.create({ name: 'Racket', slug: 'racket-m1', level: 'CATEGORY', parent_id: superCat._id });
+    const sub = await CategoryModel.create({ name: 'Badminton', slug: 'badminton-m1', level: 'SUB', parent_id: cat._id });
+
+    const user = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: user,
+      auth: { email: `${user.toString()}@example.com` },
+      profile: { first_name: 'Cat Host' },
+    } as never);
+    await meetingService.request(user.toString(), 'HOST', {
+      requested_at: '2029-03-01T05:00:00.000Z',
+      contact_phone: nextPhone(),
+      super_category_id: String(superCat._id),
+      category_id: String(cat._id),
+      sub_category_id: String(sub._id),
+    });
+    const m = await meetingService.myMeeting(user.toString(), 'HOST');
+    await meetingService.update(m!.id, { status: 'DONE' });
+    await meetingService.decide(m!.id, 'APPROVED', 'ok');
+
+    const host: any = await HostModel.findOne({ user_id: user });
+    expect(host?.host_categories).toHaveLength(1);
+    expect(host?.host_categories[0]).toMatchObject({
+      super_category_name: 'Sports',
+      category_name: 'Racket',
+      sub_category_name: 'Badminton',
+      request_no: m!.request_no,
+    });
+  });
+
+  it('still drafts the host when the survey triple no longer validates', async () => {
+    const user = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: user,
+      auth: { email: `${user.toString()}@example.com` },
+      profile: { first_name: 'Dangling' },
+    } as never);
+    // Three well-formed ids that resolve to nothing — the category was deleted
+    // between the survey and the approval.
+    await meetingService.request(user.toString(), 'HOST', {
+      requested_at: '2029-03-02T05:00:00.000Z',
+      contact_phone: nextPhone(),
+      super_category_id: String(new Types.ObjectId()),
+      category_id: String(new Types.ObjectId()),
+      sub_category_id: String(new Types.ObjectId()),
+    });
+    const m = await meetingService.myMeeting(user.toString(), 'HOST');
+    await meetingService.update(m!.id, { status: 'DONE' });
+    await meetingService.decide(m!.id, 'APPROVED', 'ok');
+
+    const host: any = await HostModel.findOne({ user_id: user });
+    expect(host?.status).toBe('DRAFT');
+    expect(host?.host_categories ?? []).toHaveLength(0);
+  });
+
+  it('never duplicates a category the host already holds for that sub', async () => {
+    const { CategoryModel } = await import('@modules/pods/category/category.model');
+    const superCat = await CategoryModel.create({ name: 'Games', slug: 'games-m2', level: 'SUPER' });
+    const cat = await CategoryModel.create({ name: 'Board', slug: 'board-m2', level: 'CATEGORY', parent_id: superCat._id });
+    const sub = await CategoryModel.create({ name: 'Chess', slug: 'chess-m2', level: 'SUB', parent_id: cat._id });
+
+    const user = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: user,
+      auth: { email: `${user.toString()}@example.com` },
+      profile: { first_name: 'Dupe' },
+    } as never);
+    // The host already holds this sub from an earlier HOSTREQ grant.
+    await HostModel.create({
+      user_id: user,
+      full_name: 'Dupe',
+      status: 'APPROVED',
+      host_categories: [{
+        super_category_id: superCat._id,
+        category_id: cat._id,
+        sub_category_id: sub._id,
+        super_category_name: 'Games',
+        category_name: 'Board',
+        sub_category_name: 'Chess',
+        request_no: 'HOSTREQ-000042',
+      }],
+    });
+    await meetingService.request(user.toString(), 'HOST', {
+      requested_at: '2029-03-03T05:00:00.000Z',
+      contact_phone: nextPhone(),
+      super_category_id: String(superCat._id),
+      category_id: String(cat._id),
+      sub_category_id: String(sub._id),
+    });
+    const m = await meetingService.myMeeting(user.toString(), 'HOST');
+    await meetingService.update(m!.id, { status: 'DONE' });
+    await meetingService.decide(m!.id, 'APPROVED', 'ok');
+
+    const host: any = await HostModel.findOne({ user_id: user });
+    expect(host?.host_categories).toHaveLength(1);
+    // The original HOSTREQ linkage survives — the meeting never overwrites it.
+    expect(host?.host_categories[0].request_no).toBe('HOSTREQ-000042');
+  });
+
   it('denies a DONE meeting: marks it denied, drafts nothing, emails the applicant, and blocks a re-decide', async () => {
     (sendMeetingRejectedEmail as jest.Mock).mockClear();
     const { userId: uid, meetingId } = await doneMeeting('HOST', '2029-05-01T05:00:00.000Z', 'Rejy');

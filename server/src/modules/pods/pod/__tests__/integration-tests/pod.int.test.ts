@@ -164,6 +164,81 @@ describe('podService integration', () => {
     expect(pod?.product_requests).toHaveLength(1);
   });
 
+  // The gate used to fall OPEN whenever the pod's category could not be
+  // resolved, so any caller pointing at a category-less (or non-existent) club
+  // could attach a product from any category straight through the API. These
+  // pin the closed door.
+  describe('product gate with no resolvable pod category', () => {
+    const seedAnyProduct = () =>
+      InventoryProductModel.create({
+        product_name: 'Unrelated kit',
+        sku: `NOCAT-${Math.random().toString(36).slice(2)}`.toUpperCase(),
+        unit_cost: 100,
+        inventory_count: 5,
+        is_active: true,
+        super_category_id: new Types.ObjectId(),
+        sub_category_id: new Types.ObjectId(),
+        categories: [
+          {
+            super_category_id: new Types.ObjectId(),
+            category_id: new Types.ObjectId(),
+            sub_category_id: new Types.ObjectId(),
+          },
+        ],
+      });
+
+    it('refuses products when the club carries no category pair', async () => {
+      const club = await ClubModel.create({
+        club_id: `club-${Math.random().toString(36).slice(2)}`,
+        club_name: 'Legacy Club',
+        super_category_id: null,
+        category_id: null,
+      });
+      const product = await seedAnyProduct();
+      await expect(
+        podService.create(
+          makeVirtualInput(new Types.ObjectId(), {
+            club_id: String(club._id),
+            products_enabled: true,
+            product_requests: [{ product_id: String(product._id), quantity: 1 }],
+          })
+        )
+      ).rejects.toThrow(/club has no category/i);
+    });
+
+    it('refuses products when club_id is well-formed but resolves to nothing', async () => {
+      const product = await seedAnyProduct();
+      await expect(
+        podService.create(
+          makeVirtualInput(new Types.ObjectId(), {
+            club_id: String(new Types.ObjectId()),
+            products_enabled: true,
+            product_requests: [{ product_id: String(product._id), quantity: 1 }],
+          })
+        )
+      ).rejects.toThrow(/club has no category/i);
+    });
+
+    // Only the products are gated — a category-less club can still host a pod
+    // that attaches nothing, so this never blocks an existing pod outright.
+    it('still creates the pod when no products are attached', async () => {
+      const club = await ClubModel.create({
+        club_id: `club-${Math.random().toString(36).slice(2)}`,
+        club_name: 'Legacy Club No Products',
+        super_category_id: null,
+        category_id: null,
+      });
+      const pod = await podService.create(
+        makeVirtualInput(new Types.ObjectId(), {
+          club_id: String(club._id),
+          products_enabled: true,
+          product_requests: [],
+        })
+      );
+      expect(pod?.product_requests).toEqual([]);
+    });
+  });
+
   // update() carries the pod edit path (amount, meeting details, window). It had
   // no direct coverage, so these pin the behaviour the S3776 extraction moved out
   // into validatePodDatesForUpdate / applyMeetingFieldsForUpdate / applyDatesForUpdate.

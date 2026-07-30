@@ -189,6 +189,13 @@ export interface CreatePodFinance {
   currency_symbol: string;
 }
 
+/** A SUB-level category and the fewest people its activity needs (0 = unset).
+ * Set by an admin in Category Management; floors the host's spots slider. */
+export interface CreatePodSubCategory {
+  id: string;
+  min_pax: number;
+}
+
 export interface CreatePodProduct {
   id: string;
   product_name: string;

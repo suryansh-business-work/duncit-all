@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useFormContext, useWatch, type UseFormSetValue } from 'react-hook-form';
 import { usePodFormData } from './context';
+import { filterProductsForClub, pruneProductRequests } from './product-category';
 import type { PodFormValues } from './types';
 
 /** A VIRTUAL pod has no venue, place charges or products — clear them. */
@@ -29,7 +30,7 @@ function clearVirtualFields(values: PodFormValues, setValue: UseFormSetValue<Pod
  * - clears product requests when products are disabled
  */
 export default function CascadeEffect() {
-  const { clubs, getClubVenueIds } = usePodFormData();
+  const { clubs, products, getClubVenueIds } = usePodFormData();
   const { control, getValues, setValue } = useFormContext<PodFormValues>();
   const podMode = useWatch({ control, name: 'pod_mode' });
   const clubId = useWatch({ control, name: 'club_id' });
@@ -68,6 +69,18 @@ export default function CascadeEffect() {
       setValue('product_requests', []);
     }
   }, [productsEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Switching club switches which products the pod may carry, so rows the new
+  // club does not offer are dropped. Without this they survive unrenderable and
+  // the save fails on the server's category gate. Twin of the same effect in
+  // both Create Pod steppers.
+  useEffect(() => {
+    const requests = getValues('product_requests');
+    if (requests.length === 0) return;
+    const club = clubs.find((item) => String(item.id) === String(clubId));
+    const kept = pruneProductRequests(requests, filterProductsForClub(products, club));
+    if (kept !== requests) setValue('product_requests', kept);
+  }, [clubId, clubs, products]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

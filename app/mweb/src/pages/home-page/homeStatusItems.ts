@@ -1,3 +1,4 @@
+import { isStoryLive } from '@duncit/utils';
 import type { HomeStatusViewerItem } from './HomeStatusViewer';
 
 /** A rail tile + the viewer payload it opens. Building these as one ordered list
@@ -89,7 +90,11 @@ function podEntry(pod: any): HomeStatusEntry {
 }
 
 function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
-  const posts = followedPosts.filter((post) => post.author_id === user.user_id);
+  // A story past its 24h life never becomes a slide, even when the feed was
+  // fetched before the boundary.
+  const posts = followedPosts.filter(
+    (post) => post.author_id === user.user_id && isStoryLive(post.expires_at),
+  );
   const firstPost = posts[0];
   const firstIsVideo = firstPost?.media_type === 'VIDEO';
   const name = user.first_name || user.full_name || 'User';
@@ -156,7 +161,7 @@ export function buildHomeStatusEntries(
 
 /** Build the "my status" viewer payload from the signed-in user's stories. */
 export function buildMyStatusViewer(me: any): HomeStatusViewerItem | null {
-  const stories = (me?.my_stories ?? []) as any[];
+  const stories = ((me?.my_stories ?? []) as any[]).filter((story) => isStoryLive(story.expires_at));
   if (stories.length === 0) return null;
   const first = stories[0];
   return {

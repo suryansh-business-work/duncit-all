@@ -363,6 +363,7 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
       showProducts={false}
       finance={finance}
       pricing={pricing}
+      spots={{ min: 0, max: 10000, slidable: false }}
     />
   );
 }

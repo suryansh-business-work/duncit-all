@@ -75,6 +75,10 @@ const CREATE_POD_OPTIONS = gql`
         sub_category_name
       }
     }
+    subCategories: categories(filter: { level: SUB }) {
+      id
+      min_pax
+    }
     availablePodProducts {
       id
       product_name
@@ -132,6 +136,9 @@ export default function CreatePodPage() {
   const clubs = options.data?.clubs ?? [];
   const locations = options.data?.locations ?? [];
   const products = options.data?.availablePodProducts ?? [];
+  // Sub-categories carry the admin-set minimum pax; the stepper looks the pod's
+  // up by the selected club's `category_id`.
+  const subCategories = options.data?.subCategories ?? [];
   // publicVenues are already APPROVED; keep only active venue partners.
   const venues = (options.data?.publicVenues ?? []).filter((venue: any) => venue.is_active !== false);
   const hostCategories = options.data?.myHost?.host_categories ?? [];
@@ -188,6 +195,7 @@ export default function CreatePodPage() {
         locations={locations}
         venues={venues}
         products={products}
+        subCategories={subCategories}
         hostCategories={hostCategories}
         viewerUserId={viewerUserId}
         onSaveDraft={saveDraft}

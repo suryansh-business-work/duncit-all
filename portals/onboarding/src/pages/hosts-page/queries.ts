@@ -230,29 +230,26 @@ export interface HostPod {
   club_slug: string;
 }
 
-export const CATEGORIES = gql`
-  query HostEditCategories($level: CategoryLevel!, $parent_id: ID) {
-    categories(filter: { level: $level, parent_id: $parent_id }) {
+export const STATUSES = ['', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
+
+/** Replace ONLY a host's operating categories (server denormalizes the names
+ * and preserves each triple's request_no linkage). */
+export const ADMIN_SET_HOST_CATEGORIES = gql`
+  mutation OnboardingSetHostCategories($host_doc_id: ID!, $categories: [HostCategoryInput!]!) {
+    adminSetHostCategories(host_doc_id: $host_doc_id, categories: $categories) {
       id
-      name
-      level
-      parent_id
-      is_active
-      sort_order
+      host_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+        request_no
+      }
     }
   }
 `;
-
-export interface CategoryOption {
-  id: string;
-  name: string;
-  level: 'SUPER' | 'CATEGORY' | 'SUB';
-  parent_id: string | null;
-  is_active?: boolean | null;
-  sort_order?: number | null;
-}
-
-export const STATUSES = ['', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];
 
 /** Status options for the table's select filter ('' All entry excluded). */
 export const STATUS_OPTIONS = STATUSES.filter(Boolean).map((s) => ({ value: s, label: s }));

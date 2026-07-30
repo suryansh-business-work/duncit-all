@@ -5,6 +5,7 @@ import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { LocationModel } from '@modules/platform/location/location.model';
@@ -597,12 +598,37 @@ async function resolveClubCategory(
   };
 }
 
+/**
+ * The pod's sub-category can set the fewest people the activity needs — a
+ * doubles game needs 4, so a 2-spot pod under it is not a real game. Enforced
+ * here, not just in the host's slider, so no client can size a pod below it.
+ * `min_pax` 0 (the default for every existing sub-category) imposes nothing.
+ */
+async function assertMeetsMinPax(clubCategory: ClubCategory | null, noOfSpots: number) {
+  const subCategoryId = clubCategory?.sub_category_id;
+  if (!subCategoryId) return;
+  const sub = await CategoryModel.findById(subCategoryId).select('min_pax').lean();
+  const minPax = sub?.min_pax ?? 0;
+  if (minPax > 0 && noOfSpots < minPax) {
+    throw new GraphQLError(
+      `This activity needs at least ${minPax} people — increase the number of spots`,
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+}
+
 /** A product may attach to a pod only when one of its category rows (or its flat
- * legacy fields) matches the pod's club at the Super + Sub level. When the club
- * has no full pair, no constraint applies (graceful for legacy clubs). */
+ * legacy fields) matches the pod's club at the Super + Sub level.
+ *
+ * FAILS CLOSED. A pod whose club carries no category pair has nothing to match
+ * against, so it accepts NO products. This used to return true, which meant any
+ * caller pointing at a category-less club — or at a club_id that does not
+ * resolve at all — could attach a product from any category through the API.
+ * Mirrors `productMatchesClub` in @duncit/utils, which hides the same set in the
+ * picker so the client never offers what this rejects. */
 function productMatchesClubCategory(product: any, clubCategory: ClubCategory | null): boolean {
   if (!clubCategory?.super_category_id || !clubCategory?.sub_category_id) {
-    return true;
+    return false;
   }
   const target = `${clubCategory.super_category_id}|${clubCategory.sub_category_id}`;
   const rows = Array.isArray(product.categories) && product.categories.length > 0
@@ -630,6 +656,15 @@ async function buildProductRequests(
   const compact = Array.from(requestMap(rawItems).entries())
     .map(([productId, quantity]) => ({ productId, quantity }))
     .filter((item) => item.quantity > 0);
+  // Nothing can be matched against a pod that has no category, so say THAT
+  // rather than blaming each product for not belonging to a category the pod
+  // never had. Reached when the club carries no Super+Sub pair, or when the
+  // club_id does not resolve to a club at all.
+  if (compact.length > 0 && (!clubCategory?.super_category_id || !clubCategory?.sub_category_id)) {
+    throw new GraphQLError("This pod's club has no category, so no products can be attached to it", {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
   const next = [];
   for (const item of compact) {
     const product = await InventoryProductModel.findById(item.productId);
@@ -923,6 +958,16 @@ async function applyPodEditCore(doc: any, input: any) {
 
   await applyPlaceForUpdate(doc, input, nextMode);
 
+  // Resizing a pod (or moving it to a club in another sub-category) must still
+  // clear that activity's minimum — applyProductsForUpdate below returns early
+  // when products are untouched, so the check cannot live in there.
+  if (input.no_of_spots !== undefined || input.club_id !== undefined) {
+    await assertMeetsMinPax(
+      await resolveClubCategory(input.club_id ?? doc.club_id),
+      input.no_of_spots ?? doc.no_of_spots ?? 0
+    );
+  }
+
   await applyProductsForUpdate(doc, input);
 
   const fields = [
@@ -1148,6 +1193,7 @@ export const podService = {
       venueAmount: slotDoc ? slotDoc.price : 0,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
+    await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
     const productRequests = await buildProductRequests(
       !!input.products_enabled,
       input.product_requests ?? [],

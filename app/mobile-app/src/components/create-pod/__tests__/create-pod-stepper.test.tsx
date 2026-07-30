@@ -75,6 +75,7 @@ const slot = {
   start_at: futureIso(24),
   end_at: futureIso(26),
   price: 400,
+  capacity: 30,
   status: 'AVAILABLE',
 };
 
@@ -91,6 +92,7 @@ const clubs = [
     club_name: 'Runners',
     location_id: 'l1',
     super_category_id: 'sc-sports',
+    category_id: 'sub-trail',
     matched_venues: [{ id: 'v1' }, { id: 'v9' }],
     matched_venues_count: 1,
   },
@@ -150,6 +152,7 @@ const setup = (over: Record<string, unknown> = {}) => {
       locations={locations}
       venues={venues}
       products={products}
+      subCategories={[{ id: 'sub-trail', min_pax: 4 }]}
       hostCategories={hostCategories}
       viewerUserId="me-1"
       finance={finance}
@@ -332,6 +335,24 @@ describe('CreatePodStepper', () => {
     expect(onPublish.mock.calls[0]?.[1].pod_type).toBe('PAID');
   });
 
+  // Step 4 only offers products in the pod's category, so a row carried in from
+  // a draft (or from a club the host has since changed) must be dropped — left
+  // in place it renders blank and the publish dies on the server category gate.
+  it('drops a picked product the pod category no longer offers', async () => {
+    setup({
+      initialStep: 3,
+      initialValues: {
+        ...initialValues,
+        club_id: 'c1',
+        products_enabled: true,
+        product_requests: [{ product_id: 'p1', quantity: 1 }],
+      },
+    });
+    await screen.findByTestId('create-pod-paid');
+    expect(screen.queryByTestId('product-0')).toBeNull();
+    expect(screen.getByTestId('products-empty')).toBeOnTheScreen();
+  });
+
   it('shows clubs from every category when the host has no linked categories', async () => {
     setup({ hostCategories: [] });
     await fillBasics();
@@ -349,7 +370,7 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-venue-v1');
   });
 
-  it('makes multi-category hosts pick a category before leaving step 2', async () => {
+  it('makes multi-category hosts pick a category before leaving step 1', async () => {
     const multi = [
       {
         super_category_id: 'sc-sports',
@@ -375,20 +396,21 @@ describe('CreatePodStepper', () => {
       { id: 'mc2', club_name: 'Chess', location_id: 'l1', super_category_id: 'sc-games' },
     ];
     setup({ hostCategories: multi, clubs: multiClubs });
+    // The picker sits above the title, so it is on screen from step 1 and the
+    // gate fires there — a host no longer fills a whole step before being told.
     await fillBasics();
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
-    // Both categories' clubs show until a category is picked.
-    expect(screen.getByTestId('create-pod-club-mc1')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-club-mc2')).toBeOnTheScreen();
-    // Select a club but no category → Next blocks with a category error.
-    press('create-pod-club-mc1');
-    press('create-pod-submit');
     await waitFor(() => expect(screen.getByTestId('create-pod-category-error')).toBeOnTheScreen());
-    // Pick the Sports category (clears the club) → only Sports clubs remain.
+    expect(screen.queryByTestId('create-pod-location-label')).toBeNull();
+
+    // Picking the Sports category releases step 1 and scopes the club list, so
+    // the Games club never appears at all.
     press('create-pod-category-sc-sports|');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-location-label');
+    expect(screen.getByTestId('create-pod-club-mc1')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-club-mc2')).toBeNull();
-    // Re-pick a club and advance.
+
     press('create-pod-club-mc1');
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');

@@ -20,6 +20,8 @@ const settlement = {
   currency_symbol: '₹',
   collected_total: 1000,
   has_venue: true,
+  // Four guests paid; the host's own seat is free and never counted.
+  paying_attendees: 4,
   waterfall,
 };
 
@@ -36,6 +38,11 @@ describe('SettlementSummary', () => {
 
   it('renders the full waterfall including the venue lines', () => {
     renderWithProviders(<SettlementSummary settlement={settlement} isLoading={false} />);
+    // The head count behind the money — a completed pod settles on who actually
+    // paid, not on the spots the host planned for.
+    expect(screen.getByTestId('settlement-attendees')).toHaveTextContent(
+      /Based on 4 paying attendees/,
+    );
     expect(screen.getByTestId('settlement-row-Customer Paid')).toBeOnTheScreen();
     expect(screen.getByText('− GST (18%)')).toBeOnTheScreen();
     expect(screen.getByText('− Platform Fee (5%)')).toBeOnTheScreen();
@@ -49,7 +56,16 @@ describe('SettlementSummary', () => {
     ).toBeOnTheScreen();
   });
 
-  it('skips the venue lines for a venue-less pod', () => {
+  it('reads naturally when exactly one guest paid', () => {
+    renderWithProviders(
+      <SettlementSummary settlement={{ ...settlement, paying_attendees: 1 }} isLoading={false} />,
+    );
+    expect(screen.getByTestId('settlement-attendees')).toHaveTextContent(
+      /Based on 1 paying attendee —/,
+    );
+  });
+
+  it('hides the venue lines for a pod with no venue', () => {
     const noVenue = {
       ...settlement,
       has_venue: false,

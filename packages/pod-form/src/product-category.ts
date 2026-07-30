@@ -4,5 +4,6 @@ export {
   clubCategoryKey,
   productMatchesClub,
   filterProductsForClub,
+  pruneProductRequests,
   type ClubCategoryKey,
 } from '@duncit/utils';

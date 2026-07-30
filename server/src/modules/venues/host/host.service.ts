@@ -221,6 +221,14 @@ export const hostService = {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
     return h ? toPub(h) : null;
   },
+  /** An admin looking up the host profile behind a user. Null is a real answer:
+   * granting the HOST role does not create a profile, so a user can hold the
+   * role with nothing to attach categories to. */
+  async getByUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
+    return h ? toPub(h) : null;
+  },
   async list(
     filter?: { status?: string; activeOnly?: boolean },
     opts?: { withCommission?: boolean; redacted?: boolean }
@@ -357,6 +365,21 @@ export const hostService = {
     await h.save();
     return toPub(h);
   },
+  /**
+   * Replace ONLY a host's operating categories.
+   *
+   * `adminUpdate` can do this too, but it demands the full step1/2/3 payload —
+   * so a caller who just wants to set categories has to round-trip every other
+   * host field and risks clobbering anything its query did not select. The
+   * admin's Roles dialog needs exactly this and nothing else.
+   */
+  async adminSetCategories(id: string, categories: any[]) {
+    const h = await HostModel.findById(id);
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    h.host_categories = (await normalizeHostCategories(categories, h.host_categories ?? [])) as any;
+    await h.save();
+    return toPub(h);
+  },
   async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string; categories?: any[] }) {
     const h = await HostModel.findById(id);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
@@ -450,13 +473,53 @@ export const hostService = {
   },
 
   /** Draft a host shell from an approved onboarding-meeting request so it shows
-   * in the Onboarded Hosts list (status DRAFT). Idempotent per user. */
-  async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {
+   * in the Onboarded Hosts list (status DRAFT). Idempotent per user.
+   *
+   * The meeting survey's Super → Category → Sub is seeded onto the host HERE —
+   * this used to be dropped on the floor (the parameter simply had no
+   * `category`), so every host onboarded through the meeting flow ended up with
+   * an empty host_categories and Create-a-Pod showed "Assigned after host
+   * onboarding" instead of their category. The venue twin
+   * (venueService.createDraftFromApproval) always seeded its category; the host
+   * side now does the same. */
+  async createDraftFromApproval(prefill: {
+    userId: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    category?: {
+      super_category_id: string;
+      category_id: string;
+      sub_category_id: string;
+    } | null;
+    request_no?: string | null;
+  }) {
     const h = await getOrCreate(prefill.userId);
-    if (h.status === 'APPROVED') return toPub(h);
+    // An already-APPROVED host re-approved for a new meeting cycle still gets
+    // the NEW category appended (same semantics as addCategoryFromRequest), so
+    // the seed runs before the early return.
+    if (prefill.category) {
+      const subId = String(prefill.category.sub_category_id);
+      if (!(h.host_categories ?? []).some((c) => String(c.sub_category_id) === subId)) {
+        try {
+          const normalized = await normalizeHostCategoryInput(prefill.category);
+          h.host_categories.push({ ...normalized, request_no: prefill.request_no ?? '' });
+        } catch {
+          // Invalid or partial meeting triple — never block the draft (the
+          // venue twin swallows the same way).
+        }
+      }
+    }
+    if (h.status === 'APPROVED') {
+      await h.save();
+      return toPub(h);
+    }
     if (prefill.name && !h.full_name) h.full_name = prefill.name;
     if (prefill.email && !h.email) h.email = prefill.email;
-    if (prefill.phone && !h.phone) h.phone = prefill.phone;
+    // Meeting phones arrive as "+91 9876543210" — the embedded space fails the
+    // Edit dialog's own phone rule. Strip whitespace only, never digits, so a
+    // foreign number is not truncated.
+    if (prefill.phone && !h.phone) h.phone = prefill.phone.replace(/\s+/g, '');
     h.status = 'DRAFT';
     await h.save();
     return toPub(h);

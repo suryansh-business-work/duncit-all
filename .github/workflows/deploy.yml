@@ -1477,8 +1477,18 @@ jobs:
           JWT_SECRET=${JWT_SECRET}
           OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
           APP_VERSION=${APP_VERSION}
+          MWEB_BASE_URL=${{ env.MWEB_URL }}
           RUN_POD_TYPE_MIGRATION=1
           EOF
+          # MWEB_BASE_URL: every link the server EMAILS is built from this
+          # (url-configs.getUrlConfigs -> appUrl), and the booking CTA is
+          # `${appUrl}/booking/:bookingId`. It was never written here, so both
+          # stacks fell through to the compiled-in production default and a pod
+          # booked on staging emailed a link to PRODUCTION mWeb carrying a
+          # staging booking id — production's database has no such member, so
+          # the CTA landed on "This booking could not be found." Not in
+          # ENV_KEY_MAP, so it resolves from process.env and cannot be set from
+          # the Tech portal; the deploy is the only place that can pin it.
           # RUN_POD_TYPE_MIGRATION: data migrations are explicitly gated after a
           # dev-machine boot ran one against live data (the PodType outage). The
           # DEPLOY is the only place that opts in: the release shipping the

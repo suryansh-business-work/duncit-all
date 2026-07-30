@@ -2,15 +2,38 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { ZodError } from 'zod';
+import { EMPTY_CATEGORY, type AdminCategoryValue } from '@duncit/category';
 import {
   ASSIGN_ROLES,
   DELETE_USER,
+  SET_HOST_CATEGORIES,
   STATUS_META,
   UPDATE_USER,
   USER,
+  USER_HOST_PROFILE,
   type EditForm,
 } from './queries';
+import { isCompleteRow } from './HostCategoriesSection';
 import { toUpdateUserInput, userProfileSchema } from './user-profile.form';
+
+/** The stored triple carries its denormalized names, so the picker can be
+ * hydrated without re-walking the category tree. */
+const toCategoryValue = (row: {
+  super_category_id?: string | null;
+  category_id?: string | null;
+  sub_category_id?: string | null;
+  super_category_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+}): AdminCategoryValue => ({
+  ...EMPTY_CATEGORY,
+  super_id: row.super_category_id ?? '',
+  super_name: row.super_category_name ?? '',
+  category_id: row.category_id ?? '',
+  category_name: row.category_name ?? '',
+  sub_id: row.sub_category_id ?? '',
+  sub_name: row.sub_category_name ?? '',
+});
 
 export function useUserDetailsState(user_id: string | undefined, setToast: (m: string | null) => void) {
   const navigate = useNavigate();
@@ -19,8 +42,16 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     skip: !user_id,
     fetchPolicy: 'cache-and-network',
   });
+  // Host categories live on the host PROFILE, not the role — a user can hold the
+  // HOST role with no profile at all, in which case there is nothing to edit.
+  const hostQuery = useQuery(USER_HOST_PROFILE, {
+    variables: { user_id },
+    skip: !user_id,
+    fetchPolicy: 'cache-and-network',
+  });
   const [updateUser] = useMutation(UPDATE_USER);
   const [assign] = useMutation(ASSIGN_ROLES);
+  const [setHostCategoriesMutation] = useMutation(SET_HOST_CATEGORIES);
   const [deleteUser] = useMutation(DELETE_USER);
 
   const [form, setForm] = useState<EditForm | null>(null);
@@ -28,7 +59,10 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
   const [opError, setOpError] = useState<string | null>(null);
   const [rolesOpen, setRolesOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<Set<string>>(new Set());
+  const [hostCategories, setHostCategories] = useState<AdminCategoryValue[]>([]);
   const [delOpen, setDelOpen] = useState(false);
+
+  const hostProfile = hostQuery.data?.hostByUser ?? null;
 
   const user = data?.user;
   const allRoles = data?.roles ?? [];
@@ -135,6 +169,9 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     const next = new Set<string>(user?.roles ?? []);
     next.add('USER');
     setSelectedRoles(next);
+    // Hydrate from the profile each time it opens, so a cancelled edit is not
+    // still sitting there the next time the dialog is used.
+    setHostCategories((hostProfile?.host_categories ?? []).map(toCategoryValue));
     setRolesOpen(true);
   };
   const toggleRole = (key: string) => {
@@ -154,6 +191,22 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
       const keys = Array.from(selectedRoles);
       if (!keys.includes('USER')) keys.push('USER');
       await assign({ variables: { user_id, role_keys: keys } });
+      // Categories are a separate document, so they save separately — and only
+      // when there is a profile to hold them. Half-filled rows are dropped: the
+      // server rejects a partial triple.
+      if (hostProfile && keys.includes('HOST')) {
+        await setHostCategoriesMutation({
+          variables: {
+            host_doc_id: hostProfile.id,
+            categories: hostCategories.filter(isCompleteRow).map((row) => ({
+              super_category_id: row.super_id,
+              category_id: row.category_id,
+              sub_category_id: row.sub_id,
+            })),
+          },
+        });
+        await hostQuery.refetch();
+      }
       setRolesOpen(false);
       setToast('Roles updated');
       await refetch();
@@ -196,6 +249,9 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     toggleRole,
     openRoles,
     saveRoles,
+    hostProfile,
+    hostCategories,
+    setHostCategories,
     delOpen,
     setDelOpen,
     doDelete,

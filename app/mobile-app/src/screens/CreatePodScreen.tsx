@@ -26,6 +26,8 @@ export function CreatePodScreen() {
     locations,
     venues,
     products,
+
+    subCategories,
     hostCategories,
     finance,
     isLoading,
@@ -67,6 +69,7 @@ export function CreatePodScreen() {
               locations={locations}
               venues={venues}
               products={products}
+              subCategories={subCategories}
               hostCategories={hostCategories}
               viewerUserId={viewerUserId}
               finance={finance}

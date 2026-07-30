@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { filterProductsForClub } from '@duncit/utils';
+import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
@@ -26,11 +26,13 @@ import type {
   CreatePodHostCategory,
   CreatePodLocation,
   CreatePodProduct,
+  CreatePodSubCategory,
   CreatePodVenue,
   PodModerationResult,
   PodModerationViolation,
 } from './create-pod.types';
 import { usePodPricing } from './price-panel';
+import { HostCategoryField } from './steps/HostCategoryField';
 import { BasicsStep } from './steps/BasicsStep';
 import { LocationClubStep } from './steps/LocationClubStep';
 import { VenueSlotStep } from './steps/VenueSlotStep';
@@ -49,6 +51,8 @@ interface Props {
   locations: CreatePodLocation[];
   venues: CreatePodVenue[];
   products: CreatePodProduct[];
+  /** SUB-level categories with their admin-set minimum pax. */
+  subCategories: CreatePodSubCategory[];
   hostCategories: CreatePodHostCategory[];
   viewerUserId: string;
   finance: CreatePodFinance;
@@ -69,6 +73,7 @@ export function CreatePodStepper({
   locations,
   venues,
   products,
+  subCategories,
   hostCategories,
   viewerUserId,
   finance,
@@ -142,7 +147,8 @@ export function CreatePodStepper({
   };
   const next = async () => {
     if (!(await form.trigger(STEP_FIELDS[step]))) return;
-    if (step === 1 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
+    // The category now sits above the title, so it gates the FIRST step.
+    if (step === 0 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
       form.setError('host_category_key', { type: 'required', message: 'Select your category' });
       return;
     }
@@ -211,16 +217,36 @@ export function CreatePodStepper({
   });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
-  const selectedClub = clubs.find((club) => club.id === form.watch('club_id')) ?? null;
+  const clubId = form.watch('club_id');
+  const selectedClub = clubs.find((club) => club.id === clubId) ?? null;
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
   // Only offer products whose category matches the selected club (Super + Sub).
   const availableProducts = filterProductsForClub(products, selectedClub);
+
+  // Changing the club (or the host category, which clears the club) changes what
+  // Step 4 may offer, so any row the new club no longer offers has to go — it
+  // would otherwise render blank, price at ₹0 and die on the server's category
+  // gate at publish with nothing on screen explaining why. mWeb twin.
+  useEffect(() => {
+    const requests = form.getValues('product_requests');
+    const kept = pruneProductRequests(requests, availableProducts);
+    if (kept !== requests) form.setValue('product_requests', kept, { shouldDirty: true });
+    // availableProducts is derived from club_id, so that is the real trigger.
+  }, [clubId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const podMode = form.watch('pod_mode');
   const slotId = form.watch('venue_slot_id');
   const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? form.watch('venue_id') : '');
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
+
+  // How big this pod may be: floored by the sub-category's admin-set minimum
+  // (a doubles game needs 4) and capped by the venue space the host booked. The
+  // pod's sub-category is its club's `category_id`. mWeb twin (rule 27).
+  const spots = spotsBounds({
+    minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
+    venueCapacity: podMode === 'PHYSICAL' ? selectedSlot?.capacity : null,
+  });
 
   // Step 4's money state lives HERE because it gates the Create Pod button: a
   // ₹0 projected payout, or a pod worth less than the venue slot, blocks
@@ -236,13 +262,7 @@ export function CreatePodStepper({
 
   const steps = [
     <BasicsStep key="basics" form={form} />,
-    <LocationClubStep
-      key="location"
-      form={form}
-      clubs={clubsForLocation}
-      locations={locations}
-      hostCategories={hostCategories}
-    />,
+    <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} />,
     <VenueSlotStep
       key="venue"
       form={form}
@@ -257,11 +277,16 @@ export function CreatePodStepper({
       showProducts={showProducts}
       finance={finance}
       pricing={pricing}
+      spots={spots}
     />,
   ];
 
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
+      {/* Above the title on purpose: the category scopes the clubs on step 2 AND
+          the products on step 4, so the host picks it before anything else
+          rather than discovering it half way through. mWeb twin (rule 27). */}
+      <HostCategoryField form={form} hostCategories={hostCategories} />
       <StepHeader step={step} />
       {steps[step]}
       {error ? (

@@ -223,6 +223,8 @@ export const createPodSchema = z
 /** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   [
+    // The category picker sits above the title now, so it belongs to step 1.
+    'host_category_key',
     'pod_title',
     'pod_description',
     'media_text',
@@ -232,7 +234,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'what_this_pod_offers',
     'available_perks',
   ],
-  ['location_id', 'locality', 'host_category_key', 'pod_mode', 'club_id'],
+  ['location_id', 'locality', 'pod_mode', 'club_id'],
   [
     'venue_id',
     'venue_slot_id',

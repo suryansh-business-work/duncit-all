@@ -2,7 +2,14 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { MockedResponse } from '@apollo/client/testing';
 import { useUserDetailsState } from '../useUserDetailsState';
-import { ASSIGN_ROLES, DELETE_USER, UPDATE_USER, USER, type EditForm } from '../queries';
+import {
+  ASSIGN_ROLES,
+  DELETE_USER,
+  UPDATE_USER,
+  USER,
+  USER_HOST_PROFILE,
+  type EditForm,
+} from '../queries';
 import { makeWrapper } from './testkit';
 
 const nav = vi.hoisted(() => ({ fn: vi.fn() }));
@@ -51,12 +58,19 @@ const rolesDoc = [
   { __typename: 'Role', id: 'r3', key: 'VENUE', name: 'Venue', description: '', is_system: false },
 ];
 
-/** The hook refetches after every mutation, so USER must be mockable N times. */
-const userMocks = (times: number, over: Record<string, unknown> = {}): MockedResponse[] =>
-  Array.from({ length: times }, () => ({
+/** The hook refetches after every mutation, so USER must be mockable N times.
+ * The host-profile lookup runs beside it — most cases have no profile, which is
+ * a real answer (holding the HOST role does not create one). */
+const userMocks = (times: number, over: Record<string, unknown> = {}): MockedResponse[] => [
+  ...Array.from({ length: times }, () => ({
     request: { query: USER, variables: { user_id: USER_ID } },
     result: { data: { user: userDoc(over), roles: rolesDoc } },
-  }));
+  })),
+  ...Array.from({ length: Math.max(times, 2) }, () => ({
+    request: { query: USER_HOST_PROFILE, variables: { user_id: USER_ID } },
+    result: { data: { hostByUser: null } },
+  })),
+];
 
 const updateMock = (input: Record<string, unknown>, spy?: () => void): MockedResponse => ({
   request: { query: UPDATE_USER, variables: { user_id: USER_ID, input } },

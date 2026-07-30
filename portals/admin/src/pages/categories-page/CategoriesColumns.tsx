@@ -28,7 +28,9 @@ export default function CategoriesColumns({
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' },
         gap: 2,
-        minHeight: 0,
+        // A floor tall enough to actually drill down and edit in. Each panel
+        // scrolls internally above this, and the page scrolls below it.
+        minHeight: { xs: 360, md: 560 },
       }}
     >
       <ColumnPanel

@@ -234,11 +234,15 @@ describe('HostPodsSection', () => {
   it('completes a pod, then closes or refetches on submit', () => {
     const hookApi = api();
     mockedUse.mockReturnValue(hookApi);
-    renderWithProviders(<HostPodsSection />);
+    // Completion also notifies the screen, which refetches the Host Share list
+    // the completion just added a payout to.
+    const onPodCompleted = jest.fn();
+    renderWithProviders(<HostPodsSection onPodCompleted={onPodCompleted} />);
     fireEvent.press(screen.getByTestId('host-pod-complete-p1'));
     expect(screen.getByTestId('mock-complete-dialog')).toBeOnTheScreen();
     fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
     expect(hookApi.refetch).toHaveBeenCalled();
+    expect(onPodCompleted).toHaveBeenCalledTimes(1);
     expect(screen.queryByTestId('mock-complete-dialog')).toBeNull();
     fireEvent.press(screen.getByTestId('host-pod-complete-p2'));
     fireEvent(screen.getByTestId('mock-complete-close'), 'touchEnd');

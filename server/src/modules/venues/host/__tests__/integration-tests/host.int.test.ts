@@ -143,6 +143,39 @@ describe('hostService integration', () => {
     expect(added).toMatchObject({ request_no: '', super_category_name: 'beta Super', category_name: 'beta Cat', sub_category_name: 'beta Sub' });
   });
 
+  // The admin Roles dialog only wants to set categories. adminUpdate demands the
+  // whole step1/2/3 payload, so it would have to round-trip every other field —
+  // and clobber anything its query missed. This path touches nothing else.
+  it('sets categories on their own, leaving the rest of the host untouched', async () => {
+    const a = await seedCategoryTree('epsilon');
+    const userId = new Types.ObjectId();
+    const h = await HostModel.create({
+      user_id: userId,
+      full_name: 'Solo Host',
+      email: 'solo@duncit.test',
+      phone: '+919999999999',
+      status: 'APPROVED',
+    });
+
+    const updated = await hostService.adminSetCategories(String(h._id), [a]);
+    expect(updated.host_categories).toHaveLength(1);
+    expect(updated.host_categories[0]).toMatchObject({
+      sub_category_id: a.sub_category_id,
+      sub_category_name: 'epsilon Sub',
+    });
+    // Everything the dialog never sent survives.
+    expect(updated.full_name).toBe('Solo Host');
+    expect(updated.email).toBe('solo@duncit.test');
+    expect(updated.status).toBe('APPROVED');
+
+    // And the admin can find that profile from the user id alone.
+    const found = await hostService.getByUser(String(userId));
+    expect(found?.id).toBe(String(h._id));
+    // A user who never onboarded simply has no profile — not an error.
+    expect(await hostService.getByUser(String(new Types.ObjectId()))).toBeNull();
+    expect(await hostService.getByUser('not-an-id')).toBeNull();
+  });
+
   it('rejects an invalid category triple (broken parent chain) on admin update', async () => {
     const a = await seedCategoryTree('gamma');
     const b = await seedCategoryTree('delta');

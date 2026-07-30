@@ -3,6 +3,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { buildEarningsStatement, formatStatementMoney } from '@duncit/utils';
 
 import type { CreatePodFinance } from '../create-pod.types';
+import { EARNINGS_ESTIMATE_NOTE } from './step4-copy';
 import { ChargesAccordion } from './ChargesAccordion';
 import { EARN_GREEN, PayoutCard } from './PayoutCard';
 import type { PodPricingState } from './usePodPricing';
@@ -113,6 +114,9 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
           />
         </YStack>
       ) : null}
+      <Text testID="price-panel-estimate-note" fontSize={11} color="$muted">
+        {EARNINGS_ESTIMATE_NOTE}
+      </Text>
     </YStack>
   );
 }

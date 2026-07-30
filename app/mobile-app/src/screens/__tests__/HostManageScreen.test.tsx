@@ -18,17 +18,34 @@ jest.mock('@/hooks/useHostDrafts', () => ({ useHostDrafts: jest.fn() }));
 jest.mock('@/hooks/useAppSettings', () => ({
   useAppSettings: () => ({ draftRetentionDays: 3 }),
 }));
-// The hosted-pods section is unit-tested on its own; keep this screen test focused.
+// The hosted-pods section is unit-tested on its own; keep this screen test
+// focused. The stub exposes onPodCompleted so the screen's payout-refetch
+// wiring is exercised.
 jest.mock('@/components/host-manage/HostPodsSection', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View: V } = require('react-native');
-  return { HostPodsSection: () => <V testID="host-pods-section" /> };
+  return {
+    HostPodsSection: ({ onPodCompleted }: { onPodCompleted?: () => void }) => (
+      <V testID="host-pods-section" onTouchEnd={onPodCompleted} />
+    ),
+  };
 });
 jest.mock('@/components/host-manage/HostShareSection', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View: V } = require('react-native');
   return { HostShareSection: () => <V testID="host-share-section" /> };
 });
+// The screen owns the payouts hook so pod completion can refetch the share list.
+const mockPayoutsRefetch = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/hooks/useHostPayouts', () => ({
+  useHostPayouts: () => ({
+    payouts: [],
+    symbol: '₹',
+    isLoading: false,
+    error: null,
+    refetch: mockPayoutsRefetch,
+  }),
+}));
 // The apply-another-category banner is unit-tested on its own; stub it here.
 jest.mock('@/components/host-manage/HostApplyBanner', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -89,6 +106,13 @@ describe('HostManageScreen', () => {
     const order = (id: string) => ids.indexOf(id);
     expect(order('host-categories-card')).toBeLessThan(order('host-apply-banner'));
     expect(order('host-apply-banner')).toBeLessThan(order('host-pods-section'));
+  });
+
+  it('refetches the payout list when a pod completes', () => {
+    mockedUse.mockReturnValue(api({ drafts: [] }));
+    renderWithProviders(<HostManageScreen />);
+    fireEvent(screen.getByTestId('host-pods-section'), 'touchEnd');
+    expect(mockPayoutsRefetch).toHaveBeenCalledTimes(1);
   });
 
   it('lists drafts and resumes one', () => {

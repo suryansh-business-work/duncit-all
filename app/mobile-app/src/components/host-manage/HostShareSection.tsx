@@ -1,6 +1,17 @@
+import { useEffect } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
-import { useHostPayouts, type HostPayout } from '@/hooks/useHostPayouts';
+import { fireAndForget } from '@/utils/fire-and-forget';
+import type { HostPayout } from '@/hooks/useHostPayouts';
+
+interface HostShareSectionProps {
+  payouts: HostPayout[];
+  symbol: string;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
 
 type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
 const STATUS_BG: Record<Status, string> = {
@@ -104,9 +115,26 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: HostPayout; symbol: s
   );
 }
 
-/** "Host Share" — every completion payout this host has earned, with status. */
-export function HostShareSection() {
-  const { payouts, symbol, isLoading } = useHostPayouts();
+/** "Host Share" — every completion payout this host has earned, with status.
+ *
+ * The screen owns the payouts hook (so completing a pod can refetch this list),
+ * and the section refetches itself whenever the screen regains focus — it used
+ * to fetch once at mount and then never again, so a share earned after the
+ * first visit simply never appeared. A load FAILURE renders its own message:
+ * showing "Complete a pod to see your share here." for a network error told a
+ * host with completed pods that they had none. */
+export function HostShareSection({
+  payouts,
+  symbol,
+  isLoading,
+  error,
+  refetch,
+}: Readonly<HostShareSectionProps>) {
+  const navigation = useNavigation();
+  useEffect(
+    () => navigation.addListener('focus', () => fireAndForget(refetch())),
+    [navigation, refetch],
+  );
 
   return (
     <YStack gap={12} testID="host-share-section">
@@ -114,7 +142,12 @@ export function HostShareSection() {
         Host Share
       </Text>
       {isLoading ? <Spinner testID="host-share-loading" color="$primary" /> : null}
-      {!isLoading && payouts.length === 0 ? (
+      {!isLoading && error ? (
+        <Text testID="host-share-error" fontSize={13} color="$danger">
+          {error}
+        </Text>
+      ) : null}
+      {!isLoading && !error && payouts.length === 0 ? (
         <Text testID="host-share-empty" fontSize={13} color="$muted">
           Complete a pod to see your share here.
         </Text>

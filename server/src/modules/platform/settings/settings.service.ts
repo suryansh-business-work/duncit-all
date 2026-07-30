@@ -255,6 +255,15 @@ const DEFAULT_FLAGS: {
       "Show all product features (Pod Shop, product management, Create-a-Pod products step, product nav) across apps and portals.",
     enabled: false,
   },
+  {
+    // Seeded ON so enabling this feature changes nothing for users already on
+    // the current build — turning it OFF is the deliberate act.
+    key: "force_app_update",
+    name: "Force App Update",
+    description:
+      "Show the blocking App Update screen in the Android and iOS apps when the installed build is behind the latest published version. Turn off and an outdated build keeps working — nobody is forced to update.",
+    enabled: true,
+  },
 ];
 
 type AppSettingsUpdateInput = {

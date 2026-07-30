@@ -354,6 +354,7 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
     venueId: form.watch('venue_id') || null,
     slotPrice: slot.price,
     isPhysical: form.watch('pod_mode') === 'PHYSICAL',
+    isFree: form.watch('pod_type') === 'FREE',
   });
   return (
     <PricingStep
@@ -370,9 +371,10 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
  * `usePotentialEarnings` argument assertions still describe real behaviour. */
 function PriceHarness({
   finance: financeSettings,
+  isFree = false,
   ...input
-}: Readonly<PodPricingInput & { finance: typeof finance }>) {
-  return <PricePanel finance={financeSettings} pricing={usePodPricing(input)} />;
+}: Readonly<Omit<PodPricingInput, 'isFree'> & { isFree?: boolean; finance: typeof finance }>) {
+  return <PricePanel finance={financeSettings} pricing={usePodPricing({ ...input, isFree })} />;
 }
 
 describe('PricingStep', () => {

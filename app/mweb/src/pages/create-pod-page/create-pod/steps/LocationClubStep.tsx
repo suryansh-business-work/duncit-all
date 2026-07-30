@@ -108,6 +108,8 @@ export default function LocationClubStep({ form, clubs, locations, hostCategorie
                 // to Physical must not carry FREE to submit.
                 if (next === 'PHYSICAL' && watch('pod_type') === 'FREE') {
                   setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
+                  // FREE forced the price to ₹0 — the now-paid pod starts blank.
+                  setValue('pod_amount', null, { shouldDirty: true });
                 }
               }}
             >

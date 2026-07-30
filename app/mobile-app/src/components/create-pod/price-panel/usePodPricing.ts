@@ -15,6 +15,8 @@ export interface PodPricingInput {
   /** Price of the picked venue slot, or null while none is picked. */
   slotPrice: number | null;
   isPhysical: boolean;
+  /** A FREE pod is the only pod allowed to carry no ticket price. */
+  isFree: boolean;
 }
 
 export interface PodPricingState extends PodPricingInput {
@@ -27,6 +29,8 @@ export interface PodPricingState extends PodPricingInput {
   ready: boolean;
   /** Capacity is the host's own free seat only — there is nothing to bill. */
   hostOnly: boolean;
+  /** A paid pod with no ticket price entered yet — nothing to project. */
+  priceMissing: boolean;
   /** The server projects a take-home of ₹0 or less at this ticket price. */
   zeroEarnings: boolean;
   /** The whole pod collects less than the venue's fixed slot price. */
@@ -60,7 +64,7 @@ export function isVenueShortfall(input: PodPricingInput): boolean {
  * numbers; both guards clear themselves as soon as the price is raised.
  */
 export function usePodPricing(input: PodPricingInput): PodPricingState {
-  const { podAmount, noOfSpots, venueId, slotPrice, isPhysical } = input;
+  const { podAmount, noOfSpots, venueId, slotPrice, isPhysical, isFree } = input;
   const venuePicked = isPhysical && slotPrice !== null;
   const { projection, waterfall, isLoading } = usePotentialEarnings(
     podAmount,
@@ -70,6 +74,9 @@ export function usePodPricing(input: PodPricingInput): PodPricingState {
   );
 
   const ready = podAmount > 0 && noOfSpots > 0;
+  // The field starts blank, so a paid pod has nothing to publish until the host
+  // types a price — ₹0 is never assumed on their behalf.
+  const priceMissing = !isFree && podAmount <= 0;
   // Never claim ₹0 earnings from a waterfall that a newer price has superseded.
   const zeroEarnings = ready && !isLoading && waterfall !== null && waterfall.host_receives <= 0;
   const venueShortfall = isVenueShortfall(input);
@@ -82,8 +89,9 @@ export function usePodPricing(input: PodPricingInput): PodPricingState {
     venuePicked,
     ready,
     hostOnly: ready && noOfSpots === 1,
+    priceMissing,
     zeroEarnings,
     venueShortfall,
-    blocked: zeroEarnings || venueShortfall,
+    blocked: priceMissing || zeroEarnings || venueShortfall,
   };
 }

@@ -14,7 +14,7 @@ import {
   ZeroEarningsNotice,
   type PodPricingState,
 } from '../price-panel';
-import { TICKET_PRICE_LABEL } from '../price-panel/step4-copy';
+import { TICKET_PRICE_LABEL, TICKET_PRICE_PLACEHOLDER } from '../price-panel/step4-copy';
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
@@ -53,6 +53,7 @@ export function PricingStep({ form, products, showProducts, finance, pricing }: 
         name="pod_amount_text"
         label={TICKET_PRICE_LABEL}
         keyboardType="numeric"
+        placeholder={TICKET_PRICE_PLACEHOLDER}
         editable={!isFree}
         hint={isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.'}
         labelAction={<SuggestedPriceLink onPress={() => setSuggestionsOpen(true)} />}

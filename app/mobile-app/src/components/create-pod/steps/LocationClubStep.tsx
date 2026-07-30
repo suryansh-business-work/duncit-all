@@ -120,6 +120,8 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
               // the switch to PHYSICAL.
               if (next === 'PHYSICAL' && getValues('pod_type') !== 'PAID') {
                 setValue('pod_type', 'PAID', { shouldDirty: true });
+                // FREE forced the price to ₹0 — the now-paid pod starts blank.
+                setValue('pod_amount_text', '', { shouldDirty: true });
               }
             }}
             testID="create-pod-mode"

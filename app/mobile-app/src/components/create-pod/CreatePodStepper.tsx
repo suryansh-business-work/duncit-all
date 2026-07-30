@@ -231,6 +231,7 @@ export function CreatePodStepper({
     venueId: form.watch('venue_id') || null,
     slotPrice: selectedSlot ? selectedSlot.price : null,
     isPhysical: podMode === 'PHYSICAL',
+    isFree: form.watch('pod_type') === 'FREE',
   });
 
   const steps = [

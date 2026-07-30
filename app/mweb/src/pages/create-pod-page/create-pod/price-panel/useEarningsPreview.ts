@@ -10,6 +10,8 @@ export interface EarningsPreviewInput {
   noOfSpots: number;
   venueId: string | null;
   isPhysical: boolean;
+  /** A FREE pod is the only pod allowed to carry no ticket price. */
+  isFree: boolean;
 }
 
 export interface EarningsPreview extends EarningsPreviewInput {
@@ -21,6 +23,8 @@ export interface EarningsPreview extends EarningsPreviewInput {
   hasVenue: boolean;
   /** Both money inputs are set, so a projection can be shown. */
   ready: boolean;
+  /** A paid pod with no ticket price entered yet — nothing to project. */
+  priceMissing: boolean;
   /** The projected host payout is ₹0 or less at this ticket price. */
   zeroEarnings: boolean;
   /** The pod does not even cover the venue's slot price. */
@@ -65,7 +69,7 @@ function useDebouncedInputs(podAmount: number, noOfSpots: number) {
  * be positive. mWeb + native apply identical thresholds (rule 27).
  */
 export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): EarningsPreview {
-  const { slotPrice, podAmount, noOfSpots, venueId, isPhysical } = input;
+  const { slotPrice, podAmount, noOfSpots, venueId, isPhysical, isFree } = input;
   const sent = useDebouncedInputs(podAmount, noOfSpots);
   const hasVenue = isPhysical && slotPrice !== null;
   const { data, loading } = useQuery(POTENTIAL_POD_EARNINGS, {
@@ -81,8 +85,11 @@ export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): Earni
   const projection: EarningsProjection | undefined = data?.potentialPodEarnings;
   const stale = sent.podAmount !== podAmount || sent.noOfSpots !== noOfSpots;
 
-  // Free pods never trip either rule — the ticket price is the switch.
+  // Free pods never trip any rule — the ticket price is the switch.
   const ready = podAmount > 0 && noOfSpots > 0;
+  // The field starts blank, so a paid pod has nothing to publish until the host
+  // types a price — ₹0 is never assumed on their behalf.
+  const priceMissing = !isFree && podAmount <= 0;
   const hostReceives = projection?.waterfall.host_receives;
   // Never claim ₹0 earnings from a waterfall that a newer price has superseded.
   const zeroEarnings =
@@ -96,8 +103,9 @@ export function useEarningsPreview(input: Readonly<EarningsPreviewInput>): Earni
     stale,
     hasVenue,
     ready,
+    priceMissing,
     zeroEarnings,
     venueShortfall,
-    blocked: zeroEarnings || venueShortfall,
+    blocked: priceMissing || zeroEarnings || venueShortfall,
   };
 }

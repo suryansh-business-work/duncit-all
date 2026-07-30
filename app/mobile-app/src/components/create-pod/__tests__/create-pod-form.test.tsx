@@ -27,6 +27,8 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   venue_space_label: 'Main Hall',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time_text: futureText,
+  // The blank default is invalid on purpose — a paid pod must carry a price.
+  pod_amount_text: '499',
   media_text: 'https://cdn/img.jpg',
   what_this_pod_offers: ['Snacks'],
   location_id: 'l1',
@@ -155,6 +157,31 @@ describe('createPodSchema', () => {
     ).toEqual([]);
   });
 
+  it('blocks a paid pod until the host enters a ticket price above ₹0', () => {
+    // The field ships blank, so an untouched paid pod cannot be published.
+    expect(blankCreatePodForm.pod_amount_text).toBe('');
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount_text: '' }))).toContain('pod_amount_text');
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount_text: ' ' }))).toContain(
+      'pod_amount_text',
+    );
+    expect(issuesOf(valid({ pod_type: 'PAID', pod_amount_text: '0' }))).toContain(
+      'pod_amount_text',
+    );
+    // A free pod is the only pod that may sit at ₹0.
+    expect(
+      createPodSchema.safeParse(
+        valid({
+          pod_type: 'FREE',
+          pod_amount_text: '0',
+          pod_mode: 'VIRTUAL',
+          venue_id: '',
+          venue_slot_id: '',
+          meeting_url: 'https://meet.duncit.com/x',
+        }),
+      ).success,
+    ).toBe(true);
+  });
+
   it('forces free pods to amount 0 and gates enabled products', () => {
     expect(issuesOf(valid({ pod_type: 'FREE', pod_amount_text: '100' }))).toContain(
       'pod_amount_text',
@@ -232,6 +259,11 @@ describe('buildCreatePodInput', () => {
 });
 
 describe('buildCreatePodInput fallbacks', () => {
+  it('maps a free pod to ₹0 — the only pod allowed to carry no price', () => {
+    const input = buildCreatePodInput(valid({ pod_type: 'FREE', pod_amount_text: '0' }));
+    expect(input.pod_amount).toBe(0);
+  });
+
   it('nulls an unset slot, location and reel (legacy drafts)', () => {
     const input = buildCreatePodInput(valid({ venue_slot_id: '', location_id: '' }));
     expect(input.venue_slot_id).toBeNull();

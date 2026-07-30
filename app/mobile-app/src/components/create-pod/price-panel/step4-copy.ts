@@ -19,6 +19,12 @@ export const VENUE_SHORTFALL_MESSAGE =
 /** Ticket Price field label — the Suggested Price link sits to its right. */
 export const TICKET_PRICE_LABEL = 'Ticket price (₹ per person)';
 
+/** The Ticket Price field starts blank — it only ever holds what the host typed,
+ * so ₹0 can never be implied — and Create Pod stays blocked until it is filled. */
+export const TICKET_PRICE_PLACEHOLDER = 'Enter ticket price';
+export const TICKET_PRICE_REQUIRED = 'Enter a ticket price to continue';
+export const TICKET_PRICE_MIN = 'Ticket price must be more than ₹0';
+
 /** The "Suggested Price" link beside the Ticket Price label, and its modal. */
 export const SUGGESTED_PRICES_LINK = 'Suggested Price';
 export const SUGGESTED_PRICES_TITLE = 'Suggested Ticket Prices';

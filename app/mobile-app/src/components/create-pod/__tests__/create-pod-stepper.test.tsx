@@ -210,6 +210,9 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
   // The Paid card is the one constant on the pricing step — FREE is virtual-only,
   // so a physical pod never renders a Free card.
   await screen.findByTestId('create-pod-paid');
+  // The Ticket Price field ships blank and gates Create Pod, so a paid pod is
+  // only publishable once the host types a price.
+  fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
   // Accept the Organizer Terms gate so the final publish validates.
   press('create-pod-terms');
 }
@@ -266,6 +269,10 @@ describe('CreatePodStepper', () => {
     press('products-enabled-toggle');
     // Pressing the already-selected Paid card is a no-op — it stays PAID.
     press('create-pod-paid');
+    // The price ships blank and gates publishing, so the host must type one.
+    expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('value', '');
+    expect(screen.getByTestId('create-pod-submit')).toBeDisabled();
+    fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
 
     // Accept the Organizer Terms gate, then publish.
     press('create-pod-terms');
@@ -316,6 +323,10 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-paid');
     expect(screen.queryByTestId('create-pod-free')).toBeNull();
     expect(screen.getByTestId('create-pod-paid')).toHaveProp('aria-pressed', true);
+    // The ₹0 the Free pick forced does not survive either — the paid pod is
+    // blank again and must be priced by the host before it can publish.
+    expect(screen.getByTestId('field-pod_amount_text')).toHaveProp('value', '');
+    fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '500');
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
     expect(onPublish.mock.calls[0]?.[1].pod_type).toBe('PAID');

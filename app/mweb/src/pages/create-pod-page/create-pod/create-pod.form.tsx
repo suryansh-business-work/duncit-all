@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TICKET_PRICE_MIN, TICKET_PRICE_REQUIRED } from './price-panel/pricingCopy';
 import {
   POD_TYPE_VALUES,
   blankCreatePodForm,
@@ -42,6 +43,23 @@ function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx)
   }
 }
 
+/** The ticket price is blank until the host types one, so a PAID pod can never
+ * be published at ₹0 by default — only a FREE pod (whose field is locked to 0)
+ * may carry no price. Native twin (rule 27). */
+function refineTicketPrice(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_type === 'FREE') {
+    if (values.pod_amount !== 0) {
+      ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: 'Free pods must have amount 0' });
+    }
+    return;
+  }
+  if (values.pod_amount === null) {
+    ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: TICKET_PRICE_REQUIRED });
+  } else if (values.pod_amount <= 0) {
+    ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: TICKET_PRICE_MIN });
+  }
+}
+
 /** Zod schema for the host Create Pod stepper — mirrors the server's
  * createPartnerPod rules (venue for physical, link for virtual, paid amounts). */
 export const createPodSchema = z
@@ -62,7 +80,7 @@ export const createPodSchema = z
     pod_date_time: z.date({ invalid_type_error: 'Start date/time required' }),
     pod_end_date_time: z.date().nullable(),
     pod_type: z.string().min(1, 'Select a pod type'),
-    pod_amount: z.number({ invalid_type_error: 'Amount must be a number' }).min(0).max(1999),
+    pod_amount: z.number({ invalid_type_error: 'Amount must be a number' }).min(0).max(1999).nullable(),
     venue_space_label: z.string(),
     no_of_spots: z.number({ invalid_type_error: 'Spots must be a number' }).min(0).max(10000),
     pod_hashtag_text: z.string().max(500),
@@ -110,9 +128,7 @@ export const createPodSchema = z
       // TODO(i18n)
       ctx.addIssue({ code: 'custom', path: ['pod_type'], message: 'Physical pods must be paid' });
     }
-    if (values.pod_type === 'FREE' && values.pod_amount !== 0) {
-      ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: 'Free pods must have amount 0' });
-    }
+    refineTicketPrice(values, ctx);
     if (values.products_enabled && values.product_requests.length === 0) {
       ctx.addIssue({ code: 'custom', path: ['product_requests'], message: 'Add at least one product' });
     }

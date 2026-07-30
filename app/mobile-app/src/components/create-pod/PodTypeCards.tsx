@@ -59,6 +59,9 @@ export function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>) {
       form.setValue('pod_amount_text', '0', { shouldDirty: true, shouldValidate: true });
     } else {
       form.setValue('pod_type', 'PAID', { shouldDirty: true, shouldValidate: true });
+      // The ₹0 a Free pod forces was never typed by the host — a paid pod goes
+      // back to a blank price field.
+      form.setValue('pod_amount_text', '', { shouldDirty: true, shouldValidate: true });
     }
   };
 

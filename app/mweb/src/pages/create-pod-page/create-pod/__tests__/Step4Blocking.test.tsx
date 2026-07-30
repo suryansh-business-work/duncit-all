@@ -49,24 +49,34 @@ const earningsMock = (podAmount: number, hostReceives: number) => ({
  * the stepper reads exactly these flags to disable Create Pod. */
 function PreviewHarness({
   podAmount,
+  isFree = false,
   onPreview,
-}: Readonly<{ podAmount: number; onPreview: (preview: EarningsPreview) => void }>) {
+}: Readonly<{
+  podAmount: number;
+  isFree?: boolean;
+  onPreview: (preview: EarningsPreview) => void;
+}>) {
   const preview = useEarningsPreview({
     slotPrice: null,
     podAmount,
     noOfSpots: 3,
     venueId: null,
     isPhysical: false,
+    isFree,
   });
   onPreview(preview);
   return null;
 }
 
-function renderPreview(podAmount: number, hostReceives: number) {
+function renderPreview(podAmount: number, hostReceives: number, isFree = false) {
   const seen: EarningsPreview[] = [];
   render(
     <MockedProvider mocks={[earningsMock(podAmount, hostReceives)]} addTypename={false}>
-      <PreviewHarness podAmount={podAmount} onPreview={(preview) => seen.push(preview)} />
+      <PreviewHarness
+        podAmount={podAmount}
+        isFree={isFree}
+        onPreview={(preview) => seen.push(preview)}
+      />
     </MockedProvider>,
   );
   return seen;
@@ -85,6 +95,20 @@ describe('Step-4 publish gate', () => {
     const seen = renderPreview(500, 640);
     await waitFor(() => expect(seen.at(-1)?.projection).toBeDefined());
     expect(seen.at(-1)?.zeroEarnings).toBe(false);
+    expect(seen.at(-1)?.blocked).toBe(false);
+  });
+
+  // The Ticket Price field ships blank, so an untouched paid pod reads as ₹0 —
+  // publishing stays blocked until the host types a price of their own.
+  it('blocks a paid pod while the ticket price is still blank', () => {
+    const seen = renderPreview(0, 0);
+    expect(seen.at(-1)?.priceMissing).toBe(true);
+    expect(seen.at(-1)?.blocked).toBe(true);
+  });
+
+  it('exempts a free pod, whose price is legitimately ₹0', () => {
+    const seen = renderPreview(0, 0, true);
+    expect(seen.at(-1)?.priceMissing).toBe(false);
     expect(seen.at(-1)?.blocked).toBe(false);
   });
 });

@@ -253,6 +253,7 @@ describe('CategoriesPage', () => {
       description: null,
       allow_co_hosts: null,
       max_co_hosts: null,
+      min_pax: null,
     });
     renderWithProviders(<CategoriesPage />, [
       brandingMock(),
@@ -268,6 +269,8 @@ describe('CategoriesPage', () => {
         is_active: true,
         allow_co_hosts: false,
         max_co_hosts: 1,
+        // A null min_pax from the server reads as "no minimum" in the form.
+        min_pax: 0,
       }),
       superList(),
       categoriesMock('CATEGORY', 's1', [cricket]),

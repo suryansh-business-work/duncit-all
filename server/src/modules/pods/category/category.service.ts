@@ -5,6 +5,8 @@ import {
   DEFAULT_CATEGORY_ICON_SIZE,
   MAX_CO_HOSTS,
   MIN_CO_HOSTS,
+  MIN_PAX_CEILING,
+  MIN_PAX_FLOOR,
   type CategoryIconPosition,
   type CategoryLevel,
   type ICategoryIconLayout,
@@ -70,6 +72,7 @@ const toPub = (d: any) => {
     sort_order: d.sort_order ?? 0,
     allow_co_hosts: !!d.allow_co_hosts,
     max_co_hosts: d.max_co_hosts ?? MIN_CO_HOSTS,
+    min_pax: d.min_pax ?? MIN_PAX_FLOOR,
     icon_layout_mweb: layoutToPub(d.icon_layout_mweb),
     icon_layout_native: layoutToPub(d.icon_layout_native),
     created_at: d.created_at?.toISOString?.() ?? '',
@@ -103,6 +106,29 @@ function validateCoHosts(
       input.max_co_hosts > MAX_CO_HOSTS)
   ) {
     throw new GraphQLError(`max_co_hosts must be between ${MIN_CO_HOSTS} and ${MAX_CO_HOSTS}`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
+/**
+ * The minimum pax an activity needs is a SUB-level concern — it describes the
+ * game, not the tier above it. Bounded like max_co_hosts, and rejected rather
+ * than clamped so the admin knows exactly what was saved.
+ */
+function validateMinPax(level: CategoryLevel, input: { min_pax?: number }) {
+  if (input.min_pax === undefined) return;
+  if (level !== 'SUB') {
+    throw new GraphQLError('Minimum pax can only be configured on a sub-category', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (
+    !Number.isInteger(input.min_pax) ||
+    input.min_pax < MIN_PAX_FLOOR ||
+    input.min_pax > MIN_PAX_CEILING
+  ) {
+    throw new GraphQLError(`min_pax must be between ${MIN_PAX_FLOOR} and ${MIN_PAX_CEILING}`, {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -182,6 +208,7 @@ export const categoryService = {
     sort_order?: number;
     allow_co_hosts?: boolean;
     max_co_hosts?: number;
+    min_pax?: number;
     icon_layout_mweb?: IconLayoutInput | null;
     icon_layout_native?: IconLayoutInput | null;
   }) {
@@ -189,6 +216,7 @@ export const categoryService = {
     if (input.parent_id && !parent) notFound();
     validateParent(input.level, parent);
     validateCoHosts(input.level, input);
+    validateMinPax(input.level, input);
     validateIconLayout(input.level, input);
 
     const slug = slugify(input.name);
@@ -210,6 +238,7 @@ export const categoryService = {
       sort_order: input.sort_order ?? 0,
       allow_co_hosts: input.allow_co_hosts ?? false,
       max_co_hosts: input.max_co_hosts ?? MIN_CO_HOSTS,
+      min_pax: input.min_pax ?? MIN_PAX_FLOOR,
       icon_layout_mweb: toIconLayout(input.icon_layout_mweb),
       icon_layout_native: toIconLayout(input.icon_layout_native),
     });
@@ -227,6 +256,7 @@ export const categoryService = {
       is_active?: boolean;
       allow_co_hosts?: boolean;
       max_co_hosts?: number;
+      min_pax?: number;
       icon_layout_mweb?: IconLayoutInput | null;
       icon_layout_native?: IconLayoutInput | null;
     }
@@ -234,6 +264,7 @@ export const categoryService = {
     const doc = await CategoryModel.findById(id);
     if (!doc) notFound();
     validateCoHosts(doc.level, input);
+    validateMinPax(doc.level, input);
     validateIconLayout(doc.level, input);
     if (input.name !== undefined) {
       doc.name = input.name.trim();
@@ -246,6 +277,7 @@ export const categoryService = {
     if (input.is_active !== undefined) doc.is_active = input.is_active;
     if (input.allow_co_hosts !== undefined) doc.allow_co_hosts = input.allow_co_hosts;
     if (input.max_co_hosts !== undefined) doc.max_co_hosts = input.max_co_hosts;
+    if (input.min_pax !== undefined) doc.min_pax = input.min_pax;
     if (input.icon_layout_mweb !== undefined) {
       doc.icon_layout_mweb = toIconLayout(input.icon_layout_mweb);
     }

@@ -80,6 +80,33 @@ describe('categoryService integration', () => {
     expect(updated!.icon_layout_native).toEqual({ position: 'BOTTOM', width: 50, height: 50 });
   });
 
+  // min_pax describes the activity ("a doubles game needs 4"), so it belongs to
+  // the SUB tier only and is bounded like the co-host cap.
+  it('accepts min_pax on a SUB, and rejects it elsewhere or out of range', async () => {
+    const sup = await makeSuper('Sports');
+    const cat = await categoryService.create({ name: 'Racket', level: 'CATEGORY', parent_id: sup!.id });
+
+    // Defaults to 0 — every existing sub-category keeps today's behaviour.
+    const plain = await categoryService.create({ name: 'Singles', level: 'SUB', parent_id: cat!.id });
+    expect(plain!.min_pax).toBe(0);
+
+    const doubles = await categoryService.create({
+      name: 'Doubles',
+      level: 'SUB',
+      parent_id: cat!.id,
+      min_pax: 4,
+    });
+    expect(doubles!.min_pax).toBe(4);
+    expect((await categoryService.update(doubles!.id, { min_pax: 6 }))!.min_pax).toBe(6);
+
+    await expect(
+      categoryService.create({ name: 'Bad tier', level: 'CATEGORY', parent_id: sup!.id, min_pax: 4 })
+    ).rejects.toThrow(/only be configured on a sub-category/i);
+    await expect(categoryService.update(doubles!.id, { min_pax: 51 })).rejects.toThrow(/between 0 and 50/i);
+    await expect(categoryService.update(doubles!.id, { min_pax: -1 })).rejects.toThrow(/between 0 and 50/i);
+    await expect(categoryService.update(doubles!.id, { min_pax: 2.5 })).rejects.toThrow(/between 0 and 50/i);
+  });
+
   it('cascade-deletes a SUPER with its descendants', async () => {
     const sup = await makeSuper('Wipe');
     const cat = await categoryService.create({ name: 'Child', level: 'CATEGORY', parent_id: sup!.id });

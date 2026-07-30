@@ -43,6 +43,7 @@ interface CategoryNode {
   sort_order: number;
   allow_co_hosts: boolean | null;
   max_co_hosts: number | null;
+  min_pax: number | null;
   icon_layout_mweb: { __typename: string; position: string; width: number; height: number } | null;
   icon_layout_native: { __typename: string; position: string; width: number; height: number } | null;
   updated_at: string;
@@ -64,6 +65,7 @@ export const catNode = (over: Partial<CategoryNode> = {}): CategoryNode => ({
   sort_order: 0,
   allow_co_hosts: false,
   max_co_hosts: 1,
+  min_pax: 0,
   icon_layout_mweb: null,
   icon_layout_native: null,
   updated_at: '2026-01-01T00:00:00.000Z',

@@ -5,6 +5,7 @@ import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
 import { ClubModel } from '@modules/clubs/club/club.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { LocationModel } from '@modules/platform/location/location.model';
@@ -597,6 +598,25 @@ async function resolveClubCategory(
   };
 }
 
+/**
+ * The pod's sub-category can set the fewest people the activity needs — a
+ * doubles game needs 4, so a 2-spot pod under it is not a real game. Enforced
+ * here, not just in the host's slider, so no client can size a pod below it.
+ * `min_pax` 0 (the default for every existing sub-category) imposes nothing.
+ */
+async function assertMeetsMinPax(clubCategory: ClubCategory | null, noOfSpots: number) {
+  const subCategoryId = clubCategory?.sub_category_id;
+  if (!subCategoryId) return;
+  const sub = await CategoryModel.findById(subCategoryId).select('min_pax').lean();
+  const minPax = sub?.min_pax ?? 0;
+  if (minPax > 0 && noOfSpots < minPax) {
+    throw new GraphQLError(
+      `This activity needs at least ${minPax} people — increase the number of spots`,
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+}
+
 /** A product may attach to a pod only when one of its category rows (or its flat
  * legacy fields) matches the pod's club at the Super + Sub level.
  *
@@ -938,6 +958,16 @@ async function applyPodEditCore(doc: any, input: any) {
 
   await applyPlaceForUpdate(doc, input, nextMode);
 
+  // Resizing a pod (or moving it to a club in another sub-category) must still
+  // clear that activity's minimum — applyProductsForUpdate below returns early
+  // when products are untouched, so the check cannot live in there.
+  if (input.no_of_spots !== undefined || input.club_id !== undefined) {
+    await assertMeetsMinPax(
+      await resolveClubCategory(input.club_id ?? doc.club_id),
+      input.no_of_spots ?? doc.no_of_spots ?? 0
+    );
+  }
+
   await applyProductsForUpdate(doc, input);
 
   const fields = [
@@ -1163,6 +1193,7 @@ export const podService = {
       venueAmount: slotDoc ? slotDoc.price : 0,
     });
     const clubCategory = await resolveClubCategory(input.club_id);
+    await assertMeetsMinPax(clubCategory, input.no_of_spots ?? 0);
     const productRequests = await buildProductRequests(
       !!input.products_enabled,
       input.product_requests ?? [],

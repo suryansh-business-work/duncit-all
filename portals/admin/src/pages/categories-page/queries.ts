@@ -19,6 +19,7 @@ export const CATEGORIES = gql`
       sort_order
       allow_co_hosts
       max_co_hosts
+      min_pax
       icon_layout_mweb {
         position
         width
@@ -78,6 +79,7 @@ export interface CatItem {
   sort_order: number;
   allow_co_hosts: boolean;
   max_co_hosts: number;
+  min_pax: number;
   icon_layout_mweb?: CategoryIconLayout | null;
   icon_layout_native?: CategoryIconLayout | null;
 }
@@ -95,6 +97,9 @@ export interface FormState {
   allow_co_hosts: boolean;
   /** SUB-category only, 1-5. */
   max_co_hosts: number;
+  /** SUB-category only, 0-50. The fewest people the activity needs; 0 = unset.
+   * A host sizing a pod in this sub-category cannot go below it. */
+  min_pax: number;
   /** CATEGORY-level only; null until configured. */
   icon_layout_mweb: CategoryIconLayout | null;
   /** CATEGORY-level only; null until configured. */
@@ -111,6 +116,7 @@ export const blankForm: FormState = {
   is_active: true,
   allow_co_hosts: false,
   max_co_hosts: 1,
+  min_pax: 0,
   icon_layout_mweb: null,
   icon_layout_native: null,
 };

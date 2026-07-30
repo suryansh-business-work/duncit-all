@@ -57,6 +57,11 @@ export const categoryTypeDefs = /* GraphQL */ `
     allow_co_hosts: Boolean!
     "SUB level only: how many co-hosts one pod may carry (1-5)."
     max_co_hosts: Int!
+    """
+    SUB level only: the fewest people this activity needs to work. A host sizing
+    a pod in this sub-category cannot go below it. 0 means no minimum is set.
+    """
+    min_pax: Int!
     "CATEGORY level only: icon layout for the mWeb vibe tabber."
     icon_layout_mweb: CategoryIconLayout
     "CATEGORY level only: icon layout for the native-app vibe tabber."
@@ -81,6 +86,7 @@ export const categoryTypeDefs = /* GraphQL */ `
     sort_order: Int
     allow_co_hosts: Boolean
     max_co_hosts: Int
+    min_pax: Int
     icon_layout_mweb: CategoryIconLayoutInput
     icon_layout_native: CategoryIconLayoutInput
   }
@@ -94,6 +100,7 @@ export const categoryTypeDefs = /* GraphQL */ `
     is_active: Boolean
     allow_co_hosts: Boolean
     max_co_hosts: Int
+    min_pax: Int
     icon_layout_mweb: CategoryIconLayoutInput
     icon_layout_native: CategoryIconLayoutInput
   }

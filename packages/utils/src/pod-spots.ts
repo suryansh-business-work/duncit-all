@@ -25,6 +25,42 @@ export function payableSpots(totalSpots: number): number {
   return Math.floor(totalSpots) - 1;
 }
 
+export interface SpotsBounds {
+  min: number;
+  max: number;
+  /** True when the host has a real range to choose from, so a slider is useful. */
+  slidable: boolean;
+}
+
+/** Hard ceiling for a pod with no venue to cap it (mirrors the schema's max). */
+export const SPOTS_HARD_MAX = 10000;
+
+/**
+ * The range a host may size a pod within: never below the sub-category's
+ * minimum (an admin says a doubles game needs 4), never above the capacity of
+ * the venue space they booked.
+ *
+ * A virtual pod has no venue, so it is only floored, not capped. When the venue
+ * capacity is at or below the minimum there is nothing to choose — `slidable`
+ * is false and the caller shows a fixed number instead of a dead slider.
+ *
+ * Shared so mWeb, native and the portal pod-form agree on the bounds even
+ * though their controls are different components (rules 27 + 40).
+ */
+export function spotsBounds(input: {
+  minPax?: number | null;
+  venueCapacity?: number | null;
+}): SpotsBounds {
+  const min = Math.max(0, Math.floor(Number(input.minPax) || 0));
+  const capacity = Math.floor(Number(input.venueCapacity) || 0);
+  const hasCapacity = capacity > 0;
+  const max = Math.max(min, hasCapacity ? capacity : SPOTS_HARD_MAX);
+  // A slider needs BOTH ends to be real. With no venue the ceiling is the
+  // schema's 10,000, and dragging across that range is useless — those pods keep
+  // the numeric stepper, still floored by the minimum.
+  return { min, max, slidable: hasCapacity && max > min };
+}
+
 /**
  * Attendees who actually PAID. Hosts are written into `pod_attendees` when the
  * pod is created but never pay, so any earning derived from the head count must

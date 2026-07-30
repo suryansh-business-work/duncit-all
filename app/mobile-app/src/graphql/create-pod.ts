@@ -79,6 +79,10 @@ export const CreatePodOptionsDocument = gql(`
         sub_category_name
       }
     }
+    subCategories: categories(filter: { level: SUB }) {
+      id
+      min_pax
+    }
     availablePodProducts {
       id
       product_name

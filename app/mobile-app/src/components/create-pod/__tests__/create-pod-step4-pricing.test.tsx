@@ -210,6 +210,7 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
       showProducts={false}
       finance={finance}
       pricing={pricing}
+      spots={{ min: 0, max: 10000, slidable: false }}
     />
   );
 }
@@ -386,6 +387,7 @@ describe('Step 4 products — category empty state', () => {
             isVenueShortfall: false,
           } as never
         }
+        spots={{ min: 0, max: 10000, slidable: false }}
       />,
     );
   };
@@ -416,6 +418,7 @@ describe('Create Pod button gating', () => {
         locations={[]}
         venues={[]}
         products={[]}
+        subCategories={[]}
         hostCategories={[]}
         viewerUserId="me-1"
         finance={finance}

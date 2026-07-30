@@ -1,9 +1,37 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Input, Slider, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
+
+interface SpotsSliderProps {
+  min: number;
+  max: number;
+  value: number;
+  onChange: (next: number) => void;
+}
+
+/** Tamagui's slider bound to whole spots. Hoisted to module scope — a component
+ * defined inside another remounts on every render (S6478). */
+function SpotsSlider({ min, max, value, onChange }: Readonly<SpotsSliderProps>) {
+  return (
+    <Slider
+      testID="create-pod-spots-slider"
+      min={min}
+      max={max}
+      step={1}
+      value={[value]}
+      onValueChange={([next]) => onChange(next ?? min)}
+      aria-label="Total spots"
+    >
+      <Slider.Track>
+        <Slider.TrackActive />
+      </Slider.Track>
+      <Slider.Thumb index={0} circular size="$2" />
+    </Slider>
+  );
+}
 
 interface StepButtonProps {
   testID: string;
@@ -40,25 +68,78 @@ interface Props {
   error?: string;
   min?: number;
   max?: number;
-  /** When true, spots are fixed by the venue space's capacity — shown read-only. */
+  /** True when there is a real range to pick from — render the slider. */
+  slidable?: boolean;
+  /** Shown under the slider: where the floor and the ceiling come from. */
+  boundsHint?: string;
+  /** When true, spots are fixed (no range to choose) — shown read-only. */
   readOnly?: boolean;
 }
 
-/** Total-spots control. For physical pods it is read-only — the count comes from
- * the venue space's capacity. Virtual pods use the editable stepper (0–10000).
- * Mobile twin of mWeb's SpotsStepper. */
+/**
+ * Total-spots control. When the pod has a real range — the sub-category's
+ * minimum up to the booked venue space's capacity — the host drags a slider
+ * anywhere between the two. With no range to pick from it falls back to a fixed
+ * number, and a virtual pod with no venue keeps the plain stepper.
+ * Mobile twin of mWeb's SpotsStepper (rule 27).
+ */
 export function SpotsStepper({
   value,
   onChange,
   error,
   min = 0,
   max = 10000,
+  slidable = false,
+  boundsHint,
   readOnly = false,
 }: Readonly<Props>) {
   const { color } = useThemeColors();
   const parsed = Number.parseInt(value, 10);
   const current = Number.isFinite(parsed) ? parsed : min;
   const set = (next: number) => onChange(String(Math.max(min, Math.min(max, next))));
+
+  if (slidable) {
+    return (
+      <YStack gap={6}>
+        <YStack
+          gap={8}
+          padding={14}
+          borderRadius={14}
+          borderWidth={1}
+          borderColor={error ? '$danger' : '$borderColor'}
+          backgroundColor="$surface"
+        >
+          <XStack alignItems="center" justifyContent="space-between">
+            <Text fontSize={14} fontWeight="900" color="$color">
+              Total spots
+            </Text>
+            <Text testID="create-pod-spots-value" fontSize={20} fontWeight="900" color="$color">
+              {current}
+            </Text>
+          </XStack>
+          <SpotsSlider min={min} max={max} value={current} onChange={set} />
+          <XStack justifyContent="space-between">
+            <Text fontSize={11} color="$muted">
+              {min}
+            </Text>
+            <Text fontSize={11} color="$muted">
+              {max}
+            </Text>
+          </XStack>
+          {boundsHint ? (
+            <Text testID="create-pod-spots-bounds" fontSize={12} color="$muted">
+              {boundsHint}
+            </Text>
+          ) : null}
+        </YStack>
+        {error ? (
+          <Text testID="no_of_spots_text-error" fontSize={12} color="$danger">
+            {error}
+          </Text>
+        ) : null}
+      </YStack>
+    );
+  }
 
   return (
     <YStack gap={6}>

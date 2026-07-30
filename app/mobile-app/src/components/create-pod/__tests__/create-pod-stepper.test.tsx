@@ -75,6 +75,7 @@ const slot = {
   start_at: futureIso(24),
   end_at: futureIso(26),
   price: 400,
+  capacity: 30,
   status: 'AVAILABLE',
 };
 
@@ -91,6 +92,7 @@ const clubs = [
     club_name: 'Runners',
     location_id: 'l1',
     super_category_id: 'sc-sports',
+    category_id: 'sub-trail',
     matched_venues: [{ id: 'v1' }, { id: 'v9' }],
     matched_venues_count: 1,
   },
@@ -150,6 +152,7 @@ const setup = (over: Record<string, unknown> = {}) => {
       locations={locations}
       venues={venues}
       products={products}
+      subCategories={[{ id: 'sub-trail', min_pax: 4 }]}
       hostCategories={hostCategories}
       viewerUserId="me-1"
       finance={finance}

@@ -18,6 +18,7 @@ import { TICKET_PRICE_LABEL, TICKET_PRICE_PLACEHOLDER } from '../price-panel/ste
 import { ProductRequestsField } from '../ProductRequestsField';
 import { SpotsStepper } from '../SpotsStepper';
 import { TermsAgreement } from '../TermsAgreement';
+import type { SpotsBounds } from '@duncit/utils';
 import type { CreatePodFinance, CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
 interface Props {
@@ -27,13 +28,26 @@ interface Props {
   finance: CreatePodFinance;
   /** Step 4's shared money state, owned by the stepper (it gates Create Pod). */
   pricing: PodPricingState;
+  /** The range the host may size this pod within (sub-category min → venue capacity). */
+  spots: SpotsBounds;
 }
 
 /** Step 4 — Free/Paid cards, ticket price (with its suggested-price helper and
  * zero-earnings guard), spots stepper, the slot-cost / GST / earnings panel,
  * optional products and the Organizer Terms gate. mWeb twin. */
-export function PricingStep({ form, products, showProducts, finance, pricing }: Readonly<Props>) {
+export function PricingStep({
+  form,
+  products,
+  showProducts,
+  finance,
+  pricing,
+  spots,
+}: Readonly<Props>) {
   const { control, watch, setValue } = form;
+  // TODO(i18n) — ships as a literal until Create-a-Pod is localized. mWeb twin.
+  const boundsHint = spots.slidable
+    ? `This activity needs at least ${spots.min}, and the space you booked holds ${spots.max}.`
+    : undefined;
   const { color } = useThemeColors();
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
@@ -67,7 +81,12 @@ export function PricingStep({ form, products, showProducts, finance, pricing }: 
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
-            readOnly={isPhysical}
+            min={spots.min}
+            max={spots.max}
+            slidable={spots.slidable}
+            boundsHint={boundsHint}
+            // Only fixed when the venue leaves no room to choose.
+            readOnly={isPhysical && !spots.slidable}
           />
         )}
       />

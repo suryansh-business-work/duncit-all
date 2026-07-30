@@ -6,6 +6,7 @@ import PricePanel, { TicketPriceField, type EarningsPreview } from '../price-pan
 import PodTypeCards from '../PodTypeCards';
 import SpotsStepper from '../SpotsStepper';
 import TermsAgreement from '../TermsAgreement';
+import type { SpotsBounds } from '@duncit/utils';
 import type { CreatePodForm, CreatePodProduct } from '../create-pod.types';
 
 interface Props {
@@ -13,15 +14,21 @@ interface Props {
   products: CreatePodProduct[];
   showProducts: boolean;
   preview: EarningsPreview;
+  /** The range the host may size this pod within (sub-category min → venue capacity). */
+  spots: SpotsBounds;
 }
 
 /** Step 4 — Free/Paid cards, ticket price, spots stepper, the slot-cost / GST /
  * earnings panel, optional products and the Organizer Terms publish gate. */
-export default function PricingStep({ form, products, showProducts, preview }: Readonly<Props>) {
+export default function PricingStep({ form, products, showProducts, preview, spots }: Readonly<Props>) {
   const { control, register, watch, setValue } = form;
   const isFree = watch('pod_type') === 'FREE';
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const productsEnabled = watch('products_enabled');
+  // TODO(i18n) — ships as a literal until Create-a-Pod is localized.
+  const boundsHint = spots.slidable
+    ? `This activity needs at least ${spots.min}, and the space you booked holds ${spots.max}.`
+    : undefined;
 
   return (
     <Stack spacing={2}>
@@ -31,7 +38,17 @@ export default function PricingStep({ form, products, showProducts, preview }: R
         control={control}
         name="no_of_spots"
         render={({ field, fieldState }) => (
-          <SpotsStepper value={Number(field.value) || 0} onChange={field.onChange} error={fieldState.error?.message} readOnly={isPhysical} />
+          <SpotsStepper
+            value={Number(field.value) || 0}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            min={spots.min}
+            max={spots.max}
+            slidable={spots.slidable}
+            boundsHint={boundsHint}
+            // Only fixed when the venue leaves no room to choose.
+            readOnly={isPhysical && !spots.slidable}
+          />
         )}
       />
       <PricePanel preview={preview} />

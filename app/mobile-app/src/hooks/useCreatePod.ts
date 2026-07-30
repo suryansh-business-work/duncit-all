@@ -119,6 +119,8 @@ export function useCreatePod(draftId?: string) {
     // publicVenues are already APPROVED; keep only active venue partners.
     venues: (data?.publicVenues ?? []).filter((venue) => venue.is_active !== false),
     products: data?.availablePodProducts ?? [],
+    // SUB categories carry the admin-set minimum pax that floors the spots slider.
+    subCategories: data?.subCategories ?? [],
     hostCategories: data?.myHost?.host_categories ?? [],
     finance: data?.publicFinanceSettings ?? blankFinance,
     isLoading,

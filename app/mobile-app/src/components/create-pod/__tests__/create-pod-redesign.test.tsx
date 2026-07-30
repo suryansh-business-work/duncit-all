@@ -77,11 +77,23 @@ describe('PodTypeCards', () => {
   });
 });
 
-function SpotsHarness({ initial = '0', err }: Readonly<{ initial?: string; err?: string }>) {
+function SpotsHarness({
+  initial = '0',
+  err,
+  slider,
+}: Readonly<{ initial?: string; err?: string; slider?: { min: number; max: number } }>) {
   const [value, setValue] = useState(initial);
   return (
     <>
-      <SpotsStepper value={value} onChange={setValue} error={err} />
+      <SpotsStepper
+        value={value}
+        onChange={setValue}
+        error={err}
+        min={slider?.min}
+        max={slider?.max}
+        slidable={!!slider}
+        boundsHint={slider ? `This activity needs at least ${slider.min}.` : undefined}
+      />
       <Text testID="sp-readout">{value}</Text>
     </>
   );
@@ -110,6 +122,39 @@ describe('SpotsStepper', () => {
     expect(screen.getByTestId('no_of_spots_text-error')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('spots-inc'));
     expect(screen.getByTestId('sp-readout')).toHaveTextContent('1');
+  });
+
+  // With an admin-set minimum and a booked venue space, the host picks anywhere
+  // between the two instead of being stuck on the venue's capacity.
+  it('renders the slider between the minimum and the venue capacity', () => {
+    renderWithProviders(<SpotsHarness initial="10" slider={{ min: 4, max: 30 }} />);
+    expect(screen.getByTestId('create-pod-spots-value')).toHaveTextContent('10');
+    expect(screen.getByTestId('create-pod-spots-bounds')).toHaveTextContent(/at least 4/);
+    // The stepper controls give way to the slider.
+    expect(screen.queryByTestId('spots-inc')).toBeNull();
+
+    fireEvent(screen.getByTestId('create-pod-spots-slider'), 'valueChange', [18]);
+    expect(screen.getByTestId('sp-readout')).toHaveTextContent('18');
+  });
+
+  it('clamps a slider value to the bounds and survives an empty change', () => {
+    renderWithProviders(<SpotsHarness initial="10" slider={{ min: 4, max: 30 }} />);
+    const slider = screen.getByTestId('create-pod-spots-slider');
+    fireEvent(slider, 'valueChange', [99]);
+    expect(screen.getByTestId('sp-readout')).toHaveTextContent('30');
+    fireEvent(slider, 'valueChange', [1]);
+    expect(screen.getByTestId('sp-readout')).toHaveTextContent('4');
+    // A change with no value falls back to the floor rather than NaN.
+    fireEvent(slider, 'valueChange', []);
+    expect(screen.getByTestId('sp-readout')).toHaveTextContent('4');
+  });
+
+  it('shows the slider error and omits the hint when none is given', () => {
+    renderWithProviders(
+      <SpotsStepper value="10" onChange={jest.fn()} error="Too few" min={4} max={30} slidable />,
+    );
+    expect(screen.getByTestId('no_of_spots_text-error')).toHaveTextContent('Too few');
+    expect(screen.queryByTestId('create-pod-spots-bounds')).toBeNull();
   });
 
   it('renders a static read-only value with no stepper controls when readOnly', () => {

@@ -16,7 +16,14 @@ export {
   pruneProductRequests,
   type ClubCategoryKey,
 } from './product-category';
-export { HOST_FREE_SPOT_NOTE, payableSpots, payingAttendees } from './pod-spots';
+export {
+  HOST_FREE_SPOT_NOTE,
+  SPOTS_HARD_MAX,
+  payableSpots,
+  payingAttendees,
+  spotsBounds,
+  type SpotsBounds,
+} from './pod-spots';
 export {
   CART_BADGE_MAX,
   cartBadgeLabel,

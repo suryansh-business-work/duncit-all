@@ -125,6 +125,7 @@ function setup(props: Partial<React.ComponentProps<typeof CreatePodStepper>> = {
         locations={[]}
         venues={[]}
         products={[]}
+        subCategories={[]}
         hostCategories={[]}
         viewerUserId="u1"
         onSaveDraft={onSaveDraft}

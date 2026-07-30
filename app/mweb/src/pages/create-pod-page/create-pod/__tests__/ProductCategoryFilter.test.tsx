@@ -45,7 +45,15 @@ function Harness({ products }: Readonly<{ products: CreatePodProduct[] }>) {
   const form = useForm<CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, products_enabled: true, product_requests: [{ product_id: '', quantity: 1 }] },
   });
-  return <PricingStep form={form} products={products} showProducts preview={preview} />;
+  return (
+    <PricingStep
+      form={form}
+      products={products}
+      showProducts
+      preview={preview}
+      spots={{ min: 0, max: 10000, slidable: false }}
+    />
+  );
 }
 
 const renderFor = (club: unknown) =>

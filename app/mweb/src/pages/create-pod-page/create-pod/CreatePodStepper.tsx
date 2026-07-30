@@ -25,6 +25,7 @@ import type {
   CreatePodLocation,
   CreatePodProduct,
   CreatePodSlot,
+  CreatePodSubCategory,
   CreatePodVenue,
   PodModerationResult,
   PodModerationViolation,
@@ -35,7 +36,7 @@ import VenueSlotStep, { VENUE_AVAILABLE_SLOTS } from './steps/VenueSlotStep';
 import PricingStep from './steps/PricingStep';
 import { useEarningsPreview } from './price-panel';
 import { useQuery } from '@apollo/client';
-import { filterProductsForClub, pruneProductRequests } from '@duncit/utils';
+import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
@@ -48,6 +49,8 @@ interface Props {
   locations: CreatePodLocation[];
   venues: CreatePodVenue[];
   products: CreatePodProduct[];
+  /** SUB-level categories with their admin-set minimum pax. */
+  subCategories: CreatePodSubCategory[];
   hostCategories: CreatePodHostCategory[];
   viewerUserId: string;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
@@ -67,6 +70,7 @@ export default function CreatePodStepper({
   locations,
   venues,
   products,
+  subCategories,
   hostCategories,
   viewerUserId,
   onSaveDraft,
@@ -239,6 +243,14 @@ export default function CreatePodStepper({
   });
   const selectedSlot = (slotsQuery.data?.venueAvailableSlots ?? []).find((slot) => slot.id === slotId) ?? null;
 
+  // How big this pod may be: floored by the sub-category's admin-set minimum
+  // (a doubles game needs 4) and capped by the venue space the host booked. The
+  // pod's sub-category is its club's `category_id`. Native twin (rule 27).
+  const spots = spotsBounds({
+    minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
+    venueCapacity: podMode === 'PHYSICAL' ? selectedSlot?.capacity : null,
+  });
+
   // Step-4 money lives here so the footer can block Create Pod on the same two
   // rules the panel renders (zero earnings / venue price not covered).
   const preview = useEarningsPreview({
@@ -254,7 +266,7 @@ export default function CreatePodStepper({
     <BasicsStep key="basics" form={form} />,
     <LocationClubStep key="location" form={form} clubs={clubsForLocation} locations={locations} hostCategories={hostCategories} />,
     <VenueSlotStep key="venue" form={form} venues={venues} clubVenueIds={clubVenueIds} viewerUserId={viewerUserId} />,
-    <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} />,
+    <PricingStep key="pricing" form={form} products={availableProducts} showProducts={showProducts} preview={preview} spots={spots} />,
   ];
 
   return (

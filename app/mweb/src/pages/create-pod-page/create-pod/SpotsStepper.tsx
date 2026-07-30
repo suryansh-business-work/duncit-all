@@ -1,4 +1,4 @@
-import { Box, FormHelperText, IconButton, Stack, TextField, Typography } from '@mui/material';
+import { Box, FormHelperText, IconButton, Slider, Stack, TextField, Typography } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -8,14 +8,67 @@ interface Props {
   error?: string;
   min?: number;
   max?: number;
-  /** When true, spots are fixed by the venue space's capacity — shown read-only. */
+  /** True when there is a real range to pick from — render the slider. */
+  slidable?: boolean;
+  /** Shown under the slider: where the floor and the ceiling come from. */
+  boundsHint?: string;
+  /** When true, spots are fixed (no range to choose) — shown read-only. */
   readOnly?: boolean;
 }
 
-/** Total-spots control. For physical pods it is read-only — the count comes from
- * the venue space's capacity. Virtual pods use the editable stepper (0–10000). */
-export default function SpotsStepper({ value, onChange, error, min = 0, max = 10000, readOnly = false }: Readonly<Props>) {
+/**
+ * Total-spots control. When the pod has a real range — the sub-category's
+ * minimum up to the booked venue space's capacity — the host drags a slider
+ * anywhere between the two. With no range to pick from (capacity equal to the
+ * minimum) it falls back to a fixed read-only number, and a virtual pod with no
+ * venue keeps the plain stepper. Native twin (rule 27).
+ */
+export default function SpotsStepper({
+  value,
+  onChange,
+  error,
+  min = 0,
+  max = 10000,
+  slidable = false,
+  boundsHint,
+  readOnly = false,
+}: Readonly<Props>) {
   const set = (next: number) => onChange(Math.max(min, Math.min(max, Number.isFinite(next) ? next : min)));
+
+  if (slidable) {
+    return (
+      <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: 2.5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+          <Typography variant="subtitle2" fontWeight={900}>
+            Total spots
+          </Typography>
+          <Typography variant="h6" fontWeight={900} data-testid="spots-value" aria-label="Total spots">
+            {value}
+          </Typography>
+        </Stack>
+        <Slider
+          value={Math.max(min, Math.min(max, value))}
+          min={min}
+          max={max}
+          step={1}
+          marks={[
+            { value: min, label: String(min) },
+            { value: max, label: String(max) },
+          ]}
+          valueLabelDisplay="auto"
+          onChange={(_e, next) => set(Array.isArray(next) ? next[0] : next)}
+          aria-label="Total spots"
+          data-testid="spots-slider"
+        />
+        {boundsHint && (
+          <Typography variant="caption" color="text.secondary" data-testid="spots-bounds-hint">
+            {boundsHint}
+          </Typography>
+        )}
+        {error && <FormHelperText error>{error}</FormHelperText>}
+      </Box>
+    );
+  }
 
   return (
     <Box>

@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { filterProductsForClub, pruneProductRequests } from '@duncit/utils';
+import { filterProductsForClub, pruneProductRequests, spotsBounds } from '@duncit/utils';
 import {
   MODERATION_FIELD_MAP,
   STEP_FIELDS,
@@ -26,6 +26,7 @@ import type {
   CreatePodHostCategory,
   CreatePodLocation,
   CreatePodProduct,
+  CreatePodSubCategory,
   CreatePodVenue,
   PodModerationResult,
   PodModerationViolation,
@@ -49,6 +50,8 @@ interface Props {
   locations: CreatePodLocation[];
   venues: CreatePodVenue[];
   products: CreatePodProduct[];
+  /** SUB-level categories with their admin-set minimum pax. */
+  subCategories: CreatePodSubCategory[];
   hostCategories: CreatePodHostCategory[];
   viewerUserId: string;
   finance: CreatePodFinance;
@@ -69,6 +72,7 @@ export function CreatePodStepper({
   locations,
   venues,
   products,
+  subCategories,
   hostCategories,
   viewerUserId,
   finance,
@@ -234,6 +238,14 @@ export function CreatePodStepper({
   const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? form.watch('venue_id') : '');
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
 
+  // How big this pod may be: floored by the sub-category's admin-set minimum
+  // (a doubles game needs 4) and capped by the venue space the host booked. The
+  // pod's sub-category is its club's `category_id`. mWeb twin (rule 27).
+  const spots = spotsBounds({
+    minPax: subCategories.find((sub) => sub.id === selectedClub?.category_id)?.min_pax,
+    venueCapacity: podMode === 'PHYSICAL' ? selectedSlot?.capacity : null,
+  });
+
   // Step 4's money state lives HERE because it gates the Create Pod button: a
   // ₹0 projected payout, or a pod worth less than the venue slot, blocks
   // publishing. The panel renders from the same object, so both always agree.
@@ -269,6 +281,7 @@ export function CreatePodStepper({
       showProducts={showProducts}
       finance={finance}
       pricing={pricing}
+      spots={spots}
     />,
   ];
 

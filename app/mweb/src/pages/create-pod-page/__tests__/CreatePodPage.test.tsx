@@ -94,6 +94,10 @@ const CREATE_POD_OPTIONS = gql`
         sub_category_name
       }
     }
+    subCategories: categories(filter: { level: SUB }) {
+      id
+      min_pax
+    }
     availablePodProducts {
       id
       product_name
@@ -124,6 +128,7 @@ const baseOptions = (overrides: Record<string, any> = {}) => ({
     { id: 'v2', is_active: false },
   ],
   myHost: { id: 'h1', status: 'APPROVED', is_active: true, host_categories: [{ super_category_id: 's' }] },
+  subCategories: [{ id: 'sub-1', min_pax: 4 }],
   availablePodProducts: [{ id: 'p1' }],
   ...overrides,
 });

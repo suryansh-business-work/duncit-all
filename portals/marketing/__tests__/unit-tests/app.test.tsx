@@ -35,6 +35,9 @@ vi.mock('../../src/pages/notifications-page/NotificationsPage', () => ({
 vi.mock('../../src/pages/ads-approvals-page/AdsApprovalsPage', () => ({
   default: () => <div>ads-approvals-page</div>,
 }));
+vi.mock('../../src/pages/live-ads-page/LiveAdsPage', () => ({
+  default: () => <div>live-ads-page</div>,
+}));
 vi.mock('../../src/pages/ads-settings-page/AdsSettingsPage', () => ({
   default: () => <div>ads-settings-page</div>,
 }));
@@ -53,6 +56,7 @@ describe('App routing', () => {
     ['/campaigns/email', 'campaigns-page'],
     ['/notifications', 'notifications-page'],
     ['/ads-approvals', 'ads-approvals-page'],
+    ['/live-ads', 'live-ads-page'],
     ['/ads-settings', 'ads-settings-page'],
   ])('renders %s behind auth', (path, text) => {
     setToken('tok');

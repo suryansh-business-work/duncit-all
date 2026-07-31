@@ -83,6 +83,17 @@ export const RENDER_MARKETING_CAMPAIGN = gql`
   }
 `;
 
+/** Saved Target Audience lists, each with its live reach. */
+export const AUDIENCE_LISTS_FOR_CAMPAIGN = gql`
+  query AudienceListsForCampaign {
+    audienceLists {
+      id
+      name
+      member_count
+    }
+  }
+`;
+
 export const CREATE_MARKETING_CAMPAIGN = gql`
   mutation CreateMarketingCampaign($input: MarketingCampaignInput!) {
     createMarketingCampaign(input: $input) {
@@ -119,6 +130,7 @@ export interface MarketingCampaignRow {
   campaign_id: string;
   name: string;
   channel: 'EMAIL';
+  audience_list_id?: string | null;
   audience: string;
   subject: string;
   scheduled_at?: string | null;

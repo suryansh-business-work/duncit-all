@@ -4595,6 +4595,8 @@ export type Mutation = {
   decideMeeting: OnboardingMeeting;
   /** Owner declines a pending booking request — the slot frees up again. */
   declineVenueSlotRequest: VenueSlot;
+  /** Permanently remove an ad request. */
+  deleteAdRequest: Scalars['Boolean']['output'];
   /**  Admin-only: delete an adjustment. Returns the recomputed score.  */
   deleteAdjustment: HealthScore;
   /** Deleting a system prompt is refused — reset it instead. */
@@ -4891,6 +4893,11 @@ export type Mutation = {
    * when compression is disabled for the surface.
    */
   startVideoCompression: VideoCompressionJob;
+  /**
+   * Stop a running ad early. It becomes EXPIRED and its window is closed now,
+   * which is what actually takes it off the slots.
+   */
+  stopAdRequest: AdRequest;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
@@ -5723,6 +5730,11 @@ export type MutationDecideMeetingArgs = {
 export type MutationDeclineVenueSlotRequestArgs = {
   reason?: InputMaybe<Scalars['String']['input']>;
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAdRequestArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6845,6 +6857,11 @@ export type MutationStartVideoCompressionArgs = {
   surface?: InputMaybe<Scalars['String']['input']>;
   trim_duration_seconds?: InputMaybe<Scalars['Float']['input']>;
   trim_start_seconds?: InputMaybe<Scalars['Float']['input']>;
+};
+
+
+export type MutationStopAdRequestArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -9412,6 +9429,11 @@ export type Query = {
   legalDocumentStatsTable: LegalDocumentTypeCountTablePage;
   legalDocuments: Array<LegalDocument>;
   legalDocumentsTable: LegalDocumentTablePage;
+  /**
+   * Only the ads showing right now — approved, started, not yet ended. LIVE is
+   * a date window rather than a stored status, so it needs its own query.
+   */
+  liveAdsTable: AdRequestTablePage;
   /** Every locale, for admin lists. */
   locales: Array<Locale>;
   location?: Maybe<Location>;
@@ -10507,6 +10529,11 @@ export type QueryLegalDocumentsArgs = {
 
 
 export type QueryLegalDocumentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryLiveAdsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 

@@ -9,6 +9,7 @@ import {
   podCardsMock,
   renderCampaignMock,
   sendCampaignMock,
+  audienceListsFeedMock,
 } from '../mocks';
 import { __setTableRows, fetchRowsFrom } from './table-mock';
 
@@ -63,12 +64,21 @@ import CampaignTable from '../../src/pages/marketing-campaigns-page/CampaignTabl
 import CampaignMjmlEditor from '../../src/pages/marketing-campaigns-page/marketing-campaign-form/CampaignMjmlEditor';
 import MarketingCampaignForm, {
   blankMarketingCampaignValues,
+  toMarketingCampaignInput,
 } from '../../src/pages/marketing-campaigns-page/marketing-campaign-form';
 import MarketingCampaignsPage from '../../src/pages/marketing-campaigns-page/MarketingCampaignsPage';
-import type { MarketingCampaignRow } from '../../src/pages/marketing-campaigns-page/queries';
+import {
+  AUDIENCE_LISTS_FOR_CAMPAIGN,
+  type MarketingCampaignRow,
+} from '../../src/pages/marketing-campaigns-page/queries';
 
 /** Mocks fired on mount of the campaigns page (preview cards + render). */
-const pageBaseMocks = () => [podCardsMock(), clubCardsMock(), renderCampaignMock()];
+const pageBaseMocks = () => [
+  podCardsMock(),
+  clubCardsMock(),
+  renderCampaignMock(),
+  audienceListsFeedMock(AUDIENCE_LISTS_FOR_CAMPAIGN),
+];
 
 beforeEach(() => {
   __setTableRows([]);
@@ -98,12 +108,15 @@ describe('CampaignTable', () => {
     const onSend = vi.fn();
     const rows = [
       makeCampaignRow({ error: 'Delivery failed' }),
-      makeCampaignRow({ campaign_id: 'c2', channel: 'WHATSAPP', status: 'SENT', card: null }),
+      makeCampaignRow({ campaign_id: 'c2', status: 'SENT', card: null }),
+      makeCampaignRow({ campaign_id: 'c3', audience: 'PARTNERS', status: 'SENDING' }),
+      // A campaign stored before WhatsApp was removed, still awaiting the
+      // migration: the raw value is shown rather than a blank cell.
       makeCampaignRow({
-        campaign_id: 'c3',
-        channel: 'SMS' as MarketingCampaignRow['channel'],
-        audience: 'PARTNERS',
-        status: 'SENDING',
+        campaign_id: 'c4',
+        channel: 'WHATSAPP' as MarketingCampaignRow['channel'],
+        audience: 'AUDIENCE_LIST',
+        status: 'SENT',
       }),
     ];
     renderWithProviders(
@@ -115,6 +128,8 @@ describe('CampaignTable', () => {
       />,
     );
     expect(await screen.findByText('Delivery failed')).toBeInTheDocument();
+    expect(screen.getAllByText('WHATSAPP').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Saved audience list').length).toBeGreaterThan(0);
     const sendButtons = screen.getAllByRole('button', { name: 'Send' });
     fireEvent.click(sendButtons[0]);
     expect(onSend).toHaveBeenCalledWith('c1');
@@ -172,12 +187,76 @@ describe('CampaignMjmlEditor', () => {
 describe('MarketingCampaignForm', () => {
   const baseProps = {
     cards: [makePreviewCard({ id: 'p1', type: 'POD' as const, title: 'Pod One' })],
+    audienceLists: [
+      { id: 'a1', name: 'Pune regulars', member_count: 1284 },
+      { id: 'a2', name: 'Dormant', member_count: 0 },
+      { id: 'a3', name: 'The one', member_count: 1 },
+    ],
     busy: false,
     previewLoading: false,
     errorMessage: null as string | null,
     onValuesChange: vi.fn(),
     onSubmit: vi.fn(),
   };
+
+  describe('the saved-list audience', () => {
+    const listValues = () => ({
+      ...blankMarketingCampaignValues('EMAIL'),
+      audience: 'AUDIENCE_LIST' as const,
+      name: 'Diwali',
+      subject: 'Festive offers',
+    });
+
+    it('shows no reach for an audience that has no count of its own', () => {
+      renderWithProviders(
+        <MarketingCampaignForm {...baseProps} initialValues={blankMarketingCampaignValues('EMAIL')} />,
+      );
+      expect(screen.queryByTestId('campaign-reach')).not.toBeInTheDocument();
+    });
+
+    it('offers each list with its live size and reports the reach', async () => {
+      renderWithProviders(<MarketingCampaignForm {...baseProps} initialValues={listValues()} />);
+      fireEvent.mouseDown(screen.getByLabelText(/Audience list/));
+      fireEvent.click(await screen.findByText('Pune regulars · 1,284'));
+      expect(await screen.findByTestId('campaign-reach')).toHaveTextContent('reaches 1,284 people');
+    });
+
+    it('says one person, not one people', async () => {
+      renderWithProviders(<MarketingCampaignForm {...baseProps} initialValues={listValues()} />);
+      fireEvent.mouseDown(screen.getByLabelText(/Audience list/));
+      fireEvent.click(await screen.findByText('The one · 1'));
+      expect(await screen.findByTestId('campaign-reach')).toHaveTextContent('reaches 1 person');
+    });
+
+    it('warns when the picked list reaches nobody', async () => {
+      renderWithProviders(<MarketingCampaignForm {...baseProps} initialValues={listValues()} />);
+      fireEvent.mouseDown(screen.getByLabelText(/Audience list/));
+      fireEvent.click(await screen.findByText('Dormant · 0'));
+      expect(await screen.findByTestId('campaign-reach')).toHaveTextContent('reaches nobody');
+    });
+
+    it('points at Target Audience when there are no lists yet', async () => {
+      renderWithProviders(
+        <MarketingCampaignForm {...baseProps} audienceLists={[]} initialValues={listValues()} />,
+      );
+      fireEvent.mouseDown(screen.getByLabelText(/Audience list/));
+      expect(await screen.findByText(/create one under Target Audience/)).toBeInTheDocument();
+    });
+
+    it('sends the picked list id, and omits it for other audiences', () => {
+      expect(
+        toMarketingCampaignInput({ ...listValues(), audience_list_id: 'a1' }).audience_list_id,
+      ).toBe('a1');
+      // A list id left over from switching audience must not be sent.
+      expect(
+        toMarketingCampaignInput({
+          ...listValues(),
+          audience: 'ALL_USERS',
+          audience_list_id: 'a1',
+        }).audience_list_id,
+      ).toBeUndefined();
+    });
+  });
 
   it('submits a valid campaign and reports value changes', async () => {
     const onSubmit = vi.fn();

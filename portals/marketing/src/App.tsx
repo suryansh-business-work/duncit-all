@@ -9,6 +9,7 @@ import AudienceListDetailPage from './pages/target-audience-page/AudienceListDet
 import MarketingCampaignsPage from './pages/marketing-campaigns-page/MarketingCampaignsPage';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
+import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
 import AdsSettingsPage from './pages/ads-settings-page/AdsSettingsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
         <Route path="/ads-approvals" element={authed(<AdsApprovalsPage />)} />
+        <Route path="/live-ads" element={authed(<LiveAdsPage />)} />
         <Route path="/ads-settings" element={authed(<AdsSettingsPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

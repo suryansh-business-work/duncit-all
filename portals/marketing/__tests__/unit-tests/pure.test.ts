@@ -72,7 +72,13 @@ describe('notifications helpers', () => {
   });
 
   it('lists the four audience scopes with icons', () => {
-    expect(SCOPES.map((s) => s.value)).toEqual(['GLOBAL', 'LOCATION', 'ZONE', 'USER']);
+    expect(SCOPES.map((s) => s.value)).toEqual([
+      'GLOBAL',
+      'LOCATION',
+      'ZONE',
+      'USER',
+      'AUDIENCE_LIST',
+    ]);
     expect(SCOPES.every((s) => s.icon)).toBe(true);
   });
 });

@@ -26,6 +26,9 @@ const STATUS_OPTIONS = ['DRAFT', 'SCHEDULED', 'SENDING', 'SENT', 'FAILED'].map((
   label: value,
 }));
 
+/** Email is the only channel. The raw-value fallback below still matters:
+ * campaigns stored before WhatsApp was removed keep that value until
+ * migrate:drop-whatsapp-campaigns has been run. */
 const CHANNEL_LABELS: Record<string, string> = {
   EMAIL: 'Email',
 };
@@ -35,6 +38,7 @@ const CHANNEL_OPTIONS = Object.entries(CHANNEL_LABELS).map(([value, label]) => (
 const AUDIENCE_LABELS: Record<string, string> = {
   ALL_USERS: 'All users',
   NEWSLETTER_SUBSCRIBERS: 'Newsletter subscribers',
+  AUDIENCE_LIST: 'Saved audience list',
 };
 
 const AUDIENCE_OPTIONS = Object.entries(AUDIENCE_LABELS).map(([value, label]) => ({ value, label }));

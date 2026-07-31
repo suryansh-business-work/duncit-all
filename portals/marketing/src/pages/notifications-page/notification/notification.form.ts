@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { optionalUrl, requiredText } from '@duncit/forms';
 import type { NotifForm } from '../helpers';
 
-const scopes = ['GLOBAL', 'LOCATION', 'ZONE', 'USER'] as const;
+const scopes = ['GLOBAL', 'LOCATION', 'ZONE', 'USER', 'AUDIENCE_LIST'] as const;
 
 /**
  * Notification contract — RHF + Zod (migrated from Formik + Yup).
@@ -21,6 +21,7 @@ export const notificationFormSchema = z
     location_id: z.string().default(''),
     zone_name: z.string().default(''),
     target_user_ids: z.array(z.string()).default([]),
+    audience_list_id: z.string().default(''),
   })
   .superRefine((values, ctx) => {
     if ((values.scope === 'LOCATION' || values.scope === 'ZONE') && !values.location_id) {
@@ -28,6 +29,13 @@ export const notificationFormSchema = z
     }
     if (values.scope === 'ZONE' && !values.zone_name) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['zone_name'], message: 'Pick a zone' });
+    }
+    if (values.scope === 'AUDIENCE_LIST' && !values.audience_list_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['audience_list_id'],
+        message: 'Pick an audience list',
+      });
     }
     if (values.scope === 'USER') {
       if (values.target_user_ids.length < 1) {
@@ -58,5 +66,6 @@ export function toCreateNotificationInput(values: NotifForm) {
     location_id: isLocationScoped ? cast.location_id : null,
     zone_name: cast.scope === 'ZONE' ? cast.zone_name : null,
     target_user_ids: cast.scope === 'USER' ? cast.target_user_ids : [],
+    audience_list_id: cast.scope === 'AUDIENCE_LIST' ? cast.audience_list_id : null,
   };
 }

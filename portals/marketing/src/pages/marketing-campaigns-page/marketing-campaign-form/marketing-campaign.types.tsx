@@ -4,7 +4,14 @@ import type { CampaignPreviewCard } from '../queries';
 
 /** Email is the only channel; WhatsApp campaigns were removed. */
 export type CampaignChannel = 'EMAIL';
-export type CampaignAudience = 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS';
+export type CampaignAudience = 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS' | 'AUDIENCE_LIST';
+
+/** A saved Target Audience list, offered as a campaign audience. */
+export interface CampaignAudienceList {
+  id: string;
+  name: string;
+  member_count: number;
+}
 export type CampaignCardType = '' | 'POD' | 'CLUB';
 
 const defaultMjml = `<mjml>
@@ -28,7 +35,10 @@ export const marketingCampaignSchema = z
   .object({
     name: requiredText('Campaign name', 3, 120),
     channel: z.enum(['EMAIL'], { required_error: 'Channel is required' }),
-    audience: z.enum(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS'], { required_error: 'Audience is required' }),
+    audience: z.enum(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'], {
+      required_error: 'Audience is required',
+    }),
+    audience_list_id: z.string().trim().default(''),
     subject: requiredText('Subject', 3, 180),
     mjml: z
       .string()
@@ -63,6 +73,7 @@ export function blankMarketingCampaignValues(channel: CampaignChannel = 'EMAIL')
     name: '',
     channel,
     audience: 'ALL_USERS',
+    audience_list_id: '',
     subject: '',
     mjml: defaultMjml,
     card_type: '',
@@ -77,6 +88,7 @@ export function toMarketingCampaignInput(values: MarketingCampaignFormValues) {
     name: cast.name,
     channel: cast.channel,
     audience: cast.audience,
+    audience_list_id: cast.audience === 'AUDIENCE_LIST' ? cast.audience_list_id : undefined,
     subject: cast.subject,
     mjml: cast.mjml,
     card_type: cast.card_type || undefined,
@@ -89,6 +101,8 @@ export function toMarketingCampaignInput(values: MarketingCampaignFormValues) {
 export interface MarketingCampaignFormProps {
   initialValues: MarketingCampaignFormValues;
   cards: CampaignPreviewCard[];
+  /** Saved audience lists, each with the number of people it reaches now. */
+  audienceLists: CampaignAudienceList[];
   busy: boolean;
   previewLoading: boolean;
   errorMessage?: string | null;

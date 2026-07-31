@@ -38,6 +38,7 @@ export const appConfig = {
       icon: 'campaign',
       children: [
         { label: 'Ads Approval', to: '/ads-approvals', icon: 'campaign' },
+        { label: 'Live Ads', to: '/live-ads', icon: 'insights' },
         { label: 'Ads Settings', to: '/ads-settings', icon: 'settings' },
       ],
     },

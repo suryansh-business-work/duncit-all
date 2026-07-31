@@ -8,6 +8,7 @@ import {
   makeNotificationRow,
   makeUser,
   usersMock,
+  audienceListsFeedMock,
 } from '../mocks';
 import { __setTableRows, fetchRowsFrom } from './table-mock';
 
@@ -40,7 +41,11 @@ import NotificationsTable from '../../src/pages/notifications-page/Notifications
 import NotificationFormDialog from '../../src/pages/notifications-page/NotificationFormDialog';
 import NotificationsPage from '../../src/pages/notifications-page/NotificationsPage';
 import { blankForm, type NotifForm } from '../../src/pages/notifications-page/helpers';
-import type { NotificationRow } from '../../src/pages/notifications-page/queries';
+import { toCreateNotificationInput } from '../../src/pages/notifications-page/notification';
+import {
+  AUDIENCE_LISTS_FOR_NOTIF,
+  type NotificationRow,
+} from '../../src/pages/notifications-page/queries';
 
 const rowBase = makeNotificationRow();
 const locName = (id?: string | null) => (id === 'l1' ? 'Mumbai' : '—');
@@ -100,6 +105,28 @@ describe('NotificationsTable', () => {
   });
 });
 
+describe('toCreateNotificationInput', () => {
+  it('sends the list id only for the saved-list audience', () => {
+    const listed = toCreateNotificationInput({
+      ...blankForm,
+      title: 'Hello there',
+      body: 'A body long enough',
+      scope: 'AUDIENCE_LIST',
+      audience_list_id: 'a1',
+    });
+    expect(listed.audience_list_id).toBe('a1');
+
+    // A leftover id from switching audience must not be sent.
+    const global = toCreateNotificationInput({
+      ...blankForm,
+      title: 'Hello there',
+      body: 'A body long enough',
+      audience_list_id: 'a1',
+    });
+    expect(global.audience_list_id).toBeNull();
+  });
+});
+
 // ===========================================================================
 describe('NotificationFormDialog', () => {
   const baseProps = {
@@ -110,7 +137,87 @@ describe('NotificationFormDialog', () => {
     onSubmit: vi.fn(),
     locations: [{ id: 'l1', location_name: 'Mumbai', location_zones: [{ zone_name: 'North' }] }],
     users: [{ user_id: 'u1', full_name: 'Alice' }],
+    audienceLists: [
+      { id: 'a1', name: 'Pune regulars', member_count: 1284 },
+      { id: 'a2', name: 'Dormant', member_count: 0 },
+    ],
+    totalUsers: 4200,
   };
+
+  // Nobody should send blind: every audience that knows its own size says so.
+  describe('reach', () => {
+    it('reports the whole platform for a global send', async () => {
+      renderWithProviders(<NotificationFormDialog {...baseProps} form={blankForm} />);
+      expect(await screen.findByTestId('notif-reach')).toHaveTextContent('reaches 4,200 people');
+    });
+
+    it('reports the picked list, and warns when it reaches nobody', async () => {
+      const form = { ...blankForm, scope: 'AUDIENCE_LIST' as const, audience_list_id: 'a1' };
+      const { unmount } = renderWithProviders(<NotificationFormDialog {...baseProps} form={form} />);
+      expect(await screen.findByTestId('notif-reach')).toHaveTextContent('reaches 1,284 people');
+      unmount();
+
+      renderWithProviders(
+        <NotificationFormDialog {...baseProps} form={{ ...form, audience_list_id: 'a2' }} />,
+      );
+      expect(await screen.findByTestId('notif-reach')).toHaveTextContent('reaches nobody');
+    });
+
+    it('says one person, not one people', async () => {
+      const form = { ...blankForm, scope: 'USER' as const, target_user_ids: ['u1'] };
+      renderWithProviders(<NotificationFormDialog {...baseProps} form={form} />);
+      expect(await screen.findByTestId('notif-reach')).toHaveTextContent('reaches 1 person');
+    });
+
+    it('shows no count for an audience that has none — a location', async () => {
+      const form = { ...blankForm, scope: 'LOCATION' as const, location_id: 'l1' };
+      renderWithProviders(<NotificationFormDialog {...baseProps} form={form} />);
+      expect(screen.queryByTestId('notif-reach')).not.toBeInTheDocument();
+    });
+
+    it('shows no count for a list that no longer exists', async () => {
+      const form = { ...blankForm, scope: 'AUDIENCE_LIST' as const, audience_list_id: 'gone' };
+      renderWithProviders(<NotificationFormDialog {...baseProps} form={form} />);
+      expect(screen.queryByTestId('notif-reach')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('the saved-list audience', () => {
+    it('offers each list with its live size, and submits the pick', async () => {
+      const onSubmit = vi.fn();
+      const form = { ...blankForm, scope: 'AUDIENCE_LIST' as const };
+      renderWithProviders(<NotificationFormDialog {...baseProps} form={form} onSubmit={onSubmit} />);
+      fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
+      fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
+
+      fireEvent.mouseDown(screen.getByLabelText('Audience list'));
+      fireEvent.click(await screen.findByText('Pune regulars · 1,284'));
+      fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0].audience_list_id).toBe('a1');
+    });
+
+    it('refuses to send without a list picked', async () => {
+      const onSubmit = vi.fn();
+      const form = { ...blankForm, scope: 'AUDIENCE_LIST' as const };
+      renderWithProviders(<NotificationFormDialog {...baseProps} form={form} onSubmit={onSubmit} />);
+      fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Weekend' } });
+      fireEvent.change(screen.getByLabelText(/Body/), { target: { value: 'Discover pods' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
+      expect(await screen.findByText('Pick an audience list')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('points at Target Audience when there are no lists yet', async () => {
+      const form = { ...blankForm, scope: 'AUDIENCE_LIST' as const };
+      renderWithProviders(
+        <NotificationFormDialog {...baseProps} form={form} audienceLists={[]} />,
+      );
+      fireEvent.mouseDown(screen.getByLabelText('Audience list'));
+      expect(await screen.findByText(/create one under Target Audience/)).toBeInTheDocument();
+    });
+  });
 
   it('submits a valid GLOBAL notification', async () => {
     const onSubmit = vi.fn();
@@ -202,7 +309,11 @@ describe('NotificationFormDialog', () => {
 
 // ===========================================================================
 describe('NotificationsPage', () => {
-  const refDataMocks = () => [locationsMock(), usersMock([makeUser()])];
+  const refDataMocks = () => [
+    locationsMock(),
+    usersMock([makeUser()]),
+    audienceListsFeedMock(AUDIENCE_LISTS_FOR_NOTIF),
+  ];
 
   beforeEach(() => {
     __setTableRows([makeNotificationRow({ location_id: 'l1' })]);

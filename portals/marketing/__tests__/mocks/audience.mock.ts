@@ -114,6 +114,15 @@ export const audienceListOwnersMock: MockedResponse = {
   result: { data: { audienceListOwners: OWNERS } },
 };
 
+/** The audienceLists dropdown feed, shared by the campaign and notification
+ * pages. Both query the same document. */
+export const audienceListsFeedMock = (query: any, lists = [
+  { __typename: 'AudienceList', id: 'a1', name: 'Pune regulars', member_count: 1284 },
+]): MockedResponse => ({
+  request: { query },
+  result: { data: { audienceLists: lists } },
+});
+
 export const audienceListOwnersEmptyMock: MockedResponse = {
   request: { query: AUDIENCE_LIST_OWNERS },
   result: { data: { audienceListOwners: [] } },

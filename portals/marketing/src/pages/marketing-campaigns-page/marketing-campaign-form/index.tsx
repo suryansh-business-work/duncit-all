@@ -6,6 +6,7 @@ export {
 } from './marketing-campaign.form';
 export type {
   CampaignAudience,
+  CampaignAudienceList,
   CampaignCardType,
   CampaignChannel,
   MarketingCampaignFormProps,

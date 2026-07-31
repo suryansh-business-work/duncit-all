@@ -18,6 +18,7 @@ export { marketingCampaignSchema };
 export default function MarketingCampaignForm({
   initialValues,
   cards,
+  audienceLists,
   busy,
   previewLoading,
   errorMessage,
@@ -35,8 +36,17 @@ export default function MarketingCampaignForm({
     return () => subscription.unsubscribe();
   }, [watch, onValuesChange]);
 
+  const audience = watch('audience');
+  const audienceListId = watch('audience_list_id');
   const cardType = watch('card_type');
   const scheduledAt = watch('scheduled_at');
+
+  // Only a saved list knows its own size; the other audiences are resolved at
+  // send time and have no count to show here.
+  const reach =
+    audience === 'AUDIENCE_LIST'
+      ? (audienceLists.find((l) => l.id === audienceListId)?.member_count ?? null)
+      : null;
 
   const submit = handleSubmit((values) => onSubmit(values));
 
@@ -50,8 +60,41 @@ export default function MarketingCampaignForm({
           <RhfTextField control={control} name="audience" label="Audience" select>
             <MenuItem value="ALL_USERS">All active users</MenuItem>
             <MenuItem value="NEWSLETTER_SUBSCRIBERS">Newsletter subscribers</MenuItem>
+            <MenuItem value="AUDIENCE_LIST">Saved audience list</MenuItem>
           </RhfTextField>
         </Grid>
+        {audience === 'AUDIENCE_LIST' && (
+          <Grid item xs={12} sm={6}>
+            <RhfTextField
+              control={control}
+              name="audience_list_id"
+              label="Audience list"
+              select
+              required
+              hint="Membership is recomputed when the campaign sends."
+            >
+              {audienceLists.length === 0 && (
+                <MenuItem disabled value="">
+                  No saved lists yet — create one under Target Audience
+                </MenuItem>
+              )}
+              {audienceLists.map((list) => (
+                <MenuItem key={list.id} value={list.id}>
+                  {`${list.name} · ${list.member_count.toLocaleString()}`}
+                </MenuItem>
+              ))}
+            </RhfTextField>
+          </Grid>
+        )}
+        {reach !== null && (
+          <Grid item xs={12}>
+            <Alert severity={reach > 0 ? 'info' : 'warning'} data-testid="campaign-reach">
+              {reach > 0
+                ? `This campaign reaches ${reach.toLocaleString()} ${reach === 1 ? 'person' : 'people'}.`
+                : 'This campaign reaches nobody right now.'}
+            </Alert>
+          </Grid>
+        )}
         <Grid item xs={12}>
           <RhfTextField control={control} name="subject" label="Email subject" required hint="3–180 characters" />
         </Grid>

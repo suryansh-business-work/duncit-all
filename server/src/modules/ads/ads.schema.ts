@@ -158,6 +158,11 @@ export const adsTypeDefs = gql`
     myAdsDashboard: AdsDashboard!
     "All requests, for the Marketing approval queue."
     adRequestsTable(query: TableQueryInput): AdRequestTablePage!
+    """
+    Only the ads showing right now — approved, started, not yet ended. LIVE is
+    a date window rather than a stored status, so it needs its own query.
+    """
+    liveAdsTable(query: TableQueryInput): AdRequestTablePage!
     "One request — owner or Marketing."
     adRequest(id: ID!): AdRequest!
     "Live ads for a placement (includes AUTO ads). Public — powers the app ad slots."
@@ -171,5 +176,12 @@ export const adsTypeDefs = gql`
     reviewAdRequest(id: ID!, approve: Boolean!, remarks: String): AdRequest!
     "Marketing edits per-position per-day pricing."
     updateAdPricing(input: UpdateAdPricingInput!): AdPricing!
+    """
+    Stop a running ad early. It becomes EXPIRED and its window is closed now,
+    which is what actually takes it off the slots.
+    """
+    stopAdRequest(id: ID!): AdRequest!
+    "Permanently remove an ad request."
+    deleteAdRequest(id: ID!): Boolean!
   }
 `;

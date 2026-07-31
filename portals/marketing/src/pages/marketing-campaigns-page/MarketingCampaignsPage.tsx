@@ -9,11 +9,13 @@ import CampaignTable from './CampaignTable';
 import MarketingCampaignForm, {
   blankMarketingCampaignValues,
   toMarketingCampaignInput,
+  type CampaignAudienceList,
   type MarketingCampaignFormValues,
 } from './marketing-campaign-form';
 import {
   CREATE_MARKETING_CAMPAIGN,
   MARKETING_CAMPAIGNS_TABLE,
+  AUDIENCE_LISTS_FOR_CAMPAIGN,
   MARKETING_PREVIEW_CARDS,
   RENDER_MARKETING_CAMPAIGN,
   SEND_MARKETING_CAMPAIGN,
@@ -30,6 +32,10 @@ export default function MarketingCampaignsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const { data: podsData } = useQuery<{ marketingCampaignPreviewCards: CampaignPreviewCard[] }>(MARKETING_PREVIEW_CARDS, { variables: { type: 'POD' } });
   const { data: clubsData } = useQuery<{ marketingCampaignPreviewCards: CampaignPreviewCard[] }>(MARKETING_PREVIEW_CARDS, { variables: { type: 'CLUB' } });
+  const { data: listsData } = useQuery<{ audienceLists: CampaignAudienceList[] }>(
+    AUDIENCE_LISTS_FOR_CAMPAIGN,
+    { fetchPolicy: 'cache-and-network' },
+  );
   const [renderCampaign, { data: previewData, loading: previewLoading }] = useLazyQuery(RENDER_MARKETING_CAMPAIGN, { fetchPolicy: 'no-cache' });
   const [createCampaign, { loading: saving }] = useMutation(CREATE_MARKETING_CAMPAIGN);
   const [sendCampaign, { loading: sending }] = useMutation(SEND_MARKETING_CAMPAIGN);
@@ -57,6 +63,8 @@ export default function MarketingCampaignsPage() {
     }, 350);
     return () => globalThis.clearTimeout(timer);
   }, [draft.subject, draft.mjml, draft.card_type, draft.card_ref_id, renderCampaign]);
+
+  const audienceLists = listsData?.audienceLists ?? [];
 
   const cards = useMemo(() => {
     if (draft.card_type === 'POD') return podsData?.marketingCampaignPreviewCards ?? [];
@@ -107,7 +115,7 @@ export default function MarketingCampaignsPage() {
         <Grid item xs={12} lg={6}>
           <Card>
             <CardContent>
-              <MarketingCampaignForm initialValues={draft} cards={cards} busy={saving} previewLoading={previewLoading} errorMessage={formError} onValuesChange={setDraft} onSubmit={handleSubmit} />
+              <MarketingCampaignForm initialValues={draft} cards={cards} audienceLists={audienceLists} busy={saving} previewLoading={previewLoading} errorMessage={formError} onValuesChange={setDraft} onSubmit={handleSubmit} />
             </CardContent>
           </Card>
         </Grid>

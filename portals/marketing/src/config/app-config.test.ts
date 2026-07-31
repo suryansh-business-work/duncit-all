@@ -22,6 +22,7 @@ describe('Duncit Marketing app config', () => {
         '/campaigns/email',
         '/notifications',
         '/ads-approvals',
+        '/live-ads',
         '/ads-settings',
       ]),
     );

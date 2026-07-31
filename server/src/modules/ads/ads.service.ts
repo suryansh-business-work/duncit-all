@@ -251,6 +251,38 @@ export const adsService = {
   },
 
   /**
+   * Stop a running ad early.
+   *
+   * LIVE and EXPIRED are derived from the date window, never stored, so
+   * stopping is closing the window — not writing a status. That is also what
+   * actually removes it from the slots, because activeAds filters on the same
+   * window. The record stays for the billing trail.
+   */
+  async stop(id: string) {
+    if (!Types.ObjectId.isValid(id)) fail('Ad request not found', 'NOT_FOUND');
+    const doc = await AdRequestModel.findById(id);
+    if (!doc) fail('Ad request not found', 'NOT_FOUND');
+    if (doc.status !== 'APPROVED') fail('Only an approved ad can be stopped');
+    const now = new Date();
+    if (deriveAdStatus(doc, now) === 'EXPIRED') fail('That ad has already ended');
+    doc.end_at = now;
+    // A stop before the start would derive as LIVE (now >= start_at is false,
+    // now >= end_at is true → EXPIRED wins), but keep the pair coherent.
+    if (doc.start_at > now) doc.start_at = now;
+    await doc.save();
+    const pricing = await getAdPricing();
+    return toPub(doc, pricing.currency_symbol);
+  },
+
+  /** Permanently remove an ad request. */
+  async remove(id: string) {
+    if (!Types.ObjectId.isValid(id)) fail('Ad request not found', 'NOT_FOUND');
+    const deleted = await AdRequestModel.findByIdAndDelete(id);
+    if (!deleted) fail('Ad request not found', 'NOT_FOUND');
+    return true;
+  },
+
+  /**
    * Advertiser dashboard KPIs, computed in-memory over the caller's own ads
    * (advertiser volumes are small). Counts bucket every ad by its DERIVED
    * status; "approved" therefore means approved-but-not-started.
@@ -308,6 +340,26 @@ export const adsService = {
     const { docs, total, page, page_size } = await runTableQuery<IAdRequest>(
       AdRequestModel,
       {},
+      input,
+      AD_TABLE_CONFIG
+    );
+    return { rows: docs.map((d) => toPub(d, pricing.currency_symbol)), total, page, page_size };
+  },
+
+  /**
+   * Ads showing right now.
+   *
+   * LIVE is not a stored value — it is APPROVED plus today falling inside the
+   * date window — so this cannot be expressed as a status filter. The window
+   * goes in as a base filter instead, which keeps paging and totals correct;
+   * filtering the page client-side would not.
+   */
+  async liveTable(input?: TableQueryInput) {
+    const now = new Date();
+    const pricing = await getAdPricing();
+    const { docs, total, page, page_size } = await runTableQuery<IAdRequest>(
+      AdRequestModel,
+      { status: 'APPROVED', start_at: { $lte: now }, end_at: { $gt: now } },
       input,
       AD_TABLE_CONFIG
     );

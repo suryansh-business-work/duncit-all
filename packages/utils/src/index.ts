@@ -2,9 +2,14 @@ export { getOrCreateDuid } from './duid';
 export { copyToClipboard } from './clipboard';
 export {
   SHORT_LINK_CLICK_KEY,
+  SHORT_LINK_UTM_KEY,
   captureShortLinkAttribution,
+  installAttributionLinkDecorator,
+  isAttributableLink,
   parseShortLinkParams,
+  storedAttributionParams,
   storedShortLinkClickId,
+  withAttribution,
   type CaptureOptions,
   type ShortLinkParams,
 } from './short-link-attribution';

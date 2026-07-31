@@ -1,9 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   SHORT_LINK_CLICK_KEY,
+  SHORT_LINK_UTM_KEY,
   captureShortLinkAttribution,
+  installAttributionLinkDecorator,
+  isAttributableLink,
   parseShortLinkParams,
+  storedAttributionParams,
   storedShortLinkClickId,
+  withAttribution,
 } from '../src/short-link-attribution';
 
 const SERVER = 'https://server.duncit.com';
@@ -169,5 +174,208 @@ describe('captureShortLinkAttribution', () => {
       fetchFn: vi.fn().mockResolvedValue({ json: () => Promise.resolve(null) }),
     });
     expect(id).toBeNull();
+  });
+});
+
+describe('utm persistence through capture', () => {
+  it('remembers the landing utms even without any short-link marker', async () => {
+    await captureShortLinkAttribution({
+      search: '?utm_source=newsletter&utm_medium=email&utm_campaign=aug&x=1',
+      referrer: '',
+      serverUrl: SERVER,
+      fetchFn: okFetch(),
+    });
+    expect(JSON.parse(localStorage.getItem(SHORT_LINK_UTM_KEY) as string)).toEqual({
+      utm_source: 'newsletter',
+      utm_medium: 'email',
+      utm_campaign: 'aug',
+    });
+  });
+
+  // First touch, same rule as the click id.
+  it('keeps the first campaign identity over a later one', async () => {
+    localStorage.setItem(SHORT_LINK_UTM_KEY, JSON.stringify({ utm_source: 'first' }));
+    await captureShortLinkAttribution({
+      search: '?utm_source=second',
+      referrer: '',
+      serverUrl: SERVER,
+      fetchFn: okFetch(),
+    });
+    expect(JSON.parse(localStorage.getItem(SHORT_LINK_UTM_KEY) as string)).toEqual({
+      utm_source: 'first',
+    });
+  });
+
+  it('stores nothing for an untagged landing, and survives storage refusing', async () => {
+    await captureShortLinkAttribution({
+      search: '?ref=abc',
+      referrer: '',
+      serverUrl: SERVER,
+      fetchFn: okFetch(),
+    });
+    expect(localStorage.getItem(SHORT_LINK_UTM_KEY)).toBeNull();
+
+    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('denied');
+    });
+    await expect(
+      captureShortLinkAttribution({
+        search: '?utm_source=x&dlc=c-1',
+        referrer: '',
+        serverUrl: SERVER,
+        fetchFn: okFetch('c-1'),
+      }),
+    ).resolves.toBe('c-1');
+    getItem.mockRestore();
+  });
+});
+
+describe('storedAttributionParams', () => {
+  it('merges the stored utms with the click id', () => {
+    localStorage.setItem(SHORT_LINK_UTM_KEY, JSON.stringify({ utm_source: 'instagram' }));
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    expect(storedAttributionParams()).toEqual({ utm_source: 'instagram', dlc: 'c-1' });
+  });
+
+  it('is empty with nothing stored, and shrugs off corrupt JSON', () => {
+    expect(storedAttributionParams()).toEqual({});
+    localStorage.setItem(SHORT_LINK_UTM_KEY, '{not json');
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    expect(storedAttributionParams()).toEqual({ dlc: 'c-1' });
+  });
+});
+
+describe('isAttributableLink', () => {
+  it('accepts our surfaces and the app scheme, nothing else', () => {
+    expect(isAttributableLink('https://mweb.duncit.com/shop')).toBe(true);
+    expect(isAttributableLink('https://duncit.com/about')).toBe(true);
+    expect(isAttributableLink('duncit:/club/x/pod/y')).toBe(true);
+    expect(isAttributableLink('https://notduncit.com/x')).toBe(false);
+    expect(isAttributableLink('https://evil.example/duncit.com')).toBe(false);
+    expect(isAttributableLink('mailto:support@duncit.com')).toBe(false);
+    expect(isAttributableLink('not a url')).toBe(false);
+  });
+});
+
+describe('withAttribution', () => {
+  it('attaches the stored identity without overriding what the link says', () => {
+    localStorage.setItem(
+      SHORT_LINK_UTM_KEY,
+      JSON.stringify({ utm_source: 'instagram', utm_medium: 'social' }),
+    );
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    const url = new URL(withAttribution('https://mweb.duncit.com/shop?utm_source=own'));
+    // The link named its own source — it meant it.
+    expect(url.searchParams.get('utm_source')).toBe('own');
+    expect(url.searchParams.get('utm_medium')).toBe('social');
+    expect(url.searchParams.get('dlc')).toBe('c-1');
+  });
+
+  it('decorates the native app scheme too', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    expect(withAttribution('duncit:/club/x?a=1')).toContain('dlc=c-1');
+  });
+
+  it('returns the url untouched with nothing stored, or when unparseable', () => {
+    expect(withAttribution('https://mweb.duncit.com/shop')).toBe('https://mweb.duncit.com/shop');
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    expect(withAttribution('::::')).toBe('::::');
+  });
+});
+
+describe('installAttributionLinkDecorator', () => {
+  const clickThrough = (element: Element) => {
+    // Swallow the default so jsdom does not try to actually navigate.
+    const swallow = (event: Event) => event.preventDefault();
+    document.addEventListener('click', swallow);
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    document.removeEventListener('click', swallow);
+  };
+
+  it('rewrites a duncit link at click time, exactly once', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    const uninstall = installAttributionLinkDecorator();
+    const anchor = document.createElement('a');
+    anchor.href = 'https://mweb.duncit.com/shop';
+    document.body.append(anchor);
+
+    clickThrough(anchor);
+    expect(anchor.href).toContain('dlc=c-1');
+    const once = anchor.href;
+    clickThrough(anchor);
+    expect(anchor.href).toBe(once);
+
+    anchor.remove();
+    uninstall();
+  });
+
+  it('reaches an anchor through the element the click actually hit', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    const uninstall = installAttributionLinkDecorator();
+    const anchor = document.createElement('a');
+    anchor.href = 'https://duncit.com/about';
+    const inner = document.createElement('span');
+    anchor.append(inner);
+    document.body.append(anchor);
+
+    clickThrough(inner);
+    expect(anchor.href).toContain('dlc=c-1');
+    anchor.remove();
+    uninstall();
+  });
+
+  it('leaves fragments, foreign links and non-links alone', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    const uninstall = installAttributionLinkDecorator();
+
+    const fragment = document.createElement('a');
+    fragment.setAttribute('href', '#section');
+    const foreign = document.createElement('a');
+    foreign.href = 'https://example.com/x';
+    const plain = document.createElement('button');
+    document.body.append(fragment, foreign, plain);
+
+    clickThrough(fragment);
+    expect(fragment.getAttribute('href')).toBe('#section');
+    clickThrough(foreign);
+    expect(foreign.href).toBe('https://example.com/x');
+    plain.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+    fragment.remove();
+    foreign.remove();
+    plain.remove();
+    uninstall();
+  });
+
+  it('does nothing for a visitor with no attribution, and uninstalls cleanly', () => {
+    const uninstall = installAttributionLinkDecorator();
+    const anchor = document.createElement('a');
+    anchor.href = 'https://mweb.duncit.com/shop';
+    document.body.append(anchor);
+
+    clickThrough(anchor);
+    expect(anchor.href).toBe('https://mweb.duncit.com/shop');
+
+    uninstall();
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    clickThrough(anchor);
+    // The listener is gone — nothing rewrites any more.
+    expect(anchor.href).toBe('https://mweb.duncit.com/shop');
+    anchor.remove();
+  });
+
+  it('covers middle-click opens too', () => {
+    localStorage.setItem(SHORT_LINK_CLICK_KEY, 'c-1');
+    const uninstall = installAttributionLinkDecorator();
+    const anchor = document.createElement('a');
+    anchor.href = 'https://partners.duncit.com/join';
+    document.body.append(anchor);
+
+    anchor.dispatchEvent(
+      new MouseEvent('auxclick', { bubbles: true, cancelable: true, button: 1 }),
+    );
+    expect(anchor.href).toContain('dlc=c-1');
+    anchor.remove();
+    uninstall();
   });
 });

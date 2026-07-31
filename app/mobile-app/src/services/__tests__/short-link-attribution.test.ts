@@ -103,6 +103,17 @@ describe('captureFromUrl', () => {
     expect(url.searchParams.get('dlc')).toBe('c-1');
   });
 
+  // The mWeb → native handoff: the Open-in-App banner deep-links
+  // duncit:/<path> decorated with the stored attribution, so the journey
+  // continues in the app under the SAME click.
+  it('captures the app-scheme deep link mWeb hands over', async () => {
+    okFetch('c-1');
+    expect(
+      await captureFromUrl('duncit:/club/smashers/pod/night?utm_source=instagram&dlc=c-1'),
+    ).toBe('c-1');
+    expect(setItemMock).toHaveBeenCalledWith(SHORT_LINK_CLICK_KEY, 'c-1');
+  });
+
   // A tagged URL that skipped the redirect still identifies the link by code.
   it('resolves a code-only landing through the server', async () => {
     okFetch('c-minted');

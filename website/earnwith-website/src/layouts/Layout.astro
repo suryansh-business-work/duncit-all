@@ -40,13 +40,19 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
     // Short-link attribution: a duncit.com marketing link may land on this
     // site carrying dl/dlc markers. The shared helper verifies them against
     // the API and records the visit; ordinary traffic costs one no-op call.
-    import { captureShortLinkAttribution } from '@duncit/utils';
+    import {
+      captureShortLinkAttribution,
+      installAttributionLinkDecorator,
+    } from '@duncit/utils';
     import { siteConfig } from '../config/site-config';
     captureShortLinkAttribution({
       search: window.location.search,
       referrer: document.referrer,
       serverUrl: siteConfig.graphqlUrl.replace('/graphql', ''),
     });
+    // Keep the tags on every hyperlink out to another duncit surface —
+    // storage does not cross origins, the URL does.
+    installAttributionLinkDecorator();
   </script>
     <slot />
     <script>

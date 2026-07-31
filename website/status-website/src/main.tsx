@@ -6,7 +6,7 @@ import '@fontsource/nunito/800.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { configureLogs, httpTransport } from '@duncit/logs';
-import { captureShortLinkAttribution } from '@duncit/utils';
+import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { SERVER_BASE } from './config/server';
 import App from './App';
 
@@ -21,6 +21,8 @@ captureShortLinkAttribution({
   referrer: document.referrer,
   serverUrl: SERVER_BASE,
 });
+// Keep the tags on every hyperlink out to another duncit surface.
+installAttributionLinkDecorator();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Root element #root not found');

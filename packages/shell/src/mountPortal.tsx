@@ -17,7 +17,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
-import { captureShortLinkAttribution } from '@duncit/utils';
+import { captureShortLinkAttribution, installAttributionLinkDecorator } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
 import { loadGoogleClientId } from './lib/google-client-id';
 import type { MountPortalOptions } from './types';
@@ -75,6 +75,9 @@ export function mountPortal(opts: MountPortalOptions): void {
     referrer: globalThis.document.referrer,
     serverUrl: graphqlUrl.replace(/\/graphql$/, ''),
   });
+  // And keep the tags on every hyperlink out to another duncit surface —
+  // storage does not cross origins, the URL does.
+  installAttributionLinkDecorator();
 
   const isAuthed = () => !!localStorage.getItem(config.tokenKey);
 

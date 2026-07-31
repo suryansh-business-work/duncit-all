@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react';
+import { withAttribution } from '@duncit/utils';
 import { gql, useQuery } from '@apollo/client';
 import { useLocation } from 'react-router-dom';
 import { Box, Button, IconButton, Paper, Stack, Typography } from '@mui/material';
@@ -72,8 +73,12 @@ export default function OpenInAppBanner() {
 
   const openInApp = () => {
     // Deep-link into the installed app at the same path; a missing app is a
-    // silent no-op and the user stays on mWeb.
-    globalThis.location.href = `duncit:/${location.pathname}${location.search}`;
+    // silent no-op and the user stays on mWeb. Decorated with the stored
+    // attribution — location.search is empty after in-app navigation, and
+    // this hop is exactly where the tags would otherwise be lost.
+    globalThis.location.href = withAttribution(
+      `duncit:/${location.pathname}${location.search}`,
+    );
   };
 
   return (

@@ -58,16 +58,28 @@ export const MARKETING_CAMPAIGNS_TABLE = gql`
   ${MARKETING_CAMPAIGN_ROW_FIELDS}
 `;
 
-export const MARKETING_PREVIEW_CARDS = gql`
-  query MarketingCampaignPreviewCards($type: MarketingCampaignCardType!) {
-    marketingCampaignPreviewCards(type: $type) {
-      id
-      type
-      title
+/** One campaign in full. Kept separate from the row fragment on purpose:
+ * `rendered_html` is an entire email body, and a page of rows must not carry
+ * one per campaign just so a dialog can show one. */
+export const MARKETING_CAMPAIGN = gql`
+  query MarketingCampaign($campaign_id: ID!) {
+    marketingCampaign(campaign_id: $campaign_id) {
+      ...MarketingCampaignRowFields
+      audience_list_id
+      rendered_html
+    }
+  }
+  ${MARKETING_CAMPAIGN_ROW_FIELDS}
+`;
+
+/** What a campaign author may write, straight from the renderer that
+ * substitutes them — so the list can never drift from the truth. */
+export const MARKETING_CAMPAIGN_VARIABLES = gql`
+  query MarketingCampaignVariables {
+    marketingCampaignVariables {
+      name
       description
-      image_url
-      cta_url
-      meta
+      sample
     }
   }
 `;
@@ -116,15 +128,11 @@ export const SEND_MARKETING_CAMPAIGN = gql`
   }
 `;
 
-export interface CampaignPreviewCard {
-  id: string;
-  type: 'POD' | 'CLUB';
-  title: string;
-  description?: string | null;
-  image_url?: string | null;
-  cta_url?: string | null;
-  meta?: string | null;
-}
+export const DELETE_MARKETING_CAMPAIGN = gql`
+  mutation DeleteMarketingCampaign($campaign_id: ID!) {
+    deleteMarketingCampaign(campaign_id: $campaign_id)
+  }
+`;
 
 export interface MarketingCampaignRow {
   campaign_id: string;
@@ -140,4 +148,15 @@ export interface MarketingCampaignRow {
   error?: string | null;
   created_at: string;
   card?: { type?: string | null; title?: string | null } | null;
+}
+
+export interface CampaignVariable {
+  name: string;
+  description: string;
+  sample: string;
+}
+
+/** A row plus the parts only the details dialog asks for. */
+export interface MarketingCampaignDetail extends MarketingCampaignRow {
+  rendered_html?: string | null;
 }

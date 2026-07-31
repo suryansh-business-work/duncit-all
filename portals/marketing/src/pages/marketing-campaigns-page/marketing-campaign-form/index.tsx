@@ -1,13 +1,13 @@
 export {
   default,
   blankMarketingCampaignValues,
+  isCampaignDraftDirty,
   marketingCampaignSchema,
   toMarketingCampaignInput,
 } from './marketing-campaign.form';
 export type {
   CampaignAudience,
   CampaignAudienceList,
-  CampaignCardType,
   CampaignChannel,
   MarketingCampaignFormProps,
   MarketingCampaignFormValues,

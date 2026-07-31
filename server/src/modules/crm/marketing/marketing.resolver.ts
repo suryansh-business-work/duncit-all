@@ -36,6 +36,14 @@ export const marketingResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return marketingService.list();
     },
+    marketingCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return marketingService.byId(args.campaign_id);
+    },
+    marketingCampaignVariables: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return marketingService.variables();
+    },
     marketingCampaignsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return marketingService.table(args.query);
@@ -61,6 +69,10 @@ export const marketingResolvers = {
     deleteAudienceList: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return audienceListService.remove(args.id);
+    },
+    deleteMarketingCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return marketingService.remove(args.campaign_id);
     },
     createMarketingCampaign: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);

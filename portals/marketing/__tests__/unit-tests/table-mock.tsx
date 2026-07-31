@@ -53,25 +53,42 @@ export function dateColumn(opts: Partial<AnyColumn> & Record<string, unknown> = 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ActionsOpts = Record<string, any>;
 
-/** Mirrors the real actionsColumn closely enough to click: one button per
- * configured handler, labelled from its `title` so specs can find it. */
+/** The real column swaps the label for `disabledTitle` while disabled, so a
+ * spec can assert on the reason a row action is unavailable. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const actionLabel = (config: ActionsOpts | undefined, row: any, fallback: string) => {
+  const base = config?.title ?? fallback;
+  if (config?.disabled?.(row) && config?.disabledTitle) return config.disabledTitle;
+  return base;
+};
+
+/** Mirrors the real actionsColumn closely enough to click: `renderExtra`
+ * first, then one button per configured handler, labelled from its `title`
+ * (or `disabledTitle`) so specs can find it. */
 export function actionsColumn(opts: ActionsOpts = {}): AnyColumn {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderAction = (row: any, config: ActionsOpts | undefined, fallback: string, onClick: (r: any) => void) => {
+    const label = actionLabel(config, row, fallback);
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        disabled={config?.disabled?.(row) ?? false}
+        onClick={() => onClick(row)}
+      >
+        {label}
+      </button>
+    );
+  };
   return {
     field: opts.field ?? 'actions',
     headerName: opts.headerName ?? 'Actions',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cellRenderer: (row: any) => (
       <>
-        {opts.onEdit && (
-          <button type="button" aria-label={opts.edit?.title ?? 'Edit'} onClick={() => opts.onEdit(row)}>
-            {opts.edit?.title ?? 'Edit'}
-          </button>
-        )}
-        {opts.onDelete && (
-          <button type="button" aria-label={opts.delete?.title ?? 'Delete'} onClick={() => opts.onDelete(row)}>
-            {opts.delete?.title ?? 'Delete'}
-          </button>
-        )}
+        {opts.renderExtra?.(row)}
+        {opts.onEdit && renderAction(row, opts.edit, 'Edit', opts.onEdit)}
+        {opts.onDelete && renderAction(row, opts.delete, 'Delete', opts.onDelete)}
       </>
     ),
   };

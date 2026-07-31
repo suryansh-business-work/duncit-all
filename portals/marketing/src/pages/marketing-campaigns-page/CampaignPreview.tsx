@@ -1,4 +1,5 @@
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import CampaignHtmlFrame from './CampaignHtmlFrame';
 
 interface Props {
   html: string;
@@ -19,19 +20,10 @@ export default function CampaignPreview({ html, errors, loading, subject }: Read
           {loading && <CircularProgress size={20} />}
         </Stack>
         {errors.map((error) => <Alert key={error} severity="warning">{error}</Alert>)}
-        <Box
-          component="iframe"
+        <CampaignHtmlFrame
+          html={html}
           title="Campaign preview"
-          srcDoc={html || '<div style="font-family:sans-serif;padding:24px;color:#6b7280">Preview will appear here.</div>'}
-          sx={{
-            flex: 1,
-            width: '100%',
-            minHeight: 520,
-            border: 1,
-            borderColor: 'divider',
-            borderRadius: 1,
-            bgcolor: 'background.default',
-          }}
+          placeholder="Preview will appear here."
         />
       </CardContent>
     </Card>

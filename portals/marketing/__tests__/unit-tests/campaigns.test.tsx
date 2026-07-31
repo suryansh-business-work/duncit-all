@@ -1,17 +1,15 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { Route } from 'react-router-dom';
 import { renderWithProviders } from '../testkit';
 import {
-  clubCardsMock,
+  campaignVariablesMock,
   createCampaignMock,
-  makeCampaignRow,
-  makePreviewCard,
-  podCardsMock,
+  makeRender,
   renderCampaignMock,
-  sendCampaignMock,
   audienceListsFeedMock,
 } from '../mocks';
-import { __setTableRows, fetchRowsFrom } from './table-mock';
+import { __setTableRows } from './table-mock';
 
 // ---------------------------------------------------------------------------
 // Module mocks — shared table, monaco editor, app-settings + MUI X picker, and
@@ -29,7 +27,11 @@ vi.mock('@monaco-editor/react', () => ({
   ),
 }));
 vi.mock('@duncit/app-settings', () => ({
-  useDateFormat: () => ({ dateFormat: 'dd/MM/yyyy', timeFormat: 'HH:mm' }),
+  useDateFormat: () => ({
+    dateFormat: 'dd/MM/yyyy',
+    timeFormat: 'HH:mm',
+    formatDateTime: (d: Date | string) => `fmt:${String(d)}`,
+  }),
 }));
 vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
   DateTimePicker: ({
@@ -54,31 +56,41 @@ vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({
   ),
 }));
 const dialogsMock = vi.hoisted(() => ({ notifyError: vi.fn(), notifySuccess: vi.fn() }));
-vi.mock('@duncit/dialogs', () => ({
+vi.mock('@duncit/dialogs', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@duncit/dialogs')>()),
   notifyError: dialogsMock.notifyError,
   notifySuccess: dialogsMock.notifySuccess,
 }));
 
 import CampaignPreview from '../../src/pages/marketing-campaigns-page/CampaignPreview';
-import CampaignTable from '../../src/pages/marketing-campaigns-page/CampaignTable';
 import CampaignMjmlEditor from '../../src/pages/marketing-campaigns-page/marketing-campaign-form/CampaignMjmlEditor';
 import MarketingCampaignForm, {
   blankMarketingCampaignValues,
   toMarketingCampaignInput,
 } from '../../src/pages/marketing-campaigns-page/marketing-campaign-form';
-import MarketingCampaignsPage from '../../src/pages/marketing-campaigns-page/MarketingCampaignsPage';
-import {
-  AUDIENCE_LISTS_FOR_CAMPAIGN,
-  type MarketingCampaignRow,
-} from '../../src/pages/marketing-campaigns-page/queries';
+import CreateCampaignPage from '../../src/pages/marketing-campaigns-page/CreateCampaignPage';
+import { AUDIENCE_LISTS_FOR_CAMPAIGN } from '../../src/pages/marketing-campaigns-page/queries';
 
-/** Mocks fired on mount of the campaigns page (preview cards + render). */
+/** Mocks fired on mount of the create page (audience lists + preview render). */
 const pageBaseMocks = () => [
-  podCardsMock(),
-  clubCardsMock(),
   renderCampaignMock(),
+  campaignVariablesMock(),
   audienceListsFeedMock(AUDIENCE_LISTS_FOR_CAMPAIGN),
 ];
+
+/** The create page mounted behind its real route, so navigating away on save
+ * lands somewhere observable. */
+const renderCreatePage = (mocks = pageBaseMocks()) =>
+  renderWithProviders(<CreateCampaignPage />, {
+    mocks,
+    initialEntries: ['/campaigns/email/new'],
+    routes: (
+      <>
+        <Route path="/campaigns/email/new" element={<CreateCampaignPage />} />
+        <Route path="/campaigns/email" element={<div>campaigns-list</div>} />
+      </>
+    ),
+  });
 
 beforeEach(() => {
   __setTableRows([]);
@@ -93,60 +105,17 @@ describe('CampaignPreview', () => {
     renderWithProviders(<CampaignPreview html="" errors={['bad tag']} loading={false} />);
     expect(screen.getByText('Subject preview')).toBeInTheDocument();
     expect(screen.getByText('bad tag')).toBeInTheDocument();
+    expect(screen.getByTitle('Campaign preview')).toHaveAttribute(
+      'srcdoc',
+      expect.stringContaining('Preview will appear here.'),
+    );
   });
 
   it('renders the subject and a loading spinner', () => {
     renderWithProviders(<CampaignPreview html="<b>hi</b>" errors={[]} loading subject="Launch" />);
     expect(screen.getByText('Launch')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-  });
-});
-
-// ===========================================================================
-describe('CampaignTable', () => {
-  it('renders channel/status/card cells and sends a draft campaign', async () => {
-    const onSend = vi.fn();
-    const rows = [
-      makeCampaignRow({ error: 'Delivery failed' }),
-      makeCampaignRow({ campaign_id: 'c2', status: 'SENT', card: null }),
-      makeCampaignRow({ campaign_id: 'c3', audience: 'PARTNERS', status: 'SENDING' }),
-      // A campaign stored before WhatsApp was removed, still awaiting the
-      // migration: the raw value is shown rather than a blank cell.
-      makeCampaignRow({
-        campaign_id: 'c4',
-        channel: 'WHATSAPP' as MarketingCampaignRow['channel'],
-        audience: 'AUDIENCE_LIST',
-        status: 'SENT',
-      }),
-    ];
-    renderWithProviders(
-      <CampaignTable
-        fetchRows={fetchRowsFrom(rows)}
-        refetchRef={{ current: null }}
-        sending={false}
-        onSend={onSend}
-      />,
-    );
-    expect(await screen.findByText('Delivery failed')).toBeInTheDocument();
-    expect(screen.getAllByText('WHATSAPP').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Saved audience list').length).toBeGreaterThan(0);
-    const sendButtons = screen.getAllByRole('button', { name: 'Send' });
-    fireEvent.click(sendButtons[0]);
-    expect(onSend).toHaveBeenCalledWith('c1');
-    expect(sendButtons[1]).toBeDisabled();
-    expect(sendButtons[2]).toBeDisabled();
-  });
-
-  it('disables all sends while a send is in flight', async () => {
-    renderWithProviders(
-      <CampaignTable
-        fetchRows={fetchRowsFrom([makeCampaignRow()])}
-        refetchRef={{ current: null }}
-        sending
-        onSend={vi.fn()}
-      />,
-    );
-    expect(await screen.findByRole('button', { name: 'Send' })).toBeDisabled();
+    expect(screen.getByTitle('Campaign preview')).toHaveAttribute('srcdoc', '<b>hi</b>');
   });
 });
 
@@ -186,7 +155,8 @@ describe('CampaignMjmlEditor', () => {
 // ===========================================================================
 describe('MarketingCampaignForm', () => {
   const baseProps = {
-    cards: [makePreviewCard({ id: 'p1', type: 'POD' as const, title: 'Pod One' })],
+    variables: [{ name: 'app_name', description: 'Your app name.', sample: 'Duncit' }],
+    unknownVariables: [] as string[],
     audienceLists: [
       { id: 'a1', name: 'Pune regulars', member_count: 1284 },
       { id: 'a2', name: 'Dormant', member_count: 0 },
@@ -278,7 +248,7 @@ describe('MarketingCampaignForm', () => {
     expect(onValuesChange).toHaveBeenCalled();
   });
 
-  it('shows the WhatsApp fallback alert and the error message', () => {
+  it('shows the error message it is given', () => {
     renderWithProviders(
       <MarketingCampaignForm
         {...baseProps}
@@ -287,6 +257,36 @@ describe('MarketingCampaignForm', () => {
       />,
     );
     expect(screen.getByText('Save failed')).toBeInTheDocument();
+  });
+
+  // The card picker is gone: a campaign is its MJML, nothing else to attach.
+  it('offers no dynamic-card fields', () => {
+    renderWithProviders(
+      <MarketingCampaignForm {...baseProps} initialValues={blankMarketingCampaignValues('EMAIL')} />,
+    );
+    expect(screen.queryByLabelText('Dynamic card')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Card item')).not.toBeInTheDocument();
+  });
+
+  it('lists the variables you are allowed to write', () => {
+    renderWithProviders(
+      <MarketingCampaignForm {...baseProps} initialValues={blankMarketingCampaignValues('EMAIL')} />,
+    );
+    expect(screen.getByText('{{app_name}}')).toBeInTheDocument();
+    expect(screen.queryByTestId('unknown-variables')).not.toBeInTheDocument();
+  });
+
+  it('names a placeholder the renderer will not substitute', () => {
+    renderWithProviders(
+      <MarketingCampaignForm
+        {...baseProps}
+        unknownVariables={['first_name']}
+        initialValues={blankMarketingCampaignValues('EMAIL')}
+      />,
+    );
+    expect(screen.getByTestId('unknown-variables')).toHaveTextContent(
+      '{{first_name}} — not a known variable',
+    );
   });
 
   it('switches the submit label to Schedule when a schedule is set', () => {
@@ -313,70 +313,30 @@ describe('MarketingCampaignForm', () => {
     expect(await screen.findByText(/MJML must be at least 20 characters/)).toBeInTheDocument();
     expect(screen.getByText(/Schedule must be a valid date and time/)).toBeInTheDocument();
   });
-
-  it('clears the card ref when the card type changes', () => {
-    renderWithProviders(
-      <MarketingCampaignForm
-        {...baseProps}
-        initialValues={{ ...blankMarketingCampaignValues('EMAIL'), card_type: 'POD', card_ref_id: 'p1' }}
-      />,
-    );
-    const cardType = screen.getByLabelText('Dynamic card');
-    fireEvent.mouseDown(cardType);
-    fireEvent.click(screen.getByRole('option', { name: 'Club card' }));
-    expect(screen.getByLabelText('Card item')).toBeInTheDocument();
-  });
 });
 
 // ===========================================================================
-describe('MarketingCampaignsPage', () => {
-  it('renders the form + preview + history and schedules a preview render', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, { mocks: pageBaseMocks() });
-    fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'A subject line' } });
-    // The debounced lazy render resolves and its subject reaches the preview.
+describe('CreateCampaignPage', () => {
+  // The whole point of the split layout: type MJML, watch it render — with no
+  // subject line typed yet.
+  it('renders the preview from the MJML alone, before a subject is written', async () => {
+    renderCreatePage();
+    fireEvent.change(screen.getByLabelText('mjml-editor'), {
+      target: { value: '<mjml><mj-body>hello there friend</mj-body></mjml>' },
+    });
     await waitFor(() => expect(screen.getByText('S')).toBeInTheDocument(), { timeout: 2500 });
   });
 
-  it('resolves POD preview cards when data is loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, { mocks: pageBaseMocks() });
-    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
-    fireEvent.click(screen.getByRole('option', { name: 'Pod card' }));
-    fireEvent.mouseDown(screen.getByLabelText('Card item'));
-    expect(await screen.findByRole('option', { name: 'Pod One' })).toBeInTheDocument();
+  it('does not ask the server to render an empty editor', async () => {
+    renderCreatePage([campaignVariablesMock(), audienceListsFeedMock(AUDIENCE_LISTS_FOR_CAMPAIGN)]);
+    fireEvent.change(screen.getByLabelText('mjml-editor'), { target: { value: '   ' } });
+    // No render mock is provided, so an attempted render would surface an error.
+    await waitFor(() => expect(screen.getByTitle('Campaign preview')).toBeInTheDocument());
+    expect(screen.getByText('Subject preview')).toBeInTheDocument();
   });
 
-  it('resolves CLUB preview cards when data is loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, { mocks: pageBaseMocks() });
-    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
-    fireEvent.click(screen.getByRole('option', { name: 'Club card' }));
-    fireEvent.mouseDown(screen.getByLabelText('Card item'));
-    expect(await screen.findByRole('option', { name: 'Club One' })).toBeInTheDocument();
-  });
-
-  it('falls back to empty POD cards when none are loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [podCardsMock([], { pending: true }), clubCardsMock([], { pending: true }), renderCampaignMock()],
-    });
-    await screen.findByTestId('table-empty');
-    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
-    fireEvent.click(screen.getByRole('option', { name: 'Pod card' }));
-    expect(screen.getByLabelText('Card item')).toBeInTheDocument();
-  });
-
-  it('falls back to empty CLUB cards when none are loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [podCardsMock([], { pending: true }), clubCardsMock([], { pending: true }), renderCampaignMock()],
-    });
-    await screen.findByTestId('table-empty');
-    fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
-    fireEvent.click(screen.getByRole('option', { name: 'Club card' }));
-    expect(screen.getByLabelText('Card item')).toBeInTheDocument();
-  });
-
-  it('schedules a campaign and shows the scheduled toast', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [...pageBaseMocks(), createCampaignMock()],
-    });
+  it('schedules a campaign, toasts, and returns to the list', async () => {
+    renderCreatePage([...pageBaseMocks(), createCampaignMock()]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     fireEvent.change(screen.getByLabelText('Schedule at'), {
@@ -387,12 +347,11 @@ describe('MarketingCampaignsPage', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Schedule Campaign' }));
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign scheduled'));
+    expect(await screen.findByText('campaigns-list')).toBeInTheDocument();
   });
 
   it('creates a campaign and shows a success toast', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [...pageBaseMocks(), createCampaignMock()],
-    });
+    renderCreatePage([...pageBaseMocks(), createCampaignMock()]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
@@ -400,10 +359,9 @@ describe('MarketingCampaignsPage', () => {
     await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign sent'));
   });
 
+  // The campaign was saved but did not go out: say so, and still move on.
   it('surfaces a server-side campaign error via notifyError', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [...pageBaseMocks(), createCampaignMock({ serverError: 'Bad MJML' })],
-    });
+    renderCreatePage([...pageBaseMocks(), createCampaignMock({ serverError: 'Bad MJML' })]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
@@ -411,38 +369,54 @@ describe('MarketingCampaignsPage', () => {
     await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Bad MJML'));
   });
 
+  // A rejected save keeps you on the form with your draft intact.
   it('shows a form error when the create mutation throws', async () => {
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [...pageBaseMocks(), createCampaignMock({ throwMessage: 'Network down' })],
-    });
+    renderCreatePage([...pageBaseMocks(), createCampaignMock({ throwMessage: 'Network down' })]);
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'Pods live' } });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Send Now' })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: 'Send Now' }));
     await waitFor(() => expect(screen.getByText('Network down')).toBeInTheDocument());
+    expect(screen.queryByText('campaigns-list')).not.toBeInTheDocument();
   });
 
-  it('sends an existing campaign from the history table', async () => {
-    __setTableRows([makeCampaignRow({ campaign_id: 'c9', name: 'Past', recipient_count: 0 })]);
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [...pageBaseMocks(), sendCampaignMock()],
-    });
-    fireEvent.click(await screen.findByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('Campaign sent'));
+  // An untouched draft is not work — leave straight away.
+  it('goes back without asking when nothing has been written', async () => {
+    renderCreatePage();
+    fireEvent.click(screen.getByRole('button', { name: 'Campaigns' }));
+    expect(await screen.findByText('campaigns-list')).toBeInTheDocument();
   });
 
-  it('reports a server-side send error and a thrown send error', async () => {
-    __setTableRows([makeCampaignRow({ campaign_id: 'c9', name: 'Past', recipient_count: 0 })]);
-    renderWithProviders(<MarketingCampaignsPage />, {
-      mocks: [
-        ...pageBaseMocks(),
-        sendCampaignMock({ serverError: 'Rejected' }),
-        sendCampaignMock({ throwMessage: 'Send crashed' }),
-      ],
+  it('asks before throwing away a draft, and stays when you cancel', async () => {
+    renderCreatePage();
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Half written' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Campaigns' }));
+
+    expect(await screen.findByText('Leave without sending?')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    await waitFor(() =>
+      expect(screen.queryByText('Leave without sending?')).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText('campaigns-list')).not.toBeInTheDocument();
+  });
+
+  it('leaves once you confirm the draft can go', async () => {
+    renderCreatePage();
+    fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Half written' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Campaigns' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Discard draft' }));
+    expect(await screen.findByText('campaigns-list')).toBeInTheDocument();
+  });
+
+  it('warns about a placeholder the renderer does not know', async () => {
+    renderCreatePage([
+      renderCampaignMock(makeRender({ detected_variables: ['app_name', 'first_name'] })),
+      campaignVariablesMock(),
+      audienceListsFeedMock(AUDIENCE_LISTS_FOR_CAMPAIGN),
+    ]);
+    fireEvent.change(screen.getByLabelText('mjml-editor'), {
+      target: { value: '<mjml><mj-body>Hi {{first_name}} from {{app_name}}</mj-body></mjml>' },
     });
-    fireEvent.click(await screen.findByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Rejected'));
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(dialogsMock.notifyError).toHaveBeenCalledWith('Send crashed'));
+    expect(await screen.findByTestId('unknown-variables')).toHaveTextContent('{{first_name}}');
   });
 });

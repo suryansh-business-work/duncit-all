@@ -1,31 +1,37 @@
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Grid, MenuItem, Stack, TextField } from '@mui/material';
+import { Alert, Button, Grid, MenuItem, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import { RhfTextField } from '@duncit/forms';
 import DateTimeField from '../../../components/DateTimeField';
 import CampaignMjmlEditor from './CampaignMjmlEditor';
+import CampaignVariables from './CampaignVariables';
 import {
   marketingCampaignSchema,
   type MarketingCampaignFormProps,
   type MarketingCampaignFormValues,
 } from './marketing-campaign.types';
 
-export { blankMarketingCampaignValues, toMarketingCampaignInput } from './marketing-campaign.types';
+export {
+  blankMarketingCampaignValues,
+  isCampaignDraftDirty,
+  toMarketingCampaignInput,
+} from './marketing-campaign.types';
 export { marketingCampaignSchema };
 
 export default function MarketingCampaignForm({
   initialValues,
-  cards,
   audienceLists,
+  variables,
+  unknownVariables,
   busy,
   previewLoading,
   errorMessage,
   onValuesChange,
   onSubmit,
 }: Readonly<MarketingCampaignFormProps>) {
-  const { control, handleSubmit, setValue, trigger, watch, formState } = useForm<MarketingCampaignFormValues>({
+  const { control, handleSubmit, trigger, watch, formState } = useForm<MarketingCampaignFormValues>({
     defaultValues: initialValues,
     resolver: zodResolver(marketingCampaignSchema),
     mode: 'onChange',
@@ -38,7 +44,6 @@ export default function MarketingCampaignForm({
 
   const audience = watch('audience');
   const audienceListId = watch('audience_list_id');
-  const cardType = watch('card_type');
   const scheduledAt = watch('scheduled_at');
 
   // Only a saved list knows its own size; the other audiences are resolved at
@@ -98,37 +103,7 @@ export default function MarketingCampaignForm({
         <Grid item xs={12}>
           <RhfTextField control={control} name="subject" label="Email subject" required hint="3–180 characters" />
         </Grid>
-        <Grid item xs={12} sm={4}>
-          <Controller
-            control={control}
-            name="card_type"
-            render={({ field }) => (
-              <TextField
-                label="Dynamic card"
-                select
-                fullWidth
-                value={field.value}
-                onChange={(event) => {
-                  field.onChange(event);
-                  setValue('card_ref_id', '');
-                }}
-                onBlur={field.onBlur}
-              >
-                <MenuItem value="">No card</MenuItem>
-                <MenuItem value="POD">Pod card</MenuItem>
-                <MenuItem value="CLUB">Club card</MenuItem>
-              </TextField>
-            )}
-          />
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <RhfTextField control={control} name="card_ref_id" label="Card item" select disabled={!cardType}>
-            {cards.map((card) => (
-              <MenuItem key={card.id} value={card.id}>{card.title}</MenuItem>
-            ))}
-          </RhfTextField>
-        </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid item xs={12} sm={6}>
           <Controller
             control={control}
             name="scheduled_at"
@@ -158,6 +133,9 @@ export default function MarketingCampaignForm({
               />
             )}
           />
+        </Grid>
+        <Grid item xs={12}>
+          <CampaignVariables variables={variables} unknown={unknownVariables} />
         </Grid>
         {errorMessage && (
           <Grid item xs={12}>

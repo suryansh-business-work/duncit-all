@@ -1,14 +1,13 @@
 import type { MockedResponse } from '@apollo/client/testing';
-import type {
-  MarketingCampaign,
-  MarketingCampaignPreviewCard,
-  MarketingCampaignRender,
-} from '@duncit/gql-types';
+import type { MarketingCampaign, MarketingCampaignRender } from '@duncit/gql-types';
 import {
   CREATE_MARKETING_CAMPAIGN,
-  MARKETING_PREVIEW_CARDS,
+  DELETE_MARKETING_CAMPAIGN,
+  MARKETING_CAMPAIGN,
+  MARKETING_CAMPAIGN_VARIABLES,
   RENDER_MARKETING_CAMPAIGN,
   SEND_MARKETING_CAMPAIGN,
+  type MarketingCampaignDetail,
   type MarketingCampaignRow,
 } from '../../src/pages/marketing-campaigns-page/queries';
 
@@ -34,42 +33,55 @@ export const makeCampaignRow = (over: Partial<MarketingCampaignRow> = {}): Marke
   ...over,
 });
 
-export type PreviewCardResp = Pick<
-  MarketingCampaignPreviewCard,
-  'id' | 'type' | 'title' | 'description' | 'image_url' | 'cta_url' | 'meta'
-> & { __typename: 'MarketingCampaignPreviewCard' };
-
-export const makePreviewCard = (over: Partial<PreviewCardResp> = {}): PreviewCardResp => ({
-  __typename: 'MarketingCampaignPreviewCard',
-  id: 'p1',
-  type: 'POD',
-  title: 'Pod One',
-  description: null,
-  image_url: null,
-  cta_url: null,
-  meta: null,
+/** One campaign in full, as the View dialog asks for it. */
+export const makeCampaignDetail = (
+  over: Partial<MarketingCampaignDetail> = {},
+): MarketingCampaignDetail => ({
+  ...makeCampaignRow(),
+  rendered_html: '<b>the email</b>',
+  audience_list_id: null,
   ...over,
 });
 
-export const podCardsMock = (
-  cards: PreviewCardResp[] = [makePreviewCard()],
-  opts: { pending?: boolean } = {},
+export const campaignDetailMock = (
+  over: Partial<MarketingCampaignDetail> = {},
+  opts: { pending?: boolean; failWith?: string } = {},
 ): MockedResponse => ({
-  request: { query: MARKETING_PREVIEW_CARDS },
-  variableMatcher: (vars) => vars?.type === 'POD',
-  result: { data: { marketingCampaignPreviewCards: cards } },
+  request: { query: MARKETING_CAMPAIGN },
+  variableMatcher: () => true,
+  ...(opts.failWith
+    ? { result: { errors: [{ message: opts.failWith }] } }
+    : {
+        result: {
+          data: {
+            marketingCampaign: { __typename: 'MarketingCampaign', ...makeCampaignDetail(over) },
+          },
+        },
+      }),
   ...(opts.pending ? { delay: Infinity } : {}),
   maxUsageCount: 20,
 });
 
-export const clubCardsMock = (
-  cards: PreviewCardResp[] = [makePreviewCard({ id: 'c1', type: 'CLUB', title: 'Club One' })],
-  opts: { pending?: boolean } = {},
+export const deleteCampaignMock = (opts: { failWith?: string } = {}): MockedResponse => ({
+  request: { query: DELETE_MARKETING_CAMPAIGN },
+  variableMatcher: () => true,
+  ...(opts.failWith
+    ? { result: { errors: [{ message: opts.failWith }] } }
+    : { result: { data: { deleteMarketingCampaign: true } } }),
+});
+
+export const campaignVariablesMock = (
+  variables = [{ name: 'app_name', description: 'Your app name.', sample: 'Duncit' }],
 ): MockedResponse => ({
-  request: { query: MARKETING_PREVIEW_CARDS },
-  variableMatcher: (vars) => vars?.type === 'CLUB',
-  result: { data: { marketingCampaignPreviewCards: cards } },
-  ...(opts.pending ? { delay: Infinity } : {}),
+  request: { query: MARKETING_CAMPAIGN_VARIABLES },
+  result: {
+    data: {
+      marketingCampaignVariables: variables.map((v) => ({
+        __typename: 'MarketingCampaignVariable',
+        ...v,
+      })),
+    },
+  },
   maxUsageCount: 20,
 });
 

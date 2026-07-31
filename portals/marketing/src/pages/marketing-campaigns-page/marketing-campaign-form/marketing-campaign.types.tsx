@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { requiredText } from '@duncit/forms';
-import type { CampaignPreviewCard } from '../queries';
+import type { CampaignVariable } from '../queries';
 
 /** Email is the only channel; WhatsApp campaigns were removed. */
 export type CampaignChannel = 'EMAIL';
@@ -12,8 +12,6 @@ export interface CampaignAudienceList {
   name: string;
   member_count: number;
 }
-export type CampaignCardType = '' | 'POD' | 'CLUB';
-
 const defaultMjml = `<mjml>
   <mj-body background-color="#f8fafc">
     <mj-section padding="28px 20px 8px">
@@ -22,17 +20,11 @@ const defaultMjml = `<mjml>
         <mj-text font-size="16px" line-height="24px" color="#4b5563">Here is something new for you.</mj-text>
       </mj-column>
     </mj-section>
-    {{content_card}}
   </mj-body>
 </mjml>`;
 
-/**
- * Marketing campaign contract — RHF + Zod (migrated from Formik + Yup).
- * `superRefine` reproduces the old yup `.when('card_type')` rule: a card item
- * is required only once a card type is selected.
- */
-export const marketingCampaignSchema = z
-  .object({
+/** Marketing campaign contract — RHF + Zod (migrated from Formik + Yup). */
+export const marketingCampaignSchema = z.object({
     name: requiredText('Campaign name', 3, 120),
     channel: z.enum(['EMAIL'], { required_error: 'Channel is required' }),
     audience: z.enum(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'], {
@@ -45,8 +37,6 @@ export const marketingCampaignSchema = z
       .trim()
       .min(20, 'MJML must be at least 20 characters')
       .refine((value) => /<mjml[\s>]/i.test(value), 'MJML must include an <mjml> root element'),
-    card_type: z.enum(['', 'POD', 'CLUB']).default(''),
-    card_ref_id: z.string().trim().default(''),
     scheduled_at: z
       .string()
       .trim()
@@ -55,16 +45,7 @@ export const marketingCampaignSchema = z
         (value) => !value || !Number.isNaN(new Date(value).getTime()),
         'Schedule must be a valid date and time',
       ),
-  })
-  .superRefine((values, ctx) => {
-    if (values.card_type && !values.card_ref_id) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['card_ref_id'],
-        message: 'Select a card',
-      });
-    }
-  });
+});
 
 export type MarketingCampaignFormValues = z.infer<typeof marketingCampaignSchema>;
 
@@ -76,10 +57,20 @@ export function blankMarketingCampaignValues(channel: CampaignChannel = 'EMAIL')
     audience_list_id: '',
     subject: '',
     mjml: defaultMjml,
-    card_type: '',
-    card_ref_id: '',
     scheduled_at: '',
   };
+}
+
+/**
+ * Whether the draft holds anything worth losing. A campaign starts with the
+ * default MJML already in the editor, so an untouched draft is not "empty" —
+ * it is equal to the blank values, which is what this compares against.
+ */
+export function isCampaignDraftDirty(values: MarketingCampaignFormValues): boolean {
+  const blank = blankMarketingCampaignValues(values.channel);
+  return (Object.keys(blank) as (keyof MarketingCampaignFormValues)[]).some(
+    (key) => values[key] !== blank[key],
+  );
 }
 
 export function toMarketingCampaignInput(values: MarketingCampaignFormValues) {
@@ -91,8 +82,6 @@ export function toMarketingCampaignInput(values: MarketingCampaignFormValues) {
     audience_list_id: cast.audience === 'AUDIENCE_LIST' ? cast.audience_list_id : undefined,
     subject: cast.subject,
     mjml: cast.mjml,
-    card_type: cast.card_type || undefined,
-    card_ref_id: cast.card_ref_id || undefined,
     scheduled_at: cast.scheduled_at || undefined,
     send_now: !cast.scheduled_at,
   };
@@ -100,9 +89,12 @@ export function toMarketingCampaignInput(values: MarketingCampaignFormValues) {
 
 export interface MarketingCampaignFormProps {
   initialValues: MarketingCampaignFormValues;
-  cards: CampaignPreviewCard[];
   /** Saved audience lists, each with the number of people it reaches now. */
   audienceLists: CampaignAudienceList[];
+  /** Placeholders the renderer substitutes, shown under the editor. */
+  variables: CampaignVariable[];
+  /** Placeholders written in the draft that the renderer does not know. */
+  unknownVariables: string[];
   busy: boolean;
   previewLoading: boolean;
   errorMessage?: string | null;

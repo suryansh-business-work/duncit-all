@@ -2,6 +2,9 @@ import { marketingService } from '../../marketing.service';
 import { MarketingCampaignModel } from '../../marketing.model';
 
 const MJML = '<mjml><mj-body><mj-text>Hello there</mj-text></mj-body></mjml>';
+/** What the renderer will actually accept — mj-text has to sit in a column. */
+const VALID_MJML =
+  '<mjml><mj-body><mj-section><mj-column><mj-text>Hello there</mj-text></mj-column></mj-section></mj-body></mjml>';
 
 const seedCampaign = (n: {
   campaign_id: string;
@@ -61,5 +64,65 @@ describe('marketingService integration', () => {
     expect(page2.total).toBe(3);
     expect(page2.page).toBe(2);
     expect(page2.page_size).toBe(1);
+  });
+
+  it('reads one campaign in full, and refuses an id that is not there', async () => {
+    await seedCampaign({ campaign_id: 'c1', name: 'August Push', subject: 'Pods near you' });
+
+    const one = await marketingService.byId('c1');
+    expect(one.name).toBe('August Push');
+    expect(one.mjml).toBe(MJML);
+
+    await expect(marketingService.byId('nope')).rejects.toThrow(/not found/i);
+  });
+
+  it('deletes a campaign, and refuses an id that is not there', async () => {
+    await seedCampaign({ campaign_id: 'c1', name: 'August Push', subject: 'Pods near you' });
+
+    expect(await marketingService.remove('c1')).toBe(true);
+    expect(await MarketingCampaignModel.findOne({ campaign_id: 'c1' }).exec()).toBeNull();
+
+    await expect(marketingService.remove('c1')).rejects.toThrow(/not found/i);
+  });
+
+  it('refuses to delete a campaign that is sending right now', async () => {
+    await seedCampaign({
+      campaign_id: 'c1',
+      name: 'In flight',
+      subject: 'Going out',
+      status: 'SENDING',
+    });
+
+    await expect(marketingService.remove('c1')).rejects.toThrow(/sending right now/i);
+    // Still there — a refused delete must not half-happen.
+    expect(await MarketingCampaignModel.findOne({ campaign_id: 'c1' }).exec()).not.toBeNull();
+  });
+
+  // A scheduled campaign owns a live setTimeout. Deleting the document without
+  // clearing it leaves a timer that fires at the scheduled hour against a
+  // campaign that no longer exists.
+  it('cancels the pending send when a scheduled campaign is deleted', async () => {
+    const clearSpy = jest.spyOn(globalThis, 'clearTimeout');
+    const scheduled = await marketingService.create({
+      name: 'Next week',
+      channel: 'EMAIL',
+      audience: 'NEWSLETTER_SUBSCRIBERS',
+      subject: 'Coming soon',
+      mjml: VALID_MJML,
+      scheduled_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    });
+    expect(scheduled.status).toBe('SCHEDULED');
+    clearSpy.mockClear();
+
+    expect(await marketingService.remove(scheduled.campaign_id)).toBe(true);
+    expect(clearSpy).toHaveBeenCalled();
+    clearSpy.mockRestore();
+  });
+
+  it('lists every variable a campaign may use, with what it renders to', async () => {
+    const variables = await marketingService.variables();
+    expect(variables.map((v) => v.name)).toEqual(['app_name']);
+    expect(variables[0].sample).toBeTruthy();
+    expect(variables[0].description).toMatch(/branding/i);
   });
 });

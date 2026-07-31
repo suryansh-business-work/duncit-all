@@ -7,6 +7,7 @@ import AudienceListsPage from './pages/target-audience-page/AudienceListsPage';
 import CreateAudienceListPage from './pages/target-audience-page/CreateAudienceListPage';
 import AudienceListDetailPage from './pages/target-audience-page/AudienceListDetailPage';
 import MarketingCampaignsPage from './pages/marketing-campaigns-page/MarketingCampaignsPage';
+import CreateCampaignPage from './pages/marketing-campaigns-page/CreateCampaignPage';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
 import LiveAdsPage from './pages/live-ads-page/LiveAdsPage';
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />
         <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage />)} />
+        <Route path="/campaigns/email/new" element={authed(<CreateCampaignPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
         <Route path="/ads-approvals" element={authed(<AdsApprovalsPage />)} />
         <Route path="/live-ads" element={authed(<LiveAdsPage />)} />

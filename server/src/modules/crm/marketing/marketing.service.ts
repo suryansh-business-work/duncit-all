@@ -166,6 +166,17 @@ async function campaignVars(card: Awaited<ReturnType<typeof findPreviewCard>>) {
   };
 }
 
+/**
+ * The variables a campaign author can rely on, with what each one means.
+ * `content_*` are deliberately not advertised: they only ever held dynamic
+ * card content, and the card picker was removed — they now always render
+ * empty, so offering them would be a lie. They are still SUBSTITUTED (see
+ * campaignVars) so older campaigns re-render as they always did.
+ */
+const CAMPAIGN_VARIABLES: { name: keyof Awaited<ReturnType<typeof campaignVars>>; description: string }[] = [
+  { name: 'app_name', description: 'Your app name, as set in Branding.' },
+];
+
 async function renderCampaign(input: {
   subject: string;
   mjml: string;
@@ -333,6 +344,42 @@ export const marketingService = {
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the marketingCampaignsTable query. */
+  /** One campaign in full, including the rendered HTML the table rows omit —
+   * a page of 25 rows has no business carrying 25 email bodies. */
+  async byId(campaignId: string) {
+    const doc = await MarketingCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw new GraphQLError('Campaign not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPub(doc);
+  },
+
+  /**
+   * Delete a campaign.
+   *
+   * A SCHEDULED campaign owns a live setTimeout in this process. Dropping the
+   * document without clearing it leaves a timer that fires at the scheduled
+   * hour and tries to send a campaign that no longer exists — so cancelling
+   * the timer is the delete, as much as removing the row is.
+   *
+   * SENDING is refused: it is mid-flight, and the send would carry on writing
+   * to a document that had been removed underneath it.
+   */
+  async remove(campaignId: string) {
+    const doc = await MarketingCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw new GraphQLError('Campaign not found', { extensions: { code: 'NOT_FOUND' } });
+    if (doc.status === 'SENDING') {
+      throw new GraphQLError('That campaign is sending right now — wait for it to finish', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const timer = timers.get(campaignId);
+    if (timer) {
+      clearTimeout(timer);
+      timers.delete(campaignId);
+    }
+    await doc.deleteOne();
+    return true;
+  },
+
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IMarketingCampaign>(
       MarketingCampaignModel,
@@ -343,6 +390,17 @@ export const marketingService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
   previewCards,
+  /** What you may write in the subject or the MJML, with a live sample of
+   * what each one renders to right now. */
+  async variables() {
+    const values = await campaignVars(null);
+    return CAMPAIGN_VARIABLES.map((variable) => ({
+      name: variable.name,
+      description: variable.description,
+      sample: values[variable.name],
+    }));
+  },
+
   async renderPreview(input: any) {
     const payload = await yup
       .object({ subject: yup.string().required(), mjml: yup.string().required(), card_type: yup.string().nullable(), card_ref_id: yup.string().nullable() })

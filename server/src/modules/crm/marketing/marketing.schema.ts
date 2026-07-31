@@ -61,6 +61,14 @@ export const marketingTypeDefs = /* GraphQL */ `
     page_size: Int!
   }
 
+  "A placeholder a campaign may use, e.g. {{app_name}}."
+  type MarketingCampaignVariable {
+    name: String!
+    description: String!
+    "What this variable renders to right now."
+    sample: String!
+  }
+
   type MarketingCampaignPreviewCard {
     id: ID!
     type: MarketingCampaignCardType!
@@ -236,6 +244,10 @@ export const marketingTypeDefs = /* GraphQL */ `
     "Every saved list, for the audience dropdowns. Each carries its live reach."
     audienceLists: [AudienceList!]!
     marketingCampaigns: [MarketingCampaign!]!
+    "One campaign in full, including its rendered HTML — powers the View dialog."
+    marketingCampaign(campaign_id: ID!): MarketingCampaign!
+    "Every variable a campaign may use, with a live sample of its value."
+    marketingCampaignVariables: [MarketingCampaignVariable!]!
     marketingCampaignsTable(query: TableQueryInput): MarketingCampaignTablePage!
     marketingCampaignPreviewCards(type: MarketingCampaignCardType!): [MarketingCampaignPreviewCard!]!
     renderMarketingCampaign(input: MarketingCampaignPreviewInput!): MarketingCampaignRender!
@@ -246,5 +258,10 @@ export const marketingTypeDefs = /* GraphQL */ `
     deleteAudienceList(id: ID!): Boolean!
     createMarketingCampaign(input: MarketingCampaignInput!): MarketingCampaign!
     sendMarketingCampaign(campaign_id: ID!): MarketingCampaign!
+    """
+    Delete a campaign. A scheduled one has its pending send cancelled with it;
+    a campaign that is sending right now is refused.
+    """
+    deleteMarketingCampaign(campaign_id: ID!): Boolean!
   }
 `;

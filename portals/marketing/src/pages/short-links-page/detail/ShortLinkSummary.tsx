@@ -74,7 +74,9 @@ export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Re
               </Box>
             </Stack>
             {qr && (
-              <Stack alignItems="center" spacing={0.5}>
+              // flexShrink 0 so the code stays scannable rather than being
+              // squeezed by a long destination beside it.
+              <Stack alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
                 <Box
                   component="img"
                   src={qr}

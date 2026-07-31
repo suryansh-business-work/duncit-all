@@ -75,7 +75,9 @@ export default function ShortLinkDetailPage() {
   const summary = stats.data?.shortLinkStats;
 
   return (
-    <Box sx={{ p: 2 }}>
+    // Capped and centred: the summary reads as a column of facts, and on a wide
+    // monitor an uncapped one stretches its labels metres from their values.
+    <Box sx={{ p: 2, maxWidth: 1400, mx: 'auto' }}>
       <BackHeader
         title={row?.label ?? 'Short link'}
         onBack={goBack}

@@ -1,4 +1,5 @@
 export { getOrCreateDuid } from './duid';
+export { copyToClipboard } from './clipboard';
 export {
   GENERIC_ERROR_MESSAGE,
   OFFLINE_MESSAGE,

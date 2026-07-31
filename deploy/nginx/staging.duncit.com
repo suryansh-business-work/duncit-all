@@ -15,6 +15,27 @@ server {
     server_name staging.duncit.com;
     client_max_body_size 25m;
 
+    # Short links: duncit.com/<code> resolves on the API, which 302s to the
+    # tagged destination. A regex location beats the `location /` catch-all
+    # below, so this is the ONLY thing that reaches the API from the apex.
+    #
+    # The code shape — exactly 8 base62 characters containing at least one
+    # digit AND one uppercase letter — is guaranteed by the generator in
+    # server/src/modules/crm/marketing/shortLink.codes.ts precisely so this
+    # regex cannot shadow a real website path: every one of those is a
+    # lowercase word (/about, /contact, /careers). Loosen either side and a
+    # marketing link starts eating a page of the site.
+    location ~ "^/(?=[^/]*[0-9])(?=[^/]*[A-Z])[A-Za-z0-9]{8}$" {
+        rewrite            ^/(.*)$ /r/$1 break;
+        proxy_pass         http://127.0.0.1:2101;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 15s;
+    }
+
     location / {
         proxy_pass         http://127.0.0.1:2100;
         proxy_http_version 1.1;

@@ -34,6 +34,7 @@ import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';
 import { buildVenueApiRouter } from '@modules/venues/publicApi/venueApi.router';
 import { buildCampaignTrackingRouter } from '@modules/crm/marketing/tracking.router';
+import { buildShortLinkRouter } from '@modules/crm/marketing/shortLink.router';
 import { startNgrokTunnel } from '@config/ngrok';
 import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
 import { userService } from '@modules/access/user/user.service';
@@ -217,6 +218,10 @@ async function bootstrap() {
   // Marketing-campaign open pixel + tracked link redirects. Hit by mail
   // clients, so: public, no CORS, and never an error page.
   app.use('/t', buildCampaignTrackingRouter());
+
+  // Short links. nginx rewrites duncit.com/<code> to /r/<code> here — see
+  // deploy/nginx/duncit.com for the apex carve-out this depends on.
+  app.use('/r', buildShortLinkRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

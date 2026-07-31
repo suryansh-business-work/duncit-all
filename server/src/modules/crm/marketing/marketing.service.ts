@@ -14,10 +14,9 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { applyVars, detectVariables, renderMjml } from '@modules/content/emailTemplate/emailTemplate.service';
 import { sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import { getMailConfigs } from '@config/url-configs';
+import { getMailConfigs, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { instrumentCampaignHtml } from './tracking.service';
-import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
@@ -55,7 +54,13 @@ function toPub(doc: IMarketingCampaign) {
     status: doc.status,
     recipient_count: doc.recipient_count,
     open_count: doc.open_count,
+    image_load_count: doc.image_load_count,
     click_count: doc.click_count,
+    first_opened_at: doc.first_opened_at ? doc.first_opened_at.toISOString() : null,
+    last_opened_at: doc.last_opened_at ? doc.last_opened_at.toISOString() : null,
+    tracked_links: doc.tracked_links,
+    tracked_images: doc.tracked_images,
+    delivery: doc.delivery ?? null,
     error: doc.error ?? null,
     created_at: doc.created_at.toISOString(),
     updated_at: doc.updated_at.toISOString(),
@@ -285,10 +290,19 @@ async function sendCampaign(campaign_id: string) {
     // the one the delivered email actually points at.
     const { serverUrl } = await getUrlConfigs();
     const tracked = instrumentCampaignHtml(rendered.html, doc.campaign_id, serverUrl);
-    doc.tracked_links = tracked.links;
+    doc.tracked_links = tracked.links.map((link) => ({ ...link, click_count: 0 }));
+    doc.tracked_images = tracked.images.map((image) => ({ ...image, load_count: 0 }));
+    // What the SMTP server accepted and refused at handover. It is the only
+    // delivery signal plain SMTP gives us — a later bounce never comes back
+    // here, it goes to the envelope sender's mailbox.
+    const delivery = { accepted: 0, rejected: 0, rejected_addresses: [] as string[] };
     for (const batch of chunk(recipients, 50)) {
-      await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: tracked.html });
+      const info = await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: tracked.html });
+      delivery.accepted += info.accepted?.length ?? 0;
+      delivery.rejected += info.rejected?.length ?? 0;
+      delivery.rejected_addresses.push(...(info.rejected ?? []).map(String));
     }
+    doc.delivery = delivery;
     doc.status = 'SENT';
     // The CLEAN render is what gets stored: the View dialog renders this in an
     // iframe, and an instrumented copy would fire the open pixel — every admin

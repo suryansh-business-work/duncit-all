@@ -42,6 +42,12 @@ export const makeCampaignDetail = (
   ...makeCampaignRow(),
   rendered_html: '<b>the email</b>',
   audience_list_id: null,
+  image_load_count: 0,
+  first_opened_at: null,
+  last_opened_at: null,
+  tracked_links: [],
+  tracked_images: [],
+  delivery: null,
   ...over,
 });
 
@@ -56,7 +62,22 @@ export const campaignDetailMock = (
     : {
         result: {
           data: {
-            marketingCampaign: { __typename: 'MarketingCampaign', ...makeCampaignDetail(over) },
+            marketingCampaign: {
+              __typename: 'MarketingCampaign',
+              ...makeCampaignDetail(over),
+              tracked_links: makeCampaignDetail(over).tracked_links.map((link) => ({
+                __typename: 'TrackedLink',
+                ...link,
+              })),
+              tracked_images: makeCampaignDetail(over).tracked_images.map((image) => ({
+                __typename: 'TrackedImage',
+                ...image,
+              })),
+              delivery: makeCampaignDetail(over).delivery && {
+                __typename: 'CampaignDelivery',
+                ...makeCampaignDetail(over).delivery,
+              },
+            },
           },
         },
       }),

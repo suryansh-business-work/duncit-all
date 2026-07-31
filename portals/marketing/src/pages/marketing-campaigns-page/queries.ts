@@ -69,6 +69,23 @@ export const MARKETING_CAMPAIGN = gql`
       ...MarketingCampaignRowFields
       audience_list_id
       rendered_html
+      image_load_count
+      first_opened_at
+      last_opened_at
+      tracked_links {
+        url
+        kind
+        click_count
+      }
+      tracked_images {
+        url
+        load_count
+      }
+      delivery {
+        accepted
+        rejected
+        rejected_addresses
+      }
     }
   }
   ${MARKETING_CAMPAIGN_ROW_FIELDS}
@@ -162,7 +179,33 @@ export interface CampaignVariable {
   sample: string;
 }
 
+export type TrackedLinkKind = 'LINK' | 'CTA' | 'UNSUBSCRIBE';
+
+export interface TrackedLink {
+  url: string;
+  kind: TrackedLinkKind;
+  click_count: number;
+}
+
+export interface TrackedImage {
+  url: string;
+  load_count: number;
+}
+
+/** What the SMTP server accepted at handover — not inbox delivery. */
+export interface CampaignDelivery {
+  accepted: number;
+  rejected: number;
+  rejected_addresses: string[];
+}
+
 /** A row plus the parts only the details dialog asks for. */
 export interface MarketingCampaignDetail extends MarketingCampaignRow {
   rendered_html?: string | null;
+  image_load_count: number;
+  first_opened_at?: string | null;
+  last_opened_at?: string | null;
+  tracked_links: TrackedLink[];
+  tracked_images: TrackedImage[];
+  delivery?: CampaignDelivery | null;
 }

@@ -48,10 +48,18 @@ export const marketingTypeDefs = /* GraphQL */ `
     sent_at: String
     status: MarketingCampaignStatus!
     recipient_count: Int!
-    "Times the email was opened — a total, not a headcount."
+    "Times the open pixel loaded — a total, not a headcount."
     open_count: Int!
+    "Times an image in the email was fetched. Survives a blocked pixel."
+    image_load_count: Int!
     "Times a tracked link in the email was followed."
     click_count: Int!
+    "First evidence anyone opened it — pixel, image load or click."
+    first_opened_at: String
+    last_opened_at: String
+    tracked_links: [TrackedLink!]!
+    tracked_images: [TrackedImage!]!
+    delivery: CampaignDelivery
     error: String
     created_at: String!
     updated_at: String!
@@ -63,6 +71,35 @@ export const marketingTypeDefs = /* GraphQL */ `
     total: Int!
     page: Int!
     page_size: Int!
+  }
+
+  enum TrackedLinkKind {
+    LINK
+    "A link MJML rendered as a button."
+    CTA
+    "An opt-out, kept apart so it never reads as ordinary engagement."
+    UNSUBSCRIBE
+  }
+
+  type TrackedLink {
+    url: String!
+    kind: TrackedLinkKind!
+    click_count: Int!
+  }
+
+  type TrackedImage {
+    url: String!
+    load_count: Int!
+  }
+
+  """
+  What the SMTP server said at handover. Acceptance, not inbox delivery — a
+  mailbox that accepts and then bounces is invisible from here.
+  """
+  type CampaignDelivery {
+    accepted: Int!
+    rejected: Int!
+    rejected_addresses: [String!]!
   }
 
   "A placeholder a campaign may use, e.g. {{app_name}}."

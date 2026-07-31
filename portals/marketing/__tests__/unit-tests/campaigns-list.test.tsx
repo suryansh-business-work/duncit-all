@@ -27,6 +27,7 @@ import MarketingCampaignsPage from '../../src/pages/marketing-campaigns-page/Mar
 import CampaignTable from '../../src/pages/marketing-campaigns-page/CampaignTable';
 import CampaignDetailsDialog from '../../src/pages/marketing-campaigns-page/CampaignDetailsDialog';
 import CampaignSummary from '../../src/pages/marketing-campaigns-page/CampaignSummary';
+import CampaignEngagement from '../../src/pages/marketing-campaigns-page/CampaignEngagement';
 import { deleteWarningFor } from '../../src/pages/marketing-campaigns-page/delete-copy';
 import { AUDIENCE_LISTS_FOR_CAMPAIGN } from '../../src/pages/marketing-campaigns-page/queries';
 import type { MarketingCampaignRow } from '../../src/pages/marketing-campaigns-page/queries';
@@ -142,22 +143,15 @@ describe('CampaignTable', () => {
 describe('CampaignSummary', () => {
   const lists = [{ id: 'a1', name: 'Pune regulars', member_count: 12 }];
 
-  it('names the audience list a campaign targets, and how it performed', () => {
+  it('names the audience list a campaign targets', () => {
     renderWithProviders(
       <CampaignSummary
-        campaign={makeCampaignDetail({
-          audience: 'AUDIENCE_LIST',
-          audience_list_id: 'a1',
-          open_count: 47,
-          click_count: 9,
-        })}
+        campaign={makeCampaignDetail({ audience: 'AUDIENCE_LIST', audience_list_id: 'a1' })}
         audienceLists={lists}
         formatDateTime={String}
       />,
     );
     expect(screen.getByText('Saved audience list · Pune regulars')).toBeInTheDocument();
-    expect(screen.getByText('47')).toBeInTheDocument();
-    expect(screen.getByText('9')).toBeInTheDocument();
   });
 
   it('falls back to the plain audience label, and em-dashes what has not happened', () => {
@@ -170,6 +164,84 @@ describe('CampaignSummary', () => {
     );
     expect(screen.getByText('All users')).toBeInTheDocument();
     expect(screen.getAllByText('—')).toHaveLength(3);
+  });
+});
+
+// ===========================================================================
+describe('CampaignEngagement', () => {
+  const render = (over = {}) =>
+    renderWithProviders(
+      <CampaignEngagement campaign={makeCampaignDetail(over)} formatDateTime={String} />,
+    );
+
+  it('reports opens, image loads, clicks and when it was first read', () => {
+    render({
+      open_count: 47,
+      image_load_count: 12,
+      click_count: 9,
+      first_opened_at: '2026-07-31T09:00:00.000Z',
+      last_opened_at: '2026-07-31T18:30:00.000Z',
+    });
+    expect(screen.getByText('47')).toBeInTheDocument();
+    expect(screen.getByText('12')).toBeInTheDocument();
+    expect(screen.getByText('9')).toBeInTheDocument();
+    expect(screen.getByText('47 opens — read more than once')).toBeInTheDocument();
+    expect(screen.getByText('2026-07-31T09:00:00.000Z')).toBeInTheDocument();
+  });
+
+  it('does not claim a repeat read off a single open', () => {
+    render({ open_count: 1 });
+    expect(screen.getByText('Pixel loads')).toBeInTheDocument();
+  });
+
+  it('em-dashes an open that has not happened', () => {
+    render();
+    expect(screen.getAllByText('—')).toHaveLength(2);
+  });
+
+  it('breaks clicks down per link, with what kind of link it was', () => {
+    render({
+      tracked_links: [
+        { url: 'https://duncit.com/book', kind: 'CTA' as const, click_count: 7 },
+        { url: 'https://duncit.com/unsubscribe', kind: 'UNSUBSCRIBE' as const, click_count: 1 },
+      ],
+    });
+    expect(screen.getByText('https://duncit.com/book')).toBeInTheDocument();
+    expect(screen.getByText('7 clicks')).toBeInTheDocument();
+    expect(screen.getByText('UNSUBSCRIBE')).toBeInTheDocument();
+  });
+
+  it('breaks image loads down per image', () => {
+    render({ tracked_images: [{ url: 'https://cdn.duncit.com/a.png', load_count: 4 }] });
+    expect(screen.getByText('4 loads')).toBeInTheDocument();
+  });
+
+  it('says so when a campaign had nothing to track', () => {
+    render();
+    expect(screen.getByText('This campaign had no links to track.')).toBeInTheDocument();
+    expect(screen.getByText('This campaign had no images to track.')).toBeInTheDocument();
+  });
+
+  // An address the mail server refused never had a chance of being read —
+  // that is a data-quality problem the marketer needs to see.
+  it('names the addresses the mail server refused outright', () => {
+    render({
+      delivery: { accepted: 48, rejected: 2, rejected_addresses: ['bad@x.com', 'gone@y.com'] },
+    });
+    expect(screen.getByText('48')).toBeInTheDocument();
+    expect(screen.getByText('2 refused')).toBeInTheDocument();
+    expect(screen.getByTestId('rejected-addresses')).toHaveTextContent('bad@x.com, gone@y.com');
+  });
+
+  it('shows a clean delivery without a refusal warning', () => {
+    render({ delivery: { accepted: 50, rejected: 0, rejected_addresses: [] } });
+    expect(screen.getByText('50')).toBeInTheDocument();
+    expect(screen.queryByTestId('rejected-addresses')).not.toBeInTheDocument();
+  });
+
+  it('shows no delivery block for a campaign that never sent', () => {
+    render();
+    expect(screen.queryByText('Accepted by SMTP')).not.toBeInTheDocument();
   });
 });
 

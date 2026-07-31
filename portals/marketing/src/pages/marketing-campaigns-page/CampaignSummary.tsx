@@ -1,5 +1,6 @@
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 import { EM_DASH } from '@duncit/table';
+import DetailField from './DetailField';
 import { AUDIENCE_LABELS, CHANNEL_LABELS, labelFor, listNameFor } from './helpers';
 import type { CampaignAudienceList } from './marketing-campaign-form';
 import type { MarketingCampaignDetail } from './queries';
@@ -8,24 +9,6 @@ interface Props {
   campaign: MarketingCampaignDetail;
   audienceLists: CampaignAudienceList[];
   formatDateTime: (value: Date | string) => string;
-}
-
-interface FieldProps {
-  label: string;
-  value: string;
-}
-
-function Field({ label, value }: Readonly<FieldProps>) {
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary" component="div">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600} component="div">
-        {value}
-      </Typography>
-    </Box>
-  );
 }
 
 const when = (value: string | null | undefined, format: Props['formatDateTime']) =>
@@ -48,16 +31,14 @@ export default function CampaignSummary({
         gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
       }}
     >
-      <Field label="Campaign ID" value={campaign.campaign_id} />
-      <Field label="Channel" value={labelFor(CHANNEL_LABELS, campaign.channel)} />
-      <Field label="Audience" value={listName ? `${audience} · ${listName}` : audience} />
-      <Field label="Recipients" value={String(campaign.recipient_count)} />
-      <Field label="Opened" value={String(campaign.open_count)} />
-      <Field label="Clicked" value={String(campaign.click_count)} />
-      <Field label="Card" value={campaign.card?.title ?? EM_DASH} />
-      <Field label="Created" value={when(campaign.created_at, formatDateTime)} />
-      <Field label="Scheduled" value={when(campaign.scheduled_at, formatDateTime)} />
-      <Field label="Sent" value={when(campaign.sent_at, formatDateTime)} />
+      <DetailField label="Campaign ID" value={campaign.campaign_id} />
+      <DetailField label="Channel" value={labelFor(CHANNEL_LABELS, campaign.channel)} />
+      <DetailField label="Audience" value={listName ? `${audience} · ${listName}` : audience} />
+      <DetailField label="Recipients" value={String(campaign.recipient_count)} />
+      <DetailField label="Card" value={campaign.card?.title ?? EM_DASH} />
+      <DetailField label="Created" value={when(campaign.created_at, formatDateTime)} />
+      <DetailField label="Scheduled" value={when(campaign.scheduled_at, formatDateTime)} />
+      <DetailField label="Sent" value={when(campaign.sent_at, formatDateTime)} />
     </Box>
   );
 }

@@ -17,6 +17,7 @@ import { StatusChip } from '@duncit/ui';
 import { parseApiError } from '@duncit/utils';
 import CampaignHtmlFrame from './CampaignHtmlFrame';
 import CampaignSummary from './CampaignSummary';
+import CampaignEngagement from './CampaignEngagement';
 import { CAMPAIGN_STATUS_COLORS, canDelete, canSend } from './helpers';
 import { MARKETING_CAMPAIGN, type MarketingCampaignDetail } from './queries';
 import type { CampaignAudienceList } from './marketing-campaign-form';
@@ -84,6 +85,7 @@ export default function CampaignDetailsDialog({
               audienceLists={audienceLists}
               formatDateTime={formatDateTime}
             />
+            <CampaignEngagement campaign={campaign} formatDateTime={formatDateTime} />
             <Box>
               <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
                 Email

@@ -10,6 +10,29 @@ export type MarketingCampaignAudience =
 export type MarketingCampaignStatus = 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED';
 export type MarketingCampaignCardType = 'POD' | 'CLUB';
 
+/** A CTA is a link MJML rendered as a button; UNSUBSCRIBE is an opt-out, kept
+ * apart so it never reads as ordinary engagement. */
+export type TrackedLinkKind = 'LINK' | 'CTA' | 'UNSUBSCRIBE';
+
+export interface ITrackedLink {
+  url: string;
+  kind: TrackedLinkKind;
+  click_count: number;
+}
+
+export interface ITrackedImage {
+  url: string;
+  load_count: number;
+}
+
+/** What the SMTP server said at handover. This is acceptance, not inbox
+ * delivery — a mailbox that accepts then bounces is invisible from here. */
+export interface ICampaignDelivery {
+  accepted: number;
+  rejected: number;
+  rejected_addresses: string[];
+}
+
 export interface IMarketingCampaignCard {
   type: MarketingCampaignCardType | null;
   ref_id?: string | null;
@@ -33,15 +56,19 @@ export interface IMarketingCampaign extends Document {
   sent_at?: Date | null;
   status: MarketingCampaignStatus;
   recipient_count: number;
-  /** Total pixel loads and tracked-link follows. Totals, not headcounts:
-   * campaigns go out BCC'd in batches, so there is no per-recipient copy to
-   * attribute an open to. */
+  /** Totals, not headcounts: campaigns go out BCC'd in batches, so there is
+   * no per-recipient copy to attribute an open to. */
   open_count: number;
+  image_load_count: number;
   click_count: number;
-  /** Every http(s) link the sent email carried, in the order the tracking
-   * redirect indexes them. The redirect resolves against this and nothing
-   * else, so it can never be pointed at an arbitrary destination. */
-  tracked_links: string[];
+  first_opened_at?: Date | null;
+  last_opened_at?: Date | null;
+  /** Every link and remote image the sent email carried, in the order the
+   * tracking redirects index them. The redirects resolve against these and
+   * nothing else, so neither can be pointed at an arbitrary destination. */
+  tracked_links: ITrackedLink[];
+  tracked_images: ITrackedImage[];
+  delivery?: ICampaignDelivery | null;
   error?: string | null;
   created_by?: string | null;
   created_at: Date;
@@ -56,6 +83,32 @@ const cardSchema = new Schema<IMarketingCampaignCard>(
     description: { type: String, default: null, trim: true },
     image_url: { type: String, default: null, trim: true },
     cta_url: { type: String, default: null, trim: true },
+  },
+  { _id: false }
+);
+
+const trackedLinkSchema = new Schema<ITrackedLink>(
+  {
+    url: { type: String, required: true },
+    kind: { type: String, enum: ['LINK', 'CTA', 'UNSUBSCRIBE'], default: 'LINK' },
+    click_count: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
+const trackedImageSchema = new Schema<ITrackedImage>(
+  {
+    url: { type: String, required: true },
+    load_count: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
+const deliverySchema = new Schema<ICampaignDelivery>(
+  {
+    accepted: { type: Number, default: 0, min: 0 },
+    rejected: { type: Number, default: 0, min: 0 },
+    rejected_addresses: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -87,8 +140,13 @@ const marketingCampaignSchema = new Schema<IMarketingCampaign>(
     },
     recipient_count: { type: Number, default: 0, min: 0 },
     open_count: { type: Number, default: 0, min: 0 },
+    image_load_count: { type: Number, default: 0, min: 0 },
     click_count: { type: Number, default: 0, min: 0 },
-    tracked_links: { type: [String], default: [] },
+    first_opened_at: { type: Date, default: null },
+    last_opened_at: { type: Date, default: null },
+    tracked_links: { type: [trackedLinkSchema], default: [] },
+    tracked_images: { type: [trackedImageSchema], default: [] },
+    delivery: { type: deliverySchema, default: null },
     error: { type: String, default: null },
     created_by: { type: String, default: null, trim: true },
   },

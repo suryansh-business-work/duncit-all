@@ -25,8 +25,7 @@ export default function App() {
         <Route path="/audience" element={authed(<AudienceListsPage />)} />
         <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />
         <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />
-        <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage defaultChannel="EMAIL" />)} />
-        <Route path="/campaigns/whatsapp" element={authed(<MarketingCampaignsPage defaultChannel="WHATSAPP" />)} />
+        <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />
         <Route path="/ads-approvals" element={authed(<AdsApprovalsPage />)} />
         <Route path="/ads-settings" element={authed(<AdsSettingsPage />)} />

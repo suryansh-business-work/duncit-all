@@ -115,7 +115,6 @@ describe('CampaignTable', () => {
       />,
     );
     expect(await screen.findByText('Delivery failed')).toBeInTheDocument();
-    expect(screen.getAllByText('WhatsApp Email Fallback').length).toBeGreaterThan(0);
     const sendButtons = screen.getAllByRole('button', { name: 'Send' });
     fireEvent.click(sendButtons[0]);
     expect(onSend).toHaveBeenCalledWith('c1');
@@ -204,11 +203,10 @@ describe('MarketingCampaignForm', () => {
     renderWithProviders(
       <MarketingCampaignForm
         {...baseProps}
-        initialValues={{ ...blankMarketingCampaignValues('WHATSAPP') }}
+        initialValues={{ ...blankMarketingCampaignValues('EMAIL') }}
         errorMessage="Save failed"
       />,
     );
-    expect(screen.getByText(/WhatsApp campaigns currently use/)).toBeInTheDocument();
     expect(screen.getByText('Save failed')).toBeInTheDocument();
   });
 
@@ -254,14 +252,14 @@ describe('MarketingCampaignForm', () => {
 // ===========================================================================
 describe('MarketingCampaignsPage', () => {
   it('renders the form + preview + history and schedules a preview render', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, { mocks: pageBaseMocks() });
+    renderWithProviders(<MarketingCampaignsPage />, { mocks: pageBaseMocks() });
     fireEvent.change(screen.getByLabelText(/^Email subject/), { target: { value: 'A subject line' } });
     // The debounced lazy render resolves and its subject reaches the preview.
     await waitFor(() => expect(screen.getByText('S')).toBeInTheDocument(), { timeout: 2500 });
   });
 
   it('resolves POD preview cards when data is loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, { mocks: pageBaseMocks() });
+    renderWithProviders(<MarketingCampaignsPage />, { mocks: pageBaseMocks() });
     fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
     fireEvent.click(screen.getByRole('option', { name: 'Pod card' }));
     fireEvent.mouseDown(screen.getByLabelText('Card item'));
@@ -269,7 +267,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('resolves CLUB preview cards when data is loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, { mocks: pageBaseMocks() });
+    renderWithProviders(<MarketingCampaignsPage />, { mocks: pageBaseMocks() });
     fireEvent.mouseDown(screen.getByLabelText('Dynamic card'));
     fireEvent.click(screen.getByRole('option', { name: 'Club card' }));
     fireEvent.mouseDown(screen.getByLabelText('Card item'));
@@ -277,7 +275,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('falls back to empty POD cards when none are loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [podCardsMock([], { pending: true }), clubCardsMock([], { pending: true }), renderCampaignMock()],
     });
     await screen.findByTestId('table-empty');
@@ -287,7 +285,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('falls back to empty CLUB cards when none are loaded', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [podCardsMock([], { pending: true }), clubCardsMock([], { pending: true }), renderCampaignMock()],
     });
     await screen.findByTestId('table-empty');
@@ -297,7 +295,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('schedules a campaign and shows the scheduled toast', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [...pageBaseMocks(), createCampaignMock()],
     });
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
@@ -313,7 +311,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('creates a campaign and shows a success toast', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [...pageBaseMocks(), createCampaignMock()],
     });
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
@@ -324,7 +322,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('surfaces a server-side campaign error via notifyError', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [...pageBaseMocks(), createCampaignMock({ serverError: 'Bad MJML' })],
     });
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
@@ -335,7 +333,7 @@ describe('MarketingCampaignsPage', () => {
   });
 
   it('shows a form error when the create mutation throws', async () => {
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [...pageBaseMocks(), createCampaignMock({ throwMessage: 'Network down' })],
     });
     fireEvent.change(screen.getByLabelText(/^Campaign name/), { target: { value: 'Weekend launch' } });
@@ -347,7 +345,7 @@ describe('MarketingCampaignsPage', () => {
 
   it('sends an existing campaign from the history table', async () => {
     __setTableRows([makeCampaignRow({ campaign_id: 'c9', name: 'Past', recipient_count: 0 })]);
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [...pageBaseMocks(), sendCampaignMock()],
     });
     fireEvent.click(await screen.findByRole('button', { name: 'Send' }));
@@ -356,7 +354,7 @@ describe('MarketingCampaignsPage', () => {
 
   it('reports a server-side send error and a thrown send error', async () => {
     __setTableRows([makeCampaignRow({ campaign_id: 'c9', name: 'Past', recipient_count: 0 })]);
-    renderWithProviders(<MarketingCampaignsPage defaultChannel="EMAIL" />, {
+    renderWithProviders(<MarketingCampaignsPage />, {
       mocks: [
         ...pageBaseMocks(),
         sendCampaignMock({ serverError: 'Rejected' }),

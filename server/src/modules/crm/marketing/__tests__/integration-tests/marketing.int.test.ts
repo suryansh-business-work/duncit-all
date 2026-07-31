@@ -7,7 +7,7 @@ const seedCampaign = (n: {
   campaign_id: string;
   name: string;
   subject: string;
-  channel?: 'EMAIL' | 'WHATSAPP';
+  channel?: 'EMAIL';
   status?: 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED';
 }) =>
   MarketingCampaignModel.create({
@@ -27,7 +27,7 @@ describe('marketingService integration', () => {
 
   it('serves the marketingCampaignsTable page with search, filters, sort and paging', async () => {
     await seedCampaign({ campaign_id: 'c1', name: 'August Push', subject: 'Pods near you', status: 'SENT' });
-    await seedCampaign({ campaign_id: 'c2', name: 'Diwali Blast', subject: 'Festive offers', channel: 'WHATSAPP' });
+    await seedCampaign({ campaign_id: 'c2', name: 'Diwali Blast', subject: 'Festive offers' });
     await seedCampaign({ campaign_id: 'c3', name: 'Welcome Drip', subject: 'Getting started' });
 
     // Default sort created_at desc (newest first) + clamp defaults.
@@ -47,10 +47,11 @@ describe('marketingService integration', () => {
       filters: [{ field: 'status', op: 'eq', value: 'SENT' }],
     });
     expect(sent.rows.map((c) => c.name)).toEqual(['August Push']);
-    const whatsapp = await marketingService.table({
-      filters: [{ field: 'channel', op: 'eq', value: 'WHATSAPP' }],
+    // Email is the only channel now, so the filter matches every campaign.
+    const byChannel = await marketingService.table({
+      filters: [{ field: 'channel', op: 'eq', value: 'EMAIL' }],
     });
-    expect(whatsapp.rows.map((c) => c.name)).toEqual(['Diwali Blast']);
+    expect(byChannel.total).toBe(3);
 
     // Allowlisted sort override + paging.
     const asc = await marketingService.table({ sort_by: 'name', sort_dir: 'asc' });

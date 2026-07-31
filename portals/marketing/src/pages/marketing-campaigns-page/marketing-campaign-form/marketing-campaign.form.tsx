@@ -35,7 +35,6 @@ export default function MarketingCampaignForm({
     return () => subscription.unsubscribe();
   }, [watch, onValuesChange]);
 
-  const channel = watch('channel');
   const cardType = watch('card_type');
   const scheduledAt = watch('scheduled_at');
 
@@ -47,13 +46,7 @@ export default function MarketingCampaignForm({
         <Grid item xs={12} sm={6}>
           <RhfTextField control={control} name="name" label="Campaign name" required hint="3–120 characters" />
         </Grid>
-        <Grid item xs={12} sm={3}>
-          <RhfTextField control={control} name="channel" label="Channel" select>
-            <MenuItem value="EMAIL">Email Campaign</MenuItem>
-            <MenuItem value="WHATSAPP">WhatsApp Campaign</MenuItem>
-          </RhfTextField>
-        </Grid>
-        <Grid item xs={12} sm={3}>
+        <Grid item xs={12} sm={6}>
           <RhfTextField control={control} name="audience" label="Audience" select>
             <MenuItem value="ALL_USERS">All active users</MenuItem>
             <MenuItem value="NEWSLETTER_SUBSCRIBERS">Newsletter subscribers</MenuItem>
@@ -108,11 +101,6 @@ export default function MarketingCampaignForm({
             )}
           />
         </Grid>
-        {channel === 'WHATSAPP' && (
-          <Grid item xs={12}>
-            <Alert severity="info">WhatsApp campaigns currently use the email delivery fallback.</Alert>
-          </Grid>
-        )}
         <Grid item xs={12}>
           <Controller
             control={control}

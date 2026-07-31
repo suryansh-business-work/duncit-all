@@ -21,12 +21,10 @@ import {
   type MarketingCampaignRow,
 } from './queries';
 
-interface Props {
-  defaultChannel?: 'EMAIL' | 'WHATSAPP';
-}
-
-export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Readonly<Props>) {
-  const [draft, setDraft] = useState<MarketingCampaignFormValues>(() => blankMarketingCampaignValues(defaultChannel));
+export default function MarketingCampaignsPage() {
+  const [draft, setDraft] = useState<MarketingCampaignFormValues>(() =>
+    blankMarketingCampaignValues('EMAIL'),
+  );
   const [formError, setFormError] = useState<string | null>(null);
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -42,9 +40,6 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
     'marketingCampaignsTable',
   );
 
-  useEffect(() => {
-    setDraft((prev) => ({ ...prev, channel: defaultChannel }));
-  }, [defaultChannel]);
 
   useEffect(() => {
     if (!draft.subject.trim() || !draft.mjml.trim()) return;
@@ -76,7 +71,7 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
       const created = result.data?.createMarketingCampaign;
       if (created?.error) notifyError(created.error);
       else notifySuccess(values.scheduled_at ? 'Campaign scheduled' : 'Campaign sent');
-      setDraft(blankMarketingCampaignValues(defaultChannel));
+      setDraft(blankMarketingCampaignValues('EMAIL'));
       refetchRef.current?.();
     } catch (error: any) {
       /* v8 ignore next -- Apollo rejects with an Error carrying a message; the string fallback is defensive */

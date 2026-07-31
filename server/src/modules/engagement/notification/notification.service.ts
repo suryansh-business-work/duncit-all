@@ -29,6 +29,7 @@ const toPub = (n: INotification) => ({
   location_id: n.location_id ? String(n.location_id) : null,
   zone_name: n.zone_name ?? null,
   target_user_ids: (n.target_user_ids ?? []).map(String),
+  audience_list_id: n.audience_list_id ? String(n.audience_list_id) : null,
   sent_by: n.sent_by ? String(n.sent_by) : null,
   delivered_count: n.delivered_count ?? 0,
   failed_count: n.failed_count ?? 0,
@@ -160,9 +161,17 @@ export const notificationService = {
     location_id?: string | null;
     zone_name?: string | null;
     target_user_ids?: string[] | null;
+    audience_list_id?: string | null;
   }): Promise<string[]> {
     if (input.scope === 'USER') {
       return (input.target_user_ids ?? []).filter(Boolean);
+    }
+    if (input.scope === 'AUDIENCE_LIST') {
+      // Resolved from the list's criteria at send time — a list built last
+      // month reaches this month's matches.
+      const { audienceListService } = await import('@modules/crm/marketing/audienceList.service');
+      const ids = await audienceListService.memberIds(input.audience_list_id ?? '');
+      return ids.map(String);
     }
     const q: any = { 'metadata.status': 'ACTIVE' };
     if (input.scope === 'LOCATION' && input.location_id) {
@@ -249,6 +258,10 @@ export const notificationService = {
       throw new GraphQLError('location_id and zone_name required for ZONE scope', { extensions: { code: 'BAD_USER_INPUT' } });
     if (input.scope === 'USER' && (!input.target_user_ids || input.target_user_ids.length === 0))
       throw new GraphQLError('target_user_ids required for USER scope', { extensions: { code: 'BAD_USER_INPUT' } });
+    if (input.scope === 'AUDIENCE_LIST' && !input.audience_list_id)
+      throw new GraphQLError('audience_list_id required for AUDIENCE_LIST scope', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
 
     const userIds = await this.resolveTargetUsers(input);
 
@@ -259,9 +272,10 @@ export const notificationService = {
       link_url: input.link_url || null,
       scope: input.scope,
       silent: !!input.silent,
-      location_id: input.scope === 'GLOBAL' || input.scope === 'USER' ? null : input.location_id,
+      location_id: input.scope === 'LOCATION' || input.scope === 'ZONE' ? input.location_id : null,
       zone_name: input.scope === 'ZONE' ? input.zone_name : null,
       target_user_ids: input.scope === 'USER' ? input.target_user_ids : [],
+      audience_list_id: input.scope === 'AUDIENCE_LIST' ? input.audience_list_id : null,
       sent_by: sentBy || null,
     });
 

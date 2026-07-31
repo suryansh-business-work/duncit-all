@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 import * as yup from 'yup';
 import { GraphQLError } from 'graphql';
-import { MarketingCampaignModel, type IMarketingCampaign } from './marketing.model';
+import {
+  MarketingCampaignModel,
+  type IMarketingCampaign,
+  type MarketingCampaignAudience,
+} from './marketing.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { NewsletterSubscriberModel } from '@modules/crm/newsletter/newsletter.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -19,11 +23,12 @@ const timers = new Map<string, NodeJS.Timeout>();
 
 const inputSchema = yup.object({
   name: yup.string().trim().min(3).max(120).required(),
-  channel: yup.mixed<'EMAIL' | 'WHATSAPP'>().oneOf(['EMAIL', 'WHATSAPP']).required(),
+  channel: yup.mixed<'EMAIL'>().oneOf(['EMAIL']).required(),
   audience: yup
-    .mixed<'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS'>()
-    .oneOf(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS'])
+    .mixed<'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS' | 'AUDIENCE_LIST'>()
+    .oneOf(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'])
     .required(),
+  audience_list_id: yup.string().trim().nullable(),
   subject: yup.string().trim().min(3).max(180).required(),
   mjml: yup.string().trim().min(20).required(),
   card_type: yup.mixed<'POD' | 'CLUB'>().oneOf(['POD', 'CLUB']).nullable(),
@@ -38,6 +43,7 @@ function toPub(doc: IMarketingCampaign) {
     name: doc.name,
     channel: doc.channel,
     audience: doc.audience,
+    audience_list_id: doc.audience_list_id ? String(doc.audience_list_id) : null,
     subject: doc.subject,
     mjml: doc.mjml,
     rendered_html: doc.rendered_html ?? null,
@@ -182,6 +188,9 @@ async function validateInput(input: any) {
   try {
     const payload = await inputSchema.validate(input, { abortEarly: false, stripUnknown: true });
     if (payload.card_type && !payload.card_ref_id) throw new Error('Card selection is required');
+    if (payload.audience === 'AUDIENCE_LIST' && !payload.audience_list_id) {
+      throw new Error('Pick the audience list to send to');
+    }
     return payload;
   } catch (e: any) {
     throw new GraphQLError(e.errors?.join(', ') || e.message || 'Invalid campaign input', {
@@ -199,17 +208,26 @@ function parseSchedule(value?: string | null) {
   return date;
 }
 
-async function recipientsFor(audience: 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS') {
-  const docs =
-    audience === 'ALL_USERS'
-      ? await UserModel.find({
-          'metadata.status': 'ACTIVE',
-          'auth.email': { $exists: true, $ne: '' },
-        })
-          .select('auth.email')
-          .lean()
-          .exec()
-      : await NewsletterSubscriberModel.find({ unsubscribed_at: null }).select('email').lean().exec();
+/** The email addresses a campaign sends to. A saved list resolves through its
+ * criteria at send time, so the recipients are always current. */
+export async function recipientsFor(audience: MarketingCampaignAudience, audienceListId?: any) {
+  const emailable = { 'metadata.status': 'ACTIVE', 'auth.email': { $exists: true, $ne: '' } };
+  let docs: any[];
+  if (audience === 'AUDIENCE_LIST') {
+    const { audienceListService } = await import('./audienceList.service');
+    const ids = await audienceListService.memberIds(String(audienceListId ?? ''));
+    docs = await UserModel.find({ ...emailable, _id: { $in: ids } })
+      .select('auth.email')
+      .lean()
+      .exec();
+  } else if (audience === 'ALL_USERS') {
+    docs = await UserModel.find(emailable).select('auth.email').lean().exec();
+  } else {
+    docs = await NewsletterSubscriberModel.find({ unsubscribed_at: null })
+      .select('email')
+      .lean()
+      .exec();
+  }
   return [
     ...new Set(
       docs
@@ -242,7 +260,7 @@ async function sendCampaign(campaign_id: string) {
       card_ref_id: doc.card?.ref_id ?? null,
     });
     if (rendered.errors.length) throw new Error(rendered.errors.join('; '));
-    const recipients = await recipientsFor(doc.audience);
+    const recipients = await recipientsFor(doc.audience, doc.audience_list_id);
     if (!recipients.length) throw new Error('No recipients found for selected audience');
     const mailConfigs = await getMailConfigs();
     const campaignTo =
@@ -350,6 +368,7 @@ export const marketingService = {
       name: payload.name,
       channel: payload.channel,
       audience: payload.audience,
+      audience_list_id: payload.audience === 'AUDIENCE_LIST' ? payload.audience_list_id : null,
       subject: payload.subject,
       mjml: payload.mjml,
       rendered_html: rendered.html,

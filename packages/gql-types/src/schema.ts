@@ -1860,6 +1860,8 @@ export type CreateLocationInput = {
 };
 
 export type CreateNotificationInput = {
+  /** Required for AUDIENCE_LIST scope — the saved marketing list to send to. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
   body: Scalars['String']['input'];
   image_url?: InputMaybe<Scalars['String']['input']>;
   link_url?: InputMaybe<Scalars['String']['input']>;
@@ -4183,6 +4185,8 @@ export type ManualLogInput = {
 export type MarketingCampaign = {
   __typename?: 'MarketingCampaign';
   audience: MarketingCampaignAudience;
+  /** AUDIENCE_LIST audience only — recipients are recomputed at send time. */
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
   campaign_id: Scalars['ID']['output'];
   card?: Maybe<MarketingCampaignCard>;
   channel: MarketingCampaignChannel;
@@ -4201,6 +4205,8 @@ export type MarketingCampaign = {
 
 export type MarketingCampaignAudience =
   | 'ALL_USERS'
+  /** Everybody currently matching a saved audience list. */
+  | 'AUDIENCE_LIST'
   | 'NEWSLETTER_SUBSCRIBERS';
 
 export type MarketingCampaignCard = {
@@ -4217,12 +4223,14 @@ export type MarketingCampaignCardType =
   | 'CLUB'
   | 'POD';
 
+/** Email is the only campaign channel; WhatsApp campaigns were removed. */
 export type MarketingCampaignChannel =
-  | 'EMAIL'
-  | 'WHATSAPP';
+  | 'EMAIL';
 
 export type MarketingCampaignInput = {
   audience: MarketingCampaignAudience;
+  /** Required when audience is AUDIENCE_LIST. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
   card_ref_id?: InputMaybe<Scalars['ID']['input']>;
   card_type?: InputMaybe<MarketingCampaignCardType>;
   channel: MarketingCampaignChannel;
@@ -7597,6 +7605,8 @@ export type NewsletterSubscriberTablePage = {
 
 export type Notification = {
   __typename?: 'Notification';
+  /** AUDIENCE_LIST scope only — members are recomputed at send time. */
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
   body: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
   delivered_count: Scalars['Int']['output'];
@@ -7615,6 +7625,8 @@ export type Notification = {
 };
 
 export type NotificationScope =
+  /** Everybody currently matching a saved marketing audience list. */
+  | 'AUDIENCE_LIST'
   | 'GLOBAL'
   | 'LOCATION'
   | 'USER'
@@ -9198,6 +9210,8 @@ export type Query = {
   audienceList?: Maybe<AudienceList>;
   /** Everybody who can open this portal — the assignable owners for a list. */
   audienceListOwners: Array<AudienceListOwner>;
+  /** Every saved list, for the audience dropdowns. Each carries its live reach. */
+  audienceLists: Array<AudienceList>;
   /** Saved Target Audience lists. */
   audienceListsTable: AudienceListTablePage;
   /**

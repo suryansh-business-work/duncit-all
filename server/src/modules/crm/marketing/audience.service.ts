@@ -280,14 +280,24 @@ async function pushPlatformsFor(ids: string[]): Promise<Map<string, string[]>> {
   return new Map([...byUser].map(([k, v]) => [k, [...v].sort((a, b) => a.localeCompare(b))]));
 }
 
+/** The Mongo filter a saved list's criteria describe right now. */
+async function audienceFilter(input?: TableQueryInput | null) {
+  const { base, query } = await translate(input);
+  const built = buildTableFilter(query, AUDIENCE_TABLE_CONFIG);
+  return Object.keys(built).length > 0 ? { $and: [base, built] } : base;
+}
+
 /** How many people match a saved list's criteria right now. A live segment has
  * no stored membership, so the count is always recomputed. */
 export async function countAudience(input?: TableQueryInput | null): Promise<number> {
-  const { base, query } = await translate(input);
-  const filter = Object.keys(buildTableFilter(query, AUDIENCE_TABLE_CONFIG)).length
-    ? { $and: [base, buildTableFilter(query, AUDIENCE_TABLE_CONFIG)] }
-    : base;
-  return UserModel.countDocuments(filter);
+  return UserModel.countDocuments(await audienceFilter(input));
+}
+
+/** Who matches right now — the recipients a campaign or notification sends to.
+ * Recomputed per send, so a list built last month reaches this month's people. */
+export async function audienceUserIds(input?: TableQueryInput | null): Promise<Types.ObjectId[]> {
+  const users = await UserModel.find(await audienceFilter(input)).select('_id');
+  return users.map((u: any) => u._id);
 }
 
 export const audienceService = {

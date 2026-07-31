@@ -1,12 +1,14 @@
 export const marketingTypeDefs = /* GraphQL */ `
+  "Email is the only campaign channel; WhatsApp campaigns were removed."
   enum MarketingCampaignChannel {
     EMAIL
-    WHATSAPP
   }
 
   enum MarketingCampaignAudience {
     ALL_USERS
     NEWSLETTER_SUBSCRIBERS
+    "Everybody currently matching a saved audience list."
+    AUDIENCE_LIST
   }
 
   enum MarketingCampaignStatus {
@@ -36,6 +38,8 @@ export const marketingTypeDefs = /* GraphQL */ `
     name: String!
     channel: MarketingCampaignChannel!
     audience: MarketingCampaignAudience!
+    "AUDIENCE_LIST audience only — recipients are recomputed at send time."
+    audience_list_id: ID
     subject: String!
     mjml: String!
     rendered_html: String
@@ -71,6 +75,8 @@ export const marketingTypeDefs = /* GraphQL */ `
     name: String!
     channel: MarketingCampaignChannel!
     audience: MarketingCampaignAudience!
+    "Required when audience is AUDIENCE_LIST."
+    audience_list_id: ID
     subject: String!
     mjml: String!
     card_type: MarketingCampaignCardType
@@ -227,6 +233,8 @@ export const marketingTypeDefs = /* GraphQL */ `
     audienceList(id: ID!): AudienceList
     "Everybody who can open this portal — the assignable owners for a list."
     audienceListOwners: [AudienceListOwner!]!
+    "Every saved list, for the audience dropdowns. Each carries its live reach."
+    audienceLists: [AudienceList!]!
     marketingCampaigns: [MarketingCampaign!]!
     marketingCampaignsTable(query: TableQueryInput): MarketingCampaignTablePage!
     marketingCampaignPreviewCards(type: MarketingCampaignCardType!): [MarketingCampaignPreviewCard!]!

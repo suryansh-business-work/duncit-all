@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { requiredText } from '@duncit/forms';
 import type { CampaignPreviewCard } from '../queries';
 
-export type CampaignChannel = 'EMAIL' | 'WHATSAPP';
+/** Email is the only channel; WhatsApp campaigns were removed. */
+export type CampaignChannel = 'EMAIL';
 export type CampaignAudience = 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS';
 export type CampaignCardType = '' | 'POD' | 'CLUB';
 
@@ -26,7 +27,7 @@ const defaultMjml = `<mjml>
 export const marketingCampaignSchema = z
   .object({
     name: requiredText('Campaign name', 3, 120),
-    channel: z.enum(['EMAIL', 'WHATSAPP'], { required_error: 'Channel is required' }),
+    channel: z.enum(['EMAIL'], { required_error: 'Channel is required' }),
     audience: z.enum(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS'], { required_error: 'Audience is required' }),
     subject: requiredText('Subject', 3, 180),
     mjml: z

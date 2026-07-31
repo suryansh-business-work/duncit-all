@@ -1,6 +1,6 @@
 import { Schema, model, type Document, Types } from 'mongoose';
 
-export type NotificationScope = 'GLOBAL' | 'LOCATION' | 'ZONE' | 'USER';
+export type NotificationScope = 'GLOBAL' | 'LOCATION' | 'ZONE' | 'USER' | 'AUDIENCE_LIST';
 
 export interface INotification extends Document {
   title: string;
@@ -12,6 +12,7 @@ export interface INotification extends Document {
   location_id?: Types.ObjectId | null;
   zone_name?: string | null;
   target_user_ids: Types.ObjectId[];
+  audience_list_id?: Types.ObjectId | null;
   sent_by?: Types.ObjectId | null;
   delivered_count: number;
   failed_count: number;
@@ -25,7 +26,15 @@ const notificationSchema = new Schema<INotification>(
     body: { type: String, required: true, trim: true },
     image_url: { type: String, default: null },
     link_url: { type: String, default: null },
-    scope: { type: String, enum: ['GLOBAL', 'LOCATION', 'ZONE', 'USER'], required: true, default: 'GLOBAL' },
+    scope: {
+      type: String,
+      enum: ['GLOBAL', 'LOCATION', 'ZONE', 'USER', 'AUDIENCE_LIST'],
+      required: true,
+      default: 'GLOBAL',
+    },
+    /** AUDIENCE_LIST scope only: the saved marketing list to send to. Its
+     * members are recomputed at send time, never frozen onto this row. */
+    audience_list_id: { type: Schema.Types.ObjectId, ref: 'AudienceList', default: null },
     silent: { type: Boolean, default: false },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     zone_name: { type: String, default: null, trim: true },

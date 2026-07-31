@@ -24,16 +24,15 @@ export const appConfig = {
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
     { label: 'Target Audience', to: '/audience', icon: 'personSearch' },
     {
-      // Grouped, not two top-level entries: the channel is a detail of the
-      // campaign, and more channels land here. Routes are unchanged.
+      // Everything you send lives here: email and push are two ways of
+      // reaching the same audience, not two separate parts of the console.
       label: 'Campaigns',
       icon: 'contactMail',
       children: [
         { label: 'Email', to: '/campaigns/email', icon: 'email' },
-        { label: 'WhatsApp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
+        { label: 'Notifications', to: '/notifications', icon: 'notifications' },
       ],
     },
-    { label: 'Notifications', to: '/notifications', icon: 'notifications' },
     {
       label: 'Ads',
       icon: 'campaign',

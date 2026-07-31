@@ -20,7 +20,6 @@ describe('Duncit Marketing app config', () => {
         '/',
         '/audience',
         '/campaigns/email',
-        '/campaigns/whatsapp',
         '/notifications',
         '/ads-approvals',
         '/ads-settings',

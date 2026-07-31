@@ -1,7 +1,12 @@
-import { Schema, model, type Document } from 'mongoose';
+import { Schema, model, type Document, type Types } from 'mongoose';
 
-export type MarketingCampaignChannel = 'EMAIL' | 'WHATSAPP';
-export type MarketingCampaignAudience = 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS';
+/** Email is the only channel. WhatsApp campaigns were removed outright —
+ * see scripts/migrate-drop-whatsapp-campaigns.ts for the stored rows. */
+export type MarketingCampaignChannel = 'EMAIL';
+export type MarketingCampaignAudience =
+  | 'ALL_USERS'
+  | 'NEWSLETTER_SUBSCRIBERS'
+  | 'AUDIENCE_LIST';
 export type MarketingCampaignStatus = 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED';
 export type MarketingCampaignCardType = 'POD' | 'CLUB';
 
@@ -19,6 +24,7 @@ export interface IMarketingCampaign extends Document {
   name: string;
   channel: MarketingCampaignChannel;
   audience: MarketingCampaignAudience;
+  audience_list_id?: Types.ObjectId | null;
   subject: string;
   mjml: string;
   rendered_html?: string | null;
@@ -49,12 +55,15 @@ const marketingCampaignSchema = new Schema<IMarketingCampaign>(
   {
     campaign_id: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
-    channel: { type: String, enum: ['EMAIL', 'WHATSAPP'], required: true },
+    channel: { type: String, enum: ['EMAIL'], required: true, default: 'EMAIL' },
     audience: {
       type: String,
-      enum: ['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS'],
+      enum: ['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'],
       required: true,
     },
+    /** AUDIENCE_LIST audience only: the saved list to send to. Its members are
+     * recomputed at send time, never frozen onto the campaign. */
+    audience_list_id: { type: Schema.Types.ObjectId, ref: 'AudienceList', default: null },
     subject: { type: String, required: true, trim: true, maxlength: 180 },
     mjml: { type: String, required: true },
     rendered_html: { type: String, default: null },

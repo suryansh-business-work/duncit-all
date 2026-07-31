@@ -27,7 +27,7 @@ vi.mock('../../src/pages/target-audience-page/AudienceListDetailPage', () => ({
   default: () => <div>audience-list-detail-page</div>,
 }));
 vi.mock('../../src/pages/marketing-campaigns-page/MarketingCampaignsPage', () => ({
-  default: ({ defaultChannel }: { defaultChannel?: string }) => <div>{`campaigns-${defaultChannel}`}</div>,
+  default: () => <div>campaigns-page</div>,
 }));
 vi.mock('../../src/pages/notifications-page/NotificationsPage', () => ({
   default: () => <div>notifications-page</div>,
@@ -50,8 +50,7 @@ describe('App routing', () => {
     ['/audience', 'audience-lists-page'],
     ['/audience/new', 'create-audience-list-page'],
     ['/audience/l1', 'audience-list-detail-page'],
-    ['/campaigns/email', 'campaigns-EMAIL'],
-    ['/campaigns/whatsapp', 'campaigns-WHATSAPP'],
+    ['/campaigns/email', 'campaigns-page'],
     ['/notifications', 'notifications-page'],
     ['/ads-approvals', 'ads-approvals-page'],
     ['/ads-settings', 'ads-settings-page'],

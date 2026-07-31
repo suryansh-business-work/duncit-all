@@ -118,7 +118,7 @@ export interface CampaignPreviewCard {
 export interface MarketingCampaignRow {
   campaign_id: string;
   name: string;
-  channel: 'EMAIL' | 'WHATSAPP';
+  channel: 'EMAIL';
   audience: string;
   subject: string;
   scheduled_at?: string | null;

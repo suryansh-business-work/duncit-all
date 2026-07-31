@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { AudienceListModel } from './audienceList.model';
-import { countAudience } from './audience.service';
+import { audienceUserIds, countAudience } from './audience.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { PORTAL_ROLE_REQUIREMENTS } from '@modules/portals';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -106,6 +106,24 @@ export const audienceListService = {
       email: u.auth.email ?? '',
       is_admin: u.metadata.role_keys.includes('SUPER_ADMIN'),
     }));
+  },
+
+  /** Every saved list, newest first — the audience dropdowns are short lists,
+   * so they take the whole set rather than a page. */
+  async list() {
+    const docs = await AudienceListModel.find().sort({ created_at: -1 });
+    return withCounts(docs);
+  },
+
+  /**
+   * Who is in a saved list right now. Recomputed on every send: the list stores
+   * criteria, so a campaign built last month reaches this month's matches.
+   */
+  async memberIds(id: string) {
+    if (!Types.ObjectId.isValid(id)) throw notFound();
+    const doc = await AudienceListModel.findById(id);
+    if (!doc) throw notFound();
+    return audienceUserIds(toQueryInput(doc));
   },
 
   async table(input?: TableQueryInput | null) {

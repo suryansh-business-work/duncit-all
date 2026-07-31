@@ -33,6 +33,9 @@ export const appConfig = {
         { label: 'Notifications', to: '/notifications', icon: 'notifications' },
       ],
     },
+    // Its own section, not a child of Campaigns: a short link is just as often
+    // made for an ad, a poster or a partner as for a campaign.
+    { label: 'Short Links', to: '/short-links', icon: 'link' },
     {
       label: 'Ads',
       icon: 'campaign',

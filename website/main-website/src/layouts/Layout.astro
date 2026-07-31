@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import { fetchBranding } from '../lib/site-data';
+import { urlConfigs } from '../config/url-configs';
+import { SHORT_CODE_PATTERN } from '../lib/short-link';
 
 interface Props {
   title: string;
@@ -21,6 +23,29 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    {/*
+      Short links. The apex answers every unknown path with this page (nginx
+      `try_files ... /index.html`), so duncit.com/aB3xY9Zq lands here instead
+      of 404ing. Hand a code-shaped path to the API resolver, which counts the
+      click and redirects on to the tagged destination.
+
+      `is:inline` and placed first on purpose: it must run before anything
+      renders, so a visitor following a link never sees the home page flash.
+      A real page is always a lowercase word, so the pattern cannot match one.
+    */}
+    <script
+      is:inline
+      define:vars={{
+        shortLinkBase: `${urlConfigs.serverUrl.replace(/\/+$/, '')}/r`,
+        shortCodePattern: SHORT_CODE_PATTERN.source,
+      }}
+    >
+      (function () {
+        var path = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+        if (!new RegExp(shortCodePattern).test(path)) return;
+        window.location.replace(shortLinkBase + '/' + path + window.location.search);
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" href={favicon} />

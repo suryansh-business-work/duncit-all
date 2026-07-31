@@ -5,6 +5,7 @@ const isDevelopment = import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 const urls = isDevelopment
   ? {
       graphqlUrl: 'http://localhost:2001/graphql',
+      serverUrl: 'http://localhost:2001',
       siteUrl: 'http://localhost:2000',
       mwebUrl: 'http://localhost:2003',
       partnersSiteUrl: 'http://localhost:2004',
@@ -13,6 +14,7 @@ const urls = isDevelopment
     }
   : {
       graphqlUrl: 'https://server.duncit.com/graphql',
+      serverUrl: 'https://server.duncit.com',
       siteUrl: 'https://duncit.com',
       mwebUrl: 'https://mweb.duncit.com',
       partnersSiteUrl: 'https://partners.duncit.com',
@@ -23,6 +25,8 @@ const urls = isDevelopment
 export const urlConfigs = {
   isDevelopment,
   graphqlUrl: import.meta.env.PUBLIC_GRAPHQL_URL || urls.graphqlUrl,
+  // Short links land on this site and are handed to the API resolver.
+  serverUrl: import.meta.env.PUBLIC_SERVER_URL || urls.serverUrl,
   siteUrl: import.meta.env.PUBLIC_SITE_URL || urls.siteUrl,
   mwebUrl: import.meta.env.PUBLIC_MWEB_URL || urls.mwebUrl,
   partnersSiteUrl: import.meta.env.PUBLIC_PARTNERS_SITE_URL || urls.partnersSiteUrl,

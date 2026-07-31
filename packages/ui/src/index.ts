@@ -11,6 +11,8 @@ export { STATUS_CHIP_COLORS, StatusChip } from './StatusChip';
 export type { StatusChipColor, StatusChipProps, StatusColorMap } from './StatusChip';
 export { InfoRow } from './InfoRow';
 export type { InfoRowProps, InfoRowVariant } from './InfoRow';
+export { ImagePreview } from './ImagePreview';
+export type { ImagePreviewProps } from './ImagePreview';
 export { PageHeader } from './PageHeader';
 export type { PageHeaderProps } from './PageHeader';
 export { BackButton, BackHeader } from './BackHeader';

@@ -6,6 +6,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Chip, IconButton, Link, Tooltip, Typography } from '@mui/material';
 import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { nationalPhoneDigits } from '@duncit/utils';
+import { categoryPath } from '../../utils/categoryPath';
 import { commissionLabel } from '../../utils/commissionLabel';
 import LifecycleActions from '../../components/LifecycleActions';
 import { STATUS_OPTIONS, type HostCategoryRow, type HostRow } from './queries';
@@ -22,9 +23,6 @@ interface Props {
 
 const getHostRowId = (h: HostRow) => h.id;
 
-const catPath = (c: HostCategoryRow) =>
-  [c.super_category_name, c.category_name, c.sub_category_name].filter(Boolean).join(' › ') || '—';
-
 function CategoryCell({ categories }: Readonly<{ categories?: HostCategoryRow[] | null }>) {
   if (!categories || categories.length === 0) {
     return <Typography variant="body2" color="text.secondary">—</Typography>;
@@ -32,8 +30,8 @@ function CategoryCell({ categories }: Readonly<{ categories?: HostCategoryRow[] 
   return (
     <>
       {categories.map((c) => (
-        <Typography key={c.request_no || catPath(c)} variant="body2" display="block">
-          {catPath(c)}
+        <Typography key={c.sub_category_id} variant="body2" display="block">
+          {categoryPath(c) || '—'}
         </Typography>
       ))}
     </>
@@ -77,7 +75,8 @@ const renderDocuments = (h: HostRow) => (
 
 const renderCategories = (h: HostRow) => <CategoryCell categories={h.host_categories} />;
 
-const categoriesValue = (h: HostRow) => (h.host_categories ?? []).map(catPath).join(' | ');
+const categoriesValue = (h: HostRow) =>
+  (h.host_categories ?? []).map((c) => categoryPath(c) || '—').join(' | ');
 
 const renderStatus = (h: HostRow) => <Chip size="small" label={h.status} />;
 

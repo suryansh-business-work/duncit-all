@@ -392,6 +392,29 @@ describe('finance resolvers (new breakdown surface)', () => {
     expect(await Q.myVenuePayouts({}, {}, ctx)).toEqual([]);
   });
 
+  // The Onboarding console's Review Host dialog seeds its commission field from
+  // this, so onboarding roles must be able to read it WITHOUT being handed
+  // financeSettings (business GSTIN, invoice branding, payout config).
+  it('defaultHostCommissionPct is readable by onboarding review roles but not by a plain user', async () => {
+    await FinanceSettingsModel.updateOne(
+      { singleton_key: 'finance' },
+      { $set: { default_host_commission_pct: 17 } },
+      { upsert: true }
+    );
+
+    for (const role of ['ONBOARDING_MANAGER', 'ZONAL_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER']) {
+      expect(await Q.defaultHostCommissionPct({}, {}, makeContext({ roles: [role] }))).toBe(17);
+    }
+
+    await expect(
+      Q.defaultHostCommissionPct({}, {}, makeContext({ roles: ['USER'] }))
+    ).rejects.toThrow(/access denied/i);
+    // Reading the default must not become a way in to the rest of finance.
+    await expect(
+      Q.financeSettings({}, {}, makeContext({ roles: ['ONBOARDING_MANAGER'] }))
+    ).rejects.toThrow(/access denied/i);
+  });
+
   it('financeDashboardStats requires a finance role', async () => {
     await expect(Q.financeDashboardStats({}, {}, makeContext({ roles: ['USER'] }))).rejects.toThrow(
       /access denied/i

@@ -15,6 +15,11 @@ function uid(ctx: GraphQLContext) {
 }
 
 export const hostResolvers = {
+  // Field resolver, not part of toPub: it costs a meeting + category lookup per
+  // host, so only the single-host Review query pays for it.
+  Host: {
+    survey_category: (parent: { user_id: string }) => hostService.surveyCategoryForUser(parent.user_id),
+  },
   Query: {
     myHost: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => hostService.getMine(uid(ctx)),
     hosts: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {

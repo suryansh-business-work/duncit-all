@@ -1,11 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
-import { useApolloClient, useMutation } from '@apollo/client';
+import { useApolloClient } from '@apollo/client';
 import { Box, Stack, Typography } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import HardDeleteDialog from '../../components/HardDeleteDialog';
 import { useEntityLifecycle } from '../../components/useEntityLifecycle';
-import { ADMIN_SET_HOST_CATEGORIES, APPROVE, DELETE_HOST, HOSTS_TABLE, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, type HostRow } from './queries';
+import { DELETE_HOST, HOSTS_TABLE, SET_HOST_ACTIVE, type HostRow } from './queries';
+import { useHostReview } from './useHostReview';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
@@ -14,74 +15,11 @@ export default function HostsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
-  const [approve] = useMutation(APPROVE);
-  const [reject] = useMutation(REJECT);
-  const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
-  const [setHostCategories, { loading: savingCategories }] = useMutation(ADMIN_SET_HOST_CATEGORIES);
   const lifecycle = useEntityLifecycle(SET_HOST_ACTIVE, DELETE_HOST, refresh);
-  const [active, setActive] = useState<any>(null);
-  const [notes, setNotes] = useState('');
-  const [tagsText, setTagsText] = useState('');
+  const review = useHostReview(refresh);
   const [editing, setEditing] = useState<any>(null);
 
   const fetchRows = useApolloTableFetch<HostRow>(client, HOSTS_TABLE, 'hostsTable');
-
-  const parseTags = () =>
-    tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);
-
-  const openReview = (host: any) => {
-    setActive(host);
-    setTagsText((host.tags ?? []).join(', '));
-  };
-
-  const doApprove = async (commissionPct: number) => {
-    // Approval applies the commission the dialog showed (15% default) unless the
-    // host already carries that exact override — the reviewer saw the number
-    // next to the Approve button, so persisting it is not a surprise.
-    if ((active.host_commission_pct ?? 0) !== commissionPct) {
-      await setHostDeductions({
-        variables: { user_id: active.user_id, host_commission_pct: commissionPct },
-      });
-    }
-    await approve({ variables: { id: active.id, notes, tags: parseTags() } });
-    setActive(null);
-    setNotes('');
-    setTagsText('');
-    refresh();
-  };
-  const doReject = async () => {
-    if (!notes.trim()) return;
-    await reject({ variables: { id: active.id, notes } });
-    setActive(null);
-    setNotes('');
-    setTagsText('');
-    refresh();
-  };
-  const doSaveCategories = async (categories: { super_category_id: string; category_id: string; sub_category_id: string }[]) => {
-    const { data } = await setHostCategories({
-      variables: {
-        host_doc_id: active.id,
-        // Ids only — the server re-validates the triple and denormalizes names.
-        categories: categories.map((c) => ({
-          super_category_id: c.super_category_id,
-          category_id: c.category_id,
-          sub_category_id: c.sub_category_id,
-        })),
-      },
-    });
-    const saved = data?.adminSetHostCategories?.host_categories ?? [];
-    setActive((current: any) => (current ? { ...current, host_categories: saved } : current));
-    refresh();
-  };
-  const doSaveCommission = async (commissionPct: number) => {
-    await setHostDeductions({
-      variables: { user_id: active.user_id, host_commission_pct: commissionPct },
-    });
-    setActive((current: any) =>
-      current ? { ...current, host_commission_pct: commissionPct } : current
-    );
-    refresh();
-  };
 
   return (
     <Box>
@@ -96,7 +34,7 @@ export default function HostsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         onEdit={setEditing}
-        onReview={openReview}
+        onReview={review.openReview}
         canHardDelete={lifecycle.canHardDelete}
         onToggleActive={lifecycle.setToggleTarget}
         onDelete={lifecycle.setDeleteTarget}
@@ -129,18 +67,23 @@ export default function HostsPage() {
       />
 
       <HostReviewDialog
-        active={active}
-        notes={notes}
-        setNotes={setNotes}
-        tagsText={tagsText}
-        setTagsText={setTagsText}
-        onClose={() => setActive(null)}
-        onApprove={doApprove}
-        onReject={doReject}
-        onSaveCommission={doSaveCommission}
-        onSaveCategories={doSaveCategories}
-        savingCategories={savingCategories}
-        savingCommission={savingCommission}
+        active={review.active}
+        notes={review.notes}
+        setNotes={review.setNotes}
+        tagsText={review.tagsText}
+        setTagsText={review.setTagsText}
+        saveError={review.saveError}
+        dismissError={review.dismissError}
+        defaultCommissionPct={review.defaultCommissionPct}
+        surveyCategory={review.surveyCategory}
+        onClose={review.closeReview}
+        onApprove={review.doApprove}
+        onReject={review.doReject}
+        onSaveCommission={review.saveCommission}
+        onSaveCategories={review.saveCategories}
+        savingCategories={review.savingCategories}
+        savingCommission={review.savingCommission}
+        deciding={review.deciding}
       />
 
       <HostEditDialog host={editing} onClose={() => setEditing(null)} onSaved={refresh} />

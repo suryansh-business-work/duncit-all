@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import type { HostCategoryValue } from '../../forms/host';
 
 export const HOSTS = gql`
   query Hosts($status: HostStatus) {
@@ -41,12 +42,39 @@ export const HOSTS = gql`
   }
 `;
 
-export interface HostCategoryRow {
-  super_category_name: string;
-  category_name: string;
-  sub_category_name: string;
-  request_no: string;
-}
+/** `host_categories` rows are the same shape the Review dialog's picker emits —
+ * ids to save with, denormalized names to render. One type, so a row can go
+ * straight from the table into the picker without a cast. */
+export type HostCategoryRow = HostCategoryValue;
+
+/** Global default from Finance → Default Deductions. The Review dialog's
+ * commission field seeds from this whenever the host has no override, so the
+ * number a reviewer sees is the one settlement will actually apply. */
+export const DEFAULT_HOST_COMMISSION = gql`
+  query DefaultHostCommission {
+    defaultHostCommissionPct
+  }
+`;
+
+/** The Super › Category › Sub the applicant picked in the Earn with Duncit
+ * gate. Resolved from their onboarding meeting, so it is available even for
+ * hosts whose pick was never copied onto host_categories. */
+export const HOST_SURVEY_CATEGORY = gql`
+  query HostSurveyCategory($host_doc_id: ID!) {
+    host(host_doc_id: $host_doc_id) {
+      id
+      survey_category {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+        request_no
+      }
+    }
+  }
+`;
 
 /** Row shape used by the hosts table columns; rows also carry the full
  * HostRowFields selection so the Edit/Review dialogs can reuse the row object. */
@@ -64,6 +92,28 @@ export interface HostRow {
   submitted_at?: string | null;
   host_commission_pct?: number | null;
   host_categories?: HostCategoryRow[] | null;
+  // Rest of the HostRowFields selection. Optional so the table's own fixtures
+  // stay valid; the Review dialog reads them off the same row object.
+  dob?: string | null;
+  full_address?: string | null;
+  passport_photo_url?: string | null;
+  police_verification_url?: string | null;
+  bank_account?: HostBankAccount | null;
+  tags?: string[] | null;
+  step_completed?: number | null;
+  reviewer_notes?: string | null;
+  approved_at?: string | null;
+  rejected_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface HostBankAccount {
+  payout_method?: string | null;
+  account_holder_name?: string | null;
+  account_number?: string | null;
+  ifsc_code?: string | null;
+  upi_id?: string | null;
 }
 
 /** Same selection as HOSTS rows (+ created_at for the hidden Created filter
@@ -94,7 +144,10 @@ const HOST_ROW_FIELDS = gql`
     status
     is_active
     submitted_at
+    approved_at
+    rejected_at
     created_at
+    updated_at
     reviewer_notes
     host_commission_pct
     host_categories {

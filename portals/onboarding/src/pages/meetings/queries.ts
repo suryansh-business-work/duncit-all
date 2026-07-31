@@ -29,17 +29,6 @@ export interface OnboardingMeeting {
   reschedule_count?: number | null;
 }
 
-export interface SurveyResponseItem {
-  label: string;
-  answer: string;
-}
-
-export interface UserSurveyResponse {
-  kind: SurveyKind;
-  title?: string | null;
-  items: SurveyResponseItem[];
-}
-
 export interface MeetingSlot {
   start_at: string;
   end_at: string;
@@ -134,16 +123,6 @@ export type MeetingDecision = 'APPROVED' | 'DENIED';
 export const DECIDE_MEETING = gql`
   mutation DecideMeeting($id: ID!, $decision: MeetingDecision!, $feedback: String!) {
     decideMeeting(id: $id, decision: $decision, feedback: $feedback) { ${FIELDS} }
-  }
-`;
-
-export const USER_SURVEY_RESPONSES = gql`
-  query MeetingUserSurveyResponses($user_id: ID!) {
-    userSurveyResponses(user_id: $user_id) {
-      kind
-      title
-      items { label answer }
-    }
   }
 `;
 

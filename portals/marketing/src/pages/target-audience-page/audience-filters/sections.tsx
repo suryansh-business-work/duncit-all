@@ -1,6 +1,6 @@
 import { Stack } from '@mui/material';
 import { PROVIDER_OPTIONS, PUSH_OPTIONS, STATUS_OPTIONS, VISIBILITY_OPTIONS } from '../helpers';
-import { MultiSelect, RangeFilter, SingleSelect, TextFilter, TriStateSelect, makeBind } from './controls';
+import { DateRange, MultiSelect, NumberRange, SingleSelect, TextFilter, TriStateSelect, makeBind } from './controls';
 import type { AudienceFilterOptions, AudienceFilterState } from './types';
 
 export interface SectionProps {
@@ -13,7 +13,7 @@ export function PeopleSection({ state, set }: Readonly<SectionProps>) {
   const bind = makeBind(state, set);
   return (
     <Stack spacing={1.5}>
-      <RangeFilter label="Age" type="number" from={bind('ageMin')} to={bind('ageMax')} />
+      <NumberRange label="Age" from={bind('ageMin')} to={bind('ageMax')} />
       <TextFilter label="Language" placeholder="en-IN" {...bind('locale')} />
     </Stack>
   );
@@ -61,8 +61,8 @@ export function ActivitySection({ state, set }: Readonly<SectionProps>) {
   const bind = makeBind(state, set);
   return (
     <Stack spacing={1.5}>
-      <RangeFilter label="Joined" type="date" from={bind('joinedFrom')} to={bind('joinedTo')} />
-      <RangeFilter label="Last active" type="date" from={bind('activeFrom')} to={bind('activeTo')} />
+      <DateRange label="Joined" from={bind('joinedFrom')} to={bind('joinedTo')} />
+      <DateRange label="Last active" from={bind('activeFrom')} to={bind('activeTo')} />
       <TriStateSelect label="Onboarding survey done" {...bind('surveyCompleted')} />
       <TriStateSelect label="Never engaged" {...bind('firstTimeUser')} />
     </Stack>

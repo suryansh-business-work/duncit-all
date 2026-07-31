@@ -168,6 +168,7 @@ export const marketingTypeDefs = /* GraphQL */ `
     name: String!
     description: String!
     owner: String!
+    owner_user_id: ID
     filters: [AudienceListFilter!]!
     search: String!
     "How many people match the criteria right now."
@@ -180,8 +181,19 @@ export const marketingTypeDefs = /* GraphQL */ `
     name: String!
     description: String
     owner: String!
+    "The account behind the owner name, when picked from the portal-access list."
+    owner_user_id: ID
     filters: [AudienceListFilterInput!]
     search: String
+  }
+
+  "Somebody who can open the Marketing portal, and so can own a list."
+  type AudienceListOwner {
+    id: ID!
+    name: String!
+    email: String!
+    "True for a SUPER_ADMIN, who reaches every portal."
+    is_admin: Boolean!
   }
 
   "Server-side table page for the shared table engine (audienceListsTable)."
@@ -213,6 +225,8 @@ export const marketingTypeDefs = /* GraphQL */ `
     audienceListsTable(query: TableQueryInput): AudienceListTablePage!
     "One saved list, with its member count recomputed."
     audienceList(id: ID!): AudienceList
+    "Everybody who can open this portal — the assignable owners for a list."
+    audienceListOwners: [AudienceListOwner!]!
     marketingCampaigns: [MarketingCampaign!]!
     marketingCampaignsTable(query: TableQueryInput): MarketingCampaignTablePage!
     marketingCampaignPreviewCards(type: MarketingCampaignCardType!): [MarketingCampaignPreviewCard!]!

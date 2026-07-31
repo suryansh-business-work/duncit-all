@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Box, Stack } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
@@ -19,6 +19,8 @@ interface FilterOptionsData {
 interface Props {
   filters: AudienceFilterState;
   onFiltersChange: (next: AudienceFilterState) => void;
+  /** How many people the current filters match, reported after each fetch. */
+  onCountChange?: (total: number) => void;
 }
 
 /**
@@ -26,7 +28,11 @@ interface Props {
  * step 1 of the create wizard and by a saved list's detail page, so a list is
  * always previewed exactly the way it was built.
  */
-export default function AudiencePicker({ filters, onFiltersChange }: Readonly<Props>) {
+export default function AudiencePicker({
+  filters,
+  onFiltersChange,
+  onCountChange,
+}: Readonly<Props>) {
   const client = useApolloClient();
   const { formatDateTime } = useDateFormat();
   const { locations } = useAdminLocations();
@@ -34,7 +40,20 @@ export default function AudiencePicker({ filters, onFiltersChange }: Readonly<Pr
     fetchPolicy: 'cache-and-network',
   });
 
-  const fetchRows = useApolloTableFetch<AudienceRow>(client, AUDIENCE_TABLE, 'audienceTable');
+  const baseFetch = useApolloTableFetch<AudienceRow>(client, AUDIENCE_TABLE, 'audienceTable');
+  const report = useRef(onCountChange);
+  report.current = onCountChange;
+
+  // The table already asks the server for a total on every fetch — reading it
+  // here avoids a second count query just to show the number.
+  const fetchRows = useCallback<typeof baseFetch>(
+    async (query) => {
+      const page = await baseFetch(query);
+      report.current?.(page.total);
+      return page;
+    },
+    [baseFetch],
+  );
 
   const interests = data?.audienceFilterOptions?.interests ?? [];
   const roles = data?.audienceFilterOptions?.roles ?? [];
@@ -60,7 +79,16 @@ export default function AudiencePicker({ filters, onFiltersChange }: Readonly<Pr
 
   return (
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="flex-start">
-      <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0 }}>
+      {/* The filters live beside the results, never inside the table — the
+          table's own column filters are gone entirely. */}
+      <Box
+        sx={{
+          width: { xs: '100%', md: 320 },
+          flexShrink: 0,
+          position: { md: 'sticky' },
+          top: { md: 16 },
+        }}
+      >
         <FilterSidebar state={filters} onChange={onFiltersChange} options={options} />
       </Box>
       <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>

@@ -8,6 +8,8 @@ import {
   audienceListMissingMock,
   audienceListMock,
   audienceListFailedMock,
+  audienceListOwnersEmptyMock,
+  audienceListOwnersMock,
   createAudienceListMock,
   deleteAudienceListMock,
   makeAudienceListRow,
@@ -24,7 +26,7 @@ const locationsMock = vi.hoisted(() => ({ locations: [] as unknown[] }));
 vi.mock('@duncit/location', () => ({
   useAdminLocations: () => ({ locations: locationsMock.locations }),
 }));
-const userMock = vi.hoisted(() => ({ user: { full_name: 'Asha Rao' } as Record<string, unknown> | null }));
+const userMock = vi.hoisted(() => ({ user: { id: 'me', full_name: 'Asha Rao' } as Record<string, unknown> | null }));
 vi.mock('@duncit/user-context', () => ({ useUserData: () => ({ user: userMock.user }) }));
 const navigateMock = vi.hoisted(() => ({ fn: vi.fn() }));
 vi.mock('react-router-dom', async (importOriginal) => ({
@@ -65,7 +67,7 @@ const columnDeps = { formatDate: (d: Date) => d.toISOString() };
 beforeEach(() => {
   __setTableRows([]);
   locationsMock.locations = LOCATIONS;
-  userMock.user = { full_name: 'Asha Rao' };
+  userMock.user = { id: 'me', full_name: 'Asha Rao' };
   navigateMock.fn.mockClear();
   dialogsMock.notifySuccess.mockClear();
 });
@@ -319,62 +321,141 @@ describe('CreateAudienceListPage', () => {
     name: 'Pune 25+',
     description: 'For the Diwali push',
     owner: 'Asha Rao',
+    owner_user_id: 'me',
     filters: [],
   };
 
+  const renderPage = (mocks: Parameters<typeof renderWithProviders>[1]['mocks']) =>
+    renderWithProviders(<CreateAudienceListPage />, { mocks });
+
   const goToStepTwo = async () => {
-    expect(await screen.findByTestId('audience-filters')).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('audience-step-next'));
+    fireEvent.click(await screen.findByTestId('audience-step-next'));
     expect(await screen.findByText('Name this list')).toBeInTheDocument();
   };
 
-  const fillForm = () => {
+  const fillNameAndDescription = () => {
     fireEvent.change(screen.getByLabelText(/List name/), { target: { value: listInput.name } });
     fireEvent.change(screen.getByLabelText(/List description/), {
       target: { value: listInput.description },
     });
   };
 
+  const pickOwner = async (name: string) => {
+    fireEvent.mouseDown(screen.getByLabelText(/List owner/));
+    fireEvent.click(await screen.findByText(name));
+  };
+
+  // The wizard's actions sit above the audience table: step 1 is full-height,
+  // so a Next button underneath it is off-screen the moment the list is big.
+  it('keeps Next and Save at the top, above the audience', async () => {
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    const next = await screen.findByTestId('audience-step-next');
+    const stepper = screen.getByText('Choose the audience');
+    expect(next.compareDocumentPosition(stepper) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    fireEvent.click(next);
+    const save = await screen.findByRole('button', { name: /Save list/ });
+    expect(save.compareDocumentPosition(screen.getByText('Name this list')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('walks step 1 to step 2 and back', async () => {
-    renderWithProviders(<CreateAudienceListPage />, { mocks: [audienceFilterOptionsMock] });
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-    expect(await screen.findByTestId('audience-filters')).toBeInTheDocument();
+    expect(await screen.findByTestId('audience-step-next')).toBeInTheDocument();
   });
 
-  it('pre-fills the owner with whoever is signed in', async () => {
-    renderWithProviders(<CreateAudienceListPage />, { mocks: [audienceFilterOptionsMock] });
+  it('pre-selects the signed-in user as owner when they can open this portal', async () => {
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
-    expect(screen.getByLabelText(/List owner/)).toHaveValue('Asha Rao');
+    await waitFor(() => expect(screen.getByLabelText(/List owner/)).toHaveValue('Asha Rao'));
   });
 
-  it('falls back to the signed-in email when there is no name', async () => {
-    userMock.user = { email: 'asha@example.com' };
-    renderWithProviders(<CreateAudienceListPage />, { mocks: [audienceFilterOptionsMock] });
-    await goToStepTwo();
-    expect(screen.getByLabelText(/List owner/)).toHaveValue('asha@example.com');
-  });
-
-  it('leaves the owner blank when nobody is signed in', async () => {
-    userMock.user = null;
-    renderWithProviders(<CreateAudienceListPage />, { mocks: [audienceFilterOptionsMock] });
+  it('leaves the owner blank when the signed-in user is not an eligible owner', async () => {
+    userMock.user = { id: 'someone-else', full_name: 'Nobody' };
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
     expect(screen.getByLabelText(/List owner/)).toHaveValue('');
   });
 
+  it('offers everyone with portal access, flagging the admins', async () => {
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    await goToStepTwo();
+    fireEvent.mouseDown(screen.getByLabelText(/List owner/));
+    expect(await screen.findByText('Ravi Boss')).toBeInTheDocument();
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('ravi@duncit.com')).toBeInTheDocument();
+  });
+
+  // "Dropdown with search": a typeable combobox, not a plain select. The
+  // filtering itself is MUI's own filterOptions, so what is asserted here is
+  // that the control really is searchable and that a typed pick round-trips.
+  it('is a searchable combobox, not a fixed select', async () => {
+    userMock.user = null;
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    await goToStepTwo();
+    const input = screen.getByLabelText(/List owner/);
+    expect(input).toHaveAttribute('role', 'combobox');
+    expect(input).not.toHaveAttribute('readonly');
+
+    fireEvent.change(input, { target: { value: 'Ravi' } });
+    fireEvent.click(within(await screen.findByRole('listbox')).getByText('Ravi Boss'));
+    expect(screen.getByLabelText(/List owner/)).toHaveValue('Ravi Boss');
+  });
+
+  it('falls back to the email for an account with no name yet', async () => {
+    userMock.user = null;
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    await goToStepTwo();
+    fireEvent.mouseDown(screen.getByLabelText(/List owner/));
+    // The email is both the label and the secondary line for this account.
+    const listbox = within(await screen.findByRole('listbox'));
+    fireEvent.click(listbox.getByRole('option', { name: /new\.hire@duncit\.com/ }));
+    expect(screen.getByLabelText(/List owner/)).toHaveValue('new.hire@duncit.com');
+  });
+
+  it('lets you clear the owner again', async () => {
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    await goToStepTwo();
+    await waitFor(() => expect(screen.getByLabelText(/List owner/)).toHaveValue('Asha Rao'));
+
+    fireEvent.click(screen.getByTitle('Clear'));
+    expect(screen.getByLabelText(/List owner/)).toHaveValue('');
+  });
+
+  it('says so when nobody can own a list', async () => {
+    renderPage([audienceFilterOptionsMock, audienceListOwnersEmptyMock]);
+    await goToStepTwo();
+    fireEvent.mouseDown(screen.getByLabelText(/List owner/));
+    expect(await screen.findByText('Nobody has access to this portal yet')).toBeInTheDocument();
+  });
+
   it('refuses to save without a name', async () => {
-    renderWithProviders(<CreateAudienceListPage />, { mocks: [audienceFilterOptionsMock] });
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
     fireEvent.click(screen.getByRole('button', { name: /Save list/ }));
     expect(await screen.findByText('Give the list a name')).toBeInTheDocument();
   });
 
-  it('saves the list and reports it', async () => {
-    renderWithProviders(<CreateAudienceListPage />, {
-      mocks: [audienceFilterOptionsMock, createAudienceListMock(listInput)],
-    });
+  it('refuses to save without an owner', async () => {
+    userMock.user = null;
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
-    fillForm();
+    fillNameAndDescription();
+    fireEvent.click(screen.getByRole('button', { name: /Save list/ }));
+    expect(await screen.findByText('Pick who owns this list')).toBeInTheDocument();
+  });
+
+  it('saves the list with the owner resolved from the picked account', async () => {
+    userMock.user = null;
+    renderPage([
+      audienceFilterOptionsMock,
+      audienceListOwnersMock,
+      createAudienceListMock(listInput),
+    ]);
+    await goToStepTwo();
+    fillNameAndDescription();
+    await pickOwner('Asha Rao');
     fireEvent.click(screen.getByRole('button', { name: /Save list/ }));
     await waitFor(() =>
       expect(dialogsMock.notifySuccess).toHaveBeenCalledWith('“Pune 25+” saved'),
@@ -382,12 +463,78 @@ describe('CreateAudienceListPage', () => {
     expect(navigateMock.fn).toHaveBeenCalledWith('/audience');
   });
 
-  it('keeps you on the form when the save fails', async () => {
-    renderWithProviders(<CreateAudienceListPage />, {
-      mocks: [audienceFilterOptionsMock, createAudienceListMock(listInput, 'server said no')],
-    });
+  it('shows how many people match, before Next', async () => {
+    __setTableRows([makeAudienceRow(), makeAudienceRow({ id: 'u2' })]);
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    const count = await screen.findByTestId('audience-match-count');
+    await waitFor(() => expect(count).toHaveTextContent('2 people'));
+
+    const next = screen.getByTestId('audience-step-next');
+    expect(count.compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('says one person, not one people', async () => {
+    __setTableRows([makeAudienceRow()]);
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+    await waitFor(() =>
+      expect(screen.getByTestId('audience-match-count')).toHaveTextContent('1 person'),
+    );
+  });
+
+  it('carries the count into step 2, where it goes back to the filters', async () => {
+    __setTableRows([makeAudienceRow(), makeAudienceRow({ id: 'u2' })]);
+    renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
     await goToStepTwo();
-    fillForm();
+    const count = screen.getByTestId('audience-match-count');
+    expect(count).toHaveTextContent('2 people');
+
+    fireEvent.click(count);
+    expect(await screen.findByTestId('audience-step-next')).toBeInTheDocument();
+  });
+
+  describe('leaving the wizard', () => {
+    it('goes straight back when no filter is applied', async () => {
+      renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+      fireEvent.click(await screen.findByRole('button', { name: 'Back to audience lists' }));
+      expect(navigateMock.fn).toHaveBeenCalledWith('/audience');
+    });
+
+    it('warns before discarding applied filters', async () => {
+      renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+      fireEvent.change(await screen.findByLabelText('Age from'), { target: { value: '25' } });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Back to audience lists' }));
+      expect(await screen.findByText('Leave without saving?')).toBeInTheDocument();
+      expect(screen.getByText(/1 filter applied/)).toBeInTheDocument();
+      expect(navigateMock.fn).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Discard filters' }));
+      expect(navigateMock.fn).toHaveBeenCalledWith('/audience');
+    });
+
+    it('pluralises the warning and lets you stay', async () => {
+      renderPage([audienceFilterOptionsMock, audienceListOwnersMock]);
+      fireEvent.change(await screen.findByLabelText('Age from'), { target: { value: '25' } });
+      fireEvent.change(screen.getByLabelText('Age to'), { target: { value: '34' } });
+      fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'en-IN' } });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Back to audience lists' }));
+      expect(await screen.findByText(/2 filters applied/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      await waitFor(() => expect(screen.queryByText('Leave without saving?')).not.toBeInTheDocument());
+      expect(navigateMock.fn).not.toHaveBeenCalled();
+    });
+  });
+
+  it('keeps you on the form when the save fails', async () => {
+    renderPage([
+      audienceFilterOptionsMock,
+      audienceListOwnersMock,
+      createAudienceListMock(listInput, 'server said no'),
+    ]);
+    await goToStepTwo();
+    fillNameAndDescription();
     fireEvent.click(screen.getByRole('button', { name: /Save list/ }));
     expect(await screen.findByText(/server said no/)).toBeInTheDocument();
     expect(screen.getByText('Name this list')).toBeInTheDocument();

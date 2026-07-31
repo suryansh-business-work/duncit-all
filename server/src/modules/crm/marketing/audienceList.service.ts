@@ -2,6 +2,8 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { AudienceListModel } from './audienceList.model';
 import { countAudience } from './audience.service';
+import { UserModel } from '@modules/access/user/user.model';
+import { PORTAL_ROLE_REQUIREMENTS } from '@modules/portals';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 
 const LIST_TABLE_CONFIG: TableEntityConfig = {
@@ -23,9 +25,14 @@ export interface AudienceListInput {
   name: string;
   description?: string | null;
   owner: string;
+  owner_user_id?: string | null;
   filters?: { field: string; op: string; value?: string | null; values?: string[] | null }[] | null;
   search?: string | null;
 }
+
+/** A usable ObjectId, or null — a malformed id is never persisted. */
+const toObjectId = (raw?: string | null) =>
+  raw && Types.ObjectId.isValid(raw) ? new Types.ObjectId(raw) : null;
 
 const notFound = () =>
   new GraphQLError('Audience list not found', { extensions: { code: 'NOT_FOUND' } });
@@ -54,6 +61,7 @@ const toPub = (doc: any, memberCount: number) => ({
   name: doc.name,
   description: doc.description,
   owner: doc.owner,
+  owner_user_id: doc.owner_user_id ? String(doc.owner_user_id) : null,
   filters: doc.filters.map((f: any) => ({
     field: f.field,
     op: f.op,
@@ -77,6 +85,29 @@ const withCounts = (docs: any[]) =>
   Promise.all(docs.map(async (doc) => toPub(doc, await countAudience(toQueryInput(doc)))));
 
 export const audienceListService = {
+  /**
+   * Who a list can be assigned to: everybody who can actually open this portal.
+   * Derived from the same PORTAL_ROLE_REQUIREMENTS map the login gate uses (plus
+   * SUPER_ADMIN, which passes every portal), so the picker cannot drift from
+   * who really has access.
+   */
+  async ownerOptions() {
+    const roles = [...PORTAL_ROLE_REQUIREMENTS.marketing, 'SUPER_ADMIN'];
+    const users = await UserModel.find({
+      'metadata.role_keys': { $in: roles },
+      'metadata.deleted_at': null,
+    })
+      .select('profile.first_name profile.last_name auth.email metadata.role_keys')
+      .sort({ 'profile.first_name': 1 });
+
+    return users.map((u: any) => ({
+      id: String(u._id),
+      name: [u.profile.first_name, u.profile.last_name].filter(Boolean).join(' '),
+      email: u.auth.email ?? '',
+      is_admin: u.metadata.role_keys.includes('SUPER_ADMIN'),
+    }));
+  },
+
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<any>(
       AudienceListModel,
@@ -100,9 +131,10 @@ export const audienceListService = {
       name: input.name.trim(),
       description: input.description?.trim() ?? '',
       owner: input.owner.trim(),
+      owner_user_id: toObjectId(input.owner_user_id),
       filters: input.filters ?? [],
       search: input.search?.trim() ?? '',
-      created_by: createdBy && Types.ObjectId.isValid(createdBy) ? new Types.ObjectId(createdBy) : null,
+      created_by: toObjectId(createdBy),
     });
     return toPub(doc, await countAudience(toQueryInput(doc)));
   },

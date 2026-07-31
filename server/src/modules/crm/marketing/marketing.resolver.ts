@@ -24,6 +24,10 @@ export const marketingResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return audienceListService.get(args.id);
     },
+    audienceListOwners: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.ownerOptions();
+    },
     marketingCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return marketingService.list();

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
+import { renderWithProviders } from '../testkit';
 import {
   FilterSidebar,
   EMPTY_FILTERS,
@@ -17,7 +18,7 @@ const OPTIONS = {
 
 const renderSidebar = (state: AudienceFilterState = EMPTY_FILTERS) => {
   const onChange = vi.fn();
-  render(<FilterSidebar state={state} onChange={onChange} options={OPTIONS} />);
+  renderWithProviders(<FilterSidebar state={state} onChange={onChange} options={OPTIONS} />);
   return onChange;
 };
 
@@ -66,14 +67,54 @@ describe('FilterSidebar', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY_FILTERS, locale: 'en-IN' });
   });
 
-  it('emits a date-range edit', () => {
-    const onChange = renderSidebar();
-    expandAll();
-    fireEvent.change(labelledSelect('Joined from'), { target: { value: '2026-01-01' } });
-    expect(onChange).toHaveBeenCalledWith({ ...EMPTY_FILTERS, joinedFrom: '2026-01-01' });
+  // Rule 11: a real MUIX picker, not a native date box. jsdom reports no fine
+  // pointer, so the responsive DatePicker renders its mobile variant here — the
+  // input is read-only and the calendar opens in a dialog.
+  describe('the date bounds', () => {
+    const openCalendar = async (index: number) => {
+      fireEvent.click(screen.getAllByLabelText(/^Choose date/)[index]);
+      return within(await screen.findByRole('dialog'));
+    };
 
-    fireEvent.change(labelledSelect('Last active to'), { target: { value: '2026-02-01' } });
-    expect(onChange).toHaveBeenCalledWith({ ...EMPTY_FILTERS, activeTo: '2026-02-01' });
+    it('opens a MUI calendar rather than a native date box', async () => {
+      renderSidebar();
+      expandAll();
+      const dialog = await openCalendar(0);
+      expect(dialog.getByRole('grid')).toBeInTheDocument();
+    });
+
+    it('emits the picked day as a plain yyyy-MM-dd bound', async () => {
+      const onChange = renderSidebar();
+      expandAll();
+      const dialog = await openCalendar(0);
+      fireEvent.click(dialog.getByRole('gridcell', { name: '15' }));
+      fireEvent.click(dialog.getByRole('button', { name: 'OK' }));
+
+      const [next] = onChange.mock.calls.at(-1) as [Record<string, string>];
+      expect(next.joinedFrom).toMatch(/^\d{4}-\d{2}-15$/);
+    });
+
+    it('shows a saved bound', () => {
+      renderSidebar({ ...EMPTY_FILTERS, joinedFrom: '2026-01-15' });
+      expandAll();
+      expect(screen.getByLabelText(/selected date is Jan 15, 2026/)).toBeInTheDocument();
+    });
+
+    it('treats a stored value that is not a date as no bound at all', () => {
+      renderSidebar({ ...EMPTY_FILTERS, joinedFrom: 'not-a-date' });
+      expandAll();
+      expect(screen.getAllByLabelText(/^Choose date$/).length).toBeGreaterThan(0);
+      expect(screen.queryByLabelText(/selected date is/)).not.toBeInTheDocument();
+    });
+
+    it('clears a bound back off again', async () => {
+      const onChange = renderSidebar({ ...EMPTY_FILTERS, activeTo: '2026-02-01' });
+      expandAll();
+      // Joined from, Joined to, Last active from, Last active to.
+      const dialog = await openCalendar(3);
+      fireEvent.click(dialog.getByRole('button', { name: 'Clear' }));
+      expect(onChange).toHaveBeenCalledWith({ ...EMPTY_FILTERS, activeTo: '' });
+    });
   });
 
   it('emits a multi-select pick and shows it as a chip', () => {
@@ -92,7 +133,7 @@ describe('FilterSidebar', () => {
 
   it('says so when a dropdown has no options yet', () => {
     const onChange = vi.fn();
-    render(
+    renderWithProviders(
       <FilterSidebar
         state={EMPTY_FILTERS}
         onChange={onChange}

@@ -36,6 +36,7 @@ const AUDIENCE_LIST_FIELDS = gql`
     name
     description
     owner
+    owner_user_id
     search
     member_count
     created_at
@@ -67,6 +68,17 @@ export const AUDIENCE_LIST = gql`
     }
   }
   ${AUDIENCE_LIST_FIELDS}
+`;
+
+export const AUDIENCE_LIST_OWNERS = gql`
+  query AudienceListOwners {
+    audienceListOwners {
+      id
+      name
+      email
+      is_admin
+    }
+  }
 `;
 
 export const CREATE_AUDIENCE_LIST = gql`

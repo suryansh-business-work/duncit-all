@@ -25,6 +25,9 @@ const audienceListSchema = new Schema(
     /** Who owns this list — a person's name, not an account. Free text so a
      * list can be assigned to someone who has no portal login. */
     owner: { type: String, required: true, trim: true, maxlength: 120 },
+    /** The account behind `owner`, when it was picked from the portal-access
+     * list. Null for a list imported or created before the picker existed. */
+    owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     /** The saved criteria, in the shared table-filter shape. */
     filters: { type: [audienceFilterSchema], default: [] },
     /** The free-text search that was active alongside the filters. */

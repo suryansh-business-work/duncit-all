@@ -1,40 +1,51 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Paper, Stack, Typography } from '@mui/material';
-import SaveIcon from '@mui/icons-material/Save';
+import { Alert, Paper, Stack, Typography } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
+import OwnerField from './OwnerField';
 import {
   audienceListSchema,
   emptyAudienceList,
   type AudienceListFormValues,
+  type OwnerOption,
 } from './audience-list.types';
 
+/** The page's top action bar submits this by id, so Save can live up there. */
+export const AUDIENCE_LIST_FORM_ID = 'audience-list-form';
+
 interface Props {
-  /** Pre-fills the owner with whoever is signed in; still editable. */
-  defaultOwner: string;
-  saving: boolean;
+  /** Everyone who can open this portal; the owner is picked from these. */
+  owners: OwnerOption[];
+  loadingOwners: boolean;
+  /** Pre-selects whoever is signed in, when they can open this portal. */
+  defaultOwnerId: string;
   error: string | null;
-  onBack: () => void;
   onSubmit: (values: AudienceListFormValues) => void;
 }
 
 /** Step 2 — name the audience that step 1 defined. */
 export default function AudienceListForm({
-  defaultOwner,
-  saving,
+  owners,
+  loadingOwners,
+  defaultOwnerId,
   error,
-  onBack,
   onSubmit,
 }: Readonly<Props>) {
   const { control, handleSubmit } = useForm<AudienceListFormValues>({
     resolver: zodResolver(audienceListSchema),
-    defaultValues: emptyAudienceList(defaultOwner),
+    defaultValues: emptyAudienceList(defaultOwnerId),
     mode: 'onBlur',
   });
 
   return (
     <Paper variant="outlined" sx={{ p: 3, borderRadius: 2, maxWidth: 640 }}>
-      <Stack spacing={2} component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+      <Stack
+        spacing={2}
+        component="form"
+        id={AUDIENCE_LIST_FORM_ID}
+        onSubmit={handleSubmit(onSubmit)}
+        noValidate
+      >
         <Stack spacing={0.25}>
           <Typography variant="subtitle1" fontWeight={800}>
             Name this list
@@ -62,27 +73,7 @@ export default function AudienceListForm({
           minRows={3}
           hint="What this audience is for."
         />
-        <RhfTextField
-          control={control}
-          name="owner"
-          label="List owner"
-          required
-          hint="Who to ask about this list."
-        />
-
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
-          <Button onClick={onBack} disabled={saving}>
-            Back
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            startIcon={<SaveIcon />}
-            disabled={saving}
-          >
-            {saving ? 'Saving…' : 'Save list'}
-          </Button>
-        </Stack>
+        <OwnerField control={control} options={owners} loading={loadingOwners} />
       </Stack>
     </Paper>
   );

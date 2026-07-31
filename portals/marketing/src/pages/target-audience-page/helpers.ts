@@ -39,6 +39,7 @@ export interface AudienceListRow {
   name: string;
   description: string;
   owner: string;
+  owner_user_id?: string | null;
   search: string;
   member_count: number;
   filters: AudienceListFilterRow[];

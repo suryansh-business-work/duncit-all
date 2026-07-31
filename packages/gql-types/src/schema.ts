@@ -450,6 +450,7 @@ export type AudienceList = {
   member_count: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   owner: Scalars['String']['output'];
+  owner_user_id?: Maybe<Scalars['ID']['output']>;
   search: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
 };
@@ -475,7 +476,19 @@ export type AudienceListInput = {
   filters?: InputMaybe<Array<AudienceListFilterInput>>;
   name: Scalars['String']['input'];
   owner: Scalars['String']['input'];
+  /** The account behind the owner name, when picked from the portal-access list. */
+  owner_user_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Somebody who can open the Marketing portal, and so can own a list. */
+export type AudienceListOwner = {
+  __typename?: 'AudienceListOwner';
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** True for a SUPER_ADMIN, who reaches every portal. */
+  is_admin: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
 };
 
 /** Server-side table page for the shared table engine (audienceListsTable). */
@@ -9183,6 +9196,8 @@ export type Query = {
   audienceFilterOptions: AudienceFilterOptions;
   /** One saved list, with its member count recomputed. */
   audienceList?: Maybe<AudienceList>;
+  /** Everybody who can open this portal — the assignable owners for a list. */
+  audienceListOwners: Array<AudienceListOwner>;
   /** Saved Target Audience lists. */
   audienceListsTable: AudienceListTablePage;
   /**

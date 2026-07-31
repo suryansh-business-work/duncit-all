@@ -34,6 +34,20 @@ describe('audienceListService', () => {
     expect(created.owner).toBe('Asha');
     expect(created.member_count).toBe(2);
     expect(created.filters).toEqual([{ field: 'city', op: 'eq', value: 'Pune', values: [] }]);
+    expect(created.owner_user_id).toBeNull();
+  });
+
+  it('links the owner to a real account when one was picked', async () => {
+    const staff = await seedUser('Pune');
+    const list = await audienceListService.create({
+      name: 'Owned',
+      owner: 'Asha',
+      owner_user_id: String(staff._id),
+    });
+    expect(list.owner_user_id).toBe(String(staff._id));
+
+    const reread = await audienceListService.get(list.id);
+    expect(reread?.owner_user_id).toBe(String(staff._id));
   });
 
   // The whole point of storing criteria instead of people: a signup that
@@ -110,6 +124,63 @@ describe('audienceListService', () => {
     await expect(audienceListService.create({ name: 'X', owner: '  ' })).rejects.toThrow(
       /owner is required/i,
     );
+  });
+
+  // A list must be assignable only to somebody who can open the portal to act
+  // on it — the same role set the login gate uses, plus SUPER_ADMIN.
+  describe('ownerOptions', () => {
+    const seedStaff = (roles: string[], first: string, over: Record<string, any> = {}) => {
+      seq += 1;
+      return UserModel.create({
+        auth: { email: `${first.toLowerCase()}${seq}@duncit.com` },
+        profile: { first_name: first, last_name: 'Staff' },
+        metadata: { status: 'ACTIVE', role_keys: roles, ...over },
+      });
+    };
+
+    it('offers marketing managers and admins, and nobody else', async () => {
+      await seedStaff(['MARKETING_MANAGER'], 'Marketer');
+      await seedStaff(['SUPER_ADMIN'], 'Admin');
+      await seedStaff(['USER'], 'Member');
+      await seedStaff(['FINANCE_MANAGER'], 'Accountant');
+
+      const owners = await audienceListService.ownerOptions();
+      expect(owners.map((o) => o.name).sort((a, b) => a.localeCompare(b))).toEqual([
+        'Admin Staff',
+        'Marketer Staff',
+      ]);
+      expect(owners.find((o) => o.name === 'Admin Staff')?.is_admin).toBe(true);
+      expect(owners.find((o) => o.name === 'Marketer Staff')?.is_admin).toBe(false);
+      expect(owners.every((o) => o.email.endsWith('@duncit.com'))).toBe(true);
+    });
+
+    it('leaves out closed accounts', async () => {
+      await seedStaff(['MARKETING_MANAGER'], 'Gone', { deleted_at: new Date() });
+      expect(await audienceListService.ownerOptions()).toEqual([]);
+    });
+
+    it('copes with an account that signed up by phone and has no email', async () => {
+      seq += 1;
+      await UserModel.create({
+        auth: { phone: { number: '900000' + seq, extension: '+91' } },
+        profile: { first_name: 'Phoney', last_name: 'Manager' },
+        metadata: { status: 'ACTIVE', role_keys: ['MARKETING_MANAGER'] },
+      });
+      expect((await audienceListService.ownerOptions())[0]).toMatchObject({
+        name: 'Phoney Manager',
+        email: '',
+      });
+    });
+
+    it('names an account that has no surname yet', async () => {
+      seq += 1;
+      await UserModel.create({
+        auth: { email: `solo${seq}@duncit.com` },
+        profile: { first_name: 'Solo' },
+        metadata: { status: 'ACTIVE', role_keys: ['MARKETING_MANAGER'] },
+      });
+      expect((await audienceListService.ownerOptions())[0].name).toBe('Solo');
+    });
   });
 
   describe('table', () => {

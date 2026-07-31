@@ -4,6 +4,7 @@ import type { AudienceFilterOptions } from '@duncit/gql-types';
 import {
   AUDIENCE_FILTER_OPTIONS,
   AUDIENCE_LIST,
+  AUDIENCE_LIST_OWNERS,
   CREATE_AUDIENCE_LIST,
   DELETE_AUDIENCE_LIST,
 } from '../../src/pages/target-audience-page/queries';
@@ -71,6 +72,7 @@ export const makeAudienceListRow = (over: Partial<AudienceListRow> = {}): Audien
   owner: 'Asha Rao',
   search: '',
   member_count: 1284,
+  owner_user_id: 'me',
   filters: [{ field: 'city', op: 'in', value: null, values: ['Pune'] }],
   created_at: '2026-06-01T00:00:00.000Z',
   ...over,
@@ -99,6 +101,22 @@ export const audienceFilterOptionsEmptyMock: MockedResponse = {
       },
     },
   },
+};
+
+export const OWNERS = [
+  { __typename: 'AudienceListOwner', id: 'me', name: 'Asha Rao', email: 'asha@duncit.com', is_admin: false },
+  { __typename: 'AudienceListOwner', id: 'boss', name: 'Ravi Boss', email: 'ravi@duncit.com', is_admin: true },
+  { __typename: 'AudienceListOwner', id: 'nameless', name: '', email: 'new.hire@duncit.com', is_admin: false },
+];
+
+export const audienceListOwnersMock: MockedResponse = {
+  request: { query: AUDIENCE_LIST_OWNERS },
+  result: { data: { audienceListOwners: OWNERS } },
+};
+
+export const audienceListOwnersEmptyMock: MockedResponse = {
+  request: { query: AUDIENCE_LIST_OWNERS },
+  result: { data: { audienceListOwners: [] } },
 };
 
 const toGqlList = (row: AudienceListRow) => ({

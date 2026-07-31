@@ -65,6 +65,12 @@ export default defineConfig({
         // children (tables, cards, dialogs, sections, forms) ARE unit-tested.
         'src/pages/hosts-page/HostsPage.tsx',
         'src/pages/hosts-page/HostEditDialog.tsx',
+        // Review-dialog container: Apollo mutations + the useDateFormat/settings
+        // read, same class as the excluded useEntityLifecycle hook. Its
+        // presentational children (details/documents/commission/categories) ARE
+        // unit-tested.
+        'src/pages/hosts-page/useHostReview.ts',
+        'src/pages/hosts-page/HostReviewDialog/index.tsx',
         // Host details: Apollo container (host + host-pods queries, bucketing);
         // its presentational HostPodsSection IS unit-tested.
         'src/pages/host-details-page/HostDetailsPage.tsx',
@@ -102,7 +108,6 @@ export default defineConfig({
         // non-null record (so `record?.x` guards never see null in jsdom) and
         // the health card always mounts the Apollo AdjustHealthDialog. Driven
         // by the excluded container pages; validated end-to-end.
-        'src/pages/hosts-page/HostReviewDialog.tsx',
         'src/pages/venues-page/VenueReviewDialog.tsx',
         'src/pages/user-details-page/UserHealthSection/HealthScoreCard.tsx',
         // Media library: Pexels REST API, ImageKit device upload and the picker

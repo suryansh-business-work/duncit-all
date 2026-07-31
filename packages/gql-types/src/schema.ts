@@ -873,6 +873,11 @@ export type Category = {
   /** SUB level only: how many co-hosts one pod may carry (1-5). */
   max_co_hosts: Scalars['Int']['output'];
   media: Array<CategoryMedia>;
+  /**
+   * SUB level only: the fewest people this activity needs to work. A host sizing
+   * a pod in this sub-category cannot go below it. 0 means no minimum is set.
+   */
+  min_pax: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   parent_id?: Maybe<Scalars['ID']['output']>;
   slug: Scalars['String']['output'];
@@ -1538,6 +1543,7 @@ export type CreateCategoryInput = {
   level: CategoryLevel;
   max_co_hosts?: InputMaybe<Scalars['Int']['input']>;
   media?: InputMaybe<Array<CategoryMediaInput>>;
+  min_pax?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
   parent_id?: InputMaybe<Scalars['ID']['input']>;
   sort_order?: InputMaybe<Scalars['Int']['input']>;
@@ -3180,6 +3186,16 @@ export type Host = {
   status: HostStatus;
   step_completed: Scalars['Int']['output'];
   submitted_at?: Maybe<Scalars['String']['output']>;
+  /**
+   * The Super → Category → Sub this applicant picked in their "Earn with
+   * Duncit" onboarding survey, read back from their onboarding meeting.
+   * Resolved on demand (never selected by the list queries) so the Review Host
+   * dialog can prefill the picker even when the pick was never copied onto
+   * host_categories — meetings approved before that seeding existed, partial
+   * triples, and hosts onboarded outside the meeting flow all leave it empty.
+   * Null when they never booked a meeting or the taxonomy has since changed.
+   */
+  survey_category?: Maybe<HostCategory>;
   tags: Array<Scalars['String']['output']>;
   updated_at: Scalars['String']['output'];
   user_id: Scalars['ID']['output'];
@@ -4299,6 +4315,12 @@ export type Mutation = {
   /** Onboarding/admin slot management for any venue (role-gated). */
   adminCreateVenueSlots: Array<VenueSlot>;
   adminDeleteVenueSlot: Scalars['Boolean']['output'];
+  /**
+   * Replace a host's operating categories and nothing else. adminUpdateHost
+   * requires the whole step1/2/3 payload, so a caller that only wants to set
+   * categories would have to round-trip every other field to use it.
+   */
+  adminSetHostCategories: Host;
   /** Onboarding/admin: edit any brand (e.g. complete an approval-created draft) and optionally set its status. */
   adminUpdateEcommBrand: EcommBrand;
   adminUpdateHost: Host;
@@ -5012,6 +5034,12 @@ export type MutationAdminCreateVenueSlotsArgs = {
 
 export type MutationAdminDeleteVenueSlotArgs = {
   slot_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAdminSetHostCategoriesArgs = {
+  categories: Array<HostCategoryInput>;
+  host_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -8377,6 +8405,12 @@ export type PodSettlement = {
   has_venue: Scalars['Boolean']['output'];
   host: PodSettlementParty;
   host_commission_pct: Scalars['Float']['output'];
+  /**
+   * Guests who actually attended and paid — the host's own free seat excluded.
+   * A completed pod settles on what it COLLECTED, so this is the head count
+   * behind every figure above.
+   */
+  paying_attendees: Scalars['Int']['output'];
   pod_id: Scalars['ID']['output'];
   pod_title: Scalars['String']['output'];
   venue?: Maybe<PodSettlementParty>;
@@ -9115,6 +9149,14 @@ export type Query = {
   crmWebsitePages: Array<CrmWebsitePage>;
   crmWebsitePagesTable: CrmWebsitePageTablePage;
   dashboardTotals: DashboardTotals;
+  /**
+   * Just the global default host commission % (Finance → Default Deductions).
+   * Split out of financeSettings because the Onboarding console's Review Host
+   * dialog seeds its commission field from this number, and financeSettings
+   * also carries the business GSTIN, invoice branding and payout config that
+   * onboarding staff have no business reading.
+   */
+  defaultHostCommissionPct: Scalars['Float']['output'];
   /** Onboarding/admin: a single brand by id. */
   ecommBrand?: Maybe<EcommBrand>;
   /** Onboarding/admin: all brands, optionally filtered by status. */
@@ -9161,6 +9203,8 @@ export type Query = {
   /** Founder/Startup dashboard: every KPI for the date range, computed + manual. */
   founderDashboard: FounderDashboard;
   host?: Maybe<Host>;
+  /** The host profile behind a user, or null when they have never onboarded. */
+  hostByUser?: Maybe<Host>;
   hostInsights: HostInsights;
   hostLead?: Maybe<HostLead>;
   hostLeads: Array<HostLead>;
@@ -10121,6 +10165,11 @@ export type QueryFounderDashboardArgs = {
 
 export type QueryHostArgs = {
   host_doc_id: Scalars['ID']['input'];
+};
+
+
+export type QueryHostByUserArgs = {
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -12320,6 +12369,7 @@ export type UpdateCategoryInput = {
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   max_co_hosts?: InputMaybe<Scalars['Int']['input']>;
   media?: InputMaybe<Array<CategoryMediaInput>>;
+  min_pax?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   sort_order?: InputMaybe<Scalars['Int']['input']>;
 };

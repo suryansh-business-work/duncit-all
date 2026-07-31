@@ -1,14 +1,9 @@
-import { useQuery } from '@apollo/client';
 import { Box, Button, Divider, Drawer, IconButton, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { InfoRow, StatusChip, type StatusColorMap } from '@duncit/ui';
+import { SurveyAnswers } from '../../components/survey-answers';
 import { meetingStatusLabel } from './statusLabel';
-import {
-  USER_SURVEY_RESPONSES,
-  type OnboardingMeeting,
-  type SurveyKind,
-  type UserSurveyResponse,
-} from './queries';
+import type { OnboardingMeeting, SurveyKind } from './queries';
 
 const STATUS_COLOR: StatusColorMap = {
   REQUESTED: 'default',
@@ -24,30 +19,6 @@ interface Props {
   onClose: () => void;
   onEdit?: (meeting: OnboardingMeeting) => void;
   onCancel?: (meeting: OnboardingMeeting) => void;
-}
-
-/** Read-only survey answers the applicant submitted for this kind. */
-function SurveyAnswers({ userId, kind }: Readonly<{ userId: string; kind: SurveyKind }>) {
-  const { data, loading } = useQuery<{ userSurveyResponses: UserSurveyResponse[] }>(USER_SURVEY_RESPONSES, {
-    variables: { user_id: userId },
-    fetchPolicy: 'cache-and-network',
-  });
-  const items = (data?.userSurveyResponses ?? []).filter((r) => r.kind === kind).flatMap((r) => r.items ?? []);
-  return (
-    <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>Survey answers</Typography>
-      {loading && items.length === 0 && <Typography variant="body2" color="text.secondary">Loading…</Typography>}
-      {!loading && items.length === 0 && <Typography variant="body2" color="text.secondary">No survey answers on file.</Typography>}
-      <Stack spacing={0.75} sx={{ mt: 0.5 }}>
-        {items.map((it) => (
-          <Box key={`${it.label}-${it.answer}`}>
-            <Typography variant="caption" color="text.secondary">{it.label}</Typography>
-            <Typography variant="body2">{it.answer || '—'}</Typography>
-          </Box>
-        ))}
-      </Stack>
-    </Box>
-  );
 }
 
 // Right-side details drawer for a single onboarding meeting (incl. survey answers).

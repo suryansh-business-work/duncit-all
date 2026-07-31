@@ -31,6 +31,16 @@ export const hostTypeDefs = /* GraphQL */ `
     bank_account: BankAccountVerification!
     tags: [String!]!
     host_categories: [HostCategory!]!
+    """
+    The Super → Category → Sub this applicant picked in their "Earn with
+    Duncit" onboarding survey, read back from their onboarding meeting.
+    Resolved on demand (never selected by the list queries) so the Review Host
+    dialog can prefill the picker even when the pick was never copied onto
+    host_categories — meetings approved before that seeding existed, partial
+    triples, and hosts onboarded outside the meeting flow all leave it empty.
+    Null when they never booked a meeting or the taxonomy has since changed.
+    """
+    survey_category: HostCategory
     step_completed: Int!
     "Permanent human id (HOST-000001) — Onboarded Hosts table."
     host_no: String

@@ -4,6 +4,7 @@ import { HostModel, type IHost, type IHostCategory } from './host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { MeetingModel } from '@modules/survey/meeting.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -523,6 +524,42 @@ export const hostService = {
     h.status = 'DRAFT';
     await h.save();
     return toPub(h);
+  },
+
+  /** The Super → Category → Sub the applicant picked in the Earn with Duncit
+   * gate, read back from their latest HOST onboarding meeting that carries a
+   * complete triple. Backs `Host.survey_category`: the Review dialog shows it
+   * as what they applied with, and prefills it when host_categories is empty.
+   * Null when they never booked a meeting, never completed the cascade, or the
+   * taxonomy moved under them since (a stale triple is not offered). */
+  async surveyCategoryForUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return null;
+    const meeting = await MeetingModel.findOne({
+      user_id: new Types.ObjectId(userId),
+      kind: 'HOST',
+      super_category_id: { $ne: null },
+      category_id: { $ne: null },
+      sub_category_id: { $ne: null },
+    }).sort({ created_at: -1 });
+    if (!meeting) return null;
+    try {
+      const c = await normalizeHostCategoryInput({
+        super_category_id: String(meeting.super_category_id),
+        category_id: String(meeting.category_id),
+        sub_category_id: String(meeting.sub_category_id),
+      });
+      return {
+        super_category_id: String(c.super_category_id),
+        category_id: String(c.category_id),
+        sub_category_id: String(c.sub_category_id),
+        super_category_name: c.super_category_name,
+        category_name: c.category_name,
+        sub_category_name: c.sub_category_name,
+        request_no: meeting.request_no ?? '',
+      };
+    } catch {
+      return null;
+    }
   },
 
   /** Append a category mapping to an approved host from an approved Host Request.

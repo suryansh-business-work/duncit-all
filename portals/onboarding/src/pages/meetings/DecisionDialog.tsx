@@ -1,26 +1,18 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import {
   Alert,
-  Box,
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
-  Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import {
-  DECIDE_MEETING,
-  USER_SURVEY_RESPONSES,
-  type MeetingDecision,
-  type OnboardingMeeting,
-  type UserSurveyResponse,
-} from './queries';
+import { SurveyAnswers } from '../../components/survey-answers';
+import { DECIDE_MEETING, type MeetingDecision, type OnboardingMeeting } from './queries';
 
 interface Props {
   meeting: OnboardingMeeting | null;
@@ -37,15 +29,6 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
   const [decideMeeting, { loading }] = useMutation(DECIDE_MEETING);
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  const { data, loading: loadingSurvey } = useQuery<{ userSurveyResponses: UserSurveyResponse[] }>(
-    USER_SURVEY_RESPONSES,
-    { variables: { user_id: meeting?.user_id }, skip: !meeting?.user_id, fetchPolicy: 'cache-and-network' },
-  );
-
-  const items = (data?.userSurveyResponses ?? [])
-    .filter((r) => r.kind === meeting?.kind)
-    .flatMap((r) => r.items ?? []);
 
   const close = () => {
     setFeedback('');
@@ -79,23 +62,7 @@ export default function DecisionDialog({ meeting, onClose, onDecided }: Readonly
           Review {meeting?.user_name || meeting?.contact_name || 'the applicant'}'s survey answers and add your
           feedback. Approving drafts them into the Onboarded list; denying asks them to re-apply.
         </Typography>
-        <Typography variant="subtitle2" sx={{ mb: 1 }}>Survey answers</Typography>
-        {loadingSurvey && items.length === 0 && (
-          <Stack alignItems="center" sx={{ py: 2 }}><CircularProgress size={22} /></Stack>
-        )}
-        {!loadingSurvey && items.length === 0 && (
-          <Typography variant="body2" color="text.secondary">No survey answers on file.</Typography>
-        )}
-        {items.length > 0 && (
-          <Stack spacing={1}>
-            {items.map((it) => (
-              <Box key={`${it.label}-${it.answer}`}>
-                <Typography variant="caption" color="text.secondary">{it.label}</Typography>
-                <Typography variant="body2">{it.answer || '—'}</Typography>
-              </Box>
-            ))}
-          </Stack>
-        )}
+        {meeting?.user_id && <SurveyAnswers userId={meeting.user_id} kind={meeting.kind} />}
         <Divider sx={{ my: 2 }} />
         <TextField
           size="small"

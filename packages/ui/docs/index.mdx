@@ -29,6 +29,7 @@ exports:
   - 'StatusChip'
   - 'STATUS_CHIP_COLORS'
   - 'InfoRow'
+  - 'ImagePreview'
   - 'PageHeader'
   - 'BackHeader'
   - 'BackButton'
@@ -266,6 +267,28 @@ render(<LanguageSelect value="en" options={[{ code: 'en', label: 'English' }]} o
 | `bold` | `boolean` | no | `false` | `split` only: total-row styling. |
 | `boldColor` | `string` | no | — | `split` + `bold`: accent colour for the value. |
 | `sx` / `labelSx` / `valueSx` | `SxProps<Theme>` | no | — | Style overrides. |
+
+### `ImagePreview`
+
+A remote document/photo as a square thumbnail that opens full-screen on click. Use it
+anywhere a review screen used to render an "open in new tab" button for a KYC document —
+the reviewer stays in the dialog.
+
+```tsx
+import { ImagePreview } from '@duncit/ui';
+
+<ImagePreview src={host.passport_photo_url} label="Passport photo" />;
+```
+
+| Prop | Type | Required | Default | Meaning |
+| --- | --- | --- | --- | --- |
+| `src` | `string` | yes | — | Remote image URL. |
+| `label` | `string` | yes | — | Accessible name **and** the caption under the thumbnail. Drives `Enlarge {label}` / `Close {label}`. |
+| `size` | `number` | no | `96` | Thumbnail edge length in px (square). |
+
+Open state is internal — there is nothing to wire at the call site. A `src` that fails to
+load swaps the thumbnail for a plain external link to the same URL, so a document that has
+been deleted or moved server-side is still reachable instead of rendering a blank box.
 
 ### `PageHeader`
 

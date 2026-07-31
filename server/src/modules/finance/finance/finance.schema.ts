@@ -395,6 +395,14 @@ export const financeTypeDefs = /* GraphQL */ `
   extend type Query {
     financeSettings: FinanceSettings!
     publicFinanceSettings: PublicFinanceSettings!
+    """
+    Just the global default host commission % (Finance → Default Deductions).
+    Split out of financeSettings because the Onboarding console's Review Host
+    dialog seeds its commission field from this number, and financeSettings
+    also carries the business GSTIN, invoice branding and payout config that
+    onboarding staff have no business reading.
+    """
+    defaultHostCommissionPct: Float!
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
     paymentReleaseRequestsTable(query: TableQueryInput): PaymentReleaseRequestTablePage!
     # Live preview of the host/venue split for a pod given a venue bill.

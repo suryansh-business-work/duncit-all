@@ -36,9 +36,9 @@ const full: HostRow = {
   pan_number: 'PAN', aadhar_number: 'AAD', status: 'APPROVED', is_active: true, submitted_at: '2026-01-02',
   host_commission_pct: 12,
   host_categories: [
-    { super_category_name: 'For You', category_name: 'Sports', sub_category_name: 'Badminton', request_no: 'HOSTREQ-000001' },
-    { super_category_name: '', category_name: 'Music', sub_category_name: '', request_no: '' },
-    { super_category_name: '', category_name: '', sub_category_name: '', request_no: 'HOSTREQ-000003' },
+    { super_category_id: 'sup-1', category_id: 'cat-1', sub_category_id: 'sub-1', super_category_name: 'For You', category_name: 'Sports', sub_category_name: 'Badminton', request_no: 'HOSTREQ-000001' },
+    { super_category_id: 'sup-2', category_id: 'cat-2', sub_category_id: 'sub-2', super_category_name: '', category_name: 'Music', sub_category_name: '', request_no: '' },
+    { super_category_id: 'sup-3', category_id: 'cat-3', sub_category_id: 'sub-3', super_category_name: '', category_name: '', sub_category_name: '', request_no: 'HOSTREQ-000003' },
   ],
 };
 const sparse: HostRow = {

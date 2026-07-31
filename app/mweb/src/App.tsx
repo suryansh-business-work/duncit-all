@@ -16,6 +16,7 @@ import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
+import { useShortLinkJourney } from './app/useShortLinkJourney';
 import { useBrandingAssets } from './hooks/useBrandingAssets';
 import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 import { StatusUploadProvider } from './components/status-upload/StatusUploadProvider';
@@ -63,6 +64,8 @@ export default function App() {
     superCategory,
   });
   useHapticFeedback(isAuthed);
+  // Only does anything for a visitor who arrived through a duncit.com link.
+  useShortLinkJourney(isAuthed);
 
   return (
     <StatusUploadProvider>

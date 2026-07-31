@@ -32,6 +32,24 @@ const favicon =
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   </head>
   <body>
+  <script>
+    // Short-link attribution: a duncit.com marketing link may land on this
+    // site carrying dl/dlc markers. The shared helper verifies them against
+    // the API and records the visit; ordinary traffic costs one no-op call.
+    import {
+      captureShortLinkAttribution,
+      installAttributionLinkDecorator,
+    } from '@duncit/utils';
+    import { urlConfigs } from '../config/url-configs';
+    captureShortLinkAttribution({
+      search: window.location.search,
+      referrer: document.referrer,
+      serverUrl: urlConfigs.graphqlUrl.replace('/graphql', ''),
+    });
+    // Keep the tags on every hyperlink out to another duncit surface —
+    // storage does not cross origins, the URL does.
+    installAttributionLinkDecorator();
+  </script>
     <slot />
       <script>
       // Ship console errors to SignOz (via the server /logs ingest).

@@ -77,6 +77,20 @@ jest.mock('expo-video', () => ({
 // @react-navigation/native down to useNavigation, so the real ref module cannot
 // even be constructed. Default it to a detached ref: never ready, no route.
 // Specs that assert cart routing override this with their own jest.mock.
+// Short-link attribution is fire-and-forget plumbing touched from App and
+// RootNavigator; suites that render navigation must not hit secure-store or
+// the network through it. Its own spec calls jest.unmock to test the real one.
+jest.mock('@/services/short-link-attribution', () => ({
+  SHORT_LINK_CLICK_KEY: 'duncit.short_link_click',
+  stepForRouteName: jest.fn(() => null),
+  shortLinkParamsFromUrl: jest.fn(() => ({ code: null, clickId: null })),
+  storedClickId: jest.fn(async () => null),
+  captureFromUrl: jest.fn(async () => null),
+  reportJourneyStep: jest.fn(),
+  reportJourneyForCurrentRoute: jest.fn(),
+  initShortLinkAttribution: jest.fn(() => () => undefined),
+}));
+
 jest.mock('@/navigation/navigationRef', () => ({
   navigationRef: {
     isReady: () => false,

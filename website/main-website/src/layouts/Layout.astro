@@ -43,7 +43,13 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
       (function () {
         var path = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
         if (!new RegExp(shortCodePattern).test(path)) return;
-        window.location.replace(shortLinkBase + '/' + path + window.location.search);
+        var params = new URLSearchParams(window.location.search);
+        // Forward the ORIGINAL referrer. By the next hop document.referrer
+        // says duncit.com, so without this every click would be recorded as
+        // having come from our own site instead of Instagram, a post or a chat.
+        if (document.referrer) params.set('dr', document.referrer);
+        var query = params.toString();
+        window.location.replace(shortLinkBase + '/' + path + (query ? '?' + query : ''));
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -65,6 +71,24 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
     />
   </head>
   <body>
+  <script>
+    // Short-link attribution: a duncit.com marketing link may land on this
+    // site carrying dl/dlc markers. The shared helper verifies them against
+    // the API and records the visit; ordinary traffic costs one no-op call.
+    import {
+      captureShortLinkAttribution,
+      installAttributionLinkDecorator,
+    } from '@duncit/utils';
+    import { urlConfigs } from '../config/url-configs';
+    captureShortLinkAttribution({
+      search: window.location.search,
+      referrer: document.referrer,
+      serverUrl: urlConfigs.serverUrl,
+    });
+    // Keep the tags on every hyperlink out to another duncit surface —
+    // storage does not cross origins, the URL does.
+    installAttributionLinkDecorator();
+  </script>
     <slot />
       <script>
       // Ship console errors to SignOz (via the server /logs ingest).

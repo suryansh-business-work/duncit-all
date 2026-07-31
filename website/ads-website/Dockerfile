@@ -49,6 +49,8 @@ ENV PUBLIC_MAIN_SITE_URL=$PUBLIC_MAIN_SITE_URL
 
 COPY website/ads-website ./website/ads-website
 COPY packages/logs ./packages/logs
+# @duncit/utils source — the layout imports the short-link capture from it.
+COPY packages/utils ./packages/utils
 RUN pnpm --filter ads-website build
 
 # --- runner ---

@@ -20,6 +20,10 @@ import { NativeTourProvider } from '@/tours/NativeTourProvider';
 import { SplashOverlay } from '@/components/SplashOverlay';
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { linking } from '@/navigation/linking';
+import {
+  initShortLinkAttribution,
+  reportJourneyForCurrentRoute,
+} from '@/services/short-link-attribution';
 import { navigationRef } from '@/navigation/navigationRef';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
@@ -103,6 +107,12 @@ export default function App() {
     loadAppVersion();
   }, [hydrateTheme, hydrateStudioMode, hydrateCart, bootstrap, loadConfig, loadAppVersion]);
 
+  // Short-link attribution: capture the URL the app was opened with (an App
+  // Link from a duncit.com short link carries dl/dlc markers) and every URL
+  // received while running. The subscription outlives renders; unsubscribed on
+  // teardown.
+  useEffect(() => initShortLinkAttribution(), []);
+
   if (!ready) return null;
 
   return (
@@ -117,6 +127,7 @@ export default function App() {
                   ref={navigationRef}
                   theme={navThemeFor(scheme === 'dark')}
                   linking={linking}
+                  onStateChange={reportJourneyForCurrentRoute}
                 >
                   <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
                   {/* Inside NavigationContainer so a tour survives the

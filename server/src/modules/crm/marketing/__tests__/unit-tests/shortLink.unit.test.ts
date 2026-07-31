@@ -123,6 +123,8 @@ describe('shortLink resolvers', () => {
       () => (shortLinkResolvers.Query as any).shortLinksTable({}, {}, ctx),
       () => (shortLinkResolvers.Query as any).shortLink({}, { id: 'x' }, ctx),
       () => (shortLinkResolvers.Query as any).shortLinkQr({}, { id: 'x' }, ctx),
+      () => (shortLinkResolvers.Query as any).shortLinkFunnel({}, { id: 'x' }, ctx),
+      () => (shortLinkResolvers.Query as any).shortLinkJourneys({}, { id: 'x' }, ctx),
       () => (shortLinkResolvers.Mutation as any).createShortLink({}, { input: {} }, ctx),
       () =>
         (shortLinkResolvers.Mutation as any).setShortLinkActive(

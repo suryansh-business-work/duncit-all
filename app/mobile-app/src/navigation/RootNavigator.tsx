@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { MainTabs } from '@/navigation/MainTabs';
@@ -68,6 +68,7 @@ import { ListProductScreen } from '@/screens/ListProductScreen';
 import { BeClubAdminScreen } from '@/screens/BeClubAdminScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
+import { reportJourneyStep } from '@/services/short-link-attribution';
 import { consumePendingBooking } from './pendingBooking';
 import { navigationRef } from './navigationRef';
 import type { RootStackParamList } from './types';
@@ -85,6 +86,20 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function RootNavigator() {
   const token = useAuthStore((s) => s.token);
   const surveyCompleted = useAuthStore((s) => s.surveyCompleted);
+  // Short-link journey: a session binds the click to the account, and the
+  // survey flag flipping true IS the survey being finished. Both are no-ops
+  // for the vast majority who never followed a link, and the server keeps a
+  // step's first timestamp, so repeats never move anything.
+  const prevSurveyCompleted = useRef(surveyCompleted);
+  useEffect(() => {
+    if (token) reportJourneyStep('SIGNED_UP');
+  }, [token]);
+  useEffect(() => {
+    if (token && surveyCompleted && !prevSurveyCompleted.current) {
+      reportJourneyStep('SURVEY_DONE');
+    }
+    prevSurveyCompleted.current = surveyCompleted;
+  }, [token, surveyCompleted]);
 
   // Replay a booking deep link that arrived while signed out (linking.ts parked
   // it and routed to Login) — the native twin of mWeb's `?redirect` return.

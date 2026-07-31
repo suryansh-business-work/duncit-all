@@ -1,17 +1,15 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
-import { useDateFormat } from '@duncit/app-settings';
 import { ConfirmDialog, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import { getShortLinkColumns } from './columns';
-import ShortLinkDetailsDialog from './ShortLinkDetailsDialog';
 import CreateShortLinkDialog from './CreateShortLinkDialog';
 import {
   DELETE_SHORT_LINK,
-  SET_SHORT_LINK_ACTIVE,
   SHORT_LINKS_TABLE,
   SHORT_LINK_OPTIONS,
   type ShortLinkOptions,
@@ -25,14 +23,12 @@ const NO_OPTIONS: ShortLinkOptions = { sources: [], mediums: [] };
  * been followed. */
 export default function ShortLinksPage() {
   const client = useApolloClient();
-  const { formatDateTime } = useDateFormat();
+  const navigate = useNavigate();
   const refetchRef = useRef<(() => void) | null>(null);
   const [creating, setCreating] = useState(false);
-  const [viewing, setViewing] = useState<ShortLinkRow | null>(null);
   const [target, setTarget] = useState<ShortLinkRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleteLink, { loading: deleting }] = useMutation(DELETE_SHORT_LINK);
-  const [setActive, { loading: toggling }] = useMutation(SET_SHORT_LINK_ACTIVE);
 
   const { data: optionsData } = useQuery<{ shortLinkOptions: ShortLinkOptions }>(
     SHORT_LINK_OPTIONS,
@@ -41,25 +37,25 @@ export default function ShortLinksPage() {
 
   const fetchRows = useApolloTableFetch<ShortLinkRow>(client, SHORT_LINKS_TABLE, 'shortLinksTable');
 
+  // Opening a link is a page, not a dialog: it carries a chart, six
+  // breakdowns and a paged table of every click.
+  const openLink = useCallback(
+    (link: ShortLinkRow) => navigate(`/short-links/${link.id}`),
+    [navigate],
+  );
+
   const columns = useMemo(
     () =>
       getShortLinkColumns({
         sources: options.sources,
         mediums: options.mediums,
-        onView: setViewing,
+        onView: openLink,
         onDelete: setTarget,
       }),
-    [options],
+    [openLink, options],
   );
 
   const refresh = useCallback(() => refetchRef.current?.(), []);
-
-  const toggleActive = async (link: ShortLinkRow) => {
-    await setActive({ variables: { id: link.id, is_active: !link.is_active } });
-    notifySuccess(link.is_active ? `“${link.label}” retired` : `“${link.label}” reactivated`);
-    setViewing(null);
-    refresh();
-  };
 
   const confirmDelete = async (link: ShortLinkRow) => {
     setError(null);
@@ -101,7 +97,7 @@ export default function ShortLinksPage() {
         columns={columns}
         fetchRows={fetchRows}
         getRowId={getRowId}
-        onRowClick={setViewing}
+        onRowClick={openLink}
         refetchRef={refetchRef}
         emptyText="No short links yet. Create one to start tracking a channel."
         searchPlaceholder="Search by label, code or destination"
@@ -114,19 +110,10 @@ export default function ShortLinksPage() {
           onClose={() => setCreating(false)}
           onCreated={(link) => {
             setCreating(false);
-            setViewing(link);
-            refresh();
+            navigate(`/short-links/${link.id}`);
           }}
         />
       )}
-
-      <ShortLinkDetailsDialog
-        link={viewing}
-        busy={toggling}
-        formatDateTime={formatDateTime}
-        onClose={() => setViewing(null)}
-        onToggleActive={toggleActive}
-      />
 
       {/* Rendered only once a link is picked, so confirming needs no null
           guard for a state the dialog cannot be open in. */}

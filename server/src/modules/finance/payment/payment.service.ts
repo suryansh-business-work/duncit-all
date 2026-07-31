@@ -636,6 +636,22 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
   } catch (e) {
     logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'ProductOrder creation failed' });
   }
+  // Marketing attribution: credit this sale to the short link the buyer came
+  // through, if any. Every paid path funnels through here — dummy, 100%-off
+  // coupon and Razorpay alike — so this is the one place it belongs. Silent
+  // for the majority who never followed a link, and best-effort: attribution
+  // must never fail a payment that already succeeded.
+  try {
+    const { shortLinkJourneyService } = await import('@modules/crm/marketing/shortLinkJourney.service');
+    await shortLinkJourneyService.attributePayment({
+      userId: String(doc.user_id),
+      paymentId: String(doc._id),
+      amount: doc.total,
+      at: doc.paid_at ?? undefined,
+    });
+  } catch (e) {
+    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Short-link attribution failed' });
+  }
   try {
     const pdf = await generateInvoicePdf({
       invoice_no: doc.invoice_no!,

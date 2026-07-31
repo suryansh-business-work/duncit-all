@@ -99,6 +99,113 @@ export const DELETE_SHORT_LINK = gql`
   }
 `;
 
+/** One link in full, for the detail page. */
+export const SHORT_LINK = gql`
+  query ShortLink($id: ID!) {
+    shortLink(id: $id) {
+      ...ShortLinkFields
+    }
+  }
+  ${SHORT_LINK_FIELDS}
+`;
+
+/** Aggregated analytics for one link — powers the detail page. */
+export const SHORT_LINK_STATS = gql`
+  query ShortLinkStats($id: ID!) {
+    shortLinkStats(id: $id) {
+      total_clicks
+      unique_visitors
+      countries_reached
+      daily {
+        date
+        count
+      }
+      platforms {
+        label
+        count
+      }
+      devices {
+        label
+        count
+      }
+      oses {
+        label
+        count
+      }
+      browsers {
+        label
+        count
+      }
+      countries {
+        label
+        count
+      }
+      cities {
+        label
+        count
+      }
+      referrers {
+        label
+        count
+      }
+    }
+  }
+`;
+
+export const SHORT_LINK_CLICKS = gql`
+  query ShortLinkClicks($id: ID!, $query: TableQueryInput) {
+    shortLinkClicks(id: $id, query: $query) {
+      total
+      rows {
+        id
+        click_id
+        clicked_at
+        platform
+        referrer_host
+        device_type
+        os
+        browser
+        country
+        region
+        city
+      }
+    }
+  }
+`;
+
+export interface ShortLinkBreakdown {
+  label: string;
+  count: number;
+}
+
+export interface ShortLinkStats {
+  total_clicks: number;
+  unique_visitors: number;
+  countries_reached: number;
+  daily: { date: string; count: number }[];
+  platforms: ShortLinkBreakdown[];
+  devices: ShortLinkBreakdown[];
+  oses: ShortLinkBreakdown[];
+  browsers: ShortLinkBreakdown[];
+  countries: ShortLinkBreakdown[];
+  cities: ShortLinkBreakdown[];
+  referrers: ShortLinkBreakdown[];
+}
+
+export interface ShortLinkClickRow {
+  id: string;
+  click_id: string;
+  clicked_at: string;
+  platform: string;
+  referrer_host?: string | null;
+  device_type: string;
+  os: string;
+  browser: string;
+  country?: string | null;
+  region?: string | null;
+  city?: string | null;
+}
+
 export interface ShortLinkOption {
   value: string;
   label: string;

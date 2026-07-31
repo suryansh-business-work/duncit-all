@@ -51,7 +51,14 @@ export function generateShortCode(): string {
  */
 export function buildDestination(
   destinationUrl: string,
-  tags: { code: string; utm_source: string; utm_medium: string; utm_campaign?: string | null },
+  tags: {
+    code: string;
+    utm_source: string;
+    utm_medium: string;
+    utm_campaign?: string | null;
+    /** This click, so a later signup or payment can be traced back to it. */
+    click_id?: string | null;
+  },
 ): string {
   const url = new URL(destinationUrl);
   const params: [string, string | null | undefined][] = [
@@ -59,6 +66,7 @@ export function buildDestination(
     ['utm_medium', tags.utm_medium],
     ['utm_campaign', tags.utm_campaign],
     ['dl', tags.code],
+    ['dlc', tags.click_id],
   ];
   for (const [key, value] of params) {
     if (value && !url.searchParams.has(key)) url.searchParams.set(key, value);

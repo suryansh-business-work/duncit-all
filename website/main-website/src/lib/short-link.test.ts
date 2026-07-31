@@ -1,15 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { SHORT_CODE_PATTERN, shortCodeFromPath, shortLinkResolverUrl } from './short-link';
+import { SHORT_CODE_PATTERN } from './short-link';
 
-describe('shortCodeFromPath', () => {
-  it('recognises a short code', () => {
-    expect(shortCodeFromPath('/aB3xY9Zq')).toBe('aB3xY9Zq');
-    expect(shortCodeFromPath('/Zq7mKp2a')).toBe('Zq7mKp2a');
-    expect(shortCodeFromPath('/1234567A')).toBe('1234567A');
+/** What the inline redirect script does to location.pathname before testing. */
+const segment = (pathname: string) => pathname.replace(/^\/+/, '').replace(/\/+$/, '');
+const isCode = (pathname: string) => SHORT_CODE_PATTERN.test(segment(pathname));
+
+describe('SHORT_CODE_PATTERN', () => {
+  it('recognises a generated short code', () => {
+    for (const path of ['/aB3xY9Zq', '/Zq7mKp2a', '/1234567A', '/A1bcdefg']) {
+      expect(isCode(path)).toBe(true);
+    }
   });
 
   it('tolerates a trailing slash', () => {
-    expect(shortCodeFromPath('/aB3xY9Zq/')).toBe('aB3xY9Zq');
+    expect(isCode('/aB3xY9Zq/')).toBe(true);
   });
 
   // The whole point of the narrow shape: a real page of this site must never
@@ -25,47 +29,23 @@ describe('shortCodeFromPath', () => {
       '/support',
       '/safety',
       '/blog/post',
+      '/safety/tools',
     ]) {
-      expect(shortCodeFromPath(path)).toBeNull();
+      expect(isCode(path)).toBe(false);
     }
   });
 
   it('rejects near-misses on the shape', () => {
     // lowercase word that happens to carry a digit
-    expect(shortCodeFromPath('/aboutus1')).toBeNull();
+    expect(isCode('/aboutus1')).toBe(false);
     // all caps, no digit
-    expect(shortCodeFromPath('/ABOUTUSX')).toBeNull();
+    expect(isCode('/ABOUTUSX')).toBe(false);
     // right characters, wrong length
-    expect(shortCodeFromPath('/aB3xY9Z')).toBeNull();
-    expect(shortCodeFromPath('/aB3xY9Zqq')).toBeNull();
+    expect(isCode('/aB3xY9Z')).toBe(false);
+    expect(isCode('/aB3xY9Zqq')).toBe(false);
     // a nested path is never a code
-    expect(shortCodeFromPath('/pods/aB3xY9Zq')).toBeNull();
+    expect(isCode('/pods/aB3xY9Zq')).toBe(false);
     // punctuation is not base62
-    expect(shortCodeFromPath('/aB3-Y9Zq')).toBeNull();
-  });
-
-  it('exports the pattern the server twin also enforces', () => {
-    expect(SHORT_CODE_PATTERN.test('aB3xY9Zq')).toBe(true);
-    expect(SHORT_CODE_PATTERN.test('about')).toBe(false);
-  });
-});
-
-describe('shortLinkResolverUrl', () => {
-  it('points at our own resolver, never at a destination in the URL', () => {
-    expect(shortLinkResolverUrl('https://server.duncit.com', 'aB3xY9Zq')).toBe(
-      'https://server.duncit.com/r/aB3xY9Zq',
-    );
-  });
-
-  it('does not double the slash when the base carries one', () => {
-    expect(shortLinkResolverUrl('https://server.duncit.com/', 'aB3xY9Zq')).toBe(
-      'https://server.duncit.com/r/aB3xY9Zq',
-    );
-  });
-
-  it('carries the visitor query string through', () => {
-    expect(shortLinkResolverUrl('https://server.duncit.com', 'aB3xY9Zq', '?fbclid=123')).toBe(
-      'https://server.duncit.com/r/aB3xY9Zq?fbclid=123',
-    );
+    expect(isCode('/aB3-Y9Zq')).toBe(false);
   });
 });

@@ -43,7 +43,13 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
       (function () {
         var path = window.location.pathname.replace(/^\/+/, '').replace(/\/+$/, '');
         if (!new RegExp(shortCodePattern).test(path)) return;
-        window.location.replace(shortLinkBase + '/' + path + window.location.search);
+        var params = new URLSearchParams(window.location.search);
+        // Forward the ORIGINAL referrer. By the next hop document.referrer
+        // says duncit.com, so without this every click would be recorded as
+        // having come from our own site instead of Instagram, a post or a chat.
+        if (document.referrer) params.set('dr', document.referrer);
+        var query = params.toString();
+        window.location.replace(shortLinkBase + '/' + path + (query ? '?' + query : ''));
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

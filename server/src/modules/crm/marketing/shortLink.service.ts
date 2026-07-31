@@ -7,6 +7,7 @@ import { buildDestination, generateShortCode, utmSlug } from './shortLink.codes'
 import { mediumUtm, shortLinkOptions, sourceUtm } from './shortLink.options';
 import { getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { shortLinkClickService } from './shortLinkClick.service';
 
 /**
  * Where a short link is allowed to point.
@@ -233,7 +234,7 @@ export const shortLinkService = {
    * Resolve a code for the public redirect. Returns null for an unknown or
    * retired code so the caller can 404 instead of guessing a destination.
    */
-  async resolve(code: string, now = new Date()) {
+  async resolve(code: string, now = new Date(), clickId?: string) {
     const doc = await ShortLinkModel.findOne({ code, is_active: true }).exec();
     if (!doc) return null;
     await ShortLinkModel.updateOne(
@@ -245,11 +246,25 @@ export const shortLinkService = {
       { _id: doc._id, first_clicked_at: null },
       { $set: { first_clicked_at: now } },
     ).exec();
-    return buildDestination(doc.destination_url, {
-      code: doc.code,
-      utm_source: doc.utm_source,
-      utm_medium: doc.utm_medium,
-      utm_campaign: doc.utm_campaign,
-    });
+    return {
+      destination: buildDestination(doc.destination_url, {
+        code: doc.code,
+        utm_source: doc.utm_source,
+        utm_medium: doc.utm_medium,
+        utm_campaign: doc.utm_campaign,
+        click_id: clickId,
+      }),
+      shortLinkId: doc._id.toHexString(),
+    };
+  },
+
+  /** Aggregated click analytics for one link. */
+  stats(id: string) {
+    return shortLinkClickService.stats(id);
+  },
+
+  /** A page of individual clicks for one link. */
+  clicks(id: string, query?: TableQueryInput | null) {
+    return shortLinkClickService.table(id, query);
   },
 };

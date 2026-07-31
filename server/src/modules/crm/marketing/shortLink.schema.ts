@@ -89,6 +89,55 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "One row of a breakdown — a value and how many clicks carried it."
+  type ShortLinkBreakdown {
+    label: String!
+    count: Int!
+  }
+
+  type ShortLinkDailyPoint {
+    date: String!
+    count: Int!
+  }
+
+  type ShortLinkStats {
+    total_clicks: Int!
+    "Distinct visitors, counted by hashed address."
+    unique_visitors: Int!
+    countries_reached: Int!
+    daily: [ShortLinkDailyPoint!]!
+    "Where the click came from — Instagram, WhatsApp, Direct…"
+    platforms: [ShortLinkBreakdown!]!
+    devices: [ShortLinkBreakdown!]!
+    oses: [ShortLinkBreakdown!]!
+    browsers: [ShortLinkBreakdown!]!
+    countries: [ShortLinkBreakdown!]!
+    cities: [ShortLinkBreakdown!]!
+    referrers: [ShortLinkBreakdown!]!
+  }
+
+  "A single recorded click. Addresses are hashed on the way in, never stored."
+  type ShortLinkClick {
+    id: ID!
+    click_id: String!
+    clicked_at: String!
+    platform: String!
+    referrer_host: String
+    device_type: String!
+    os: String!
+    browser: String!
+    country: String
+    region: String
+    city: String
+  }
+
+  type ShortLinkClickTablePage {
+    rows: [ShortLinkClick!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type ShortLinkTablePage {
     rows: [ShortLink!]!
     total: Int!
@@ -115,6 +164,10 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     shortLink(id: ID!): ShortLink!
     "A PNG data URL of the short link, rendered server-side."
     shortLinkQr(id: ID!): String!
+    "Aggregated click analytics for one link."
+    shortLinkStats(id: ID!): ShortLinkStats!
+    "Individual clicks on one link."
+    shortLinkClicks(id: ID!, query: TableQueryInput): ShortLinkClickTablePage!
   }
 
   extend type Mutation {

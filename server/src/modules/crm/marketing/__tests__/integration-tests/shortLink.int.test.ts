@@ -121,9 +121,10 @@ describe('shortLinkService.create', () => {
 describe('shortLinkService.resolve', () => {
   it('returns the tagged destination and counts the click', async () => {
     const link = await shortLinkService.create(base, null);
-    const destination = await shortLinkService.resolve(link.code);
-    expect(destination).toContain('utm_source=instagram');
-    expect(destination).toContain(`dl=${link.code}`);
+    const resolved = await shortLinkService.resolve(link.code);
+    expect(resolved?.destination).toContain('utm_source=instagram');
+    expect(resolved?.destination).toContain(`dl=${link.code}`);
+    expect(resolved?.shortLinkId).toBe(link.id);
 
     const doc = await ShortLinkModel.findOne({ code: link.code }).exec();
     expect(doc?.click_count).toBe(1);
@@ -146,6 +147,14 @@ describe('shortLinkService.resolve', () => {
     expect(doc?.click_count).toBe(2);
     expect(doc?.first_clicked_at?.toISOString()).toBe(early.toISOString());
     expect(doc?.last_clicked_at?.toISOString()).toBe(later.toISOString());
+  });
+
+  // The click id travels into the destination so a later signup or payment
+  // can be traced back to the exact click that produced it.
+  it('carries the click id into the destination when one is given', async () => {
+    const link = await shortLinkService.create(base, null);
+    const resolved = await shortLinkService.resolve(link.code, new Date(), 'click-abc');
+    expect(resolved?.destination).toContain('dlc=click-abc');
   });
 
   it('resolves nothing for an unknown or retired code', async () => {
@@ -233,6 +242,9 @@ describe('shortLink resolvers', () => {
     expect((await Q.shortLink({}, { id: created.id }, ctx)).code).toBe(created.code);
     expect(await Q.shortLinkQr({}, { id: created.id }, ctx)).toContain('data:image/png');
 
+    expect((await Q.shortLinkStats({}, { id: created.id }, ctx)).total_clicks).toBe(0);
+    expect((await Q.shortLinkClicks({}, { id: created.id, query: null }, ctx)).total).toBe(0);
+
     const retired = await M.setShortLinkActive({}, { id: created.id, is_active: false }, ctx);
     expect(retired.is_active).toBe(false);
     expect(await M.deleteShortLink({}, { id: created.id }, ctx)).toBe(true);
@@ -250,6 +262,7 @@ describe('the public /r/:code route', () => {
     expect(res.status).toBe(302);
     expect(res.headers.location).toContain('utm_source=instagram');
     expect(res.headers.location).toContain(`dl=${link.code}`);
+    expect(res.headers.location).toContain('dlc=');
     // 301 would be cached by the browser and later clicks would never reach
     // us, silently freezing the counts.
     expect(res.status).not.toBe(301);

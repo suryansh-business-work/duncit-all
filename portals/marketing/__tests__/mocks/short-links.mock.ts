@@ -1,13 +1,17 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import {
   CAMPAIGNS_FOR_SHORT_LINK,
+  SHORT_LINK,
+  SHORT_LINK_STATS,
   CREATE_SHORT_LINK,
   DELETE_SHORT_LINK,
   SET_SHORT_LINK_ACTIVE,
   SHORT_LINK_OPTIONS,
   SHORT_LINK_QR,
+  type ShortLinkClickRow,
   type ShortLinkOptions,
   type ShortLinkRow,
+  type ShortLinkStats,
 } from '../../src/pages/short-links-page/queries';
 
 export const makeShortLinkRow = (over: Partial<ShortLinkRow> = {}): ShortLinkRow => ({
@@ -116,4 +120,80 @@ export const deleteShortLinkMock = (opts: { failWith?: string } = {}): MockedRes
   ...(opts.failWith
     ? { result: { errors: [{ message: opts.failWith }] } }
     : { result: { data: { deleteShortLink: true } } }),
+});
+
+export const makeShortLinkClickRow = (
+  over: Partial<ShortLinkClickRow> = {},
+): ShortLinkClickRow => ({
+  id: 'clk1',
+  click_id: 'c-1',
+  clicked_at: '2026-07-31T09:00:00.000Z',
+  platform: 'Instagram',
+  referrer_host: 'instagram.com',
+  device_type: 'MOBILE',
+  os: 'Android',
+  browser: 'Chrome',
+  country: 'IN',
+  region: 'MH',
+  city: 'Pune',
+  ...over,
+});
+
+export const makeShortLinkStats = (over: Partial<ShortLinkStats> = {}): ShortLinkStats => ({
+  total_clicks: 128,
+  unique_visitors: 94,
+  countries_reached: 3,
+  daily: [
+    { date: '2026-07-30', count: 40 },
+    { date: '2026-07-31', count: 88 },
+  ],
+  platforms: [
+    { label: 'Instagram', count: 90 },
+    { label: 'Direct', count: 38 },
+  ],
+  // Deliberately all different, so a spec asserting on a number can only be
+  // matching the one it means.
+  devices: [{ label: 'MOBILE', count: 121 }],
+  oses: [{ label: 'Android', count: 122 }],
+  browsers: [{ label: 'Chrome', count: 123 }],
+  countries: [{ label: 'IN', count: 124 }],
+  cities: [{ label: 'Pune', count: 125 }],
+  referrers: [{ label: 'instagram.com', count: 126 }],
+  ...over,
+});
+
+const typedStats = (stats: ShortLinkStats) => ({
+  __typename: 'ShortLinkStats',
+  ...stats,
+  daily: stats.daily.map((point) => ({ __typename: 'ShortLinkDailyPoint', ...point })),
+  platforms: stats.platforms.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+  devices: stats.devices.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+  oses: stats.oses.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+  browsers: stats.browsers.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+  countries: stats.countries.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+  cities: stats.cities.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+  referrers: stats.referrers.map((r) => ({ __typename: 'ShortLinkBreakdown', ...r })),
+});
+
+export const shortLinkMock = (
+  over: Partial<ShortLinkRow> = {},
+  opts: { failWith?: string } = {},
+): MockedResponse => ({
+  request: { query: SHORT_LINK },
+  variableMatcher: () => true,
+  ...(opts.failWith
+    ? { result: { errors: [{ message: opts.failWith }] } }
+    : { result: { data: { shortLink: { __typename: 'ShortLink', ...makeShortLinkRow(over) } } } }),
+  maxUsageCount: 20,
+});
+
+export const shortLinkStatsMock = (
+  over: Partial<ShortLinkStats> = {},
+  opts: { pending?: boolean } = {},
+): MockedResponse => ({
+  request: { query: SHORT_LINK_STATS },
+  variableMatcher: () => true,
+  result: { data: { shortLinkStats: typedStats(makeShortLinkStats(over)) } },
+  ...(opts.pending ? { delay: Infinity } : {}),
+  maxUsageCount: 20,
 });

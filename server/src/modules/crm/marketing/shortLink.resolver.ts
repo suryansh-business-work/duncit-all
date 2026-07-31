@@ -23,6 +23,18 @@ export const shortLinkResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return shortLinkService.qrDataUrl(args.id);
     },
+    shortLinkStats: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkService.stats(args.id);
+    },
+    shortLinkClicks: (
+      _p: unknown,
+      args: { id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return shortLinkService.clicks(args.id, args.query);
+    },
   },
   Mutation: {
     createShortLink: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

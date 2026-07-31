@@ -1,6 +1,14 @@
 export { getOrCreateDuid } from './duid';
 export { copyToClipboard } from './clipboard';
 export {
+  SHORT_LINK_CLICK_KEY,
+  captureShortLinkAttribution,
+  parseShortLinkParams,
+  storedShortLinkClickId,
+  type CaptureOptions,
+  type ShortLinkParams,
+} from './short-link-attribution';
+export {
   GENERIC_ERROR_MESSAGE,
   OFFLINE_MESSAGE,
   isNetworkFailureMessage,

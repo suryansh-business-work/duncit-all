@@ -6,7 +6,8 @@ import { reportJourneyStep, storedClickId, type JourneyStep } from '../lib/short
  * Which funnel step a path represents. Kept as one ordered list rather than
  * scattered `reportJourneyStep` calls across page components: the funnel is a
  * single idea, and spreading it over five files is how a step quietly stops
- * being reported when a page is refactored.
+ * being reported when a page is refactored. (LANDED is not here — the landing
+ * capture reports it server-side through `/r/v` before React even mounts.)
  */
 const PATH_STEPS: [RegExp, JourneyStep][] = [
   [/^\/club\/[^/]+\/pod\/[^/]+/, 'VIEWED_POD'],
@@ -37,13 +38,6 @@ export function useShortLinkJourney(isAuthed: boolean) {
     reported.current.add(step);
     reportJourneyStep(step);
   };
-
-  useEffect(() => {
-    if (!storedClickId()) return;
-    send('LANDED');
-    // Mount-only: the landing is the first page of this visit, not every one.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     if (!storedClickId()) return;

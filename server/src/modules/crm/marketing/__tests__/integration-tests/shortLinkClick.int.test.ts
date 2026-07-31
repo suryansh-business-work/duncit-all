@@ -178,6 +178,105 @@ describe('shortLinkClickService.table', () => {
   });
 });
 
+describe('shortLinkService.visit — a landing that skipped the redirect', () => {
+  it('mints the click, counts it on the link, and stamps LANDED', async () => {
+    const link = await newLink();
+    const clickId = await shortLinkService.visit(link.code, {
+      referrer: 'https://www.instagram.com/p/1',
+      userAgent: ANDROID_CHROME,
+      forwardedFor: '103.21.244.0',
+    });
+    expect(clickId).toBeTruthy();
+
+    const doc = await ShortLinkClickModel.findOne({ click_id: clickId }).exec();
+    expect(doc?.platform).toBe('Instagram');
+    expect(doc?.journey.map((entry) => entry.step)).toEqual(['LANDED']);
+
+    const reread = await shortLinkService.byId(link.id);
+    expect(reread.click_count).toBe(1);
+    expect(reread.first_clicked_at).not.toBeNull();
+  });
+
+  it('mints nothing for an unknown or retired code', async () => {
+    expect(await shortLinkService.visit('zzzzzzzz', {})).toBeNull();
+    const link = await newLink();
+    await shortLinkService.setActive(link.id, false);
+    expect(await shortLinkService.visit(link.code, {})).toBeNull();
+  });
+});
+
+describe('the public /r/v landing report', () => {
+  const app = express();
+  app.use('/r', buildShortLinkRouter());
+
+  it('stamps LANDED for a click that came through the redirect', async () => {
+    const link = await newLink();
+    const resolved = await request(app).get(`/r/${link.code}`);
+    const dlc = new URL(resolved.headers.location).searchParams.get('dlc') as string;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const res = await request(app).get('/r/v').query({ dlc });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ click_id: dlc });
+    expect(res.headers['access-control-allow-origin']).toBe('*');
+
+    const doc = await ShortLinkClickModel.findOne({ click_id: dlc }).exec();
+    expect(doc?.journey.map((entry) => entry.step)).toEqual(['LANDED']);
+  });
+
+  // The fix for "maine link banaya par track hi nahi hua": the destination
+  // recognises the dl code even when the redirect never happened.
+  it('mints a click from the code when the redirect was skipped', async () => {
+    const link = await newLink();
+    const res = await request(app)
+      .get('/r/v')
+      .query({ dl: link.code, dr: 'https://www.instagram.com/p/1' })
+      .set('user-agent', ANDROID_CHROME)
+      .set('x-forwarded-for', '103.21.244.0');
+
+    expect(res.status).toBe(200);
+    expect(res.body.click_id).toBeTruthy();
+
+    const doc = await ShortLinkClickModel.findOne({ click_id: res.body.click_id }).exec();
+    expect(doc?.platform).toBe('Instagram');
+    expect(doc?.journey.map((entry) => entry.step)).toEqual(['LANDED']);
+    expect((await shortLinkService.byId(link.id)).click_count).toBe(1);
+  });
+
+  // Resilient to a stored id that no longer resolves (a wiped collection):
+  // the code still lands somewhere real.
+  it('falls back from an unknown click id to the code', async () => {
+    const link = await newLink();
+    const res = await request(app).get('/r/v').query({ dlc: 'gone-id', dl: link.code });
+    expect(res.body.click_id).toBeTruthy();
+    expect(res.body.click_id).not.toBe('gone-id');
+  });
+
+  it('records nothing for unknown markers, garbage, or nothing at all', async () => {
+    expect((await request(app).get('/r/v').query({ dl: 'zzzzzzzz' })).body).toEqual({
+      click_id: null,
+    });
+    expect((await request(app).get('/r/v').query({ dl: 'not-code-shaped' })).body).toEqual({
+      click_id: null,
+    });
+    expect((await request(app).get('/r/v')).body).toEqual({ click_id: null });
+    expect((await request(app).get('/r/v').query({ dlc: ['a', 'b'] })).body).toEqual({
+      click_id: null,
+    });
+  });
+
+  it('answers null rather than leaking when the lookup blows up', async () => {
+    const visit = jest
+      .spyOn(shortLinkService, 'visit')
+      .mockRejectedValue(new Error('mongo is down'));
+    const res = await request(app).get('/r/v').query({ dl: 'aB3xY9Zq' });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ click_id: null });
+    expect(res.text).not.toMatch(/mongo/i);
+    visit.mockRestore();
+  });
+});
+
 describe('the public /r/:code route records the click', () => {
   const app = express();
   app.use('/r', buildShortLinkRouter());

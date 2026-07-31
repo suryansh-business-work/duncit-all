@@ -51,6 +51,8 @@ ENV PUBLIC_PARTNERS_APP_URL=$PUBLIC_PARTNERS_APP_URL
 
 COPY website/partners-website ./website/partners-website
 COPY packages/logs ./packages/logs
+# @duncit/utils source — the layout imports the short-link capture from it.
+COPY packages/utils ./packages/utils
 RUN pnpm --filter partners-website build
 
 # --- runner ---

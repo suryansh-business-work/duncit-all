@@ -62,15 +62,21 @@ export const shortLinkClickService = {
     forwardedFor?: string | null;
     remoteAddress?: string | null;
     at?: Date;
+    /** Set when the click is minted BY a landing page (the visitor is already
+     * there), so the journey starts with LANDED rather than waiting for a
+     * report that already happened. */
+    landed?: boolean;
   }) {
     const agent = parseUserAgent(input.userAgent);
     const ip = clientIpFrom(input.forwardedFor, input.remoteAddress);
     const geo = geoFromIp(ip);
+    const at = input.at ?? new Date();
     return ShortLinkClickModel.create({
+      journey: input.landed ? [{ step: 'LANDED', at }] : [],
       click_id: input.clickId,
       code: input.code,
       short_link_id: new Types.ObjectId(input.shortLinkId),
-      clicked_at: input.at ?? new Date(),
+      clicked_at: at,
       platform: resolvePlatform(input.referrer, input.userAgent),
       referrer_host: referrerHost(input.referrer),
       referrer_url: input.referrer || null,

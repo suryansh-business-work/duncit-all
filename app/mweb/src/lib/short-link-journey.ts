@@ -1,27 +1,19 @@
 import { gql } from '@apollo/client';
+import { captureShortLinkAttribution, storedShortLinkClickId } from '@duncit/utils';
 import { apolloClient } from '../apollo';
+import { urlConfigs } from '../config/url-configs';
 
 /**
- * Short-link attribution.
+ * Short-link journey reporting for mWeb.
  *
- * A duncit.com link redirects here carrying `dlc` — the id of the click that
- * sent the visitor. Holding on to it lets the marketing console follow one
- * click all the way to a payment.
- *
- * FIRST TOUCH WINS. A visitor who arrives from an Instagram link, wanders off
- * and comes back through a WhatsApp one keeps the first attribution for the
- * rest of that stored journey — otherwise the last link before checkout would
- * take credit for work the first one did.
+ * The landing itself is captured by the shared `@duncit/utils` helper, which
+ * reports to the API's `/r/v` endpoint — that call verifies the URL markers
+ * (`dlc` click id, or the `dl` code alone when the redirect was skipped)
+ * against the database and stamps LANDED server-side. What remains here is
+ * the funnel: the steps only this app can see, reported over GraphQL because
+ * the authenticated call is what binds the click to the account.
  */
-const KEY = 'duncit_short_link_click';
-
-export const JOURNEY_STEPS = [
-  'LANDED',
-  'SIGNED_UP',
-  'SURVEY_DONE',
-  'VIEWED_POD',
-  'CHECKOUT_STARTED',
-] as const;
+export const JOURNEY_STEPS = ['SIGNED_UP', 'SURVEY_DONE', 'VIEWED_POD', 'CHECKOUT_STARTED'] as const;
 
 export type JourneyStep = (typeof JOURNEY_STEPS)[number];
 
@@ -31,37 +23,21 @@ const RECORD_STEP = gql`
   }
 `;
 
-/** The click id a search string carries, if it carries one. */
-export function clickIdFromSearch(search: string): string | null {
-  return new URLSearchParams(search).get('dlc');
-}
-
-export function storedClickId(): string | null {
-  try {
-    return globalThis.localStorage.getItem(KEY);
-  } catch {
-    // Private mode / storage disabled: attribution is simply unavailable.
-    return null;
-  }
-}
+/** The click this browser is attributed to, from an earlier landing. */
+export const storedClickId = storedShortLinkClickId;
 
 /**
- * Remember the click that brought this visitor, if it is the first one we have
- * seen. Runs at module scope before React mounts, because `RequireAuth`
- * rewrites the URL to /login?redirect=… for signed-out visitors and mounting
- * is delayed by up to 3s waiting on config — by then the parameter is gone.
+ * Capture the landing. Runs at module scope in main.tsx BEFORE React mounts,
+ * because `RequireAuth` rewrites the URL to /login?redirect=… for signed-out
+ * visitors and mounting waits up to 3s on config — by then the markers are
+ * gone from location.search. Resolution-only promise; nothing awaits it.
  */
-export function captureShortLinkClick(search: string): string | null {
-  const incoming = clickIdFromSearch(search);
-  if (!incoming) return storedClickId();
-  const existing = storedClickId();
-  if (existing) return existing;
-  try {
-    globalThis.localStorage.setItem(KEY, incoming);
-  } catch {
-    // Nothing to do — the step below still reports against this page load.
-  }
-  return incoming;
+export function captureShortLinkClick(search: string): Promise<string | null> {
+  return captureShortLinkAttribution({
+    search,
+    referrer: globalThis.document?.referrer ?? '',
+    serverUrl: urlConfigs.apiBaseUrl,
+  });
 }
 
 /**

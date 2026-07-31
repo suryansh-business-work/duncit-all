@@ -1,5 +1,7 @@
+import crypto from 'node:crypto';
 import * as yup from 'yup';
 import { GraphQLError } from 'graphql';
+import type { Types } from 'mongoose';
 import QRCode from 'qrcode';
 import { ShortLinkModel, SHORT_LINK_MEDIUMS, SHORT_LINK_SOURCES, type IShortLink } from './shortLink.model';
 import { MarketingCampaignModel } from './marketing.model';
@@ -109,6 +111,20 @@ async function campaignUtm(campaignId?: string | null) {
  * shape constraint is ~1.7e14, but retrying costs one indexed lookup and
  * removes the question entirely.
  */
+/** One counted click on the link document — shared by the redirect and the
+ * landing-side visit so both paths move the same numbers the same way. */
+async function countClick(id: Types.ObjectId, now: Date) {
+  await ShortLinkModel.updateOne(
+    { _id: id },
+    { $inc: { click_count: 1 }, $set: { last_clicked_at: now } },
+  ).exec();
+  // Filtered so the first click can never be overwritten by a later one.
+  await ShortLinkModel.updateOne(
+    { _id: id, first_clicked_at: null },
+    { $set: { first_clicked_at: now } },
+  ).exec();
+}
+
 async function uniqueCode(attempts = 5): Promise<string> {
   for (let i = 0; i < attempts; i += 1) {
     const code = generateShortCode();
@@ -237,15 +253,7 @@ export const shortLinkService = {
   async resolve(code: string, now = new Date(), clickId?: string) {
     const doc = await ShortLinkModel.findOne({ code, is_active: true }).exec();
     if (!doc) return null;
-    await ShortLinkModel.updateOne(
-      { _id: doc._id },
-      { $inc: { click_count: 1 }, $set: { last_clicked_at: now } },
-    ).exec();
-    // Filtered so the first click can never be overwritten by a later one.
-    await ShortLinkModel.updateOne(
-      { _id: doc._id, first_clicked_at: null },
-      { $set: { first_clicked_at: now } },
-    ).exec();
+    await countClick(doc._id, now);
     return {
       destination: buildDestination(doc.destination_url, {
         code: doc.code,
@@ -256,6 +264,41 @@ export const shortLinkService = {
       }),
       shortLinkId: doc._id.toHexString(),
     };
+  },
+
+  /**
+   * A landing that arrived WITHOUT the redirect — a shared tagged URL, an app
+   * that opened the destination directly, a resolver hop that was skipped.
+   * The destination page recognised the `dl` code and reported in, so the
+   * click is minted here instead: counted on the link, recorded with the
+   * landing already stamped, and its id handed back for the visitor's journey.
+   */
+  async visit(
+    code: string,
+    meta: {
+      referrer?: string | null;
+      userAgent?: string | null;
+      forwardedFor?: string | null;
+      remoteAddress?: string | null;
+    },
+    now = new Date(),
+  ) {
+    const doc = await ShortLinkModel.findOne({ code, is_active: true }).exec();
+    if (!doc) return null;
+    await countClick(doc._id, now);
+    const clickId = crypto.randomUUID();
+    await shortLinkClickService.record({
+      clickId,
+      code,
+      shortLinkId: doc._id.toHexString(),
+      referrer: meta.referrer,
+      userAgent: meta.userAgent,
+      forwardedFor: meta.forwardedFor,
+      remoteAddress: meta.remoteAddress,
+      at: now,
+      landed: true,
+    });
+    return clickId;
   },
 
   /** Aggregated click analytics for one link. */

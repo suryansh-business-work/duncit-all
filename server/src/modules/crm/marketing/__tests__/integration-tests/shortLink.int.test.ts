@@ -257,21 +257,27 @@ describe('recordShortLinkJourney is public', () => {
   const M = shortLinkResolvers.Mutation as any;
 
   // Most of this funnel happens before anyone signs in, so requiring auth
-  // would make the anonymous half unmeasurable.
+  // would make the anonymous half unmeasurable. The false answer is "unknown
+  // click", not a refusal — the point is that no access check threw.
   it('accepts a step from a signed-out visitor', async () => {
-    expect(await M.recordShortLinkJourney({}, { click_id: 'c-x', step: 'LANDED' }, makeContext())).toBe(
-      true,
-    );
+    expect(
+      await M.recordShortLinkJourney({}, { click_id: 'c-x', step: 'LANDED' }, makeContext()),
+    ).toBe(false);
   });
 
   it('accepts a step from a signed-in visitor and binds the account', async () => {
+    const link = await shortLinkService.create(base, null);
+    const app = express();
+    app.use('/r', buildShortLinkRouter());
+    const minted = await request(app).get('/r/v').query({ dl: link.code });
+    const clickId = minted.body.click_id as string;
+
+    const ctx = makeContext({ roles: ['USER'] });
     expect(
-      await M.recordShortLinkJourney(
-        {},
-        { click_id: 'c-x', step: 'SIGNED_UP' },
-        makeContext({ roles: ['USER'] }),
-      ),
+      await M.recordShortLinkJourney({}, { click_id: clickId, step: 'SIGNED_UP' }, ctx),
     ).toBe(true);
+    const journey = await shortLinkService.clicks(link.id, null);
+    expect(journey.total).toBe(1);
   });
 });
 

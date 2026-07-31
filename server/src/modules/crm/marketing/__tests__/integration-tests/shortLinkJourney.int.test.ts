@@ -100,8 +100,17 @@ describe('recordStep', () => {
   });
 
   // The id comes from a URL a visitor can edit — analytics, not an action.
-  it('ignores an unknown click id rather than raising', async () => {
-    expect(await shortLinkJourneyService.recordStep('nope', 'LANDED')).toBe(true);
+  // The false answer is what lets the landing endpoint fall back to the code.
+  it('ignores an unknown click id, and says so', async () => {
+    expect(await shortLinkJourneyService.recordStep('nope', 'LANDED')).toBe(false);
+    expect(await shortLinkJourneyService.recordStep('nope', 'LANDED', '64b7f9c2f1a2b3c4d5e6f7a8')).toBe(false);
+  });
+
+  it('answers true for a step that already happened on a real click', async () => {
+    const link = await newLink();
+    await click(link.id, link.code, 'c-1');
+    await shortLinkJourneyService.recordStep('c-1', 'LANDED');
+    expect(await shortLinkJourneyService.recordStep('c-1', 'LANDED')).toBe(true);
   });
 });
 

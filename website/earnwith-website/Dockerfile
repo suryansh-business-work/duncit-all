@@ -49,6 +49,8 @@ ENV PUBLIC_MAIN_SITE_URL=$PUBLIC_MAIN_SITE_URL
 
 COPY website/earnwith-website ./website/earnwith-website
 COPY packages/logs ./packages/logs
+# @duncit/utils source — the layout imports the short-link capture from it.
+COPY packages/utils ./packages/utils
 RUN pnpm --filter earnwith-website build
 
 # --- runner ---

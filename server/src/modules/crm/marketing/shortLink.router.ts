@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import { Router } from 'express';
 import { shortLinkService } from './shortLink.service';
 import { shortLinkClickService } from './shortLinkClick.service';
+import { shortLinkJourneyService } from './shortLinkJourney.service';
 import { SHORT_CODE_PATTERN } from './shortLink.codes';
 import { logs } from '@observability/log';
 
@@ -15,6 +16,47 @@ import { logs } from '@observability/log';
  */
 export function buildShortLinkRouter() {
   const router = Router();
+
+  /**
+   * Landing-side visit report — every destination surface calls this at root
+   * when its URL carries a short-link marker.
+   *
+   * `dlc` (a click id) says the redirect happened: its LANDED step is stamped.
+   * `dl` (the code) alone says the redirect was SKIPPED — a shared tagged URL,
+   * an app opening the destination directly — so the click is minted here,
+   * verified against the database first. Unknown markers record nothing.
+   *
+   * Registered before /:code, which would otherwise swallow the path. Public
+   * and credential-less, hence the wildcard CORS — production nginx strips
+   * this header and applies its own.
+   */
+  router.get('/v', async (req, res) => {
+    res.set({ 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+    const dlc = typeof req.query.dlc === 'string' ? req.query.dlc : null;
+    const dl = typeof req.query.dl === 'string' ? req.query.dl : null;
+    const referrer = typeof req.query.dr === 'string' ? req.query.dr : null;
+    try {
+      // The click id names the exact click; fall through to the code when it
+      // no longer resolves, so a stale stored id still lands somewhere real.
+      if (dlc && (await shortLinkJourneyService.recordStep(dlc, 'LANDED'))) {
+        res.json({ click_id: dlc });
+        return;
+      }
+      if (dl && SHORT_CODE_PATTERN.test(dl)) {
+        const clickId = await shortLinkService.visit(dl, {
+          referrer,
+          userAgent: req.get('user-agent'),
+          forwardedFor: req.get('x-forwarded-for'),
+          remoteAddress: req.socket.remoteAddress,
+        });
+        res.json({ click_id: clickId });
+        return;
+      }
+    } catch (error) {
+      logs.server.error('shortLink', 'visit', { error });
+    }
+    res.json({ click_id: null });
+  });
 
   router.get('/:code', async (req, res) => {
     const code = String(req.params.code);

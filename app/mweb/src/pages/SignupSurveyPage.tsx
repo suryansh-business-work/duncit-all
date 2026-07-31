@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getSafeRedirectPath } from '../utils/redirect';
+import { reportJourneyStep } from '../lib/short-link-journey';
 import {
   Alert,
   Box,
@@ -83,6 +84,9 @@ export default function SignupSurveyPage() {
     try {
       await surveySchema.validate({ category_ids }, { abortEarly: false });
       await saveInterests({ variables: { category_ids } });
+      // Reported from the submit success itself, not from leaving the page —
+      // navigating away without saving is not a finished survey.
+      reportJourneyStep('SURVEY_DONE');
       // The survey is a gate: resume whatever deep link sent the user to login
       // (an emailed /booking/:id) instead of dumping them on the home page.
       navigate(getSafeRedirectPath(new URLSearchParams(location.search).get('redirect')) || '/');

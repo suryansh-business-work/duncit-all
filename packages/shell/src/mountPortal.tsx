@@ -17,6 +17,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport } from '@duncit/logs';
+import { captureShortLinkAttribution } from '@duncit/utils';
 import { PortalBranding } from './PortalBranding';
 import { loadGoogleClientId } from './lib/google-client-id';
 import type { MountPortalOptions } from './types';
@@ -62,6 +63,17 @@ export function mountPortal(opts: MountPortalOptions): void {
   configureLogs(httpTransport(graphqlUrl.replace(/\/graphql$/, '/logs')), {
     platform: 'web',
     portal: config.key,
+  });
+
+  // Short-link attribution: every portal is a *.duncit.com destination a
+  // marketing link may point at, so the landing is reported at boot — before
+  // render, because an auth guard immediately rewrites the URL and takes the
+  // markers with it. Rejection-free by contract (every failure path inside
+  // resolves), so no .catch — which would only add an uncoverable dead branch.
+  captureShortLinkAttribution({
+    search: globalThis.location.search,
+    referrer: globalThis.document.referrer,
+    serverUrl: graphqlUrl.replace(/\/graphql$/, ''),
   });
 
   const isAuthed = () => !!localStorage.getItem(config.tokenKey);

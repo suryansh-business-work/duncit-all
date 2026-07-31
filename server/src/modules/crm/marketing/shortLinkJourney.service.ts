@@ -72,25 +72,29 @@ export const shortLinkJourneyService = {
   /**
    * Stamp a step on a click. Idempotent — a step that already happened keeps
    * its original time, so a reloaded page cannot rewrite when someone signed
-   * up. Unknown click ids are ignored rather than raised: the id comes from a
-   * URL a visitor can edit, and this is analytics, not an action.
+   * up. Unknown click ids are ignored rather than raised (the id comes from a
+   * URL a visitor can edit), but the return says whether the click EXISTS —
+   * the landing endpoint uses that to fall back to minting a fresh click from
+   * the code when a stored id no longer resolves.
    */
-  async recordStep(clickId: string, step: JourneyStep, userId?: string | null) {
-    const set: Record<string, unknown> = {};
-    if (userId) set.user_id = new Types.ObjectId(userId);
+  async recordStep(clickId: string, step: JourneyStep, userId?: string | null): Promise<boolean> {
+    const set = userId ? { user_id: new Types.ObjectId(userId) } : null;
     const result = await ShortLinkClickModel.updateOne(
       { click_id: clickId, 'journey.step': { $ne: step } },
       {
         $push: { journey: { step, at: new Date() } },
-        ...(userId ? { $set: set } : {}),
+        ...(set ? { $set: set } : {}),
       },
     ).exec();
+    if (result.matchedCount > 0) return true;
 
-    // The step was already there, but the account behind it may be new.
-    if (result.matchedCount === 0 && userId) {
-      await ShortLinkClickModel.updateOne({ click_id: clickId }, { $set: set }).exec();
+    // Either the step was already there — bind the account, which may be new
+    // since the anonymous visit — or the click does not exist at all.
+    if (set) {
+      const rebind = await ShortLinkClickModel.updateOne({ click_id: clickId }, { $set: set }).exec();
+      return rebind.matchedCount > 0;
     }
-    return true;
+    return (await ShortLinkClickModel.exists({ click_id: clickId })) !== null;
   },
 
   /**

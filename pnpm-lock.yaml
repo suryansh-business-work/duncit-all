@@ -3936,6 +3936,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
@@ -3958,6 +3961,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
@@ -3983,6 +3989,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@fortawesome/fontawesome-free':
         specifier: ^7.2.0
         version: 7.2.0
@@ -4011,6 +4020,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@fortawesome/fontawesome-free':
         specifier: ^7.2.0
         version: 7.2.0
@@ -4039,6 +4051,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)

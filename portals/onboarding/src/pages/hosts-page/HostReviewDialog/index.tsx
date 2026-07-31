@@ -76,7 +76,11 @@ export default function HostReviewDialog({
   if (!active) return null;
 
   return (
-    <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
+    // `md`, not `sm`: the category picker puts three cascading selects and an
+    // Add button on one row, and under ~700px each select is narrower than its
+    // own label, which then runs under the dropdown arrow. HostEditDialog — the
+    // picker's other host is already md for the same reason.
+    <Dialog open onClose={busy ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pb: 1 }}>
         <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ display: 'block', lineHeight: 1 }}>
           Review host

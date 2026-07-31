@@ -4,6 +4,8 @@ export const notificationTypeDefs = /* GraphQL */ `
     LOCATION
     ZONE
     USER
+    "Everybody currently matching a saved marketing audience list."
+    AUDIENCE_LIST
   }
 
   type Notification {
@@ -17,6 +19,8 @@ export const notificationTypeDefs = /* GraphQL */ `
     location_id: ID
     zone_name: String
     target_user_ids: [ID!]!
+    "AUDIENCE_LIST scope only — members are recomputed at send time."
+    audience_list_id: ID
     sent_by: ID
     delivered_count: Int!
     failed_count: Int!
@@ -53,6 +57,8 @@ export const notificationTypeDefs = /* GraphQL */ `
     location_id: ID
     zone_name: String
     target_user_ids: [ID!]
+    "Required for AUDIENCE_LIST scope — the saved marketing list to send to."
+    audience_list_id: ID
   }
 
   input PushSubscriptionInput {

@@ -26,6 +26,7 @@
     "@duncit/app-settings": "workspace:*",
     "@duncit/dialogs": "workspace:*",
     "@duncit/forms": "workspace:*",
+    "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/media-picker": "workspace:*",
     "@duncit/shell": "workspace:*",

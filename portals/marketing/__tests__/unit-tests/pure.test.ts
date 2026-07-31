@@ -72,7 +72,13 @@ describe('notifications helpers', () => {
   });
 
   it('lists the four audience scopes with icons', () => {
-    expect(SCOPES.map((s) => s.value)).toEqual(['GLOBAL', 'LOCATION', 'ZONE', 'USER']);
+    expect(SCOPES.map((s) => s.value)).toEqual([
+      'GLOBAL',
+      'LOCATION',
+      'ZONE',
+      'USER',
+      'AUDIENCE_LIST',
+    ]);
     expect(SCOPES.every((s) => s.icon)).toBe(true);
   });
 });
@@ -215,28 +221,16 @@ describe('marketingCampaignSchema branch completion', () => {
     }
   });
 
-  it('accepts a selected card with a card ref id', () => {
-    const result = marketingCampaignSchema.safeParse({
-      ...campaignValid,
-      card_type: 'POD',
-      card_ref_id: 'pod-1',
-    });
-    expect(result.success).toBe(true);
-  });
 });
 
 describe('toMarketingCampaignInput branch completion', () => {
-  it('schedules (no send_now) and forwards the card selection', () => {
+  it('schedules instead of sending when a schedule is set', () => {
     const input = toMarketingCampaignInput({
       ...campaignValid,
-      card_type: 'CLUB',
-      card_ref_id: 'club-9',
       scheduled_at: '2030-01-01T10:00:00.000Z',
     });
     expect(input.send_now).toBe(false);
     expect(input.scheduled_at).toBe('2030-01-01T10:00:00.000Z');
-    expect(input.card_type).toBe('CLUB');
-    expect(input.card_ref_id).toBe('club-9');
   });
 
   it('defaults the channel to EMAIL and to WHATSAPP when requested', () => {

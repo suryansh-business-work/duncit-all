@@ -1,44 +1,38 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, Button, Chip, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import { DuncitTable, dateColumn, type DuncitColumn, type TableFetch } from '@duncit/table';
-import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import {
+  DuncitTable,
+  actionsColumn,
+  dateColumn,
+  type DuncitColumn,
+  type TableFetch,
+} from '@duncit/table';
+import { StatusChip } from '@duncit/ui';
+import {
+  AUDIENCE_LABELS,
+  AUDIENCE_OPTIONS,
+  CAMPAIGN_STATUS_COLORS,
+  CHANNEL_LABELS,
+  CHANNEL_OPTIONS,
+  STATUS_OPTIONS,
+  canDelete,
+  canSend,
+  labelFor,
+} from './helpers';
 import type { MarketingCampaignRow } from './queries';
 
 interface Props {
   fetchRows: TableFetch<MarketingCampaignRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
-  sending: boolean;
-  onSend: (campaignId: string) => void;
+  busy: boolean;
+  onView: (row: MarketingCampaignRow) => void;
+  onSend: (row: MarketingCampaignRow) => void;
+  onDelete: (row: MarketingCampaignRow) => void;
 }
 
 const getCampaignRowId = (row: MarketingCampaignRow) => row.campaign_id;
-
-const STATUS_COLORS: StatusColorMap = {
-  SENT: 'success',
-  FAILED: 'error',
-  SCHEDULED: 'info',
-  SENDING: 'warning',
-};
-
-const STATUS_OPTIONS = ['DRAFT', 'SCHEDULED', 'SENDING', 'SENT', 'FAILED'].map((value) => ({
-  value,
-  label: value,
-}));
-
-const CHANNEL_LABELS: Record<string, string> = {
-  EMAIL: 'Email',
-  WHATSAPP: 'WhatsApp Email Fallback',
-};
-
-const CHANNEL_OPTIONS = Object.entries(CHANNEL_LABELS).map(([value, label]) => ({ value, label }));
-
-const AUDIENCE_LABELS: Record<string, string> = {
-  ALL_USERS: 'All users',
-  NEWSLETTER_SUBSCRIBERS: 'Newsletter subscribers',
-};
-
-const AUDIENCE_OPTIONS = Object.entries(AUDIENCE_LABELS).map(([value, label]) => ({ value, label }));
 
 const DATE_TIME_FORMAT = 'd MMM yyyy, HH:mm';
 
@@ -59,35 +53,23 @@ const renderCampaign = (row: MarketingCampaignRow) => (
 );
 
 const renderChannel = (row: MarketingCampaignRow) => (
-  <Chip size="small" label={CHANNEL_LABELS[row.channel] ?? row.channel} />
+  <Chip size="small" label={labelFor(CHANNEL_LABELS, row.channel)} />
 );
 
 const renderStatus = (row: MarketingCampaignRow) => (
-  <StatusChip status={row.status} colorMap={STATUS_COLORS} />
+  <StatusChip status={row.status} colorMap={CAMPAIGN_STATUS_COLORS} />
 );
 
 export default function CampaignTable({
   fetchRows,
   refetchRef,
-  sending,
+  busy,
+  onView,
   onSend,
+  onDelete,
 }: Readonly<Props>) {
-  const columns = useMemo<DuncitColumn<MarketingCampaignRow>[]>(() => {
-    const renderActions = (row: MarketingCampaignRow) => (
-      <Tooltip title="Send campaign now">
-        <span>
-          <Button
-            size="small"
-            startIcon={<SendIcon />}
-            disabled={sending || row.status === 'SENT' || row.status === 'SENDING'}
-            onClick={() => onSend(row.campaign_id)}
-          >
-            Send
-          </Button>
-        </span>
-      </Tooltip>
-    );
-    return [
+  const columns = useMemo<DuncitColumn<MarketingCampaignRow>[]>(
+    () => [
       {
         field: 'name',
         headerName: 'Campaign',
@@ -102,7 +84,7 @@ export default function CampaignTable({
         minWidth: 170,
         filter: { type: 'select', options: CHANNEL_OPTIONS },
         cellRenderer: renderChannel,
-        valueGetter: (row) => CHANNEL_LABELS[row.channel] ?? row.channel,
+        valueGetter: (row) => labelFor(CHANNEL_LABELS, row.channel),
       },
       {
         field: 'status',
@@ -134,24 +116,58 @@ export default function CampaignTable({
         format: DATE_TIME_FORMAT,
       }),
       { field: 'recipient_count', headerName: 'Recipients', width: 120 },
+      { field: 'open_count', headerName: 'Opened', width: 110 },
+      { field: 'click_count', headerName: 'Clicked', width: 110 },
       {
         field: 'audience',
         headerName: 'Audience',
         hide: true,
         minWidth: 180,
         filter: { type: 'select', options: AUDIENCE_OPTIONS },
-        valueGetter: (row) => AUDIENCE_LABELS[row.audience] ?? row.audience,
+        valueGetter: (row) => labelFor(AUDIENCE_LABELS, row.audience),
       },
       dateColumn<MarketingCampaignRow>({ width: 160, format: DATE_TIME_FORMAT }),
-      {
-        field: 'actions',
-        headerName: 'Actions',
-        sortable: false,
-        width: 120,
-        cellRenderer: renderActions,
-      },
-    ];
-  }, [sending, onSend]);
+      actionsColumn<MarketingCampaignRow>({
+        width: 150,
+        onDelete,
+        // Disabled rather than hidden: a marketer looking for Delete on a
+        // sending campaign should be told why it is unavailable, not left
+        // hunting for a button that is missing on some rows.
+        delete: {
+          title: 'Delete campaign',
+          disabled: (row) => !canDelete(row.status),
+          disabledTitle: 'Sending right now — wait for it to finish',
+        },
+        renderExtra: (row) => {
+          // One label for the tooltip and the accessible name, so what a
+          // screen reader announces is what the tooltip says.
+          const sendLabel = canSend(row.status) ? 'Send campaign now' : 'Already sent';
+          return (
+            <>
+              <Tooltip title="View campaign">
+                <IconButton size="small" aria-label="View campaign" onClick={() => onView(row)}>
+                  <VisibilityOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title={sendLabel}>
+                <span>
+                  <IconButton
+                    size="small"
+                    aria-label={sendLabel}
+                    disabled={busy || !canSend(row.status)}
+                    onClick={() => onSend(row)}
+                  >
+                    <SendIcon fontSize="small" />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </>
+          );
+        },
+      }),
+    ],
+    [busy, onView, onSend, onDelete],
+  );
 
   return (
     <DuncitTable<MarketingCampaignRow>
@@ -159,7 +175,8 @@ export default function CampaignTable({
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getCampaignRowId}
-      emptyText="No campaigns yet."
+      onRowClick={onView}
+      emptyText="No campaigns yet. Create one to reach your audience."
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or subject"
       refetchRef={refetchRef}

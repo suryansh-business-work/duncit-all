@@ -17,14 +17,26 @@ vi.mock('../../src/components/AppShell', () => ({
 }));
 vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>login-page</div> }));
 vi.mock('../../src/pages/WelcomePage', () => ({ default: () => <div>welcome-page</div> }));
+vi.mock('../../src/pages/target-audience-page/AudienceListsPage', () => ({
+  default: () => <div>audience-lists-page</div>,
+}));
+vi.mock('../../src/pages/target-audience-page/CreateAudienceListPage', () => ({
+  default: () => <div>create-audience-list-page</div>,
+}));
+vi.mock('../../src/pages/target-audience-page/AudienceListDetailPage', () => ({
+  default: () => <div>audience-list-detail-page</div>,
+}));
 vi.mock('../../src/pages/marketing-campaigns-page/MarketingCampaignsPage', () => ({
-  default: ({ defaultChannel }: { defaultChannel?: string }) => <div>{`campaigns-${defaultChannel}`}</div>,
+  default: () => <div>campaigns-page</div>,
 }));
 vi.mock('../../src/pages/notifications-page/NotificationsPage', () => ({
   default: () => <div>notifications-page</div>,
 }));
 vi.mock('../../src/pages/ads-approvals-page/AdsApprovalsPage', () => ({
   default: () => <div>ads-approvals-page</div>,
+}));
+vi.mock('../../src/pages/live-ads-page/LiveAdsPage', () => ({
+  default: () => <div>live-ads-page</div>,
 }));
 vi.mock('../../src/pages/ads-settings-page/AdsSettingsPage', () => ({
   default: () => <div>ads-settings-page</div>,
@@ -38,10 +50,13 @@ describe('App routing', () => {
   it.each([
     ['/', 'welcome-page'],
     ['/profile', 'profile-page'],
-    ['/campaigns/email', 'campaigns-EMAIL'],
-    ['/campaigns/whatsapp', 'campaigns-WHATSAPP'],
+    ['/audience', 'audience-lists-page'],
+    ['/audience/new', 'create-audience-list-page'],
+    ['/audience/l1', 'audience-list-detail-page'],
+    ['/campaigns/email', 'campaigns-page'],
     ['/notifications', 'notifications-page'],
     ['/ads-approvals', 'ads-approvals-page'],
+    ['/live-ads', 'live-ads-page'],
     ['/ads-settings', 'ads-settings-page'],
   ])('renders %s behind auth', (path, text) => {
     setToken('tok');

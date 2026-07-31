@@ -80,6 +80,28 @@ describe('AdsApprovalsTable + columns', () => {
     fireEvent.click(screen.getByText('rowclick-1'));
     expect(onReview).toHaveBeenCalledTimes(2);
   });
+
+  // A product/brand ad request whose linked record was deleted still has to
+  // render a kind, not "Product · undefined".
+  it('labels product and brand ads, named or not', async () => {
+    const rows = [
+      makeAdRequestRow({ id: 'k1', ad_kind: 'PRODUCT_AD', product_name: 'Yoga Mat' }),
+      makeAdRequestRow({ id: 'k2', ad_kind: 'PRODUCT_AD', product_name: null }),
+      makeAdRequestRow({ id: 'k3', ad_kind: 'BRAND_AD', brand_name: 'Acme' }),
+      makeAdRequestRow({ id: 'k4', ad_kind: 'BRAND_AD', brand_name: null }),
+    ];
+    renderWithProviders(
+      <AdsApprovalsTable
+        fetchRows={fetchRowsFrom(rows)}
+        refetchRef={{ current: null }}
+        onReview={vi.fn()}
+      />,
+    );
+    expect(await screen.findByText('Product · Yoga Mat')).toBeInTheDocument();
+    expect(screen.getByText('Product Ad')).toBeInTheDocument();
+    expect(screen.getByText('Brand · Acme')).toBeInTheDocument();
+    expect(screen.getByText('Brand Ad')).toBeInTheDocument();
+  });
 });
 
 // ===========================================================================

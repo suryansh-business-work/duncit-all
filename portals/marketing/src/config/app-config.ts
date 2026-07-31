@@ -22,14 +22,23 @@ export const appConfig = {
   accent: { light: '#fda4af', main: '#e11d48', hover: '#be123c', active: '#9f1239' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Email Campaigns', to: '/campaigns/email', icon: 'email' },
-    { label: 'WhatsApp Campaigns', to: '/campaigns/whatsapp', icon: 'whatsapp' },
-    { label: 'Notifications', to: '/notifications', icon: 'notifications' },
+    { label: 'Target Audience', to: '/audience', icon: 'personSearch' },
+    {
+      // Everything you send lives here: email and push are two ways of
+      // reaching the same audience, not two separate parts of the console.
+      label: 'Campaigns',
+      icon: 'contactMail',
+      children: [
+        { label: 'Email', to: '/campaigns/email', icon: 'email' },
+        { label: 'Notifications', to: '/notifications', icon: 'notifications' },
+      ],
+    },
     {
       label: 'Ads',
       icon: 'campaign',
       children: [
         { label: 'Ads Approval', to: '/ads-approvals', icon: 'campaign' },
+        { label: 'Live Ads', to: '/live-ads', icon: 'insights' },
         { label: 'Ads Settings', to: '/ads-settings', icon: 'settings' },
       ],
     },

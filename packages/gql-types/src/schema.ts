@@ -420,6 +420,132 @@ export type ApprovalStatus =
   | 'DENIED'
   | 'PENDING';
 
+/** Dropdown values for the audience filters whose options are data, not a fixed list. */
+export type AudienceFilterOptions = {
+  __typename?: 'AudienceFilterOptions';
+  interests: Array<AudienceInterestOption>;
+  /** Role keys actually held by somebody in the audience. */
+  roles: Array<Scalars['String']['output']>;
+};
+
+/** A category at least one person has picked as an interest. */
+export type AudienceInterestOption = {
+  __typename?: 'AudienceInterestOption';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+/**
+ * A saved Target Audience list. It stores the filter CRITERIA, not the people —
+ * opening it re-runs them, so the membership and the count are always current
+ * rather than a snapshot of the day it was built.
+ */
+export type AudienceList = {
+  __typename?: 'AudienceList';
+  created_at?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  filters: Array<AudienceListFilter>;
+  id: Scalars['ID']['output'];
+  /** How many people match the criteria right now. */
+  member_count: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+  owner_user_id?: Maybe<Scalars['ID']['output']>;
+  search: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** One saved criterion, in the shared table-filter shape. */
+export type AudienceListFilter = {
+  __typename?: 'AudienceListFilter';
+  field: Scalars['String']['output'];
+  op: Scalars['String']['output'];
+  value?: Maybe<Scalars['String']['output']>;
+  values: Array<Scalars['String']['output']>;
+};
+
+export type AudienceListFilterInput = {
+  field: Scalars['String']['input'];
+  op: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['String']['input']>;
+  values?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type AudienceListInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  filters?: InputMaybe<Array<AudienceListFilterInput>>;
+  name: Scalars['String']['input'];
+  owner: Scalars['String']['input'];
+  /** The account behind the owner name, when picked from the portal-access list. */
+  owner_user_id?: InputMaybe<Scalars['ID']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Somebody who can open the Marketing portal, and so can own a list. */
+export type AudienceListOwner = {
+  __typename?: 'AudienceListOwner';
+  email: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** True for a SUPER_ADMIN, who reaches every portal. */
+  is_admin: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine (audienceListsTable). */
+export type AudienceListTablePage = {
+  __typename?: 'AudienceListTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AudienceList>;
+  total: Scalars['Int']['output'];
+};
+
+/**
+ * One targetable person. Deliberately narrower than the admin User type: a
+ * campaign tool has no business with payout percentages, postal addresses or
+ * raw birthdates, so this carries the derived age instead of the date of birth
+ * and omits the rest.
+ */
+export type AudienceMember = {
+  __typename?: 'AudienceMember';
+  /** Derived from the date of birth. Null when the account never supplied one. */
+  age?: Maybe<Scalars['Int']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  email_verified: Scalars['Boolean']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_login_at?: Maybe<Scalars['String']['output']>;
+  last_login_provider?: Maybe<Scalars['String']['output']>;
+  locale?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  phone_verified: Scalars['Boolean']['output'];
+  pincode?: Maybe<Scalars['String']['output']>;
+  /**
+   * Push platforms this person can currently be reached on (ANDROID / IOS /
+   * WEB). Empty when they have never granted push or have since logged out —
+   * this is reachability, not an inventory of the devices they own.
+   */
+  push_platforms: Array<Scalars['String']['output']>;
+  roles: Array<Scalars['String']['output']>;
+  state?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
+  /** True when the WhatsApp number on the account has been verified. */
+  whatsapp_reachable: Scalars['Boolean']['output'];
+  zone?: Maybe<Scalars['String']['output']>;
+};
+
+/** Server-side table page for the shared table engine (audienceTable). */
+export type AudienceTablePage = {
+  __typename?: 'AudienceTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AudienceMember>;
+  total: Scalars['Int']['output'];
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   token: Scalars['String']['output'];
@@ -1734,6 +1860,8 @@ export type CreateLocationInput = {
 };
 
 export type CreateNotificationInput = {
+  /** Required for AUDIENCE_LIST scope — the saved marketing list to send to. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
   body: Scalars['String']['input'];
   image_url?: InputMaybe<Scalars['String']['input']>;
   link_url?: InputMaybe<Scalars['String']['input']>;
@@ -4057,6 +4185,8 @@ export type ManualLogInput = {
 export type MarketingCampaign = {
   __typename?: 'MarketingCampaign';
   audience: MarketingCampaignAudience;
+  /** AUDIENCE_LIST audience only — recipients are recomputed at send time. */
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
   campaign_id: Scalars['ID']['output'];
   card?: Maybe<MarketingCampaignCard>;
   channel: MarketingCampaignChannel;
@@ -4075,6 +4205,8 @@ export type MarketingCampaign = {
 
 export type MarketingCampaignAudience =
   | 'ALL_USERS'
+  /** Everybody currently matching a saved audience list. */
+  | 'AUDIENCE_LIST'
   | 'NEWSLETTER_SUBSCRIBERS';
 
 export type MarketingCampaignCard = {
@@ -4091,12 +4223,14 @@ export type MarketingCampaignCardType =
   | 'CLUB'
   | 'POD';
 
+/** Email is the only campaign channel; WhatsApp campaigns were removed. */
 export type MarketingCampaignChannel =
-  | 'EMAIL'
-  | 'WHATSAPP';
+  | 'EMAIL';
 
 export type MarketingCampaignInput = {
   audience: MarketingCampaignAudience;
+  /** Required when audience is AUDIENCE_LIST. */
+  audience_list_id?: InputMaybe<Scalars['ID']['input']>;
   card_ref_id?: InputMaybe<Scalars['ID']['input']>;
   card_type?: InputMaybe<MarketingCampaignCardType>;
   channel: MarketingCampaignChannel;
@@ -4399,6 +4533,7 @@ export type Mutation = {
   completePodSettlement: PodSettlementResult;
   createAiPrompt: AiPrompt;
   createApiKey: CreatedApiKey;
+  createAudienceList: AudienceList;
   createBadge: Badge;
   createCategory: Category;
   createChallenge: Challenge;
@@ -4460,10 +4595,13 @@ export type Mutation = {
   decideMeeting: OnboardingMeeting;
   /** Owner declines a pending booking request — the slot frees up again. */
   declineVenueSlotRequest: VenueSlot;
+  /** Permanently remove an ad request. */
+  deleteAdRequest: Scalars['Boolean']['output'];
   /**  Admin-only: delete an adjustment. Returns the recomputed score.  */
   deleteAdjustment: HealthScore;
   /** Deleting a system prompt is refused — reset it instead. */
   deleteAiPrompt: Scalars['Boolean']['output'];
+  deleteAudienceList: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
   deleteCategory: Scalars['Boolean']['output'];
@@ -4755,6 +4893,11 @@ export type Mutation = {
    * when compression is disabled for the surface.
    */
   startVideoCompression: VideoCompressionJob;
+  /**
+   * Stop a running ad early. It becomes EXPIRED and its window is closed now,
+   * which is what actually takes it off the slots.
+   */
+  stopAdRequest: AdRequest;
   /** Advertiser submits a request; server quotes the cost and assigns the trace id. */
   submitAdRequest: AdRequest;
   /** Submit a structured address for ADDRESS verification — moves it to PENDING. */
@@ -5310,6 +5453,11 @@ export type MutationCreateApiKeyArgs = {
 };
 
 
+export type MutationCreateAudienceListArgs = {
+  input: AudienceListInput;
+};
+
+
 export type MutationCreateBadgeArgs = {
   input: CreateBadgeInput;
 };
@@ -5585,12 +5733,22 @@ export type MutationDeclineVenueSlotRequestArgs = {
 };
 
 
+export type MutationDeleteAdRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteAdjustmentArgs = {
   id: Scalars['ID']['input'];
 };
 
 
 export type MutationDeleteAiPromptArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAudienceListArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -6702,6 +6860,11 @@ export type MutationStartVideoCompressionArgs = {
 };
 
 
+export type MutationStopAdRequestArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationSubmitAdRequestArgs = {
   input: SubmitAdRequestInput;
 };
@@ -7459,6 +7622,8 @@ export type NewsletterSubscriberTablePage = {
 
 export type Notification = {
   __typename?: 'Notification';
+  /** AUDIENCE_LIST scope only — members are recomputed at send time. */
+  audience_list_id?: Maybe<Scalars['ID']['output']>;
   body: Scalars['String']['output'];
   created_at: Scalars['String']['output'];
   delivered_count: Scalars['Int']['output'];
@@ -7477,6 +7642,8 @@ export type Notification = {
 };
 
 export type NotificationScope =
+  /** Everybody currently matching a saved marketing audience list. */
+  | 'AUDIENCE_LIST'
   | 'GLOBAL'
   | 'LOCATION'
   | 'USER'
@@ -9054,6 +9221,23 @@ export type Query = {
   approvalRequests: Array<ApprovalRequest>;
   /** Server-side table page (search/filter/sort/paginate) over the admin approval inbox. */
   approvalRequestsTable: ApprovalRequestTablePage;
+  /** Dropdown values for the audience filters that are driven by data. */
+  audienceFilterOptions: AudienceFilterOptions;
+  /** One saved list, with its member count recomputed. */
+  audienceList?: Maybe<AudienceList>;
+  /** Everybody who can open this portal — the assignable owners for a list. */
+  audienceListOwners: Array<AudienceListOwner>;
+  /** Every saved list, for the audience dropdowns. Each carries its live reach. */
+  audienceLists: Array<AudienceList>;
+  /** Saved Target Audience lists. */
+  audienceListsTable: AudienceListTablePage;
+  /**
+   * The marketing Target Audience list. Soft-deleted accounts are always
+   * excluded. Beyond the plain field filters, three filter fields are resolved
+   * server-side: 'age' (translated to a date-of-birth range), 'whatsapp', and
+   * 'push_platform' / 'interest_category' (resolved to a user-id set).
+   */
+  audienceTable: AudienceTablePage;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -9245,6 +9429,11 @@ export type Query = {
   legalDocumentStatsTable: LegalDocumentTypeCountTablePage;
   legalDocuments: Array<LegalDocument>;
   legalDocumentsTable: LegalDocumentTablePage;
+  /**
+   * Only the ads showing right now — approved, started, not yet ended. LIVE is
+   * a date window rather than a stored status, so it needs its own query.
+   */
+  liveAdsTable: AdRequestTablePage;
   /** Every locale, for admin lists. */
   locales: Array<Locale>;
   location?: Maybe<Location>;
@@ -9663,6 +9852,21 @@ export type QueryApprovalRequestsArgs = {
 
 
 export type QueryApprovalRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAudienceListArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAudienceListsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAudienceTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -10325,6 +10529,11 @@ export type QueryLegalDocumentsArgs = {
 
 
 export type QueryLegalDocumentsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryLiveAdsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 

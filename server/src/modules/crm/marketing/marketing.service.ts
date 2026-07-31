@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 import * as yup from 'yup';
 import { GraphQLError } from 'graphql';
-import { MarketingCampaignModel, type IMarketingCampaign } from './marketing.model';
+import {
+  MarketingCampaignModel,
+  type IMarketingCampaign,
+  type MarketingCampaignAudience,
+} from './marketing.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { NewsletterSubscriberModel } from '@modules/crm/newsletter/newsletter.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -10,8 +14,9 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { applyVars, detectVariables, renderMjml } from '@modules/content/emailTemplate/emailTemplate.service';
 import { sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
-import { getMailConfigs } from '@config/url-configs';
+import { getMailConfigs, getUrlConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { instrumentCampaignHtml } from './tracking.service';
 import { logs } from '@observability/log';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
@@ -19,11 +24,12 @@ const timers = new Map<string, NodeJS.Timeout>();
 
 const inputSchema = yup.object({
   name: yup.string().trim().min(3).max(120).required(),
-  channel: yup.mixed<'EMAIL' | 'WHATSAPP'>().oneOf(['EMAIL', 'WHATSAPP']).required(),
+  channel: yup.mixed<'EMAIL'>().oneOf(['EMAIL']).required(),
   audience: yup
-    .mixed<'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS'>()
-    .oneOf(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS'])
+    .mixed<'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS' | 'AUDIENCE_LIST'>()
+    .oneOf(['ALL_USERS', 'NEWSLETTER_SUBSCRIBERS', 'AUDIENCE_LIST'])
     .required(),
+  audience_list_id: yup.string().trim().nullable(),
   subject: yup.string().trim().min(3).max(180).required(),
   mjml: yup.string().trim().min(20).required(),
   card_type: yup.mixed<'POD' | 'CLUB'>().oneOf(['POD', 'CLUB']).nullable(),
@@ -38,6 +44,7 @@ function toPub(doc: IMarketingCampaign) {
     name: doc.name,
     channel: doc.channel,
     audience: doc.audience,
+    audience_list_id: doc.audience_list_id ? String(doc.audience_list_id) : null,
     subject: doc.subject,
     mjml: doc.mjml,
     rendered_html: doc.rendered_html ?? null,
@@ -46,6 +53,14 @@ function toPub(doc: IMarketingCampaign) {
     sent_at: doc.sent_at ? doc.sent_at.toISOString() : null,
     status: doc.status,
     recipient_count: doc.recipient_count,
+    open_count: doc.open_count,
+    image_load_count: doc.image_load_count,
+    click_count: doc.click_count,
+    first_opened_at: doc.first_opened_at ? doc.first_opened_at.toISOString() : null,
+    last_opened_at: doc.last_opened_at ? doc.last_opened_at.toISOString() : null,
+    tracked_links: doc.tracked_links,
+    tracked_images: doc.tracked_images,
+    delivery: doc.delivery ?? null,
     error: doc.error ?? null,
     created_at: doc.created_at.toISOString(),
     updated_at: doc.updated_at.toISOString(),
@@ -160,6 +175,17 @@ async function campaignVars(card: Awaited<ReturnType<typeof findPreviewCard>>) {
   };
 }
 
+/**
+ * The variables a campaign author can rely on, with what each one means.
+ * `content_*` are deliberately not advertised: they only ever held dynamic
+ * card content, and the card picker was removed — they now always render
+ * empty, so offering them would be a lie. They are still SUBSTITUTED (see
+ * campaignVars) so older campaigns re-render as they always did.
+ */
+const CAMPAIGN_VARIABLES: { name: keyof Awaited<ReturnType<typeof campaignVars>>; description: string }[] = [
+  { name: 'app_name', description: 'Your app name, as set in Branding.' },
+];
+
 async function renderCampaign(input: {
   subject: string;
   mjml: string;
@@ -182,6 +208,9 @@ async function validateInput(input: any) {
   try {
     const payload = await inputSchema.validate(input, { abortEarly: false, stripUnknown: true });
     if (payload.card_type && !payload.card_ref_id) throw new Error('Card selection is required');
+    if (payload.audience === 'AUDIENCE_LIST' && !payload.audience_list_id) {
+      throw new Error('Pick the audience list to send to');
+    }
     return payload;
   } catch (e: any) {
     throw new GraphQLError(e.errors?.join(', ') || e.message || 'Invalid campaign input', {
@@ -199,17 +228,26 @@ function parseSchedule(value?: string | null) {
   return date;
 }
 
-async function recipientsFor(audience: 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS') {
-  const docs =
-    audience === 'ALL_USERS'
-      ? await UserModel.find({
-          'metadata.status': 'ACTIVE',
-          'auth.email': { $exists: true, $ne: '' },
-        })
-          .select('auth.email')
-          .lean()
-          .exec()
-      : await NewsletterSubscriberModel.find({ unsubscribed_at: null }).select('email').lean().exec();
+/** The email addresses a campaign sends to. A saved list resolves through its
+ * criteria at send time, so the recipients are always current. */
+export async function recipientsFor(audience: MarketingCampaignAudience, audienceListId?: any) {
+  const emailable = { 'metadata.status': 'ACTIVE', 'auth.email': { $exists: true, $ne: '' } };
+  let docs: any[];
+  if (audience === 'AUDIENCE_LIST') {
+    const { audienceListService } = await import('./audienceList.service');
+    const ids = await audienceListService.memberIds(String(audienceListId ?? ''));
+    docs = await UserModel.find({ ...emailable, _id: { $in: ids } })
+      .select('auth.email')
+      .lean()
+      .exec();
+  } else if (audience === 'ALL_USERS') {
+    docs = await UserModel.find(emailable).select('auth.email').lean().exec();
+  } else {
+    docs = await NewsletterSubscriberModel.find({ unsubscribed_at: null })
+      .select('email')
+      .lean()
+      .exec();
+  }
   return [
     ...new Set(
       docs
@@ -242,16 +280,33 @@ async function sendCampaign(campaign_id: string) {
       card_ref_id: doc.card?.ref_id ?? null,
     });
     if (rendered.errors.length) throw new Error(rendered.errors.join('; '));
-    const recipients = await recipientsFor(doc.audience);
+    const recipients = await recipientsFor(doc.audience, doc.audience_list_id);
     if (!recipients.length) throw new Error('No recipients found for selected audience');
     const mailConfigs = await getMailConfigs();
     const campaignTo =
       (await getRuntimeEnvValue('CAMPAIGN_TO')) ||
       mailConfigs.from;
+    // Instrument once, right before sending: the stored link table has to be
+    // the one the delivered email actually points at.
+    const { serverUrl } = await getUrlConfigs();
+    const tracked = instrumentCampaignHtml(rendered.html, doc.campaign_id, serverUrl);
+    doc.tracked_links = tracked.links.map((link) => ({ ...link, click_count: 0 }));
+    doc.tracked_images = tracked.images.map((image) => ({ ...image, load_count: 0 }));
+    // What the SMTP server accepted and refused at handover. It is the only
+    // delivery signal plain SMTP gives us — a later bounce never comes back
+    // here, it goes to the envelope sender's mailbox.
+    const delivery = { accepted: 0, rejected: 0, rejected_addresses: [] as string[] };
     for (const batch of chunk(recipients, 50)) {
-      await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: rendered.html });
+      const info = await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: tracked.html });
+      delivery.accepted += info.accepted?.length ?? 0;
+      delivery.rejected += info.rejected?.length ?? 0;
+      delivery.rejected_addresses.push(...(info.rejected ?? []).map(String));
     }
+    doc.delivery = delivery;
     doc.status = 'SENT';
+    // The CLEAN render is what gets stored: the View dialog renders this in an
+    // iframe, and an instrumented copy would fire the open pixel — every admin
+    // looking at a campaign would inflate its own open count.
     doc.rendered_html = rendered.html;
     doc.recipient_count = recipients.length;
     doc.sent_at = new Date();
@@ -293,6 +348,8 @@ const MARKETING_TABLE_CONFIG: TableEntityConfig = {
     audience: 'audience',
     status: 'status',
     recipient_count: 'recipient_count',
+    open_count: 'open_count',
+    click_count: 'click_count',
     scheduled_at: 'scheduled_at',
     sent_at: 'sent_at',
     created_at: 'created_at',
@@ -315,6 +372,42 @@ export const marketingService = {
   },
 
   /** Server-side table page (search/filter/sort/paginate) for the marketingCampaignsTable query. */
+  /** One campaign in full, including the rendered HTML the table rows omit —
+   * a page of 25 rows has no business carrying 25 email bodies. */
+  async byId(campaignId: string) {
+    const doc = await MarketingCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw new GraphQLError('Campaign not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPub(doc);
+  },
+
+  /**
+   * Delete a campaign.
+   *
+   * A SCHEDULED campaign owns a live setTimeout in this process. Dropping the
+   * document without clearing it leaves a timer that fires at the scheduled
+   * hour and tries to send a campaign that no longer exists — so cancelling
+   * the timer is the delete, as much as removing the row is.
+   *
+   * SENDING is refused: it is mid-flight, and the send would carry on writing
+   * to a document that had been removed underneath it.
+   */
+  async remove(campaignId: string) {
+    const doc = await MarketingCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw new GraphQLError('Campaign not found', { extensions: { code: 'NOT_FOUND' } });
+    if (doc.status === 'SENDING') {
+      throw new GraphQLError('That campaign is sending right now — wait for it to finish', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const timer = timers.get(campaignId);
+    if (timer) {
+      clearTimeout(timer);
+      timers.delete(campaignId);
+    }
+    await doc.deleteOne();
+    return true;
+  },
+
   async table(input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<IMarketingCampaign>(
       MarketingCampaignModel,
@@ -325,6 +418,17 @@ export const marketingService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
   previewCards,
+  /** What you may write in the subject or the MJML, with a live sample of
+   * what each one renders to right now. */
+  async variables() {
+    const values = await campaignVars(null);
+    return CAMPAIGN_VARIABLES.map((variable) => ({
+      name: variable.name,
+      description: variable.description,
+      sample: values[variable.name],
+    }));
+  },
+
   async renderPreview(input: any) {
     const payload = await yup
       .object({ subject: yup.string().required(), mjml: yup.string().required(), card_type: yup.string().nullable(), card_ref_id: yup.string().nullable() })
@@ -350,6 +454,7 @@ export const marketingService = {
       name: payload.name,
       channel: payload.channel,
       audience: payload.audience,
+      audience_list_id: payload.audience === 'AUDIENCE_LIST' ? payload.audience_list_id : null,
       subject: payload.subject,
       mjml: payload.mjml,
       rendered_html: rendered.html,

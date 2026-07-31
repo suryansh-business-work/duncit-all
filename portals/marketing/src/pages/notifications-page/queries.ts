@@ -13,6 +13,7 @@ export interface NotificationRow {
   location_id?: string | null;
   zone_name?: string | null;
   target_user_ids: string[];
+  audience_list_id?: string | null;
   delivered_count: number;
   failed_count: number;
   created_at: string;
@@ -31,6 +32,7 @@ const NOTIFICATION_ROW_FIELDS = gql`
     location_id
     zone_name
     target_user_ids
+    audience_list_id
     delivered_count
     failed_count
     created_at
@@ -88,6 +90,18 @@ export const USERS_FOR_NOTIF = gql`
       full_name
       email
       phone_number
+    }
+  }
+`;
+
+/** Saved Target Audience lists, each with the number of people it reaches
+ * right now — the criteria are re-run server-side on every read. */
+export const AUDIENCE_LISTS_FOR_NOTIF = gql`
+  query AudienceListsForNotif {
+    audienceLists {
+      id
+      name
+      member_count
     }
   }
 `;

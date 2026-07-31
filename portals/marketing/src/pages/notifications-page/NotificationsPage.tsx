@@ -11,6 +11,7 @@ import {
   LOCATIONS_FOR_NOTIF,
   NOTIFS_TABLE,
   USERS_FOR_NOTIF,
+  AUDIENCE_LISTS_FOR_NOTIF,
   type NotificationRow,
 } from './queries';
 import { blankForm, type NotifForm } from './helpers';
@@ -23,6 +24,9 @@ export default function NotificationsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const { data: locsData } = useQuery(LOCATIONS_FOR_NOTIF);
   const { data: usersData } = useQuery(USERS_FOR_NOTIF);
+  const { data: listsData } = useQuery(AUDIENCE_LISTS_FOR_NOTIF, {
+    fetchPolicy: 'cache-and-network',
+  });
 
   const [createMut] = useMutation(CREATE_NOTIFICATION);
   const [deleteMut] = useMutation(DELETE_NOTIFICATION);
@@ -36,6 +40,7 @@ export default function NotificationsPage() {
 
   const locations = locsData?.locations ?? [];
   const users = usersData?.users ?? [];
+  const audienceLists = listsData?.audienceLists ?? [];
   const locName = useCallback(
     (id?: string | null) =>
       (locsData?.locations ?? []).find((l: any) => l.id === id)?.location_name ?? '—',
@@ -127,6 +132,8 @@ export default function NotificationsPage() {
         onSubmit={submit}
         locations={locations}
         users={users}
+        audienceLists={audienceLists}
+        totalUsers={users.length}
       />
 
       <Snackbar

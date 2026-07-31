@@ -11,6 +11,9 @@ import { useEffect, useState, type ReactNode } from 'react';
  * `useApolloTableFetch`); component specs pass a `fetchRows` built with
  * `fetchRowsFrom(...)`.
  */
+/** Mirrors the real `@duncit/table` export — column code compares against it. */
+export const EM_DASH = '—';
+
 let ROWS: unknown[] = [];
 
 export function __setTableRows(rows: unknown[]): void {
@@ -46,6 +49,59 @@ type AnyColumn = {
 export function dateColumn(opts: Partial<AnyColumn> & Record<string, unknown> = {}): AnyColumn {
   return { field: (opts.field as string) ?? 'created_at', headerName: opts.headerName ?? 'Date', ...opts };
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ActionsOpts = Record<string, any>;
+
+/** The real column swaps the label for `disabledTitle` while disabled, so a
+ * spec can assert on the reason a row action is unavailable. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const actionLabel = (config: ActionsOpts | undefined, row: any, fallback: string) => {
+  const base = config?.title ?? fallback;
+  if (config?.disabled?.(row) && config?.disabledTitle) return config.disabledTitle;
+  return base;
+};
+
+/** Mirrors the real actionsColumn closely enough to click: `renderExtra`
+ * first, then one button per configured handler, labelled from its `title`
+ * (or `disabledTitle`) so specs can find it. */
+export function actionsColumn(opts: ActionsOpts = {}): AnyColumn {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderAction = (row: any, config: ActionsOpts | undefined, fallback: string, onClick: (r: any) => void) => {
+    const label = actionLabel(config, row, fallback);
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        disabled={config?.disabled?.(row) ?? false}
+        onClick={() => onClick(row)}
+      >
+        {label}
+      </button>
+    );
+  };
+  return {
+    field: opts.field ?? 'actions',
+    headerName: opts.headerName ?? 'Actions',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cellRenderer: (row: any) => (
+      <>
+        {opts.renderExtra?.(row)}
+        {opts.onEdit && renderAction(row, opts.edit, 'Edit', opts.onEdit)}
+        {opts.onDelete && renderAction(row, opts.delete, 'Delete', opts.onDelete)}
+      </>
+    ),
+  };
+}
+
+/** A column's text: its valueGetter if it has one, otherwise the raw field —
+ * except for a cellRenderer-only column, which owns its whole cell. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const renderCell = (column: AnyColumn, row: any): string => {
+  if (column.valueGetter) return String(column.valueGetter(row) ?? '');
+  if (column.cellRenderer || !column.field) return '';
+  return String(row[column.field] ?? '');
+};
 
 interface MockTableProps {
   columns: AnyColumn[];
@@ -84,7 +140,9 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
         <div key={getRowId ? getRowId(row) : String(index)} data-testid="table-row">
           {columns.map((column) => (
             <span key={column.field ?? column.headerName} data-testid={`cell-${column.field ?? column.headerName}`}>
-              {column.valueGetter ? String(column.valueGetter(row) ?? '') : ''}
+              {/* Production reads row[field] when a column declares neither a
+                  valueGetter nor a cellRenderer — a plain value column. */}
+              {renderCell(column, row)}
               {column.cellRenderer ? column.cellRenderer(row) : null}
             </span>
           ))}

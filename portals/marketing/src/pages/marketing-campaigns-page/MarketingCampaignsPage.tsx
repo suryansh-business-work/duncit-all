@@ -1,40 +1,40 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useApolloClient, useLazyQuery, useMutation, useQuery } from '@apollo/client';
-import { Box, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
-import CampaignIcon from '@mui/icons-material/Campaign';
+import { useCallback, useRef, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
-import { notifyError, notifySuccess } from '@duncit/dialogs';
-import CampaignPreview from './CampaignPreview';
+import { useDateFormat } from '@duncit/app-settings';
+import { ConfirmDialog, notifyError, notifySuccess } from '@duncit/dialogs';
+import { parseApiError } from '@duncit/utils';
 import CampaignTable from './CampaignTable';
-import MarketingCampaignForm, {
-  blankMarketingCampaignValues,
-  toMarketingCampaignInput,
-  type MarketingCampaignFormValues,
-} from './marketing-campaign-form';
+import CampaignDetailsDialog from './CampaignDetailsDialog';
+import { deleteWarningFor } from './delete-copy';
+import type { CampaignAudienceList } from './marketing-campaign-form';
 import {
-  CREATE_MARKETING_CAMPAIGN,
+  AUDIENCE_LISTS_FOR_CAMPAIGN,
+  DELETE_MARKETING_CAMPAIGN,
   MARKETING_CAMPAIGNS_TABLE,
-  MARKETING_PREVIEW_CARDS,
-  RENDER_MARKETING_CAMPAIGN,
   SEND_MARKETING_CAMPAIGN,
-  type CampaignPreviewCard,
   type MarketingCampaignRow,
 } from './queries';
 
-interface Props {
-  defaultChannel?: 'EMAIL' | 'WHATSAPP';
-}
-
-export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Readonly<Props>) {
-  const [draft, setDraft] = useState<MarketingCampaignFormValues>(() => blankMarketingCampaignValues(defaultChannel));
-  const [formError, setFormError] = useState<string | null>(null);
+/** Every campaign, with the two things you do to one: look at it, or remove
+ * it. Creating happens on its own page — the MJML editor needs the width. */
+export default function MarketingCampaignsPage() {
   const client = useApolloClient();
+  const navigate = useNavigate();
+  const { formatDateTime } = useDateFormat();
   const refetchRef = useRef<(() => void) | null>(null);
-  const { data: podsData } = useQuery<{ marketingCampaignPreviewCards: CampaignPreviewCard[] }>(MARKETING_PREVIEW_CARDS, { variables: { type: 'POD' } });
-  const { data: clubsData } = useQuery<{ marketingCampaignPreviewCards: CampaignPreviewCard[] }>(MARKETING_PREVIEW_CARDS, { variables: { type: 'CLUB' } });
-  const [renderCampaign, { data: previewData, loading: previewLoading }] = useLazyQuery(RENDER_MARKETING_CAMPAIGN, { fetchPolicy: 'no-cache' });
-  const [createCampaign, { loading: saving }] = useMutation(CREATE_MARKETING_CAMPAIGN);
+  const [viewing, setViewing] = useState<string | null>(null);
+  const [target, setTarget] = useState<MarketingCampaignRow | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [sendCampaign, { loading: sending }] = useMutation(SEND_MARKETING_CAMPAIGN);
+  const [deleteCampaign, { loading: deleting }] = useMutation(DELETE_MARKETING_CAMPAIGN);
+  const { data: listsData } = useQuery<{ audienceLists: CampaignAudienceList[] }>(
+    AUDIENCE_LISTS_FOR_CAMPAIGN,
+    { fetchPolicy: 'cache-and-network' },
+  );
 
   const fetchRows = useApolloTableFetch<MarketingCampaignRow>(
     client,
@@ -42,88 +42,100 @@ export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Rea
     'marketingCampaignsTable',
   );
 
-  useEffect(() => {
-    setDraft((prev) => ({ ...prev, channel: defaultChannel }));
-  }, [defaultChannel]);
+  const busy = sending || deleting;
 
-  useEffect(() => {
-    if (!draft.subject.trim() || !draft.mjml.trim()) return;
-    const timer = globalThis.setTimeout(() => {
-      renderCampaign({
-        variables: {
-          input: {
-            subject: draft.subject,
-            mjml: draft.mjml,
-            card_type: draft.card_type || null,
-            card_ref_id: draft.card_ref_id || null,
-          },
-        },
-      });
-    }, 350);
-    return () => globalThis.clearTimeout(timer);
-  }, [draft.subject, draft.mjml, draft.card_type, draft.card_ref_id, renderCampaign]);
+  const openCampaign = useCallback((row: MarketingCampaignRow) => setViewing(row.campaign_id), []);
 
-  const cards = useMemo(() => {
-    if (draft.card_type === 'POD') return podsData?.marketingCampaignPreviewCards ?? [];
-    if (draft.card_type === 'CLUB') return clubsData?.marketingCampaignPreviewCards ?? [];
-    return [];
-  }, [clubsData, draft.card_type, podsData]);
-
-  const handleSubmit = async (values: MarketingCampaignFormValues) => {
-    setFormError(null);
-    try {
-      const result = await createCampaign({ variables: { input: toMarketingCampaignInput(values) } });
-      const created = result.data?.createMarketingCampaign;
-      if (created?.error) notifyError(created.error);
-      else notifySuccess(values.scheduled_at ? 'Campaign scheduled' : 'Campaign sent');
-      setDraft(blankMarketingCampaignValues(defaultChannel));
+  const handleSend = useCallback(
+    async (row: MarketingCampaignRow) => {
+      try {
+        const result = await sendCampaign({ variables: { campaign_id: row.campaign_id } });
+        const sent = result.data?.sendMarketingCampaign;
+        if (sent?.error) notifyError(sent.error);
+        else notifySuccess('Campaign sent');
+      } catch (e) {
+        notifyError(parseApiError(e, 'Campaign send failed'));
+        return;
+      }
       refetchRef.current?.();
-    } catch (error: any) {
-      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the string fallback is defensive */
-      setFormError(error.message || 'Campaign could not be saved');
+    },
+    [sendCampaign],
+  );
+
+  const confirmDelete = async (row: MarketingCampaignRow) => {
+    setError(null);
+    try {
+      await deleteCampaign({ variables: { campaign_id: row.campaign_id } });
+    } catch (e) {
+      setError(parseApiError(e, 'Could not delete the campaign'));
+      return;
     }
+    notifySuccess(`“${row.name}” deleted`);
+    setTarget(null);
+    setViewing(null);
+    refetchRef.current?.();
   };
 
-  const handleSend = async (campaignId: string) => {
-    try {
-      const result = await sendCampaign({ variables: { campaign_id: campaignId } });
-      const sent = result.data?.sendMarketingCampaign;
-      if (sent?.error) notifyError(sent.error);
-      else notifySuccess('Campaign sent');
-      refetchRef.current?.();
-    } catch (error: any) {
-      /* v8 ignore next -- Apollo rejects with an Error carrying a message; the string fallback is defensive */
-      notifyError(error.message || 'Campaign send failed');
-    }
+  const closeConfirm = () => {
+    setTarget(null);
+    setError(null);
   };
-
-  const preview = previewData?.renderMarketingCampaign;
 
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5}>
-        <CampaignIcon color="primary" />
-        <Box>
-          <Typography variant="h5" fontWeight={700}>Marketing Campaigns</Typography>
-          <Typography variant="caption" color="text.secondary">Create MJML email campaigns with Pod and Club cards.</Typography>
-        </Box>
+    <Box sx={{ p: 2 }}>
+      <Stack direction="row" alignItems="flex-start" spacing={2} mb={2}>
+        <Stack spacing={0.25} sx={{ flex: 1 }}>
+          <Typography variant="h5" fontWeight={700}>
+            Marketing Campaigns
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Every email campaign you have sent or scheduled. Open one to see the email exactly as it
+            went out.
+          </Typography>
+        </Stack>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => navigate('/campaigns/email/new')}
+        >
+          New campaign
+        </Button>
       </Stack>
-      <Grid container spacing={2} alignItems="stretch">
-        <Grid item xs={12} lg={6}>
-          <Card>
-            <CardContent>
-              <MarketingCampaignForm initialValues={draft} cards={cards} busy={saving} previewLoading={previewLoading} errorMessage={formError} onValuesChange={setDraft} onSubmit={handleSubmit} />
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} lg={6}>
-          <CampaignPreview html={preview?.html ?? ''} errors={preview?.errors ?? []} loading={previewLoading} subject={preview?.subject} />
-        </Grid>
-      </Grid>
-      <Box>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Campaign History</Typography>
-        <CampaignTable fetchRows={fetchRows} refetchRef={refetchRef} sending={sending} onSend={handleSend} />
-      </Box>
-    </Stack>
+
+      <CampaignTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        busy={busy}
+        onView={openCampaign}
+        onSend={handleSend}
+        onDelete={setTarget}
+      />
+
+      <CampaignDetailsDialog
+        campaignId={viewing}
+        audienceLists={listsData?.audienceLists ?? []}
+        busy={busy}
+        formatDateTime={formatDateTime}
+        onClose={() => setViewing(null)}
+        onSend={handleSend}
+        onDelete={setTarget}
+      />
+
+      {/* Rendered only once a campaign is picked, so confirming needs no null
+          guard for a state the dialog cannot be open in. */}
+      {target && (
+        <ConfirmDialog
+          open
+          title="Delete this campaign?"
+          message={error ?? deleteWarningFor(target)}
+          confirmLabel="Delete"
+          confirmColor="error"
+          loading={deleting}
+          busyLabel="Deleting…"
+          onClose={closeConfirm}
+          onConfirm={() => confirmDelete(target)}
+        />
+      )}
+    </Box>
   );
 }

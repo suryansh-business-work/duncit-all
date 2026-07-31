@@ -29,6 +29,10 @@ export const adsResolvers = {
       requireRole(ctx, MARKETING_REVIEW);
       return adsService.table(args.query);
     },
+    liveAdsTable: (_p: unknown, args: { query?: any }, ctx: any) => {
+      requireRole(ctx, MARKETING_REVIEW);
+      return adsService.liveTable(args.query);
+    },
     adRequest: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return adsService.byId(args.id, { id: user.id, canReview: hasRole(user, MARKETING_REVIEW) });
@@ -47,6 +51,14 @@ export const adsResolvers = {
     ) => {
       const user = requireRole(ctx, MARKETING_REVIEW);
       return adsService.review(user.id, args.id, args.approve, args.remarks);
+    },
+    stopAdRequest: (_p: unknown, args: { id: string }, ctx: any) => {
+      requireRole(ctx, MARKETING_REVIEW);
+      return adsService.stop(args.id);
+    },
+    deleteAdRequest: (_p: unknown, args: { id: string }, ctx: any) => {
+      requireRole(ctx, MARKETING_REVIEW);
+      return adsService.remove(args.id);
     },
     updateAdPricing: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, MARKETING_REVIEW);

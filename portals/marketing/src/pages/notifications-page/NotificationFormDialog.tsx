@@ -13,10 +13,12 @@ import {
   Stack,
   Switch,
   TextField,
+  Typography,
 } from '@mui/material';
+import GroupIcon from '@mui/icons-material/Group';
 import MediaPickerField from '../../components/MediaPickerField';
 import { RhfTextField } from '@duncit/forms';
-import { type NotifForm, SCOPES } from './helpers';
+import { reachOf, type AudienceListOption, type NotifForm, SCOPES } from './helpers';
 import { notificationFormSchema } from './notification.form';
 
 interface Props {
@@ -28,6 +30,9 @@ interface Props {
   onSubmit: (values: NotifForm) => void;
   locations: any[];
   users: any[];
+  audienceLists: AudienceListOption[];
+  /** Everybody on the platform — the reach of a Global notification. */
+  totalUsers: number;
 }
 
 export default function NotificationFormDialog({
@@ -39,6 +44,8 @@ export default function NotificationFormDialog({
   onSubmit,
   locations,
   users,
+  audienceLists,
+  totalUsers,
 }: Readonly<Props>) {
   const { control, handleSubmit, setValue, watch, reset } = useForm<NotifForm>({
     defaultValues: form,
@@ -49,9 +56,17 @@ export default function NotificationFormDialog({
   useEffect(() => reset(form), [form, reset]);
 
   const scope = watch('scope');
+  const audienceListId = watch('audience_list_id');
+  const targetUserIds = watch('target_user_ids');
   const locationId = watch('location_id');
   const location = locations.find((item: any) => item.id === locationId);
   const zones: { zone_name: string }[] = location?.location_zones ?? [];
+
+  const reach = reachOf(
+    { scope, target_user_ids: targetUserIds, audience_list_id: audienceListId },
+    audienceLists,
+    totalUsers,
+  );
 
   const submit = handleSubmit((values) => onSubmit(values));
 
@@ -102,6 +117,7 @@ export default function NotificationFormDialog({
                     setValue('location_id', '');
                     setValue('zone_name', '');
                     setValue('target_user_ids', []);
+                    setValue('audience_list_id', '');
                   }}
                 >
                   {SCOPES.map((option) => (
@@ -110,6 +126,52 @@ export default function NotificationFormDialog({
                 </TextField>
               )}
             />
+
+            {/* How many people this audience actually reaches, so nobody sends
+                blind. A location or zone has no count of its own. */}
+            {reach !== null && (
+              <Alert
+                severity={reach > 0 ? 'info' : 'warning'}
+                icon={<GroupIcon fontSize="small" />}
+                data-testid="notif-reach"
+              >
+                <Typography variant="body2">
+                  {reach > 0
+                    ? `This reaches ${reach.toLocaleString()} ${reach === 1 ? 'person' : 'people'}.`
+                    : 'This reaches nobody right now.'}
+                </Typography>
+              </Alert>
+            )}
+
+            {scope === 'AUDIENCE_LIST' && (
+              <Controller
+                control={control}
+                name="audience_list_id"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    select
+                    label="Audience list"
+                    fullWidth
+                    value={field.value}
+                    onBlur={field.onBlur}
+                    onChange={field.onChange}
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message ?? 'Membership is recomputed when you send.'}
+                  >
+                    {audienceLists.length === 0 && (
+                      <MenuItem disabled value="">
+                        No saved lists yet — create one under Target Audience
+                      </MenuItem>
+                    )}
+                    {audienceLists.map((list) => (
+                      <MenuItem key={list.id} value={list.id}>
+                        {`${list.name} · ${list.member_count.toLocaleString()}`}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              />
+            )}
 
             {(scope === 'LOCATION' || scope === 'ZONE') && (
               <Controller

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Divider, Stack, Typography } from '@mui/material';
+import { Box, Divider, Stack, Typography } from '@mui/material';
 import { InfoRow } from '@duncit/ui';
 import type { HostRow } from '../queries';
 
@@ -9,6 +9,9 @@ interface Props {
 }
 
 const dash = (value?: string | null) => value || '—';
+
+/** Free-text rows keep the whole row rather than wrapping inside half of it. */
+const FULL_WIDTH = { gridColumn: { sm: '1 / -1' } };
 
 /** Payout accounts are shown last-4 only: a reviewer confirms the destination
  * exists, they never need the full number read back to them. */
@@ -23,7 +26,18 @@ function Section({ title, children }: Readonly<{ title: string; children: ReactN
           {title}
         </Typography>
       </Divider>
-      <Stack spacing={0.75}>{children}</Stack>
+      {/* Two columns once there is room: these rows are short, and a single
+          column down a dialog this wide is a lot of scrolling for a reviewer. */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+          columnGap: 3,
+          rowGap: 0.75,
+        }}
+      >
+        {children}
+      </Box>
     </>
   );
 }
@@ -62,7 +76,13 @@ export default function HostReviewDetails({ host, formatDateTime }: Readonly<Pro
         <InfoRow variant="inline" labelWidth={120} label="Date of birth" value={at(host.dob)} />
         <InfoRow variant="inline" labelWidth={120} label="Aadhar" value={dash(host.aadhar_number)} />
         <InfoRow variant="inline" labelWidth={120} label="PAN" value={dash(host.pan_number)} />
-        <InfoRow variant="inline" labelWidth={120} label="Address" value={dash(host.full_address)} />
+        <InfoRow
+          variant="inline"
+          labelWidth={120}
+          label="Address"
+          value={dash(host.full_address)}
+          sx={FULL_WIDTH}
+        />
       </Section>
 
       <Section title="Payout">
@@ -92,6 +112,7 @@ export default function HostReviewDetails({ host, formatDateTime }: Readonly<Pro
           labelWidth={120}
           label="Last note"
           value={dash(host.reviewer_notes)}
+          sx={FULL_WIDTH}
         />
       </Section>
     </Stack>

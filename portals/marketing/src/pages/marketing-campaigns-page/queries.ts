@@ -23,8 +23,8 @@ export const MARKETING_CAMPAIGNS = gql`
 `;
 
 /** Same selection as MARKETING_CAMPAIGNS rows — every allowlisted sort/filter
- * field (name, channel, audience, status, recipient_count, scheduled_at,
- * sent_at, created_at) is already selected. */
+ * field (name, channel, audience, status, recipient_count, open_count,
+ * click_count, scheduled_at, sent_at, created_at) is already selected. */
 const MARKETING_CAMPAIGN_ROW_FIELDS = gql`
   fragment MarketingCampaignRowFields on MarketingCampaign {
     campaign_id
@@ -36,6 +36,8 @@ const MARKETING_CAMPAIGN_ROW_FIELDS = gql`
     sent_at
     status
     recipient_count
+    open_count
+    click_count
     error
     created_at
     card {
@@ -58,16 +60,45 @@ export const MARKETING_CAMPAIGNS_TABLE = gql`
   ${MARKETING_CAMPAIGN_ROW_FIELDS}
 `;
 
-export const MARKETING_PREVIEW_CARDS = gql`
-  query MarketingCampaignPreviewCards($type: MarketingCampaignCardType!) {
-    marketingCampaignPreviewCards(type: $type) {
-      id
-      type
-      title
+/** One campaign in full. Kept separate from the row fragment on purpose:
+ * `rendered_html` is an entire email body, and a page of rows must not carry
+ * one per campaign just so a dialog can show one. */
+export const MARKETING_CAMPAIGN = gql`
+  query MarketingCampaign($campaign_id: ID!) {
+    marketingCampaign(campaign_id: $campaign_id) {
+      ...MarketingCampaignRowFields
+      audience_list_id
+      rendered_html
+      image_load_count
+      first_opened_at
+      last_opened_at
+      tracked_links {
+        url
+        kind
+        click_count
+      }
+      tracked_images {
+        url
+        load_count
+      }
+      delivery {
+        accepted
+        rejected
+        rejected_addresses
+      }
+    }
+  }
+  ${MARKETING_CAMPAIGN_ROW_FIELDS}
+`;
+
+/** What a campaign author may write, straight from the renderer that
+ * substitutes them — so the list can never drift from the truth. */
+export const MARKETING_CAMPAIGN_VARIABLES = gql`
+  query MarketingCampaignVariables {
+    marketingCampaignVariables {
+      name
       description
-      image_url
-      cta_url
-      meta
+      sample
     }
   }
 `;
@@ -79,6 +110,17 @@ export const RENDER_MARKETING_CAMPAIGN = gql`
       html
       errors
       detected_variables
+    }
+  }
+`;
+
+/** Saved Target Audience lists, each with its live reach. */
+export const AUDIENCE_LISTS_FOR_CAMPAIGN = gql`
+  query AudienceListsForCampaign {
+    audienceLists {
+      id
+      name
+      member_count
     }
   }
 `;
@@ -105,27 +147,65 @@ export const SEND_MARKETING_CAMPAIGN = gql`
   }
 `;
 
-export interface CampaignPreviewCard {
-  id: string;
-  type: 'POD' | 'CLUB';
-  title: string;
-  description?: string | null;
-  image_url?: string | null;
-  cta_url?: string | null;
-  meta?: string | null;
-}
+export const DELETE_MARKETING_CAMPAIGN = gql`
+  mutation DeleteMarketingCampaign($campaign_id: ID!) {
+    deleteMarketingCampaign(campaign_id: $campaign_id)
+  }
+`;
 
 export interface MarketingCampaignRow {
   campaign_id: string;
   name: string;
-  channel: 'EMAIL' | 'WHATSAPP';
+  channel: 'EMAIL';
+  audience_list_id?: string | null;
   audience: string;
   subject: string;
   scheduled_at?: string | null;
   sent_at?: string | null;
   status: string;
   recipient_count: number;
+  /** Totals, not headcounts — campaigns go out BCC'd, so an open cannot be
+   * attributed to one recipient. */
+  open_count: number;
+  click_count: number;
   error?: string | null;
   created_at: string;
   card?: { type?: string | null; title?: string | null } | null;
+}
+
+export interface CampaignVariable {
+  name: string;
+  description: string;
+  sample: string;
+}
+
+export type TrackedLinkKind = 'LINK' | 'CTA' | 'UNSUBSCRIBE';
+
+export interface TrackedLink {
+  url: string;
+  kind: TrackedLinkKind;
+  click_count: number;
+}
+
+export interface TrackedImage {
+  url: string;
+  load_count: number;
+}
+
+/** What the SMTP server accepted at handover — not inbox delivery. */
+export interface CampaignDelivery {
+  accepted: number;
+  rejected: number;
+  rejected_addresses: string[];
+}
+
+/** A row plus the parts only the details dialog asks for. */
+export interface MarketingCampaignDetail extends MarketingCampaignRow {
+  rendered_html?: string | null;
+  image_load_count: number;
+  first_opened_at?: string | null;
+  last_opened_at?: string | null;
+  tracked_links: TrackedLink[];
+  tracked_images: TrackedImage[];
+  delivery?: CampaignDelivery | null;
 }

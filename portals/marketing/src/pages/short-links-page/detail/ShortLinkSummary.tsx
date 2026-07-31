@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Chip, Grid, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import { EM_DASH } from '@duncit/table';
 import { InfoRow } from '@duncit/ui';
 import CopyableUrl from '../CopyableUrl';
@@ -37,20 +37,18 @@ export default function ShortLinkSummary({ link, stats, qr, formatDateTime }: Re
 
   return (
     <Stack spacing={2}>
-      <Grid container spacing={2}>
-        <Grid item xs={6} md={3}>
-          <Stat label="Total clicks" value={stats.total_clicks.toLocaleString()} />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <Stat label="Unique visitors" value={stats.unique_visitors.toLocaleString()} />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <Stat label="Countries" value={stats.countries_reached.toLocaleString()} />
-        </Grid>
-        <Grid item xs={6} md={3}>
-          <Stat label="Last click" value={when(link.last_clicked_at)} />
-        </Grid>
-      </Grid>
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 2,
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+        }}
+      >
+        <Stat label="Total clicks" value={stats.total_clicks.toLocaleString()} />
+        <Stat label="Unique visitors" value={stats.unique_visitors.toLocaleString()} />
+        <Stat label="Countries" value={stats.countries_reached.toLocaleString()} />
+        <Stat label="Last click" value={when(link.last_clicked_at)} />
+      </Box>
 
       <Card variant="outlined">
         <CardContent>

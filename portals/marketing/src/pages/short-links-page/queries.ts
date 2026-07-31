@@ -173,6 +173,73 @@ export const SHORT_LINK_CLICKS = gql`
   }
 `;
 
+/** Click -> signup -> checkout -> paid, for one link. */
+export const SHORT_LINK_FUNNEL = gql`
+  query ShortLinkFunnel($id: ID!) {
+    shortLinkFunnel(id: $id) {
+      revenue
+      conversion_rate
+      steps {
+        step
+        count
+      }
+    }
+  }
+`;
+
+/** One row per click, with the person it became. */
+export const SHORT_LINK_JOURNEYS = gql`
+  query ShortLinkJourneys($id: ID!, $query: TableQueryInput) {
+    shortLinkJourneys(id: $id, query: $query) {
+      total
+      rows {
+        id
+        click_id
+        clicked_at
+        platform
+        country
+        city
+        device_type
+        furthest_step
+        converted_amount
+        user_id
+        user_name
+        user_email
+        steps {
+          step
+          at
+        }
+      }
+    }
+  }
+`;
+
+export interface ShortLinkFunnelStep {
+  step: string;
+  count: number;
+}
+
+export interface ShortLinkFunnel {
+  steps: ShortLinkFunnelStep[];
+  revenue: number;
+  conversion_rate: number;
+}
+
+export interface ShortLinkJourneyRow {
+  id: string;
+  click_id: string;
+  clicked_at: string;
+  platform: string;
+  country?: string | null;
+  city?: string | null;
+  device_type: string;
+  furthest_step: string;
+  converted_amount?: number | null;
+  user_id?: string | null;
+  user_name?: string | null;
+  user_email?: string | null;
+  steps: { step: string; at: string }[];
+}
 export interface ShortLinkBreakdown {
   label: string;
   count: number;

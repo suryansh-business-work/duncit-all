@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Grid, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Skeleton, Stack, Typography } from '@mui/material';
 import { DuncitTable, useApolloTableFetch } from '@duncit/table';
 import { BackHeader } from '@duncit/ui';
 import { useDateFormat } from '@duncit/app-settings';
@@ -11,18 +11,26 @@ import ShortLinkSummary from './detail/ShortLinkSummary';
 import ClicksOverTime from './detail/ClicksOverTime';
 import BreakdownCard from './detail/BreakdownCard';
 import { getClickColumns } from './detail/clickColumns';
+import FunnelCard from './detail/FunnelCard';
+import { getJourneyColumns } from './detail/journeyColumns';
+import JourneyTimelineDialog from './detail/JourneyTimelineDialog';
 import {
   SET_SHORT_LINK_ACTIVE,
   SHORT_LINK,
   SHORT_LINK_CLICKS,
   SHORT_LINK_QR,
+  SHORT_LINK_FUNNEL,
+  SHORT_LINK_JOURNEYS,
   SHORT_LINK_STATS,
   type ShortLinkClickRow,
+  type ShortLinkFunnel,
+  type ShortLinkJourneyRow,
   type ShortLinkRow,
   type ShortLinkStats,
 } from './queries';
 
 const getRowId = (row: ShortLinkClickRow) => row.id;
+const getJourneyRowId = (row: ShortLinkJourneyRow) => row.id;
 
 const NOTHING_YET = 'No clicks recorded yet.';
 
@@ -40,6 +48,11 @@ export default function ShortLinkDetailPage() {
     fetchPolicy: 'cache-and-network',
   });
   const qr = useQuery<{ shortLinkQr: string }>(SHORT_LINK_QR, { variables: { id: linkId } });
+  const funnel = useQuery<{ shortLinkFunnel: ShortLinkFunnel }>(SHORT_LINK_FUNNEL, {
+    variables: { id: linkId },
+    fetchPolicy: 'cache-and-network',
+  });
+  const [openJourney, setOpenJourney] = useState<ShortLinkJourneyRow | null>(null);
   const [setActive, { loading: toggling }] = useMutation(SET_SHORT_LINK_ACTIVE);
 
   const fetchRows = useApolloTableFetch<ShortLinkClickRow>(
@@ -50,7 +63,16 @@ export default function ShortLinkDetailPage() {
     [linkId],
   );
 
+  const journeyFetchRows = useApolloTableFetch<ShortLinkJourneyRow>(
+    client,
+    SHORT_LINK_JOURNEYS,
+    'shortLinkJourneys',
+    { extraVariables: { id: linkId } },
+    [linkId],
+  );
+
   const columns = useMemo(() => getClickColumns(), []);
+  const journeyColumns = useMemo(() => getJourneyColumns(), []);
   const goBack = useCallback(() => navigate('/short-links'), [navigate]);
 
   const toggleActive = async (current: ShortLinkRow) => {
@@ -77,9 +99,10 @@ export default function ShortLinkDetailPage() {
   return (
     // Capped and centred: the summary reads as a column of facts, and on a wide
     // monitor an uncapped one stretches its labels metres from their values.
-    <Box sx={{ p: 2, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 2, maxWidth: 1400, mx: 'auto'}}>
       <BackHeader
         title={row?.label ?? 'Short link'}
+        sx={{ mb: 4}}
         onBack={goBack}
         actions={
           row && (
@@ -110,30 +133,41 @@ export default function ShortLinkDetailPage() {
 
           <ClicksOverTime daily={summary.daily} formatDate={formatDate} />
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
-              <BreakdownCard
-                title="Came from"
-                rows={summary.platforms}
-                emptyText={NOTHING_YET}
-              />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <BreakdownCard title="Country" rows={summary.countries} emptyText={NOTHING_YET} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <BreakdownCard title="City" rows={summary.cities} emptyText={NOTHING_YET} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <BreakdownCard title="Device" rows={summary.devices} emptyText={NOTHING_YET} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <BreakdownCard title="Operating system" rows={summary.oses} emptyText={NOTHING_YET} />
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <BreakdownCard title="Browser" rows={summary.browsers} emptyText={NOTHING_YET} />
-            </Grid>
-          </Grid>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 2,
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+            }}
+          >
+            <BreakdownCard title="Came from" rows={summary.platforms} emptyText={NOTHING_YET} />
+            <BreakdownCard title="Country" rows={summary.countries} emptyText={NOTHING_YET} />
+            <BreakdownCard title="City" rows={summary.cities} emptyText={NOTHING_YET} />
+            <BreakdownCard title="Device" rows={summary.devices} emptyText={NOTHING_YET} />
+            <BreakdownCard title="Operating system" rows={summary.oses} emptyText={NOTHING_YET} />
+            <BreakdownCard title="Browser" rows={summary.browsers} emptyText={NOTHING_YET} />
+          </Box>
+
+          {funnel.data && <FunnelCard funnel={funnel.data.shortLinkFunnel} />}
+
+          <Box>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+              Who followed this link
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              One row per click. Open a row for that person's timeline.
+            </Typography>
+            <DuncitTable<ShortLinkJourneyRow>
+              tableId="marketing-short-link-journeys"
+              columns={journeyColumns}
+              fetchRows={journeyFetchRows}
+              getRowId={getJourneyRowId}
+              onRowClick={setOpenJourney}
+              emptyText={NOTHING_YET}
+              searchPlaceholder="Search by platform, country or city"
+              defaultSort={{ field: 'clicked_at', dir: 'desc' }}
+            />
+          </Box>
 
           <Box>
             <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
@@ -150,6 +184,12 @@ export default function ShortLinkDetailPage() {
               defaultSort={{ field: 'clicked_at', dir: 'desc' }}
             />
           </Box>
+
+          <JourneyTimelineDialog
+            journey={openJourney}
+            formatDateTime={formatDateTime}
+            onClose={() => setOpenJourney(null)}
+          />
         </Stack>
       )}
     </Box>

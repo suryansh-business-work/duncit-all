@@ -12,8 +12,14 @@ const DEVICE_LABELS: Record<string, string> = {
   UNKNOWN: 'Unknown',
 };
 
-/** City, Region, Country — skipping whichever the lookup could not resolve. */
-export const locationOf = (row: ShortLinkClickRow) => {
+/** City, Region, Country — skipping whichever the lookup could not resolve.
+ * Structurally typed so the journey table can reuse it without carrying the
+ * whole click row. */
+export const locationOf = (row: {
+  city?: string | null;
+  region?: string | null;
+  country?: string | null;
+}) => {
   const parts = [row.city, row.region, row.country].filter(Boolean);
   return parts.length > 0 ? parts.join(', ') : EM_DASH;
 };

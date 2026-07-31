@@ -2,6 +2,7 @@ import type { MockedResponse } from '@apollo/client/testing';
 import {
   CAMPAIGNS_FOR_SHORT_LINK,
   SHORT_LINK,
+  SHORT_LINK_FUNNEL,
   SHORT_LINK_STATS,
   CREATE_SHORT_LINK,
   DELETE_SHORT_LINK,
@@ -9,6 +10,8 @@ import {
   SHORT_LINK_OPTIONS,
   SHORT_LINK_QR,
   type ShortLinkClickRow,
+  type ShortLinkFunnel,
+  type ShortLinkJourneyRow,
   type ShortLinkOptions,
   type ShortLinkRow,
   type ShortLinkStats,
@@ -196,4 +199,60 @@ export const shortLinkStatsMock = (
   result: { data: { shortLinkStats: typedStats(makeShortLinkStats(over)) } },
   ...(opts.pending ? { delay: Infinity } : {}),
   maxUsageCount: 20,
+});
+
+export const makeShortLinkFunnel = (over: Partial<ShortLinkFunnel> = {}): ShortLinkFunnel => ({
+  revenue: 4500,
+  conversion_rate: 12.5,
+  steps: [
+    { step: 'CLICKED', count: 40 },
+    { step: 'LANDED', count: 32 },
+    { step: 'SIGNED_UP', count: 18 },
+    { step: 'SURVEY_DONE', count: 14 },
+    { step: 'VIEWED_POD', count: 11 },
+    { step: 'CHECKOUT_STARTED', count: 7 },
+    { step: 'PAID', count: 5 },
+  ],
+  ...over,
+});
+
+export const shortLinkFunnelMock = (over: Partial<ShortLinkFunnel> = {}): MockedResponse => {
+  const funnel = makeShortLinkFunnel(over);
+  return {
+    request: { query: SHORT_LINK_FUNNEL },
+    variableMatcher: () => true,
+    result: {
+      data: {
+        shortLinkFunnel: {
+          __typename: 'ShortLinkFunnel',
+          ...funnel,
+          steps: funnel.steps.map((s) => ({ __typename: 'ShortLinkFunnelStep', ...s })),
+        },
+      },
+    },
+    maxUsageCount: 20,
+  };
+};
+
+export const makeShortLinkJourneyRow = (
+  over: Partial<ShortLinkJourneyRow> = {},
+): ShortLinkJourneyRow => ({
+  id: 'j1',
+  click_id: 'c-1',
+  clicked_at: '2026-07-31T09:00:00.000Z',
+  platform: 'Instagram',
+  country: 'IN',
+  city: 'Pune',
+  device_type: 'MOBILE',
+  furthest_step: 'PAID',
+  converted_amount: 1500,
+  user_id: 'u1',
+  user_name: 'Asha K',
+  user_email: 'asha@example.com',
+  steps: [
+    { step: 'LANDED', at: '2026-07-31T09:00:10.000Z' },
+    { step: 'SIGNED_UP', at: '2026-07-31T09:02:00.000Z' },
+    { step: 'PAID', at: '2026-07-31T09:09:00.000Z' },
+  ],
+  ...over,
 });

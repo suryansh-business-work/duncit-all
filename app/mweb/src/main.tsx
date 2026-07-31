@@ -10,6 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { apolloClient } from './apollo';
+import { captureShortLinkClick } from './lib/short-link-journey';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport } from '@duncit/logs';
 import { ColorModeProvider } from './ColorModeContext';
@@ -82,6 +83,11 @@ const loadUser = async () => {
 configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')), {
   platform: 'web',
 });
+
+// Read the short-link click id BEFORE anything else runs. RequireAuth rewrites
+// the URL to /login?redirect=… for signed-out visitors, and mounting waits up to
+// 3s on config below — by then the parameter is gone from location.search.
+captureShortLinkClick(globalThis.window.location.search);
 
 function mount() {
   // A top-level ErrorBoundary wraps the WHOLE provider tree (not just the routes)

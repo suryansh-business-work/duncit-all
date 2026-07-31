@@ -2,6 +2,27 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 import type { DeviceType } from './shortLink.analytics';
 
 /**
+ * How far a click got. Ordered: the funnel is drawn in this sequence, and a
+ * later step always implies the earlier ones were reached.
+ */
+export const JOURNEY_STEPS = [
+  'CLICKED',
+  'LANDED',
+  'SIGNED_UP',
+  'SURVEY_DONE',
+  'VIEWED_POD',
+  'CHECKOUT_STARTED',
+  'PAID',
+] as const;
+
+export type JourneyStep = (typeof JOURNEY_STEPS)[number];
+
+export interface IJourneyEntry {
+  step: JourneyStep;
+  at: Date;
+}
+
+/**
  * One row per click on a short link.
  *
  * Kept separate from the counter on ShortLink on purpose: the counter answers
@@ -34,6 +55,15 @@ export interface IShortLinkClick extends Document {
   user_agent?: string | null;
   /** Filled in later, when the visit is tied to an account. */
   user_id?: Types.ObjectId | null;
+  /**
+   * The steps this click reached, each stamped once. Append-only: a step that
+   * has already happened is never re-dated, so "when did they sign up" stays
+   * the first time rather than the last page they reloaded.
+   */
+  journey: IJourneyEntry[];
+  /** Set when a payment is attributed back to this click. */
+  converted_amount?: number | null;
+  converted_payment_id?: Types.ObjectId | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -56,6 +86,18 @@ const shortLinkClickSchema = new Schema<IShortLinkClick>(
     ip_hash: { type: String, default: null, index: true },
     user_agent: { type: String, default: null },
     user_id: { type: Schema.Types.ObjectId, default: null, index: true },
+    journey: {
+      type: [
+        {
+          _id: false,
+          step: { type: String, enum: JOURNEY_STEPS, required: true },
+          at: { type: Date, required: true },
+        },
+      ],
+      default: [],
+    },
+    converted_amount: { type: Number, default: null },
+    converted_payment_id: { type: Schema.Types.ObjectId, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

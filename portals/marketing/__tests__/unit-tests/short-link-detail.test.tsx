@@ -10,7 +10,7 @@ import {
   shortLinkQrMock,
   shortLinkStatsMock,
 } from '../mocks';
-import { __setTableRows } from './table-mock';
+import { __setTableRows, tableById } from './table-mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
 vi.mock('@duncit/app-settings', () => ({
@@ -33,6 +33,10 @@ import ShortLinkDetailPage from '../../src/pages/short-links-page/ShortLinkDetai
 import BreakdownCard from '../../src/pages/short-links-page/detail/BreakdownCard';
 import ClicksOverTime from '../../src/pages/short-links-page/detail/ClicksOverTime';
 import { getClickColumns, locationOf } from '../../src/pages/short-links-page/detail/clickColumns';
+import {
+  fillDailySeries,
+  niceTicks,
+} from '../../src/pages/short-links-page/detail/daily-series';
 import type { ShortLinkClickRow } from '../../src/pages/short-links-page/queries';
 
 const detailMocks = () => [shortLinkMock(), shortLinkStatsMock(), shortLinkQrMock()];
@@ -82,8 +86,53 @@ describe('BreakdownCard', () => {
 });
 
 // ===========================================================================
+describe('fillDailySeries', () => {
+  const END = new Date('2026-07-31T13:00:00.000Z');
+
+  // Three clicks spread over three weeks must not draw as three adjacent bars
+  // — the gaps are what make the axis mean elapsed time.
+  it('gives every day in the window a slot, filling the gaps with zero', () => {
+    const series = fillDailySeries([{ date: '2026-07-29', count: 5 }], 7, END);
+    expect(series).toHaveLength(7);
+    expect(series.at(-1)).toEqual({ date: '2026-07-31', count: 0 });
+    expect(series.find((point) => point.date === '2026-07-29')).toEqual({
+      date: '2026-07-29',
+      count: 5,
+    });
+    expect(series.filter((point) => point.count === 0)).toHaveLength(6);
+  });
+
+  it('runs oldest to newest, ending on the given day', () => {
+    const series = fillDailySeries([], 3, END);
+    expect(series.map((point) => point.date)).toEqual(['2026-07-29', '2026-07-30', '2026-07-31']);
+  });
+
+  it('ignores days outside the window', () => {
+    const series = fillDailySeries([{ date: '2020-01-01', count: 99 }], 3, END);
+    expect(series.every((point) => point.count === 0)).toBe(true);
+  });
+});
+
+describe('niceTicks', () => {
+  // A peak of 47 must not produce an axis of 0 / 15.7 / 31.3 / 47.
+  it('lands on numbers a person would choose', () => {
+    expect(niceTicks(47)).toEqual([60, 45, 30, 15, 0]);
+    expect(niceTicks(8)).toEqual([8, 6, 4, 2, 0]);
+    expect(niceTicks(1)).toEqual([4, 3, 2, 1, 0]);
+    expect(niceTicks(230)).toEqual([240, 180, 120, 60, 0]);
+    expect(niceTicks(1900)).toEqual([2000, 1500, 1000, 500, 0]);
+  });
+
+  // An empty chart still needs an axis, so the scale never divides by zero.
+  it('keeps a usable axis when nothing has been clicked', () => {
+    expect(niceTicks(0)).toEqual([4, 3, 2, 1, 0]);
+  });
+});
+
 describe('ClicksOverTime', () => {
-  it('draws one bar per day', () => {
+  const END = new Date('2026-07-31T13:00:00.000Z');
+
+  it('draws the whole window, not only the days with clicks', () => {
     renderWithProviders(
       <ClicksOverTime
         daily={[
@@ -91,15 +140,30 @@ describe('ClicksOverTime', () => {
           { date: '2026-07-31', count: 88 },
         ]}
         formatDate={String}
+        today={END}
       />,
     );
-    expect(screen.getAllByTestId('click-bar')).toHaveLength(2);
+    expect(screen.getAllByTestId('click-bar')).toHaveLength(30);
+    expect(screen.getByText('Last 30 days · 128 clicks')).toBeInTheDocument();
   });
 
-  it('says so when nothing has been clicked in the window', () => {
-    renderWithProviders(<ClicksOverTime daily={[]} formatDate={String} />);
-    expect(screen.getByText('No clicks in the last 30 days.')).toBeInTheDocument();
-    expect(screen.queryByTestId('click-bar')).not.toBeInTheDocument();
+  it('sizes each bar by its own count', () => {
+    renderWithProviders(
+      <ClicksOverTime
+        daily={[{ date: '2026-07-31', count: 40 }]}
+        formatDate={String}
+        days={3}
+        today={END}
+      />,
+    );
+    const bars = screen.getAllByTestId('click-bar');
+    expect(bars.map((bar) => bar.getAttribute('data-count'))).toEqual(['0', '0', '40']);
+  });
+
+  it('still draws an axis when nothing has been clicked', () => {
+    renderWithProviders(<ClicksOverTime daily={[]} formatDate={String} days={5} today={END} />);
+    expect(screen.getAllByTestId('click-bar')).toHaveLength(5);
+    expect(screen.getByText('Last 5 days · 0 clicks')).toBeInTheDocument();
   });
 });
 
@@ -145,13 +209,15 @@ describe('ShortLinkDetailPage', () => {
     for (const title of ['Country', 'City', 'Device', 'Operating system', 'Browser']) {
       expect(screen.getByText(title)).toBeInTheDocument();
     }
-    expect(screen.getAllByTestId('click-bar')).toHaveLength(2);
+    expect(screen.getAllByTestId('click-bar')).toHaveLength(30);
   });
 
   it('lists every click in a table', async () => {
     __setTableRows([makeShortLinkClickRow()]);
     renderDetail();
-    const row = await screen.findByTestId('table-row');
+    await screen.findAllByTestId('table-row');
+    // The page renders a journey table too, so scope to the clicks one.
+    const row = within(tableById('marketing-short-link-clicks')).getByTestId('table-row');
     expect(within(row).getByTestId('cell-platform')).toHaveTextContent('Instagram');
     expect(within(row).getByTestId('cell-platform')).toHaveTextContent('instagram.com');
     expect(within(row).getByTestId('cell-country')).toHaveTextContent('Pune, MH, IN');
@@ -166,7 +232,10 @@ describe('ShortLinkDetailPage', () => {
       makeShortLinkClickRow({ id: 'clk2', device_type: 'WATCH', referrer_host: null }),
     ]);
     renderDetail();
-    const [first, second] = await screen.findAllByTestId('table-row');
+    await screen.findAllByTestId('table-row');
+    const [first, second] = within(tableById('marketing-short-link-clicks')).getAllByTestId(
+      'table-row',
+    );
     expect(within(first).getByTestId('cell-platform')).toHaveTextContent('Direct');
     expect(within(first).getByTestId('cell-device_type')).toHaveTextContent('Desktop');
     expect(within(second).getByTestId('cell-device_type')).toHaveTextContent('WATCH');

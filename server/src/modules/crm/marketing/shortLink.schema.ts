@@ -131,6 +131,59 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     city: String
   }
 
+  "How far a click got. Ordered — a later step implies the earlier ones."
+  enum ShortLinkJourneyStep {
+    CLICKED
+    LANDED
+    SIGNED_UP
+    SURVEY_DONE
+    VIEWED_POD
+    CHECKOUT_STARTED
+    PAID
+  }
+
+  type ShortLinkFunnelStep {
+    step: ShortLinkJourneyStep!
+    count: Int!
+  }
+
+  type ShortLinkFunnel {
+    steps: [ShortLinkFunnelStep!]!
+    "Revenue attributed to this link."
+    revenue: Float!
+    "Percentage of clicks that ended in a payment."
+    conversion_rate: Float!
+  }
+
+  type ShortLinkJourneyEntry {
+    step: ShortLinkJourneyStep!
+    at: String!
+  }
+
+  "One click, who it turned into, and how far it got."
+  type ShortLinkJourney {
+    id: ID!
+    click_id: String!
+    clicked_at: String!
+    platform: String!
+    country: String
+    city: String
+    device_type: String!
+    furthest_step: ShortLinkJourneyStep!
+    converted_amount: Float
+    user_id: ID
+    user_name: String
+    user_email: String
+    steps: [ShortLinkJourneyEntry!]!
+  }
+
+  type ShortLinkJourneyTablePage {
+    rows: [ShortLinkJourney!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   type ShortLinkClickTablePage {
     rows: [ShortLinkClick!]!
     total: Int!
@@ -168,9 +221,20 @@ export const shortLinkTypeDefs = /* GraphQL */ `
     shortLinkStats(id: ID!): ShortLinkStats!
     "Individual clicks on one link."
     shortLinkClicks(id: ID!, query: TableQueryInput): ShortLinkClickTablePage!
+    "Click -> signup -> checkout -> paid, for one link."
+    shortLinkFunnel(id: ID!): ShortLinkFunnel!
+    "One row per click, with the person it became and how far they got."
+    shortLinkJourneys(id: ID!, query: TableQueryInput): ShortLinkJourneyTablePage!
   }
 
   extend type Mutation {
+    """
+    Report that a click reached a step. Called by the apps as the visitor moves
+    through the funnel; safe to call more than once, since a step that already
+    happened keeps its original time. Public: most of the funnel happens before
+    anyone has signed in, and an authenticated call also binds the account.
+    """
+    recordShortLinkJourney(click_id: String!, step: ShortLinkJourneyStep!): Boolean!
     createShortLink(input: ShortLinkInput!): ShortLink!
     "Retire or revive a link without deleting its click history."
     setShortLinkActive(id: ID!, is_active: Boolean!): ShortLink!

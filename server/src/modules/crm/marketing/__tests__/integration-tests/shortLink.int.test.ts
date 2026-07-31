@@ -244,10 +244,34 @@ describe('shortLink resolvers', () => {
 
     expect((await Q.shortLinkStats({}, { id: created.id }, ctx)).total_clicks).toBe(0);
     expect((await Q.shortLinkClicks({}, { id: created.id, query: null }, ctx)).total).toBe(0);
+    expect((await Q.shortLinkFunnel({}, { id: created.id }, ctx)).steps.length).toBeGreaterThan(0);
+    expect((await Q.shortLinkJourneys({}, { id: created.id, query: null }, ctx)).total).toBe(0);
 
     const retired = await M.setShortLinkActive({}, { id: created.id, is_active: false }, ctx);
     expect(retired.is_active).toBe(false);
     expect(await M.deleteShortLink({}, { id: created.id }, ctx)).toBe(true);
+  });
+});
+
+describe('recordShortLinkJourney is public', () => {
+  const M = shortLinkResolvers.Mutation as any;
+
+  // Most of this funnel happens before anyone signs in, so requiring auth
+  // would make the anonymous half unmeasurable.
+  it('accepts a step from a signed-out visitor', async () => {
+    expect(await M.recordShortLinkJourney({}, { click_id: 'c-x', step: 'LANDED' }, makeContext())).toBe(
+      true,
+    );
+  });
+
+  it('accepts a step from a signed-in visitor and binds the account', async () => {
+    expect(
+      await M.recordShortLinkJourney(
+        {},
+        { click_id: 'c-x', step: 'SIGNED_UP' },
+        makeContext({ roles: ['USER'] }),
+      ),
+    ).toBe(true);
   });
 });
 

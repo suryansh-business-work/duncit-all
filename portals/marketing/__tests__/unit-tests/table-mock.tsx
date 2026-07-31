@@ -29,6 +29,10 @@ export function useApolloTableFetch(): () => Promise<{ rows: unknown[]; total: n
   return resolveRows;
 }
 
+/** Scope queries to one table when a page renders several. */
+export const tableById = (id: string): HTMLElement =>
+  document.querySelector(`[data-table-id="${id}"]`) as HTMLElement;
+
 /** Build a `fetchRows` that always resolves the given rows (component specs). */
 export const fetchRowsFrom =
   (rows: unknown[]) => async (): Promise<{ rows: unknown[]; total: number }> => ({
@@ -104,6 +108,8 @@ const renderCell = (column: AnyColumn, row: any): string => {
 };
 
 interface MockTableProps {
+  /** Present so a page rendering more than one table stays distinguishable. */
+  tableId?: string;
   columns: AnyColumn[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fetchRows: (q: unknown) => Promise<{ rows: any[]; total: number }>;
@@ -117,7 +123,8 @@ interface MockTableProps {
 }
 
 export function DuncitTable(props: Readonly<MockTableProps>) {
-  const { columns, fetchRows, getRowId, onRowClick, emptyText, toolbarActions, refetchRef } = props;
+  const { tableId, columns, fetchRows, getRowId, onRowClick, emptyText, toolbarActions, refetchRef } =
+    props;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [rows, setRows] = useState<any[]>([]);
 
@@ -133,7 +140,7 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
   }, []);
 
   return (
-    <div data-testid="duncit-table">
+    <div data-testid="duncit-table" data-table-id={tableId}>
       <div data-testid="table-toolbar">{toolbarActions}</div>
       {rows.length === 0 && <div data-testid="table-empty">{emptyText}</div>}
       {rows.map((row, index) => (

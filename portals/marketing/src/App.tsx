@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProfilePage, createAuthed } from '@duncit/shell';
 import { NotifyHost } from '@duncit/dialogs';
 import LoginPage from './pages/LoginPage';
-import WelcomePage from './pages/WelcomePage';
+import DashboardPage from './pages/dashboard-page/DashboardPage';
 import AudienceListsPage from './pages/target-audience-page/AudienceListsPage';
 import CreateAudienceListPage from './pages/target-audience-page/CreateAudienceListPage';
 import AudienceListDetailPage from './pages/target-audience-page/AudienceListDetailPage';
@@ -25,7 +25,7 @@ export default function App() {
       <Routes>
         <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={authed(<WelcomePage />)} />
+        <Route path="/" element={authed(<DashboardPage />)} />
         <Route path="/audience" element={authed(<AudienceListsPage />)} />
         <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />
         <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />

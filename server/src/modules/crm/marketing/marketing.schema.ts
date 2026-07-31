@@ -266,7 +266,82 @@ export const marketingTypeDefs = /* GraphQL */ `
     roles: [String!]!
   }
 
+  type MarketingDashboardPoint {
+    label: String!
+    count: Int!
+  }
+
+  type MarketingDashboardDaily {
+    date: String!
+    count: Int!
+  }
+
+  type MarketingDashboardTopLink {
+    id: ID!
+    label: String!
+    code: String!
+    clicks: Int!
+    revenue: Float!
+  }
+
+  type MarketingDashboardLinks {
+    total_clicks: Int!
+    unique_visitors: Int!
+    conversions: Int!
+    revenue: Float!
+    conversion_rate: Float!
+    daily: [MarketingDashboardDaily!]!
+    platforms: [MarketingDashboardPoint!]!
+    countries: [MarketingDashboardPoint!]!
+    "Links accepting traffic right now."
+    active: Int!
+    total: Int!
+    top: [MarketingDashboardTopLink!]!
+  }
+
+  type MarketingDashboardRecentCampaign {
+    campaign_id: ID!
+    name: String!
+    sent_at: String
+    recipient_count: Int!
+    open_count: Int!
+    click_count: Int!
+    open_rate: Float!
+  }
+
+  type MarketingDashboardCampaigns {
+    sent: Int!
+    scheduled: Int!
+    failed: Int!
+    recipients: Int!
+    opens: Int!
+    clicks: Int!
+    open_rate: Float!
+    click_rate: Float!
+    recent: [MarketingDashboardRecentCampaign!]!
+  }
+
+  type MarketingDashboardAudience {
+    lists: Int!
+  }
+
+  type MarketingDashboardAds {
+    live: Int!
+    pending: Int!
+  }
+
+  "Everything the Marketing console opens on, in one round trip."
+  type MarketingDashboard {
+    "The window the activity figures cover, in days."
+    days: Int!
+    links: MarketingDashboardLinks!
+    campaigns: MarketingDashboardCampaigns!
+    audience: MarketingDashboardAudience!
+    ads: MarketingDashboardAds!
+  }
+
   extend type Query {
+    marketingDashboard(days: Int): MarketingDashboard!
     """
     The marketing Target Audience list. Soft-deleted accounts are always
     excluded. Beyond the plain field filters, three filter fields are resolved

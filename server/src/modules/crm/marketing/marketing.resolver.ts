@@ -1,6 +1,7 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { marketingService } from './marketing.service';
+import { marketingDashboardService } from './marketingDashboard.service';
 import { audienceService } from './audience.service';
 import { audienceListService } from './audienceList.service';
 
@@ -8,6 +9,10 @@ const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
 
 export const marketingResolvers = {
   Query: {
+    marketingDashboard: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return marketingDashboardService.overview(args.days ?? 30);
+    },
     audienceTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return audienceService.table(args.query);

@@ -33,6 +33,15 @@ export interface IMarketingCampaign extends Document {
   sent_at?: Date | null;
   status: MarketingCampaignStatus;
   recipient_count: number;
+  /** Total pixel loads and tracked-link follows. Totals, not headcounts:
+   * campaigns go out BCC'd in batches, so there is no per-recipient copy to
+   * attribute an open to. */
+  open_count: number;
+  click_count: number;
+  /** Every http(s) link the sent email carried, in the order the tracking
+   * redirect indexes them. The redirect resolves against this and nothing
+   * else, so it can never be pointed at an arbitrary destination. */
+  tracked_links: string[];
   error?: string | null;
   created_by?: string | null;
   created_at: Date;
@@ -77,6 +86,9 @@ const marketingCampaignSchema = new Schema<IMarketingCampaign>(
       index: true,
     },
     recipient_count: { type: Number, default: 0, min: 0 },
+    open_count: { type: Number, default: 0, min: 0 },
+    click_count: { type: Number, default: 0, min: 0 },
+    tracked_links: { type: [String], default: [] },
     error: { type: String, default: null },
     created_by: { type: String, default: null, trim: true },
   },

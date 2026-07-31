@@ -33,6 +33,7 @@ import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';
 import { buildVenueApiRouter } from '@modules/venues/publicApi/venueApi.router';
+import { buildCampaignTrackingRouter } from '@modules/crm/marketing/tracking.router';
 import { startNgrokTunnel } from '@config/ngrok';
 import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
 import { userService } from '@modules/access/user/user.service';
@@ -212,6 +213,10 @@ async function bootstrap() {
   // Public developer REST API — approved venues + slot booking, x-api-key auth
   // (parses its own JSON, carries its own CORS for the Developers portal).
   app.use('/api/v1', buildVenueApiRouter());
+
+  // Marketing-campaign open pixel + tracked link redirects. Hit by mail
+  // clients, so: public, no CORS, and never an error page.
+  app.use('/t', buildCampaignTrackingRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

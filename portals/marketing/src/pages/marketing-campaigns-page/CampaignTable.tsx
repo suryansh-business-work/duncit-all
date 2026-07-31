@@ -116,6 +116,8 @@ export default function CampaignTable({
         format: DATE_TIME_FORMAT,
       }),
       { field: 'recipient_count', headerName: 'Recipients', width: 120 },
+      { field: 'open_count', headerName: 'Opened', width: 110 },
+      { field: 'click_count', headerName: 'Clicked', width: 110 },
       {
         field: 'audience',
         headerName: 'Audience',

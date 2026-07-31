@@ -27,6 +27,8 @@ export const makeCampaignRow = (over: Partial<MarketingCampaignRow> = {}): Marke
   sent_at: null,
   status: 'DRAFT',
   recipient_count: 3,
+  open_count: 0,
+  click_count: 0,
   error: null,
   created_at: '2026-01-01T00:00:00.000Z',
   card: { title: 'Pod card' },

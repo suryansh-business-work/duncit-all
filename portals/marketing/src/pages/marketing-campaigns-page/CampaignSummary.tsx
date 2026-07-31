@@ -52,6 +52,8 @@ export default function CampaignSummary({
       <Field label="Channel" value={labelFor(CHANNEL_LABELS, campaign.channel)} />
       <Field label="Audience" value={listName ? `${audience} · ${listName}` : audience} />
       <Field label="Recipients" value={String(campaign.recipient_count)} />
+      <Field label="Opened" value={String(campaign.open_count)} />
+      <Field label="Clicked" value={String(campaign.click_count)} />
       <Field label="Card" value={campaign.card?.title ?? EM_DASH} />
       <Field label="Created" value={when(campaign.created_at, formatDateTime)} />
       <Field label="Scheduled" value={when(campaign.scheduled_at, formatDateTime)} />

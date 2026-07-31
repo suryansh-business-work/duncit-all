@@ -23,8 +23,8 @@ export const MARKETING_CAMPAIGNS = gql`
 `;
 
 /** Same selection as MARKETING_CAMPAIGNS rows — every allowlisted sort/filter
- * field (name, channel, audience, status, recipient_count, scheduled_at,
- * sent_at, created_at) is already selected. */
+ * field (name, channel, audience, status, recipient_count, open_count,
+ * click_count, scheduled_at, sent_at, created_at) is already selected. */
 const MARKETING_CAMPAIGN_ROW_FIELDS = gql`
   fragment MarketingCampaignRowFields on MarketingCampaign {
     campaign_id
@@ -36,6 +36,8 @@ const MARKETING_CAMPAIGN_ROW_FIELDS = gql`
     sent_at
     status
     recipient_count
+    open_count
+    click_count
     error
     created_at
     card {
@@ -145,6 +147,10 @@ export interface MarketingCampaignRow {
   sent_at?: string | null;
   status: string;
   recipient_count: number;
+  /** Totals, not headcounts — campaigns go out BCC'd, so an open cannot be
+   * attributed to one recipient. */
+  open_count: number;
+  click_count: number;
   error?: string | null;
   created_at: string;
   card?: { type?: string | null; title?: string | null } | null;

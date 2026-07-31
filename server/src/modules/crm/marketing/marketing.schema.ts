@@ -48,6 +48,10 @@ export const marketingTypeDefs = /* GraphQL */ `
     sent_at: String
     status: MarketingCampaignStatus!
     recipient_count: Int!
+    "Times the email was opened — a total, not a headcount."
+    open_count: Int!
+    "Times a tracked link in the email was followed."
+    click_count: Int!
     error: String
     created_at: String!
     updated_at: String!

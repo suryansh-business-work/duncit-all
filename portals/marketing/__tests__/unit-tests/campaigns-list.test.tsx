@@ -68,6 +68,15 @@ describe('CampaignTable', () => {
       />,
     );
 
+  // How many opened it and how many clicked through is the whole point of a
+  // campaign — it belongs on the row, not buried in a dialog.
+  it('reports opens and clicks on the row', async () => {
+    renderTable([makeCampaignRow({ recipient_count: 120, open_count: 47, click_count: 9 })]);
+    const row = await screen.findByTestId('table-row');
+    expect(within(row).getByTestId('cell-open_count')).toHaveTextContent('47');
+    expect(within(row).getByTestId('cell-click_count')).toHaveTextContent('9');
+  });
+
   it('renders the campaign, channel, audience and card cells', async () => {
     renderTable([
       makeCampaignRow({ error: 'Delivery failed' }),
@@ -133,15 +142,22 @@ describe('CampaignTable', () => {
 describe('CampaignSummary', () => {
   const lists = [{ id: 'a1', name: 'Pune regulars', member_count: 12 }];
 
-  it('names the audience list a campaign targets', () => {
+  it('names the audience list a campaign targets, and how it performed', () => {
     renderWithProviders(
       <CampaignSummary
-        campaign={makeCampaignDetail({ audience: 'AUDIENCE_LIST', audience_list_id: 'a1' })}
+        campaign={makeCampaignDetail({
+          audience: 'AUDIENCE_LIST',
+          audience_list_id: 'a1',
+          open_count: 47,
+          click_count: 9,
+        })}
         audienceLists={lists}
         formatDateTime={String}
       />,
     );
     expect(screen.getByText('Saved audience list · Pune regulars')).toBeInTheDocument();
+    expect(screen.getByText('47')).toBeInTheDocument();
+    expect(screen.getByText('9')).toBeInTheDocument();
   });
 
   it('falls back to the plain audience label, and em-dashes what has not happened', () => {

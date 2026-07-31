@@ -94,6 +94,15 @@ export function actionsColumn(opts: ActionsOpts = {}): AnyColumn {
   };
 }
 
+/** A column's text: its valueGetter if it has one, otherwise the raw field —
+ * except for a cellRenderer-only column, which owns its whole cell. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const renderCell = (column: AnyColumn, row: any): string => {
+  if (column.valueGetter) return String(column.valueGetter(row) ?? '');
+  if (column.cellRenderer || !column.field) return '';
+  return String(row[column.field] ?? '');
+};
+
 interface MockTableProps {
   columns: AnyColumn[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -131,7 +140,9 @@ export function DuncitTable(props: Readonly<MockTableProps>) {
         <div key={getRowId ? getRowId(row) : String(index)} data-testid="table-row">
           {columns.map((column) => (
             <span key={column.field ?? column.headerName} data-testid={`cell-${column.field ?? column.headerName}`}>
-              {column.valueGetter ? String(column.valueGetter(row) ?? '') : ''}
+              {/* Production reads row[field] when a column declares neither a
+                  valueGetter nor a cellRenderer — a plain value column. */}
+              {renderCell(column, row)}
               {column.cellRenderer ? column.cellRenderer(row) : null}
             </span>
           ))}

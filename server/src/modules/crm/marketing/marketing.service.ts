@@ -16,6 +16,8 @@ import { sendHtmlEmail } from '@services/email/email.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { getMailConfigs } from '@config/url-configs';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
+import { instrumentCampaignHtml } from './tracking.service';
+import { getUrlConfigs } from '@config/url-configs';
 import { logs } from '@observability/log';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
@@ -52,6 +54,8 @@ function toPub(doc: IMarketingCampaign) {
     sent_at: doc.sent_at ? doc.sent_at.toISOString() : null,
     status: doc.status,
     recipient_count: doc.recipient_count,
+    open_count: doc.open_count,
+    click_count: doc.click_count,
     error: doc.error ?? null,
     created_at: doc.created_at.toISOString(),
     updated_at: doc.updated_at.toISOString(),
@@ -277,10 +281,18 @@ async function sendCampaign(campaign_id: string) {
     const campaignTo =
       (await getRuntimeEnvValue('CAMPAIGN_TO')) ||
       mailConfigs.from;
+    // Instrument once, right before sending: the stored link table has to be
+    // the one the delivered email actually points at.
+    const { serverUrl } = await getUrlConfigs();
+    const tracked = instrumentCampaignHtml(rendered.html, doc.campaign_id, serverUrl);
+    doc.tracked_links = tracked.links;
     for (const batch of chunk(recipients, 50)) {
-      await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: rendered.html });
+      await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: tracked.html });
     }
     doc.status = 'SENT';
+    // The CLEAN render is what gets stored: the View dialog renders this in an
+    // iframe, and an instrumented copy would fire the open pixel — every admin
+    // looking at a campaign would inflate its own open count.
     doc.rendered_html = rendered.html;
     doc.recipient_count = recipients.length;
     doc.sent_at = new Date();
@@ -322,6 +334,8 @@ const MARKETING_TABLE_CONFIG: TableEntityConfig = {
     audience: 'audience',
     status: 'status',
     recipient_count: 'recipient_count',
+    open_count: 'open_count',
+    click_count: 'click_count',
     scheduled_at: 'scheduled_at',
     sent_at: 'sent_at',
     created_at: 'created_at',

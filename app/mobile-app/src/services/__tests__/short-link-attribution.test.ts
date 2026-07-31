@@ -1,27 +1,4 @@
-jest.unmock('@/services/short-link-attribution');
-
-const mockParse = jest.fn();
-const mockGetInitialURL = jest.fn();
-const mockAddEventListener = jest.fn();
-jest.mock('expo-linking', () => ({
-  parse: (url: string) => mockParse(url),
-  getInitialURL: () => mockGetInitialURL(),
-  addEventListener: (type: string, handler: (event: { url: string }) => void) =>
-    mockAddEventListener(type, handler),
-}));
-
-jest.mock('@/services/secure-storage', () => ({
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-}));
-jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
-jest.mock('@/constants/config', () => ({
-  config: { apiUrl: 'https://server.duncit.com' },
-}));
-jest.mock('@/navigation/navigationRef', () => ({
-  navigationRef: { getCurrentRoute: jest.fn() },
-}));
-
+import * as Linking from 'expo-linking';
 import { getItem, setItem } from '@/services/secure-storage';
 import { graphqlRequest } from '@/services/graphql.client';
 import { navigationRef } from '@/navigation/navigationRef';
@@ -36,6 +13,23 @@ import {
   storedClickId,
 } from '../short-link-attribution';
 
+// jest.setup mocks this module for every other suite; this one tests it.
+jest.unmock('@/services/short-link-attribution');
+
+// Automocked rather than factory-mocked so the imports above can stay at the
+// top of the file: a factory closing over local consts would run during those
+// imports, before the consts are initialised.
+jest.mock('expo-linking');
+jest.mock('@/services/secure-storage');
+jest.mock('@/services/graphql.client');
+jest.mock('@/constants/config', () => ({ config: { apiUrl: 'https://server.duncit.com' } }));
+jest.mock('@/navigation/navigationRef', () => ({
+  navigationRef: { getCurrentRoute: jest.fn() },
+}));
+
+const parseMock = jest.mocked(Linking.parse);
+const getInitialURLMock = jest.mocked(Linking.getInitialURL);
+const addEventListenerMock = jest.mocked(Linking.addEventListener);
 const getItemMock = jest.mocked(getItem);
 const setItemMock = jest.mocked(setItem);
 const graphqlRequestMock = jest.mocked(graphqlRequest);
@@ -54,10 +48,13 @@ beforeEach(() => {
   jest.clearAllMocks();
   getItemMock.mockResolvedValue(null);
   setItemMock.mockResolvedValue(undefined);
-  graphqlRequestMock.mockResolvedValue({ recordShortLinkJourney: true });
-  mockParse.mockImplementation((url: string) => ({
-    queryParams: Object.fromEntries(new URL(url).searchParams),
-  }));
+  graphqlRequestMock.mockResolvedValue({ recordShortLinkJourney: true } as never);
+  parseMock.mockImplementation(
+    (url: string) =>
+      ({ queryParams: Object.fromEntries(new URL(url).searchParams) }) as ReturnType<
+        typeof Linking.parse
+      >,
+  );
 });
 
 describe('shortLinkParamsFromUrl', () => {
@@ -72,12 +69,12 @@ describe('shortLinkParamsFromUrl', () => {
       code: null,
       clickId: null,
     });
-    mockParse.mockReturnValue({ queryParams: { dl: ['a', 'b'], dlc: '' } });
+    parseMock.mockReturnValue({ queryParams: { dl: ['a', 'b'], dlc: '' } } as never);
     expect(shortLinkParamsFromUrl('whatever')).toEqual({ code: null, clickId: null });
   });
 
   it('answers empty rather than throwing on an unparseable URL', () => {
-    mockParse.mockImplementation(() => {
+    parseMock.mockImplementation(() => {
       throw new Error('bad url');
     });
     expect(shortLinkParamsFromUrl(':::')).toEqual({ code: null, clickId: null });
@@ -218,15 +215,20 @@ describe('reportJourneyForCurrentRoute', () => {
 describe('initShortLinkAttribution', () => {
   it('captures the launch URL and every URL while running, and unsubscribes', async () => {
     okFetch('c-1');
-    mockGetInitialURL.mockResolvedValue('https://mweb.duncit.com/x?dlc=c-1');
+    getInitialURLMock.mockResolvedValue('https://mweb.duncit.com/x?dlc=c-1');
     const remove = jest.fn();
-    mockAddEventListener.mockReturnValue({ remove });
+    addEventListenerMock.mockReturnValue({ remove } as never);
 
     const unsubscribe = initShortLinkAttribution();
     await settle();
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    const handler = mockAddEventListener.mock.calls[0][1];
+    // The assertion above proves the listener was registered, so the call
+    // tuple exists.
+    const [, handler] = addEventListenerMock.mock.calls[0] as [
+      string,
+      (event: { url: string }) => void,
+    ];
     handler({ url: 'https://mweb.duncit.com/y?dlc=c-2' });
     await settle();
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -236,8 +238,8 @@ describe('initShortLinkAttribution', () => {
   });
 
   it('survives the launch URL being unreadable', async () => {
-    mockGetInitialURL.mockRejectedValue(new Error('no activity'));
-    mockAddEventListener.mockReturnValue({ remove: jest.fn() });
+    getInitialURLMock.mockRejectedValue(new Error('no activity'));
+    addEventListenerMock.mockReturnValue({ remove: jest.fn() } as never);
     expect(() => initShortLinkAttribution()).not.toThrow();
     await settle();
   });

@@ -102,11 +102,10 @@ export function reportJourneyStep(step: JourneyStep): void {
   storedClickId()
     .then((clickId) => {
       if (!clickId) return null;
-      return graphqlRequest<{ recordShortLinkJourney: boolean }, { click_id: string; step: string }>(
-        RECORD_STEP,
-        { click_id: clickId, step },
-        { auth: true },
-      );
+      return graphqlRequest<
+        { recordShortLinkJourney: boolean },
+        { click_id: string; step: string }
+      >(RECORD_STEP, { click_id: clickId, step }, { auth: true });
     })
     .catch(() => undefined);
 }

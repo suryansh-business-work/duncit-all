@@ -19,31 +19,10 @@ vi.mock('@duncit/shell', async (importOriginal) => ({
   },
 }));
 
-import WelcomePage from '../../src/pages/WelcomePage';
 import LoginPage from '../../src/pages/LoginPage';
 
 afterEach(() => {
   userCtxMock.value = { user: null };
-});
-
-describe('WelcomePage', () => {
-  it('greets a signed-in user by first name', () => {
-    userCtxMock.value = { user: { first_name: 'Sam', full_name: 'Sam Fox' } };
-    renderWithProviders(<WelcomePage />);
-    expect(screen.getByText('Hi Sam')).toBeInTheDocument();
-    expect(screen.getByText('Welcome to Duncit Marketing')).toBeInTheDocument();
-  });
-
-  it('falls back to the full name when there is no first name', () => {
-    userCtxMock.value = { user: { first_name: '', full_name: 'Sam Fox' } };
-    renderWithProviders(<WelcomePage />);
-    expect(screen.getByText('Hi Sam Fox')).toBeInTheDocument();
-  });
-
-  it('greets "there" when there is no user', () => {
-    renderWithProviders(<WelcomePage />);
-    expect(screen.getByText('Hi there')).toBeInTheDocument();
-  });
 });
 
 describe('LoginPage', () => {

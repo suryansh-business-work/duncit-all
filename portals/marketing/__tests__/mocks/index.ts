@@ -12,3 +12,4 @@ export * from './campaigns.mock';
 export * from './notifications.mock';
 export * from './mjml.mock';
 export * from './short-links.mock';
+export * from './dashboard.mock';

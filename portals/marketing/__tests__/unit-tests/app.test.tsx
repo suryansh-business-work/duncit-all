@@ -16,7 +16,9 @@ vi.mock('../../src/components/AppShell', () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>login-page</div> }));
-vi.mock('../../src/pages/WelcomePage', () => ({ default: () => <div>welcome-page</div> }));
+vi.mock('../../src/pages/dashboard-page/DashboardPage', () => ({
+  default: () => <div>welcome-page</div>,
+}));
 vi.mock('../../src/pages/target-audience-page/AudienceListsPage', () => ({
   default: () => <div>audience-lists-page</div>,
 }));

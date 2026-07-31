@@ -420,6 +420,67 @@ export type ApprovalStatus =
   | 'DENIED'
   | 'PENDING';
 
+/** Dropdown values for the audience filters whose options are data, not a fixed list. */
+export type AudienceFilterOptions = {
+  __typename?: 'AudienceFilterOptions';
+  interests: Array<AudienceInterestOption>;
+  /** Role keys actually held by somebody in the audience. */
+  roles: Array<Scalars['String']['output']>;
+};
+
+/** A category at least one person has picked as an interest. */
+export type AudienceInterestOption = {
+  __typename?: 'AudienceInterestOption';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+/**
+ * One targetable person. Deliberately narrower than the admin User type: a
+ * campaign tool has no business with payout percentages, postal addresses or
+ * raw birthdates, so this carries the derived age instead of the date of birth
+ * and omits the rest.
+ */
+export type AudienceMember = {
+  __typename?: 'AudienceMember';
+  /** Derived from the date of birth. Null when the account never supplied one. */
+  age?: Maybe<Scalars['Int']['output']>;
+  city?: Maybe<Scalars['String']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  email_verified: Scalars['Boolean']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  last_login_at?: Maybe<Scalars['String']['output']>;
+  last_login_provider?: Maybe<Scalars['String']['output']>;
+  locale?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  phone_verified: Scalars['Boolean']['output'];
+  pincode?: Maybe<Scalars['String']['output']>;
+  /**
+   * Push platforms this person can currently be reached on (ANDROID / IOS /
+   * WEB). Empty when they have never granted push or have since logged out —
+   * this is reachability, not an inventory of the devices they own.
+   */
+  push_platforms: Array<Scalars['String']['output']>;
+  roles: Array<Scalars['String']['output']>;
+  state?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<Scalars['String']['output']>;
+  /** True when the WhatsApp number on the account has been verified. */
+  whatsapp_reachable: Scalars['Boolean']['output'];
+  zone?: Maybe<Scalars['String']['output']>;
+};
+
+/** Server-side table page for the shared table engine (audienceTable). */
+export type AudienceTablePage = {
+  __typename?: 'AudienceTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AudienceMember>;
+  total: Scalars['Int']['output'];
+};
+
 export type AuthPayload = {
   __typename?: 'AuthPayload';
   token: Scalars['String']['output'];
@@ -9054,6 +9115,15 @@ export type Query = {
   approvalRequests: Array<ApprovalRequest>;
   /** Server-side table page (search/filter/sort/paginate) over the admin approval inbox. */
   approvalRequestsTable: ApprovalRequestTablePage;
+  /** Dropdown values for the audience filters that are driven by data. */
+  audienceFilterOptions: AudienceFilterOptions;
+  /**
+   * The marketing Target Audience list. Soft-deleted accounts are always
+   * excluded. Beyond the plain field filters, three filter fields are resolved
+   * server-side: 'age' (translated to a date-of-birth range), 'whatsapp', and
+   * 'push_platform' / 'interest_category' (resolved to a user-id set).
+   */
+  audienceTable: AudienceTablePage;
   /** Active, currently-valid coupons a shopper can apply (global + this pod). */
   availableCouponsForPod: Array<Coupon>;
   availablePodProducts: Array<InventoryProduct>;
@@ -9663,6 +9733,11 @@ export type QueryApprovalRequestsArgs = {
 
 
 export type QueryApprovalRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAudienceTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 

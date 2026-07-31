@@ -13,10 +13,28 @@ describe('Duncit Marketing app config', () => {
     expect(appConfig.requiredRoles).toContain('MARKETING_MANAGER');
   });
 
-  it('exposes the campaign and notification nav entries', () => {
-    const targets = appConfig.nav.map((n) => n.to);
+  it('exposes every nav destination, including the ones nested in a group', () => {
+    const targets = appConfig.nav.flatMap((n) => [n.to, ...(n.children ?? []).map((c) => c.to)]);
     expect(targets).toEqual(
-      expect.arrayContaining(['/', '/campaigns/email', '/campaigns/whatsapp', '/notifications']),
+      expect.arrayContaining([
+        '/',
+        '/audience',
+        '/campaigns/email',
+        '/campaigns/whatsapp',
+        '/notifications',
+        '/ads-approvals',
+        '/ads-settings',
+      ]),
     );
+  });
+
+  // A group header is not navigable — the sidebar ignores a parent `to`, and
+  // giving one would put a dead link in the header search and breadcrumbs.
+  it('leaves every group header without a route of its own', () => {
+    const groups = appConfig.nav.filter((n) => (n.children ?? []).length > 0);
+    expect(groups.map((g) => g.label)).toEqual(['Campaigns', 'Ads']);
+    for (const group of groups) {
+      expect(group.to).toBeUndefined();
+    }
   });
 });

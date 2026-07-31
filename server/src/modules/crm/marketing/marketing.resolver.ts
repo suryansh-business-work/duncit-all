@@ -1,11 +1,20 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { marketingService } from './marketing.service';
+import { audienceService } from './audience.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
 
 export const marketingResolvers = {
   Query: {
+    audienceTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceService.table(args.query);
+    },
+    audienceFilterOptions: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceService.filterOptions();
+    },
     marketingCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return marketingService.list();

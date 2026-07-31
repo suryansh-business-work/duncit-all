@@ -11,6 +11,9 @@ import { useEffect, useState, type ReactNode } from 'react';
  * `useApolloTableFetch`); component specs pass a `fetchRows` built with
  * `fetchRowsFrom(...)`.
  */
+/** Mirrors the real `@duncit/table` export — column code compares against it. */
+export const EM_DASH = '—';
+
 let ROWS: unknown[] = [];
 
 export function __setTableRows(rows: unknown[]): void {

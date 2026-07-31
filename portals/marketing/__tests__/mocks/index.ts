@@ -7,6 +7,7 @@
  * without `addTypename`.
  */
 export * from './ads.mock';
+export * from './audience.mock';
 export * from './campaigns.mock';
 export * from './notifications.mock';
 export * from './mjml.mock';

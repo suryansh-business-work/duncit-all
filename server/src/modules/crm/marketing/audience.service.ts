@@ -7,6 +7,7 @@ import {
   PushSubscriptionModel,
 } from '@modules/engagement/notification/notification.model';
 import {
+  buildTableFilter,
   runTableQuery,
   type TableEntityConfig,
   type TableFilterInput,
@@ -277,6 +278,16 @@ async function pushPlatformsFor(ids: string[]): Promise<Map<string, string[]>> {
   for (const t of native) add(t.user_id, (t.platform ?? 'unknown').toUpperCase());
   for (const s of web) add(s.user_id, 'WEB');
   return new Map([...byUser].map(([k, v]) => [k, [...v].sort((a, b) => a.localeCompare(b))]));
+}
+
+/** How many people match a saved list's criteria right now. A live segment has
+ * no stored membership, so the count is always recomputed. */
+export async function countAudience(input?: TableQueryInput | null): Promise<number> {
+  const { base, query } = await translate(input);
+  const filter = Object.keys(buildTableFilter(query, AUDIENCE_TABLE_CONFIG)).length
+    ? { $and: [base, buildTableFilter(query, AUDIENCE_TABLE_CONFIG)] }
+    : base;
+  return UserModel.countDocuments(filter);
 }
 
 export const audienceService = {

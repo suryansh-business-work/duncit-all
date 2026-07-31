@@ -50,6 +50,33 @@ export function dateColumn(opts: Partial<AnyColumn> & Record<string, unknown> = 
   return { field: (opts.field as string) ?? 'created_at', headerName: opts.headerName ?? 'Date', ...opts };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type ActionsOpts = Record<string, any>;
+
+/** Mirrors the real actionsColumn closely enough to click: one button per
+ * configured handler, labelled from its `title` so specs can find it. */
+export function actionsColumn(opts: ActionsOpts = {}): AnyColumn {
+  return {
+    field: opts.field ?? 'actions',
+    headerName: opts.headerName ?? 'Actions',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cellRenderer: (row: any) => (
+      <>
+        {opts.onEdit && (
+          <button type="button" aria-label={opts.edit?.title ?? 'Edit'} onClick={() => opts.onEdit(row)}>
+            {opts.edit?.title ?? 'Edit'}
+          </button>
+        )}
+        {opts.onDelete && (
+          <button type="button" aria-label={opts.delete?.title ?? 'Delete'} onClick={() => opts.onDelete(row)}>
+            {opts.delete?.title ?? 'Delete'}
+          </button>
+        )}
+      </>
+    ),
+  };
+}
+
 interface MockTableProps {
   columns: AnyColumn[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

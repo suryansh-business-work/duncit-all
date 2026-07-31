@@ -1,13 +1,19 @@
+import { GraphQLError } from 'graphql';
 import type { MockedResponse } from '@apollo/client/testing';
 import type { AudienceFilterOptions } from '@duncit/gql-types';
-import { AUDIENCE_FILTER_OPTIONS } from '../../src/pages/target-audience-page/queries';
-import type { AudienceRow } from '../../src/pages/target-audience-page/helpers';
+import {
+  AUDIENCE_FILTER_OPTIONS,
+  AUDIENCE_LIST,
+  CREATE_AUDIENCE_LIST,
+  DELETE_AUDIENCE_LIST,
+} from '../../src/pages/target-audience-page/queries';
+import type { AudienceListRow, AudienceRow } from '../../src/pages/target-audience-page/helpers';
 
 /**
  * Target Audience mocks. Rows reach the (mocked) `@duncit/table` as props, so
- * they are typed against the app-level `AudienceRow` projection; the filter
- * options flow through `MockedProvider` and are typed against the generated
- * `AudienceFilterOptions` with `__typename`, matching production.
+ * they are typed against the app-level row projections; the filter options and
+ * mutations flow through `MockedProvider` and carry `__typename`, matching
+ * production.
  */
 export const makeAudienceRow = (over: Partial<AudienceRow> = {}): AudienceRow => ({
   id: 'u1',
@@ -58,6 +64,18 @@ export const makeSparseAudienceRow = (): AudienceRow =>
     created_at: null,
   });
 
+export const makeAudienceListRow = (over: Partial<AudienceListRow> = {}): AudienceListRow => ({
+  id: 'l1',
+  name: 'Pune regulars',
+  description: 'Everyone browsing Pune',
+  owner: 'Asha Rao',
+  search: '',
+  member_count: 1284,
+  filters: [{ field: 'city', op: 'in', value: null, values: ['Pune'] }],
+  created_at: '2026-06-01T00:00:00.000Z',
+  ...over,
+});
+
 const filterOptions: AudienceFilterOptions = {
   __typename: 'AudienceFilterOptions',
   interests: [{ __typename: 'AudienceInterestOption', id: 'c1', name: 'Live Music' }],
@@ -82,3 +100,43 @@ export const audienceFilterOptionsEmptyMock: MockedResponse = {
     },
   },
 };
+
+const toGqlList = (row: AudienceListRow) => ({
+  __typename: 'AudienceList',
+  ...row,
+  filters: row.filters.map((f) => ({ __typename: 'AudienceListFilter', ...f })),
+});
+
+export const audienceListMock = (row = makeAudienceListRow()): MockedResponse => ({
+  request: { query: AUDIENCE_LIST, variables: { id: row.id } },
+  result: { data: { audienceList: toGqlList(row) } },
+});
+
+export const audienceListMissingMock = (id = 'gone'): MockedResponse => ({
+  request: { query: AUDIENCE_LIST, variables: { id } },
+  result: { data: { audienceList: null } },
+});
+
+export const audienceListFailedMock = (id = 'l1', message = 'boom'): MockedResponse => ({
+  request: { query: AUDIENCE_LIST, variables: { id } },
+  result: { errors: [new GraphQLError(message)] },
+});
+
+/** A server-side rejection, which is what parseApiError is written against —
+ * a network `error` would collapse to the generic offline copy instead. */
+const rejection = (message: string) => ({ result: { errors: [new GraphQLError(message)] } });
+
+export const createAudienceListMock = (
+  input: Record<string, unknown>,
+  failWith?: string,
+): MockedResponse => ({
+  request: { query: CREATE_AUDIENCE_LIST, variables: { input } },
+  ...(failWith
+    ? rejection(failWith)
+    : { result: { data: { createAudienceList: { __typename: 'AudienceList', id: 'l9', name: String(input.name) } } } }),
+});
+
+export const deleteAudienceListMock = (id = 'l1', failWith?: string): MockedResponse => ({
+  request: { query: DELETE_AUDIENCE_LIST, variables: { id } },
+  ...(failWith ? rejection(failWith) : { result: { data: { deleteAudienceList: true } } }),
+});

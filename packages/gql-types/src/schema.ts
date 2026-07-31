@@ -436,6 +436,58 @@ export type AudienceInterestOption = {
 };
 
 /**
+ * A saved Target Audience list. It stores the filter CRITERIA, not the people —
+ * opening it re-runs them, so the membership and the count are always current
+ * rather than a snapshot of the day it was built.
+ */
+export type AudienceList = {
+  __typename?: 'AudienceList';
+  created_at?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  filters: Array<AudienceListFilter>;
+  id: Scalars['ID']['output'];
+  /** How many people match the criteria right now. */
+  member_count: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  owner: Scalars['String']['output'];
+  search: Scalars['String']['output'];
+  updated_at?: Maybe<Scalars['String']['output']>;
+};
+
+/** One saved criterion, in the shared table-filter shape. */
+export type AudienceListFilter = {
+  __typename?: 'AudienceListFilter';
+  field: Scalars['String']['output'];
+  op: Scalars['String']['output'];
+  value?: Maybe<Scalars['String']['output']>;
+  values: Array<Scalars['String']['output']>;
+};
+
+export type AudienceListFilterInput = {
+  field: Scalars['String']['input'];
+  op: Scalars['String']['input'];
+  value?: InputMaybe<Scalars['String']['input']>;
+  values?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+export type AudienceListInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  filters?: InputMaybe<Array<AudienceListFilterInput>>;
+  name: Scalars['String']['input'];
+  owner: Scalars['String']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** Server-side table page for the shared table engine (audienceListsTable). */
+export type AudienceListTablePage = {
+  __typename?: 'AudienceListTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<AudienceList>;
+  total: Scalars['Int']['output'];
+};
+
+/**
  * One targetable person. Deliberately narrower than the admin User type: a
  * campaign tool has no business with payout percentages, postal addresses or
  * raw birthdates, so this carries the derived age instead of the date of birth
@@ -4460,6 +4512,7 @@ export type Mutation = {
   completePodSettlement: PodSettlementResult;
   createAiPrompt: AiPrompt;
   createApiKey: CreatedApiKey;
+  createAudienceList: AudienceList;
   createBadge: Badge;
   createCategory: Category;
   createChallenge: Challenge;
@@ -4525,6 +4578,7 @@ export type Mutation = {
   deleteAdjustment: HealthScore;
   /** Deleting a system prompt is refused — reset it instead. */
   deleteAiPrompt: Scalars['Boolean']['output'];
+  deleteAudienceList: Scalars['Boolean']['output'];
   deleteBadge: Scalars['Boolean']['output'];
   deleteBrandPickupLocation: Scalars['Boolean']['output'];
   deleteCategory: Scalars['Boolean']['output'];
@@ -5371,6 +5425,11 @@ export type MutationCreateApiKeyArgs = {
 };
 
 
+export type MutationCreateAudienceListArgs = {
+  input: AudienceListInput;
+};
+
+
 export type MutationCreateBadgeArgs = {
   input: CreateBadgeInput;
 };
@@ -5652,6 +5711,11 @@ export type MutationDeleteAdjustmentArgs = {
 
 
 export type MutationDeleteAiPromptArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteAudienceListArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -9117,6 +9181,10 @@ export type Query = {
   approvalRequestsTable: ApprovalRequestTablePage;
   /** Dropdown values for the audience filters that are driven by data. */
   audienceFilterOptions: AudienceFilterOptions;
+  /** One saved list, with its member count recomputed. */
+  audienceList?: Maybe<AudienceList>;
+  /** Saved Target Audience lists. */
+  audienceListsTable: AudienceListTablePage;
   /**
    * The marketing Target Audience list. Soft-deleted accounts are always
    * excluded. Beyond the plain field filters, three filter fields are resolved
@@ -9733,6 +9801,16 @@ export type QueryApprovalRequestsArgs = {
 
 
 export type QueryApprovalRequestsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAudienceListArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryAudienceListsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 

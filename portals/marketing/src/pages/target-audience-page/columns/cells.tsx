@@ -6,9 +6,6 @@ export const dash = (value?: string | null) => value || EM_DASH;
 
 export const yesNo = (value: boolean) => (value ? 'Yes' : 'No');
 
-/** Columns that are a filter axis only — the row carries no value to show. */
-export const filterOnly = () => EM_DASH;
-
 export const renderPerson = (row: AudienceRow) => (
   <Stack spacing={0} sx={{ lineHeight: 1.3 }}>
     <Typography variant="body2" fontWeight={700} noWrap>

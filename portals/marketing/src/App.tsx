@@ -3,7 +3,9 @@ import { ProfilePage, createAuthed } from '@duncit/shell';
 import { NotifyHost } from '@duncit/dialogs';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
-import TargetAudiencePage from './pages/target-audience-page/TargetAudiencePage';
+import AudienceListsPage from './pages/target-audience-page/AudienceListsPage';
+import CreateAudienceListPage from './pages/target-audience-page/CreateAudienceListPage';
+import AudienceListDetailPage from './pages/target-audience-page/AudienceListDetailPage';
 import MarketingCampaignsPage from './pages/marketing-campaigns-page/MarketingCampaignsPage';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
 import AdsApprovalsPage from './pages/ads-approvals-page/AdsApprovalsPage';
@@ -20,7 +22,9 @@ export default function App() {
         <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<WelcomePage />)} />
-        <Route path="/audience" element={authed(<TargetAudiencePage />)} />
+        <Route path="/audience" element={authed(<AudienceListsPage />)} />
+        <Route path="/audience/new" element={authed(<CreateAudienceListPage />)} />
+        <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage defaultChannel="EMAIL" />)} />
         <Route path="/campaigns/whatsapp" element={authed(<MarketingCampaignsPage defaultChannel="WHATSAPP" />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />

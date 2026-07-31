@@ -1,9 +1,14 @@
 import { dateColumn, EM_DASH, type DuncitColumn } from '@duncit/table';
-import { PUSH_OPTIONS, type AudienceRow } from '../helpers';
-import { dash, filterOnly, renderPerson, renderPush, renderRoles, yesNo } from './cells';
+import type { AudienceRow } from '../helpers';
+import { dash, renderPerson, renderPush, renderRoles, yesNo } from './cells';
 import type { AudienceColumnDeps } from './types';
 
 type Column = DuncitColumn<AudienceRow>;
+
+/**
+ * No column carries a `filter`: every filter lives in the sidebar, which can
+ * combine ten conditions at once where a column popover only ever shows one.
+ */
 
 /** Who they are. */
 export const identityColumns = (): Column[] => [
@@ -23,36 +28,20 @@ export const identityColumns = (): Column[] => [
     valueGetter: (row) => dash(row.phone),
   },
   {
-    // Age is derived from the birthdate server-side; the min/max control here
-    // is translated into a date range by the audience service.
     field: 'age',
     headerName: 'Age',
-    filter: { type: 'number' },
-    width: 100,
+    width: 90,
     valueGetter: (row) => row.age ?? EM_DASH,
   },
 ];
 
 /** Where they are — the browse-location fields, not the postal address. */
-export const placeColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
-  {
-    field: 'city',
-    headerName: 'City',
-    filter: { type: 'select', options: deps.cityOptions, multiple: true },
-    minWidth: 130,
-    valueGetter: (row) => dash(row.city),
-  },
-  {
-    field: 'state',
-    headerName: 'State',
-    filter: { type: 'select', options: deps.stateOptions, multiple: true },
-    minWidth: 130,
-    valueGetter: (row) => dash(row.state),
-  },
+export const placeColumns = (): Column[] => [
+  { field: 'city', headerName: 'City', minWidth: 130, valueGetter: (row) => dash(row.city) },
+  { field: 'state', headerName: 'State', minWidth: 130, valueGetter: (row) => dash(row.state) },
   {
     field: 'zone',
     headerName: 'Zone',
-    filter: { type: 'select', options: deps.zoneOptions, multiple: true },
     minWidth: 130,
     hide: true,
     valueGetter: (row) => dash(row.zone),
@@ -60,7 +49,6 @@ export const placeColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
   {
     field: 'pincode',
     headerName: 'Pincode',
-    filter: { type: 'text' },
     sortable: false,
     width: 120,
     hide: true,
@@ -69,7 +57,6 @@ export const placeColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
   {
     field: 'country',
     headerName: 'Country',
-    filter: { type: 'select', options: deps.countryOptions, multiple: true },
     sortable: false,
     minWidth: 120,
     hide: true,
@@ -77,12 +64,11 @@ export const placeColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
   },
 ];
 
-/** How you can reach them, and what they care about. */
-export const reachColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
+/** How you can reach them. */
+export const reachColumns = (): Column[] => [
   {
     field: 'push_platform',
     headerName: 'Push reachable',
-    filter: { type: 'select', options: PUSH_OPTIONS },
     sortable: false,
     minWidth: 160,
     cellRenderer: renderPush,
@@ -91,24 +77,13 @@ export const reachColumns = (deps: Readonly<AudienceColumnDeps>): Column[] => [
   {
     field: 'whatsapp',
     headerName: 'WhatsApp',
-    filter: { type: 'boolean' },
     sortable: false,
-    width: 120,
+    width: 110,
     valueGetter: (row) => yesNo(row.whatsapp_reachable),
-  },
-  {
-    field: 'interest_category',
-    headerName: 'Interest',
-    filter: { type: 'select', options: deps.interestOptions, multiple: true },
-    sortable: false,
-    hide: true,
-    minWidth: 160,
-    valueGetter: filterOnly,
   },
   {
     field: 'role',
     headerName: 'Roles',
-    filter: { type: 'select', options: deps.roleOptions, multiple: true },
     sortable: false,
     minWidth: 160,
     cellRenderer: renderRoles,

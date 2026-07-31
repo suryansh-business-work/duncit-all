@@ -24,6 +24,27 @@ export interface AudienceRow {
   created_at?: string | null;
 }
 
+/** One saved criterion, as stored on a list. */
+export interface AudienceListFilterRow {
+  field: string;
+  op: string;
+  value?: string | null;
+  values: string[];
+}
+
+/** A saved Target Audience list. Stores criteria, not people, so member_count
+ * is recomputed by the server every time it is read. */
+export interface AudienceListRow {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  search: string;
+  member_count: number;
+  filters: AudienceListFilterRow[];
+  created_at?: string | null;
+}
+
 export interface Option {
   value: string;
   label: string;

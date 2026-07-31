@@ -6,19 +6,14 @@ import type { AudienceColumnDeps } from './types';
 
 export type { AudienceColumnDeps } from './types';
 
-/**
- * Every column doubles as a filter: the column's `field` IS the server-side
- * filter key, which is why `age`, `push_platform` and `interest_category` are
- * named to match the three the audience service translates rather than
- * comparing directly against a document field.
- */
+/** Display columns for the audience table. Filtering is the sidebar's job. */
 export function getAudienceColumns(
   deps: Readonly<AudienceColumnDeps>,
 ): DuncitColumn<AudienceRow>[] {
   return [
     ...identityColumns(),
-    ...placeColumns(deps),
-    ...reachColumns(deps),
+    ...placeColumns(),
+    ...reachColumns(),
     ...accountColumns(),
     ...activityColumns(deps),
   ];

@@ -2,6 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { marketingService } from './marketing.service';
 import { audienceService } from './audience.service';
+import { audienceListService } from './audienceList.service';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
 
@@ -14,6 +15,14 @@ export const marketingResolvers = {
     audienceFilterOptions: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return audienceService.filterOptions();
+    },
+    audienceListsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.table(args.query);
+    },
+    audienceList: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.get(args.id);
     },
     marketingCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -37,6 +46,14 @@ export const marketingResolvers = {
     },
   },
   Mutation: {
+    createAudienceList: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.create(args.input, ctx.user?.id ?? null);
+    },
+    deleteAudienceList: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return audienceListService.remove(args.id);
+    },
     createMarketingCampaign: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return marketingService.create(args.input, ctx.user?.id ?? null);

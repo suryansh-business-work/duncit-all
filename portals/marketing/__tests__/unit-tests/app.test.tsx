@@ -17,8 +17,14 @@ vi.mock('../../src/components/AppShell', () => ({
 }));
 vi.mock('../../src/pages/LoginPage', () => ({ default: () => <div>login-page</div> }));
 vi.mock('../../src/pages/WelcomePage', () => ({ default: () => <div>welcome-page</div> }));
-vi.mock('../../src/pages/target-audience-page/TargetAudiencePage', () => ({
-  default: () => <div>target-audience-page</div>,
+vi.mock('../../src/pages/target-audience-page/AudienceListsPage', () => ({
+  default: () => <div>audience-lists-page</div>,
+}));
+vi.mock('../../src/pages/target-audience-page/CreateAudienceListPage', () => ({
+  default: () => <div>create-audience-list-page</div>,
+}));
+vi.mock('../../src/pages/target-audience-page/AudienceListDetailPage', () => ({
+  default: () => <div>audience-list-detail-page</div>,
 }));
 vi.mock('../../src/pages/marketing-campaigns-page/MarketingCampaignsPage', () => ({
   default: ({ defaultChannel }: { defaultChannel?: string }) => <div>{`campaigns-${defaultChannel}`}</div>,
@@ -41,7 +47,9 @@ describe('App routing', () => {
   it.each([
     ['/', 'welcome-page'],
     ['/profile', 'profile-page'],
-    ['/audience', 'target-audience-page'],
+    ['/audience', 'audience-lists-page'],
+    ['/audience/new', 'create-audience-list-page'],
+    ['/audience/l1', 'audience-list-detail-page'],
     ['/campaigns/email', 'campaigns-EMAIL'],
     ['/campaigns/whatsapp', 'campaigns-WHATSAPP'],
     ['/notifications', 'notifications-page'],

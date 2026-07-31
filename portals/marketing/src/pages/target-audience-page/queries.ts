@@ -30,6 +30,60 @@ export const AUDIENCE_TABLE = gql`
   }
 `;
 
+const AUDIENCE_LIST_FIELDS = gql`
+  fragment AudienceListFields on AudienceList {
+    id
+    name
+    description
+    owner
+    search
+    member_count
+    created_at
+    filters {
+      field
+      op
+      value
+      values
+    }
+  }
+`;
+
+export const AUDIENCE_LISTS_TABLE = gql`
+  query AudienceListsTable($query: TableQueryInput) {
+    audienceListsTable(query: $query) {
+      total
+      rows {
+        ...AudienceListFields
+      }
+    }
+  }
+  ${AUDIENCE_LIST_FIELDS}
+`;
+
+export const AUDIENCE_LIST = gql`
+  query AudienceList($id: ID!) {
+    audienceList(id: $id) {
+      ...AudienceListFields
+    }
+  }
+  ${AUDIENCE_LIST_FIELDS}
+`;
+
+export const CREATE_AUDIENCE_LIST = gql`
+  mutation CreateAudienceList($input: AudienceListInput!) {
+    createAudienceList(input: $input) {
+      id
+      name
+    }
+  }
+`;
+
+export const DELETE_AUDIENCE_LIST = gql`
+  mutation DeleteAudienceList($id: ID!) {
+    deleteAudienceList(id: $id)
+  }
+`;
+
 export const AUDIENCE_FILTER_OPTIONS = gql`
   query AudienceFilterOptions {
     audienceFilterOptions {

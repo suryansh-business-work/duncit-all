@@ -143,6 +143,55 @@ export const marketingTypeDefs = /* GraphQL */ `
     name: String!
   }
 
+  "One saved criterion, in the shared table-filter shape."
+  type AudienceListFilter {
+    field: String!
+    op: String!
+    value: String
+    values: [String!]!
+  }
+
+  input AudienceListFilterInput {
+    field: String!
+    op: String!
+    value: String
+    values: [String!]
+  }
+
+  """
+  A saved Target Audience list. It stores the filter CRITERIA, not the people —
+  opening it re-runs them, so the membership and the count are always current
+  rather than a snapshot of the day it was built.
+  """
+  type AudienceList {
+    id: ID!
+    name: String!
+    description: String!
+    owner: String!
+    filters: [AudienceListFilter!]!
+    search: String!
+    "How many people match the criteria right now."
+    member_count: Int!
+    created_at: String
+    updated_at: String
+  }
+
+  input AudienceListInput {
+    name: String!
+    description: String
+    owner: String!
+    filters: [AudienceListFilterInput!]
+    search: String
+  }
+
+  "Server-side table page for the shared table engine (audienceListsTable)."
+  type AudienceListTablePage {
+    rows: [AudienceList!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   "Dropdown values for the audience filters whose options are data, not a fixed list."
   type AudienceFilterOptions {
     interests: [AudienceInterestOption!]!
@@ -160,6 +209,10 @@ export const marketingTypeDefs = /* GraphQL */ `
     audienceTable(query: TableQueryInput): AudienceTablePage!
     "Dropdown values for the audience filters that are driven by data."
     audienceFilterOptions: AudienceFilterOptions!
+    "Saved Target Audience lists."
+    audienceListsTable(query: TableQueryInput): AudienceListTablePage!
+    "One saved list, with its member count recomputed."
+    audienceList(id: ID!): AudienceList
     marketingCampaigns: [MarketingCampaign!]!
     marketingCampaignsTable(query: TableQueryInput): MarketingCampaignTablePage!
     marketingCampaignPreviewCards(type: MarketingCampaignCardType!): [MarketingCampaignPreviewCard!]!
@@ -167,6 +220,8 @@ export const marketingTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
+    createAudienceList(input: AudienceListInput!): AudienceList!
+    deleteAudienceList(id: ID!): Boolean!
     createMarketingCampaign(input: MarketingCampaignInput!): MarketingCampaign!
     sendMarketingCampaign(campaign_id: ID!): MarketingCampaign!
   }

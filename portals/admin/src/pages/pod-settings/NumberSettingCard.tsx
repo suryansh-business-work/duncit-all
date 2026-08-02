@@ -37,7 +37,10 @@ export default function NumberSettingCard({
   }, [value]);
 
   const num = Number(raw);
-  const invalid = !Number.isInteger(num) || num < min;
+  // `Number('') === 0`, so a card with min 0 would read a cleared box as a legal
+  // save of 0. Cards with min 1 already rejected it via `num < min` — the blank
+  // guard just makes that explicit for every min.
+  const invalid = raw.trim() === '' || !Number.isInteger(num) || num < min;
   const dirty = value != null && num !== value;
 
   const submit = async () => {

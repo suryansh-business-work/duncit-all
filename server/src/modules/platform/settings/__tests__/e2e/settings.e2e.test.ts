@@ -111,4 +111,44 @@ describe('settings e2e', () => {
     );
     expect(clamped.updateAppSettings.max_backout_attempts).toBe(1);
   });
+
+  it('configures the venue-cancel health penalty (default 5, 0 stays 0, clamped to 0-100)', async () => {
+    const SAVE_PENALTY = gql`
+      mutation ($i: UpdateAppSettingsInput!) {
+        updateAppSettings(input: $i) {
+          venue_cancel_health_penalty
+        }
+      }
+    `;
+    const READ_PENALTY = gql`
+      query {
+        publicAppSettings {
+          venue_cancel_health_penalty
+        }
+      }
+    `;
+
+    const pub = server.client();
+    const before: any = await pub.request(READ_PENALTY);
+    expect(before.publicAppSettings.venue_cancel_health_penalty).toBe(5);
+
+    const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
+    const updated: any = await admin.request(SAVE_PENALTY, { i: { venue_cancel_health_penalty: 12 } });
+    expect(updated.updateAppSettings.venue_cancel_health_penalty).toBe(12);
+
+    // The partner portal reads this without a token.
+    const after: any = await pub.request(READ_PENALTY);
+    expect(after.publicAppSettings.venue_cancel_health_penalty).toBe(12);
+
+    // 0 is a legal value — it disables the penalty and must not bounce to 5.
+    const zero: any = await admin.request(SAVE_PENALTY, { i: { venue_cancel_health_penalty: 0 } });
+    expect(zero.updateAppSettings.venue_cancel_health_penalty).toBe(0);
+    expect((await pub.request<any>(READ_PENALTY)).publicAppSettings.venue_cancel_health_penalty).toBe(0);
+
+    // Out-of-range values clamp to 0..100.
+    const high: any = await admin.request(SAVE_PENALTY, { i: { venue_cancel_health_penalty: 250 } });
+    expect(high.updateAppSettings.venue_cancel_health_penalty).toBe(100);
+    const low: any = await admin.request(SAVE_PENALTY, { i: { venue_cancel_health_penalty: -4 } });
+    expect(low.updateAppSettings.venue_cancel_health_penalty).toBe(0);
+  });
 });

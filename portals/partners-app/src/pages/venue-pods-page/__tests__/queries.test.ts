@@ -3,34 +3,17 @@ import type { TableFilterValue } from '@duncit/table';
 import { fieldsAt, operationOf, variablesOf } from '../../../__tests__/gql-contract';
 import {
   applyVenuePodsQuery,
+  canCancelVenuePod,
+  cancelDisabledReason,
+  cancelSuccessMessage,
   matchesTab,
   tabCounts,
+  VENUE_CANCEL_PENALTY,
+  VENUE_CANCEL_POD,
   VENUE_POD_ATTENDEE_PROFILES,
   VENUE_PODS,
-  type VenuePodRow,
 } from '../queries';
-
-const makeRow = (over: Partial<VenuePodRow> = {}): VenuePodRow => ({
-  id: '1',
-  pod_slug: 'yoga',
-  pod_title: 'Yoga',
-  pod_date_time: '2026-08-10T18:00:00.000Z',
-  pod_end_date_time: null,
-  pod_amount: 300,
-  pod_type: 'PAID',
-  no_of_spots: 8,
-  attendee_count: 3,
-  pod_attendees: ['u1', 'u2', 'u3'],
-  host_names: ['Hema Kaur'],
-  venue_id: 'v1',
-  venue_name: 'Hall A',
-  bucket: 'UPCOMING',
-  is_active: true,
-  completed_at: null,
-  cancelled_at: null,
-  created_at: '2026-07-01T00:00:00.000Z',
-  ...over,
-});
+import { makeVenuePodRow as makeRow } from './fixtures';
 
 const baseQuery = {
   search: '',
@@ -68,6 +51,71 @@ describe('VENUE_PODS contract', () => {
       'full_name',
       'profile_photo',
     ]);
+  });
+
+  it('cancels a pod with a pod id and a reason, and reads back the health outcome', () => {
+    expect(operationOf(VENUE_CANCEL_POD)).toEqual({ name: 'VenueCancelPod', type: 'mutation' });
+    expect(variablesOf(VENUE_CANCEL_POD)).toEqual({ pod_id: 'ID!', reason: 'String!' });
+    expect(fieldsAt(VENUE_CANCEL_POD, 'venueCancelPod')).toEqual([
+      'pod_id',
+      'health_penalty',
+      'venue_health_score',
+      'refunded_count',
+    ]);
+  });
+
+  it('reads the live penalty under its own operation name, never PublicAppSettings', () => {
+    expect(operationOf(VENUE_CANCEL_PENALTY)).toEqual({
+      name: 'VenueCancelPenalty',
+      type: 'query',
+    });
+    expect(variablesOf(VENUE_CANCEL_PENALTY)).toEqual({});
+    expect(fieldsAt(VENUE_CANCEL_PENALTY, 'publicAppSettings')).toEqual([
+      'venue_cancel_health_penalty',
+    ]);
+  });
+});
+
+describe('canCancelVenuePod', () => {
+  it('allows only an upcoming pod', () => {
+    expect(canCancelVenuePod(makeRow({ bucket: 'UPCOMING' }))).toBe(true);
+    expect(canCancelVenuePod(makeRow({ bucket: 'ONGOING' }))).toBe(false);
+    expect(canCancelVenuePod(makeRow({ bucket: 'COMPLETED' }))).toBe(false);
+    expect(canCancelVenuePod(makeRow({ bucket: 'CANCELLED' }))).toBe(false);
+  });
+
+  it('refuses a pod that is already cancelled, whatever its bucket says', () => {
+    const row = makeRow({ bucket: 'UPCOMING', cancelled_at: '2026-07-03T00:00:00.000Z' });
+    expect(canCancelVenuePod(row)).toBe(false);
+    expect(cancelDisabledReason(row)).toBe('This pod is already cancelled.');
+  });
+
+  it('explains every disabled state and stays silent when the action is live', () => {
+    expect(cancelDisabledReason(makeRow({ bucket: 'UPCOMING' }))).toBeNull();
+    expect(cancelDisabledReason(makeRow({ bucket: 'CANCELLED' }))).toBe(
+      'This pod is already cancelled.',
+    );
+    expect(cancelDisabledReason(makeRow({ bucket: 'ONGOING' }))).toBe(
+      'This pod has already started, so it can no longer be cancelled.',
+    );
+    expect(cancelDisabledReason(makeRow({ bucket: 'COMPLETED' }))).toBe(
+      'This pod has already finished.',
+    );
+  });
+});
+
+describe('cancelSuccessMessage', () => {
+  const result = { pod_id: '1', health_penalty: 7, venue_health_score: 82, refunded_count: 3 };
+
+  it('reports the refunds and the resulting health score from the server', () => {
+    expect(cancelSuccessMessage(result)).toBe(
+      "Pod cancelled — 3 payments refunded. This venue's Account Health is now 82.",
+    );
+  });
+
+  it('says "1 payment" for a single refund and still reports zero refunds', () => {
+    expect(cancelSuccessMessage({ ...result, refunded_count: 1 })).toContain('1 payment refunded');
+    expect(cancelSuccessMessage({ ...result, refunded_count: 0 })).toContain('0 payments refunded');
   });
 });
 

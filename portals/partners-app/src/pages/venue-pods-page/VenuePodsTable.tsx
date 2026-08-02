@@ -1,13 +1,17 @@
 import { useMemo } from 'react';
-import { Stack, Typography } from '@mui/material';
+import { Button, Stack, Tooltip, Typography } from '@mui/material';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import { DuncitTable, type DuncitColumn, type TableFetch, type TableFilterValue } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
 import {
   BUCKET_COLORS,
   BUCKET_LABELS,
+  cancelDisabledReason,
   fmtDate,
   type VenuePodRow,
 } from './queries';
+
+const CANCEL_HINT = 'Cancel this pod and refund every paid attendee';
 
 const getRowId = (row: VenuePodRow) => row.id;
 
@@ -26,11 +30,56 @@ const renderBucket = (row: VenuePodRow) => (
   <StatusChip status={row.bucket} label={BUCKET_LABELS[row.bucket]} colorMap={BUCKET_COLORS} />
 );
 
+/** Per-row Cancel action; the span keeps the tooltip alive while disabled. */
+function CancelPodCell({
+  row,
+  onCancel,
+}: Readonly<{ row: VenuePodRow; onCancel: (row: VenuePodRow) => void }>) {
+  const disabledReason = cancelDisabledReason(row);
+  return (
+    <Tooltip title={disabledReason ?? CANCEL_HINT}>
+      <span>
+        <Button
+          size="small"
+          variant="outlined"
+          color="error"
+          disabled={!!disabledReason}
+          startIcon={<EventBusyIcon fontSize="small" />}
+          onClick={(event) => {
+            event.stopPropagation();
+            onCancel(row);
+          }}
+          sx={{ whiteSpace: 'nowrap' }}
+        >
+          Cancel pod
+        </Button>
+      </span>
+    </Tooltip>
+  );
+}
+
+/**
+ * Built at module scope so the cell renderer is never a component defined inside
+ * a component. Renderer-only columns freeze on the pre-mutation row after a
+ * refetch, so the `valueGetter` keys the cell on the button's own state — and
+ * because AG Grid exports the value, not the renderer, it reads as plain
+ * English in a CSV instead of a machine key.
+ */
+const actionsColumn = (onCancel: (row: VenuePodRow) => void): DuncitColumn<VenuePodRow> => ({
+  field: 'actions',
+  headerName: 'Actions',
+  width: 160,
+  sortable: false,
+  valueGetter: (row) => cancelDisabledReason(row) ?? CANCEL_HINT,
+  cellRenderer: (row: VenuePodRow) => <CancelPodCell row={row} onCancel={onCancel} />,
+});
+
 interface Props {
   fetchRows: TableFetch<VenuePodRow>;
   externalFilters: TableFilterValue[];
   refetchRef: React.MutableRefObject<(() => void) | null>;
   onRowClick: (row: VenuePodRow) => void;
+  onCancel: (row: VenuePodRow) => void;
 }
 
 /** All pods booked at the partner's venues; click a row for attendees. */
@@ -39,6 +88,7 @@ export default function VenuePodsTable({
   externalFilters,
   refetchRef,
   onRowClick,
+  onCancel,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<VenuePodRow>[]>(
     () => [
@@ -99,8 +149,9 @@ export default function VenuePodsTable({
         sortable: false,
         valueGetter: (row) => fmtDate(row.cancelled_at),
       },
+      actionsColumn(onCancel),
     ],
-    [],
+    [onCancel],
   );
 
   return (

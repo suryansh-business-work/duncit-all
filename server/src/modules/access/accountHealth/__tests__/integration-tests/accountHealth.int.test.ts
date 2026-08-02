@@ -1,6 +1,8 @@
 import { Types } from 'mongoose';
 import { accountHealthService } from '../../accountHealth.service';
+import { HealthAdjustmentModel } from '../../accountHealth.model';
 import { UserModel } from '../../../user/user.model';
+import { VenueModel } from '@modules/venues/venue/venue.model';
 
 async function makeUser() {
   const u = await UserModel.create({
@@ -9,6 +11,21 @@ async function makeUser() {
   });
   return String(u._id);
 }
+
+async function makeVenue() {
+  const owner = await UserModel.create({
+    auth: { email: `venue-${Date.now()}-${Math.random()}@duncit.com` },
+    profile: { first_name: 'Venue', last_name: 'Owner' },
+  });
+  const v = await VenueModel.create({
+    owner_user_id: owner._id,
+    venue_name: 'Rooftop Hall',
+  } as never);
+  return String(v._id);
+}
+
+const countAdjustments = (venueId: string) =>
+  HealthAdjustmentModel.countDocuments({ subject_id: new Types.ObjectId(venueId) });
 
 describe('accountHealthService integration', () => {
   const adminId = new Types.ObjectId().toString();
@@ -104,5 +121,132 @@ describe('accountHealthService integration', () => {
 
   it('deleteAdjustment rejects an invalid id', async () => {
     await expect(accountHealthService.deleteAdjustment('bad')).rejects.toThrow(/invalid id/i);
+  });
+
+  describe('applySystemPenalty', () => {
+    it('rejects an invalid subject id', async () => {
+      await expect(
+        accountHealthService.applySystemPenalty({
+          subject_type: 'VENUE',
+          subject_id: 'bad',
+          points: 5,
+          remark: 'cancelled a pod',
+        })
+      ).rejects.toThrow(/invalid subject_id/i);
+    });
+
+    it('throws NOT_FOUND when the subject venue no longer exists', async () => {
+      await expect(
+        accountHealthService.applySystemPenalty({
+          subject_type: 'VENUE',
+          subject_id: new Types.ObjectId().toString(),
+          points: 5,
+          remark: 'cancelled a pod',
+        })
+      ).rejects.toThrow(/venue not found/i);
+    });
+
+    it('deducts the points from a venue and credits System as the actor', async () => {
+      const venueId = await makeVenue();
+      const score = await accountHealthService.applySystemPenalty({
+        subject_type: 'VENUE',
+        subject_id: venueId,
+        points: 5,
+        remark: '  Venue owner cancelled the pod "Sunset Jam".  ',
+      });
+      expect(score).toBe(95);
+
+      const health = await accountHealthService.getVenueHealth(venueId);
+      expect(health.total_score).toBe(95);
+      expect(health.adjustments).toHaveLength(1);
+      expect(health.adjustments[0].delta).toBe(-5);
+      // No admin behind a system penalty — the pub mapper renders it as System.
+      expect(health.adjustments[0].created_by_id).toBeNull();
+      expect(health.adjustments[0].created_by_name).toBe('System');
+      expect(health.adjustments[0].remark).toBe('Venue owner cancelled the pod "Sunset Jam".');
+    });
+
+    it('records nothing for a zero penalty and still reports the current score', async () => {
+      const venueId = await makeVenue();
+      await accountHealthService.applySystemPenalty({
+        subject_type: 'VENUE',
+        subject_id: venueId,
+        points: 10,
+        remark: 'earlier cancellation',
+      });
+
+      const score = await accountHealthService.applySystemPenalty({
+        subject_type: 'VENUE',
+        subject_id: venueId,
+        points: 0,
+        remark: 'penalty disabled by the admin',
+      });
+      expect(score).toBe(90);
+      expect(await countAdjustments(venueId)).toBe(1);
+    });
+
+    it('treats a negative or unusable magnitude as no penalty at all', async () => {
+      const venueId = await makeVenue();
+      expect(
+        await accountHealthService.applySystemPenalty({
+          subject_type: 'VENUE',
+          subject_id: venueId,
+          points: -20,
+          remark: 'negative',
+        })
+      ).toBe(100);
+      expect(
+        await accountHealthService.applySystemPenalty({
+          subject_type: 'VENUE',
+          subject_id: venueId,
+          points: Number.NaN,
+          remark: 'junk',
+        })
+      ).toBe(100);
+      expect(await countAdjustments(venueId)).toBe(0);
+    });
+
+    it('clamps an oversized penalty to the -100 the adjustment schema allows', async () => {
+      const venueId = await makeVenue();
+      const score = await accountHealthService.applySystemPenalty({
+        subject_type: 'VENUE',
+        subject_id: venueId,
+        points: 250,
+        remark: 'oversized',
+      });
+      expect(score).toBe(0);
+
+      const health = await accountHealthService.getVenueHealth(venueId);
+      expect(health.adjustments[0].delta).toBe(-100);
+      expect(health.band).toBe('RED');
+    });
+
+    it('floors a fractional magnitude and truncates the remark at 500 characters', async () => {
+      const venueId = await makeVenue();
+      const score = await accountHealthService.applySystemPenalty({
+        subject_type: 'VENUE',
+        subject_id: venueId,
+        points: 7.9,
+        remark: 'x'.repeat(600),
+      });
+      expect(score).toBe(93);
+
+      const health = await accountHealthService.getVenueHealth(venueId);
+      expect(health.adjustments[0].remark).toHaveLength(500);
+    });
+
+    it('penalises a USER subject through the same shared resolver', async () => {
+      const userId = await makeUser();
+      const score = await accountHealthService.applySystemPenalty({
+        subject_type: 'USER',
+        subject_id: userId,
+        points: 3,
+        remark: 'system penalty',
+      });
+      expect(score).toBe(97);
+
+      const health = await accountHealthService.getUserAccountHealth(userId);
+      expect(health.adjustments[0].created_by_name).toBe('System');
+    });
   });
 });

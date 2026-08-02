@@ -9,6 +9,7 @@ const POD_SETTINGS = gql`
     appSettings {
       draft_retention_days
       max_backout_attempts
+      venue_cancel_health_penalty
       updated_at
     }
   }
@@ -19,14 +20,16 @@ const UPDATE_POD_SETTINGS = gql`
     updateAppSettings(input: $input) {
       draft_retention_days
       max_backout_attempts
+      venue_cancel_health_penalty
       updated_at
     }
   }
 `;
 
 /** Admin > Pods > Pod Settings — platform defaults for the Create-a-Pod flow:
- * the draft-pod retention window (daily cleanup job + Host Studio note) and the
- * per-user-per-pod Backout attempt limit enforced by the backout flow. */
+ * the draft-pod retention window (daily cleanup job + Host Studio note), the
+ * per-user-per-pod Backout attempt limit enforced by the backout flow, and the
+ * Account Health penalty a venue pays when its owner cancels a booked pod. */
 export default function PodSettingsPage() {
   const { data, loading, refetch } = useQuery(POD_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [save] = useMutation(UPDATE_POD_SETTINGS, {
@@ -71,6 +74,17 @@ export default function PodSettingsPage() {
         loading={loading}
         value={settings?.max_backout_attempts ?? null}
         onSave={(next) => saveField({ max_backout_attempts: next })}
+      />
+      <NumberSettingCard
+        title="Account Health Penalty When a Venue Cancels a Pod"
+        description="Points deducted from a venue's Account Health each time its owner cancels a pod booked at that venue. Set 0 to disable the penalty."
+        label="Account Health Penalty (Points)"
+        helperText="Minimum 0 points. Default 5."
+        invalidText="Enter a whole number of 0 or more."
+        min={0}
+        loading={loading}
+        value={settings?.venue_cancel_health_penalty ?? null}
+        onSave={(next) => saveField({ venue_cancel_health_penalty: next })}
       />
       <Snackbar
         open={!!toast}

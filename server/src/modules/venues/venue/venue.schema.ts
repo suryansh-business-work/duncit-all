@@ -271,6 +271,18 @@ export const venueTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "Outcome of a venue owner cancelling a pod booked at their venue."
+  type VenueCancelPodResult {
+    "The cancelled pod's id."
+    pod_id: ID!
+    "Account Health points deducted from the venue for this cancellation."
+    health_penalty: Int!
+    "The venue's Account Health score after the deduction."
+    venue_health_score: Int!
+    "Attendee payments refunded by this cancellation."
+    refunded_count: Int!
+  }
+
   extend type Query {
     "Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's)."
     myVenue(venue_id: ID): Venue
@@ -320,6 +332,8 @@ export const venueTypeDefs = /* GraphQL */ `
     setVenueDeductions(venue_doc_id: ID!, venue_share_pct: Float!, venue_commission_pct: Float!): Venue!
     "Owner (or admin) updates operating hours, weekly-off, holidays + booking rules."
     updateVenueSettings(venue_doc_id: ID!, input: VenueSettingsInput!): Venue!
+    "Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings."
+    venueCancelPod(pod_id: ID!, reason: String!): VenueCancelPodResult!
     "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the venue still has live pods/booked slots."
     deleteVenue(venue_doc_id: ID!, email: String!, password: String!): Boolean!
   }

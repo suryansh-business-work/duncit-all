@@ -4,6 +4,7 @@ import { venueService } from './venue.service';
 import { venuePodsService } from './venuePods.service';
 import { userService } from '@modules/access/user/user.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { podService } from '@modules/pods/pod/pod.service';
 import { MeetingModel } from '@modules/survey/meeting.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import type { GraphQLContext } from '@context';
@@ -183,6 +184,10 @@ export const venueResolvers = {
       const isAdmin = !!ctx.user && hasRole(ctx.user, ADMIN_REVIEW);
       return venueService.updateSettings(userId, isAdmin, args.venue_doc_id, args.input);
     },
+    // Partner-facing like the other myVenue* entries: ownership of the venue the
+    // pod is booked at is enforced inside the service, so no role gate here.
+    venueCancelPod: async (_p: unknown, args: { pod_id: string; reason: string }, ctx: GraphQLContext) =>
+      podService.venueCancelPod(args.pod_id, uid(ctx), args.reason),
     deleteVenue: async (
       _p: unknown,
       args: { venue_doc_id: string; email: string; password: string },

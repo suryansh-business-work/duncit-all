@@ -22,12 +22,21 @@ const DEFAULT_MAX_BIRTH_YEAR = 2012;
 const DEFAULT_DRAFT_RETENTION_DAYS = 3;
 /** Default max Backout attempts a user gets per pod. */
 const DEFAULT_MAX_BACKOUT_ATTEMPTS = 3;
+/** Default Account Health penalty when a venue owner cancels a pod. */
+const DEFAULT_VENUE_CANCEL_HEALTH_PENALTY = 5;
 
 const cleanRetentionDays = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_DRAFT_RETENTION_DAYS);
 
 const cleanMaxBackoutAttempts = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_MAX_BACKOUT_ATTEMPTS);
+
+// 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
+// the cleaners above use would silently turn a saved 0 back into 5.
+const cleanVenueCancelHealthPenalty = (value: unknown) => {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : DEFAULT_VENUE_CANCEL_HEALTH_PENALTY;
+};
 
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
@@ -42,6 +51,8 @@ const toAppPub = (d: any) => ({
   max_birth_year: d?.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
   draft_retention_days: d?.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
   max_backout_attempts: d?.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
+  venue_cancel_health_penalty:
+    d?.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -278,6 +289,7 @@ type AppSettingsUpdateInput = {
   max_birth_year?: number;
   draft_retention_days?: number;
   max_backout_attempts?: number;
+  venue_cancel_health_penalty?: number;
 };
 
 /** Fields copied to the update as-is when the caller supplied them. */
@@ -311,6 +323,10 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
     update.draft_retention_days = cleanRetentionDays(input.draft_retention_days);
   if (input.max_backout_attempts !== undefined)
     update.max_backout_attempts = cleanMaxBackoutAttempts(input.max_backout_attempts);
+  if (input.venue_cancel_health_penalty !== undefined)
+    update.venue_cancel_health_penalty = cleanVenueCancelHealthPenalty(
+      input.venue_cancel_health_penalty,
+    );
   return update;
 };
 
@@ -337,6 +353,8 @@ export const settingsService = {
       max_birth_year: doc.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
       draft_retention_days: doc.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
       max_backout_attempts: doc.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
+      venue_cancel_health_penalty:
+        doc.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
     };
   },
 
@@ -344,6 +362,13 @@ export const settingsService = {
   async getMaxBackoutAttempts(): Promise<number> {
     const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
     return cleanMaxBackoutAttempts(doc?.max_backout_attempts);
+  },
+
+  /** Clamped Account Health penalty (0–100, default 5) charged to a venue when
+   * its owner cancels a pod booked there. */
+  async getVenueCancelHealthPenalty(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return cleanVenueCancelHealthPenalty(doc?.venue_cancel_health_penalty);
   },
 
   /**

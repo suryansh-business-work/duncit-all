@@ -13,4 +13,14 @@ describe('venue unit', () => {
       (venueResolvers.Mutation as any).approveVenue({}, { venue_doc_id: 'x' }, makeContext({ roles: ['USER'] }))
     ).rejects.toThrow(/access denied/i);
   });
+
+  it('venueCancelPod requires authentication', async () => {
+    await expect(
+      (venueResolvers.Mutation as any).venueCancelPod(
+        {},
+        { pod_id: 'x', reason: 'Kitchen fire' },
+        makeContext()
+      )
+    ).rejects.toThrow(/authentication required/i);
+  });
 });

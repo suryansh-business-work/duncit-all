@@ -32,6 +32,8 @@ export const settingsTypeDefs = gql`
     draft_retention_days: Int!
     "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
     max_backout_attempts: Int!
+    "Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty)."
+    venue_cancel_health_penalty: Int!
     updated_at: String
   }
 
@@ -54,6 +56,8 @@ export const settingsTypeDefs = gql`
     draft_retention_days: Int!
     "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
     max_backout_attempts: Int!
+    "Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty)."
+    venue_cancel_health_penalty: Int!
   }
 
   type PublicClientConfig {
@@ -76,6 +80,8 @@ export const settingsTypeDefs = gql`
     draft_retention_days: Int
     "Max Backout attempts a user gets per pod (min 1)."
     max_backout_attempts: Int
+    "Account Health points deducted from a venue when its owner cancels a pod booked there (0-100, 0 disables the penalty)."
+    venue_cancel_health_penalty: Int
   }
 
   type FeatureFlag {

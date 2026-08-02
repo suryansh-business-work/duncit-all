@@ -15,7 +15,9 @@ import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from '@modules/finance/finance/finance.model';
-import { breakdownService } from '@modules/finance/finance/breakdown.service';
+import { breakdownService, bucketForPod } from '@modules/finance/finance/breakdown.service';
+import { settingsService } from '@modules/platform/settings/settings.service';
+import { accountHealthService } from '@modules/access/accountHealth/accountHealth.service';
 import {
   sendPodCancelledEmail,
   sendPodRefundEmail,
@@ -372,6 +374,143 @@ async function podAudience(doc: any, excludeUserId: string) {
       name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'there',
     }))
     .filter((u: { email: string }) => !!u.email);
+}
+
+/** Who cancelled a pod — doubles as the refund metadata tag and the audit source. */
+type PodCancelInitiator = 'HOST' | 'VENUE_OWNER';
+
+/**
+ * Soft-deletes a pod exactly once. The `deleted_at` flip is a CONDITIONAL write,
+ * so when two cancels race only one caller gets `true` back — the loser must not
+ * fan out a second round of cancellation emails or dock the venue's health
+ * twice. Returns false when the pod was already cancelled.
+ */
+async function softDeletePod(
+  id: string,
+  audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null }
+): Promise<boolean> {
+  const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
+  if (!doc) notFound();
+  if (doc!.deleted_at) return false;
+  // Release the venue slot + reserved inventory, then claim the delete. The
+  // filter carries deleted_at itself, so the soft-delete hook leaves it alone
+  // and the write only lands while the pod is still live.
+  await applyProductDeltas(doc!.product_requests ?? [], []);
+  await venueSlotService.releaseForPod(String(doc!._id));
+  const claimed = await PodModel.findOneAndUpdate(
+    { _id: doc!._id, deleted_at: null },
+    { $set: { deleted_at: new Date(), is_active: false } },
+    { new: true }
+  ).setOptions({ includeDeleted: true });
+  if (!claimed) return false;
+  await podAuditService.record({
+    pod: claimed,
+    action: 'DELETE',
+    source: audit?.source ?? 'SYSTEM',
+    actorUserId: audit?.actorUserId,
+    note: audit?.note,
+  });
+  return true;
+}
+
+/**
+ * The money-and-mail half of a pod cancellation, shared by the host delete and
+ * the venue-owner cancel flows: refund every SUCCESS payment, snapshot the
+ * audience, commit the soft delete, then best-effort email a cancellation note
+ * to each attendee and a refund note to each payer. Returns the refunded count,
+ * or null when a concurrent cancel had already committed the delete — the
+ * caller must then skip every follow-up effect rather than double-apply it.
+ */
+async function refundAndNotifyCancellation(
+  doc: any,
+  actorUserId: string,
+  reason: string,
+  initiatedBy: PodCancelInitiator
+): Promise<number | null> {
+  const when = podWhenLabel(doc);
+  const podTitle = doc.pod_title;
+  const logComponent = initiatedBy === 'HOST' ? 'hostRemove' : 'venueCancelPod';
+
+  const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
+  const refundedByUser = new Map<string, any>();
+  for (const payment of payments) {
+    payment.status = 'REFUNDED';
+    (payment as any).metadata = {
+      ...(payment as any).metadata,
+      refund_reason: reason,
+      refunded_at: new Date().toISOString(),
+      refund_initiated_by: initiatedBy,
+      refund_initiator_id: actorUserId,
+    };
+    payment.markModified('metadata');
+    await payment.save();
+    refundedByUser.set(String(payment.user_id), payment);
+  }
+
+  const audience = await podAudience(doc, actorUserId);
+  const won = await softDeletePod(String(doc._id), {
+    actorUserId,
+    source: initiatedBy,
+    note: reason,
+  });
+  // Another cancel committed first: it already emailed this audience, so
+  // sending again would double-notify every attendee and payer.
+  if (!won) return null;
+
+  // Best-effort after the delete commits: cancellation + refund emails.
+  try {
+    await Promise.allSettled([
+      ...audience.map((user) => {
+        const payment = refundedByUser.get(user.user_id);
+        const refundLine = payment
+          ? `Your payment of ${payment.currency_symbol}${payment.total} will be refunded.`
+          : '';
+        return sendPodCancelledEmail({
+          to: user.email,
+          name: user.name,
+          pod_title: podTitle,
+          when,
+          reason,
+          refund_line: refundLine,
+        });
+      }),
+      ...payments.map((payment) =>
+        sendPodRefundEmail({
+          to: payment.user_email,
+          name: payment.user_name,
+          pod_title: podTitle,
+          amount: `${payment.currency_symbol}${payment.total}`,
+          reason,
+        })
+      ),
+    ]);
+  } catch (err) {
+    logs.server.error('pod', logComponent, {
+      error: err,
+      msg: 'delete emails failed',
+    });
+  }
+
+  return payments.length;
+}
+
+/**
+ * Loads the venue the caller owns for this pod. The pod must actually sit at an
+ * APPROVED venue booking, and that venue must belong to the caller.
+ */
+async function assertOwnedVenue(doc: any, userId: string) {
+  const venue =
+    doc.venue_id && doc.venue_approval_status === 'APPROVED'
+      ? await VenueModel.findOne({
+          _id: doc.venue_id,
+          owner_user_id: new Types.ObjectId(userId),
+        }).select('_id')
+      : null;
+  if (!venue) {
+    throw new GraphQLError('This pod is not booked at a venue you own', {
+      extensions: { code: 'FORBIDDEN' },
+    });
+  }
 }
 
 /** Best-effort in-app note to the venue owner: a host requested one of their
@@ -1634,63 +1773,64 @@ export const podService = {
   async hostRemove(id: string, userId: string, reasonSubject: string, reasonNote?: string | null) {
     const doc = await findHostedPod(id, userId);
     const reason = buildDeleteReason(reasonSubject, reasonNote);
-    const when = podWhenLabel(doc);
-    const podTitle = doc.pod_title;
+    await refundAndNotifyCancellation(doc, userId, reason, 'HOST');
+    return true;
+  },
 
-    const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
-    const refundedByUser = new Map<string, any>();
-    for (const payment of payments) {
-      payment.status = 'REFUNDED';
-      (payment as any).metadata = {
-        ...(payment as any).metadata,
-        refund_reason: reason,
-        refunded_at: new Date().toISOString(),
-        refund_initiated_by: 'HOST',
-        refund_initiator_id: userId,
-      };
-      payment.markModified('metadata');
-      await payment.save();
-      refundedByUser.set(String(payment.user_id), payment);
+  /**
+   * Venue owner cancels an UPCOMING pod booked at their venue: refunds every
+   * SUCCESS payment, emails the audience and soft-deletes the pod (audit source
+   * VENUE_OWNER, so Finance → Cancel & Refunds lists it as kind VENUE), then
+   * deducts the Account Health penalty configured in Admin → Pods → Pod
+   * Settings from that venue. Returns the penalty and the resulting score.
+   */
+  async venueCancelPod(podId: string, userId: string, reason: string) {
+    if (!Types.ObjectId.isValid(podId)) {
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-
-    const audience = await podAudience(doc, userId);
-    await this.remove(id, { actorUserId: userId, source: 'HOST', note: reason });
-
-    // Best-effort after the delete commits: cancellation + refund emails.
-    try {
-      await Promise.allSettled([
-        ...audience.map((user) => {
-          const payment = refundedByUser.get(user.user_id);
-          const refundLine = payment
-            ? `Your payment of ${payment.currency_symbol}${payment.total} will be refunded.`
-            : '';
-          return sendPodCancelledEmail({
-            to: user.email,
-            name: user.name,
-            pod_title: podTitle,
-            when,
-            reason,
-            refund_line: refundLine,
-          });
-        }),
-        ...payments.map((payment) =>
-          sendPodRefundEmail({
-            to: payment.user_email,
-            name: payment.user_name,
-            pod_title: podTitle,
-            amount: `${payment.currency_symbol}${payment.total}`,
-            reason,
-          })
-        ),
-      ]);
-    } catch (err) {
-      logs.server.error('pod', 'hostRemove', {
-        error: err,
-        msg: 'delete emails failed',
+    const trimmed = String(reason ?? '').trim();
+    if (trimmed.length < 5) {
+      throw new GraphQLError('Please describe why you are cancelling this pod', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const note = trimmed.slice(0, 500);
+    // Deliberately NOT includeDeleted: an already-cancelled pod is a clean
+    // NOT_FOUND before any refund or penalty runs.
+    const doc = await PodModel.findById(podId);
+    if (!doc) notFound();
+    await assertOwnedVenue(doc!, userId);
+    if (bucketForPod(doc!, Date.now()) !== 'upcoming') {
+      throw new GraphQLError('Only an upcoming pod can be cancelled', {
+        extensions: { code: 'BAD_REQUEST' },
       });
     }
 
-    return true;
+    const podTitle = doc!.pod_title;
+    const venueId = String(doc!.venue_id);
+    const refunded_count = await refundAndNotifyCancellation(doc!, userId, note, 'VENUE_OWNER');
+    // A concurrent cancel committed the delete first and already took the
+    // penalty. Report that cancellation's outcome — docking the venue a second
+    // time for one cancellation is the bug this guard exists to stop.
+    if (refunded_count === null) {
+      const current = await accountHealthService.getVenueHealth(venueId);
+      return {
+        pod_id: podId,
+        health_penalty: 0,
+        venue_health_score: current.total_score,
+        refunded_count: 0,
+      };
+    }
+
+    const health_penalty = await settingsService.getVenueCancelHealthPenalty();
+    const venue_health_score = await accountHealthService.applySystemPenalty({
+      subject_type: 'VENUE',
+      subject_id: venueId,
+      points: health_penalty,
+      remark: `Venue owner cancelled the pod "${podTitle}". Reason: ${note}`,
+    });
+
+    return { pod_id: podId, health_penalty, venue_health_score, refunded_count };
   },
 
   async addStatus(id: string, viewerId: string, media: any, isAdmin = false) {
@@ -1713,25 +1853,10 @@ export const podService = {
 
   async remove(id: string, audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null }) {
     // Portals now list cancelled pods, so Delete can be pressed on one twice.
-    // Load it either way and answer idempotently instead of a confusing 404 —
-    // the slot and inventory releases below already ran the first time.
-    const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
-    if (!doc) notFound();
-    if (doc.deleted_at) return true;
-    // Soft delete: release the venue slot + reserved inventory, then mark the
-    // pod deleted (keep the row so bookings/payments/tickets/history survive).
-    await applyProductDeltas(doc!.product_requests ?? [], []);
-    await venueSlotService.releaseForPod(String(doc!._id));
-    doc!.deleted_at = new Date();
-    doc!.is_active = false;
-    await doc!.save();
-    await podAuditService.record({
-      pod: doc,
-      action: 'DELETE',
-      source: audit?.source ?? 'SYSTEM',
-      actorUserId: audit?.actorUserId,
-      note: audit?.note,
-    });
+    // softDeletePod answers idempotently instead of a confusing 404 — the slot
+    // and inventory releases already ran the first time — so this stays `true`
+    // whether or not this particular call is the one that committed the delete.
+    await softDeletePod(id, audit);
     return true;
   },
 

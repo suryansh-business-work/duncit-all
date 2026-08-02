@@ -1,16 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Card, MenuItem, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
+import { Alert, Card, MenuItem, Snackbar, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import type { TableFilterValue, TableQueryState } from '@duncit/table';
 import { MY_VENUES } from '../register-venue-page/queries';
 import VenuePodsTable from './VenuePodsTable';
 import VenuePodDetailDialog from './VenuePodDetailDialog';
+import VenueCancelPodDialog from './VenueCancelPodDialog';
 import {
   applyVenuePodsQuery,
+  cancelSuccessMessage,
   tabCounts,
   TAB_LABELS,
   TAB_ORDER,
   VENUE_PODS,
+  type VenueCancelPodResult,
   type VenuePodRow,
   type VenuePodTab,
 } from './queries';
@@ -21,6 +24,8 @@ export default function VenuePodsPage() {
   const [venueId, setVenueId] = useState<string>(ALL_VENUES);
   const [tab, setTab] = useState<VenuePodTab>('ALL');
   const [selected, setSelected] = useState<VenuePodRow | null>(null);
+  const [podToCancel, setPodToCancel] = useState<VenuePodRow | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const refetchRef = useRef<(() => void) | null>(null);
 
   const venuesQuery = useQuery(MY_VENUES, { fetchPolicy: 'cache-first' });
@@ -52,6 +57,14 @@ export default function VenuePodsPage() {
     () => [{ field: 'tab', op: 'eq', value: tab }],
     [tab],
   );
+
+  // Refetching swaps the `rows` identity, and the effect above pokes the table
+  // so the cancelled pod flips to Cancelled without a manual refresh.
+  const handleCancelled = async (result: VenueCancelPodResult) => {
+    setPodToCancel(null);
+    setMessage(cancelSuccessMessage(result));
+    await podsQuery.refetch();
+  };
 
   return (
     <Stack spacing={2.5} sx={{ width: '100%' }}>
@@ -105,8 +118,20 @@ export default function VenuePodsPage() {
         externalFilters={externalFilters}
         refetchRef={refetchRef}
         onRowClick={setSelected}
+        onCancel={setPodToCancel}
       />
       <VenuePodDetailDialog row={selected} onClose={() => setSelected(null)} />
+      <VenueCancelPodDialog
+        row={podToCancel}
+        onClose={() => setPodToCancel(null)}
+        onCancelled={handleCancelled}
+      />
+      <Snackbar
+        open={!!message}
+        autoHideDuration={4000}
+        message={message ?? ''}
+        onClose={() => setMessage(null)}
+      />
     </Stack>
   );
 }

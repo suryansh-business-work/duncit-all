@@ -222,6 +222,13 @@ export const podTypeDefs = /* GraphQL */ `
     pod_hosts_id: [ID!]
     location_id: ID
     venue_id: ID
+    """
+    Re-route the pod to a different slot (Admin / Club Admin edit at any stage).
+    A partner's slot re-enters that venue's approval queue exactly like a host
+    resubmission; the previously held slot is released. Omit to leave the
+    pod's current booking untouched.
+    """
+    venue_slot_id: ID
     club_id: ID
     zone_name: String
     pod_mode: PodMode
@@ -300,7 +307,8 @@ export const podTypeDefs = /* GraphQL */ `
 
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
-    podsTable(query: TableQueryInput): PodTablePage!
+    "include_deleted also lists cancelled pods — honored for admin reviewers only."
+    podsTable(query: TableQueryInput, include_deleted: Boolean): PodTablePage!
     myHostPods(from: String, to: String): [Pod!]!
     "Table page over the caller's own hosted pods (myHostPods rows)."
     myHostPodsTable(query: TableQueryInput): PodTablePage!

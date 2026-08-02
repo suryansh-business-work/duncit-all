@@ -43,7 +43,22 @@ describe('useStatusUpload', () => {
       fileName: 'x.jpg',
       mimeType: 'image/jpeg',
       mediaType: 'IMAGE',
+      // No club context on the home rail — a personal story.
+      clubId: null,
     });
+  });
+
+  it('attaches the club when the hook is scoped to one (club story upload)', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [{ base64: 'abc', fileName: 'x.jpg', mimeType: 'image/jpeg', type: 'image' }],
+    });
+    const { result } = renderHook(() => useStatusUpload({ clubId: 'club-1' }));
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(mockPublish).toHaveBeenCalledWith(expect.objectContaining({ clubId: 'club-1' }));
   });
 
   it('pauses a picked video on the preview sheet, then publishes it on confirm', async () => {
@@ -83,6 +98,7 @@ describe('useStatusUpload', () => {
       mimeType: 'video/mp4',
       mediaType: 'VIDEO',
       trim: null,
+      clubId: null,
     });
   });
 

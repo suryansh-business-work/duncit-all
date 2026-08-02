@@ -5,21 +5,26 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 
 interface Props {
-  pod: any;
+  pod: { is_deleted?: boolean | null };
   onEdit: (pod: any) => void;
   onQuickEdit: (pod: any) => void;
   onDelete: (pod: any) => void;
   onComplete: (pod: any) => void;
 }
 
+/** A cancelled pod stays editable (that is the point of listing it), but it can
+ * no longer be completed or deleted — both would fail at the server. */
 export default function PodActionButtons({ pod, onEdit, onQuickEdit, onDelete, onComplete }: Readonly<Props>) {
+  const cancelled = !!pod.is_deleted;
   return (
     <Stack direction="row" spacing={0.25} justifyContent="flex-end">
-      <Tooltip title="Complete this pod">
-        <IconButton size="small" color="success" onClick={() => onComplete(pod)}>
-          <TaskAltIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      {!cancelled && (
+        <Tooltip title="Complete this pod">
+          <IconButton size="small" color="success" onClick={() => onComplete(pod)}>
+            <TaskAltIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
       <Tooltip title="Quick edit (name, description, images)">
         <IconButton size="small" onClick={() => onQuickEdit(pod)}>
           <EditNoteIcon fontSize="small" />
@@ -30,11 +35,13 @@ export default function PodActionButtons({ pod, onEdit, onQuickEdit, onDelete, o
           <EditIcon fontSize="small" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Delete">
-        <IconButton size="small" onClick={() => onDelete(pod)}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      {!cancelled && (
+        <Tooltip title="Delete">
+          <IconButton size="small" onClick={() => onDelete(pod)}>
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   );
 }

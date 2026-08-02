@@ -10,6 +10,7 @@ export const StatusFeedDocument = gql(`
     stories {
       id
       author_id
+      club_id
       author {
         user_id
         full_name
@@ -36,6 +37,27 @@ export const StatusFeedDocument = gql(`
       liked_by_me
       likes_count
       views_count
+    }
+  }
+`);
+
+/** A club's live 24h stories — mirrors mWeb's CLUB_STORIES. */
+export const ClubStoriesDocument = gql(`
+  query MobileClubStories($clubId: ID!) {
+    clubStories(club_id: $clubId) {
+      id
+      club_id
+      image_url
+      media_type
+      caption
+      created_at
+      expires_at
+      seen_by_me
+      author {
+        user_id
+        full_name
+        profile_photo
+      }
     }
   }
 `);

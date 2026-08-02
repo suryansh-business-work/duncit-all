@@ -34,8 +34,28 @@ const ashaGroup = {
   },
 };
 
+/** A live club story — the only legitimate source of a club ring. */
+const clubStory = (over: Record<string, unknown> = {}) => ({
+  id: 'cs1',
+  club_id: 'c1',
+  image_url: 'club-story.jpg',
+  media_type: 'IMAGE',
+  caption: null,
+  created_at: '2026-01-01T00:00:00.000Z',
+  expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+  seen_by_me: false,
+  liked_by_me: false,
+  likes_count: 0,
+  ...over,
+});
+
 beforeEach(() => {
-  mockedStatus.mockReturnValue({ statuses: [ashaGroup], mine: null, isLoading: false });
+  mockedStatus.mockReturnValue({
+    statuses: [ashaGroup],
+    clubStories: [clubStory()],
+    mine: null,
+    isLoading: false,
+  });
   mockedFollowing.mockReturnValue({
     people: [
       { user_id: 'u1', full_name: 'Asha Verma', first_name: 'Asha', profile_photo: 'p.jpg' },
@@ -63,15 +83,68 @@ describe('useStoryRail (bug 3)', () => {
     const { result } = renderHook(() => useStoryRail());
     const [club, user] = result.current.items;
     expect(club?.target).toEqual({ kind: 'club', id: 'c1', title: 'Runners' });
-    expect(club?.cover.mediaType).toBe('VIDEO');
+    expect(club?.cover.mediaType).toBe('IMAGE');
     expect(user?.target).toEqual({ kind: 'user', id: 'u1' });
     expect(user?.subLabel).toBe('Asha Verma');
+  });
+
+  it('fills in defaults for a club story with nullish optional fields', () => {
+    mockedStatus.mockReturnValue({
+      statuses: [],
+      clubStories: [
+        clubStory({
+          media_type: null,
+          caption: null,
+          seen_by_me: null,
+          liked_by_me: null,
+          likes_count: null,
+        }),
+      ],
+      mine: null,
+      isLoading: false,
+    });
+    const { result } = renderHook(() => useStoryRail());
+    expect(result.current.items[0]?.slides[0]).toMatchObject({
+      mediaType: 'IMAGE',
+      caption: null,
+      seenByMe: false,
+      likedByMe: false,
+      likesCount: 0,
+    });
+  });
+
+  it('carries a club video story through as a VIDEO slide', () => {
+    mockedStatus.mockReturnValue({
+      statuses: [],
+      clubStories: [clubStory({ media_type: 'VIDEO' })],
+      mine: null,
+      isLoading: false,
+    });
+    const { result } = renderHook(() => useStoryRail());
+    expect(result.current.items[0]?.slides[0]?.mediaType).toBe('VIDEO');
+  });
+
+  it("orders a club's slides oldest → newest", () => {
+    mockedStatus.mockReturnValue({
+      statuses: [],
+      clubStories: [
+        clubStory({ id: 'newer', created_at: '2026-02-01T00:00:00.000Z' }),
+        clubStory({ id: 'older', created_at: '2026-01-01T00:00:00.000Z' }),
+      ],
+      mine: null,
+      isLoading: false,
+    });
+    const { result } = renderHook(() => useStoryRail());
+    const club = result.current.items.find((i) => i.key === 'club-c1');
+    expect(club?.slides.map((s) => s.id)).toEqual(['older', 'newer']);
+    // The ring thumbnail is the NEWEST story, like every other rail.
+    expect(club?.cover.id).toBe('newer');
   });
 
   it('skips clubs without media and people without an active story', () => {
     const { result } = renderHook(() => useStoryRail());
     const keys = result.current.items.map((i) => i.key);
-    expect(keys).not.toContain('club-c2'); // no media
+    expect(keys).not.toContain('club-c2'); // no live story
     expect(keys).not.toContain('user-u2'); // no story
   });
 
@@ -83,7 +156,12 @@ describe('useStoryRail (bug 3)', () => {
       slides: ashaGroup.slides,
       cover: ashaGroup.cover,
     };
-    mockedStatus.mockReturnValue({ statuses: [storyGroup], mine: null, isLoading: false });
+    mockedStatus.mockReturnValue({
+      statuses: [storyGroup],
+      clubStories: [clubStory({ id: 'cs3', club_id: 'c3', media_type: null })],
+      mine: null,
+      isLoading: false,
+    });
     mockedFollowing.mockReturnValue({
       people: [{ user_id: 'u3', full_name: null, first_name: null, profile_photo: null }],
       followedClubs: [
@@ -108,7 +186,12 @@ describe('useStoryRail (bug 3)', () => {
   });
 
   it('passes through my own story and a combined loading flag', () => {
-    mockedStatus.mockReturnValue({ statuses: [], mine: ashaGroup, isLoading: true });
+    mockedStatus.mockReturnValue({
+      statuses: [],
+      clubStories: [],
+      mine: ashaGroup,
+      isLoading: true,
+    });
     mockedFollowing.mockReturnValue({
       people: [],
       followedClubs: [],

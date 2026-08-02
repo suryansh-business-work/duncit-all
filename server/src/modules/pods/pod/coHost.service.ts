@@ -6,6 +6,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel, type CoHostStatus, type IPod } from './pod.model';
+import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 
 /**
  * Co-hosting.
@@ -115,6 +116,16 @@ async function approvedHostUserIdsInSubCategory(subCategoryId: string): Promise<
   return new Set(hosts.map((h: any) => String(h.user_id)));
 }
 
+/**
+ * Co-host roster changes are a critical action, so they land in the same
+ * AI-monitored trail the portals read. The roster lives in `co_hosts`, which
+ * is not a diffed field, so the change is carried in the note (no `before` —
+ * an empty diff must still record, not be swallowed as a no-op edit).
+ */
+async function recordCoHostAudit(pod: IPod, actorUserId: string, note: string) {
+  await podAuditService.record({ pod, action: 'UPDATE', source: 'HOST', actorUserId, note });
+}
+
 /** Fire-and-forget in-app notification; a failure must never fail the mutation. */
 async function notify(userIds: string[], title: string, body: string) {
   if (!userIds.length) return;
@@ -197,6 +208,7 @@ export const coHostService = {
       } as any);
     }
     await pod.save();
+    await recordCoHostAudit(pod, userId, `Co-host invited (${inviteeId})`);
     await notify(
       [String(inviteeId)],
       'Co-host invite',
@@ -214,6 +226,7 @@ export const coHostService = {
     ) as any;
     if (pod.co_hosts.length === before) notFound('That co-host is not on this pod');
     await pod.save();
+    await recordCoHostAudit(pod, userId, `Co-host removed (${coHostId})`);
     return pod;
   },
 
@@ -230,6 +243,7 @@ export const coHostService = {
     entry.status = accept ? 'ACCEPTED' : 'DECLINED';
     entry.responded_at = new Date();
     await pod.save();
+    await recordCoHostAudit(pod, userId, `Co-host invite ${accept ? 'accepted' : 'declined'}`);
 
     const user = await UserModel.findById(userId).select('profile.first_name profile.last_name');
     const who =

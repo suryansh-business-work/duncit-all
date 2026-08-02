@@ -96,6 +96,15 @@ const club = {
   club_moments: [{ url: 'http://x/moment.jpg', type: 'IMAGE' }],
 };
 
+/** A live club story — the club ring's only legitimate source. */
+const clubStory = {
+  id: 'cs1',
+  club_id: 'c1',
+  image_url: 'http://x/club-story.jpg',
+  media_type: 'IMAGE',
+  expires_at: new Date(Date.now() + 3600000).toISOString(),
+};
+
 const pod = {
   id: 'p1',
   pod_id: 'pod9',
@@ -144,6 +153,7 @@ function renderRail(props: Partial<Parameters<typeof HomeStatusRail>[0]> = {}) {
     hostPods: [],
     followedUsers: [],
     followedPosts: [],
+    clubStories: [clubStory],
     ...props,
   };
   return render(

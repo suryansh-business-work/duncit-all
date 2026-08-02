@@ -75,6 +75,10 @@ export interface PodRow {
   is_active: boolean;
   completed_at?: string | null;
   created_at?: string | null;
+  /** Cancelled (soft-deleted) — only listed when "Include cancelled" is on. */
+  is_deleted?: boolean | null;
+  venue_approval_status?: string | null;
+  venue_slot_id?: string | null;
 }
 
 /** Same selection as PODS rows (+ created_at for the table's Created filter),
@@ -87,6 +91,9 @@ const POD_ROW_FIELDS = gql`
     pod_hosts_id
     location_id
     venue_id
+    venue_slot_id
+    venue_approval_status
+    is_deleted
     club_id
     pod_mode
     meeting_platform
@@ -133,8 +140,8 @@ const POD_ROW_FIELDS = gql`
 `;
 
 export const PODS_TABLE = gql`
-  query PodsTable($query: TableQueryInput) {
-    podsTable(query: $query) {
+  query PodsTable($query: TableQueryInput, $include_deleted: Boolean) {
+    podsTable(query: $query, include_deleted: $include_deleted) {
       total
       rows {
         ...PodRowFields
@@ -144,10 +151,11 @@ export const PODS_TABLE = gql`
   ${POD_ROW_FIELDS}
 `;
 
-/** Single-pod fetch for the /pods?edit=<id> deep-link (rows are paged now). */
+/** Single-pod fetch for the /pods?edit=<id> deep-link (rows are paged now).
+ * include_deleted so a cancelled pod stays editable from its details page. */
 export const POD_FOR_EDIT = gql`
   query PodForEdit($id: ID!) {
-    pod(pod_doc_id: $id) {
+    pod(pod_doc_id: $id, include_deleted: true) {
       ...PodRowFields
     }
   }

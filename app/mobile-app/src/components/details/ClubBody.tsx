@@ -9,6 +9,7 @@ import { ClubSegments } from '@/components/details/club/ClubSegments';
 import { ClubFriendsSection } from '@/components/details/club/ClubFriendsSection';
 import { ClubMeetupVenuesSection } from '@/components/details/club/ClubMeetupVenuesSection';
 import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
+import { ClubStoriesRail } from '@/components/details/club/ClubStoriesRail';
 import { ClubTotalMembersSection } from '@/components/details/club/ClubTotalMembersSection';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -88,6 +89,9 @@ export function ClubBody({
         busy={followBusy}
         onToggle={onToggleFollow}
       />
+      {/* Ephemeral 24h club stories + the "Add" tile — mirrors mWeb, which
+          places this directly under the club summary header. */}
+      <ClubStoriesRail clubId={club.id} clubName={club.club_name} />
       <XStack
         gap={8}
         padding={12}

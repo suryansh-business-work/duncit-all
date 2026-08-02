@@ -84,6 +84,7 @@ export const CLUB_STORIES = gql`
   query ClubStories($id: ID!) {
     clubStories(club_id: $id) {
       id
+      expires_at
       image_url
       media_type
       caption

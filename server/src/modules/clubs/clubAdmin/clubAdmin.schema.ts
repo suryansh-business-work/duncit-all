@@ -125,6 +125,15 @@ export const clubAdminTypeDefs = /* GraphQL */ `
     myAdminClubsPage(filter: MyAdminClubsFilter): ClubAdminClubsPage!
     "Max-info table page over the signed-in Club Admin's clubs ('Your Clubs' table)."
     myAdminClubsTable(query: TableQueryInput): ClubAdminClubInfoTablePage!
+    """
+    Pods across the signed-in Club Admin's clubs, scoped server-side. Shows
+    EVERY stage — including pods awaiting the venue owner's approval and
+    cancelled ones — so a club admin can open and edit a pod wherever it sits
+    in the booking cycle. Pass club_id to narrow to one of their clubs.
+    """
+    clubAdminPodsTable(club_id: ID, query: TableQueryInput): PodTablePage!
+    "Full action trail of one pod in the caller's clubs, newest first."
+    clubAdminPodAuditLogs(pod_doc_id: ID!): [PodAuditLog!]!
     "Aggregated metrics for the signed-in Club Admin's clubs."
     clubAdminDashboard(from: String, to: String): ClubAdminDashboard!
     "Table page over the dashboard's computed per-club breakdown rows."

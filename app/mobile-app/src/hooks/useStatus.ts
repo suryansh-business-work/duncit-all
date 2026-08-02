@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { isStoryLive } from '@duncit/utils';
 
 import { useStatusStore, type StatusFeed } from '@/stores/status.store';
 
@@ -76,16 +77,35 @@ export function useStatus() {
     fetch();
   }, [fetch]);
 
-  const statuses = useMemo(
-    () =>
-      groupByAuthor(data?.stories ?? [], (post) => ({
-        name: post.author?.full_name ?? 'User',
-        photo: post.author?.profile_photo,
-      })),
+  // A story past its 24h window never renders, even when the zustand cache was
+  // filled before the boundary — the server filter is authoritative, this
+  // keeps a long-open session honest (mirrors mWeb's isStoryLive guard).
+  const live = useMemo(
+    () => (data?.stories ?? []).filter((post) => isStoryLive(post.expires_at)),
     [data?.stories],
   );
 
-  const mine = useMemo(() => groupByAuthor(data?.myStories ?? [])[0] ?? null, [data?.myStories]);
+  const statuses = useMemo(
+    () =>
+      // Club-attached stories belong to their club's ring, not the author's.
+      groupByAuthor(
+        live.filter((post) => !post.club_id),
+        (post) => ({
+          name: post.author?.full_name ?? 'User',
+          photo: post.author?.profile_photo,
+        }),
+      ),
+    [live],
+  );
 
-  return { statuses, mine, isLoading, refetch: () => fetch(true) };
+  /** Live stories attached to a club, keyed by club id — the club rings. */
+  const clubStories = useMemo(() => live.filter((post) => !!post.club_id), [live]);
+
+  const mine = useMemo(
+    () =>
+      groupByAuthor((data?.myStories ?? []).filter((p) => isStoryLive(p.expires_at)))[0] ?? null,
+    [data?.myStories],
+  );
+
+  return { statuses, clubStories, mine, isLoading, refetch: () => fetch(true) };
 }

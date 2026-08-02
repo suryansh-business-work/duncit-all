@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
 
 import { useFollowing } from '@/hooks/useFollowing';
-import { useStatus, type StatusGroup, type StatusSlide } from '@/hooks/useStatus';
+import { useStatus, type StatusGroup, type StatusPost, type StatusSlide } from '@/hooks/useStatus';
+
+/** A story row carrying the club it was posted to. */
+type ClubStoryPost = StatusPost;
 
 /** Where the viewer's "Open details" button navigates for a rail item. Clubs carry
  * their URL slug (clubSlug) so the deep link matches mWeb's /club/:clubSlug. */
@@ -15,23 +18,21 @@ export interface StoryRailItem extends StatusGroup {
   target?: StoryTarget;
 }
 
-type Media = { url?: string | null; type?: string | null };
-
-/** Convert a club/pod media list into viewer slides (drops urlless entries). */
-function mediaToSlides(key: string, media: readonly Media[]): StatusSlide[] {
-  return media
-    .filter((m) => !!m?.url)
-    .map((m, index) => ({
-      id: `${key}-${index}`,
-      imageUrl: m.url,
-      mediaType: String(m.type ?? 'IMAGE').toUpperCase() === 'VIDEO' ? 'VIDEO' : 'IMAGE',
-      caption: null,
-      createdAt: '',
-      expiresAt: null,
-      // Club/pod feature media aren't real stories: no seen/like tracking.
-      seenByMe: false,
-      likedByMe: false,
-      likesCount: 0,
+/** Convert a club's LIVE stories into viewer slides, oldest → newest. */
+function clubStoriesToSlides(stories: readonly ClubStoryPost[]): StatusSlide[] {
+  return stories
+    .slice()
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+    .map((story) => ({
+      id: story.id,
+      imageUrl: story.image_url,
+      mediaType: String(story.media_type ?? 'IMAGE').toUpperCase() === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+      caption: story.caption ?? null,
+      createdAt: story.created_at,
+      expiresAt: story.expires_at,
+      seenByMe: story.seen_by_me ?? false,
+      likedByMe: story.liked_by_me ?? false,
+      likesCount: story.likes_count ?? 0,
     }));
 }
 
@@ -42,7 +43,9 @@ function toGroup(
   subLabel: string,
   target: StoryTarget,
 ): StoryRailItem | null {
-  const cover = slides[0];
+  // Slides play oldest → newest, but the ring shows the NEWEST story, matching
+  // groupByAuthor and both club surfaces.
+  const cover = slides.at(-1);
   if (!cover) return null;
   return { key, authorId: key, name, photo: cover.imageUrl, slides, cover, subLabel, target };
 }
@@ -54,16 +57,19 @@ function toGroup(
  * stories" feed so both platforms show the same followed set.
  */
 export function useStoryRail() {
-  const { statuses, mine, isLoading: statusLoading } = useStatus();
+  const { statuses, clubStories, mine, isLoading: statusLoading } = useStatus();
   const { people, followedClubs, isLoading: followLoading } = useFollowing();
 
   const items = useMemo<StoryRailItem[]>(() => {
+    // A club ring is built from that club's LIVE 24h stories. It used to render
+    // the club's permanent feature gallery, which has no expiry — those rings
+    // sat in the rail forever looking exactly like a real story.
     const clubItems = followedClubs
       .map((club) =>
         toGroup(
           `club-${club.id}`,
           club.club_name,
-          mediaToSlides(`club-${club.id}`, club.club_feature_images_and_videos ?? []),
+          clubStoriesToSlides(clubStories.filter((story) => story.club_id === club.id)),
           'Club status',
           { kind: 'club', id: club.id, clubSlug: club.club_id, title: club.club_name },
         ),
@@ -89,7 +95,7 @@ export function useStoryRail() {
     });
 
     return [...clubItems, ...userItems];
-  }, [statuses, people, followedClubs]);
+  }, [statuses, clubStories, people, followedClubs]);
 
   return { mine, items, isLoading: statusLoading || followLoading };
 }

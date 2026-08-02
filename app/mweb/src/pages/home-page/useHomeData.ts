@@ -397,8 +397,17 @@ export function useHomeData({
 
   const followedPosts = useMemo(() => {
     const userIds = new Set(followingUserIds);
-    return (data?.stories ?? []).filter((post: any) => userIds.has(post.author_id)).slice(0, 36);
+    // A club-attached story belongs to its club's ring, not its author's.
+    return (data?.stories ?? [])
+      .filter((post: any) => !post.club_id && userIds.has(post.author_id))
+      .slice(0, 36);
   }, [data?.stories, followingUserIds]);
+
+  /** Live stories attached to a club — the source of the rail's club rings. */
+  const clubStories = useMemo(
+    () => (data?.stories ?? []).filter((post: any) => !!post.club_id),
+    [data?.stories],
+  );
 
   // All of my own active (non-expired) stories, newest first — the rail groups
   // them as add-on slides instead of letting a new upload overwrite the old one.
@@ -423,6 +432,7 @@ export function useHomeData({
     followedClubs,
     hostPods,
     followedPosts,
+    clubStories,
     myStories,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
     totalPods: activePods.length,

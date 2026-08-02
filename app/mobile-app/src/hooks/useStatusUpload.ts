@@ -18,7 +18,8 @@ interface PendingVideoAsset extends PendingStoryVideo {
  * upload it and publish the story. Picked videos pause on the preview sheet —
  * clips over the 15s cap must be trimmed there before posting. Mirrors mWeb's
  * StatusUploadProvider. */
-export function useStatusUpload() {
+export function useStatusUpload(options?: { clubId?: string | null }) {
+  const clubId = options?.clubId ?? null;
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   // A picked video waiting on the preview / 15s-trim sheet (Bug 3).
@@ -35,7 +36,7 @@ export function useStatusUpload() {
       () => undefined,
     );
     try {
-      await publish(asset);
+      await publish({ ...asset, clubId });
       scheduleLocalNotification(
         'Story posted 🎉',
         'Your story is live for the next 24 hours.',

@@ -39,6 +39,13 @@ export const clubAdminResolvers = {
     },
     clubAdminHostSearch: (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) =>
       clubAdminService.searchHosts(actorOf(ctx), args.search),
+    clubAdminPodsTable: (
+      _p: unknown,
+      args: { club_id?: string | null; query?: any },
+      ctx: GraphQLContext
+    ) => clubAdminService.podsTable(actorOf(ctx), args.club_id, args.query),
+    clubAdminPodAuditLogs: (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) =>
+      clubAdminService.podAuditLogs(actorOf(ctx), args.pod_doc_id),
   },
   Mutation: {
     clubAdminCreatePod: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

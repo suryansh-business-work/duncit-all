@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PostModel, type IPost } from './post.model';
 import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
+import { ClubModel } from '@modules/clubs/club/club.model';
 import { logs } from '@observability/log';
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -41,6 +42,39 @@ const toPub = (p: IPost, viewerId?: string | null) => ({
 function assertId(id: string, label = 'id') {
   if (!Types.ObjectId.isValid(id))
     throw new GraphQLError(`Invalid ${label}`, { extensions: { code: 'BAD_USER_INPUT' } });
+}
+
+/**
+ * An expired story is GONE by every route, not just the rails: the TTL monitor
+ * only sweeps about once a minute, and during that lag a doc is still
+ * findable by id. Every path that loads a post by id runs this, so a story
+ * past its 24h can never be read, viewed, liked or commented on.
+ */
+function isExpiredStory(doc: Pick<IPost, 'kind' | 'expires_at'> | null): boolean {
+  return !!doc && doc.kind === 'STORY' && !!doc.expires_at && doc.expires_at <= new Date();
+}
+
+/**
+ * A club story is posted by the club's community, so the author must actually
+ * belong to it — a follower, or one of its admins. Without this any signed-in
+ * user could drop a story into any club id (even one that does not exist).
+ */
+async function assertMayPostToClub(clubId: Types.ObjectId, authorId: string) {
+  const author = new Types.ObjectId(authorId);
+  const club = await ClubModel.findById(clubId).select('admin_user_ids').lean();
+  if (!club) {
+    throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+  const isAdmin = ((club as any).admin_user_ids ?? []).some(
+    (id: Types.ObjectId) => String(id) === authorId,
+  );
+  if (isAdmin) return;
+  const follows = await ClubFollowerModel.exists({ club_id: clubId, user_id: author });
+  if (!follows) {
+    throw new GraphQLError('Follow this club to post a story to it', {
+      extensions: { code: 'FORBIDDEN' },
+    });
+  }
 }
 
 // Reject anything that isn't a sane media reference. The URL must be an
@@ -163,10 +197,7 @@ export const postService = {
   async getById(id: string, viewerId?: string | null) {
     assertId(id);
     const doc = await PostModel.findById(id);
-    // The list queries filter expired stories and the TTL index eventually
-    // deletes them, but a direct id stays resolvable during the sweep lag —
-    // an expired story must be gone by EVERY route, not just the rails.
-    if (doc?.kind === 'STORY' && doc.expires_at && doc.expires_at <= new Date()) return null;
+    if (isExpiredStory(doc)) return null;
     return doc ? toPub(doc, viewerId) : null;
   },
 
@@ -181,6 +212,7 @@ export const postService = {
     if (kind === 'STORY' && input.club_id) {
       assertId(input.club_id, 'club_id');
       clubId = new Types.ObjectId(input.club_id);
+      await assertMayPostToClub(clubId, authorId);
     }
     const doc = await PostModel.create({
       author_id: new Types.ObjectId(authorId),
@@ -201,6 +233,9 @@ export const postService = {
     assertId(id);
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    // An expired story is unreachable by id too — never viewable, likeable
+    // or commentable during the TTL sweep lag.
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     if (String(doc.author_id) !== viewerId)
       throw new GraphQLError('Not allowed', { extensions: { code: 'FORBIDDEN' } });
     await doc.deleteOne();
@@ -216,6 +251,9 @@ export const postService = {
     assertId(id);
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    // An expired story is unreachable by id too — never viewable, likeable
+    // or commentable during the TTL sweep lag.
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     const isOwner = String(doc.author_id) === viewerId;
     const alreadyViewed = (doc.views || []).some((v) => String(v.user_id) === viewerId);
     if (!isOwner && !alreadyViewed) {
@@ -230,6 +268,9 @@ export const postService = {
     assertId(id);
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    // An expired story is unreachable by id too — never viewable, likeable
+    // or commentable during the TTL sweep lag.
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     if (String(doc.author_id) !== viewerId)
       throw new GraphQLError('Not allowed', { extensions: { code: 'FORBIDDEN' } });
     return (doc.views || [])
@@ -242,6 +283,9 @@ export const postService = {
     assertId(id);
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    // An expired story is unreachable by id too — never viewable, likeable
+    // or commentable during the TTL sweep lag.
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     const idx = doc.likes.findIndex((x) => String(x) === viewerId);
     const nowLiked = idx < 0;
     if (idx >= 0) doc.likes.splice(idx, 1);
@@ -273,6 +317,9 @@ export const postService = {
       });
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    // An expired story is unreachable by id too — never viewable, likeable
+    // or commentable during the TTL sweep lag.
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     doc.comments.push({
       author_id: new Types.ObjectId(viewerId),
       text: trimmed,
@@ -295,6 +342,9 @@ export const postService = {
     assertId(commentId, 'comment_id');
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    // An expired story is unreachable by id too — never viewable, likeable
+    // or commentable during the TTL sweep lag.
+    if (isExpiredStory(doc)) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     const c = doc.comments.find((x) => String(x._id) === commentId);
     if (!c) throw new GraphQLError('Comment not found', { extensions: { code: 'NOT_FOUND' } });
     // Comment author OR post author may delete a comment

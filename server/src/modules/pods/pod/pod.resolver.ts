@@ -216,8 +216,18 @@ export const podResolvers = {
   Query: {
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
       podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
-    podsTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
-      podService.table(args.query, { includePendingApproval: canReviewPendingPods(ctx) }),
+    podsTable: async (
+      _p: unknown,
+      args: { query?: any; include_deleted?: boolean | null },
+      ctx: GraphQLContext
+    ) => {
+      const canReview = canReviewPendingPods(ctx);
+      return podService.table(args.query, {
+        includePendingApproval: canReview,
+        // Cancelled pods stay editable, so reviewers must be able to find them.
+        includeDeleted: args.include_deleted === true && canReview,
+      });
+    },
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return podService.listMyHostPods(user.id, { from: args.from, to: args.to });
@@ -291,7 +301,13 @@ export const podResolvers = {
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, ADMIN_WRITE);
-      return podService.update(args.pod_doc_id, args.input, { actorUserId: user.id, source: 'ADMIN' });
+      // Admins edit a pod at any stage — including a cancelled (soft-deleted)
+      // one, which every other caller cannot even read.
+      return podService.update(args.pod_doc_id, args.input, {
+        actorUserId: user.id,
+        source: 'ADMIN',
+        includeDeleted: true,
+      });
     },
     inviteCoHost: async (
       _p: unknown,

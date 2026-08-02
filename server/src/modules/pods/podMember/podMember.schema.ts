@@ -128,6 +128,44 @@ export const podMemberTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "One filled Backout seat on a pod — who released the spot and who took it."
+  type PodSpotFill {
+    "Permanent Backout ID of the filled request (DUN-BKO-000001)."
+    backout_no: String!
+    backed_out_user_id: ID!
+    backed_out_user_name: String
+    backed_out_profile_photo: String
+    "Null on requests filled before the replacement was recorded."
+    replacement_user_id: ID
+    replacement_user_name: String
+    replacement_profile_photo: String
+    filled_at: String!
+  }
+
+  "Admin/Finance: one person on a pod — host, attendee or backed-out member."
+  type AdminPodAttendee {
+    "PodMember row id — null for people without a membership row (host seat)."
+    member_id: ID
+    user_id: ID!
+    full_name: String
+    email: String
+    phone: String
+    profile_photo: String
+    is_host: Boolean!
+    "Null for people without a membership row (the host's own free seat)."
+    status: MembershipStatus
+    joined_at: String
+    backed_out_at: String
+    source: JoinSource
+    refund_status: RefundStatus
+    payment_id: ID
+    "Backout ID of the filled request when this member's seat was rebooked."
+    backout_no: String
+    "Set when this member backed out and a replacement filled the seat."
+    replaced_by_user_id: ID
+    replaced_by_name: String
+  }
+
   "One booking resolved from a booking deep link (the receipt email's View Booking CTA)."
   type BookingDetail {
     "PodMember id — the booking identifier carried in the deep link."
@@ -156,6 +194,10 @@ export const podMemberTypeDefs = /* GraphQL */ `
     myPodMemberships(status: MembershipStatus): [PodMember!]!
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
     podMembers(pod_doc_id: ID!, status: MembershipStatus): [PodMember!]!
+    "Every filled Backout seat of a pod — struck-through attendee rows (public)."
+    podSpotFills(pod_doc_id: ID!): [PodSpotFill!]!
+    "Admin/Finance: everyone on a pod with contact info and replacement links."
+    adminPodAttendees(pod_doc_id: ID!): [AdminPodAttendee!]!
     referralLookup(token: String!): PodMember
     "Resolve a booking deep link. Only the user who owns the booking may read it."
     bookingDetail(booking_id: ID!): BookingDetail!

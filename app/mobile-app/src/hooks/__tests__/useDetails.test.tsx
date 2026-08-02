@@ -105,12 +105,14 @@ describe('useResolvedPodId / useResolvedClubId', () => {
 
 describe('usePodDetails / useClubDetails', () => {
   it('loads the pod, the viewer + the resolved venue/location', async () => {
-    mockRequest.mockResolvedValueOnce({
-      me: { user_id: 'me', profile_photo: 'http://img/me.jpg', saved_pod_ids: ['p1'] },
-      pod: { id: 'p1', venue_id: 'v1', location_id: 'l1' },
-      publicVenues: [{ id: 'v1', venue_name: 'Hall' }],
-      locations: [{ id: 'l1', location_name: 'City' }],
-    });
+    mockRequest
+      .mockResolvedValueOnce({
+        me: { user_id: 'me', profile_photo: 'http://img/me.jpg', saved_pod_ids: ['p1'] },
+        pod: { id: 'p1', venue_id: 'v1', location_id: 'l1' },
+        publicVenues: [{ id: 'v1', venue_name: 'Hall' }],
+        locations: [{ id: 'l1', location_name: 'City' }],
+      })
+      .mockResolvedValueOnce({ podSpotFills: [] });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.pod?.id).toBe('p1');
@@ -131,14 +133,21 @@ describe('usePodDetails / useClubDetails', () => {
       })
       .mockResolvedValueOnce({
         publicUsersByIds: [{ user_id: 'h1', full_name: 'Host', profile_photo: null }],
-      });
+      })
+      .mockResolvedValueOnce({ podSpotFills: [] });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.people).toHaveLength(1);
-    expect(mockRequest).toHaveBeenCalledTimes(2);
-    expect(mockRequest).toHaveBeenLastCalledWith(
+    expect(mockRequest).toHaveBeenCalledTimes(3);
+    expect(mockRequest).toHaveBeenNthCalledWith(
+      2,
       expect.anything(),
       { ids: ['h1', 'u1'] },
+      { auth: true },
+    );
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { podId: 'p1' },
       { auth: true },
     );
   });
@@ -151,11 +160,38 @@ describe('usePodDetails / useClubDetails', () => {
         publicVenues: [],
         locations: [],
       })
-      .mockRejectedValueOnce(new Error('down'));
+      .mockRejectedValueOnce(new Error('down'))
+      .mockResolvedValueOnce({ podSpotFills: [] });
     const { result } = renderHook(() => usePodDetails('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.people).toEqual([]);
     expect(result.current.error).toBeUndefined();
+  });
+
+  it('loads the filled Backout seats and survives a failed lookup', async () => {
+    const fill = {
+      backout_no: 'DUN-BKO-000001',
+      backed_out_user_id: 'u1',
+      backed_out_user_name: 'Asha',
+      backed_out_profile_photo: null,
+      replacement_user_id: 'u2',
+      replacement_user_name: 'Bela',
+      filled_at: '2026-07-01T00:00:00.000Z',
+    };
+    mockRequest
+      .mockResolvedValueOnce({ me: null, pod: { id: 'p1' }, publicVenues: [], locations: [] })
+      .mockResolvedValueOnce({ podSpotFills: [fill] });
+    const { result } = renderHook(() => usePodDetails('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.spotFills).toEqual([fill]);
+
+    mockRequest
+      .mockResolvedValueOnce({ me: null, pod: { id: 'p1' }, publicVenues: [], locations: [] })
+      .mockRejectedValueOnce(new Error('down'));
+    const failed = renderHook(() => usePodDetails('p1'));
+    await waitFor(() => expect(failed.result.current.isLoading).toBe(false));
+    expect(failed.result.current.spotFills).toEqual([]);
+    expect(failed.result.current.error).toBeUndefined();
   });
 
   it('stays idle with no resolved id (a slug link is still resolving)', () => {

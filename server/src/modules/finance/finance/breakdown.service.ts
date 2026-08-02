@@ -470,8 +470,9 @@ export const breakdownService = {
 const monthKey = (year: number, month: number): string => `${year}-${String(month).padStart(2, '0')}`;
 
 /** Classifies one pod into a donut bucket. Cancelled = soft-deleted; Completed =
- * finance-settled OR past its end time; then Ongoing vs Upcoming by start time. */
-function bucketForPod(
+ * finance-settled OR past its end time; then Ongoing vs Upcoming by start time.
+ * Exported: the Partners venue-pods list derives its status the same way. */
+export function bucketForPod(
   pod: {
     pod_date_time?: Date | null;
     pod_end_date_time?: Date | null;

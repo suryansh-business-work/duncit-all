@@ -1,29 +1,18 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Button, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import GroupsIcon from '@mui/icons-material/Groups';
-import { BackButton, InfoRow, QueryGuard } from '@duncit/ui';
-import { POD_DETAIL } from './queries';
+import { BackButton, QueryGuard } from '@duncit/ui';
+import { POD_ATTENDEES_ADMIN, POD_DETAIL, type AdminPodAttendeeRow } from './queries';
+import PodOverviewCard from './PodOverviewCard';
+import PodTimelineSection from './PodTimelineSection';
+import PodAttendeesSection from './PodAttendeesSection';
+import PodPaymentsSection from './PodPaymentsSection';
+import PodHostsCard from './PodHostsCard';
+import PodClubCard from './PodClubCard';
 import PodCouponsSection from './PodCouponsSection';
 import PodFinanceSection from './PodFinanceSection';
 import { useFeatureFlag } from '@duncit/app-settings';
-
-const fmtDateTime = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
-
-function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
-  return <InfoRow variant="split" label={label} value={value} sx={{ py: 0.75 }} />;
-}
 
 export default function PodDetailsPage() {
   const { id = '' } = useParams();
@@ -34,7 +23,13 @@ export default function PodDetailsPage() {
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
+  const attendeesQuery = useQuery(POD_ATTENDEES_ADMIN, {
+    variables: { id },
+    skip: !id,
+    fetchPolicy: 'cache-and-network',
+  });
   const pod = data?.pod;
+  const attendeeRows: AdminPodAttendeeRow[] = attendeesQuery.data?.adminPodAttendees ?? [];
 
   return (
     <QueryGuard
@@ -48,7 +43,6 @@ export default function PodDetailsPage() {
       {() => {
         const isVirtual = pod.pod_mode === 'VIRTUAL';
         const isFree = (pod.pod_type ?? '').includes('FREE');
-        const attendees = pod.pod_attendees?.length ?? 0;
 
         return (
           <Stack spacing={3}>
@@ -59,60 +53,49 @@ export default function PodDetailsPage() {
                   {pod.pod_title}
                 </Typography>
               </Stack>
-              <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/pods?edit=${pod.id}`)}>
-                Edit pod
-              </Button>
+              {!pod.is_deleted && (
+                <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/pods?edit=${pod.id}`)}>
+                  Edit pod
+                </Button>
+              )}
             </Stack>
 
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Chip label={isFree ? 'Free' : `₹${pod.pod_amount}`} color="primary" />
               <Chip label={isVirtual ? 'Virtual' : 'Physical'} variant="outlined" />
               <Chip label={(pod.pod_occurrence ?? '').replaceAll('_', ' ') || 'ONE TIME'} variant="outlined" />
-              <Chip label={pod.is_active ? 'Active' : 'Inactive'} color={pod.is_active ? 'success' : 'default'} />
+              {pod.is_deleted && <Chip label="Cancelled" color="error" />}
+              {!pod.is_deleted && pod.completed_at && <Chip label="Completed" color="success" />}
+              {!pod.is_deleted && !pod.completed_at && (
+                <Chip label={pod.is_active ? 'Active' : 'Inactive'} color={pod.is_active ? 'success' : 'default'} />
+              )}
+              {pod.venue_approval_status !== 'NONE' && (
+                <Chip label={`Venue: ${pod.venue_approval_status}`} variant="outlined" />
+              )}
             </Stack>
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
-              <Card sx={{ flex: 1, minWidth: 0, width: '100%' }}>
-                <CardContent>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <GroupsIcon color="primary" />
-                    <Typography variant="subtitle1" fontWeight={900}>
-                      Overview
-                    </Typography>
-                  </Stack>
-                  <Divider sx={{ mb: 1 }} />
-                  <Row label="When" value={`${fmtDateTime(pod.pod_date_time)}`} />
-                  <Row label="Ends" value={fmtDateTime(pod.pod_end_date_time)} />
-                  {isVirtual ? (
-                    <Row label="Meeting" value={pod.meeting_platform || 'Online'} />
-                  ) : (
-                    <Row label="Zone" value={pod.zone_name || '—'} />
-                  )}
-                  <Row label="People in" value={attendees} />
-                  <Row label="Spots left" value={Math.max((pod.no_of_spots ?? 0) - attendees, 0)} />
-                  <Row label="Views" value={pod.pod_hits ?? 0} />
-                  <Row label="Likes · Comments" value={`${pod.like_count ?? 0} · ${pod.comment_count ?? 0}`} />
-                  {showProducts && (
-                    <Row label="Products" value={pod.products_enabled ? 'Enabled' : 'Off'} />
-                  )}
-                  {pod.pod_description && (
-                    <Box sx={{ mt: 1.5 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Description
-                      </Typography>
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {pod.pod_description}
-                      </Typography>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
+              <PodOverviewCard pod={pod} showProducts={showProducts} />
+              <PodTimelineSection pod={pod} />
+            </Stack>
 
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
+              <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+                <PodHostsCard pod={pod} attendees={attendeeRows} />
+                <PodClubCard clubId={pod.club_id ?? null} />
+              </Stack>
               <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                 <PodFinanceSection podId={pod.id} />
-                <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
               </Stack>
             </Stack>
+
+            <PodAttendeesSection
+              rows={attendeeRows}
+              loading={attendeesQuery.loading}
+              errorText={attendeesQuery.error?.message}
+            />
+            <PodPaymentsSection podId={pod.id} />
+            <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
           </Stack>
         );
       }}

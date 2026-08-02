@@ -13,6 +13,10 @@ import {
 } from './payment.validator';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// Read-only payment views. ZONAL_ADMIN opens the Admin pod-details page, whose
+// Payments section lists a pod's transactions — same read scope it already has
+// on podFinanceBreakdown and adminPodAttendees. Mutations stay on ADMIN_RW.
+const ADMIN_READ = [...ADMIN_RW, 'ZONAL_ADMIN'];
 
 export const paymentResolvers = {
   Payment: {
@@ -31,15 +35,15 @@ export const paymentResolvers = {
   },
   Query: {
     payments: (_p: unknown, args: { filter?: any; limit?: number }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, ADMIN_READ);
       return paymentService.list(args.filter, args.limit ?? 200);
     },
     paymentsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, ADMIN_READ);
       return paymentService.table(args.query);
     },
     payment: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, ADMIN_READ);
       return paymentService.getById(args.payment_doc_id);
     },
     myPayments: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

@@ -22,7 +22,6 @@ import DeleteUserDialog from './DeleteUserDialog';
 import UserHealthSection from './UserHealthSection';
 import UserVerificationsSection from './UserVerificationsSection';
 import UserSurveysSection from './UserSurveysSection';
-import CommissionSection from './CommissionSection';
 import { useUserDetailsState } from './useUserDetailsState';
 
 export default function UserDetailsPage() {
@@ -85,16 +84,6 @@ export default function UserDetailsPage() {
               <Stack spacing={2}>
                 <RolesSection user={s.user} roleByKey={s.roleByKey} onManageRoles={s.openRoles} />
               </Stack>
-            ),
-          },
-          {
-            label: 'Commission',
-            content: (
-              <CommissionSection
-                userId={userId}
-                initialCommissionPct={s.user.host_commission_pct ?? 0}
-                onSaved={setToast}
-              />
             ),
           },
           { label: 'Badges', content: <UserBadgesSection userId={userId} /> },

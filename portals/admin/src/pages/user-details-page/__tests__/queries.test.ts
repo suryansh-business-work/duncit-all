@@ -81,7 +81,6 @@ describe('USER', () => {
         'is_email_verified',
         'is_phone_verified',
         'roles',
-        'host_commission_pct',
         'dob',
         'created_at',
       ]),

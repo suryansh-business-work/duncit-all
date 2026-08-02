@@ -231,6 +231,20 @@ export const POD_PEOPLE = gql`
   }
 `;
 
+export const POD_SPOT_FILLS = gql`
+  query PodSpotFills($id: ID!) {
+    podSpotFills(pod_doc_id: $id) {
+      backout_no
+      backed_out_user_id
+      backed_out_user_name
+      backed_out_profile_photo
+      replacement_user_id
+      replacement_user_name
+      filled_at
+    }
+  }
+`;
+
 export const INC_HITS = gql`
   mutation IncPodHits($id: ID!) {
     incrementPodHits(pod_doc_id: $id) { id pod_hits }

@@ -2,8 +2,13 @@ import { useState } from 'react';
 import { AppImage } from '@/components/AppImage';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { AttendeesDialog, type AttendeePerson } from '@/components/details/AttendeesDialog';
-import type { PodPerson } from '@/hooks/useDetails';
+import {
+  AttendeesDialog,
+  type AttendeePerson,
+  type SpotFillRow,
+} from '@/components/details/AttendeesDialog';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { PodPerson, PodSpotFill } from '@/hooks/useDetails';
 
 /** Builds the full attendee list — hosts first, each flagged for highlighting. */
 export function buildAttendeePeople(
@@ -46,6 +51,22 @@ export function buildHostPeople(people: PodPerson[], hostIds: string[]): HostPer
   });
 }
 
+type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;
+
+/** Resolve the raw spot fills to display rows ONCE — the caption line and the
+ * dialog both render these, so the fallback copy can't drift between them. */
+export function buildSpotFillRows(fills: PodSpotFill[], t: Translate): SpotFillRow[] {
+  return (fills ?? []).map((fill) => ({
+    key: fill.backout_no,
+    old_user_id: fill.backed_out_user_id,
+    old_name: fill.backed_out_user_name || t('mweb.podDetails.formerAttendee'),
+    old_photo: fill.backed_out_profile_photo ?? null,
+    filled_by_label: t('mweb.podDetails.spotFilledBy', {
+      vars: { name: fill.replacement_user_name || t('mweb.podDetails.newAttendee') },
+    }),
+  }));
+}
+
 const MAX_AVATAR_PREVIEW = 8;
 
 /** One avatar bubble in the overlapping preview row (hosts get a primary ring). */
@@ -80,19 +101,24 @@ export function AttendeesSection({
   people,
   spots,
   expired,
+  spotFills = [],
   onOpenProfile,
 }: Readonly<{
   people: AttendeePerson[];
   spots: number;
   /** Past pods show "attended" instead of "going". */
   expired?: boolean;
+  /** Filled Backout seats — old attendee struck through, filler named. */
+  spotFills?: PodSpotFill[];
   onOpenProfile: (userId: string) => void;
 }>) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const going = people.length;
   const pct = spots > 0 ? Math.min(100, Math.round((going / spots) * 100)) : 0;
   const previews = people.slice(0, MAX_AVATAR_PREVIEW);
   const extra = going - previews.length;
+  const fillRows = buildSpotFillRows(spotFills, t);
 
   return (
     <YStack gap={8}>
@@ -146,9 +172,24 @@ export function AttendeesSection({
           </Text>
         </XStack>
       )}
+      {fillRows.length > 0 ? (
+        <YStack gap={2}>
+          {fillRows.map((fill) => (
+            <Text key={fill.key} fontSize={12} color="$muted">
+              <Text fontSize={12} color="$muted" textDecorationLine="line-through">
+                {fill.old_name}
+              </Text>
+              {' · '}
+              {fill.filled_by_label}
+            </Text>
+          ))}
+        </YStack>
+      ) : null}
       <AttendeesDialog
         open={open}
         people={people}
+        spotFills={fillRows}
+        spotFilledTitle={t('mweb.podDetails.spotFilled')}
         onClose={() => setOpen(false)}
         onOpenProfile={(userId) => {
           setOpen(false);

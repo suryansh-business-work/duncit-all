@@ -4,6 +4,7 @@ import { FinanceSettingsModel, getFinanceSettings, type IFinanceSettings } from 
 import { paymentReleaseService } from './paymentRelease.service';
 import { computePodSettlement } from './settlement.service';
 import { breakdownService } from './breakdown.service';
+import { podCancellationService, type PodCancelKind } from './podCancellation.service';
 import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -208,6 +209,18 @@ export const financeResolvers = {
     financeDashboardStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return breakdownService.dashboardStats();
+    },
+    podCancellations: async (
+      _p: unknown,
+      args: { kind?: PodCancelKind | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return podCancellationService.list(args.kind);
+    },
+    podCancellationStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return podCancellationService.stats();
     },
   },
   Mutation: {

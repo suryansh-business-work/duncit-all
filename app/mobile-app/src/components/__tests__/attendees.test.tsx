@@ -1,11 +1,17 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
-import { AttendeesDialog, type AttendeePerson } from '@/components/details/AttendeesDialog';
+import {
+  AttendeesDialog,
+  type AttendeePerson,
+  type SpotFillRow,
+} from '@/components/details/AttendeesDialog';
 import {
   AttendeesSection,
   buildAttendeePeople,
   buildHostPeople,
+  buildSpotFillRows,
 } from '@/components/details/AttendeesSection';
+import type { PodSpotFill } from '@/hooks/useDetails';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const person = (id: string, over: Partial<AttendeePerson> = {}): AttendeePerson => ({
@@ -15,6 +21,29 @@ const person = (id: string, over: Partial<AttendeePerson> = {}): AttendeePerson 
   is_host: false,
   ...over,
 });
+
+const spotFill = (over: Partial<PodSpotFill> = {}): PodSpotFill => ({
+  backout_no: 'DUN-BKO-000001',
+  backed_out_user_id: 'out1',
+  backed_out_user_name: 'Asha Rao',
+  backed_out_profile_photo: 'https://x/asha.jpg',
+  replacement_user_id: 'new1',
+  replacement_user_name: 'Bela Jain',
+  filled_at: '2026-07-01T00:00:00.000Z',
+  ...over,
+});
+
+const fillRow = (over: Partial<SpotFillRow> = {}): SpotFillRow => ({
+  key: 'DUN-BKO-000001',
+  old_user_id: 'out1',
+  old_name: 'Asha Rao',
+  old_photo: null,
+  filled_by_label: 'Spot filled by Bela Jain',
+  ...over,
+});
+
+const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
+  options?.vars?.name === undefined ? key : `${key}:${options.vars.name}`;
 
 describe('buildAttendeePeople', () => {
   it('orders hosts first and fills missing profiles with nulls', () => {
@@ -49,6 +78,39 @@ describe('buildHostPeople', () => {
       { user_id: 'h2', full_name: null, profile_photo: null },
     ]);
     expect(buildHostPeople([], undefined as never)).toEqual([]);
+  });
+});
+
+describe('buildSpotFillRows', () => {
+  it('resolves names, photos and the filled-by label, with copy fallbacks', () => {
+    const rows = buildSpotFillRows([spotFill()], t);
+    expect(rows).toEqual([
+      {
+        key: 'DUN-BKO-000001',
+        old_user_id: 'out1',
+        old_name: 'Asha Rao',
+        old_photo: 'https://x/asha.jpg',
+        filled_by_label: 'mweb.podDetails.spotFilledBy:Bela Jain',
+      },
+    ]);
+    // Legacy fills without names/photos fall back to the localized copy.
+    const legacy = buildSpotFillRows(
+      [
+        spotFill({
+          backed_out_user_name: null,
+          backed_out_profile_photo: null,
+          replacement_user_id: null,
+          replacement_user_name: null,
+        }),
+      ],
+      t,
+    );
+    expect(legacy[0]).toMatchObject({
+      old_name: 'mweb.podDetails.formerAttendee',
+      old_photo: null,
+      filled_by_label: 'mweb.podDetails.spotFilledBy:mweb.podDetails.newAttendee',
+    });
+    expect(buildSpotFillRows(undefined as never, t)).toEqual([]);
   });
 });
 
@@ -94,6 +156,25 @@ describe('AttendeesSection', () => {
     renderWithProviders(<AttendeesSection people={many} spots={0} onOpenProfile={jest.fn()} />);
     expect(screen.getByText('+3')).toBeOnTheScreen();
   });
+
+  it('strikes through replaced attendees and names the filler', () => {
+    const onOpenProfile = jest.fn();
+    renderWithProviders(
+      <AttendeesSection
+        people={[person('u1')]}
+        spots={5}
+        spotFills={[spotFill()]}
+        onOpenProfile={onOpenProfile}
+      />,
+    );
+    // Caption line under the avatar group: struck old name + filled-by copy.
+    expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
+    expect(screen.getByText(/Spot filled by Bela Jain/)).toBeOnTheScreen();
+    // The dialog lists the same row and taps through to the old profile.
+    fireEvent.press(screen.getByTestId('attendees-avatar-group'));
+    fireEvent.press(screen.getByTestId('spot-fill-row-DUN-BKO-000001'));
+    expect(onOpenProfile).toHaveBeenCalledWith('out1');
+  });
 });
 
 describe('AttendeesDialog', () => {
@@ -121,5 +202,22 @@ describe('AttendeesDialog', () => {
       <AttendeesDialog open people={[]} onClose={jest.fn()} onOpenProfile={jest.fn()} />,
     );
     expect(screen.getByTestId('attendees-dialog-empty')).toBeOnTheScreen();
+  });
+
+  it('renders photo-less spot-fill rows with the initial fallback and title', () => {
+    renderWithProviders(
+      <AttendeesDialog
+        open
+        people={[]}
+        spotFills={[fillRow()]}
+        spotFilledTitle="Spot filled"
+        onClose={jest.fn()}
+        onOpenProfile={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Spot filled')).toBeOnTheScreen();
+    expect(screen.getByText('A')).toBeOnTheScreen();
+    expect(screen.getByText('Asha Rao')).toBeOnTheScreen();
+    expect(screen.getByText('Spot filled by Bela Jain')).toBeOnTheScreen();
   });
 });

@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { venueService } from './venue.service';
+import { venuePodsService } from './venuePods.service';
 import { userService } from '@modules/access/user/user.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { MeetingModel } from '@modules/survey/meeting.model';
@@ -61,6 +62,8 @@ export const venueResolvers = {
       venueService.listMine(uid(ctx)),
     myVenuesTable: async (_p: unknown, args: { query?: any }, ctx: GraphQLContext) =>
       venueService.tableMine(uid(ctx), args.query),
+    venuePods: async (_p: unknown, args: { venue_id?: string | null }, ctx: GraphQLContext) =>
+      venuePodsService.listForOwner(uid(ctx), args.venue_id),
     venueRegistrationConfig: async () => venueService.registrationConfig(),
     venues: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);

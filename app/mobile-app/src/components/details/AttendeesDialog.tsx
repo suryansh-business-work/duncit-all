@@ -14,9 +14,21 @@ export interface AttendeePerson {
   is_host: boolean;
 }
 
+/** One filled Backout seat, already resolved to display copy by the section —
+ * computed once in the parent so both surfaces render identical rows. */
+export interface SpotFillRow {
+  key: string;
+  old_user_id: string;
+  old_name: string;
+  old_photo: string | null;
+  filled_by_label: string;
+}
+
 interface Props {
   open: boolean;
   people: AttendeePerson[];
+  spotFills?: SpotFillRow[];
+  spotFilledTitle?: string;
   onClose: () => void;
   onOpenProfile: (userId: string) => void;
 }
@@ -86,8 +98,67 @@ function AttendeeRow({
   );
 }
 
-/** Full attendees list — photos, host highlight, tap-through to profiles (3). */
-export function AttendeesDialog({ open, people, onClose, onOpenProfile }: Readonly<Props>) {
+/** One struck-through former attendee whose seat a replacement rebooked. */
+function SpotFillRowItem({ fill, onPress }: Readonly<{ fill: SpotFillRow; onPress: () => void }>) {
+  return (
+    <XStack
+      testID={`spot-fill-row-${fill.key}`}
+      role="button"
+      aria-label={fill.old_name}
+      onPress={onPress}
+      alignItems="center"
+      gap={12}
+      padding={10}
+      borderRadius={12}
+      pressStyle={{ opacity: 0.8, backgroundColor: '$surface' }}
+    >
+      {fill.old_photo ? (
+        <AppImage
+          source={{ uri: fill.old_photo }}
+          style={{ width: 40, height: 40, borderRadius: 20, opacity: 0.6 }}
+        />
+      ) : (
+        <YStack
+          width={40}
+          height={40}
+          alignItems="center"
+          justifyContent="center"
+          borderRadius={20}
+          backgroundColor="$surface"
+        >
+          <Text fontSize={15} fontWeight="800" color="$muted">
+            {fill.old_name.charAt(0).toUpperCase()}
+          </Text>
+        </YStack>
+      )}
+      <YStack flex={1}>
+        <Text
+          fontSize={14}
+          fontWeight="700"
+          color="$muted"
+          textDecorationLine="line-through"
+          numberOfLines={1}
+        >
+          {fill.old_name}
+        </Text>
+        <Text fontSize={11.5} color="$muted">
+          {fill.filled_by_label}
+        </Text>
+      </YStack>
+    </XStack>
+  );
+}
+
+/** Full attendees list — photos, host highlight, tap-through to profiles (3).
+ * Filled Backout seats render struck-through with the replacement named. */
+export function AttendeesDialog({
+  open,
+  people,
+  spotFills = [],
+  spotFilledTitle = '',
+  onClose,
+  onOpenProfile,
+}: Readonly<Props>) {
   const { color: ink } = useThemeColors();
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
@@ -147,6 +218,20 @@ export function AttendeesDialog({ open, people, onClose, onOpenProfile }: Readon
                     />
                   ))
                 )}
+                {spotFills.length > 0 ? (
+                  <YStack paddingTop={6} gap={2}>
+                    <Text fontSize={11.5} fontWeight="800" color="$muted" paddingHorizontal={10}>
+                      {spotFilledTitle}
+                    </Text>
+                    {spotFills.map((fill) => (
+                      <SpotFillRowItem
+                        key={fill.key}
+                        fill={fill}
+                        onPress={() => onOpenProfile(fill.old_user_id)}
+                      />
+                    ))}
+                  </YStack>
+                ) : null}
               </ScrollView>
             </SafeAreaView>
           </YStack>

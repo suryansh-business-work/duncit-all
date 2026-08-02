@@ -304,7 +304,8 @@ export const podTypeDefs = /* GraphQL */ `
     myHostPods(from: String, to: String): [Pod!]!
     "Table page over the caller's own hosted pods (myHostPods rows)."
     myHostPodsTable(query: TableQueryInput): PodTablePage!
-    pod(pod_doc_id: ID!): Pod
+    "include_deleted opens a cancelled pod too — honored for admin reviewers only."
+    pod(pod_doc_id: ID!, include_deleted: Boolean): Pod
     podBySlugs(club_slug: String!, pod_slug: String!): Pod
     podComments(pod_doc_id: ID!): [PodComment!]!
     "Location ids that currently have at least one live (active, not-yet-passed) pod."

@@ -772,6 +772,126 @@ export const podMemberService = {
     return toPub(membership);
   },
 
+  /**
+   * Public, pod-scoped: every filled Backout seat — who left and who took the
+   * spot. Powers the struck-through attendee rows on Pod Details (app + admin).
+   * Names/photos are already public via publicUsersByIds, so no guard.
+   */
+  async listSpotFills(podDocId: string) {
+    if (!Types.ObjectId.isValid(podDocId)) return [];
+    // lean(): plain DB shapes, so legacy rows keep their genuinely-missing fields.
+    const requests = await BackoutRequestModel.find({
+      pod_id: new Types.ObjectId(podDocId),
+      status: 'SPOT_FILLED',
+    })
+      .sort({ created_at: 1 })
+      .lean();
+    if (requests.length === 0) return [];
+    const userIds = [
+      ...new Set(
+        requests
+          .flatMap((r) => [String(r.user_id), r.replacement_user_id && String(r.replacement_user_id)])
+          .filter(Boolean) as string[],
+      ),
+    ];
+    const users = await UserModel.find({ _id: { $in: userIds } }).select(
+      'profile.first_name profile.last_name profile.profile_photo',
+    );
+    const userById = new Map<string, any>(users.map((u: any) => [String(u._id), u]));
+    return requests.map((r) => {
+      const backedOut = userById.get(String(r.user_id));
+      const replacement = r.replacement_user_id ? userById.get(String(r.replacement_user_id)) : null;
+      const filledEvent = (r.events ?? []).find((e) => e.status === 'SPOT_FILLED');
+      return {
+        backout_no: r.backout_no,
+        backed_out_user_id: String(r.user_id),
+        backed_out_user_name: fullName(backedOut) || null,
+        backed_out_profile_photo: backedOut?.profile?.profile_photo ?? null,
+        replacement_user_id: r.replacement_user_id ? String(r.replacement_user_id) : null,
+        replacement_user_name: fullName(replacement) || null,
+        replacement_profile_photo: replacement?.profile?.profile_photo ?? null,
+        filled_at: iso(filledEvent?.at) ?? iso(r.updated_at) ?? '',
+      };
+    });
+  },
+
+  /**
+   * Admin/Finance: one row per person on a pod — hosts, current attendees and
+   * backed-out members — hydrated with contact info and, for filled seats, who
+   * replaced them. Includes soft-deleted pods (cancelled pods keep their list).
+   */
+  async listAdminAttendees(podDocId: string) {
+    // lean(): plain DB shapes, so legacy pods keep their genuinely-missing arrays.
+    const pod = Types.ObjectId.isValid(podDocId)
+      ? await PodModel.findById(podDocId).setOptions({ includeDeleted: true }).lean()
+      : null;
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    const [members, spotFilled] = await Promise.all([
+      PodMemberModel.find({ pod_id: pod._id }).sort({ joined_at: 1 }),
+      BackoutRequestModel.find({ pod_id: pod._id, status: 'SPOT_FILLED' }).lean(),
+    ]);
+    const hostIds = new Set((pod.pod_hosts_id ?? []).map(String));
+    const memberUserIds = new Set(members.map((m) => String(m.user_id)));
+    // People on the pod without a membership row (the host's own free seat).
+    const extraIds = (pod.pod_attendees ?? []).map(String).filter((id) => !memberUserIds.has(id));
+    const fillByMemberId = new Map(spotFilled.map((r) => [String(r.member_id), r]));
+    const userIds = [
+      ...new Set([
+        ...extraIds,
+        ...members.map((m) => String(m.user_id)),
+        ...(spotFilled
+          .map((r) => r.replacement_user_id && String(r.replacement_user_id))
+          .filter(Boolean) as string[]),
+      ]),
+    ];
+    const users = await UserModel.find({ _id: { $in: userIds } }).select(
+      'profile.first_name profile.last_name profile.profile_photo auth.email auth.phone.number auth.phone.extension',
+    );
+    const userById = new Map<string, any>(users.map((u: any) => [String(u._id), u]));
+    const personFields = (userId: string) => {
+      const user = userById.get(userId);
+      return {
+        user_id: userId,
+        full_name: fullName(user) || null,
+        email: user?.auth?.email ?? null,
+        phone: userContactNumber(user),
+        profile_photo: user?.profile?.profile_photo ?? null,
+        is_host: hostIds.has(userId),
+      };
+    };
+    const hostRows = extraIds.map((id) => ({
+      ...personFields(id),
+      member_id: null,
+      status: null,
+      joined_at: null,
+      backed_out_at: null,
+      source: null,
+      refund_status: null,
+      payment_id: null,
+      backout_no: null,
+      replaced_by_user_id: null,
+      replaced_by_name: null,
+    }));
+    const memberRows = members.map((m) => {
+      const fill = fillByMemberId.get(String(m._id));
+      const replacementId = fill?.replacement_user_id ? String(fill.replacement_user_id) : null;
+      return {
+        ...personFields(String(m.user_id)),
+        member_id: String(m._id),
+        status: m.status,
+        joined_at: iso(m.joined_at),
+        backed_out_at: iso(m.backed_out_at),
+        source: m.source,
+        refund_status: m.refund_status,
+        payment_id: m.payment_id ? String(m.payment_id) : null,
+        backout_no: fill?.backout_no ?? null,
+        replaced_by_user_id: replacementId,
+        replaced_by_name: replacementId ? fullName(userById.get(replacementId)) || null : null,
+      };
+    });
+    return [...hostRows, ...memberRows];
+  },
+
   /** Finance: every Backout request ever raised, newest first (all statuses). */
   async listBackoutRefunds() {
     const docs = await BackoutRequestModel.find().sort({ created_at: -1 });

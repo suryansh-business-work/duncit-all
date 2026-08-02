@@ -4,6 +4,7 @@ import { PostModel } from '../../post.model';
 import { UserNotificationModel } from '@modules/engagement/notification/notification.model';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
+import { ClubModel } from '@modules/clubs/club/club.model';
 
 const author = new Types.ObjectId().toString();
 const img = 'https://img/post.jpg';
@@ -233,7 +234,13 @@ describe('postService integration', () => {
   });
 
   it('attaches a story to a club and lists it via clubStories (Bug 6)', async () => {
-    const clubId = new Types.ObjectId().toString();
+    // Only the club's own community may post to it, so the author follows it.
+    const club = await ClubModel.create({
+      club_id: `c-${Math.random().toString(36).slice(2)}`,
+      club_name: 'Runners',
+    } as never);
+    const clubId = String(club._id);
+    await ClubFollowerModel.create({ user_id: new Types.ObjectId(author), club_id: club._id });
     const story = await postService.create(author, {
       image_url: img,
       kind: 'STORY',
@@ -252,6 +259,81 @@ describe('postService integration', () => {
     // Expired club stories drop out.
     await PostModel.updateOne({ _id: story.id }, { expires_at: new Date(Date.now() - 1000) });
     expect(await postService.listClubStories(clubId)).toHaveLength(0);
+  });
+
+  describe('who may post a club story', () => {
+    const makeClub = (over: Record<string, unknown> = {}) =>
+      ClubModel.create({
+        club_id: `c-${Math.random().toString(36).slice(2)}`,
+        club_name: 'Runners',
+        ...over,
+      } as never);
+
+    it('lets a club admin post without following', async () => {
+      const club = await makeClub({ admin_user_ids: [new Types.ObjectId(author)] });
+      const story = await postService.create(author, {
+        image_url: img,
+        kind: 'STORY',
+        club_id: String(club._id),
+      });
+      expect(story.club_id).toBe(String(club._id));
+    });
+
+    it('refuses a stranger — a club story belongs to that club community', async () => {
+      const club = await makeClub();
+      await expect(
+        postService.create(author, { image_url: img, kind: 'STORY', club_id: String(club._id) }),
+      ).rejects.toThrow('Follow this club');
+    });
+
+    it('refuses a club that does not exist', async () => {
+      await expect(
+        postService.create(author, {
+          image_url: img,
+          kind: 'STORY',
+          club_id: new Types.ObjectId().toString(),
+        }),
+      ).rejects.toThrow('Club not found');
+    });
+  });
+
+  describe('an expired story is unreachable by every route', () => {
+    const expire = (id: string) =>
+      PostModel.updateOne({ _id: id }, { expires_at: new Date(Date.now() - 1000) });
+
+    it('cannot be viewed, liked, commented on, or have its viewers listed', async () => {
+      const story = await postService.create(author, { image_url: img, kind: 'STORY' });
+      await expire(story.id);
+      const viewer = new Types.ObjectId().toString();
+
+      await expect(postService.recordView(story.id, viewer)).rejects.toThrow('Post not found');
+      await expect(postService.toggleLike(story.id, viewer)).rejects.toThrow('Post not found');
+      await expect(postService.addComment(story.id, viewer, 'hi')).rejects.toThrow('Post not found');
+      await expect(postService.listViewers(story.id, author)).rejects.toThrow('Post not found');
+      expect(await postService.getById(story.id)).toBeNull();
+    });
+
+    it('still allows those actions on a permanent post', async () => {
+      const post = await postService.create(author, { image_url: img });
+      const viewer = new Types.ObjectId().toString();
+      await expect(postService.toggleLike(post.id, viewer)).resolves.toMatchObject({ id: post.id });
+    });
+
+    it('blocks deleting a comment on an expired story but allows it on a live post', async () => {
+      const post = await postService.create(author, { image_url: img });
+      const withComment = await postService.addComment(post.id, author, 'hello');
+      const commentId = withComment.comments[0].id;
+      await expect(
+        postService.deleteComment(post.id, commentId, author),
+      ).resolves.toMatchObject({ comments_count: 0 });
+
+      const story = await postService.create(author, { image_url: img, kind: 'STORY' });
+      const storyComment = await postService.addComment(story.id, author, 'hi');
+      await expire(story.id);
+      await expect(
+        postService.deleteComment(story.id, storyComment.comments[0].id, author),
+      ).rejects.toThrow('Post not found');
+    });
   });
 
   it('defaults a plain post to an image kept on the profile grid', async () => {

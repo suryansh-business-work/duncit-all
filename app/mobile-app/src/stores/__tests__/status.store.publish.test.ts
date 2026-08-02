@@ -137,6 +137,23 @@ describe('status.store publish (video vs image pipelines)', () => {
     expect(postCreate?.[1].input.kind).toBe('POST');
   });
 
+  it('attaches club_id only when the story was posted from a club page', async () => {
+    // From a club page → the story belongs to that club's rail.
+    await useStatusStore.getState().publish({ base64: 'abc', mediaType: 'IMAGE', clubId: 'c1' });
+    const clubCreate = mockRequest.mock.calls.find(([doc]) =>
+      JSON.stringify(doc).includes('MobileCreatePost'),
+    );
+    expect(clubCreate?.[1].input.club_id).toBe('c1');
+
+    mockRequest.mockClear();
+    // From the home rail → a personal story, no club key at all.
+    await useStatusStore.getState().publish({ base64: 'abc', mediaType: 'IMAGE', clubId: null });
+    const plainCreate = mockRequest.mock.calls.find(([doc]) =>
+      JSON.stringify(doc).includes('MobileCreatePost'),
+    );
+    expect(plainCreate?.[1].input).not.toHaveProperty('club_id');
+  });
+
   it('still refuses an image publish without base64 bytes', async () => {
     await expect(useStatusStore.getState().publish({ uri: 'file://p.jpg' })).rejects.toThrow(
       'No media selected.',

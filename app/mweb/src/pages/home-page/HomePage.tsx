@@ -45,6 +45,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     followedClubs,
     hostPods,
     followedPosts,
+    clubStories,
     myStories,
     followedUsers,
     totalPods,
@@ -88,6 +89,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         followedClubs={followedClubs}
         hostPods={hostPods}
         followedPosts={followedPosts}
+        clubStories={clubStories}
         followedUsers={followedUsers}
       />
       <Box data-tour="home-categories">

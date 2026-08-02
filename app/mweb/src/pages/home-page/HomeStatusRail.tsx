@@ -17,6 +17,8 @@ interface HomeStatusRailProps {
   hostPods: any[];
   followedPosts: any[];
   followedUsers: any[];
+  /** Live club-attached stories — the club rings are built from these. */
+  clubStories?: any[];
 }
 
 export default function HomeStatusRail({
@@ -25,6 +27,7 @@ export default function HomeStatusRail({
   hostPods,
   followedPosts,
   followedUsers,
+  clubStories,
 }: Readonly<HomeStatusRailProps>) {
   // Index into the ordered viewer sequence ([my status, …entries]); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -36,8 +39,8 @@ export default function HomeStatusRail({
   const [deleteStory] = useMutation(DELETE_STORY_POST, { refetchQueries: ['HomeFeed'] });
 
   const buildEntries = useCallback(
-    () => buildHomeStatusEntries({ followedClubs, hostPods, followedUsers, followedPosts }),
-    [followedClubs, hostPods, followedUsers, followedPosts],
+    () => buildHomeStatusEntries({ followedClubs, hostPods, followedUsers, followedPosts, clubStories }),
+    [followedClubs, hostPods, followedUsers, followedPosts, clubStories],
   );
   // Order only while the viewer is closed (the rail sits behind the full-screen
   // viewer). This keeps an open story from re-indexing mid-view; on close / data

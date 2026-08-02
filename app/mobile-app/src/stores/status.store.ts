@@ -24,6 +24,9 @@ export interface StatusUploadAsset {
   /** STORY (default, 24h ephemeral) vs POST (permanent profile post). The
    * profile "Add Post" flow sets POST; the story rail/avatar ring keep STORY. */
   kind?: 'STORY' | 'POST';
+  /** Attach the story to a club — set by the club page's "Add story" tile.
+   * The server requires the author to follow (or administer) that club. */
+  clubId?: string | null;
   /** Trim window (seconds) the server cuts during the FFmpeg pass — set when a
    * picked video runs past the 15s story cap. */
   trim?: VideoTrim | null;
@@ -114,6 +117,7 @@ export const useStatusStore = create<StatusState>((set, get) => ({
             // STORY (default) is 24h-ephemeral; POST is a permanent profile post.
             kind,
             media_type: isVideo ? 'VIDEO' : 'IMAGE',
+            ...(asset.clubId ? { club_id: asset.clubId } : {}),
           },
         },
         { auth: true },

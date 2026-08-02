@@ -32,6 +32,16 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
           club_feature_images_and_videos: [],
         },
       ],
+      // The ring comes from a LIVE club story, never from club_moments.
+      clubStories: [
+        {
+          id: 'cs1',
+          club_id: 'c1',
+          image_url: 'cs.jpg',
+          media_type: 'IMAGE',
+          expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+        },
+      ],
       hostPods: [
         { id: 'p1', pod_id: 'pod1', pod_title: 'Host Pod', club_slug: 'cl', pod_images_and_videos: [{ url: 'a.jpg', type: 'IMAGE' }] },
       ],
@@ -41,11 +51,70 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
       ],
     }, identity);
     expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'user-u1']);
+    expect(entries[0].viewer.slides?.[0]?.mediaUrl).toBe('cs.jpg');
     expect(entries[1].viewer.subLabel).toBe('Your pod status');
     expect(entries[2].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
     // The user's story carries a post id so it can be liked/recorded/viewed.
     expect(entries[2].viewer.kind).toBe('user');
     expect(entries[2].viewer.slides?.[0]?.id).toBeDefined();
+  });
+
+  it('drops a club whose only media is permanent club_moments — those never expire', () => {
+    const entries = buildHomeStatusEntries({
+      ...baseArgs,
+      followedClubs: [
+        {
+          id: 'c1',
+          club_id: 'club1',
+          club_name: 'Runners',
+          // Permanent "past event photos" — must NOT become a story ring.
+          club_moments: [{ url: 'm.jpg', type: 'IMAGE' }],
+          club_feature_images_and_videos: [{ url: 'f.jpg', type: 'IMAGE' }],
+        },
+      ],
+      clubStories: [],
+    });
+    expect(entries).toEqual([]);
+  });
+
+  it('drops a club story that has passed its 24h window', () => {
+    const entries = buildHomeStatusEntries({
+      ...baseArgs,
+      followedClubs: [{ id: 'c1', club_id: 'club1', club_name: 'Runners', club_feature_images_and_videos: [] }],
+      clubStories: [
+        {
+          id: 'cs-old',
+          club_id: 'c1',
+          image_url: 'old.jpg',
+          media_type: 'IMAGE',
+          expires_at: new Date(Date.now() - 1_000).toISOString(),
+        },
+      ],
+    });
+    expect(entries).toEqual([]);
+  });
+
+  it('greys a club ring once every club story has been seen', () => {
+    const ring = (seen: boolean) =>
+      buildHomeStatusEntries({
+        ...baseArgs,
+        followedClubs: [{ id: 'c1', club_id: 'club1', club_name: 'Runners', club_feature_images_and_videos: [] }],
+        clubStories: [
+          {
+            id: 'cs1',
+            club_id: 'c1',
+            image_url: 'cs.jpg',
+            media_type: 'VIDEO',
+            seen_by_me: seen,
+            expires_at: new Date(Date.now() + 3_600_000).toISOString(),
+          },
+        ],
+      })[0];
+    expect(ring(false).active).toBe(true);
+    expect(ring(true).active).toBe(false);
+    // A video story fills videoUrl, not imageUrl.
+    expect(ring(false).videoUrl).toBe('cs.jpg');
+    expect(ring(false).imageUrl).toBeNull();
   });
 
   it('marks a user ring unseen until every story is seen (Bug 2)', () => {

@@ -33,29 +33,49 @@ interface BuildArgs {
   hostPods: any[];
   followedUsers: any[];
   followedPosts: any[];
+  /** Live club-attached stories — a club ring is built from these, never from
+   * the club's permanent media. */
+  clubStories?: any[];
 }
 
-function clubEntry(club: any): HomeStatusEntry {
-  const moments = (club.club_moments ?? []).filter((item: any) => item?.url);
-  const media = firstMedia(moments) ?? firstMedia(club.club_feature_images_and_videos);
+/**
+ * A club ring is built from the club's LIVE stories — real 24h Post rows, the
+ * same ones the club page shows. It used to render `club_moments`, the club's
+ * permanent "past event photos" gallery, which has no expiry at all: those
+ * rings sat in the rail forever and looked identical to a real story.
+ * A club with no live story returns null and drops out of the rail.
+ */
+function clubEntry(club: any, clubStories: any[]): HomeStatusEntry | null {
+  const stories = clubStories.filter(
+    (story) => story.club_id === club.id && isStoryLive(story.expires_at),
+  );
+  if (stories.length === 0) return null;
+  const first = stories[0];
+  const firstIsVideo = first.media_type === 'VIDEO';
   return {
     key: `club-${club.id}`,
     label: club.club_name,
-    imageUrl: media?.type === 'VIDEO' ? null : media?.url,
-    videoUrl: media?.type === 'VIDEO' ? media?.url : null,
+    imageUrl: firstIsVideo ? null : first.image_url,
+    videoUrl: firstIsVideo ? first.image_url : null,
     initials: initials(club.club_name),
-    active: true,
+    // Unseen while any of the club's stories hasn't been opened.
+    active: stories.some((story) => !story.seen_by_me),
     viewer: {
       kind: 'club',
       label: club.club_name,
       subLabel: 'Club status',
       avatarUrl: firstMedia(club.club_feature_images_and_videos)?.url,
-      mediaUrl: media?.url,
-      mediaType: media?.type,
-      slides: moments.map((moment: any, index: number) => ({
-        mediaUrl: moment.url,
-        mediaType: moment.type,
-        subLabel: `Club status ${index + 1}/${moments.length}`,
+      mediaUrl: first.image_url,
+      mediaType: first.media_type ?? 'IMAGE',
+      slides: stories.map((story: any, index: number) => ({
+        id: story.id,
+        mediaUrl: story.image_url,
+        mediaType: story.media_type ?? 'IMAGE',
+        subLabel: story.caption || `Club status ${index + 1}/${stories.length}`,
+        createdAt: story.created_at,
+        expiresAt: story.expires_at,
+        likeCount: story.likes_count ?? 0,
+        likedByMe: story.liked_by_me ?? false,
       })),
       targetUrl: club.club_id ? `/club/${club.club_id}` : undefined,
       internal: true,
@@ -146,11 +166,14 @@ function randomShuffle<T>(items: T[]): T[] {
  * already-seen tiles pushed to the end (no ring). The "my status" tile is handled
  * separately by the rail. `shuffle` is injectable so tests stay deterministic. */
 export function buildHomeStatusEntries(
-  { followedClubs, hostPods, followedUsers, followedPosts }: BuildArgs,
+  { followedClubs, hostPods, followedUsers, followedPosts, clubStories = [] }: BuildArgs,
   shuffle: StatusShuffle = randomShuffle,
 ): HomeStatusEntry[] {
   const all = [
-    ...followedClubs.map((c) => clubEntry(c)),
+    // A club without a live story has no ring at all.
+    ...followedClubs
+      .map((c) => clubEntry(c, clubStories))
+      .filter((entry): entry is HomeStatusEntry => entry !== null),
     ...hostPods.map((p) => podEntry(p)),
     ...followedUsers.map((u) => userEntry(u, followedPosts)),
   ];

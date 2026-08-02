@@ -37,6 +37,9 @@ interface StatusViewerProps {
   onToggleLike?: (slideId: string) => void;
   /** Record that a slide was shown so its ring greys (Bug 2). */
   onSlideSeen?: (slideId: string) => void;
+  /** Slide to open on. A per-story rail (the club page) opens the tapped
+   * story; author rails open at the start. */
+  startIndex?: number;
 }
 
 // Each slide runs 15s (images and videos alike); a video that ends sooner
@@ -152,9 +155,10 @@ export function StatusViewer({
   onViewers,
   onToggleLike,
   onSlideSeen,
+  startIndex = 0,
 }: Readonly<StatusViewerProps>) {
   const { onPrimary } = useThemeColors();
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(startIndex);
   const [progress, setProgress] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -188,11 +192,12 @@ export function StatusViewer({
     else if (intent === 'prev') onPrev?.();
   };
 
-  // Reset to the first slide whenever a new author's story opens.
+  // Open at the requested slide whenever a new story opens — an author rail
+  // starts at 0, the club page opens the story that was tapped.
   useEffect(() => {
-    setIndex(0);
+    setIndex(startIndex);
     setProgress(0);
-  }, [status]);
+  }, [status, startIndex]);
 
   // Per-slide setup: seed the like button, close any open menu, and record the
   // view so the ring greys (Bugs 2 & 5). Keyed on the slide id + its like values

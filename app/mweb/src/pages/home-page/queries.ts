@@ -47,6 +47,7 @@ export const HOME_DATA = gql`
     stories {
       id
       author_id
+      club_id
       image_url
       media_type
       caption

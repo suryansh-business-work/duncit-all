@@ -6,6 +6,8 @@ import { requireRole } from '@middleware/rbac';
 
 // Finance/admin roles that may view the Backout Refunds list.
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+// Roles that may read a pod's attendee contact list (Admin + Finance portals).
+const ATTENDEE_ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
 
 function requireUser(ctx: GraphQLContext) {
   if (!ctx.user) {
@@ -39,6 +41,12 @@ export const podMemberResolvers = {
     },
     podMembers: async (_p: unknown, args: { pod_doc_id: string; status?: string }) =>
       podMemberService.listForPod(args.pod_doc_id, args.status),
+    podSpotFills: async (_p: unknown, args: { pod_doc_id: string }) =>
+      podMemberService.listSpotFills(args.pod_doc_id),
+    adminPodAttendees: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ATTENDEE_ADMIN_ROLES);
+      return podMemberService.listAdminAttendees(args.pod_doc_id);
+    },
     referralLookup: async (_p: unknown, args: { token: string }) =>
       podMemberService.lookupReferral(args.token),
     bookingDetail: async (_p: unknown, args: { booking_id: string }, ctx: GraphQLContext) => {

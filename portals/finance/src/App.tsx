@@ -9,6 +9,9 @@ import {
   PodFinanceDetailPage,
   BackoutRefundPage,
   BackoutRefundDetailPage,
+  CancellationsDashboardPage,
+  HostCancelPage,
+  VenueCancelPage,
   PaymentLogsPage,
   PaymentReleasePage,
   WithdrawalsPage,
@@ -35,6 +38,9 @@ export default function App() {
       <Route path="/pod-finance/:podId" element={authed(<PodFinanceDetailPage />)} />
       <Route path="/backout-refunds" element={authed(<BackoutRefundPage />)} />
       <Route path="/backout-refunds/:id" element={authed(<BackoutRefundDetailPage />)} />
+      <Route path="/cancellations" element={authed(<CancellationsDashboardPage />)} />
+      <Route path="/cancellations/venue" element={authed(<VenueCancelPage />)} />
+      <Route path="/cancellations/host" element={authed(<HostCancelPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />

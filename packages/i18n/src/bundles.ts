@@ -34,6 +34,12 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       includeOutOfStock: 'Include out of stock',
       searchPlaceholder: 'Search products or brands…',
     },
+    podDetails: {
+      spotFilled: 'Spot filled',
+      spotFilledBy: 'Spot filled by {name}',
+      formerAttendee: 'Former attendee',
+      newAttendee: 'A new attendee',
+    },
   },
 };
 

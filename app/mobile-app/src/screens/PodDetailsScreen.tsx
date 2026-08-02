@@ -49,6 +49,7 @@ export function PodDetailsScreen() {
     savedInitially,
     membershipState,
     people,
+    spotFills,
     categoryCrumbs,
     isLoading,
     refetch,
@@ -219,6 +220,7 @@ export function PodDetailsScreen() {
           <PodAccordions
             pod={pod}
             people={people}
+            spotFills={spotFills}
             categoryCrumbs={categoryCrumbs}
             isFree={isFree}
             gstPct={finance.gstPct}

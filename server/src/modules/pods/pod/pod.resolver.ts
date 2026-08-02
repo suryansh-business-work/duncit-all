@@ -226,7 +226,16 @@ export const podResolvers = {
       const user = requireAuth(ctx);
       return podService.tableMine(user.id, args.query);
     },
-    pod: async (_p: unknown, args: { pod_doc_id: string }) => podService.getById(args.pod_doc_id),
+    pod: async (
+      _p: unknown,
+      args: { pod_doc_id: string; include_deleted?: boolean | null },
+      ctx: GraphQLContext
+    ) =>
+      // Admin reviewers may open a cancelled pod's detail page (timeline shows
+      // the Cancelled stage); everyone else keeps the soft-delete guarantee.
+      podService.getById(args.pod_doc_id, {
+        includeDeleted: args.include_deleted === true && canReviewPendingPods(ctx),
+      }),
     podBySlugs: async (
       _p: unknown,
       args: { club_slug: string; pod_slug: string }

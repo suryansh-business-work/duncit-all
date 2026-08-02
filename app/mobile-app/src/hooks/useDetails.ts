@@ -10,6 +10,7 @@ import {
   PodCommentsDocument,
   PodDetailsDocument,
   PodPeopleDocument,
+  PodSpotFillsDocument,
   TogglePodCommentLikeDocument,
 } from '@/graphql/details';
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
@@ -23,6 +24,7 @@ export type PodVenue = PodDetailsResult['publicVenues'][number];
 export type PodLocation = PodDetailsResult['locations'][number];
 export type PodMembershipState = PodDetailsResult['podMembershipState'];
 export type PodPerson = ResultOf<typeof PodPeopleDocument>['publicUsersByIds'][number];
+export type PodSpotFill = ResultOf<typeof PodSpotFillsDocument>['podSpotFills'][number];
 type ClubDetailsResult = ResultOf<typeof ClubDetailsDocument>;
 export type ClubDetail = NonNullable<ClubDetailsResult['club']>;
 export type ClubPod = ClubDetailsResult['pods'][number];
@@ -97,6 +99,7 @@ export function usePodDetails(podId: string) {
   const [savedInitially, setSavedInitially] = useState(false);
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
   const [people, setPeople] = useState<PodPerson[]>([]);
+  const [spotFills, setSpotFills] = useState<PodSpotFill[]>([]);
   const [categoryCrumbs, setCategoryCrumbs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -126,6 +129,15 @@ export function usePodDetails(podId: string) {
       setPeople(peopleData?.publicUsersByIds ?? []);
     } else {
       setPeople([]);
+    }
+    // Filled Backout seats for the struck-through attendee rows (best-effort).
+    if (nextPod) {
+      const fillData = await graphqlRequest(PodSpotFillsDocument, { podId }, { auth: true }).catch(
+        () => null,
+      );
+      setSpotFills(fillData?.podSpotFills ?? []);
+    } else {
+      setSpotFills([]);
     }
   }, [podId]);
 
@@ -157,6 +169,7 @@ export function usePodDetails(podId: string) {
     savedInitially,
     membershipState,
     people,
+    spotFills,
     categoryCrumbs,
     isLoading,
     error,

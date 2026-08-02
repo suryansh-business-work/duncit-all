@@ -35,6 +35,7 @@ export const appConfig: AppConfig = {
         { label: 'Venue Dashboard', to: '/venues/dashboard', icon: 'analytics' },
         { label: 'Venue Management', to: '/register-venue', icon: 'storefront' },
         { label: 'Slot Requests', to: '/venues/requests', icon: 'calendar' },
+        { label: 'Pods', to: '/venues/pods', icon: 'orders' },
       ],
     },
     { label: 'Host', to: '/become-host', icon: 'work' },

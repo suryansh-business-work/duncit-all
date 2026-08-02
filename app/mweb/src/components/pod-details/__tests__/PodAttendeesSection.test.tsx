@@ -2,13 +2,27 @@ import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
-import PodAttendeesSection, { buildAttendeePeople } from '../PodAttendeesSection';
+import PodAttendeesSection, {
+  buildAttendeePeople,
+  buildSpotFillRows,
+  type SpotFill,
+} from '../PodAttendeesSection';
 
 const attendees = [
   { user_id: 'h1', full_name: 'Alice Host', profile_photo: 'https://img/a.jpg' },
   { user_id: 'g1', full_name: 'Bob Guest', profile_photo: null },
   { user_id: 'g2', full_name: null, profile_photo: null },
 ];
+
+const spotFill = (over: Partial<SpotFill> = {}): SpotFill => ({
+  backout_no: 'DUN-BKO-000001',
+  backed_out_user_id: 'out1',
+  backed_out_user_name: 'Asha Rao',
+  backed_out_profile_photo: 'https://img/asha.jpg',
+  replacement_user_id: 'new1',
+  replacement_user_name: 'Bela Jain',
+  ...over,
+});
 
 function setup(props: Partial<Parameters<typeof PodAttendeesSection>[0]> = {}) {
   return render(
@@ -40,6 +54,40 @@ describe('buildAttendeePeople', () => {
     expect(people[0].profile_photo).toBeNull();
     // null attendeeIds path
     expect(buildAttendeePeople([], null as unknown as string[], [])).toEqual([]);
+  });
+});
+
+describe('buildSpotFillRows', () => {
+  const t = (key: string, options?: { vars?: Record<string, string | number> }) =>
+    options?.vars?.name === undefined ? key : `${key}:${options.vars.name}`;
+
+  it('resolves display rows once, with copy fallbacks for legacy fills', () => {
+    expect(buildSpotFillRows([spotFill()], t)).toEqual([
+      {
+        key: 'DUN-BKO-000001',
+        old_user_id: 'out1',
+        old_name: 'Asha Rao',
+        old_photo: 'https://img/asha.jpg',
+        filled_by_label: 'mweb.podDetails.spotFilledBy:Bela Jain',
+      },
+    ]);
+    const legacy = buildSpotFillRows(
+      [
+        spotFill({
+          backed_out_user_name: null,
+          backed_out_profile_photo: null,
+          replacement_user_id: null,
+          replacement_user_name: null,
+        }),
+      ],
+      t,
+    );
+    expect(legacy[0]).toMatchObject({
+      old_name: 'mweb.podDetails.formerAttendee',
+      old_photo: null,
+      filled_by_label: 'mweb.podDetails.spotFilledBy:mweb.podDetails.newAttendee',
+    });
+    expect(buildSpotFillRows(undefined as unknown as SpotFill[], t)).toEqual([]);
   });
 });
 
@@ -83,5 +131,18 @@ describe('PodAttendeesSection', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close attendees' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  });
+
+  it('strikes through a replaced attendee and names the filler, in line and in the dialog', () => {
+    setup({ spotFills: [spotFill()] });
+    // Caption line under the avatar group.
+    expect(screen.getByText('Asha Rao')).toBeInTheDocument();
+    expect(screen.getByText(/Spot filled by Bela Jain/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View all attendees' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Spot filled')).toBeInTheDocument();
+    expect(within(dialog).getByText('Asha Rao')).toBeInTheDocument();
+    expect(within(dialog).getByText('Spot filled by Bela Jain')).toBeInTheDocument();
   });
 });

@@ -8,6 +8,7 @@ import VenueListingsPage from './pages/venue-listings-page/VenueListingsPage';
 import VenueAvailabilityPage from './pages/venue-availability-page/VenueAvailabilityPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
+import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
 import BrandSettingsPage from './pages/ecomm-brand-page/brand-settings/BrandSettingsPage';
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/register-venue/:venueId" element={authed(<RegisterVenuePage />)} />
       <Route path="/venues/dashboard" element={authed(<VenueDashboardPage />)} />
       <Route path="/venues/requests" element={authed(<SlotRequestsPage />)} />
+      <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />

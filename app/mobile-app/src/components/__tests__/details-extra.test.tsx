@@ -64,6 +64,19 @@ describe('PodAccordions', () => {
       <PodAccordions
         pod={podWithClub as never}
         people={[]}
+        spotFills={
+          [
+            {
+              backout_no: 'DUN-BKO-000009',
+              backed_out_user_id: 'o1',
+              backed_out_user_name: 'Old Name',
+              backed_out_profile_photo: null,
+              replacement_user_id: 'n1',
+              replacement_user_name: 'New Name',
+              filled_at: '2026-07-01T00:00:00.000Z',
+            },
+          ] as never
+        }
         categoryCrumbs={['Sports', 'Racquet', 'Badminton']}
         isFree={false}
         gstPct={18}
@@ -74,6 +87,8 @@ describe('PodAccordions', () => {
     );
     expect(screen.getByTestId('accordion-about')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-expand-all'));
+    // The attendees section strikes through the replaced member and names the filler.
+    expect(screen.getByText(/Spot filled by New Name/)).toBeOnTheScreen();
     expect(screen.getByText('Place charges')).toBeOnTheScreen();
     expect(screen.getByText('Payment terms')).toBeOnTheScreen();
     // Paid pod → customer sees GST + total only (no fee/host/venue internals).

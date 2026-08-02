@@ -2,7 +2,7 @@ import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import type { PodDetail, PodPerson } from '@/hooks/useDetails';
+import type { PodDetail, PodPerson, PodSpotFill } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { inclusiveGst } from '@/utils/checkout-math';
 import { isPodExpired } from '@/utils/pod-format';
@@ -73,6 +73,7 @@ function PaymentDetails({
 export function PodAccordions({
   pod,
   people,
+  spotFills = [],
   categoryCrumbs,
   isFree,
   gstPct,
@@ -82,6 +83,8 @@ export function PodAccordions({
 }: Readonly<{
   pod: PodDetail;
   people: PodPerson[];
+  /** Filled Backout seats — struck-through rows in the attendees section. */
+  spotFills?: PodSpotFill[];
   categoryCrumbs: readonly string[];
   isFree: boolean;
   gstPct: number;
@@ -148,6 +151,7 @@ export function PodAccordions({
             people={attendeePeople}
             spots={pod.no_of_spots}
             expired={isPodExpired(pod.pod_date_time)}
+            spotFills={spotFills}
             onOpenProfile={onOpenProfile}
           />
         ),
@@ -199,7 +203,18 @@ export function PodAccordions({
       });
     }
     return list;
-  }, [pod, people, categoryCrumbs, isFree, gstPct, currency, onOpenClub, onOpenProfile, primary]);
+  }, [
+    pod,
+    people,
+    spotFills,
+    categoryCrumbs,
+    isFree,
+    gstPct,
+    currency,
+    onOpenClub,
+    onOpenProfile,
+    primary,
+  ]);
 
   const [open, setOpen] = useState<Set<string>>(new Set(['about']));
   const toggle = (id: string) =>

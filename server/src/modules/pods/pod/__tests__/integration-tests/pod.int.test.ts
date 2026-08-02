@@ -606,3 +606,26 @@ describe('pod reels (explore reel_url)', () => {
     expect(await podService.list()).toHaveLength(3);
   });
 });
+
+describe('pod(include_deleted) — admin reviewers may open cancelled pods', () => {
+  const resolvePod = podResolvers.Query.pod;
+
+  it('honors include_deleted only for review roles', async () => {
+    const doc = await PodModel.create(
+      makePod({ pod_title: 'Cancelled pod', deleted_at: new Date(), is_active: false })
+    );
+    const id = String(doc._id);
+
+    const admin = makeContext({ roles: ['SUPER_ADMIN'] });
+    const viewer = makeContext({ roles: [] });
+
+    expect(await resolvePod(null, { pod_doc_id: id }, viewer)).toBeNull();
+    expect(await resolvePod(null, { pod_doc_id: id, include_deleted: true }, viewer)).toBeNull();
+    expect(await resolvePod(null, { pod_doc_id: id, include_deleted: true }, admin)).toMatchObject({
+      id,
+      is_deleted: true,
+    });
+    // Admins still get the default (hidden) behavior without the flag.
+    expect(await resolvePod(null, { pod_doc_id: id }, admin)).toBeNull();
+  });
+});

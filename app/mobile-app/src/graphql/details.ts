@@ -277,6 +277,21 @@ export const PodPeopleDocument = gql(`
   }
 `);
 
+/** Filled Backout seats — struck-through attendees. Mirrors mWeb's POD_SPOT_FILLS. */
+export const PodSpotFillsDocument = gql(`
+  query MobilePodSpotFills($podId: ID!) {
+    podSpotFills(pod_doc_id: $podId) {
+      backout_no
+      backed_out_user_id
+      backed_out_user_name
+      backed_out_profile_photo
+      replacement_user_id
+      replacement_user_name
+      filled_at
+    }
+  }
+`);
+
 /** Comments thread for a pod (auth) — mirrors mWeb's POD_COMMENTS. */
 export const PodCommentsDocument = gql(`
   query MobilePodComments($podId: ID!) {

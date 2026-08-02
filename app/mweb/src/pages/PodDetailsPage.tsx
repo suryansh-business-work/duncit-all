@@ -31,6 +31,7 @@ import {
   POD_DETAILS,
   POD_ID_BY_SLUGS,
   POD_PEOPLE,
+  POD_SPOT_FILLS,
   PodDetailsSkeleton,
 } from './pod-details-page/queries';
 
@@ -67,6 +68,11 @@ export default function PodDetailsPage() {
   const { data: peopleData } = useQuery(POD_PEOPLE, {
     variables: { ids: peopleIds },
     skip: peopleIds.length === 0,
+    fetchPolicy: 'cache-and-network',
+  });
+  const { data: spotFillData } = useQuery(POD_SPOT_FILLS, {
+    variables: { id },
+    skip: !id,
     fetchPolicy: 'cache-and-network',
   });
   const pod = data?.pod ?? null;
@@ -189,6 +195,7 @@ export default function PodDetailsPage() {
         club={club}
         hosts={podHosts}
         attendees={allPeople}
+        spotFills={spotFillData?.podSpotFills ?? []}
         isFree={isFree}
         priceCompute={priceCompute}
         categoryCrumbs={clubCategoryCrumbs}

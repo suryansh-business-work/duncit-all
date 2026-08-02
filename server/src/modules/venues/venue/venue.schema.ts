@@ -239,10 +239,44 @@ export const venueTypeDefs = /* GraphQL */ `
     owner_address: String
   }
 
+  "Derived lifecycle bucket of a pod at a venue."
+  enum VenuePodBucket {
+    UPCOMING
+    ONGOING
+    COMPLETED
+    CANCELLED
+  }
+
+  "One pod booked at a venue the caller owns (Partners → Venues → Pods)."
+  type VenuePod {
+    id: ID!
+    pod_slug: String!
+    pod_title: String!
+    pod_date_time: String!
+    pod_end_date_time: String
+    pod_amount: Int!
+    pod_type: PodType!
+    no_of_spots: Int!
+    attendee_count: Int!
+    "Attendee user ids — resolve names via publicUsersByIds."
+    pod_attendees: [ID!]!
+    host_names: [String!]!
+    venue_id: ID!
+    venue_name: String!
+    bucket: VenuePodBucket!
+    is_active: Boolean!
+    completed_at: String
+    "Set when the pod was cancelled (soft-deleted)."
+    cancelled_at: String
+    created_at: String!
+  }
+
   extend type Query {
     "Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's)."
     myVenue(venue_id: ID): Venue
     myVenues: [Venue!]!
+    "Pods at the caller's venues, all states incl. cancelled. venue_id narrows to one owned venue."
+    venuePods(venue_id: ID): [VenuePod!]!
     "Owner-scoped table page over the caller's venues (shared table engine)."
     myVenuesTable(query: TableQueryInput): VenueTablePage!
     venues(status: VenueStatus): [Venue!]!

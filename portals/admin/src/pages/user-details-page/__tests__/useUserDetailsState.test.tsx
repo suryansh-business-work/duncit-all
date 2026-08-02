@@ -45,7 +45,6 @@ const userDoc = (over: Record<string, unknown> = {}) => ({
   interest_categories: [],
   status: 'ACTIVE',
   roles: ['USER', 'HOST'],
-  host_commission_pct: 10,
   dob: '1995-04-02',
   created_at: '2025-01-01T00:00:00.000Z',
   updated_at: '2025-01-02T00:00:00.000Z',
@@ -96,7 +95,6 @@ const updateMock = (input: Record<string, unknown>, spy?: () => void): MockedRes
           status: 'ACTIVE',
           assigned_city: 'Pune',
           assigned_zones: ['West', 'North'],
-          host_commission_pct: 10,
         },
       },
     };

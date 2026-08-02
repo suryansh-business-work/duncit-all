@@ -29,7 +29,16 @@ export const appConfig = {
     { label: 'Startup Dashboard', to: '/startup-dashboard', icon: 'insights' },
     { label: 'Default Deductions', to: '/default-deductions', icon: 'percent' },
     { label: 'Pod Finance', to: '/pod-finance', icon: 'analytics' },
-    { label: 'Backout Refunds', to: '/backout-refunds', icon: 'quote' },
+    {
+      label: 'Cancel & Refunds',
+      icon: 'quote',
+      children: [
+        { label: 'Dashboard', to: '/cancellations', icon: 'dashboard' },
+        { label: 'User Backout Refunds', to: '/backout-refunds', icon: 'quote' },
+        { label: 'Venue Cancel', to: '/cancellations/venue', icon: 'storefront' },
+        { label: 'Host Cancel', to: '/cancellations/host', icon: 'receipt' },
+      ],
+    },
     { label: 'Payment Logs', to: '/payment-logs', icon: 'receipt' },
     { label: 'Payment Release', to: '/payment-release', icon: 'payments' },
     { label: 'Withdrawals', to: '/withdrawals', icon: 'payments' },

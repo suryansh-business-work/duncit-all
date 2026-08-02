@@ -1,11 +1,38 @@
 import { useMemo, useState } from 'react';
 import { Avatar, AvatarGroup, ButtonBase, Stack, Typography } from '@mui/material';
-import PodAttendeesDialog, { type AttendeePerson } from './PodAttendeesDialog';
+import PodAttendeesDialog, { type AttendeePerson, type SpotFillRow } from './PodAttendeesDialog';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface Attendee {
   user_id: string;
   full_name?: string | null;
   profile_photo?: string | null;
+}
+
+/** One filled Backout seat as the server reports it (podSpotFills). */
+export interface SpotFill {
+  backout_no: string;
+  backed_out_user_id: string;
+  backed_out_user_name?: string | null;
+  backed_out_profile_photo?: string | null;
+  replacement_user_id?: string | null;
+  replacement_user_name?: string | null;
+}
+
+type Translate = (key: string, options?: { vars?: Record<string, string | number> }) => string;
+
+/** Resolve the raw spot fills to display rows ONCE — the caption line and the
+ * dialog both render these, so the fallback copy can't drift between them. */
+export function buildSpotFillRows(fills: SpotFill[], t: Translate): SpotFillRow[] {
+  return (fills ?? []).map((fill) => ({
+    key: fill.backout_no,
+    old_user_id: fill.backed_out_user_id,
+    old_name: fill.backed_out_user_name || t('mweb.podDetails.formerAttendee'),
+    old_photo: fill.backed_out_profile_photo ?? null,
+    filled_by_label: t('mweb.podDetails.spotFilledBy', {
+      vars: { name: fill.replacement_user_name || t('mweb.podDetails.newAttendee') },
+    }),
+  }));
 }
 
 interface Props {
@@ -15,6 +42,8 @@ interface Props {
   totalSpots: number;
   /** Past pods show "attended" instead of "going". */
   expired?: boolean;
+  /** Filled Backout seats — old attendee struck through, filler named. */
+  spotFills?: SpotFill[];
 }
 
 const MAX_PREVIEW = 8;
@@ -46,12 +75,15 @@ export default function PodAttendeesSection({
   hostIds,
   totalSpots,
   expired,
+  spotFills = [],
 }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const people = useMemo(
     () => buildAttendeePeople(attendees, attendeeIds, hostIds),
     [attendees, attendeeIds, hostIds]
   );
+  const fillRows = useMemo(() => buildSpotFillRows(spotFills, t), [spotFills, t]);
   const count = people.length;
   const noun = expired ? 'attended' : 'going';
 
@@ -103,7 +135,29 @@ export default function PodAttendeesSection({
           </Typography>
         </ButtonBase>
       )}
-      <PodAttendeesDialog open={open} people={people} onClose={() => setOpen(false)} />
+      {fillRows.length > 0 && (
+        <Stack spacing={0.25}>
+          {fillRows.map((fill) => (
+            <Typography key={fill.key} variant="caption" color="text.secondary">
+              <Typography
+                component="span"
+                variant="caption"
+                sx={{ textDecoration: 'line-through', color: 'text.disabled' }}
+              >
+                {fill.old_name}
+              </Typography>
+              {' · '}
+              {fill.filled_by_label}
+            </Typography>
+          ))}
+        </Stack>
+      )}
+      <PodAttendeesDialog
+        open={open}
+        people={people}
+        spotFills={fillRows}
+        onClose={() => setOpen(false)}
+      />
     </Stack>
   );
 }

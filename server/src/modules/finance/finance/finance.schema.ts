@@ -375,6 +375,55 @@ export const financeTypeDefs = /* GraphQL */ `
     kind: PaymentReleaseKind
   }
 
+  "Who cancelled a pod — Finance's Cancel & Refunds pages split on this."
+  enum PodCancelKind {
+    HOST
+    VENUE
+    ADMIN
+    CLUB_ADMIN
+    SYSTEM
+  }
+
+  "One cancelled pod with its refund money and the venue's booked amount."
+  type PodCancellation {
+    pod_id: ID!
+    pod_slug: String!
+    pod_title: String!
+    kind: PodCancelKind!
+    "Free-text cancellation reason (delete reason / venue decline reason)."
+    reason: String!
+    actor_name: String!
+    cancelled_at: String!
+    pod_date_time: String
+    pod_amount: Float!
+    attendee_count: Int!
+    "Payments already refunded for this pod."
+    refunded_count: Int!
+    refunded_total: Float!
+    "Successful payments NOT refunded — outstanding attendee money."
+    unrefunded_count: Int!
+    unrefunded_total: Float!
+    venue_id: ID
+    venue_name: String
+    "The venue's booked slot money for this pod (what the venue loses)."
+    venue_amount: Float!
+    host_names: [String!]!
+    club_id: ID
+    currency_symbol: String!
+  }
+
+  "KPI tiles for Finance → Cancel & Refunds → Dashboard."
+  type PodCancellationStats {
+    total_cancelled: Int!
+    cancelled_by_host: Int!
+    cancelled_by_venue: Int!
+    cancelled_by_admin: Int!
+    cancelled_by_club_admin: Int!
+    total_refund_amount: Float!
+    refunded_payment_count: Int!
+    currency_symbol: String!
+  }
+
   input CreatePaymentReleaseInput {
     pod_id: ID!
     kind: PaymentReleaseKind!
@@ -442,6 +491,10 @@ export const financeTypeDefs = /* GraphQL */ `
     myVenueEarningsSummary: EarningsSummary!
     # Finance portal dashboard KPI cards (finance roles only).
     financeDashboardStats: FinanceDashboardStats!
+    # Cancel & Refunds: every cancelled pod, newest first (finance roles only).
+    podCancellations(kind: PodCancelKind): [PodCancellation!]!
+    # Cancel & Refunds dashboard KPI tiles (finance roles only).
+    podCancellationStats: PodCancellationStats!
   }
 
   extend type Mutation {

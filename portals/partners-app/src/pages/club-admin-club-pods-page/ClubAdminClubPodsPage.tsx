@@ -5,6 +5,7 @@ import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip,
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import HistoryIcon from '@mui/icons-material/History';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import { PodEditorDialog, useMediaPickerBridge } from '@duncit/pod-form';
@@ -12,6 +13,7 @@ import MediaPickerDialog from '../../components/MediaPickerDialog';
 import { CLUB_ADMIN_DELETE_POD, CLUB_ADMIN_POD_LOOKUPS, CLUB_ADMIN_PODS_TABLE } from './queries';
 import { getClubVenueIds } from '../pods-page/partner-pod-config';
 import useClubAdminPodEditor, { CLUB_ADMIN_POD_CONFIG } from './useClubAdminPodEditor';
+import PodActivityDialog from './PodActivityDialog';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 
 export default function ClubAdminClubPodsPage() {
@@ -22,6 +24,7 @@ export default function ClubAdminClubPodsPage() {
   const [deletePod, deleteState] = useMutation(CLUB_ADMIN_DELETE_POD);
 
   const [podToDelete, setPodToDelete] = useState<any>(null);
+  const [trailPod, setTrailPod] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const picker = useMediaPickerBridge();
@@ -44,12 +47,15 @@ export default function ClubAdminClubPodsPage() {
   const club = clubs.find((item: any) => item.id === clubId);
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
 
-  // Every page (and every user filter) stays pinned to this club server-side.
+  // Every page (and every user filter) stays pinned to this club server-side:
+  // clubAdminPodsTable resolves the caller's club membership itself, so no
+  // client filter can widen the scope. It also returns every stage — awaiting
+  // venue approval and cancelled pods included — so all of them stay editable.
   const fetchRows = useApolloTableFetch<PodRowBase>(
     client,
     CLUB_ADMIN_PODS_TABLE,
-    'podsTable',
-    { extraFilters: [{ field: 'club_id', op: 'eq', value: clubId }] },
+    'clubAdminPodsTable',
+    { extraVariables: { club_id: clubId } },
     [clubId],
   );
 
@@ -69,14 +75,23 @@ export default function ClubAdminClubPodsPage() {
 
   const renderActions = (pod: PodRowBase) => (
     <Stack direction="row" justifyContent="flex-end" component="span">
+      <Tooltip title="Activity & AI monitoring">
+        <IconButton size="small" onClick={() => setTrailPod(pod)}>
+          <HistoryIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
       <Tooltip title="Edit pod">
         <IconButton size="small" onClick={() => editor.openEdit(pod)}><EditIcon fontSize="small" /></IconButton>
       </Tooltip>
-      <Tooltip title="Delete pod">
-        <IconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
-          <DeleteOutlineIcon fontSize="small" />
-        </IconButton>
-      </Tooltip>
+      {/* An already-cancelled pod stays editable, but there is nothing left
+          to delete. */}
+      {!pod.is_deleted && (
+        <Tooltip title="Delete pod">
+          <IconButton size="small" color="error" onClick={() => { setDeleteError(null); setPodToDelete(pod); }}>
+            <DeleteOutlineIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   );
 
@@ -114,6 +129,8 @@ export default function ClubAdminClubPodsPage() {
           />
         </Stack>
       </CardContent>
+
+      <PodActivityDialog pod={trailPod} onClose={() => setTrailPod(null)} />
 
       <PodEditorDialog
         open={editor.open}

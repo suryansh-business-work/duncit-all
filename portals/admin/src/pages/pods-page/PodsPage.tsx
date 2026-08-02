@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApolloClient } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Snackbar, Stack } from '@mui/material';
+import { Button, FormControlLabel, Snackbar, Stack, Switch } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
 import { makeNativeParityPodConfig, useMediaPickerBridge, type PodFormConfig } from '@duncit/pod-form';
@@ -28,6 +28,8 @@ export default function PodsPage() {
   const lookups = usePodPageData();
   const [toast, setToast] = useState<string | null>(null);
   const [quickPod, setQuickPod] = useState<PodRow | null>(null);
+  // Cancelled pods stay editable, so they must be findable — off by default.
+  const [showCancelled, setShowCancelled] = useState(false);
   const picker = useMediaPickerBridge();
   const releaseRequest = usePodReleaseRequest({
     refetch: async () => refetchRef.current?.(),
@@ -63,17 +65,22 @@ export default function PodsPage() {
     client,
     PODS_TABLE,
     'podsTable',
-    { extraFilters: clubFilter ? [{ field: 'club_id', op: 'eq', value: clubFilter }] : undefined },
-    [clubFilter],
+    {
+      extraFilters: clubFilter ? [{ field: 'club_id', op: 'eq', value: clubFilter }] : undefined,
+      extraVariables: { include_deleted: showCancelled },
+    },
+    [clubFilter, showCancelled],
   );
 
-  // The club select lives outside the table, so a change must trigger a reload.
-  const prevClubRef = useRef(clubFilter);
+  // The club select and the cancelled toggle live outside the table, so a
+  // change to either must trigger a reload.
+  const prevScopeRef = useRef(`${clubFilter}|${showCancelled}`);
   useEffect(() => {
-    if (prevClubRef.current === clubFilter) return;
-    prevClubRef.current = clubFilter;
+    const scope = `${clubFilter}|${showCancelled}`;
+    if (prevScopeRef.current === scope) return;
+    prevScopeRef.current = scope;
     refetchRef.current?.();
-  }, [clubFilter]);
+  }, [clubFilter, showCancelled]);
 
   return (
     <Stack spacing={3}>
@@ -87,9 +94,22 @@ export default function PodsPage() {
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         toolbarActions={
-          <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>
-            New Pod
-          </Button>
+          <>
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={showCancelled}
+                  onChange={(e) => setShowCancelled(e.target.checked)}
+                />
+              }
+              label="Include cancelled"
+              slotProps={{ typography: { variant: 'body2' } }}
+            />
+            <Button size="small" variant="contained" startIcon={<AddIcon />} onClick={editor.openCreate}>
+              New Pod
+            </Button>
+          </>
         }
         clubName={lookups.clubName}
         venueName={lookups.venueName}

@@ -4,6 +4,7 @@ import { ClubModel } from '@modules/clubs/club/club.model';
 import { mapClubToPublic, clubService } from '@modules/clubs/club/club.service';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { podService } from '@modules/pods/pod/pod.service';
+import { podAuditService } from '@modules/pods/podAudit/podAudit.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { ClubRatingModel } from '@modules/clubs/club/clubRating.model';
@@ -348,9 +349,14 @@ export const clubAdminService = {
     if (!ok) forbidden();
   },
 
+  /** Club admins reach their club's pods at every stage, so a cancelled
+   * (soft-deleted) pod still resolves here — membership is what gates it. */
   async assertClubAdminForPod(actor: Actor, podDocId: string) {
     if (!Types.ObjectId.isValid(podDocId)) podNotFound();
-    const pod = await PodModel.findById(podDocId).select('club_id').lean();
+    const pod = await PodModel.findById(podDocId)
+      .setOptions({ includeDeleted: true })
+      .select('club_id')
+      .lean();
     if (!pod) podNotFound();
     await this.assertClubAdmin(actor, String((pod as any).club_id));
   },
@@ -388,6 +394,27 @@ export const clubAdminService = {
     }));
   },
 
+  /**
+   * Pods across the actor's clubs, at every stage. Scope is resolved HERE and
+   * pinned into the query's baseFilter, so a client filter can never widen it
+   * to a club the actor does not administer. `club_id` narrows to one of their
+   * clubs (guarded); SUPER_ADMIN with no clubs still sees nothing here — the
+   * Admin portal is that role's surface.
+   */
+  async podsTable(actor: Actor, clubId: string | null | undefined, query?: any) {
+    if (clubId) {
+      await this.assertClubAdmin(actor, clubId);
+      return podService.tableForClubAdmin([clubId], query);
+    }
+    return podService.tableForClubAdmin(await this.adminClubIds(actor.id), query);
+  },
+
+  /** The AI-monitored action trail of one pod in the actor's clubs. */
+  async podAuditLogs(actor: Actor, podDocId: string) {
+    await this.assertClubAdminForPod(actor, podDocId);
+    return podAuditService.listForPod(podDocId);
+  },
+
   /** Full pod create under a club the actor administers. Reuses podService.create
    * after the club-membership guard. The partner pod form does not collect hosts
    * (the host self-serve flow injects the creator server-side), so record the
@@ -412,7 +439,11 @@ export const clubAdminService = {
     if (Array.isArray(clean.pod_hosts_id) && clean.pod_hosts_id.length === 0) {
       delete clean.pod_hosts_id;
     }
-    return podService.update(podDocId, clean, { actorUserId: actor.id, source: 'CLUB_ADMIN' });
+    return podService.update(podDocId, clean, {
+      actorUserId: actor.id,
+      source: 'CLUB_ADMIN',
+      includeDeleted: true,
+    });
   },
 
   /** Soft-delete a pod in the actor's clubs (same soft-delete as the admin path). */

@@ -66,7 +66,14 @@ const renderHits = (p: PodRow) => (
 );
 
 const renderStatus = (p: PodRow) => {
+  if (p.is_deleted) return <Chip size="small" label="Cancelled" color="error" />;
   if (p.completed_at) return <Chip size="small" label="Completed" color="info" />;
+  if (p.venue_approval_status === 'PENDING') {
+    return <Chip size="small" label="Awaiting venue" color="warning" />;
+  }
+  if (p.venue_approval_status === 'DECLINED') {
+    return <Chip size="small" label="Venue rejected" color="error" variant="outlined" />;
+  }
   if (p.is_active) return <Chip size="small" label="Active" color="success" />;
   return <Chip size="small" label="Draft" color="default" />;
 };

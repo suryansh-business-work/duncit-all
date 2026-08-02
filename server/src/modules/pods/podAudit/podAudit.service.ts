@@ -32,7 +32,23 @@ const TRACKED_FIELDS = [
   'club_id',
   'is_active',
   'venue_approval_status',
+  'pod_info',
+  'reel_url',
+  'pod_hashtag',
+  'pod_images_and_videos',
+  'pod_hosts_id',
 ] as const;
+
+/** Fields whose raw value is an array — summarised rather than stringified, so
+ * a media/host edit produces a readable diff instead of '[object Object]'
+ * (S6551) and, crucially, is not silently dropped as "nothing changed". */
+const ARRAY_FIELD_SUMMARY: Record<string, (items: any[]) => string> = {
+  pod_hashtag: (items) => items.map(String).join(', '),
+  // Media is compared by the URLs it points at: a swapped image is a change,
+  // a re-saved identical gallery is not.
+  pod_images_and_videos: (items) => items.map((m) => String(m?.url ?? '')).join(', '),
+  pod_hosts_id: (items) => items.map(String).join(', '),
+};
 
 export type PodAuditSnapshot = Record<string, string>;
 
@@ -47,7 +63,11 @@ const asText = (value: AuditValue): string => {
 /** Compact string snapshot of the tracked fields of a pod doc. */
 export function snapshotPod(doc: any): PodAuditSnapshot {
   const snap: PodAuditSnapshot = {};
-  for (const field of TRACKED_FIELDS) snap[field] = asText(doc?.[field]);
+  for (const field of TRACKED_FIELDS) {
+    const summarise = ARRAY_FIELD_SUMMARY[field];
+    const value = doc?.[field];
+    snap[field] = summarise ? summarise(Array.isArray(value) ? value : []) : asText(value);
+  }
   return snap;
 }
 

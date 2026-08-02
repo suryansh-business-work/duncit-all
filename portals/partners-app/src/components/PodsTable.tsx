@@ -15,6 +15,10 @@ export interface PodRowBase {
   pod_attendees?: string[] | null;
   is_active: boolean;
   completed_at?: string | null;
+  /** Optional booking-cycle state — the club-admin list shows every stage, the
+   * host list does not select them. */
+  is_deleted?: boolean | null;
+  venue_approval_status?: string | null;
 }
 
 interface Props<T extends PodRowBase> {
@@ -30,13 +34,21 @@ interface Props<T extends PodRowBase> {
   renderActions?: (pod: T) => ReactNode;
 }
 
+/** Booking-cycle state wins over the plain active/draft split, so a cancelled
+ * or venue-blocked pod is never mistaken for a draft. */
 const podStatusLabel = (pod: PodRowBase): string => {
+  if (pod.is_deleted) return 'Cancelled';
   if (pod.completed_at) return 'Completed';
+  if (pod.venue_approval_status === 'PENDING') return 'Awaiting venue';
+  if (pod.venue_approval_status === 'DECLINED') return 'Venue rejected';
   return pod.is_active ? 'Active' : 'Draft';
 };
 
-const podStatusColor = (pod: PodRowBase): 'success' | 'info' | 'default' => {
+const podStatusColor = (pod: PodRowBase): 'success' | 'info' | 'default' | 'error' | 'warning' => {
+  if (pod.is_deleted) return 'error';
   if (pod.completed_at) return 'success';
+  if (pod.venue_approval_status === 'PENDING') return 'warning';
+  if (pod.venue_approval_status === 'DECLINED') return 'error';
   return pod.is_active ? 'info' : 'default';
 };
 

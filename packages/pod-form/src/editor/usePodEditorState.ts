@@ -22,9 +22,13 @@ export interface UsePodEditorStateArgs {
 
 /**
  * Shared create/edit dialog controller for the pod form — one submit pipeline
- * for every portal: builds the GraphQL input, strips `venue_slot_id` on update
- * (UpdatePodInput has no slot field; slot re-booking is create-only) and keeps
- * the is_active toggle authoritative where the config shows it.
+ * for every portal: builds the GraphQL input and keeps the is_active toggle
+ * authoritative where the config shows it.
+ *
+ * A CHANGED `venue_slot_id` rides along on update, which is how a portal
+ * re-routes a pod's booking (the lever that rescues a venue-rejected pod
+ * without creating a new one). An unchanged slot is stripped so a plain
+ * content edit never re-enters the venue's approval queue.
  */
 export default function usePodEditorState({
   config,
@@ -79,8 +83,10 @@ export default function usePodEditorState({
     try {
       const input = buildPodInput(values, { draft: options.draft, config });
       if (editingPod) {
-        // UpdatePodInput has no venue_slot_id — slot changes go through the venue flow.
-        delete input.venue_slot_id;
+        // Only a genuinely different slot is a re-route; re-saving the same one
+        // would needlessly release and re-request the venue's approval.
+        const sameSlot = (input.venue_slot_id ?? null) === (editingPod.venue_slot_id ?? null);
+        if (sameSlot) delete input.venue_slot_id;
         if (!options.draft && config.showIsActive) input.is_active = values.is_active;
         await submitUpdate(editingPod.id, input);
       } else {

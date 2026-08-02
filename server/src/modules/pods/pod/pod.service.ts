@@ -1005,6 +1005,116 @@ async function applyPodEditCore(doc: any, input: any) {
  * resubmission — never taken from the form. */
 const HOST_RESUBMIT_BLOCKED_FIELDS = ['pod_hosts_id', 'pod_attendees', 'club_id', 'is_active'] as const;
 
+/** The pod's booking + window, restored verbatim if a re-route cannot claim
+ * its target slot. */
+function snapshotBooking(doc: any) {
+  return {
+    venue_slot_id: doc.venue_slot_id,
+    venue_approval_status: doc.venue_approval_status,
+    is_active: doc.is_active,
+    venue_id: doc.venue_id,
+    location_id: doc.location_id,
+    zone_name: doc.zone_name,
+    pod_date_time: doc.pod_date_time,
+    pod_end_date_time: doc.pod_end_date_time,
+  };
+}
+
+interface SlotReroute {
+  slotDoc: any;
+  needsVenueApproval: boolean;
+  previousSlotId: string | null;
+}
+
+/**
+ * Resolve the slot an Admin / Club Admin re-routed a pod onto — the lever that
+ * rescues a venue-rejected pod from a portal without creating a new one.
+ *
+ * Runs BEFORE the content edit so the slot dictates the pod's window exactly
+ * as it does on create and host resubmission: the resolved venue and date
+ * range are written back onto `input`, so applyPodEditCore derives location,
+ * zone and dates from them instead of leaving the pod advertising a time its
+ * venue never booked. Returns null when no re-route was requested.
+ */
+async function prepareSlotReroute(doc: any, input: any): Promise<SlotReroute | null> {
+  if (input.venue_slot_id === undefined) return null;
+  // Venue inventory is only ever held by a pod that can still release it. A
+  // cancelled or settled pod would strand the slot forever.
+  if (doc.deleted_at) {
+    throw new GraphQLError('Restore this pod before changing its venue slot', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
+  if (doc.completed_at) {
+    throw new GraphQLError('A completed pod cannot be moved to another venue slot', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
+  const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
+  const slotInput: any = {
+    venue_slot_id: nextMode === 'PHYSICAL' ? input.venue_slot_id : undefined,
+    venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : undefined),
+    pod_hosts_id: (doc.pod_hosts_id ?? []).map(String),
+  };
+  const { slotDoc, needsVenueApproval } = await resolveSlotForCreate(slotInput, nextMode);
+  if (slotDoc) {
+    input.venue_id = slotInput.venue_id;
+    input.pod_date_time = slotInput.pod_date_time;
+    input.pod_end_date_time = slotInput.pod_end_date_time;
+  }
+  return {
+    slotDoc,
+    needsVenueApproval,
+    previousSlotId: doc.venue_slot_id ? String(doc.venue_slot_id) : null,
+  };
+}
+
+/** Booking state implied by a resolved re-route, applied after the content edit. */
+function applyRerouteState(doc: any, input: any, reroute: SlotReroute) {
+  const pendingApproval = Boolean(reroute.slotDoc && reroute.needsVenueApproval);
+  doc.venue_slot_id = reroute.slotDoc ? reroute.slotDoc._id : null;
+  doc.venue_approval_status = pendingApproval ? 'PENDING' : 'NONE';
+  // A pod waiting on the venue's answer is never live. Otherwise a settled
+  // booking brings the pod back online — unless the portal said otherwise,
+  // in which case its explicit Active choice wins.
+  doc.is_active = pendingApproval ? false : input.is_active ?? true;
+}
+
+/**
+ * Claim the new slot, and only once it is secured, free the old one — never
+ * the reverse, or a lost race would leave the pod's seat sellable to someone
+ * else while the pod still claimed it. A failed claim restores the previous
+ * booking AND persists it, mirroring holdOrBookForResubmit.
+ */
+async function claimRerouteSlot(
+  doc: any,
+  reroute: SlotReroute,
+  previous: ReturnType<typeof snapshotBooking>,
+  actorSource: PodAuditSource,
+) {
+  const { slotDoc, needsVenueApproval, previousSlotId } = reroute;
+  try {
+    if (slotDoc && needsVenueApproval) {
+      await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+      await notifyVenueSlotRequested(doc, slotDoc);
+      await emailVenueSlotRequested(doc, slotDoc);
+    } else if (slotDoc) {
+      await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+    }
+  } catch (e) {
+    Object.assign(doc, previous);
+    await doc.save();
+    logs.server.warn('pod', 'slotReroute', {
+      error: e,
+      msg: `Slot re-route (${actorSource}) failed — pod kept its previous booking`,
+    });
+    throw e;
+  }
+  if (previousSlotId && previousSlotId !== String(slotDoc?._id ?? '')) {
+    await venueSlotService.releaseSlotForPod(previousSlotId, String(doc._id));
+  }
+}
+
 /** Re-enter the booking cycle for a resubmitted slot: a partner slot is held
  * (PENDING approval, venue notified again); the host's own slot books
  * instantly. A concurrent snatch reverts the pod to its rejected state —
@@ -1089,7 +1199,10 @@ export const podService = {
    * baseFilter, so a client filter can never surface a PENDING pod to a
    * non-review caller (runTableQuery $and-merges the two). Soft-deleted pods
    * stay excluded via the model's pre-find hook. */
-  async table(input?: TableQueryInput | null, opts?: { includePendingApproval?: boolean }) {
+  async table(
+    input?: TableQueryInput | null,
+    opts?: { includePendingApproval?: boolean; includeDeleted?: boolean }
+  ) {
     const baseFilter = opts?.includePendingApproval
       ? {}
       : { venue_approval_status: { $ne: 'PENDING' } };
@@ -1097,7 +1210,8 @@ export const podService = {
       PodModel,
       baseFilter,
       coerceLegacyPodTypeFilters(input),
-      POD_TABLE_CONFIG
+      POD_TABLE_CONFIG,
+      { includeDeleted: opts?.includeDeleted }
     );
     const slugMap = await loadClubSlugMap(docs);
     return { rows: docs.map((d) => toPub(d, slugMap)), total, page, page_size };
@@ -1116,6 +1230,28 @@ export const podService = {
       { pod_hosts_id: new Types.ObjectId(userId) },
       coerceLegacyPodTypeFilters(input),
       POD_TABLE_CONFIG
+    );
+    const slugMap = await loadClubSlugMap(docs);
+    return { rows: docs.map((d) => toPub(d, slugMap)), total, page, page_size };
+  },
+
+  /**
+   * Club-scoped table page for the Partners portal's Club Admin. The club ids
+   * are pinned in the baseFilter ($and-merged by runTableQuery), so a client
+   * filter can never widen it to another club's pods. Unlike the public table
+   * this deliberately shows EVERY stage — pods still awaiting the venue
+   * owner's approval and cancelled (soft-deleted) ones included — because a
+   * club admin must be able to open and edit a pod wherever it sits in the
+   * booking cycle.
+   */
+  async tableForClubAdmin(clubIds: string[], input?: TableQueryInput | null) {
+    if (clubIds.length === 0) return { rows: [], total: 0, page: 1, page_size: 0 };
+    const { docs, total, page, page_size } = await runTableQuery<any>(
+      PodModel,
+      { club_id: { $in: clubIds.map((id) => new Types.ObjectId(id)) } },
+      coerceLegacyPodTypeFilters(input),
+      POD_TABLE_CONFIG,
+      { includeDeleted: true }
     );
     const slugMap = await loadClubSlugMap(docs);
     return { rows: docs.map((d) => toPub(d, slugMap)), total, page, page_size };
@@ -1309,17 +1445,38 @@ export const podService = {
     );
   },
 
-  async update(id: string, input: any, audit?: { actorUserId?: string | null; source: PodAuditSource }) {
-    const doc = await PodModel.findById(id);
+  /**
+   * Portal edit (Admin / Club Admin) — allowed at EVERY stage of the booking
+   * cycle: awaiting venue approval, live, venue-rejected, completed, and
+   * cancelled (soft-deleted pods opt in via `includeDeleted`, so a cancelled
+   * pod stays correctable instead of being frozen). Passing `venue_slot_id`
+   * re-routes the booking, which is how a portal rescues a rejected pod.
+   */
+  async update(
+    id: string,
+    input: any,
+    audit?: { actorUserId?: string | null; source: PodAuditSource; includeDeleted?: boolean }
+  ) {
+    const query = PodModel.findById(id);
+    if (audit?.includeDeleted) query.setOptions({ includeDeleted: true });
+    const doc = await query;
     if (!doc) notFound();
 
+    const source = audit?.source ?? 'SYSTEM';
+    // A cancelled pod stays correctable, but a content edit must never
+    // contradict its cancellation by flipping it live again.
+    if (doc.deleted_at) delete input.is_active;
+    const reroute = await prepareSlotReroute(doc, input);
+    const booking = reroute ? snapshotBooking(doc) : null;
     const before = snapshotPod(doc);
     await applyPodEditCore(doc, input);
+    if (reroute) applyRerouteState(doc, input, reroute);
     await doc.save();
+    if (reroute && booking) await claimRerouteSlot(doc, reroute, booking, source);
     await podAuditService.record({
       pod: doc,
       action: 'UPDATE',
-      source: audit?.source ?? 'SYSTEM',
+      source,
       actorUserId: audit?.actorUserId,
       before,
     });
@@ -1555,8 +1712,12 @@ export const podService = {
   },
 
   async remove(id: string, audit?: { actorUserId?: string | null; source: PodAuditSource; note?: string | null }) {
-    const doc = await PodModel.findById(id);
+    // Portals now list cancelled pods, so Delete can be pressed on one twice.
+    // Load it either way and answer idempotently instead of a confusing 404 —
+    // the slot and inventory releases below already ran the first time.
+    const doc = await PodModel.findById(id).setOptions({ includeDeleted: true });
     if (!doc) notFound();
+    if (doc.deleted_at) return true;
     // Soft delete: release the venue slot + reserved inventory, then mark the
     // pod deleted (keep the row so bookings/payments/tickets/history survive).
     await applyProductDeltas(doc!.product_requests ?? [], []);

@@ -96,13 +96,18 @@ const CLUB_ADMIN_POD_ROW_FIELDS = gql`
     product_requests { product_id quantity }
     pod_attendees
     is_active
+    is_deleted
+    venue_approval_status
     completed_at
   }
 `;
 
+/** Club-scoped server-side (not a client filter) and deliberately covering
+ * EVERY stage — pods awaiting venue approval and cancelled ones included — so
+ * a club admin can open and edit a pod wherever it sits in the booking cycle. */
 export const CLUB_ADMIN_PODS_TABLE = gql`
-  query ClubAdminPodsTable($query: TableQueryInput) {
-    podsTable(query: $query) {
+  query ClubAdminPodsTable($club_id: ID, $query: TableQueryInput) {
+    clubAdminPodsTable(club_id: $club_id, query: $query) {
       total
       rows {
         ...ClubAdminPodRowFields
@@ -110,6 +115,23 @@ export const CLUB_ADMIN_PODS_TABLE = gql`
     }
   }
   ${CLUB_ADMIN_POD_ROW_FIELDS}
+`;
+
+/** The AI-monitored action trail of one pod in the caller's clubs. */
+export const CLUB_ADMIN_POD_AUDIT_LOGS = gql`
+  query ClubAdminPodAuditLogs($pod_doc_id: ID!) {
+    clubAdminPodAuditLogs(pod_doc_id: $pod_doc_id) {
+      id
+      action
+      source
+      actor_name
+      note
+      changes { field from to }
+      ai_risk
+      ai_summary
+      created_at
+    }
+  }
 `;
 
 /** Approved hosts for the assign-host picker (club-admin scoped, max 20 rows). */

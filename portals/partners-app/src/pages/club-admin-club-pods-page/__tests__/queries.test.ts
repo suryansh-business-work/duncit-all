@@ -74,19 +74,34 @@ describe('CLUB_ADMIN_PODS', () => {
 });
 
 describe('CLUB_ADMIN_PODS_TABLE', () => {
-  it('pages server-side through TableQueryInput under the podsTable result key', () => {
+  it('pages through the club-scoped resolver, not the public podsTable', () => {
     expect(operationOf(CLUB_ADMIN_PODS_TABLE)).toEqual({
       name: 'ClubAdminPodsTable',
       type: 'query',
     });
-    expect(variablesOf(CLUB_ADMIN_PODS_TABLE)).toEqual({ query: 'TableQueryInput' });
-    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE)).toEqual(['podsTable']);
-    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE, 'podsTable')).toEqual(['total', 'rows']);
+    expect(variablesOf(CLUB_ADMIN_PODS_TABLE)).toEqual({
+      club_id: 'ID',
+      query: 'TableQueryInput',
+    });
+    // Scope is an ARGUMENT the server enforces, never a client-side filter.
+    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE)).toEqual(['clubAdminPodsTable']);
+    expect(argumentsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable')).toEqual({
+      club_id: '$club_id',
+      query: '$query',
+    });
+    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable')).toEqual(['total', 'rows']);
+  });
+
+  it('reads the stage fields so every booking-cycle state is renderable', () => {
+    const rowFields = fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable', 'rows');
+    expect(rowFields).toEqual(
+      expect.arrayContaining(['is_active', 'is_deleted', 'venue_approval_status', 'completed_at']),
+    );
   });
 
   it('rows are a superset of the plain list selection, so a row can prefill the editor', () => {
     const listFields = fieldsAt(CLUB_ADMIN_PODS, 'pods');
-    const rowFields = fieldsAt(CLUB_ADMIN_PODS_TABLE, 'podsTable', 'rows');
+    const rowFields = fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable', 'rows');
     for (const field of listFields) {
       expect(rowFields).toContain(field);
     }
@@ -94,28 +109,29 @@ describe('CLUB_ADMIN_PODS_TABLE', () => {
   });
 
   it('adds the edit-only fields the list view has no use for', () => {
-    const rowFields = fieldsAt(CLUB_ADMIN_PODS_TABLE, 'podsTable', 'rows');
+    const rowFields = fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable', 'rows');
     const listFields = new Set(fieldsAt(CLUB_ADMIN_PODS, 'pods'));
     const editOnly = rowFields.filter((field) => !listFields.has(field));
     expect([...editOnly].sort((a, b) => a.localeCompare(b))).toEqual([
       'host_names',
+      'is_deleted',
       'location_id',
       'place_charges',
       'pod_hosts_id',
       'reel_url',
+      'venue_approval_status',
     ]);
   });
 
   it('resolves the row fragment, expanding nested media and charge groups', () => {
-    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE, 'podsTable', 'rows', 'place_charges')).toEqual([
+    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable', 'rows', 'place_charges')).toEqual([
       'label',
       'amount',
       'note',
     ]);
-    expect(fieldsAt(CLUB_ADMIN_PODS_TABLE, 'podsTable', 'rows', 'pod_images_and_videos')).toEqual([
-      'url',
-      'type',
-    ]);
+    expect(
+      fieldsAt(CLUB_ADMIN_PODS_TABLE, 'clubAdminPodsTable', 'rows', 'pod_images_and_videos'),
+    ).toEqual(['url', 'type']);
   });
 });
 

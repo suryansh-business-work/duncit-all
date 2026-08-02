@@ -53,11 +53,12 @@ export default function PodDetailsPage() {
                   {pod.pod_title}
                 </Typography>
               </Stack>
-              {!pod.is_deleted && (
-                <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/pods?edit=${pod.id}`)}>
-                  Edit pod
-                </Button>
-              )}
+              {/* Editable at every stage — a cancelled pod included, so an
+                  admin can correct it (or re-route its venue slot) after the
+                  fact rather than rebuilding it. */}
+              <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/pods?edit=${pod.id}`)}>
+                Edit pod
+              </Button>
             </Stack>
 
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>

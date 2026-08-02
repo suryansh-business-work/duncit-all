@@ -343,6 +343,19 @@ async function applyApproval(doc: IPaymentRelease) {
     await podService.releaseCompletedPodStock(doc.pod_id).catch((e: Error) => {
       logs.server.warn('paymentRelease', 'applyApproval', { error: e, msg: 'stock release failed' });
     });
+    // A pod completed by a finance approval (rather than a host submission)
+    // must still leave a COMPLETE entry in the monitored trail.
+    const pod = await PodModel.findById(doc.pod_id).setOptions({ includeDeleted: true });
+    if (pod) {
+      const { podAuditService } = await import('@modules/pods/podAudit/podAudit.service');
+      await podAuditService.record({
+        pod,
+        action: 'COMPLETE',
+        source: 'SYSTEM',
+        actorUserId: doc.reviewed_by ? String(doc.reviewed_by) : null,
+        note: `Pod completed by ${doc.kind} payout approval (${doc.release_id})`,
+      });
+    }
   }
   const payout = doc.approved_amount ?? doc.amount_requested;
   const { walletService } = await import('@modules/finance/wallet/wallet.service');

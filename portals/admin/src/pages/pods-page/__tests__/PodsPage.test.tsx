@@ -282,7 +282,20 @@ describe('PodsPage / club filter', () => {
     renderPage('/pods?club_id=club2');
     expect(harness.fetchCalls[0].options).toEqual({
       extraFilters: [{ field: 'club_id', op: 'eq', value: 'club2' }],
+      // Cancelled pods stay out of the list until the toggle asks for them.
+      extraVariables: { include_deleted: false },
     });
+  });
+
+  it('asks the server for cancelled pods when "Include cancelled" is switched on', async () => {
+    renderPage('/pods');
+    fireEvent.click(screen.getByRole('checkbox', { name: /include cancelled/i }));
+    await waitFor(() =>
+      expect(
+        (harness.fetchCalls.at(-1)?.options as { extraVariables?: { include_deleted?: boolean } })
+          .extraVariables?.include_deleted,
+      ).toBe(true),
+    );
   });
 
   it('preselects the club from the URL in the toolbar', () => {

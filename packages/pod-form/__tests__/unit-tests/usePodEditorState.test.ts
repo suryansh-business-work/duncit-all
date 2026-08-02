@@ -73,11 +73,13 @@ describe('usePodEditorState', () => {
     expect(result.current.busy).toBe(false);
   });
 
-  it('updates a pod, strips venue_slot_id and keeps is_active authoritative', async () => {
+  it('updates a pod, keeps an unchanged slot out of the input and is_active authoritative', async () => {
     const submitUpdate = vi.fn().mockResolvedValue({ id: 'up' });
     const onSaved = vi.fn();
     const { result } = renderHook(() => usePodEditorState(baseArgs({ submitUpdate, onSaved })));
-    act(() => result.current.openEdit({ id: 'doc-9' }));
+    // The pod is already on slot s1, and the form still holds s1 — re-saving
+    // must not release and re-request the venue's approval.
+    act(() => result.current.openEdit({ id: 'doc-9', venue_slot_id: 's1' }));
     await act(async () => {
       await result.current.submit(values({ is_active: false }), { draft: false });
     });
@@ -87,6 +89,30 @@ describe('usePodEditorState', () => {
     expect('venue_slot_id' in input).toBe(false);
     expect(input.is_active).toBe(false);
     expect(onSaved).toHaveBeenCalledWith({ created: false, draft: false });
+  });
+
+  it('sends a CHANGED slot on update — the portal re-route that rescues a rejected pod', async () => {
+    const submitUpdate = vi.fn().mockResolvedValue({ id: 'up' });
+    const { result } = renderHook(() => usePodEditorState(baseArgs({ submitUpdate })));
+    // The pod sits on the slot its venue rejected (none held); the form picks s1.
+    act(() => result.current.openEdit({ id: 'doc-9', venue_slot_id: null }));
+    await act(async () => {
+      await result.current.submit(values(), { draft: false });
+    });
+    expect(submitUpdate.mock.calls[0][1].venue_slot_id).toBe('s1');
+  });
+
+  it('never sends a slot for a virtual pod, which has none on either side', async () => {
+    const submitUpdate = vi.fn().mockResolvedValue({ id: 'up' });
+    const { result } = renderHook(() => usePodEditorState(baseArgs({ submitUpdate })));
+    act(() => result.current.openEdit({ id: 'doc-v' }));
+    await act(async () => {
+      await result.current.submit(
+        values({ pod_mode: 'VIRTUAL', meeting_url: 'https://meet.example.com/x' }),
+        { draft: false },
+      );
+    });
+    expect('venue_slot_id' in submitUpdate.mock.calls[0][1]).toBe(false);
   });
 
   it('does not override is_active on a draft update', async () => {

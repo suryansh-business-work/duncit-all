@@ -736,6 +736,17 @@ export const venueSlotService = {
     );
   },
 
+  /** Release ONE slot the pod holds — used when a re-route has already secured
+   * a replacement, so the blanket release would free the new seat too. Matching
+   * on booked_by_pod_id keeps it a no-op if the slot moved on meanwhile.
+   * `slotId` always comes from a pod's stored venue_slot_id, so it is a valid id. */
+  async releaseSlotForPod(slotId: string, podId: string): Promise<void> {
+    await VenueSlotModel.updateOne(
+      { _id: new Types.ObjectId(slotId), booked_by_pod_id: new Types.ObjectId(podId) },
+      { $set: { status: 'AVAILABLE', booked_by_pod_id: null } }
+    );
+  },
+
   /** Atomic external booking (public developer API): AVAILABLE → BOOKED keyed
    * on the API key, not a pod. Returns null when the slot is not available so
    * the REST layer can answer 409. */

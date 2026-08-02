@@ -197,26 +197,32 @@ function combineFilters(
 
 interface TableQueryModel {
   find: (filter: Record<string, unknown>) => any;
-  countDocuments: (filter: Record<string, unknown>) => Promise<number>;
+  countDocuments: (filter: Record<string, unknown>) => any;
 }
 
 export async function runTableQuery<TDoc>(
   Model: TableQueryModel,
   baseFilter: Record<string, unknown>,
   input: TableQueryInput | null | undefined,
-  config: TableEntityConfig
+  config: TableEntityConfig,
+  /** Soft-delete opt-in — applied to BOTH the page and the count, so a table
+   * that lists deleted rows still paginates over the same set. */
+  options?: { includeDeleted?: boolean }
 ): Promise<TablePageResult<TDoc>> {
   const q = input ?? {};
   const filter = combineFilters(baseFilter, buildTableFilter(q, config));
   const { page, pageSize } = clampPage(q);
   const sort = resolveSort(q, config);
-  const [docs, total] = await Promise.all([
-    Model.find(filter)
-      .sort(sort)
-      .skip((page - 1) * pageSize)
-      .limit(pageSize),
-    Model.countDocuments(filter),
-  ]);
+  const find = Model.find(filter)
+    .sort(sort)
+    .skip((page - 1) * pageSize)
+    .limit(pageSize);
+  const count = Model.countDocuments(filter);
+  if (options?.includeDeleted) {
+    find.setOptions({ includeDeleted: true });
+    count.setOptions({ includeDeleted: true });
+  }
+  const [docs, total] = await Promise.all([find, count]);
   return { docs, total, page, page_size: pageSize };
 }
 

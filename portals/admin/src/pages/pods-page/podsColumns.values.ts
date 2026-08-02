@@ -18,7 +18,10 @@ export const modeLabel = (p: PodRow) => (p.pod_mode === 'VIRTUAL' ? 'Virtual' : 
 export const typeValue = (p: PodRow) => `${modeLabel(p)} · ${p.pod_type.replaceAll('_', ' ')}`;
 
 export const statusValue = (p: PodRow) => {
+  if (p.is_deleted) return 'Cancelled';
   if (p.completed_at) return 'Completed';
+  if (p.venue_approval_status === 'PENDING') return 'Awaiting venue';
+  if (p.venue_approval_status === 'DECLINED') return 'Venue rejected';
   return p.is_active ? 'Active' : 'Draft';
 };
 

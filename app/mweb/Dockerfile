@@ -52,6 +52,7 @@ COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/fallback-icons/package.json ./packages/fallback-icons/
 COPY packages/onboarding/package.json ./packages/onboarding/
 COPY packages/tours/package.json ./packages/tours/
+COPY packages/virtual-scroll/package.json ./packages/virtual-scroll/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

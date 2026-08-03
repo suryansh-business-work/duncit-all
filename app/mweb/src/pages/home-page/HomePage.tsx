@@ -70,6 +70,9 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
 
   // No clubs/pods in this city → nothing to filter or search.
   const noContent = (data?.pods?.length ?? 0) === 0 && (data?.clubs?.length ?? 0) === 0;
+  // A chip/filter narrows the rails; the full-list pages are unfiltered, so
+  // the See-all cards drop their count + jump-to-index while one is active.
+  const railsFiltered = Boolean(categoryId) || priceFilter !== 'ALL' || dateFilter !== 'ALL';
   const podsLabel = `${totalPods} ${totalPods === 1 ? 'pod' : 'pods'} nearby`;
 
   return (
@@ -169,7 +172,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           </Button>
         </Stack>
         <Box data-tour="home-pods">
-          <HomeFeaturedPods pods={featuredPods} />
+          <HomeFeaturedPods pods={featuredPods} totalCount={totalPods} filtered={railsFiltered} />
         </Box>
         <Box data-tour="home-search">
           <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
@@ -191,7 +194,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             ))}
           </Box>
         )}
-        <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} />
+        <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} filtered={railsFiltered} />
         <AdSlot position="HOME_BOTTOM" variant="banner" />
         {isHost && (
           <Fab

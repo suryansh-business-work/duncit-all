@@ -18,7 +18,17 @@ export function useDetailNav() {
     openClub: (clubSlug?: string | null) => {
       if (clubSlug) navigation.navigate('ClubDetails', { clubSlug });
     },
-    openPreviousPods: () => navigation.navigate('PreviousPods'),
-    openHappeningNearby: () => navigation.navigate('HappeningNearby'),
+    // A numeric startIndex lands the list on that pod ("See all" continues
+    // after the home rail's cap); the typeof guard drops press-event args.
+    openPreviousPods: (startIndex?: number) =>
+      navigation.navigate(
+        'PreviousPods',
+        typeof startIndex === 'number' ? { initialIndex: startIndex } : undefined,
+      ),
+    openHappeningNearby: (startIndex?: number) =>
+      navigation.navigate(
+        'HappeningNearby',
+        typeof startIndex === 'number' ? { initialIndex: startIndex } : undefined,
+      ),
   };
 }

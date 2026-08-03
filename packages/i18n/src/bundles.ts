@@ -26,6 +26,18 @@ export const MWEB_BUNDLE: NestedCatalogue = {
     account: {
       preferences: 'Preferences',
     },
+    home: {
+      seeAll: 'See all',
+      morePods: '+{count} more',
+      searchPods: 'Search pods…',
+      noSearchResults: 'No pods match your search.',
+      happeningNearbyTitle: 'Happening nearby',
+      happeningNearbySubtitle: 'Live pods around your selected city',
+      happeningNearbyEmpty: 'No live pods around you right now.',
+      previousPodsTitle: 'Previous Pods',
+      previousPodsSubtitle: 'Pods that have already taken place',
+      previousPodsEmpty: 'No previous pods to show yet.',
+    },
     shop: {
       title: 'Pod Shop',
       emptyState: 'No products match your filters.',

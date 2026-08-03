@@ -81,6 +81,9 @@ importers:
       '@duncit/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      '@duncit/virtual-scroll':
+        specifier: workspace:*
+        version: link:../../packages/virtual-scroll
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1368,6 +1371,18 @@ importers:
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+
+  packages/virtual-scroll:
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3

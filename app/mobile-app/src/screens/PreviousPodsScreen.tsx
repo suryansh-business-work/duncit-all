@@ -1,40 +1,26 @@
-import { useWindowDimensions } from 'react-native';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 
-import { Reveal } from '@/animations/Reveal';
-import { PodCard } from '@/components/home/PodCard';
+import { PodListView } from '@/components/pod-list/PodListView';
 import { StackScreen } from '@/components/StackScreen';
-import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { useTranslation } from '@/hooks/useTranslation';
+import type { RootStackParamList } from '@/navigation/types';
 
 /** Dedicated page of pods that have already taken place (past date) for the
  * selected city/super-category — reached from the Home "Previous Pods" section. */
 export function PreviousPodsScreen() {
-  const { width } = useWindowDimensions();
+  const { t } = useTranslation();
   const { previousPods } = useHomeFeed('');
-  const { openPod } = useDetailNav();
+  const route = useRoute<RouteProp<RootStackParamList, 'PreviousPods'>>();
 
   return (
-    <StackScreen title="Previous Pods" testID="previous-pods-screen">
-      {previousPods.length === 0 ? (
-        <Text testID="previous-pods-empty" textAlign="center" color="$muted" padding={24}>
-          No previous pods to show yet.
-        </Text>
-      ) : (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <YStack gap={12} padding={16} paddingBottom={40}>
-            {previousPods.map((pod, index) => (
-              <Reveal key={pod.id} index={index} scale>
-                <PodCard
-                  pod={pod}
-                  width={width - 32}
-                  onPress={() => openPod(pod.club_slug, pod.pod_id)}
-                />
-              </Reveal>
-            ))}
-          </YStack>
-        </ScrollView>
-      )}
+    <StackScreen title={t('mweb.home.previousPodsTitle')} testID="previous-pods-screen">
+      <PodListView
+        pods={previousPods}
+        initialIndex={route.params?.initialIndex}
+        emptyText={t('mweb.home.previousPodsEmpty')}
+        testID="previous-pods"
+      />
     </StackScreen>
   );
 }

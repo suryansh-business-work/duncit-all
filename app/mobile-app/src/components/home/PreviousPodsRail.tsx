@@ -4,17 +4,25 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
+import { SeeAllCard } from '@/components/home/SeeAllCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
+
+/** Max entries shown on the home rail before the See-all card takes over. */
+const RAIL_CAP = 10;
 
 interface Props {
   pods: HomePod[];
-  onSeeAll: () => void;
+  /** True while a vibe chip / sheet filter narrows the rail: the full screen
+   * is unfiltered, so the card drops its count and its jump-to-index. */
+  filtered: boolean;
+  /** Opens the full list; a numeric startIndex lands on the first unseen pod. */
+  onSeeAll: (startIndex?: number) => void;
   onOpenPod: (pod: HomePod) => void;
 }
 
 /** Bottom-of-home rail of pods whose date has already passed, with a "See all"
  * link to the dedicated Previous Pods screen (bug 8). Hidden when there are none. */
-export function PreviousPodsRail({ pods, onSeeAll, onOpenPod }: Readonly<Props>) {
+export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readonly<Props>) {
   const { primary, muted } = useThemeColors();
   if (pods.length === 0) return null;
 
@@ -36,7 +44,7 @@ export function PreviousPodsRail({ pods, onSeeAll, onOpenPod }: Readonly<Props>)
           testID="previous-pods-see-all"
           role="button"
           aria-label="See all previous pods"
-          onPress={onSeeAll}
+          onPress={() => onSeeAll()}
           alignItems="center"
           gap={2}
           pressStyle={{ opacity: 0.8 }}
@@ -52,11 +60,18 @@ export function PreviousPodsRail({ pods, onSeeAll, onOpenPod }: Readonly<Props>)
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
       >
-        {pods.slice(0, 10).map((pod, index) => (
+        {pods.slice(0, RAIL_CAP).map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
             <PodCard pod={pod} width={300} onPress={() => onOpenPod(pod)} />
           </Reveal>
         ))}
+        {pods.length > RAIL_CAP ? (
+          <SeeAllCard
+            testID="previous-pods-see-all-card"
+            count={filtered ? undefined : pods.length - RAIL_CAP}
+            onPress={() => onSeeAll(filtered ? undefined : RAIL_CAP)}
+          />
+        ) : null}
       </ScrollView>
     </YStack>
   );

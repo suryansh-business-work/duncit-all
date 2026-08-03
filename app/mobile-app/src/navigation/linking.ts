@@ -64,7 +64,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       // Booking deep link from the payment-receipt email — resolves the booking
       // server-side and forwards to its pod detail screen.
       Booking: 'booking/:bookingId',
-      PreviousPods: 'previous-pods',
+      PreviousPods: { path: 'previous-pods', parse: { initialIndex: Number } },
       BecomeHost: 'become-host',
       HostManage: 'host/manage',
       HostDashboard: 'host/dashboard',
@@ -88,7 +88,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       TicketDetails: 'tickets/:ticketId',
       PodIdeas: 'pod-ideas',
       Referral: 'referral',
-      HappeningNearby: 'happening-nearby',
+      HappeningNearby: { path: 'happening-nearby', parse: { initialIndex: Number } },
       Faqs: 'faqs',
       TourGuide: 'tour-guide',
       PodPlans: 'pod-plans',

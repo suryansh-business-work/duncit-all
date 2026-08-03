@@ -63,8 +63,10 @@ export type RootStackParamList = {
   // Always the club slug (/club/:clubSlug) — in-app taps and shared deep links —
   // resolved to a doc id via clubBySlug. clubId/title stay for back-compat.
   ClubDetails: { clubId?: string; clubSlug?: string; title?: string };
-  PreviousPods: undefined;
-  HappeningNearby: undefined;
+  // initialIndex = pod index to land on ("See all" continues after the home
+  // rail's cap).
+  PreviousPods: { initialIndex?: number } | undefined;
+  HappeningNearby: { initialIndex?: number } | undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
   Checkout: { podId: string };
   // Standalone product checkout — EVERY cart line pays in one product payment.

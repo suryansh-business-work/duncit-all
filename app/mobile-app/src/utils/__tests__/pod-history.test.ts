@@ -294,7 +294,12 @@ describe('pod history filter + sort', () => {
   it('counts the active filters', () => {
     expect(activePodHistoryFilterCount(DEFAULT_POD_HISTORY_FILTERS)).toBe(0);
     expect(
-      activePodHistoryFilterCount({ search: '', superId: 's1', categoryId: 'c1', sort: 'DATE_DESC' }),
+      activePodHistoryFilterCount({
+        search: '',
+        superId: 's1',
+        categoryId: 'c1',
+        sort: 'DATE_DESC',
+      }),
     ).toBe(2);
   });
 

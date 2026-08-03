@@ -2,10 +2,17 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import { useNavigate } from 'react-router-dom';
+import SeeAllCard from './SeeAllCard';
 import { podUrl } from '../../utils/seoUrls';
 
 interface HomeFeaturedPodsProps {
   pods: any[];
+  /** Full "happening nearby" count — a trailing See-all card appears when the
+   * rail is capped below it. */
+  totalCount: number;
+  /** True while a vibe chip / sheet filter narrows the rail: the full page is
+   * unfiltered, so the card drops its count and its jump-to-index. */
+  filtered: boolean;
 }
 
 function formatPodDate(value?: string | null) {
@@ -23,7 +30,11 @@ function mediaOf(pod: any) {
   return pod.pod_images_and_videos?.[0] ?? null;
 }
 
-export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProps>) {
+export default function HomeFeaturedPods({
+  pods,
+  totalCount,
+  filtered,
+}: Readonly<HomeFeaturedPodsProps>) {
   const navigate = useNavigate();
   if (pods.length === 0) return null;
 
@@ -101,6 +112,15 @@ export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProp
             </Box>
           );
         })}
+        {totalCount > pods.length && (
+          <SeeAllCard
+            count={filtered ? undefined : totalCount - pods.length}
+            width={200}
+            onClick={() =>
+              navigate(filtered ? '/happening-nearby' : `/happening-nearby?from=${pods.length}`)
+            }
+          />
+        )}
       </Stack>
     </Box>
   );

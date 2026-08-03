@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
@@ -205,7 +205,19 @@ export function useHomeData({
   // feed and moves to the Previous Pods section/page (bug 8).
   const isPastPod = (p: any) =>
     !!p.pod_date_time && new Date(p.pod_date_time).getTime() < Date.now();
-  const activePods = useMemo(() => filteredPods.filter((p: any) => !isPastPod(p)), [filteredPods]);
+  // Date-ASC like the native twin (useHomeFeed deriveHome), so the Happening
+  // nearby page shows the same order as the home rail and a "See all"
+  // continuation (?from=N) lands right after the rail's last card.
+  const activePods = useMemo(
+    () =>
+      filteredPods
+        .filter((p: any) => !isPastPod(p))
+        .sort(
+          (a: any, b: any) =>
+            new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
+        ),
+    [filteredPods]
+  );
   const previousPods = useMemo(
     () =>
       filteredPods
@@ -255,7 +267,7 @@ export function useHomeData({
         (a: any, b: any) =>
           new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
       )
-      .slice(0, 6);
+      .slice(0, 10);
   }, [activePods]);
 
   const hostNameById = useMemo(() => {
@@ -266,17 +278,22 @@ export function useHomeData({
     return map;
   }, [data?.publicHosts]);
 
-  const hostNameOf = (p: any): string | null => {
-    if (Array.isArray(p.host_names) && p.host_names.length > 0) {
-      return p.host_names.join(', ');
-    }
-    const ids: string[] = p.pod_hosts_id ?? [];
-    for (const id of ids) {
-      const n = hostNameById.get(id);
-      if (n) return n;
-    }
-    return null;
-  };
+  // Stable identity: the pod-list page keys memos on this (a fresh closure per
+  // render would cancel its jump-correction timer on every parent re-render).
+  const hostNameOf = useCallback(
+    (p: any): string | null => {
+      if (Array.isArray(p.host_names) && p.host_names.length > 0) {
+        return p.host_names.join(', ');
+      }
+      const ids: string[] = p.pod_hosts_id ?? [];
+      for (const id of ids) {
+        const n = hostNameById.get(id);
+        if (n) return n;
+      }
+      return null;
+    },
+    [hostNameById]
+  );
 
   // Category ids that actually have at least one pod in the current location /
   // super-category context — used to hide vibe chips that would show nothing.

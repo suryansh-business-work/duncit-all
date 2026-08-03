@@ -85,7 +85,9 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
                   fontSize: 12,
                   bgcolor: 'rgba(0,0,0,0.1)',
                   color: mine ? 'primary.contrastText' : 'text.primary',
-                  borderRadius: '4px',
+                  // A reaction count is a pill like a Chip, so it keeps its
+                  // round ends under the 4px corner cap.
+                  borderRadius: 999,
                   px: 0.75,
                 }}
               >

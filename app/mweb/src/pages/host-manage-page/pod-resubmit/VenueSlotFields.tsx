@@ -1,5 +1,9 @@
-import { CircularProgress, MenuItem, TextField } from '@mui/material';
-import { slotOptionLabel } from './pod-resubmit.form';
+import { useMemo } from 'react';
+import { MenuItem, TextField, Typography } from '@mui/material';
+import { useDateFormat } from '@duncit/app-settings';
+import { buildSlotLabels } from '@duncit/slots';
+import { SlotCalendar } from '@duncit/slots/mui';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { ResubmitSlotOption, ResubmitVenueOption } from './pod-resubmit.types';
 
 interface VenueFieldProps {
@@ -41,29 +45,47 @@ interface SlotFieldProps {
   onChange: (slotId: string) => void;
 }
 
-/** Available-slot picker for the chosen venue (time window + space + price). */
+/**
+ * Available-slot picker for the chosen venue — the same calendar the create-pod
+ * flow, the app and the portals use, so resubmitting feels like creating.
+ */
 export function SlotField({ slots, loading, disabled, value, error, onChange }: Readonly<SlotFieldProps>) {
-  let helper = error ?? 'Pick an open time slot';
-  if (!error && disabled) helper = 'Select a venue first';
-  if (!error && !disabled && !loading && slots.length === 0) helper = 'No open slots at this venue — pick another venue';
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  const labels = useMemo(() => buildSlotLabels(t, 'mweb.slots'), [t]);
+
+  const calendarSlots = useMemo(
+    () =>
+      slots.map((slot) => ({
+        id: slot.id,
+        start_at: slot.start_at,
+        end_at: slot.end_at,
+        price: slot.price,
+        // A venue can publish two spaces at the same hour; without the space the
+        // two tiles would be indistinguishable.
+        caption: slot.space_label || undefined,
+      })),
+    [slots],
+  );
+
+  if (disabled) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        {labels.pickVenueFirst}
+      </Typography>
+    );
+  }
+
   return (
-    <TextField
-      select
-      label="Time slot"
+    <SlotCalendar
+      slots={calendarSlots}
+      loading={loading}
+      error={error}
+      selectedSlotId={value}
+      onPick={(slot) => onChange(slot.id)}
+      fmt={fmt}
+      labels={labels}
       required
-      fullWidth
-      disabled={disabled || loading}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      error={!!error}
-      helperText={helper}
-      InputProps={loading ? { endAdornment: <CircularProgress size={16} /> } : undefined}
-    >
-      {slots.map((slot) => (
-        <MenuItem key={slot.id} value={slot.id}>
-          {slotOptionLabel(slot)}
-        </MenuItem>
-      ))}
-    </TextField>
+    />
   );
 }

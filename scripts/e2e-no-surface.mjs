@@ -45,6 +45,10 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/regex', 'zero-dep regex/validators, no DOM'],
   ['@duncit/shell', 'library — rendered end-to-end by all 17 portal suites'],
   ['@duncit/slack', 'zero-dep payload builders, no DOM'],
+  [
+    '@duncit/slots',
+    'library — the slot calendar is rendered end-to-end by admin, partners-app, onboarding, mWeb and the app',
+  ],
   ['@duncit/table', 'library — rendered end-to-end by every portal list page'],
   ['@duncit/theme', 'library — rendered end-to-end by every portal'],
   ['@duncit/ui', 'library — rendered end-to-end by every portal'],

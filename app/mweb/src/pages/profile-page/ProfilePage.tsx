@@ -22,12 +22,14 @@ export default function ProfilePage() {
   const me = data?.me;
   const posts = data?.myPosts ?? [];
 
+  const verifyEmailRequested = new URLSearchParams(location.search).has('verifyEmail');
+
   useEffect(() => {
-    if (!location.search.includes('verifyEmail')) return;
+    if (!verifyEmailRequested) return;
     globalThis.requestAnimationFrame(() => {
       document.getElementById('email-verification')?.scrollIntoView({ block: 'start' });
     });
-  }, [location.search, me?.is_email_verified]);
+  }, [verifyEmailRequested, me?.is_email_verified]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -58,7 +60,7 @@ export default function ProfilePage() {
         onChanged={() => refetch()}
       />
 
-      <ProfileAccordions me={me} onSaved={() => refetch()} />
+      <ProfileAccordions me={me} onSaved={() => refetch()} autoSendEmailOtp={verifyEmailRequested} />
       <ProfilePostsGrid posts={posts} onOpenPost={setOpenPostId} onNewPost={() => setUploadOpen(true)} />
 
       <PostDialog

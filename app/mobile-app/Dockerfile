@@ -32,6 +32,7 @@ COPY packages/utils ./packages/utils
 COPY packages/onboarding ./packages/onboarding
 COPY packages/tours ./packages/tours
 COPY packages/virtual-scroll ./packages/virtual-scroll
+COPY packages/slots ./packages/slots
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

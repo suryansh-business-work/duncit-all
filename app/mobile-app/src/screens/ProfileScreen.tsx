@@ -31,7 +31,9 @@ export function ProfileScreen() {
   // /profile?verifyEmail=1 scrolling to its #email-verification anchor.
   const scrollRef = useRef<RNScrollView>(null);
   const [verifyY, setVerifyY] = useState<number | null>(null);
-  const jumpToVerify = route.params?.verifyEmail === true;
+  // On the Expo web build the param arrives from the URL as the string "true",
+  // so a strict boolean check would silently disable the jump there.
+  const jumpToVerify = String(route.params?.verifyEmail) === 'true';
   useEffect(() => {
     if (!jumpToVerify || verifyY === null) return;
     scrollRef.current?.scrollTo({ y: Math.max(0, verifyY - 12), animated: true });

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
+import { isOtp } from '@duncit/regex';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
@@ -95,8 +96,12 @@ export function EmailVerificationSection({
     );
   }
 
-  const idleSendLabel = requested ? 'Resend' : 'Send OTP';
+  const idleSendLabel = requested ? 'Resend OTP' : 'Send OTP';
   const sendLabel = sending ? 'Sending…' : idleSendLabel;
+  // Same rule the mWeb twin's Zod schema enforces, from the shared package —
+  // so a short code is caught here instead of costing a server round-trip.
+  const otpValid = isOtp(otp.trim());
+  const otpHint = otp.length > 0 && !otpValid;
 
   return (
     <YStack testID="email-verification" gap={10}>
@@ -134,7 +139,7 @@ export function EmailVerificationSection({
           backgroundColor="$background"
           color="$color"
           placeholderTextColor="$muted"
-          borderColor={error ? '$danger' : '$borderColor'}
+          borderColor={error || otpHint ? '$danger' : '$borderColor'}
           value={otp}
           onChangeText={setOtp}
           placeholder="Enter OTP"
@@ -145,7 +150,7 @@ export function EmailVerificationSection({
         <XStack
           testID="email-verification-send"
           role="button"
-          aria-label={requested ? 'Resend OTP' : 'Send OTP'}
+          aria-label={idleSendLabel}
           aria-disabled={sending || !email}
           onPress={() => {
             if (!sending && email) fireAndForget(sendOtp());
@@ -167,11 +172,19 @@ export function EmailVerificationSection({
         </XStack>
       </XStack>
 
+      {otpHint ? (
+        <Text testID="email-verification-hint" fontSize={12} color="$danger">
+          Enter the OTP we sent
+        </Text>
+      ) : null}
+
       <PrimaryButton
         testID="email-verification-submit"
-        label={verifying ? 'Verifying…' : 'Verify'}
+        // PrimaryButton swaps the label for a Spinner while loading, so a
+        // "Verifying…" branch here would never render.
+        label="Verify"
         loading={verifying}
-        disabled={verifying || otp.trim().length === 0}
+        disabled={verifying || !otpValid}
         onPress={verify}
       />
     </YStack>

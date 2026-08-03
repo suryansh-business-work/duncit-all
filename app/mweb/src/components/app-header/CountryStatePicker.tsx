@@ -57,7 +57,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
             <Chip
               key={c.country}
               onClick={() => onCountry(c.country)}
-              avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: 0.5 }} /> : undefined}
+              avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: '4px' }} /> : undefined}
               label={c.country}
               sx={chipSx(c.country === activeCountry?.country)}
             />

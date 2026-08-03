@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -34,7 +34,7 @@ export const emailVerificationSchema = z.object({
     .regex(OTP_PATTERN, 'Enter the OTP we sent'),
 });
 
-export default function EmailVerificationForm({ email, verified, onVerified }: Readonly<EmailVerificationFormProps>) {
+export default function EmailVerificationForm({ email, verified, onVerified, autoSend = false }: Readonly<EmailVerificationFormProps>) {
   const [requestOtp, requestState] = useMutation(REQUEST_EMAIL_OTP);
   const [verifyOtp, verifyState] = useMutation(VERIFY_EMAIL_OTP);
   const [requested, setRequested] = useState(false);
@@ -60,11 +60,25 @@ export default function EmailVerificationForm({ email, verified, onVerified }: R
   const sendOtp = async () => {
     setError(null);
     setMessage(null);
-    const res = await requestOtp();
-    setRequested(true);
-    setDevOtp(res.data?.requestEmailVerificationOtp?.dev_otp ?? null);
-    setMessage(`OTP sent to ${email}`);
+    try {
+      const res = await requestOtp();
+      setRequested(true);
+      setDevOtp(res.data?.requestEmailVerificationOtp?.dev_otp ?? null);
+      setMessage(`OTP sent to ${email}`);
+    } catch (e: any) {
+      setError(e?.message ?? 'Could not send the OTP');
+    }
   };
+
+  // Deep-linked from the header nudge: mail the code once. The ref keeps a
+  // re-render from sending twice. The native twin does the same.
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    if (!autoSend || verified || !email || autoSentRef.current) return;
+    autoSentRef.current = true;
+    sendOtp().catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sendOtp is stable enough here
+  }, [autoSend, verified, email]);
 
   if (verified) {
     return <Alert severity="success">Your email is verified.</Alert>;

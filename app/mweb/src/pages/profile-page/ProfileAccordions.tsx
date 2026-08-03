@@ -27,7 +27,11 @@ function Title({ icon, label }: Readonly<{ icon: JSX.Element; label: string }>) 
   );
 }
 
-export default function ProfileAccordions({ me, onSaved }: Readonly<{ me: any; onSaved: () => void }>) {
+export default function ProfileAccordions({
+  me,
+  onSaved,
+  autoSendEmailOtp = false,
+}: Readonly<{ me: any; onSaved: () => void; autoSendEmailOtp?: boolean }>) {
   return (
     <Stack spacing={1}>
       <Accordion defaultExpanded disableGutters>
@@ -36,7 +40,12 @@ export default function ProfileAccordions({ me, onSaved }: Readonly<{ me: any; o
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={2}>
-            <EmailVerificationForm email={me.email} verified={me.is_email_verified} onVerified={onSaved} />
+            <EmailVerificationForm
+              email={me.email}
+              verified={me.is_email_verified}
+              onVerified={onSaved}
+              autoSend={autoSendEmailOtp}
+            />
           <ProfileAboutSection me={me} onSaved={onSaved} />
           </Stack>
         </AccordionDetails>

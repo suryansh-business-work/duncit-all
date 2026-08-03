@@ -20,7 +20,7 @@ importers:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       husky:
         specifier: ^9.1.6
         version: 9.1.7
@@ -32,7 +32,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   app/mweb:
     dependencies:
@@ -72,6 +72,9 @@ importers:
       '@duncit/slack':
         specifier: workspace:*
         version: link:../../packages/slack
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../../packages/slots
       '@duncit/tours':
         specifier: workspace:*
         version: link:../../packages/tours
@@ -204,7 +207,7 @@ importers:
         version: 0.23.13
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -219,19 +222,19 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   docs-site:
     dependencies:
       '@astrojs/mdx':
         specifier: ^4.3.0
-        version: 4.3.14(astro@5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0))
+        version: 4.3.14(astro@5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0))
       '@astrojs/react':
         specifier: ^4.4.0
-        version: 4.4.2(@types/node@25.9.4)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(jiti@2.7.0)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(yaml@2.9.0)
+        version: 4.4.2(@types/node@25.9.4)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(jiti@2.7.0)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)
       '@duncit/dialogs':
         specifier: workspace:*
         version: link:../packages/dialogs
@@ -258,7 +261,7 @@ importers:
         version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       astro:
         specifier: ^5.18.1
-        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -317,7 +320,7 @@ importers:
         version: 18.3.28
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -338,7 +341,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -372,7 +375,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -396,19 +399,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/auth-tokens:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/availability-calendar:
     devDependencies:
@@ -441,7 +444,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -459,7 +462,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/breadcrumb:
     devDependencies:
@@ -489,7 +492,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -507,7 +510,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/category:
     devDependencies:
@@ -537,7 +540,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       graphql:
         specifier: ^16.8.1
         version: 16.14.0
@@ -558,7 +561,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/club-form:
     dependencies:
@@ -601,7 +604,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       graphql:
         specifier: ^16.8.1
         version: 16.14.0
@@ -622,7 +625,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -631,7 +634,7 @@ importers:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -643,7 +646,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/dialogs:
     devDependencies:
@@ -667,7 +670,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -682,19 +685,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/fallback-icons:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/forms:
     devDependencies:
@@ -721,7 +724,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -739,7 +742,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -748,7 +751,7 @@ importers:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       country-region-data:
         specifier: ^4.1.0
         version: 4.1.0
@@ -757,7 +760,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/gql-types:
     devDependencies:
@@ -769,13 +772,13 @@ importers:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/location:
     devDependencies:
@@ -808,7 +811,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       graphql:
         specifier: ^16.8.1
         version: 16.14.0
@@ -829,19 +832,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/logs:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/media-picker:
     dependencies:
@@ -869,7 +872,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       graphql:
         specifier: ^16.8.1
         version: 16.14.0
@@ -887,19 +890,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/onboarding:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/pod-form:
     dependencies:
@@ -913,6 +916,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../slots
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.77.0(react@18.3.1))
@@ -945,7 +951,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -969,7 +975,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -1005,7 +1011,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -1023,7 +1029,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
       zod:
         specifier: ^3.24.1
         version: 3.25.76
@@ -1032,13 +1038,13 @@ importers:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/shell:
     dependencies:
@@ -1108,7 +1114,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
@@ -1132,19 +1138,67 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/slack:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
+
+  packages/slots:
+    devDependencies:
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@testing-library/dom':
+        specifier: ^10.4.0
+        version: 10.4.1
+      '@testing-library/jest-dom':
+        specifier: ^6.4.5
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.0.0
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@vitest/coverage-v8':
+        specifier: 1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
+      date-fns:
+        specifier: ^2.30.0
+        version: 2.30.0
+      date-fns-tz:
+        specifier: 2.0.1
+        version: 2.0.1(date-fns@2.30.0)
+      jsdom:
+        specifier: ^25.0.1
+        version: 25.0.1
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: 1.6.1
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/table:
     devDependencies:
@@ -1177,7 +1231,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       ag-grid-community:
         specifier: ^34.3.1
         version: 34.3.1
@@ -1201,7 +1255,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/theme:
     devDependencies:
@@ -1228,7 +1282,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -1243,19 +1297,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/tours:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/ui:
     dependencies:
@@ -1289,7 +1343,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -1307,7 +1361,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/user-context:
     devDependencies:
@@ -1340,7 +1394,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       formik:
         specifier: ^2.4.6
         version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
@@ -1361,7 +1415,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
       yup:
         specifier: ^1.4.0
         version: 1.7.1
@@ -1370,7 +1424,7 @@ importers:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
@@ -1379,19 +1433,19 @@ importers:
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   packages/virtual-scroll:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/admin:
     dependencies:
@@ -1431,6 +1485,9 @@ importers:
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../../packages/slots
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table
@@ -1563,10 +1620,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -1581,10 +1638,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/ads-portal:
     dependencies:
@@ -1699,7 +1756,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -1714,10 +1771,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/ai:
     dependencies:
@@ -1826,7 +1883,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -1841,10 +1898,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/challenge-portal:
     dependencies:
@@ -1950,10 +2007,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -1968,10 +2025,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/crm:
     dependencies:
@@ -2122,13 +2179,13 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-istanbul':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2146,13 +2203,13 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vite-plugin-istanbul:
         specifier: 6.0.2
-        version: 6.0.2(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 6.0.2(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/developers:
     dependencies:
@@ -2252,10 +2309,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2270,10 +2327,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/employee:
     dependencies:
@@ -2361,7 +2418,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2376,10 +2433,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/finance:
     dependencies:
@@ -2488,10 +2545,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-istanbul':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2509,13 +2566,13 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vite-plugin-istanbul:
         specifier: ^6.0.2
-        version: 6.0.2(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 6.0.2(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/hr:
     dependencies:
@@ -2603,7 +2660,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2618,10 +2675,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/legal:
     dependencies:
@@ -2730,10 +2787,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2748,10 +2805,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/marketing:
     dependencies:
@@ -2872,7 +2929,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -2887,10 +2944,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/onboarding:
     dependencies:
@@ -2921,6 +2978,9 @@ importers:
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../../packages/slots
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table
@@ -3020,10 +3080,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3038,10 +3098,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/partners-app:
     dependencies:
@@ -3051,6 +3111,9 @@ importers:
       '@duncit/ad-request-form':
         specifier: workspace:*
         version: link:../../packages/ad-request-form
+      '@duncit/app-settings':
+        specifier: workspace:*
+        version: link:../../packages/app-settings
       '@duncit/availability-calendar':
         specifier: workspace:*
         version: link:../../packages/availability-calendar
@@ -3084,6 +3147,9 @@ importers:
       '@duncit/shell':
         specifier: workspace:*
         version: link:../../packages/shell
+      '@duncit/slots':
+        specifier: workspace:*
+        version: link:../../packages/slots
       '@duncit/table':
         specifier: workspace:*
         version: link:../../packages/table
@@ -3192,7 +3258,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3207,10 +3273,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/products:
     dependencies:
@@ -3328,7 +3394,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3343,10 +3409,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/support:
     dependencies:
@@ -3467,10 +3533,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3485,10 +3551,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/tech:
     dependencies:
@@ -3606,10 +3672,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3624,10 +3690,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   portals/website-app:
     dependencies:
@@ -3745,7 +3811,7 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))
       cross-env:
         specifier: ^10.1.0
         version: 10.1.0
@@ -3760,10 +3826,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
   server:
     dependencies:
@@ -3959,20 +4025,20 @@ importers:
         version: link:../../packages/utils
       '@tailwindcss/vite':
         specifier: ^4.2.2
-        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))
       astro:
         specifier: ^5.7.10
-        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.3.0
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   website/earnwith-website:
     dependencies:
@@ -3984,20 +4050,20 @@ importers:
         version: link:../../packages/utils
       '@tailwindcss/vite':
         specifier: ^4.2.2
-        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))
       astro:
         specifier: ^5.7.10
-        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.3.0
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   website/main-website:
     dependencies:
@@ -4015,23 +4081,23 @@ importers:
         version: 7.2.0
       '@tailwindcss/vite':
         specifier: ^4.2.2
-        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))
       animejs:
         specifier: ^4.3.6
         version: 4.4.1
       astro:
         specifier: ^5.7.10
-        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.3.0
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   website/partners-website:
     dependencies:
@@ -4046,23 +4112,23 @@ importers:
         version: 7.2.0
       '@tailwindcss/vite':
         specifier: ^4.2.2
-        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))
       animejs:
         specifier: ^4.3.6
         version: 4.4.1
       astro:
         specifier: ^5.7.10
-        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.3.0
     devDependencies:
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
   website/status-website:
     dependencies:
@@ -4114,10 +4180,10 @@ importers:
         version: 18.3.7(@types/react@18.3.28)
       '@vitejs/plugin-react':
         specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@25.9.4)(lightningcss@1.32.0))
+        version: 4.7.0(vite@5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0))
       '@vitest/coverage-v8':
         specifier: 1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0))
+        version: 1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))
       jsdom:
         specifier: ^24.1.3
         version: 24.1.3
@@ -4126,10 +4192,10 @@ importers:
         version: 5.9.3
       vite:
         specifier: ^5.2.11
-        version: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)
+        version: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
       vitest:
         specifier: 1.6.1
-        version: 1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: 1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
 
 packages:
 
@@ -5824,6 +5890,9 @@ packages:
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
+
+  '@jridgewell/source-map@0.3.11':
+    resolution: {integrity: sha512-ZMp1V8ZFcPG5dIWnQLr3NSI1MiCU7UETdS/A0G8V/XWHvJv3ZsFqutJn1Y5RPmAPX6F3BiE397OqveU/9NCuIA==}
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
@@ -11993,6 +12062,11 @@ packages:
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
 
+  terser@5.49.0:
+    resolution: {integrity: sha512-SNiDnXyHSrxVcIOtVbULzcTmniUiwcV7Nwdyj1twVubeTmbjoa8p69KKDpfkdoOavuM4/GRm1+ykI8qqnavHoA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   test-exclude@6.0.0:
     resolution: {integrity: sha512-cAGWPIyOHU6zlmg88jwm7VRyXnMN7iV68OGAbYDk/Mh/xC/pzVPlQtY6ngoIH/5/tciuhGfvESU8GrHrcxD56w==}
     engines: {node: '>=8'}
@@ -13050,12 +13124,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@astrojs/mdx@4.3.14(astro@5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0))':
+  '@astrojs/mdx@4.3.14(astro@5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0))':
     dependencies:
       '@astrojs/markdown-remark': 6.3.11
       '@mdx-js/mdx': 3.1.1
       acorn: 8.16.0
-      astro: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+      astro: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
       es-module-lexer: 1.7.0
       estree-util-visit: 2.0.0
       hast-util-to-html: 9.0.5
@@ -13073,15 +13147,15 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
-  '@astrojs/react@4.4.2(@types/node@25.9.4)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(jiti@2.7.0)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(yaml@2.9.0)':
+  '@astrojs/react@4.4.2(@types/node@25.9.4)(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(jiti@2.7.0)(lightningcss@1.32.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(terser@5.49.0)(yaml@2.9.0)':
     dependencies:
       '@types/react': 18.3.28
       '@types/react-dom': 18.3.7(@types/react@18.3.28)
-      '@vitejs/plugin-react': 4.7.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      '@vitejs/plugin-react': 4.7.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       ultrahtml: 1.6.0
-      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -14751,6 +14825,12 @@ snapshots:
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
+  '@jridgewell/source-map@0.3.11':
+    dependencies:
+      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/trace-mapping': 0.3.31
+    optional: true
+
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
   '@jridgewell/trace-mapping@0.3.31':
@@ -16029,12 +16109,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.0
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.0
 
-  '@tailwindcss/vite@4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@tailwindcss/vite@4.3.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))':
     dependencies:
       '@tailwindcss/node': 4.3.0
       '@tailwindcss/oxide': 4.3.0
       tailwindcss: 4.3.0
-      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0)
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -16566,7 +16646,7 @@ snapshots:
 
   '@ungap/structured-clone@1.3.1': {}
 
-  '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))':
+  '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -16574,11 +16654,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@25.9.4)(lightningcss@1.32.0))':
+  '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -16586,11 +16666,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@vitejs/plugin-react@4.7.0(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))':
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-transform-react-jsx-self': 7.27.1(@babel/core@7.29.0)
@@ -16598,11 +16678,11 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.27
       '@types/babel__core': 7.20.5
       react-refresh: 0.17.0
-      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-istanbul@1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))':
+  '@vitest/coverage-istanbul@1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       debug: 4.4.3(supports-color@8.1.1)
       istanbul-lib-coverage: 3.2.2
@@ -16613,11 +16693,11 @@ snapshots:
       magicast: 0.3.5
       picocolors: 1.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+      vitest: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))':
+  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -16632,11 +16712,11 @@ snapshots:
       std-env: 3.10.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+      vitest: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0))':
+  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -16651,11 +16731,11 @@ snapshots:
       std-env: 3.10.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)
+      vitest: 1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0))':
+  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -16670,11 +16750,11 @@ snapshots:
       std-env: 3.10.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)
+      vitest: 1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0))':
+  '@vitest/coverage-v8@1.6.1(vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -16689,7 +16769,7 @@ snapshots:
       std-env: 3.10.0
       strip-literal: 2.1.1
       test-exclude: 6.0.0
-      vitest: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)
+      vitest: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -16904,7 +16984,7 @@ snapshots:
 
   astring@1.9.0: {}
 
-  astro@5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0):
+  astro@5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0):
     dependencies:
       '@astrojs/compiler': 2.13.1
       '@astrojs/internal-helpers': 0.7.6
@@ -16961,8 +17041,8 @@ snapshots:
       unist-util-visit: 5.1.0
       unstorage: 1.17.5
       vfile: 6.0.3
-      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
-      vitefu: 1.1.3(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0)
+      vitefu: 1.1.3(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0))
       xxhash-wasm: 1.1.0
       yargs-parser: 21.1.1
       yocto-spinner: 0.2.3
@@ -22645,6 +22725,14 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
+  terser@5.49.0:
+    dependencies:
+      '@jridgewell/source-map': 0.3.11
+      acorn: 8.16.0
+      commander: 2.20.3
+      source-map-support: 0.5.21
+    optional: true
+
   test-exclude@6.0.0:
     dependencies:
       '@istanbuljs/schema': 0.1.6
@@ -23060,13 +23148,13 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite-node@1.6.1(@types/node@20.19.41)(lightningcss@1.32.0):
+  vite-node@1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       pathe: 1.1.2
       picocolors: 1.1.1
-      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -23078,13 +23166,13 @@ snapshots:
       - supports-color
       - terser
 
-  vite-node@1.6.1(@types/node@25.9.4)(lightningcss@1.32.0):
+  vite-node@1.6.1(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3(supports-color@8.1.1)
       pathe: 1.1.2
       picocolors: 1.1.1
-      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -23096,7 +23184,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-istanbul@6.0.2(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)):
+  vite-plugin-istanbul@6.0.2(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)):
     dependencies:
       '@istanbuljs/load-nyc-config': 1.1.0
       espree: 10.4.0
@@ -23104,11 +23192,11 @@ snapshots:
       picocolors: 1.1.1
       source-map: 0.7.6
       test-exclude: 6.0.0
-      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
     transitivePeerDependencies:
       - supports-color
 
-  vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0):
+  vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.15
@@ -23117,8 +23205,9 @@ snapshots:
       '@types/node': 20.19.41
       fsevents: 2.3.3
       lightningcss: 1.32.0
+      terser: 5.49.0
 
-  vite@5.4.21(@types/node@25.9.4)(lightningcss@1.32.0):
+  vite@5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.5.15
@@ -23127,8 +23216,9 @@ snapshots:
       '@types/node': 25.9.4
       fsevents: 2.3.3
       lightningcss: 1.32.0
+      terser: 5.49.0
 
-  vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0):
+  vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0):
     dependencies:
       esbuild: 0.25.12
       fdir: 6.5.0(picomatch@4.0.4)
@@ -23141,13 +23231,14 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       lightningcss: 1.32.0
+      terser: 5.49.0
       yaml: 2.9.0
 
-  vitefu@1.1.3(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)):
+  vitefu@1.1.3(vite@6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0)):
     optionalDependencies:
-      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0)
+      vite: 6.4.2(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.49.0)(yaml@2.9.0)
 
-  vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0):
+  vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -23166,8 +23257,8 @@ snapshots:
       strip-literal: 2.1.1
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
-      vite-node: 1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
+      vite-node: 1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.19.41
@@ -23182,7 +23273,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0):
+  vitest@1.6.1(@types/node@20.19.41)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -23201,8 +23292,8 @@ snapshots:
       strip-literal: 2.1.1
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
-      vite-node: 1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
+      vite-node: 1.6.1(@types/node@20.19.41)(lightningcss@1.32.0)(terser@5.49.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.19.41
@@ -23217,7 +23308,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0):
+  vitest@1.6.1(@types/node@25.9.4)(jsdom@24.1.3)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -23236,8 +23327,8 @@ snapshots:
       strip-literal: 2.1.1
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)
-      vite-node: 1.6.1(@types/node@25.9.4)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
+      vite-node: 1.6.1(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.9.4
@@ -23252,7 +23343,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0):
+  vitest@1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0):
     dependencies:
       '@vitest/expect': 1.6.1
       '@vitest/runner': 1.6.1
@@ -23271,8 +23362,8 @@ snapshots:
       strip-literal: 2.1.1
       tinybench: 2.9.0
       tinypool: 0.8.4
-      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)
-      vite-node: 1.6.1(@types/node@25.9.4)(lightningcss@1.32.0)
+      vite: 5.4.21(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
+      vite-node: 1.6.1(@types/node@25.9.4)(lightningcss@1.32.0)(terser@5.49.0)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 25.9.4

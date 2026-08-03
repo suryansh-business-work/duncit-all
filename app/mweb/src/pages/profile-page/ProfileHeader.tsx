@@ -106,10 +106,10 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           />
         </Stack>
         <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
-          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: '4px', fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
+          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 999, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             New Post
           </Button>
-          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: '4px', fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
+          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 999, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             Edit profile
           </Button>
           <IconButton
@@ -118,7 +118,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               width: 44,
               height: 42,
               flex: '0 0 44px',
-              borderRadius: '4px',
+              borderRadius: '50%',
               border: 1,
               borderColor: 'divider',
             }}
@@ -132,7 +132,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               width: 44,
               height: 42,
               flex: '0 0 44px',
-              borderRadius: '4px',
+              borderRadius: '50%',
               border: 1,
               borderColor: 'divider',
             }}

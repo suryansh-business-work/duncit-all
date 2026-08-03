@@ -36,7 +36,6 @@ export const MobileAccountDocument = gql(`
       last_name
       full_name
       email
-      is_email_verified
       phone_number
       phone_extension
       whatsapp_number

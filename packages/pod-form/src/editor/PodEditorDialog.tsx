@@ -5,6 +5,7 @@ import PodForm from '../PodForm';
 import type {
   GenerateMeetingLinkInput,
   PodFormConfig,
+  PodFormData,
   PodFormFinance,
   PodFormValues,
   PodOption,
@@ -32,6 +33,10 @@ export interface PodEditorDialogProps {
   onPickVideo?: () => Promise<string | null>;
   searchHosts?: SearchPodHosts;
   dateTimeFormat?: string;
+  /** Admin-configured formatter from `useDateFormat()`; drives the slot calendar. */
+  dateFormatter: PodFormData['dateFormatter'];
+  /** Slot-picker copy — `shell.slots.*` in the portals (rule 38). */
+  slotLabels: PodFormData['slotLabels'];
   onSubmit: (values: PodFormValues, options: { draft: boolean }) => Promise<void> | void;
   onReady?: (methods: UseFormReturn<PodFormValues>) => void;
   hideDraftOnEdit?: boolean;
@@ -62,6 +67,8 @@ export default function PodEditorDialog({
   onPickVideo,
   searchHosts,
   dateTimeFormat,
+  dateFormatter,
+  slotLabels,
   onSubmit,
   onReady,
   hideDraftOnEdit,
@@ -91,6 +98,8 @@ export default function PodEditorDialog({
           onPickVideo={onPickVideo}
           searchHosts={searchHosts}
           dateTimeFormat={dateTimeFormat}
+          dateFormatter={dateFormatter}
+          slotLabels={slotLabels}
           busy={busy}
           error={error}
           onCancel={onClose}

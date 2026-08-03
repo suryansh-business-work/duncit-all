@@ -55,7 +55,7 @@ function VibeChip({ label, selected, onClick }: Readonly<VibeChipProps>) {
       color={selected ? 'primary' : 'default'}
       variant={selected ? 'filled' : 'outlined'}
       onClick={onClick}
-      sx={{ height: 36, px: 0.75, fontWeight: 900, borderRadius: '4px', flex: '0 0 auto' }}
+      sx={{ height: 36, px: 0.75, fontWeight: 900, borderRadius: 999, flex: '0 0 auto' }}
     />
   );
 }

@@ -16,7 +16,7 @@ export async function requestEmailVerificationOtp(): Promise<{ devOtp: string | 
   const data = await graphqlRequest(MobileRequestEmailVerificationOtpDocument, undefined, {
     auth: true,
   });
-  return { devOtp: data.requestEmailVerificationOtp?.dev_otp ?? null };
+  return { devOtp: data.requestEmailVerificationOtp.dev_otp ?? null };
 }
 
 /**

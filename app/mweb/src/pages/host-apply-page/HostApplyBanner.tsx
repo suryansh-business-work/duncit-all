@@ -34,7 +34,7 @@ export default function HostApplyBanner() {
           sx={{
             width: 48,
             height: 48,
-            borderRadius: '4px',
+            borderRadius: '50%',
             flexShrink: 0,
             display: 'grid',
             placeItems: 'center',

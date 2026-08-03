@@ -13,6 +13,12 @@ import type { DateInput } from './format';
  * not a fixed number of days, so `(now - dob) / 31536000000` drifts by a day
  * across leap years and would let an under-age user through on the wrong side
  * of their birthday. Comparing (year, month, day) triples is exact.
+ *
+ * "Today" is the DEVICE'S local day, because that is the date the person
+ * actually lives in — someone whose birthday is today is 18 today, wherever
+ * they are. The server cannot know that zone, so it allows one day of slack
+ * (see server/src/utils/age.ts); without that, an IST user was accepted by this
+ * form and rejected by the API until 05:30 every morning.
  */
 
 /** Fallback minimum age, used until the admin setting resolves. */
@@ -20,7 +26,8 @@ export const DEFAULT_MIN_ACCOUNT_AGE_YEARS = 18;
 
 /** Midnight-normalised local date, or null when the input is not a real date. */
 function toDay(input: DateInput): Date | null {
-  if (!input) return null;
+  // An explicit emptiness check, not a falsy one: 0 is a valid epoch timestamp.
+  if (input === null || input === undefined || input === '') return null;
   let date: Date | null = null;
   if (input instanceof Date) date = input;
   else if (typeof input === 'number') date = new Date(input);
@@ -57,7 +64,12 @@ export function latestEligibleDob(
   asOf?: DateInput,
 ): Date {
   const today = toDay(asOf) ?? toDay(new Date())!;
-  return new Date(today.getFullYear() - minAgeYears, today.getMonth(), today.getDate());
+  const month = today.getMonth();
+  const result = new Date(today.getFullYear() - minAgeYears, month, today.getDate());
+  // Feb 29 overflows into Mar 1 when the target year is not a leap year, which
+  // would offer a day the age check then rejects. Step back to Feb 28.
+  if (result.getMonth() !== month) result.setDate(0);
+  return result;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
 import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
@@ -15,7 +15,7 @@ const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 /** Parse a typed YYYY-MM-DD value into a Date, or null when blank/invalid. */
 export function parseDob(value: string): Date | null {
   if (!DOB_PATTERN.test(value)) return null;
-  const parsed = new Date(value);
+  const parsed = parseISO(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 

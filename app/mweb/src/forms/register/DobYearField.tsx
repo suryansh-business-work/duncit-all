@@ -2,6 +2,7 @@ import { Controller, type Control } from 'react-hook-form';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { parseISO } from 'date-fns';
 import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import type { RegisterFormValues } from './register.types';
 
@@ -41,7 +42,7 @@ export default function DobYearField({
             label="Date of birth"
             openTo="year"
             views={['year', 'month', 'day']}
-            value={field.value ? new Date(field.value) : null}
+            value={field.value ? parseISO(field.value) : null}
             minDate={minDate}
             maxDate={maxDate}
             onChange={(d) => {

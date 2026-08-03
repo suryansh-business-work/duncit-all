@@ -601,7 +601,9 @@ function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser |
 
 /* ---- Allowlists for the shared table engine (DUNCIT TABLE CONTRACT v1) ---- */
 
-/** inventoryProductsTable — Products portal Duncit catalogue (search + status/ownership). */
+/** inventoryProductsTable — Products portal catalogue: the Duncit list
+ * (ownership=DUNCIT) and one brand's full list (ownership=BRAND + brand_id),
+ * every listing_review_status included. */
 const INVENTORY_PRODUCT_TABLE_CONFIG: TableEntityConfig = {
   searchFields: ['product_name', 'sku', 'tags', 'brand_name'],
   sortFields: {
@@ -621,6 +623,9 @@ const INVENTORY_PRODUCT_TABLE_CONFIG: TableEntityConfig = {
     is_active: { type: 'boolean' },
     pod_available: { type: 'boolean' },
     brand_name: { type: 'string' },
+    // brand_id is an ObjectId path — Mongoose casts the hex string on find().
+    // Use op 'eq'/'in' only: a 'contains' regex CastErrors on an ObjectId path.
+    brand_id: { type: 'string' },
     sku: { type: 'string' },
     selling_price: { type: 'number' },
     inventory_count: { type: 'number' },

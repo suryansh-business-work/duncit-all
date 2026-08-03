@@ -25,14 +25,17 @@ export const appConfig = {
     {
       label: 'Catalog',
       icon: 'inventory',
-      children: [{ label: 'Duncit Products', to: '/inventory', icon: 'inventory' }],
+      children: [
+        { label: 'Duncit Products', to: '/inventory', icon: 'inventory' },
+        { label: 'Brands', to: '/catalog/brands', icon: 'storefront' },
+      ],
     },
     {
-      label: 'E-commerce',
+      label: 'Brands & Products Review',
       icon: 'storefront',
       children: [
-        { label: 'Brands', to: '/ecomm/brands', icon: 'storefront' },
-        { label: 'Listing Reviews', to: '/ecomm/product-requests', icon: 'rule' },
+        { label: 'Brands Review', to: '/ecomm/brands', icon: 'storefront' },
+        { label: 'Products Reviews', to: '/ecomm/product-requests', icon: 'rule' },
       ],
     },
     {

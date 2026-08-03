@@ -22,13 +22,18 @@ import {
   INVENTORY_STOCK_MOVEMENTS,
 } from './productQueries';
 import { CREATE_PRODUCT, UPDATE_PRODUCT } from '../queries';
+import { productListLabel, productListPath } from './productPaths';
 import { productSchema } from './schema';
 import { toFormValues, toSubmitInput, type InventoryProductFormValues } from './types';
 
 export default function InventoryProductPage() {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  // `brandId` is present only on /catalog/brands/:brandId/products/:id/edit,
+  // where the editor belongs to one brand's catalogue instead of Duncit's.
+  const { id, brandId } = useParams<{ id: string; brandId: string }>();
   const isNew = !id;
+  const backTo = productListPath(brandId);
+  const backLabel = `Back to ${productListLabel(brandId).toLowerCase()}`;
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -108,8 +113,8 @@ export default function InventoryProductPage() {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Alert severity="warning">Product not found.</Alert>
-        <Button sx={{ mt: 2 }} startIcon={<ArrowBackIcon />} onClick={() => navigate('/inventory')}>
-          Back to inventory
+        <Button sx={{ mt: 2 }} startIcon={<ArrowBackIcon />} onClick={() => navigate(backTo)}>
+          {backLabel}
         </Button>
       </Container>
     );
@@ -122,6 +127,7 @@ export default function InventoryProductPage() {
       <ProductPageHeader
         isNew={isNew}
         product={product}
+        brandId={brandId}
         onError={setError}
         onToast={setToast}
         onRefetch={productQuery.refetch}
@@ -141,8 +147,8 @@ export default function InventoryProductPage() {
           activityLoading={
             logsQuery.loading || movementsQuery.loading || analyticsQuery.loading
           }
-          onCancel={() => navigate('/inventory')}
-          onAfterSave={() => navigate('/inventory')}
+          onCancel={() => navigate(backTo)}
+          onAfterSave={() => navigate(backTo)}
           onSubmit={onSubmit}
           onError={setError}
         />

@@ -22,6 +22,7 @@ const SWITCHES: { name: SwitchName; label: string }[] = [
 export default function DeliveryAvailabilitySection() {
   const { control } = useFormContext<InventoryProductFormValues>();
   const deliveryAvailable = useWatch({ control, name: 'delivery_available' });
+  const ownership = useWatch({ control, name: 'ownership' });
   const chargeHint = deliveryAvailable
     ? 'Flat fee per order; set 0 for free delivery'
     : 'Enable "Delivery available" to set a charge';
@@ -60,9 +61,12 @@ export default function DeliveryAvailabilitySection() {
           InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
         />
       </Grid>
-      <Grid item xs={12} md={6}>
-        <WarehouseSelect />
-      </Grid>
+      {/* Duncit warehouses only — a brand product ships from the brand's own. */}
+      {ownership === 'DUNCIT' && (
+        <Grid item xs={12} md={6}>
+          <WarehouseSelect />
+        </Grid>
+      )}
       <Grid item xs={12}>
         <Typography variant="subtitle2" fontWeight={700}>
           Shipping dimensions

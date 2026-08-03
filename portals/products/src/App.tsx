@@ -5,9 +5,12 @@ import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import InventoryPage from './pages/inventory-page/InventoryPage';
 import InventoryProductPage from './pages/inventory-page/inventory-product-page/InventoryProductPage';
-import EcommRequestsPage from './pages/ecomm/EcommRequestsPage';
-import EcommMarketplacePage from './pages/ecomm/EcommMarketplacePage';
-import EcommBrandDetailPage from './pages/ecomm/EcommBrandDetailPage';
+import ProductsReviewPage from './pages/ecomm/ProductsReviewPage';
+import BrandsReviewPage from './pages/ecomm/BrandsReviewPage';
+import BrandReviewDetailPage from './pages/ecomm/BrandReviewDetailPage';
+import CatalogBrandsPage from './pages/catalog-brands/CatalogBrandsPage';
+import CatalogBrandDetailPage from './pages/catalog-brands/CatalogBrandDetailPage';
+import CatalogBrandProductsPage from './pages/catalog-brands/CatalogBrandProductsPage';
 import BrandRequestPage from './pages/ecomm/ecomm-requests/BrandRequestPage';
 import ProductRequestPage from './pages/ecomm/ecomm-requests/ProductRequestPage';
 import ProductOrdersPage from './pages/orders/ProductOrdersPage';
@@ -38,11 +41,21 @@ export default function App() {
       <Route path="/inventory" element={products(<InventoryPage />)} />
       <Route path="/inventory/new" element={products(<InventoryProductPage />)} />
       <Route path="/inventory/:id/edit" element={products(<InventoryProductPage />)} />
-      <Route path="/ecomm/product-requests" element={products(<EcommRequestsPage />)} />
+      <Route path="/catalog/brands" element={products(<CatalogBrandsPage />)} />
+      <Route path="/catalog/brands/:brandId" element={products(<CatalogBrandDetailPage />)} />
+      <Route
+        path="/catalog/brands/:brandId/products"
+        element={products(<CatalogBrandProductsPage />)}
+      />
+      <Route
+        path="/catalog/brands/:brandId/products/:id/edit"
+        element={products(<InventoryProductPage />)}
+      />
+      <Route path="/ecomm/product-requests" element={products(<ProductsReviewPage />)} />
       <Route path="/ecomm/brand-request" element={products(<BrandRequestPage />)} />
       <Route path="/ecomm/product-request" element={products(<ProductRequestPage />)} />
-      <Route path="/ecomm/brands" element={products(<EcommMarketplacePage />)} />
-      <Route path="/ecomm/brands/:brandId" element={products(<EcommBrandDetailPage />)} />
+      <Route path="/ecomm/brands" element={products(<BrandsReviewPage />)} />
+      <Route path="/ecomm/brands/:brandId" element={products(<BrandReviewDetailPage />)} />
       <Route path="/warehouse-approval" element={products(<WarehouseApprovalPage />)} />
       <Route path="/orders" element={products(<ProductOrdersPage />)} />
       <Route path="/orders/:orderId" element={products(<ProductOrderDetailPage />)} />

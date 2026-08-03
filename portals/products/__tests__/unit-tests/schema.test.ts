@@ -62,7 +62,18 @@ describe('productSchema', () => {
     expect(messages({ ...valid, tags })).toContain('At most 20 tags');
   });
 
-  it('requires a warehouse (pickup location)', () => {
+  it('requires a warehouse (pickup location) on a Duncit product', () => {
     expect(messages({ ...valid, pickup_location_id: '' })).toContain('Warehouse is required');
+  });
+
+  it('does not require a warehouse on a brand-owned product', () => {
+    // A brand product ships from the brand's own warehouse, which this form
+    // never lists, so the field must stay optional there.
+    const result = productSchema.safeParse({
+      ...valid,
+      ownership: 'BRAND',
+      pickup_location_id: '',
+    });
+    expect(result.success).toBe(true);
   });
 });

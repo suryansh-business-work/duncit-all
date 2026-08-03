@@ -42,6 +42,18 @@ const renderEdit = (mocks: MockedResponse[]) =>
     initialEntries: ['/inventory/p1/edit'],
     routes: <Route path="/inventory/:id/edit" element={<InventoryProductPage />} />,
   });
+/** The same editor mounted on the brand route the Catalog > Brands pages use. */
+const renderBrandEdit = (mocks: MockedResponse[]) =>
+  renderWithProviders(<></>, {
+    mocks,
+    initialEntries: ['/catalog/brands/b1/products/p1/edit'],
+    routes: (
+      <Route
+        path="/catalog/brands/:brandId/products/:id/edit"
+        element={<InventoryProductPage />}
+      />
+    ),
+  });
 
 const savedProduct = makeInventoryProduct({ id: 'p1', product_name: 'Cold Brew', sku: 'CB1', status: 'ACTIVE' });
 
@@ -94,6 +106,26 @@ describe('InventoryProductPage', () => {
     expect(alert).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /close/i }));
     await waitFor(() => expect(screen.queryByText('boom')).not.toBeInTheDocument());
+  });
+
+  it('returns to the brand products page from the brand route', async () => {
+    const brandProduct = makeInventoryProduct({ id: 'p1', ownership: 'BRAND' });
+    renderBrandEdit(inventoryEditQueryMocks(brandProduct));
+    await waitFor(() => expect(screen.getByText('EDIT HEADER')).toBeInTheDocument());
+    nav.fn.mockClear();
+    act(() => body.props?.onCancel());
+    expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products');
+    nav.fn.mockClear();
+    act(() => body.props?.onAfterSave());
+    expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products');
+  });
+
+  it('sends the brand products page a missing product back to that brand', async () => {
+    renderBrandEdit(inventoryEditQueryMocks(null));
+    await waitFor(() => expect(screen.getByText('Product not found.')).toBeInTheDocument());
+    nav.fn.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: /Back to brand products/i }));
+    expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products');
   });
 
   it('surfaces a save error', async () => {

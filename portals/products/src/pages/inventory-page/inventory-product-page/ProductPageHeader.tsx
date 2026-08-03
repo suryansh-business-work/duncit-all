@@ -17,11 +17,15 @@ import {
   DUPLICATE_INVENTORY_PRODUCT,
   RESTORE_INVENTORY_PRODUCT,
 } from './productQueries';
+import { productEditPath, productListLabel, productListPath } from './productPaths';
 import { STATUS_CHIP_COLOR } from './constants';
 
 interface ProductPageHeaderProps {
   isNew: boolean;
   product: any;
+  /** Set on the brand route so the breadcrumb and the duplicate redirect stay
+   * inside `/catalog/brands/:brandId/products`. */
+  brandId?: string;
   onError: (msg: string) => void;
   onToast: (msg: string) => void;
   onRefetch: () => Promise<unknown>;
@@ -30,6 +34,7 @@ interface ProductPageHeaderProps {
 export default function ProductPageHeader({
   isNew,
   product,
+  brandId,
   onError,
   onToast,
   onRefetch,
@@ -44,7 +49,9 @@ export default function ProductPageHeader({
   return (
     <Stack spacing={2} sx={{ mb: 2 }}>
       <Breadcrumbs>
-        <BackButton onClick={() => navigate('/inventory')}>Inventory</BackButton>
+        <BackButton onClick={() => navigate(productListPath(brandId))}>
+          {productListLabel(brandId)}
+        </BackButton>
         <Typography color="text.primary">
           {isNew ? 'Add product' : product?.product_name || 'Edit product'}
         </Typography>
@@ -76,7 +83,7 @@ export default function ProductPageHeader({
                 try {
                   const res = await duplicateProduct({ variables: { id: product.id } });
                   const newId = res.data?.duplicateInventoryProduct?.id;
-                  if (newId) navigate(`/inventory/${newId}/edit`);
+                  if (newId) navigate(productEditPath(newId, brandId));
                 } catch (err: any) {
                   onError(err?.message ?? 'Duplicate failed');
                 }

@@ -9,6 +9,7 @@ export type UnitType =
   | 'METER'
   | 'OTHER';
 export type InventoryStatus = 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED';
+export type ProductOwnership = 'DUNCIT' | 'BRAND';
 export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
 export type StockMovementType =
   | 'IN'
@@ -20,6 +21,9 @@ export type StockMovementType =
 
 export interface InventoryProductFormValues {
   id?: string;
+  /** Read-only context: who owns the product. Drives the Duncit-only fields;
+   * never submitted (it is not part of UpdateInventoryProductInput). */
+  ownership: ProductOwnership;
 
   product_name: string;
   sku: string;
@@ -74,6 +78,7 @@ export interface InventoryProductFormValues {
 }
 
 export const blankProductForm: InventoryProductFormValues = {
+  ownership: 'DUNCIT',
   product_name: '',
   sku: '',
   barcode: '',
@@ -123,6 +128,7 @@ export function toFormValues(product: any): InventoryProductFormValues {
     iso ? new Date(iso).toISOString().slice(0, 10) : '';
   return {
     id: product.id,
+    ownership: (product.ownership as ProductOwnership) ?? 'DUNCIT',
     product_name: product.product_name ?? '',
     sku: product.sku ?? '',
     barcode: product.barcode ?? '',
@@ -168,8 +174,9 @@ export function toFormValues(product: any): InventoryProductFormValues {
 }
 
 export function toSubmitInput(values: InventoryProductFormValues) {
-  const { id: _id, ...rest } = values;
-  return {
+  // `ownership` is read-only context, not a field of UpdateInventoryProductInput.
+  const { id: _id, ownership, pickup_location_id, ...rest } = values;
+  const input = {
     ...rest,
     sku: rest.sku.trim().toUpperCase(),
     category_id: rest.category_id || null,
@@ -177,4 +184,8 @@ export function toSubmitInput(values: InventoryProductFormValues) {
     manufacturing_date: rest.manufacturing_date || null,
     images: rest.images.filter(Boolean),
   };
+  // A brand-owned product ships from the brand's own warehouse, which this form
+  // never lists — so it must not write that field back either.
+  if (ownership === 'BRAND') return input;
+  return { ...input, pickup_location_id };
 }

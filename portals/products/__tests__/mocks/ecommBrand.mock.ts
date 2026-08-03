@@ -1,6 +1,13 @@
 import type { MockedResponse } from '@apollo/client/testing';
 import type { EcommBrand } from '@duncit/gql-types';
-import { MARKETPLACE_BRANDS, type BrandProductRow, type EcommBrandRow } from '../../src/pages/ecomm/queries';
+import {
+  APPROVE_ECOMM_BRAND,
+  ECOMM_BRAND,
+  MARKETPLACE_BRANDS,
+  REJECT_ECOMM_BRAND,
+  type BrandProductRow,
+  type EcommBrandRow,
+} from '../../src/pages/ecomm/queries';
 import { makeInventoryProduct } from './inventory.mock';
 
 /**
@@ -11,6 +18,7 @@ import { makeInventoryProduct } from './inventory.mock';
 export const makeEcommBrand = (over: Partial<EcommBrand> = {}): EcommBrand => ({
   __typename: 'EcommBrand',
   id: 'b1',
+  brand_no: 'BRD-000001',
   brand_name: 'Acme',
   registered_business_name: 'Acme Pvt Ltd',
   tagline: 'Fresh goods',
@@ -43,24 +51,42 @@ export const makeEcommBrand = (over: Partial<EcommBrand> = {}): EcommBrand => ({
   owner_user_id: 'u1',
   is_active: true,
   default_pickup_location_id: null,
+  submitted_at: '2026-01-02T00:00:00.000Z',
   created_at: '2026-01-01T00:00:00.000Z',
   ...over,
 });
 
-/** Table row for the marketplace brands table (nullable projection). */
+/** Table row for the brands review table (nullable projection). Carries the
+ * whole submission because the review dialog reads the row object. */
 export const makeEcommBrandRow = (over: Partial<EcommBrandRow> = {}): EcommBrandRow => {
   const b = makeEcommBrand();
   return {
     id: b.id,
+    brand_no: b.brand_no,
     brand_name: b.brand_name,
     logo_url: b.logo_url,
+    cover_image_url: b.cover_image_url,
+    tagline: b.tagline,
+    description: b.description,
+    product_categories: b.product_categories,
     status: b.status,
+    is_active: b.is_active,
+    reviewer_notes: b.reviewer_notes,
+    tags: b.tags,
     approved_product_count: b.approved_product_count,
     default_pickup_location_id: 'loc1',
+    contact_person: b.contact_person,
     city: b.city,
     state: b.state,
     contact_email: b.contact_email,
     contact_phone: b.contact_phone,
+    registered_business_name: b.registered_business_name,
+    gstin: b.gstin,
+    pan: b.pan,
+    website_url: b.website_url,
+    instagram_url: b.instagram_url,
+    documents: b.documents,
+    submitted_at: b.submitted_at,
     created_at: b.created_at,
     ...over,
   };
@@ -92,5 +118,50 @@ export const marketplaceBrandsMock = (brands: EcommBrand[] = [makeEcommBrand()])
   request: { query: MARKETPLACE_BRANDS },
   variableMatcher: () => true,
   result: { data: { marketplaceBrands: brands } },
+  maxUsageCount: 20,
+});
+
+/** Single brand at any status — what the review detail page loads. */
+export const ecommBrandMock = (brand: EcommBrand | null = makeEcommBrand()): MockedResponse => ({
+  request: { query: ECOMM_BRAND },
+  variableMatcher: () => true,
+  result: { data: { ecommBrand: brand } },
+  maxUsageCount: 20,
+});
+
+export const approveEcommBrandMock = (over: { fail?: boolean } = {}): MockedResponse => ({
+  request: { query: APPROVE_ECOMM_BRAND },
+  variableMatcher: () => true,
+  result: over.fail
+    ? { errors: [{ message: 'cannot approve' }] }
+    : {
+        data: {
+          approveEcommBrand: {
+            __typename: 'EcommBrand',
+            id: 'b1',
+            status: 'APPROVED',
+            reviewer_notes: 'looks good',
+            tags: ['premium'],
+          },
+        },
+      },
+  maxUsageCount: 20,
+});
+
+export const rejectEcommBrandMock = (over: { fail?: boolean } = {}): MockedResponse => ({
+  request: { query: REJECT_ECOMM_BRAND },
+  variableMatcher: () => true,
+  result: over.fail
+    ? { errors: [{ message: 'cannot reject' }] }
+    : {
+        data: {
+          rejectEcommBrand: {
+            __typename: 'EcommBrand',
+            id: 'b1',
+            status: 'REJECTED',
+            reviewer_notes: 'missing GSTIN',
+          },
+        },
+      },
   maxUsageCount: 20,
 });

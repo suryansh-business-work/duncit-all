@@ -41,6 +41,16 @@ describe('BasicInfoSection', () => {
     });
     expect(screen.getByText(/5\/280/)).toBeInTheDocument();
   });
+
+  it('names the brand as the owner for a brand-owned product', () => {
+    renderWithProviders(
+      <ProductFormHarness values={{ ownership: 'BRAND' }}>
+        <BasicInfoSection categories={[]} />
+      </ProductFormHarness>,
+    );
+    expect(screen.getByText('Product owner: Brand')).toBeInTheDocument();
+    expect(screen.queryByText('Product owner: Duncit')).not.toBeInTheDocument();
+  });
 });
 
 describe('PricingTaxSection', () => {
@@ -85,5 +95,18 @@ describe('DeliveryAvailabilitySection', () => {
     fireEvent.click(deliverySwitch);
     expect(screen.getByLabelText(/Delivery charge/i)).not.toBeDisabled();
     expect(screen.getByText(/set 0 for free delivery/i)).toBeInTheDocument();
+  });
+
+  it('hides the Duncit warehouse picker for a brand-owned product', async () => {
+    renderWithProviders(
+      <ProductFormHarness values={{ ownership: 'BRAND' }}>
+        <DeliveryAvailabilitySection />
+      </ProductFormHarness>,
+      { mocks: [brandPickupLocationsMock([makeBrandPickupLocation({ owner_kind: 'DUNCIT', brand_id: null })])] },
+    );
+    // Shipping dimensions still render; the Duncit-only warehouse select does not.
+    expect(screen.getByLabelText(/Weight/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Main WH — Pune')).not.toBeInTheDocument());
+    expect(screen.queryByLabelText(/Warehouse/i)).not.toBeInTheDocument();
   });
 });

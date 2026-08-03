@@ -38,41 +38,88 @@ export const MARKETPLACE_BRAND_PRODUCTS = gql`
   }
 `;
 
-/** Row shape consumed by the marketplace brands table columns. */
+export interface EcommBrandDocument {
+  type: string;
+  url: string;
+}
+
+/** Row shape consumed by the brands review table AND the review dialog — rows
+ * carry the whole submission so approving needs no second round trip. */
 export interface EcommBrandRow {
   id: string;
+  brand_no?: string | null;
   brand_name: string;
   logo_url?: string | null;
+  cover_image_url?: string | null;
+  tagline?: string | null;
+  description?: string | null;
+  product_categories?: string[] | null;
   status: string;
+  is_active?: boolean | null;
+  reviewer_notes?: string | null;
+  tags?: string[] | null;
   approved_product_count: number;
   default_pickup_location_id?: string | null;
+  contact_person?: string | null;
   city?: string | null;
   state?: string | null;
   contact_email?: string | null;
   contact_phone?: string | null;
+  registered_business_name?: string | null;
+  gstin?: string | null;
+  pan?: string | null;
+  website_url?: string | null;
+  instagram_url?: string | null;
+  documents?: EcommBrandDocument[] | null;
+  submitted_at?: string | null;
   created_at?: string | null;
 }
 
-/** Same selection as MARKETPLACE_BRANDS rows (+ created_at for the Created filter column). */
+/** Everything the review inbox shows plus everything the review dialog reads. */
 const ECOMM_BRAND_ROW_FIELDS = gql`
   fragment EcommBrandRowFields on EcommBrand {
     id
+    brand_no
     brand_name
     logo_url
+    cover_image_url
+    tagline
+    description
+    product_categories
     status
+    is_active
+    reviewer_notes
+    tags
     approved_product_count
     default_pickup_location_id
+    contact_person
     city
     state
     contact_email
     contact_phone
+    registered_business_name
+    gstin
+    pan
+    website_url
+    instagram_url
+    documents {
+      type
+      url
+    }
+    submitted_at
     created_at
   }
 `;
 
-export const MARKETPLACE_BRANDS_TABLE = gql`
-  query MarketplaceBrandsTable($query: TableQueryInput) {
-    marketplaceBrandsTable(query: $query) {
+/**
+ * The review inbox source. `ecommBrandsTable` is unscoped — every brand, every
+ * status, deactivated included — which is what an approval queue needs.
+ * `marketplaceBrandsTable` is APPROVED+active only (correct for the storefront)
+ * and hid partner submissions from this page entirely.
+ */
+export const ECOMM_BRANDS_TABLE = gql`
+  query EcommBrandsTable($query: TableQueryInput) {
+    ecommBrandsTable(query: $query) {
       total
       rows {
         ...EcommBrandRowFields
@@ -80,6 +127,38 @@ export const MARKETPLACE_BRANDS_TABLE = gql`
     }
   }
   ${ECOMM_BRAND_ROW_FIELDS}
+`;
+
+/** One brand by id, at any status — the review inbox's row target. */
+export const ECOMM_BRAND = gql`
+  query EcommBrand($brand_doc_id: ID!) {
+    ecommBrand(brand_doc_id: $brand_doc_id) {
+      ...EcommBrandRowFields
+    }
+  }
+  ${ECOMM_BRAND_ROW_FIELDS}
+`;
+
+/** Approving also grants the brand owner the E-commerce Manager role. */
+export const APPROVE_ECOMM_BRAND = gql`
+  mutation ApproveEcommBrand($brand_doc_id: ID!, $notes: String, $tags: [String!]) {
+    approveEcommBrand(brand_doc_id: $brand_doc_id, notes: $notes, tags: $tags) {
+      id
+      status
+      reviewer_notes
+      tags
+    }
+  }
+`;
+
+export const REJECT_ECOMM_BRAND = gql`
+  mutation RejectEcommBrand($brand_doc_id: ID!, $notes: String!) {
+    rejectEcommBrand(brand_doc_id: $brand_doc_id, notes: $notes) {
+      id
+      status
+      reviewer_notes
+    }
+  }
 `;
 
 /** Row shape consumed by the brand products table columns. */

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import EcommRequestsTable from '../../src/pages/ecomm/EcommRequestsTable';
+import ProductsReviewTable from '../../src/pages/ecomm/ProductsReviewTable';
 import { makeProductListingRow } from '../mocks/productListing.mock';
 
 vi.mock('@duncit/table', () => import('./table-mock'));
@@ -9,10 +9,10 @@ vi.mock('@duncit/ui', () => ({
   StatusChip: ({ status }: { status: string }) => <span>{status}</span>,
 }));
 
-describe('EcommRequestsTable', () => {
+describe('ProductsReviewTable', () => {
   it('renders request rows with delivery, inventory and commission', async () => {
     render(
-      <EcommRequestsTable
+      <ProductsReviewTable
         fetchRows={async () => ({
           rows: [
             makeProductListingRow(),
@@ -38,7 +38,7 @@ describe('EcommRequestsTable', () => {
 
   it('renders venue delivery and the non-partner caption', async () => {
     render(
-      <EcommRequestsTable
+      <ProductsReviewTable
         fetchRows={async () => ({
           rows: [
             makeProductListingRow({
@@ -60,7 +60,7 @@ describe('EcommRequestsTable', () => {
   it('calls onReview from the row Review button', async () => {
     const onReview = vi.fn();
     render(
-      <EcommRequestsTable
+      <ProductsReviewTable
         fetchRows={async () => ({ rows: [makeProductListingRow()], total: 1 })}
         refetchRef={{ current: null }}
         onReview={onReview}

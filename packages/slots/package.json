@@ -22,7 +22,6 @@
     "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/slots"
   },
   "peerDependencies": {
-    "@duncit/datetime": "workspace:*",
     "@expo/vector-icons": ">=14",
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",
@@ -49,7 +48,6 @@
     }
   },
   "devDependencies": {
-    "@duncit/datetime": "workspace:*",
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",
     "@mui/x-date-pickers": "^6.20.2",

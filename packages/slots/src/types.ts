@@ -1,5 +1,3 @@
-import type { DateFormatter } from '@duncit/datetime';
-
 /**
  * The one slot shape every picker renders. Venue availability and onboarding
  * meeting slots both normalise into this, so a single calendar serves both.
@@ -27,12 +25,27 @@ export interface SlotDay<T extends CalendarSlot = CalendarSlot> {
   slots: T[];
 }
 
+/** What a formatter accepts — mirrors `DateInput` in @duncit/datetime. */
+export type SlotDateInput = string | number | Date | null | undefined;
+
 /**
- * The formatter slice the slot helpers need. Taking the slice rather than the
- * whole `DateFormatter` keeps the helpers callable from a test or a surface that
- * only has partial settings.
+ * The formatter slice the slot helpers need. `@duncit/datetime`'s `DateFormatter`
+ * satisfies it structurally, so `useDateFormat()` is passed straight in.
+ *
+ * Described structurally rather than imported ON PURPOSE. The native app
+ * typechecks and bundles this package from its own SOURCE, and module resolution
+ * then walks up from `packages/slots/` — which finds nothing in CI or Docker,
+ * where only `app/mobile-app` is installed. An `import type` from another
+ * @duncit package compiles locally (pnpm leaves a node_modules here) and fails
+ * there. No other native-consumed package imports a sibling for the same reason.
  */
-export type SlotFormatter = Pick<DateFormatter, 'dayKey' | 'formatDate' | 'formatTime' | 'clock'>;
+export interface SlotFormatter {
+  /** 'yyyy-MM-dd' calendar-day key in the admin-configured zone. */
+  dayKey: (input: SlotDateInput) => string;
+  formatDate: (input: SlotDateInput) => string;
+  formatTime: (input: SlotDateInput) => string;
+  clock: { nowMs: () => number };
+}
 
 /**
  * Every user-visible string the pickers render. Required, never defaulted inside

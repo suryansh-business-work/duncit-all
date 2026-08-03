@@ -1161,9 +1161,6 @@ importers:
         specifier: '>=1'
         version: 2.6.2(react-dom@18.3.1(react@18.3.1))(react-native@0.86.2(@babel/core@7.29.0)(@types/react@18.3.28)(react@18.3.1))(react@18.3.1)
     devDependencies:
-      '@duncit/datetime':
-        specifier: workspace:*
-        version: link:../datetime
       '@mui/icons-material':
         specifier: ^5.15.18
         version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)

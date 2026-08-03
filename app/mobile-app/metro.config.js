@@ -20,6 +20,14 @@ config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
   'date-fns': path.resolve(__dirname, 'node_modules/date-fns'),
   'date-fns-tz': path.resolve(__dirname, 'node_modules/date-fns-tz'),
+  // @duncit/slots ships Tamagui views (its /native subpath), so its peers must
+  // resolve the same way date-fns does — otherwise the walk-up from
+  // packages/slots/ finds nothing in Docker/CI and the export fails there while
+  // passing locally.
+  react: path.resolve(__dirname, 'node_modules/react'),
+  'react-native': path.resolve(__dirname, 'node_modules/react-native'),
+  tamagui: path.resolve(__dirname, 'node_modules/tamagui'),
+  '@expo/vector-icons': path.resolve(__dirname, 'node_modules/@expo/vector-icons'),
 };
 
 // Expo SDK 54 enables package exports, so Metro prefers each package's ESM

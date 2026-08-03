@@ -21,3 +21,10 @@ export {
   type DateInput,
 } from './format';
 export { resolveActiveOccasion, type OccasionWindow } from './occasion';
+export {
+  DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  ageInYears,
+  dobMinAgeMessage,
+  isEligibleDob,
+  latestEligibleDob,
+} from './age';

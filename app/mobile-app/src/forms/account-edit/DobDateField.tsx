@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Modal, ScrollView } from 'react-native';
-import { useController, type Control } from 'react-hook-form';
+import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
 import { format } from 'date-fns';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { DobCalendarSheet } from './DobCalendarSheet';
-import type { AccountEditValues } from './account-edit.types';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -19,20 +19,38 @@ export function parseDob(value: string): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
+interface DobDateFieldProps<T extends FieldValues> {
+  control: Control<T>;
+  /** Defaults to the conventional `dob` field both forms declare. */
+  name?: Path<T>;
+  /** Admin-configured minimum joining age (Admin > Settings). */
+  minAge?: number;
+}
+
 /**
  * Full date-of-birth picker (bug 1) — type `YYYY-MM-DD` directly or open the
  * calendar sheet, which offers fast editable year selection then month + day.
- * Future dates are blocked and the range is capped at ~120 years. RN twin of
- * mWeb's MUI X DobDateField; the value is stored as a 'YYYY-MM-DD' string.
+ * The calendar stops at the minimum joining age and the range is capped at ~120
+ * years. RN twin of mWeb's MUI X DobDateField; the value is stored as a
+ * 'YYYY-MM-DD' string.
+ *
+ * Generic over the form so signup and edit-profile share ONE picker — they ask
+ * for the same thing and must enforce the same age.
  */
-export function DobDateField({ control }: Readonly<{ control: Control<AccountEditValues> }>) {
+export function DobDateField<T extends FieldValues>({
+  control,
+  name,
+  minAge = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+}: Readonly<DobDateFieldProps<T>>) {
   const { color: ink, muted } = useThemeColors();
-  const { field, fieldState } = useController({ control, name: 'dob' });
+  const { field, fieldState } = useController({ control, name: name ?? ('dob' as Path<T>) });
   const [open, setOpen] = useState(false);
   const closeSheet = () => setOpen(false);
 
-  const value = field.value ?? '';
-  const maxDate = new Date();
+  const value = typeof field.value === 'string' ? field.value : '';
+  // The calendar stops at the minimum joining age, so an under-18 day cannot be
+  // picked; the schema still re-checks a typed value.
+  const maxDate = latestEligibleDob(minAge);
   const error = fieldState.error?.message;
 
   return (

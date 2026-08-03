@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Stack, Typography } from '@mui/material';
@@ -7,7 +7,8 @@ import AddressFields, { type AddressFieldNames } from '../../../forms/components
 import DobDateField from './DobDateField';
 import LocationSelect from './LocationSelect';
 import ContactFields from './ContactFields';
-import { accountEditSchema, type AccountEditValues } from './account-edit.types';
+import { makeAccountEditSchema, type AccountEditValues } from './account-edit.types';
+import { useMinSignupAge } from '../../../utils/dateFormat';
 
 const ADDRESS_NAMES: AddressFieldNames<AccountEditValues> = {
   line1: 'address_line1',
@@ -44,6 +45,12 @@ export default function AccountEditForm({
   onRegisterReset,
 }: Readonly<Props>) {
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // The joining age is admin-configured, so the schema is built from it.
+  const minAge = useMinSignupAge();
+  const schema = useMemo(
+    () => makeAccountEditSchema(minAge, defaultValues.dob),
+    [minAge, defaultValues.dob],
+  );
   const {
     control,
     setValue,
@@ -52,7 +59,7 @@ export default function AccountEditForm({
     formState: { isDirty, isValid },
   } = useForm<AccountEditValues>({
     defaultValues,
-    resolver: zodResolver(accountEditSchema),
+    resolver: zodResolver(schema),
     mode: 'onChange',
   });
 
@@ -106,7 +113,7 @@ export default function AccountEditForm({
           size="small"
           InputLabelProps={{ shrink: true }}
         />
-        <DobDateField control={control} />
+        <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
         <ContactFields control={control} setValue={setValue} />
         <Typography variant="overline" color="text.secondary" fontWeight={900}>

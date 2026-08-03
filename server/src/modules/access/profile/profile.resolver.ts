@@ -5,6 +5,7 @@ import {
   interestCategoryIdsSchema,
 } from './profile.validator';
 import { validate } from '@utils/validate';
+import { assertEligibleDob } from '@utils/age';
 import type { GraphQLContext } from '@context';
 
 // A stable @handle for follow lists. There is no real username field yet, so we
@@ -107,6 +108,12 @@ export const profileResolvers = {
         });
       }
       const data = await validate(updateMyProfileSchema, args.input);
+      // Same admin-configured age gate as signup — a profile edit must not be a
+      // way around it. An omitted/empty dob means "unchanged" and is skipped,
+      // and so is a resubmission of the date already on file (raising the
+      // minimum must not lock an existing account out of its own profile).
+      const current = data.dob ? await userService.me(ctx.user.id) : null;
+      await assertEligibleDob(data.dob, current?.dob);
       return userService.updateMyProfile(ctx.user.id, data);
     },
     updateMyProfileVisibility: async (

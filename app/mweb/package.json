@@ -1,6 +1,6 @@
 {
   "name": "mweb-app",
-  "version": "1.6.14",
+  "version": "1.6.15",
   "private": true,
   "type": "module",
   "scripts": {
@@ -25,6 +25,7 @@
     "@apollo/client": "^3.10.4",
     "@duncit/app-settings": "workspace:*",
     "@duncit/auth-tokens": "workspace:*",
+    "@duncit/datetime": "workspace:*",
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/geo": "workspace:*",
     "@duncit/location": "workspace:*",

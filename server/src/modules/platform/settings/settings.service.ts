@@ -14,10 +14,10 @@ import {
   setReopenWindowZone,
   DEFAULT_REOPEN_ZONE,
 } from "@modules/support/reopenWindow";
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, MAX_ACCOUNT_AGE_YEARS } from "@utils/age";
 
-/** Signup birth-year bound defaults when the admin hasn't set explicit values. */
-const DEFAULT_MIN_BIRTH_YEAR = 1940;
-const DEFAULT_MAX_BIRTH_YEAR = 2012;
+/** Minimum joining age when the admin hasn't set an explicit value. */
+const DEFAULT_MIN_SIGNUP_AGE = DEFAULT_MIN_ACCOUNT_AGE_YEARS;
 /** Default draft-pod retention window (days) before auto-deletion. */
 const DEFAULT_DRAFT_RETENTION_DAYS = 3;
 /** Default max Backout attempts a user gets per pod. */
@@ -30,6 +30,14 @@ const cleanRetentionDays = (value: unknown) =>
 
 const cleanMaxBackoutAttempts = (value: unknown) =>
   Math.max(1, Math.floor(Number(value)) || DEFAULT_MAX_BACKOUT_ATTEMPTS);
+
+/** Minimum joining age, clamped to a sane 1..120 so a typo cannot lock every
+ * new user out (or let every child in). */
+const cleanMinSignupAge = (value: unknown) =>
+  Math.min(
+    MAX_ACCOUNT_AGE_YEARS,
+    Math.max(1, Math.floor(Number(value)) || DEFAULT_MIN_SIGNUP_AGE),
+  );
 
 // 0 is a legal value here (it disables the penalty), so the `|| DEFAULT` idiom
 // the cleaners above use would silently turn a saved 0 back into 5.
@@ -47,8 +55,7 @@ const toAppPub = (d: any) => ({
   time_source: d?.time_source ?? "SERVER",
   custom_time: d?.custom_time?.toISOString?.() ?? null,
   custom_time_set_at: d?.custom_time_set_at?.toISOString?.() ?? null,
-  min_birth_year: d?.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
-  max_birth_year: d?.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
+  min_signup_age: d?.min_signup_age ?? DEFAULT_MIN_SIGNUP_AGE,
   draft_retention_days: d?.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
   max_backout_attempts: d?.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
   venue_cancel_health_penalty:
@@ -285,8 +292,7 @@ type AppSettingsUpdateInput = {
   time_zone?: string;
   time_source?: string;
   custom_time?: string | null;
-  min_birth_year?: number;
-  max_birth_year?: number;
+  min_signup_age?: number;
   draft_retention_days?: number;
   max_backout_attempts?: number;
   venue_cancel_health_penalty?: number;
@@ -300,8 +306,6 @@ const APP_SETTING_PASSTHROUGH_FIELDS = [
   "time_format",
   "time_zone",
   "time_source",
-  "min_birth_year",
-  "max_birth_year",
 ] as const;
 
 /** Saving an anchor stamps the server clock beside it, so every device can
@@ -319,6 +323,8 @@ const buildAppSettingsUpdate = (input: AppSettingsUpdateInput) => {
   }
   if (input.custom_time !== undefined)
     Object.assign(update, customTimeUpdate(input.custom_time));
+  if (input.min_signup_age !== undefined)
+    update.min_signup_age = cleanMinSignupAge(input.min_signup_age);
   if (input.draft_retention_days !== undefined)
     update.draft_retention_days = cleanRetentionDays(input.draft_retention_days);
   if (input.max_backout_attempts !== undefined)
@@ -349,13 +355,19 @@ export const settingsService = {
       custom_time_set_at: doc.custom_time_set_at?.toISOString?.() ?? null,
       // Stamped per response so clients keep the server clock ticking.
       server_time: new Date().toISOString(),
-      min_birth_year: doc.min_birth_year ?? DEFAULT_MIN_BIRTH_YEAR,
-      max_birth_year: doc.max_birth_year ?? DEFAULT_MAX_BIRTH_YEAR,
+      min_signup_age: doc.min_signup_age ?? DEFAULT_MIN_SIGNUP_AGE,
       draft_retention_days: doc.draft_retention_days ?? DEFAULT_DRAFT_RETENTION_DAYS,
       max_backout_attempts: doc.max_backout_attempts ?? DEFAULT_MAX_BACKOUT_ATTEMPTS,
       venue_cancel_health_penalty:
         doc.venue_cancel_health_penalty ?? DEFAULT_VENUE_CANCEL_HEALTH_PENALTY,
     };
+  },
+
+  /** Clamped minimum joining age (1–120, default 18) — the age gate every DOB
+   * input on every surface is validated against. */
+  async getMinSignupAge(): Promise<number> {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    return cleanMinSignupAge(doc?.min_signup_age);
   },
 
   /** Clamped max-backout-attempts setting for the backout flow (min 1, default 3). */

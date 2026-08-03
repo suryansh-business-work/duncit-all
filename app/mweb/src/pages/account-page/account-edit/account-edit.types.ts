@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, dobMinAgeMessage, isEligibleDob } from '@duncit/datetime';
 import { PERSON_NAME_PATTERN } from '../../../forms/validation/rules';
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -26,16 +27,21 @@ const optionalPersonName = (label: string) =>
 const optionalLocation = (label: string) =>
   z.string().trim().max(80, `${label} must be 80 characters or fewer`);
 
-/** Optional full birth date — empty (no change) or a valid past YYYY-MM-DD. */
-const dob = z
-  .string()
-  .trim()
-  .refine((v) => v === '' || DOB_PATTERN.test(v), 'Use the format YYYY-MM-DD')
-  .refine((v) => {
-    if (!v || !DOB_PATTERN.test(v)) return true;
-    const parsed = new Date(v);
-    return !Number.isNaN(parsed.getTime()) && parsed.getTime() <= Date.now();
-  }, 'Enter a valid past date');
+/** Optional full birth date — empty (no change) or a YYYY-MM-DD that clears the
+ * admin-configured minimum age. Same rule and message as signup, from
+ * @duncit/datetime, so a profile edit cannot walk around the joining age. */
+const makeDob = (minAge: number, initialDob: string) =>
+  z
+    .string()
+    .trim()
+    .refine((v) => v === '' || DOB_PATTERN.test(v), 'Use the format YYYY-MM-DD')
+    .refine((v) => {
+      if (!v || !DOB_PATTERN.test(v)) return true;
+      // A stored date the user has not touched is grandfathered: tightening the
+      // age rule must not brick an existing profile, it only gates a NEW pick.
+      if (initialDob && v === initialDob) return true;
+      return isEligibleDob(v, minAge);
+    }, dobMinAgeMessage(minAge));
 
 const phone = z
   .string()
@@ -53,7 +59,11 @@ const extension = z
  * `zone` was dropped (bug 14); `state` was added for the dependent location
  * dropdowns (bug 2).
  */
-export const accountEditSchema = z.object({
+export const makeAccountEditSchema = (
+  minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  initialDob = '',
+) =>
+  z.object({
   first_name: z
     .string()
     .trim()
@@ -64,7 +74,7 @@ export const accountEditSchema = z.object({
     }),
   last_name: optionalPersonName('Last name'),
   bio: z.string().trim().max(500, 'Bio must be 500 characters or fewer'),
-  dob,
+  dob: makeDob(minAge, initialDob),
   country: optionalLocation('Country'),
   state: optionalLocation('State'),
   city: optionalLocation('City'),
@@ -80,6 +90,9 @@ export const accountEditSchema = z.object({
   address_pincode: addressPincode,
   address_country: addressText('Country', 80),
 });
+
+/** Default-threshold schema — for callers with no settings context (tests). */
+export const accountEditSchema = makeAccountEditSchema();
 
 export type AccountEditValues = z.infer<typeof accountEditSchema>;
 

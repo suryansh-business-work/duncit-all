@@ -3,16 +3,21 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, subYears } from 'date-fns';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, latestEligibleDob } from '@duncit/datetime';
 import type { AccountEditValues } from './account-edit.types';
 
 /**
  * Full date-of-birth picker (bug 1) — opens on the year so the birth year can be
  * picked fast, then month and day, and the text field stays editable so the year
- * can also be typed. Stores the value as a 'YYYY-MM-DD' string; future dates are
- * blocked and the range is capped at 120 years.
+ * can also be typed. Stores the value as a 'YYYY-MM-DD' string; the calendar
+ * stops at the minimum joining age (so an under-18 day cannot be picked at all)
+ * and the range is capped at 120 years.
  */
-export default function DobDateField({ control }: Readonly<{ control: Control<AccountEditValues> }>) {
-  const maxDate = new Date();
+export default function DobDateField({
+  control,
+  minAge = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+}: Readonly<{ control: Control<AccountEditValues>; minAge?: number }>) {
+  const maxDate = latestEligibleDob(minAge);
   const minDate = subYears(maxDate, 120);
   return (
     <Controller
@@ -37,7 +42,8 @@ export default function DobDateField({ control }: Readonly<{ control: Control<Ac
                 onBlur: field.onBlur,
                 InputLabelProps: { shrink: true },
                 error: !!fieldState.error,
-                helperText: fieldState.error?.message ?? ' ',
+                helperText:
+                  fieldState.error?.message ?? `Must be at least ${minAge} years old`,
               },
             }}
           />

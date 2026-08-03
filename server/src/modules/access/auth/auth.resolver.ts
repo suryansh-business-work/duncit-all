@@ -10,12 +10,17 @@ import {
   googleSignupSchema,
 } from './auth.validator';
 import { validate } from '@utils/validate';
+import { assertEligibleDob } from '@utils/age';
 import type { GraphQLContext } from '@context';
 
 export const authResolvers = {
   Mutation: {
     register: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(registerSchema, args.input);
+      // The age gate is admin-configured, so it lives here rather than in the
+      // static yup schema — and it must be server-side: the client rule only
+      // shapes the form, it cannot stop a hand-rolled mutation.
+      await assertEligibleDob(data.dob);
       return userService.register(data);
     },
     login: async (_p: unknown, args: { input: unknown }) => {
@@ -77,6 +82,7 @@ export const authResolvers = {
     },
     signupWithGoogle: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(googleSignupSchema, args.input);
+      await assertEligibleDob(data.dob);
       return userService.signupWithGoogle(data);
     },
     seedSuperAdmin: async () => {

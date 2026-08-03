@@ -6,7 +6,7 @@ import {
   PUBLIC_APP_SETTINGS,
   useDateFormat,
   useDraftRetentionDays,
-  useSignupBirthYearBounds,
+  useMinSignupAge,
   formatDurationBetween,
 } from '../dateFormat';
 
@@ -80,21 +80,19 @@ describe('useDraftRetentionDays', () => {
   });
 });
 
-describe('useSignupBirthYearBounds', () => {
-  it('returns admin bounds when present', async () => {
-    const { result } = renderHook(() => useSignupBirthYearBounds(), {
-      wrapper: makeWrapper(settingsMock(FULL_SETTINGS)),
+describe('useMinSignupAge', () => {
+  it('returns the admin-configured minimum age when present', async () => {
+    const { result } = renderHook(() => useMinSignupAge(), {
+      wrapper: makeWrapper(settingsMock({ ...FULL_SETTINGS, min_signup_age: 21 })),
     });
-    await waitFor(() => expect(result.current.minBirthYear).toBe(1950));
-    expect(result.current.maxBirthYear).toBe(2005);
+    await waitFor(() => expect(result.current).toBe(21));
   });
 
-  it('falls back when data missing', async () => {
-    const { result } = renderHook(() => useSignupBirthYearBounds(), {
+  it('falls back to 18 when data missing', async () => {
+    const { result } = renderHook(() => useMinSignupAge(), {
       wrapper: makeWrapper(settingsMock({ date_format: null } as any)),
     });
-    await waitFor(() => expect(result.current.minBirthYear).toBe(1940));
-    expect(result.current.maxBirthYear).toBe(2012);
+    await waitFor(() => expect(result.current).toBe(18));
   });
 });
 

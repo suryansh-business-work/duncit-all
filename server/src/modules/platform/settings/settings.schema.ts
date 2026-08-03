@@ -24,10 +24,8 @@ export const settingsTypeDefs = gql`
     custom_time: String
     "Server's real time when the CUSTOM anchor was saved (ISO)."
     custom_time_set_at: String
-    "Earliest allowed signup birth year (inclusive)."
-    min_birth_year: Int!
-    "Latest allowed signup birth year (inclusive)."
-    max_birth_year: Int!
+    "Minimum age (whole years) required to sign up or save a date of birth."
+    min_signup_age: Int!
     "Days a Create-Pod draft is kept (from last save) before auto-deletion."
     draft_retention_days: Int!
     "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
@@ -50,8 +48,8 @@ export const settingsTypeDefs = gql`
     custom_time_set_at: String
     "The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking."
     server_time: String!
-    min_birth_year: Int!
-    max_birth_year: Int!
+    "Minimum age (whole years) required to sign up or save a date of birth."
+    min_signup_age: Int!
     "Days a Create-Pod draft is kept (from last save) before auto-deletion."
     draft_retention_days: Int!
     "Max Backout attempts a user gets per pod (each 'Backout in process' counts one)."
@@ -74,8 +72,8 @@ export const settingsTypeDefs = gql`
     time_source: TimeSource
     "CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side."
     custom_time: String
-    min_birth_year: Int
-    max_birth_year: Int
+    "Minimum age to use the app, in whole years (1-120)."
+    min_signup_age: Int
     "Days a Create-Pod draft is kept before auto-deletion (min 1)."
     draft_retention_days: Int
     "Max Backout attempts a user gets per pod (min 1)."

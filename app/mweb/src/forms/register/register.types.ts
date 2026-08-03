@@ -1,30 +1,25 @@
 import { z } from 'zod';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, dobMinAgeMessage, isEligibleDob } from '@duncit/datetime';
 
 export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
 
-/** Admin-configured signup birth-year bound defaults (Admin > Settings). */
-export const DEFAULT_MIN_BIRTH_YEAR = 1940;
-export const DEFAULT_MAX_BIRTH_YEAR = 2012;
-
 /**
  * Register contract — RHF + Zod (migrated from Formik + Yup). Mirrors the native
- * signup: name, email, 8-char password with confirmation, and a birth year
- * within the admin-configurable [min, max] bounds (so the schema is built
- * per-render from the fetched bounds — see RegisterForm).
+ * signup: name, email, 8-char password with confirmation, and a date of birth
+ * that makes the applicant at least 18 today.
+ *
+ * The age rule lives in @duncit/datetime so signup, the profile editor and the
+ * server all gate on the same calendar comparison. It replaced an
+ * admin-configured birth-YEAR range, which could only ever approximate an age:
+ * a year picker passes anyone born in the cut-off year, including someone whose
+ * 18th birthday is still months away.
  */
-export function makeRegisterSchema(
-  minYear: number = DEFAULT_MIN_BIRTH_YEAR,
-  maxYear: number = DEFAULT_MAX_BIRTH_YEAR,
-) {
-  // Birth year as a 'YYYY-01-01' string (from the year picker).
+export function makeRegisterSchema(minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS) {
   const dobString = z
     .string()
-    .min(1, 'Birth year is required')
-    .refine((v) => !Number.isNaN(new Date(v).getTime()), 'Birth year is required')
-    .refine((v) => {
-      const year = new Date(v).getFullYear();
-      return year >= minYear && year <= maxYear;
-    }, `Enter a year between ${minYear} and ${maxYear}`);
+    .min(1, 'Date of birth is required')
+    .refine((v) => !Number.isNaN(new Date(v).getTime()), 'Enter a valid date of birth')
+    .refine((v) => isEligibleDob(v, minAge), dobMinAgeMessage(minAge));
 
   return z
     .object({
@@ -47,7 +42,6 @@ export function makeRegisterSchema(
     });
 }
 
-/** The default-bounds schema — for callers that don't need dynamic bounds. */
 export const registerSchema = makeRegisterSchema();
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;

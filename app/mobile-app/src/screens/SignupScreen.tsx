@@ -26,7 +26,7 @@ export function SignupScreen() {
     try {
       const result = await register({
         name: values.name,
-        birthYear: values.birthYear,
+        dob: values.dob,
         email: values.email,
         password: values.password,
       });

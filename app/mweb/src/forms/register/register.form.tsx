@@ -12,7 +12,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
 import { makeRegisterSchema, registerDefaults, type RegisterFormValues } from './register.types';
-import { useSignupBirthYearBounds } from '../../utils/dateFormat';
+import { useMinSignupAge } from '../../utils/dateFormat';
 
 interface Props {
   loading?: boolean;
@@ -49,11 +49,8 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const { minBirthYear, maxBirthYear } = useSignupBirthYearBounds();
-  const schema = useMemo(
-    () => makeRegisterSchema(minBirthYear, maxBirthYear),
-    [minBirthYear, maxBirthYear],
-  );
+  const minAge = useMinSignupAge();
+  const schema = useMemo(() => makeRegisterSchema(minAge), [minAge]);
   const { control, handleSubmit } = useForm<RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
     resolver: zodResolver(schema),
@@ -95,7 +92,7 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
           InputLabelProps={{ shrink: true }}
           InputProps={startIcon(<EmailOutlinedIcon fontSize="small" />)}
         />
-        <DobYearField control={control} minYear={minBirthYear} maxYear={maxBirthYear} />
+        <DobYearField control={control} minAge={minAge} />
         <RhfTextField
           control={control}
           name="password"

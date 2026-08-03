@@ -21,7 +21,7 @@ function Harness({
   const dob = watch('dob');
   return (
     <div>
-      <DobYearField control={control} minYear={1940} maxYear={2012} />
+      <DobYearField control={control} minAge={18} />
       <span data-testid="dob-value">{dob}</span>
       <button
         type="button"

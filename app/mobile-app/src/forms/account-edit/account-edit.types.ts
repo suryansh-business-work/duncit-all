@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PHONE_NUMBER, PINCODE } from '@duncit/regex';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, dobMinAgeMessage, isEligibleDob } from '@duncit/datetime';
 
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 
@@ -21,16 +22,21 @@ const extension = z
 
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Optional birth date — empty (no change) or a valid past YYYY-MM-DD (bug 8). */
-const dob = z
-  .string()
-  .trim()
-  .refine((value) => value === '' || DOB_PATTERN.test(value), 'Use the format YYYY-MM-DD')
-  .refine((value) => {
-    if (!value || !DOB_PATTERN.test(value)) return true;
-    const parsed = new Date(value);
-    return !Number.isNaN(parsed.getTime()) && parsed.getTime() <= Date.now();
-  }, 'Enter a valid past date');
+/** Optional birth date — empty (no change) or a YYYY-MM-DD that clears the
+ * admin-configured minimum age. Same rule and message as mWeb and signup, from
+ * @duncit/datetime, so a profile edit cannot walk around the joining age. */
+const makeDob = (minAge: number, initialDob: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => value === '' || DOB_PATTERN.test(value), 'Use the format YYYY-MM-DD')
+    .refine((value) => {
+      if (!value || !DOB_PATTERN.test(value)) return true;
+      // A stored date the user has not touched is grandfathered: tightening the
+      // age rule must not brick an existing profile, it only gates a NEW pick.
+      if (initialDob && value === initialDob) return true;
+      return isEligibleDob(value, minAge);
+    }, dobMinAgeMessage(minAge));
 
 /** ISO/date string → the YYYY-MM-DD the date field expects (empty when unset). */
 export function toDobInput(value?: string | null): string {
@@ -38,29 +44,36 @@ export function toDobInput(value?: string | null): string {
   return DOB_PATTERN.test(value.slice(0, 10)) ? value.slice(0, 10) : '';
 }
 
-export const accountEditSchema = z.object({
-  first_name: z.string().trim().min(1, 'First name is required').max(60, 'Too long'),
-  last_name: z.string().trim().max(60, 'Too long'),
-  bio: z.string().trim().max(280, 'Keep it under 280 characters'),
-  dob,
-  country: z.string().trim().max(80, 'Too long'),
-  state: z.string().trim().max(80, 'Too long'),
-  city: z.string().trim().max(80, 'Too long'),
-  phone_extension: extension,
-  phone_number: phone,
-  whatsapp_extension: extension,
-  whatsapp_number: phone,
-  address_line1: z.string().trim().max(200, 'Too long'),
-  address_line2: z.string().trim().max(200, 'Too long'),
-  address_landmark: z.string().trim().max(160, 'Too long'),
-  address_city: z.string().trim().max(120, 'Too long'),
-  address_state: z.string().trim().max(120, 'Too long'),
-  address_pincode: z
-    .string()
-    .trim()
-    .refine((value) => value === '' || PINCODE.test(value), 'Enter a valid 6-digit pincode'),
-  address_country: z.string().trim().max(80, 'Too long'),
-});
+export const makeAccountEditSchema = (
+  minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS,
+  initialDob = '',
+) =>
+  z.object({
+    first_name: z.string().trim().min(1, 'First name is required').max(60, 'Too long'),
+    last_name: z.string().trim().max(60, 'Too long'),
+    bio: z.string().trim().max(280, 'Keep it under 280 characters'),
+    dob: makeDob(minAge, initialDob),
+    country: z.string().trim().max(80, 'Too long'),
+    state: z.string().trim().max(80, 'Too long'),
+    city: z.string().trim().max(80, 'Too long'),
+    phone_extension: extension,
+    phone_number: phone,
+    whatsapp_extension: extension,
+    whatsapp_number: phone,
+    address_line1: z.string().trim().max(200, 'Too long'),
+    address_line2: z.string().trim().max(200, 'Too long'),
+    address_landmark: z.string().trim().max(160, 'Too long'),
+    address_city: z.string().trim().max(120, 'Too long'),
+    address_state: z.string().trim().max(120, 'Too long'),
+    address_pincode: z
+      .string()
+      .trim()
+      .refine((value) => value === '' || PINCODE.test(value), 'Enter a valid 6-digit pincode'),
+    address_country: z.string().trim().max(80, 'Too long'),
+  });
+
+/** Default-threshold schema — for callers with no settings context (tests). */
+export const accountEditSchema = makeAccountEditSchema();
 
 export type AccountEditValues = z.infer<typeof accountEditSchema>;
 

@@ -45,7 +45,7 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
   }
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: 3 }} data-testid="club-admin-card">
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="club-admin-card">
       <Stack spacing={1.25}>
         <Typography variant="caption" fontWeight={800} color="text.secondary">
           Need Help? Contact the Club Admin

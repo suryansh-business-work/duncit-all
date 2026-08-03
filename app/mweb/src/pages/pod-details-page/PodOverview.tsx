@@ -52,7 +52,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
       sx={{
         p: 2,
         mt: -1.5,
-        borderRadius: 4,
+        borderRadius: '4px',
         color: textColor,
         background: isDark
           ? 'linear-gradient(145deg, #15111c 0%, #2a1926 52%, #0f172a 100%)'
@@ -94,11 +94,11 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         <TimeChip iso={pod.pod_date_time} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-        <Box sx={{ flex: 1, p: 1.2, borderRadius: 3, bgcolor: softBg }}>
+        <Box sx={{ flex: 1, p: 1.2, borderRadius: '4px', bgcolor: softBg }}>
           <Typography variant="caption" sx={{ color: mutedColor }}>People in</Typography>
           <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1 }}>{spotsTaken}</Typography>
         </Box>
-        <Box sx={{ flex: 1, p: 1.2, borderRadius: 3, bgcolor: softBg }}>
+        <Box sx={{ flex: 1, p: 1.2, borderRadius: '4px', bgcolor: softBg }}>
           <Typography variant="caption" sx={{ color: mutedColor }}>Spots left</Typography>
           <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
         </Box>

@@ -23,8 +23,7 @@ export const PublicAppSettingsDocument = gql(`
       custom_time
       custom_time_set_at
       server_time
-      min_birth_year
-      max_birth_year
+      min_signup_age
       draft_retention_days
     }
   }

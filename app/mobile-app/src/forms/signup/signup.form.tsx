@@ -5,6 +5,7 @@ import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { DobDateField } from '@/forms/account-edit/DobDateField';
 import { useAppSettings } from '@/hooks/useAppSettings';
 import { makeSignupSchema, signupDefaults, type SignupFormValues } from './signup.types';
 
@@ -14,13 +15,10 @@ export interface SignupFormProps {
   onSubmit: (values: SignupFormValues) => void | Promise<void>;
 }
 
-/** Email signup form: Name, Birth Year, Email, Password, Confirm Password. */
+/** Email signup form: Name, Date of Birth, Email, Password, Confirm Password. */
 export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupFormProps>) {
-  const { minBirthYear, maxBirthYear } = useAppSettings();
-  const schema = useMemo(
-    () => makeSignupSchema(minBirthYear, maxBirthYear),
-    [minBirthYear, maxBirthYear],
-  );
+  const { minSignupAge } = useAppSettings();
+  const schema = useMemo(() => makeSignupSchema(minSignupAge), [minSignupAge]);
   const { control, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: signupDefaults,
     resolver: zodResolver(schema),
@@ -39,16 +37,7 @@ export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupF
         textContentType="name"
         required
       />
-      <FormTextField
-        control={control}
-        name="birthYear"
-        label="Birth Year"
-        placeholder="1995"
-        keyboardType="number-pad"
-        maxLength={4}
-        hint={`Between ${minBirthYear} and ${maxBirthYear}`}
-        required
-      />
+      <DobDateField control={control} minAge={minSignupAge} />
       <FormTextField
         control={control}
         name="email"

@@ -18,7 +18,7 @@ export default function HostApplyBanner() {
   return (
     <Card
       sx={{
-        borderRadius: 4,
+        borderRadius: '4px',
         color: 'common.white',
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
         boxShadow: '0 12px 30px rgba(255,79,115,0.30)',
@@ -34,7 +34,7 @@ export default function HostApplyBanner() {
           sx={{
             width: 48,
             height: 48,
-            borderRadius: 3,
+            borderRadius: '4px',
             flexShrink: 0,
             display: 'grid',
             placeItems: 'center',

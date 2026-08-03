@@ -103,7 +103,7 @@ export default function LocationDialog({
         sx={{
           width: 34,
           height: 34,
-          borderRadius: 2,
+          borderRadius: '4px',
           display: 'grid',
           placeItems: 'center',
           color: 'primary.main',

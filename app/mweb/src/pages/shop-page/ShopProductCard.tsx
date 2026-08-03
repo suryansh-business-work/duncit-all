@@ -34,7 +34,7 @@ export default function ShopProductCard({
   };
   return (
     <Card
-      sx={{ position: 'relative', borderRadius: 3, border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
+      sx={{ position: 'relative', borderRadius: '4px', border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
     >
       <CardActionArea onClick={() => onOpen(product.id)} aria-label={`View ${product.product_name}`}>
         <Box sx={{ aspectRatio: '1 / 1', bgcolor: 'action.hover' }}>

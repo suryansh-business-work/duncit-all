@@ -74,7 +74,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '4px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
         <DialogTitle sx={{ fontWeight: 900 }}>Liked by</DialogTitle>
         <IconButton aria-label="Close" onClick={onClose}>

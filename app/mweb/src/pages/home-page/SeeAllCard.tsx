@@ -27,7 +27,7 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
         minHeight: 180,
         flex: '0 0 auto',
         alignSelf: 'stretch',
-        borderRadius: 4,
+        borderRadius: '4px',
         border: '1px dashed',
         borderColor: 'divider',
         bgcolor: 'background.paper',

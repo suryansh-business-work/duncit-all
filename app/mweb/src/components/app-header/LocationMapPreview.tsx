@@ -55,7 +55,7 @@ export default function LocationMapPreview({ city, zoneName, pincode, country }:
           height: 200,
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: 2,
+          borderRadius: '4px',
           display: 'block',
           bgcolor: 'action.hover',
         }}

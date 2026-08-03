@@ -88,7 +88,7 @@ export default function HostApplyPage() {
           Back
         </Button>
       </Box>
-      <Card variant="outlined" sx={{ borderRadius: 4, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
         <CardContent>
           <AuthLogo />
           {step !== 'success' && (

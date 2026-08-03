@@ -21,7 +21,7 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
       >
         {title}
       </Typography>
-      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: 3, overflow: 'hidden' }}>
+      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '4px', overflow: 'hidden' }}>
         <List disablePadding>
           {items.map((item, index) => (
             <ListItemButton

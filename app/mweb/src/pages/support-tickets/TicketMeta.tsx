@@ -28,7 +28,7 @@ export default function TicketMeta({ ticket }: Readonly<{ ticket: TicketDetail }
   const lastUpdated = ticket.last_message_at || ticket.updated_at;
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, flex: 1 }}>
           {ticket.category}

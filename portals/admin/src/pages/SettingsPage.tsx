@@ -3,7 +3,7 @@ import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AppearanceSection from './settings-page/AppearanceSection';
 import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
 import TimeSourceSection from './settings-page/TimeSourceSection';
-import BirthYearSection from './settings-page/BirthYearSection';
+import MinAgeSection from './settings-page/MinAgeSection';
 
 export default function SettingsPage() {
   const [toast, setToast] = useState<string | null>(null);
@@ -18,7 +18,7 @@ export default function SettingsPage() {
       <AppearanceSection />
       <DisplayFormatsSection onToast={setToast} />
       <TimeSourceSection onToast={setToast} />
-      <BirthYearSection onToast={setToast} />
+      <MinAgeSection onToast={setToast} />
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

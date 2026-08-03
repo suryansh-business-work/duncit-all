@@ -15,9 +15,9 @@ export interface IAppSettings extends Document {
   /** Server's real time when the anchor was saved — the apps tick forward from
    * here, so a custom clock advances instead of freezing. */
   custom_time_set_at: Date | null;
-  /** Signup birth-year bounds (inclusive), configurable from Admin > Settings. */
-  min_birth_year: number;
-  max_birth_year: number;
+  /** Minimum age (whole years) required to sign up and to save a date of birth,
+   * configurable from Admin > Settings. */
+  min_signup_age: number;
   /** Days a Create-Pod draft is retained (from its last save) before the
    * background cleanup permanently deletes it. Admin > Pods > Pod Settings. */
   draft_retention_days: number;
@@ -47,8 +47,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     time_source: { type: String, enum: ["SERVER", "BROWSER", "CUSTOM"], default: "SERVER" },
     custom_time: { type: Date, default: null },
     custom_time_set_at: { type: Date, default: null },
-    min_birth_year: { type: Number, default: 1940 },
-    max_birth_year: { type: Number, default: 2012 },
+    min_signup_age: { type: Number, default: 18 },
     draft_retention_days: { type: Number, default: 3, min: 1 },
     max_backout_attempts: { type: Number, default: 3, min: 1 },
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },

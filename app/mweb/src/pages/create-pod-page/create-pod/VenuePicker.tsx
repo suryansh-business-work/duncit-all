@@ -45,7 +45,7 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
                 <Box
                   sx={{
                     height: 96,
-                    borderRadius: 1.5,
+                    borderRadius: '4px',
                     mb: 1,
                     bgcolor: 'action.hover',
                     backgroundImage: venue.cover_image_url ? `url(${venue.cover_image_url})` : undefined,

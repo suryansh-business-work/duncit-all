@@ -15,7 +15,7 @@ export default function StudioStub({ icon, title, subtitle }: Readonly<Props>) {
         sx={{
           width: 64,
           height: 64,
-          borderRadius: 4,
+          borderRadius: '4px',
           display: 'grid',
           placeItems: 'center',
           color: 'primary.contrastText',

@@ -83,7 +83,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
             '&::-webkit-scrollbar': { display: 'none' },
             '&::-webkit-scrollbar-thumb': {
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.16),
-              borderRadius: 3,
+              borderRadius: '4px',
             },
           }}
         >

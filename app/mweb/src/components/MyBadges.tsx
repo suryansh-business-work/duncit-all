@@ -59,7 +59,7 @@ export default function MyBadges() {
                 onClick={() => setActive(ub)}
                 aria-label={`View badge ${ub.badge?.title ?? ''}`}
                 sx={{
-                  borderRadius: 2,
+                  borderRadius: '4px',
                   p: 1,
                   textAlign: 'center',
                   display: 'flex',

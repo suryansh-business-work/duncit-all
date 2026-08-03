@@ -58,7 +58,7 @@ export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>
   return (
     <Box
       data-testid="suggested-prices-table"
-      sx={{ border: 1, borderColor: 'divider', borderRadius: 3, overflow: 'hidden' }}
+      sx={{ border: 1, borderColor: 'divider', borderRadius: '4px', overflow: 'hidden' }}
     >
       <Stack
         direction="row"

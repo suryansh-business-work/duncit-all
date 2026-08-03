@@ -42,7 +42,7 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
             </ListItem>
           ))}
         </List>
-        <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+        <Box sx={{ mt: 1.5, p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}>
           <Typography variant="caption" color="error" sx={{ fontWeight: 700 }}>
             {POD_AI_GUIDELINES.warning}
           </Typography>

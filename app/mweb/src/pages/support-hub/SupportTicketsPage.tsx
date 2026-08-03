@@ -83,7 +83,7 @@ export default function SupportTicketsPage() {
       backTo="/support"
     >
       <Stack spacing={2.25}>
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(255,79,115,0.12)' }}>
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.12)' }}>
           <Stack direction="row" alignItems="center" spacing={1.25}>
             <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
               {['primary.main', 'secondary.main', 'info.main'].map((color) => (
@@ -112,7 +112,7 @@ export default function SupportTicketsPage() {
           variant="outlined"
           sx={{
             p: 1.5,
-            borderRadius: 4,
+            borderRadius: '4px',
             bgcolor: 'rgba(20,184,166,0.10)',
             borderColor: 'rgba(20,184,166,0.24)',
             cursor: 'pointer',
@@ -131,7 +131,7 @@ export default function SupportTicketsPage() {
           </Stack>
         </Paper>
 
-        <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
+        <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
           <Box sx={{ mb: 1 }}>
             <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
               Tell us what's going on

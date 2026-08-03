@@ -42,7 +42,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     text: { primary: INK, secondary: MUTED },
     divider: BORDER,
   },
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: 4 },
   typography: {
     fontFamily:
       '"Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -93,7 +93,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         '*::-webkit-scrollbar': { width: 8, height: 8 },
         '*::-webkit-scrollbar-thumb': {
           background: alpha(INK, 0.18),
-          borderRadius: 8,
+          borderRadius: 4,
         },
         '*::-webkit-scrollbar-thumb:hover': { background: alpha(INK, 0.28) },
         // Accessibility: visible focus ring for keyboard users.
@@ -127,7 +127,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        rounded: { borderRadius: 16 },
+        rounded: { borderRadius: 4 },
         outlined: { borderColor: BORDER },
       },
     },
@@ -135,7 +135,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 4,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           backgroundImage: SURFACE_GRADIENT,
@@ -148,13 +148,13 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
     },
     MuiCardActionArea: {
-      styleOverrides: { focusHighlight: { borderRadius: 12 } },
+      styleOverrides: { focusHighlight: { borderRadius: 4 } },
     },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 4,
           paddingInline: 18,
           paddingBlock: 9,
           fontWeight: 600,
@@ -195,7 +195,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiIconButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 4,
           '&.Mui-focusVisible': { outline: `2px solid ${alpha(PRIMARY, 0.4)}` },
         },
       },
@@ -240,7 +240,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 4,
           backgroundColor: SURFACE,
           '& fieldset': { borderColor: BORDER },
           '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
@@ -250,7 +250,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 14, border: `1px solid ${BORDER}` },
+        root: { borderRadius: 4, border: `1px solid ${BORDER}` },
         standardInfo: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
         standardSuccess: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
         standardWarning: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
@@ -262,7 +262,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiAccordion: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 4,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           backgroundImage: SURFACE_GRADIENT,
@@ -275,7 +275,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 4,
           '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
         },
       },
@@ -283,7 +283,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiToggleButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 4,
           textTransform: 'none',
           fontWeight: 600,
           paddingInline: 14,
@@ -316,7 +316,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           backgroundColor: isDark ? '#111827' : tokens.neutral[900],
           color: '#ffffff',
           border: `1px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'transparent'}`,
-          borderRadius: 8,
+          borderRadius: 4,
           fontSize: '0.75rem',
           fontWeight: 600,
           paddingInline: 8,
@@ -327,12 +327,12 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         },
       },
     },
-    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: 14 } } },
-    MuiDialog: { styleOverrides: { paper: { borderRadius: 18, backgroundImage: SURFACE_GRADIENT } } },
+    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: 4 } } },
+    MuiDialog: { styleOverrides: { paper: { borderRadius: 4, backgroundImage: SURFACE_GRADIENT } } },
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 12,
+          borderRadius: 4,
           border: `1px solid ${BORDER}`,
           boxShadow: `0 8px 32px -12px ${alpha(INK, 0.18)}`,
         },

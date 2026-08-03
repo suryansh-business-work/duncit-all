@@ -129,7 +129,7 @@ export default function ProductDetailPage() {
               sx={{
                 width: 180,
                 height: 180,
-                borderRadius: 2,
+                borderRadius: '4px',
                 objectFit: 'cover',
                 cursor: 'zoom-in',
                 flex: '0 0 auto',
@@ -172,7 +172,7 @@ export default function ProductDetailPage() {
           sx={{
             border: 1,
             borderColor: 'divider',
-            borderRadius: 2,
+            borderRadius: '4px',
             overflow: 'hidden',
           }}
         >
@@ -204,7 +204,7 @@ export default function ProductDetailPage() {
           onUpdate={updateQuantity}
         />
       ) : (
-        <Alert severity="info" sx={{ borderRadius: 2 }}>
+        <Alert severity="info" sx={{ borderRadius: '4px' }}>
           Products are purchased from a pod&apos;s shop while booking — find this product in a pod
           near you.
         </Alert>

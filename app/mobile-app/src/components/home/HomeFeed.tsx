@@ -26,6 +26,7 @@ import { HomeFilterButton } from '@/components/home/HomeFilterButton';
 import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
+import { VerifyEmailBanner } from '@/components/home/VerifyEmailBanner';
 import { StatusRail } from '@/components/status/StatusRail';
 import { DEFAULT_HOME_FILTERS, activeFilterCount, type HomeFilters } from '@/utils/home-filters';
 
@@ -96,6 +97,11 @@ export function HomeFeed() {
           <Reveal index={0}>
             <StatusRail userName={userName} userPhoto={userPhoto} />
           </Reveal>
+          <VerifyEmailBanner
+            email={meData?.me?.email}
+            verified={!!meData?.me?.is_email_verified}
+            onPress={() => navigation.navigate('Profile', { verifyEmail: true })}
+          />
           <Reveal index={1}>
             <TourAnchor tour="home" anchor="home-categories">
               <HomeVibeChips

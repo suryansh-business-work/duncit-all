@@ -28,7 +28,7 @@ export default function VenueExploreCard({
     .filter(Boolean)
     .join(' · ');
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4, overflow: 'hidden' }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px', overflow: 'hidden' }}>
       <CardActionArea onClick={onOpen} aria-label={venue.venue_name} data-testid={`venue-card-${venue.id}`}>
         <Box
           sx={{

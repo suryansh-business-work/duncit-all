@@ -68,7 +68,7 @@ export default function ForgotPasswordForm({ loading, initialValues, errorMessag
           size="large"
           endIcon={<ArrowForwardIcon />}
           disabled={loading}
-          sx={{ borderRadius: 2, py: 1.25, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: '4px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Sending OTP…' : 'Send reset OTP'}
         </Button>

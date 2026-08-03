@@ -96,7 +96,7 @@ export default function AddressBookSection() {
   };
 
   return (
-    <Box sx={{ p: 2, borderRadius: 3, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+    <Box sx={{ p: 2, borderRadius: '4px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <HomeWorkIcon color="primary" />
@@ -122,7 +122,7 @@ export default function AddressBookSection() {
             direction="row"
             spacing={1}
             alignItems="center"
-            sx={{ p: 1.25, borderRadius: 2, border: 1, borderColor: 'divider' }}
+            sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Stack direction="row" spacing={0.75} alignItems="center">

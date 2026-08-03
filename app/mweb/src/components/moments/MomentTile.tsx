@@ -23,7 +23,7 @@ export default function MomentTile({ url, type, size, aspect, index, total, onCl
         width: size ?? '100%',
         height: size,
         aspectRatio: aspect,
-        borderRadius: 1.5,
+        borderRadius: '4px',
         overflow: 'hidden',
         '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 2 },
       }}

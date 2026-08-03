@@ -26,7 +26,7 @@ export default function CategorySummaryBanner({
         gap: 1,
         p: 1.25,
         mb: 1.5,
-        borderRadius: 2,
+        borderRadius: '4px',
         bgcolor: 'action.hover',
       }}
     >

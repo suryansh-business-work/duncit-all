@@ -24,7 +24,7 @@ export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: s
         sx={{
           position: 'relative',
           height: CARD_HEIGHT,
-          borderRadius: 4,
+          borderRadius: '4px',
           overflow: 'hidden',
           cursor: 'pointer',
           bgcolor: 'grey.900',

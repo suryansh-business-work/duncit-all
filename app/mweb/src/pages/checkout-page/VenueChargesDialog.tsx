@@ -39,7 +39,7 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
           {charges.length > 0 && (
             <Stack
               spacing={1}
-              sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}
+              sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}
               divider={<Box sx={{ borderBottom: '1px dashed', borderColor: 'divider' }} />}
             >
               {charges.map((charge) => (

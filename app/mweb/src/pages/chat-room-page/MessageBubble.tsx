@@ -43,7 +43,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           maxWidth: '78%',
           bgcolor: mine ? 'primary.main' : 'background.paper',
           color: mine ? 'primary.contrastText' : 'text.primary',
-          borderRadius: mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
+          borderRadius: mine ? '4px 4px 1px 4px' : '4px 4px 4px 1px',
           cursor: 'pointer',
           border: mine ? 0 : 1,
           borderColor: 'divider',
@@ -85,7 +85,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
                   fontSize: 12,
                   bgcolor: 'rgba(0,0,0,0.1)',
                   color: mine ? 'primary.contrastText' : 'text.primary',
-                  borderRadius: 5,
+                  borderRadius: '4px',
                   px: 0.75,
                 }}
               >

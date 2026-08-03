@@ -52,7 +52,7 @@ export default function HostDashboardPage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <SpaceDashboardIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -74,7 +74,7 @@ export default function HostDashboardPage() {
 
       <Stack direction="row" spacing={1}>
         {stats.map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>
                 {item.label}
@@ -92,7 +92,7 @@ export default function HostDashboardPage() {
       <HostInsights pods={pods} currency={wallet?.currency_symbol ?? '₹'} />
 
       {health && (
-        <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <Card variant="outlined" sx={{ borderRadius: '4px' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
               <HealthMeter

@@ -1,7 +1,7 @@
 import { graphqlRequest } from '@/services/graphql.client';
 import { clearAuthToken, setAuthToken } from '@/services/auth-token';
 import {
-  birthYearToDob,
+  dobToIso,
   login,
   loginWithGoogle,
   logout,
@@ -40,21 +40,21 @@ describe('auth.service helpers', () => {
   });
 
   it('converts a birth year to a Jan 1 ISO date', () => {
-    expect(birthYearToDob('1995')).toBe('1995-01-01T00:00:00.000Z');
+    expect(dobToIso('1995-06-15')).toBe('1995-06-15T00:00:00.000Z');
   });
 });
 
 describe('auth.service mutations', () => {
   afterEach(() => jest.clearAllMocks());
 
-  it('register maps Name/Birth Year and persists the token', async () => {
+  it('register maps Name/Date of Birth and persists the token', async () => {
     mockedRequest.mockResolvedValue({
       register: { token: 'tok-1', user: { onboarding_survey_completed: false } },
     } as never);
 
     const result = await register({
       name: 'Riya Sharma',
-      birthYear: '1995',
+      dob: '1995-01-01',
       email: 'Riya@Duncit.com',
       password: 'StrongPass123',
     });

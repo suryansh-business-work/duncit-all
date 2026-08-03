@@ -92,7 +92,7 @@ export default function OpenInAppBanner() {
         right: 12,
         bottom: BANNER_BOTTOM,
         zIndex: (t) => t.zIndex.snackbar,
-        borderRadius: 3,
+        borderRadius: '4px',
         p: 1.25,
       }}
     >

@@ -22,7 +22,7 @@ interface Props {
 
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '4px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
         <DialogTitle sx={{ fontWeight: 900 }}>Filter by Category</DialogTitle>
         <IconButton aria-label="Close filter" onClick={onClose}>

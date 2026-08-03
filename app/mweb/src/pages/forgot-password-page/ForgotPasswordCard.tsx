@@ -43,7 +43,7 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
               component={RouterLink}
               to="/register"
               variant="contained"
-              sx={{ borderRadius: 2, px: 3, fontWeight: 700, textTransform: 'none' }}
+              sx={{ borderRadius: '4px', px: 3, fontWeight: 700, textTransform: 'none' }}
             >
               Create Account
             </Button>

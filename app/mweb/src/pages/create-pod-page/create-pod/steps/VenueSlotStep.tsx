@@ -120,7 +120,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
       )}
       {errors.venue_id && <FormHelperText error>{errors.venue_id.message}</FormHelperText>}
       {selectedVenue && (
-        <Stack spacing={1.5} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+        <Stack spacing={1.5} sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}>
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
             {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}Total capacity: {selectedVenue.capacity ?? 0}
           </Typography>

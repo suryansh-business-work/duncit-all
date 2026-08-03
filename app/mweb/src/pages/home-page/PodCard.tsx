@@ -41,7 +41,7 @@ export default function PodCard({
         maxWidth: 264,
         flex: '0 0 auto',
         scrollSnapAlign: 'start',
-        borderRadius: 4,
+        borderRadius: '4px',
         cursor: 'pointer',
         bgcolor: 'background.paper',
         background: (theme) => `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
@@ -67,7 +67,7 @@ export default function PodCard({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: 3,
+                  borderRadius: '4px',
                   bgcolor: 'action.hover',
                   background: 'linear-gradient(145deg, #ff8b5f 0%, #ed4f7a 50%, #16121f 100%)',
                 }}
@@ -85,7 +85,7 @@ export default function PodCard({
                 muted
                 loop
                 playsInline
-                sx={{ width: '100%', height: 168, objectFit: 'cover', display: 'block', borderRadius: 3 }}
+                sx={{ width: '100%', height: 168, objectFit: 'cover', display: 'block', borderRadius: '4px' }}
               />
             );
           }
@@ -94,7 +94,7 @@ export default function PodCard({
               component="img"
               image={first.url}
               alt={pod.pod_title}
-              sx={{ height: 168, objectFit: 'cover', borderRadius: 3 }}
+              sx={{ height: 168, objectFit: 'cover', borderRadius: '4px' }}
             />
           );
         })()}

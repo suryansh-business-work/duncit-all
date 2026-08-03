@@ -19,7 +19,7 @@ export default function ZeroEarningsNotice() {
       data-testid="create-pod-zero-earnings"
       sx={{
         p: 1.25,
-        borderRadius: 2,
+        borderRadius: '4px',
         bgcolor: alpha(theme.palette.warning.main, 0.1),
         border: 1,
         borderColor: alpha(theme.palette.warning.main, 0.4),

@@ -36,7 +36,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
   const expandable = (b?.version ?? 0) >= 2;
 
   return (
-    <Box sx={{ p: 1.25, borderRadius: 3, border: 1, borderColor: 'divider' }}>
+    <Box sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 800 }} noWrap>
           {payout.pod_title}

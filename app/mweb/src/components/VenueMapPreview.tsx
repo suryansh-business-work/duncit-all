@@ -33,7 +33,7 @@ export default function VenueMapPreview({ title = 'Map preview', parts, lat, lng
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
         allowFullScreen
-        sx={{ width: '100%', height: { xs: 240, sm: 280 }, border: '1px solid', borderColor: 'divider', borderRadius: 2 }}
+        sx={{ width: '100%', height: { xs: 240, sm: 280 }, border: '1px solid', borderColor: 'divider', borderRadius: '4px' }}
       />
     </Box>
   );

@@ -77,7 +77,7 @@ export default function ReferralPage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 640, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <CardGiftcardIcon fontSize="small" />
         </Box>
         <Box>
@@ -90,7 +90,7 @@ export default function ReferralPage() {
         </Box>
       </Stack>
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>
             YOUR CODE
@@ -104,7 +104,7 @@ export default function ReferralPage() {
             </Button>
           </Stack>
           {referral?.gift_description && (
-            <Alert icon={<CardGiftcardIcon />} severity="success" sx={{ mt: 1.5, borderRadius: 3 }}>
+            <Alert icon={<CardGiftcardIcon />} severity="success" sx={{ mt: 1.5, borderRadius: '4px' }}>
               {referral.gift_description}
             </Alert>
           )}
@@ -117,7 +117,7 @@ export default function ReferralPage() {
       </Card>
 
       {!referral?.referred_by_name && (
-        <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <Card variant="outlined" sx={{ borderRadius: '4px' }}>
           <CardContent>
             <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
               Got a friend's code?
@@ -139,7 +139,7 @@ export default function ReferralPage() {
         </Card>
       )}
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
             <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
@@ -152,7 +152,7 @@ export default function ReferralPage() {
           ) : (
             <Stack spacing={1}>
               {referral.referred.map((entry: any) => (
-                <Stack key={entry.user_id} direction="row" alignItems="center" spacing={1} sx={{ p: 1.25, borderRadius: 3, border: 1, borderColor: 'divider' }}>
+                <Stack key={entry.user_id} direction="row" alignItems="center" spacing={1} sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}>
                   <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 800 }} noWrap>
                     {entry.full_name || 'New member'}
                   </Typography>

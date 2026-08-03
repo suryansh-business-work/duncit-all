@@ -236,7 +236,17 @@ export default function AppHeader({
         <Alert
           severity="info"
           onClick={() => navigate('/profile?verifyEmail=1')}
-          sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', borderRadius: 0, cursor: 'pointer', py: 0.25 }}
+          sx={{
+            width: '100%',
+            maxWidth: APP_SHELL_MAX_WIDTH,
+            mx: 'auto',
+            borderRadius: 0,
+            cursor: 'pointer',
+            // Sits between the toolbar and the category tabs; without the
+            // vertical margin it reads as part of whichever one it touches.
+            my: 1,
+            py: 0.75,
+          }}
         >
           Please verify your email
         </Alert>

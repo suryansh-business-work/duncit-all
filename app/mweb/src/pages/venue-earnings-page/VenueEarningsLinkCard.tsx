@@ -18,7 +18,7 @@ export default function VenueEarningsLinkCard() {
       component={RouterLink}
       to="/venues/earnings"
       variant="outlined"
-      sx={{ borderRadius: 4, display: 'block', textDecoration: 'none' }}
+      sx={{ borderRadius: '4px', display: 'block', textDecoration: 'none' }}
       data-testid="venue-earnings-link-card"
     >
       <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>

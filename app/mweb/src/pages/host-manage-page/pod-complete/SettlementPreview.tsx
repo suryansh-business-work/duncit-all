@@ -121,7 +121,7 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<P
   };
 
   return (
-    <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.08)' }}>
+    <Box sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.08)' }}>
       <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 0.5 }}>
         Your share (credited to your wallet on completion)
       </Typography>

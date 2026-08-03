@@ -78,7 +78,7 @@ export default function PodAttendeesDialog({
               <ListItemButton
                 key={person.user_id}
                 onClick={() => openProfile(person.user_id)}
-                sx={{ borderRadius: 2.5 }}
+                sx={{ borderRadius: '4px' }}
               >
                 <ListItemAvatar>
                   <Avatar
@@ -117,7 +117,7 @@ export default function PodAttendeesDialog({
                 <ListItemButton
                   key={fill.key}
                   onClick={() => openProfile(fill.old_user_id)}
-                  sx={{ borderRadius: 2.5 }}
+                  sx={{ borderRadius: '4px' }}
                 >
                   <ListItemAvatar>
                     <Avatar src={fill.old_photo || undefined} sx={{ opacity: 0.6 }}>

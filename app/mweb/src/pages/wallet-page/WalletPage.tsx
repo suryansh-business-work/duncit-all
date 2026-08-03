@@ -61,7 +61,7 @@ export default function WalletPage() {
 
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Card variant="outlined" sx={{ borderRadius: 4, background: 'linear-gradient(135deg, rgba(255,79,115,0.12), rgba(255,122,89,0.12))' }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px', background: 'linear-gradient(135deg, rgba(255,79,115,0.12), rgba(255,122,89,0.12))' }}>
         <CardContent>
           <Typography variant="caption" sx={{ fontWeight: 900 }} color="primary.main">
             Available balance
@@ -81,7 +81,7 @@ export default function WalletPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
             Withdrawals
@@ -111,7 +111,7 @@ export default function WalletPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
             Transactions

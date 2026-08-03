@@ -58,7 +58,7 @@ export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandPr
           sx={{
             width: 36,
             height: 36,
-            borderRadius: 1.5,
+            borderRadius: '4px',
             display: 'grid',
             placeItems: 'center',
             bgcolor: 'primary.main',

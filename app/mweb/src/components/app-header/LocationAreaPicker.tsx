@@ -55,7 +55,7 @@ export default function LocationAreaPicker({
   const areaItemSx = (theme: Theme) => ({
     border: 1,
     borderColor: 'divider',
-    borderRadius: 2,
+    borderRadius: '4px',
     minHeight: 54,
     px: 1.25,
     py: 0.8,
@@ -94,7 +94,7 @@ export default function LocationAreaPicker({
             sx={{
               '& .MuiOutlinedInput-root': {
                 minHeight: 40,
-                borderRadius: 2,
+                borderRadius: '4px',
                 bgcolor: 'action.hover',
               },
               '& input': { fontSize: 13 },

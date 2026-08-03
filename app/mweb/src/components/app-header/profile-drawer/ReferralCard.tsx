@@ -17,7 +17,7 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
         }}
         sx={{
           p: 1.5,
-          borderRadius: 3,
+          borderRadius: '4px',
           cursor: 'pointer',
           transition: 'border-color 160ms ease',
           '&:hover': { borderColor: 'success.main' },
@@ -29,7 +29,7 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
             sx={{
               width: 44,
               height: 44,
-              borderRadius: 2.5,
+              borderRadius: '4px',
               display: 'grid',
               placeItems: 'center',
               color: 'success.main',

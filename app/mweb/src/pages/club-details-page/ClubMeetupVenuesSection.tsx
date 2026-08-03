@@ -66,7 +66,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           <Card
             key={venue.id}
             variant="outlined"
-            sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: 2 }}
+            sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '4px' }}
           >
             <CardActionArea onClick={() => setSelectedId(venue.id)}>
               <CardContent>

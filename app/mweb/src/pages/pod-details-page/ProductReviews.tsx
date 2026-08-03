@@ -105,7 +105,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         </Stack>
       )}
 
-      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 1.5 }}>
+      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '4px', p: 1.5 }}>
         <Typography variant="body2" fontWeight={800} sx={{ mb: 0.5 }}>
           Write a review
         </Typography>
@@ -200,7 +200,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
             </Stack>
           )}
           {r.seller_reply && (
-            <Box sx={{ mt: 0.75, ml: 2, p: 1, bgcolor: 'action.hover', borderRadius: 1.5 }}>
+            <Box sx={{ mt: 0.75, ml: 2, p: 1, bgcolor: 'action.hover', borderRadius: '4px' }}>
               <Typography variant="caption" fontWeight={800} color="primary.main">
                 Seller response
               </Typography>

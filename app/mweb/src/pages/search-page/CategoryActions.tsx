@@ -39,7 +39,7 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
                 flexDirection: 'column',
                 gap: 0.75,
                 p: 1.5,
-                borderRadius: 3,
+                borderRadius: '4px',
                 border: 1,
                 borderColor: 'divider',
                 bgcolor: 'background.paper',

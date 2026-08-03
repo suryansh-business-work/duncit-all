@@ -137,7 +137,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         ))}
       </Stack>
       {filter === 'ALL' && rooms.length > 0 && (
-        <Box sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
+        <Box sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
           <Typography variant="caption" color="success.main" sx={{ fontWeight: 950, letterSpacing: 0.6 }}>
             ACTIVE PODS · {rooms.length}
           </Typography>
@@ -160,11 +160,11 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
           {visibleRooms.map((p: any) => {
             const statusChip = podStatusChip(podStatus(p.pod_date_time, p.pod_end_date_time));
             return (
-            <Card key={p.id} variant="outlined" sx={{ borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }}>
+            <Card key={p.id} variant="outlined" sx={{ borderRadius: '4px', bgcolor: 'background.paper', overflow: 'hidden' }}>
               <CardActionArea onClick={() => navigate(`/chats/${p.id}`)}>
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Avatar src={p.cover_url || undefined} variant="rounded" sx={{ width: 58, height: 58, borderRadius: 3, bgcolor: 'primary.main' }}>
+                    <Avatar src={p.cover_url || undefined} variant="rounded" sx={{ width: 58, height: 58, borderRadius: '4px', bgcolor: 'primary.main' }}>
                       <GroupsIcon />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>

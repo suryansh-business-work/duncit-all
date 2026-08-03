@@ -13,7 +13,7 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
   const directions = mapSearchUrl([venue.venue_name, address].filter(Boolean).join(', '));
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }} data-testid="create-pod-venue-contact">
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="create-pod-venue-contact">
       <Typography variant="subtitle2" fontWeight={900}>{venue.venue_name}</Typography>
       {address && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{address}</Typography>

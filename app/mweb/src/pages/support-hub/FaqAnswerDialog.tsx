@@ -13,7 +13,7 @@ interface FaqAnswerDialogProps {
 export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDialogProps>) {
   const navigate = useNavigate();
   return (
-    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 4 } }}>
+    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '4px' } }}>
       {faq && (
         <DialogContent sx={{ p: 2.5 }}>
           <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
@@ -27,7 +27,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
           <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1.5 }}>
             {faq.answer}
           </Typography>
-          <Box sx={{ mt: 2.5, p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.08)' }}>
+          <Box sx={{ mt: 2.5, p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.08)' }}>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
               Still need help?
             </Typography>

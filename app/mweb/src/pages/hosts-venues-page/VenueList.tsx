@@ -57,7 +57,7 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
     <Grid container spacing={2}>
       {venues.map((v) => (
         <Grid item xs={12} sm={6} key={v.id}>
-          <Card variant="outlined" sx={{ height: '100%', borderRadius: 4, overflow: 'hidden', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
+          <Card variant="outlined" sx={{ height: '100%', borderRadius: '4px', overflow: 'hidden', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
             {v.cover_image_url ? (
               <CardMedia
                 component="img"

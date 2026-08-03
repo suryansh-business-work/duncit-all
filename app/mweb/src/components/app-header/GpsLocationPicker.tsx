@@ -53,7 +53,7 @@ export default function GpsLocationPicker({
         disabled={busy}
         sx={{
           minHeight: 42,
-          borderRadius: 2.25,
+          borderRadius: '4px',
           border: '1px solid transparent',
           color: 'primary.main',
           fontWeight: 900,

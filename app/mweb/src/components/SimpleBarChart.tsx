@@ -51,7 +51,7 @@ export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) 
                 width: '100%',
                 maxWidth: 34,
                 height: `${Math.max(4, (d.value / max) * 82)}%`,
-                borderRadius: 1.5,
+                borderRadius: '4px',
                 background: d.value > 0 ? 'linear-gradient(180deg, #ff7a59 0%, #ff4f73 100%)' : undefined,
                 bgcolor: d.value > 0 ? undefined : 'action.hover',
                 transition: 'height 300ms cubic-bezier(0.2, 0.8, 0.2, 1)',

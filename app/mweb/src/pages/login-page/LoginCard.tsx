@@ -50,7 +50,7 @@ export default function LoginCard({
           sx={{
             px: 1.25,
             py: 1,
-            borderRadius: 2,
+            borderRadius: '4px',
             bgcolor: 'action.hover',
             border: 1,
             borderColor: 'divider',

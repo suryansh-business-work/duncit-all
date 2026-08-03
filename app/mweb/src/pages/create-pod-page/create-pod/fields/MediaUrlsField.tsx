@@ -67,7 +67,7 @@ export default function MediaUrlsField({
           sx={{
             mt: 1,
             cursor: 'pointer',
-            borderRadius: 3,
+            borderRadius: '4px',
             border: '2px dashed',
             borderColor: error ? 'error.main' : 'divider',
             bgcolor: 'action.hover',
@@ -90,7 +90,7 @@ export default function MediaUrlsField({
       ) : (
         <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
           {urls.map((url) => (
-            <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
+            <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: '4px', overflow: 'hidden', border: 1, borderColor: 'divider', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
               {VIDEO_URL_RE.test(url) ? (
                 <VideocamIcon color="action" />
               ) : (
@@ -112,7 +112,7 @@ export default function MediaUrlsField({
             aria-label="Add media"
             onClick={openPicker}
             onKeyDown={openOnKey}
-            sx={{ cursor: 'pointer', width: 88, height: 88, borderRadius: 2, border: '2px dashed', borderColor: 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary', '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}
+            sx={{ cursor: 'pointer', width: 88, height: 88, borderRadius: '4px', border: '2px dashed', borderColor: 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary', '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}
           >
             <AddIcon />
           </Box>

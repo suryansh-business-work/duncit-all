@@ -1,19 +1,18 @@
 import { z } from 'zod';
+import { DEFAULT_MIN_ACCOUNT_AGE_YEARS, dobMinAgeMessage, isEligibleDob } from '@duncit/datetime';
 
-/** Admin-configured signup birth-year bound defaults (Admin > Settings). */
-export const DEFAULT_MIN_BIRTH_YEAR = 1940;
-export const DEFAULT_MAX_BIRTH_YEAR = 2012;
+const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 /**
- * Simplified signup contract: Name, Birth Year, Email, Password, Confirm
- * Password. Mirrors the mWeb signup so both apps validate identical rules. The
- * birth-year bounds are admin-configurable, so the schema is built per-render
- * from the fetched min/max (see SignupForm).
+ * Simplified signup contract: Name, Date of Birth, Email, Password, Confirm
+ * Password. Mirrors the mWeb signup so both apps validate identical rules.
+ *
+ * The date of birth must make the applicant at least 18 today. It replaced an
+ * admin-configured birth-YEAR range, which could only ever approximate an age:
+ * a year picker passes anyone born in the cut-off year, including someone whose
+ * 18th birthday is still months away.
  */
-export function makeSignupSchema(
-  minYear: number = DEFAULT_MIN_BIRTH_YEAR,
-  maxYear: number = DEFAULT_MAX_BIRTH_YEAR,
-) {
+export function makeSignupSchema(minAge: number = DEFAULT_MIN_ACCOUNT_AGE_YEARS) {
   return z
     .object({
       name: z
@@ -21,13 +20,12 @@ export function makeSignupSchema(
         .trim()
         .min(2, 'Name must be at least 2 characters')
         .max(80, 'Name is too long'),
-      birthYear: z
+      dob: z
         .string()
-        .regex(/^\d{4}$/, 'Enter a 4-digit year')
-        .refine((v) => {
-          const year = Number(v);
-          return year >= minYear && year <= maxYear;
-        }, `Enter a year between ${minYear} and ${maxYear}`),
+        .trim()
+        .min(1, 'Date of birth is required')
+        .refine((v) => DOB_PATTERN.test(v), 'Use the format YYYY-MM-DD')
+        .refine((v) => isEligibleDob(v, minAge), dobMinAgeMessage(minAge)),
       email: z.string().trim().email('Enter a valid email'),
       password: z.string().min(8, 'Min 8 characters').max(128, 'Password is too long'),
       confirmPassword: z.string().min(8, 'Min 8 characters'),
@@ -38,14 +36,13 @@ export function makeSignupSchema(
     });
 }
 
-/** The default-bounds schema — for callers that don't need dynamic bounds. */
 export const signupSchema = makeSignupSchema();
 
 export type SignupFormValues = z.infer<typeof signupSchema>;
 
 export const signupDefaults: SignupFormValues = {
   name: '',
-  birthYear: '',
+  dob: '',
   email: '',
   password: '',
   confirmPassword: '',

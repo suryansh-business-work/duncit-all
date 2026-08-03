@@ -20,7 +20,7 @@ interface Props {
 
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '4px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
         <DialogTitle sx={{ fontWeight: 900 }}>Sort Results</DialogTitle>
         <IconButton aria-label="Close sort" onClick={onClose}>

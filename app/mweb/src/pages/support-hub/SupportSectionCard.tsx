@@ -17,7 +17,7 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
       variant="outlined"
       sx={{
         p: 1.75,
-        borderRadius: 4,
+        borderRadius: '4px',
         textDecoration: 'none',
         color: 'inherit',
         display: 'block',
@@ -31,7 +31,7 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
           sx={{
             width: 44,
             height: 44,
-            borderRadius: 3,
+            borderRadius: '4px',
             display: 'grid',
             placeItems: 'center',
             color,

@@ -41,7 +41,7 @@ export default function SupportShell({
           sx={{
             width: 38,
             height: 38,
-            borderRadius: 3,
+            borderRadius: '4px',
             display: 'grid',
             placeItems: 'center',
             color: 'primary.contrastText',

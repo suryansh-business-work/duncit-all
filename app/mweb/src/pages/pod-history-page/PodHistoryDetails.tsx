@@ -107,7 +107,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
       <Card>
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: 3, bgcolor: 'action.hover' }}>
+            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: '4px', bgcolor: 'action.hover' }}>
               <EventIcon />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>

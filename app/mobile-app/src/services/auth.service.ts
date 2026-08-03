@@ -11,7 +11,8 @@ import { setAuthToken, clearAuthToken } from './auth-token';
 
 export interface SignupValues {
   name: string;
-  birthYear: string;
+  /** YYYY-MM-DD; the server stores a full date. */
+  dob: string;
   email: string;
   password: string;
 }
@@ -33,9 +34,11 @@ export function splitName(name: string): { first_name: string; last_name?: strin
   return { first_name: first ?? '', last_name: rest.length ? rest.join(' ') : undefined };
 }
 
-/** Birth year -> Jan 1 of that year as ISO (mirrors mWeb's DobYear handling). */
-export function birthYearToDob(year: string): string {
-  return new Date(Date.UTC(Number(year), 0, 1)).toISOString();
+/** YYYY-MM-DD -> the ISO instant the server persists. Built in UTC so the day
+ * the user picked is the day that is stored, whatever the device timezone. */
+export function dobToIso(dob: string): string {
+  const [year, month, day] = dob.split('-').map(Number);
+  return new Date(Date.UTC(year ?? 0, (month ?? 1) - 1, day ?? 1)).toISOString();
 }
 
 export async function register(values: SignupValues): Promise<AuthOutcome> {
@@ -46,7 +49,7 @@ export async function register(values: SignupValues): Promise<AuthOutcome> {
       last_name,
       email: values.email.trim().toLowerCase(),
       password: values.password,
-      dob: birthYearToDob(values.birthYear),
+      dob: dobToIso(values.dob),
     },
   });
   await setAuthToken(data.register.token);

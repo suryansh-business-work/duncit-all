@@ -108,7 +108,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   return (
     <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', p: 1 }}>
       <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
-      <Card sx={{ borderRadius: 5, color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 55%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 24px 60px rgba(17,24,39,0.28)' : `0 24px 60px ${alpha(theme.palette.primary.dark, 0.12)}` }}>
+      <Card sx={{ borderRadius: '4px', color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 55%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 24px 60px rgba(17,24,39,0.28)' : `0 24px 60px ${alpha(theme.palette.primary.dark, 0.12)}` }}>
         <CardContent sx={{ textAlign: 'center', p: 3 }}>
           <PaymentLottie variant="success" size={140} />
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>You are in</Typography>
@@ -116,7 +116,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           <Typography variant="body2" color="text.secondary" gutterBottom>
             Your slot is booked. A receipt with the tax invoice has been emailed to you.
           </Typography>
-          <Box sx={{ mt: 3, p: 2, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
+          <Box sx={{ mt: 3, p: 2, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
           <Stack spacing={0.8}>
             <Row label="Amount paid" value={formatMoney(payment.currency_symbol, payment.total)} bold />
             {paidAt && <Row label="Paid on" value={formatDateTime(paidAt)} />}
@@ -125,7 +125,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           </Stack>
           </Box>
           {pod && (
-            <Box sx={{ mt: 2, p: 2, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ mt: 2, p: 2, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
               <Stack spacing={1.25}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EventAvailableIcon color="primary" />
@@ -135,10 +135,10 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
                   </Box>
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: 3, '&:hover': { bgcolor: '#171717' } }}>
+                  <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '4px', '&:hover': { bgcolor: '#171717' } }}>
                     Add to Apple Wallet
                   </Button>
-                  <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: 3, '&:hover': { bgcolor: '#111827' } }}>
+                  <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '4px', '&:hover': { bgcolor: '#111827' } }}>
                     Add to Google Wallet
                   </Button>
                 </Stack>

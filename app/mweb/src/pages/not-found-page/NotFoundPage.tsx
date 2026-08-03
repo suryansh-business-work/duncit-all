@@ -17,7 +17,7 @@ export default function NotFoundPage() {
         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360 }}>
           The page you’re looking for doesn’t exist or has moved.
         </Typography>
-        <Button component={RouterLink} to="/" variant="contained" sx={{ mt: 1, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}>
+        <Button component={RouterLink} to="/" variant="contained" sx={{ mt: 1, borderRadius: '4px', textTransform: 'none', fontWeight: 700 }}>
           Go to Home
         </Button>
       </Stack>

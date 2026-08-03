@@ -107,7 +107,7 @@ export default function SuggestedPricesDialog({
           {body}
           <Box
             data-testid="suggested-prices-note"
-            sx={{ p: 1.5, borderRadius: 3, bgcolor: alpha(theme.palette.primary.main, 0.1) }}
+            sx={{ p: 1.5, borderRadius: '4px', bgcolor: alpha(theme.palette.primary.main, 0.1) }}
           >
             <Typography variant="body2" fontWeight={700}>
               {SUGGESTED_PRICES_NOTE}

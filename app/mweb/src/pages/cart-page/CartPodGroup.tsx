@@ -27,7 +27,7 @@ export default function CartPodGroup({
   return (
     <Stack
       spacing={1}
-      sx={{ p: 1.5, borderRadius: 3, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+      sx={{ p: 1.5, borderRadius: '4px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
       data-testid={`cart-pod-${podId}`}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
@@ -36,7 +36,7 @@ export default function CartPodGroup({
       {lines.map((line) => (
         <Stack key={cartLineKey(line)} direction="row" spacing={1} alignItems="center">
           <Box
-            sx={{ width: 48, height: 48, borderRadius: 2, overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover' }}
+            sx={{ width: 48, height: 48, borderRadius: '4px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover' }}
           >
             {line.image_url && (
               <Box

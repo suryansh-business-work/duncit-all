@@ -45,6 +45,9 @@ importers:
       '@duncit/auth-tokens':
         specifier: workspace:*
         version: link:../../packages/auth-tokens
+      '@duncit/datetime':
+        specifier: workspace:*
+        version: link:../../packages/datetime
       '@duncit/fallback-icons':
         specifier: workspace:*
         version: link:../../packages/fallback-icons

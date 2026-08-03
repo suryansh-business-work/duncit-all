@@ -15,7 +15,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
 
   if (loading && !options.length) {
     return (
-      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }}>
         <Typography variant="body2" color="text.secondary">
           Loading your pods…
         </Typography>
@@ -24,7 +24,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Re
   }
   if (!options.length) {
     return (
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.08)' }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.08)' }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <EventIcon color="action" />
           <Typography variant="body2" sx={{ fontWeight: 700 }}>

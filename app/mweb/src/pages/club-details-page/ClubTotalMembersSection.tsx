@@ -16,7 +16,7 @@ export default function ClubTotalMembersSection({ count }: Readonly<Props>) {
       alignItems="center"
       sx={{
         p: 1.75,
-        borderRadius: 2,
+        borderRadius: '4px',
         bgcolor: 'background.paper',
         border: 1,
         borderColor: 'divider',

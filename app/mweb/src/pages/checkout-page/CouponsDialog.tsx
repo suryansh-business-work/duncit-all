@@ -50,7 +50,7 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
                 }}
                 sx={{
                   p: 1.5,
-                  borderRadius: 2,
+                  borderRadius: '4px',
                   border: '1px dashed',
                   borderColor: 'primary.main',
                   cursor: 'pointer',

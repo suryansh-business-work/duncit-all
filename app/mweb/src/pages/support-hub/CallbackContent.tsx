@@ -44,7 +44,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
 
   return (
     <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
         <Stack spacing={1.25}>
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
             Call support now
@@ -68,7 +68,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
         <Stack spacing={1.5}>
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
             Request a callback

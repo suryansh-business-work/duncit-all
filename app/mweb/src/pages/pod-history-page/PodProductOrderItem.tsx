@@ -20,7 +20,7 @@ export default function PodProductOrderItem({ order }: Readonly<{ order: Product
   const steps = buildOrderTimeline(order);
 
   return (
-    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 1.5 }}>
+    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '4px', p: 1.5 }}>
       <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" sx={{ mb: 1 }}>
         <Chip
           size="small"

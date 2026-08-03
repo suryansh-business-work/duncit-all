@@ -82,7 +82,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
         <Box
           key={pending}
           sx={{
-            borderRadius: 4,
+            borderRadius: '4px',
             px: 2.5,
             py: 2,
             color: 'primary.contrastText',

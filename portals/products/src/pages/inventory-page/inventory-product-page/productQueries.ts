@@ -47,6 +47,7 @@ export const INVENTORY_PRODUCT_DETAIL = gql`
       length_cm
       breadth_cm
       weight_kg
+      ownership
       is_active
       last_updated_by_id
       last_updated_by_name

@@ -56,7 +56,7 @@ const renderStatus = (r: ProductListingRow) => (
   <StatusChip status={r.listing_review_status} colorMap={REQUEST_STATUS_COLOR} />
 );
 
-export default function EcommRequestsTable({
+export default function ProductsReviewTable({
   fetchRows,
   refetchRef,
   onReview,

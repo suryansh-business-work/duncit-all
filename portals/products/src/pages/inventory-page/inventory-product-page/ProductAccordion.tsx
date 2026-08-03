@@ -6,6 +6,7 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useFormContext, useWatch } from 'react-hook-form';
 import ActivityLogsSection from './ActivityLogsSection';
 import AdvancedSettingsSection from './AdvancedSettingsSection';
 import BasicInfoSection from './BasicInfoSection';
@@ -14,6 +15,7 @@ import InventoryManagementSection from './InventoryManagementSection';
 import MediaBrandingSection from './MediaBrandingSection';
 import PricingTaxSection from './PricingTaxSection';
 import SupplierDetailsSection from './SupplierDetailsSection';
+import type { InventoryProductFormValues } from './types';
 
 const SECTIONS = [
   { id: 'basic', label: 'Basic info' },
@@ -25,6 +27,10 @@ const SECTIONS = [
   { id: 'advanced', label: 'Advanced settings' },
   { id: 'activity', label: 'Activity & analytics' },
 ];
+
+/** Supplier details is Duncit procurement metadata — a brand-owned product is
+ * supplied by the brand itself, so the section does not apply there. */
+const isNotSupplier = (sec: { id: string }) => sec.id !== 'supplier';
 
 interface ProductAccordionProps {
   isNew: boolean;
@@ -46,9 +52,12 @@ export default function ProductAccordion({
   onError,
 }: Readonly<ProductAccordionProps>) {
   const [expanded, setExpanded] = useState<string>('basic');
+  const { control } = useFormContext<InventoryProductFormValues>();
+  const ownership = useWatch({ control, name: 'ownership' });
+  const sections = ownership === 'BRAND' ? SECTIONS.filter(isNotSupplier) : SECTIONS;
   return (
     <>
-      {SECTIONS.map((sec) => (
+      {sections.map((sec) => (
         <Accordion
           key={sec.id}
           expanded={expanded === sec.id}

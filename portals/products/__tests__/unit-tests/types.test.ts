@@ -61,12 +61,30 @@ describe('inventory product form mappers', () => {
       expiry_date: '',
       manufacturing_date: '2026-01-01',
       images: ['a.jpg', '', 'b.jpg'],
+      pickup_location_id: 'wh1',
     });
     expect('id' in input).toBe(false);
+    // `ownership` is read-only context, not a field of UpdateInventoryProductInput.
+    expect('ownership' in input).toBe(false);
     expect(input.sku).toBe('CB-2');
     expect(input.category_id).toBeNull();
     expect(input.expiry_date).toBeNull();
     expect(input.manufacturing_date).toBe('2026-01-01');
     expect(input.images).toEqual(['a.jpg', 'b.jpg']);
+    // A Duncit product still submits its warehouse.
+    expect(input).toMatchObject({ pickup_location_id: 'wh1' });
+  });
+
+  it('maps a brand-owned product and never writes its warehouse back', () => {
+    const values = toFormValues({ id: 'p1', ownership: 'BRAND', pickup_location_id: 'brand-wh' });
+    expect(values.ownership).toBe('BRAND');
+    const input = toSubmitInput(values);
+    expect('pickup_location_id' in input).toBe(false);
+    expect('ownership' in input).toBe(false);
+  });
+
+  it('defaults ownership to Duncit when the product does not report it', () => {
+    expect(toFormValues({ id: 'p1' }).ownership).toBe('DUNCIT');
+    expect(blankProductForm.ownership).toBe('DUNCIT');
   });
 });

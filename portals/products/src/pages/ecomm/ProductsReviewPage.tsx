@@ -9,13 +9,13 @@ import {
   Typography,
 } from '@mui/material';
 import { useApolloTableFetch } from '@duncit/table';
-import EcommRequestsTable from './EcommRequestsTable';
+import ProductsReviewTable from './ProductsReviewTable';
 import ReviewListingDialog from './ReviewListingDialog';
 import { PRODUCT_LISTING_REQUESTS_TABLE, type ProductListingRow } from './requestsQueries';
 
 const STATUS_TABS = ['PENDING', 'APPROVED', 'DENIED', 'ALL'];
 
-export default function EcommRequestsPage() {
+export default function ProductsReviewPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const [status, setStatus] = useState('PENDING');
@@ -53,10 +53,11 @@ export default function EcommRequestsPage() {
       <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={2}>
         <Box>
           <Typography variant="h4" fontWeight={950}>
-            Ecomm Requests
+            Products Reviews
           </Typography>
           <Typography color="text.secondary">
-            Review partner product listings before they become selectable in pods.
+            Approve or deny the product listings partners submit, before they become selectable in
+            pods.
           </Typography>
         </Box>
         <ToggleButtonGroup
@@ -75,7 +76,7 @@ export default function EcommRequestsPage() {
 
       {message && <Alert severity="success" onClose={() => setMessage(null)}>{message}</Alert>}
 
-      <EcommRequestsTable
+      <ProductsReviewTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         onReview={setReviewTarget}

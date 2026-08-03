@@ -21,9 +21,18 @@ vi.mock('../../src/pages/inventory-page/InventoryPage', () => ({
 vi.mock('../../src/pages/inventory-page/inventory-product-page/InventoryProductPage', () => ({
   default: () => <div>PRODUCT PAGE</div>,
 }));
-vi.mock('../../src/pages/ecomm/EcommRequestsPage', () => ({ default: () => <div>REQUESTS PAGE</div> }));
-vi.mock('../../src/pages/ecomm/EcommMarketplacePage', () => ({ default: () => <div>BRANDS PAGE</div> }));
-vi.mock('../../src/pages/ecomm/EcommBrandDetailPage', () => ({ default: () => <div>BRAND DETAIL</div> }));
+vi.mock('../../src/pages/ecomm/ProductsReviewPage', () => ({ default: () => <div>REQUESTS PAGE</div> }));
+vi.mock('../../src/pages/ecomm/BrandsReviewPage', () => ({ default: () => <div>BRANDS PAGE</div> }));
+vi.mock('../../src/pages/ecomm/BrandReviewDetailPage', () => ({ default: () => <div>BRAND DETAIL</div> }));
+vi.mock('../../src/pages/catalog-brands/CatalogBrandsPage', () => ({
+  default: () => <div>CATALOG BRANDS</div>,
+}));
+vi.mock('../../src/pages/catalog-brands/CatalogBrandDetailPage', () => ({
+  default: () => <div>CATALOG BRAND DETAIL</div>,
+}));
+vi.mock('../../src/pages/catalog-brands/CatalogBrandProductsPage', () => ({
+  default: () => <div>CATALOG BRAND PRODUCTS</div>,
+}));
 vi.mock('../../src/pages/ecomm/ecomm-requests/BrandRequestPage', () => ({
   default: () => <div>BRAND REQUEST</div>,
 }));
@@ -50,6 +59,16 @@ afterEach(() => {
   flag.value = true;
 });
 
+const REVIEW_AND_CATALOG_ROUTES: [string, string][] = [
+  ['/ecomm/brands', 'BRANDS PAGE'],
+  ['/ecomm/brands/b1', 'BRAND DETAIL'],
+  ['/ecomm/product-requests', 'REQUESTS PAGE'],
+  ['/catalog/brands', 'CATALOG BRANDS'],
+  ['/catalog/brands/b1', 'CATALOG BRAND DETAIL'],
+  ['/catalog/brands/b1/products', 'CATALOG BRAND PRODUCTS'],
+  ['/catalog/brands/b1/products/p1/edit', 'PRODUCT PAGE'],
+];
+
 describe('App routing', () => {
   it('redirects unauthenticated visitors to the login page', () => {
     renderWithProviders(<App />, { initialEntries: ['/inventory'] });
@@ -75,6 +94,14 @@ describe('App routing', () => {
     renderWithProviders(<App />, { initialEntries: ['/orders'] });
     expect(screen.getByText('WELCOME PAGE')).toBeInTheDocument();
     expect(screen.queryByText('ORDERS PAGE')).not.toBeInTheDocument();
+  });
+
+  // The review inbox, the catalogue brand pages and the shared product editor
+  // reused on a brand product all mount from the same guard, so one table.
+  it.each(REVIEW_AND_CATALOG_ROUTES)('renders %s', (path, sentinel) => {
+    setToken('tok');
+    renderWithProviders(<App />, { initialEntries: [path] });
+    expect(screen.getByText(sentinel)).toBeInTheDocument();
   });
 
   it('renders the Duncit warehouses settings route when authenticated', () => {

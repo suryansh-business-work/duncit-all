@@ -370,6 +370,72 @@ describe('inventory table queries (shared table engine)', () => {
     expect(page2.page_size).toBe(1);
   });
 
+  it('scopes inventoryProductsTable to ONE brand via brand_id, whatever the listing or brand status', async () => {
+    // Brand A is deliberately un-approved AND deactivated: Catalog > Brands is
+    // the admin's full view of a brand, not its storefront.
+    const brandA = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Aster Co', status: 'SUBMITTED', is_active: false });
+    const brandB = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Borel Co', status: 'APPROVED', is_active: true });
+    await InventoryProductModel.create({ product_name: 'A Approved', sku: 'CBA1', unit_cost: 5, brand_id: brandA._id, ownership: 'BRAND', listing_review_status: 'APPROVED' });
+    await InventoryProductModel.create({ product_name: 'A Pending', sku: 'CBA2', unit_cost: 5, brand_id: brandA._id, ownership: 'BRAND', listing_review_status: 'PENDING' });
+    await InventoryProductModel.create({ product_name: 'A Denied', sku: 'CBA3', unit_cost: 5, brand_id: brandA._id, ownership: 'BRAND', listing_review_status: 'DENIED' });
+    await InventoryProductModel.create({ product_name: 'A Archived', sku: 'CBA4', unit_cost: 5, brand_id: brandA._id, ownership: 'BRAND', listing_review_status: 'APPROVED', status: 'ARCHIVED', is_active: false });
+    await InventoryProductModel.create({ product_name: 'B Approved', sku: 'CBB1', unit_cost: 5, brand_id: brandB._id, ownership: 'BRAND', listing_review_status: 'APPROVED' });
+    await InventoryProductModel.create({ product_name: 'Duncit Mat', sku: 'CBD1', unit_cost: 5, ownership: 'DUNCIT' });
+
+    const scoped = await inventoryService.table({
+      filters: [
+        { field: 'ownership', op: 'eq', value: 'BRAND' },
+        { field: 'brand_id', op: 'eq', value: String(brandA._id) },
+      ],
+    });
+    // Every review status plus the archived row — and NOTHING of brand B's. A
+    // silently dropped brand_id filter would leak 'B Approved' in here.
+    expect(scoped.rows.map((p) => p.product_name)).toEqual(['A Approved', 'A Archived', 'A Denied', 'A Pending']);
+    expect(scoped.total).toBe(4);
+    expect(scoped.rows.every((p) => p.brand_id === String(brandA._id))).toBe(true);
+
+    // Brand B's list is exactly its own row — the filter really discriminates.
+    const bScoped = await inventoryService.table({
+      filters: [{ field: 'brand_id', op: 'eq', value: String(brandB._id) }],
+    });
+    expect(bScoped.rows.map((p) => p.product_name)).toEqual(['B Approved']);
+
+    // The storefront query is untouched: brand A is not approved, so its
+    // marketplace page stays empty even though Catalog lists 4 products.
+    const storefront = await inventoryService.marketplaceBrandProductsTable(String(brandA._id));
+    expect(storefront.total).toBe(0);
+
+    // A well-formed id owned by no brand yields an EMPTY page, never everything.
+    const unknown = await inventoryService.table({
+      filters: [{ field: 'brand_id', op: 'eq', value: new Types.ObjectId().toString() }],
+    });
+    expect(unknown.rows).toEqual([]);
+    expect(unknown.total).toBe(0);
+
+    // ownership=DUNCIT can never be combined into a brand's list.
+    const duncitOfBrandA = await inventoryService.table({
+      filters: [
+        { field: 'ownership', op: 'eq', value: 'DUNCIT' },
+        { field: 'brand_id', op: 'eq', value: String(brandA._id) },
+      ],
+    });
+    expect(duncitOfBrandA.total).toBe(0);
+
+    // Unfiltered behaviour is unchanged — every product of every owner.
+    const all = await inventoryService.table();
+    expect(all.total).toBe(6);
+    const duncitOnly = await inventoryService.table({
+      filters: [{ field: 'ownership', op: 'eq', value: 'DUNCIT' }],
+    });
+    expect(duncitOnly.rows.map((p) => p.product_name)).toEqual(['Duncit Mat']);
+
+    // A malformed id is rejected by the ObjectId cast — it can never fall
+    // through to "match everything", which is what a dropped filter would do.
+    await expect(
+      inventoryService.table({ filters: [{ field: 'brand_id', op: 'eq', value: 'not-an-id' }] })
+    ).rejects.toThrow(/objectid/i);
+  });
+
   it('scopes marketplaceBrandProductsTable to one approved, active brand', async () => {
     const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Mine Co', status: 'APPROVED', is_active: true });
     const other = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Other Co', status: 'APPROVED', is_active: true });

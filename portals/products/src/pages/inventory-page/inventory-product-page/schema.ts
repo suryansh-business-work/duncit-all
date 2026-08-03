@@ -19,6 +19,7 @@ const moneyField = z
 export const productSchema = z
   .object({
     id: z.string().optional(),
+    ownership: z.enum(['DUNCIT', 'BRAND']),
 
     product_name: z
       .string()
@@ -83,8 +84,8 @@ export const productSchema = z
     host_request_allowed: z.boolean(),
     delivery_available: z.boolean(),
     delivery_charge: z.number({ invalid_type_error: 'Number required' }).min(0).max(100000),
-    // Every Duncit product must ship from a Duncit warehouse (its rate/shipment origin).
-    pickup_location_id: z.string().min(1, 'Warehouse is required'),
+    // Required for Duncit products only — see the ownership refine below.
+    pickup_location_id: z.string(),
 
     height_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
     length_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
@@ -98,6 +99,16 @@ export const productSchema = z
         code: z.ZodIssueCode.custom,
         path: ['max_order_qty'],
         message: 'Max order qty must be ≥ min order qty',
+      });
+    }
+    // Every Duncit product must ship from a Duncit warehouse (its rate/shipment
+    // origin). A brand product keeps the brand's own warehouse, which this form
+    // does not list, so the field stays optional there.
+    if (values.ownership === 'DUNCIT' && values.pickup_location_id.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['pickup_location_id'],
+        message: 'Warehouse is required',
       });
     }
   });

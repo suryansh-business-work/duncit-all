@@ -1,10 +1,10 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Avatar, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Button, Chip, Stack, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { DuncitTable, type DuncitColumn, type TableFetch } from '@duncit/table';
 import { StatusChip } from '@duncit/ui';
-import { BRAND_STATUS_COLOR, BRAND_STATUS_OPTIONS } from './brandStatus';
+import { BRAND_STATUS_COLOR } from './brandStatus';
 import { useDateFormat } from '@duncit/app-settings';
 import type { EcommBrandRow } from './queries';
 
@@ -12,6 +12,7 @@ interface Props {
   fetchRows: TableFetch<EcommBrandRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
   onView: (b: EcommBrandRow) => void;
+  onReview: (b: EcommBrandRow) => void;
 }
 
 const getRowId = (b: EcommBrandRow) => b.id;
@@ -50,10 +51,28 @@ const renderStatus = (b: EcommBrandRow) => (
   <StatusChip status={b.status} colorMap={BRAND_STATUS_COLOR} />
 );
 
-export default function EcommBrandsTable({ fetchRows, refetchRef, onView }: Readonly<Props>) {
+export default function BrandsReviewTable({
+  fetchRows,
+  refetchRef,
+  onView,
+  onReview,
+}: Readonly<Props>) {
   const { formatDate } = useDateFormat();
-  const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(
-    () => [
+  const columns = useMemo<DuncitColumn<EcommBrandRow>[]>(() => {
+    // Rows open the brand, so the action must not also trigger the row click.
+    const renderReview = (b: EcommBrandRow) => (
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={(event) => {
+          event.stopPropagation();
+          onReview(b);
+        }}
+      >
+        Review
+      </Button>
+    );
+    return [
       { field: 'logo', headerName: '', sortable: false, width: 64, cellRenderer: renderLogo },
       {
         field: 'brand_name',
@@ -85,12 +104,21 @@ export default function EcommBrandsTable({ fetchRows, refetchRef, onView }: Read
         valueGetter: pickupValue,
       },
       {
+        // No column filter: the page's status tabs own the status scope and are
+        // appended AFTER the column filters, so a column filter here would be
+        // silently overridden on every tab but ALL. Mirrors ProductsReviewTable.
         field: 'status',
         headerName: 'Status',
-        filter: { type: 'select', options: BRAND_STATUS_OPTIONS },
         width: 130,
         cellRenderer: renderStatus,
         valueGetter: (b) => b.status,
+      },
+      {
+        field: 'submitted_at',
+        headerName: 'Submitted',
+        filter: { type: 'date' },
+        width: 130,
+        valueGetter: (b) => (b.submitted_at ? formatDate(b.submitted_at) : '—'),
       },
       {
         field: 'created_at',
@@ -100,9 +128,9 @@ export default function EcommBrandsTable({ fetchRows, refetchRef, onView }: Read
         width: 130,
         valueGetter: (b) => (b.created_at ? formatDate(b.created_at) : '—'),
       },
-    ],
-    [formatDate],
-  );
+      { field: 'review', headerName: 'Review', sortable: false, width: 110, cellRenderer: renderReview },
+    ];
+  }, [onReview, formatDate]);
 
   return (
     <DuncitTable<EcommBrandRow>

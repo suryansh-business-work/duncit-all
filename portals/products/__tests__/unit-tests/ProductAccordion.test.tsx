@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ProductAccordion from '../../src/pages/inventory-page/inventory-product-page/ProductAccordion';
+import type { ProductOwnership } from '../../src/pages/inventory-page/inventory-product-page/types';
+import { ProductFormHarness } from './form-harness';
 
 vi.mock('../../src/pages/inventory-page/inventory-product-page/BasicInfoSection', () => ({
   default: () => <div>BASIC</div>,
@@ -27,17 +29,19 @@ vi.mock('../../src/pages/inventory-page/inventory-product-page/ActivityLogsSecti
   default: () => <div>ACTIVITY</div>,
 }));
 
-const renderAccordion = () =>
+const renderAccordion = (ownership: ProductOwnership = 'DUNCIT') =>
   render(
-    <ProductAccordion
-      isNew={false}
-      categories={[]}
-      logs={[]}
-      movements={[]}
-      analytics={[]}
-      activityLoading={false}
-      onError={vi.fn()}
-    />,
+    <ProductFormHarness values={{ ownership }}>
+      <ProductAccordion
+        isNew={false}
+        categories={[]}
+        logs={[]}
+        movements={[]}
+        analytics={[]}
+        activityLoading={false}
+        onError={vi.fn()}
+      />
+    </ProductFormHarness>,
   );
 
 describe('ProductAccordion', () => {
@@ -65,6 +69,19 @@ describe('ProductAccordion', () => {
     expect(screen.getByText('ADVANCED')).toBeInTheDocument();
     open('Activity & analytics');
     expect(screen.getByText('ACTIVITY')).toBeInTheDocument();
+  });
+
+  it('keeps the Duncit-only supplier section for a Duncit product', () => {
+    renderAccordion();
+    expect(screen.getByText('Supplier details')).toBeInTheDocument();
+  });
+
+  it('drops the Duncit-only supplier section for a brand-owned product', () => {
+    renderAccordion('BRAND');
+    expect(screen.queryByText('Supplier details')).not.toBeInTheDocument();
+    // Every other section still renders.
+    expect(screen.getByText('Basic info')).toBeInTheDocument();
+    expect(screen.getByText('Delivery & availability')).toBeInTheDocument();
   });
 
   it('collapses the open section when its header is clicked again', () => {

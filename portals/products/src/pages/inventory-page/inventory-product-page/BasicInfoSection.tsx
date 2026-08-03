@@ -19,6 +19,8 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
   const { control } = useFormContext<InventoryProductFormValues>();
   const shortDescription = useWatch({ control, name: 'short_description' });
   const description = useWatch({ control, name: 'description' });
+  const ownership = useWatch({ control, name: 'ownership' });
+  const ownerLabel = ownership === 'BRAND' ? 'Product owner: Brand' : 'Product owner: Duncit';
 
   return (
     <Grid container spacing={2}>
@@ -27,7 +29,7 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
           color="primary"
           variant="outlined"
           icon={<VerifiedIcon />}
-          label="Product owner: Duncit"
+          label={ownerLabel}
         />
       </Grid>
       <Grid item xs={12} sm={8}>

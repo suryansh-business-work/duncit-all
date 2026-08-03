@@ -91,6 +91,100 @@ describe('ecommBrandService integration', () => {
   });
 });
 
+describe('Brands Review inbox (products portal, PRODUCTS_MANAGER)', () => {
+  // The products portal admits PRODUCTS_MANAGER only (app-config requiredRoles),
+  // and its /ecomm/brands inbox reads ecommBrandsTable + ecommBrand and decides
+  // with approveEcommBrand/rejectEcommBrand. If that role loses BRAND_REVIEW the
+  // whole inbox 403s and a partner's SUBMITTED brand is invisible again.
+  const asProducts = () => makeContext({ roles: ['PRODUCTS_MANAGER'] });
+
+  const seedSubmitted = async (brandName: string) => {
+    const brand = await EcommBrandModel.create({
+      owner_user_id: new Types.ObjectId(),
+      brand_name: brandName,
+      status: 'SUBMITTED',
+      submitted_at: new Date(),
+      contact_email: `${brandName.toLowerCase().replaceAll(' ', '-')}@x.com`,
+    });
+    return String(brand._id);
+  };
+
+  it('lists a partner-submitted brand and reads it back', async () => {
+    const id = await seedSubmitted('Inbox Co');
+    await EcommBrandModel.create({
+      owner_user_id: new Types.ObjectId(),
+      brand_name: 'Live Co',
+      status: 'APPROVED',
+    });
+    const Q = ecommBrandResolvers.Query as any;
+
+    // The inbox opens on the SUBMITTED tab, so this is exactly what an admin
+    // sees on page load without touching a filter.
+    const page = await Q.ecommBrandsTable(
+      {},
+      { query: { filters: [{ field: 'status', op: 'eq', value: 'SUBMITTED' }] } },
+      asProducts()
+    );
+    expect(page.rows.map((b: any) => b.brand_name)).toEqual(['Inbox Co']);
+
+    // Row click → the detail page reads the same brand at SUBMITTED.
+    const one = await Q.ecommBrand({}, { brand_doc_id: id }, asProducts());
+    expect(one.status).toBe('SUBMITTED');
+
+    // A role the portal never admits is still refused.
+    expect(() => Q.ecommBrandsTable({}, {}, makeContext({ roles: ['USER'] }))).toThrow(
+      /access denied/i
+    );
+  });
+
+  it('approves and rejects, and manages a brand from Catalog', async () => {
+    const { userService } = await import('@modules/access/user/user.service');
+    const assignSpy = jest.spyOn(userService, 'assignRoles').mockResolvedValue(undefined as never);
+    const M = ecommBrandResolvers.Mutation as any;
+
+    const approvable = await seedSubmitted('Approve Co');
+    const approved = await M.approveEcommBrand(
+      {},
+      { brand_doc_id: approvable, notes: 'Docs verified', tags: ['decor'] },
+      asProducts()
+    );
+    expect(approved.status).toBe('APPROVED');
+
+    const rejectable = await seedSubmitted('Reject Co');
+    const rejected = await M.rejectEcommBrand(
+      {},
+      { brand_doc_id: rejectable, notes: 'GSTIN does not match the PAN' },
+      asProducts()
+    );
+    expect(rejected.status).toBe('REJECTED');
+    expect(rejected.reviewer_notes).toBe('GSTIN does not match the PAN');
+
+    // Catalog > Brands > Manage: edit, commission and visibility, no approvals.
+    const edited = await M.adminUpdateEcommBrand(
+      {},
+      { brand_doc_id: approvable, input: { tagline: 'Handmade at home' } },
+      asProducts()
+    );
+    expect(edited.tagline).toBe('Handmade at home');
+    expect(edited.status).toBe('APPROVED'); // omitting `status` never re-decides
+
+    const priced = await M.setBrandCommission(
+      {},
+      { brand_doc_id: approvable, product_commission_pct: 11 },
+      asProducts()
+    );
+    expect(priced.product_commission_pct).toBe(11);
+
+    const hidden = await M.setEcommBrandActive(
+      {},
+      { brand_doc_id: approvable, active: false },
+      asProducts()
+    );
+    expect(hidden.is_active).toBe(false);
+    assignSpy.mockRestore();
+  });
+});
+
 describe('ecommBrand table queries (shared table engine)', () => {
   it('serves ecommBrandsTable with search, filters, sort and paging', async () => {
     const owner = new Types.ObjectId();

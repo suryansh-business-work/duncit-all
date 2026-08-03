@@ -6,8 +6,16 @@ import { requireRole } from '@middleware/rbac';
 import { ADMIN_RW } from '@modules/venues/inventory/inventory.resolver';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 
-// Onboarding managers review brands; admins can too.
-const BRAND_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+// Onboarding managers review brands; admins can too. PRODUCTS_MANAGER is the
+// products portal's role — its Brands Review inbox and Catalog > Brands screens
+// read/decide on brands through these resolvers.
+const BRAND_REVIEW = [
+  'SUPER_ADMIN',
+  'CITY_ADMIN',
+  'ZONAL_ADMIN',
+  'ONBOARDING_MANAGER',
+  'PRODUCTS_MANAGER',
+];
 // Permanent hard-delete is a developer-only action.
 const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 

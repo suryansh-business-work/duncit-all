@@ -6,6 +6,9 @@ afterEach(() => {
   vi.resetModules();
 });
 
+const flattenNav = (items: typeof appConfig.nav = appConfig.nav): typeof appConfig.nav =>
+  items.flatMap((item) => [item, ...flattenNav(item.children ?? [])]);
+
 describe('Duncit Products app config', () => {
   it('declares the expected identity', () => {
     expect(appConfig.key).toBe('products');
@@ -28,21 +31,39 @@ describe('Duncit Products app config', () => {
   });
 
   it('exposes the inventory, ecomm and orders nav entries', () => {
-    const flatten = (items: typeof appConfig.nav): typeof appConfig.nav =>
-      items.flatMap((item) => [item, ...flatten(item.children ?? [])]);
-    const targets = flatten(appConfig.nav)
+    const targets = flattenNav()
       .map((n) => n.to)
       .filter(Boolean);
     expect(targets).toEqual(
       expect.arrayContaining([
         '/',
         '/inventory',
+        '/catalog/brands',
         '/ecomm/product-requests',
         '/ecomm/brands',
         '/orders',
         '/settings/warehouses',
       ]),
     );
+  });
+
+  it('keeps the catalogue and the review inbox in separate nav sections', () => {
+    const catalog = appConfig.nav.find((item) => item.label === 'Catalog');
+    expect(catalog?.children?.map((c) => [c.label, c.to])).toEqual([
+      ['Duncit Products', '/inventory'],
+      ['Brands', '/catalog/brands'],
+    ]);
+    const review = appConfig.nav.find((item) => item.label === 'Brands & Products Review');
+    expect(review?.children?.map((c) => [c.label, c.to])).toEqual([
+      ['Brands Review', '/ecomm/brands'],
+      ['Products Reviews', '/ecomm/product-requests'],
+    ]);
+    // The change-request pages are a different feature and stay put.
+    const requests = appConfig.nav.find((item) => item.label === 'Ecomm Requests');
+    expect(requests?.children?.map((c) => c.to)).toEqual([
+      '/ecomm/brand-request',
+      '/ecomm/product-request',
+    ]);
   });
 
   it('honours VITE_REQUIRED_ROLES and VITE_LOGIN_IMAGE when provided', async () => {

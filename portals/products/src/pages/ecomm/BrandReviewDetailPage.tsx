@@ -18,17 +18,22 @@ import { StatusChip } from '@duncit/ui';
 import BrandProductsTable from './BrandProductsTable';
 import BrandPickupPanel from './BrandPickupPanel';
 import { BRAND_STATUS_COLOR } from './brandStatus';
-import { MARKETPLACE_BRANDS } from './queries';
+import { ECOMM_BRAND } from './queries';
 
-export default function EcommBrandDetailPage() {
+export default function BrandReviewDetailPage() {
   const navigate = useNavigate();
   const { brandId = '' } = useParams<{ brandId: string }>();
 
-  const brandsQuery = useQuery(MARKETPLACE_BRANDS, { fetchPolicy: 'cache-and-network' });
+  // `ecommBrand` resolves a brand at ANY status; the marketplace queries are
+  // approved-only, so a row opened from the review inbox showed "not found".
+  const brandQuery = useQuery(ECOMM_BRAND, {
+    variables: { brand_doc_id: brandId },
+    fetchPolicy: 'cache-and-network',
+  });
 
-  const brand = (brandsQuery.data?.marketplaceBrands ?? []).find((item: any) => item.id === brandId);
+  const brand = brandQuery.data?.ecommBrand;
 
-  if (brandsQuery.loading && !brandsQuery.data) {
+  if (brandQuery.loading && !brandQuery.data) {
     return (
       <Stack alignItems="center" sx={{ py: 8 }}>
         <CircularProgress />
@@ -43,7 +48,7 @@ export default function EcommBrandDetailPage() {
         onClick={() => navigate('/ecomm/brands')}
         sx={{ alignSelf: 'flex-start' }}
       >
-        Back to brands
+        Back to Brands Review
       </Button>
 
       {brand ? (
@@ -91,7 +96,7 @@ export default function EcommBrandDetailPage() {
           </Card>
         </>
       ) : (
-        <Alert severity="warning">Brand not found or not currently listed.</Alert>
+        <Alert severity="warning">Brand not found.</Alert>
       )}
     </Stack>
   );

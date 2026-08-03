@@ -149,6 +149,17 @@ describe('ProductPageHeader', () => {
     await waitFor(() => expect(props.onError).toHaveBeenCalledWith('restore failed'));
   });
 
+  it('keeps the breadcrumb and the duplicate redirect inside the brand catalogue', async () => {
+    fns.duplicate.mockResolvedValue({ data: { duplicateInventoryProduct: { id: 'p2' } } });
+    renderHeader({ brandId: 'b1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Brand products' }));
+    expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products');
+    fireEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    await waitFor(() =>
+      expect(nav.fn).toHaveBeenCalledWith('/catalog/brands/b1/products/p2/edit'),
+    );
+  });
+
   it('falls back to a generic breadcrumb label when the product has no name', () => {
     renderHeader({ product: { ...activeProduct, product_name: '' } });
     // Breadcrumb uses `product_name || 'Edit product'` when the name is blank.

@@ -8,9 +8,9 @@ import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
 
 /**
- * Header avatar that opens the account drawer — the mobile twin of mWeb's
- * header <Avatar> + <ProfileDrawer> pair. Navigates to the routable /menu
- * overlay (so Back/refresh work). Falls back to the user's initial.
+ * Header avatar that opens the account menu — the mobile twin of mWeb's header
+ * <Avatar>, which navigates to the same /menu route (a real page on both, so
+ * Back/refresh work). Falls back to the user's initial.
  */
 export function AccountButton() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

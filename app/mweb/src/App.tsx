@@ -36,8 +36,12 @@ export default function App() {
   const location = useLocation();
   const fullBleed = location.pathname.startsWith('/explore');
   const isSignupSurvey = location.pathname.startsWith('/signup-survey');
-  const showAppHeader = isAuthed;
-  const showBottomNav = isAuthed && !isSignupSurvey;
+  // The account menu owns the whole viewport (it carries its own title + ✕),
+  // exactly like the full-screen drawer it replaced. A trailing slash still
+  // resolves to the same route, so normalise before comparing.
+  const isMenu = location.pathname === '/menu' || location.pathname === '/menu/';
+  const showAppHeader = isAuthed && !isMenu;
+  const showBottomNav = isAuthed && !isSignupSurvey && !isMenu;
   const navPadBottom = showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : '0px';
   const contentPadBottom = fullBleed ? 0 : `calc(${navPadBottom} + ${APP_BANNER_CONTENT_OFFSET})`;
 
@@ -101,7 +105,10 @@ export default function App() {
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',
           position: 'relative',
-          px: fullBleed ? 0 : { xs: 1.25, sm: 2 },
+          // The menu keeps the gutters at 0 (edge-to-edge, like the drawer it
+          // replaced and like its native twin) but still scrolls, so it cannot
+          // ride the `fullBleed` flag — that also hides the overflow.
+          px: fullBleed || isMenu ? 0 : { xs: 1.25, sm: 2 },
           ...(isAuthed && {
             flex: 1,
             minHeight: 0,
@@ -110,8 +117,8 @@ export default function App() {
             overflowY: fullBleed ? 'hidden' : 'auto',
             scrollPaddingBottom: showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : undefined,
           }),
-          py: fullBleed ? 0 : 2,
-          pb: fullBleed ? 0 : 2,
+          py: fullBleed || isMenu ? 0 : 2,
+          pb: fullBleed || isMenu ? 0 : 2,
         }}
       >
         <ScrollToTop />

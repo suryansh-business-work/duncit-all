@@ -27,6 +27,7 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       preferences: 'Preferences',
     },
     home: {
+      closeMenu: 'Close menu',
       seeAll: 'See all',
       morePods: '+{count} more',
       searchPods: 'Search pods…',

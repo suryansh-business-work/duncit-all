@@ -84,6 +84,7 @@ const SavedItemsPage = lazy(() => import('../pages/SavedItemsPage'));
 const ClubsPage = lazy(() => import('../pages/ClubsPage'));
 const ChatsPage = lazy(() => import('../pages/ChatsPage'));
 const ChatRoomPage = lazy(() => import('../pages/ChatRoomPage'));
+const MenuPage = lazy(() => import('../pages/menu-page'));
 
 interface Props {
   superCategory: string;
@@ -121,6 +122,8 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
             />,
           )}
         />
+        {/* The account menu is a page, not a drawer — Back/refresh just work. */}
+        <Route path="/menu" element={withAuth(<MenuPage />)} />
         <Route path="/profile" element={withAuth(<ProfilePage />)} />
         <Route path="/post/:postId" element={withAuth(<PostPage />)} />
         <Route path="/follow" element={withAuth(<FollowPage superCategorySlug={superCategory} />)} />

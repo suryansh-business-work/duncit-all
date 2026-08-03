@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Avatar, Box, Chip, IconButton, Toolbar, Tooltip } from '@mui/material';
-import {
-  HEADER_DATA,
-  OPEN_LOCATION_PICKER_EVENT,
-  PUBLIC_POLICIES,
-  SET_MY_SELECTED_LOCATION,
-} from './queries';
+import { HEADER_DATA, OPEN_LOCATION_PICKER_EVENT, SET_MY_SELECTED_LOCATION } from './queries';
 import HeaderGreeting from './HeaderGreeting';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderSearchButton from './HeaderSearchButton';
 import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
-import ProfileDrawer from './ProfileDrawer';
 import StudioSwitchDialog from './profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from './SuperCategoryTabs';
 import HeaderCartButton from '../cart/HeaderCartButton';
@@ -43,29 +37,10 @@ export default function AppHeader({
   onZoneChange,
 }: Readonly<AppHeaderProps>) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
   const { logout: ctxLogout } = useUserData();
-  // The account drawer lives in URL history (?menu=open) so the browser Back
-  // button closes it instead of unloading the underlying full-screen page.
-  const menuOpen = searchParams.get('menu') === 'open';
-  const openMenu = () => {
-    const params = new URLSearchParams(location.search);
-    params.set('menu', 'open');
-    navigate({ search: `?${params.toString()}` });
-  };
-  const closeMenu = () => {
-    if (!menuOpen) return;
-    const idx = Number((globalThis.history.state as { idx?: number })?.idx ?? 0);
-    if (idx > 0) {
-      navigate(-1);
-      return;
-    }
-    const params = new URLSearchParams(location.search);
-    params.delete('menu');
-    const search = params.toString();
-    navigate({ search: search ? `?${search}` : '' }, { replace: true });
-  };
+  // The account menu is its own page (/menu) — opening it is a normal push, so
+  // Back returns here and a refresh keeps the user on the menu.
+  const openMenu = () => navigate('/menu');
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
   const [persistSelectedLocation] = useMutation(SET_MY_SELECTED_LOCATION, {
     onError: () => undefined,
@@ -73,7 +48,6 @@ export default function AppHeader({
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
-  const [policiesOpen, setPoliciesOpen] = useState(false);
   const [toast, setToast] = useState<{ title?: string; body?: string } | null>(null);
   const { mode: studioMode, setMode: setStudioMode } = useStudioMode();
   const [studioSwitchOpen, setStudioSwitchOpen] = useState(false);
@@ -131,9 +105,6 @@ export default function AppHeader({
     globalThis.addEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
     return () => globalThis.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
   }, [openLocationPicker]);
-
-  const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
-  const publicPolicies = policiesData?.publicPolicies ?? [];
 
   const logout = () => {
     ctxLogout();
@@ -245,15 +216,6 @@ export default function AppHeader({
                 </Avatar>
               </IconButton>
             </Tooltip>
-            <ProfileDrawer
-              open={menuOpen}
-              onClose={closeMenu}
-              me={me}
-              publicPolicies={publicPolicies}
-              policiesOpen={policiesOpen}
-              setPoliciesOpen={setPoliciesOpen}
-              onLogout={logout}
-            />
             <StudioSwitchDialog
               open={studioSwitchOpen}
               roles={me?.roles ?? []}

@@ -10,7 +10,7 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   ResetPassword: { email: string };
   Survey: undefined;
-  /** Account drawer as a routable overlay (URL /menu) — Back/refresh work. */
+  /** Account menu as its own page (URL /menu) — Back/refresh work. */
   Menu: undefined;
   Home: NavigatorScreenParams<TabParamList> | undefined;
   Search: undefined;

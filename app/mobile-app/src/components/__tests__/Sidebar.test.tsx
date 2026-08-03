@@ -40,13 +40,14 @@ beforeEach(() => {
 });
 
 describe('Sidebar', () => {
-  it('stays unmounted while closed', () => {
-    renderWithProviders(<Sidebar open={false} onClose={jest.fn()} />);
-    expect(screen.queryByTestId('sidebar-panel')).toBeNull();
+  it('renders as a full page (no drawer backdrop)', () => {
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
+    expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
+    expect(screen.queryByTestId('sidebar-backdrop')).toBeNull();
   });
 
   it('shows the USER profile cards, the switch-role button, logout and app version', () => {
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByText('Asha Roy')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-grid-earn')).toBeOnTheScreen();
@@ -59,7 +60,7 @@ describe('Sidebar', () => {
 
   it('opens the profile from the identity card', () => {
     const onClose = jest.fn();
-    renderWithProviders(<Sidebar open onClose={onClose} />);
+    renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-identity'));
     expect(onClose).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('Profile');
@@ -67,7 +68,7 @@ describe('Sidebar', () => {
 
   it('closes and navigates from a quick-grid tile, referral and manage rows', () => {
     const onClose = jest.fn();
-    renderWithProviders(<Sidebar open onClose={onClose} />);
+    renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
     expect(onClose).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('PodHistory');
@@ -78,14 +79,14 @@ describe('Sidebar', () => {
   });
 
   it('shows the incomplete banner and opens Account from it', () => {
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('profile-completion-cta'));
     expect(mockNavigate).toHaveBeenCalledWith('Account');
   });
 
   it('switches into Host Studio and keeps the unified card layout', () => {
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     // Dismissing via the backdrop keeps the current (USER) mode.
     fireEvent.press(screen.getByTestId('studio-switch-backdrop'));
@@ -100,7 +101,7 @@ describe('Sidebar', () => {
 
   it('logs out from the footer', () => {
     const onClose = jest.fn();
-    renderWithProviders(<Sidebar open onClose={onClose} />);
+    renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-logout'));
     expect(onClose).toHaveBeenCalled();
     expect(mockLogout).toHaveBeenCalled();
@@ -108,7 +109,7 @@ describe('Sidebar', () => {
 
   it('expands the policies group and navigates to a policy', () => {
     const onClose = jest.fn();
-    renderWithProviders(<Sidebar open onClose={onClose} />);
+    renderWithProviders(<Sidebar onClose={onClose} />);
     expect(screen.queryByTestId('sidebar-policy-terms')).toBeNull();
     fireEvent.press(screen.getByText('Policies'));
     fireEvent.press(screen.getByTestId('sidebar-policy-terms'));
@@ -116,19 +117,18 @@ describe('Sidebar', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Policy', { slug: 'terms' });
   });
 
-  it('closes from the backdrop and the close button', () => {
+  it('closes from the close button', () => {
     const onClose = jest.fn();
-    renderWithProviders(<Sidebar open onClose={onClose} />);
-    fireEvent.press(screen.getByTestId('sidebar-backdrop'));
+    renderWithProviders(<Sidebar onClose={onClose} />);
     fireEvent.press(screen.getByTestId('sidebar-close'));
-    expect(onClose).toHaveBeenCalledTimes(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it('renders the dark-mode icon when the dark scheme is active', () => {
     const { useThemeStore } = jest.requireActual('@/stores/theme.store');
     const original = useThemeStore.getState();
     useThemeStore.setState({ ...original, scheme: 'dark' });
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('sidebar-theme-switch').props.value).toBe(true);
     useThemeStore.setState(original);
   });
@@ -138,7 +138,7 @@ describe('Sidebar', () => {
     const { useThemeStore } = jest.requireActual('@/stores/theme.store');
     const original = useThemeStore.getState();
     useThemeStore.setState({ ...original, toggle });
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     fireEvent(screen.getByTestId('sidebar-theme-switch'), 'valueChange', true);
     expect(toggle).toHaveBeenCalled();
     useThemeStore.setState(original);

@@ -102,8 +102,11 @@ describe('ProfileDrawer', () => {
     fireEvent.click(screen.getByText('Switch role'));
     // Dialog title appears
     expect(screen.getByRole('heading', { name: 'Switch role' })).toBeInTheDocument();
-    // Pick the Venue Studio bubble
+    // Picking the Venue Studio bubble only stages the choice.
     fireEvent.click(screen.getByRole('button', { name: 'Venue Studio' }));
+    expect(studioState.setMode).not.toHaveBeenCalled();
+    // Confirming is what actually switches.
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to Venue Studio' }));
     expect(studioState.setMode).toHaveBeenCalledWith('VENUE');
     expect(mockNavigate).toHaveBeenCalledWith('/venues/manage');
   });

@@ -89,6 +89,7 @@ describe('AppHeader', () => {
     // Reopen and switch back to User.
     fireEvent.press(screen.getByTestId('header-studio-badge'));
     fireEvent.press(screen.getByTestId('studio-switch-USER'));
+    fireEvent.press(screen.getByTestId('studio-switch-confirm'));
     expect(screen.queryByTestId('header-studio-badge')).toBeNull();
   });
 

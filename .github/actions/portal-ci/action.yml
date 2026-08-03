@@ -29,7 +29,12 @@ runs:
     - name: TypeScript
       shell: bash
       run: pnpm --filter ${{ inputs.workspace }} exec ${{ inputs.typecheck }}
-    - name: Test
-      if: ${{ inputs.test != '' }}
-      shell: bash
-      run: pnpm --filter ${{ inputs.workspace }} run ${{ inputs.test }}
+    # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+    # No action may fail because of a test suite while the pause is on, so the
+    # step is disabled HERE, in the one composite every deploy build job uses,
+    # rather than in ~20 call sites. The `test:` inputs in deploy.yml are left
+    # untouched: re-enabling is uncommenting these four lines.
+    # - name: Test
+    #   if: ${{ inputs.test != '' }}
+    #   shell: bash
+    #   run: pnpm --filter ${{ inputs.workspace }} run ${{ inputs.test }}

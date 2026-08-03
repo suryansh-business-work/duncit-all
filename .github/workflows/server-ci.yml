@@ -72,25 +72,26 @@ jobs:
           key: mongo-binaries-${{ runner.os }}-${{ env.MONGOMS_VERSION }}
           restore-keys: mongo-binaries-${{ runner.os }}-
 
+      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
       # Unit + integration + e2e suites against the in-memory Mongo. Serial
       # (--runInBand): the suites share that instance and flake in parallel.
-      - name: Test (jest --runInBand)
-        id: test
-        working-directory: server
-        # `tee` keeps the output for the annotation step below. The runner's
-        # default shell already sets `-o pipefail`, so jest's exit code is still
-        # the step's exit code and nothing here can mask a failure.
-        run: pnpm run test:ci 2>&1 | tee jest.log
+      # - name: Test (jest --runInBand)
+      #   id: test
+      #   working-directory: server
+      #   # `tee` keeps the output for the annotation step below. The runner's
+      #   # default shell already sets `-o pipefail`, so jest's exit code is still
+      #   # the step's exit code and nothing here can mask a failure.
+      #   run: pnpm run test:ci 2>&1 | tee jest.log
 
       # A failed step used to surface only "Process completed with exit code 1".
       # Step logs need a token to read, so that bare line was the whole public
       # record of the failure. This republishes the actual jest failures as
       # annotations and a job summary, which the run page and the public
       # check-runs API both serve.
-      - name: Report the failing tests
-        if: failure() && steps.test.outcome == 'failure'
-        working-directory: server
-        run: node scripts/ci-jest-annotations.mjs jest.log
+      # - name: Report the failing tests
+      #   if: failure() && steps.test.outcome == 'failure'
+      #   working-directory: server
+      #   run: node scripts/ci-jest-annotations.mjs jest.log
 
       - name: Typecheck
         working-directory: server

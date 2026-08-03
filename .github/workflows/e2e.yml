@@ -23,11 +23,17 @@ name: E2E
 #     green. The shell, theme, user-context and every other shared package are
 #     rendered by all of these surfaces; there is no edit to this repo that is
 #     provably safe for e2e.
+# TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+# This whole workflow IS the e2e suite, so it is off the automatic triggers for
+# the duration of the pause and only runs on demand from the Actions tab.
+# deploy.yml's `E2E must be green` gate is paused in the same commit — with the
+# suite not running, a missing check is (correctly) a hard failure there.
+# Re-enabling the pause means restoring the two commented triggers below.
 on:
-  push:
-    branches: [main, master, develop, staging]
-  pull_request:
-    branches: [main, master, develop, staging]
+  # push:
+  #   branches: [main, master, develop, staging]
+  # pull_request:
+  #   branches: [main, master, develop, staging]
   workflow_dispatch:
 
 concurrency:

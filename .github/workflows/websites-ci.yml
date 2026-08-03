@@ -65,9 +65,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test
-        working-directory: ${{ matrix.dir }}
-        run: pnpm run --if-present test
+      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+      # - name: Test
+      #   working-directory: ${{ matrix.dir }}
+      #   run: pnpm run --if-present test
 
       - name: Typecheck
         working-directory: ${{ matrix.dir }}

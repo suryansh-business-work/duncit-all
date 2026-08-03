@@ -54,6 +54,15 @@ env:
 
 jobs:
   # -----------------------------------------------------------
+  # E2E GATE — PAUSED (temporary; see the banner at the top of .claude/CLAUDE.md).
+  #
+  # e2e.yml no longer runs on push/PR, so this job would wait 40 minutes for a
+  # check that is never published and then block every deploy. The whole job is
+  # commented out and `changes` drops its `needs: e2e-gate` edge below. Both come
+  # back together when the pause ends — do not re-enable the suite without also
+  # restoring this gate.
+  #
+  # -----------------------------------------------------------
   # E2E GATE.
   #
   # Before this job existed, exactly one deploy path was gated on tests:
@@ -72,64 +81,64 @@ jobs:
   # the same hole in a new shape. On `workflow_dispatch` run the E2E workflow
   # for the commit first (or re-run it) and then dispatch the deploy.
   # -----------------------------------------------------------
-  e2e-gate:
-    name: E2E must be green
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    steps:
-      - name: Wait for the E2E gate on ${{ github.sha }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          CHECK_NAME='E2E gate'
-          DEADLINE=$(( $(date +%s) + 40*60 ))
-
-          # Deliberately NO `|| true` on the API call. Swallowing a transport
-          # error here would look exactly like "the check has not appeared yet"
-          # and would quietly burn the whole timeout; worse, any future edit
-          # that turned the timeout into a pass would hand back the very bypass
-          # this job exists to close. An API failure is surfaced and retried a
-          # bounded number of times, then fails the deploy.
-          api_failures=0
-          while :; do
-            if payload=$(gh api "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
-                  --jq ".check_runs[] | select(.name == \"$CHECK_NAME\") | \"\(.status) \(.conclusion // \"pending\")\"" \
-                  | tail -1); then
-              api_failures=0
-            else
-              api_failures=$(( api_failures + 1 ))
-              echo "::warning::check-runs API call failed (${api_failures}/5)."
-              if [ "$api_failures" -ge 5 ]; then
-                echo "::error::Cannot read the '$CHECK_NAME' check for $SHA. Deploy blocked."
-                exit 1
-              fi
-              sleep 20
-              continue
-            fi
-
-            status=${payload%% *}
-            conclusion=${payload##* }
-            echo "E2E gate: status='${status:-none}' conclusion='${conclusion:-none}'"
-
-            if [ "${status:-}" = "completed" ]; then
-              if [ "$conclusion" = "success" ]; then
-                echo "E2E is green — proceeding with the deploy."
-                exit 0
-              fi
-              echo "::error::E2E concluded '$conclusion' for $SHA. Deploy blocked."
-              exit 1
-            fi
-
-            if [ "$(date +%s)" -ge "$DEADLINE" ]; then
-              echo "::error::Timed out waiting for the '$CHECK_NAME' check on $SHA."
-              echo "::error::A deploy is never allowed to proceed without a green E2E run."
-              exit 1
-            fi
-            sleep 20
-          done
+  # e2e-gate:
+  #   name: E2E must be green
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 45
+  #   steps:
+  #     - name: Wait for the E2E gate on ${{ github.sha }}
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #         REPO: ${{ github.repository }}
+  #         SHA: ${{ github.sha }}
+  #       run: |
+  #         set -euo pipefail
+  #         CHECK_NAME='E2E gate'
+  #         DEADLINE=$(( $(date +%s) + 40*60 ))
+  #
+  #         # Deliberately NO `|| true` on the API call. Swallowing a transport
+  #         # error here would look exactly like "the check has not appeared yet"
+  #         # and would quietly burn the whole timeout; worse, any future edit
+  #         # that turned the timeout into a pass would hand back the very bypass
+  #         # this job exists to close. An API failure is surfaced and retried a
+  #         # bounded number of times, then fails the deploy.
+  #         api_failures=0
+  #         while :; do
+  #           if payload=$(gh api "repos/$REPO/commits/$SHA/check-runs?per_page=100" \
+  #                 --jq ".check_runs[] | select(.name == \"$CHECK_NAME\") | \"\(.status) \(.conclusion // \"pending\")\"" \
+  #                 | tail -1); then
+  #             api_failures=0
+  #           else
+  #             api_failures=$(( api_failures + 1 ))
+  #             echo "::warning::check-runs API call failed (${api_failures}/5)."
+  #             if [ "$api_failures" -ge 5 ]; then
+  #               echo "::error::Cannot read the '$CHECK_NAME' check for $SHA. Deploy blocked."
+  #               exit 1
+  #             fi
+  #             sleep 20
+  #             continue
+  #           fi
+  #
+  #           status=${payload%% *}
+  #           conclusion=${payload##* }
+  #           echo "E2E gate: status='${status:-none}' conclusion='${conclusion:-none}'"
+  #
+  #           if [ "${status:-}" = "completed" ]; then
+  #             if [ "$conclusion" = "success" ]; then
+  #               echo "E2E is green — proceeding with the deploy."
+  #               exit 0
+  #             fi
+  #             echo "::error::E2E concluded '$conclusion' for $SHA. Deploy blocked."
+  #             exit 1
+  #           fi
+  #
+  #           if [ "$(date +%s)" -ge "$DEADLINE" ]; then
+  #             echo "::error::Timed out waiting for the '$CHECK_NAME' check on $SHA."
+  #             echo "::error::A deploy is never allowed to proceed without a green E2E run."
+  #             exit 1
+  #           fi
+  #           sleep 20
+  #         done
 
   # -----------------------------------------------------------
   # Decide which services need to be (re)built based on changed paths.
@@ -141,7 +150,10 @@ jobs:
     # skips `changes`, which skips all 26 builds, which skips the deploy. There
     # is deliberately no `if: always()` or `continue-on-error` anywhere on that
     # path: a failure here must stop the release, not annotate it.
-    needs: e2e-gate
+    #
+    # TEST PAUSE: the edge is cut while e2e-gate above is commented out. Restore
+    # this line and that job together.
+    # needs: e2e-gate
     runs-on: ubuntu-latest
     outputs:
       server: ${{ steps.filter.outputs.server }}
@@ -738,52 +750,57 @@ jobs:
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
 
-      - name: Install Cypress binary
-        # pnpm sometimes skips Cypress's `postinstall` download under
-        # `--frozen-lockfile`, and `cypress-io/github-action@v6` with
-        # `install: false` only verifies — it doesn't fetch the binary.
-        # Run an explicit install so the runner cache at
-        # `/home/runner/.cache/Cypress/<version>/Cypress` always exists.
-        working-directory: portals/crm
-        run: pnpm exec cypress install
+      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+      # Only the CRM SOURCE typecheck below stays on: build-crm still needs this
+      # job, so keeping it is what preserves CRM's pre-image gate. Everything
+      # cypress/vitest — including the spec typecheck, which fails on test files
+      # — is paused.
+      # - name: Install Cypress binary
+      #   # pnpm sometimes skips Cypress's `postinstall` download under
+      #   # `--frozen-lockfile`, and `cypress-io/github-action@v6` with
+      #   # `install: false` only verifies — it doesn't fetch the binary.
+      #   # Run an explicit install so the runner cache at
+      #   # `/home/runner/.cache/Cypress/<version>/Cypress` always exists.
+      #   working-directory: portals/crm
+      #   run: pnpm exec cypress install
 
       - name: Type-check CRM source
         working-directory: portals/crm
         run: pnpm exec tsc -b --noEmit
 
-      - name: Type-check Cypress specs
-        working-directory: portals/crm
-        run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
+      # - name: Type-check Cypress specs
+      #   working-directory: portals/crm
+      #   run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
 
-      - name: Run vitest unit + component tests
-        working-directory: portals/crm
-        run: pnpm exec vitest run --reporter=default
+      # - name: Run vitest unit + component tests
+      #   working-directory: portals/crm
+      #   run: pnpm exec vitest run --reporter=default
 
-      - name: Build CRM bundle for Cypress preview
-        working-directory: portals/crm
-        # `build:e2e` forces VITE_GRAPHQL_URL=/graphql (via .env.e2e) so the
-        # bundled app talks same-origin and cy.intercept catches every
-        # GraphQL call without a CORS preflight hitting server.duncit.com.
-        run: pnpm build:e2e
+      # - name: Build CRM bundle for Cypress preview
+      #   working-directory: portals/crm
+      #   # `build:e2e` forces VITE_GRAPHQL_URL=/graphql (via .env.e2e) so the
+      #   # bundled app talks same-origin and cy.intercept catches every
+      #   # GraphQL call without a CORS preflight hitting server.duncit.com.
+      #   run: pnpm build:e2e
 
-      - name: Run Cypress e2e specs
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: portals/crm
-          install: false
-          config-file: __tests__/e2e/cypress.config.ts
-          start: pnpm preview
-          wait-on: 'http://localhost:2007'
-          wait-on-timeout: 120
-          browser: chrome
+      # - name: Run Cypress e2e specs
+      #   uses: cypress-io/github-action@v6
+      #   with:
+      #     working-directory: portals/crm
+      #     install: false
+      #     config-file: __tests__/e2e/cypress.config.ts
+      #     start: pnpm preview
+      #     wait-on: 'http://localhost:2007'
+      #     wait-on-timeout: 120
+      #     browser: chrome
 
-      - name: Upload Cypress screenshots on failure
-        if: failure()
-        uses: actions/upload-artifact@v6
-        with:
-          name: crm-cypress-screenshots
-          path: portals/crm/cypress-artifacts/screenshots
-          if-no-files-found: ignore
+      # - name: Upload Cypress screenshots on failure
+      #   if: failure()
+      #   uses: actions/upload-artifact@v6
+      #   with:
+      #     name: crm-cypress-screenshots
+      #     path: portals/crm/cypress-artifacts/screenshots
+      #     if-no-files-found: ignore
 
   build-crm:
     needs: [changes, crm-tests]

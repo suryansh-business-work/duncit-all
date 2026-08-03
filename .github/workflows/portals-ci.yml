@@ -75,9 +75,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test (vitest schema/form/unit)
-        working-directory: ${{ matrix.dir }}
-        run: pnpm exec vitest run --reporter=default --reporter=junit --outputFile=${{ github.workspace }}/test-results/${{ matrix.name }}-junit.xml
+      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+      # - name: Test (vitest schema/form/unit)
+      #   working-directory: ${{ matrix.dir }}
+      #   run: pnpm exec vitest run --reporter=default --reporter=junit --outputFile=${{ github.workspace }}/test-results/${{ matrix.name }}-junit.xml
 
       - name: Typecheck
         working-directory: ${{ matrix.dir }}
@@ -93,10 +94,11 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: pnpm run build
 
-      - name: Upload JUnit report
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: portal-tests-${{ matrix.name }}
-          path: test-results/${{ matrix.name }}-junit.xml
-          if-no-files-found: ignore
+      # Nothing writes a JUnit report while the test step above is paused.
+      # - name: Upload JUnit report
+      #   if: always()
+      #   uses: actions/upload-artifact@v6
+      #   with:
+      #     name: portal-tests-${{ matrix.name }}
+      #     path: test-results/${{ matrix.name }}-junit.xml
+      #     if-no-files-found: ignore

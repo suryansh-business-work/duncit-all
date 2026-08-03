@@ -1,7 +1,6 @@
 export interface CompletePodValues {
   host_user_id: string;
   venue_bill_amount: number;
-  bill_url: string;
   media_text: string;
   notes: string;
 }

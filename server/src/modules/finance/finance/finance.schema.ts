@@ -364,7 +364,6 @@ export const financeTypeDefs = /* GraphQL */ `
   input CompletePodInput {
     pod_id: ID!
     venue_bill_amount: Float!
-    bill_url: String
     host_user_id: ID
     evidence_media: [PaymentReleaseMediaInput!]
     notes: String

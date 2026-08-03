@@ -84,7 +84,6 @@ async function seedCanonicalPod() {
 const completeInput = (podId: Types.ObjectId) => ({
   pod_id: String(podId),
   venue_bill_amount: 0,
-  bill_url: 'https://x.com/bill.pdf',
   evidence_media: [{ url: 'https://x.com/party.jpg' }],
 });
 

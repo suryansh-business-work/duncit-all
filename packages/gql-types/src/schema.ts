@@ -1578,7 +1578,6 @@ export type CommunicationLogPage = {
 };
 
 export type CompletePodInput = {
-  bill_url?: InputMaybe<Scalars['String']['input']>;
   evidence_media?: InputMaybe<Array<PaymentReleaseMediaInput>>;
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;

@@ -10,9 +10,7 @@ export default defineConfig({
       reporter: ['text-summary', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**'],
-      // The Tamagui views only render under Metro/React Native, so they are
-      // covered by the app's own suite rather than this jsdom one.
-      exclude: ['src/**/index.ts', 'src/**/*.d.ts', 'src/native/**'],
+      exclude: ['src/**/index.ts', 'src/**/*.d.ts'],
       thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },

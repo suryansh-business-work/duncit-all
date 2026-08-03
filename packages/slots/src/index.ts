@@ -2,10 +2,14 @@
  * @duncit/slots — one slot-selection experience for every surface.
  *
  * This entry point is framework-free, so React Native, the browser and Node can
- * all import it. The views live behind subpaths so a consumer never pulls in the
- * other platform's UI toolkit:
- *   - `@duncit/slots/mui`    — portals + mWeb (MUI + MUIX DateCalendar)
- *   - `@duncit/slots/native` — the app (Tamagui)
+ * all import it. `@duncit/slots/mui` adds the MUI calendar for the portals and
+ * mWeb.
+ *
+ * The app renders these same helpers through its own Tamagui view in
+ * `app/mobile-app/src/components/slots/`. It lives there, not here, because the
+ * native app compiles linked packages from their own SOURCE — a `react` or
+ * `tamagui` import inside this package resolves by walking up from
+ * `packages/slots/` and finds nothing in CI or Docker.
  */
 export {
   groupSlotsByDay,

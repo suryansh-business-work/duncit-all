@@ -1,6 +1,6 @@
 ---
 name: '@duncit/slots'
-summary: 'One slot-selection experience for every surface: pick a date on a calendar, then a time on that date. Framework-free logic at the root, the MUI calendar behind /mui, the Tamagui one behind /native.'
+summary: 'One slot-selection experience for every surface: pick a date on a calendar, then a time on that date. Framework-free logic at the root, the MUI calendar behind /mui; the app renders the same logic through its own Tamagui view.'
 category: 'ui'
 zeroDeps: true
 frameworkFree: false
@@ -45,17 +45,19 @@ This package is the single answer: one set of helpers that group and label slots
 admin-configured formatter, and two thin views — MUI and Tamagui — that render the identical
 two steps from those helpers.
 
-## The three entry points
+## Where each piece lives
 
 | Import | Contains | Used by |
 | --- | --- | --- |
 | `@duncit/slots` | Types and pure functions. No React, no toolkit. | everything, including Node and tests |
 | `@duncit/slots/mui` | `SlotCalendar` on MUIX `DateCalendar` | the portals and mWeb |
-| `@duncit/slots/native` | `SlotCalendar` on a hand-drawn Tamagui month grid | the app |
+| — | the app renders the same logic through its own Tamagui view in `app/mobile-app/src/components/slots/` | the app |
 
-Native never resolves `/mui` and the portals never resolve `/native`, so neither build pulls in
-the other toolkit. Expo SDK 54 honours package `exports`, which is what makes the split work
-under Metro.
+The Tamagui view lives in the app rather than here on purpose: the native app typechecks and
+bundles linked packages from their own SOURCE, so a `react`/`tamagui` import inside this package
+resolves by walking up from `packages/slots/` and finds nothing in CI or Docker. Keeping the
+view in the app is what every other native-consumed package already does — the two calendars
+still render the same steps from the same helpers.
 
 ## The one slot shape
 
@@ -118,5 +120,4 @@ app, `shell.slots.*` for the portals.
 
 ## Coverage
 
-100/100/100/100 on `src/**`, excluding `src/native/**`: the Tamagui views only render under
-Metro, so the app's own suite covers them.
+100/100/100/100 on `src/**`. The app's Tamagui view is covered by the app's own suite.

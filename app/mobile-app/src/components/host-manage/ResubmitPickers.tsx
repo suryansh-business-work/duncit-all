@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
 import { buildSlotLabels } from '@duncit/slots';
-import { SlotCalendar } from '@duncit/slots/native';
+import { SlotCalendar } from '@/components/slots';
 
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';

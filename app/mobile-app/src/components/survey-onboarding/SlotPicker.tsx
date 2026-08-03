@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { mwebCurrentLabel, mwebMeetingLabels } from '@duncit/slots';
-import { SlotCalendar } from '@duncit/slots/native';
+import { SlotCalendar } from '@/components/slots';
 
 import { useDateFormat } from '@/hooks/useDateFormat';
 import { useTranslation } from '@/hooks/useTranslation';

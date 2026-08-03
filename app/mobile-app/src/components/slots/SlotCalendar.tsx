@@ -8,9 +8,9 @@ import {
   slotDayKeys,
   slotPriceLabel,
   slotTimeLabel,
-} from '../group';
-import { monthKeyOf } from '../month';
-import type { CalendarSlot, SlotFormatter, SlotLabels } from '../types';
+} from '@duncit/slots';
+import { monthKeyOf } from '@duncit/slots';
+import type { CalendarSlot, SlotFormatter, SlotLabels } from '@duncit/slots';
 import SlotMonthGrid from './SlotMonthGrid';
 
 export interface SlotCalendarProps {
@@ -135,11 +135,7 @@ export default function SlotCalendar({
                   alignItems="center"
                   pressStyle={slot.disabled ? undefined : { opacity: 0.7 }}
                 >
-                  <Text
-                    fontSize={14}
-                    fontWeight="900"
-                    color={selected ? '$onPrimary' : '$color'}
-                  >
+                  <Text fontSize={14} fontWeight="900" color={selected ? '$onPrimary' : '$color'}>
                     {time}
                   </Text>
                   {secondary ? (

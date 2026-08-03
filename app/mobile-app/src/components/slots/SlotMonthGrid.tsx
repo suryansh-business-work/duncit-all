@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { addMonths, buildMonthGrid, clampMonth, monthKeyOf, weekdayInitials } from '../month';
+import { addMonths, buildMonthGrid, clampMonth, monthKeyOf, weekdayInitials } from '@duncit/slots';
 
 export interface SlotMonthGridProps {
   monthKey: string;

@@ -180,7 +180,9 @@ export function EmailVerificationSection({
 
       <PrimaryButton
         testID="email-verification-submit"
-        label={verifying ? 'Verifying…' : 'Verify'}
+        // PrimaryButton swaps the label for a Spinner while loading, so a
+        // "Verifying…" branch here would never render.
+        label="Verify"
         loading={verifying}
         disabled={verifying || !otpValid}
         onPress={verify}

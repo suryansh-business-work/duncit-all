@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ClubFormConfig } from './types';
+import type { ClubFormConfig, ClubFormValues } from './types';
 
 /** True when the value is an http(s) link. Mirrors the admin `isLink`. */
 const isLink = (value: string) => /^https?:\/\/\S+/i.test(value.trim());
@@ -13,13 +13,73 @@ const faqSchema = z.object({
   answer: z.string().default(''),
 });
 
+/** Plain "this text is required" fields, in their declared order. */
+const REQUIRED_TEXT: ReadonlyArray<readonly [field: 'club_name' | 'club_description', message: string]> = [
+  ['club_name', 'Club name is required'],
+  ['club_description', 'A short description is required'],
+];
+
+/** Pick-one fields (ids from a picker). */
+const REQUIRED_IDS: ReadonlyArray<
+  readonly [field: 'super_category_id' | 'category_id' | 'location_id', message: string]
+> = [
+  ['super_category_id', 'Select a super category'],
+  ['category_id', 'Select a sub category'],
+  ['location_id', 'Select the club location'],
+];
+
+/** WhatsApp links: required AND well-formed. */
+const REQUIRED_LINKS: ReadonlyArray<readonly [field: 'community_link' | 'group_link', label: string]> = [
+  ['community_link', 'WhatsApp community link is required'],
+  ['group_link', 'WhatsApp group link is required'],
+];
+
+/** Bullet lists that need at least one non-blank entry. */
+const REQUIRED_BULLETS: ReadonlyArray<
+  readonly [field: 'who_we_are' | 'what_we_do' | 'perks' | 'values', message: string]
+> = [
+  ['who_we_are', 'Add at least one "Who we are" point'],
+  ['what_we_do', 'Add at least one "What we do" point'],
+  ['perks', 'Add at least one perk'],
+  ['values', 'Add at least one value'],
+];
+
+type AddIssue = (field: string, message: string) => void;
+
+/** The required-field rules every consumer shares, ported 1:1 from the admin
+ * `validateClub`. Kept out of the `superRefine` closure so the config-dependent
+ * rules beside it stay readable. */
+function addCoreIssues(values: ClubFormValues, add: AddIssue) {
+  for (const [field, message] of REQUIRED_TEXT) {
+    if (!values[field].trim()) add(field, message);
+  }
+  for (const [field, message] of REQUIRED_IDS) {
+    if (!values[field]) add(field, message);
+  }
+  for (const [field, message] of REQUIRED_BULLETS) {
+    if (!hasEntry(values[field])) add(field, message);
+  }
+  for (const [field, missingMessage] of REQUIRED_LINKS) {
+    const link = values[field];
+    if (!link.trim()) add(field, missingMessage);
+    else if (!isLink(link)) add(field, 'Enter a valid link (https://…)');
+  }
+  if (mediaCount(values.feature_text) < 1) add('feature_text', 'Add at least one feature image');
+}
+
 /**
  * Config-driven Zod factory. Ports the admin `validateClub` (clubValidation.ts)
  * 1:1 — identical required fields and identical messages — as a `superRefine`.
- * The config booleans gate which SECTIONS render (see ClubForm), not the core
- * required rules, so every consumer validates the club identically.
+ * The config booleans gate which SECTIONS render (see ClubForm); the core
+ * required rules are shared, so every consumer validates the club identically.
+ *
+ * The one config-dependent rule is the Club Admin: it is required, but only for
+ * the surfaces that actually render the picker (`showAdmins`). The partner /
+ * club-admin edit flow hides that section AND omits admin_user_ids from its
+ * submit (build-input.ts), so demanding it there would be an error the user can
+ * neither see nor clear.
  */
-export function makeClubSchema(_config: ClubFormConfig) {
+export function makeClubSchema(config: ClubFormConfig) {
   return z
     .object({
       id: z.string().optional(),
@@ -47,23 +107,12 @@ export function makeClubSchema(_config: ClubFormConfig) {
       const add = (path: string, message: string) =>
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message });
 
-      if (!values.club_name.trim()) add('club_name', 'Club name is required');
-      if (!values.club_description.trim()) add('club_description', 'A short description is required');
-      if (!values.super_category_id) add('super_category_id', 'Select a super category');
-      if (!values.category_id) add('category_id', 'Select a sub category');
-      if (!values.location_id) add('location_id', 'Select the club location');
-      if (mediaCount(values.feature_text) < 1) add('feature_text', 'Add at least one feature image');
+      addCoreIssues(values, add);
 
-      if (!values.community_link.trim()) add('community_link', 'WhatsApp community link is required');
-      else if (!isLink(values.community_link)) add('community_link', 'Enter a valid link (https://…)');
-
-      if (!values.group_link.trim()) add('group_link', 'WhatsApp group link is required');
-      else if (!isLink(values.group_link)) add('group_link', 'Enter a valid link (https://…)');
-
-      if (!hasEntry(values.who_we_are)) add('who_we_are', 'Add at least one "Who we are" point');
-      if (!hasEntry(values.what_we_do)) add('what_we_do', 'Add at least one "What we do" point');
-      if (!hasEntry(values.perks)) add('perks', 'Add at least one perk');
-      if (!hasEntry(values.values)) add('values', 'Add at least one value');
+      // Every club is administered by exactly one user.
+      if (config.showAdmins && !values.admin_user_ids.some((id) => id.trim())) {
+        add('admin_user_ids', 'Assign a Club Admin');
+      }
     });
 }
 

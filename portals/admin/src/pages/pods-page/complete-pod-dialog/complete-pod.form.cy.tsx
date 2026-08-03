@@ -6,7 +6,6 @@ import { buildWaterfallLines, type PodFinanceWaterfall } from '../../../componen
 const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   host_user_id: 'u1',
   venue_bill_amount: 1500,
-  bill_url: 'https://cdn.test/bill.pdf',
   media_text: 'https://cdn.test/party.jpg',
   notes: '',
   ...over,
@@ -27,12 +26,16 @@ describe('buildCompleteSchema', () => {
     expect(errorsOf(false, valid({ media_text: '' })).join(' ')).toMatch(/party/i);
   });
 
-  it('requires a bill amount + upload only for venue pods', () => {
-    const errs = errorsOf(true, valid({ venue_bill_amount: 0, bill_url: '' })).join(' ');
+  it('requires a bill amount only for venue pods', () => {
+    const errs = errorsOf(true, valid({ venue_bill_amount: 0 })).join(' ');
     expect(errs).toMatch(/venue bill/i);
-    expect(errs).toMatch(/bill upload/i);
-    // Virtual pod (no venue): no bill needed.
-    expect(errorsOf(false, valid({ venue_bill_amount: 0, bill_url: '' }))).toEqual([]);
+    // Virtual pod (no venue): no bill amount needed.
+    expect(errorsOf(false, valid({ venue_bill_amount: 0 }))).toEqual([]);
+  });
+
+  it('accepts a venue submission with no bill document', () => {
+    expect(errorsOf(true, valid())).toEqual([]);
+    expect(buildCompleteInput(valid(), 'pod1')).not.toHaveProperty('bill_url');
   });
 });
 

@@ -24,7 +24,7 @@ export const PodSettlementPreviewDocument = gql(`
   }
 `);
 
-/** Host completes a pod: enter venue bill + party media -> reconciled releases. */
+/** Host completes a pod: enter venue bill amount + party media -> reconciled releases. */
 export const CompletePodSettlementDocument = gql(`
   mutation MobileCompletePodSettlement($input: CompletePodInput!) {
     completePodSettlement(input: $input) {

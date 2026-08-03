@@ -14,7 +14,6 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSettlementPreview } from '@/hooks/useSettlementPreview';
 import { fireAndForget } from '@/utils/fire-and-forget';
-import { BillUploadField } from './BillUploadField';
 import { SettlementSummary } from './SettlementSummary';
 import {
   blankPodCompleteValues,
@@ -30,8 +29,8 @@ interface Props {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: enter the venue bill + upload party media. The split is
- * previewed live; on submit two payout releases are created for Finance (2). */
+/** Host completes a pod: enter the venue bill amount + upload party media. The
+ * split is previewed live; on submit two payout releases are created for Finance. */
 export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const hasVenue = !!pod?.venue_id;
@@ -101,31 +100,17 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                 <ScrollView showsVerticalScrollIndicator={false}>
                   <YStack gap={12} paddingBottom={6}>
                     <Text fontSize={12.5} color="$muted">
-                      Upload party photos/videos (with the Duncit banner)
-                      {hasVenue ? ' and the venue bill' : ''}. Payouts are credited to the wallets
-                      on completion.
+                      Upload party photos/videos (with the Duncit banner). Payouts are credited to
+                      the wallets on completion.
                     </Text>
                     {hasVenue ? (
-                      <>
-                        <FormTextField
-                          control={control}
-                          name="venue_bill_amount"
-                          label="Venue Bill Amount"
-                          keyboardType="numeric"
-                          required
-                        />
-                        <Controller
-                          control={control}
-                          name="bill_url"
-                          render={({ field, fieldState }) => (
-                            <BillUploadField
-                              value={field.value}
-                              onChange={field.onChange}
-                              error={fieldState.error?.message}
-                            />
-                          )}
-                        />
-                      </>
+                      <FormTextField
+                        control={control}
+                        name="venue_bill_amount"
+                        label="Venue Bill Amount"
+                        keyboardType="numeric"
+                        required
+                      />
                     ) : null}
                     <Controller
                       control={control}

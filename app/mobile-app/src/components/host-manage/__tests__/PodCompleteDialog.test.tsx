@@ -22,13 +22,6 @@ jest.mock('@/hooks/useMediaUpload', () => ({
   }),
 }));
 jest.mock('@/hooks/useUploadSettings', () => ({ useUploadSettings: () => null }));
-jest.mock('@/hooks/useSupportUpload', () => ({
-  useSupportUpload: () => ({
-    uploading: false,
-    error: undefined,
-    pickAndUpload: jest.fn().mockResolvedValue('https://cdn/bill.pdf'),
-  }),
-}));
 const mockRequest = graphqlRequest as jest.Mock;
 
 const venuePod = { id: 'p1', pod_title: 'Cafe jam', venue_id: 'v1' };
@@ -94,39 +87,33 @@ describe('PodCompleteDialog', () => {
     );
   });
 
-  it('requires bill amount, bill upload and media for a venue pod', async () => {
+  it('requires bill amount and media for a venue pod, but never a bill document', async () => {
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={jest.fn()} />,
     );
     expect(screen.getByTestId('field-venue_bill_amount')).toBeOnTheScreen();
+    expect(screen.queryByTestId('bill-upload-add')).toBeNull();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(screen.getByTestId('venue_bill_amount-error')).toBeOnTheScreen());
-    expect(screen.getByTestId('bill_url-error')).toBeOnTheScreen();
     expect(screen.getByTestId('media_text-error')).toBeOnTheScreen();
     expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('submits a venue pod once the bill + media are uploaded', async () => {
+  it('submits a venue pod with the bill amount and media, no bill document', async () => {
     const onCompleted = jest.fn();
     renderWithProviders(
       <PodCompleteDialog pod={venuePod} onClose={jest.fn()} onCompleted={onCompleted} />,
     );
     fireEvent.changeText(screen.getByTestId('field-venue_bill_amount'), '1500');
-    fireEvent.press(screen.getByTestId('bill-upload-add'));
-    await waitFor(() => expect(screen.getByTestId('bill-preview')).toBeOnTheScreen());
     await addPartyMedia();
     fireEvent.press(screen.getByTestId('pod-complete-submit'));
     await waitFor(() => expect(onCompleted).toHaveBeenCalled());
     expect(mockRequest).toHaveBeenCalledWith(
       expect.anything(),
-      {
-        input: expect.objectContaining({
-          venue_bill_amount: 1500,
-          bill_url: 'https://cdn/bill.pdf',
-        }),
-      },
+      { input: expect.objectContaining({ pod_id: 'p1', venue_bill_amount: 1500 }) },
       { auth: true },
     );
+    expect(mockRequest.mock.calls[0][1].input).not.toHaveProperty('bill_url');
   });
 
   it('surfaces a server failure and a non-Error rejection', async () => {

@@ -2,10 +2,9 @@ import { z } from 'zod';
 
 import { CategoryMediaType, type CompletePodInput } from '@/generated/graphql/graphql';
 
-/** Shapes for the host's "Complete Pod" flow (venue bill + party media). */
+/** Shapes for the host's "Complete Pod" flow (venue bill amount + party media). */
 export interface PodCompleteValues {
   venue_bill_amount: string;
-  bill_url: string;
   media_text: string;
 }
 
@@ -17,7 +16,6 @@ export interface HostPodForComplete {
 
 export const blankPodCompleteValues: PodCompleteValues = {
   venue_bill_amount: '',
-  bill_url: '',
   media_text: '',
 };
 
@@ -32,12 +30,11 @@ const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 /** True when at least one party photo/video URL has been entered. */
 export const hasMediaLine = (mediaText: string) => splitLines(mediaText).length > 0;
 
-/** Schema depends on whether the pod has a venue: only then is a bill required. */
+/** Schema depends on whether the pod has a venue: only then is the bill amount required. */
 export const buildPodCompleteSchema = (hasVenue: boolean) =>
   z
     .object({
       venue_bill_amount: z.string().trim(),
-      bill_url: z.string().trim(),
       media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video'),
     })
     .superRefine((values, ctx) => {
@@ -50,13 +47,6 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
           message: 'Enter the venue bill amount',
         });
       }
-      if (!values.bill_url.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['bill_url'],
-          message: 'Upload the venue bill',
-        });
-      }
     });
 
 /** Maps the validated values onto the server's CompletePodInput. */
@@ -64,7 +54,6 @@ export function buildCompleteInput(values: PodCompleteValues, podId: string): Co
   return {
     pod_id: podId,
     venue_bill_amount: Number(values.venue_bill_amount) || 0,
-    bill_url: values.bill_url.trim() || undefined,
     evidence_media: splitLines(values.media_text).map((url) => ({
       url,
       type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,

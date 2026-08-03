@@ -263,7 +263,6 @@ describe('legacy settlement — completePod keeps the clamp for shortfall pods',
       {
         pod_id: String(pod._id),
         venue_bill_amount: 0,
-        bill_url: 'https://x.com/bill.pdf',
         evidence_media: [{ url: 'https://x.com/party.jpg' }],
       },
       { id: String(host._id), isAdmin: false }

@@ -4,7 +4,6 @@ import { blankPodCompleteValues, type PodCompleteValues } from './pod-complete.t
 
 const valid = (over: Partial<PodCompleteValues> = {}): PodCompleteValues => ({
   venue_bill_amount: '1500',
-  bill_url: 'https://cdn/bill.pdf',
   media_text: 'https://cdn/party.jpg',
   ...over,
 });
@@ -24,12 +23,11 @@ describe('buildPodCompleteSchema', () => {
     expect(issuesOf(false, valid({ media_text: '   ' }))).toContain('media_text');
   });
 
-  it('requires a bill amount + url only for venue pods', () => {
-    const paths = issuesOf(true, valid({ venue_bill_amount: '0', bill_url: '' }));
+  it('requires a bill amount only for venue pods', () => {
+    const paths = issuesOf(true, valid({ venue_bill_amount: '0' }));
     expect(paths).toContain('venue_bill_amount');
-    expect(paths).toContain('bill_url');
-    // Virtual pod (no venue): bill not required.
-    expect(buildPodCompleteSchema(false).safeParse(valid({ venue_bill_amount: '', bill_url: '' })).success).toBe(true);
+    // Virtual pod (no venue): the bill amount is not required.
+    expect(buildPodCompleteSchema(false).safeParse(valid({ venue_bill_amount: '' })).success).toBe(true);
   });
 });
 
@@ -41,16 +39,15 @@ describe('buildCompleteInput', () => {
     );
     expect(input.pod_id).toBe('pod1');
     expect(input.venue_bill_amount).toBe(1500);
-    expect(input.bill_url).toBe('https://cdn/bill.pdf');
+    expect(Object.keys(input)).not.toContain('bill_url');
     expect(input.evidence_media).toEqual([
       { url: 'https://cdn/a.jpg', type: 'IMAGE' },
       { url: 'https://cdn/b.mp4', type: 'VIDEO' },
     ]);
   });
 
-  it('omits the bill url and zeroes the amount for a blank/virtual submission', () => {
+  it('zeroes the amount for a blank/virtual submission', () => {
     const input = buildCompleteInput({ ...blankPodCompleteValues, media_text: 'https://cdn/a.jpg' }, 'pod2');
     expect(input.venue_bill_amount).toBe(0);
-    expect(input.bill_url).toBeUndefined();
   });
 });

@@ -24,6 +24,9 @@ export interface IAppSettings extends Document {
   /** Max Backout attempts a user gets per pod (Admin > Pods > Pod Settings).
    * Each successful "Backout in process" counts one attempt. */
   max_backout_attempts: number;
+  /** Account Health points deducted from a venue when its owner cancels a pod
+   * booked there (Admin > Pods > Pod Settings). 0 disables the penalty. */
+  venue_cancel_health_penalty: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -48,6 +51,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     max_birth_year: { type: Number, default: 2012 },
     draft_retention_days: { type: Number, default: 3, min: 1 },
     max_backout_attempts: { type: Number, default: 3, min: 1 },
+    venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

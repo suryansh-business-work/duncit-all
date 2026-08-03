@@ -28,17 +28,8 @@ import PodCompleteForm, {
 } from '../pod-complete.form';
 import type { HostPodForComplete, PodCompleteValues } from '../pod-complete.types';
 
-// Stub the heavy child fields (they pull in @duncit/media-picker + a picker dialog)
-// with simple controlled inputs so we can drive the form's Controllers directly.
-vi.mock('../BillUploadField', () => ({
-  default: ({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) => (
-    <div>
-      <input aria-label="bill-url" value={value} onChange={(e) => onChange(e.target.value)} />
-      {error ? <span>{error}</span> : null}
-    </div>
-  ),
-}));
-
+// Stub the heavy child field (it pulls in @duncit/media-picker + a picker dialog)
+// with a simple controlled input so we can drive the form's Controller directly.
 vi.mock('../../../create-pod-page/create-pod/fields/MediaUrlsField', () => ({
   default: ({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) => (
     <div>
@@ -73,7 +64,7 @@ function renderForm(
 
 describe('buildPodCompleteSchema', () => {
   it('requires at least one media line', () => {
-    const res = buildPodCompleteSchema(false).safeParse({ venue_bill_amount: '', bill_url: '', media_text: '   \n  ' });
+    const res = buildPodCompleteSchema(false).safeParse({ venue_bill_amount: '', media_text: '   \n  ' });
     expect(res.success).toBe(false);
     if (!res.success) {
       expect(res.error.issues.map((i) => i.path[0])).toContain('media_text');
@@ -81,36 +72,35 @@ describe('buildPodCompleteSchema', () => {
   });
 
   it('passes with a media line and no venue', () => {
-    const res = buildPodCompleteSchema(false).safeParse({ venue_bill_amount: '', bill_url: '', media_text: 'http://x.jpg' });
+    const res = buildPodCompleteSchema(false).safeParse({ venue_bill_amount: '', media_text: 'http://x.jpg' });
     expect(res.success).toBe(true);
   });
 
-  it('requires bill amount and bill url when a venue is present', () => {
-    const res = buildPodCompleteSchema(true).safeParse({ venue_bill_amount: '0', bill_url: '', media_text: 'http://x.jpg' });
+  it('requires the bill amount when a venue is present', () => {
+    const res = buildPodCompleteSchema(true).safeParse({ venue_bill_amount: '0', media_text: 'http://x.jpg' });
     expect(res.success).toBe(false);
     if (!res.success) {
       const paths = res.error.issues.map((i) => i.path[0]);
-      expect(paths).toEqual(expect.arrayContaining(['venue_bill_amount', 'bill_url']));
+      expect(paths).toEqual(expect.arrayContaining(['venue_bill_amount']));
     }
   });
 
-  it('passes with a venue when bill amount and url are provided', () => {
-    const res = buildPodCompleteSchema(true).safeParse({ venue_bill_amount: '500', bill_url: 'http://bill.pdf', media_text: 'http://x.jpg' });
+  it('passes with a venue on the bill amount alone — no bill document needed', () => {
+    const res = buildPodCompleteSchema(true).safeParse({ venue_bill_amount: '500', media_text: 'http://x.jpg' });
     expect(res.success).toBe(true);
   });
 });
 
 describe('buildCompleteInput', () => {
-  it('maps values, classifying media by extension and dropping an empty bill', () => {
+  it('maps values, classifying media by extension and never emitting a bill url', () => {
     const values: PodCompleteValues = {
       venue_bill_amount: '',
-      bill_url: '   ',
       media_text: 'http://a.jpg\n http://b.mov \n',
     };
-    expect(buildCompleteInput(values, 'pod-1')).toEqual({
+    // toStrictEqual so an undefined `bill_url` key would still fail the match.
+    expect(buildCompleteInput(values, 'pod-1')).toStrictEqual({
       pod_id: 'pod-1',
       venue_bill_amount: 0,
-      bill_url: undefined,
       evidence_media: [
         { url: 'http://a.jpg', type: 'IMAGE' },
         { url: 'http://b.mov', type: 'VIDEO' },
@@ -118,13 +108,10 @@ describe('buildCompleteInput', () => {
     });
   });
 
-  it('keeps a numeric amount and trimmed bill url', () => {
-    const out = buildCompleteInput(
-      { venue_bill_amount: '750', bill_url: ' http://bill.pdf ', media_text: 'http://c.webm' },
-      'pod-2',
-    );
+  it('keeps a numeric amount', () => {
+    const out = buildCompleteInput({ venue_bill_amount: '750', media_text: 'http://c.webm' }, 'pod-2');
     expect(out.venue_bill_amount).toBe(750);
-    expect(out.bill_url).toBe('http://bill.pdf');
+    expect(Object.keys(out)).not.toContain('bill_url');
     expect(out.evidence_media).toEqual([{ url: 'http://c.webm', type: 'VIDEO' }]);
   });
 });
@@ -143,10 +130,11 @@ describe('PodCompleteForm', () => {
     expect(screen.getByTestId('settlement-preview')).toHaveTextContent('preview:pod-1:0');
   });
 
-  it('renders the venue bill field and updates the preview amount for a venue pod', () => {
+  it('renders the venue bill amount — but no bill upload — and updates the preview', () => {
     renderForm(podWithVenue);
     const amount = screen.getByRole('spinbutton', { name: /venue bill amount/i });
     expect(amount).toBeInTheDocument();
+    expect(screen.queryByText(/upload venue bill/i)).not.toBeInTheDocument();
     fireEvent.change(amount, { target: { value: '1200' } });
     expect(screen.getByTestId('settlement-preview')).toHaveTextContent('preview:pod-2:1200');
   });
@@ -157,7 +145,6 @@ describe('PodCompleteForm', () => {
     // number field would otherwise be blocked by jsdom's HTML5 constraint check.
     fireEvent.submit(document.getElementById('pod-complete-form') as HTMLFormElement);
     expect(await screen.findByText(/enter the venue bill amount/i)).toBeInTheDocument();
-    expect(screen.getByText(/upload the venue bill/i)).toBeInTheDocument();
     expect(screen.getByText(/add at least one party photo or video/i)).toBeInTheDocument();
   });
 
@@ -175,7 +162,6 @@ describe('PodCompleteForm', () => {
           input: {
             pod_id: 'pod-1',
             venue_bill_amount: 0,
-            bill_url: undefined,
             evidence_media: [{ url: 'http://x.jpg', type: 'IMAGE' }],
           },
         },
@@ -195,6 +181,36 @@ describe('PodCompleteForm', () => {
     await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
   });
 
+  it('submits a venue pod with the amount alone — no bill document', async () => {
+    const mock = {
+      request: {
+        query: COMPLETE_POD,
+        variables: {
+          input: {
+            pod_id: 'pod-2',
+            venue_bill_amount: 1200,
+            evidence_media: [{ url: 'http://z.jpg', type: 'IMAGE' }],
+          },
+        },
+      },
+      result: {
+        data: {
+          completePodSettlement: {
+            settlement: { currency_symbol: '₹', host: { payout_amount: 900 } },
+            releases: [{ id: 'r2', kind: 'VENUE', status: 'PENDING' }],
+          },
+        },
+      },
+    };
+    const { onCompleted } = renderForm(podWithVenue, [mock]);
+    fireEvent.change(screen.getByRole('spinbutton', { name: /venue bill amount/i }), {
+      target: { value: '1200' },
+    });
+    fireEvent.change(screen.getByLabelText('media-text'), { target: { value: 'http://z.jpg' } });
+    fireEvent.click(screen.getByRole('button', { name: /complete pod/i }));
+    await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
+  });
+
   it('shows an error alert when the mutation fails', async () => {
     const mock = {
       request: {
@@ -203,7 +219,6 @@ describe('PodCompleteForm', () => {
           input: {
             pod_id: 'pod-1',
             venue_bill_amount: 0,
-            bill_url: undefined,
             evidence_media: [{ url: 'http://y.jpg', type: 'IMAGE' }],
           },
         },

@@ -149,6 +149,31 @@ export type AdminContactActionType =
   | 'CALL'
   | 'EMAIL';
 
+/** Admin/Finance: one person on a pod — host, attendee or backed-out member. */
+export type AdminPodAttendee = {
+  __typename?: 'AdminPodAttendee';
+  backed_out_at?: Maybe<Scalars['String']['output']>;
+  /** Backout ID of the filled request when this member's seat was rebooked. */
+  backout_no?: Maybe<Scalars['String']['output']>;
+  email?: Maybe<Scalars['String']['output']>;
+  full_name?: Maybe<Scalars['String']['output']>;
+  is_host: Scalars['Boolean']['output'];
+  joined_at?: Maybe<Scalars['String']['output']>;
+  /** PodMember row id — null for people without a membership row (host seat). */
+  member_id?: Maybe<Scalars['ID']['output']>;
+  payment_id?: Maybe<Scalars['ID']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  profile_photo?: Maybe<Scalars['String']['output']>;
+  refund_status?: Maybe<RefundStatus>;
+  replaced_by_name?: Maybe<Scalars['String']['output']>;
+  /** Set when this member backed out and a replacement filled the seat. */
+  replaced_by_user_id?: Maybe<Scalars['ID']['output']>;
+  source?: Maybe<JoinSource>;
+  /** Null for people without a membership row (the host's own free seat). */
+  status?: Maybe<MembershipStatus>;
+  user_id: Scalars['ID']['output'];
+};
+
 export type AdminReferral = {
   __typename?: 'AdminReferral';
   code: Scalars['String']['output'];
@@ -357,6 +382,8 @@ export type AppSettings = {
   /** IANA timezone (e.g. Asia/Kolkata) used to display all dates & times. */
   time_zone: Scalars['String']['output'];
   updated_at?: Maybe<Scalars['String']['output']>;
+  /** Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty). */
+  venue_cancel_health_penalty: Scalars['Int']['output'];
 };
 
 export type AppVersionInfo = {
@@ -981,6 +1008,17 @@ export type BulkUpdateVenueSlotsInput = {
   weekdays?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
+/**
+ * What the SMTP server said at handover. Acceptance, not inbox delivery — a
+ * mailbox that accepts and then bounces is invisible from here.
+ */
+export type CampaignDelivery = {
+  __typename?: 'CampaignDelivery';
+  accepted: Scalars['Int']['output'];
+  rejected: Scalars['Int']['output'];
+  rejected_addresses: Array<Scalars['String']['output']>;
+};
+
 export type Category = {
   __typename?: 'Category';
   /** SUB level only: may a host invite co-hosts to a pod in this sub-category? */
@@ -1540,7 +1578,6 @@ export type CommunicationLogPage = {
 };
 
 export type CompletePodInput = {
-  bill_url?: InputMaybe<Scalars['String']['input']>;
   evidence_media?: InputMaybe<Array<PaymentReleaseMediaInput>>;
   host_user_id?: InputMaybe<Scalars['ID']['input']>;
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -4190,16 +4227,28 @@ export type MarketingCampaign = {
   campaign_id: Scalars['ID']['output'];
   card?: Maybe<MarketingCampaignCard>;
   channel: MarketingCampaignChannel;
+  /** Times a tracked link in the email was followed. */
+  click_count: Scalars['Int']['output'];
   created_at: Scalars['String']['output'];
+  delivery?: Maybe<CampaignDelivery>;
   error?: Maybe<Scalars['String']['output']>;
+  /** First evidence anyone opened it — pixel, image load or click. */
+  first_opened_at?: Maybe<Scalars['String']['output']>;
+  /** Times an image in the email was fetched. Survives a blocked pixel. */
+  image_load_count: Scalars['Int']['output'];
+  last_opened_at?: Maybe<Scalars['String']['output']>;
   mjml: Scalars['String']['output'];
   name: Scalars['String']['output'];
+  /** Times the open pixel loaded — a total, not a headcount. */
+  open_count: Scalars['Int']['output'];
   recipient_count: Scalars['Int']['output'];
   rendered_html?: Maybe<Scalars['String']['output']>;
   scheduled_at?: Maybe<Scalars['String']['output']>;
   sent_at?: Maybe<Scalars['String']['output']>;
   status: MarketingCampaignStatus;
   subject: Scalars['String']['output'];
+  tracked_images: Array<TrackedImage>;
+  tracked_links: Array<TrackedLink>;
   updated_at: Scalars['String']['output'];
 };
 
@@ -4281,6 +4330,98 @@ export type MarketingCampaignTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<MarketingCampaign>;
   total: Scalars['Int']['output'];
+};
+
+/** A placeholder a campaign may use, e.g. {{app_name}}. */
+export type MarketingCampaignVariable = {
+  __typename?: 'MarketingCampaignVariable';
+  description: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  /** What this variable renders to right now. */
+  sample: Scalars['String']['output'];
+};
+
+/** Everything the Marketing console opens on, in one round trip. */
+export type MarketingDashboard = {
+  __typename?: 'MarketingDashboard';
+  ads: MarketingDashboardAds;
+  audience: MarketingDashboardAudience;
+  campaigns: MarketingDashboardCampaigns;
+  /** The window the activity figures cover, in days. */
+  days: Scalars['Int']['output'];
+  links: MarketingDashboardLinks;
+};
+
+export type MarketingDashboardAds = {
+  __typename?: 'MarketingDashboardAds';
+  live: Scalars['Int']['output'];
+  pending: Scalars['Int']['output'];
+};
+
+export type MarketingDashboardAudience = {
+  __typename?: 'MarketingDashboardAudience';
+  lists: Scalars['Int']['output'];
+};
+
+export type MarketingDashboardCampaigns = {
+  __typename?: 'MarketingDashboardCampaigns';
+  click_rate: Scalars['Float']['output'];
+  clicks: Scalars['Int']['output'];
+  failed: Scalars['Int']['output'];
+  open_rate: Scalars['Float']['output'];
+  opens: Scalars['Int']['output'];
+  recent: Array<MarketingDashboardRecentCampaign>;
+  recipients: Scalars['Int']['output'];
+  scheduled: Scalars['Int']['output'];
+  sent: Scalars['Int']['output'];
+};
+
+export type MarketingDashboardDaily = {
+  __typename?: 'MarketingDashboardDaily';
+  count: Scalars['Int']['output'];
+  date: Scalars['String']['output'];
+};
+
+export type MarketingDashboardLinks = {
+  __typename?: 'MarketingDashboardLinks';
+  /** Links accepting traffic right now. */
+  active: Scalars['Int']['output'];
+  conversion_rate: Scalars['Float']['output'];
+  conversions: Scalars['Int']['output'];
+  countries: Array<MarketingDashboardPoint>;
+  daily: Array<MarketingDashboardDaily>;
+  platforms: Array<MarketingDashboardPoint>;
+  revenue: Scalars['Float']['output'];
+  top: Array<MarketingDashboardTopLink>;
+  total: Scalars['Int']['output'];
+  total_clicks: Scalars['Int']['output'];
+  unique_visitors: Scalars['Int']['output'];
+};
+
+export type MarketingDashboardPoint = {
+  __typename?: 'MarketingDashboardPoint';
+  count: Scalars['Int']['output'];
+  label: Scalars['String']['output'];
+};
+
+export type MarketingDashboardRecentCampaign = {
+  __typename?: 'MarketingDashboardRecentCampaign';
+  campaign_id: Scalars['ID']['output'];
+  click_count: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  open_count: Scalars['Int']['output'];
+  open_rate: Scalars['Float']['output'];
+  recipient_count: Scalars['Int']['output'];
+  sent_at?: Maybe<Scalars['String']['output']>;
+};
+
+export type MarketingDashboardTopLink = {
+  __typename?: 'MarketingDashboardTopLink';
+  clicks: Scalars['Int']['output'];
+  code: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  label: Scalars['String']['output'];
+  revenue: Scalars['Float']['output'];
 };
 
 export type MediaScanLog = {
@@ -4575,6 +4716,7 @@ export type Mutation = {
   /** Standalone product-cart checkout via Razorpay (step 1; verify with verifyRazorpayPayment). */
   createRazorpayProductOrder: RazorpayOrder;
   createRole: Role;
+  createShortLink: ShortLink;
   createSlotTemplate: SlotTemplate;
   createSurvey: Survey;
   createTicket: Ticket;
@@ -4637,6 +4779,11 @@ export type Mutation = {
   deleteLegalDocument: Scalars['Boolean']['output'];
   deleteLocale: Scalars['Boolean']['output'];
   deleteLocation: Scalars['Boolean']['output'];
+  /**
+   * Delete a campaign. A scheduled one has its pending send cancelled with it;
+   * a campaign that is sending right now is refused.
+   */
+  deleteMarketingCampaign: Scalars['Boolean']['output'];
   /** Auth-required: confirm the OTP and soft-delete (and anonymize) the account. */
   deleteMyAccount: Scalars['Boolean']['output'];
   deleteMyAddress: Scalars['Boolean']['output'];
@@ -4656,6 +4803,7 @@ export type Mutation = {
   deletePostComment: Post;
   deletePushSubscription: Scalars['Boolean']['output'];
   deleteRole: Scalars['Boolean']['output'];
+  deleteShortLink: Scalars['Boolean']['output'];
   deleteSlotTemplate: Scalars['Boolean']['output'];
   deleteSurvey: Scalars['Boolean']['output'];
   deleteTranslation: Scalars['Boolean']['output'];
@@ -4752,6 +4900,13 @@ export type Mutation = {
   recordProductClick: Scalars['Boolean']['output'];
   /** Record a buyer view of a product (forward-only engagement tracking). */
   recordProductView: Scalars['Boolean']['output'];
+  /**
+   * Report that a click reached a step. Called by the apps as the visitor moves
+   * through the funnel; safe to call more than once, since a step that already
+   * happened keeps its original time. Public: most of the funnel happens before
+   * anyone has signed in, and an authenticated call also binds the account.
+   */
+  recordShortLinkJourney: Scalars['Boolean']['output'];
   /** Record that the signed-in viewer opened this story; idempotent (Bugs 2 & 4). */
   recordStoryView: Post;
   recordUserContactAction: UserContactAction;
@@ -4874,6 +5029,8 @@ export type Mutation = {
   setPortalMode: PortalMode;
   /** Ops: switch an order between SHIP and PICKUP. */
   setProductOrderFulfilmentMethod: ProductOrder;
+  /** Retire or revive a link without deleting its click history. */
+  setShortLinkActive: ShortLink;
   setVenueActive: Venue;
   setVenueDeductions: Venue;
   sharePodIdea: PodIdea;
@@ -5037,6 +5194,8 @@ export type Mutation = {
   uploadImageToImagekit: UploadedImage;
   upsertLocale: Locale;
   upsertTranslation: Translation;
+  /** Venue owner cancels an UPCOMING pod booked at their venue: refunds every successful attendee payment, emails the audience and deducts the Account Health penalty configured in Admin > Pods > Pod Settings. */
+  venueCancelPod: VenueCancelPodResult;
   verifyEmailVerificationOtp: User;
   verifyEventTicketQr: EventTicketVerifyResult;
   verifyRazorpayPayment: Payment;
@@ -5649,6 +5808,11 @@ export type MutationCreateRoleArgs = {
 };
 
 
+export type MutationCreateShortLinkArgs = {
+  input: ShortLinkInput;
+};
+
+
 export type MutationCreateSlotTemplateArgs = {
   input: CreateSlotTemplateInput;
 };
@@ -5917,6 +6081,11 @@ export type MutationDeleteLocationArgs = {
 };
 
 
+export type MutationDeleteMarketingCampaignArgs = {
+  campaign_id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteMyAccountArgs = {
   input: DeleteMyAccountInput;
 };
@@ -6003,6 +6172,11 @@ export type MutationDeletePushSubscriptionArgs = {
 
 export type MutationDeleteRoleArgs = {
   role_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteShortLinkArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6340,6 +6514,12 @@ export type MutationRecordProductClickArgs = {
 
 export type MutationRecordProductViewArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationRecordShortLinkJourneyArgs = {
+  click_id: Scalars['String']['input'];
+  step: ShortLinkJourneyStep;
 };
 
 
@@ -6796,6 +6976,12 @@ export type MutationSetPortalModeArgs = {
 export type MutationSetProductOrderFulfilmentMethodArgs = {
   id: Scalars['ID']['input'];
   method: FulfilmentMethod;
+};
+
+
+export type MutationSetShortLinkActiveArgs = {
+  id: Scalars['ID']['input'];
+  is_active: Scalars['Boolean']['input'];
 };
 
 
@@ -7494,6 +7680,12 @@ export type MutationUpsertLocaleArgs = {
 
 export type MutationUpsertTranslationArgs = {
   input: UpsertTranslationInput;
+};
+
+
+export type MutationVenueCancelPodArgs = {
+  pod_id: Scalars['ID']['input'];
+  reason: Scalars['String']['input'];
 };
 
 
@@ -8228,6 +8420,56 @@ export type PodAuditSource =
   | 'SYSTEM'
   | 'VENUE_OWNER';
 
+/** Who cancelled a pod — Finance's Cancel & Refunds pages split on this. */
+export type PodCancelKind =
+  | 'ADMIN'
+  | 'CLUB_ADMIN'
+  | 'HOST'
+  | 'SYSTEM'
+  | 'VENUE';
+
+/** One cancelled pod with its refund money and the venue's booked amount. */
+export type PodCancellation = {
+  __typename?: 'PodCancellation';
+  actor_name: Scalars['String']['output'];
+  attendee_count: Scalars['Int']['output'];
+  cancelled_at: Scalars['String']['output'];
+  club_id?: Maybe<Scalars['ID']['output']>;
+  currency_symbol: Scalars['String']['output'];
+  host_names: Array<Scalars['String']['output']>;
+  kind: PodCancelKind;
+  pod_amount: Scalars['Float']['output'];
+  pod_date_time?: Maybe<Scalars['String']['output']>;
+  pod_id: Scalars['ID']['output'];
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  /** Free-text cancellation reason (delete reason / venue decline reason). */
+  reason: Scalars['String']['output'];
+  /** Payments already refunded for this pod. */
+  refunded_count: Scalars['Int']['output'];
+  refunded_total: Scalars['Float']['output'];
+  /** Successful payments NOT refunded — outstanding attendee money. */
+  unrefunded_count: Scalars['Int']['output'];
+  unrefunded_total: Scalars['Float']['output'];
+  /** The venue's booked slot money for this pod (what the venue loses). */
+  venue_amount: Scalars['Float']['output'];
+  venue_id?: Maybe<Scalars['ID']['output']>;
+  venue_name?: Maybe<Scalars['String']['output']>;
+};
+
+/** KPI tiles for Finance → Cancel & Refunds → Dashboard. */
+export type PodCancellationStats = {
+  __typename?: 'PodCancellationStats';
+  cancelled_by_admin: Scalars['Int']['output'];
+  cancelled_by_club_admin: Scalars['Int']['output'];
+  cancelled_by_host: Scalars['Int']['output'];
+  cancelled_by_venue: Scalars['Int']['output'];
+  currency_symbol: Scalars['String']['output'];
+  refunded_payment_count: Scalars['Int']['output'];
+  total_cancelled: Scalars['Int']['output'];
+  total_refund_amount: Scalars['Float']['output'];
+};
+
 /** A co-host on a pod. View-only: they cannot edit, complete or delete it, and the pod's earnings are unaffected. */
 export type PodCoHost = {
   __typename?: 'PodCoHost';
@@ -8630,6 +8872,21 @@ export type PodShopSliderMediaInput = {
   subheading?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<CategoryMediaType>;
   url: Scalars['String']['input'];
+};
+
+/** One filled Backout seat on a pod — who released the spot and who took it. */
+export type PodSpotFill = {
+  __typename?: 'PodSpotFill';
+  backed_out_profile_photo?: Maybe<Scalars['String']['output']>;
+  backed_out_user_id: Scalars['ID']['output'];
+  backed_out_user_name?: Maybe<Scalars['String']['output']>;
+  /** Permanent Backout ID of the filled request (DUN-BKO-000001). */
+  backout_no: Scalars['String']['output'];
+  filled_at: Scalars['String']['output'];
+  replacement_profile_photo?: Maybe<Scalars['String']['output']>;
+  /** Null on requests filled before the replacement was recorded. */
+  replacement_user_id?: Maybe<Scalars['ID']['output']>;
+  replacement_user_name?: Maybe<Scalars['String']['output']>;
 };
 
 /** Server-side table page for the shared table engine (podsTable / myHostPodsTable). */
@@ -9118,6 +9375,8 @@ export type PublicAppSettings = {
   time_source: TimeSource;
   /** IANA timezone (e.g. Asia/Kolkata) used to display all dates & times. */
   time_zone: Scalars['String']['output'];
+  /** Account Health points deducted from a venue when its owner cancels a pod booked there (0 disables the penalty). */
+  venue_cancel_health_penalty: Scalars['Int']['output'];
 };
 
 export type PublicClientConfig = {
@@ -9209,6 +9468,8 @@ export type Query = {
   adRequest: AdRequest;
   /** All requests, for the Marketing approval queue. */
   adRequestsTable: AdRequestTablePage;
+  /** Admin/Finance: everyone on a pod with contact info and replacement links. */
+  adminPodAttendees: Array<AdminPodAttendee>;
   /** Onboarding/admin: all slots for any venue (role-gated, no owner check). */
   adminVenueSlots: Array<VenueSlot>;
   aiPrompt?: Maybe<AiPrompt>;
@@ -9282,8 +9543,17 @@ export type Query = {
   clubAdminDashboardTable: ClubAdminClubRowTablePage;
   /** Approved hosts matching the search, for the assign-host picker. Club-admin scoped. */
   clubAdminHostSearch: Array<ClubAdminHostOption>;
+  /** Full action trail of one pod in the caller's clubs, newest first. */
+  clubAdminPodAuditLogs: Array<PodAuditLog>;
   /** Club admin: the same trail scoped to the clubs the caller administers. */
   clubAdminPodAuditLogsTable: PodAuditLogTablePage;
+  /**
+   * Pods across the signed-in Club Admin's clubs, scoped server-side. Shows
+   * EVERY stage — including pods awaiting the venue owner's approval and
+   * cancelled ones — so a club admin can open and edit a pod wherever it sits
+   * in the booking cycle. Pass club_id to narrow to one of their clubs.
+   */
+  clubAdminPodsTable: PodTablePage;
   clubBySlug?: Maybe<Club>;
   clubRatings: Array<ClubRating>;
   /** Active (non-expired) stories attached to a club, newest first (Bug 6). */
@@ -9439,9 +9709,14 @@ export type Query = {
   location?: Maybe<Location>;
   locations: Array<Location>;
   locationsTable: LocationTablePage;
+  /** One campaign in full, including its rendered HTML — powers the View dialog. */
+  marketingCampaign: MarketingCampaign;
   marketingCampaignPreviewCards: Array<MarketingCampaignPreviewCard>;
+  /** Every variable a campaign may use, with a live sample of its value. */
+  marketingCampaignVariables: Array<MarketingCampaignVariable>;
   marketingCampaigns: Array<MarketingCampaign>;
   marketingCampaignsTable: MarketingCampaignTablePage;
+  marketingDashboard: MarketingDashboard;
   /** Approved products of one external brand — the e-commerce marketplace list. */
   marketplaceBrandProducts: Array<InventoryProduct>;
   /** Server-side table sibling of marketplaceBrandProducts (shared table engine). */
@@ -9576,12 +9851,15 @@ export type Query = {
   paymentsTable: PaymentTablePage;
   pexelsSearch: PexelsSearchResult;
   pexelsSearchVideos: PexelsVideoSearchResult;
+  /** include_deleted opens a cancelled pod too — honored for admin reviewers only. */
   pod?: Maybe<Pod>;
   /** Full trail of one pod, newest first (admin). */
   podAuditLogs: Array<PodAuditLog>;
   /** Admin: AI-monitored audit trail of every pod action. */
   podAuditLogsTable: PodAuditLogTablePage;
   podBySlugs?: Maybe<Pod>;
+  podCancellationStats: PodCancellationStats;
+  podCancellations: Array<PodCancellation>;
   podComments: Array<PodComment>;
   podFinanceBreakdown: PodFinanceBreakdown;
   podIdea?: Maybe<PodIdea>;
@@ -9593,9 +9871,12 @@ export type Query = {
   podPlans: Array<PodPlan>;
   podPlansTable: PodPlanTablePage;
   podSettlementPreview: PodSettlement;
+  /** Every filled Backout seat of a pod — struck-through attendee rows (public). */
+  podSpotFills: Array<PodSpotFill>;
   pods: Array<Pod>;
   /** Pods that currently stock a catalogue product — per-pod purchase context so a buyer can add the product to the cart from the catalogue / standalone product detail (any signed-in user). */
   podsForProduct: Array<ProductPodOption>;
+  /** include_deleted also lists cancelled pods — honored for admin reviewers only. */
   podsTable: PodTablePage;
   policies: Array<Policy>;
   policiesTable: PolicyTablePage;
@@ -9680,6 +9961,20 @@ export type Query = {
    * bundles when seeding Translations, so email copy is translatable too.
    */
   serverTranslationSeed: Array<TranslationEntry>;
+  shortLink: ShortLink;
+  /** Individual clicks on one link. */
+  shortLinkClicks: ShortLinkClickTablePage;
+  /** Click -> signup -> checkout -> paid, for one link. */
+  shortLinkFunnel: ShortLinkFunnel;
+  /** One row per click, with the person it became and how far they got. */
+  shortLinkJourneys: ShortLinkJourneyTablePage;
+  /** The channel and medium dropdowns, so no client keeps its own copy. */
+  shortLinkOptions: ShortLinkOptions;
+  /** A PNG data URL of the short link, rendered server-side. */
+  shortLinkQr: Scalars['String']['output'];
+  /** Aggregated click analytics for one link. */
+  shortLinkStats: ShortLinkStats;
+  shortLinksTable: ShortLinkTablePage;
   /** Channels the Slack bot can see, each with a copyable archive link. */
   slackChannels: Array<SlackChannel>;
   /** Whether a Slack bot token is configured (Tech portal). */
@@ -9749,6 +10044,8 @@ export type Query = {
   venueLeads: Array<VenueLead>;
   venueLeadsTable: VenueLeadTablePage;
   venueOwnerStats: VenueOwnerStats;
+  /** Pods at the caller's venues, all states incl. cancelled. venue_id narrows to one owned venue. */
+  venuePods: Array<VenuePod>;
   venueRegistrationConfig: VenueRegistrationConfig;
   /** Owner: pending booking requests across their venues (or one venue). */
   venueSlotRequests: Array<VenueSlotRequest>;
@@ -9825,6 +10122,11 @@ export type QueryAdRequestArgs = {
 
 export type QueryAdRequestsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryAdminPodAttendeesArgs = {
+  pod_doc_id: Scalars['ID']['input'];
 };
 
 
@@ -10017,7 +10319,18 @@ export type QueryClubAdminHostSearchArgs = {
 };
 
 
+export type QueryClubAdminPodAuditLogsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryClubAdminPodAuditLogsTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryClubAdminPodsTableArgs = {
+  club_id?: InputMaybe<Scalars['ID']['input']>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -10553,6 +10866,11 @@ export type QueryLocationsTableArgs = {
 };
 
 
+export type QueryMarketingCampaignArgs = {
+  campaign_id: Scalars['ID']['input'];
+};
+
+
 export type QueryMarketingCampaignPreviewCardsArgs = {
   type: MarketingCampaignCardType;
 };
@@ -10560,6 +10878,11 @@ export type QueryMarketingCampaignPreviewCardsArgs = {
 
 export type QueryMarketingCampaignsTableArgs = {
   query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryMarketingDashboardArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -10832,6 +11155,7 @@ export type QueryPexelsSearchVideosArgs = {
 
 
 export type QueryPodArgs = {
+  include_deleted?: InputMaybe<Scalars['Boolean']['input']>;
   pod_doc_id: Scalars['ID']['input'];
 };
 
@@ -10849,6 +11173,11 @@ export type QueryPodAuditLogsTableArgs = {
 export type QueryPodBySlugsArgs = {
   club_slug: Scalars['String']['input'];
   pod_slug: Scalars['String']['input'];
+};
+
+
+export type QueryPodCancellationsArgs = {
+  kind?: InputMaybe<PodCancelKind>;
 };
 
 
@@ -10906,6 +11235,11 @@ export type QueryPodSettlementPreviewArgs = {
 };
 
 
+export type QueryPodSpotFillsArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+};
+
+
 export type QueryPodsArgs = {
   filter?: InputMaybe<PodFilterInput>;
 };
@@ -10917,6 +11251,7 @@ export type QueryPodsForProductArgs = {
 
 
 export type QueryPodsTableArgs = {
+  include_deleted?: InputMaybe<Scalars['Boolean']['input']>;
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -11123,6 +11458,43 @@ export type QuerySearchDiscoveryArgs = {
 export type QuerySearchSuggestionsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   query: Scalars['String']['input'];
+};
+
+
+export type QueryShortLinkArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryShortLinkClicksArgs = {
+  id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryShortLinkFunnelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryShortLinkJourneysArgs = {
+  id: Scalars['ID']['input'];
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryShortLinkQrArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryShortLinkStatsArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryShortLinksTableArgs = {
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -11341,6 +11713,11 @@ export type QueryVenueLeadsTableArgs = {
 
 
 export type QueryVenueOwnerStatsArgs = {
+  venue_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+
+export type QueryVenuePodsArgs = {
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
 
@@ -11721,6 +12098,228 @@ export type ShipRocketInfo = {
   order_id: Scalars['String']['output'];
   shipment_id: Scalars['String']['output'];
   tracking_status: Scalars['String']['output'];
+};
+
+export type ShortLink = {
+  __typename?: 'ShortLink';
+  campaign_id?: Maybe<Scalars['ID']['output']>;
+  click_count: Scalars['Int']['output'];
+  code: Scalars['String']['output'];
+  created_at: Scalars['String']['output'];
+  destination_url: Scalars['String']['output'];
+  first_clicked_at?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  last_clicked_at?: Maybe<Scalars['String']['output']>;
+  medium: ShortLinkMedium;
+  medium_other?: Maybe<Scalars['String']['output']>;
+  /** The link you hand out, e.g. https://duncit.com/aB3xY9Zq */
+  short_url: Scalars['String']['output'];
+  source: ShortLinkSource;
+  source_other?: Maybe<Scalars['String']['output']>;
+  /** Where the code actually lands, with the utm tags and dl marker applied. */
+  tagged_url: Scalars['String']['output'];
+  updated_at: Scalars['String']['output'];
+  utm_campaign?: Maybe<Scalars['String']['output']>;
+  utm_medium: Scalars['String']['output'];
+  utm_source: Scalars['String']['output'];
+};
+
+/** One row of a breakdown — a value and how many clicks carried it. */
+export type ShortLinkBreakdown = {
+  __typename?: 'ShortLinkBreakdown';
+  count: Scalars['Int']['output'];
+  label: Scalars['String']['output'];
+};
+
+/** A single recorded click. Addresses are hashed on the way in, never stored. */
+export type ShortLinkClick = {
+  __typename?: 'ShortLinkClick';
+  browser: Scalars['String']['output'];
+  city?: Maybe<Scalars['String']['output']>;
+  click_id: Scalars['String']['output'];
+  clicked_at: Scalars['String']['output'];
+  country?: Maybe<Scalars['String']['output']>;
+  device_type: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  os: Scalars['String']['output'];
+  platform: Scalars['String']['output'];
+  referrer_host?: Maybe<Scalars['String']['output']>;
+  region?: Maybe<Scalars['String']['output']>;
+};
+
+export type ShortLinkClickTablePage = {
+  __typename?: 'ShortLinkClickTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ShortLinkClick>;
+  total: Scalars['Int']['output'];
+};
+
+export type ShortLinkDailyPoint = {
+  __typename?: 'ShortLinkDailyPoint';
+  count: Scalars['Int']['output'];
+  date: Scalars['String']['output'];
+};
+
+export type ShortLinkFunnel = {
+  __typename?: 'ShortLinkFunnel';
+  /** Percentage of clicks that ended in a payment. */
+  conversion_rate: Scalars['Float']['output'];
+  /** Revenue attributed to this link. */
+  revenue: Scalars['Float']['output'];
+  steps: Array<ShortLinkFunnelStep>;
+};
+
+export type ShortLinkFunnelStep = {
+  __typename?: 'ShortLinkFunnelStep';
+  count: Scalars['Int']['output'];
+  step: ShortLinkJourneyStep;
+};
+
+export type ShortLinkInput = {
+  campaign_id?: InputMaybe<Scalars['ID']['input']>;
+  destination_url: Scalars['String']['input'];
+  label: Scalars['String']['input'];
+  medium: ShortLinkMedium;
+  /** Required when medium is OTHER. */
+  medium_other?: InputMaybe<Scalars['String']['input']>;
+  source: ShortLinkSource;
+  /** Required when source is OTHER. */
+  source_other?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** One click, who it turned into, and how far it got. */
+export type ShortLinkJourney = {
+  __typename?: 'ShortLinkJourney';
+  city?: Maybe<Scalars['String']['output']>;
+  click_id: Scalars['String']['output'];
+  clicked_at: Scalars['String']['output'];
+  converted_amount?: Maybe<Scalars['Float']['output']>;
+  country?: Maybe<Scalars['String']['output']>;
+  device_type: Scalars['String']['output'];
+  furthest_step: ShortLinkJourneyStep;
+  id: Scalars['ID']['output'];
+  platform: Scalars['String']['output'];
+  steps: Array<ShortLinkJourneyEntry>;
+  user_email?: Maybe<Scalars['String']['output']>;
+  user_id?: Maybe<Scalars['ID']['output']>;
+  user_name?: Maybe<Scalars['String']['output']>;
+};
+
+export type ShortLinkJourneyEntry = {
+  __typename?: 'ShortLinkJourneyEntry';
+  at: Scalars['String']['output'];
+  step: ShortLinkJourneyStep;
+};
+
+/** How far a click got. Ordered — a later step implies the earlier ones. */
+export type ShortLinkJourneyStep =
+  | 'CHECKOUT_STARTED'
+  | 'CLICKED'
+  | 'LANDED'
+  | 'PAID'
+  | 'SIGNED_UP'
+  | 'SURVEY_DONE'
+  | 'VIEWED_POD';
+
+export type ShortLinkJourneyTablePage = {
+  __typename?: 'ShortLinkJourneyTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ShortLinkJourney>;
+  total: Scalars['Int']['output'];
+};
+
+/** How the traffic arrives. Becomes utm_medium. */
+export type ShortLinkMedium =
+  | 'AFFILIATE'
+  | 'BANNER'
+  | 'CPC'
+  | 'DIRECT'
+  | 'DISPLAY'
+  | 'DISPLAY_AD'
+  | 'EMAIL'
+  | 'INFLUENCER'
+  | 'IN_APP'
+  | 'MESSAGING'
+  | 'ORGANIC_SEARCH'
+  | 'ORGANIC_SOCIAL'
+  | 'OTHER'
+  | 'PAID_SOCIAL'
+  | 'PUSH_NOTIFICATION'
+  | 'QR_CODE'
+  | 'REFERRAL'
+  | 'SEARCH'
+  | 'SMS'
+  | 'SOCIAL'
+  | 'VIDEO';
+
+export type ShortLinkOption = {
+  __typename?: 'ShortLinkOption';
+  label: Scalars['String']['output'];
+  requires_text: Scalars['Boolean']['output'];
+  /** What this option puts in the URL. Empty for OTHER, which is free text. */
+  utm_value: Scalars['String']['output'];
+  value: Scalars['String']['output'];
+};
+
+export type ShortLinkOptions = {
+  __typename?: 'ShortLinkOptions';
+  mediums: Array<ShortLinkOption>;
+  sources: Array<ShortLinkOption>;
+};
+
+/**
+ * Where a link is being handed out. Becomes utm_source. OTHER carries free
+ * text in source_other.
+ */
+export type ShortLinkSource =
+  | 'AFFILIATE'
+  | 'DIRECT_LINK_SHARE'
+  | 'DISCORD'
+  | 'EMAIL'
+  | 'FACEBOOK'
+  | 'GOOGLE_ADS'
+  | 'GOOGLE_SEARCH'
+  | 'INFLUENCER'
+  | 'INSTAGRAM'
+  | 'LINKEDIN'
+  | 'OTHER'
+  | 'QR_CODE'
+  | 'REDDIT'
+  | 'REFERRAL_PARTNER'
+  | 'SMS'
+  | 'TELEGRAM'
+  | 'THREADS'
+  | 'WHATSAPP'
+  | 'X_TWITTER'
+  | 'YOUTUBE';
+
+export type ShortLinkStats = {
+  __typename?: 'ShortLinkStats';
+  browsers: Array<ShortLinkBreakdown>;
+  cities: Array<ShortLinkBreakdown>;
+  countries: Array<ShortLinkBreakdown>;
+  countries_reached: Scalars['Int']['output'];
+  daily: Array<ShortLinkDailyPoint>;
+  devices: Array<ShortLinkBreakdown>;
+  oses: Array<ShortLinkBreakdown>;
+  /** Where the click came from — Instagram, WhatsApp, Direct… */
+  platforms: Array<ShortLinkBreakdown>;
+  referrers: Array<ShortLinkBreakdown>;
+  total_clicks: Scalars['Int']['output'];
+  /** Distinct visitors, counted by hashed address. */
+  unique_visitors: Scalars['Int']['output'];
+};
+
+export type ShortLinkTablePage = {
+  __typename?: 'ShortLinkTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ShortLink>;
+  total: Scalars['Int']['output'];
 };
 
 export type SlackChannel = {
@@ -12402,6 +13001,26 @@ export type TimeSource =
   /** The server's clock — the default, keeps every device in step. */
   | 'SERVER';
 
+export type TrackedImage = {
+  __typename?: 'TrackedImage';
+  load_count: Scalars['Int']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type TrackedLink = {
+  __typename?: 'TrackedLink';
+  click_count: Scalars['Int']['output'];
+  kind: TrackedLinkKind;
+  url: Scalars['String']['output'];
+};
+
+export type TrackedLinkKind =
+  /** A link MJML rendered as a button. */
+  | 'CTA'
+  | 'LINK'
+  /** An opt-out, kept apart so it never reads as ordinary engagement. */
+  | 'UNSUBSCRIBE';
+
 /** Export format for support chat / ticket transcripts. */
 export type TranscriptFormat =
   | 'DOCX'
@@ -12507,6 +13126,8 @@ export type UpdateAppSettingsInput = {
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;
+  /** Account Health points deducted from a venue when its owner cancels a pod booked there (0-100, 0 disables the penalty). */
+  venue_cancel_health_penalty?: InputMaybe<Scalars['Int']['input']>;
 };
 
 /**
@@ -12877,6 +13498,13 @@ export type UpdatePodInput = {
   products_enabled?: InputMaybe<Scalars['Boolean']['input']>;
   reel_url?: InputMaybe<Scalars['String']['input']>;
   venue_id?: InputMaybe<Scalars['ID']['input']>;
+  /**
+   * Re-route the pod to a different slot (Admin / Club Admin edit at any stage).
+   * A partner's slot re-enters that venue's approval queue exactly like a host
+   * resubmission; the previously held slot is released. Omit to leave the
+   * pod's current booking untouched.
+   */
+  venue_slot_id?: InputMaybe<Scalars['ID']['input']>;
   what_this_pod_offers?: InputMaybe<Array<Scalars['String']['input']>>;
   zone_name?: InputMaybe<Scalars['String']['input']>;
 };
@@ -13293,6 +13921,19 @@ export type VenueAutoExtendInput = {
   until?: InputMaybe<Scalars['String']['input']>;
 };
 
+/** Outcome of a venue owner cancelling a pod booked at their venue. */
+export type VenueCancelPodResult = {
+  __typename?: 'VenueCancelPodResult';
+  /** Account Health points deducted from the venue for this cancellation. */
+  health_penalty: Scalars['Int']['output'];
+  /** The cancelled pod's id. */
+  pod_id: Scalars['ID']['output'];
+  /** Attendee payments refunded by this cancellation. */
+  refunded_count: Scalars['Int']['output'];
+  /** The venue's Account Health score after the deduction. */
+  venue_health_score: Scalars['Int']['output'];
+};
+
 /** One named capacity the venue offers (e.g. 'Banquet hall' seats 120). */
 export type VenueCapacityItem = {
   __typename?: 'VenueCapacityItem';
@@ -13466,6 +14107,38 @@ export type VenueOwnerStats = {
   total_venues: Scalars['Int']['output'];
   upcoming_slots: Scalars['Int']['output'];
 };
+
+/** One pod booked at a venue the caller owns (Partners → Venues → Pods). */
+export type VenuePod = {
+  __typename?: 'VenuePod';
+  attendee_count: Scalars['Int']['output'];
+  bucket: VenuePodBucket;
+  /** Set when the pod was cancelled (soft-deleted). */
+  cancelled_at?: Maybe<Scalars['String']['output']>;
+  completed_at?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['String']['output'];
+  host_names: Array<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  is_active: Scalars['Boolean']['output'];
+  no_of_spots: Scalars['Int']['output'];
+  pod_amount: Scalars['Int']['output'];
+  /** Attendee user ids — resolve names via publicUsersByIds. */
+  pod_attendees: Array<Scalars['ID']['output']>;
+  pod_date_time: Scalars['String']['output'];
+  pod_end_date_time?: Maybe<Scalars['String']['output']>;
+  pod_slug: Scalars['String']['output'];
+  pod_title: Scalars['String']['output'];
+  pod_type: PodType;
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+};
+
+/** Derived lifecycle bucket of a pod at a venue. */
+export type VenuePodBucket =
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'ONGOING'
+  | 'UPCOMING';
 
 /** Registration option catalogs — clients render these instead of hardcoding. */
 export type VenueRegistrationConfig = {

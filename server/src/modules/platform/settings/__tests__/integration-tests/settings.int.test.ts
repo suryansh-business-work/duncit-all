@@ -1,6 +1,6 @@
 import { settingsService } from '../../settings.service';
 import { settingsResolvers } from '../../settings.resolver';
-import { FeatureFlagModel } from '../../settings.model';
+import { AppSettingsModel, FeatureFlagModel } from '../../settings.model';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { makeContext } from '@test/harness';
 import {
@@ -57,6 +57,56 @@ describe('settingsService integration', () => {
     expect(cleared.custom_time_set_at).toBeNull();
 
     await settingsService.updateAppSettings({ time_source: 'SERVER' });
+  });
+
+  it('clamps the venue-cancel Account Health penalty, keeping 0 as a legal value', async () => {
+    // Nothing saved yet: the getter falls back to the default.
+    expect(await settingsService.getVenueCancelHealthPenalty()).toBe(5);
+
+    const set = await settingsService.updateAppSettings({ venue_cancel_health_penalty: 12 });
+    expect(set.venue_cancel_health_penalty).toBe(12);
+    expect(await settingsService.getVenueCancelHealthPenalty()).toBe(12);
+
+    // 0 disables the penalty — a `|| DEFAULT` cleaner would silently restore 5.
+    const zero = await settingsService.updateAppSettings({ venue_cancel_health_penalty: 0 });
+    expect(zero.venue_cancel_health_penalty).toBe(0);
+    expect(await settingsService.getVenueCancelHealthPenalty()).toBe(0);
+
+    // Out of range clamps to 0..100; fractions floor.
+    expect(
+      (await settingsService.updateAppSettings({ venue_cancel_health_penalty: 250 }))
+        .venue_cancel_health_penalty
+    ).toBe(100);
+    expect(
+      (await settingsService.updateAppSettings({ venue_cancel_health_penalty: -7 }))
+        .venue_cancel_health_penalty
+    ).toBe(0);
+    expect(
+      (await settingsService.updateAppSettings({ venue_cancel_health_penalty: 7.9 }))
+        .venue_cancel_health_penalty
+    ).toBe(7);
+
+    // Unusable input falls back to the default rather than storing NaN.
+    expect(
+      (await settingsService.updateAppSettings({ venue_cancel_health_penalty: 'abc' as never }))
+        .venue_cancel_health_penalty
+    ).toBe(5);
+
+    // Public read: this is what the partner cancel dialog shows the venue owner.
+    expect((await settingsService.getPublicAppSettings()).venue_cancel_health_penalty).toBe(5);
+  });
+
+  it('defaults the venue-cancel penalty when the stored value is missing', async () => {
+    await settingsService.getAppSettings(); // seed the singleton
+    // Raw driver write — Mongoose would fill the schema default back in.
+    await AppSettingsModel.collection.updateOne(
+      { singleton_key: 'app' },
+      { $unset: { venue_cancel_health_penalty: '' } }
+    );
+
+    expect(await settingsService.getVenueCancelHealthPenalty()).toBe(5);
+    expect((await settingsService.getAppSettings()).venue_cancel_health_penalty).toBe(5);
+    expect((await settingsService.getPublicAppSettings()).venue_cancel_health_penalty).toBe(5);
   });
 
   it('replaces occasional icons, normalising slugs and dropping unusable rows', async () => {

@@ -161,7 +161,6 @@ vi.mock('../complete-pod-dialog', async (importOriginal) => {
             props.onSubmit({
               host_user_id: 'u1',
               venue_bill_amount: 1500,
-              bill_url: 'https://cdn.test/bill.pdf',
               media_text: 'https://cdn.test/party.jpg',
               notes: '',
             })
@@ -492,7 +491,6 @@ describe('PodsPage / complete a pod', () => {
     const values = {
       host_user_id: 'u1',
       venue_bill_amount: 1500,
-      bill_url: 'https://cdn.test/bill.pdf',
       media_text: 'https://cdn.test/party.jpg',
       notes: '',
     };

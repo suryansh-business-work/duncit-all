@@ -14,7 +14,6 @@ import {
   Typography,
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
-import MediaPickerField from '../../../components/MediaPickerField';
 import MediaListField from '../../../components/MediaListField';
 import SettlementPreview from './SettlementPreview';
 import type { CompletePodDialogProps, CompletePodValues } from './complete-pod.types';
@@ -26,16 +25,13 @@ export const mediaTextToInput = (value: string) =>
     .filter(Boolean)
     .map((url) => ({ url, type: /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url) ? 'VIDEO' : 'IMAGE' }));
 
-/** Schema depends on whether the pod has a venue: only then is a bill required. */
+/** Schema depends on whether the pod has a venue: only then is a bill amount required. */
 export const buildCompleteSchema = (hasVenue: boolean) =>
   z.object({
     host_user_id: z.string().trim().min(1, 'Select host'),
     venue_bill_amount: hasVenue
       ? z.coerce.number({ message: 'Enter a valid amount' }).gt(0, 'Venue bill must be greater than 0')
       : z.coerce.number({ message: 'Enter a valid amount' }).min(0),
-    bill_url: hasVenue
-      ? z.string().trim().min(1, 'Bill upload is required').url('Upload or paste a valid bill URL')
-      : z.string().trim(),
     media_text: z.string().trim().min(1, 'Upload at least one party photo or video'),
     notes: z.string().trim().max(1000, 'Notes must be 1000 characters or fewer'),
   });
@@ -46,7 +42,6 @@ export function buildCompleteInput(values: CompletePodValues, podId: string) {
     pod_id: podId,
     host_user_id: values.host_user_id || undefined,
     venue_bill_amount: Number(values.venue_bill_amount) || 0,
-    bill_url: values.bill_url.trim() || undefined,
     evidence_media: mediaTextToInput(values.media_text),
     notes: values.notes.trim() || undefined,
   };
@@ -67,7 +62,6 @@ export default function CompletePodDialog({
   const initialValues: CompletePodValues = {
     host_user_id: hostOptions[0]?.user_id ?? '',
     venue_bill_amount: 0,
-    bill_url: '',
     media_text: '',
     notes: '',
   };
@@ -103,23 +97,7 @@ export default function CompletePodDialog({
                 ))}
               </RhfTextField>
               {hasVenue && (
-                <>
-                  <RhfTextField control={control} name="venue_bill_amount" type="number" label="Venue bill amount" required />
-                  <Controller
-                    control={control}
-                    name="bill_url"
-                    render={({ field, fieldState }) => (
-                      <MediaPickerField
-                        label="Venue bill upload"
-                        value={field.value}
-                        onChange={field.onChange}
-                        folder="/pod-bills"
-                        helperText={fieldState.error?.message ?? ' '}
-                        required
-                      />
-                    )}
-                  />
-                </>
+                <RhfTextField control={control} name="venue_bill_amount" type="number" label="Venue bill amount" required />
               )}
               <Controller
                 control={control}

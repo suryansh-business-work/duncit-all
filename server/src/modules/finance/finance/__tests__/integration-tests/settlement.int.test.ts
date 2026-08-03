@@ -79,6 +79,9 @@ describe('pod settlement (engine v2: venue slot price off the pool, host keeps t
     expect(await collectedForPod(pod._id)).toBe(5000);
 
     // No slot linked → the host-entered venue bill (1500) is the venue amount.
+    // This fallback is why the bill AMOUNT survives the bill-document removal.
+    expect(pod.venue_slot_id).toBeNull();
+    expect(await venueAmountForPod(pod, 1500)).toBe(1500);
     const s = await computePodSettlement(String(pod._id), 1500);
     expect(s.collected_total).toBe(5000);
     expect(s.has_venue).toBe(true);
@@ -210,7 +213,6 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
       {
         pod_id: String(pod._id),
         venue_bill_amount: 1500,
-        bill_url: 'https://x.com/bill.pdf',
         evidence_media: [{ url: 'https://x.com/party.jpg' }],
       },
       { id: String(host._id), isAdmin: false }
@@ -345,7 +347,7 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
 
     await expect(
       paymentReleaseService.completePod(
-        { pod_id: String(pod._id), venue_bill_amount: 1000, bill_url: 'https://x.com/b.pdf', evidence_media: [{ url: 'https://x.com/p.jpg' }] },
+        { pod_id: String(pod._id), venue_bill_amount: 1000, evidence_media: [{ url: 'https://x.com/p.jpg' }] },
         { id: new Types.ObjectId().toString(), isAdmin: false }
       )
     ).rejects.toThrow(/only a host/i);
@@ -353,7 +355,6 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     const input = {
       pod_id: String(pod._id),
       venue_bill_amount: 1000,
-      bill_url: 'https://x.com/b.pdf',
       evidence_media: [{ url: 'https://x.com/p.jpg' }],
     };
     await paymentReleaseService.completePod(input, { id: String(host._id), isAdmin: false });
@@ -362,24 +363,48 @@ describe('completePod — the single trigger: releases auto-approve and wallets 
     ).rejects.toThrow(/already been submitted/i);
   });
 
-  it('requires party media and (for venue pods) a bill upload', async () => {
+  it('requires party media', async () => {
     const host = await seedHost();
     const pod = await seedPod(host._id, (await seedVenue(host._id))._id);
     await seedPayment(pod._id, 5000);
 
     await expect(
       paymentReleaseService.completePod(
-        { pod_id: String(pod._id), venue_bill_amount: 1000, bill_url: 'https://x.com/b.pdf', evidence_media: [] },
+        { pod_id: String(pod._id), venue_bill_amount: 1000, evidence_media: [] },
         { id: String(host._id), isAdmin: false }
       )
     ).rejects.toThrow(/party photos or videos/i);
+  });
 
-    await expect(
-      paymentReleaseService.completePod(
-        { pod_id: String(pod._id), venue_bill_amount: 1000, bill_url: '', evidence_media: [{ url: 'https://x.com/p.jpg' }] },
-        { id: String(host._id), isAdmin: false }
-      )
-    ).rejects.toThrow(/venue bill/i);
+  it('completes a venue pod with no bill document — both releases store a blank bill_url', async () => {
+    const owner = await seedHost();
+    const host = await seedHost(10);
+    const venue = await seedVenue(owner._id, 20);
+    const pod = await seedPod(host._id, venue._id); // venue, no booked slot
+    await seedPayment(pod._id, 5000);
+
+    const result = await paymentReleaseService.completePod(
+      {
+        pod_id: String(pod._id),
+        venue_bill_amount: 1500,
+        evidence_media: [{ url: 'https://x.com/party.jpg' }],
+      },
+      { id: String(host._id), isAdmin: false }
+    );
+
+    expect(result.settlement.has_venue).toBe(true);
+    expect(result.releases.map((r) => r.kind).sort((a, b) => a.localeCompare(b))).toEqual([
+      'HOST_PAYMENT',
+      'VENUE_BILLING',
+    ]);
+    // No bill document is asked for any more, so the stored value is blank…
+    expect(result.releases.every((r) => r.bill_url === '')).toBe(true);
+    const stored = await PaymentReleaseModel.find({ pod_id: pod._id });
+    expect(stored.map((doc) => doc.bill_url)).toEqual(['', '']);
+    // …while the entered venue bill AMOUNT still drives the venue's payout
+    // (no venue_slot_id → venueAmountForPod falls back to 1500, −20% = 1200).
+    const venueRel = result.releases.find((r) => r.kind === 'VENUE_BILLING')!;
+    expect(venueRel.amount_requested).toBe(1200);
   });
 
   it('completes a virtual pod (no venue) with only a host release', async () => {

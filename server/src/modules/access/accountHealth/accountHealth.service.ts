@@ -176,6 +176,42 @@ export const accountHealthService = {
     return buildScore(input.subject_type, input.subject_id, subjectLabel);
   },
 
+  /**
+   * System-issued deduction with no admin actor behind it — e.g. a venue owner
+   * cancelling a pod booked at their venue. `points` is a positive magnitude
+   * (floored, clamped to 0–100); 0 records nothing and simply reports the
+   * current score. Returns the subject's total_score after the penalty.
+   */
+  async applySystemPenalty(input: {
+    subject_type: HealthSubjectType;
+    subject_id: string;
+    points: number;
+    remark: string;
+  }): Promise<number> {
+    if (!Types.ObjectId.isValid(input.subject_id)) fail('BAD_USER_INPUT', 'Invalid subject_id');
+    const floored = Math.floor(Number(input.points));
+    const points = Number.isFinite(floored) ? clamp(floored, 0, 100) : 0;
+
+    const { subjectUserId, subjectLabel } = await resolveSubject(
+      input.subject_type,
+      input.subject_id
+    );
+
+    if (points > 0) {
+      await HealthAdjustmentModel.create({
+        subject_type: input.subject_type,
+        subject_id: new Types.ObjectId(input.subject_id),
+        subject_user_id: subjectUserId,
+        delta: -points,
+        remark: input.remark.trim().slice(0, 500),
+        created_by: null,
+      });
+    }
+
+    const score = await buildScore(input.subject_type, input.subject_id, subjectLabel);
+    return score.total_score;
+  },
+
   async editAdjustment(_adminId: string, input: { id: string; delta: number; remark?: string }) {
     if (!Types.ObjectId.isValid(input.id)) fail('BAD_USER_INPUT', 'Invalid id');
     const doc = await HealthAdjustmentModel.findById(input.id);

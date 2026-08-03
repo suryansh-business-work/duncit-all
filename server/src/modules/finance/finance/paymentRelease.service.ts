@@ -525,8 +525,8 @@ export const paymentReleaseService = {
     return toPub(doc);
   },
 
-  /** Host (or admin) completes a pod: enter the venue bill + upload party media,
-   * and the reconciled host/venue payout releases are created PENDING for
+  /** Host (or admin) completes a pod: enter the venue bill amount + upload party
+   * media, and the reconciled host/venue payout releases are created PENDING for
    * Finance to approve. Returns the computed settlement + the created releases. */
   async completePod(input: any, actor: { id: string; isAdmin: boolean }) {
     const pod = await PodModel.findById(input.pod_id);
@@ -547,7 +547,6 @@ export const paymentReleaseService = {
       });
     }
 
-    const billUrl = clean(input.bill_url);
     const evidence = (input.evidence_media ?? [])
       .map((media: any) => clean(media?.url || media))
       .filter(Boolean)
@@ -559,11 +558,6 @@ export const paymentReleaseService = {
     }
 
     const settlement = await computePodSettlement(String(pod._id), Number(input.venue_bill_amount) || 0);
-    if (settlement.has_venue && !billUrl) {
-      throw new GraphQLError('Upload the venue bill to complete this pod', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
 
     const releases: IPaymentRelease[] = [];
     const hostBeneficiary = await beneficiaryFor('HOST_PAYMENT', pod, input.host_user_id);
@@ -578,7 +572,7 @@ export const paymentReleaseService = {
         beneficiary_name: hostBeneficiary.name,
         beneficiary_email: hostBeneficiary.email,
         amount_requested: settlement.host.payout_amount,
-        bill_url: billUrl,
+        bill_url: '',
         evidence_media: evidence,
         notes: clean(input.notes),
         requested_by: new Types.ObjectId(actor.id),
@@ -600,7 +594,7 @@ export const paymentReleaseService = {
           beneficiary_name: venueBeneficiary.name,
           beneficiary_email: venueBeneficiary.email,
           amount_requested: settlement.venue.payout_amount,
-          bill_url: billUrl,
+          bill_url: '',
           evidence_media: [],
           notes: clean(input.notes),
           requested_by: new Types.ObjectId(actor.id),

@@ -1,8 +1,7 @@
-/** Shared types for the host's "Complete Pod" flow (venue bill + party media). */
+/** Shared types for the host's "Complete Pod" flow (venue bill amount + party media). */
 
 export interface PodCompleteValues {
   venue_bill_amount: string;
-  bill_url: string;
   media_text: string;
 }
 
@@ -14,7 +13,6 @@ export interface HostPodForComplete {
 
 export const blankPodCompleteValues: PodCompleteValues = {
   venue_bill_amount: '',
-  bill_url: '',
   media_text: '',
 };
 

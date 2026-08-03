@@ -37,6 +37,30 @@ export const VENUE_POD_ATTENDEE_PROFILES = gql`
   }
 `;
 
+export const VENUE_CANCEL_POD = gql`
+  mutation VenueCancelPod($pod_id: ID!, $reason: String!) {
+    venueCancelPod(pod_id: $pod_id, reason: $reason) {
+      pod_id
+      health_penalty
+      venue_health_score
+      refunded_count
+    }
+  }
+`;
+
+/**
+ * The Account Health penalty a venue pays for cancelling, straight from Admin >
+ * Pods > Pod Settings. Its own operation name (never `PublicAppSettings`) so it
+ * cannot thrash the shared document's normalized cache entry.
+ */
+export const VENUE_CANCEL_PENALTY = gql`
+  query VenueCancelPenalty {
+    publicAppSettings {
+      venue_cancel_health_penalty
+    }
+  }
+`;
+
 export type VenuePodBucket = 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 
 export interface VenuePodRow {
@@ -64,6 +88,32 @@ export interface AttendeeProfile {
   user_id: string;
   full_name: string | null;
   profile_photo: string | null;
+}
+
+export interface VenueCancelPodResult {
+  pod_id: string;
+  health_penalty: number;
+  venue_health_score: number;
+  refunded_count: number;
+}
+
+/** A venue owner may only pull the plug before the pod starts. */
+export const canCancelVenuePod = (row: VenuePodRow): boolean =>
+  row.bucket === 'UPCOMING' && !row.cancelled_at;
+
+/** Why the Cancel action is unavailable, or null when it is available. */
+export function cancelDisabledReason(row: VenuePodRow): string | null {
+  if (canCancelVenuePod(row)) return null;
+  if (row.cancelled_at || row.bucket === 'CANCELLED') return 'This pod is already cancelled.';
+  if (row.bucket === 'ONGOING') return 'This pod has already started, so it can no longer be cancelled.';
+  return 'This pod has already finished.';
+}
+
+/** Success line for the page snackbar — every number comes from the server. */
+export function cancelSuccessMessage(result: VenueCancelPodResult): string {
+  const refunds =
+    result.refunded_count === 1 ? '1 payment refunded' : `${result.refunded_count} payments refunded`;
+  return `Pod cancelled — ${refunds}. This venue's Account Health is now ${result.venue_health_score}.`;
 }
 
 export const BUCKET_LABELS: Record<VenuePodBucket, string> = {

@@ -16,7 +16,6 @@ import {
   Typography,
 } from '@mui/material';
 import MediaUrlsField from '../../create-pod-page/create-pod/fields/MediaUrlsField';
-import BillUploadField from './BillUploadField';
 import SettlementPreview from './SettlementPreview';
 import { blankPodCompleteValues, type HostPodForComplete, type PodCompleteValues } from './pod-complete.types';
 
@@ -44,12 +43,11 @@ const hasMediaLine = (text: string) =>
 const splitLines = (text: string) =>
   text.split('\n').map((item) => item.trim()).filter(Boolean);
 
-/** Schema depends on whether the pod has a venue: only then is a bill required. */
+/** Schema depends on whether the pod has a venue: only then is a bill amount required. */
 export const buildPodCompleteSchema = (hasVenue: boolean) =>
   z
     .object({
       venue_bill_amount: z.string().trim(),
-      bill_url: z.string().trim(),
       media_text: z.string().refine(hasMediaLine, 'Add at least one party photo or video'),
     })
     .superRefine((values, ctx) => {
@@ -58,9 +56,6 @@ export const buildPodCompleteSchema = (hasVenue: boolean) =>
       if (!Number.isFinite(amount) || amount <= 0) {
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['venue_bill_amount'], message: 'Enter the venue bill amount' });
       }
-      if (!values.bill_url.trim()) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['bill_url'], message: 'Upload the venue bill' });
-      }
     });
 
 /** Maps the validated values onto the server's CompletePodInput. */
@@ -68,7 +63,6 @@ export function buildCompleteInput(values: PodCompleteValues, podId: string) {
   return {
     pod_id: podId,
     venue_bill_amount: Number(values.venue_bill_amount) || 0,
-    bill_url: values.bill_url.trim() || undefined,
     evidence_media: splitLines(values.media_text).map((url) => ({
       url,
       type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE',
@@ -82,8 +76,8 @@ interface PodCompleteFormProps {
   onCompleted: () => void;
 }
 
-/** Host completes a pod: enter the venue bill + upload party media. The split is
- * previewed live; on submit two payout releases are created for Finance. */
+/** Host completes a pod: enter the venue bill amount + upload party media. The
+ * split is previewed live; on submit two payout releases are created for Finance. */
 export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<PodCompleteFormProps>) {
   const hasVenue = !!pod?.venue_id;
   const {
@@ -117,33 +111,20 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
       <DialogContent dividers>
         <Stack component="form" id="pod-complete-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
-            Upload your party photos/videos (with the Duncit banner) and the venue bill. Your
-            payout is credited to your wallet as soon as the pod is completed.
+            Upload your party photos/videos (with the Duncit banner). Your payout is credited to
+            your wallet as soon as the pod is completed.
           </Typography>
           {hasVenue && (
-            <>
-              <TextField
-                label="Venue Bill Amount"
-                required
-                type="number"
-                fullWidth
-                {...register('venue_bill_amount')}
-                error={!!errors.venue_bill_amount}
-                helperText={errors.venue_bill_amount?.message}
-                InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
-              />
-              <Controller
-                control={control}
-                name="bill_url"
-                render={({ field, fieldState }) => (
-                  <BillUploadField
-                    value={field.value}
-                    onChange={field.onChange}
-                    error={fieldState.error?.message}
-                  />
-                )}
-              />
-            </>
+            <TextField
+              label="Venue Bill Amount"
+              required
+              type="number"
+              fullWidth
+              {...register('venue_bill_amount')}
+              error={!!errors.venue_bill_amount}
+              helperText={errors.venue_bill_amount?.message}
+              InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+            />
           )}
           <Controller
             control={control}

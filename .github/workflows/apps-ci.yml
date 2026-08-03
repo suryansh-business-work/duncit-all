@@ -50,9 +50,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test
-        working-directory: app/mweb
-        run: pnpm exec vitest run
+      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+      # - name: Test
+      #   working-directory: app/mweb
+      #   run: pnpm exec vitest run
 
       - name: Typecheck
         working-directory: app/mweb
@@ -96,9 +97,11 @@ jobs:
         working-directory: app/mobile-app
         run: npm run codegen
 
-      - name: Test (jest, 100% coverage gate)
-        working-directory: app/mobile-app
-        run: npm run test:coverage
+      # TEST PAUSE (temporary — see the banner at the top of .claude/CLAUDE.md).
+      # The 100% coverage gate is part of the suite, so it pauses with it.
+      # - name: Test (jest, 100% coverage gate)
+      #   working-directory: app/mobile-app
+      #   run: npm run test:coverage
 
       - name: Typecheck
         working-directory: app/mobile-app

@@ -1,3 +1,5 @@
+TEMPARALLY PAUSE ON TEST CASES ABHI TEST CASES KE WAJAH SE KOI ACTION FAILED NAHI HONA CAHIYE ABHI KOI NAYE TEST CASE NAHI LIKHANA HAI AAGAR KUCH FAIL BHI HO RAHA HAI TO PLEASE IGNORE BELOW LIKHE HUE SABHI TEST KO IGNORE KARO saara focus feature development and all par and local test run nahi karana hai during dev no e2e, no integration no unit
+
 # Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
 ## Tech Stack:

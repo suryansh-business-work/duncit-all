@@ -1,5 +1,5 @@
-import { JSX } from 'react';
-import { Box, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
+import { JSX, useEffect, useState } from 'react';
+import { Box, Button, ButtonBase, Dialog, DialogContent, Stack, Typography } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -14,6 +14,13 @@ const ICONS: Record<StudioMode, JSX.Element> = {
   ECOMM: <Inventory2Icon fontSize="small" />,
 };
 
+const ACTIVE_CAPTION = 'Active right now';
+const PENDING_CAPTION = 'Selected — press Switch to confirm';
+
+/** Label for the confirm button — naming the target makes the two-step flow obvious. */
+const switchButtonLabel = (changed: boolean, mode: StudioMode) =>
+  changed ? `Switch to ${STUDIO_LABEL[mode]}` : 'Switch';
+
 interface Props {
   open: boolean;
   roles: string[];
@@ -22,10 +29,20 @@ interface Props {
   onSelect: (mode: StudioMode) => void;
 }
 
-/** Bubble-style role switcher — one bubble per mode; the active one lifts up
- * and expands into the big primary card below, with smooth transitions. */
+/** Bubble-style role switcher — one bubble per mode; the picked one lifts up
+ * and expands into the big primary card below. Picking a bubble only stages the
+ * choice; nothing switches until the Switch button below is pressed. */
 export default function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: Readonly<Props>) {
   const options = availableModes(roles);
+  const [pending, setPending] = useState<StudioMode>(current);
+
+  // The dialog stays mounted between openings, so the staged pick is reset every
+  // time it opens — otherwise it would reopen on a choice the user abandoned.
+  useEffect(() => {
+    setPending(current);
+  }, [open, current]);
+
+  const changed = pending !== current;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="studio-switch-title">
@@ -35,13 +52,13 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
         </Typography>
         <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 2 }}>
           {options.map((option) => {
-            const selected = option.mode === current;
+            const selected = option.mode === pending;
             return (
               <ButtonBase
                 key={option.mode}
                 aria-label={option.label}
                 aria-pressed={selected}
-                onClick={() => onSelect(option.mode)}
+                onClick={() => setPending(option.mode)}
                 sx={{
                   width: 52,
                   height: 52,
@@ -63,7 +80,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
           })}
         </Stack>
         <Box
-          key={current}
+          key={pending}
           sx={{
             borderRadius: 4,
             px: 2.5,
@@ -82,14 +99,27 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
-              {STUDIO_LABEL[current]}
+              {STUDIO_LABEL[pending]}
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.85, fontWeight: 700 }}>
-              Active right now — tap a bubble to switch
+              {changed ? PENDING_CAPTION : ACTIVE_CAPTION}
             </Typography>
           </Box>
           <CheckCircleIcon />
         </Box>
+        <Button
+          fullWidth
+          size="large"
+          variant="contained"
+          disabled={!changed}
+          onClick={() => onSelect(pending)}
+          sx={{ mt: 2, borderRadius: 999, fontWeight: 900, height: 52 }}
+        >
+          {switchButtonLabel(changed, pending)}
+        </Button>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.25, textAlign: 'center' }}>
+          Switching changes your sidebar, header and dashboard.
+        </Typography>
       </DialogContent>
     </Dialog>
   );

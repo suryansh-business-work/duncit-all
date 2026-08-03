@@ -92,6 +92,7 @@ describe('Sidebar', () => {
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-HOST'));
+    fireEvent.press(screen.getByTestId('studio-switch-confirm'));
     // Every role now shares the same profile card layout — no studio-only list.
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     expect(mockNavigate).toHaveBeenCalledWith(STUDIO_HOME_ROUTE.HOST);

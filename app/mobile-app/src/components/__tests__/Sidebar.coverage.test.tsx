@@ -72,6 +72,7 @@ describe('Sidebar branch coverage', () => {
     renderWithProviders(<Sidebar open onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-VENUE'));
+    fireEvent.press(screen.getByTestId('studio-switch-confirm'));
     // The unified card layout stays; switching jumps to the venue dashboard.
     expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
     expect(mockNavigate).toHaveBeenCalledWith(STUDIO_HOME_ROUTE.VENUE);

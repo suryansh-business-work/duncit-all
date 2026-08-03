@@ -55,14 +55,14 @@ export function HostPodRow({
           flex={1}
           pressStyle={{ opacity: 0.8 }}
         >
-          <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
+          <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
             {title}
           </Text>
           {approval ? (
             <Text
               testID={`host-pod-approval-${id}`}
               fontSize={11.5}
-              fontWeight="900"
+              fontWeight="700"
               color={approval.tone === 'error' ? '$danger' : semantic.warning}
               numberOfLines={1}
             >

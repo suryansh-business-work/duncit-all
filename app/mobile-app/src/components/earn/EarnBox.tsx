@@ -34,7 +34,7 @@ function EnabledStatus({
   cta,
 }: Readonly<{ testID: string; label: string; cta?: EarnBoxCta }>) {
   const enabledLabel = (
-    <Text testID={`${testID}-enabled`} fontSize={12} fontWeight="800" color="$primary">
+    <Text testID={`${testID}-enabled`} fontSize={12} fontWeight="600" color="$primary">
       {label}
     </Text>
   );
@@ -55,7 +55,7 @@ function EnabledStatus({
         justifyContent="center"
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={12} fontWeight="900" color="$onPrimary">
+        <Text fontSize={12} fontWeight="700" color="$onPrimary">
           {cta.label}
         </Text>
       </XStack>
@@ -107,7 +107,7 @@ export function EarnBox({
       >
         <MaterialIcons name={icon} size={22} color={onPrimary} />
       </YStack>
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         {title}
       </Text>
       <Text fontSize={13} color="$muted">

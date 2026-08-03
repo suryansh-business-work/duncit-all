@@ -2,8 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RefreshControl, type ScrollView as RNScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, YStack } from 'tamagui';
 
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -19,15 +18,20 @@ import { useHomeStore } from '@/stores/home.store';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { AdSlot } from '@/components/ads/AdSlot';
+import { ClubRecommendationRow } from '@/components/home/ClubRecommendationRow';
 import { ClubSection } from '@/components/home/ClubSection';
+import { CreatePodFab } from '@/components/home/CreatePodFab';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
+import { HomeEmptyText } from '@/components/home/HomeEmptyText';
 import { HomeFeaturedPods } from '@/components/home/HomeFeaturedPods';
+import { HostCtaBanner } from '@/components/home/HostCtaBanner';
 import { HomeFilterButton } from '@/components/home/HomeFilterButton';
 import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
 import { VerifyEmailBanner } from '@/components/home/VerifyEmailBanner';
 import { StatusRail } from '@/components/status/StatusRail';
+import { useSavedPodHearts } from '@/hooks/useSavedPodHearts';
 import { DEFAULT_HOME_FILTERS, activeFilterCount, type HomeFilters } from '@/utils/home-filters';
 
 /** Scrollable home body — RN port of mWeb's HomePage. Owns the selected vibe
@@ -49,6 +53,7 @@ export function HomeFeed() {
     featuredPods,
     previousPods,
     totalPods,
+    categoryLabelOf,
     refetch,
   } = useHomeFeed(selectedCategoryId, filters, showAllVibes);
   const filterCount = activeFilterCount(filters, selectedCategoryId);
@@ -59,7 +64,8 @@ export function HomeFeed() {
     Boolean(selectedCategoryId) || filters.price !== 'ALL' || filters.date !== 'ALL';
   const bottomSpace = useBottomNavSpace();
   const { data: meData } = useMe();
-  const { primary, onPrimary } = useThemeColors();
+  const saved = useSavedPodHearts();
+  const { primary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isHost = meData?.me?.roles?.includes('HOST') ?? false;
@@ -110,6 +116,8 @@ export function HomeFeed() {
                 onSelect={setSelectedCategoryId}
                 allIcon={brandingData?.branding.home_all_vibe_icon_url}
                 allLayout={brandingData?.branding.home_all_vibe_icon_layout}
+                heading={brandingData?.branding.home_vibe_heading}
+                subheading={brandingData?.branding.home_vibe_subheading}
                 action={
                   <HomeFilterButton
                     count={filterCount}
@@ -132,22 +140,23 @@ export function HomeFeed() {
                   filtered={railsFiltered}
                   onSeeAll={openHappeningNearby}
                   onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
+                  categoryLabelOf={categoryLabelOf}
+                  savedOf={saved.signedIn ? saved.isSaved : undefined}
+                  onToggleSave={saved.signedIn ? saved.toggle : undefined}
                 />
               </TourAnchor>
             </Reveal>
+            <HostCtaBanner
+              isHost={isHost}
+              onCreatePod={() => navigation.navigate('CreatePod')}
+              onBecomeHost={() => navigation.navigate('Earn')}
+            />
+            <ClubRecommendationRow
+              clubs={clubsWithPods.map((entry) => entry.club)}
+              onOpenClub={(club) => openClub(club.club_id)}
+            />
             {isEmpty ? (
-              <Reveal index={4} scale>
-                <Text
-                  testID="home-empty"
-                  textAlign="center"
-                  fontSize={13}
-                  color="$muted"
-                  paddingHorizontal={24}
-                  paddingVertical={32}
-                >
-                  No pods here yet. Pull to refresh or pick a different vibe.
-                </Text>
-              </Reveal>
+              <HomeEmptyText />
             ) : (
               // One anchor around the whole club list: the Clubs step describes
               // what clubs are, so it highlights the region rather than picking
@@ -161,6 +170,7 @@ export function HomeFeed() {
                         pods={pods}
                         onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
                         onOpenClub={(c) => openClub(c.club_id)}
+                        categoryLabelOf={categoryLabelOf}
                       />
                     </Reveal>
                   ))}
@@ -184,28 +194,7 @@ export function HomeFeed() {
         </YStack>
       </ScrollView>
       {isHost ? (
-        <XStack
-          testID="home-create-pod-fab"
-          role="button"
-          aria-label="Create pod"
-          onPress={() => navigation.navigate('CreatePod')}
-          position="absolute"
-          right={16}
-          bottom={bottomSpace + 8}
-          width={56}
-          height={56}
-          borderRadius={28}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$primary"
-          shadowColor="#000000"
-          shadowOpacity={0.25}
-          shadowRadius={12}
-          shadowOffset={{ width: 0, height: 6 }}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <MaterialIcons name="add" size={28} color={onPrimary} />
-        </XStack>
+        <CreatePodFab bottom={bottomSpace + 8} onPress={() => navigation.navigate('CreatePod')} />
       ) : null}
       <HomeFilterSheet
         open={filterOpen}

@@ -68,7 +68,7 @@ export function PodPendingSummaryCard({ view }: Readonly<{ view: PodPendingView 
           style={{ width: '100%', height: 160, borderRadius: 10 }}
         />
       ) : null}
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         {pod.pod_title}
       </Text>
       {rows.map((row) => (

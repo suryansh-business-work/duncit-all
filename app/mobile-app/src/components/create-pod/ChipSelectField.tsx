@@ -66,7 +66,7 @@ export function ChipSelectField({
                 backgroundColor={selected ? '$primary' : 'transparent'}
                 pressStyle={{ opacity: 0.85 }}
               >
-                <Text fontSize={12.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
+                <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {option.label}
                 </Text>
               </XStack>

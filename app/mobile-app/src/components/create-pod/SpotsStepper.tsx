@@ -110,10 +110,10 @@ export function SpotsStepper({
           backgroundColor="$surface"
         >
           <XStack alignItems="center" justifyContent="space-between">
-            <Text fontSize={14} fontWeight="900" color="$color">
+            <Text fontSize={14} fontWeight="700" color="$color">
               Total spots
             </Text>
-            <Text testID="create-pod-spots-value" fontSize={20} fontWeight="900" color="$color">
+            <Text testID="create-pod-spots-value" fontSize={20} fontWeight="700" color="$color">
               {current}
             </Text>
           </XStack>
@@ -153,7 +153,7 @@ export function SpotsStepper({
         backgroundColor="$surface"
       >
         <YStack flex={1}>
-          <Text fontSize={14} fontWeight="900" color="$color">
+          <Text fontSize={14} fontWeight="700" color="$color">
             Total spots
           </Text>
           <Text fontSize={12} color="$muted">
@@ -161,7 +161,7 @@ export function SpotsStepper({
           </Text>
         </YStack>
         {readOnly ? (
-          <Text testID="create-pod-spots-readonly" fontSize={20} fontWeight="900" color="$color">
+          <Text testID="create-pod-spots-readonly" fontSize={20} fontWeight="700" color="$color">
             {value}
           </Text>
         ) : (
@@ -180,7 +180,7 @@ export function SpotsStepper({
               size="$4"
               backgroundColor="$surface"
               color="$color"
-              fontWeight="900"
+              fontWeight="700"
               borderColor="$borderColor"
               keyboardType="numeric"
               value={value}

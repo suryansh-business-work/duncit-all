@@ -75,7 +75,7 @@ export function ClubSegments(props: Readonly<Props>) {
               borderColor={isActive ? '$primary' : '$borderColor'}
               backgroundColor={isActive ? '$primary' : 'transparent'}
             >
-              <Text fontSize={13} fontWeight="900" color={isActive ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="700" color={isActive ? '$onPrimary' : '$color'}>
                 {label}
               </Text>
             </XStack>

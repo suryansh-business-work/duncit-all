@@ -18,14 +18,14 @@ export default function VenueEarningsLinkCard() {
       component={RouterLink}
       to="/venues/earnings"
       variant="outlined"
-      sx={{ borderRadius: '4px', display: 'block', textDecoration: 'none' }}
+      sx={{ borderRadius: '16px', display: 'block', textDecoration: 'none' }}
       data-testid="venue-earnings-link-card"
     >
       <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
         <Stack direction="row" alignItems="center" spacing={1.25}>
           <PaidIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 950, lineHeight: 1.2 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
               Earnings
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>

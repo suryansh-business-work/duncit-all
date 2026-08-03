@@ -36,7 +36,7 @@ export default function EmailTranscriptDialog({ open, sessionId, defaultEmail, o
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Email this chat</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Email this chat</DialogTitle>
       <DialogContent>
         {done ? (
           <Alert severity="success">Transcript sent to {email}.</Alert>

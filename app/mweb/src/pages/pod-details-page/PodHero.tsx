@@ -69,7 +69,7 @@ export default function PodHero({
           mt: -2,
           mx: { xs: -2, sm: -3 },
           height: 240,
-          borderRadius: '4px',
+          borderRadius: '16px',
           overflow: 'hidden',
           background: 'linear-gradient(145deg, #17111d 0%, #2c1728 56%, #111827 100%)',
           display: 'flex',
@@ -78,7 +78,7 @@ export default function PodHero({
         }}
       >
         <EventIcon sx={{ fontSize: 80, color: 'rgba(255,255,255,0.24)' }} />
-        <Typography sx={{ position: 'absolute', left: 18, bottom: 20, right: 18, color: '#fff', fontWeight: 900, lineHeight: 1.05 }} variant="h4">
+        <Typography sx={{ position: 'absolute', left: 18, bottom: 20, right: 18, color: '#fff', fontWeight: 700, lineHeight: 1.05 }} variant="h4">
           {title}
         </Typography>
         <HeroOverlayActions
@@ -98,7 +98,7 @@ export default function PodHero({
         position: 'relative',
         mt: -2,
         mx: { xs: -2, sm: -3 },
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         '.slick-dots': { bottom: 12 },
         '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
@@ -137,7 +137,7 @@ export default function PodHero({
       </Slider>
       <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(5,5,8,0.22) 0%, rgba(5,5,8,0) 38%, rgba(5,5,8,0.72) 100%)' }} />
       <Box sx={{ position: 'absolute', left: 16, right: 90, bottom: 16, zIndex: 2, color: '#fff', pointerEvents: 'none' }}>
-        <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.05 }}>
           {title}
         </Typography>
       </Box>

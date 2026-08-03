@@ -92,7 +92,7 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
         <Text fontSize={11} color="$muted">
           You're hosting
         </Text>
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Your Pod
         </Text>
       </YStack>
@@ -109,7 +109,7 @@ function HostBar({ onGoToDashboard }: Readonly<{ onGoToDashboard: () => void }>)
         backgroundColor="$primary"
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={15} fontWeight="900" color={onPrimary}>
+        <Text fontSize={15} fontWeight="700" color={onPrimary}>
           Go to Dashboard
         </Text>
       </XStack>
@@ -122,7 +122,7 @@ function ClosedNotice() {
   return (
     <XStack flex={1} alignItems="center" gap={8} testID="pod-booking-closed">
       <MaterialIcons name="event-busy" size={20} color={semantic.warning} />
-      <Text flex={1} fontSize={13.5} fontWeight="800" color="$muted">
+      <Text flex={1} fontSize={13.5} fontWeight="600" color="$muted">
         This pod has already taken place — booking is closed.
       </Text>
     </XStack>
@@ -142,7 +142,7 @@ function MemberBar({
           <Text fontSize={11} color="$muted">
             You're going
           </Text>
-          <Text fontSize={16} fontWeight="900" color="$color" testID="pod-booked-label">
+          <Text fontSize={16} fontWeight="700" color="$color" testID="pod-booked-label">
             Pod Booked
           </Text>
           {canBackout ? null : (
@@ -167,7 +167,7 @@ function MemberBar({
           borderColor="$danger"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color="$danger">
+          <Text fontSize={14} fontWeight="700" color="$danger">
             Backout
           </Text>
         </XStack>
@@ -196,7 +196,7 @@ function BookBar({ isFree, isFull, podAmount, onCheckout }: Readonly<BookBarProp
         <Text fontSize={11} color="$muted">
           {isFree ? 'Entry' : 'Price'}
         </Text>
-        <Text fontSize={18} fontWeight="900" color="$color">
+        <Text fontSize={18} fontWeight="700" color="$color">
           {isFree ? 'Free' : `₹${podAmount}`}
         </Text>
       </YStack>
@@ -215,7 +215,7 @@ function BookBar({ isFree, isFull, podAmount, onCheckout }: Readonly<BookBarProp
         opacity={isFull ? 0.6 : 1}
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={15} fontWeight="900" color={onPrimary}>
+        <Text fontSize={15} fontWeight="700" color={onPrimary}>
           {bookText}
         </Text>
       </XStack>

@@ -49,7 +49,7 @@ export function OrdersHistoryScreen() {
     body = (
       <YStack alignItems="center" gap={10} paddingVertical={64} testID="orders-empty">
         <MaterialIcons name="local-shipping" size={44} color={muted} />
-        <Text fontSize={17} fontWeight="900" color="$color">
+        <Text fontSize={17} fontWeight="700" color="$color">
           No product orders yet
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
@@ -63,7 +63,7 @@ export function OrdersHistoryScreen() {
         {orders.map((order) => (
           <YStack key={order.id} gap={4}>
             {order.pod?.pod_title ? (
-              <Text fontSize={11.5} fontWeight="800" color="$muted">
+              <Text fontSize={11.5} fontWeight="600" color="$muted">
                 {order.pod.pod_title}
               </Text>
             ) : null}

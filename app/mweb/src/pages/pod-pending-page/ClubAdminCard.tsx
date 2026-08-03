@@ -45,9 +45,9 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
   }
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="club-admin-card">
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="club-admin-card">
       <Stack spacing={1.25}>
-        <Typography variant="caption" fontWeight={800} color="text.secondary">
+        <Typography variant="caption" fontWeight={600} color="text.secondary">
           Need Help? Contact the Club Admin
         </Typography>
         <Stack direction="row" spacing={1.25} alignItems="center">
@@ -59,7 +59,7 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
           >
             <PersonIcon />
           </Avatar>
-          <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0 }}>
             {admin.name}
           </Typography>
         </Stack>
@@ -74,7 +74,7 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
               size="small"
               startIcon={<CallIcon />}
               data-testid="club-admin-call"
-              sx={{ fontWeight: 800 }}
+              sx={{ fontWeight: 600 }}
             >
               Call
             </Button>
@@ -87,7 +87,7 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
               size="small"
               startIcon={<ChatIcon />}
               data-testid="club-admin-message"
-              sx={{ fontWeight: 800 }}
+              sx={{ fontWeight: 600 }}
             >
               Message
             </Button>
@@ -98,7 +98,7 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
               size="small"
               startIcon={<EmailIcon />}
               data-testid="club-admin-email-action"
-              sx={{ fontWeight: 800 }}
+              sx={{ fontWeight: 600 }}
             >
               Email
             </Button>

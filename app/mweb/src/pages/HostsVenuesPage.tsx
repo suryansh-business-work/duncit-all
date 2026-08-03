@@ -95,10 +95,10 @@ export default function HostsVenuesPage() {
           <StorefrontIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Hosts &amp; Venues
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             Meet trusted people and spaces powering pods
           </Typography>
         </Box>
@@ -114,7 +114,7 @@ export default function HostsVenuesPage() {
         onChange={(_e, v) => setTab(v)}
         textColor="primary"
         TabIndicatorProps={{ sx: { display: 'none' } }}
-        sx={{ p: 0.5, borderRadius: 999, bgcolor: 'action.hover', border: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 42, borderRadius: 999, fontWeight: 950 }, '& .Mui-selected': { bgcolor: 'background.paper', boxShadow: '0 10px 24px rgba(15,23,42,0.12)' } }}
+        sx={{ p: 0.5, borderRadius: 999, bgcolor: 'action.hover', border: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 42, borderRadius: 999, fontWeight: 700 }, '& .Mui-selected': { bgcolor: 'background.paper', boxShadow: '0 10px 24px rgba(15,23,42,0.12)' } }}
       >
         <Tab
           value="HOSTS"

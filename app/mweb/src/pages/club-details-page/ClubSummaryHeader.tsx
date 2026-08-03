@@ -21,10 +21,10 @@ interface Props {
 function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
   return (
     <Box sx={{ flex: 1, textAlign: 'left' }}>
-      <Typography display="block" sx={{ fontWeight: 950, lineHeight: 1 }}>
+      <Typography display="block" sx={{ fontWeight: 700, lineHeight: 1 }}>
         {value}
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
         {label}
       </Typography>
     </Box>
@@ -52,7 +52,7 @@ export default function ClubSummaryHeader({
         p: 2,
         position: 'relative',
         zIndex: 2,
-        borderRadius: '4px',
+        borderRadius: '16px',
         bgcolor: 'background.paper',
         border: 1,
         borderColor: 'divider',
@@ -63,12 +63,12 @@ export default function ClubSummaryHeader({
         <Avatar
           src={featureUrl}
           variant="rounded"
-          sx={{ width: 72, height: 72, borderRadius: '4px', bgcolor: 'primary.main' }}
+          sx={{ width: 72, height: 72, borderRadius: '16px', bgcolor: 'primary.main' }}
         >
           <GroupsIcon />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
             {club.club_name}
           </Typography>
           {categoryCrumbs.length > 0 && (
@@ -99,7 +99,7 @@ export default function ClubSummaryHeader({
           variant={following ? 'outlined' : 'contained'}
           startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />}
           onClick={onToggleFollow}
-          sx={{ borderRadius: '4px', fontWeight: 900 }}
+          sx={{ borderRadius: '16px', fontWeight: 700 }}
         >
           {following ? 'Following' : 'Follow Club'}
         </Button>
@@ -112,7 +112,7 @@ export default function ClubSummaryHeader({
           target={chatUrl ? '_blank' : undefined}
           rel={chatUrl ? 'noreferrer' : undefined}
           disabled={!chatUrl}
-          sx={{ borderRadius: '4px', fontWeight: 900 }}
+          sx={{ borderRadius: '16px', fontWeight: 700 }}
         >
           Chat
         </Button>

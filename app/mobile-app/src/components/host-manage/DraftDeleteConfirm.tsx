@@ -41,7 +41,7 @@ export function DraftDeleteConfirm({ open, busy, onCancel, onConfirm }: Readonly
             gap={10}
           >
             <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="900" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color">
                 Delete draft?
               </Text>
               <Text fontSize={13.5} color="$muted" paddingTop={6}>
@@ -64,7 +64,7 @@ export function DraftDeleteConfirm({ open, busy, onCancel, onConfirm }: Readonly
                   opacity={busy ? 0.6 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Cancel
                   </Text>
                 </XStack>
@@ -85,7 +85,7 @@ export function DraftDeleteConfirm({ open, busy, onCancel, onConfirm }: Readonly
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     {busy ? 'Deleting…' : 'Delete'}
                   </Text>
                 </XStack>

@@ -68,7 +68,7 @@ export function CheckoutSuccess({
   return (
     <YStack testID="checkout-success" alignItems="center" gap={14} padding={20}>
       <MaterialIcons name="check-circle" size={64} color={semantic.success} />
-      <Text fontSize={20} fontWeight="900" color="$color" textAlign="center">
+      <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
         Payment successful
       </Text>
       <YStack
@@ -139,7 +139,7 @@ export function CheckoutSuccess({
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+          <Text fontSize={14} fontWeight="700" color={onPrimary}>
             Home
           </Text>
         </XStack>
@@ -157,7 +157,7 @@ export function CheckoutSuccess({
           borderColor="$borderColor"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color="$color">
+          <Text fontSize={14} fontWeight="700" color="$color">
             {profileLabel}
           </Text>
         </XStack>
@@ -229,7 +229,7 @@ function Row({ label, value }: Readonly<{ label: string; value: string }>) {
       <Text fontSize={13} color="$muted">
         {label}
       </Text>
-      <Text fontSize={13} fontWeight="800" color="$color">
+      <Text fontSize={13} fontWeight="600" color="$color">
         {value}
       </Text>
     </XStack>

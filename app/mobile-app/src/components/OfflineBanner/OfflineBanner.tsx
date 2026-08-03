@@ -22,7 +22,7 @@ export function OfflineBanner() {
         backgroundColor="#b3261e"
       >
         <MaterialIcons name="wifi-off" size={16} color="#ffffff" />
-        <Text fontSize={13} fontWeight="800" color="#ffffff">
+        <Text fontSize={13} fontWeight="600" color="#ffffff">
           No internet connection
         </Text>
       </XStack>

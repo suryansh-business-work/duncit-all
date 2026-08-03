@@ -36,7 +36,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={800}>
+      <Typography variant="caption" color="text.secondary" fontWeight={600}>
         {requiredLabel('Select Category', true)}
       </Typography>
       <Typography
@@ -60,7 +60,7 @@ export default function HostCategoryField({ form, hostCategories }: Readonly<Pro
                 variant={selected ? 'filled' : 'outlined'}
                 onClick={() => pickCategory(key)}
                 data-testid={`create-pod-category-${key}`}
-                sx={{ fontWeight: 800 }}
+                sx={{ fontWeight: 600 }}
               />
             );
           })

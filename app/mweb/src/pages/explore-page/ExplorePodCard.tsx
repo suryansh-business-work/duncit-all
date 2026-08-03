@@ -174,17 +174,17 @@ export default function ExplorePodCard({
           right: 10,
           bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
           p: 0.75,
-          borderRadius: '4px',
+          borderRadius: '16px',
           bgcolor: 'rgba(0,0,0,0.42)',
           border: '1px solid rgba(255,255,255,0.12)',
           backdropFilter: 'blur(16px)',
         }}
       >
-        <Box sx={{ width: 36, height: 36, borderRadius: '4px', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
+        <Box sx={{ width: 36, height: 36, borderRadius: '8px', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
           {expired ? <InfoOutlinedIcon sx={{ fontSize: 19 }} /> : <FlashOnIcon sx={{ fontSize: 19 }} />}
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
             {expired ? 'This pod is expired' : 'Join in 2 taps'}
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.82 }} noWrap>
@@ -196,7 +196,7 @@ export default function ExplorePodCard({
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
-            sx={{ minWidth: 48, borderRadius: '4px', px: 1.2 }}
+            sx={{ minWidth: 48, borderRadius: '16px', px: 1.2 }}
             aria-label="Open pod details"
           >
             Go

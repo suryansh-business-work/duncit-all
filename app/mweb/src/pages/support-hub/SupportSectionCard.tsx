@@ -17,7 +17,7 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
       variant="outlined"
       sx={{
         p: 1.75,
-        borderRadius: '4px',
+        borderRadius: '16px',
         textDecoration: 'none',
         color: 'inherit',
         display: 'block',
@@ -41,7 +41,7 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
           <Icon />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
             {label}
           </Typography>
           <Typography variant="caption" color="text.secondary">
@@ -49,7 +49,7 @@ export default function SupportSectionCard({ section }: Readonly<Props>) {
           </Typography>
         </Box>
         <Stack direction="row" alignItems="center" spacing={0.25} sx={{ color }}>
-          <Typography variant="caption" sx={{ fontWeight: 900 }}>
+          <Typography variant="caption" sx={{ fontWeight: 700 }}>
             Open
           </Typography>
           <ChevronRightIcon fontSize="small" />

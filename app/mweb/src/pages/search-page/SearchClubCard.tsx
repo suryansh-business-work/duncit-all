@@ -53,12 +53,12 @@ export default function SearchClubCard({
           <GroupsIcon />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }} onClick={() => onOpenClub(club.club_id)}>
-          <Typography variant="subtitle1" fontWeight={900} noWrap sx={{ lineHeight: 1.15 }}>
+          <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ lineHeight: 1.15 }}>
             {club.club_name}
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
             {categoryName && (
-              <Typography variant="caption" color="primary.main" fontWeight={800} noWrap>
+              <Typography variant="caption" color="primary.main" fontWeight={600} noWrap>
                 {categoryName}
               </Typography>
             )}
@@ -76,7 +76,7 @@ export default function SearchClubCard({
             icon={<HowToRegIcon />}
             color="primary"
             label="Following"
-            sx={{ fontWeight: 800, flex: '0 0 auto' }}
+            sx={{ fontWeight: 600, flex: '0 0 auto' }}
           />
         ) : (
           <FollowButton

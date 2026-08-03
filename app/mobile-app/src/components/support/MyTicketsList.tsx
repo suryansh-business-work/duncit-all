@@ -65,10 +65,10 @@ export function MyTicketsList() {
           pressStyle={{ opacity: 0.85 }}
         >
           <XStack justifyContent="space-between" alignItems="center" gap={8}>
-            <Text fontSize={14} fontWeight="800" color="$color" flex={1} numberOfLines={1}>
+            <Text fontSize={14} fontWeight="600" color="$color" flex={1} numberOfLines={1}>
               {t.subject}
             </Text>
-            <Text fontSize={11} fontWeight="900" color="$primary">
+            <Text fontSize={11} fontWeight="700" color="$primary">
               {LABEL[t.status as Filter] ?? t.status}
             </Text>
           </XStack>
@@ -81,7 +81,7 @@ export function MyTicketsList() {
 
   return (
     <YStack gap={10} testID="my-tickets-list">
-      <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
         Your tickets
       </Text>
       <XStack gap={6} flexWrap="wrap">
@@ -102,7 +102,7 @@ export function MyTicketsList() {
               backgroundColor={active ? '$primary' : 'transparent'}
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={12} fontWeight="800" color={active ? '$onPrimary' : '$muted'}>
+              <Text fontSize={12} fontWeight="600" color={active ? '$onPrimary' : '$muted'}>
                 {LABEL[f]} ({countFor(f)})
               </Text>
             </XStack>

@@ -24,7 +24,7 @@ export default function OrdersHistoryPage() {
     return (
       <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
         <LocalShippingIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-        <Typography variant="h6" fontWeight={900}>
+        <Typography variant="h6" fontWeight={700}>
           No product orders yet
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -37,7 +37,7 @@ export default function OrdersHistoryPage() {
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
           My Product Orders
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
@@ -47,7 +47,7 @@ export default function OrdersHistoryPage() {
       {orders.map((order) => (
         <Stack key={order.id} spacing={0.5}>
           {order.pod?.pod_title && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
               {order.pod.pod_title}
             </Typography>
           )}

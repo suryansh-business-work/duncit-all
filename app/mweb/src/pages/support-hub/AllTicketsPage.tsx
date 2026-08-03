@@ -67,24 +67,24 @@ export default function AllTicketsPage() {
               key={`${row.source}-${row.id}`}
               variant="outlined"
               onClick={() => target && navigate(target)}
-              sx={{ p: 1.5, borderRadius: '4px', cursor: target ? 'pointer' : 'default' }}
+              sx={{ p: 1.5, borderRadius: '16px', cursor: target ? 'pointer' : 'default' }}
             >
               <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="caption" sx={{ fontWeight: 900, color: 'text.secondary' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
                       {row.ticket_no}
                     </Typography>
                     <Chip size="small" label={SOURCE_LABEL[row.source]} color={SOURCE_COLOR[row.source]} variant="outlined" />
                   </Stack>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
                     {row.title}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {formatDistanceToNowStrict(new Date(row.created_at))} ago
                   </Typography>
                 </Box>
-                <Chip size="small" label={row.status} sx={{ fontWeight: 800 }} />
+                <Chip size="small" label={row.status} sx={{ fontWeight: 600 }} />
               </Stack>
             </Paper>
           );

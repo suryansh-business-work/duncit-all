@@ -40,7 +40,7 @@ export default function EarnBox({
     <Card
       variant="outlined"
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         opacity: disabled && !cta ? 0.55 : 1,
         boxShadow: 'none',
         '&:hover': { boxShadow: 'none' },
@@ -62,14 +62,14 @@ export default function EarnBox({
             >
               {icon}
             </Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {description}
             </Typography>
             {disabled && !cta && (
-              <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 800 }} />
+              <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
             )}
           </Stack>
         </CardContent>
@@ -77,12 +77,12 @@ export default function EarnBox({
       {cta && (
         <Box sx={{ px: 3, pb: 2 }}>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 800 }} />
+            <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 600 }} />
             <Button
               size="small"
               variant="contained"
               onClick={cta.onClick}
-              sx={{ borderRadius: 999, fontWeight: 800, textTransform: 'none' }}
+              sx={{ borderRadius: 999, fontWeight: 600, textTransform: 'none' }}
             >
               {cta.label}
             </Button>

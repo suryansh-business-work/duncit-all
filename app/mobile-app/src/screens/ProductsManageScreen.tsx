@@ -49,7 +49,7 @@ export function ProductsManageScreen() {
             borderColor="$borderColor"
             backgroundColor="$surface"
           >
-            <Text fontSize={15} fontWeight="900" color="$color">
+            <Text fontSize={15} fontWeight="700" color="$color">
               Stock by product
             </Text>
             <Text fontSize={11.5} color="$muted">

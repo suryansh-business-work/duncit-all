@@ -35,13 +35,13 @@ export default function ClubPreview({ club }: Readonly<Props>) {
       direction="row"
       spacing={1.5}
       alignItems="center"
-      sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
+      sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
     >
       <Avatar variant="rounded" src={cover} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
         <GroupsIcon />
       </Avatar>
       <Box sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
           {club.club_name}
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
@@ -51,15 +51,15 @@ export default function ClubPreview({ club }: Readonly<Props>) {
             icon={<StorefrontOutlinedIcon />}
             label={`${club.matched_venues_count ?? 0} ${(club.matched_venues_count ?? 0) === 1 ? 'venue' : 'venues'}`}
           />
-          <Button size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 900 }}>
+          <Button size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 700 }}>
             View club details
           </Button>
         </Stack>
       </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">
-        <DialogTitle sx={{ fontWeight: 900, display: 'flex', alignItems: 'center', pr: 1 }}>
-          <Typography component="span" sx={{ flex: 1, fontWeight: 900 }} noWrap>
+        <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', pr: 1 }}>
+          <Typography component="span" sx={{ flex: 1, fontWeight: 700 }} noWrap>
             {club.club_name}
           </Typography>
           <IconButton size="small" aria-label="Close club details" onClick={() => setOpen(false)}>
@@ -76,7 +76,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
                     component="img"
                     src={item.url}
                     alt={club.club_name}
-                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
+                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: '16px', flexShrink: 0 }}
                   />
                 ))}
               </Stack>

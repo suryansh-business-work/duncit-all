@@ -36,13 +36,13 @@ export function PodClubCard({
           {logo ? (
             <AppImage source={{ uri: logo }} style={{ width: 48, height: 48 }} resizeMode="cover" />
           ) : (
-            <Text fontSize={18} fontWeight="900" color="$primary">
+            <Text fontSize={18} fontWeight="700" color="$primary">
               {initial}
             </Text>
           )}
         </YStack>
         <YStack flex={1} gap={2}>
-          <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
             {club.club_name}
           </Text>
           <CategoryBreadcrumb crumbs={categoryCrumbs} />
@@ -64,7 +64,7 @@ export function PodClubCard({
         pressStyle={{ opacity: 0.8 }}
       >
         <MaterialIcons name="groups" size={18} color={primary} />
-        <Text fontSize={14} fontWeight="800" color="$primary">
+        <Text fontSize={14} fontWeight="600" color="$primary">
           View club
         </Text>
       </XStack>

@@ -10,12 +10,20 @@ import { PodCard } from '@/components/home/PodCard';
 
 interface ClubSectionProps extends ClubWithPods {
   onOpenPod: (pod: HomePod) => void;
+  /** The category chip over each card's image (mock: "Sports"). */
+  categoryLabelOf?: (pod: HomePod) => string | null;
   onOpenClub: (club: HomeClub) => void;
 }
 
 /** A club header (avatar + name + description) above a horizontal row of its
  * pods — RN port of mWeb's ClubSection. */
-export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<ClubSectionProps>) {
+export function ClubSection({
+  club,
+  pods,
+  onOpenPod,
+  onOpenClub,
+  categoryLabelOf,
+}: Readonly<ClubSectionProps>) {
   const { onPrimary } = useThemeColors();
   const image = club.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
 
@@ -51,7 +59,7 @@ export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<Club
           )}
         </YStack>
         <YStack flex={1}>
-          <Text fontSize={15.5} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text fontSize={15.5} fontWeight="700" color="$color" numberOfLines={1}>
             {club.club_name}
           </Text>
           {club.club_description ? (
@@ -68,7 +76,13 @@ export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<Club
       >
         {pods.map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
-            <PodCard pod={pod} width={260} showPlace={false} onPress={() => onOpenPod(pod)} />
+            <PodCard
+              pod={pod}
+              width={260}
+              showPlace={false}
+              onPress={() => onOpenPod(pod)}
+              categoryLabel={categoryLabelOf?.(pod)}
+            />
           </Reveal>
         ))}
       </ScrollView>

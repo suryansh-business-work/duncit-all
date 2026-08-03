@@ -38,7 +38,7 @@ export function PrivacyToggleCard({
     >
       <MaterialIcons name="lock-outline" size={20} color={color} />
       <YStack flex={1}>
-        <Text fontSize={14.5} fontWeight="900" color="$color">
+        <Text fontSize={14.5} fontWeight="700" color="$color">
           Private account
         </Text>
         <Text fontSize={12.5} fontWeight="700" color="$muted">

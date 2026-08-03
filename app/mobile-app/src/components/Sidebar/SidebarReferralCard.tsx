@@ -40,7 +40,7 @@ export function SidebarReferralCard({
           <MaterialIcons name={REFERRAL_TILE.icon} size={22} color={success} />
         </YStack>
         <YStack flex={1}>
-          <Text numberOfLines={1} fontSize={14} fontWeight="800" color="$color">
+          <Text numberOfLines={1} fontSize={14} fontWeight="600" color="$color">
             {REFERRAL_TILE.label}
           </Text>
           <Text numberOfLines={1} fontSize={12} color="$muted">

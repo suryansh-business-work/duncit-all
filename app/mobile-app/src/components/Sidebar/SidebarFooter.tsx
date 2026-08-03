@@ -25,7 +25,7 @@ export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) 
         pressStyle={{ opacity: 0.8 }}
       >
         <MaterialIcons name="logout" size={18} color={semantic.error} />
-        <Text fontSize={14} fontWeight="800" color="$danger">
+        <Text fontSize={14} fontWeight="600" color="$danger">
           Logout
         </Text>
       </XStack>

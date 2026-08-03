@@ -47,7 +47,7 @@ export function SeeAllCard({ count, width = 200, height = 230, onPress, testID }
       >
         <MaterialIcons name="arrow-forward" size={22} color={onPrimary} />
       </YStack>
-      <Text fontSize={14} fontWeight="900" color="$color">
+      <Text fontSize={14} fontWeight="700" color="$color">
         {t('mweb.home.seeAll')}
       </Text>
       {count !== undefined ? (

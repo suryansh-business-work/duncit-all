@@ -29,7 +29,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
         opacity={busy ? 0.6 : 1}
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Cancel
         </Text>
       </XStack>
@@ -50,7 +50,7 @@ export function ResubmitFooter({ busy, onCancel, onSubmit }: Readonly<Props>) {
         pressStyle={{ opacity: 0.85 }}
       >
         {busy ? <Spinner size="small" color={onPrimary} /> : null}
-        <Text fontSize={14} fontWeight="900" color="$onPrimary">
+        <Text fontSize={14} fontWeight="700" color="$onPrimary">
           {busy ? 'Resubmitting…' : 'Resubmit request'}
         </Text>
       </XStack>

@@ -5,6 +5,7 @@ import { Text, YStack } from 'tamagui';
 import { AppImage } from '@/components/AppImage';
 import type { VibeIconLayout } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useThemeStore } from '@/stores/theme.store';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 type FlexDirection = 'column' | 'column-reverse' | 'row' | 'row-reverse';
@@ -79,11 +80,15 @@ export function VibeCategoryTab({
   onPress,
 }: Readonly<VibeCategoryTabProps>) {
   const { primary, color } = useThemeColors();
+  const dark = useThemeStore((s) => s.scheme) === 'dark';
   const tint = selected ? primary : color;
   const flexDirection = POSITION_TO_DIRECTION[iconLayout?.position ?? ''] ?? 'column';
   const iconWidth = iconLayout?.width ?? DEFAULT_ICON_SIZE;
   const iconHeight = iconLayout?.height ?? DEFAULT_ICON_SIZE;
+  const selectedFill = dark ? 'rgba(255,79,115,0.18)' : 'rgba(255,79,115,0.08)';
 
+  // The mock's CARD tile: rounded card, icon over label, selected = primary
+  // border + soft primary fill (the underline bar is gone).
   return (
     <YStack
       testID={testID}
@@ -92,10 +97,16 @@ export function VibeCategoryTab({
       aria-pressed={selected}
       onPress={onPress}
       flexDirection={flexDirection}
-      width={74}
+      minWidth={84}
       alignItems="center"
+      justifyContent="center"
       gap={5}
-      paddingVertical={4}
+      paddingVertical={10}
+      paddingHorizontal={8}
+      borderRadius={16}
+      borderWidth={1.5}
+      borderColor={selected ? '$primary' : '$borderColor'}
+      backgroundColor={selected ? selectedFill : '$surface'}
       pressStyle={{ opacity: 0.85 }}
     >
       <YStack width={iconWidth} height={iconHeight} alignItems="center" justifyContent="center">
@@ -108,17 +119,10 @@ export function VibeCategoryTab({
           height={iconHeight}
         />
       </YStack>
-      <YStack
-        testID={`${testID}-underline`}
-        width={22}
-        height={3}
-        borderRadius={2}
-        backgroundColor={selected ? '$primary' : 'transparent'}
-      />
       <Text
         fontSize={11.5}
-        fontWeight="800"
-        color={selected ? '$primary' : '$muted'}
+        fontWeight={selected ? '700' : '600'}
+        color={selected ? '$primary' : '$color'}
         numberOfLines={1}
       >
         {label}

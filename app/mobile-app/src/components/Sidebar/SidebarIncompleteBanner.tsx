@@ -23,7 +23,7 @@ export function SidebarIncompleteBanner({
         <XStack flex={1} alignItems="center" gap={10}>
           <YStack width={8} height={8} borderRadius={4} backgroundColor="$primary" />
           <YStack flex={1}>
-            <Text numberOfLines={1} fontSize={13.5} fontWeight="800" color="$color">
+            <Text numberOfLines={1} fontSize={13.5} fontWeight="600" color="$color">
               Your profile is incomplete
             </Text>
             <Text fontSize={12} color="$muted">
@@ -42,7 +42,7 @@ export function SidebarIncompleteBanner({
           paddingVertical={7}
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={12.5} fontWeight="800" color="$background">
+          <Text fontSize={12.5} fontWeight="600" color="$background">
             Complete
           </Text>
         </XStack>

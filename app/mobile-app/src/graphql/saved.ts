@@ -16,6 +16,7 @@ export const MySavedPodsDocument = gql(`
       pod_type
       pod_amount
       no_of_spots
+      pod_attendees
       host_names
       pod_images_and_videos {
         url

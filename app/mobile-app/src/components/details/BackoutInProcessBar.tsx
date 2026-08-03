@@ -14,7 +14,7 @@ export function BackoutInProcessBar({
     return (
       <XStack flex={1} alignItems="center" gap={8} testID="pod-backout-locked">
         <MaterialIcons name="lock-clock" size={20} color={semantic.warning} />
-        <Text flex={1} fontSize={13} fontWeight="800" color="$muted">
+        <Text flex={1} fontSize={13} fontWeight="600" color="$muted">
           A replacement has been confirmed — this Backout can no longer be cancelled.
         </Text>
       </XStack>
@@ -28,7 +28,7 @@ export function BackoutInProcessBar({
           <Text fontSize={11} color="$muted">
             Searching for a replacement
           </Text>
-          <Text fontSize={15} fontWeight="900" color="$color" testID="pod-backout-in-process">
+          <Text fontSize={15} fontWeight="700" color="$color" testID="pod-backout-in-process">
             Backout in process
           </Text>
         </YStack>
@@ -56,7 +56,7 @@ export function BackoutInProcessBar({
 function KeepSpotLabel() {
   const { onPrimary } = useThemeColors();
   return (
-    <Text fontSize={14} fontWeight="900" color={onPrimary}>
+    <Text fontSize={14} fontWeight="700" color={onPrimary}>
       Keep My Spot
     </Text>
   );

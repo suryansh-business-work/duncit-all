@@ -42,7 +42,7 @@ export function SupportHelpCenter() {
     <>
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 28 }}>
         <YStack gap={4}>
-          <Text testID="support-hero-title" fontSize={22} fontWeight="900" color="$color">
+          <Text testID="support-hero-title" fontSize={22} fontWeight="700" color="$color">
             Have a burning question?
           </Text>
           <Text fontSize={13.5} color="$muted">

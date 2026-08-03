@@ -18,7 +18,7 @@ function PodRail({ title, pods, priceFormat, onOpen }: Readonly<Props & { title:
   if (pods.length === 0) return null;
   return (
     <Box>
-      <Typography variant="subtitle1" fontWeight={900} sx={{ mb: 0.75 }}>
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.75 }}>
         {title}
       </Typography>
       <Stack direction="row" spacing={1.25} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>

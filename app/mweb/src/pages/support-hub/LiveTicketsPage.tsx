@@ -24,12 +24,12 @@ export default function LiveTicketsPage() {
       <Paper
         onClick={() => navigate('/live-chat')}
         variant="outlined"
-        sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(33,150,243,0.08)', cursor: 'pointer' }}
+        sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(33,150,243,0.08)', cursor: 'pointer' }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
           <ForumIcon color="primary" />
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
               Chat live with an agent
             </Typography>
             <Typography variant="caption" color="text.secondary">

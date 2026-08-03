@@ -38,7 +38,7 @@ export function StartConversation({ onPress }: Readonly<{ onPress: () => void }>
         <MaterialIcons name="chat-bubble-outline" size={22} color="#ffffff" />
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={15} fontWeight="900" color="#ffffff">
+        <Text fontSize={15} fontWeight="700" color="#ffffff">
           Start a conversation
         </Text>
         <Text fontSize={12.5} color="#ffffff" opacity={0.9}>

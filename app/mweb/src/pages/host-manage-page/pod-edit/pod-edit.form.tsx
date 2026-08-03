@@ -100,7 +100,7 @@ export default function PodEditForm({ pod, onClose, onSaved }: Readonly<PodEditF
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 900 }}>Edit pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Edit pod</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-edit-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <TextField
@@ -145,7 +145,7 @@ export default function PodEditForm({ pod, onClose, onSaved }: Readonly<PodEditF
           form="pod-edit-form"
           variant="contained"
           disabled={saveState.loading}
-          sx={{ borderRadius: 999, fontWeight: 900 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {saveState.loading ? 'Saving…' : 'Save changes'}
         </Button>

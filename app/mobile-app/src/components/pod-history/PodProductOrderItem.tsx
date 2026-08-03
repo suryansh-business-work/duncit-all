@@ -23,7 +23,7 @@ function Chip({ label, filled }: Readonly<{ label: string; filled?: boolean }>) 
       borderWidth={filled ? 0 : 1}
       borderColor="$borderColor"
     >
-      <Text fontSize={10.5} fontWeight="800" color={filled ? '$onPrimary' : '$color'}>
+      <Text fontSize={10.5} fontWeight="600" color={filled ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -79,7 +79,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             {li.name}
             {li.variant_label ? ` — ${li.variant_label}` : ''} × {li.qty}
           </Text>
-          <Text fontSize={13} fontWeight="800" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {formatMoney(order.currency_symbol, li.gross)}
           </Text>
         </XStack>
@@ -106,7 +106,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             }}
           >
             <MaterialIcons name="open-in-new" size={14} color="#ff4f73" />
-            <Text fontSize={12.5} fontWeight="800" color="$primary">
+            <Text fontSize={12.5} fontWeight="600" color="$primary">
               Track shipment
             </Text>
           </XStack>

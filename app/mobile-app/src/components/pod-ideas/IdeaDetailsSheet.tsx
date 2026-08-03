@@ -71,7 +71,7 @@ export function IdeaDetailsSheet({ id, myId, onClose, onChanged }: Readonly<Prop
             >
               <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
                 <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                  <Text flex={1} fontSize={18} fontWeight="900" color="$color" numberOfLines={1}>
+                  <Text flex={1} fontSize={18} fontWeight="700" color="$color" numberOfLines={1}>
                     {idea?.title ?? 'Pod idea'}
                   </Text>
                   <XStack

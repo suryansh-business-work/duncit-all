@@ -44,7 +44,7 @@ function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={17} fontWeight="900" color={onPrimary}>
+          <Text fontSize={17} fontWeight="700" color={onPrimary}>
             {initial}
           </Text>
         )}
@@ -59,7 +59,7 @@ function PersonChip({ person, isHost, onPress }: Readonly<PersonProps>) {
           backgroundColor={primary}
         >
           <MaterialIcons name="star" size={9} color={onPrimary} />
-          <Text fontSize={9} fontWeight="900" color={onPrimary}>
+          <Text fontSize={9} fontWeight="700" color={onPrimary}>
             Host
           </Text>
         </XStack>
@@ -96,7 +96,7 @@ export function ChatParticipantsPanel({
       borderBottomWidth={1}
       borderBottomColor="$borderColor"
     >
-      <Text fontSize={12} fontWeight="800" color="$muted">
+      <Text fontSize={12} fontWeight="600" color="$muted">
         {count} {count === 1 ? 'participant' : 'participants'}
       </Text>
       <ScrollView

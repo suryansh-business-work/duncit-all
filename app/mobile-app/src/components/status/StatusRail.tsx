@@ -133,6 +133,8 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             if (!uploading) fireAndForget(pickAndUpload());
           }}
         />
+        {/* The sponsored tile sits second, right after "Your story" (mock). */}
+        <AdSlot position="STATUS" variant="tile" />
         {followed.map((item, itemIndex) => (
           <StatusTile
             key={item.key}
@@ -143,7 +145,6 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             onPress={() => openAt(mine ? itemIndex + 1 : itemIndex)}
           />
         ))}
-        <AdSlot position="STATUS" variant="tile" />
       </ScrollView>
       <StatusViewer
         status={active ?? null}

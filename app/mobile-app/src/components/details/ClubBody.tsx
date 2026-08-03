@@ -19,7 +19,7 @@ import { pickPodMoments } from '@/utils/club-detail';
 function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   return (
     <YStack flex={1} alignItems="flex-start">
-      <Text fontSize={18} fontWeight="900" color="$color">
+      <Text fontSize={18} fontWeight="700" color="$color">
         {value}
       </Text>
       <Text fontSize={12} fontWeight="700" color="$muted">
@@ -74,7 +74,7 @@ export function ClubBody({
 
   return (
     <YStack padding={16} gap={18}>
-      <Text fontSize={24} fontWeight="900" color="$color">
+      <Text fontSize={24} fontWeight="700" color="$color">
         {club.club_name}
       </Text>
       <CategoryBreadcrumb crumbs={categoryCrumbs} />
@@ -108,7 +108,7 @@ export function ClubBody({
       <ClubTotalMembersSection count={club.followers_count ?? 0} />
       {members.length > 0 ? (
         <YStack gap={8} testID="club-members">
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             Pod Members
           </Text>
           <AttendeesSection
@@ -148,7 +148,7 @@ export function ClubBody({
               pressStyle={{ opacity: 0.85 }}
             >
               <MaterialIcons name="chat" size={18} color={onPrimary} />
-              <Text fontSize={14} fontWeight="900" color="$onPrimary">
+              <Text fontSize={14} fontWeight="700" color="$onPrimary">
                 {link.label}
               </Text>
             </XStack>

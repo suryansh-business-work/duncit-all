@@ -87,11 +87,11 @@ export default function HostPodsCard({
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <EventIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
+          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             Your pods
           </Typography>
           <Tooltip title="Filter pods">

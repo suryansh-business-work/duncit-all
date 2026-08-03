@@ -45,7 +45,7 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: 
       backgroundColor="$surface"
     >
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+        <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {payout.pod_title}
         </Text>
         <XStack
@@ -54,7 +54,7 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: 
           borderRadius={999}
           backgroundColor={STATUS_BG[payout.status] ?? '#6b7280'}
         >
-          <Text fontSize={10.5} fontWeight="900" color="#ffffff">
+          <Text fontSize={10.5} fontWeight="700" color="#ffffff">
             {payout.status}
           </Text>
         </XStack>
@@ -64,10 +64,10 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: 
       </Text>
       <WaterfallLine b={payout.breakdown} symbol={symbol} />
       <XStack justifyContent="space-between">
-        <Text fontSize={13} fontWeight="900" color="$color">
+        <Text fontSize={13} fontWeight="700" color="$color">
           Payout
         </Text>
-        <Text fontSize={13} fontWeight="900" color="$primary">
+        <Text fontSize={13} fontWeight="700" color="$primary">
           {symbol}
           {payable.toFixed(2)}
         </Text>
@@ -88,7 +88,7 @@ export function VenueEarningsScreen() {
         <YStack gap={16} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-earnings-loading" color="$primary" /> : null}
           {summary ? <EarningsSummaryTiles summary={summary} /> : null}
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             Payout history
           </Text>
           {!isLoading && payouts.length === 0 ? (

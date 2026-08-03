@@ -16,7 +16,7 @@ export function ClubFaqsSection({ faqs }: Readonly<{ faqs: Faq[] }>) {
   if (faqs.length === 0) return null;
   return (
     <YStack gap={8} testID="club-faqs">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         FAQs
       </Text>
       {faqs.map((faq) => {
@@ -39,7 +39,7 @@ export function ClubFaqsSection({ faqs }: Readonly<{ faqs: Faq[] }>) {
               justifyContent="space-between"
               gap={8}
             >
-              <Text flex={1} fontSize={14} fontWeight="800" color="$color">
+              <Text flex={1} fontSize={14} fontWeight="600" color="$color">
                 {faq.question}
               </Text>
               <MaterialIcons

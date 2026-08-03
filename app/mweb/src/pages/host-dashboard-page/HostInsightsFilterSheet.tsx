@@ -34,7 +34,7 @@ export default function HostInsightsFilterSheet({
       open={open}
       onClose={onClose}
       title={
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           Filter pods by month
         </Typography>
       }
@@ -51,7 +51,7 @@ export default function HostInsightsFilterSheet({
           <Button
             variant="contained"
             onClick={() => onApply(draft)}
-            sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}
+            sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
           >
             Apply
           </Button>
@@ -69,7 +69,7 @@ export default function HostInsightsFilterSheet({
               color={selected ? 'primary' : 'default'}
               variant={selected ? 'filled' : 'outlined'}
               onClick={() => setDraft(value)}
-              sx={{ height: 32, fontWeight: 800 }}
+              sx={{ height: 32, fontWeight: 600 }}
             />
           );
         })}

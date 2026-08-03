@@ -143,12 +143,12 @@ export default function UserHostPanel() {
           <WorkspacePremiumIcon fontSize="small" />
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Host application</Typography>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Host application</Typography>
           <Typography variant="caption" color="text.secondary">
             {isApproved ? 'Approved host profile' : `Step ${completed} of 4 completed`}
           </Typography>
         </Box>
-        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />
+        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
       </Stack>
       <Stack direction="row" spacing={0.75} alignItems="center">
         {labels.map((label, index) => {
@@ -156,7 +156,7 @@ export default function UserHostPanel() {
           return (
             <Box key={label} sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'divider', mb: 0.6 }} />
-              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 10, fontWeight: 900 }} noWrap>
+              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 10, fontWeight: 700 }} noWrap>
                 {label}
               </Typography>
             </Box>
@@ -174,7 +174,7 @@ export default function UserHostPanel() {
         to="/become-host"
         variant="contained"
         size="large"
-        sx={{ borderRadius: 999, fontWeight: 950 }}
+        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {isApproved ? 'Update host profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
       </Button>

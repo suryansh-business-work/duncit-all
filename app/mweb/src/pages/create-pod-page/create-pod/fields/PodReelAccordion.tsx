@@ -85,7 +85,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
         '&:before': { display: 'none' },
         border: '1px solid',
         borderColor: 'divider',
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         boxShadow: 'none',
         bgcolor: 'background.paper',
@@ -99,7 +99,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
       >
         <Stack direction="row" alignItems="center" spacing={1.25} sx={{ flex: 1 }}>
           <MovieOutlinedIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" fontWeight={900}>Pod Reel</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>Pod Reel</Typography>
           {hasReel && <Chip label="Added" size="small" color="primary" />}
         </Stack>
       </AccordionSummary>
@@ -114,7 +114,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               src={reelUrl}
               controls
               playsInline
-              sx={{ width: '100%', maxHeight: 320, borderRadius: '4px', bgcolor: 'common.black' }}
+              sx={{ width: '100%', maxHeight: 320, borderRadius: '16px', bgcolor: 'common.black' }}
             />
           )}
           {error && (

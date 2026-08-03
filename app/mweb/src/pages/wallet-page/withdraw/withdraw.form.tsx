@@ -80,7 +80,7 @@ export default function WithdrawForm({ open, maxAmount, currency, onClose, onDon
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Withdraw from wallet</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Withdraw from wallet</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="withdraw-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <TextField
@@ -114,7 +114,7 @@ export default function WithdrawForm({ open, maxAmount, currency, onClose, onDon
         <Button onClick={onClose} disabled={state.loading}>
           Cancel
         </Button>
-        <Button type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 900 }}>
+        <Button type="submit" form="withdraw-form" variant="contained" disabled={state.loading} sx={{ borderRadius: 999, fontWeight: 700 }}>
           {state.loading ? 'Requesting…' : 'Request withdrawal'}
         </Button>
       </DialogActions>

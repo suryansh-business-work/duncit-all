@@ -20,7 +20,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
       onClick={onOpen}
       sx={{
         cursor: 'pointer',
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         bgcolor: 'background.paper',
         background: (theme) => `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
@@ -34,11 +34,11 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
           <CardMedia
             component={cover.type === 'VIDEO' ? 'video' : 'img'}
             src={cover.url}
-            sx={{ height: 154, borderRadius: '4px', objectFit: 'cover' }}
+            sx={{ height: 154, borderRadius: '16px', objectFit: 'cover' }}
             {...coverMediaProps}
           />
         ) : (
-          <Box sx={{ height: 154, borderRadius: '4px', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 50%, #35158a 100%)' }}>
+          <Box sx={{ height: 154, borderRadius: '16px', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 50%, #35158a 100%)' }}>
             <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.18)', color: 'common.white' }}>
               <GroupsIcon />
             </Avatar>
@@ -47,10 +47,10 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
       </Box>
       <CardContent sx={{ pt: 0.75, '&:last-child': { pb: 1.5 } }}>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.75 }}>
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950, lineHeight: 1.15 }} noWrap>
+          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700, lineHeight: 1.15 }} noWrap>
             {club.club_name}
           </Typography>
-          <Chip size="small" label={`${podCount} pod${podCount === 1 ? '' : 's'}`} color="primary" sx={{ fontWeight: 900 }} />
+          <Chip size="small" label={`${podCount} pod${podCount === 1 ? '' : 's'}`} color="primary" sx={{ fontWeight: 700 }} />
         </Stack>
         {club.club_description && (
           <Typography
@@ -61,7 +61,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
             {club.club_description}
           </Typography>
         )}
-        <Button fullWidth variant="contained" endIcon={<ArrowForwardIcon />} onClick={(event) => { event.stopPropagation(); onOpen(); }} sx={{ mt: 1.5, borderRadius: 999, fontWeight: 900 }}>
+        <Button fullWidth variant="contained" endIcon={<ArrowForwardIcon />} onClick={(event) => { event.stopPropagation(); onOpen(); }} sx={{ mt: 1.5, borderRadius: 999, fontWeight: 700 }}>
           Open Club
         </Button>
       </CardContent>

@@ -56,7 +56,7 @@ export function HomeFilterButton({
           justifyContent="center"
           backgroundColor="$primary"
         >
-          <Text fontSize={9} fontWeight="900" color="$onPrimary">
+          <Text fontSize={9} fontWeight="700" color="$onPrimary">
             {count}
           </Text>
         </XStack>

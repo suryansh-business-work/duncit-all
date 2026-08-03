@@ -19,6 +19,7 @@ export const MobileMeDocument = gql(`
       selected_location_id
       roles
       locale
+      saved_pod_ids
     }
   }
 `);

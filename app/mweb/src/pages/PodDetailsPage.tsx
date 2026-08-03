@@ -218,7 +218,7 @@ export default function PodDetailsPage() {
             `/support/tickets?category=BOOKING&podId=${pod.id}&podTitle=${encodeURIComponent(pod.pod_title)}&subject=${encodeURIComponent(supportSubject)}`
           )
         }
-        sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
+        sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
       >
         Contact support about this pod
       </Button>

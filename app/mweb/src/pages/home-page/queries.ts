@@ -17,6 +17,9 @@ export const HOME_DATA = gql`
       }
       category_id
       super_category_id
+      followers_count
+      is_verified
+      location_id
     }
     pods(filter: $podFilter) {
       id

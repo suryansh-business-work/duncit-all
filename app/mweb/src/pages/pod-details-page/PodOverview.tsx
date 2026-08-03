@@ -52,7 +52,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
       sx={{
         p: 2,
         mt: -1.5,
-        borderRadius: '4px',
+        borderRadius: '16px',
         color: textColor,
         background: isDark
           ? 'linear-gradient(145deg, #15111c 0%, #2a1926 52%, #0f172a 100%)'
@@ -64,7 +64,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
     >
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.05 }}>
+          <Typography variant="h4" fontWeight={700} sx={{ lineHeight: 1.05 }}>
         {pod.pod_title}
       </Typography>
           {hostLine && <Typography variant="body2" sx={{ color: mutedColor, mt: 0.6 }} noWrap>Hosted by {hostLine}</Typography>}
@@ -83,7 +83,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
         <Chip
           label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
-          sx={{ fontWeight: 900, fontSize: '1rem', px: 0.5, height: 32, bgcolor: isDark ? '#fff' : alpha(theme.palette.primary.main, 0.12), color: isDark ? '#111827' : 'primary.dark' }}
+          sx={{ fontWeight: 700, fontSize: '1rem', px: 0.5, height: 32, bgcolor: isDark ? '#fff' : alpha(theme.palette.primary.main, 0.12), color: isDark ? '#111827' : 'primary.dark' }}
         />
         <Chip
           icon={pod.pod_mode === 'VIRTUAL' ? <VideocamIcon /> : <PlaceIcon />}
@@ -94,13 +94,13 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         <TimeChip iso={pod.pod_date_time} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-        <Box sx={{ flex: 1, p: 1.2, borderRadius: '4px', bgcolor: softBg }}>
+        <Box sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
           <Typography variant="caption" sx={{ color: mutedColor }}>People in</Typography>
-          <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1 }}>{spotsTaken}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{spotsTaken}</Typography>
         </Box>
-        <Box sx={{ flex: 1, p: 1.2, borderRadius: '4px', bgcolor: softBg }}>
+        <Box sx={{ flex: 1, p: 1.2, borderRadius: '16px', bgcolor: softBg }}>
           <Typography variant="caption" sx={{ color: mutedColor }}>Spots left</Typography>
-          <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>{Math.max(spotsTotal - spotsTaken, 0)}</Typography>
         </Box>
       </Stack>
       <PodQuickStats

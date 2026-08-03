@@ -45,11 +45,11 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
     >
       <XStack alignItems="center" gap={6}>
         <MaterialIcons name="insights" size={16} color={EARN_GREEN} />
-        <Text fontSize={14} fontWeight="900" color="$color">
+        <Text fontSize={14} fontWeight="700" color="$color">
           Potential earnings
         </Text>
       </XStack>
-      <Text fontSize={11.5} fontWeight="800" color="$muted">
+      <Text fontSize={11.5} fontWeight="600" color="$muted">
         Your take-home for the full pod
       </Text>
       {noOfSpots > 0 ? (
@@ -89,10 +89,10 @@ export function PricePanel({ finance, pricing }: Readonly<Props>) {
         <YStack gap={10} testID="create-pod-earnings">
           <YStack gap={2}>
             <XStack justifyContent="space-between" gap={12}>
-              <Text fontSize={13} fontWeight="800" color="$color" flexShrink={1}>
+              <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
                 Total collection ({money(podAmount)} × {projection.payable_spots})
               </Text>
-              <Text fontSize={13} fontWeight="900" color={EARN_GREEN}>
+              <Text fontSize={13} fontWeight="700" color={EARN_GREEN}>
                 {money(waterfall.amount)}
               </Text>
             </XStack>

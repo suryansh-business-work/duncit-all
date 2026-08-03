@@ -38,7 +38,7 @@ export default function StickyPodActionPanel(props: Readonly<Props>) {
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',
           p: 0.75,
-          borderRadius: '4px',
+          borderRadius: '16px',
           border: 1,
           borderColor: 'divider',
           bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.94),

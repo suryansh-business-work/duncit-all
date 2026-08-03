@@ -37,12 +37,12 @@ export default function SpotsStepper({
 
   if (slidable) {
     return (
-      <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '4px' }}>
+      <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '16px' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" fontWeight={700}>
             Total spots
           </Typography>
-          <Typography variant="h6" fontWeight={900} data-testid="spots-value" aria-label="Total spots">
+          <Typography variant="h6" fontWeight={700} data-testid="spots-value" aria-label="Total spots">
             {value}
           </Typography>
         </Stack>
@@ -77,16 +77,16 @@ export default function SpotsStepper({
         alignItems="center"
         justifyContent="space-between"
         spacing={1}
-        sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '4px' }}
+        sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '16px' }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="subtitle2" fontWeight={900}>Total spots</Typography>
+          <Typography variant="subtitle2" fontWeight={700}>Total spots</Typography>
           <Typography variant="caption" color="text.secondary">
             {readOnly ? 'Set by the venue space you picked.' : 'Number of available tickets.'}
           </Typography>
         </Box>
         {readOnly ? (
-          <Typography variant="h6" fontWeight={900} sx={{ px: 1.5 }} aria-label="Total spots">
+          <Typography variant="h6" fontWeight={700} sx={{ px: 1.5 }} aria-label="Total spots">
             {value}
           </Typography>
         ) : (
@@ -99,7 +99,7 @@ export default function SpotsStepper({
               size="small"
               value={value}
               onChange={(e) => set(Number.parseInt(e.target.value, 10))}
-              sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 900 } }}
+              sx={{ width: 76, '& input': { textAlign: 'center', fontWeight: 700 } }}
               inputProps={{ 'aria-label': 'Total spots', min, max }}
             />
             <IconButton aria-label="Increase spots" size="small" disabled={value >= max} onClick={() => set(value + 1)} sx={{ border: 1, borderColor: 'divider' }}>

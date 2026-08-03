@@ -59,7 +59,7 @@ export default function PodHistoryDetailsPage() {
         </IconButton>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0 }}>Pod History</Typography>
-          <Typography variant="h5" fontWeight={950} sx={{ lineHeight: 1.1 }} noWrap>{selected.pod?.pod_title ?? 'Details'}</Typography>
+          <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }} noWrap>{selected.pod?.pod_title ?? 'Details'}</Typography>
         </Box>
       </Stack>
       <PodHistoryDetails

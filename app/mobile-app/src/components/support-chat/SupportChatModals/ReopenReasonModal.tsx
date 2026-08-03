@@ -26,7 +26,7 @@ export function ReopenReasonModal({
   if (!open) return null;
   return (
     <Backdrop testID="reopen-reason-modal">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Re-open this conversation
       </Text>
       <Text fontSize={13} color="$muted">

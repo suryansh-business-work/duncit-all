@@ -24,7 +24,7 @@ export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: s
         sx={{
           position: 'relative',
           height: CARD_HEIGHT,
-          borderRadius: '4px',
+          borderRadius: '16px',
           overflow: 'hidden',
           cursor: 'pointer',
           bgcolor: 'grey.900',
@@ -60,7 +60,7 @@ export default function VenuesCard({ onNavigate }: Readonly<{ onNavigate: (to: s
           }}
         >
           <Box>
-            <Typography sx={{ fontSize: 26, fontWeight: 900, lineHeight: 1.2 }}>Venues</Typography>
+            <Typography sx={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>Venues</Typography>
             <Typography sx={{ fontSize: 12.5, fontWeight: 700, opacity: 0.85 }}>
               Discover spaces to meet near you
             </Typography>

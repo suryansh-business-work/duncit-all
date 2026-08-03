@@ -39,7 +39,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
       backgroundColor="rgba(0,0,0,0.35)"
     >
       {media.heading ? (
-        <Text fontSize={24} fontWeight="900" color="#ffffff" maxWidth={260}>
+        <Text fontSize={24} fontWeight="700" color="#ffffff" maxWidth={260}>
           {media.heading}
         </Text>
       ) : null}
@@ -62,7 +62,7 @@ function SlideOverlay({ media }: Readonly<{ media: SliderMedia }>) {
           backgroundColor="#ffffff"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={13} fontWeight="800" color="#111111">
+          <Text fontSize={13} fontWeight="600" color="#111111">
             {media.cta_label}
           </Text>
         </XStack>

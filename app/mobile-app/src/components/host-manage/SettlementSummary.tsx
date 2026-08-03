@@ -88,7 +88,7 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       backgroundColor="rgba(255,79,115,0.08)"
       testID="settlement-summary"
     >
-      <Text fontSize={13} fontWeight="900" color="$color">
+      <Text fontSize={13} fontWeight="700" color="$color">
         Your share (credited to your wallet on completion)
       </Text>
       {body}

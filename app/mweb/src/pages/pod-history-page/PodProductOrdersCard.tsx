@@ -37,7 +37,7 @@ export default function PodProductOrdersCard({ podId }: Readonly<{ podId?: strin
       <CardContent>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <ShoppingBagIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle1" fontWeight={950}>
+          <Typography variant="subtitle1" fontWeight={700}>
             Products &amp; tracking
           </Typography>
         </Stack>

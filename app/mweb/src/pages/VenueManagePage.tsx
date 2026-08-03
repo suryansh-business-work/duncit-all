@@ -94,17 +94,17 @@ function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProp
     <Box
       sx={{
         p: 1.25,
-        borderRadius: '4px',
+        borderRadius: '16px',
         border: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
       }}
     >
       <Stack direction="row" spacing={1.25}>
-        <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '4px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
+        <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '16px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
         <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }} noWrap>
+          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }} noWrap>
             {venue.venue_name}
           </Typography>
         </Stack>
@@ -134,11 +134,11 @@ function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProp
         </Stack>
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
-        <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+        <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
           Edit
         </Button>
         {venue?.status === 'APPROVED' && (
-          <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+          <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
             Public link
           </Button>
         )}
@@ -176,27 +176,27 @@ export default function VenueManagePage() {
           <StorefrontIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Venue Studio
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             List your space, run events, get discovered
           </Typography>
         </Box>
-        <Button component={RouterLink} to="/register-venue" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+        <Button component={RouterLink} to="/register-venue" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
           New venue
         </Button>
       </Stack>
 
       <Stack direction="row" spacing={1}>
         {[{ label: 'Listed', value: venueCount, icon: <StorefrontIcon fontSize="small" /> }, { label: 'Capacity', value: capacity || '-', icon: <ChairIcon fontSize="small" /> }, { label: 'Status', value: venue?.status ?? 'New', icon: <InsightsIcon fontSize="small" /> }].map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Stack direction="row" spacing={0.75} alignItems="center" color="primary.main">
                 {item.icon}
-                <Typography variant="caption" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
+                <Typography variant="caption" sx={{ fontWeight: 700 }} noWrap>{item.label}</Typography>
               </Stack>
-              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }} noWrap>{item.value}</Typography>
+              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }} noWrap>{item.value}</Typography>
             </CardContent>
           </Card>
         ))}
@@ -204,9 +204,9 @@ export default function VenueManagePage() {
 
       <VenueEarningsLinkCard />
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             Pods at your venue
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -217,7 +217,7 @@ export default function VenueManagePage() {
       </Card>
 
       {health && venue?.id && (
-        <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+        <Card variant="outlined" sx={{ borderRadius: '16px' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
               <HealthMeter
@@ -229,7 +229,7 @@ export default function VenueManagePage() {
                 caption="Tap for details"
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {bandHeadline(health.band)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -251,10 +251,10 @@ export default function VenueManagePage() {
         </Card>
       )}
 
-      <Card variant="outlined" sx={{ borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.10)' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               Your application
             </Typography>
             <UserVenuePanel />
@@ -262,14 +262,14 @@ export default function VenueManagePage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" sx={{ mb: 1.5 }}>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>Your venues</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Your venues</Typography>
               <Typography variant="caption" color="text.secondary">{venueCount} listed</Typography>
             </Box>
-            <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />
+            <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
           </Stack>
           <VenueListBody showSpinner={loading && !data} error={error} venue={venue} />
         </CardContent>

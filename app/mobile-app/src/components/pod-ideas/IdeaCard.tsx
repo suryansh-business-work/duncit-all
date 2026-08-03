@@ -60,12 +60,12 @@ export function IdeaCard({
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={15} fontWeight="900" color="$color">
+          <Text fontSize={15} fontWeight="700" color="$color">
             {initial}
           </Text>
         </YStack>
         <YStack flex={1}>
-          <Text fontSize={13.5} fontWeight="800" color="$color" numberOfLines={1}>
+          <Text fontSize={13.5} fontWeight="600" color="$color" numberOfLines={1}>
             {author?.full_name ?? 'Member'}
           </Text>
           <Text fontSize={11.5} color="$muted">
@@ -79,7 +79,7 @@ export function IdeaCard({
             borderRadius={999}
             backgroundColor={statusColor(idea.status)}
           >
-            <Text fontSize={10} fontWeight="900" color="#ffffff">
+            <Text fontSize={10} fontWeight="700" color="#ffffff">
               {idea.status}
             </Text>
           </XStack>
@@ -105,7 +105,7 @@ export function IdeaCard({
         gap={4}
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           {idea.title}
         </Text>
         <Text fontSize={13.5} color="$muted" numberOfLines={4} lineHeight={19}>
@@ -123,7 +123,7 @@ export function IdeaCard({
               borderRadius={6}
               backgroundColor="$background"
             >
-              <Text fontSize={10.5} fontWeight="800" color="$muted">
+              <Text fontSize={10.5} fontWeight="600" color="$muted">
                 {idea.idea_no}
               </Text>
             </XStack>

@@ -83,7 +83,7 @@ export function SurveyScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <YStack gap={4} paddingBottom={12}>
-            <Text fontSize={30} fontWeight="800" color="$color">
+            <Text fontSize={30} fontWeight="600" color="$color">
               What&apos;s your vibe? ✨
             </Text>
             <Text fontSize={14} color="$muted">

@@ -62,7 +62,7 @@ export default function SlotMonthGrid({
         >
           <MaterialIcons name="chevron-left" size={24} color="#8a8a8f" />
         </XStack>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {title}
         </Text>
         <XStack

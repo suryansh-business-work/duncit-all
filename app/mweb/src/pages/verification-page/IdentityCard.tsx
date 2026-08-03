@@ -83,7 +83,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
             startIcon={<UploadFileIcon />}
             disabled={busy}
             onClick={() => inputRef.current?.click()}
-            sx={{ mt: 1, borderRadius: 999, fontWeight: 900 }}
+            sx={{ mt: 1, borderRadius: 999, fontWeight: 700 }}
           >
             {busy ? 'Uploading…' : uploadLabel}
           </Button>

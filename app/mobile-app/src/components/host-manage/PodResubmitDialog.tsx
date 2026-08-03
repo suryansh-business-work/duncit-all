@@ -109,7 +109,7 @@ export function PodResubmitDialog({ pod, onClose, onSaved }: Readonly<Props>) {
               padding={18}
             >
               <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={6}>
+                <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={6}>
                   Edit & resubmit pod
                 </Text>
                 <Text fontSize={12.5} color="$muted" paddingBottom={10}>

@@ -19,7 +19,7 @@ export default function AiMonitorChip({ onClick }: Readonly<Props>) {
         py: 0.5,
         gap: 0.5,
         color: '#fff',
-        fontWeight: 900,
+        fontWeight: 700,
         fontSize: 11,
         lineHeight: 1,
         background: 'linear-gradient(120deg, #7C3AED, #EC4899, #F59E0B)',

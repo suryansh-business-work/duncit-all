@@ -55,10 +55,10 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
         <XStack alignItems="center" gap={8}>
           <MaterialIcons name="place" size={18} color={primary} />
           <YStack flex={1}>
-            <Text fontSize={12} fontWeight="800" color="$muted">
+            <Text fontSize={12} fontWeight="600" color="$muted">
               Pod location
             </Text>
-            <Text testID="create-pod-location-label" fontSize={15} fontWeight="900" color="$color">
+            <Text testID="create-pod-location-label" fontSize={15} fontWeight="700" color="$color">
               {location
                 ? [locationLabel(location), location.state].filter(Boolean).join(', ')
                 : 'No location selected'}
@@ -81,7 +81,7 @@ export function LocationClubStep({ form, clubs, locations }: Readonly<Props>) {
             borderRadius={10}
             pressStyle={{ opacity: 0.7 }}
           >
-            <Text fontSize={13} fontWeight="800" color="$color">
+            <Text fontSize={13} fontWeight="600" color="$color">
               Change
             </Text>
           </XStack>

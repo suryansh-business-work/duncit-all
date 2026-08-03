@@ -40,7 +40,7 @@ function FilterChipRow({
             color={value === val ? 'primary' : 'default'}
             variant={value === val ? 'filled' : 'outlined'}
             onClick={() => onSelect(val)}
-            sx={{ height: 32, fontWeight: 800, borderRadius: 999, flex: '0 0 auto' }}
+            sx={{ height: 32, fontWeight: 600, borderRadius: 999, flex: '0 0 auto' }}
           />
         ))}
       </Stack>
@@ -52,7 +52,7 @@ function FilterChipRow({
 function FilterSection({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <Stack spacing={0.75}>
-      <Typography variant="caption" sx={{ fontWeight: 900, color: 'text.secondary' }}>
+      <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>
         {title.toUpperCase()}
       </Typography>
       {children}

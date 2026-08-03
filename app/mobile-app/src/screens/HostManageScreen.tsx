@@ -75,7 +75,7 @@ export function HostManageScreen() {
             pressStyle={{ opacity: 0.85 }}
           >
             <MaterialIcons name="insights" size={18} color={ink} />
-            <Text fontSize={14} fontWeight="800" color="$color">
+            <Text fontSize={14} fontWeight="600" color="$color">
               Dashboard & Insights
             </Text>
           </XStack>
@@ -90,7 +90,7 @@ export function HostManageScreen() {
 
           <HostShareSection {...payoutsApi} />
 
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             Draft pods
           </Text>
           {drafts.length > 0 ? (
@@ -130,7 +130,7 @@ export function HostManageScreen() {
                 borderColor="$borderColor"
                 backgroundColor="$surface"
               >
-                <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
+                <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
                   {draft.pod_title || 'Untitled pod'}
                 </Text>
                 <Text fontSize={12} color="$muted">
@@ -152,7 +152,7 @@ export function HostManageScreen() {
                     backgroundColor="$primary"
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={13} fontWeight="900" color="$onPrimary">
+                    <Text fontSize={13} fontWeight="700" color="$onPrimary">
                       Continue
                     </Text>
                   </XStack>

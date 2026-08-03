@@ -70,7 +70,7 @@ export default function PaymentDetailsCard({
   const fieldSx = {
     '& .MuiInputLabel-root': { color: 'text.secondary' },
     '& .MuiInputLabel-root.Mui-focused': { color: '#ff8b5f' },
-    '& .MuiOutlinedInput-root': { minHeight: 56, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.84), color: 'text.primary', borderRadius: '4px' },
+    '& .MuiOutlinedInput-root': { minHeight: 56, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.84), color: 'text.primary', borderRadius: '16px' },
     '& .MuiInputBase-input, & .MuiSelect-select': { color: 'text.primary', py: 1.45 },
     '& .MuiSelect-select': { display: 'flex', alignItems: 'center' },
     '& .MuiSelect-icon': { color: 'text.secondary' },
@@ -81,20 +81,20 @@ export default function PaymentDetailsCard({
     PaperProps: {
       sx: {
         mt: 1,
-        borderRadius: '4px',
+        borderRadius: '16px',
         border: '1px solid',
         borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider',
         bgcolor: isDark ? '#171821' : theme.palette.background.paper,
         boxShadow: '0 18px 44px rgba(15,23,42,0.2)',
-        '& .MuiMenuItem-root': { minHeight: 42, fontWeight: 700, borderRadius: '4px', mx: 0.75, my: 0.25 },
+        '& .MuiMenuItem-root': { minHeight: 42, fontWeight: 700, borderRadius: '16px', mx: 0.75, my: 0.25 },
       },
     },
   };
 
   return (
-    <Card sx={{ flex: 1, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
+    <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={900} gutterBottom>Payment details</Typography>
+        <Typography variant="subtitle1" fontWeight={700} gutterBottom>Payment details</Typography>
         <Stack spacing={2} sx={{ mt: 3 }}>
           <CheckoutFields
             control={control}
@@ -131,7 +131,7 @@ export default function PaymentDetailsCard({
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
             onClick={onSubmit}
             disabled={submitting || total <= 0}
-            sx={{ minHeight: 48, borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
+            sx={{ minHeight: 48, borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >
             {submitting ? 'Processing...' : `Pay ${formatMoney(currency, effectiveTotal)}`}
           </Button>

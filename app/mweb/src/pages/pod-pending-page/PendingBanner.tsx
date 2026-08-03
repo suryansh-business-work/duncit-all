@@ -12,7 +12,7 @@ export default function PendingBanner() {
   return (
     <Stack spacing={1.25} alignItems="center" sx={{ py: 2 }} data-testid="pod-pending-banner">
       <CheckCircleIcon sx={{ fontSize: 64, color: 'warning.main' }} />
-      <Typography variant="h6" fontWeight={900} textAlign="center">
+      <Typography variant="h6" fontWeight={700} textAlign="center">
         {HEADING}
       </Typography>
       <Typography variant="body2" color="text.secondary" textAlign="center">

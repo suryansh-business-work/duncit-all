@@ -81,30 +81,30 @@ export default function ReferralPage() {
           <CardGiftcardIcon fontSize="small" />
         </Box>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Refer &amp; Earn
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             Share your code, bring friends to Duncit
           </Typography>
         </Box>
       </Stack>
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
             YOUR CODE
           </Typography>
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mt: 0.5 }}>
-            <Typography variant="h5" sx={{ fontWeight: 950, letterSpacing: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: 1 }}>
               {referral?.code}
             </Typography>
-            <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => void copyCode()} sx={{ borderRadius: 999, fontWeight: 900 }}>
+            <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => void copyCode()} sx={{ borderRadius: 999, fontWeight: 700 }}>
               {copied ? 'Copied!' : 'Copy'}
             </Button>
           </Stack>
           {referral?.gift_description && (
-            <Alert icon={<CardGiftcardIcon />} severity="success" sx={{ mt: 1.5, borderRadius: '4px' }}>
+            <Alert icon={<CardGiftcardIcon />} severity="success" sx={{ mt: 1.5, borderRadius: '16px' }}>
               {referral.gift_description}
             </Alert>
           )}
@@ -117,9 +117,9 @@ export default function ReferralPage() {
       </Card>
 
       {!referral?.referred_by_name && (
-        <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+        <Card variant="outlined" sx={{ borderRadius: '16px' }}>
           <CardContent>
-            <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
               Got a friend's code?
             </Typography>
             <Stack direction="row" spacing={1}>
@@ -130,7 +130,7 @@ export default function ReferralPage() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value.toUpperCase())}
               />
-              <Button variant="contained" onClick={() => void redeem().catch(() => undefined)} disabled={applyState.loading || !draft.trim()} sx={{ borderRadius: 999, fontWeight: 900, px: 3 }}>
+              <Button variant="contained" onClick={() => void redeem().catch(() => undefined)} disabled={applyState.loading || !draft.trim()} sx={{ borderRadius: 999, fontWeight: 700, px: 3 }}>
                 {applyState.loading ? 'Applying…' : 'Apply'}
               </Button>
             </Stack>
@@ -139,10 +139,10 @@ export default function ReferralPage() {
         </Card>
       )}
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
+            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
               Friends you referred
             </Typography>
             <Chip size="small" label={referral?.referred?.length ?? 0} />
@@ -152,8 +152,8 @@ export default function ReferralPage() {
           ) : (
             <Stack spacing={1}>
               {referral.referred.map((entry: any) => (
-                <Stack key={entry.user_id} direction="row" alignItems="center" spacing={1} sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}>
-                  <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 800 }} noWrap>
+                <Stack key={entry.user_id} direction="row" alignItems="center" spacing={1} sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
+                  <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
                     {entry.full_name || 'New member'}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>

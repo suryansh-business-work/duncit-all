@@ -24,7 +24,7 @@ interface Props {
 /** A labelled field: a caption above its input (Item 1 — proper labels). */
 function FieldLabel({ children }: Readonly<{ children: string }>) {
   return (
-    <Text fontSize={12.5} fontWeight="800" color="$muted">
+    <Text fontSize={12.5} fontWeight="600" color="$muted">
       {children}
     </Text>
   );
@@ -94,7 +94,7 @@ export function TicketForm({
           borderColor="$primary"
         >
           <MaterialIcons name="event" size={14} color={primary} />
-          <Text fontSize={12} fontWeight="800" color="$primary">
+          <Text fontSize={12} fontWeight="600" color="$primary">
             About pod: {podTitle}
           </Text>
         </XStack>
@@ -170,7 +170,7 @@ export function TicketForm({
         disabled={submitting}
         backgroundColor="$primary"
         color="$onPrimary"
-        fontWeight="900"
+        fontWeight="700"
       >
         {submitting ? 'Sending…' : 'Send to support'}
       </Button>

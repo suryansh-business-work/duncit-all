@@ -35,7 +35,7 @@ function TypeCard({ testID, label, caption, icon, selected, onPress }: Readonly<
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name={icon} size={24} color={selected ? primary : color} />
-      <Text fontSize={16} fontWeight="900" color={selected ? '$primary' : '$color'}>
+      <Text fontSize={16} fontWeight="700" color={selected ? '$primary' : '$color'}>
         {label}
       </Text>
       <Text fontSize={11.5} color="$muted">

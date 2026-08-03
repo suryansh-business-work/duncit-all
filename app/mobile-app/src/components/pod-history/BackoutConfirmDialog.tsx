@@ -67,7 +67,7 @@ export function BackoutConfirmDialog({
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={18} fontWeight="900" color="$color">
+                <Text fontSize={18} fontWeight="700" color="$color">
                   Backout from Pod?
                 </Text>
                 <XStack
@@ -85,14 +85,14 @@ export function BackoutConfirmDialog({
               </XStack>
 
               <YStack paddingHorizontal={16} gap={8}>
-                <Text fontSize={14} fontWeight="800" color="$color">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   You will get the refund only if someone fills your spot.
                 </Text>
                 {refundAmount == null ? null : (
                   <Text
                     testID="backout-refund-amount"
                     fontSize={13.5}
-                    fontWeight="800"
+                    fontWeight="600"
                     color="$primary"
                   >
                     If the refund is done, you will get ₹{refundAmount} (after the {deductionPct}%
@@ -121,7 +121,7 @@ export function BackoutConfirmDialog({
                   aria-label="View backout terms"
                   onPress={onViewTerms}
                   fontSize={12}
-                  fontWeight="800"
+                  fontWeight="600"
                   color="$primary"
                 >
                   Read the full Backout Terms &amp; Conditions
@@ -145,7 +145,7 @@ export function BackoutConfirmDialog({
                   opacity={busy ? 0.6 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Close
                   </Text>
                 </XStack>
@@ -166,7 +166,7 @@ export function BackoutConfirmDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     {busy ? 'Backing out…' : 'Confirm Backout'}
                   </Text>
                 </XStack>

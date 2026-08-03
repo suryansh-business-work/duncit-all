@@ -16,7 +16,7 @@ export default function ClubTotalMembersSection({ count }: Readonly<Props>) {
       alignItems="center"
       sx={{
         p: 1.75,
-        borderRadius: '4px',
+        borderRadius: '16px',
         bgcolor: 'background.paper',
         border: 1,
         borderColor: 'divider',
@@ -37,14 +37,14 @@ export default function ClubTotalMembersSection({ count }: Readonly<Props>) {
         <GroupsIcon sx={{ color: 'primary.main' }} />
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography sx={{ fontWeight: 900, fontSize: 16, lineHeight: 1.2 }}>
+        <Typography sx={{ fontWeight: 700, fontSize: 16, lineHeight: 1.2 }}>
           Total Members
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12.5 }}>
           People following this club
         </Typography>
       </Box>
-      <Typography sx={{ fontWeight: 900, fontSize: 22, color: 'primary.main' }}>
+      <Typography sx={{ fontWeight: 700, fontSize: 22, color: 'primary.main' }}>
         {count}
       </Typography>
     </Stack>

@@ -128,7 +128,7 @@ function ReviewCard({
   return (
     <YStack gap={4} paddingTop={10} borderTopWidth={1} borderColor="$borderColor">
       <XStack gap={6} alignItems="center">
-        <Text fontSize={13} fontWeight="800" color={ink}>
+        <Text fontSize={13} fontWeight="600" color={ink}>
           {review.user_name}
         </Text>
         <Stars value={review.rating} size={14} />
@@ -151,7 +151,7 @@ function ReviewCard({
       ) : null}
       {review.seller_reply ? (
         <YStack gap={2} padding={8} backgroundColor="$color2" borderRadius={8}>
-          <Text fontSize={11} fontWeight="800" color={primary}>
+          <Text fontSize={11} fontWeight="600" color={primary}>
             Seller response
           </Text>
           <Text fontSize={13} color={ink}>
@@ -250,7 +250,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
 
   return (
     <YStack gap={12} testID="product-reviews">
-      <Text fontSize={16} fontWeight="900" color={ink}>
+      <Text fontSize={16} fontWeight="700" color={ink}>
         Ratings & reviews
       </Text>
       {summary && summary.total > 0 ? (
@@ -263,7 +263,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
       ) : null}
 
       <YStack gap={8} padding={12} borderWidth={1} borderColor="$borderColor" borderRadius={12}>
-        <Text fontSize={13} fontWeight="800" color={ink}>
+        <Text fontSize={13} fontWeight="600" color={ink}>
           Write a review
         </Text>
         <Stars value={rating} onChange={setRating} size={26} />
@@ -286,7 +286,7 @@ export function ProductReviews({ productId }: Readonly<{ productId: string }>) {
           disabled={saving}
           backgroundColor={primary}
           color="white"
-          fontWeight="800"
+          fontWeight="600"
         >
           {saving ? 'Submitting…' : 'Submit review'}
         </Button>

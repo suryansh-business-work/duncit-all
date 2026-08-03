@@ -27,7 +27,7 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
         minHeight: 180,
         flex: '0 0 auto',
         alignSelf: 'stretch',
-        borderRadius: '4px',
+        borderRadius: '16px',
         border: '1px dashed',
         borderColor: 'divider',
         bgcolor: 'background.paper',
@@ -51,7 +51,7 @@ export default function SeeAllCard({ count, width, onClick }: Readonly<Props>) {
         >
           <ArrowForwardIcon />
         </Box>
-        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {t('mweb.home.seeAll')}
         </Typography>
         {count !== undefined && (

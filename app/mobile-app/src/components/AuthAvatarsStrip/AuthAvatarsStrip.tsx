@@ -33,7 +33,7 @@ export function AuthAvatarsStrip({ caption }: Readonly<{ caption: string }>) {
           />
         ))}
       </XStack>
-      <Text flex={1} fontSize={12} fontWeight="800" color="$color">
+      <Text flex={1} fontSize={12} fontWeight="600" color="$color">
         {caption}
       </Text>
     </XStack>

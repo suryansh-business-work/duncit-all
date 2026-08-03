@@ -26,7 +26,7 @@ interface Props {
 export default function CouponsDialog({ open, coupons, currency, onClose, onPick }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ pr: 6, fontWeight: 900 }}>
+      <DialogTitle sx={{ pr: 6, fontWeight: 700 }}>
         Available coupons
         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
           <CloseIcon />
@@ -50,7 +50,7 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
                 }}
                 sx={{
                   p: 1.5,
-                  borderRadius: '4px',
+                  borderRadius: '16px',
                   border: '1px dashed',
                   borderColor: 'primary.main',
                   cursor: 'pointer',
@@ -63,10 +63,10 @@ export default function CouponsDialog({ open, coupons, currency, onClose, onPick
                 <LocalOfferIcon color="primary" />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Stack direction="row" spacing={0.75} alignItems="center">
-                    <Typography variant="subtitle2" fontWeight={900}>
+                    <Typography variant="subtitle2" fontWeight={700}>
                       {coupon.code}
                     </Typography>
-                    <Chip size="small" color="success" label={`${coupon.discount_pct}% off`} sx={{ height: 20, fontWeight: 800 }} />
+                    <Chip size="small" color="success" label={`${coupon.discount_pct}% off`} sx={{ height: 20, fontWeight: 600 }} />
                   </Stack>
                   <Typography variant="caption" color="text.secondary">
                     {coupon.description || (coupon.scope === 'POD' ? 'For this pod' : 'All pods')}

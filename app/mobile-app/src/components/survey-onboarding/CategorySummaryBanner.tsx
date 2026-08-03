@@ -32,7 +32,7 @@ export function CategorySummaryBanner({
       backgroundColor="$color2"
     >
       <YStack flex={1} gap={2}>
-        <Text fontSize={11} fontWeight="800" opacity={0.6} color={ink}>
+        <Text fontSize={11} fontWeight="600" opacity={0.6} color={ink}>
           CATEGORY
         </Text>
         <Text fontSize={13} fontWeight="700" color={ink}>
@@ -50,7 +50,7 @@ export function CategorySummaryBanner({
         paddingHorizontal={6}
       >
         <MaterialIcons name="edit" size={14} color={primary} />
-        <Text fontSize={12} fontWeight="800" color={primary}>
+        <Text fontSize={12} fontWeight="600" color={primary}>
           Change
         </Text>
       </XStack>

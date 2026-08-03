@@ -115,18 +115,18 @@ export default function VenueDetailsPage() {
         <Button startIcon={<ContentCopyIcon />} onClick={copyLink}>Copy link</Button>
       </Stack>
 
-      <Box sx={{ borderRadius: '4px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ borderRadius: '16px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         {images[0] ? (
           <Box component="img" src={images[0] as string} alt={venue.venue_name} sx={{ width: '100%', height: { xs: 260, sm: 360 }, objectFit: 'cover', display: 'block' }} />
         ) : (
           <Box sx={{ minHeight: 220, display: 'grid', placeItems: 'center', px: 3, bgcolor: 'action.hover' }}>
-            <Typography variant="h4" fontWeight={800} textAlign="center">{venue.venue_name}</Typography>
+            <Typography variant="h4" fontWeight={600} textAlign="center">{venue.venue_name}</Typography>
           </Box>
         )}
       </Box>
 
       <Stack spacing={1}>
-        <Typography variant="h4" fontWeight={800}>{venue.venue_name}</Typography>
+        <Typography variant="h4" fontWeight={600}>{venue.venue_name}</Typography>
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Chip label={venue.venue_type} />
           <Chip label={`${venue.capacity} capacity`} />

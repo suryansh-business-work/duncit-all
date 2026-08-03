@@ -3,12 +3,12 @@ import {
   Badge,
   Box,
   Button,
-  IconButton,
   Tooltip,
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
+import { useTranslation } from '../../i18n/useTranslation';
 import FilterBar from './FilterBar';
 import type { DateFilter, PriceFilter, SortBy } from './queries';
 
@@ -32,6 +32,7 @@ interface Props {
 const DEFAULT_SORT: SortBy = 'DATE_ASC';
 
 export default function FilterMenu(props: Readonly<Props>) {
+  const { t } = useTranslation();
   const {
     categoryId,
     setCategoryId,
@@ -67,25 +68,31 @@ export default function FilterMenu(props: Readonly<Props>) {
 
   return (
     <>
-      <Tooltip title={props.disabled ? '' : 'Filters'}>
+      <Tooltip title={props.disabled ? '' : t('mweb.home.vibeFilter')}>
         <span>
-        <IconButton
+        {/* The mock's "Filter" pill — icon + label, active-count badge. */}
+        <Button
           onClick={() => setOpen(true)}
           disabled={props.disabled}
           aria-label={`Open filters${activeCountSuffix}`}
+          startIcon={
+            <Badge badgeContent={activeCount} color="primary" overlap="circular">
+              <FilterListIcon sx={{ fontSize: 18 }} />
+            </Badge>
+          }
           sx={{
             border: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
-            minWidth: 44,
-            minHeight: 44,
+            color: 'text.primary',
+            minHeight: 40,
+            px: 1.5,
+            fontWeight: 600,
             '&:hover': { bgcolor: 'action.hover' },
           }}
         >
-          <Badge badgeContent={activeCount} color="primary" overlap="circular">
-            <FilterListIcon />
-          </Badge>
-        </IconButton>
+          {t('mweb.home.vibeFilter')}
+        </Button>
         </span>
       </Tooltip>
 

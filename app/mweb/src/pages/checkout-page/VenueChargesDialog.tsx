@@ -24,7 +24,7 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ pr: 6, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <DialogTitle sx={{ pr: 6, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
         <StorefrontIcon color="primary" fontSize="small" />
         Venue Charges
         <IconButton onClick={onClose} aria-label="Close" sx={{ position: 'absolute', right: 8, top: 8 }}>
@@ -39,7 +39,7 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
           {charges.length > 0 && (
             <Stack
               spacing={1}
-              sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}
+              sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}
               divider={<Box sx={{ borderBottom: '1px dashed', borderColor: 'divider' }} />}
             >
               {charges.map((charge) => (
@@ -66,10 +66,10 @@ export default function VenueChargesDialog({ open, charges, currency, onClose }:
                 </Stack>
               ))}
               <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" fontWeight={900}>
+                <Typography variant="body2" fontWeight={700}>
                   Total venue charges
                 </Typography>
-                <Typography variant="body2" fontWeight={900}>
+                <Typography variant="body2" fontWeight={700}>
                   {formatMoney(currency, total)}
                 </Typography>
               </Stack>

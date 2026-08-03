@@ -244,7 +244,7 @@ export function PodDetailsScreen() {
           paddingHorizontal={16}
           paddingTop={12}
         >
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             Contact support about this pod
           </Text>
         </XStack>
@@ -257,7 +257,7 @@ export function PodDetailsScreen() {
           This pod is unavailable.
         </Text>
         <XStack role="button" aria-label="Go back" onPress={goBack}>
-          <Text color="$primary" fontWeight="900">
+          <Text color="$primary" fontWeight="700">
             Go back
           </Text>
         </XStack>

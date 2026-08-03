@@ -9,7 +9,7 @@ export function ClubMomentsRail({ moments }: Readonly<{ moments: ClubMoment[] }>
   if (moments.length === 0) return null;
   return (
     <YStack gap={8} testID="club-moments">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Club Moments
       </Text>
       <ScrollView

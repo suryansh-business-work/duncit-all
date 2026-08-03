@@ -6,12 +6,12 @@ export function ClubBulletsSection({ title, items }: Readonly<{ title: string; i
   if (bullets.length === 0) return null;
   return (
     <YStack gap={8} testID="club-bullets">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         {title}
       </Text>
       {bullets.map((item) => (
         <XStack key={item} gap={8} alignItems="flex-start">
-          <Text color="$primary" fontSize={14} fontWeight="900">
+          <Text color="$primary" fontSize={14} fontWeight="700">
             •
           </Text>
           <Text flex={1} fontSize={14} color="$muted" lineHeight={20}>

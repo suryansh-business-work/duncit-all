@@ -43,7 +43,7 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
         Location
       </Typography>
       <Autocomplete

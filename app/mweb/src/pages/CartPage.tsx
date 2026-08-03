@@ -33,13 +33,13 @@ export default function CartPage() {
     return (
       <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
         <ShoppingCartIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-        <Typography variant="h6" fontWeight={900}>
+        <Typography variant="h6" fontWeight={700}>
           Your cart is empty
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Add products from any Pod Shop and they will wait for you here.
         </Typography>
-        <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 800 }}>
+        <Button variant="contained" onClick={() => navigate('/shop')} sx={{ borderRadius: 999, fontWeight: 600 }}>
           Browse the Pod Shop
         </Button>
       </Stack>
@@ -48,7 +48,7 @@ export default function CartPage() {
 
   return (
     <Stack spacing={2} sx={{ py: 1 }}>
-      <Typography variant="h5" sx={{ fontWeight: 950 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700 }}>
         Cart
       </Typography>
       {groups.map(([podId, group]) => (
@@ -66,7 +66,7 @@ export default function CartPage() {
         <Typography variant="body2" color="text.secondary">
           Cart total
         </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           {priceFormat(grandTotal)}
         </Typography>
       </Stack>
@@ -75,11 +75,11 @@ export default function CartPage() {
       <Button
         variant="contained"
         onClick={() => navigate('/product-checkout')}
-        sx={{ borderRadius: 999, fontWeight: 900 }}
+        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         Proceed to checkout
       </Button>
-      <Button variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 800 }}>
+      <Button variant="text" color="error" onClick={clearAll} sx={{ alignSelf: 'center', fontWeight: 600 }}>
         Clear cart
       </Button>
     </Stack>

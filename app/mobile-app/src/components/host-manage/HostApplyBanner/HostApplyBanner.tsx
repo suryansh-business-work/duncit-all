@@ -38,7 +38,7 @@ export function HostApplyBanner() {
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Ready to Host More Experiences?
       </Text>
       <Text fontSize={13} color="$muted">
@@ -55,7 +55,7 @@ export function HostApplyBanner() {
           backgroundColor="$muted"
           opacity={0.7}
         >
-          <Text fontSize={13} fontWeight="900" color="$onPrimary">
+          <Text fontSize={13} fontWeight="700" color="$onPrimary">
             {label}
           </Text>
         </XStack>
@@ -72,7 +72,7 @@ export function HostApplyBanner() {
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={13} fontWeight="900" color="$onPrimary">
+          <Text fontSize={13} fontWeight="700" color="$onPrimary">
             {label}
           </Text>
         </XStack>

@@ -40,7 +40,7 @@ function GridTile({
         <MaterialIcons name={tile.icon} size={20} color={primary} />
       </YStack>
       <YStack gap={2}>
-        <Text numberOfLines={1} fontSize={14} fontWeight="800" color="$color">
+        <Text numberOfLines={1} fontSize={14} fontWeight="600" color="$color">
           {tile.label}
         </Text>
         <Text numberOfLines={1} fontSize={11.5} color="$muted">

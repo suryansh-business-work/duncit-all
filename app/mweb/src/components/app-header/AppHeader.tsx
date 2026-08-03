@@ -2,16 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
-import { Alert, AppBar, Avatar, Box, Chip, IconButton, Toolbar, Tooltip } from '@mui/material';
+import { Alert, AppBar, Box, Chip, Toolbar } from '@mui/material';
 import { HEADER_DATA, OPEN_LOCATION_PICKER_EVENT, SET_MY_SELECTED_LOCATION } from './queries';
 import HeaderGreeting from './HeaderGreeting';
-import HeaderNotificationsBell from './HeaderNotificationsBell';
-import HeaderSearchButton from './HeaderSearchButton';
+import HeaderQuickActions from './HeaderQuickActions';
 import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
 import StudioSwitchDialog from './profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from './SuperCategoryTabs';
-import HeaderCartButton from '../cart/HeaderCartButton';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
@@ -134,7 +132,7 @@ export default function AppHeader({
             color="primary"
             size="small"
             onClick={() => setStudioSwitchOpen(true)}
-            sx={{ fontWeight: 900, borderRadius: 999 }}
+            sx={{ fontWeight: 700, borderRadius: 999 }}
           />
         ) : (
           <HeaderGreeting
@@ -155,10 +153,7 @@ export default function AppHeader({
           <>
             {/* Studio modes (Host/Venue/ecomm) get a focused header — no location, no search. */}
             {effectiveStudio === 'USER' && (
-              <>
-                {/* Location now lives on the left (HeaderGreeting); search stays on the right. */}
-                <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
-                <LocationDialog
+              <LocationDialog
                   open={locDialogOpen}
                   onClose={() => setLocDialogOpen(false)}
                   locations={locations}
@@ -182,40 +177,17 @@ export default function AppHeader({
                     setLocDialogOpen(false);
                   }}
                 />
-
-              </>
             )}
-            {/* The cart entry point rides in the header on every page (it used
-             * to float over the content); it hides itself when there is nothing
-             * to open. */}
-            <HeaderCartButton />
-            <Box data-tour="home-notifications" component="span" sx={{ display: 'inline-flex' }}>
-              <HeaderNotificationsBell onToast={handleNotifToast} />
-            </Box>
-
-            <Tooltip title={me?.full_name ?? 'Account'}>
-              <IconButton
-                onClick={openMenu}
-                data-tour="home-profile"
-                sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
-                aria-label="Open account menu"
-              >
-                <Avatar
-                  src={me?.profile_photo || undefined}
-                  sx={{
-                    width: 34,
-                    height: 34,
-                    bgcolor: 'primary.main',
-                    fontSize: 13,
-                    border: 2,
-                    borderColor: 'primary.main',
-                    boxShadow: '0 0 0 3px rgba(255,79,115,0.24)',
-                  }}
-                >
-                  {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
-                </Avatar>
-              </IconButton>
-            </Tooltip>
+            {/* Labelled circular actions (mock): Search · Cart · Alerts · avatar
+             * with online dot. The cart still hides itself when empty. */}
+            <HeaderQuickActions
+              showSearch={effectiveStudio === 'USER'}
+              locationId={selectedLocationId}
+              zoneName={selectedZoneName}
+              onToast={handleNotifToast}
+              me={me}
+              onOpenMenu={openMenu}
+            />
             <StudioSwitchDialog
               open={studioSwitchOpen}
               roles={me?.roles ?? []}

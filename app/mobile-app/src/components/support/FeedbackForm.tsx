@@ -16,7 +16,7 @@ interface Props {
 /** A labelled field caption (mirrors TicketForm's FieldLabel). */
 function FieldLabel({ children }: Readonly<{ children: string }>) {
   return (
-    <Text fontSize={12.5} fontWeight="800" color="$muted">
+    <Text fontSize={12.5} fontWeight="600" color="$muted">
       {children}
     </Text>
   );
@@ -71,7 +71,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
                 backgroundColor={selected ? '$primary' : '$surface'}
                 pressStyle={{ opacity: 0.85 }}
               >
-                <Text fontWeight="800" fontSize={13} color={selected ? '$onPrimary' : '$color'}>
+                <Text fontWeight="600" fontSize={13} color={selected ? '$onPrimary' : '$color'}>
                   {option}
                 </Text>
               </XStack>
@@ -110,7 +110,7 @@ export function FeedbackForm({ submitting, errorMessage, onSubmit }: Readonly<Pr
         disabled={submitting}
         backgroundColor="$primary"
         color="$onPrimary"
-        fontWeight="900"
+        fontWeight="700"
       >
         {submitting ? 'Sending…' : 'Send feedback'}
       </Button>

@@ -57,7 +57,7 @@ export default function PodFeedbackPrompt() {
 
   return (
     <Dialog open={open} onClose={() => setDismissed(true)} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>How was “{pod.title}”?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>How was “{pod.title}”?</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ pt: 1 }}>
           <Typography variant="body2" color="text.secondary">

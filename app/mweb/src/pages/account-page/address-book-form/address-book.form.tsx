@@ -82,7 +82,7 @@ export default function AddressForm({
 
   return (
     <Dialog open={open} onClose={onCancel} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>{title}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{title}</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5} sx={{ mt: 0.5 }}>
           {field('label', 'Label (Home, Office…)')}
@@ -115,7 +115,7 @@ export default function AddressForm({
         <Button onClick={onCancel} disabled={saving}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving} sx={{ fontWeight: 800 }}>
+        <Button variant="contained" onClick={handleSubmit(onSubmit)} disabled={saving} sx={{ fontWeight: 600 }}>
           Save address
         </Button>
       </DialogActions>

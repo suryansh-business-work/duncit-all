@@ -29,7 +29,7 @@ export default function ResetPasswordCard({
       <AuthScreenFrame center>
         <Stack spacing={2.2} alignItems="center" data-testid="reset-success">
           <CheckCircleRoundedIcon sx={{ fontSize: 72, color: '#2e7d32' }} />
-          <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
             Password reset <Box component="span" sx={{ color: '#2e7d32' }}>successfully</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
@@ -40,7 +40,7 @@ export default function ResetPasswordCard({
             to="/login"
             variant="contained"
             size="large"
-            sx={{ borderRadius: '4px', py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
+            sx={{ borderRadius: '16px', py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
           >
             Go to login
           </Button>
@@ -54,7 +54,7 @@ export default function ResetPasswordCard({
       <Stack spacing={2.1}>
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
-          <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
             Reset <Box component="span" sx={{ color: '#ff5b72' }}>password</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>

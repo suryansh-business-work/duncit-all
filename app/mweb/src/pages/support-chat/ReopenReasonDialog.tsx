@@ -32,7 +32,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Re-open this conversation</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Re-open this conversation</DialogTitle>
       <DialogContent>
         {error && (
           <Alert severity="error" sx={{ mb: 1 }}>

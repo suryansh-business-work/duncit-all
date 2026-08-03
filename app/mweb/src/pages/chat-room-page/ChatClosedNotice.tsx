@@ -12,7 +12,7 @@ export default function ChatClosedNotice() {
       sx={{ px: { xs: 1.25, sm: 2 }, py: 1.75 }}
     >
       <LockOutlinedIcon fontSize="small" color="disabled" />
-      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 800 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
         This pod has ended — chat is closed.
       </Typography>
     </Stack>

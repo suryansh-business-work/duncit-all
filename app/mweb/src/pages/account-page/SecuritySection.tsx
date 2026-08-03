@@ -51,7 +51,7 @@ export default function SecuritySection() {
             justifyContent="space-between"
           >
             <Stack sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                 Password
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -63,7 +63,7 @@ export default function SecuritySection() {
               startIcon={<LockResetIcon />}
               onClick={() => setChangeOpen(true)}
               data-testid="open-change-password"
-              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '4px' }}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '16px' }}
             >
               Change password
             </Button>

@@ -105,7 +105,7 @@ export default function ClubHero({
           startIcon={following ? <CheckIcon sx={{ fontSize: 16 }} /> : <AddIcon sx={{ fontSize: 16 }} />}
           sx={{
             borderRadius: 999,
-            fontWeight: 900,
+            fontWeight: 700,
             textTransform: 'none',
             minWidth: 0,
             px: 1.5,
@@ -142,7 +142,7 @@ export default function ClubHero({
           mt: -2,
           mx: { xs: -2, sm: -3 },
           height: 240,
-          borderRadius: '4px',
+          borderRadius: '16px',
           overflow: 'hidden',
           bgcolor: 'action.hover',
           display: 'flex',
@@ -162,7 +162,7 @@ export default function ClubHero({
         position: 'relative',
         mt: -2,
         mx: { xs: -2, sm: -3 },
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         '.slick-dots': { bottom: 12 },
         '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },

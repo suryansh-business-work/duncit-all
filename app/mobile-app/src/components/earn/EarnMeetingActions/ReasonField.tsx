@@ -11,7 +11,7 @@ interface Props {
 export function ReasonField({ testID, label, value, onChangeText }: Readonly<Props>) {
   return (
     <YStack gap={6} paddingTop={12}>
-      <Text fontSize={13} fontWeight="800" color="$color">
+      <Text fontSize={13} fontWeight="600" color="$color">
         {label} *
       </Text>
       <TextArea

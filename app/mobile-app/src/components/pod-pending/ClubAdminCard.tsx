@@ -43,7 +43,7 @@ export function ClubAdminCard({ admin }: Readonly<{ admin: PendingClubAdmin }>) 
       borderRadius={12}
       backgroundColor="$surface"
     >
-      <Text fontSize={12} fontWeight="800" color="$muted">
+      <Text fontSize={12} fontWeight="600" color="$muted">
         Need Help? Contact the Club Admin
       </Text>
       <XStack alignItems="center" gap={10}>
@@ -67,7 +67,7 @@ export function ClubAdminCard({ admin }: Readonly<{ admin: PendingClubAdmin }>) 
             <MaterialIcons name="person" size={22} color={muted} />
           </XStack>
         )}
-        <Text flex={1} fontSize={16} fontWeight="900" color="$color">
+        <Text flex={1} fontSize={16} fontWeight="700" color="$color">
           {admin.name}
         </Text>
       </XStack>

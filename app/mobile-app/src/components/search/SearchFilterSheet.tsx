@@ -53,7 +53,7 @@ export function SearchFilterSheet({
           <YStack backgroundColor="$background" borderTopLeftRadius={22} borderTopRightRadius={22}>
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Filter by Category
                 </Text>
                 <XStack
@@ -99,7 +99,7 @@ export function SearchFilterSheet({
                   backgroundColor="$primary"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color="$onPrimary">
+                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     Apply
                   </Text>
                 </XStack>

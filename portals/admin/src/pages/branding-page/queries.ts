@@ -30,6 +30,8 @@ export const BRANDING_FIELDS = `
     height
   }
   home_show_all_vibe_categories
+  home_vibe_heading
+  home_vibe_subheading
   home_header_tagline
   mobile_font_family
   mweb_font_family

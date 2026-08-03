@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { LocationDialog } from '@/components/LocationDialog';
 import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const DEFAULT_TAGLINE = 'It All Starts Here!';
 
@@ -14,26 +15,18 @@ interface Props {
   showLocation: boolean;
 }
 
-/** Home header left block: the admin-configurable tagline on top with the
- * tappable city (+ chevron) beneath. Replaces the old logo + mascot. */
+/** Home header left block (mock): the tappable pin + city on top, the BIG
+ * admin-configurable tagline beneath it, then the greeting subtitle. The
+ * Tamagui twin of mWeb's HeaderGreeting. */
 export function HeaderGreeting({ tagline, showLocation }: Readonly<Props>) {
   const { cityLabel } = useLocations();
-  const { color } = useThemeColors();
+  const { primary } = useThemeColors();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const title = tagline?.trim() || DEFAULT_TAGLINE;
 
   return (
     <YStack minWidth={0}>
-      <Text
-        testID="header-greeting-title"
-        fontSize={16}
-        fontWeight="900"
-        color="$color"
-        lineHeight={19}
-        numberOfLines={1}
-      >
-        {title}
-      </Text>
       {showLocation ? (
         <>
           <XStack
@@ -43,17 +36,30 @@ export function HeaderGreeting({ tagline, showLocation }: Readonly<Props>) {
             onPress={() => setOpen(true)}
             alignItems="center"
             gap={2}
-            marginTop={-1}
             pressStyle={{ opacity: 0.7 }}
           >
-            <Text fontSize={12.5} fontWeight="500" color="$primary" numberOfLines={1}>
+            <MaterialIcons name="location-on" size={13} color={primary} />
+            <Text fontSize={12} fontWeight="600" color="$primary" numberOfLines={1}>
               {cityLabel || 'Select city'}
             </Text>
-            <MaterialIcons name="chevron-right" size={16} color={color} />
+            <MaterialIcons name="keyboard-arrow-down" size={16} color={primary} />
           </XStack>
           <LocationDialog open={open} onClose={() => setOpen(false)} />
         </>
       ) : null}
+      <Text
+        testID="header-greeting-title"
+        fontSize={21}
+        fontWeight="700"
+        color="$color"
+        lineHeight={25}
+        numberOfLines={1}
+      >
+        {title}
+      </Text>
+      <Text fontSize={11.5} fontWeight="600" color="$muted" numberOfLines={1}>
+        {t('mweb.home.greetingSubtitle')}
+      </Text>
     </YStack>
   );
 }

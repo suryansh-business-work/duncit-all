@@ -310,7 +310,7 @@ function CropHeader({
 }: Readonly<{ isImage: boolean; uploading: boolean; onCancel: () => void }>) {
   return (
     <XStack alignItems="center" justifyContent="space-between" padding={16}>
-      <Text color="#ffffff" fontSize={17} fontWeight="900">
+      <Text color="#ffffff" fontSize={17} fontWeight="700">
         {isImage ? 'Crop & upload' : 'Upload video'}
       </Text>
       <XStack
@@ -363,7 +363,7 @@ function CropActions({
         opacity={uploading ? 0.6 : 1}
         pressStyle={{ opacity: 0.8 }}
       >
-        <Text fontSize={14} fontWeight="900" color="#ffffff">
+        <Text fontSize={14} fontWeight="700" color="#ffffff">
           Cancel
         </Text>
       </XStack>
@@ -384,7 +384,7 @@ function CropActions({
         pressStyle={{ opacity: 0.85 }}
       >
         {uploading ? <Spinner size="small" color={onPrimary} /> : null}
-        <Text fontSize={14} fontWeight="900" color={onPrimary}>
+        <Text fontSize={14} fontWeight="700" color={onPrimary}>
           {isImage ? 'Use photo' : 'Upload'}
         </Text>
       </XStack>

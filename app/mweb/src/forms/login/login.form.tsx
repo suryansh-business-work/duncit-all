@@ -116,7 +116,7 @@ export default function LoginForm({
           endIcon={<ArrowForwardIcon />}
           disabled={loading}
           sx={{
-            borderRadius: '4px',
+            borderRadius: '16px',
             py: 1.25,
             fontWeight: 700,
             textTransform: 'none',

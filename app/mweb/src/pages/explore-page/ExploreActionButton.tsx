@@ -42,7 +42,7 @@ export default function ExploreActionButton({
         onClick={onLabelClick}
         sx={{
           color: 'common.white',
-          fontWeight: 800,
+          fontWeight: 600,
           textShadow: '0 1px 6px rgba(0,0,0,0.45)',
           cursor: onLabelClick ? 'pointer' : 'default',
         }}

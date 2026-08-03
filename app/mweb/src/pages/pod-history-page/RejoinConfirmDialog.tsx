@@ -12,7 +12,7 @@ interface Props {
 export default function RejoinConfirmDialog({ open, busy, onClose, onConfirm }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 950 }}>Rejoin this pod?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Rejoin this pod?</DialogTitle>
       <DialogContent>
         <DialogContentText>
           You&apos;ll rejoin this pod for free — no payment is required. Your spot is restored and stays active until

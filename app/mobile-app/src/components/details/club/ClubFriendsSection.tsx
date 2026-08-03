@@ -44,7 +44,7 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
 
   return (
     <YStack gap={8} testID="club-friends">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Friends Here
       </Text>
       <XStack alignItems="center" gap={12}>
@@ -79,7 +79,7 @@ export function ClubFriendsSection({ friendIds, onOpenProfile }: Readonly<Props>
             maxHeight="70%"
           >
             <XStack alignItems="center" justifyContent="space-between" marginBottom={16}>
-              <Text fontSize={17} fontWeight="900" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color">
                 Friends in this club
               </Text>
               <TouchableOpacity testID="friends-modal-close" onPress={() => setModalVisible(false)}>

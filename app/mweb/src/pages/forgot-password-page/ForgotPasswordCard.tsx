@@ -19,7 +19,7 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
       <Stack spacing={2.1}>
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
-          <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
             Forgot <Box component="span" sx={{ color: '#ff5b72' }}>password?</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 320 }}>
@@ -43,7 +43,7 @@ export default function ForgotPasswordCard({ loading, errorMessage, unregistered
               component={RouterLink}
               to="/register"
               variant="contained"
-              sx={{ borderRadius: '4px', px: 3, fontWeight: 700, textTransform: 'none' }}
+              sx={{ borderRadius: '16px', px: 3, fontWeight: 700, textTransform: 'none' }}
             >
               Create Account
             </Button>

@@ -82,7 +82,7 @@ export default function EarnPage() {
         </Button>
       </Box>
       <Stack spacing={0.5}>
-        <Typography variant="h5" sx={{ fontWeight: 950 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Earn with Duncit
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -92,7 +92,7 @@ export default function EarnPage() {
       <Stack spacing={1.5}>
         {showSkeleton
           ? boxes.map((box) => (
-              <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: '4px' }} />
+              <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: '16px' }} />
             ))
           : null}
         {showSkeleton ? null : boxes.map((box) => {

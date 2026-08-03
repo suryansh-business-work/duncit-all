@@ -52,11 +52,11 @@ export default function SupportShell({
           {icon}
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
             {title}
           </Typography>
           {subtitle && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }} noWrap>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
               {subtitle}
             </Typography>
           )}

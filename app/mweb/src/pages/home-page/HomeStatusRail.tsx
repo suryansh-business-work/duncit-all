@@ -103,6 +103,8 @@ export default function HomeStatusRail({
       >
         <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
           <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
+          {/* The sponsored tile sits second, right after "Your story" (mock). */}
+          <AdSlot position="STATUS" variant="tile" />
           {entries.map((entry, entryIndex) => (
             <HomeStatusTile
               key={entry.key}
@@ -114,7 +116,6 @@ export default function HomeStatusRail({
               onClick={() => setActiveIndex(offset + entryIndex)}
             />
           ))}
-          <AdSlot position="STATUS" variant="tile" />
         </Stack>
       </Box>
       <HomeStatusViewer

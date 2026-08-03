@@ -55,7 +55,7 @@ export function TourGuideScreen() {
               >
                 <MaterialIcons name={done ? 'replay' : 'play-arrow'} size={22} color={primary} />
                 <YStack flex={1} gap={2}>
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     {tour.title}
                   </Text>
                   <Text fontSize={12} color="$muted">
@@ -66,7 +66,7 @@ export function TourGuideScreen() {
                   <Text
                     testID={`tour-done-${tour.id}`}
                     fontSize={11}
-                    fontWeight="800"
+                    fontWeight="600"
                     color="$muted"
                   >
                     Completed

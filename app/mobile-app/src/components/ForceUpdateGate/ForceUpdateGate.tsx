@@ -98,7 +98,7 @@ export function ForceUpdateGate() {
       <Text
         testID="force-update-title"
         fontSize={24}
-        fontWeight="800"
+        fontWeight="600"
         color={tokens.ink}
         textAlign="center"
       >

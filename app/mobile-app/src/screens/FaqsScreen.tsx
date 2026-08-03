@@ -93,7 +93,7 @@ export function FaqsScreen() {
           {filteredGroups.map((group, groupIndex) => (
             <Reveal key={group.super_category?.id ?? 'general'} index={groupIndex}>
               <YStack gap={6} marginBottom={14}>
-                <Text fontSize={13} fontWeight="900" color="$muted" textTransform="uppercase">
+                <Text fontSize={13} fontWeight="700" color="$muted" textTransform="uppercase">
                   {group.super_category?.name ?? 'General'}
                 </Text>
                 {group.faqs.map((faq) => (

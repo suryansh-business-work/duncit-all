@@ -108,7 +108,7 @@ function VirtualMeetingFields({
         )}
       />
       {duration ? (
-        <Text testID="pod-duration" fontSize={12.5} fontWeight="800" color="$muted">
+        <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
           Total duration: {duration}
         </Text>
       ) : null}
@@ -137,7 +137,7 @@ function SpaceChip({
       backgroundColor={selected ? '$primary' : 'transparent'}
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={12.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
+      <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {space.label} · {space.capacity} spots
       </Text>
     </XStack>
@@ -167,7 +167,7 @@ function VenueSpaceCard({
       borderWidth={1}
       borderColor="$borderColor"
     >
-      <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="800" color="$color">
+      <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="600" color="$color">
         {venue.venue_type ? `${venue.venue_type} · ` : ''}Total capacity: {venue.capacity ?? 0}
       </Text>
       <YStack gap={6}>
@@ -320,7 +320,7 @@ export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Read
       {selectedVenue ? <VenueContactCard venue={selectedVenue} /> : null}
       {mapQuery ? <MapEmbed query={mapQuery} height={200} /> : null}
       {duration ? (
-        <Text testID="pod-duration" fontSize={12.5} fontWeight="800" color="$muted">
+        <Text testID="pod-duration" fontSize={12.5} fontWeight="600" color="$muted">
           Pod window from slot: {duration}
         </Text>
       ) : null}

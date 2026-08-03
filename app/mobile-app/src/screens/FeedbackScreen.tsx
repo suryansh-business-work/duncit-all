@@ -44,7 +44,7 @@ export function FeedbackScreen() {
             borderColor="$borderColor"
             backgroundColor="$surface"
           >
-            <Text fontSize={15} fontWeight="900" color="$color">
+            <Text fontSize={15} fontWeight="700" color="$color">
               Thanks!
             </Text>
             <Text fontSize={13} color="$muted">

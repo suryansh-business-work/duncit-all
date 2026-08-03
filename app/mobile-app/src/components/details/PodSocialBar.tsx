@@ -46,7 +46,7 @@ function SocialButton({
       pressStyle={{ opacity: 0.8 }}
     >
       <MaterialIcons name={icon} size={18} color={active ? '#ffffff' : color} />
-      <Text fontSize={14} fontWeight="800" color={fg}>
+      <Text fontSize={14} fontWeight="600" color={fg}>
         {label}
       </Text>
     </XStack>

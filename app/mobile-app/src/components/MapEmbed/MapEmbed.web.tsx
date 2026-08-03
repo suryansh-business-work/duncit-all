@@ -32,7 +32,7 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
           rel="noreferrer"
           style={{ display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
         >
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             Open in Maps
           </Text>
           <MaterialIcons name="open-in-new" size={14} color={primary} />

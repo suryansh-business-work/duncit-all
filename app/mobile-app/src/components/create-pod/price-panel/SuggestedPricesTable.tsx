@@ -30,14 +30,14 @@ function SuggestedPriceRow({ price, payout, description, testID }: Readonly<RowP
       borderTopColor="$borderColor"
     >
       <YStack flex={1} minWidth={0} gap={2}>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {price}
         </Text>
         <Text fontSize={11} color="$muted">
           {description}
         </Text>
       </YStack>
-      <Text fontSize={14} fontWeight="900" color="$success">
+      <Text fontSize={14} fontWeight="700" color="$success">
         {payout}
       </Text>
     </XStack>
@@ -68,10 +68,10 @@ export function SuggestedPricesTable({ prices, symbol }: Readonly<Props>) {
         paddingVertical={9}
         backgroundColor="$surface"
       >
-        <Text fontSize={12} fontWeight="900" color="$muted">
+        <Text fontSize={12} fontWeight="700" color="$muted">
           {SUGGESTED_PRICES_PRICE_COLUMN}
         </Text>
-        <Text fontSize={12} fontWeight="900" color="$muted">
+        <Text fontSize={12} fontWeight="700" color="$muted">
           {SUGGESTED_PRICES_PAYOUT_COLUMN}
         </Text>
       </XStack>

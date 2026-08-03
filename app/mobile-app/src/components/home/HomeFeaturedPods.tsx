@@ -16,6 +16,11 @@ interface HomeFeaturedPodsProps {
   onOpenPod: (pod: HomePod) => void;
   /** Opens the full list, landing on `startIndex` (the first unseen pod). */
   onSeeAll: (startIndex?: number) => void;
+  /** The category chip over each card's image (mock: "Sports"). */
+  categoryLabelOf?: (pod: HomePod) => string | null;
+  /** Heart state + toggle; omit to hide the hearts (signed-out). */
+  savedOf?: (podDocId: string) => boolean;
+  onToggleSave?: (podDocId: string) => void;
 }
 
 /** Horizontal strip of the soonest pods — RN port of mWeb's HomeFeaturedPods. */
@@ -25,6 +30,9 @@ export function HomeFeaturedPods({
   filtered,
   onOpenPod,
   onSeeAll,
+  categoryLabelOf,
+  savedOf,
+  onToggleSave,
 }: Readonly<HomeFeaturedPodsProps>) {
   if (pods.length === 0) return null;
 
@@ -36,7 +44,15 @@ export function HomeFeaturedPods({
     >
       {pods.map((pod, index) => (
         <Reveal key={pod.id} index={index} scale>
-          <PodCard pod={pod} width={300} showPlace={false} onPress={() => onOpenPod(pod)} />
+          <PodCard
+            pod={pod}
+            width={300}
+            showPlace={false}
+            onPress={() => onOpenPod(pod)}
+            categoryLabel={categoryLabelOf?.(pod)}
+            saved={savedOf?.(pod.id) ?? false}
+            onToggleSave={onToggleSave ? () => onToggleSave(pod.id) : undefined}
+          />
         </Reveal>
       ))}
       {totalCount > pods.length ? (

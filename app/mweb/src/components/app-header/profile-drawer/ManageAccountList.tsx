@@ -17,11 +17,11 @@ export default function ManageAccountList({ title, items, onNavigate }: Readonly
       <Typography
         variant="overline"
         color="text.secondary"
-        sx={{ fontWeight: 800, letterSpacing: 0.4, pl: 0.5 }}
+        sx={{ fontWeight: 600, letterSpacing: 0.4, pl: 0.5 }}
       >
         {title}
       </Typography>
-      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '4px', overflow: 'hidden' }}>
+      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '16px', overflow: 'hidden' }}>
         <List disablePadding>
           {items.map((item, index) => (
             <ListItemButton

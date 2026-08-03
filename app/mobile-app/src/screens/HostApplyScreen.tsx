@@ -53,7 +53,7 @@ export function HostApplyScreen() {
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text fontSize={18} fontWeight="800" color={ink}>
+          <Text fontSize={18} fontWeight="600" color={ink}>
             {headerTitle}
           </Text>
         </XStack>

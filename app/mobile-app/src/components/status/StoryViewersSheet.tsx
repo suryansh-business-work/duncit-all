@@ -55,7 +55,7 @@ export function StoryViewersSheet({
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
                 <XStack alignItems="center" gap={8}>
                   <MaterialIcons name="visibility" size={20} color={color} />
-                  <Text fontSize={16} fontWeight="900" color="$color">
+                  <Text fontSize={16} fontWeight="700" color="$color">
                     {count === 0 ? 'No views yet' : `Seen by ${count}`}
                   </Text>
                 </XStack>

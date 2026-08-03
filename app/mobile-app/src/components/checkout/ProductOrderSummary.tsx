@@ -184,10 +184,10 @@ export function ProductOrderSummary({
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
         <YStack flex={1} minWidth={0}>
-          <Text fontSize={11} fontWeight="800" textTransform="uppercase" color="$muted">
+          <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
             Order summary
           </Text>
-          <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1}>
             Your order
           </Text>
         </YStack>

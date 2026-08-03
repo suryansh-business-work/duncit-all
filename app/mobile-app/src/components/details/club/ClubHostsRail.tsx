@@ -16,7 +16,7 @@ export function ClubHostsRail({ hosts, onOpenHost }: Readonly<Props>) {
   if (hosts.length === 0) return null;
   return (
     <YStack gap={8} testID="club-hosts">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Club Hosts
       </Text>
       <ScrollView
@@ -49,7 +49,7 @@ export function ClubHostsRail({ hosts, onOpenHost }: Readonly<Props>) {
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text color="$onPrimary" fontWeight="900" fontSize={18}>
+                <Text color="$onPrimary" fontWeight="700" fontSize={18}>
                   {host.name.charAt(0).toUpperCase()}
                 </Text>
               </YStack>

@@ -46,7 +46,7 @@ function Chip({
       borderColor={primary ? '$primary' : (tone ?? '$borderColor')}
     >
       {icon ? <MaterialIcons name={icon} size={14} color={fg} /> : null}
-      <Text fontSize={12} fontWeight="800" color={primary ? '$onPrimary' : tone || '$color'}>
+      <Text fontSize={12} fontWeight="600" color={primary ? '$onPrimary' : tone || '$color'}>
         {label}
       </Text>
     </XStack>
@@ -59,7 +59,7 @@ function StatBox({ label, value }: Readonly<{ label: string; value: number | str
       <Text fontSize={12} color="$muted">
         {label}
       </Text>
-      <Text fontSize={20} fontWeight="900" color="$color">
+      <Text fontSize={20} fontWeight="700" color="$color">
         {value}
       </Text>
     </YStack>
@@ -90,7 +90,7 @@ export function PodInfo({
       borderWidth={1}
       borderColor="$borderColor"
     >
-      <Text fontSize={23} fontWeight="900" color="$color">
+      <Text fontSize={23} fontWeight="700" color="$color">
         {pod.pod_title}
       </Text>
       {host ? (

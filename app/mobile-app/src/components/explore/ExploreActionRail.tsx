@@ -85,7 +85,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
                   pressStyle={{ opacity: 0.7 }}
                 >
                   <MaterialIcons name={action.icon} size={18} color="#ffffff" />
-                  <Text color="#ffffff" fontSize={13} fontWeight="800">
+                  <Text color="#ffffff" fontSize={13} fontWeight="600">
                     {action.label}
                   </Text>
                 </XStack>

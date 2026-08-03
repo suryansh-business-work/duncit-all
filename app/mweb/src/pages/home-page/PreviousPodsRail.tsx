@@ -29,7 +29,7 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
         <Stack direction="row" spacing={1} alignItems="center">
           <HistoryIcon color="action" />
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               Previous Pods
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -41,7 +41,7 @@ export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonl
           size="small"
           endIcon={<ArrowForwardIcon />}
           onClick={() => navigate('/previous-pods')}
-          sx={{ fontWeight: 800 }}
+          sx={{ fontWeight: 600 }}
         >
           See all
         </Button>

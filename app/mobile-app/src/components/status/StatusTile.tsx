@@ -57,7 +57,7 @@ export function StatusTile({
           resizeMode="cover"
         />
       ) : (
-        <Text fontSize={22} fontWeight="900" color="$onPrimary">
+        <Text fontSize={22} fontWeight="700" color="$onPrimary">
           {initial}
         </Text>
       )}
@@ -73,7 +73,7 @@ export function StatusTile({
           justifyContent="center"
           backgroundColor="rgba(0,0,0,0.5)"
         >
-          <Text fontSize={15} fontWeight="900" color="#ffffff">
+          <Text fontSize={15} fontWeight="700" color="#ffffff">
             {Math.round(progress)}%
           </Text>
         </YStack>

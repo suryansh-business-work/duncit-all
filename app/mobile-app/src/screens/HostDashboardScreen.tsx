@@ -39,7 +39,7 @@ function StatCard({ value, label }: Readonly<{ value: number; label: string }>) 
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={20} fontWeight="900" color="$color">
+      <Text fontSize={20} fontWeight="700" color="$color">
         {value}
       </Text>
       <Text fontSize={12} fontWeight="700" color="$muted">
@@ -73,7 +73,7 @@ function QuickAction({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name={icon} size={22} color={primary} />
-      <Text fontSize={13} fontWeight="900" color="$color">
+      <Text fontSize={13} fontWeight="700" color="$color">
         {label}
       </Text>
     </YStack>
@@ -112,10 +112,10 @@ export function HostDashboardScreen() {
           gap={4}
           testID="host-earnings"
         >
-          <Text fontSize={12} fontWeight="900" color="$onPrimary" opacity={0.9}>
+          <Text fontSize={12} fontWeight="700" color="$onPrimary" opacity={0.9}>
             AVAILABLE BALANCE
           </Text>
-          <Text fontSize={30} fontWeight="900" color="$onPrimary">
+          <Text fontSize={30} fontWeight="700" color="$onPrimary">
             {currency}
             {(wallet?.balance ?? 0).toFixed(2)}
           </Text>
@@ -168,12 +168,12 @@ export function HostDashboardScreen() {
               justifyContent="center"
               backgroundColor={BAND_COLOR[health.band]}
             >
-              <Text fontSize={14} fontWeight="900" color="#ffffff">
+              <Text fontSize={14} fontWeight="700" color="#ffffff">
                 {health.total_score}
               </Text>
             </YStack>
             <YStack flex={1}>
-              <Text fontSize={14.5} fontWeight="900" color="$color">
+              <Text fontSize={14.5} fontWeight="700" color="$color">
                 Profile health
               </Text>
               <Text fontSize={12.5} color="$muted">

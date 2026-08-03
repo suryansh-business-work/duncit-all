@@ -36,7 +36,7 @@ function OptionRow({ testID, label, selected, onPress }: Readonly<OptionRowProps
     >
       <Text
         fontSize={13}
-        fontWeight="800"
+        fontWeight="600"
         color={selected ? '$onPrimary' : '$color'}
         numberOfLines={1}
       >
@@ -57,7 +57,7 @@ interface PickerShellProps {
 function PickerShell({ title, emptyText, error, children }: Readonly<PickerShellProps>) {
   return (
     <YStack gap={6}>
-      <Text fontSize={13} fontWeight="800" color="$color">
+      <Text fontSize={13} fontWeight="600" color="$color">
         {title}
       </Text>
       {children}

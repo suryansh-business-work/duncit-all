@@ -39,7 +39,7 @@ export default function BrandDetailDialog({
           component="img"
           src={brand.cover_image_url}
           alt={brand.brand_name}
-          sx={{ width: '100%', height: 128, borderRadius: '4px', objectFit: 'cover' }}
+          sx={{ width: '100%', height: 128, borderRadius: '16px', objectFit: 'cover' }}
         />
       )}
       <Stack direction="row" spacing={1.5} alignItems="center">
@@ -47,7 +47,7 @@ export default function BrandDetailDialog({
           <StorefrontIcon />
         </Avatar>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" sx={{ fontWeight: 900 }} noWrap>
+          <Typography variant="h6" sx={{ fontWeight: 700 }} noWrap>
             {brand.brand_name}
           </Typography>
           {brand.tagline && (

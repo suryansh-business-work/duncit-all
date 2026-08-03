@@ -48,7 +48,7 @@ export default function TicketHeader({
       <IconButton size="small" onClick={onBack} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
         <ArrowBackIcon />
       </IconButton>
-      <Typography variant="h6" sx={{ fontWeight: 900, flex: 1 }} noWrap>
+      <Typography variant="h6" sx={{ fontWeight: 700, flex: 1 }} noWrap>
         {subject || 'Ticket'}
       </Typography>
       {status && <Chip size="small" color={STATUS_COLOR[status]} label={status} />}

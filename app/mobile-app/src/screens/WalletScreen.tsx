@@ -33,7 +33,7 @@ function TxnRow({ txn, symbol }: Readonly<{ txn: WalletTxn; symbol: string }>) {
           {fmtDate(txn.created_at)}
         </Text>
       </YStack>
-      <Text fontSize={13.5} fontWeight="900" color={credit ? '#16a34a' : '#dc2626'}>
+      <Text fontSize={13.5} fontWeight="700" color={credit ? '#16a34a' : '#dc2626'}>
         {credit ? '+' : '-'}
         {symbol}
         {txn.amount.toFixed(2)}
@@ -61,7 +61,7 @@ function WithdrawalRow({ w, symbol }: Readonly<{ w: Withdrawal; symbol: string }
         borderRadius={999}
         backgroundColor={STATUS_BG[w.status] ?? '#6b7280'}
       >
-        <Text fontSize={10.5} fontWeight="900" color="#ffffff">
+        <Text fontSize={10.5} fontWeight="700" color="#ffffff">
           {w.status}
         </Text>
       </XStack>
@@ -83,10 +83,10 @@ export function WalletScreen() {
           {isLoading && !wallet ? <Spinner testID="wallet-loading" color="$primary" /> : null}
 
           <YStack gap={6} padding={16} borderRadius={16} backgroundColor="rgba(255,79,115,0.10)">
-            <Text fontSize={12} fontWeight="900" color="$primary">
+            <Text fontSize={12} fontWeight="700" color="$primary">
               Available balance
             </Text>
-            <Text fontSize={30} fontWeight="900" color="$color">
+            <Text fontSize={30} fontWeight="700" color="$color">
               {symbol}
               {balance.toFixed(2)}
             </Text>
@@ -113,13 +113,13 @@ export function WalletScreen() {
               opacity={balance <= 0 ? 0.5 : 1}
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={14} fontWeight="900" color="$onPrimary">
+              <Text fontSize={14} fontWeight="700" color="$onPrimary">
                 Withdraw
               </Text>
             </XStack>
           </YStack>
 
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             Withdrawals
           </Text>
           {!isLoading && withdrawals.length === 0 ? (
@@ -131,7 +131,7 @@ export function WalletScreen() {
             <WithdrawalRow key={w.id} w={w} symbol={symbol} />
           ))}
 
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             Transactions
           </Text>
           {!isLoading && transactions.length === 0 ? (

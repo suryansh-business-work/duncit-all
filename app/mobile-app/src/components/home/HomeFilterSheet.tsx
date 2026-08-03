@@ -75,7 +75,7 @@ export function HomeFilterSheet({
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Filters
                 </Text>
                 <XStack
@@ -149,7 +149,7 @@ export function HomeFilterSheet({
                   opacity={count === 0 ? 0.5 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Reset
                   </Text>
                 </XStack>
@@ -166,7 +166,7 @@ export function HomeFilterSheet({
                   backgroundColor="$primary"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color="$onPrimary">
+                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     Done
                   </Text>
                 </XStack>

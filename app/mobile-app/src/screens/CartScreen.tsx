@@ -29,7 +29,7 @@ export function CartScreen() {
     body = (
       <YStack alignItems="center" gap={10} paddingVertical={64} testID="cart-empty">
         <MaterialIcons name="shopping-cart" size={44} color={muted} />
-        <Text fontSize={17} fontWeight="900" color="$color">
+        <Text fontSize={17} fontWeight="700" color="$color">
           Your cart is empty
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
@@ -48,7 +48,7 @@ export function CartScreen() {
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+          <Text fontSize={14} fontWeight="700" color={onPrimary}>
             Find a pod
           </Text>
         </XStack>
@@ -71,7 +71,7 @@ export function CartScreen() {
           <Text fontSize={12} color="$muted">
             Cart total
           </Text>
-          <Text testID="cart-total" fontSize={16} fontWeight="900" color="$color">
+          <Text testID="cart-total" fontSize={16} fontWeight="700" color="$color">
             ₹{total}
           </Text>
         </XStack>
@@ -88,7 +88,7 @@ export function CartScreen() {
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+          <Text fontSize={14} fontWeight="700" color={onPrimary}>
             Proceed to checkout
           </Text>
         </XStack>
@@ -101,7 +101,7 @@ export function CartScreen() {
           padding={8}
           pressStyle={{ opacity: 0.7 }}
         >
-          <Text fontSize={13} fontWeight="800" color="$danger">
+          <Text fontSize={13} fontWeight="600" color="$danger">
             Clear cart
           </Text>
         </XStack>

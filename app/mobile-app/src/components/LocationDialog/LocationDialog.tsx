@@ -61,7 +61,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
             <SafeAreaView edges={['bottom']}>
               <YStack paddingHorizontal={16} paddingTop={16} gap={12}>
                 <XStack alignItems="center" justifyContent="space-between">
-                  <Text fontSize={18} fontWeight="900" color="$color">
+                  <Text fontSize={18} fontWeight="700" color="$color">
                     Choose your location
                   </Text>
                   <XStack
@@ -96,7 +96,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   ) : (
                     <MaterialIcons name="my-location" size={18} color={primary} />
                   )}
-                  <Text fontSize={14} fontWeight="900" color="$primary">
+                  <Text fontSize={14} fontWeight="700" color="$primary">
                     {draft.busy ? 'Locating…' : 'Use my location'}
                   </Text>
                 </XStack>
@@ -154,7 +154,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   borderColor="$borderColor"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Cancel
                   </Text>
                 </XStack>
@@ -173,7 +173,7 @@ export function LocationDialog({ open, onClose, onApply, initialLocationId }: Re
                   opacity={draft.draftId ? 1 : 0.6}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color={draft.draftId ? onPrimary : color}>
+                  <Text fontSize={14} fontWeight="700" color={draft.draftId ? onPrimary : color}>
                     {applyLabel}
                   </Text>
                 </XStack>

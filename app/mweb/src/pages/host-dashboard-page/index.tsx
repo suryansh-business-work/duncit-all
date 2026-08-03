@@ -56,10 +56,10 @@ export default function HostDashboardPage() {
           <SpaceDashboardIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Dashboard
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             {meQ.data?.me?.full_name ? `Welcome back, ${meQ.data.me.full_name}` : 'Your host overview'}
           </Typography>
         </Box>
@@ -74,12 +74,12 @@ export default function HostDashboardPage() {
 
       <Stack direction="row" spacing={1}>
         {stats.map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>
+              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>
                 {item.label}
               </Typography>
-              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }}>
+              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }}>
                 {item.value}
               </Typography>
             </CardContent>
@@ -92,7 +92,7 @@ export default function HostDashboardPage() {
       <HostInsights pods={pods} currency={wallet?.currency_symbol ?? '₹'} />
 
       {health && (
-        <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+        <Card variant="outlined" sx={{ borderRadius: '16px' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
               <HealthMeter
@@ -104,7 +104,7 @@ export default function HostDashboardPage() {
                 caption="Tap for details"
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {bandHint(health.band)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">

@@ -19,7 +19,7 @@ export function InfoRow({ icon, label, value, testID }: Readonly<InfoRowProps>) 
     <XStack gap={8} alignItems="flex-start">
       <MaterialIcons name={icon} size={16} color={muted} style={{ marginTop: 2 }} />
       <YStack flex={1}>
-        <Text fontSize={11} fontWeight="800" color="$muted">
+        <Text fontSize={11} fontWeight="600" color="$muted">
           {label}
         </Text>
         <Text testID={testID} fontSize={13} fontWeight="700" color="$color">

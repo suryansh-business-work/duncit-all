@@ -110,7 +110,7 @@ export default function SavedItemsToolbar({ search, onSearch, filters, onFilters
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Stack spacing={2} sx={{ p: 2, width: 288 }}>
-          <Typography fontWeight={800}>Filter by category</Typography>
+          <Typography fontWeight={600}>Filter by category</Typography>
           <LevelSelect label="Super category" value={filters.superId} options={superCategories(categories)} onChange={setSuper} />
           <LevelSelect
             label="Category"

@@ -57,8 +57,8 @@ export default function FollowFeedList({
   if (loading && !data) {
     return (
       <Stack spacing={2}>
-        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '4px' }} />
-        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '4px' }} />
+        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '16px' }} />
+        <Skeleton variant="rounded" height={320} sx={{ borderRadius: '16px' }} />
       </Stack>
     );
   }
@@ -69,7 +69,7 @@ export default function FollowFeedList({
 
   if (posts.length === 0) {
     return (
-      <Box sx={{ p: 4, borderRadius: '4px', bgcolor: 'action.hover', textAlign: 'center' }}>
+      <Box sx={{ p: 4, borderRadius: '16px', bgcolor: 'action.hover', textAlign: 'center' }}>
         <FavoriteBorderIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontWeight: 700 }}>
           {emptyText}

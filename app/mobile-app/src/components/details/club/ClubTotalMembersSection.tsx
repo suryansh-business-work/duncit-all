@@ -36,14 +36,14 @@ export function ClubTotalMembersSection({ count }: Readonly<Props>) {
         <MaterialIcons name="groups" size={24} color={primary} />
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Total Members
         </Text>
         <Text fontSize={12.5} color="$muted">
           People following this club
         </Text>
       </YStack>
-      <Text fontSize={22} fontWeight="900" color="$primary">
+      <Text fontSize={22} fontWeight="700" color="$primary">
         {count}
       </Text>
     </XStack>

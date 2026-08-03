@@ -47,7 +47,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth aria-labelledby="studio-switch-title">
       <DialogContent sx={{ pb: 3 }}>
-        <Typography id="studio-switch-title" variant="subtitle1" sx={{ fontWeight: 900, mb: 2 }}>
+        <Typography id="studio-switch-title" variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
           Switch role
         </Typography>
         <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 2 }}>
@@ -82,7 +82,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
         <Box
           key={pending}
           sx={{
-            borderRadius: '4px',
+            borderRadius: '16px',
             px: 2.5,
             py: 2,
             color: 'primary.contrastText',
@@ -98,7 +98,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
           }}
         >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
               {STUDIO_LABEL[pending]}
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.85, fontWeight: 700 }}>
@@ -113,7 +113,7 @@ export default function StudioSwitchDialog({ open, roles, current, onClose, onSe
           variant="contained"
           disabled={!changed}
           onClick={() => onSelect(pending)}
-          sx={{ mt: 2, borderRadius: 999, fontWeight: 900, height: 52 }}
+          sx={{ mt: 2, borderRadius: 999, fontWeight: 700, height: 52 }}
         >
           {switchButtonLabel(changed, pending)}
         </Button>

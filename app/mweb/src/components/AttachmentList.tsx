@@ -39,7 +39,7 @@ function VideoCard({ info }: Readonly<{ info: AttachmentInfo }>) {
         src={info.url}
         controls
         preload="metadata"
-        style={{ width: '100%', maxHeight: 160, borderRadius: '4px', background: '#000' }}
+        style={{ width: '100%', maxHeight: 160, borderRadius: '16px', background: '#000' }}
       />
       <Typography variant="caption" noWrap sx={{ display: 'block', opacity: 0.8, mt: 0.25 }}>
         {info.name}

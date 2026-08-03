@@ -47,14 +47,14 @@ export default function UserVenuePanel() {
           <WorkspacePremiumIcon fontSize="small" />
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 950 }} noWrap>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
             {venue.venue_name || 'Venue application'}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {isApproved ? 'Approved venue profile' : `Step ${completed} of 4 completed`}
           </Typography>
         </Box>
-        <Chip size="small" label={venue.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />
+        <Chip size="small" label={venue.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 700 }} />
       </Stack>
       <Stack direction="row" spacing={0.75} alignItems="center">
         {labels.map((label, index) => {
@@ -62,7 +62,7 @@ export default function UserVenuePanel() {
           return (
             <Box key={label} sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'divider', mb: 0.6 }} />
-              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 10, fontWeight: 900 }} noWrap>
+              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 10, fontWeight: 700 }} noWrap>
                 {label}
               </Typography>
             </Box>
@@ -75,7 +75,7 @@ export default function UserVenuePanel() {
         </Typography>
       )}
       {venue.reviewer_notes && <Alert severity="info">{venue.reviewer_notes}</Alert>}
-      <Button component={RouterLink} to="/register-venue" variant="contained" size="large" sx={{ borderRadius: 999, fontWeight: 950 }}>
+      <Button component={RouterLink} to="/register-venue" variant="contained" size="large" sx={{ borderRadius: 999, fontWeight: 700 }}>
         {isApproved ? 'Update venue profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
       </Button>
     </Stack>

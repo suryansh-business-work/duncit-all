@@ -53,10 +53,10 @@ export default function GpsLocationPicker({
         disabled={busy}
         sx={{
           minHeight: 42,
-          borderRadius: '4px',
+          borderRadius: '16px',
           border: '1px solid transparent',
           color: 'primary.main',
-          fontWeight: 900,
+          fontWeight: 700,
           background: (theme) => {
             const fill = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.9);
             return `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main}) border-box`;

@@ -32,7 +32,7 @@ function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items:
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
             onClick={() => onChange(itemValue)}
-            sx={{ height: 32, fontWeight: 800 }}
+            sx={{ height: 32, fontWeight: 600 }}
           />
         );
       })}
@@ -56,7 +56,7 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
       onClose={onClose}
       title={
         <Box>
-          <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }}>
             Filters
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -70,7 +70,7 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           <Button startIcon={<CloseIcon />} onClick={reset} color="inherit" disabled={activeCount === 0}>
             Reset
           </Button>
-          <Button variant="contained" onClick={onClose} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+          <Button variant="contained" onClick={onClose} sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}>
             Show {resultCount} pods
           </Button>
         </Stack>
@@ -79,20 +79,20 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
     >
       <Stack spacing={2}>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Quick presets</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Quick presets</Typography>
           <ChipRow items={PRESETS} value={filters.preset} onChange={(preset) => setFilters({ ...filters, preset })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Sort by</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Sort by</Typography>
           <ChipRow items={SORTS} value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Vibe</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Vibe</Typography>
           <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            <Chip label="All" clickable color={filters.categoryId ? 'default' : 'primary'} variant={filters.categoryId ? 'outlined' : 'filled'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 800 }} />
+            <Chip label="All" clickable color={filters.categoryId ? 'default' : 'primary'} variant={filters.categoryId ? 'outlined' : 'filled'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 600 }} />
             {visibleCats.map((category: any) => {
               const selected = filters.categoryId === category.id;
-              return <Chip key={category.id} label={category.name} clickable color={selected ? 'primary' : 'default'} variant={selected ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={{ height: 32, fontWeight: 800 }} />;
+              return <Chip key={category.id} label={category.name} clickable color={selected ? 'primary' : 'default'} variant={selected ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={{ height: 32, fontWeight: 600 }} />;
             })}
             {hiddenCount > 0 && (
               <Chip
@@ -100,17 +100,17 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
                 clickable
                 variant="outlined"
                 onClick={() => setShowAllVibes((v) => !v)}
-                sx={{ height: 32, fontWeight: 800 }}
+                sx={{ height: 32, fontWeight: 600 }}
               />
             )}
           </Stack>
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Price</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>Price</Typography>
           <ChipRow items={PRICES} value={filters.price} onChange={(price) => setFilters({ ...filters, price })} />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>When</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>When</Typography>
           <ChipRow items={DATES} value={filters.date} onChange={(date) => setFilters({ ...filters, date })} />
         </Stack>
       </Stack>

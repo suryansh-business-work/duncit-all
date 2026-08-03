@@ -64,7 +64,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
 
   return (
     <YStack gap={6} testID="checkout-address-picker">
-      <Text fontSize={12} fontWeight="800" color="$muted">
+      <Text fontSize={12} fontWeight="600" color="$muted">
         Deliver to
       </Text>
       <XStack
@@ -117,7 +117,7 @@ export function SavedAddressPicker({ onPick }: Readonly<Props>) {
               maxHeight="70%"
             >
               <SafeAreaView edges={['bottom']}>
-                <Text padding={16} fontSize={16} fontWeight="900" color="$color">
+                <Text padding={16} fontSize={16} fontWeight="700" color="$color">
                   Deliver to a saved address
                 </Text>
                 <ScrollView>

@@ -13,11 +13,11 @@ interface Props {
  * "No data available" empty state when there is nothing to plot. */
 export default function InsightChartCard({ title, subtitle, empty, action, children }: Readonly<Props>) {
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack direction="row" alignItems="flex-start" spacing={1} sx={{ mb: 1 }}>
           <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
               {title}
             </Typography>
             {subtitle ? (

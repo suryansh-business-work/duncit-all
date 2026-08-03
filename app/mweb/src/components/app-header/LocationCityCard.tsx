@@ -29,7 +29,7 @@ export default function LocationCityCard({
       sx={{
         border: 1.5,
         borderColor: active ? 'primary.main' : 'divider',
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         minWidth: 0,
         boxShadow: active ? 3 : 0,
@@ -61,7 +61,7 @@ export default function LocationCityCard({
               sx={{
                 height: 20,
                 fontSize: 10,
-                fontWeight: 800,
+                fontWeight: 600,
                 bgcolor: 'rgba(255,255,255,0.84)',
                 color: active ? 'primary.main' : 'warning.dark',
                 '& .MuiChip-icon': { fontSize: 13, color: 'inherit' },
@@ -70,7 +70,7 @@ export default function LocationCityCard({
           )}
         </Box>
         <Box sx={{ minWidth: 0, width: '100%' }}>
-          <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.1 }} noWrap>
+          <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.1 }} noWrap>
             {location.location_name}
           </Typography>
           <Typography variant="caption" sx={{ display: 'block', lineHeight: 1.2, fontWeight: 700, color: '#fff' }} noWrap>

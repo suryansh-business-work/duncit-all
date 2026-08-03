@@ -70,8 +70,8 @@ export default function ResponsiveDialog({
         disableSwipeToOpen
         PaperProps={{
           sx: mergeSx({
-            borderTopLeftRadius: '4px',
-            borderTopRightRadius: '4px',
+            borderTopLeftRadius: '16px',
+            borderTopRightRadius: '16px',
             maxHeight: sheetMaxHeight,
             display: 'flex',
             flexDirection: 'column',

@@ -153,7 +153,7 @@ export default function AccountPage() {
                 caption="Tap for details"
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                   {bandHeadline(health.band)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">

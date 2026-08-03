@@ -60,7 +60,7 @@ export function VenueChargesSheet({
               <XStack alignItems="center" justifyContent="space-between">
                 <XStack alignItems="center" gap={8}>
                   <MaterialIcons name="storefront" size={18} color="#ff4f73" />
-                  <Text fontSize={17} fontWeight="900" color="$color">
+                  <Text fontSize={17} fontWeight="700" color="$color">
                     Venue Charges
                   </Text>
                 </XStack>
@@ -99,17 +99,17 @@ export function VenueChargesSheet({
                         </Text>
                       ) : null}
                     </YStack>
-                    <Text fontSize={13} fontWeight="800" color="$color">
+                    <Text fontSize={13} fontWeight="600" color="$color">
                       {formatMoney(currency, charge.amount)}
                     </Text>
                   </XStack>
                 ))}
                 <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
                 <XStack justifyContent="space-between">
-                  <Text fontSize={13} fontWeight="900" color="$color">
+                  <Text fontSize={13} fontWeight="700" color="$color">
                     Total venue charges
                   </Text>
-                  <Text fontSize={13} fontWeight="900" color="$color">
+                  <Text fontSize={13} fontWeight="700" color="$color">
                     {formatMoney(currency, total)}
                   </Text>
                 </XStack>

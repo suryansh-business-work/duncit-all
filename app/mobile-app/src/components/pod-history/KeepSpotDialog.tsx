@@ -61,7 +61,7 @@ export function KeepSpotDialog({
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={18} fontWeight="900" color="$color">
+                <Text fontSize={18} fontWeight="700" color="$color">
                   Change of plans?
                 </Text>
                 <XStack
@@ -85,7 +85,7 @@ export function KeepSpotDialog({
                   {attemptsLeft} more times)
                 </Text>
                 {error ? (
-                  <Text testID="keep-spot-error" fontSize={13} fontWeight="800" color="$danger">
+                  <Text testID="keep-spot-error" fontSize={13} fontWeight="600" color="$danger">
                     {error}
                   </Text>
                 ) : null}
@@ -108,7 +108,7 @@ export function KeepSpotDialog({
                   opacity={busy ? 0.6 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Close
                   </Text>
                 </XStack>
@@ -129,7 +129,7 @@ export function KeepSpotDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     {busy ? 'Restoring…' : 'Keep My Spot'}
                   </Text>
                 </XStack>

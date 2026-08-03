@@ -64,10 +64,10 @@ export function NotificationsScreen({
                 <MaterialIcons name="close" size={20} color={color} />
               </XStack>
               <YStack flex={1}>
-                <Text fontSize={22} fontWeight="900" color="$color">
+                <Text fontSize={22} fontWeight="700" color="$color">
                   Notifications
                 </Text>
-                <Text fontSize={12} fontWeight="800" color="$muted">
+                <Text fontSize={12} fontWeight="600" color="$muted">
                   {liveUnread > 0 ? `${liveUnread} unread update${plural}` : 'All caught up'}
                 </Text>
               </YStack>
@@ -103,7 +103,7 @@ export function NotificationsScreen({
             >
               <MaterialIcons name="notifications-active" size={26} color={primary} />
               <YStack flex={1}>
-                <Text fontSize={14} fontWeight="900" color="$color">
+                <Text fontSize={14} fontWeight="700" color="$color">
                   Never Miss an Update
                 </Text>
                 <Text fontSize={12} color="$muted">
@@ -117,7 +117,7 @@ export function NotificationsScreen({
                 paddingHorizontal={10}
                 paddingVertical={3}
               >
-                <Text fontSize={12} fontWeight="900" color="$onPrimary">
+                <Text fontSize={12} fontWeight="700" color="$onPrimary">
                   {notifs.length}
                 </Text>
               </XStack>
@@ -136,7 +136,7 @@ export function NotificationsScreen({
               borderColor="$borderColor"
             >
               <MaterialIcons name="notifications" size={20} color={color} />
-              <Text flex={1} fontSize={13.5} fontWeight="800" color="$color">
+              <Text flex={1} fontSize={13.5} fontWeight="600" color="$color">
                 Allow notifications
               </Text>
               <Switch

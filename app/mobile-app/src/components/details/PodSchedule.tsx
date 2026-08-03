@@ -74,7 +74,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
     >
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="event" size={20} color={primary} />
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Time &amp; Venue
         </Text>
       </XStack>
@@ -107,7 +107,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
               pressStyle={{ opacity: 0.85 }}
             >
               <MaterialIcons name="videocam" size={18} color={onPrimary} />
-              <Text fontSize={14} fontWeight="900" color={onPrimary}>
+              <Text fontSize={14} fontWeight="700" color={onPrimary}>
                 Join meeting
               </Text>
             </XStack>
@@ -140,7 +140,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
               alignSelf="flex-start"
               pressStyle={{ opacity: 0.7 }}
             >
-              <Text fontSize={14} fontWeight="800" color="$primary">
+              <Text fontSize={14} fontWeight="600" color="$primary">
                 Venue details
               </Text>
               <MaterialIcons name="open-in-new" size={14} color={primary} />

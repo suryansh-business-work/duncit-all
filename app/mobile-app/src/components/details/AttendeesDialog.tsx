@@ -64,7 +64,7 @@ function AttendeeRow({
           borderRadius={20}
           backgroundColor="$primary"
         >
-          <Text fontSize={15} fontWeight="800" color="$onPrimary">
+          <Text fontSize={15} fontWeight="600" color="$onPrimary">
             {(person.full_name?.[0] ?? '?').toUpperCase()}
           </Text>
         </YStack>
@@ -89,7 +89,7 @@ function AttendeeRow({
           paddingHorizontal={10}
           paddingVertical={3}
         >
-          <Text fontSize={11} fontWeight="900" color="$onPrimary">
+          <Text fontSize={11} fontWeight="700" color="$onPrimary">
             Host
           </Text>
         </YStack>
@@ -126,7 +126,7 @@ function SpotFillRowItem({ fill, onPress }: Readonly<{ fill: SpotFillRow; onPres
           borderRadius={20}
           backgroundColor="$surface"
         >
-          <Text fontSize={15} fontWeight="800" color="$muted">
+          <Text fontSize={15} fontWeight="600" color="$muted">
             {fill.old_name.charAt(0).toUpperCase()}
           </Text>
         </YStack>
@@ -185,7 +185,7 @@ export function AttendeesDialog({
           >
             <SafeAreaView edges={[]}>
               <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
-                <Text fontSize={16} fontWeight="900" color="$color">
+                <Text fontSize={16} fontWeight="700" color="$color">
                   Attendees ({people.length})
                 </Text>
                 <XStack
@@ -220,7 +220,7 @@ export function AttendeesDialog({
                 )}
                 {spotFills.length > 0 ? (
                   <YStack paddingTop={6} gap={2}>
-                    <Text fontSize={11.5} fontWeight="800" color="$muted" paddingHorizontal={10}>
+                    <Text fontSize={11.5} fontWeight="600" color="$muted" paddingHorizontal={10}>
                       {spotFilledTitle}
                     </Text>
                     {spotFills.map((fill) => (

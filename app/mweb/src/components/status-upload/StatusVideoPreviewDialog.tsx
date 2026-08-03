@@ -72,7 +72,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
 
   return (
     <Dialog open={!!file} onClose={onCancel} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Preview your video story</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Preview your video story</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           {url && (
@@ -83,7 +83,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
               controls
               playsInline
               onLoadedMetadata={onLoadedMetadata}
-              sx={{ width: '100%', maxHeight: '48vh', borderRadius: '4px', bgcolor: 'common.black' }}
+              sx={{ width: '100%', maxHeight: '48vh', borderRadius: '16px', bgcolor: 'common.black' }}
             />
           )}
           {file && <FileDetails file={file} dims={dims} />}
@@ -112,7 +112,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
-        <Button variant="contained" onClick={confirm} sx={{ fontWeight: 800 }}>
+        <Button variant="contained" onClick={confirm} sx={{ fontWeight: 600 }}>
           {needsTrim ? 'Trim & Post' : 'Post story'}
         </Button>
       </DialogActions>

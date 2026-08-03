@@ -40,7 +40,7 @@ function ChargeSection({ title, amount, tint, error, children }: Readonly<Sectio
   return (
     <Box
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         bgcolor: tint,
         ...(error ? { border: '1px solid', borderColor: 'error.main' } : null),
@@ -51,11 +51,11 @@ function ChargeSection({ title, amount, tint, error, children }: Readonly<Sectio
         aria-expanded={open}
         sx={{ width: '100%', px: 1.5, py: 1, justifyContent: 'space-between', textAlign: 'left' }}
       >
-        <Typography variant="body2" fontWeight={800}>
+        <Typography variant="body2" fontWeight={600}>
           {title}
         </Typography>
         <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Typography variant="body2" fontWeight={800}>
+          <Typography variant="body2" fontWeight={600}>
             {amount}
           </Typography>
           <ExpandMoreIcon
@@ -70,7 +70,7 @@ function ChargeSection({ title, amount, tint, error, children }: Readonly<Sectio
         </Alert>
       )}
       <Collapse in={open} unmountOnExit>
-        <Box sx={{ bgcolor: 'background.paper', mx: 0.5, mb: 0.5, borderRadius: '4px' }}>{children}</Box>
+        <Box sx={{ bgcolor: 'background.paper', mx: 0.5, mb: 0.5, borderRadius: '16px' }}>{children}</Box>
       </Collapse>
     </Box>
   );
@@ -107,7 +107,7 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
       sx={{
         border: '1px solid',
         borderColor: venueError ? 'error.main' : 'divider',
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
       }}
     >
@@ -118,12 +118,12 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
       >
         <Stack direction="row" alignItems="center" spacing={1}>
           <ReceiptLongOutlinedIcon fontSize="small" color="primary" />
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" fontWeight={700}>
             Govt. and other charges
           </Typography>
         </Stack>
         <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" fontWeight={700}>
             {money(statement.total_deductions)}
           </Typography>
           <ExpandMoreIcon
@@ -152,10 +152,10 @@ export default function ChargesAccordion({ statement, money, venueError }: Reado
             );
           })}
           <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, pt: 0.5 }}>
-            <Typography variant="body2" fontWeight={800}>
+            <Typography variant="body2" fontWeight={600}>
               Total deductions
             </Typography>
-            <Typography variant="body2" fontWeight={900}>
+            <Typography variant="body2" fontWeight={700}>
               {money(statement.total_deductions)}
             </Typography>
           </Stack>

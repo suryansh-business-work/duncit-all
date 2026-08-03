@@ -68,7 +68,7 @@ export default function FaqsPage() {
           <HelpOutlineIcon />
         </Box>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Got questions?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -77,7 +77,7 @@ export default function FaqsPage() {
         </Box>
       </Stack>
 
-      <Paper variant="outlined" sx={{ p: 1, borderRadius: '4px' }}>
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: '16px' }}>
         <TextField
           fullWidth
           size="small"
@@ -122,7 +122,7 @@ export default function FaqsPage() {
       {loading && (
         <Stack spacing={1.5}>
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: '4px' }} />
+            <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: '16px' }} />
           ))}
         </Stack>
       )}
@@ -135,14 +135,14 @@ export default function FaqsPage() {
 
       {filteredGroups.map((g) => (
         <Box key={g.super_category?.id ?? 'GENERIC'}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             {g.super_category?.name ?? 'General'}
           </Typography>
           <Stack spacing={1} sx={{ mt: 1 }}>
             {g.faqs.map((f: any) => (
-              <Accordion key={f.id} disableGutters elevation={0} sx={{ borderRadius: '4px', overflow: 'hidden' }}>
+              <Accordion key={f.id} disableGutters elevation={0} sx={{ borderRadius: '16px', overflow: 'hidden' }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" sx={{ fontWeight: 950 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
                     {f.question}
                   </Typography>
                 </AccordionSummary>
@@ -151,8 +151,8 @@ export default function FaqsPage() {
                     {f.answer}
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-                    <Chip label="Helpful" variant="outlined" sx={{ fontWeight: 900 }} />
-                    <Chip label="Not really" variant="outlined" sx={{ fontWeight: 900 }} />
+                    <Chip label="Helpful" variant="outlined" sx={{ fontWeight: 700 }} />
+                    <Chip label="Not really" variant="outlined" sx={{ fontWeight: 700 }} />
                   </Stack>
                 </AccordionDetails>
               </Accordion>

@@ -54,7 +54,7 @@ export function NotificationRow({
       </YStack>
       <YStack flex={1} gap={2}>
         <XStack alignItems="center" gap={6}>
-          <Text flex={1} fontSize={15} fontWeight="900" color={titleColor} numberOfLines={2}>
+          <Text flex={1} fontSize={15} fontWeight="700" color={titleColor} numberOfLines={2}>
             {notification.title}
           </Text>
           <Text fontSize={11} fontWeight="700" color={ink ?? muted} opacity={unread ? 0.9 : 1}>
@@ -79,7 +79,7 @@ export function NotificationRow({
               paddingHorizontal={9}
               paddingVertical={2}
             >
-              <Text fontSize={10.5} fontWeight="900" color="#ffffff">
+              <Text fontSize={10.5} fontWeight="700" color="#ffffff">
                 NEW
               </Text>
             </YStack>

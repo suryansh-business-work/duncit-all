@@ -26,7 +26,7 @@ function Stat({
       flex={1}
       pressStyle={{ opacity: 0.7 }}
     >
-      <Text fontSize={18} fontWeight="900" color="$color">
+      <Text fontSize={18} fontWeight="700" color="$color">
         {value}
       </Text>
       <Text fontSize={12} fontWeight="700" color="$muted">
@@ -55,7 +55,7 @@ export function ProfileHeader({
       <XStack gap={14} alignItems="center">
         <ProfileAvatar photo={me.profile_photo} initial={initial} size={76} onChanged={onChanged} />
         <YStack flex={1} gap={3}>
-          <Text fontSize={20} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text fontSize={20} fontWeight="700" color="$color" numberOfLines={1}>
             {me.full_name ?? 'User'}
           </Text>
           <XStack alignItems="center" gap={5}>
@@ -81,7 +81,7 @@ export function ProfileHeader({
               borderWidth={1}
               borderColor="$borderColor"
             >
-              <Text fontSize={11} fontWeight="800" color="$color">
+              <Text fontSize={11} fontWeight="600" color="$color">
                 {labelFor(role)}
               </Text>
             </XStack>
@@ -131,7 +131,7 @@ export function ProfileHeader({
         pressStyle={{ opacity: 0.85 }}
       >
         <MaterialIcons name="share" size={16} color={color} />
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Share profile
         </Text>
       </XStack>

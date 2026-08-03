@@ -95,7 +95,7 @@ export function ReelPanelBody({
           ) : (
             <MaterialIcons name="video-library" size={20} color={primary} />
           )}
-          <Text fontSize={13.5} fontWeight="800" color="$color">
+          <Text fontSize={13.5} fontWeight="600" color="$color">
             {uploading ? busyLabel : 'Upload a video'}
           </Text>
         </XStack>

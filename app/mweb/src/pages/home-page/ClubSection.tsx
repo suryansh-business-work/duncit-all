@@ -9,9 +9,11 @@ interface ClubSectionProps {
   club: any;
   clubPods: any[];
   hostNameOf: (pod: any) => string | null;
+  /** The category chip over each card's image (mock: "Sports"). */
+  categoryLabelOf?: (pod: any) => string | null;
 }
 
-export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<ClubSectionProps>) {
+export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelOf }: Readonly<ClubSectionProps>) {
   const navigate = useNavigate();
   return (
     <Box sx={{ minWidth: 0 }}>
@@ -41,7 +43,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
             <GroupsIcon />
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={900} sx={{ lineHeight: 1.15 }} noWrap>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.15 }} noWrap>
               {club.club_name}
             </Typography>
             {club.club_description && (
@@ -60,7 +62,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
             )}
           </Box>
         </Stack>
-        <Chip size="small" label={`${clubPods.length} pod${clubPods.length === 1 ? '' : 's'}`} sx={{ fontWeight: 800, flex: '0 0 auto' }} />
+        <Chip size="small" label={`${clubPods.length} pod${clubPods.length === 1 ? '' : 's'}`} sx={{ fontWeight: 600, flex: '0 0 auto' }} />
       </Stack>
 
       {clubPods.length === 0 ? (
@@ -83,7 +85,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
             '&::-webkit-scrollbar': { display: 'none' },
             '&::-webkit-scrollbar-thumb': {
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.16),
-              borderRadius: '4px',
+              borderRadius: '16px',
             },
           }}
         >
@@ -92,6 +94,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
               key={p.id}
               pod={p}
               hostName={hostNameOf(p)}
+              categoryLabel={categoryLabelOf?.(p)}
               showPlace={false}
               onOpen={() => navigate(podUrl(p.club_slug, p.pod_id))}
             />

@@ -32,7 +32,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
         <XStack alignItems="center" gap={8} flex={1}>
           <MaterialIcons name="history" size={20} color={muted} />
           <YStack>
-            <Text fontSize={16} fontWeight="900" color="$color">
+            <Text fontSize={16} fontWeight="700" color="$color">
               Previous Pods
             </Text>
             <Text fontSize={12} fontWeight="700" color="$muted">
@@ -49,7 +49,7 @@ export function PreviousPodsRail({ pods, filtered, onSeeAll, onOpenPod }: Readon
           gap={2}
           pressStyle={{ opacity: 0.8 }}
         >
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             See all
           </Text>
           <MaterialIcons name="chevron-right" size={16} color={primary} />

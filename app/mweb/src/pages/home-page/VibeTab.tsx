@@ -30,18 +30,13 @@ interface VibeTabProps {
   layout?: IconLayout | null;
 }
 
-/** An icon+label tab for a top-level category (not an MUI Chip). The icon renders
- * full-bleed (no circular badge); its position relative to the label follows
- * `layout.position` (default TOP -> icon over label). Selected state is an
- * underline bar + primary-coloured label. */
+/** An icon+label CARD tile for a top-level category — the mock's vibe tile:
+ * a rounded card with the icon over the label, selected = primary border and a
+ * soft primary fill. The admin icon layout (position/size) still applies. */
 export default function VibeTab({ label, icon, selected, onClick, layout }: Readonly<VibeTabProps>) {
   const position = layout?.position ?? 'TOP';
   const direction = DIRECTION_BY_POSITION[position];
   const isRow = direction === 'row' || direction === 'row-reverse';
-  const activeColor = selected ? 'primary.main' : 'text.secondary';
-  const underline = (
-    <Box sx={{ height: 3, width: 22, borderRadius: '4px', bgcolor: selected ? 'primary.main' : 'transparent' }} />
-  );
   return (
     <Stack
       component="button"
@@ -49,26 +44,48 @@ export default function VibeTab({ label, icon, selected, onClick, layout }: Read
       onClick={onClick}
       aria-pressed={selected}
       alignItems="center"
+      justifyContent="center"
       spacing={0.5}
       sx={{
         flex: '0 0 auto',
-        width: 76,
-        px: 0.5,
-        py: 0.75,
-        border: 'none',
-        background: 'transparent',
+        minWidth: 84,
+        px: 1,
+        py: 1.1,
+        border: 1.5,
+        borderStyle: 'solid',
+        borderColor: selected ? 'primary.main' : 'divider',
+        borderRadius: '16px',
+        bgcolor: (theme) => {
+          if (!selected) return theme.palette.background.paper;
+          const tint = theme.palette.mode === 'dark' ? 0.16 : 0.07;
+          return `rgba(255,79,115,${tint})`;
+        },
         cursor: 'pointer',
-        color: activeColor,
+        color: selected ? 'primary.main' : 'text.secondary',
+        transition: 'border-color 160ms ease, background-color 160ms ease',
+        '&:hover': { borderColor: 'primary.main' },
       }}
     >
-      <Stack direction={direction} alignItems="center" justifyContent="center" spacing={0.5} sx={{ color: activeColor }}>
-        <Box sx={{ minHeight: 46, display: 'grid', placeItems: 'center' }}>{icon}</Box>
-        {!isRow && underline}
-        <Typography variant="caption" sx={{ fontWeight: selected ? 900 : 700, lineHeight: 1.15, textAlign: 'center' }} noWrap>
+      <Stack
+        direction={direction}
+        alignItems="center"
+        justifyContent="center"
+        spacing={isRow ? 0.75 : 0.5}
+      >
+        <Box sx={{ minHeight: isRow ? 'auto' : 46, display: 'grid', placeItems: 'center' }}>{icon}</Box>
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: selected ? 900 : 700,
+            lineHeight: 1.15,
+            textAlign: 'center',
+            color: selected ? 'primary.main' : 'text.primary',
+          }}
+          noWrap
+        >
           {label}
         </Typography>
       </Stack>
-      {isRow && underline}
     </Stack>
   );
 }

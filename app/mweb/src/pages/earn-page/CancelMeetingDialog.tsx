@@ -45,7 +45,7 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
 
   return (
     <Dialog open={open} onClose={() => !cancelling && onClose()} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 900 }}>Cancel this meeting?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Cancel this meeting?</DialogTitle>
       <DialogContent>
         <Stack spacing={1.5}>
           <DialogContentText>
@@ -68,7 +68,7 @@ export default function CancelMeetingDialog({ open, kind, onClose, onDone }: Rea
           color="error"
           variant="contained"
           disabled={cancelling}
-          sx={{ borderRadius: 999, fontWeight: 900 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {cancelling ? 'Cancelling…' : 'Cancel meeting'}
         </Button>

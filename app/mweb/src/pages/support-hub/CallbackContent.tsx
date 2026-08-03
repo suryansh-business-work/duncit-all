@@ -44,9 +44,9 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
 
   return (
     <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
         <Stack spacing={1.25}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             Call support now
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -61,16 +61,16 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             startIcon={<CallIcon />}
             disabled={!target?.available}
             onClick={handleCallNow}
-            sx={{ borderRadius: 99, fontWeight: 800 }}
+            sx={{ borderRadius: 99, fontWeight: 600 }}
           >
             Call Now
           </Button>
         </Stack>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
         <Stack spacing={1.5}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             Request a callback
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -101,7 +101,7 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
             startIcon={<PhoneCallbackIcon />}
             disabled={loading}
             onClick={handleRequest}
-            sx={{ borderRadius: 99, fontWeight: 800 }}
+            sx={{ borderRadius: 99, fontWeight: 600 }}
           >
             {loading ? 'Requesting…' : 'Request callback'}
           </Button>

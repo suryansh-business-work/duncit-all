@@ -38,7 +38,7 @@ function MoreWayCard({ section, onPress }: Readonly<MoreWayCardProps>) {
         <MaterialIcons name={section.icon} size={22} color="#ffffff" />
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           {section.title}
         </Text>
         <Text fontSize={12.5} color="$muted">
@@ -59,7 +59,7 @@ export function SupportMoreWays({
     <YStack gap={8}>
       <Text
         fontSize={12}
-        fontWeight="900"
+        fontWeight="700"
         color="$muted"
         textTransform="uppercase"
         letterSpacing={0.5}

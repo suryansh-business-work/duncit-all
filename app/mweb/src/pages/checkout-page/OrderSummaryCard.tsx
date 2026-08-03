@@ -28,14 +28,14 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup }: Readonly<
   const [venueInfoOpen, setVenueInfoOpen] = useState(false);
 
   return (
-    <Card sx={{ flex: 1, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
+    <Card sx={{ flex: 1, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent sx={{ p: 1.25 }}>
-        <Box sx={{ height: 150, borderRadius: '4px', overflow: 'hidden', position: 'relative', bgcolor: 'rgba(255,255,255,0.08)' }}>
+        <Box sx={{ height: 150, borderRadius: '16px', overflow: 'hidden', position: 'relative', bgcolor: 'rgba(255,255,255,0.08)' }}>
           {media?.url && <Box component={media.type === 'VIDEO' ? 'video' : 'img'} src={media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
           <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 12%, rgba(0,0,0,0.75) 100%)' }} />
           <Box sx={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.7)', letterSpacing: 0, lineHeight: 1 }}>Ticket</Typography>
-            <Typography variant="subtitle1" fontWeight={900} noWrap>{title}</Typography>
+            <Typography variant="subtitle1" fontWeight={700} noWrap>{title}</Typography>
             {when && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.74)' }}>{when}</Typography>}
           </Box>
         </Box>
@@ -49,7 +49,7 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup }: Readonly<
           <Divider sx={{ my: 1 }} />
           <Row label="Total payable" value={fmt(breakup.total)} bold />
           {venueCharges.length > 0 && (
-            <Box sx={{ mt: 1, p: 1.25, borderRadius: '4px', border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
+            <Box sx={{ mt: 1, p: 1.25, borderRadius: '16px', border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
                   <Typography variant="body2" fontWeight={600}>Venue Charges</Typography>

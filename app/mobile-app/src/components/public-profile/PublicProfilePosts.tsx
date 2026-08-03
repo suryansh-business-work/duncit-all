@@ -29,7 +29,7 @@ export function PublicProfilePosts({
         paddingHorizontal={24}
       >
         <MaterialIcons name="lock-outline" size={28} color="#9aa0a6" />
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           This account is private
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">
@@ -70,7 +70,7 @@ export function PublicProfilePosts({
 
       <XStack alignItems="center" justifyContent="center" gap={6} paddingTop={4}>
         <MaterialIcons name="grid-on" size={16} color="#9aa0a6" />
-        <Text fontSize={12} fontWeight="800" color="$muted" letterSpacing={1.5}>
+        <Text fontSize={12} fontWeight="600" color="$muted" letterSpacing={1.5}>
           POSTS
         </Text>
       </XStack>

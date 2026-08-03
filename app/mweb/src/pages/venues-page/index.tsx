@@ -74,7 +74,7 @@ export default function VenuesPage({ locationId, cityLabel }: Readonly<Props>) {
       spacing={1.5}
       sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
     >
-      <Typography variant="h5" sx={{ fontWeight: 950 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700 }}>
         Venues
       </Typography>
       {cityLabel && (

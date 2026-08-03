@@ -86,7 +86,7 @@ function HostRow({
         {host.profile_photo ? (
           <AppImage source={{ uri: host.profile_photo }} style={{ width: 40, height: 40 }} />
         ) : (
-          <Text fontSize={15} fontWeight="800" color="$onPrimary">
+          <Text fontSize={15} fontWeight="600" color="$onPrimary">
             {(host.full_name?.[0] ?? 'H').toUpperCase()}
           </Text>
         )}
@@ -144,7 +144,7 @@ export function ChargesSection({
               </Text>
             ) : null}
           </YStack>
-          <Text fontSize={13.5} fontWeight="900" color="$color">
+          <Text fontSize={13.5} fontWeight="700" color="$color">
             ₹{c.amount}
           </Text>
         </XStack>

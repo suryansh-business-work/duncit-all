@@ -66,7 +66,7 @@ export function AllSupportTicketsScreen() {
       >
         <YStack flex={1} gap={2}>
           <XStack gap={8} alignItems="center">
-            <Text fontSize={11} fontWeight="900" color="$muted">
+            <Text fontSize={11} fontWeight="700" color="$muted">
               {row.ticket_no}
             </Text>
             <XStack
@@ -75,16 +75,16 @@ export function AllSupportTicketsScreen() {
               paddingVertical={2}
               backgroundColor={SOURCE_TINT[row.source] ?? '$background'}
             >
-              <Text fontSize={10.5} fontWeight="800" color="$color">
+              <Text fontSize={10.5} fontWeight="600" color="$color">
                 {SOURCE_LABEL[row.source] ?? row.source}
               </Text>
             </XStack>
           </XStack>
-          <Text fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+          <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
             {row.title}
           </Text>
         </YStack>
-        <Text fontSize={11.5} fontWeight="800" color="$muted">
+        <Text fontSize={11.5} fontWeight="600" color="$muted">
           {row.status}
         </Text>
       </XStack>

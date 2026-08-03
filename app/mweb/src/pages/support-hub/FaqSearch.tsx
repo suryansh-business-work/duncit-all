@@ -59,7 +59,7 @@ export default function FaqSearch({ query, onQueryChange, onOpen }: Readonly<Faq
         sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper', minHeight: 48 } }}
       />
       {active && (
-        <Paper variant="outlined" sx={{ mt: 1, borderRadius: '4px', overflow: 'hidden' }}>
+        <Paper variant="outlined" sx={{ mt: 1, borderRadius: '16px', overflow: 'hidden' }}>
           {loading && (
             <Stack sx={{ p: 1 }} spacing={1}>
               {[0, 1, 2].map((i) => (

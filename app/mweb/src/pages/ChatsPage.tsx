@@ -109,7 +109,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <ChatBubbleOutlineIcon color="primary" />
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Chats
           </Typography>
         </Stack>
@@ -133,12 +133,12 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
       />
       <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
         {POD_FILTERS.map(([value, label]) => (
-          <Chip key={value} clickable label={label} color={filter === value ? 'primary' : 'default'} variant={filter === value ? 'filled' : 'outlined'} onClick={() => setFilter(value)} sx={{ height: 34, fontWeight: 900 }} />
+          <Chip key={value} clickable label={label} color={filter === value ? 'primary' : 'default'} variant={filter === value ? 'filled' : 'outlined'} onClick={() => setFilter(value)} sx={{ height: 34, fontWeight: 700 }} />
         ))}
       </Stack>
       {filter === 'ALL' && rooms.length > 0 && (
-        <Box sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
-          <Typography variant="caption" color="success.main" sx={{ fontWeight: 950, letterSpacing: 0.6 }}>
+        <Box sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
+          <Typography variant="caption" color="success.main" sx={{ fontWeight: 700, letterSpacing: 0.6 }}>
             ACTIVE PODS · {rooms.length}
           </Typography>
           <Stack direction="row" spacing={1.25} sx={{ mt: 1.25, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
@@ -160,15 +160,15 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
           {visibleRooms.map((p: any) => {
             const statusChip = podStatusChip(podStatus(p.pod_date_time, p.pod_end_date_time));
             return (
-            <Card key={p.id} variant="outlined" sx={{ borderRadius: '4px', bgcolor: 'background.paper', overflow: 'hidden' }}>
+            <Card key={p.id} variant="outlined" sx={{ borderRadius: '16px', bgcolor: 'background.paper', overflow: 'hidden' }}>
               <CardActionArea onClick={() => navigate(`/chats/${p.id}`)}>
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
                   <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Avatar src={p.cover_url || undefined} variant="rounded" sx={{ width: 58, height: 58, borderRadius: '4px', bgcolor: 'primary.main' }}>
+                    <Avatar src={p.cover_url || undefined} variant="rounded" sx={{ width: 58, height: 58, borderRadius: '16px', bgcolor: 'primary.main' }}>
                       <GroupsIcon />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 950, lineHeight: 1.15 }} noWrap>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
                         {p.pod_title}
                       </Typography>
                       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap display="block">
@@ -177,13 +177,13 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                           : 'Pod chat'}
                       </Typography>
                       <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
-                        <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10, fontWeight: 950 }} />
+                        <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
                         <Typography variant="caption" color="text.secondary">
                           {p.pod_attendees?.length || 0}{p.no_of_spots ? `/${p.no_of_spots}` : ''} members
                         </Typography>
                       </Stack>
                     </Box>
-                    <Typography variant="caption" color="primary.main" sx={{ fontWeight: 900, flex: '0 0 auto' }}>
+                    <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700, flex: '0 0 auto' }}>
                       Open
                     </Typography>
                   </Stack>

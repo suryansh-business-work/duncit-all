@@ -14,7 +14,7 @@ export default function SubmittedSummary({ survey, answers }: Readonly<Props>) {
   if (items.length === 0) return null;
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px', mb: 2 }}>
+    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', mb: 2 }}>
       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
         YOUR SURVEY ANSWERS
       </Typography>

@@ -25,7 +25,7 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
       borderColor="$borderColor"
       borderRadius={12}
     >
-      <Text fontSize={15} fontWeight="900" color="$color">
+      <Text fontSize={15} fontWeight="700" color="$color">
         {venue.venue_name}
       </Text>
       {address ? (
@@ -45,7 +45,7 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
             pressStyle={{ opacity: 0.7 }}
           >
             <MaterialIcons name="phone" size={16} color={primary} />
-            <Text fontSize={13} fontWeight="800" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$primary">
               Call Venue
             </Text>
           </XStack>
@@ -60,16 +60,16 @@ export function VenueContactCard({ venue }: Readonly<{ venue: CreatePodVenue }>)
           pressStyle={{ opacity: 0.7 }}
         >
           <MaterialIcons name="directions" size={16} color={primary} />
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             Get Directions
           </Text>
         </XStack>
       </XStack>
       <YStack gap={2}>
-        <Text fontSize={12} fontWeight="800" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           Venue contact for follow-up
         </Text>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {venue.owner_name || venue.venue_name}
         </Text>
         {venue.owner_email ? (

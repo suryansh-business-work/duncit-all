@@ -27,16 +27,16 @@ export default function CartPodGroup({
   return (
     <Stack
       spacing={1}
-      sx={{ p: 1.5, borderRadius: '4px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+      sx={{ p: 1.5, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
       data-testid={`cart-pod-${podId}`}
     >
-      <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
+      <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
         {podTitle}
       </Typography>
       {lines.map((line) => (
         <Stack key={cartLineKey(line)} direction="row" spacing={1} alignItems="center">
           <Box
-            sx={{ width: 48, height: 48, borderRadius: '4px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover' }}
+            sx={{ width: 48, height: 48, borderRadius: '16px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'action.hover' }}
           >
             {line.image_url && (
               <Box
@@ -48,7 +48,7 @@ export default function CartPodGroup({
             )}
           </Box>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>
+            <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
               {line.product_name}
               {line.variant_label ? ` — ${line.variant_label}` : ''}
             </Typography>
@@ -74,7 +74,7 @@ export default function CartPodGroup({
             >
               <RemoveIcon fontSize="small" />
             </IconButton>
-            <Typography variant="body2" fontWeight={900}>
+            <Typography variant="body2" fontWeight={700}>
               {line.quantity}
             </Typography>
             <IconButton
@@ -100,7 +100,7 @@ export default function CartPodGroup({
         <Typography variant="body2" color="text.secondary">
           Products total
         </Typography>
-        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {priceFormat(total)}
         </Typography>
       </Stack>

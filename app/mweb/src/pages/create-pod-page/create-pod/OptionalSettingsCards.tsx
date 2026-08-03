@@ -27,14 +27,14 @@ interface CardProps {
 function SettingCard({ panel, summary, onOpen }: Readonly<CardProps>) {
   const filled = summary !== 'Add';
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px', height: '100%' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px', height: '100%' }}>
       <CardActionArea onClick={onOpen} sx={{ p: 1.5, height: '100%' }} aria-label={panel.title}>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <Box sx={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText' }}>
             {panel.icon}
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={900} noWrap>{panel.title}</Typography>
+            <Typography variant="subtitle2" fontWeight={700} noWrap>{panel.title}</Typography>
             <Typography variant="caption" color="text.secondary" noWrap>{panel.subtitle}</Typography>
           </Box>
           {filled ? <Chip label={summary} size="small" color="primary" /> : <ChevronRightIcon color="action" />}
@@ -84,7 +84,7 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
 
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: '0.1em' }}>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: '0.1em' }}>
         OPTIONAL SETTINGS
       </Typography>
       <Stack spacing={1.25} sx={{ mt: 1 }}>
@@ -93,7 +93,7 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
       </Stack>
 
       <Dialog open={!!active} onClose={() => setActive(null)} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ fontWeight: 900, pr: 6 }}>
+        <DialogTitle sx={{ fontWeight: 700, pr: 6 }}>
           {activePanel?.title}
           <IconButton aria-label="Close" onClick={() => setActive(null)} sx={{ position: 'absolute', right: 8, top: 8 }}>
             <CloseIcon />
@@ -101,7 +101,7 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
         </DialogTitle>
         <DialogContent>{active && <PanelBody panelKey={active} form={form} />}</DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={() => setActive(null)} sx={{ fontWeight: 800 }}>Done</Button>
+          <Button variant="contained" onClick={() => setActive(null)} sx={{ fontWeight: 600 }}>Done</Button>
         </DialogActions>
       </Dialog>
     </Box>

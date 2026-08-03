@@ -50,7 +50,7 @@ export function SidebarManageList({
     <YStack paddingHorizontal={16} paddingBottom={10} gap={4}>
       <Text
         fontSize={11}
-        fontWeight="800"
+        fontWeight="600"
         letterSpacing={0.4}
         textTransform="uppercase"
         color="$muted"

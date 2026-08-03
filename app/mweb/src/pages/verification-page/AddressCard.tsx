@@ -82,7 +82,7 @@ export default function AddressCard({ item, onChanged, onError }: Readonly<Props
           variant="outlined"
           disabled={busy}
           onClick={() => onSubmit().catch(() => undefined)}
-          sx={{ borderRadius: 999, fontWeight: 900, alignSelf: 'flex-start' }}
+          sx={{ borderRadius: 999, fontWeight: 700, alignSelf: 'flex-start' }}
         >
           {busy ? 'Submitting…' : 'Submit address'}
         </Button>

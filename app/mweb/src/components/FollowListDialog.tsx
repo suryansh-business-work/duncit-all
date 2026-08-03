@@ -67,7 +67,7 @@ function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly<RowProps>) {
         onClick={() => onOpen(person.user_id)}
         sx={{ minWidth: 0, flex: 1, cursor: 'pointer' }}
       >
-        <Typography fontWeight={800} noWrap>
+        <Typography fontWeight={600} noWrap>
           {name}
         </Typography>
         <Typography variant="caption" color="text.secondary" noWrap>
@@ -79,7 +79,7 @@ function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly<RowProps>) {
           size="small"
           variant={person.is_following ? 'outlined' : 'contained'}
           onClick={() => onToggle(person)}
-          sx={{ fontWeight: 800, borderRadius: 999 }}
+          sx={{ fontWeight: 600, borderRadius: 999 }}
         >
           {person.is_following ? 'Following' : 'Follow'}
         </Button>

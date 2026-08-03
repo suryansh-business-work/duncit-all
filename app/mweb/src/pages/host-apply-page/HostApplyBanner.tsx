@@ -18,7 +18,7 @@ export default function HostApplyBanner() {
   return (
     <Card
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         color: 'common.white',
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
         boxShadow: '0 12px 30px rgba(255,79,115,0.30)',
@@ -44,7 +44,7 @@ export default function HostApplyBanner() {
           <AddBusinessRoundedIcon />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.15 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.15 }}>
             Ready to Host More Experiences?
           </Typography>
           <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.95 }}>
@@ -59,7 +59,7 @@ export default function HostApplyBanner() {
           onClick={() => navigate('/host/apply')}
           sx={{
             borderRadius: 999,
-            fontWeight: 950,
+            fontWeight: 700,
             whiteSpace: 'nowrap',
             bgcolor: 'common.white',
             color: '#ff4f73',

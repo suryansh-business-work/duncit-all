@@ -30,7 +30,7 @@ export default function HostPodRow({ pod, onComplete, onEdit, onDelete }: Readon
       spacing={0.75}
       sx={{
         p: 1.25,
-        borderRadius: '4px',
+        borderRadius: '16px',
         border: 1,
         borderColor: rejected ? 'error.light' : 'divider',
         bgcolor: 'background.paper',

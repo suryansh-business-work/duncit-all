@@ -79,7 +79,7 @@ export default function VirtualMeetingFields({ form }: Readonly<{ form: CreatePo
         />
       </Stack>
       {duration && (
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
           Total duration: {duration}
         </Typography>
       )}

@@ -93,7 +93,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
   return (
     <Stack spacing={1.5}>
       <Divider />
-      <Typography variant="subtitle1" fontWeight={900}>
+      <Typography variant="subtitle1" fontWeight={700}>
         Ratings &amp; reviews
       </Typography>
       {summary && summary.total > 0 && (
@@ -105,8 +105,8 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         </Stack>
       )}
 
-      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '4px', p: 1.5 }}>
-        <Typography variant="body2" fontWeight={800} sx={{ mb: 0.5 }}>
+      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', p: 1.5 }}>
+        <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
           Write a review
         </Typography>
         <Rating value={rating} onChange={(_, v) => setRating(v)} />
@@ -161,7 +161,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
           size="small"
           onClick={submit}
           disabled={saving}
-          sx={{ mt: 1, borderRadius: 999, fontWeight: 800 }}
+          sx={{ mt: 1, borderRadius: 999, fontWeight: 600 }}
         >
           {saving ? 'Submitting…' : 'Submit review'}
         </Button>
@@ -176,7 +176,7 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
         <Box key={r.id} sx={{ borderTop: 1, borderColor: 'divider', pt: 1.25 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Avatar sx={{ width: 28, height: 28, fontSize: 13 }}>{(r.user_name[0] ?? 'U').toUpperCase()}</Avatar>
-            <Typography variant="body2" fontWeight={800}>
+            <Typography variant="body2" fontWeight={600}>
               {r.user_name}
             </Typography>
             <Rating value={r.rating} readOnly size="small" />
@@ -200,8 +200,8 @@ export default function ProductReviews({ productId }: Readonly<{ productId: stri
             </Stack>
           )}
           {r.seller_reply && (
-            <Box sx={{ mt: 0.75, ml: 2, p: 1, bgcolor: 'action.hover', borderRadius: '4px' }}>
-              <Typography variant="caption" fontWeight={800} color="primary.main">
+            <Box sx={{ mt: 0.75, ml: 2, p: 1, bgcolor: 'action.hover', borderRadius: '16px' }}>
+              <Typography variant="caption" fontWeight={600} color="primary.main">
                 Seller response
               </Typography>
               <Typography variant="body2">{r.seller_reply}</Typography>

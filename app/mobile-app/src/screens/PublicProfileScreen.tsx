@@ -88,7 +88,7 @@ function FollowButton({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name={view.icon} size={18} color={view.iconColor} />
-      <Text fontSize={14} fontWeight="900" color={view.labelColor}>
+      <Text fontSize={14} fontWeight="700" color={view.labelColor}>
         {view.label}
       </Text>
     </XStack>
@@ -113,7 +113,7 @@ function EditProfileButton({ onPress }: Readonly<{ onPress: () => void }>) {
       borderColor="$borderColor"
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={14} fontWeight="800" color="$color">
+      <Text fontSize={14} fontWeight="600" color="$color">
         Edit my profile
       </Text>
     </XStack>

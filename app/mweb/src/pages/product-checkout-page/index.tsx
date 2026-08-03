@@ -75,12 +75,12 @@ export default function ProductCheckoutPage() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
-      <Box sx={{ p: 2, borderRadius: '4px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ p: 2, borderRadius: '16px', color: 'text.primary', background: headerBg, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
           <IconButton onClick={() => navigate(-1)} aria-label="Back" sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Product checkout</Typography>
-            <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.1 }}>Complete your order</Typography>
+            <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.1 }}>Complete your order</Typography>
           </Box>
           <GatewayChip finance={session.finance} />
         </Stack>
@@ -135,9 +135,9 @@ function EmptyProductCheckout({ onCart }: Readonly<{ onCart: () => void }>) {
   return (
     <Stack alignItems="center" spacing={1.5} sx={{ py: 8, textAlign: 'center' }}>
       <ShoppingBagIcon sx={{ fontSize: 44, color: 'text.disabled' }} />
-      <Typography variant="h6" fontWeight={900}>Nothing to checkout</Typography>
+      <Typography variant="h6" fontWeight={700}>Nothing to checkout</Typography>
       <Typography variant="body2" color="text.secondary">There are no products in your cart.</Typography>
-      <Button variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 800 }}>Back to cart</Button>
+      <Button variant="contained" onClick={onCart} sx={{ borderRadius: 999, fontWeight: 600 }}>Back to cart</Button>
     </Stack>
   );
 }

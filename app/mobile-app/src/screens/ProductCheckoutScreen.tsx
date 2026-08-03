@@ -62,7 +62,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
   return (
     <YStack alignItems="center" gap={10} paddingVertical={64} testID="product-checkout-empty">
       <MaterialIcons name="shopping-bag" size={44} color={muted} />
-      <Text fontSize={17} fontWeight="900" color="$color">
+      <Text fontSize={17} fontWeight="700" color="$color">
         Nothing to checkout
       </Text>
       <Text fontSize={13} color="$muted" textAlign="center">
@@ -81,7 +81,7 @@ function EmptyProductCart({ onCart }: Readonly<{ onCart: () => void }>) {
         backgroundColor="$primary"
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={14} fontWeight="900" color={onPrimary}>
+        <Text fontSize={14} fontWeight="700" color={onPrimary}>
           Back to cart
         </Text>
       </XStack>

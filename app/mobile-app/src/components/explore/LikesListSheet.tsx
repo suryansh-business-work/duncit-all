@@ -97,7 +97,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
               </YStack>
             )}
             <YStack flex={1}>
-              <Text fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+              <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
                 {item.full_name || item.first_name || 'User'}
               </Text>
               {item.username ? (
@@ -144,7 +144,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                 paddingTop={16}
                 paddingBottom={8}
               >
-                <Text fontSize={18} fontWeight="900" color="$color">
+                <Text fontSize={18} fontWeight="700" color="$color">
                   Liked by
                 </Text>
                 <XStack

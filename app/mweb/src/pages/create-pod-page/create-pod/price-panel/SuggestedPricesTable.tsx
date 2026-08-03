@@ -27,7 +27,7 @@ function SuggestedPriceRow({ price, payout, description, testId }: Readonly<RowP
       sx={{ px: 1.5, py: 1.125, borderTop: 1, borderColor: 'divider' }}
     >
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="body2" fontWeight={800}>
+        <Typography variant="body2" fontWeight={600}>
           {price}
         </Typography>
         <Typography variant="caption" color="text.secondary">
@@ -36,7 +36,7 @@ function SuggestedPriceRow({ price, payout, description, testId }: Readonly<RowP
       </Box>
       <Typography
         variant="body2"
-        fontWeight={900}
+        fontWeight={700}
         color="success.main"
         sx={{ whiteSpace: 'nowrap' }}
       >
@@ -58,7 +58,7 @@ export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>
   return (
     <Box
       data-testid="suggested-prices-table"
-      sx={{ border: 1, borderColor: 'divider', borderRadius: '4px', overflow: 'hidden' }}
+      sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', overflow: 'hidden' }}
     >
       <Stack
         direction="row"
@@ -66,10 +66,10 @@ export default function SuggestedPricesTable({ prices, symbol }: Readonly<Props>
         justifyContent="space-between"
         sx={{ px: 1.5, py: 1.125, bgcolor: 'action.hover' }}
       >
-        <Typography variant="caption" fontWeight={900} color="text.secondary">
+        <Typography variant="caption" fontWeight={700} color="text.secondary">
           {SUGGESTED_PRICES_PRICE_COLUMN}
         </Typography>
-        <Typography variant="caption" fontWeight={900} color="text.secondary">
+        <Typography variant="caption" fontWeight={700} color="text.secondary">
           {SUGGESTED_PRICES_PAYOUT_COLUMN}
         </Typography>
       </Stack>

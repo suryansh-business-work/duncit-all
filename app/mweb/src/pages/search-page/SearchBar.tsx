@@ -82,7 +82,7 @@ export default function SearchBar({ value, onChange, onPick }: Readonly<Props>) 
         {showSuggestions && (
           <Paper
             elevation={6}
-            sx={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 6, borderRadius: '4px', overflow: 'hidden' }}
+            sx={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 6, borderRadius: '16px', overflow: 'hidden' }}
           >
             <List dense disablePadding>
               {suggestions.map((s) => (

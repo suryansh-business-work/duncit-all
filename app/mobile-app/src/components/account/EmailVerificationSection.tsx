@@ -107,7 +107,7 @@ export function EmailVerificationSection({
     <YStack testID="email-verification" gap={10}>
       <XStack alignItems="center" gap={8}>
         <MaterialIcons name="mark-email-read" size={18} color={primary} />
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Verify email
         </Text>
       </XStack>
@@ -166,7 +166,7 @@ export function EmailVerificationSection({
           opacity={sending || !email ? 0.5 : 1}
           pressStyle={{ opacity: 0.8 }}
         >
-          <Text fontSize={13} fontWeight="800" color={muted}>
+          <Text fontSize={13} fontWeight="600" color={muted}>
             {sendLabel}
           </Text>
         </XStack>

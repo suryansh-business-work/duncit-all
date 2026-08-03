@@ -44,7 +44,7 @@ export default function AdTile({ ad }: Readonly<{ ad: PublicAd }>) {
             bottom: 0,
             textAlign: 'center',
             fontSize: 8.5,
-            fontWeight: 800,
+            fontWeight: 600,
             lineHeight: '14px',
             color: '#fff',
             bgcolor: 'rgba(0,0,0,0.6)',
@@ -58,7 +58,7 @@ export default function AdTile({ ad }: Readonly<{ ad: PublicAd }>) {
         sx={{
           width: '100%',
           minHeight: 17,
-          fontWeight: 800,
+          fontWeight: 600,
           lineHeight: 1.15,
           textAlign: 'center',
           overflow: 'hidden',

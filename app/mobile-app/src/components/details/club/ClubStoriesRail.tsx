@@ -81,7 +81,7 @@ export function ClubStoriesRail({ clubId, clubName }: Readonly<Props>) {
     <YStack gap={8} testID="club-stories">
       <XStack alignItems="center" gap={6}>
         <MaterialIcons name="auto-stories" size={15} color={primary} />
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Stories
         </Text>
       </XStack>

@@ -30,7 +30,7 @@ function AddPostButton({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color="#ffffff" />
-      <Text fontSize={13} fontWeight="900" color="#ffffff">
+      <Text fontSize={13} fontWeight="700" color="#ffffff">
         {uploading ? 'Uploading…' : 'Add post'}
       </Text>
     </XStack>
@@ -60,7 +60,7 @@ export function ProfilePostsGrid({
   return (
     <YStack paddingHorizontal={16} gap={10} paddingBottom={24}>
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Posts
         </Text>
         {onAddPost ? <AddPostButton uploading={uploading} onAddPost={onAddPost} /> : null}
@@ -87,7 +87,7 @@ export function ProfilePostsGrid({
               pressStyle={{ opacity: 0.85 }}
             >
               <MaterialIcons name="add-a-photo" size={16} color={primary} />
-              <Text fontSize={13} fontWeight="900" color="$primary">
+              <Text fontSize={13} fontWeight="700" color="$primary">
                 Add your first post
               </Text>
             </XStack>

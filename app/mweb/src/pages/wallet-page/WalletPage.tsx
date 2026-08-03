@@ -54,19 +54,19 @@ export default function WalletPage() {
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
         <AccountBalanceWalletIcon color="primary" />
-        <Typography variant="h4" sx={{ fontWeight: 950, flex: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, flex: 1 }}>
           Wallet
         </Typography>
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Card variant="outlined" sx={{ borderRadius: '4px', background: 'linear-gradient(135deg, rgba(255,79,115,0.12), rgba(255,122,89,0.12))' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px', background: 'linear-gradient(135deg, rgba(255,79,115,0.12), rgba(255,122,89,0.12))' }}>
         <CardContent>
-          <Typography variant="caption" sx={{ fontWeight: 900 }} color="primary.main">
+          <Typography variant="caption" sx={{ fontWeight: 700 }} color="primary.main">
             Available balance
           </Typography>
-          <Typography variant="h3" sx={{ fontWeight: 950, my: 0.5 }}>
+          <Typography variant="h3" sx={{ fontWeight: 700, my: 0.5 }}>
             {currency}
             {balance.toFixed(2)}
           </Typography>
@@ -74,16 +74,16 @@ export default function WalletPage() {
             {PAYOUT_LABEL[wallet?.payout_mode] ?? ''} · Next cycle {fmtDate(wallet?.next_payout_at)}
           </Typography>
           <Box sx={{ mt: 1.5 }}>
-            <Button variant="contained" disabled={balance <= 0} onClick={() => setOpen(true)} sx={{ borderRadius: 999, fontWeight: 900 }}>
+            <Button variant="contained" disabled={balance <= 0} onClick={() => setOpen(true)} sx={{ borderRadius: 999, fontWeight: 700 }}>
               Withdraw
             </Button>
           </Box>
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
             Withdrawals
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
@@ -111,9 +111,9 @@ export default function WalletPage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950, mb: 1 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
             Transactions
           </Typography>
           <Divider sx={{ mb: 1.5 }} />
@@ -131,7 +131,7 @@ export default function WalletPage() {
                       {fmtDate(t.created_at)}
                     </Typography>
                   </Box>
-                  <Typography variant="body2" fontWeight={900} color={t.type === 'CREDIT' ? 'success.main' : 'error.main'}>
+                  <Typography variant="body2" fontWeight={700} color={t.type === 'CREDIT' ? 'success.main' : 'error.main'}>
                     {t.type === 'CREDIT' ? '+' : '−'}
                     {currency}
                     {t.amount.toFixed(2)}

@@ -23,7 +23,7 @@ export function SponsoredBadge({ testID }: Readonly<{ testID: string }>) {
       borderRadius={999}
       style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}
     >
-      <Text fontSize={9} fontWeight="800" letterSpacing={0.4} color="rgba(255,255,255,0.92)">
+      <Text fontSize={9} fontWeight="600" letterSpacing={0.4} color="rgba(255,255,255,0.92)">
         Sponsored
       </Text>
     </YStack>
@@ -108,7 +108,7 @@ export function AdCard({
         padding={10}
         style={{ backgroundColor: SCRIM }}
       >
-        <Text fontSize={13} fontWeight="800" color="white" numberOfLines={1}>
+        <Text fontSize={13} fontWeight="600" color="white" numberOfLines={1}>
           {ad.ad_title}
         </Text>
       </YStack>

@@ -55,13 +55,13 @@ export function FeedPostCard({
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={14} fontWeight="900" color="$onPrimary">
+            <Text fontSize={14} fontWeight="700" color="$onPrimary">
               {name.charAt(0).toUpperCase()}
             </Text>
           </YStack>
         )}
         <YStack flex={1} minWidth={0}>
-          <Text fontSize={14} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text fontSize={14} fontWeight="700" color="$color" numberOfLines={1}>
             {name}
           </Text>
           <Text fontSize={11} color="$muted">
@@ -75,7 +75,7 @@ export function FeedPostCard({
             paddingVertical={3}
             backgroundColor="$primary"
           >
-            <Text fontSize={10} fontWeight="900" color="$onPrimary">
+            <Text fontSize={10} fontWeight="700" color="$onPrimary">
               STORY
             </Text>
           </XStack>
@@ -111,7 +111,7 @@ export function FeedPostCard({
               size={20}
               color={post.liked_by_me ? primary : muted}
             />
-            <Text fontSize={13} fontWeight="800" color="$muted">
+            <Text fontSize={13} fontWeight="600" color="$muted">
               {post.likes_count}
             </Text>
           </XStack>
@@ -125,7 +125,7 @@ export function FeedPostCard({
             pressStyle={{ opacity: 0.6 }}
           >
             <MaterialIcons name="chat-bubble-outline" size={19} color={muted} />
-            <Text fontSize={13} fontWeight="800" color="$muted">
+            <Text fontSize={13} fontWeight="600" color="$muted">
               {post.comments_count}
             </Text>
           </XStack>

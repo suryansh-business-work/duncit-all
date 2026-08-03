@@ -68,7 +68,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
 
   return (
     <Dialog open={open} onClose={() => !rescheduling && onClose()} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 900 }}>Reschedule your onboarding meeting</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Reschedule your onboarding meeting</DialogTitle>
       <DialogContent>
         {showLoader ? (
           <Box sx={{ display: 'grid', placeItems: 'center', py: 4 }}><CircularProgress size={24} /></Box>
@@ -106,7 +106,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
           form="reschedule-reason-form"
           variant="contained"
           disabled={rescheduling || slots.length === 0}
-          sx={{ borderRadius: 999, fontWeight: 900 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {rescheduling ? 'Moving…' : 'Move to this slot'}
         </Button>

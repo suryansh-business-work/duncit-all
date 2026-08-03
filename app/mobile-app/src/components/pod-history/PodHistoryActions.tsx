@@ -50,7 +50,7 @@ function ActionButton({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name={icon} size={16} color={variant === 'danger' ? danger : iconTint} />
-      <Text fontSize={13} fontWeight="800" color={tint}>
+      <Text fontSize={13} fontWeight="600" color={tint}>
         {label}
       </Text>
     </XStack>

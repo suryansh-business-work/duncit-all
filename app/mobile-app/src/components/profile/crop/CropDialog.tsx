@@ -72,7 +72,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
         <YStack flex={1} backgroundColor="rgba(0,0,0,0.92)" testID="crop-dialog">
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack alignItems="center" justifyContent="space-between" padding={16}>
-              <Text color="#ffffff" fontSize={17} fontWeight="900">
+              <Text color="#ffffff" fontSize={17} fontWeight="700">
                 Adjust photo
               </Text>
               <XStack
@@ -130,7 +130,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 borderColor="rgba(255,255,255,0.4)"
                 pressStyle={{ opacity: 0.8 }}
               >
-                <Text fontSize={14} fontWeight="900" color="#ffffff">
+                <Text fontSize={14} fontWeight="700" color="#ffffff">
                   Discard
                 </Text>
               </XStack>
@@ -151,7 +151,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 pressStyle={{ opacity: 0.85 }}
               >
                 {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                <Text fontSize={14} fontWeight="700" color={onPrimary}>
                   {busy ? 'Saving…' : 'Save'}
                 </Text>
               </XStack>

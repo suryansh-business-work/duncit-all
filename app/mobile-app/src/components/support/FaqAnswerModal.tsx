@@ -43,7 +43,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
               {faq ? (
                 <ScrollView contentContainerStyle={{ padding: 20 }}>
                   <XStack alignItems="flex-start" justifyContent="space-between" gap={12}>
-                    <Text flex={1} fontSize={18} fontWeight="900" color="$color">
+                    <Text flex={1} fontSize={18} fontWeight="700" color="$color">
                       {faq.question}
                     </Text>
                     <XStack
@@ -71,7 +71,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                     backgroundColor="rgba(255,79,115,0.08)"
                     gap={10}
                   >
-                    <Text fontSize={12} fontWeight="800" color="$muted">
+                    <Text fontSize={12} fontWeight="600" color="$muted">
                       Still need help?
                     </Text>
                     <XStack
@@ -88,7 +88,7 @@ export function FaqAnswerModal({ faq, onClose, onStartChat }: Readonly<FaqAnswer
                       pressStyle={{ opacity: 0.9 }}
                     >
                       <MaterialIcons name="chat-bubble-outline" size={18} color="#ffffff" />
-                      <Text fontSize={14} fontWeight="900" color="#ffffff">
+                      <Text fontSize={14} fontWeight="700" color="#ffffff">
                         Start a conversation
                       </Text>
                     </XStack>

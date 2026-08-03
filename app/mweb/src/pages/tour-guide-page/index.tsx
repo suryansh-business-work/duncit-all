@@ -51,7 +51,7 @@ export default function TourGuidePage() {
         </Button>
       </Box>
       <Stack spacing={0.5}>
-        <Typography variant="h5" sx={{ fontWeight: 950 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Tour Guide
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -62,7 +62,7 @@ export default function TourGuidePage() {
         {tours.map((tour) => {
           const done = isTourCompleted(completed, tour.id);
           return (
-            <Card key={tour.id} variant="outlined" sx={{ borderRadius: '4px' }}>
+            <Card key={tour.id} variant="outlined" sx={{ borderRadius: '16px' }}>
               <CardContent>
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
@@ -72,7 +72,7 @@ export default function TourGuidePage() {
                 >
                   <Stack spacing={0.25} sx={{ minWidth: 0 }}>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                         {tour.title}
                       </Typography>
                       {done && <Chip size="small" label="Completed" color="success" />}

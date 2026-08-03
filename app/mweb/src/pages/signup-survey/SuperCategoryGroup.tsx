@@ -29,7 +29,7 @@ export function SuperCategoryGroup({
   return (
     <Box
       sx={(t) => ({
-        borderRadius: '4px',
+        borderRadius: '16px',
         p: { xs: 1.5, sm: 2 },
         border: `1.5px solid ${alpha(hue, 0.22)}`,
         background:
@@ -50,12 +50,12 @@ export function SuperCategoryGroup({
             borderRadius: 999,
             backgroundColor: alpha(hue, 0.12),
             color: hue,
-            fontWeight: 800,
+            fontWeight: 600,
             userSelect: 'none',
           }}
         >
           {emoji && <Box component="span" sx={{ fontSize: 18, lineHeight: 1 }}>{emoji}</Box>}
-          <Typography variant="subtitle2" fontWeight={800} sx={{ color: 'inherit' }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ color: 'inherit' }}>
             {superCategory.name}
           </Typography>
         </Box>

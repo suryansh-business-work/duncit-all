@@ -206,6 +206,10 @@ export const settingsTypeDefs = gql`
     home_all_vibe_icon_layout: CategoryIconLayout
     "When true, the home vibe tabber shows every category (even ones with no pods); false shows only categories that have pods."
     home_show_all_vibe_categories: Boolean!
+    "Heading over the home vibe (category) filter; empty falls back to each client's bundled copy."
+    home_vibe_heading: String!
+    "Sub-heading under the vibe heading; empty falls back to each client's bundled copy."
+    home_vibe_subheading: String!
     home_header_tagline: String!
     app_latest_version: String!
     "Global Pod Shop top slider — admin-managed image/video media (products portal)."
@@ -251,6 +255,8 @@ export const settingsTypeDefs = gql`
     home_all_vibe_icon_url: String
     home_all_vibe_icon_layout: CategoryIconLayoutInput
     home_show_all_vibe_categories: Boolean
+    home_vibe_heading: String
+    home_vibe_subheading: String
     home_header_tagline: String
     app_latest_version: String
   }

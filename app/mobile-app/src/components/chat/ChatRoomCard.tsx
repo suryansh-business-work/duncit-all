@@ -57,7 +57,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
         )}
       </YStack>
       <YStack flex={1} gap={4}>
-        <Text fontSize={15.5} fontWeight="900" color="$color" numberOfLines={1}>
+        <Text fontSize={15.5} fontWeight="700" color="$color" numberOfLines={1}>
           {room.pod_title}
         </Text>
         <XStack alignItems="center" gap={8}>
@@ -71,7 +71,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
             borderRadius={999}
             backgroundColor={status.color}
           >
-            <Text fontSize={10} fontWeight="900" color="#ffffff">
+            <Text fontSize={10} fontWeight="700" color="#ffffff">
               {status.label}
             </Text>
           </XStack>

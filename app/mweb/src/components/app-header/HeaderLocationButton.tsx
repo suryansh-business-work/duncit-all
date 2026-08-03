@@ -27,7 +27,7 @@ export default function HeaderLocationButton({
     <Button
       startIcon={
         flag ? (
-          <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: '4px' }} />
+          <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: '8px' }} />
         ) : (
           <LocationOnIcon />
         )
@@ -46,7 +46,7 @@ export default function HeaderLocationButton({
         bgcolor: 'action.hover',
         border: 1,
         borderColor: 'divider',
-        fontWeight: 900,
+        fontWeight: 700,
         '& .MuiButton-startIcon': { mr: 0.5, color: 'primary.main', flex: '0 0 auto' },
         '&:hover': { bgcolor: 'action.selected' },
       }}

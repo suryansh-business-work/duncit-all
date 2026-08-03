@@ -67,7 +67,7 @@ export function MeetingPhase({
     >
       {answered.length > 0 && (
         <YStack gap={8} padding={12} borderRadius={12} backgroundColor="$color2">
-          <Text fontSize={12} fontWeight="800" opacity={0.7} color={ink}>
+          <Text fontSize={12} fontWeight="600" opacity={0.7} color={ink}>
             YOUR SURVEY ANSWERS
           </Text>
           {answered.map((x) => (
@@ -158,7 +158,7 @@ export function MeetingPhase({
               backgroundColor={primary}
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={13} fontWeight="900" color="white">
+              <Text fontSize={13} fontWeight="700" color="white">
                 Go To Profile
               </Text>
             </XStack>
@@ -182,7 +182,7 @@ export function MeetingPhase({
         onPress={onSubmit}
         backgroundColor={primary}
         color="white"
-        fontWeight="800"
+        fontWeight="600"
       >
         {busy ? 'Booking…' : 'Book this slot'}
       </Button>

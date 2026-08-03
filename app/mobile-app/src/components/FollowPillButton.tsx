@@ -41,7 +41,7 @@ export function FollowPillButton({
         size={18}
         color={following ? onPrimary : ink}
       />
-      <Text fontSize={14} fontWeight="900" color={following ? '$onPrimary' : '$color'}>
+      <Text fontSize={14} fontWeight="700" color={following ? '$onPrimary' : '$color'}>
         {following ? 'Following' : 'Follow'}
       </Text>
     </XStack>

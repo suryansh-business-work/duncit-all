@@ -38,10 +38,10 @@ function KpiTile({ label, value }: Readonly<{ label: string; value: string }>) {
       borderColor="$borderColor"
       backgroundColor="$background"
     >
-      <Text fontSize={11} fontWeight="900" color="$primary">
+      <Text fontSize={11} fontWeight="700" color="$primary">
         {label}
       </Text>
-      <Text fontSize={18} fontWeight="900" color="$color" marginTop={2}>
+      <Text fontSize={18} fontWeight="700" color="$color" marginTop={2}>
         {value}
       </Text>
     </YStack>
@@ -78,7 +78,7 @@ export function HostInsightsSection({ pods, currency }: Readonly<Props>) {
       >
         <XStack alignItems="center" gap={8}>
           <MaterialIcons name="insights" size={18} color={ink} />
-          <Text fontSize={15} fontWeight="900" color="$color">
+          <Text fontSize={15} fontWeight="700" color="$color">
             Host Insights
           </Text>
         </XStack>

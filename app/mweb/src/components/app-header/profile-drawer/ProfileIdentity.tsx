@@ -28,14 +28,14 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
           textAlign: 'left',
           px: 1.5,
           py: 1,
-          borderRadius: '4px',
+          borderRadius: '16px',
           '&:hover': { bgcolor: 'action.hover' },
         }}
         aria-label="Open your profile"
       >
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Stack direction="row" alignItems="center" spacing={0.25}>
-            <Typography fontSize={15} fontWeight={800} noWrap>
+            <Typography fontSize={15} fontWeight={600} noWrap>
               {me?.full_name ?? 'User'}
             </Typography>
             <ChevronRightIcon sx={{ fontSize: 16 }} color="disabled" />
@@ -53,7 +53,7 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
             height: 44,
             bgcolor: 'primary.main',
             fontSize: 18,
-            fontWeight: 800,
+            fontWeight: 600,
             boxShadow: '0 0 0 2px rgba(255,79,115,0.18)',
           }}
         >

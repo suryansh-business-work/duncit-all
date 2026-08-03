@@ -15,10 +15,10 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
   if (groups.length === 0) return null;
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
         Topics
       </Typography>
-      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '4px', overflow: 'hidden' }}>
+      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: '16px', overflow: 'hidden' }}>
         <List disablePadding>
           {groups.map((group, index) => {
             const id = group.super_category?.id ?? 'GENERIC';
@@ -48,7 +48,7 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
                   {mark ?? <HelpOutlineIcon fontSize="small" />}
                 </Box>
                 <Stack sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 800 }} noWrap>
+                  <Typography sx={{ fontWeight: 600 }} noWrap>
                     {name}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">

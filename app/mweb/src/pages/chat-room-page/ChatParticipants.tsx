@@ -47,7 +47,7 @@ export default function ChatParticipants({ hosts, participants, count, onOpenPro
           }
           label={person.full_name}
           variant="outlined"
-          sx={{ height: 42, borderRadius: 999, fontWeight: 800 }}
+          sx={{ height: 42, borderRadius: 999, fontWeight: 600 }}
         />
       </Tooltip>
     );
@@ -58,7 +58,7 @@ export default function ChatParticipants({ hosts, participants, count, onOpenPro
       data-testid="chat-participants"
       sx={{ px: { xs: 1.25, sm: 2 }, py: 1, borderBottom: 1, borderColor: 'divider' }}
     >
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
         {count} {count === 1 ? 'participant' : 'participants'}
       </Typography>
       <Stack

@@ -148,7 +148,7 @@ export default function ClubsPage({
       }}
     >
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
           Clubs
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
@@ -156,13 +156,13 @@ export default function ClubsPage({
         </Typography>
       </Box>
       {locationId && selectedLocationName && (
-        <Alert severity="info" sx={{ borderRadius: '4px', py: 0.25, alignItems: 'center', fontWeight: 700 }}>
+        <Alert severity="info" sx={{ borderRadius: '16px', py: 0.25, alignItems: 'center', fontWeight: 700 }}>
           Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}
           <Link
             component="button"
             type="button"
             underline="always"
-            sx={{ fontWeight: 800, verticalAlign: 'baseline' }}
+            sx={{ fontWeight: 600, verticalAlign: 'baseline' }}
             onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
           >
             Change your location here
@@ -192,13 +192,13 @@ export default function ClubsPage({
       />
       {locationHasNoClubs ? (
         <Stack alignItems="center" spacing={1.5} sx={{ py: 6, textAlign: 'center' }}>
-          <Typography variant="h6" fontWeight={800}>
+          <Typography variant="h6" fontWeight={600}>
             No Clubs operating at the selected location,
           </Typography>
           <Button
             variant="contained"
             onClick={() => globalThis.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
-            sx={{ borderRadius: 999, fontWeight: 800 }}
+            sx={{ borderRadius: 999, fontWeight: 600 }}
           >
             Reset Location
           </Button>

@@ -89,7 +89,7 @@ export function CurrentPasswordForm({
           size="large"
           disabled={loading}
           data-testid="change-password-request"
-          sx={{ borderRadius: '4px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Sending OTP…' : 'Send OTP'}
         </Button>
@@ -174,7 +174,7 @@ export function NewPasswordForm({
           size="large"
           disabled={loading}
           data-testid="change-password-submit"
-          sx={{ borderRadius: '4px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Updating…' : 'Update password'}
         </Button>

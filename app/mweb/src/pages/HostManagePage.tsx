@@ -70,17 +70,17 @@ export default function HostManagePage() {
           <DashboardIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Your Pods
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             Manage the pods you host
           </Typography>
         </Box>
-        <Button component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+        <Button component={RouterLink} to="/host/dashboard" variant="outlined" size="small" startIcon={<InsightsIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
           Insights
         </Button>
-        <Button component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+        <Button component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 700 }}>
           Create
         </Button>
       </Stack>

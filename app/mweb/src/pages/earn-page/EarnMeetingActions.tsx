@@ -34,7 +34,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
             variant="outlined"
             startIcon={<EventRepeatIcon />}
             onClick={() => setRescheduleOpen(true)}
-            sx={{ borderRadius: 999, fontWeight: 800 }}
+            sx={{ borderRadius: 999, fontWeight: 600 }}
           >
             Reschedule meeting
           </Button>
@@ -45,7 +45,7 @@ export default function EarnMeetingActions({ kind, bookedAt, rescheduleCount, on
           variant="outlined"
           startIcon={<EventBusyIcon />}
           onClick={() => setCancelOpen(true)}
-          sx={{ borderRadius: 999, fontWeight: 800 }}
+          sx={{ borderRadius: 999, fontWeight: 600 }}
         >
           Cancel meeting
         </Button>

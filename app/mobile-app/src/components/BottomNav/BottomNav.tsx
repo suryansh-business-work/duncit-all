@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useThemeStore } from '@/stores/theme.store';
 import { TAB_CONFIG } from '@/navigation/tabs';
 
 /** Edge-to-edge flat tab bar — full width, no border radius, with the active
@@ -11,7 +13,10 @@ import { TAB_CONFIG } from '@/navigation/tabs';
  * mWeb's BottomNav. Used as React Navigation's custom `tabBar`. */
 export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
-  const { muted, onPrimary } = useThemeColors();
+  const { muted, primary } = useThemeColors();
+  const { t } = useTranslation();
+  const dark = useThemeStore((s) => s.scheme) === 'dark';
+  const activePill = dark ? 'rgba(255,79,115,0.22)' : 'rgba(255,79,115,0.12)';
 
   return (
     <XStack
@@ -58,19 +63,19 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             paddingVertical={4}
             pressStyle={{ opacity: 0.85 }}
           >
-            {/* Selection bubble — the active icon sits inside a primary circle (B4-8). */}
+            {/* Selection pill (mock) — the active icon sits in a soft primary pill. */}
             <YStack
-              width={38}
-              height={38}
+              width={44}
+              height={30}
               alignItems="center"
               justifyContent="center"
-              borderRadius={19}
-              backgroundColor={focused ? '$primary' : 'transparent'}
+              borderRadius={999}
+              backgroundColor={focused ? activePill : 'transparent'}
             >
-              <MaterialIcons name={cfg.icon} size={21} color={focused ? onPrimary : muted} />
+              <MaterialIcons name={cfg.icon} size={21} color={focused ? primary : muted} />
             </YStack>
-            <Text fontSize={11} fontWeight="800" color={focused ? '$primary' : '$muted'}>
-              {cfg.label}
+            <Text fontSize={11} fontWeight="600" color={focused ? '$primary' : '$muted'}>
+              {t(cfg.labelKey)}
             </Text>
           </YStack>
         );

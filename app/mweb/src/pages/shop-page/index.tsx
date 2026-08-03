@@ -27,13 +27,13 @@ function TrustBar() {
     <Stack
       direction="row"
       justifyContent="space-around"
-      sx={{ bgcolor: 'action.hover', borderRadius: '4px', p: 1.5, mt: 1 }}
+      sx={{ bgcolor: 'action.hover', borderRadius: '16px', p: 1.5, mt: 1 }}
     >
       {TRUST_ITEMS.map(({ Icon, title, caption }) => (
         <Stack key={title} direction="row" spacing={1} alignItems="center">
           <Icon sx={{ color: 'primary.main' }} fontSize="small" />
           <Box>
-            <Typography variant="caption" sx={{ fontWeight: 900, display: 'block', lineHeight: 1.1 }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', lineHeight: 1.1 }}>
               {title}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.1 }}>
@@ -71,7 +71,7 @@ export default function ShopPage() {
   return (
     <Stack spacing={2} sx={{ py: 0.5 }}>
       {/* The cart lives in the app header now, on every page — not just here. */}
-      <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+      <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
         {t('mweb.shop.title')}
       </Typography>
       <PodShopSlider />
@@ -80,7 +80,7 @@ export default function ShopPage() {
         <Alert severity="info">{t('mweb.shop.emptyState')}</Alert>
       ) : (
         <>
-          <Typography variant="h6" sx={{ fontWeight: 900 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             {t('mweb.shop.featured')}
           </Typography>
           <Box

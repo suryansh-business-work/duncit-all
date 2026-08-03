@@ -38,7 +38,7 @@ export function PayoutCard({
       <XStack alignItems="flex-start" gap={10}>
         <MaterialIcons name="account-balance-wallet" size={22} color={EARN_GREEN} />
         <YStack flex={1} minWidth={0} gap={4}>
-          <Text fontSize={15.5} fontWeight="900" color="$color">
+          <Text fontSize={15.5} fontWeight="700" color="$color">
             You will receive
           </Text>
           <XStack alignItems="center" gap={8} flexWrap="wrap">
@@ -52,13 +52,13 @@ export function PayoutCard({
               paddingHorizontal={8}
               paddingVertical={2}
             >
-              <Text fontSize={11} fontWeight="800" color={EARN_GREEN}>
+              <Text fontSize={11} fontWeight="600" color={EARN_GREEN}>
                 {earnPct}% of collection
               </Text>
             </XStack>
           </XStack>
         </YStack>
-        <Text fontSize={21} fontWeight="900" color={EARN_GREEN}>
+        <Text fontSize={21} fontWeight="700" color={EARN_GREEN}>
           {amount}
         </Text>
       </XStack>
@@ -80,10 +80,10 @@ export function PayoutCard({
           </Text>
         </XStack>
         <XStack justifyContent="space-between">
-          <Text fontSize={11.5} fontWeight="800" color="$color">
+          <Text fontSize={11.5} fontWeight="600" color="$color">
             = You will receive
           </Text>
-          <Text fontSize={11.5} fontWeight="900" color={EARN_GREEN}>
+          <Text fontSize={11.5} fontWeight="700" color={EARN_GREEN}>
             {amount}
           </Text>
         </XStack>

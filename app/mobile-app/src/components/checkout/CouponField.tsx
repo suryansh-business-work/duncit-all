@@ -50,7 +50,7 @@ export function CouponField({
       >
         <XStack alignItems="center" gap={8} flex={1}>
           <MaterialIcons name="local-offer" size={16} color="#22c55e" />
-          <Text fontSize={13.5} fontWeight="800" color="$color">
+          <Text fontSize={13.5} fontWeight="600" color="$color">
             {applied.code} · −{currency}
             {applied.discount_amount}
           </Text>
@@ -62,7 +62,7 @@ export function CouponField({
           onPress={onRemove}
           pressStyle={{ opacity: 0.6 }}
         >
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             Remove
           </Text>
         </XStack>
@@ -103,7 +103,7 @@ export function CouponField({
             {applying ? (
               <Spinner color={primary} />
             ) : (
-              <Text fontSize={14} fontWeight="800" color="$primary">
+              <Text fontSize={14} fontWeight="600" color="$primary">
                 Apply
               </Text>
             )}
@@ -119,7 +119,7 @@ export function CouponField({
           alignSelf="flex-start"
           pressStyle={{ opacity: 0.7 }}
         >
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             View available coupons ({available.length})
           </Text>
         </XStack>

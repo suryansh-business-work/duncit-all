@@ -119,7 +119,7 @@ export function CategoryPhase({
         onPress={onContinuePress}
         backgroundColor={primary}
         color="white"
-        fontWeight="800"
+        fontWeight="600"
       >
         {busy ? 'Loading…' : 'Continue'}
       </Button>

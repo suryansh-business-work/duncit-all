@@ -55,7 +55,7 @@ export function Accordion({
         pressStyle={{ opacity: 0.8 }}
       >
         <MaterialIcons name={icon} size={18} color={primary} />
-        <Text flex={1} fontSize={15} fontWeight="900" color={titleTint}>
+        <Text flex={1} fontSize={15} fontWeight="700" color={titleTint}>
           {title}
         </Text>
         <MaterialIcons

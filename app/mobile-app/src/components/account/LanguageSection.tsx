@@ -39,7 +39,7 @@ export function LanguageSection() {
 
   return (
     <YStack gap={10} testID="account-language-section">
-      <Text fontSize={14} fontWeight="900" color="$color">
+      <Text fontSize={14} fontWeight="700" color="$color">
         {t('mweb.account.preferences')}
       </Text>
       <Text fontSize={12} color="$muted">
@@ -68,7 +68,7 @@ export function LanguageSection() {
               <YStack>
                 {/* The endonym leads, so someone who switched into a script they
                     cannot read can still recognise their own language. */}
-                <Text fontSize={14} fontWeight="800" color="$color">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   {option.label}
                 </Text>
                 {option.english_label ? (

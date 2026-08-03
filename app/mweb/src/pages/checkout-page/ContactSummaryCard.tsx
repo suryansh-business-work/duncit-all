@@ -17,7 +17,7 @@ interface RowProps {
 function ContactRow({ label, value }: Readonly<RowProps>) {
   return (
     <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="caption" color="text.secondary" sx={{ width: 56, flex: '0 0 auto', fontWeight: 800 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ width: 56, flex: '0 0 auto', fontWeight: 600 }}>
         {label}
       </Typography>
       <Typography variant="body2" fontWeight={700} sx={{ minWidth: 0, wordBreak: 'break-word' }}>
@@ -31,7 +31,7 @@ function ContactRow({ label, value }: Readonly<RowProps>) {
 function ContactRowSkeleton({ label }: Readonly<{ label: string }>) {
   return (
     <Stack direction="row" spacing={1.5} alignItems="baseline">
-      <Typography variant="caption" color="text.secondary" sx={{ width: 56, flex: '0 0 auto', fontWeight: 800 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ width: 56, flex: '0 0 auto', fontWeight: 600 }}>
         {label}
       </Typography>
       <Skeleton variant="text" width="62%" sx={{ minWidth: 0 }} />
@@ -58,10 +58,10 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
 
   return (
     <Stack spacing={1.25}>
-      <Typography variant="overline" color="text.secondary" fontWeight={900}>
+      <Typography variant="overline" color="text.secondary" fontWeight={700}>
         Contact details
       </Typography>
-      <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '4px', border: '1px solid', borderColor: 'divider' }}>
+      <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }}>
         {loading ? (
           <>
             <ContactRowSkeleton label="Name" />

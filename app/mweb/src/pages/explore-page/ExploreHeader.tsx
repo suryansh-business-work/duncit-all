@@ -25,13 +25,13 @@ export default function ExploreHeader({
       <Stack direction="row" alignItems="center" spacing={1}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={0.75} alignItems="center">
-            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 900, lineHeight: 1 }}>
+            <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700, lineHeight: 1 }}>
               Explore
             </Typography>
             <Chip
               size="small"
               label={`${resultCount} live`}
-              sx={{ height: 22, bgcolor: 'rgba(16,185,129,0.22)', color: '#7cf8ad', fontWeight: 900 }}
+              sx={{ height: 22, bgcolor: 'rgba(16,185,129,0.22)', color: '#7cf8ad', fontWeight: 700 }}
             />
           </Stack>
         </Box>

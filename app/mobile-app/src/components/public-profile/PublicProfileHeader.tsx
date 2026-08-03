@@ -37,12 +37,12 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={36} fontWeight="900" color={onPrimary}>
+          <Text fontSize={36} fontWeight="700" color={onPrimary}>
             {initial}
           </Text>
         )}
       </YStack>
-      <Text fontSize={20} fontWeight="900" color="$color" textAlign="center">
+      <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
         {user.full_name || 'Duncit user'}
       </Text>
       <Text fontSize={12.5} color="$muted">
@@ -58,7 +58,7 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
           gap={4}
           pressStyle={{ opacity: 0.7 }}
         >
-          <Text fontSize={14} fontWeight="900" color="$color">
+          <Text fontSize={14} fontWeight="700" color="$color">
             {user.followers_count}
           </Text>
           <Text fontSize={13} color="$muted">
@@ -74,7 +74,7 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
           gap={4}
           pressStyle={{ opacity: 0.7 }}
         >
-          <Text fontSize={14} fontWeight="900" color="$color">
+          <Text fontSize={14} fontWeight="700" color="$color">
             {user.following_count}
           </Text>
           <Text fontSize={13} color="$muted">

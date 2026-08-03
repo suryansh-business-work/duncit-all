@@ -117,7 +117,7 @@ export default function SplashScreen({
             sx={{
               position: 'relative',
               fontSize: 64,
-              fontWeight: 950,
+              fontWeight: 700,
               color: '#fff',
               animation: `${logoBounce} 1.1s cubic-bezier(.2,.7,.2,1.4) both`,
             }}
@@ -131,7 +131,7 @@ export default function SplashScreen({
         variant="h5"
         sx={{
           mt: 5,
-          fontWeight: 800,
+          fontWeight: 600,
           color: '#fff',
           textAlign: 'center',
           opacity: 0,

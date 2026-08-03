@@ -88,7 +88,7 @@ function AttendeeBubble({ person, first }: Readonly<{ person: AttendeePerson; fi
       {person.profile_photo ? (
         <AppImage source={{ uri: person.profile_photo }} style={{ width: 36, height: 36 }} />
       ) : (
-        <Text fontSize={13} fontWeight="800" color="$onPrimary">
+        <Text fontSize={13} fontWeight="600" color="$onPrimary">
           {(person.full_name?.[0] ?? '?').toUpperCase()}
         </Text>
       )}
@@ -161,13 +161,13 @@ export function AttendeesSection({
                 borderColor="$background"
                 backgroundColor="$surface"
               >
-                <Text fontSize={11.5} fontWeight="800" color="$muted">
+                <Text fontSize={11.5} fontWeight="600" color="$muted">
                   +{extra}
                 </Text>
               </YStack>
             ) : null}
           </XStack>
-          <Text fontSize={12.5} fontWeight="800" color="$primary">
+          <Text fontSize={12.5} fontWeight="600" color="$primary">
             View all
           </Text>
         </XStack>

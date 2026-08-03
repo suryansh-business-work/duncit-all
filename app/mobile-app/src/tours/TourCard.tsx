@@ -42,7 +42,7 @@ export function TourCard({
       backgroundColor="$background"
       maxWidth={300}
     >
-      <Text fontSize={15} fontWeight="900" color="$color">
+      <Text fontSize={15} fontWeight="700" color="$color">
         {title}
       </Text>
       <Text fontSize={13} color="$muted">
@@ -61,7 +61,7 @@ export function TourCard({
           paddingHorizontal={10}
           pressStyle={{ opacity: 0.7 }}
         >
-          <Text fontSize={12.5} fontWeight="800" color="$muted">
+          <Text fontSize={12.5} fontWeight="600" color="$muted">
             Skip
           </Text>
         </XStack>
@@ -78,7 +78,7 @@ export function TourCard({
             borderColor="$borderColor"
             pressStyle={{ opacity: 0.7 }}
           >
-            <Text fontSize={12.5} fontWeight="800" color="$color">
+            <Text fontSize={12.5} fontWeight="600" color="$color">
               Previous
             </Text>
           </XStack>
@@ -94,7 +94,7 @@ export function TourCard({
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={12.5} fontWeight="900" color={onPrimary}>
+          <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
             {isLast ? 'Finish' : 'Next'}
           </Text>
         </XStack>

@@ -108,15 +108,15 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
   return (
     <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', p: 1 }}>
       <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
-      <Card sx={{ borderRadius: '4px', color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 55%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 24px 60px rgba(17,24,39,0.28)' : `0 24px 60px ${alpha(theme.palette.primary.dark, 0.12)}` }}>
+      <Card sx={{ borderRadius: '16px', color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 55%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 24px 60px rgba(17,24,39,0.28)' : `0 24px 60px ${alpha(theme.palette.primary.dark, 0.12)}` }}>
         <CardContent sx={{ textAlign: 'center', p: 3 }}>
           <PaymentLottie variant="success" size={140} />
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>You are in</Typography>
-          <Typography variant="h4" fontWeight={900} gutterBottom sx={{ mt: 0.5, lineHeight: 1.05 }}>Payment Successful</Typography>
+          <Typography variant="h4" fontWeight={700} gutterBottom sx={{ mt: 0.5, lineHeight: 1.05 }}>Payment Successful</Typography>
           <Typography variant="body2" color="text.secondary" gutterBottom>
             Your slot is booked. A receipt with the tax invoice has been emailed to you.
           </Typography>
-          <Box sx={{ mt: 3, p: 2, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
+          <Box sx={{ mt: 3, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
           <Stack spacing={0.8}>
             <Row label="Amount paid" value={formatMoney(payment.currency_symbol, payment.total)} bold />
             {paidAt && <Row label="Paid on" value={formatDateTime(paidAt)} />}
@@ -125,20 +125,20 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           </Stack>
           </Box>
           {pod && (
-            <Box sx={{ mt: 2, p: 2, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ mt: 2, p: 2, borderRadius: '16px', bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
               <Stack spacing={1.25}>
                 <Stack direction="row" spacing={1} alignItems="center">
                   <EventAvailableIcon color="primary" />
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography fontWeight={900} noWrap>{pod.pod_title}</Typography>
+                    <Typography fontWeight={700} noWrap>{pod.pod_title}</Typography>
                     <Typography variant="caption" color="text.secondary">{formatDateTime(pod.pod_date_time)}</Typography>
                   </Box>
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '4px', '&:hover': { bgcolor: '#171717' } }}>
+                  <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#171717' } }}>
                     Add to Apple Wallet
                   </Button>
-                  <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '4px', '&:hover': { bgcolor: '#111827' } }}>
+                  <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: '16px', '&:hover': { bgcolor: '#111827' } }}>
                     Add to Google Wallet
                   </Button>
                 </Stack>
@@ -156,11 +156,11 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
           {invoiceError && <Alert severity="error" sx={{ mt: 2 }}>{invoiceError}</Alert>}
           <Stack direction="row" spacing={1.5} sx={{ mt: 4, justifyContent: 'center' }}>
             {pod?.id && (
-              <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>Ticket</Button>
+              <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>Ticket</Button>
             )}
             <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>Invoice</Button>
             <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>Home</Button>
-            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileLabel}</Button>
+            <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 700, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>{profileLabel}</Button>
           </Stack>
         </CardContent>
       </Card>

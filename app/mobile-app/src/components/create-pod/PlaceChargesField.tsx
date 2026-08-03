@@ -102,7 +102,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
         pressStyle={{ opacity: 0.7 }}
       >
         <MaterialIcons name="add" size={18} color={primary} />
-        <Text fontSize={13} fontWeight="800" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$primary">
           Add charge
         </Text>
       </XStack>

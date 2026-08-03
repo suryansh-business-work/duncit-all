@@ -57,7 +57,7 @@ function SupportTopicRow({ group, isLast, onOpen }: Readonly<SupportTopicRowProp
         <TopicIcon icon={group.super_category?.icon} tint={primary} />
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
+        <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
           {name}
         </Text>
         <Text fontSize={12} color="$muted">
@@ -82,7 +82,7 @@ export function SupportTopics({ groups, onOpenTopic }: Readonly<SupportTopicsPro
     <YStack gap={8}>
       <Text
         fontSize={12}
-        fontWeight="900"
+        fontWeight="700"
         color="$muted"
         textTransform="uppercase"
         letterSpacing={0.5}

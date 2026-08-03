@@ -39,7 +39,7 @@ export function ProcessingOverlay({ open }: Readonly<{ open: boolean }>) {
         borderColor="rgba(255,255,255,0.16)"
       >
         <Spinner size="large" color={primary} />
-        <Text fontSize={16} fontWeight="900" color="#ffffff" textAlign="center">
+        <Text fontSize={16} fontWeight="700" color="#ffffff" textAlign="center">
           Processing your payment…
         </Text>
         <Text fontSize={12.5} color="rgba(255,255,255,0.74)" textAlign="center">

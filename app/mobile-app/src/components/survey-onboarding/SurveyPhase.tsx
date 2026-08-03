@@ -76,7 +76,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
         </Text>
       )}
       <YStack gap={4}>
-        <Text fontSize={16} fontWeight="800" color={ink}>
+        <Text fontSize={16} fontWeight="600" color={ink}>
           {active.title}
         </Text>
         {active.help ? (
@@ -168,7 +168,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
           onPress={onPrimary}
           backgroundColor={primary}
           color="white"
-          fontWeight="800"
+          fontWeight="600"
         >
           {primaryLabel}
         </Button>

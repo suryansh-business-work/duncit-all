@@ -19,10 +19,10 @@ export default function AccountHealthPage() {
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             Your account
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
             Account Health
           </Typography>
         </Box>

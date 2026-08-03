@@ -36,9 +36,9 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
   const expandable = (b?.version ?? 0) >= 2;
 
   return (
-    <Box sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}>
+    <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 800 }} noWrap>
+        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
           {payout.pod_title}
         </Typography>
         <Chip size="small" color={STATUS_COLOR[payout.status] ?? 'default'} label={payout.status} />
@@ -47,7 +47,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: VenuePayout; symbol: s
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }} noWrap>
           {formatDate(payout.created_at)}
         </Typography>
-        <Typography variant="body2" color="primary.main" sx={{ fontWeight: 900 }}>
+        <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>
           {fmt(payable)}
         </Typography>
         {expandable && (

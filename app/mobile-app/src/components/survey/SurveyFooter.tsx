@@ -49,7 +49,7 @@ export function SurveyFooter({
           <Text fontSize={12} color="$muted">
             Selected
           </Text>
-          <Text fontSize={16} fontWeight="800" color="$color">
+          <Text fontSize={16} fontWeight="600" color="$color">
             {count}
             <Text fontWeight="600" color="$muted">
               {' '}
@@ -73,7 +73,7 @@ export function SurveyFooter({
           opacity={canSubmit ? 1 : 0.5}
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={16} fontWeight="800" color="$onPrimary">
+          <Text fontSize={16} fontWeight="600" color="$onPrimary">
             {saving ? 'Saving…' : 'Find my crew'}
           </Text>
         </XStack>

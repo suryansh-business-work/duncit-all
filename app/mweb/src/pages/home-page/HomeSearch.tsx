@@ -40,7 +40,7 @@ export default function HomeSearch({ disabled }: Readonly<Props>) {
         }}
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: '4px',
+            borderRadius: '16px',
             bgcolor: 'background.paper',
             minHeight: 44,
             cursor: disabled ? 'default' : 'pointer',

@@ -73,7 +73,7 @@ export default function FeedbackForm({ loading, errorMessage, onSubmit }: Readon
           size="large"
           disabled={loading}
           data-testid="feedback-submit"
-          sx={{ borderRadius: '4px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: '16px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Sending…' : 'Send feedback'}
         </Button>

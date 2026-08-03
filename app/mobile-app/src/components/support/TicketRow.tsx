@@ -22,7 +22,7 @@ export function TicketRow({ ticket }: Readonly<{ ticket: Ticket }>) {
       backgroundColor="$surface"
     >
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14.5} fontWeight="900" color="$color" numberOfLines={1}>
+        <Text flex={1} fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
           {ticket.subject}
         </Text>
         <XStack
@@ -31,7 +31,7 @@ export function TicketRow({ ticket }: Readonly<{ ticket: Ticket }>) {
           paddingVertical={3}
           backgroundColor={STATUS_TINT[ticket.status] ?? STATUS_TINT.CLOSED}
         >
-          <Text fontSize={10.5} fontWeight="900" color="$color">
+          <Text fontSize={10.5} fontWeight="700" color="$color">
             {ticket.status}
           </Text>
         </XStack>

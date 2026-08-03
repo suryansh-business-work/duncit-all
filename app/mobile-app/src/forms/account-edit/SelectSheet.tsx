@@ -129,7 +129,7 @@ export function SelectSheet({
                 padding={16}
                 gap={12}
               >
-                <Text fontSize={16} fontWeight="900" color="$color">
+                <Text fontSize={16} fontWeight="700" color="$color">
                   {label}
                 </Text>
                 <XStack

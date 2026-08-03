@@ -44,7 +44,7 @@ export default function TicketPriceField({ form, preview, isFree }: Readonly<Pro
           component="label"
           htmlFor={FIELD_ID}
           variant="subtitle2"
-          fontWeight={800}
+          fontWeight={600}
           sx={{ minWidth: 0 }}
         >
           {TICKET_PRICE_LABEL}

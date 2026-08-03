@@ -50,7 +50,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         color={count ? 'primary' : 'inherit'}
         startIcon={<FilterListIcon />}
         onClick={(e) => setFilterAnchor(e.currentTarget)}
-        sx={{ fontWeight: 800, borderRadius: 999 }}
+        sx={{ fontWeight: 600, borderRadius: 999 }}
       >
         {count ? `Filter (${count})` : 'Filter'}
       </Button>
@@ -60,7 +60,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         color="inherit"
         startIcon={<SortIcon />}
         onClick={(e) => setSortAnchor(e.currentTarget)}
-        sx={{ fontWeight: 800, borderRadius: 999 }}
+        sx={{ fontWeight: 600, borderRadius: 999 }}
       >
         Sort
       </Button>
@@ -73,7 +73,7 @@ export default function PodHistoryToolbar({ filters, categories, onChange, onRes
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Box sx={{ p: 2, width: 290 }}>
-          <Typography variant="subtitle2" fontWeight={900} gutterBottom>
+          <Typography variant="subtitle2" fontWeight={700} gutterBottom>
             Filter by category
           </Typography>
           <FormControl fullWidth size="small" sx={{ mt: 1 }}>

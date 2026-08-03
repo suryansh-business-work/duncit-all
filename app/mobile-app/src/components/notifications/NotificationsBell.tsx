@@ -76,7 +76,7 @@ export function NotificationsBell() {
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={9} fontWeight="900" color={onPrimary}>
+            <Text fontSize={9} fontWeight="700" color={onPrimary}>
               {unreadCount > 9 ? '9+' : unreadCount}
             </Text>
           </YStack>

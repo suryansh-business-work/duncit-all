@@ -23,7 +23,7 @@ interface Props {
 const chipSx = (active: boolean) => ({
   height: 34,
   borderRadius: 999,
-  fontWeight: 800,
+  fontWeight: 600,
   border: 1,
   borderColor: active ? 'primary.main' : 'divider',
   bgcolor: (theme: Theme) => {
@@ -47,7 +47,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
 
   return (
     <Stack spacing={1} sx={{ mb: 1.5 }}>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900, lineHeight: 1.4 }}>
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, lineHeight: 1.4 }}>
         Country
       </Typography>
       <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5, scrollbarWidth: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
@@ -57,7 +57,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
             <Chip
               key={c.country}
               onClick={() => onCountry(c.country)}
-              avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: '4px' }} /> : undefined}
+              avatar={flag ? <Box component="img" src={flag} alt="" sx={{ width: 22, height: 16, borderRadius: '8px' }} /> : undefined}
               label={c.country}
               sx={chipSx(c.country === activeCountry?.country)}
             />
@@ -66,7 +66,7 @@ export default function CountryStatePicker({ tree, country, state, onCountry, on
       </Box>
 
       <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900, lineHeight: 1.4 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, lineHeight: 1.4 }}>
           State
         </Typography>
         {(activeCountry?.states.length ?? 0) > 6 && (

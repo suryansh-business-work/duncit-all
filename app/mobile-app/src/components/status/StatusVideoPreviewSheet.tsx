@@ -94,7 +94,7 @@ function PreviewBody({
       padding={16}
       gap={12}
     >
-      <Text fontSize={17} fontWeight="900" color="$color">
+      <Text fontSize={17} fontWeight="700" color="$color">
         Preview your video story
       </Text>
       <YStack height={300} borderRadius={14} overflow="hidden" backgroundColor="#000000">
@@ -118,7 +118,7 @@ function PreviewBody({
               disabled={start <= 0}
               onPress={() => seekTo(start - TRIM_STEP_SECONDS)}
             />
-            <Text fontSize={13.5} fontWeight="900" color="$color" testID="story-trim-window">
+            <Text fontSize={13.5} fontWeight="700" color="$color" testID="story-trim-window">
               {fmt(start)} – {fmt(windowEnd)} of {fmt(video.durationSeconds)}
             </Text>
             <StepButton
@@ -145,7 +145,7 @@ function PreviewBody({
           borderColor="$borderColor"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="800" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             Cancel
           </Text>
         </XStack>
@@ -162,7 +162,7 @@ function PreviewBody({
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+          <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {needsTrim ? 'Trim & Post' : 'Post story'}
           </Text>
         </XStack>

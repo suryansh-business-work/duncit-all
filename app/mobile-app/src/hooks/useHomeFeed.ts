@@ -181,6 +181,19 @@ function deriveHome(
 
   const featuredPods = activePods.slice().sort(byDateAsc).slice(0, 10);
 
+  // The pod card's category chip (mock: "Sports") — the pod's club's CATEGORY
+  // name, resolved through the same catalogue the vibe chips use. mWeb twin:
+  // useHomeData.categoryLabelOf.
+  const categoryNameById = new Map<string, string>();
+  (data?.categories ?? []).forEach((c) => categoryNameById.set(c.id, c.name));
+  const clubCategoryNameById = new Map<string, string>();
+  clubs.forEach((club) => {
+    const name = club.category_id ? categoryNameById.get(club.category_id) : undefined;
+    if (name) clubCategoryNameById.set(club.id, name);
+  });
+  const categoryLabelOf = (p: HomePod): string | null =>
+    clubCategoryNameById.get(p.club_id) ?? null;
+
   return {
     categoryChips,
     vibeCategories,
@@ -190,6 +203,7 @@ function deriveHome(
     activePods: activePods.slice().sort(byDateAsc),
     previousPods,
     totalPods: activePods.length,
+    categoryLabelOf,
   };
 }
 

@@ -94,7 +94,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
               padding={18}
             >
               <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={10}>
+                <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={10}>
                   Complete pod
                 </Text>
                 <ScrollView showsVerticalScrollIndicator={false}>
@@ -155,7 +155,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                     opacity={busy ? 0.6 : 1}
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="800" color="$color">
+                    <Text fontSize={14} fontWeight="600" color="$color">
                       Cancel
                     </Text>
                   </XStack>
@@ -176,7 +176,7 @@ export function PodCompleteDialog({ pod, onClose, onCompleted }: Readonly<Props>
                     pressStyle={{ opacity: 0.85 }}
                   >
                     {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                    <Text fontSize={14} fontWeight="900" color="$onPrimary">
+                    <Text fontSize={14} fontWeight="700" color="$onPrimary">
                       {busy ? 'Completing…' : 'Complete pod'}
                     </Text>
                   </XStack>

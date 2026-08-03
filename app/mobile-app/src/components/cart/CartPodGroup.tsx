@@ -42,7 +42,7 @@ function LineStepper({ line, onSetQuantity }: Readonly<StepperProps>) {
       >
         <MaterialIcons name="remove" size={18} color={muted} />
       </XStack>
-      <Text fontSize={14} fontWeight="900" color="$color">
+      <Text fontSize={14} fontWeight="700" color="$color">
         {line.quantity}
       </Text>
       <XStack
@@ -83,7 +83,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
       borderColor="$borderColor"
       backgroundColor="$background"
     >
-      <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+      <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
         {podTitle}
       </Text>
       {lines.map((line) => (
@@ -104,7 +104,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
             ) : null}
           </YStack>
           <YStack flex={1} minWidth={0} gap={2}>
-            <Text fontSize={13.5} fontWeight="800" color="$color" numberOfLines={1}>
+            <Text fontSize={13.5} fontWeight="600" color="$color" numberOfLines={1}>
               {line.product_name}
               {line.variant_label ? ` — ${line.variant_label}` : ''}
             </Text>
@@ -132,7 +132,7 @@ export function CartPodGroup({ podId, podTitle, lines, onSetQuantity, onRemove }
         <Text fontSize={12} color="$muted">
           Products total
         </Text>
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           ₹{total}
         </Text>
       </XStack>

@@ -79,7 +79,7 @@ export default function SlotCalendar({
   return (
     <YStack gap={10} testID="slot-calendar">
       <YStack gap={2}>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {labels.date}
           {required ? <Text color="$danger"> *</Text> : null}
         </Text>
@@ -103,7 +103,7 @@ export default function SlotCalendar({
       />
 
       <YStack gap={6}>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {labels.availableSlots}
         </Text>
         {daySlots.length > 0 ? (
@@ -135,7 +135,7 @@ export default function SlotCalendar({
                   alignItems="center"
                   pressStyle={slot.disabled ? undefined : { opacity: 0.7 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color={selected ? '$onPrimary' : '$color'}>
+                  <Text fontSize={14} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
                     {time}
                   </Text>
                   {secondary ? (

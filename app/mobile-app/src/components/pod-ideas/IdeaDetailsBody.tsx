@@ -34,12 +34,12 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             {initial}
           </Text>
         </YStack>
         <YStack>
-          <Text fontSize={14} fontWeight="800" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {author?.full_name ?? 'Member'}
           </Text>
           <Text fontSize={11.5} color="$muted">
@@ -76,7 +76,7 @@ export function IdeaDetailsBody({ idea, myId, onToggleLike, onDeleteComment }: R
         </Text>
       </XStack>
 
-      <Text fontSize={12} fontWeight="900" color="$muted" textTransform="uppercase">
+      <Text fontSize={12} fontWeight="700" color="$muted" textTransform="uppercase">
         Comments ({idea.comments_count})
       </Text>
       {idea.comments.length === 0 ? (

@@ -83,10 +83,10 @@ export function PodShop({
         <XStack gap={8} alignItems="center">
           <MaterialIcons name="storefront" size={22} color="#ff8b5f" />
           <YStack>
-            <Text fontSize={11} fontWeight="800" color="$muted" letterSpacing={0.4}>
+            <Text fontSize={11} fontWeight="600" color="$muted" letterSpacing={0.4}>
               POD SHOP
             </Text>
-            <Text fontSize={16} fontWeight="900" color="$color">
+            <Text fontSize={16} fontWeight="700" color="$color">
               Products
             </Text>
           </YStack>
@@ -97,7 +97,7 @@ export function PodShop({
           borderRadius={999}
           backgroundColor="$surface"
         >
-          <Text fontSize={12} fontWeight="800" color="$color">
+          <Text fontSize={12} fontWeight="600" color="$color">
             {pod.products_enabled ? 'Available' : 'Closed'}
           </Text>
         </XStack>
@@ -136,7 +136,7 @@ export function PodShop({
           <Text fontSize={12} color="$muted">
             {productCountLabel(selectedCount)}
           </Text>
-          <Text fontSize={15} fontWeight="900" color="$color">
+          <Text fontSize={15} fontWeight="700" color="$color">
             ₹{shownTotal}
           </Text>
         </XStack>

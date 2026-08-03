@@ -77,21 +77,21 @@ export default function SosContent({ selected }: Readonly<Props>) {
         variant="outlined"
         sx={{
           p: 2.5,
-          borderRadius: '4px',
+          borderRadius: '16px',
           borderColor: 'rgba(76,175,80,0.4)',
           bgcolor: 'rgba(76,175,80,0.08)',
         }}
       >
         <Stack spacing={1.5} alignItems="center" textAlign="center">
           <CheckCircleIcon color="success" sx={{ fontSize: 48 }} />
-          <Typography variant="h6" sx={{ fontWeight: 950 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
             SOS sent. Help is on the way.
           </Typography>
           <Chip
             size="small"
             color={active.status === 'ACKNOWLEDGED' ? 'success' : 'warning'}
             label={active.status === 'ACKNOWLEDGED' ? 'Acknowledged by team' : 'Awaiting response'}
-            sx={{ fontWeight: 800 }}
+            sx={{ fontWeight: 600 }}
           />
           <Typography variant="caption" color="text.secondary">
             We notified the host and admin team. Stay on this screen until someone reaches you.
@@ -107,7 +107,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         variant="outlined"
         sx={{
           p: 2,
-          borderRadius: '4px',
+          borderRadius: '16px',
           borderColor: 'rgba(244,67,54,0.3)',
           bgcolor: 'rgba(244,67,54,0.08)',
         }}
@@ -115,7 +115,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         <Stack direction="row" spacing={1.25} alignItems="flex-start">
           <WarningAmberIcon color="error" />
           <Box>
-            <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
               Only tap SOS in a real emergency
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -150,7 +150,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         size="large"
         disabled={!selected || loading}
         onClick={handleRaise}
-        sx={{ py: 1.75, borderRadius: 99, fontWeight: 900, letterSpacing: 1 }}
+        sx={{ py: 1.75, borderRadius: 99, fontWeight: 700, letterSpacing: 1 }}
       >
         {loading ? 'Sending SOS…' : 'SEND SOS'}
       </Button>

@@ -86,7 +86,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             <YStack flex={1} minWidth={0} gap={2}>
               <Text
                 fontSize={15.5}
-                fontWeight="900"
+                fontWeight="700"
                 color="$color"
                 numberOfLines={1}
                 textAlign="left"
@@ -95,7 +95,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
               </Text>
               <XStack alignItems="center" gap={8} flexWrap="wrap">
                 {categoryName ? (
-                  <Text fontSize={12} fontWeight="800" color="$primary" numberOfLines={1}>
+                  <Text fontSize={12} fontWeight="600" color="$primary" numberOfLines={1}>
                     {categoryName}
                   </Text>
                 ) : null}
@@ -121,7 +121,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             justifyContent="center"
           >
             <MaterialIcons name="check" size={15} color={onPrimary} />
-            <Text fontSize={12.5} fontWeight="900" color="$onPrimary">
+            <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
               Following
             </Text>
           </XStack>
@@ -144,7 +144,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
             pressStyle={{ opacity: 0.85 }}
           >
             <MaterialIcons name="add" size={15} color={primary} />
-            <Text fontSize={12.5} fontWeight="900" color="$primary">
+            <Text fontSize={12.5} fontWeight="700" color="$primary">
               Follow
             </Text>
           </XStack>

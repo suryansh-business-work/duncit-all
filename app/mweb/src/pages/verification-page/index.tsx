@@ -45,10 +45,10 @@ export default function VerificationPage() {
         </IconButton>
         <VerifiedUserIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={950} lineHeight={1}>
+          <Typography variant="h5" fontWeight={700} lineHeight={1}>
             Verification
           </Typography>
-          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+          <Typography variant="caption" color="text.secondary" fontWeight={600}>
             Verify your identity, address and email
           </Typography>
         </Box>

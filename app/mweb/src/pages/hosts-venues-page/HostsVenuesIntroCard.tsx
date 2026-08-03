@@ -6,7 +6,7 @@ import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 
 export default function HostsVenuesIntroCard() {
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.10)' }}>
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -14,7 +14,7 @@ export default function HostsVenuesIntroCard() {
           alignItems={{ xs: 'stretch', sm: 'center' }}
         >
           <Stack direction="row" spacing={1.5} sx={{ flex: 1 }} alignItems="center">
-            <Box sx={{ width: 42, height: 42, borderRadius: 3, display: 'grid', placeItems: 'center', bgcolor: 'success.main', color: 'success.contrastText' }}>
+            <Box sx={{ width: 42, height: 42, borderRadius: '4px', display: 'grid', placeItems: 'center', bgcolor: 'success.main', color: 'success.contrastText' }}>
               <VerifiedUserIcon />
             </Box>
             <Box>

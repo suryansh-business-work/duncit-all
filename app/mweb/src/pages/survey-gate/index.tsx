@@ -163,7 +163,7 @@ export default function SurveyGatePage() {
       </Box>
       <Card
         variant="outlined"
-        sx={{ borderRadius: 4, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
+        sx={{ borderRadius: '4px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
       >
         <CardContent>
           <AuthLogo />
@@ -199,7 +199,7 @@ export default function SurveyGatePage() {
           )}
           {step === 'thanks' && (
             <Stack spacing={2}>
-              <Alert severity="success" sx={{ borderRadius: 3 }}>
+              <Alert severity="success" sx={{ borderRadius: '4px' }}>
                 Thank you for your submission! Your onboarding meeting is booked for{' '}
                 <strong>{slotLabel}</strong>. Our onboarding team will meet you at your selected
                 slot — please join 5 minutes early.

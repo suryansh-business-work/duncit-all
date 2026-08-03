@@ -40,7 +40,7 @@ export default function EarnBox({
     <Card
       variant="outlined"
       sx={{
-        borderRadius: 4,
+        borderRadius: '4px',
         opacity: disabled && !cta ? 0.55 : 1,
         boxShadow: 'none',
         '&:hover': { boxShadow: 'none' },
@@ -53,7 +53,7 @@ export default function EarnBox({
               sx={{
                 width: 44,
                 height: 44,
-                borderRadius: 3,
+                borderRadius: '4px',
                 display: 'grid',
                 placeItems: 'center',
                 color: 'primary.contrastText',

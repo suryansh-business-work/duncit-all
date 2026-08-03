@@ -64,7 +64,7 @@ export default function FaqsPage() {
   return (
     <Stack spacing={2} sx={{ width: '100%', maxWidth: 760, mx: 'auto' }}>
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ width: 48, height: 48, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)', boxShadow: '0 14px 28px rgba(255,79,115,0.30)' }}>
+        <Box sx={{ width: 48, height: 48, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)', boxShadow: '0 14px 28px rgba(255,79,115,0.30)' }}>
           <HelpOutlineIcon />
         </Box>
         <Box>
@@ -77,7 +77,7 @@ export default function FaqsPage() {
         </Box>
       </Stack>
 
-      <Paper variant="outlined" sx={{ p: 1, borderRadius: 4 }}>
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: '4px' }}>
         <TextField
           fullWidth
           size="small"
@@ -122,7 +122,7 @@ export default function FaqsPage() {
       {loading && (
         <Stack spacing={1.5}>
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: 3 }} />
+            <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: '4px' }} />
           ))}
         </Stack>
       )}
@@ -140,7 +140,7 @@ export default function FaqsPage() {
           </Typography>
           <Stack spacing={1} sx={{ mt: 1 }}>
             {g.faqs.map((f: any) => (
-              <Accordion key={f.id} disableGutters elevation={0} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+              <Accordion key={f.id} disableGutters elevation={0} sx={{ borderRadius: '4px', overflow: 'hidden' }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography variant="body2" sx={{ fontWeight: 950 }}>
                     {f.question}

@@ -55,7 +55,7 @@ export default function HostDraftsCard() {
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4 }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <EditNoteIcon color="primary" />
@@ -78,7 +78,7 @@ export default function HostDraftsCard() {
                 direction="row"
                 alignItems="center"
                 spacing={1}
-                sx={{ p: 1.25, borderRadius: 3, border: 1, borderColor: 'divider' }}
+                sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle2" fontWeight={700} noWrap>

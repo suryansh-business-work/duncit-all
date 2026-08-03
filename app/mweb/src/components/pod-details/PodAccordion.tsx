@@ -42,7 +42,7 @@ export default function PodAccordion({
         mb: 1,
         border: '1px solid',
         borderColor: 'divider',
-        borderRadius: 1.5,
+        borderRadius: '4px',
         overflow: 'hidden',
         boxShadow: 'none',
         bgcolor: 'background.paper',

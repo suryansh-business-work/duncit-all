@@ -87,7 +87,7 @@ export default function HostPodsCard({
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4 }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <EventIcon color="primary" />

@@ -83,7 +83,7 @@ export default function StatusVideoPreviewDialog({ file, onCancel, onConfirm }: 
               controls
               playsInline
               onLoadedMetadata={onLoadedMetadata}
-              sx={{ width: '100%', maxHeight: '48vh', borderRadius: 2, bgcolor: 'common.black' }}
+              sx={{ width: '100%', maxHeight: '48vh', borderRadius: '4px', bgcolor: 'common.black' }}
             />
           )}
           {file && <FileDetails file={file} dims={dims} />}

@@ -22,7 +22,7 @@ interface Props {
 
 function StatBox({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <Box sx={{ flex: '1 1 40%', minWidth: 0, p: 1, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.14)' }}>
+    <Box sx={{ flex: '1 1 40%', minWidth: 0, p: 1, borderRadius: '4px', bgcolor: 'rgba(255,255,255,0.14)' }}>
       <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.9, display: 'block' }} noWrap>
         {label}
       </Typography>
@@ -44,7 +44,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
   return (
     <Card
       sx={{
-        borderRadius: 4,
+        borderRadius: '4px',
         color: 'common.white',
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 60%, #16121f 100%)',
         boxShadow: '0 18px 42px rgba(245,51,122,0.24)',

@@ -67,7 +67,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
           p: 1,
           px: 1.25,
           maxWidth: '80%',
-          borderRadius: 3,
+          borderRadius: '4px',
           bgcolor: isUser ? 'primary.main' : 'background.paper',
           color: isUser ? 'primary.contrastText' : 'text.primary',
         }}

@@ -92,7 +92,7 @@ export default function MenuPanel({
           <Box sx={{ px: 2, pb: 1.25 }}>
             <ListItemButton
               onClick={() => setSwitchOpen(true)}
-              sx={{ borderRadius: 2.5, border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
+              sx={{ borderRadius: '4px', border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
             >
               <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
                 <SwapHorizIcon fontSize="small" />

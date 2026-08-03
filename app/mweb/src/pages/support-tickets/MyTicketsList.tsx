@@ -52,7 +52,7 @@ export default function MyTicketsList() {
             key={t.id}
             variant="outlined"
             onClick={() => navigate(`/tickets/${t.id}`)}
-            sx={{ p: 1.5, borderRadius: 3, cursor: 'pointer' }}
+            sx={{ p: 1.5, borderRadius: '4px', cursor: 'pointer' }}
           >
             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
               <Box sx={{ minWidth: 0 }}>
@@ -72,7 +72,7 @@ export default function MyTicketsList() {
     );
 
   return (
-    <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
+    <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
         Your tickets
       </Typography>

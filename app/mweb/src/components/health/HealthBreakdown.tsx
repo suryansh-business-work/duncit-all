@@ -21,7 +21,7 @@ const BAND_COLOR: Record<HealthScore['band'], 'error' | 'warning' | 'success'> =
 export default function HealthBreakdown({ score }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
         <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" rowGap={1}>
           <Box>
             <Typography variant="h3" sx={{ fontWeight: 950, lineHeight: 1 }}>
@@ -64,7 +64,7 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
               const sign = a.delta > 0 ? `+${a.delta}` : `${a.delta}`;
               const color: 'success' | 'error' = a.delta > 0 ? 'success' : 'error';
               return (
-                <Paper key={a.id} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                <Paper key={a.id} variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }}>
                   <Stack direction="row" alignItems="center" spacing={1.25}>
                     <Chip size="small" color={color} label={sign} sx={{ fontWeight: 900 }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>

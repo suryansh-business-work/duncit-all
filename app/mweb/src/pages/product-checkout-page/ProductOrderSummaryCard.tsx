@@ -147,7 +147,7 @@ export default function ProductOrderSummaryCard({ lines, breakup, subtotal, quot
   const estimated = !!quote && !quote.all_quoted;
 
   return (
-    <Card sx={{ flex: 1, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
+    <Card sx={{ flex: 1, borderRadius: '4px', bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent sx={{ p: 1.75 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <ShoppingBagIcon sx={{ color: '#ff8b5f' }} />

@@ -111,7 +111,7 @@ export default function PodShopSlider() {
     <Box
       data-testid="pod-shop-slider"
       sx={{
-        borderRadius: 4,
+        borderRadius: '4px',
         overflow: 'hidden',
         '.slick-dots': { bottom: 12 },
         '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },

@@ -15,7 +15,7 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
       }}
       sx={{
         p: 1.5,
-        borderRadius: 3,
+        borderRadius: '4px',
         cursor: 'pointer',
         transition: 'border-color 160ms ease, background-color 160ms ease',
         '&:hover': { borderColor: 'primary.main', bgcolor: (t) => alpha(t.palette.primary.main, 0.05) },
@@ -26,7 +26,7 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
         sx={{
           width: 36,
           height: 36,
-          borderRadius: 2,
+          borderRadius: '4px',
           display: 'grid',
           placeItems: 'center',
           color: 'primary.main',

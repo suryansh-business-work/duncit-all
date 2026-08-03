@@ -71,7 +71,7 @@ export default function HomeFeaturedPods({
                 flex: '0 0 auto',
                 p: 0,
                 border: 0,
-                borderRadius: 4,
+                borderRadius: '4px',
                 overflow: 'hidden',
                 position: 'relative',
                 textAlign: 'left',

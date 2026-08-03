@@ -33,7 +33,7 @@ export default function CallbackHistory() {
   if (items.length === 0) return null;
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
+    <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
         Previous callbacks
       </Typography>
@@ -41,7 +41,7 @@ export default function CallbackHistory() {
         {items.map((c) => {
           const dur = durationLabel(c.duration_seconds);
           return (
-            <Paper key={c.id} variant="outlined" sx={{ p: 1.25, borderRadius: 3 }}>
+            <Paper key={c.id} variant="outlined" sx={{ p: 1.25, borderRadius: '4px' }}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
                 <Typography variant="caption" color="text.secondary">
                   {format(new Date(c.created_at), 'd MMM yyyy, HH:mm')}

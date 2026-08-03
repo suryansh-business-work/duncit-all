@@ -44,7 +44,7 @@ export default function ProductsManagePage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <Inventory2Icon fontSize="small" />
         </Box>
         <Box>
@@ -66,7 +66,7 @@ export default function ProductsManagePage() {
 
       <Stack direction="row" spacing={1}>
         {[{ label: 'Products', value: products.length }, { label: 'In stock', value: totalStock }, { label: 'Avg price', value: `₹${avgPrice}` }].map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
               <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }} noWrap>{item.value}</Typography>
@@ -75,7 +75,7 @@ export default function ProductsManagePage() {
         ))}
       </Stack>
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
             Stock by product

@@ -45,7 +45,7 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
                 width: 190,
                 minHeight: 130,
                 p: 1.75,
-                borderRadius: 4,
+                borderRadius: '4px',
                 textAlign: 'left',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',

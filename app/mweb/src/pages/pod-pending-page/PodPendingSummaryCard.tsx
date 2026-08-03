@@ -65,7 +65,7 @@ export default function PodPendingSummaryCard({ view }: Readonly<{ view: PodPend
   });
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: 3 }} data-testid="pod-pending-summary">
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="pod-pending-summary">
       <Stack spacing={1.25}>
         {image && (
           <Box
@@ -73,7 +73,7 @@ export default function PodPendingSummaryCard({ view }: Readonly<{ view: PodPend
             src={image}
             alt={pod.pod_title}
             data-testid="pod-pending-image"
-            sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 2.5 }}
+            sx={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: '4px' }}
           />
         )}
         <Typography variant="subtitle1" fontWeight={900}>

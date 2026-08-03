@@ -62,7 +62,7 @@ export default function TourGuidePage() {
         {tours.map((tour) => {
           const done = isTourCompleted(completed, tour.id);
           return (
-            <Card key={tour.id} variant="outlined" sx={{ borderRadius: 3 }}>
+            <Card key={tour.id} variant="outlined" sx={{ borderRadius: '4px' }}>
               <CardContent>
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}

@@ -61,7 +61,7 @@ export default function ContactSummaryCard({ control, contact, loading }: Readon
       <Typography variant="overline" color="text.secondary" fontWeight={900}>
         Contact details
       </Typography>
-      <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+      <Stack spacing={0.75} sx={{ px: 1.5, py: 1.25, borderRadius: '4px', border: '1px solid', borderColor: 'divider' }}>
         {loading ? (
           <>
             <ContactRowSkeleton label="Name" />

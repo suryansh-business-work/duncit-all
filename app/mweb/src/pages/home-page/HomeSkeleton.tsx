@@ -3,7 +3,7 @@ import { Box, Skeleton, Stack } from '@mui/material';
 export default function HomeSkeleton() {
   return (
     <Stack spacing={4}>
-      <Skeleton variant="rectangular" height={220} sx={{ borderRadius: 2 }} />
+      <Skeleton variant="rectangular" height={220} sx={{ borderRadius: '4px' }} />
       {[0, 1].map((i) => (
         <Box key={i}>
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>

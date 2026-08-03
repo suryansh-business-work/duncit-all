@@ -28,7 +28,7 @@ export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentit
           textAlign: 'left',
           px: 1.5,
           py: 1,
-          borderRadius: 3,
+          borderRadius: '4px',
           '&:hover': { bgcolor: 'action.hover' },
         }}
         aria-label="Open your profile"

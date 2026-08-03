@@ -52,7 +52,7 @@ export default function ClubSummaryHeader({
         p: 2,
         position: 'relative',
         zIndex: 2,
-        borderRadius: 4,
+        borderRadius: '4px',
         bgcolor: 'background.paper',
         border: 1,
         borderColor: 'divider',
@@ -63,7 +63,7 @@ export default function ClubSummaryHeader({
         <Avatar
           src={featureUrl}
           variant="rounded"
-          sx={{ width: 72, height: 72, borderRadius: 4, bgcolor: 'primary.main' }}
+          sx={{ width: 72, height: 72, borderRadius: '4px', bgcolor: 'primary.main' }}
         >
           <GroupsIcon />
         </Avatar>
@@ -99,7 +99,7 @@ export default function ClubSummaryHeader({
           variant={following ? 'outlined' : 'contained'}
           startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />}
           onClick={onToggleFollow}
-          sx={{ borderRadius: 3, fontWeight: 900 }}
+          sx={{ borderRadius: '4px', fontWeight: 900 }}
         >
           {following ? 'Following' : 'Follow Club'}
         </Button>
@@ -112,7 +112,7 @@ export default function ClubSummaryHeader({
           target={chatUrl ? '_blank' : undefined}
           rel={chatUrl ? 'noreferrer' : undefined}
           disabled={!chatUrl}
-          sx={{ borderRadius: 3, fontWeight: 900 }}
+          sx={{ borderRadius: '4px', fontWeight: 900 }}
         >
           Chat
         </Button>

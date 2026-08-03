@@ -83,7 +83,7 @@ export default function NotificationsScreen({
         </Stack>
 
         <Box sx={{ px: 1.5, pb: 1.5 }}>
-          <Box sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(255,79,115,0.12)', border: '1px solid rgba(255,79,115,0.22)' }}>
+          <Box sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.12)', border: '1px solid rgba(255,79,115,0.22)' }}>
             <Stack direction="row" alignItems="center" spacing={1.25}>
               <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
                 {[0, 1, 2].map((index) => (
@@ -121,7 +121,7 @@ export default function NotificationsScreen({
 
         <Stack spacing={1} sx={{ px: 1.5, pb: 3, overflowY: 'auto' }}>
           {notifs.length === 0 && (
-            <Box sx={{ p: 3, borderRadius: 4, bgcolor: 'background.paper', textAlign: 'center' }}>
+            <Box sx={{ p: 3, borderRadius: '4px', bgcolor: 'background.paper', textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 No notifications yet.
               </Typography>
@@ -141,7 +141,7 @@ export default function NotificationsScreen({
                 onClick={() => onNotifClick(item)}
                 sx={{
                   p: 1.35,
-                  borderRadius: 4,
+                  borderRadius: '4px',
                   cursor: 'pointer',
                   color: unread ? 'primary.contrastText' : 'text.primary',
                   background: unread ? 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' : undefined,

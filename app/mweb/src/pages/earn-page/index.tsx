@@ -92,7 +92,7 @@ export default function EarnPage() {
       <Stack spacing={1.5}>
         {showSkeleton
           ? boxes.map((box) => (
-              <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: 3 }} />
+              <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: '4px' }} />
             ))
           : null}
         {showSkeleton ? null : boxes.map((box) => {

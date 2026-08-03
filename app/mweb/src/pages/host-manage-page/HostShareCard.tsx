@@ -75,7 +75,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
   const payableLabel = isV2 ? 'Payout' : legacyLabel;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
-    <Box sx={{ p: 1.25, borderRadius: 3, border: 1, borderColor: 'divider' }}>
+    <Box sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
         <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 800 }} noWrap>
           {payout.pod_title}
@@ -132,7 +132,7 @@ export default function HostShareCard() {
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4 }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <PaidIcon color="primary" />

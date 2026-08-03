@@ -69,7 +69,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
     <Box
       sx={{
         p: 2,
-        borderRadius: 4,
+        borderRadius: '4px',
         color: textColor,
         background: isDark
           ? 'linear-gradient(145deg, #15111c 0%, #2a1926 54%, #111827 100%)'
@@ -120,14 +120,14 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               alignItems="center"
               sx={{
                 p: 1,
-                borderRadius: 3,
+                borderRadius: '4px',
                 border: '1px solid',
                 borderColor: selected ? selectedBorder : borderColor,
                 bgcolor: selected ? selectedBg : itemBg,
                 transition: 'all 0.18s ease',
               }}
             >
-              <Box sx={{ width: 54, height: 54, borderRadius: 2, overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
+              <Box sx={{ width: 54, height: 54, borderRadius: '4px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
                 {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>

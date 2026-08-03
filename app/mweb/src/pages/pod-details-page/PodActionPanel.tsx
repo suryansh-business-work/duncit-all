@@ -89,7 +89,7 @@ export default function PodActionPanel({
     !!pod?.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
   if (isExpired && !isMember && !inProcess) {
     return (
-      <Alert severity="warning" sx={{ borderRadius: 2 }}>
+      <Alert severity="warning" sx={{ borderRadius: '4px' }}>
         This pod has already taken place — booking is closed.
       </Alert>
     );

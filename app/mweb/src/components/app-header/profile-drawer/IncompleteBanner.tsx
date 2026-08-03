@@ -17,7 +17,7 @@ export default function IncompleteBanner({ percent, onComplete }: Readonly<Incom
         sx={{
           px: 1.75,
           py: 1.25,
-          borderRadius: 2.5,
+          borderRadius: '4px',
           border: 1,
           borderColor: 'divider',
           bgcolor: 'background.paper',

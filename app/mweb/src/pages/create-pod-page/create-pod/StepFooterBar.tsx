@@ -47,7 +47,7 @@ export default function StepFooterBar({
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',
           p: 1,
-          borderRadius: 3,
+          borderRadius: '4px',
           border: 1,
           borderColor: 'divider',
           bgcolor: (theme) =>

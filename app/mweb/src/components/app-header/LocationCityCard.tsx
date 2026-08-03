@@ -29,7 +29,7 @@ export default function LocationCityCard({
       sx={{
         border: 1.5,
         borderColor: active ? 'primary.main' : 'divider',
-        borderRadius: 2.25,
+        borderRadius: '4px',
         overflow: 'hidden',
         minWidth: 0,
         boxShadow: active ? 3 : 0,

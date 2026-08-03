@@ -88,7 +88,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
   };
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }} data-testid="create-pod-price-panel">
+    <Card variant="outlined" sx={{ p: 2, borderRadius: '4px' }} data-testid="create-pod-price-panel">
       <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} alignItems="center">
           <InsightsIcon color="primary" fontSize="small" />
@@ -103,7 +103,7 @@ export default function PricePanel({ preview }: Readonly<Props>) {
           <Alert
             severity="success"
             icon={<InfoOutlinedIcon fontSize="small" />}
-            sx={{ borderRadius: 2.5, py: 0.25 }}
+            sx={{ borderRadius: '4px', py: 0.25 }}
             data-testid="price-panel-host-free-note"
           >
             Your spot is free — that is why the total calculation is based on the remaining

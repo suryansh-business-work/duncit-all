@@ -115,7 +115,7 @@ export default function VenueDetailsPage() {
         <Button startIcon={<ContentCopyIcon />} onClick={copyLink}>Copy link</Button>
       </Stack>
 
-      <Box sx={{ borderRadius: 2, overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ borderRadius: '4px', overflow: 'hidden', bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
         {images[0] ? (
           <Box component="img" src={images[0] as string} alt={venue.venue_name} sx={{ width: '100%', height: { xs: 260, sm: 360 }, objectFit: 'cover', display: 'block' }} />
         ) : (

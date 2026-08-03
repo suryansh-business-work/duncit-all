@@ -21,7 +21,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
         bgcolor: (t) => `${t.palette.background.paper}f2`,
         border: 1,
         borderColor: 'divider',
-        borderRadius: 3,
+        borderRadius: '4px',
         boxShadow: '0 14px 36px rgba(15, 23, 42, 0.14)',
       }}
     >

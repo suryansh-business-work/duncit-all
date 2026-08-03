@@ -61,7 +61,7 @@ export function DeleteAccountForm({ loading, errorMessage, onSubmit }: Readonly<
           size="large"
           disabled={loading}
           data-testid="delete-account-submit"
-          sx={{ borderRadius: 2, py: 1.1, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: '4px', py: 1.1, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Deleting…' : 'Delete my account'}
         </Button>

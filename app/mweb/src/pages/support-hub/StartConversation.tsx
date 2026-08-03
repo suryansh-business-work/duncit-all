@@ -17,7 +17,7 @@ export default function StartConversation() {
       }}
       sx={{
         p: 1.75,
-        borderRadius: 4,
+        borderRadius: '4px',
         cursor: 'pointer',
         color: '#fff',
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
@@ -26,7 +26,7 @@ export default function StartConversation() {
       aria-label="Start a conversation with support"
     >
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ width: 44, height: 44, borderRadius: 3, display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,255,255,0.2)' }}>
+        <Box sx={{ width: 44, height: 44, borderRadius: '4px', display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,255,255,0.2)' }}>
           <ChatBubbleOutlineIcon />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>

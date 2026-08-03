@@ -139,7 +139,7 @@ export default function UserHostPanel() {
   return (
     <Stack spacing={1.5}>
       <Stack direction="row" spacing={1.25} alignItems="center">
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, bgcolor: 'rgba(255,193,7,0.16)', color: 'warning.main', display: 'grid', placeItems: 'center' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: '4px', bgcolor: 'rgba(255,193,7,0.16)', color: 'warning.main', display: 'grid', placeItems: 'center' }}>
           <WorkspacePremiumIcon fontSize="small" />
         </Box>
         <Box sx={{ minWidth: 0, flex: 1 }}>

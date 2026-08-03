@@ -20,7 +20,7 @@ function Stat({
         flex: 1,
         textAlign: 'center',
         p: 1,
-        borderRadius: 3,
+        borderRadius: '4px',
         bgcolor: 'action.hover',
         cursor: onClick ? 'pointer' : 'default',
       }}
@@ -51,7 +51,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
   return (
     <Box
       sx={{
-        borderRadius: 4,
+        borderRadius: '4px',
         overflow: 'hidden',
         border: 1,
         borderColor: 'divider',
@@ -106,10 +106,10 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           />
         </Stack>
         <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
-          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 3, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
+          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: '4px', fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             New Post
           </Button>
-          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 3, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
+          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: '4px', fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             Edit profile
           </Button>
           <IconButton
@@ -118,7 +118,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               width: 44,
               height: 42,
               flex: '0 0 44px',
-              borderRadius: 3,
+              borderRadius: '4px',
               border: 1,
               borderColor: 'divider',
             }}
@@ -132,7 +132,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
               width: 44,
               height: 42,
               flex: '0 0 44px',
-              borderRadius: 3,
+              borderRadius: '4px',
               border: 1,
               borderColor: 'divider',
             }}

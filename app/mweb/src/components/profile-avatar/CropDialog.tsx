@@ -63,7 +63,7 @@ export default function CropDialog({ open, src, saving, onCancel, onConfirm }: R
     <Dialog open={open && !!src} onClose={busy ? undefined : cancel} fullWidth maxWidth="xs">
       <DialogTitle>Adjust photo</DialogTitle>
       <DialogContent>
-        <Box sx={{ position: 'relative', width: '100%', height: 300, bgcolor: '#111', borderRadius: 2 }}>
+        <Box sx={{ position: 'relative', width: '100%', height: 300, bgcolor: '#111', borderRadius: '4px' }}>
           {src && (
             <Cropper
               image={src}

@@ -15,7 +15,7 @@ interface CtaBlockProps {
 /** A single call-to-action card — hoisted to module scope (S6478). */
 function CtaBlock({ icon, title, description, cta, onClick }: Readonly<CtaBlockProps>) {
   return (
-    <Card variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+    <Card variant="outlined" sx={{ p: 2.5, borderRadius: '4px' }}>
       <Stack spacing={1}>
         <Stack direction="row" spacing={1} alignItems="center">
           {icon}

@@ -14,7 +14,7 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
   const meta = STATUS_META[item.status];
   const done = item.status === 'APPROVED' || item.status === 'VERIFIED_BY_APP';
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
       <CardContent>
         <Stack direction="row" alignItems="flex-start" spacing={1.5}>
           <CheckCircleIcon

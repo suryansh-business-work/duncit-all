@@ -91,7 +91,7 @@ export default function HostsVenuesPage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ width: 40, height: 40, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 40, height: 40, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <StorefrontIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>

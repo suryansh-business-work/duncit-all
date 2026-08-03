@@ -30,7 +30,7 @@ export default function CompletionMeter({ profile }: Readonly<CompletionMeterPro
         variant="determinate"
         value={percent}
         aria-label="Profile completion"
-        sx={{ height: 8, borderRadius: 4 }}
+        sx={{ height: 8, borderRadius: '4px' }}
       />
     </Box>
   );

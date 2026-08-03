@@ -68,7 +68,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
         <Button
           size="small"
           variant="outlined"
-          sx={{ borderRadius: 3, fontWeight: 800 }}
+          sx={{ borderRadius: '4px', fontWeight: 800 }}
           onClick={() => setDialogOpen(true)}
         >
           Rate Club
@@ -150,7 +150,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
             variant="contained"
             onClick={handleSubmit}
             disabled={!stars || submitting}
-            sx={{ borderRadius: 3, fontWeight: 900 }}
+            sx={{ borderRadius: '4px', fontWeight: 900 }}
           >
             {submitting ? 'Submitting…' : 'Submit'}
           </Button>

@@ -35,7 +35,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
       direction="row"
       spacing={1.5}
       alignItems="center"
-      sx={{ p: 1.25, borderRadius: 3, border: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
+      sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider', bgcolor: 'action.hover' }}
     >
       <Avatar variant="rounded" src={cover} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
         <GroupsIcon />
@@ -76,7 +76,7 @@ export default function ClubPreview({ club }: Readonly<Props>) {
                     component="img"
                     src={item.url}
                     alt={club.club_name}
-                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: 2, flexShrink: 0 }}
+                    sx={{ width: 120, height: 90, objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
                   />
                 ))}
               </Stack>

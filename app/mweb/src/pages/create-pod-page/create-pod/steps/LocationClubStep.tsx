@@ -59,7 +59,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
 
   return (
     <Stack spacing={2}>
-      <Card variant="outlined" sx={{ p: 1.5, borderRadius: 2.5 }}>
+      <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }}>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <PlaceIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>

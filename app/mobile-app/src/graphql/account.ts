@@ -36,6 +36,7 @@ export const MobileAccountDocument = gql(`
       last_name
       full_name
       email
+      is_email_verified
       phone_number
       phone_extension
       whatsapp_number
@@ -183,6 +184,29 @@ export const MobilePolicyBySlugDocument = gql(`
       slug
       title
       content
+    }
+  }
+`);
+
+/**
+ * Email verification — the RN twin of mWeb's EmailVerificationForm. Requesting
+ * mails the OTP to the address already on the account, so neither mutation
+ * takes an email argument.
+ */
+export const MobileRequestEmailVerificationOtpDocument = gql(`
+  mutation MobileRequestEmailVerificationOtp {
+    requestEmailVerificationOtp {
+      ok
+      dev_otp
+    }
+  }
+`);
+
+export const MobileVerifyEmailVerificationOtpDocument = gql(`
+  mutation MobileVerifyEmailVerificationOtp($otp: String!) {
+    verifyEmailVerificationOtp(otp: $otp) {
+      user_id
+      is_email_verified
     }
   }
 `);

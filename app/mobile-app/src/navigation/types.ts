@@ -14,7 +14,9 @@ export type RootStackParamList = {
   Menu: undefined;
   Home: NavigatorScreenParams<TabParamList> | undefined;
   Search: undefined;
-  Profile: undefined;
+  // verifyEmail scrolls straight to the email-verification section, the RN twin
+  // of mWeb's /profile?verifyEmail=1.
+  Profile: { verifyEmail?: boolean } | undefined;
   Account: undefined;
   AccountHealth: undefined;
   Verification: undefined;

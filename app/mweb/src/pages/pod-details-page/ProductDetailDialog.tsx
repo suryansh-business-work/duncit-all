@@ -177,13 +177,13 @@ export default function ProductDetailDialog({
                 key={url}
                 onClick={() => setZoomIndex(imageIndex)}
                 aria-label="Zoom image"
-                sx={{ borderRadius: 2, flex: '0 0 auto' }}
+                sx={{ borderRadius: '4px', flex: '0 0 auto' }}
               >
                 <Box
                   component="img"
                   src={url}
                   alt={product.product_name}
-                  sx={{ width: 160, height: 160, borderRadius: 2, objectFit: 'cover' }}
+                  sx={{ width: 160, height: 160, borderRadius: '4px', objectFit: 'cover' }}
                 />
               </ButtonBase>
             ))}
@@ -222,7 +222,7 @@ export default function ProductDetailDialog({
           {description || 'No description provided.'}
         </Typography>
         {specs.length > 0 && (
-          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
+          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '4px', overflow: 'hidden' }}>
             {specs.map((spec, specIndex) => (
               <Box key={spec.label}>
                 {specIndex > 0 && <Divider />}

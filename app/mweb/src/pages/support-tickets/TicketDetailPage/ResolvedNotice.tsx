@@ -35,7 +35,7 @@ export default function ResolvedNotice({
   }
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, bgcolor: 'action.hover' }}>
+    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}>
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
         <Stack sx={{ minWidth: 0 }}>
           <Typography variant="body2" color="text.secondary">

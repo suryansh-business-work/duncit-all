@@ -74,7 +74,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   });
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: 3 }} data-testid="venue-pending-card">
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="venue-pending-card">
       <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
           <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 0 }}>

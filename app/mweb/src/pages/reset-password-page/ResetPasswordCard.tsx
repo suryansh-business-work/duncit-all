@@ -40,7 +40,7 @@ export default function ResetPasswordCard({
             to="/login"
             variant="contained"
             size="large"
-            sx={{ borderRadius: 2, py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
+            sx={{ borderRadius: '4px', py: 1.1, px: 4, fontWeight: 700, textTransform: 'none' }}
           >
             Go to login
           </Button>

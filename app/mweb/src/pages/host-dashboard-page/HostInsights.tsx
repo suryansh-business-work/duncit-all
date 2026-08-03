@@ -40,7 +40,7 @@ interface Props {
 /** One KPI tile (Total Pods / Host Earnings), synced to the Partner Portal. */
 function KpiTile({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <Card variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
+    <Card variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
       <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
         <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>
           {label}
@@ -78,10 +78,10 @@ export default function HostInsights({ pods, currency }: Readonly<Props>) {
 
   return (
     <Stack spacing={2.25}>
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 1.5 }}>
-            <Box sx={{ width: 34, height: 34, borderRadius: 2.5, display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73, #ff7a59)' }}>
+            <Box sx={{ width: 34, height: 34, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73, #ff7a59)' }}>
               <InsightsIcon fontSize="small" />
             </Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>

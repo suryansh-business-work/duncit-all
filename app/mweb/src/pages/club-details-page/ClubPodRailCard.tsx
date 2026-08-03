@@ -20,7 +20,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
   return (
     <Card
       variant="outlined"
-      sx={{ width: 168, flex: '0 0 auto', borderRadius: 3, overflow: 'hidden', bgcolor: 'background.paper' }}
+      sx={{ width: 168, flex: '0 0 auto', borderRadius: '4px', overflow: 'hidden', bgcolor: 'background.paper' }}
     >
       {cover ? (
         <CardMedia component="img" image={cover} alt={pod.pod_title} sx={{ height: 96, objectFit: 'cover' }} />

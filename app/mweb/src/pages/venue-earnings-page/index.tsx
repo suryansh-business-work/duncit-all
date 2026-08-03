@@ -33,7 +33,7 @@ export default function VenueEarningsPage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <PaidIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -48,7 +48,7 @@ export default function VenueEarningsPage() {
 
       {summary && <StatCards summary={summary} />}
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
             <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>

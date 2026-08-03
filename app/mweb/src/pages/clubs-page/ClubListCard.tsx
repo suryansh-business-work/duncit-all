@@ -20,7 +20,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
       onClick={onOpen}
       sx={{
         cursor: 'pointer',
-        borderRadius: 4,
+        borderRadius: '4px',
         overflow: 'hidden',
         bgcolor: 'background.paper',
         background: (theme) => `linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.action.hover} 100%)`,
@@ -34,11 +34,11 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
           <CardMedia
             component={cover.type === 'VIDEO' ? 'video' : 'img'}
             src={cover.url}
-            sx={{ height: 154, borderRadius: 3, objectFit: 'cover' }}
+            sx={{ height: 154, borderRadius: '4px', objectFit: 'cover' }}
             {...coverMediaProps}
           />
         ) : (
-          <Box sx={{ height: 154, borderRadius: 3, display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 50%, #35158a 100%)' }}>
+          <Box sx={{ height: 154, borderRadius: '4px', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #ff8b5f 0%, #ed4f7a 50%, #35158a 100%)' }}>
             <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.18)', color: 'common.white' }}>
               <GroupsIcon />
             </Avatar>

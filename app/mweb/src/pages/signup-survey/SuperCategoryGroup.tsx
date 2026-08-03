@@ -29,7 +29,7 @@ export function SuperCategoryGroup({
   return (
     <Box
       sx={(t) => ({
-        borderRadius: 4,
+        borderRadius: '4px',
         p: { xs: 1.5, sm: 2 },
         border: `1.5px solid ${alpha(hue, 0.22)}`,
         background:

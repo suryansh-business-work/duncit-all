@@ -1,10 +1,13 @@
-import { useNavigation } from '@react-navigation/native';
+import { useEffect, useRef, useState } from 'react';
+import type { ScrollView as RNScrollView } from 'react-native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { EmailVerificationSection } from '@/components/account';
 import { useGoBack } from '@/hooks/useGoBack';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfilePanels } from '@/components/profile/ProfilePanels';
@@ -20,8 +23,19 @@ import { fireAndForget } from '@/utils/fire-and-forget';
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
 export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'Profile'>>();
   const goBack = useGoBack();
   const { me, posts, isLoading, refetch } = useProfile();
+  // The Home banner deep-links here to verify the email, so scroll that section
+  // into view once it has reported its position — the RN twin of mWeb's
+  // /profile?verifyEmail=1 scrolling to its #email-verification anchor.
+  const scrollRef = useRef<RNScrollView>(null);
+  const [verifyY, setVerifyY] = useState<number | null>(null);
+  const jumpToVerify = route.params?.verifyEmail === true;
+  useEffect(() => {
+    if (!jumpToVerify || verifyY === null) return;
+    scrollRef.current?.scrollTo({ y: Math.max(0, verifyY - 12), animated: true });
+  }, [jumpToVerify, verifyY]);
   const { color: ink } = useThemeColors();
   const { uploading, pickAndPost } = useProfilePostUpload();
   const isHost = me?.roles.includes('HOST') ?? false;
@@ -33,8 +47,20 @@ export function ProfileScreen() {
   };
 
   const body = me ? (
-    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
+    <ScrollView ref={scrollRef} flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
       <ProfileHeader me={me} onChanged={() => fireAndForget(refetch())} />
+      <YStack
+        paddingHorizontal={16}
+        paddingBottom={4}
+        onLayout={(e) => setVerifyY(e.nativeEvent.layout.y)}
+      >
+        <EmailVerificationSection
+          email={me.email}
+          verified={!!me.is_email_verified}
+          autoSend={jumpToVerify}
+          onVerified={() => fireAndForget(refetch())}
+        />
+      </YStack>
       <ProfilePanels
         me={me}
         onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}

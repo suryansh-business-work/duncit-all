@@ -82,7 +82,7 @@ export default function EmojiFeedbackDialog({
                       border: 'none',
                       bgcolor: 'transparent',
                       p: 0.5,
-                      borderRadius: 2,
+                      borderRadius: '4px',
                       fontSize: 30,
                       lineHeight: 1,
                       opacity: active || rating === 0 ? 1 : 0.45,

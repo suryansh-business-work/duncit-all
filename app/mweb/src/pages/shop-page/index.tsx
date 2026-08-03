@@ -27,7 +27,7 @@ function TrustBar() {
     <Stack
       direction="row"
       justifyContent="space-around"
-      sx={{ bgcolor: 'action.hover', borderRadius: 3, p: 1.5, mt: 1 }}
+      sx={{ bgcolor: 'action.hover', borderRadius: '4px', p: 1.5, mt: 1 }}
     >
       {TRUST_ITEMS.map(({ Icon, title, caption }) => (
         <Stack key={title} direction="row" spacing={1} alignItems="center">

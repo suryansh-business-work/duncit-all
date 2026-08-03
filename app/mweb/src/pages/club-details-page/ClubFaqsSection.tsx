@@ -29,7 +29,7 @@ export default function ClubFaqsSection({ faqs }: Readonly<Props>) {
             mb: 1,
             border: '1px solid',
             borderColor: 'divider',
-            borderRadius: 1.5,
+            borderRadius: '4px',
             overflow: 'hidden',
             boxShadow: 'none',
           }}

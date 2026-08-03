@@ -85,7 +85,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
         '&:before': { display: 'none' },
         border: '1px solid',
         borderColor: 'divider',
-        borderRadius: 1.5,
+        borderRadius: '4px',
         overflow: 'hidden',
         boxShadow: 'none',
         bgcolor: 'background.paper',
@@ -114,7 +114,7 @@ export default function PodReelAccordion({ form }: Readonly<Props>) {
               src={reelUrl}
               controls
               playsInline
-              sx={{ width: '100%', maxHeight: 320, borderRadius: 2, bgcolor: 'common.black' }}
+              sx={{ width: '100%', maxHeight: 320, borderRadius: '4px', bgcolor: 'common.black' }}
             />
           )}
           {error && (

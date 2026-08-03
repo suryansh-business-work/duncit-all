@@ -27,7 +27,7 @@ interface CardProps {
 function SettingCard({ panel, summary, onOpen }: Readonly<CardProps>) {
   const filled = summary !== 'Add';
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2.5, height: '100%' }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px', height: '100%' }}>
       <CardActionArea onClick={onOpen} sx={{ p: 1.5, height: '100%' }} aria-label={panel.title}>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <Box sx={{ display: 'grid', placeItems: 'center', width: 38, height: 38, borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText' }}>

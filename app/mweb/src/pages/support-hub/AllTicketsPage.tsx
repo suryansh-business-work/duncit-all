@@ -67,7 +67,7 @@ export default function AllTicketsPage() {
               key={`${row.source}-${row.id}`}
               variant="outlined"
               onClick={() => target && navigate(target)}
-              sx={{ p: 1.5, borderRadius: 3, cursor: target ? 'pointer' : 'default' }}
+              sx={{ p: 1.5, borderRadius: '4px', cursor: target ? 'pointer' : 'default' }}
             >
               <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>

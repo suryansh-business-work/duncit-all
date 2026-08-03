@@ -44,7 +44,7 @@ export default function TicketBubble({ msg, timeText, agentLastReadAt }: Readonl
         sx={{
           p: 1.25,
           maxWidth: '78%',
-          borderRadius: 3,
+          borderRadius: '4px',
           bgcolor: isUser ? 'primary.main' : 'background.paper',
           color: isUser ? 'primary.contrastText' : 'text.primary',
         }}

@@ -94,14 +94,14 @@ function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProp
     <Box
       sx={{
         p: 1.25,
-        borderRadius: 3.5,
+        borderRadius: '4px',
         border: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
       }}
     >
       <Stack direction="row" spacing={1.25}>
-        <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2.5, bgcolor: 'action.hover', flex: '0 0 auto' }} />
+        <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: '4px', bgcolor: 'action.hover', flex: '0 0 auto' }} />
         <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }} noWrap>
@@ -172,7 +172,7 @@ export default function VenueManagePage() {
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <StorefrontIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -190,7 +190,7 @@ export default function VenueManagePage() {
 
       <Stack direction="row" spacing={1}>
         {[{ label: 'Listed', value: venueCount, icon: <StorefrontIcon fontSize="small" /> }, { label: 'Capacity', value: capacity || '-', icon: <ChairIcon fontSize="small" /> }, { label: 'Status', value: venue?.status ?? 'New', icon: <InsightsIcon fontSize="small" /> }].map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Stack direction="row" spacing={0.75} alignItems="center" color="primary.main">
                 {item.icon}
@@ -204,7 +204,7 @@ export default function VenueManagePage() {
 
       <VenueEarningsLinkCard />
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
             Pods at your venue
@@ -217,7 +217,7 @@ export default function VenueManagePage() {
       </Card>
 
       {health && venue?.id && (
-        <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <Card variant="outlined" sx={{ borderRadius: '4px' }}>
           <CardContent>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
               <HealthMeter
@@ -251,7 +251,7 @@ export default function VenueManagePage() {
         </Card>
       )}
 
-      <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>
           <Stack spacing={1.5}>
             <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
@@ -262,7 +262,7 @@ export default function VenueManagePage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" sx={{ mb: 1.5 }}>
             <Box sx={{ flex: 1 }}>

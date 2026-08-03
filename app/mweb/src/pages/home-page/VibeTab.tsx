@@ -40,7 +40,7 @@ export default function VibeTab({ label, icon, selected, onClick, layout }: Read
   const isRow = direction === 'row' || direction === 'row-reverse';
   const activeColor = selected ? 'primary.main' : 'text.secondary';
   const underline = (
-    <Box sx={{ height: 3, width: 22, borderRadius: 2, bgcolor: selected ? 'primary.main' : 'transparent' }} />
+    <Box sx={{ height: 3, width: 22, borderRadius: '4px', bgcolor: selected ? 'primary.main' : 'transparent' }} />
   );
   return (
     <Stack

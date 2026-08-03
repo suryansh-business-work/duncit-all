@@ -63,7 +63,7 @@ export default function SecuritySection() {
               startIcon={<LockResetIcon />}
               onClick={() => setChangeOpen(true)}
               data-testid="open-change-password"
-              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+              sx={{ textTransform: 'none', fontWeight: 700, borderRadius: '4px' }}
             >
               Change password
             </Button>

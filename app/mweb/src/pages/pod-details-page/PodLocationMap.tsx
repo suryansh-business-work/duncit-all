@@ -47,7 +47,7 @@ export default function PodLocationMap({ locationName, zoneName, pincode }: Read
           height: { xs: 240, sm: 280 },
           border: '1px solid',
           borderColor: 'divider',
-          borderRadius: 2,
+          borderRadius: '4px',
           display: 'block',
           bgcolor: 'action.hover',
         }}

@@ -31,7 +31,7 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
   const scheduled = meeting.status === 'SCHEDULED' && !!(meeting.scheduled_at || meeting.meeting_link);
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: scheduled ? 'rgba(20,184,166,0.06)' : undefined }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px', bgcolor: scheduled ? 'rgba(20,184,166,0.06)' : undefined }}>
       <CardContent>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
           <EventAvailableIcon color="primary" fontSize="small" />

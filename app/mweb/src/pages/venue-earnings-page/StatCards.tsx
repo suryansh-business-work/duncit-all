@@ -22,7 +22,7 @@ export default function StatCards({ summary }: Readonly<{ summary: VenueEarnings
   return (
     <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
       {stats.map((item) => (
-        <Card key={item.label} variant="outlined" sx={{ flex: '1 1 40%', minWidth: 0, borderRadius: 3 }}>
+        <Card key={item.label} variant="outlined" sx={{ flex: '1 1 40%', minWidth: 0, borderRadius: '4px' }}>
           <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
             <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>
               {item.label}

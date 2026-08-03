@@ -156,7 +156,7 @@ export default function ClubsPage({
         </Typography>
       </Box>
       {locationId && selectedLocationName && (
-        <Alert severity="info" sx={{ borderRadius: 3, py: 0.25, alignItems: 'center', fontWeight: 700 }}>
+        <Alert severity="info" sx={{ borderRadius: '4px', py: 0.25, alignItems: 'center', fontWeight: 700 }}>
           Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}
           <Link
             component="button"

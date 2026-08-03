@@ -77,7 +77,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         variant="outlined"
         sx={{
           p: 2.5,
-          borderRadius: 4,
+          borderRadius: '4px',
           borderColor: 'rgba(76,175,80,0.4)',
           bgcolor: 'rgba(76,175,80,0.08)',
         }}
@@ -107,7 +107,7 @@ export default function SosContent({ selected }: Readonly<Props>) {
         variant="outlined"
         sx={{
           p: 2,
-          borderRadius: 4,
+          borderRadius: '4px',
           borderColor: 'rgba(244,67,54,0.3)',
           bgcolor: 'rgba(244,67,54,0.08)',
         }}

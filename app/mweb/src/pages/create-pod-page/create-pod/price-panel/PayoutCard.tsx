@@ -20,7 +20,7 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
     <Box
       data-testid="price-panel-payout"
       sx={{
-        borderRadius: 2.5,
+        borderRadius: '4px',
         p: 1.5,
         bgcolor: alpha(theme.palette.success.main, 0.08),
         border: '1px solid',
@@ -81,7 +81,7 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
           mt: 1.25,
           px: 1.25,
           py: 0.75,
-          borderRadius: 2,
+          borderRadius: '4px',
           border: '1px dashed',
           borderColor: alpha(theme.palette.success.main, 0.4),
         }}

@@ -29,7 +29,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
         {
           position: 'relative',
           width: '100%',
-          borderRadius: 4,
+          borderRadius: '4px',
           overflow: 'hidden',
           bgcolor: 'grey.900',
           cursor: clickable ? 'pointer' : 'default',

@@ -40,7 +40,7 @@ export default function LanguageSection() {
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 3 }}>
+    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
       <CardContent>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={800}>

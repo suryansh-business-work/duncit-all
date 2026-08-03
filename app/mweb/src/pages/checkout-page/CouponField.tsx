@@ -38,7 +38,7 @@ export default function CouponField({
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ p: 1.25, borderRadius: 2, bgcolor: 'success.light', color: 'success.contrastText' }}
+        sx={{ p: 1.25, borderRadius: '4px', bgcolor: 'success.light', color: 'success.contrastText' }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
           <LocalOfferIcon fontSize="small" />

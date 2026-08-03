@@ -33,7 +33,7 @@ export default function FeedPostCard({
     <Card
       variant="outlined"
       sx={{
-        borderRadius: 4,
+        borderRadius: '4px',
         overflow: 'hidden',
         bgcolor: 'background.paper',
         boxShadow: '0 18px 42px rgba(9,7,18,0.14)',

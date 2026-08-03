@@ -37,7 +37,7 @@ export default function SpotsStepper({
 
   if (slidable) {
     return (
-      <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: 2.5 }}>
+      <Box sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '4px' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
           <Typography variant="subtitle2" fontWeight={900}>
             Total spots
@@ -77,7 +77,7 @@ export default function SpotsStepper({
         alignItems="center"
         justifyContent="space-between"
         spacing={1}
-        sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: 2.5 }}
+        sx={{ p: 1.5, border: 1, borderColor: error ? 'error.main' : 'divider', borderRadius: '4px' }}
       >
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="subtitle2" fontWeight={900}>Total spots</Typography>

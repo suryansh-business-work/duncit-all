@@ -117,7 +117,7 @@ export default function SlotPicker({ slots, loading, selectedSlotId, onPick, err
                   }}
                   sx={{
                     p: 1,
-                    borderRadius: 2,
+                    borderRadius: '4px',
                     border: selected ? 2 : 1,
                     borderColor: selected ? 'primary.main' : 'divider',
                     bgcolor: selected ? 'primary.main' : 'background.paper',

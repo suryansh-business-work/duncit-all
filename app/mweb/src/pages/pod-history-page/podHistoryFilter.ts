@@ -16,16 +16,32 @@ export const POD_HISTORY_SORTS: readonly PodHistorySortOption[] = [
 ];
 
 export interface PodHistoryFilters {
+  /** Free-text query typed in the Pod History search box. */
+  search: string;
   superId: string;
   categoryId: string;
   sort: PodHistorySort;
 }
 
 export const DEFAULT_POD_HISTORY_FILTERS: PodHistoryFilters = {
+  search: '',
   superId: '',
   categoryId: '',
   sort: 'DATE_DESC',
 };
+
+/**
+ * Case-insensitive match over the fields a joined pod is recognised by: its
+ * title, its pod id and the club slug it belongs to. An empty term matches
+ * everything. The list is already in memory (myPodMemberships returns the whole
+ * history), so this filters client-side — no query round-trip per keystroke.
+ */
+export function matchesPodHistorySearch(item: PodHistoryItem, term: string): boolean {
+  const query = term.trim().toLowerCase();
+  if (!query) return true;
+  const pod = item.pod;
+  return [pod?.pod_title, pod?.pod_id, pod?.club_slug].some((field) => !!field?.toLowerCase().includes(query));
+}
 
 const toMs = (iso?: string | null) => (iso ? new Date(iso).getTime() : 0);
 
@@ -37,7 +53,8 @@ const COMPARATORS: Record<PodHistorySort, (a: PodHistoryItem, b: PodHistoryItem)
 };
 
 /**
- * Filter the joined-pod list by Super Category → Category, then sort it.
+ * Filter the joined-pod list by search text and Super Category → Category, then
+ * sort it.
  *
  * A club is tagged at its leaf category (typically the SUB level), so a naive
  * `club.category_id === filters.categoryId` matched nothing. We instead match on
@@ -52,7 +69,9 @@ export function applyPodHistory(
 ): PodHistoryItem[] {
   const matches = makeCategoryMatcher(categories);
   const target = filters.categoryId || filters.superId;
-  const filtered = items.filter((item) => matches(item.pod?.club, target));
+  const filtered = items.filter(
+    (item) => matches(item.pod?.club, target) && matchesPodHistorySearch(item, filters.search),
+  );
   const copy = [...filtered];
   copy.sort(COMPARATORS[filters.sort]);
   return copy;

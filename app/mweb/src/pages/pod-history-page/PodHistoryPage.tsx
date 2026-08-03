@@ -1,9 +1,22 @@
 import { useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { Alert, Avatar, Box, Card, CardActionArea, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Avatar,
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  CircularProgress,
+  InputAdornment,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import HistoryIcon from '@mui/icons-material/History';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   MY_POD_MEMBERSHIPS,
   POD_HISTORY_CATEGORIES,
@@ -71,12 +84,28 @@ export default function PodHistoryPage() {
         />
       </Stack>
 
+      <TextField
+        size="small"
+        fullWidth
+        placeholder="Search joined pods…"
+        value={filters.search}
+        onChange={(event) => setFilters({ ...filters, search: event.target.value })}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }}
+        inputProps={{ 'aria-label': 'Search joined pods' }}
+      />
+
       {visible.length === 0 ? (
         <Alert severity="info" icon={false}>
           <Typography fontWeight={900}>No Pods Found</Typography>
           <Typography variant="body2">
-            We couldn't find any enrolled Pods matching your selected filters. Try changing your filters to explore more
-            of your Pod history.
+            We couldn't find any enrolled Pods matching your search or filters. Try a different search or change your
+            filters to explore more of your Pod history.
           </Typography>
         </Alert>
       ) : (

@@ -25,7 +25,7 @@ function buildSections(showAdmins: boolean): SectionDef[] {
     { id: 'links', label: 'Venues & Community Links', render: () => <LinksSection /> },
     { id: 'content', label: 'Page Content (Who We Are, Perks, FAQs…)', render: () => <ContentSection /> },
   ];
-  if (showAdmins) list.push({ id: 'admins', label: 'Club Admins', render: () => <AdminsSection /> });
+  if (showAdmins) list.push({ id: 'admins', label: 'Club Admin', render: () => <AdminsSection /> });
   return list;
 }
 

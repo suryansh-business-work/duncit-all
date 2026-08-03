@@ -231,7 +231,7 @@ Given a server Club, the fields that change shape:
 | --- | --- | --- | --- | --- |
 | `initialValues` | `ClubFormValues` | yes | — | Seed values; the form `reset()`s whenever this identity changes. |
 | `config` | `ClubFormConfig` | yes | — | Which governance sections render. Pass the **same** object to `buildClubInput`. |
-| `initialAdmins` | `ClubAdmin[]` | no | `[]` | Pre-assigned admins, to seed labelled chips in the picker. |
+| `initialAdmins` | `ClubAdmin[]` | no | `[]` | Pre-assigned admin, to seed the labelled option in the picker. |
 | `onPickImage` | `(folder?: string) => Promise<string \| null>` | no | `undefined` | Rich media picker; omit for the newline-URL textarea. |
 | `busy` | `boolean` | no | `false` | Disables the actions while the mutation runs. |
 | `error` | `string \| null` | no | `undefined` | Server error rendered as an `Alert`. |
@@ -245,7 +245,7 @@ The form validates on **blur** (`mode: 'onBlur'`), not on change.
 
 | Flag | Type | Turns on |
 | --- | --- | --- |
-| `showAdmins` | `boolean` | Club Admins picker + the read-only auto-matched venues panel, and the `admin_user_ids` key in the input. |
+| `showAdmins` | `boolean` | Club Admin picker (single-select — a club has ONE admin, so `admin_user_ids` holds 0 or 1 id) + the read-only auto-matched venues panel, and the `admin_user_ids` key in the input. |
 | `showVerified` | `boolean` | Verified-badge toggle, and the `is_verified` key in the input. |
 | `showIsActive` | `boolean` | Active/inactive toggle (only meaningful while editing). |
 

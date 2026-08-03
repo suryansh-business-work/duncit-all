@@ -227,11 +227,11 @@ describe('pod history filter + sort', () => {
   });
 
   it('filters by super category, then refines by category', () => {
-    expect(ids(applyPodHistory(all, { superId: 's1', categoryId: '', sort: 'DATE_DESC' }))).toEqual(
-      ['a', 'b'],
-    );
     expect(
-      ids(applyPodHistory(all, { superId: 's1', categoryId: 'c2', sort: 'DATE_DESC' })),
+      ids(applyPodHistory(all, { search: '', superId: 's1', categoryId: '', sort: 'DATE_DESC' })),
+    ).toEqual(['a', 'b']);
+    expect(
+      ids(applyPodHistory(all, { search: '', superId: 's1', categoryId: 'c2', sort: 'DATE_DESC' })),
     ).toEqual(['b']);
   });
 
@@ -248,17 +248,30 @@ describe('pod history filter + sort', () => {
     const list = [football, tennis];
     // Selecting the parent CATEGORY keeps both SUB-tagged clubs (flat equality dropped them).
     expect(
-      ids(applyPodHistory(list, { superId: 's1', categoryId: 'cat1', sort: 'DATE_DESC' }, cats)),
+      ids(
+        applyPodHistory(
+          list,
+          { search: '', superId: 's1', categoryId: 'cat1', sort: 'DATE_DESC' },
+          cats,
+        ),
+      ),
     ).toEqual(['f', 't']);
     // Selecting a specific SUB narrows to that one.
     expect(
-      ids(applyPodHistory(list, { superId: 's1', categoryId: 'sub1', sort: 'DATE_DESC' }, cats)),
+      ids(
+        applyPodHistory(
+          list,
+          { search: '', superId: 's1', categoryId: 'sub1', sort: 'DATE_DESC' },
+          cats,
+        ),
+      ),
     ).toEqual(['f']);
   });
 
   it('drops items without a matching club (incl. missing club)', () => {
     const noClub = membership({ id: 'x', pod: { id: 'pod-x', pod_title: 'X' } });
     const items = applyPodHistory([a, noClub], {
+      search: '',
       superId: 's1',
       categoryId: '',
       sort: 'DATE_DESC',
@@ -281,7 +294,7 @@ describe('pod history filter + sort', () => {
   it('counts the active filters', () => {
     expect(activePodHistoryFilterCount(DEFAULT_POD_HISTORY_FILTERS)).toBe(0);
     expect(
-      activePodHistoryFilterCount({ superId: 's1', categoryId: 'c1', sort: 'DATE_DESC' }),
+      activePodHistoryFilterCount({ search: '', superId: 's1', categoryId: 'c1', sort: 'DATE_DESC' }),
     ).toBe(2);
   });
 

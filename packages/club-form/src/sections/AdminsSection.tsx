@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Autocomplete, Avatar, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Avatar, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useClubFormData } from '../context';
@@ -16,9 +16,10 @@ interface UserOption {
 
 const userLabel = (user: UserOption) => user.full_name || user.email || user.user_id;
 
-/** Server-side searchable picker to assign platform users as Club Admins. Seeds
- * labelled chips from the club's pre-assigned admins (initialAdmins) so they are
- * named immediately, and never drops a selected id. */
+/** Server-side searchable picker to assign ONE platform user as the Club Admin.
+ * A club has a single admin, so this is a single-select: picking a user replaces
+ * whoever was there. Seeds the labelled option from the club's pre-assigned
+ * admin (initialAdmins) so it is named immediately. */
 export default function AdminsSection() {
   const { initialAdmins } = useClubFormData();
   const { control, setValue } = useFormContext<ClubFormValues>();
@@ -31,11 +32,18 @@ export default function AdminsSection() {
   const [chosen, setChosen] = useState<UserOption[]>(seed);
   const seedKey = initialAdmins.map((admin) => admin.id).join(',');
 
-  // Re-seed labelled chips when a different club's pre-assigned admins arrive.
+  // Re-seed the labelled option when a different club's pre-assigned admin arrives.
   useEffect(() => {
     setChosen(seed());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [seedKey]);
+
+  // An older club may carry more than one admin id. Trim it to the first so the
+  // one shown in the picker is exactly the one a save writes back — a value the
+  // field cannot display must not survive a submit.
+  useEffect(() => {
+    if (adminIds.length > 1) setValue('admin_user_ids', [adminIds[0]]);
+  }, [adminIds, setValue]);
 
   useEffect(() => {
     const id = setTimeout(() => setTerm(input.trim()), 300);
@@ -55,24 +63,28 @@ export default function AdminsSection() {
     return [...map.values()];
   }, [chosen, results]);
 
-  // Map every assigned id to a labelled option, falling back to an id-only
-  // placeholder — never drop an id here (that would delete pre-assigned admins).
-  const value = adminIds.map((id) => options.find((user) => user.user_id === id) ?? { user_id: id });
+  // The assigned id as a labelled option, falling back to an id-only
+  // placeholder — never drop the id here (that would delete the assigned admin).
+  // Memoised: MUI resets the input text whenever `value` changes identity, so a
+  // fresh object every render would re-run that on each one.
+  const selectedId = adminIds[0];
+  const value = useMemo(
+    () => (selectedId ? options.find((user) => user.user_id === selectedId) ?? { user_id: selectedId } : null),
+    [options, selectedId],
+  );
 
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <AdminPanelSettingsIcon fontSize="small" color="action" />
-        <Typography variant="subtitle2">Club Admins</Typography>
-        <Chip size="small" label={adminIds.length} color={adminIds.length ? 'primary' : 'default'} />
+        <Typography variant="subtitle2">Club Admin</Typography>
       </Stack>
 
       <Alert severity="info">
-        Assigned users can manage this club&apos;s pods from the Duncit app. Search by name, email or phone.
+        The assigned user can manage this club&apos;s pods from the Duncit app. Search by name, email or phone.
       </Alert>
 
       <Autocomplete
-        multiple
         options={options}
         value={value}
         loading={loading}
@@ -82,8 +94,8 @@ export default function AdminsSection() {
         inputValue={input}
         onInputChange={(_, next) => setInput(next)}
         onChange={(_, next) => {
-          setChosen(next);
-          setValue('admin_user_ids', next.map((user) => user.user_id));
+          setChosen(next ? [next] : []);
+          setValue('admin_user_ids', next ? [next.user_id] : []);
         }}
         renderOption={(optionProps, option) => (
           <li {...optionProps} key={option.user_id}>
@@ -98,26 +110,12 @@ export default function AdminsSection() {
             </Stack>
           </li>
         )}
-        renderTags={(selected, getTagProps) =>
-          selected.map((option, index) => {
-            const { key, ...tagProps } = getTagProps({ index });
-            return (
-              <Chip
-                key={option.user_id}
-                {...tagProps}
-                size="small"
-                avatar={<Avatar src={option.profile_photo ?? undefined}>{userLabel(option).charAt(0).toUpperCase()}</Avatar>}
-                label={userLabel(option)}
-              />
-            );
-          })
-        }
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Assign Club Admins"
+            label="Assign Club Admin"
             placeholder="Search users…"
-            helperText="Optional — assign one or more users to administer this club."
+            helperText="Optional — one user administers this club. Picking another replaces the current one."
             InputProps={{
               ...params.InputProps,
               endAdornment: (

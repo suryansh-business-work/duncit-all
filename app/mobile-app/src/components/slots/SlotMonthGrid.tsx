@@ -126,7 +126,7 @@ export default function SlotMonthGrid({
                 >
                   <Text
                     fontSize={13}
-                    fontWeight={selected ? '900' : '600'}
+                    fontWeight={selected ? '700' : '600'}
                     color={selected ? '$onPrimary' : '$color'}
                   >
                     {Number(dayKey.slice(8, 10))}

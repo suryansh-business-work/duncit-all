@@ -73,9 +73,19 @@ export default function HomeFeaturedPods({
           return (
             <Box
               key={pod.id}
-              component="button"
-              type="button"
+              // A div with button semantics, NOT component="button": the
+              // save-heart is itself a <button>, and button-in-button is
+              // invalid HTML that React warns about.
+              role="button"
+              tabIndex={0}
+              aria-label={pod.pod_title}
               onClick={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigate(podUrl(pod.club_slug, pod.pod_id));
+                }
+              }}
               sx={{
                 width: { xs: 'min(86vw, 340px)', sm: 340 },
                 height: 252,
@@ -111,7 +121,7 @@ export default function HomeFeaturedPods({
               )}
               {onToggleSave && (
                 <IconButton
-                  aria-label={saved ? 'Remove from saved' : 'Save pod'}
+                  aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
                   aria-pressed={saved}
                   onClick={(event) => {
                     event.stopPropagation();

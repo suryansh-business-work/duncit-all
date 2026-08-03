@@ -72,7 +72,7 @@ function AttendeeRow({
       <YStack flex={1}>
         <Text
           fontSize={14}
-          fontWeight={person.is_host ? '900' : '700'}
+          fontWeight={person.is_host ? '700' : '600'}
           color="$color"
           numberOfLines={1}
         >

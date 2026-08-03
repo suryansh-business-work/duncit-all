@@ -214,7 +214,7 @@ function ActionButton({
       )}
       <Text
         fontSize={14}
-        fontWeight={filled ? '900' : '800'}
+        fontWeight={filled ? '700' : '600'}
         color={filled ? onPrimary : '$primary'}
       >
         {busy ? 'Preparing…' : label}

@@ -96,7 +96,7 @@ export default function PodAttendeesDialog({
                 <ListItemText
                   primary={person.full_name || 'Attendee'}
                   secondary="View profile"
-                  primaryTypographyProps={{ fontWeight: person.is_host ? 800 : 600, fontSize: 14 }}
+                  primaryTypographyProps={{ fontWeight: person.is_host ? 700 : 600, fontSize: 14 }}
                   secondaryTypographyProps={{ fontSize: 12 }}
                 />
                 {person.is_host && (

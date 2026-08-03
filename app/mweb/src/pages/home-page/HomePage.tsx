@@ -82,7 +82,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
 
   return (
     <Stack
-      spacing={2.25}
+      spacing={3}
       sx={{
         pt: 0.25,
         mx: { xs: -1.25, sm: -2 },
@@ -130,7 +130,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         }
       />
       </Box>
-      <Stack spacing={1.75}>
+      <Stack spacing={2.25}>
         <HomeNearbyHeader totalPods={totalPods} onOpen={() => navigate('/happening-nearby')} />
         <Box data-tour="home-pods">
           <HomeFeaturedPods
@@ -165,6 +165,8 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
                 clubPods={podsByClub.get(club.id) ?? []}
                 hostNameOf={hostNameOf}
                 categoryLabelOf={categoryLabelOf}
+                savedOf={saved.signedIn ? saved.isSaved : undefined}
+                onToggleSave={saved.signedIn ? saved.toggle : undefined}
               />
             ))}
           </Box>

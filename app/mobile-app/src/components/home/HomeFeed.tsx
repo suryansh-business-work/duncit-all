@@ -99,7 +99,7 @@ export function HomeFeed() {
           />
         }
       >
-        <YStack gap={20} paddingTop={12} paddingBottom={bottomSpace} testID="home-feed">
+        <YStack gap={26} paddingTop={16} paddingBottom={bottomSpace} testID="home-feed">
           <Reveal index={0}>
             <StatusRail userName={userName} userPhoto={userPhoto} />
           </Reveal>
@@ -128,7 +128,7 @@ export function HomeFeed() {
               />
             </TourAnchor>
           </Reveal>
-          <YStack gap={16}>
+          <YStack gap={20}>
             <Reveal index={2}>
               <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
             </Reveal>
@@ -171,6 +171,8 @@ export function HomeFeed() {
                         onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
                         onOpenClub={(c) => openClub(c.club_id)}
                         categoryLabelOf={categoryLabelOf}
+                        savedOf={saved.signedIn ? saved.isSaved : undefined}
+                        onToggleSave={saved.signedIn ? saved.toggle : undefined}
                       />
                     </Reveal>
                   ))}

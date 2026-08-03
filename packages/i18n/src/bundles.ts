@@ -69,6 +69,9 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       joinedClub: 'Joined',
       membersOne: '1 Member',
       membersMany: '{count} Members',
+      homeEmpty: 'No pods here yet. Pull to refresh or pick a different vibe.',
+      savePod: 'Save pod',
+      savedPod: 'Remove from saved',
     },
     nav: {
       home: 'Home',

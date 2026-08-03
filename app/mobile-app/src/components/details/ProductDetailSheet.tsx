@@ -204,10 +204,10 @@ function SpecGrid({ specs }: Readonly<{ specs: ProductSpec[] }>) {
           borderTopWidth={specIndex === 0 ? 0 : 1}
           borderColor="$borderColor"
         >
-          <Text fontSize={13} color="$muted" fontWeight="700">
+          <Text fontSize={13} color="$muted" fontWeight="600">
             {spec.label}
           </Text>
-          <Text fontSize={13} color="$color" fontWeight="600">
+          <Text fontSize={13} color="$color" fontWeight="700">
             {spec.value}
           </Text>
         </XStack>

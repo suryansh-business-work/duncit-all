@@ -28,7 +28,7 @@ export default function OrderTrackingTimeline({ steps }: Readonly<{ steps: Timel
             <Typography
               variant="body2"
               sx={{
-                fontWeight: step.current ? 800 : 500,
+                fontWeight: step.current ? 700 : 500,
                 color: step.current ? 'text.primary' : 'text.secondary',
                 pb: isLast ? 0 : 1,
               }}

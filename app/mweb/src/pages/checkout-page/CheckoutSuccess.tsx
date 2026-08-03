@@ -171,8 +171,8 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile, profi
 function Row({ label, value, bold, mono }: Readonly<{ label: string; value: string; bold?: boolean; mono?: boolean }>) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center">
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 900 : 500}>{label}</Typography>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 900 : 500} sx={mono ? { fontFamily: 'monospace' } : undefined}>{value}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500}>{label}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500} sx={mono ? { fontFamily: 'monospace' } : undefined}>{value}</Typography>
     </Stack>
   );
 }

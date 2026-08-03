@@ -11,9 +11,12 @@ interface ClubSectionProps {
   hostNameOf: (pod: any) => string | null;
   /** The category chip over each card's image (mock: "Sports"). */
   categoryLabelOf?: (pod: any) => string | null;
+  /** Heart state + toggle; omit to hide the hearts (signed-out). */
+  savedOf?: (podDocId: string) => boolean;
+  onToggleSave?: (podDocId: string) => void;
 }
 
-export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelOf }: Readonly<ClubSectionProps>) {
+export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelOf, savedOf, onToggleSave }: Readonly<ClubSectionProps>) {
   const navigate = useNavigate();
   return (
     <Box sx={{ minWidth: 0 }}>
@@ -95,6 +98,8 @@ export default function ClubSection({ club, clubPods, hostNameOf, categoryLabelO
               pod={p}
               hostName={hostNameOf(p)}
               categoryLabel={categoryLabelOf?.(p)}
+              saved={savedOf?.(p.id)}
+              onToggleSave={onToggleSave ? () => onToggleSave(p.id) : undefined}
               showPlace={false}
               onOpen={() => navigate(podUrl(p.club_slug, p.pod_id))}
             />

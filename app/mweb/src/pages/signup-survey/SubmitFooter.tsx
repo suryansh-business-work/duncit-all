@@ -35,7 +35,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           <Typography variant="caption" color="text.secondary">
             Selected
           </Typography>
-          <Typography variant="subtitle1" fontWeight={600}>
+          <Typography variant="subtitle1" fontWeight={700}>
             {count}
             <Box component="span" sx={{ color: 'text.secondary', fontWeight: 600 }}>
               {' '}/ {total}

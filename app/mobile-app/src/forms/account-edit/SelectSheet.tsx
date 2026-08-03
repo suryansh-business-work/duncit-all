@@ -188,7 +188,7 @@ export function SelectSheet({
                           <Text
                             flex={1}
                             fontSize={14}
-                            fontWeight={active ? '800' : '500'}
+                            fontWeight={active ? '700' : '500'}
                             color={active ? '$primary' : '$color'}
                           >
                             {option.label}

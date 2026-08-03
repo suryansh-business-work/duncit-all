@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** The host-only floating Create Pod button — extracted from HomeFeed for the
  * 200-line cap. The gate (hosts only) is behaviour and stays with the caller. */
@@ -10,11 +11,12 @@ export function CreatePodFab({
   onPress,
 }: Readonly<{ bottom: number; onPress: () => void }>) {
   const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   return (
     <XStack
       testID="home-create-pod-fab"
       role="button"
-      aria-label="Create pod"
+      aria-label={t('mweb.home.hostCtaButton')}
       onPress={onPress}
       position="absolute"
       right={16}

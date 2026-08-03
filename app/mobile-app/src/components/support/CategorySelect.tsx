@@ -70,7 +70,7 @@ export function CategorySelect({ value, onChange }: Readonly<Props>) {
               >
                 <Text
                   fontSize={14}
-                  fontWeight={selected ? '800' : '600'}
+                  fontWeight={selected ? '700' : '600'}
                   color={selected ? '$onPrimary' : '$color'}
                 >
                   {c.label}

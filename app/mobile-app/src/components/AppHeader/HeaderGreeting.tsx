@@ -47,17 +47,20 @@ export function HeaderGreeting({ tagline, showLocation }: Readonly<Props>) {
           <LocationDialog open={open} onClose={() => setOpen(false)} />
         </>
       ) : null}
+      {/* The title also opens the location picker — a bigger tap target than
+       * the small city row alone (user ask). */}
       <Text
         testID="header-greeting-title"
-        fontSize={21}
+        fontSize={16.5}
         fontWeight="700"
         color="$color"
-        lineHeight={25}
+        lineHeight={20}
         numberOfLines={1}
+        onPress={showLocation ? () => setOpen(true) : undefined}
       >
         {title}
       </Text>
-      <Text fontSize={11.5} fontWeight="600" color="$muted" numberOfLines={1}>
+      <Text fontSize={11} fontWeight="500" color="$muted" numberOfLines={1}>
         {t('mweb.home.greetingSubtitle')}
       </Text>
     </YStack>

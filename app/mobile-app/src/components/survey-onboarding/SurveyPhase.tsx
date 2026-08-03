@@ -130,7 +130,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
                       q.multi ? answer.toggle(q, opt) : answer.set(q.qid, { value: opt })
                     }
                   >
-                    <Text color={selected ? primary : ink} fontWeight={selected ? '800' : '400'}>
+                    <Text color={selected ? primary : ink} fontWeight={selected ? '700' : '400'}>
                       {selected ? '●' : '○'} {opt}
                     </Text>
                   </Button>

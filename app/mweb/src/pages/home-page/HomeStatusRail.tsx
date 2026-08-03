@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
+import NearMeIcon from '@mui/icons-material/NearMe';
 import { useMutation } from '@apollo/client';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AdSlot from '../../components/ads/AdSlot';
@@ -86,12 +87,15 @@ export default function HomeStatusRail({
 
   return (
     <>
+      {/* The mock frames the story rail in its own card, with a decorative
+       * paper-plane doodle trailing the tiles. */}
       <Box
         sx={{
-          mx: { xs: -1.25, sm: -2 },
-          px: { xs: 1.25, sm: 2 },
-          pt: 0.25,
-          pb: 1,
+          borderRadius: '20px',
+          border: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          py: 1.25,
           mb: 1.25,
           minHeight: 96,
           overflowX: 'auto',
@@ -101,7 +105,7 @@ export default function HomeStatusRail({
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
+        <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content', px: 1.5 }}>
           <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
           {/* The sponsored tile sits second, right after "Your story" (mock). */}
           <AdSlot position="STATUS" variant="tile" />
@@ -116,6 +120,19 @@ export default function HomeStatusRail({
               onClick={() => setActiveIndex(offset + entryIndex)}
             />
           ))}
+          {/* Decorative dotted-arrow doodle from the mock. */}
+          <Stack
+            direction="row"
+            spacing={0.6}
+            alignItems="center"
+            aria-hidden
+            sx={{ pt: 3, pl: 0.75, opacity: 0.55, flex: '0 0 auto' }}
+          >
+            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
+            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
+            <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'primary.main' }} />
+            <NearMeIcon sx={{ fontSize: 22, color: 'primary.main', transform: 'rotate(45deg)' }} />
+          </Stack>
         </Stack>
       </Box>
       <HomeStatusViewer

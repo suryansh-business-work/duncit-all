@@ -92,7 +92,7 @@ export function CategoryPhase({
                 opacity={heldDisabled ? 0.4 : 1}
                 onPress={heldDisabled ? undefined : () => pick(level, c.id)}
               >
-                <Text color={selected ? 'white' : ink} fontWeight={selected ? '800' : '500'}>
+                <Text color={selected ? 'white' : ink} fontWeight={selected ? '700' : '500'}>
                   {c.name}
                 </Text>
               </Button>

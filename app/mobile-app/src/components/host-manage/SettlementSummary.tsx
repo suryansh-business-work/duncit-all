@@ -19,14 +19,14 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
       <Text
         fontSize={12.5}
         color={line.strong ? '$color' : '$muted'}
-        fontWeight={line.strong ? '900' : '700'}
+        fontWeight={line.strong ? '700' : '600'}
       >
         {line.label}
       </Text>
       <Text
         fontSize={12.5}
         color={line.strong ? '$primary' : '$color'}
-        fontWeight={line.strong ? '900' : '800'}
+        fontWeight={line.strong ? '700' : '600'}
       >
         {symbol}
         {line.value.toFixed(2)}

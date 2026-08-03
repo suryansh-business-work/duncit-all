@@ -43,7 +43,7 @@ export function ChatPodFilter({ value, onChange }: Readonly<Props>) {
           >
             <Text
               fontSize={12.5}
-              fontWeight={selected ? '900' : '600'}
+              fontWeight={selected ? '700' : '600'}
               color={selected ? onPrimary : ink}
             >
               {option.label}

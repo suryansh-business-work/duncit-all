@@ -47,8 +47,9 @@ export default function VibeTab({ label, icon, selected, onClick, layout }: Read
       justifyContent="center"
       spacing={0.5}
       sx={{
+        // Fixed width so every tile in the rail matches (user ask).
         flex: '0 0 auto',
-        minWidth: 84,
+        width: 92,
         px: 1,
         py: 1.1,
         border: 1.5,
@@ -76,7 +77,7 @@ export default function VibeTab({ label, icon, selected, onClick, layout }: Read
         <Typography
           variant="caption"
           sx={{
-            fontWeight: selected ? 900 : 700,
+            fontWeight: selected ? 700 : 600,
             lineHeight: 1.15,
             textAlign: 'center',
             color: selected ? 'primary.main' : 'text.primary',

@@ -5,7 +5,6 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useThemeStore } from '@/stores/theme.store';
 import { TAB_CONFIG } from '@/navigation/tabs';
 
 /** Edge-to-edge flat tab bar — full width, no border radius, with the active
@@ -15,8 +14,6 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
   const { muted, primary } = useThemeColors();
   const { t } = useTranslation();
-  const dark = useThemeStore((s) => s.scheme) === 'dark';
-  const activePill = dark ? 'rgba(255,79,115,0.22)' : 'rgba(255,79,115,0.12)';
 
   return (
     <XStack
@@ -63,15 +60,8 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             paddingVertical={4}
             pressStyle={{ opacity: 0.85 }}
           >
-            {/* Selection pill (mock) — the active icon sits in a soft primary pill. */}
-            <YStack
-              width={44}
-              height={30}
-              alignItems="center"
-              justifyContent="center"
-              borderRadius={999}
-              backgroundColor={focused ? activePill : 'transparent'}
-            >
+            {/* Active tab = primary tint only, no background shape (user ask). */}
+            <YStack width={44} height={30} alignItems="center" justifyContent="center">
               <MaterialIcons name={cfg.icon} size={21} color={focused ? primary : muted} />
             </YStack>
             <Text fontSize={11} fontWeight="600" color={focused ? '$primary' : '$muted'}>

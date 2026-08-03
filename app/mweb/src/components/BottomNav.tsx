@@ -128,11 +128,9 @@ export default function BottomNav() {
             borderRadius: 999,
             transition: 'all 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
           },
-          // Selection pill (mock) — the active icon sits in a soft primary pill.
+          // Active tab = primary tint only, no background shape (user ask).
           '& .Mui-selected .nav-icon-wrap': {
             color: 'primary.main',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark' ? 'rgba(255,79,115,0.22)' : 'rgba(255,79,115,0.12)',
             transform: 'translateY(-1px)',
           },
           '& .MuiBottomNavigationAction-label': {

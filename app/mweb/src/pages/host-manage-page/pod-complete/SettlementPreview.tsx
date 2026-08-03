@@ -48,10 +48,10 @@ interface Line {
 function Row({ symbol, line }: Readonly<{ symbol: string; line: Line }>) {
   return (
     <Stack direction="row" justifyContent="space-between">
-      <Typography variant="body2" sx={{ fontWeight: line.strong ? 900 : 600 }}>
+      <Typography variant="body2" sx={{ fontWeight: line.strong ? 700 : 600 }}>
         {line.label}
       </Typography>
-      <Typography variant="body2" color={line.strong ? 'success.main' : 'text.primary'} sx={{ fontWeight: line.strong ? 900 : 700 }}>
+      <Typography variant="body2" color={line.strong ? 'success.main' : 'text.primary'} sx={{ fontWeight: line.strong ? 700 : 600 }}>
         {symbol}
         {line.value.toFixed(2)}
       </Typography>

@@ -15,12 +15,12 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
     <XStack justifyContent="space-between" alignItems="center">
       <Text
         fontSize={bold ? 15 : 13}
-        fontWeight={bold ? '900' : '600'}
+        fontWeight={bold ? '700' : '600'}
         color={bold ? '$color' : '$muted'}
       >
         {label}
       </Text>
-      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '900' : '700'} color="$color">
+      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color="$color">
         {value}
       </Text>
     </XStack>

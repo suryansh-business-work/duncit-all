@@ -45,7 +45,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
       justifyContent="space-between"
       paddingLeft={16}
       paddingRight={16}
-      paddingVertical={8}
+      paddingVertical={12}
     >
       <XStack alignItems="center" gap={6} flex={1} minWidth={0}>
         {!minimal && effectiveStudio !== 'USER' ? (
@@ -74,7 +74,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
           />
         )}
       </XStack>
-      <XStack alignItems="flex-start" gap={8}>
+      <XStack alignItems="center" gap={8}>
         {/* Labelled circular actions (mock): Search · Cart · Alerts · avatar
          * with online dot. Studio modes keep their focused header (no search),
          * and the cart still hides itself when empty. */}

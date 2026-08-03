@@ -28,11 +28,13 @@ interface PodInfoPanelProps {
   dark: boolean;
   spotsText: string;
   place: string;
+  /** "N joining now" chip copy; empty hides the chip (mWeb twin parity). */
+  joiningText: string;
 }
 
 /** The translucent bottom panel: date, big title, spots left, price, place.
  * Module scope (S6478) and out of PodCard to keep its complexity in bounds. */
-function PodInfoPanel({ pod, dark, spotsText, place }: Readonly<PodInfoPanelProps>) {
+function PodInfoPanel({ pod, dark, spotsText, place, joiningText }: Readonly<PodInfoPanelProps>) {
   const panelBg = dark ? 'rgba(17,26,46,0.88)' : 'rgba(255,255,255,0.90)';
   const panelBorder = dark ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.55)';
   const mutedInk = dark ? '#9aa3b2' : '#6b7280';
@@ -49,11 +51,25 @@ function PodInfoPanel({ pod, dark, spotsText, place }: Readonly<PodInfoPanelProp
       borderWidth={1}
       borderColor={panelBorder}
     >
-      <XStack alignItems="center" gap={4}>
-        <MaterialIcons name="event" size={12} color={mutedInk} />
-        <Text fontSize={11} fontWeight="600" color="$muted" numberOfLines={1}>
-          {podDateLabel(pod)}
-        </Text>
+      <XStack alignItems="center" gap={6} flexWrap="wrap">
+        <XStack alignItems="center" gap={4} flexShrink={1}>
+          <MaterialIcons name="event" size={12} color={mutedInk} />
+          <Text fontSize={11} fontWeight="600" color="$muted" numberOfLines={1}>
+            {podDateLabel(pod)}
+          </Text>
+        </XStack>
+        {joiningText ? (
+          <XStack
+            backgroundColor="rgba(34,197,94,0.18)"
+            borderRadius={999}
+            paddingHorizontal={8}
+            paddingVertical={2}
+          >
+            <Text fontSize={10} fontWeight="700" color="#22c55e" numberOfLines={1}>
+              {joiningText}
+            </Text>
+          </XStack>
+        ) : null}
       </XStack>
       <Text fontSize={18} fontWeight="700" color="$color" numberOfLines={1}>
         {pod.pod_title}
@@ -110,7 +126,10 @@ export function PodCard({
 
   const taken = (pod as { pod_attendees?: string[] }).pod_attendees?.length ?? 0;
   const spotsLeft = pod.no_of_spots > 0 ? Math.max(0, pod.no_of_spots - taken) : 0;
-  let spotsText = pod.no_of_spots > 0 ? `${taken}/${pod.no_of_spots}` : 'Open';
+  // Fallback matches the mWeb twin exactly (rule 27): "3/8", or just "3" when
+  // the pod has no spot limit.
+  const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
+  let spotsText = `${taken}${spotsSuffix}`;
   if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
 
@@ -156,7 +175,7 @@ export function PodCard({
           <XStack
             testID={`pod-card-save-${pod.pod_id}`}
             role="button"
-            aria-label={saved ? 'Remove from saved' : 'Save pod'}
+            aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
             aria-pressed={saved}
             onPress={onToggleSave}
             position="absolute"
@@ -178,7 +197,13 @@ export function PodCard({
           </XStack>
         ) : null}
 
-        <PodInfoPanel pod={pod} dark={dark} spotsText={spotsText} place={place} />
+        <PodInfoPanel
+          pod={pod}
+          dark={dark}
+          spotsText={spotsText}
+          place={place}
+          joiningText={taken > 0 ? t('mweb.home.joiningNow', { count: taken }) : ''}
+        />
       </YStack>
     </PressScale>
   );

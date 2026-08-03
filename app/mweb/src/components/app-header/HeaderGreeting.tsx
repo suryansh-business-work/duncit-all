@@ -70,13 +70,21 @@ export default function HeaderGreeting({
           )}
         </Box>
       ) : null}
+      {/* The title also opens the location picker — a bigger tap target than
+       * the small city row alone (user ask). */}
       <Typography
-        sx={{ fontWeight: 700, lineHeight: 1.12, fontSize: { xs: '1.35rem', sm: '1.5rem' } }}
+        onClick={onOpenLocation}
+        sx={{
+          fontWeight: 700,
+          lineHeight: 1.15,
+          fontSize: { xs: '1.05rem', sm: '1.2rem' },
+          cursor: onOpenLocation ? 'pointer' : 'default',
+        }}
         noWrap
       >
         {title}
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }} noWrap>
         {t('mweb.home.greetingSubtitle')}
       </Typography>
     </Stack>

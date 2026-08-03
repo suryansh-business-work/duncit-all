@@ -46,7 +46,7 @@ export default function CountryCodeField({ control, name, label, disabled }: Rea
                 component="img"
                 src={countryFlagUrl(option.iso2)}
                 alt=""
-                sx={{ width: 22, height: 16, borderRadius: '8px' }}
+                sx={{ width: 22, height: 16, borderRadius: '4px' }}
               />
               {option.name}
               <Box component="span" sx={{ ml: 'auto', color: 'text.secondary' }}>

@@ -97,7 +97,7 @@ export function VibeCategoryTab({
       aria-pressed={selected}
       onPress={onPress}
       flexDirection={flexDirection}
-      minWidth={84}
+      width={96}
       alignItems="center"
       justifyContent="center"
       gap={5}

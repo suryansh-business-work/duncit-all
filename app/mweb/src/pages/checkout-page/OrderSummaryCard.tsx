@@ -72,8 +72,8 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup }: Readonly<
 function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 900 : 500}>{label}</Typography>
-      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 900 : 700}>{value}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500}>{label}</Typography>
+      <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 600}>{value}</Typography>
     </Stack>
   );
 }

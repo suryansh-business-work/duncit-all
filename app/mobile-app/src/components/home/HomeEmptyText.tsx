@@ -1,9 +1,11 @@
 import { Text } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /** The no-pods empty state — extracted from HomeFeed for the 200-line cap. */
 export function HomeEmptyText() {
+  const { t } = useTranslation();
   return (
     <Reveal index={4} scale>
       <Text
@@ -14,7 +16,7 @@ export function HomeEmptyText() {
         paddingHorizontal={24}
         paddingVertical={32}
       >
-        No pods here yet. Pull to refresh or pick a different vibe.
+        {t('mweb.home.homeEmpty')}
       </Text>
     </Reveal>
   );

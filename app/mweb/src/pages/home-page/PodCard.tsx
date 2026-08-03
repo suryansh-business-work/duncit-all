@@ -1,4 +1,4 @@
-import { Box, Card, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Card, Chip, IconButton, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -56,6 +56,15 @@ export default function PodCard({
   return (
     <Card
       onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      aria-label={pod.pod_title}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
       sx={{
         minWidth: 268,
         maxWidth: 268,
@@ -98,7 +107,7 @@ export default function PodCard({
 
       {onToggleSave && (
         <IconButton
-          aria-label={saved ? 'Remove from saved' : 'Save pod'}
+          aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
           aria-pressed={saved}
           onClick={(event) => {
             event.stopPropagation();
@@ -171,15 +180,19 @@ export default function PodCard({
             sx={{ height: 24, fontWeight: 700, flex: '0 0 auto' }}
           />
         </Stack>
-        {(placeText || hostName) && (
+        {placeText && (
           <Stack direction="row" spacing={0.4} alignItems="center" sx={{ minWidth: 0 }}>
-            {placeText ? (
-              <PlaceIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
-            ) : (
-              <PersonIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
-            )}
+            <PlaceIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
             <Typography variant="caption" color="text.secondary" noWrap>
-              {placeText || hostName}
+              {placeText}
+            </Typography>
+          </Stack>
+        )}
+        {hostName && (
+          <Stack direction="row" spacing={0.4} alignItems="center" sx={{ minWidth: 0 }}>
+            <PersonIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {hostName}
             </Typography>
           </Stack>
         )}

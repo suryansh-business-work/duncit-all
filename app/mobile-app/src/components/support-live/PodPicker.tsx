@@ -106,7 +106,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
                 <YStack flex={1}>
                   <Text
                     fontSize={14}
-                    fontWeight={isSelected ? '800' : '600'}
+                    fontWeight={isSelected ? '700' : '600'}
                     color={isSelected ? '$onPrimary' : '$color'}
                     numberOfLines={1}
                   >

@@ -82,7 +82,7 @@ export function CategoryCascadeField({
       >
         <Text
           fontSize={12.5}
-          fontWeight={selected ? '800' : '600'}
+          fontWeight={selected ? '700' : '600'}
           color={selected ? onPrimary : ink}
         >
           {label}

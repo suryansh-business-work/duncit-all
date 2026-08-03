@@ -27,7 +27,7 @@ export default function HeaderLocationButton({
     <Button
       startIcon={
         flag ? (
-          <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: '8px' }} />
+          <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: '4px' }} />
         ) : (
           <LocationOnIcon />
         )

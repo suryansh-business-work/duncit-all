@@ -18,7 +18,6 @@ interface Handlers {
 
 interface Props extends Handlers {
   meeting: OnboardingMeeting;
-  marking: boolean;
 }
 
 /** Status-driven action list. Cancelled or denied meetings get no actions. */
@@ -45,7 +44,7 @@ function buildActions(meeting: OnboardingMeeting, h: Handlers): Action[] {
 }
 
 /** Actions dropdown on a meeting row — options change with the meeting status. */
-export default function MeetingRowActions({ meeting, marking, onSchedule, onMarkDone, onDecide, onReject }: Readonly<Props>) {
+export default function MeetingRowActions({ meeting, onSchedule, onMarkDone, onDecide, onReject }: Readonly<Props>) {
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
   const actions = buildActions(meeting, { onSchedule, onMarkDone, onDecide, onReject });
   if (actions.length === 0) {
@@ -57,7 +56,7 @@ export default function MeetingRowActions({ meeting, marking, onSchedule, onMark
   };
   return (
     <>
-      <IconButton size="small" disabled={marking} onClick={(e) => setAnchor(e.currentTarget)} aria-label="Meeting actions">
+      <IconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} aria-label="Meeting actions">
         <MoreVertIcon fontSize="small" />
       </IconButton>
       <Menu anchorEl={anchor} open={!!anchor} onClose={() => setAnchor(null)}>

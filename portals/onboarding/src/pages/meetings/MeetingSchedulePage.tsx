@@ -60,7 +60,12 @@ export default function MeetingSchedulePage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
   const refresh = useCallback(() => refetchRef.current?.(), []);
-  const [updateMeeting, { loading: marking }] = useMutation(UPDATE_MEETING);
+  const [updateMeeting] = useMutation(UPDATE_MEETING);
+  // Double-submit guard for "Mark done". It is a ref rather than the mutation's
+  // `loading` flag because that flag would have to ride into the table's column
+  // defs, and a changing column def rebuilds every AG Grid column — closing an
+  // open Actions menu and resetting user-resized widths mid-action.
+  const markingRef = useRef(false);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
   const [deciding, setDeciding] = useState<OnboardingMeeting | null>(null);
@@ -80,17 +85,25 @@ export default function MeetingSchedulePage() {
     [kind, statusFilter],
   );
 
-  if (!valid) return <Alert severity="error">Unknown meeting kind.</Alert>;
+  // Memoized so the table's column defs stay stable across renders.
+  const markDone = useCallback(
+    async (m: OnboardingMeeting) => {
+      if (markingRef.current) return;
+      markingRef.current = true;
+      setActionError(null);
+      try {
+        await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
+        refresh();
+      } catch (e) {
+        setActionError(e instanceof Error ? e.message : 'Could not mark the meeting as done');
+      } finally {
+        markingRef.current = false;
+      }
+    },
+    [updateMeeting, refresh],
+  );
 
-  const markDone = async (m: OnboardingMeeting) => {
-    setActionError(null);
-    try {
-      await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
-      refresh();
-    } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Could not mark the meeting as done');
-    }
-  };
+  if (!valid) return <Alert severity="error">Unknown meeting kind.</Alert>;
 
   return (
     <Stack spacing={2.5}>
@@ -113,7 +126,6 @@ export default function MeetingSchedulePage() {
         key={`${kind}:${statusFilter}`}
         fetchRows={fetchRows}
         refetchRef={refetchRef}
-        marking={marking}
         onSelect={setSelected}
         onSchedule={setEditing}
         onMarkDone={markDone}

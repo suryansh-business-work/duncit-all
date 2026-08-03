@@ -52,6 +52,33 @@ function buildTooltipValueGetter<T>(column: DuncitColumn<T>) {
 }
 
 /**
+ * Never-equal comparator for renderer columns.
+ *
+ * With `getRowId` set, AG Grid updates rows in place and then repaints only the
+ * cells whose value changed by `===`. A plain-text cell IS its value, so that
+ * gate is right for them — but a custom renderer draws from the WHOLE row, so a
+ * cell can need a repaint while this column's own value is untouched (a status
+ * chip that also reads `cancelled_by_staff`, an actions menu keyed on four
+ * fields, a caption showing a sibling field). Those cells froze on the
+ * pre-update row until something forced a full redraw, which is why callers
+ * kept inventing composite valueGetters to fake a change.
+ *
+ * Declaring renderer cells never-equal makes every row update repaint them.
+ * Untouched rows are skipped upstream — AG Grid only updates a row whose data
+ * object identity changed — so with a normalizing client (Apollo returns stable
+ * references for unchanged entities) this is reached only for rows that really
+ * moved. A fetch that rebuilds every row object repaints every renderer cell on
+ * the page instead: bounded by the page size, one React re-render each.
+ *
+ * `colDef.equals` has two consumers in AG Grid: this repaint gate, and the
+ * row-span cache. A renderer column can therefore never form a row span — moot
+ * while no table sets `enableCellSpan`/`spanRows`. Enabling
+ * `enableCellChangeFlash` would likewise flash every renderer cell of an
+ * updated row.
+ */
+const NEVER_EQUAL = () => false;
+
+/**
  * Derives AG Grid column defs from DuncitColumn[]. Sort display is controlled: the def
  * carries the hook's current sort so header arrows always mirror the query state.
  */
@@ -72,6 +99,7 @@ export function buildColDefs<T>(
     sort: sortBy === column.field ? sortDir : null,
     valueGetter: buildValueGetter(column),
     cellRenderer: buildCellRenderer(column),
+    equals: column.cellRenderer ? NEVER_EQUAL : undefined,
     cellClass: column.cellRenderer ? undefined : TRUNCATE_CELL_CLASS,
     tooltipValueGetter: buildTooltipValueGetter(column),
   }));

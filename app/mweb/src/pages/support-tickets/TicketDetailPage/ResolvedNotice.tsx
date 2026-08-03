@@ -35,7 +35,7 @@ export default function ResolvedNotice({
   }
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}>
+    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
         <Stack sx={{ minWidth: 0 }}>
           <Typography variant="body2" color="text.secondary">
@@ -49,7 +49,7 @@ export default function ResolvedNotice({
           startIcon={<ReplayIcon />}
           disabled={!reopenable || reopening}
           onClick={onReopen}
-          sx={{ borderRadius: 99, fontWeight: 800, flexShrink: 0 }}
+          sx={{ borderRadius: 99, fontWeight: 600, flexShrink: 0 }}
         >
           Re-open
         </Button>

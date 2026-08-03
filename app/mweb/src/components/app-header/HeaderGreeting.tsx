@@ -1,5 +1,7 @@
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { useTranslation } from '../../i18n/useTranslation';
 
 const DEFAULT_TAGLINE = 'It All Starts Here!';
 
@@ -13,8 +15,8 @@ interface Props {
   onOpenLocation?: () => void;
 }
 
-/** Home header left block: the admin-configurable tagline on top with the
- * tappable city/zone (+ chevron) beneath. Replaces the old logo + mascot. */
+/** Home header left block (mock): the tappable pin + city on top, the BIG
+ * admin-configurable tagline beneath it, then the greeting subtitle. */
 export default function HeaderGreeting({
   tagline,
   loading,
@@ -23,16 +25,14 @@ export default function HeaderGreeting({
   selectedZoneName,
   onOpenLocation,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const title = tagline?.trim() || DEFAULT_TAGLINE;
   const cityText = selectedZoneName
     ? `${selectedLocationName ?? 'Select city'} · ${selectedZoneName}`
     : (selectedLocationName ?? 'Select city');
 
   return (
-    <Stack sx={{ minWidth: 0 }}>
-      <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
-        {title}
-      </Typography>
+    <Stack sx={{ minWidth: 0 }} spacing={0.1}>
       {onOpenLocation ? (
         <Box
           role="button"
@@ -57,18 +57,36 @@ export default function HeaderGreeting({
             <Skeleton variant="text" width={90} height={14} />
           ) : (
             <>
+              <LocationOnIcon sx={{ fontSize: 15, flex: '0 0 auto' }} />
               <Typography
                 variant="caption"
-                sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}
                 noWrap
               >
                 {cityText}
               </Typography>
-              <KeyboardArrowRightIcon sx={{ fontSize: 16, flex: '0 0 auto' }} />
+              <KeyboardArrowDownIcon sx={{ fontSize: 16, flex: '0 0 auto' }} />
             </>
           )}
         </Box>
       ) : null}
+      {/* The title also opens the location picker — a bigger tap target than
+       * the small city row alone (user ask). */}
+      <Typography
+        onClick={onOpenLocation}
+        sx={{
+          fontWeight: 700,
+          lineHeight: 1.15,
+          fontSize: { xs: '1.05rem', sm: '1.2rem' },
+          cursor: onOpenLocation ? 'pointer' : 'default',
+        }}
+        noWrap
+      >
+        {title}
+      </Typography>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }} noWrap>
+        {t('mweb.home.greetingSubtitle')}
+      </Typography>
     </Stack>
   );
 }

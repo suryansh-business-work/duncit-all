@@ -37,7 +37,7 @@ export default function TicketEmailDialog({ open, ticketId, defaultEmail, onClos
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Email this ticket</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Email this ticket</DialogTitle>
       <DialogContent>
         {done ? (
           <Alert severity="success">Transcript sent to {email}.</Alert>

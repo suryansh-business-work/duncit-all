@@ -1,0 +1,99 @@
+import type { ReactNode } from 'react';
+import { Avatar, Badge, Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import HeaderNotificationsBell from './HeaderNotificationsBell';
+import HeaderSearchButton from './HeaderSearchButton';
+import HeaderCartButton from '../cart/HeaderCartButton';
+import { useTranslation } from '../../i18n/useTranslation';
+
+/** A labelled circular header action (mock): the button with a tiny caption. */
+function QuickAction({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
+  return (
+    <Stack alignItems="center" spacing={0.1} sx={{ flex: '0 0 auto' }}>
+      {children}
+      <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', lineHeight: 1 }}>
+        {label}
+      </Typography>
+    </Stack>
+  );
+}
+
+interface Props {
+  /** Search hides outside the USER studio (focused partner headers). */
+  showSearch: boolean;
+  locationId: string;
+  zoneName: string;
+  onToast: (t: { title?: string; body?: string } | null) => void;
+  me?: { full_name?: string | null; first_name?: string | null; profile_photo?: string | null } | null;
+  onOpenMenu: () => void;
+}
+
+/**
+ * The header's right-side cluster (mock): labelled circular actions — Search,
+ * Cart, Alerts — then the avatar with its online dot. Extracted from AppHeader
+ * (which is over the line cap) and keeps every tour anchor in place.
+ */
+export default function HeaderQuickActions({
+  showSearch,
+  locationId,
+  zoneName,
+  onToast,
+  me,
+  onOpenMenu,
+}: Readonly<Props>) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {showSearch && (
+        <QuickAction label={t('mweb.home.actionSearch')}>
+          <HeaderSearchButton locationId={locationId} zoneName={zoneName} />
+        </QuickAction>
+      )}
+      {/* The cart caption ships inside the button — it hides with it. */}
+      <HeaderCartButton label={t('mweb.home.actionCart')} />
+      <QuickAction label={t('mweb.home.actionAlerts')}>
+        <Box data-tour="home-notifications" component="span" sx={{ display: 'inline-flex' }}>
+          <HeaderNotificationsBell onToast={onToast} />
+        </Box>
+      </QuickAction>
+      <Tooltip title={me?.full_name ?? 'Account'}>
+        <IconButton
+          onClick={onOpenMenu}
+          data-tour="home-profile"
+          sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
+          aria-label="Open account menu"
+        >
+          <Badge
+            overlap="circular"
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            variant="dot"
+            sx={{
+              '& .MuiBadge-dot': {
+                bgcolor: '#22c55e',
+                border: '2px solid',
+                borderColor: 'background.paper',
+                width: 11,
+                height: 11,
+                borderRadius: '50%',
+              },
+            }}
+          >
+            <Avatar
+              src={me?.profile_photo || undefined}
+              sx={{
+                width: 34,
+                height: 34,
+                bgcolor: 'primary.main',
+                fontSize: 13,
+                border: 2,
+                borderColor: 'primary.main',
+                boxShadow: '0 0 0 3px rgba(255,79,115,0.24)',
+              }}
+            >
+              {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
+            </Avatar>
+          </Badge>
+        </IconButton>
+      </Tooltip>
+    </>
+  );
+}

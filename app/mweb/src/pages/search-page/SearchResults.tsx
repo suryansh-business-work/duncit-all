@@ -86,7 +86,7 @@ export default function SearchResults({
           color="inherit"
           startIcon={<SortIcon />}
           onClick={() => setSortOpen(true)}
-          sx={{ fontWeight: 800, borderRadius: 999 }}
+          sx={{ fontWeight: 600, borderRadius: 999 }}
         >
           Sort
         </Button>
@@ -95,7 +95,7 @@ export default function SearchResults({
           color={categoryId ? 'primary' : 'inherit'}
           startIcon={<FilterIcon />}
           onClick={() => setFilterOpen(true)}
-          sx={{ fontWeight: 800, borderRadius: 999 }}
+          sx={{ fontWeight: 600, borderRadius: 999 }}
         >
           Filter
         </Button>

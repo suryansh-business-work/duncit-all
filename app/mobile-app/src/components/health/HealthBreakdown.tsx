@@ -25,7 +25,7 @@ export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>)
       >
         <XStack alignItems="center" gap={16} flexWrap="wrap">
           <XStack alignItems="flex-end" gap={2}>
-            <Text fontSize={40} fontWeight="900" lineHeight={42} color="$color">
+            <Text fontSize={40} fontWeight="700" lineHeight={42} color="$color">
               {score.total_score}
             </Text>
             <Text fontSize={12} color="$muted" marginBottom={6}>
@@ -40,7 +40,7 @@ export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>)
               paddingVertical={3}
               backgroundColor={bandColor}
             >
-              <Text fontSize={12} fontWeight="800" color="white">
+              <Text fontSize={12} fontWeight="600" color="white">
                 {healthBandLabel(score.band)}
               </Text>
             </XStack>
@@ -52,7 +52,7 @@ export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>)
       </YStack>
 
       <YStack gap={8}>
-        <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+        <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
           Admin remarks
         </Text>
         {score.adjustments.length === 0 ? (
@@ -89,7 +89,7 @@ export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>)
                   paddingVertical={4}
                   backgroundColor={positive ? semantic.success : semantic.error}
                 >
-                  <Text fontSize={12} fontWeight="900" color="white">
+                  <Text fontSize={12} fontWeight="700" color="white">
                     {adjustmentSign(adjustment.delta)}
                   </Text>
                 </XStack>

@@ -75,7 +75,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
           paddingHorizontal={16}
           paddingVertical={10}
         >
-          <Text fontSize={12} fontWeight="800" textTransform="uppercase" color="$muted">
+          <Text fontSize={12} fontWeight="600" textTransform="uppercase" color="$muted">
             {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
           </Text>
           <XStack
@@ -128,7 +128,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             >
               <MaterialIcons name="swap-horiz" size={20} color={primary} />
               <YStack flex={1}>
-                <Text fontSize={14} fontWeight="800" color="$color">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   Switch role
                 </Text>
                 <Text fontSize={11.5} color="$muted">

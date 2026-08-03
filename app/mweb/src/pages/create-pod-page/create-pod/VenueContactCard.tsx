@@ -13,26 +13,26 @@ export default function VenueContactCard({ venue }: Readonly<{ venue: CreatePodV
   const directions = mapSearchUrl([venue.venue_name, address].filter(Boolean).join(', '));
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="create-pod-venue-contact">
-      <Typography variant="subtitle2" fontWeight={900}>{venue.venue_name}</Typography>
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="create-pod-venue-contact">
+      <Typography variant="subtitle2" fontWeight={700}>{venue.venue_name}</Typography>
       {address && (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>{address}</Typography>
       )}
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
         {venue.owner_phone && (
-          <Button href={`tel:${venue.owner_phone}`} size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ fontWeight: 800 }}>
+          <Button href={`tel:${venue.owner_phone}`} size="small" startIcon={<PhoneIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
             Call Venue
           </Button>
         )}
-        <Button href={directions} target="_blank" rel="noreferrer" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ fontWeight: 800 }}>
+        <Button href={directions} target="_blank" rel="noreferrer" size="small" startIcon={<DirectionsIcon fontSize="small" />} sx={{ fontWeight: 600 }}>
           Get Directions
         </Button>
       </Stack>
       <Stack spacing={0.25} sx={{ mt: 1 }}>
-        <Typography variant="caption" color="text.secondary" fontWeight={800}>
+        <Typography variant="caption" color="text.secondary" fontWeight={600}>
           Venue contact for follow-up
         </Typography>
-        <Typography variant="body2" fontWeight={800}>{venue.owner_name || venue.venue_name}</Typography>
+        <Typography variant="body2" fontWeight={600}>{venue.owner_name || venue.venue_name}</Typography>
         {venue.owner_email && (
           <Link href={`mailto:${venue.owner_email}`} variant="body2" sx={{ wordBreak: 'break-all' }}>
             {venue.owner_email}

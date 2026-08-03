@@ -33,7 +33,7 @@ export default function HomeStatusTile({
   const imageOrAvatar = imageUrl ? (
     <Box component="img" src={imageUrl} alt={label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
   ) : (
-    <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'primary.main', fontWeight: 900 }}>
+    <Avatar sx={{ width: '100%', height: '100%', bgcolor: 'primary.main', fontWeight: 700 }}>
       {initials || label.slice(0, 1).toUpperCase()}
     </Avatar>
   );
@@ -118,7 +118,7 @@ export default function HomeStatusTile({
         sx={{
           width: '100%',
           minHeight: 17,
-          fontWeight: 800,
+          fontWeight: 600,
           lineHeight: 1.15,
           textAlign: 'center',
           overflow: 'hidden',

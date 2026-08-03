@@ -127,7 +127,7 @@ export function MediaUploadField({
         >
           <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
         </YStack>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Upload an image or video
         </Text>
         <Text fontSize={12} color="$muted">

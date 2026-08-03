@@ -65,7 +65,7 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
             color={active === key ? 'primary' : 'default'}
             variant={active === key ? 'filled' : 'outlined'}
             onClick={() => setActive(key)}
-            sx={{ height: 34, fontWeight: 900 }}
+            sx={{ height: 34, fontWeight: 700 }}
           />
         ))}
       </Stack>

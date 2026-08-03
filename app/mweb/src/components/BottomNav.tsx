@@ -8,13 +8,14 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { APP_SHELL_MAX_WIDTH } from '../app/appLayout';
+import { useTranslation } from '../i18n/useTranslation';
 
 const TABS = [
-  { value: '/', label: 'Home', icon: <HomeIcon /> },
-  { value: '/explore', label: 'Explore', icon: <ExploreIcon /> },
-  { value: '/clubs', label: 'Clubs', icon: <GroupsIcon /> },
-  { value: '/chats', label: 'Chats', icon: <ChatBubbleOutlineIcon /> },
-  { value: '/follow', label: 'Following', icon: <FavoriteBorderIcon /> },
+  { value: '/', labelKey: 'mweb.nav.home', icon: <HomeIcon /> },
+  { value: '/explore', labelKey: 'mweb.nav.explore', icon: <ExploreIcon /> },
+  { value: '/clubs', labelKey: 'mweb.nav.clubs', icon: <GroupsIcon /> },
+  { value: '/chats', labelKey: 'mweb.nav.chats', icon: <ChatBubbleOutlineIcon /> },
+  { value: '/follow', labelKey: 'mweb.nav.following', icon: <FavoriteBorderIcon /> },
 ];
 
 const NAV_BOTTOM_GAP = 0;
@@ -24,6 +25,7 @@ const NAV_OVERLAY_GAP = 10;
 export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation();
   const paperRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -118,24 +120,22 @@ export default function BottomNav() {
             transform: 'translateY(-1px)',
           },
           '& .nav-icon-wrap': {
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 30,
             display: 'grid',
             placeItems: 'center',
             mb: 0.1,
-            borderRadius: '50%',
+            borderRadius: 999,
             transition: 'all 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
           },
-          // Selection bubble — the active icon pops inside a primary circle (B4-8).
+          // Active tab = primary tint only, no background shape (user ask).
           '& .Mui-selected .nav-icon-wrap': {
-            color: 'primary.contrastText',
-            bgcolor: 'primary.main',
-            transform: 'scale(1.1) translateY(-2px)',
-            boxShadow: '0 8px 18px rgba(255,79,115,0.35)',
+            color: 'primary.main',
+            transform: 'translateY(-1px)',
           },
           '& .MuiBottomNavigationAction-label': {
             fontSize: 11,
-            fontWeight: 800,
+            fontWeight: 600,
             mt: 0,
             transition: 'color 200ms ease',
           },
@@ -145,12 +145,12 @@ export default function BottomNav() {
           },
         }}
       >
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <BottomNavigationAction
-            key={t.value}
-            value={t.value}
-            label={t.label}
-            icon={<Box className="nav-icon-wrap">{t.icon}</Box>}
+            key={tab.value}
+            value={tab.value}
+            label={t(tab.labelKey)}
+            icon={<Box className="nav-icon-wrap">{tab.icon}</Box>}
           />
         ))}
       </BottomNavigation>

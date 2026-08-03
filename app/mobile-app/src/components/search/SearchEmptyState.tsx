@@ -29,7 +29,7 @@ function CtaBlock({ icon, title, description, cta, testID, onPress }: Readonly<C
     >
       <XStack alignItems="center" gap={8}>
         <MaterialIcons name={icon} size={20} color={primary} />
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           {title}
         </Text>
       </XStack>
@@ -45,7 +45,7 @@ function CtaBlock({ icon, title, description, cta, testID, onPress }: Readonly<C
           backgroundColor="$primary"
           alignItems="center"
         >
-          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+          <Text fontSize={14} fontWeight="700" color={onPrimary}>
             {cta}
           </Text>
         </XStack>
@@ -80,7 +80,7 @@ export function SearchEmptyState({
     <YStack gap={16} testID="search-empty-state">
       <YStack alignItems="center" gap={8} paddingVertical={8}>
         <MaterialIcons name="search-off" size={48} color={muted} />
-        <Text fontSize={17} fontWeight="900" color="$color" textAlign="center">
+        <Text fontSize={17} fontWeight="700" color="$color" textAlign="center">
           {heading}
         </Text>
         <Text fontSize={13} color="$muted" textAlign="center">

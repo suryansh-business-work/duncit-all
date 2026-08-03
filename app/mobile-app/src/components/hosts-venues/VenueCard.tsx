@@ -47,7 +47,7 @@ export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
         )}
       </YStack>
       <YStack padding={12} gap={3}>
-        <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
           {venue.venue_name}
         </Text>
         <Text fontSize={12} color="$muted" numberOfLines={1}>

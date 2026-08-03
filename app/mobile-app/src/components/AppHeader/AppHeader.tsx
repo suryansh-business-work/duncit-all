@@ -11,10 +11,12 @@ import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import { useBranding } from '@/hooks/useBranding';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_HOME_ROUTE, STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
 
 import { HeaderGreeting } from './HeaderGreeting';
+import { QuickAction } from './QuickAction';
 
 /**
  * In-app header — the admin-configurable tagline plus the tappable location on
@@ -26,6 +28,7 @@ import { HeaderGreeting } from './HeaderGreeting';
 export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
   const navigation = useNavigation();
   const { color: ink, onPrimary } = useThemeColors();
+  const { t } = useTranslation();
   const me = useMe().data?.me;
   const branding = useBranding().data?.branding;
   const roles = me?.roles ?? [];
@@ -42,7 +45,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
       justifyContent="space-between"
       paddingLeft={16}
       paddingRight={16}
-      paddingVertical={8}
+      paddingVertical={12}
     >
       <XStack alignItems="center" gap={6} flex={1} minWidth={0}>
         {!minimal && effectiveStudio !== 'USER' ? (
@@ -59,7 +62,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             backgroundColor="$primary"
             pressStyle={{ opacity: 0.85 }}
           >
-            <Text fontSize={11.5} fontWeight="900" color="$onPrimary">
+            <Text fontSize={11.5} fontWeight="700" color="$onPrimary">
               {STUDIO_LABEL[effectiveStudio]}
             </Text>
             <MaterialIcons name="swap-horiz" size={14} color={onPrimary} />
@@ -72,28 +75,36 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         )}
       </XStack>
       <XStack alignItems="center" gap={8}>
-        {/* Studio modes (Host/Venue/ecomm) get a focused header — no search. */}
+        {/* Labelled circular actions (mock): Search · Cart · Alerts · avatar
+         * with online dot. Studio modes keep their focused header (no search),
+         * and the cart still hides itself when empty. */}
         {showBrowseActions ? (
-          <XStack
-            testID="header-search"
-            role="button"
-            aria-label="Search pods"
-            onPress={() => navigation.navigate('Search')}
-            width={40}
-            height={40}
-            alignItems="center"
-            justifyContent="center"
-            borderRadius={20}
-            pressStyle={{ opacity: 0.7 }}
-          >
-            <MaterialIcons name="search" size={24} color={ink} />
-          </XStack>
+          <QuickAction label={t('mweb.home.actionSearch')}>
+            <XStack
+              testID="header-search"
+              role="button"
+              aria-label="Search pods"
+              onPress={() => navigation.navigate('Search')}
+              width={40}
+              height={40}
+              alignItems="center"
+              justifyContent="center"
+              borderRadius={20}
+              backgroundColor="$surface"
+              borderWidth={1}
+              borderColor="$borderColor"
+              pressStyle={{ opacity: 0.7 }}
+            >
+              <MaterialIcons name="search" size={22} color={ink} />
+            </XStack>
+          </QuickAction>
         ) : null}
-        {/* The cart entry point rides in the header on every screen (it used to
-         * float over the content); it hides itself when there is nothing to
-         * open. */}
-        {minimal ? null : <HeaderCartButton />}
-        {minimal ? null : <NotificationsBell />}
+        {minimal ? null : <HeaderCartButton label={t('mweb.home.actionCart')} />}
+        {minimal ? null : (
+          <QuickAction label={t('mweb.home.actionAlerts')}>
+            <NotificationsBell />
+          </QuickAction>
+        )}
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>
       <StudioSwitchDialog

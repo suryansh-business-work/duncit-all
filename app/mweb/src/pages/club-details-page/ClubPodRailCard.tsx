@@ -20,7 +20,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
   return (
     <Card
       variant="outlined"
-      sx={{ width: 168, flex: '0 0 auto', borderRadius: '4px', overflow: 'hidden', bgcolor: 'background.paper' }}
+      sx={{ width: 168, flex: '0 0 auto', borderRadius: '16px', overflow: 'hidden', bgcolor: 'background.paper' }}
     >
       {cover ? (
         <CardMedia component="img" image={cover} alt={pod.pod_title} sx={{ height: 96, objectFit: 'cover' }} />
@@ -30,12 +30,12 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
         </Box>
       )}
       <Box sx={{ p: 1 }}>
-        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }}>
+        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }}>
           {dateLabel}
         </Typography>
         <Typography
           variant="subtitle2"
-          fontWeight={900}
+          fontWeight={700}
           sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.15, minHeight: 34 }}
         >
           {pod.pod_title}
@@ -48,7 +48,7 @@ export default function ClubPodRailCard({ pod, priceFormat, onOpen }: Readonly<P
           sx={{
             mt: 0.75,
             borderRadius: 999,
-            fontWeight: 900,
+            fontWeight: 700,
             background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 100%)',
             '&:hover': { background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 100%)' },
           }}

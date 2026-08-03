@@ -19,14 +19,14 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
       <Text
         fontSize={12.5}
         color={line.strong ? '$color' : '$muted'}
-        fontWeight={line.strong ? '900' : '700'}
+        fontWeight={line.strong ? '700' : '600'}
       >
         {line.label}
       </Text>
       <Text
         fontSize={12.5}
         color={line.strong ? '$primary' : '$color'}
-        fontWeight={line.strong ? '900' : '800'}
+        fontWeight={line.strong ? '700' : '600'}
       >
         {symbol}
         {line.value.toFixed(2)}
@@ -88,7 +88,7 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       backgroundColor="rgba(255,79,115,0.08)"
       testID="settlement-summary"
     >
-      <Text fontSize={13} fontWeight="900" color="$color">
+      <Text fontSize={13} fontWeight="700" color="$color">
         Your share (credited to your wallet on completion)
       </Text>
       {body}

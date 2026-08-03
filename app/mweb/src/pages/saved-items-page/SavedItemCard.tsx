@@ -34,7 +34,7 @@ export default function SavedItemCard({ pod, onOpen }: Readonly<Props>) {
           )}
           <CardContent sx={{ minWidth: 0, flex: 1 }}>
             <Stack spacing={0.75}>
-              <Typography variant="subtitle1" fontWeight={800} noWrap>
+              <Typography variant="subtitle1" fontWeight={600} noWrap>
                 {pod.pod_title}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>

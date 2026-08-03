@@ -38,8 +38,8 @@ export default function SupportHubPage() {
 
         {!searching && loading && (
           <Stack spacing={1.5}>
-            <Skeleton variant="rounded" height={140} sx={{ borderRadius: '4px' }} />
-            <Skeleton variant="rounded" height={180} sx={{ borderRadius: '4px' }} />
+            <Skeleton variant="rounded" height={140} sx={{ borderRadius: '16px' }} />
+            <Skeleton variant="rounded" height={180} sx={{ borderRadius: '16px' }} />
           </Stack>
         )}
 
@@ -53,7 +53,7 @@ export default function SupportHubPage() {
         <StartConversation />
 
         <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             More ways to reach us
           </Typography>
           <Box

@@ -59,7 +59,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Filter pods
                 </Text>
                 <XStack
@@ -120,7 +120,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   borderColor="$borderColor"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Reset
                   </Text>
                 </XStack>
@@ -137,7 +137,7 @@ export function HostPodsFilterSheet({ open, initial, onApply, onClose }: Readonl
                   backgroundColor="$primary"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color="$onPrimary">
+                  <Text fontSize={14} fontWeight="700" color="$onPrimary">
                     Apply
                   </Text>
                 </XStack>

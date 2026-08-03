@@ -31,7 +31,7 @@ function ActionRow({ icon, label, color, testID, onPress }: Readonly<ActionRowPr
       pressStyle={{ opacity: 0.6 }}
     >
       <MaterialIcons name={icon} size={22} color={color} />
-      <Text fontSize={15} fontWeight="800" color={color}>
+      <Text fontSize={15} fontWeight="600" color={color}>
         {label}
       </Text>
     </XStack>

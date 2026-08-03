@@ -48,7 +48,7 @@ function Chip({
       {flag ? (
         <AppImage source={{ uri: flag }} style={{ width: 22, height: 16, borderRadius: 2 }} />
       ) : null}
-      <Text fontSize={13} fontWeight="800" color={active ? '$primary' : '$color'}>
+      <Text fontSize={13} fontWeight="600" color={active ? '$primary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -73,7 +73,7 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
 
   return (
     <YStack gap={8}>
-      <Text fontSize={11} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
         COUNTRY
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -91,7 +91,7 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
         </XStack>
       </ScrollView>
 
-      <Text fontSize={11} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
         STATE
       </Text>
       {showStateSearch ? (

@@ -71,7 +71,7 @@ export function RescheduleDialog({
               gap={10}
             >
               <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={8}>
+                <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={8}>
                   Reschedule your onboarding meeting
                 </Text>
                 <ScrollView keyboardShouldPersistTaps="handled">
@@ -127,7 +127,7 @@ export function RescheduleDialog({
                     borderColor="$borderColor"
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="800" color="$color">
+                    <Text fontSize={14} fontWeight="600" color="$color">
                       Close
                     </Text>
                   </XStack>
@@ -146,7 +146,7 @@ export function RescheduleDialog({
                     opacity={busy ? 0.7 : 1}
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                    <Text fontSize={14} fontWeight="700" color={onPrimary}>
                       {busy ? 'Moving…' : 'Move to this slot'}
                     </Text>
                   </XStack>

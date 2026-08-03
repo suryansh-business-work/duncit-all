@@ -43,7 +43,7 @@ export function SupportChatBubble({
       <XStack justifyContent="center" testID={`support-msg-${message.id}`}>
         <Text
           fontSize={11.5}
-          fontWeight="800"
+          fontWeight="600"
           color="$muted"
           textAlign="center"
           borderWidth={1}
@@ -73,7 +73,7 @@ export function SupportChatBubble({
         borderColor="$borderColor"
       >
         {!mine && (
-          <Text fontSize={11} fontWeight="800" color={message.is_ai ? '$primary' : '$muted'}>
+          <Text fontSize={11} fontWeight="600" color={message.is_ai ? '$primary' : '$muted'}>
             {message.is_ai ? 'Duncit Assistant' : message.sender_name || 'Support'}
           </Text>
         )}
@@ -101,7 +101,7 @@ export function SupportChatBubble({
             pressStyle={{ opacity: 0.7 }}
           >
             <MaterialIcons name="error-outline" size={13} color="#ff5a5f" />
-            <Text fontSize={11} fontWeight="800" color="#ff5a5f">
+            <Text fontSize={11} fontWeight="600" color="#ff5a5f">
               Failed · Retry
             </Text>
           </XStack>

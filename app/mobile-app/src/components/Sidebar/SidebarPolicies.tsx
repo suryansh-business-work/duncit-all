@@ -44,7 +44,7 @@ export function SidebarPolicies({
         paddingVertical={12}
       >
         <MaterialIcons name="description" size={20} color={muted} />
-        <Text flex={1} fontSize={14} fontWeight="800" color="$color">
+        <Text flex={1} fontSize={14} fontWeight="600" color="$color">
           Policies
         </Text>
         <MaterialIcons name={open ? 'expand-less' : 'expand-more'} size={20} color={muted} />

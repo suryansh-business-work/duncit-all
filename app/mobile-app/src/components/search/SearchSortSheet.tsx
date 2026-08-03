@@ -36,7 +36,7 @@ export function SearchSortSheet({ open, value, onClose, onSelect }: Readonly<Pro
           <YStack backgroundColor="$background" borderTopLeftRadius={22} borderTopRightRadius={22}>
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Sort Results
                 </Text>
                 <XStack

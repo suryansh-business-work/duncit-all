@@ -38,11 +38,11 @@ export default function CouponField({
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ p: 1.25, borderRadius: '4px', bgcolor: 'success.light', color: 'success.contrastText' }}
+        sx={{ p: 1.25, borderRadius: '16px', bgcolor: 'success.light', color: 'success.contrastText' }}
       >
         <Stack direction="row" spacing={1} alignItems="center">
           <LocalOfferIcon fontSize="small" />
-          <Typography variant="body2" fontWeight={800}>
+          <Typography variant="body2" fontWeight={600}>
             {applied.code} applied
           </Typography>
           <Chip
@@ -78,7 +78,7 @@ export default function CouponField({
           type="button"
           underline="hover"
           onClick={() => setPickerOpen(true)}
-          sx={{ alignSelf: 'flex-start', fontWeight: 800, fontSize: 13 }}
+          sx={{ alignSelf: 'flex-start', fontWeight: 600, fontSize: 13 }}
         >
           View {available.length} available coupon{available.length === 1 ? '' : 's'}
         </Link>

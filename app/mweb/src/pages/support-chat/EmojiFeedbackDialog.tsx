@@ -44,11 +44,11 @@ export default function EmojiFeedbackDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>How did we do?</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>How did we do?</DialogTitle>
       <DialogContent>
         {submitted ? (
           <Stack spacing={1.25} sx={{ pt: 1 }}>
-            <Typography variant="body1" sx={{ fontWeight: 800 }}>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
               Your rating: {submitted.emoji} {submitted.label}
             </Typography>
             {existingComment && (
@@ -82,7 +82,7 @@ export default function EmojiFeedbackDialog({
                       border: 'none',
                       bgcolor: 'transparent',
                       p: 0.5,
-                      borderRadius: '4px',
+                      borderRadius: '16px',
                       fontSize: 30,
                       lineHeight: 1,
                       opacity: active || rating === 0 ? 1 : 0.45,

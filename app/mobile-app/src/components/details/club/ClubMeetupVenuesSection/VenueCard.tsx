@@ -32,7 +32,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
       backgroundColor="$surface"
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+      <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
         {venue.venue_name}
       </Text>
       <Text fontSize={12} color="$muted">
@@ -51,7 +51,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
           borderColor="$borderColor"
         >
           <MaterialIcons name="near-me" size={12} color={primary} />
-          <Text fontSize={11} fontWeight="800" color="$color">
+          <Text fontSize={11} fontWeight="600" color="$color">
             {distance}
           </Text>
         </XStack>
@@ -66,7 +66,7 @@ export function VenueCard({ venue, distance, onSelect, onOpen }: Readonly<Props>
         gap={4}
         pressStyle={{ opacity: 0.7 }}
       >
-        <Text fontSize={13} fontWeight="800" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$primary">
           Venue details
         </Text>
         <MaterialIcons name="open-in-new" size={13} color={primary} />

@@ -102,7 +102,7 @@ export function DobCalendarSheet({
 
   return (
     <YStack gap={12}>
-      <Text fontSize={12} fontWeight="900" color="$muted">
+      <Text fontSize={12} fontWeight="700" color="$muted">
         YEAR
       </Text>
       <XStack
@@ -148,7 +148,7 @@ export function DobCalendarSheet({
                 borderColor={selected ? '$primary' : '$borderColor'}
                 backgroundColor={selected ? '$primary' : 'transparent'}
               >
-                <Text fontSize={12.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
+                <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
                   {y}
                 </Text>
               </YStack>
@@ -173,7 +173,7 @@ export function DobCalendarSheet({
         >
           <MaterialIcons name="chevron-left" size={22} color={muted} />
         </XStack>
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           {format(view, 'MMMM yyyy')}
         </Text>
         <XStack
@@ -216,7 +216,7 @@ export function DobCalendarSheet({
         backgroundColor="$primary"
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={14} fontWeight="900" color="$onPrimary">
+        <Text fontSize={14} fontWeight="700" color="$onPrimary">
           Done
         </Text>
       </XStack>

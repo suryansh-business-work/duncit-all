@@ -24,7 +24,7 @@ const BANNER_BOTTOM = `calc(${BANNER_GAP}px + var(--duncit-bottom-nav-overlay-of
 
 /** Both actions share one height — the outlined border would otherwise make
  * "Open" 2px taller than the contained "Get app" — and split the row evenly. */
-const ACTION_SX = { flex: 1, height: 44, fontWeight: 800 } as const;
+const ACTION_SX = { flex: 1, height: 44, fontWeight: 600 } as const;
 
 const isMobileUa = () => /android/i.test(navigator.userAgent) || IOS_RX.test(navigator.userAgent);
 
@@ -92,14 +92,14 @@ export default function OpenInAppBanner() {
         right: 12,
         bottom: BANNER_BOTTOM,
         zIndex: (t) => t.zIndex.snackbar,
-        borderRadius: '4px',
+        borderRadius: '16px',
         p: 1.25,
       }}
     >
       <Stack direction="row" spacing={1.25} alignItems="flex-start">
         <InstallMobileIcon color="primary" sx={{ mt: 0.25 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="body2" fontWeight={800}>
+          <Typography variant="body2" fontWeight={600}>
             Duncit is better in the app
           </Typography>
           <Typography variant="caption" color="text.secondary" display="block">

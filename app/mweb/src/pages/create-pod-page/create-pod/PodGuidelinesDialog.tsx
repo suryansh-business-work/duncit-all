@@ -25,7 +25,7 @@ interface Props {
 export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth data-testid="pod-guidelines-dialog">
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 900 }}>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700 }}>
         <AutoAwesomeIcon color="primary" /> What AI monitors
       </DialogTitle>
       <DialogContent>
@@ -42,7 +42,7 @@ export default function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) 
             </ListItem>
           ))}
         </List>
-        <Box sx={{ mt: 1.5, p: 1.5, borderRadius: '4px', bgcolor: 'action.hover' }}>
+        <Box sx={{ mt: 1.5, p: 1.5, borderRadius: '16px', bgcolor: 'action.hover' }}>
           <Typography variant="caption" color="error" sx={{ fontWeight: 700 }}>
             {POD_AI_GUIDELINES.warning}
           </Typography>

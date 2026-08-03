@@ -1,4 +1,4 @@
-import { Badge, IconButton } from '@mui/material';
+import { Badge, IconButton, Stack, Typography } from '@mui/material';
 import ShoppingCartRoundedIcon from '@mui/icons-material/ShoppingCartRounded';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CART_BADGE_MAX, deriveCartEntry } from '@duncit/utils';
@@ -13,21 +13,30 @@ import { useCart } from './CartContext';
  * @duncit/utils, so the badge, the visibility rule and the accessible name
  * cannot drift apart (rule 27).
  */
-export default function HeaderCartButton() {
+export default function HeaderCartButton({ label }: Readonly<{ label?: string }>) {
   const { totalCount } = useCart();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const entry = deriveCartEntry(totalCount, pathname);
+  // The caption ships inside the component so it hides together with the
+  // button — a wrapper-provided label would float alone while the cart is empty.
   if (!entry.visible) return null;
   return (
-    <IconButton
-      aria-label={entry.label}
-      onClick={() => navigate('/cart')}
-      sx={{ bgcolor: 'action.hover' }}
-    >
-      <Badge badgeContent={entry.count} color="error" max={CART_BADGE_MAX}>
-        <ShoppingCartRoundedIcon />
-      </Badge>
-    </IconButton>
+    <Stack alignItems="center" spacing={0.1} sx={{ flex: '0 0 auto' }}>
+      <IconButton
+        aria-label={entry.label}
+        onClick={() => navigate('/cart')}
+        sx={{ bgcolor: 'action.hover' }}
+      >
+        <Badge badgeContent={entry.count} color="error" max={CART_BADGE_MAX}>
+          <ShoppingCartRoundedIcon />
+        </Badge>
+      </IconButton>
+      {label && (
+        <Typography sx={{ fontSize: 10, fontWeight: 700, color: 'text.secondary', lineHeight: 1 }}>
+          {label}
+        </Typography>
+      )}
+    </Stack>
   );
 }

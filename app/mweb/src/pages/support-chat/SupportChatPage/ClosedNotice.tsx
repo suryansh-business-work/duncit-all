@@ -16,7 +16,7 @@ export default function ClosedNotice({ reopenable, reopenDeadline, formatDateTim
   }
 
   return (
-    <Paper variant="outlined" sx={{ p: 1, borderRadius: '4px', textAlign: 'center', bgcolor: 'action.hover' }}>
+    <Paper variant="outlined" sx={{ p: 1, borderRadius: '16px', textAlign: 'center', bgcolor: 'action.hover' }}>
       <Stack spacing={0.25}>
         <Typography variant="caption" sx={{ fontWeight: 700 }}>
           This conversation has been marked as resolved.

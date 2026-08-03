@@ -62,7 +62,7 @@ export function SecuritySheet({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={18} fontWeight="900" color="$color">
+                  <Text fontSize={18} fontWeight="700" color="$color">
                     {title}
                   </Text>
                   <XStack

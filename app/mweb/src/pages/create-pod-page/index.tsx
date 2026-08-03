@@ -224,7 +224,7 @@ export default function CreatePodPage() {
         <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
           <AddCircleOutlineIcon color="primary" />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
               Create a Pod
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>

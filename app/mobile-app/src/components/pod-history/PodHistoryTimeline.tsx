@@ -41,7 +41,7 @@ export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) 
             </YStack>
             <YStack flex={1} paddingBottom={last ? 0 : 6}>
               <XStack alignItems="center" gap={8} flexWrap="wrap">
-                <Text fontSize={14} fontWeight="900" color="$color">
+                <Text fontSize={14} fontWeight="700" color="$color">
                   {event.title}
                 </Text>
                 <XStack
@@ -54,7 +54,7 @@ export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) 
                 >
                   <Text
                     fontSize={10}
-                    fontWeight="800"
+                    fontWeight="600"
                     color={event.state === 'done' ? '$onPrimary' : '$color'}
                   >
                     {event.tag}

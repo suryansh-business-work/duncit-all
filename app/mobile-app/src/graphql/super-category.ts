@@ -8,6 +8,7 @@ export const SuperCategoriesDocument = gql(`
       name
       slug
       icon
+      description
     }
   }
 `);

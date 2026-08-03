@@ -58,7 +58,7 @@ export function ChipArrayField({
               backgroundColor="$primary"
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={12.5} fontWeight="800" color="$onPrimary">
+              <Text fontSize={12.5} fontWeight="600" color="$onPrimary">
                 {tag}
               </Text>
               <MaterialIcons name="close" size={14} color={onPrimary} />

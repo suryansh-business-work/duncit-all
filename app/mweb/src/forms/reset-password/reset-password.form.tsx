@@ -112,7 +112,7 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           size="large"
           endIcon={<ArrowForwardIcon />}
           disabled={loading}
-          sx={{ borderRadius: '4px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: '16px', py: 1.25, fontWeight: 700, textTransform: 'none' }}
         >
           {loading ? 'Resetting…' : 'Reset password'}
         </Button>

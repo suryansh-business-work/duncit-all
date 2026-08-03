@@ -27,7 +27,7 @@ export function ActionLink({ icon, label, url, testID }: Readonly<ActionLinkProp
       pressStyle={{ opacity: 0.7 }}
     >
       <MaterialIcons name={icon} size={16} color={primary} />
-      <Text fontSize={13} fontWeight="800" color="$primary">
+      <Text fontSize={13} fontWeight="600" color="$primary">
         {label}
       </Text>
     </XStack>

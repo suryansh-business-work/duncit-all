@@ -39,7 +39,7 @@ export function LocationButton() {
         ) : (
           <MaterialIcons name="place" size={15} color={color} />
         )}
-        <Text fontSize={12} fontWeight="800" color="$color" numberOfLines={1}>
+        <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
           {cityLabel || 'Location'}
         </Text>
       </XStack>

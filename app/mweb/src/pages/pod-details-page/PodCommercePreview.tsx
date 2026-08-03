@@ -69,7 +69,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
     <Box
       sx={{
         p: 2,
-        borderRadius: '4px',
+        borderRadius: '16px',
         color: textColor,
         background: isDark
           ? 'linear-gradient(145deg, #15111c 0%, #2a1926 54%, #111827 100%)'
@@ -88,13 +88,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               Pod Shop
             </Typography>
             <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
                 Products
               </Typography>
             </Stack>
           </Box>
         </Stack>
-        <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 800 }} />
+        <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 600 }} />
       </Stack>
 
       {requests.length === 0 ? (
@@ -120,18 +120,18 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               alignItems="center"
               sx={{
                 p: 1,
-                borderRadius: '4px',
+                borderRadius: '16px',
                 border: '1px solid',
                 borderColor: selected ? selectedBorder : borderColor,
                 bgcolor: selected ? selectedBg : itemBg,
                 transition: 'all 0.18s ease',
               }}
             >
-              <Box sx={{ width: 54, height: 54, borderRadius: '4px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
+              <Box sx={{ width: 54, height: 54, borderRadius: '16px', overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
                 {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.product_name}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>{item.product_name}</Typography>
                 <Typography variant="caption" sx={{ color: mutedColor }} noWrap>Available {maxQuantity}</Typography>
                 {!readOnly && quantity === 0 && maxQuantity > 0 && (
                   <Box sx={{ mt: 0.75 }}>
@@ -140,7 +140,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                       variant="outlined"
                       startIcon={<AddShoppingCartIcon />}
                       onClick={() => updateQuantity(item.product_id, 1)}
-                      sx={{ borderRadius: 999, fontWeight: 800, textTransform: 'none' }}
+                      sx={{ borderRadius: 999, fontWeight: 600, textTransform: 'none' }}
                     >
                       Add to cart
                     </Button>
@@ -148,7 +148,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                 )}
                 {selected && <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
                   <IconButton size="small" aria-label={`Decrease ${item.product_name}`} onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
-                  <Typography variant="body2" fontWeight={900}>{quantity}</Typography>
+                  <Typography variant="body2" fontWeight={700}>{quantity}</Typography>
                   <IconButton size="small" aria-label={`Increase ${item.product_name}`} disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
                 </Stack>}
               </Box>
@@ -160,7 +160,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
               >
                 <InfoOutlinedIcon fontSize="small" />
               </IconButton>
-              <Typography variant="body2" sx={{ fontWeight: 900, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
                 +{priceFormat(Number(item.unit_cost ?? 0) * Math.max(quantity, 1))}
               </Typography>
             </Stack>
@@ -179,7 +179,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           <Typography variant="caption" sx={{ color: mutedColor }}>
             {productCountLabel(selectedCount)}
           </Typography>
-          <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
             {priceFormat(shownTotal)}
           </Typography>
         </Stack>

@@ -71,7 +71,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
           <YStack flex={1} testID="post-viewer" backgroundColor="$background">
             <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
               <XStack alignItems="center" justifyContent="space-between" padding={12}>
-                <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1} flex={1}>
+                <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1} flex={1}>
                   {post?.author?.full_name ?? 'Post'}
                 </Text>
                 {post ? (

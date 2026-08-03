@@ -34,7 +34,7 @@ export default function ShopProductCard({
   };
   return (
     <Card
-      sx={{ position: 'relative', borderRadius: '4px', border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
+      sx={{ position: 'relative', borderRadius: '16px', border: 1, borderColor: 'divider', boxShadow: 'none', overflow: 'hidden' }}
     >
       <CardActionArea onClick={() => onOpen(product.id)} aria-label={`View ${product.product_name}`}>
         <Box sx={{ aspectRatio: '1 / 1', bgcolor: 'action.hover' }}>
@@ -48,7 +48,7 @@ export default function ShopProductCard({
           )}
         </Box>
         <Stack spacing={0.25} sx={{ p: 1.25 }}>
-          <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>
+          <Typography variant="body2" sx={{ fontWeight: 600 }} noWrap>
             {product.product_name}
           </Typography>
           {product.brand_name && (
@@ -57,13 +57,13 @@ export default function ShopProductCard({
             </Typography>
           )}
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.25 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'primary.main' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: 'primary.main' }}>
               {priceFormat(product.unit_cost)}
             </Typography>
             {hasRating && (
               <Stack direction="row" alignItems="center" spacing={0.25}>
                 <StarRoundedIcon sx={{ fontSize: 16, color: '#f5a623' }} />
-                <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600 }}>
                   {summary.average_rating.toFixed(1)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -83,7 +83,7 @@ export default function ShopProductCard({
             top: 6,
             right: 6,
             height: 22,
-            fontWeight: 800,
+            fontWeight: 600,
             fontSize: 11,
             bgcolor: 'grey.800',
             color: 'common.white',

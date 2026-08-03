@@ -25,7 +25,7 @@ function CountStat({
 }: Readonly<{ value: number; label: string; onClick: () => void }>) {
   return (
     <Box onClick={onClick} role="button" sx={{ textAlign: 'center', cursor: 'pointer' }}>
-      <Typography component="span" fontWeight={900}>
+      <Typography component="span" fontWeight={700}>
         {value}
       </Typography>{' '}
       <Typography component="span" variant="body2" color="text.secondary">

@@ -33,13 +33,13 @@ function PostCommentRow({
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize={13} fontWeight="900" color="$color">
+        <Text fontSize={13} fontWeight="700" color="$color">
           {initial}
         </Text>
       </YStack>
       <YStack flex={1} gap={2}>
         <XStack gap={8} alignItems="center">
-          <Text fontSize={13} fontWeight="800" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {author?.full_name ?? 'Member'}
           </Text>
           <Text fontSize={11} color="$muted">
@@ -93,19 +93,19 @@ export function PostViewerBody({ post, meId, onToggleLike, onDeleteComment }: Re
             size={20}
             color={post.liked_by_me ? danger : muted}
           />
-          <Text fontSize={13.5} fontWeight="800" color="$muted">
+          <Text fontSize={13.5} fontWeight="600" color="$muted">
             {post.likes_count}
           </Text>
         </XStack>
         <XStack alignItems="center" gap={6}>
           <MaterialIcons name="chat-bubble-outline" size={18} color={muted} />
-          <Text fontSize={13.5} fontWeight="800" color="$muted">
+          <Text fontSize={13.5} fontWeight="600" color="$muted">
             {post.comments_count}
           </Text>
         </XStack>
       </XStack>
 
-      <Text fontSize={12} fontWeight="900" color="$muted" textTransform="uppercase">
+      <Text fontSize={12} fontWeight="700" color="$muted" textTransform="uppercase">
         Comments ({post.comments_count})
       </Text>
       {post.comments.length === 0 ? (

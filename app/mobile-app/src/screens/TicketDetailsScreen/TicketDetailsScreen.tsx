@@ -106,7 +106,7 @@ export function TicketDetailsScreen() {
     ticketBody = (
       <YStack flex={1}>
         <YStack padding={16} gap={6} borderBottomWidth={1} borderColor="$borderColor">
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             {ticket.subject}
           </Text>
           <TicketMeta

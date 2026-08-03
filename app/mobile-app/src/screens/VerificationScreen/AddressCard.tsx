@@ -105,7 +105,7 @@ export function AddressCard({ item, busy, onSubmit }: Readonly<Props>) {
             pressStyle={{ opacity: 0.85 }}
           >
             {busy ? <Spinner testID="address-busy" size="small" color={onPrimary} /> : null}
-            <Text fontSize={14} fontWeight="900" color={onPrimary}>
+            <Text fontSize={14} fontWeight="700" color={onPrimary}>
               {item.status === 'NOT_SUBMITTED' ? 'Submit address' : 'Update address'}
             </Text>
           </XStack>

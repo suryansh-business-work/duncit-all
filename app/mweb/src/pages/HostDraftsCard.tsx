@@ -55,11 +55,11 @@ export default function HostDraftsCard() {
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <EditNoteIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
+          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             Draft pods
           </Typography>
           <Chip size="small" label={drafts.length} />
@@ -78,7 +78,7 @@ export default function HostDraftsCard() {
                 direction="row"
                 alignItems="center"
                 spacing={1}
-                sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}
+                sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle2" fontWeight={700} noWrap>
@@ -94,7 +94,7 @@ export default function HostDraftsCard() {
                   to={`/create-pod/${draft.id}`}
                   size="small"
                   variant="outlined"
-                  sx={{ borderRadius: 999, fontWeight: 900 }}
+                  sx={{ borderRadius: 999, fontWeight: 700 }}
                 >
                   Continue
                 </Button>

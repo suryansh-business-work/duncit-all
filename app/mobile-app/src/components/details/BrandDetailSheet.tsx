@@ -69,7 +69,7 @@ export function BrandDetailSheet({
             )}
           </YStack>
           <YStack flex={1}>
-            <Text testID="brand-detail-name" fontSize={18} fontWeight="900" color="$color">
+            <Text testID="brand-detail-name" fontSize={18} fontWeight="700" color="$color">
               {brand.brand_name}
             </Text>
             {brand.tagline ? (
@@ -122,7 +122,7 @@ export function BrandDetailSheet({
           >
             <SafeAreaView edges={['bottom']}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Brand
                 </Text>
                 <XStack

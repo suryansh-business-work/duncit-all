@@ -82,7 +82,7 @@ export function CategoryCascadeField({
       >
         <Text
           fontSize={12.5}
-          fontWeight={selected ? '800' : '600'}
+          fontWeight={selected ? '700' : '600'}
           color={selected ? onPrimary : ink}
         >
           {label}
@@ -94,7 +94,7 @@ export function CategoryCascadeField({
   const group = (label: string, level: keyof CategoryScope, options: CategoryOption[]) =>
     options.length === 0 ? null : (
       <YStack gap={6}>
-        <Text fontSize={12.5} fontWeight="800" color="$muted">
+        <Text fontSize={12.5} fontWeight="600" color="$muted">
           {label}
         </Text>
         <XStack flexWrap="wrap" gap={8}>

@@ -34,7 +34,7 @@ export function ClubPodsSchedule({ pods, onOpenPod }: Readonly<Props>) {
         if (rail.length === 0) return null;
         return (
           <YStack key={phase} gap={8}>
-            <Text fontSize={15} fontWeight="900" color="$color">
+            <Text fontSize={15} fontWeight="700" color="$color">
               {title}
             </Text>
             <ScrollView

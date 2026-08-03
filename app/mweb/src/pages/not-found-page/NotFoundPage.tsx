@@ -8,16 +8,16 @@ export default function NotFoundPage() {
     <Box data-testid="not-found-page" sx={{ minHeight: '60dvh', display: 'grid', placeItems: 'center', p: 3 }}>
       <Stack spacing={1.5} alignItems="center" textAlign="center">
         <SearchOffIcon color="primary" sx={{ fontSize: 64 }} />
-        <Typography variant="h2" fontWeight={950} sx={{ lineHeight: 1 }}>
+        <Typography variant="h2" fontWeight={700} sx={{ lineHeight: 1 }}>
           404
         </Typography>
-        <Typography variant="h6" fontWeight={800}>
+        <Typography variant="h6" fontWeight={600}>
           Page not found
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 360 }}>
           The page you’re looking for doesn’t exist or has moved.
         </Typography>
-        <Button component={RouterLink} to="/" variant="contained" sx={{ mt: 1, borderRadius: '4px', textTransform: 'none', fontWeight: 700 }}>
+        <Button component={RouterLink} to="/" variant="contained" sx={{ mt: 1, borderRadius: '16px', textTransform: 'none', fontWeight: 700 }}>
           Go to Home
         </Button>
       </Stack>

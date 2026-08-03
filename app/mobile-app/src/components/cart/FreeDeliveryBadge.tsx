@@ -21,7 +21,7 @@ export function FreeDeliveryBadge({ testID }: Readonly<{ testID: string }>) {
       borderColor="$success"
     >
       <MaterialIcons name="local-shipping" size={11} color={success} />
-      <Text fontSize={10} fontWeight="800" color="$success">
+      <Text fontSize={10} fontWeight="600" color="$success">
         Free delivery
       </Text>
     </XStack>

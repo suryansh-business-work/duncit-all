@@ -46,7 +46,7 @@ export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?:
           )}
         </YStack>
         <YStack flex={1} gap={2}>
-          <Text fontSize={15.5} fontWeight="900" color="$color" numberOfLines={1} textAlign="left">
+          <Text fontSize={15.5} fontWeight="700" color="$color" numberOfLines={1} textAlign="left">
             {club.club_name}
           </Text>
           {club.club_description ? (

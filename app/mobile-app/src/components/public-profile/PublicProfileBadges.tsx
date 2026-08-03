@@ -29,7 +29,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
     >
       <XStack alignItems="center" gap={6}>
         <MaterialIcons name="emoji-events" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           Badges
         </Text>
         <Text fontSize={12} color="$muted">
@@ -125,7 +125,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
                       <MaterialIcons name="emoji-events" size={30} color={onPrimary} />
                     )}
                   </YStack>
-                  <Text fontSize={18} fontWeight="900" color="$color" textAlign="center">
+                  <Text fontSize={18} fontWeight="700" color="$color" textAlign="center">
                     {active?.badge?.title}
                   </Text>
                   {active?.badge?.description ? (
@@ -151,7 +151,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
                     borderColor="$borderColor"
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="800" color={color}>
+                    <Text fontSize={14} fontWeight="600" color={color}>
                       Close
                     </Text>
                   </XStack>

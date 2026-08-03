@@ -49,7 +49,7 @@ export default function VenuePodsSection({ venueId }: Readonly<{ venueId: string
 
   return (
     <Stack spacing={1} data-testid="venue-pods-section">
-      <Typography variant="subtitle1" fontWeight={900}>
+      <Typography variant="subtitle1" fontWeight={700}>
         Pods at this venue
       </Typography>
       {loading && !data ? (

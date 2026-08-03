@@ -15,7 +15,7 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
       }}
       sx={{
         p: 1.5,
-        borderRadius: '4px',
+        borderRadius: '16px',
         cursor: 'pointer',
         transition: 'border-color 160ms ease, background-color 160ms ease',
         '&:hover': { borderColor: 'primary.main', bgcolor: (t) => alpha(t.palette.primary.main, 0.05) },
@@ -26,7 +26,7 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
         sx={{
           width: 36,
           height: 36,
-          borderRadius: '4px',
+          borderRadius: '8px',
           display: 'grid',
           placeItems: 'center',
           color: 'primary.main',
@@ -36,7 +36,7 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
       >
         {profileIcon(tile.icon)}
       </Box>
-      <Typography fontSize={14} fontWeight={800} noWrap>
+      <Typography fontSize={14} fontWeight={600} noWrap>
         {tile.label}
       </Typography>
       <Typography fontSize={11.5} color="text.secondary" noWrap display="block">

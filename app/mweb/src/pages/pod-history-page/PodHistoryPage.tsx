@@ -69,7 +69,7 @@ export default function PodHistoryPage() {
           <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0 }}>
             Pods
           </Typography>
-          <Typography variant="h5" fontWeight={900}>
+          <Typography variant="h5" fontWeight={700}>
             Joined Pods
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -102,7 +102,7 @@ export default function PodHistoryPage() {
 
       {visible.length === 0 ? (
         <Alert severity="info" icon={false}>
-          <Typography fontWeight={900}>No Pods Found</Typography>
+          <Typography fontWeight={700}>No Pods Found</Typography>
           <Typography variant="body2">
             We couldn't find any enrolled Pods matching your search or filters. Try a different search or change your
             filters to explore more of your Pod history.
@@ -119,7 +119,7 @@ export default function PodHistoryPage() {
                       <HistoryIcon />
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography fontWeight={900} noWrap>
+                      <Typography fontWeight={700} noWrap>
                         {item.pod?.pod_title ?? 'Pod'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">

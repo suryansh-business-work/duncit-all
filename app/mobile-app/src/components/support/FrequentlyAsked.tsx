@@ -34,7 +34,7 @@ function FrequentlyAskedTile({ faq, colors, onOpen }: Readonly<FrequentlyAskedTi
       />
       <YStack flex={1} padding={16} justifyContent="space-between" gap={12}>
         <MaterialIcons name="help-outline" size={22} color="#ffffff" style={styles.icon} />
-        <Text fontSize={14} fontWeight="900" color="#ffffff" lineHeight={18}>
+        <Text fontSize={14} fontWeight="700" color="#ffffff" lineHeight={18}>
           {faq.question}
         </Text>
       </YStack>
@@ -55,7 +55,7 @@ export function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAskedProps>
     <YStack gap={8}>
       <Text
         fontSize={12}
-        fontWeight="900"
+        fontWeight="700"
         color="$muted"
         textTransform="uppercase"
         letterSpacing={0.5}

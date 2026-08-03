@@ -65,7 +65,7 @@ export function VenuePicker({
                 pressStyle={{ opacity: 0.85 }}
               >
                 <XStack alignItems="center" gap={6}>
-                  <Text flex={1} fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+                  <Text flex={1} fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
                     {venue.venue_name}
                   </Text>
                   {selected ? (

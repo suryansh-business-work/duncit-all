@@ -30,7 +30,7 @@ function ActionRow({
       pressStyle={{ opacity: 0.8 }}
     >
       <MaterialIcons name={icon} size={20} color={primary} />
-      <Text flex={1} fontSize={14.5} fontWeight="800" color="$color">
+      <Text flex={1} fontSize={14.5} fontWeight="600" color="$color">
         {label}
       </Text>
       <MaterialIcons name="chevron-right" size={22} color={muted} />
@@ -76,7 +76,7 @@ export function HostsVenuesCard({
         gap={2}
         pressStyle={onDiscover ? { opacity: 0.85 } : undefined}
       >
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Hosts &amp; Venues
         </Text>
         <Text fontSize={13} color="$muted">

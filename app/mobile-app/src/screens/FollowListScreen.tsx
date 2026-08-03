@@ -61,13 +61,13 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={16} fontWeight="900" color="$onPrimary">
+            <Text fontSize={16} fontWeight="700" color="$onPrimary">
               {initial}
             </Text>
           </YStack>
         )}
         <YStack flex={1}>
-          <Text fontSize={15} fontWeight="800" color="$color" numberOfLines={1}>
+          <Text fontSize={15} fontWeight="600" color="$color" numberOfLines={1}>
             {person.full_name || person.first_name || 'Duncit user'}
           </Text>
           <Text fontSize={12.5} color="$muted" numberOfLines={1}>
@@ -118,7 +118,7 @@ export function FollowListScreen() {
               borderColor={selected ? '$primary' : '$borderColor'}
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={13} fontWeight="900" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
                 {TAB_LABELS[value]}
               </Text>
             </XStack>

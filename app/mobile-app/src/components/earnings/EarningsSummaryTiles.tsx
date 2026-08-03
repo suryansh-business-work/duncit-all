@@ -19,7 +19,7 @@ function Tile({ label, value }: Readonly<{ label: string; value: string }>) {
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={17} fontWeight="900" color="$color" numberOfLines={1}>
+      <Text fontSize={17} fontWeight="700" color="$color" numberOfLines={1}>
         {value}
       </Text>
       <Text fontSize={12} fontWeight="700" color="$muted">

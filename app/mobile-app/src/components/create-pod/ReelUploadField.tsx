@@ -99,7 +99,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
           <MaterialIcons name="movie" size={18} color={onPrimary} />
         </YStack>
         <YStack flex={1}>
-          <Text fontSize={14} fontWeight="900" color="$color">
+          <Text fontSize={14} fontWeight="700" color="$color">
             Pod Reel
           </Text>
           <Text fontSize={12} color="$muted">
@@ -107,7 +107,7 @@ export function ReelUploadField({ value, onChange }: Readonly<Props>) {
           </Text>
         </YStack>
         {value ? (
-          <Text fontSize={12} fontWeight="800" color="$primary">
+          <Text fontSize={12} fontWeight="600" color="$primary">
             Added
           </Text>
         ) : (

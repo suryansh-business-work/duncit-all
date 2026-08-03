@@ -14,7 +14,7 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
         color="error"
         startIcon={<LogoutIcon />}
         onClick={onLogout}
-        sx={{ borderRadius: 999, fontWeight: 900 }}
+        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         Logout
       </Button>

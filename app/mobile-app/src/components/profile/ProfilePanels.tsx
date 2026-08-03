@@ -36,7 +36,7 @@ function NavRow({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name={icon} size={20} color={primary} />
-      <Text flex={1} fontSize={14.5} fontWeight="800" color="$color">
+      <Text flex={1} fontSize={14.5} fontWeight="600" color="$color">
         {label}
       </Text>
       <MaterialIcons name="chevron-right" size={22} color={muted} />
@@ -107,7 +107,7 @@ export function ProfilePanels({
           onToggle={() => toggle('pet')}
           testID="accordion-pet"
         >
-          <Text fontSize={14} fontWeight="800" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             {pet.name}
           </Text>
           <Text fontSize={12.5} color="$muted">

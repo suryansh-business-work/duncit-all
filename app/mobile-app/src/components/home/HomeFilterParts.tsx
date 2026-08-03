@@ -26,7 +26,7 @@ export function FilterChip({ label, selected, onPress, testID }: Readonly<Filter
       borderColor={selected ? '$primary' : '$borderColor'}
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={13} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
+      <Text fontSize={13} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -42,7 +42,7 @@ interface SectionProps {
 export function Section({ title, children }: Readonly<SectionProps>) {
   return (
     <YStack gap={8}>
-      <Text fontSize={11.5} fontWeight="800" color="$muted" textTransform="uppercase">
+      <Text fontSize={11.5} fontWeight="600" color="$muted" textTransform="uppercase">
         {title}
       </Text>
       {children}

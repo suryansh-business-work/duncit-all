@@ -34,14 +34,14 @@ export function ClubsLocationNote() {
         <MaterialIcons name="info-outline" size={16} color={primary} />
         <Text flex={1} fontSize={12.5} color="$muted" lineHeight={18}>
           Showing clubs in{' '}
-          <Text fontWeight="800" color="$color">
+          <Text fontWeight="600" color="$color">
             {label}
           </Text>
           . Want clubs from another location?{' '}
           <Text
             testID="clubs-location-note-change"
             color="$primary"
-            fontWeight="800"
+            fontWeight="600"
             textDecorationLine="underline"
             onPress={() => setOpen(true)}
           >

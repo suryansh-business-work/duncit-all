@@ -96,15 +96,15 @@ export default function AddressBookSection() {
   };
 
   return (
-    <Box sx={{ p: 2, borderRadius: '4px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+    <Box sx={{ p: 2, borderRadius: '16px', border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <HomeWorkIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             Address Book
           </Typography>
         </Stack>
-        <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={openAdd} sx={{ borderRadius: 999, fontWeight: 800 }}>
+        <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={openAdd} sx={{ borderRadius: 999, fontWeight: 600 }}>
           Add address
         </Button>
       </Stack>
@@ -122,14 +122,14 @@ export default function AddressBookSection() {
             direction="row"
             spacing={1}
             alignItems="center"
-            sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}
+            sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Stack direction="row" spacing={0.75} alignItems="center">
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {address.label}
                 </Typography>
-                {address.is_default && <Chip size="small" color="primary" label="Default" sx={{ fontWeight: 800 }} />}
+                {address.is_default && <Chip size="small" color="primary" label="Default" sx={{ fontWeight: 600 }} />}
               </Stack>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }} noWrap>
                 {oneLine(address)}

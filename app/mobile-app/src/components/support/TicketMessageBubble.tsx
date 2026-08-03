@@ -29,7 +29,7 @@ function SystemLine({ id, text }: Readonly<{ id: string; text: string }>) {
     <XStack justifyContent="center" testID={`ticket-msg-${id}`}>
       <Text
         fontSize={11.5}
-        fontWeight="800"
+        fontWeight="600"
         color="$muted"
         textAlign="center"
         borderWidth={1}
@@ -69,7 +69,7 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
         borderColor="$borderColor"
         gap={3}
       >
-        <Text fontSize={11} fontWeight="800" color={subtleInk}>
+        <Text fontSize={11} fontWeight="600" color={subtleInk}>
           {message.author_name}
         </Text>
         <AttachmentView urls={message.attachments} size={120} />

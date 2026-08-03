@@ -18,7 +18,7 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
 
   return (
     <YStack gap={8}>
-      <Text fontSize={11} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
         CITY
       </Text>
       {cities.length === 0 ? (
@@ -55,7 +55,7 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
               <MaterialIcons name="location-city" size={28} color={primary} />
             )}
             <YStack flex={1}>
-              <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
+              <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
                 {loc.location_name}
               </Text>
               <Text fontSize={12.5} fontWeight="700" color="$primary" numberOfLines={1}>

@@ -19,7 +19,7 @@ export default function ZeroEarningsNotice() {
       data-testid="create-pod-zero-earnings"
       sx={{
         p: 1.25,
-        borderRadius: '4px',
+        borderRadius: '16px',
         bgcolor: alpha(theme.palette.warning.main, 0.1),
         border: 1,
         borderColor: alpha(theme.palette.warning.main, 0.4),
@@ -27,7 +27,7 @@ export default function ZeroEarningsNotice() {
     >
       <InfoOutlinedIcon fontSize="small" color="warning" />
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle2" fontWeight={800}>
+        <Typography variant="subtitle2" fontWeight={600}>
           {ZERO_EARNINGS_TITLE}
         </Typography>
         <Typography variant="caption" color="text.secondary">

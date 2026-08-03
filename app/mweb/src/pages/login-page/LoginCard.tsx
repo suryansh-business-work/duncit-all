@@ -35,7 +35,7 @@ export default function LoginCard({
       <Stack spacing={2.1}>
         <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
-          <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+          <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
             Welcome <Box component="span" sx={{ color: '#ff5b72' }}>back.</Box>
           </Typography>
           <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 300 }}>
@@ -50,7 +50,7 @@ export default function LoginCard({
           sx={{
             px: 1.25,
             py: 1,
-            borderRadius: '4px',
+            borderRadius: '16px',
             bgcolor: 'action.hover',
             border: 1,
             borderColor: 'divider',
@@ -61,7 +61,7 @@ export default function LoginCard({
               <Box key={color} sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: color, border: '2px solid #201529' }} />
             ))}
           </Stack>
-          <Typography variant="caption" fontWeight={800} color="text.primary">
+          <Typography variant="caption" fontWeight={600} color="text.primary">
             New pods are waiting for your crew today
           </Typography>
         </Stack>

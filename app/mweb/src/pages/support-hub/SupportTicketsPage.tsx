@@ -83,7 +83,7 @@ export default function SupportTicketsPage() {
       backTo="/support"
     >
       <Stack spacing={2.25}>
-        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.12)' }}>
+        <Paper variant="outlined" sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.12)' }}>
           <Stack direction="row" alignItems="center" spacing={1.25}>
             <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
               {['primary.main', 'secondary.main', 'info.main'].map((color) => (
@@ -96,14 +96,14 @@ export default function SupportTicketsPage() {
               ))}
             </Stack>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 950 }} noWrap>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
                 Help squad is ready
               </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
                 Average reply within 24 hours
               </Typography>
             </Box>
-            <Chip size="small" color="success" label="Live" sx={{ fontWeight: 900 }} />
+            <Chip size="small" color="success" label="Live" sx={{ fontWeight: 700 }} />
           </Stack>
         </Paper>
 
@@ -112,7 +112,7 @@ export default function SupportTicketsPage() {
           variant="outlined"
           sx={{
             p: 1.5,
-            borderRadius: '4px',
+            borderRadius: '16px',
             bgcolor: 'rgba(20,184,166,0.10)',
             borderColor: 'rgba(20,184,166,0.24)',
             cursor: 'pointer',
@@ -121,7 +121,7 @@ export default function SupportTicketsPage() {
           <Stack direction="row" spacing={1} alignItems="center">
             <HelpOutlineIcon color="success" />
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 Maybe answered already?
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -131,9 +131,9 @@ export default function SupportTicketsPage() {
           </Stack>
         </Paper>
 
-        <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
+        <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
           <Box sx={{ mb: 1 }}>
-            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+            <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
               Tell us what's going on
             </Typography>
             <Typography variant="body2" color="text.secondary">

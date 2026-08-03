@@ -20,9 +20,9 @@ interface Props {
 
 export default function SearchSortMenu({ open, value, onClose, onSelect }: Readonly<Props>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '4px' } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
-        <DialogTitle sx={{ fontWeight: 900 }}>Sort Results</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Sort Results</DialogTitle>
         <IconButton aria-label="Close sort" onClick={onClose}>
           <CloseIcon />
         </IconButton>
@@ -41,7 +41,7 @@ export default function SearchSortMenu({ open, value, onClose, onSelect }: Reado
             <ListItemText
               primary={option.label}
               secondary={option.description}
-              primaryTypographyProps={{ fontWeight: 800 }}
+              primaryTypographyProps={{ fontWeight: 600 }}
             />
           </ListItemButton>
         ))}

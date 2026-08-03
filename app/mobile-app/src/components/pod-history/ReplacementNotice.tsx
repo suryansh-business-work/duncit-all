@@ -19,7 +19,7 @@ export function ReplacementNotice({ deductionPct }: Readonly<Props>) {
   return (
     <YStack gap={4} testID="ph-replacement">
       <XStack alignItems="center" gap={6}>
-        <Text fontSize={13} fontWeight="800" color="$color">
+        <Text fontSize={13} fontWeight="600" color="$color">
           We are finding your replacement
         </Text>
         <XStack

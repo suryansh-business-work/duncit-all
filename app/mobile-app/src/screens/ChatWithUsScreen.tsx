@@ -47,7 +47,7 @@ export function ChatWithUsScreen() {
             <MaterialIcons name="forum" size={22} color={onPrimary} />
           </YStack>
           <YStack flex={1} gap={2}>
-            <Text fontSize={15} fontWeight="900" color="$color">
+            <Text fontSize={15} fontWeight="700" color="$color">
               Chat live with an agent
             </Text>
             <Text fontSize={12.5} color="$muted">

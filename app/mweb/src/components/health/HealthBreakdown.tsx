@@ -21,10 +21,10 @@ const BAND_COLOR: Record<HealthScore['band'], 'error' | 'warning' | 'success'> =
 export default function HealthBreakdown({ score }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
         <Stack direction="row" alignItems="center" spacing={2} flexWrap="wrap" rowGap={1}>
           <Box>
-            <Typography variant="h3" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            <Typography variant="h3" sx={{ fontWeight: 700, lineHeight: 1 }}>
               {score.total_score}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -36,7 +36,7 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
               size="small"
               color={BAND_COLOR[score.band]}
               label={BAND_LABEL[score.band]}
-              sx={{ fontWeight: 800, mb: 0.5 }}
+              sx={{ fontWeight: 600, mb: 0.5 }}
             />
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
               Base score: {score.base_score}
@@ -51,7 +51,7 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
       </Paper>
 
       <Box>
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
           Admin remarks
         </Typography>
         {score.adjustments.length === 0 ? (
@@ -64,9 +64,9 @@ export default function HealthBreakdown({ score }: Readonly<Props>) {
               const sign = a.delta > 0 ? `+${a.delta}` : `${a.delta}`;
               const color: 'success' | 'error' = a.delta > 0 ? 'success' : 'error';
               return (
-                <Paper key={a.id} variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }}>
+                <Paper key={a.id} variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
                   <Stack direction="row" alignItems="center" spacing={1.25}>
-                    <Chip size="small" color={color} label={sign} sx={{ fontWeight: 900 }} />
+                    <Chip size="small" color={color} label={sign} sx={{ fontWeight: 700 }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Typography variant="body2">{a.remark}</Typography>
                       <Typography variant="caption" color="text.secondary">

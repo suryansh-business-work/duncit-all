@@ -75,7 +75,7 @@ export default function PodPlansPage() {
                     sx={{
                       width: 56,
                       height: 56,
-                      borderRadius: '4px',
+                      borderRadius: '16px',
                       objectFit: 'cover',
                       flexShrink: 0,
                     }}

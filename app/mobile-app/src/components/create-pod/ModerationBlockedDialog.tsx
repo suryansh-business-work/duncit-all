@@ -60,7 +60,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
             <SafeAreaView edges={[]}>
               <XStack alignItems="center" gap={8} paddingBottom={2}>
                 <MaterialIcons name="gpp-maybe" size={20} color="#ef4444" />
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Fix these before publishing
                 </Text>
               </XStack>
@@ -93,7 +93,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                       pressStyle={{ opacity: 0.7 }}
                     >
                       <MaterialIcons name="arrow-forward" size={14} color="#7C3AED" />
-                      <Text fontSize={12} fontWeight="800" color="#7C3AED">
+                      <Text fontSize={12} fontWeight="600" color="#7C3AED">
                         Fix in {violation.stepTitle}
                       </Text>
                     </XStack>
@@ -113,7 +113,7 @@ export function ModerationBlockedDialog({ violations, onJump, onClose }: Readonl
                 borderColor="$borderColor"
                 pressStyle={{ opacity: 0.7 }}
               >
-                <Text fontSize={14} fontWeight="800" color="$color">
+                <Text fontSize={14} fontWeight="600" color="$color">
                   Close
                 </Text>
               </XStack>

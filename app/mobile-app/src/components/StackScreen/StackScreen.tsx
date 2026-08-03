@@ -52,7 +52,7 @@ export function StackScreen({
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text flex={1} fontSize={18} fontWeight="800" color="$color" numberOfLines={1}>
+          <Text flex={1} fontSize={18} fontWeight="600" color="$color" numberOfLines={1}>
             {title}
           </Text>
           {right}

@@ -31,10 +31,10 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
         <Chip
           label="Sponsored"
           size="small"
-          sx={{ height: 20, fontSize: 10.5, fontWeight: 800, color: '#fff', bgcolor: 'rgba(255,255,255,0.22)' }}
+          sx={{ height: 20, fontSize: 10.5, fontWeight: 600, color: '#fff', bgcolor: 'rgba(255,255,255,0.22)' }}
         />
         {ad.ad_title && (
-          <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
             {ad.ad_title}
           </Typography>
         )}
@@ -44,7 +44,7 @@ export default function AdSlide({ ad }: Readonly<{ ad: PublicAd }>) {
             size="small"
             endIcon={<OpenInNewIcon />}
             onClick={() => openAdLink(ad.redirect_url)}
-            sx={{ fontWeight: 800, borderRadius: 999 }}
+            sx={{ fontWeight: 600, borderRadius: 999 }}
           >
             Learn more
           </Button>

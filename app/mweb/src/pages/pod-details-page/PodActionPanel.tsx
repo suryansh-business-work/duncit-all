@@ -31,7 +31,7 @@ const compactButtonSx = {
   minHeight: 40,
   px: 1.5,
   fontSize: 13,
-  fontWeight: 950,
+  fontWeight: 700,
   whiteSpace: 'nowrap',
 };
 
@@ -89,7 +89,7 @@ export default function PodActionPanel({
     !!pod?.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
   if (isExpired && !isMember && !inProcess) {
     return (
-      <Alert severity="warning" sx={{ borderRadius: '4px' }}>
+      <Alert severity="warning" sx={{ borderRadius: '16px' }}>
         This pod has already taken place — booking is closed.
       </Alert>
     );

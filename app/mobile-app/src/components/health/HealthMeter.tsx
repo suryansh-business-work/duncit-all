@@ -63,15 +63,15 @@ export function HealthMeter({
           alignItems="center"
           justifyContent="flex-end"
         >
-          <Text fontWeight="900" fontSize={size * 0.28} lineHeight={size * 0.3} color={color}>
+          <Text fontWeight="700" fontSize={size * 0.28} lineHeight={size * 0.3} color={color}>
             {safeScore}
           </Text>
-          <Text fontSize={12} fontWeight="800" color="$muted">
+          <Text fontSize={12} fontWeight="600" color="$muted">
             / 100
           </Text>
         </YStack>
       </YStack>
-      <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted" marginTop={8}>
+      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted" marginTop={8}>
         {label}
       </Text>
       {caption ? (

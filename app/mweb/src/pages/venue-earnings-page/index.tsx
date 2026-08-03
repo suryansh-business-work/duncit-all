@@ -37,10 +37,10 @@ export default function VenueEarningsPage() {
           <PaidIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             Earnings
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             Your venue payouts across all pods
           </Typography>
         </Box>
@@ -48,10 +48,10 @@ export default function VenueEarningsPage() {
 
       {summary && <StatCards summary={summary} />}
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
+            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
               Payout history
             </Typography>
             <Chip size="small" label={payouts.length} />

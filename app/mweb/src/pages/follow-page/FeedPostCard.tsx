@@ -33,7 +33,7 @@ export default function FeedPostCard({
     <Card
       variant="outlined"
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         bgcolor: 'background.paper',
         boxShadow: '0 18px 42px rgba(9,7,18,0.14)',
@@ -55,7 +55,7 @@ export default function FeedPostCard({
             {avatarFallback}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
+            <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
               {header.name}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
@@ -64,7 +64,7 @@ export default function FeedPostCard({
           </Box>
         </Stack>
         {post.kind === 'STORY' && (
-          <Chip size="small" color="secondary" label="STORY" sx={{ height: 22, fontWeight: 900 }} />
+          <Chip size="small" color="secondary" label="STORY" sx={{ height: 22, fontWeight: 700 }} />
         )}
       </Stack>
 
@@ -101,13 +101,13 @@ export default function FeedPostCard({
         >
           {post.liked_by_me ? <FavoriteIcon /> : <FavoriteBorderIcon />}
         </IconButton>
-        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {post.likes_count}
         </Typography>
         <IconButton aria-label="Comments" onClick={() => onOpenComments(post.id)} sx={{ ml: 0.5 }}>
           <ChatBubbleOutlineIcon />
         </IconButton>
-        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
           {post.comments_count}
         </Typography>
       </Stack>

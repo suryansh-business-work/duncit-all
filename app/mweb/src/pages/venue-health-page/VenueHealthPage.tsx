@@ -22,10 +22,10 @@ export default function VenueHealthPage() {
           <ArrowBackIcon />
         </IconButton>
         <Box>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             {data?.myVenueHealth?.subject_label || 'Venue'}
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
             Venue Health
           </Typography>
         </Box>

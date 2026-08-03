@@ -17,7 +17,7 @@ export function CouponTotal({
 }>) {
   if (!coupon?.ok) return null;
   return (
-    <Text testID="coupon-total" fontSize={14} fontWeight="800" color="$color">
+    <Text testID="coupon-total" fontSize={14} fontWeight="600" color="$color">
       You pay {currency}
       {effectiveTotal}{' '}
       <Text fontSize={13} color="$muted" textDecorationLine="line-through">

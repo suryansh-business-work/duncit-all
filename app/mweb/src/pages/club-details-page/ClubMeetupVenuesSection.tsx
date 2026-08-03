@@ -66,7 +66,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
           <Card
             key={venue.id}
             variant="outlined"
-            sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '4px' }}
+            sx={{ minWidth: 220, flex: '0 0 auto', borderRadius: '16px' }}
           >
             <CardActionArea onClick={() => setSelectedId(venue.id)}>
               <CardContent>
@@ -77,7 +77,7 @@ export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
                   {[venue.locality, venue.city].filter(Boolean).join(', ')}
                 </Typography>
                 {distance && (
-                  <Chip size="small" icon={<NearMeIcon sx={{ fontSize: 14 }} />} label={distance} sx={{ mt: 0.5, height: 22, fontWeight: 800 }} />
+                  <Chip size="small" icon={<NearMeIcon sx={{ fontSize: 14 }} />} label={distance} sx={{ mt: 0.5, height: 22, fontWeight: 600 }} />
                 )}
               </CardContent>
             </CardActionArea>

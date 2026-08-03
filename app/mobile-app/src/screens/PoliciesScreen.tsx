@@ -44,7 +44,7 @@ export function PoliciesScreen() {
                 pressStyle={{ opacity: 0.85 }}
               >
                 <MaterialIcons name="description" size={20} color={primary} />
-                <Text flex={1} fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
+                <Text flex={1} fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
                   {policy.title}
                 </Text>
                 <MaterialIcons name="chevron-right" size={22} color={muted} />

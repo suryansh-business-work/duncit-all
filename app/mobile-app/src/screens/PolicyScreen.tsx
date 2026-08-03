@@ -54,7 +54,7 @@ export function PolicyScreen() {
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text numberOfLines={1} flex={1} fontSize={18} fontWeight="800" color="$color">
+          <Text numberOfLines={1} flex={1} fontSize={18} fontWeight="600" color="$color">
             {policy?.title ?? 'Policy'}
           </Text>
           <XStack

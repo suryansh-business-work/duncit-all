@@ -60,10 +60,10 @@ export default function PricePanel({ preview }: Readonly<Props>) {
       <Stack spacing={1.25}>
         <Stack spacing={0.25}>
           <Stack direction="row" justifyContent="space-between" spacing={2}>
-            <Typography variant="body2" fontWeight={800}>
+            <Typography variant="body2" fontWeight={600}>
               Total collection ({fmt(podAmount)} × {projection.payable_spots})
             </Typography>
-            <Typography variant="body2" fontWeight={900} color="success.main">
+            <Typography variant="body2" fontWeight={700} color="success.main">
               {fmt(w.amount)}
             </Typography>
           </Stack>
@@ -88,22 +88,22 @@ export default function PricePanel({ preview }: Readonly<Props>) {
   };
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: '4px' }} data-testid="create-pod-price-panel">
+    <Card variant="outlined" sx={{ p: 2, borderRadius: '16px' }} data-testid="create-pod-price-panel">
       <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} alignItems="center">
           <InsightsIcon color="primary" fontSize="small" />
-          <Typography variant="subtitle2" fontWeight={900}>
+          <Typography variant="subtitle2" fontWeight={700}>
             Potential earnings
           </Typography>
         </Stack>
-        <Typography variant="caption" fontWeight={800} color="text.secondary">
+        <Typography variant="caption" fontWeight={600} color="text.secondary">
           Your take-home for the full pod
         </Typography>
         {noOfSpots > 0 && (
           <Alert
             severity="success"
             icon={<InfoOutlinedIcon fontSize="small" />}
-            sx={{ borderRadius: '4px', py: 0.25 }}
+            sx={{ borderRadius: '16px', py: 0.25 }}
             data-testid="price-panel-host-free-note"
           >
             Your spot is free — that is why the total calculation is based on the remaining

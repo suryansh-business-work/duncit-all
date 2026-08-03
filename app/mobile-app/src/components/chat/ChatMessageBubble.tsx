@@ -93,7 +93,7 @@ export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessa
         borderColor={mine ? '$primary' : '$borderColor'}
       >
         {!mine && message.user_name ? (
-          <Text fontSize={11} fontWeight="800" color="$muted">
+          <Text fontSize={11} fontWeight="600" color="$muted">
             {message.user_name}
           </Text>
         ) : null}

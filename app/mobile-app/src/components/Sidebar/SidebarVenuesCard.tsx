@@ -63,7 +63,7 @@ export function SidebarVenuesCard({
         <YStack flex={1} padding={16} justifyContent="flex-end" style={{ backgroundColor: SCRIM }}>
           <XStack alignItems="center" justifyContent="space-between">
             <YStack>
-              <Text fontSize={26} fontWeight="900" color="white">
+              <Text fontSize={26} fontWeight="700" color="white">
                 Venues
               </Text>
               <Text fontSize={12.5} fontWeight="700" color="rgba(255,255,255,0.85)">

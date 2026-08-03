@@ -66,7 +66,7 @@ function BrandAttribution({
         type="button"
         onClick={() => onOpenBrand(brandId)}
         underline="hover"
-        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 800, width: 'fit-content' }}
+        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontWeight: 600, width: 'fit-content' }}
       >
         <StorefrontIcon sx={{ fontSize: 16 }} />
         by {brandName}
@@ -177,23 +177,23 @@ export default function ProductDetailDialog({
                 key={url}
                 onClick={() => setZoomIndex(imageIndex)}
                 aria-label="Zoom image"
-                sx={{ borderRadius: '4px', flex: '0 0 auto' }}
+                sx={{ borderRadius: '16px', flex: '0 0 auto' }}
               >
                 <Box
                   component="img"
                   src={url}
                   alt={product.product_name}
-                  sx={{ width: 160, height: 160, borderRadius: '4px', objectFit: 'cover' }}
+                  sx={{ width: 160, height: 160, borderRadius: '16px', objectFit: 'cover' }}
                 />
               </ButtonBase>
             ))}
           </Stack>
         )}
-        <Typography variant="h6" sx={{ fontWeight: 900 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
           {product.product_name}
         </Typography>
         <Stack direction="row" spacing={1} alignItems="baseline">
-          <Typography variant="h5" sx={{ fontWeight: 900, color: 'primary.main' }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
             {formatRupees(price)}
           </Typography>
           {mrp > price && (
@@ -222,7 +222,7 @@ export default function ProductDetailDialog({
           {description || 'No description provided.'}
         </Typography>
         {specs.length > 0 && (
-          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '4px', overflow: 'hidden' }}>
+          <Box sx={{ border: 1, borderColor: 'divider', borderRadius: '16px', overflow: 'hidden' }}>
             {specs.map((spec, specIndex) => (
               <Box key={spec.label}>
                 {specIndex > 0 && <Divider />}
@@ -230,7 +230,7 @@ export default function ProductDetailDialog({
                   <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
                     {spec.label}
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
                     {spec.value}
                   </Typography>
                 </Stack>

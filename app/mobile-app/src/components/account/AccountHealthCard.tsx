@@ -53,7 +53,7 @@ export function AccountHealthCard({
           alignItems="center"
           justifyContent="center"
         >
-          <Text fontSize={24} fontWeight="900" color="$color">
+          <Text fontSize={24} fontWeight="700" color="$color">
             {health.total_score}
           </Text>
           <Text fontSize={10} fontWeight="700" color="$muted">
@@ -61,7 +61,7 @@ export function AccountHealthCard({
           </Text>
         </YStack>
         <YStack flex={1} gap={4}>
-          <Text fontSize={16} fontWeight="900" color="$color">
+          <Text fontSize={16} fontWeight="700" color="$color">
             {BAND_MESSAGE[health.band] ?? 'Account health'}
           </Text>
           <Text fontSize={13} color="$muted">
@@ -74,7 +74,7 @@ export function AccountHealthCard({
             </Text>
           ) : null}
           {onPress ? (
-            <Text fontSize={12} fontWeight="800" color="$primary">
+            <Text fontSize={12} fontWeight="600" color="$primary">
               Tap for details
             </Text>
           ) : null}

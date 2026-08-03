@@ -13,11 +13,11 @@ interface FaqAnswerDialogProps {
 export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDialogProps>) {
   const navigate = useNavigate();
   return (
-    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '4px' } }}>
+    <Dialog open={faq !== null} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '16px' } }}>
       {faq && (
         <DialogContent sx={{ p: 2.5 }}>
           <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={1}>
-            <Typography variant="h6" sx={{ fontWeight: 950, pr: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, pr: 1 }}>
               {faq.question}
             </Typography>
             <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }} aria-label="Close">
@@ -27,7 +27,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
           <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', mt: 1.5 }}>
             {faq.answer}
           </Typography>
-          <Box sx={{ mt: 2.5, p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.08)' }}>
+          <Box sx={{ mt: 2.5, p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.08)' }}>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
               Still need help?
             </Typography>
@@ -39,7 +39,7 @@ export default function FaqAnswerDialog({ faq, onClose }: Readonly<FaqAnswerDial
                 onClose();
                 navigate('/live-chat');
               }}
-              sx={{ mt: 1, borderRadius: 999, fontWeight: 900 }}
+              sx={{ mt: 1, borderRadius: 999, fontWeight: 700 }}
             >
               Start a conversation
             </Button>

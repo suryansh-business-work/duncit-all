@@ -32,10 +32,10 @@ export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
         />
       ) : null}
       <YStack padding={14} gap={4}>
-        <Text fontSize={11} fontWeight="800" textTransform="uppercase" color="$muted">
+        <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
           Your booking
         </Text>
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           {pod.pod_title}
         </Text>
         {pod.pod_date_time ? (

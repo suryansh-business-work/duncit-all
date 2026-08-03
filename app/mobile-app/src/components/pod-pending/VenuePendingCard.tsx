@@ -66,7 +66,7 @@ export function VenuePendingCard({
       backgroundColor="$surface"
     >
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text flex={1} fontSize={16} fontWeight="900" color="$color" numberOfLines={2}>
+        <Text flex={1} fontSize={16} fontWeight="700" color="$color" numberOfLines={2}>
           {venue.venue_name}
         </Text>
         <XStack
@@ -79,7 +79,7 @@ export function VenuePendingCard({
           borderColor={badgeColor}
         >
           <MaterialIcons name={badge.icon} size={14} color={badgeColor} />
-          <Text testID="venue-pending-badge" fontSize={11} fontWeight="900" color={badgeColor}>
+          <Text testID="venue-pending-badge" fontSize={11} fontWeight="700" color={badgeColor}>
             {badge.label}
           </Text>
         </XStack>

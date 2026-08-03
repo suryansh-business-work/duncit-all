@@ -74,7 +74,7 @@ export default function SupportForm({
             label={`About pod: ${attachedPod}`}
             variant="outlined"
             color="primary"
-            sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
+            sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
           />
         ) : null}
         <RhfTextField
@@ -160,7 +160,7 @@ export default function SupportForm({
           variant="contained"
           size="large"
           disabled={loading || isSubmitting}
-          sx={{ borderRadius: 999, fontWeight: 950 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {loading || isSubmitting ? 'Sending…' : 'Send to support'}
         </Button>

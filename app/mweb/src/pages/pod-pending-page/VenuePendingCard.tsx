@@ -74,10 +74,10 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
   });
 
   return (
-    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }} data-testid="venue-pending-card">
+    <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="venue-pending-card">
       <Stack spacing={1.25}>
         <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0 }}>
             {venue.venue_name}
           </Typography>
           <Chip
@@ -87,7 +87,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
             icon={BADGE_ICONS[badge.icon]}
             label={badge.label}
             data-testid="venue-pending-badge"
-            sx={{ fontWeight: 900 }}
+            sx={{ fontWeight: 700 }}
           />
         </Stack>
         {rows.map((row) => (
@@ -102,7 +102,7 @@ export default function VenuePendingCard({ venue, status }: Readonly<Props>) {
             size="small"
             startIcon={<MapIcon />}
             data-testid="venue-pending-map"
-            sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
+            sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
           >
             View on Map
           </Button>

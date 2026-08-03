@@ -104,7 +104,7 @@ export default function CategoryStep({
         size="large"
         disabled={submitting}
         onClick={onSubmit}
-        sx={{ borderRadius: 999, fontWeight: 900 }}
+        sx={{ borderRadius: 999, fontWeight: 700 }}
       >
         {submitting ? 'Loading…' : 'Continue'}
       </Button>

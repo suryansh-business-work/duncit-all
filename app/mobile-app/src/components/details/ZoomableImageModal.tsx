@@ -37,7 +37,7 @@ export function ZoomableImageModal({
             paddingHorizontal={16}
             paddingVertical={8}
           >
-            <Text color="#ffffff" fontSize={13} fontWeight="800">
+            <Text color="#ffffff" fontSize={13} fontWeight="600">
               {images.length > 0 ? `${current + 1} / ${images.length}` : ''}
             </Text>
             <XStack

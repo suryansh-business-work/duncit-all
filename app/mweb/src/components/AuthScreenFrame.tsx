@@ -42,7 +42,7 @@ export default function AuthScreenFrame({ children, center }: Readonly<Props>) {
             display: center ? 'flex' : 'block',
             alignItems: center ? 'center' : undefined,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '4px',
+              borderRadius: '16px',
               bgcolor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.72)',
               minHeight: 46,
               '& fieldset': { borderColor: isDark ? 'rgba(255,255,255,0.13)' : 'rgba(31,27,46,0.14)' },
@@ -54,20 +54,20 @@ export default function AuthScreenFrame({ children, center }: Readonly<Props>) {
             '& .MuiInputLabel-root': {
               color: 'text.secondary',
               fontSize: 13,
-              fontWeight: 800,
+              fontWeight: 600,
               textTransform: 'uppercase',
             },
             '& .MuiInputLabel-root.Mui-focused': { color: 'primary.main' },
             '& .MuiFormHelperText-root': { minHeight: 10, mx: 0.25, mt: 0.25, fontSize: 10 },
             '& .MuiButton-contained': {
               minHeight: 48,
-              borderRadius: '4px',
+              borderRadius: '16px',
               background: 'linear-gradient(135deg, #ff535e 0%, #f23da6 100%)',
               boxShadow: '0 18px 36px rgba(255,76,103,0.34)',
             },
             '& .MuiDivider-root': { color: 'text.secondary', fontSize: 12 },
             '& .MuiDivider-root:before, & .MuiDivider-root:after': { borderColor: 'divider' },
-            '& .MuiLink-root': { color: 'primary.main', fontWeight: 800 },
+            '& .MuiLink-root': { color: 'primary.main', fontWeight: 600 },
           }}
         >
           <Box sx={{ width: '100%' }}>{children}</Box>

@@ -24,7 +24,7 @@ export default function TermsAgreement({ form }: Readonly<{ form: CreatePodForm 
             label={
               <Typography variant="body2" color="text.secondary">
                 I agree to the{' '}
-                <Link href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 800 }}>
+                <Link href="/policies/terms-of-service" target="_blank" rel="noreferrer" sx={{ fontWeight: 600 }}>
                   Organizer Terms of Service
                 </Link>{' '}
                 and confirm that I have the right to host this event at the selected venue.

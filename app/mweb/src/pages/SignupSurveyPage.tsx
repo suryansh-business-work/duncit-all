@@ -146,7 +146,7 @@ export default function SignupSurveyPage() {
       </Box>
 
       <Box>
-        <Typography variant="h4" fontWeight={800}>
+        <Typography variant="h4" fontWeight={600}>
           What's your vibe? ✨
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>

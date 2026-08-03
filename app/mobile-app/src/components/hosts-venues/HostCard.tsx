@@ -59,13 +59,13 @@ export function HostCard({
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={20} fontWeight="900" color={onPrimary}>
+          <Text fontSize={20} fontWeight="700" color={onPrimary}>
             {initial}
           </Text>
         )}
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
           {host.full_name || 'Duncit host'}
         </Text>
         {host.full_address ? (
@@ -135,7 +135,7 @@ function FollowButton({
             size={14}
             color={isFollowing ? primary : onPrimary}
           />
-          <Text fontSize={12} fontWeight="800" color={isFollowing ? '$primary' : onPrimary}>
+          <Text fontSize={12} fontWeight="600" color={isFollowing ? '$primary' : onPrimary}>
             {isFollowing ? 'Following' : 'Follow'}
           </Text>
         </XStack>

@@ -20,7 +20,7 @@ export default function SuccessScreen() {
       >
         <CheckCircleRoundedIcon sx={{ fontSize: 40 }} />
       </Box>
-      <Typography variant="h6" fontWeight={950}>
+      <Typography variant="h6" fontWeight={700}>
         Your Request Has Been Submitted
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 440 }}>
@@ -32,7 +32,7 @@ export default function SuccessScreen() {
         variant="contained"
         size="large"
         onClick={() => navigate('/host/manage')}
-        sx={{ borderRadius: 999, fontWeight: 900, px: 4 }}
+        sx={{ borderRadius: 999, fontWeight: 700, px: 4 }}
       >
         Okay
       </Button>

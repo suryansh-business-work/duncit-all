@@ -72,7 +72,7 @@ export function SearchResults({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="swap-vert" size={16} color={color} />
-          <Text fontSize={13.5} fontWeight="800" color="$color">
+          <Text fontSize={13.5} fontWeight="600" color="$color">
             Sort
           </Text>
         </XStack>
@@ -92,7 +92,7 @@ export function SearchResults({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="tune" size={16} color={filterActive ? onPrimary : color} />
-          <Text fontSize={13.5} fontWeight="800" color={filterActive ? '$onPrimary' : '$color'}>
+          <Text fontSize={13.5} fontWeight="600" color={filterActive ? '$onPrimary' : '$color'}>
             Filter
           </Text>
         </XStack>

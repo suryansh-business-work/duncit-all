@@ -96,7 +96,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={18} fontWeight="900" color="$color">
+                  <Text fontSize={18} fontWeight="700" color="$color">
                     Edit profile
                   </Text>
                   <XStack

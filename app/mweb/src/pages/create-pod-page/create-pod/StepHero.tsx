@@ -24,12 +24,12 @@ export default function StepHero({ step, total, title, subtitle }: Readonly<Prop
         sx={{ height: 6, borderRadius: 999 }}
       />
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mt: 0.5 }}>
-        <Typography variant="caption" color="primary" sx={{ fontWeight: 900, letterSpacing: '0.14em' }}>
+        <Typography variant="caption" color="primary" sx={{ fontWeight: 700, letterSpacing: '0.14em' }}>
           STEP {step + 1} OF {total}
         </Typography>
         <AiMonitorChip onClick={() => setGuideOpen(true)} />
       </Stack>
-      <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.12 }}>
+      <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.12 }}>
         {title}
       </Typography>
       <Typography variant="body2" color="text.secondary">

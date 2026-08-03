@@ -44,11 +44,25 @@ export function AccountButton() {
           borderRadius={18}
           backgroundColor="$primary"
         >
-          <Text fontSize={14} fontWeight="800" color="$onPrimary">
+          <Text fontSize={14} fontWeight="600" color="$onPrimary">
             {initial}
           </Text>
         </YStack>
       )}
+      {/* Online dot (mock) — decorative presence marker on the signed-in avatar. */}
+      {me ? (
+        <YStack
+          position="absolute"
+          bottom={2}
+          right={2}
+          width={11}
+          height={11}
+          borderRadius={6}
+          backgroundColor="#22c55e"
+          borderWidth={2}
+          borderColor="$surface"
+        />
+      ) : null}
     </XStack>
   );
 }

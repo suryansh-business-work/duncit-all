@@ -59,8 +59,8 @@ export default function PodAttendeesDialog({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900, display: 'flex', alignItems: 'center', pr: 1 }}>
-        <Typography component="span" sx={{ flex: 1, fontWeight: 900 }}>
+      <DialogTitle sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', pr: 1 }}>
+        <Typography component="span" sx={{ flex: 1, fontWeight: 700 }}>
           Attendees ({people.length})
         </Typography>
         <IconButton size="small" aria-label="Close attendees" onClick={onClose}>
@@ -78,7 +78,7 @@ export default function PodAttendeesDialog({
               <ListItemButton
                 key={person.user_id}
                 onClick={() => openProfile(person.user_id)}
-                sx={{ borderRadius: '4px' }}
+                sx={{ borderRadius: '16px' }}
               >
                 <ListItemAvatar>
                   <Avatar
@@ -96,11 +96,11 @@ export default function PodAttendeesDialog({
                 <ListItemText
                   primary={person.full_name || 'Attendee'}
                   secondary="View profile"
-                  primaryTypographyProps={{ fontWeight: person.is_host ? 800 : 600, fontSize: 14 }}
+                  primaryTypographyProps={{ fontWeight: person.is_host ? 700 : 600, fontSize: 14 }}
                   secondaryTypographyProps={{ fontSize: 12 }}
                 />
                 {person.is_host && (
-                  <Chip size="small" color="primary" label="Host" sx={{ fontWeight: 900 }} />
+                  <Chip size="small" color="primary" label="Host" sx={{ fontWeight: 700 }} />
                 )}
               </ListItemButton>
             ))}
@@ -109,7 +109,7 @@ export default function PodAttendeesDialog({
         {spotFills.length > 0 && (
           <>
             <Divider sx={{ my: 1 }} />
-            <Typography variant="caption" color="text.secondary" sx={{ px: 2, fontWeight: 800 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ px: 2, fontWeight: 600 }}>
               {t('mweb.podDetails.spotFilled')}
             </Typography>
             <List disablePadding>
@@ -117,7 +117,7 @@ export default function PodAttendeesDialog({
                 <ListItemButton
                   key={fill.key}
                   onClick={() => openProfile(fill.old_user_id)}
-                  sx={{ borderRadius: '4px' }}
+                  sx={{ borderRadius: '16px' }}
                 >
                   <ListItemAvatar>
                     <Avatar src={fill.old_photo || undefined} sx={{ opacity: 0.6 }}>

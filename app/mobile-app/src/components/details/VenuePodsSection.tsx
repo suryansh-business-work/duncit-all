@@ -28,7 +28,7 @@ export function VenuePodsSection({ venueId }: Readonly<{ venueId: string }>) {
 
   return (
     <YStack gap={10} testID="venue-pods-section">
-      <Text fontSize={15} fontWeight="900" color="$color">
+      <Text fontSize={15} fontWeight="700" color="$color">
         Pods at this venue
       </Text>
       {isLoading ? <Spinner testID="venue-pods-loading" color="$primary" /> : null}

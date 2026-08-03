@@ -103,7 +103,7 @@ export function HostsVenuesScreen() {
               borderColor={selected ? '$primary' : '$borderColor'}
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={13} fontWeight="900" color={selected ? '$onPrimary' : '$color'}>
+              <Text fontSize={13} fontWeight="700" color={selected ? '$onPrimary' : '$color'}>
                 {t === 'HOSTS' ? 'Hosts' : 'Venues'}
               </Text>
             </XStack>

@@ -27,7 +27,7 @@ export function HostRequestSuccess() {
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
           <MaterialIcons name="check-circle" size={56} color={ink} />
-          <Text textAlign="center" fontSize={22} fontWeight="900" color={ink}>
+          <Text textAlign="center" fontSize={22} fontWeight="700" color={ink}>
             Your Request Has Been Submitted
           </Text>
           <Text textAlign="center" fontSize={14.5} color={ink} opacity={0.85}>
@@ -46,7 +46,7 @@ export function HostRequestSuccess() {
             backgroundColor="$primary"
             pressStyle={{ opacity: 0.85 }}
           >
-            <Text fontSize={14.5} fontWeight="900" color="$onPrimary">
+            <Text fontSize={14.5} fontWeight="700" color="$onPrimary">
               Okay
             </Text>
           </XStack>

@@ -15,7 +15,7 @@ export default function InfoRow({ icon, label, value, testId }: Readonly<InfoRow
     <Stack direction="row" spacing={1} alignItems="flex-start" data-testid={testId}>
       <Box sx={{ color: 'text.secondary', display: 'flex', mt: '2px' }}>{icon}</Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="caption" fontWeight={800} color="text.secondary" display="block">
+        <Typography variant="caption" fontWeight={600} color="text.secondary" display="block">
           {label}
         </Typography>
         <Typography variant="body2" fontWeight={700}>

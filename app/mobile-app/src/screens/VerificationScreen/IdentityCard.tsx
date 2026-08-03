@@ -50,7 +50,7 @@ function PickButton({
       ) : (
         <MaterialIcons name={icon} size={16} color={primary} />
       )}
-      <Text fontSize={13} fontWeight="900" color="$primary">
+      <Text fontSize={13} fontWeight="700" color="$primary">
         {label}
       </Text>
     </XStack>

@@ -106,7 +106,7 @@ export function ChatRoomScreen() {
             gap={4}
             pressStyle={{ opacity: 0.7 }}
           >
-            <Text fontSize={18} fontWeight="800" color="$color" numberOfLines={1} flex={1}>
+            <Text fontSize={18} fontWeight="600" color="$color" numberOfLines={1} flex={1}>
               {title}
             </Text>
             <MaterialIcons name="chevron-right" size={20} color={muted} />

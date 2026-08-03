@@ -372,10 +372,8 @@ export type AppSettings = {
   jwt_no_expiry: Scalars['Boolean']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
   max_backout_attempts: Scalars['Int']['output'];
-  /** Latest allowed signup birth year (inclusive). */
-  max_birth_year: Scalars['Int']['output'];
-  /** Earliest allowed signup birth year (inclusive). */
-  min_birth_year: Scalars['Int']['output'];
+  /** Minimum age (whole years) required to sign up or save a date of birth. */
+  min_signup_age: Scalars['Int']['output'];
   time_format: Scalars['String']['output'];
   /** Where every app reads 'now' from: SERVER, BROWSER or CUSTOM. */
   time_source: TimeSource;
@@ -905,6 +903,10 @@ export type Branding = {
   home_header_tagline: Scalars['String']['output'];
   /** When true, the home vibe tabber shows every category (even ones with no pods); false shows only categories that have pods. */
   home_show_all_vibe_categories: Scalars['Boolean']['output'];
+  /** Heading over the home vibe (category) filter; empty falls back to each client's bundled copy. */
+  home_vibe_heading: Scalars['String']['output'];
+  /** Sub-heading under the vibe heading; empty falls back to each client's bundled copy. */
+  home_vibe_subheading: Scalars['String']['output'];
   ios_app_url: Scalars['String']['output'];
   logo_url: Scalars['String']['output'];
   mobile_favicon_url: Scalars['String']['output'];
@@ -9366,8 +9368,8 @@ export type PublicAppSettings = {
   draft_retention_days: Scalars['Int']['output'];
   /** Max Backout attempts a user gets per pod (each 'Backout in process' counts one). */
   max_backout_attempts: Scalars['Int']['output'];
-  max_birth_year: Scalars['Int']['output'];
-  min_birth_year: Scalars['Int']['output'];
+  /** Minimum age (whole years) required to sign up or save a date of birth. */
+  min_signup_age: Scalars['Int']['output'];
   /** The server's clock at the moment this response was built (ISO). Clients add their own elapsed time to keep it ticking. */
   server_time: Scalars['String']['output'];
   time_format: Scalars['String']['output'];
@@ -13121,8 +13123,8 @@ export type UpdateAppSettingsInput = {
   jwt_no_expiry?: InputMaybe<Scalars['Boolean']['input']>;
   /** Max Backout attempts a user gets per pod (min 1). */
   max_backout_attempts?: InputMaybe<Scalars['Int']['input']>;
-  max_birth_year?: InputMaybe<Scalars['Int']['input']>;
-  min_birth_year?: InputMaybe<Scalars['Int']['input']>;
+  /** Minimum age to use the app, in whole years (1-120). */
+  min_signup_age?: InputMaybe<Scalars['Int']['input']>;
   time_format?: InputMaybe<Scalars['String']['input']>;
   time_source?: InputMaybe<TimeSource>;
   time_zone?: InputMaybe<Scalars['String']['input']>;
@@ -13164,6 +13166,8 @@ export type UpdateBrandingInput = {
   home_all_vibe_icon_url?: InputMaybe<Scalars['String']['input']>;
   home_header_tagline?: InputMaybe<Scalars['String']['input']>;
   home_show_all_vibe_categories?: InputMaybe<Scalars['Boolean']['input']>;
+  home_vibe_heading?: InputMaybe<Scalars['String']['input']>;
+  home_vibe_subheading?: InputMaybe<Scalars['String']['input']>;
   ios_app_url?: InputMaybe<Scalars['String']['input']>;
   logo_url?: InputMaybe<Scalars['String']['input']>;
   mobile_favicon_url?: InputMaybe<Scalars['String']['input']>;

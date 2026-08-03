@@ -40,7 +40,7 @@ export function IdeasList({
     <YStack gap={16}>
       {myIdeas.length > 0 ? (
         <YStack gap={10}>
-          <Text fontSize={12} fontWeight="900" color="$muted" textTransform="uppercase">
+          <Text fontSize={12} fontWeight="700" color="$muted" textTransform="uppercase">
             Your submissions
           </Text>
           {myIdeas.map((idea, index) => (

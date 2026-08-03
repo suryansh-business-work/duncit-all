@@ -20,7 +20,7 @@ export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props
 
   return (
     <YStack gap={6}>
-      <Text fontSize={11} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
         MAP
       </Text>
       <iframe

@@ -123,7 +123,7 @@ export function AccountEditForm({
 
       <ContactFields control={control} setValue={setValue} />
 
-      <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
         MAIN ADDRESS
       </Text>
       <AddressFields control={control} names={ADDRESS_NAMES} pincodeHint="6-digit PIN code" />
@@ -145,7 +145,7 @@ export function AccountEditForm({
         opacity={discardDisabled ? 0.5 : 1}
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Discard changes
         </Text>
       </XStack>

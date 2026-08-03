@@ -38,7 +38,7 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
       borderWidth={1}
       borderColor="$borderColor"
     >
-      <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
         Previous callbacks
       </Text>
       {items.map((c) => {
@@ -57,7 +57,7 @@ export function CallbackHistory({ refreshKey = 0 }: Readonly<{ refreshKey?: numb
               <Text fontSize={12} color="$muted">
                 {format(new Date(c.created_at), 'd MMM yyyy, HH:mm')}
               </Text>
-              <Text fontSize={11} fontWeight="900" color={STATUS_COLOR[c.status] ?? '$muted'}>
+              <Text fontSize={11} fontWeight="700" color={STATUS_COLOR[c.status] ?? '$muted'}>
                 {c.status}
               </Text>
             </XStack>

@@ -16,7 +16,7 @@ export default function OfflineBanner() {
     >
       <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
         <WifiOffIcon fontSize="small" />
-        <Typography variant="body2" fontWeight={800}>
+        <Typography variant="body2" fontWeight={600}>
           No internet connection
         </Typography>
       </Stack>

@@ -73,7 +73,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
             placeItems: 'center',
             cursor: 'pointer',
             fontSize: 14,
-            fontWeight: 900,
+            fontWeight: 700,
             lineHeight: 1,
           }}
           aria-label="Add another"
@@ -106,7 +106,7 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
           />
           <Typography
             variant="caption"
-            sx={{ position: 'absolute', fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+            sx={{ position: 'absolute', fontWeight: 700, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
           >
             {progress}%
           </Typography>

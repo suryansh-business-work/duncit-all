@@ -52,11 +52,11 @@ export default function MyTicketsList() {
             key={t.id}
             variant="outlined"
             onClick={() => navigate(`/tickets/${t.id}`)}
-            sx={{ p: 1.5, borderRadius: '4px', cursor: 'pointer' }}
+            sx={{ p: 1.5, borderRadius: '16px', cursor: 'pointer' }}
           >
             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }} noWrap>
                   {t.subject}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -72,8 +72,8 @@ export default function MyTicketsList() {
     );
 
   return (
-    <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '4px' }}>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+    <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: '16px' }}>
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
         Your tickets
       </Typography>
       <Tabs
@@ -84,7 +84,7 @@ export default function MyTicketsList() {
         sx={{ minHeight: 36, mb: 1, '& .MuiTab-root': { minHeight: 36, py: 0.5 } }}
       >
         {FILTERS.map((f) => (
-          <Tab key={f} value={f} label={`${LABEL[f]} (${countFor(f)})`} sx={{ fontWeight: 800 }} />
+          <Tab key={f} value={f} label={`${LABEL[f]} (${countFor(f)})`} sx={{ fontWeight: 600 }} />
         ))}
       </Tabs>
 

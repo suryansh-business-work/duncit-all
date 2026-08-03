@@ -53,10 +53,10 @@ function PaymentDetails({
         </Text>
       </XStack>
       <XStack justifyContent="space-between">
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           Total payable
         </Text>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {money(amount)}
         </Text>
       </XStack>
@@ -118,7 +118,7 @@ export function PodAccordions({
             pressStyle={{ opacity: 0.8 }}
           >
             <MaterialIcons name="groups" size={18} color={primary} />
-            <Text fontSize={14} fontWeight="800" color="$primary">
+            <Text fontSize={14} fontWeight="600" color="$primary">
               View club
             </Text>
           </XStack>
@@ -234,7 +234,7 @@ export function PodAccordions({
           aria-label="Expand all"
           onPress={() => setOpen(new Set(sections.map((s) => s.id)))}
           fontSize={13}
-          fontWeight="800"
+          fontWeight="600"
           color="$primary"
         >
           Expand all
@@ -245,7 +245,7 @@ export function PodAccordions({
           aria-label="Collapse all"
           onPress={() => setOpen(new Set())}
           fontSize={13}
-          fontWeight="800"
+          fontWeight="600"
           color="$muted"
         >
           Collapse all

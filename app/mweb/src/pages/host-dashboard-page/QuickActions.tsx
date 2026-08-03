@@ -33,7 +33,7 @@ export default function QuickActions() {
             flex: '1 1 120px',
             minWidth: 120,
             p: 1.5,
-            borderRadius: '4px',
+            borderRadius: '16px',
             border: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
@@ -43,7 +43,7 @@ export default function QuickActions() {
           }}
         >
           <Box sx={{ color: 'primary.main', display: 'flex' }}>{action.icon}</Box>
-          <Typography variant="caption" sx={{ fontWeight: 900 }}>
+          <Typography variant="caption" sx={{ fontWeight: 700 }}>
             {action.label}
           </Typography>
         </ButtonBase>

@@ -33,7 +33,7 @@ export function AiMonitorChip({ onPress, testID = 'create-pod-ai-chip' }: Readon
         }}
       >
         <MaterialIcons name="auto-awesome" size={13} color="#ffffff" />
-        <Text fontSize={11} fontWeight="900" color="#ffffff">
+        <Text fontSize={11} fontWeight="700" color="#ffffff">
           AI monitoring
         </Text>
       </LinearGradient>

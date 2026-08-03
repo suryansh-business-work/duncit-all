@@ -68,7 +68,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
         <Button
           size="small"
           variant="outlined"
-          sx={{ borderRadius: '4px', fontWeight: 800 }}
+          sx={{ borderRadius: '16px', fontWeight: 600 }}
           onClick={() => setDialogOpen(true)}
         >
           Rate Club
@@ -77,7 +77,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
 
       {ratingsCount > 0 ? (
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-          <Typography variant="h4" fontWeight={900}>{rating.toFixed(1)}</Typography>
+          <Typography variant="h4" fontWeight={700}>{rating.toFixed(1)}</Typography>
           <Box>
             <Rating value={rating} precision={0.1} readOnly size="small" emptyIcon={<StarIcon fontSize="inherit" />} />
             <Typography variant="caption" color="text.secondary">{ratingsCount} ratings</Typography>
@@ -119,7 +119,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
       )}
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle fontWeight={800}>Rate this Club</DialogTitle>
+        <DialogTitle fontWeight={600}>Rate this Club</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ pt: 1 }}>
             <Box>
@@ -150,7 +150,7 @@ export default function ClubRatingSection({ clubId, rating, ratingsCount }: Read
             variant="contained"
             onClick={handleSubmit}
             disabled={!stars || submitting}
-            sx={{ borderRadius: '4px', fontWeight: 900 }}
+            sx={{ borderRadius: '16px', fontWeight: 700 }}
           >
             {submitting ? 'Submitting…' : 'Submit'}
           </Button>

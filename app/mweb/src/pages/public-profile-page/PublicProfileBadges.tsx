@@ -62,7 +62,7 @@ export default function PublicProfileBadges({ userId }: Readonly<Props>) {
               onClick={() => setActive(ub)}
               aria-label={`View badge ${ub.badge?.title ?? ''}`}
               sx={{
-                borderRadius: '4px',
+                borderRadius: '16px',
                 p: 1,
                 display: 'flex',
                 flexDirection: 'column',

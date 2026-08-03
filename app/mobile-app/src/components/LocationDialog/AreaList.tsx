@@ -86,7 +86,7 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
 
   return (
     <YStack gap={8}>
-      <Text fontSize={11} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={11} fontWeight="700" color="$muted" letterSpacing={0.6}>
         AREA IN {locationName.toUpperCase()}
       </Text>
       {zones.length === 0 ? (

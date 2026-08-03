@@ -29,7 +29,7 @@ export function ModalButton({ testID, label, primary, disabled, onPress }: Reado
       opacity={disabled ? 0.5 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={14} fontWeight="800" color={primary ? '$onPrimary' : '$color'}>
+      <Text fontSize={14} fontWeight="600" color={primary ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>

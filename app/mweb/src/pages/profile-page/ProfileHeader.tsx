@@ -20,15 +20,15 @@ function Stat({
         flex: 1,
         textAlign: 'center',
         p: 1,
-        borderRadius: '4px',
+        borderRadius: '16px',
         bgcolor: 'action.hover',
         cursor: onClick ? 'pointer' : 'default',
       }}
     >
-      <Typography display="block" fontWeight={950} lineHeight={1}>
+      <Typography display="block" fontWeight={700} lineHeight={1}>
         {new Intl.NumberFormat(undefined, { notation: value > 999 ? 'compact' : 'standard' }).format(value)}
       </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
         {label}
       </Typography>
     </Box>
@@ -51,7 +51,7 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
   return (
     <Box
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         overflow: 'hidden',
         border: 1,
         borderColor: 'divider',
@@ -80,10 +80,10 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           onChanged={onChanged}
         />
         <Box sx={{ width: '100%', textAlign: 'center' }}>
-          <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
             {displayName}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 800 }} noWrap>
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
             {me.email ?? `@${me.user_id}`}
           </Typography>
           {me.bio && (
@@ -106,10 +106,10 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           />
         </Stack>
         <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
-          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 999, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
+          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
             New Post
           </Button>
-          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 999, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
+          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 999, fontWeight: 700, fontSize: 12, minHeight: 42, px: 1 }}>
             Edit profile
           </Button>
           <IconButton

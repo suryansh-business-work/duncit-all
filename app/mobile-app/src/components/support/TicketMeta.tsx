@@ -39,17 +39,17 @@ export function TicketMeta({
   return (
     <YStack gap={4} testID="ticket-meta">
       <XStack gap={8} flexWrap="wrap" alignItems="center">
-        <Text testID="ticket-meta-no" fontSize={12} fontWeight="800" color="$muted">
+        <Text testID="ticket-meta-no" fontSize={12} fontWeight="600" color="$muted">
           {ticketNo(id)}
         </Text>
-        <Text fontSize={12} fontWeight="800" color="$muted">
+        <Text fontSize={12} fontWeight="600" color="$muted">
           {category}
         </Text>
-        <Text fontSize={12} fontWeight="800" color="$primary">
+        <Text fontSize={12} fontWeight="600" color="$primary">
           {status}
         </Text>
         {priority ? (
-          <Text testID="ticket-meta-priority" fontSize={12} fontWeight="800" color="$muted">
+          <Text testID="ticket-meta-priority" fontSize={12} fontWeight="600" color="$muted">
             {priority}
           </Text>
         ) : null}

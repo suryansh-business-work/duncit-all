@@ -29,7 +29,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
         {
           position: 'relative',
           width: '100%',
-          borderRadius: '4px',
+          borderRadius: '16px',
           overflow: 'hidden',
           bgcolor: 'grey.900',
           cursor: clickable ? 'pointer' : 'default',
@@ -50,7 +50,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
           left: 8,
           height: 20,
           fontSize: 10.5,
-          fontWeight: 800,
+          fontWeight: 600,
           color: '#fff',
           bgcolor: 'rgba(0,0,0,0.55)',
         }}
@@ -67,7 +67,7 @@ export default function AdCard({ ad, variant = 'banner', sx }: Readonly<AdCardPr
             px: 1.5,
             pt: 3,
             pb: 1,
-            fontWeight: 800,
+            fontWeight: 600,
             color: '#fff',
             background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
           }}

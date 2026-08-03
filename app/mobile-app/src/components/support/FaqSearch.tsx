@@ -69,7 +69,7 @@ function FaqResults({ results, isLoading, query, onOpen }: Readonly<FaqResultsPr
           borderTopColor="$borderColor"
           pressStyle={{ opacity: 0.8 }}
         >
-          <Text flex={1} fontSize={14} fontWeight="800" color="$color">
+          <Text flex={1} fontSize={14} fontWeight="600" color="$color">
             {faq.question}
           </Text>
         </XStack>

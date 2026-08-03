@@ -13,7 +13,7 @@ export function PendingBanner() {
   return (
     <YStack testID="pod-pending-banner" alignItems="center" gap={10} paddingVertical={16}>
       <MaterialIcons name="check-circle" size={64} color={semantic.warning} />
-      <Text fontSize={17} fontWeight="900" color="$color" textAlign="center">
+      <Text fontSize={17} fontWeight="700" color="$color" textAlign="center">
         {HEADING}
       </Text>
       <Text fontSize={13} color="$muted" textAlign="center">

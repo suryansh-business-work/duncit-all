@@ -33,7 +33,7 @@ function SosSendButton({
       pressStyle={{ opacity: 0.85 }}
     >
       {busy ? <Spinner color="white" /> : null}
-      <Text fontSize={15} fontWeight="900" color="white" letterSpacing={1}>
+      <Text fontSize={15} fontWeight="700" color="white" letterSpacing={1}>
         {busy ? 'SENDING SOS…' : 'SEND SOS'}
       </Text>
     </XStack>
@@ -101,7 +101,7 @@ export function SosScreen() {
             borderColor="$borderColor"
           >
             <MaterialIcons name="check-circle" size={44} color={semantic.success} />
-            <Text fontSize={16} fontWeight="900" color="$color" textAlign="center">
+            <Text fontSize={16} fontWeight="700" color="$color" textAlign="center">
               SOS sent. Help is on the way.
             </Text>
             <Text fontSize={12} color="$muted" textAlign="center">
@@ -122,7 +122,7 @@ export function SosScreen() {
             >
               <MaterialIcons name="warning-amber" size={20} color={semantic.error} />
               <YStack flex={1} gap={2}>
-                <Text fontSize={13.5} fontWeight="900" color="$color">
+                <Text fontSize={13.5} fontWeight="700" color="$color">
                   Only tap SOS in a real emergency
                 </Text>
                 <Text fontSize={12} color="$muted">

@@ -43,7 +43,7 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
             <SafeAreaView edges={[]}>
               <XStack alignItems="center" gap={8} paddingBottom={6}>
                 <MaterialIcons name="auto-awesome" size={20} color={primary} />
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   What AI monitors
                 </Text>
               </XStack>
@@ -83,7 +83,7 @@ export function PodGuidelinesDialog({ open, onClose }: Readonly<Props>) {
                 backgroundColor="$primary"
                 pressStyle={{ opacity: 0.85 }}
               >
-                <Text fontSize={14} fontWeight="800" color="$onPrimary">
+                <Text fontSize={14} fontWeight="600" color="$onPrimary">
                   Got it
                 </Text>
               </XStack>

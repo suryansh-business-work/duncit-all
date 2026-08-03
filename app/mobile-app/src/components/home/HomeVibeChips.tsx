@@ -5,6 +5,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { VibeCategoryTab } from '@/components/home/VibeCategoryTab';
 import type { VibeCategory, VibeIconLayout } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HomeVibeChipsProps {
   categories: VibeCategory[];
@@ -14,6 +15,10 @@ interface HomeVibeChipsProps {
   allIcon?: string | null;
   /** Admin-managed icon layout (position + size) for the "All" tab (branding). */
   allLayout?: VibeIconLayout | null;
+  /** Admin-managed heading (branding.home_vibe_heading); empty falls back to the bundled copy. */
+  heading?: string | null;
+  /** Admin-managed sub-heading (branding.home_vibe_subheading); empty falls back to the bundled copy. */
+  subheading?: string | null;
   /** Right-aligned slot in the header (e.g. the Filters button). */
   action?: ReactNode;
 }
@@ -43,7 +48,7 @@ function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipP
       borderColor={selected ? '$primary' : '$borderColor'}
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={12.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
+      <Text fontSize={12.5} fontWeight="600" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -59,25 +64,35 @@ export function HomeVibeChips({
   onSelect,
   allIcon,
   allLayout,
+  heading,
+  subheading,
   action,
 }: Readonly<HomeVibeChipsProps>) {
   const { primary } = useThemeColors();
+  const { t } = useTranslation();
   const hasCategories = categories.length > 0;
   if (!hasCategories && !action) return null;
 
+  const headingText = heading?.trim() || t('mweb.home.vibeHeading');
+  const subheadingText = subheading?.trim() || t('mweb.home.vibeSubheading');
   const activeCategory =
     categories.find((c) => c.id === selectedId || c.subs.some((s) => s.id === selectedId)) ?? null;
   const subs = activeCategory?.subs ?? [];
 
   return (
     <YStack gap={10}>
-      <XStack alignItems="center" justifyContent="space-between" gap={6} paddingHorizontal={16}>
-        <XStack alignItems="center" gap={6} flex={1}>
-          <MaterialIcons name="auto-awesome" size={18} color={primary} />
-          <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1}>
-            What&apos;s your vibe today?
+      <XStack alignItems="flex-start" justifyContent="space-between" gap={6} paddingHorizontal={16}>
+        <YStack flex={1} minWidth={0}>
+          <XStack alignItems="center" gap={6}>
+            <MaterialIcons name="auto-awesome" size={18} color={primary} />
+            <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1}>
+              {headingText}
+            </Text>
+          </XStack>
+          <Text fontSize={11.5} fontWeight="600" color="$muted" numberOfLines={1}>
+            {subheadingText}
           </Text>
-        </XStack>
+        </YStack>
         {action}
       </XStack>
 
@@ -89,7 +104,7 @@ export function HomeVibeChips({
         >
           <VibeCategoryTab
             testID="vibe-chip-all"
-            label="All"
+            label={t('mweb.home.vibeAll')}
             icon={allIcon ?? undefined}
             iconLayout={allLayout}
             fallback="apps"
@@ -122,7 +137,7 @@ export function HomeVibeChips({
         >
           <VibeSubChip
             testID={`vibe-sub-all-${activeCategory.id}`}
-            label={`All ${activeCategory.name}`}
+            label={t('mweb.home.vibeAllOf', { vars: { name: activeCategory.name } })}
             selected={selectedId === activeCategory.id}
             onPress={() => onSelect(activeCategory.id)}
           />

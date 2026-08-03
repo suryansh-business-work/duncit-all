@@ -47,7 +47,7 @@ export default function StepFooterBar({
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',
           p: 1,
-          borderRadius: '4px',
+          borderRadius: '16px',
           border: 1,
           borderColor: 'divider',
           bgcolor: (theme) =>
@@ -64,7 +64,7 @@ export default function StepFooterBar({
             disabled={isFirst || busy}
             onClick={onBack}
             startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 14 }} />}
-            sx={{ flex: 1, fontWeight: 800 }}
+            sx={{ flex: 1, fontWeight: 600 }}
           >
             Back
           </Button>
@@ -74,7 +74,7 @@ export default function StepFooterBar({
             disabled={primaryDisabled}
             onClick={isLast ? onSubmit : onNext}
             endIcon={isLast ? undefined : <ArrowForwardIosIcon sx={{ fontSize: 14 }} />}
-            sx={{ flex: 2, fontWeight: 900 }}
+            sx={{ flex: 2, fontWeight: 700 }}
           >
             {primaryLabel}
           </Button>

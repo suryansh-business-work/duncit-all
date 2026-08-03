@@ -15,7 +15,7 @@ const railSx = {
   '&::-webkit-scrollbar': { display: 'none' },
 } as const;
 
-const chipSx = { height: 32, fontWeight: 800, borderRadius: 999, flex: '0 0 auto' } as const;
+const chipSx = { height: 32, fontWeight: 600, borderRadius: 999, flex: '0 0 auto' } as const;
 
 /** Horizontally scrollable category rail below the club search bar — the mWeb
  * twin of the native ClubsSearchFilter chip row ("All" first, select on tap). */

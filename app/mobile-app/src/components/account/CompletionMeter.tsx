@@ -15,7 +15,7 @@ export function CompletionMeter({ profile }: Readonly<CompletionMeterProps>) {
   return (
     <YStack testID="profile-completion" gap={6}>
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={13} fontWeight="800" color="$color">
+        <Text fontSize={13} fontWeight="600" color="$color">
           Profile completion
         </Text>
         <Text fontSize={13} color="$muted" testID="profile-completion-value">

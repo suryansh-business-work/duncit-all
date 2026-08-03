@@ -66,7 +66,7 @@ export function PodHistoryScreen() {
     body = (
       <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
         <YStack gap={2} marginBottom={4}>
-          <Text fontSize={20} fontWeight="900" color="$color">
+          <Text fontSize={20} fontWeight="700" color="$color">
             Joined Pods
           </Text>
           <Text fontSize={13} color="$muted">
@@ -101,7 +101,7 @@ export function PodHistoryScreen() {
         </XStack>
         {visible.length === 0 ? (
           <YStack testID="pod-history-no-match" gap={4} paddingVertical={24} alignItems="center">
-            <Text fontSize={16} fontWeight="900" color="$color">
+            <Text fontSize={16} fontWeight="700" color="$color">
               No Pods Found
             </Text>
             <Text fontSize={13} color="$muted" textAlign="center">

@@ -66,7 +66,7 @@ export function PodFeedbackPrompt() {
         borderRadius={16}
         backgroundColor="$background"
       >
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           How was “{pod.title}”?
         </Text>
         <XStack gap={6} justifyContent="center">
@@ -104,7 +104,7 @@ export function PodFeedbackPrompt() {
                 borderColor={active ? '$primary' : '$borderColor'}
                 backgroundColor={active ? '$primary' : 'transparent'}
               >
-                <Text fontSize={11} fontWeight="800" color={active ? '$onPrimary' : '$muted'}>
+                <Text fontSize={11} fontWeight="600" color={active ? '$onPrimary' : '$muted'}>
                   {c.charAt(0) + c.slice(1).toLowerCase()}
                 </Text>
               </XStack>
@@ -138,7 +138,7 @@ export function PodFeedbackPrompt() {
             borderWidth={1}
             borderColor="$borderColor"
           >
-            <Text fontSize={14} fontWeight="800" color="$color">
+            <Text fontSize={14} fontWeight="600" color="$color">
               Not now
             </Text>
           </XStack>
@@ -156,7 +156,7 @@ export function PodFeedbackPrompt() {
             backgroundColor="$primary"
             opacity={!rating || busy ? 0.5 : 1}
           >
-            <Text fontSize={14} fontWeight="800" color="$onPrimary">
+            <Text fontSize={14} fontWeight="600" color="$onPrimary">
               {busy ? 'Sending…' : 'Submit'}
             </Text>
           </XStack>

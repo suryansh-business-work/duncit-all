@@ -21,7 +21,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
         bgcolor: (t) => `${t.palette.background.paper}f2`,
         border: 1,
         borderColor: 'divider',
-        borderRadius: '4px',
+        borderRadius: '16px',
         boxShadow: '0 14px 36px rgba(15, 23, 42, 0.14)',
       }}
     >
@@ -35,7 +35,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           <Typography variant="caption" color="text.secondary">
             Selected
           </Typography>
-          <Typography variant="subtitle1" fontWeight={800}>
+          <Typography variant="subtitle1" fontWeight={700}>
             {count}
             <Box component="span" sx={{ color: 'text.secondary', fontWeight: 600 }}>
               {' '}/ {total}
@@ -48,7 +48,7 @@ export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit
           size="large"
           disabled={!canSubmit}
           onClick={onSubmit}
-          sx={{ minWidth: 160, fontWeight: 800 }}
+          sx={{ minWidth: 160, fontWeight: 600 }}
         >
           {saving ? 'Saving…' : 'Find my crew'}
         </Button>

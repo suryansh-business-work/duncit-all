@@ -76,7 +76,7 @@ export const ChatBody = forwardRef<RNScrollView, Props>(function ChatBody(
               <Text
                 testID={`day-${m.id}`}
                 fontSize={11}
-                fontWeight="800"
+                fontWeight="600"
                 color="$muted"
                 textAlign="center"
               >

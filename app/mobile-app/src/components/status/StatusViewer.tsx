@@ -61,7 +61,7 @@ function StatusHeaderText({
 }: Readonly<{ name: string; subLabel?: string | null; remaining: string | null }>) {
   return (
     <YStack flex={1}>
-      <Text color="#ffffff" fontSize={16} fontWeight="900" numberOfLines={1}>
+      <Text color="#ffffff" fontSize={16} fontWeight="700" numberOfLines={1}>
         {name}
       </Text>
       {subLabel ? (
@@ -134,7 +134,7 @@ function StatusLikeButton({
           color={liked ? '#ff4f73' : '#ffffff'}
         />
         {likeCount > 0 ? (
-          <Text testID="status-like-count" fontSize={14} fontWeight="800" color="#ffffff">
+          <Text testID="status-like-count" fontSize={14} fontWeight="600" color="#ffffff">
             {likeCount}
           </Text>
         ) : null}
@@ -333,7 +333,7 @@ export function StatusViewer({
                   pressStyle={{ opacity: 0.7 }}
                 >
                   <MaterialIcons name="delete-outline" size={18} color="#e0435a" />
-                  <Text fontSize={14} fontWeight="800" color="#e0435a">
+                  <Text fontSize={14} fontWeight="600" color="#e0435a">
                     Delete
                   </Text>
                 </XStack>
@@ -378,7 +378,7 @@ export function StatusViewer({
                   pressStyle={{ opacity: 0.7 }}
                 >
                   <MaterialIcons name="visibility" size={20} color="#ffffff" />
-                  <Text fontSize={13} fontWeight="800" color="#ffffff">
+                  <Text fontSize={13} fontWeight="600" color="#ffffff">
                     Viewers
                   </Text>
                 </XStack>
@@ -400,7 +400,7 @@ export function StatusViewer({
                   backgroundColor="$primary"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     Open details
                   </Text>
                   <MaterialIcons name="arrow-forward" size={16} color={onPrimary} />

@@ -34,7 +34,7 @@ export default function ProductQuantityBar({ quantity, maxQuantity, onUpdate }: 
         <IconButton aria-label="Decrease quantity" onClick={() => onUpdate(quantity - 1)}>
           <RemoveIcon />
         </IconButton>
-        <Typography sx={{ fontWeight: 900, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
+        <Typography sx={{ fontWeight: 700, minWidth: 24, textAlign: 'center' }}>{quantity}</Typography>
         <IconButton
           aria-label="Increase quantity"
           disabled={quantity >= maxQuantity}

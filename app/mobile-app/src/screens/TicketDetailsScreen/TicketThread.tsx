@@ -41,7 +41,7 @@ export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThrea
             <Text
               testID={`ticket-day-${m.id}`}
               fontSize={11}
-              fontWeight="800"
+              fontWeight="600"
               color="$muted"
               textAlign="center"
             >

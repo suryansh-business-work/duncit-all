@@ -14,6 +14,8 @@ export const HEADER_DATA = gql`
         height
       }
       home_show_all_vibe_categories
+      home_vibe_heading
+      home_vibe_subheading
       home_header_tagline
     }
     me {
@@ -40,6 +42,7 @@ export const HEADER_DATA = gql`
       name
       slug
       icon
+      description
     }
     locations {
       id

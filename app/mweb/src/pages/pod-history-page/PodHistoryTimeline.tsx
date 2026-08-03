@@ -58,7 +58,7 @@ export default function PodHistoryTimeline({ item }: Readonly<{ item: PodHistory
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25, flexWrap: 'wrap' }}>
-              <Typography variant="subtitle2" fontWeight={900}>{event.title}</Typography>
+              <Typography variant="subtitle2" fontWeight={700}>{event.title}</Typography>
               {event.tag && <Chip size="small" label={event.tag} color={event.state === 'done' ? 'success' : 'info'} variant={event.state === 'done' ? 'filled' : 'outlined'} sx={{ height: 20, fontSize: 11 }} />}
             </Stack>
             {event.date && <Typography variant="caption" color="text.secondary">{formatDateTime(event.date)}</Typography>}

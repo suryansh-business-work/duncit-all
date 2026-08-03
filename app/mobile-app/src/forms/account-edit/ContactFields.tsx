@@ -38,7 +38,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
 
   return (
     <YStack gap={10}>
-      <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
         CONTACT NUMBER
       </Text>
       <XStack gap={12} alignItems="flex-end">
@@ -82,7 +82,7 @@ export function ContactFields({ control, setValue }: Readonly<Props>) {
         </Text>
       </XStack>
 
-      <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
         WHATSAPP NUMBER
       </Text>
       <XStack gap={12} alignItems="flex-end">

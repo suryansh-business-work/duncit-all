@@ -77,11 +77,11 @@ export function ChargeSection({
         paddingVertical={9}
         pressStyle={{ opacity: 0.8 }}
       >
-        <Text fontSize={13} fontWeight="800" color="$color" flexShrink={1}>
+        <Text fontSize={13} fontWeight="600" color="$color" flexShrink={1}>
           {title}
         </Text>
         <XStack alignItems="center" gap={4}>
-          <Text fontSize={13} fontWeight="800" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {amount}
           </Text>
           <MaterialIcons

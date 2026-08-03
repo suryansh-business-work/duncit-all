@@ -16,7 +16,7 @@ interface Props {
 export default function VenuePicker({ venues, selectedId, onSelect, required }: Readonly<Props>) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={800}>
+      <Typography variant="caption" color="text.secondary" fontWeight={600}>
         {requiredLabel('Select venue', required)}
       </Typography>
       <Stack direction="row" sx={{ mt: 1, gap: 1.25, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
@@ -45,7 +45,7 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
                 <Box
                   sx={{
                     height: 96,
-                    borderRadius: '4px',
+                    borderRadius: '16px',
                     mb: 1,
                     bgcolor: 'action.hover',
                     backgroundImage: venue.cover_image_url ? `url(${venue.cover_image_url})` : undefined,
@@ -54,7 +54,7 @@ export default function VenuePicker({ venues, selectedId, onSelect, required }: 
                   }}
                 />
                 <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <Typography variant="subtitle2" fontWeight={900} noWrap sx={{ flex: 1 }}>
+                  <Typography variant="subtitle2" fontWeight={700} noWrap sx={{ flex: 1 }}>
                     {venue.venue_name}
                   </Typography>
                   {selected && <CheckCircleIcon color="primary" fontSize="small" />}

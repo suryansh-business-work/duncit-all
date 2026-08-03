@@ -60,7 +60,7 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
             borderRadius={999}
             backgroundColor="rgba(33,33,33,0.85)"
           >
-            <Text fontSize={10} fontWeight="800" color="#ffffff">
+            <Text fontSize={10} fontWeight="600" color="#ffffff">
               {t('mweb.shop.outOfStock')}
             </Text>
           </XStack>
@@ -90,7 +90,7 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
         )}
       </YStack>
       <YStack padding={10} gap={2}>
-        <Text fontSize={13} fontWeight="800" color="$color" numberOfLines={1}>
+        <Text fontSize={13} fontWeight="600" color="$color" numberOfLines={1}>
           {product.product_name}
         </Text>
         {product.brand_name ? (
@@ -99,13 +99,13 @@ export function ShopProductCard({ product, adding, onOpen, onQuickAdd }: Readonl
           </Text>
         ) : null}
         <XStack alignItems="center" justifyContent="space-between" marginTop={2}>
-          <Text fontSize={14} fontWeight="900" color="$primary">
+          <Text fontSize={14} fontWeight="700" color="$primary">
             ₹{product.unit_cost}
           </Text>
           {hasRating ? (
             <XStack testID={`shop-product-rating-${product.id}`} alignItems="center" gap={2}>
               <MaterialIcons name="star" size={13} color="#f5a623" />
-              <Text fontSize={11} fontWeight="800" color="$color">
+              <Text fontSize={11} fontWeight="600" color="$color">
                 {summary!.average_rating.toFixed(1)}
               </Text>
               <Text fontSize={11} color="$muted">

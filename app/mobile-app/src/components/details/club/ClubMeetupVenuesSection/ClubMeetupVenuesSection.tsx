@@ -73,7 +73,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
   return (
     <YStack gap={8} testID="club-venues">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           We usually meet
         </Text>
         {origin ? null : (
@@ -87,7 +87,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
             pressStyle={{ opacity: 0.7 }}
           >
             <MaterialIcons name="near-me" size={14} color={primary} />
-            <Text fontSize={13} fontWeight="800" color="$primary">
+            <Text fontSize={13} fontWeight="600" color="$primary">
               {locating ? 'Locating…' : 'Show distance'}
             </Text>
           </XStack>
@@ -121,7 +121,7 @@ export function ClubMeetupVenuesSection({ venues, onOpenVenue }: Readonly<Props>
         gap={4}
         pressStyle={{ opacity: 0.7 }}
       >
-        <Text fontSize={13} fontWeight="800" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$primary">
           Open venue details
         </Text>
         <MaterialIcons name="open-in-new" size={13} color={primary} />

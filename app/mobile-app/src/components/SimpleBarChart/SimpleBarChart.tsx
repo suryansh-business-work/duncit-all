@@ -49,7 +49,7 @@ export function SimpleBarChart({ data, height = 120, testID = 'bar-chart' }: Rea
           {/* The bar scales inside this flex track, so the value/label rows can
               never be pushed out of the card (overlap fix, B4-1). */}
           <YStack flex={1} width="100%" alignItems="center" justifyContent="flex-end" gap={4}>
-            <Text fontSize={11} fontWeight="900" color="$color">
+            <Text fontSize={11} fontWeight="700" color="$color">
               {d.value}
             </Text>
             <YStack
@@ -60,7 +60,7 @@ export function SimpleBarChart({ data, height = 120, testID = 'bar-chart' }: Rea
               backgroundColor={d.value > 0 ? '$primary' : '$surface'}
             />
           </YStack>
-          <Text fontSize={11} fontWeight="800" color="$muted">
+          <Text fontSize={11} fontWeight="600" color="$muted">
             {d.label}
           </Text>
         </YStack>

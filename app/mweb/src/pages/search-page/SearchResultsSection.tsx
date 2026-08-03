@@ -44,7 +44,7 @@ export default function SearchResultsSection({
   if (results.length === 0) return null;
   return (
     <Box component="section">
-      <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1.2 }}>
+      <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
         {heading}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

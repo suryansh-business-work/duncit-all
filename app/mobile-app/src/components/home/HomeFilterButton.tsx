@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface HomeFilterButtonProps {
   /** Number of active filters — shows a badge. */
@@ -11,14 +12,15 @@ interface HomeFilterButtonProps {
   onPress: () => void;
 }
 
-/** The Filters (tune) button shown in the "What's your vibe today?" header —
- * RN port of mWeb's FilterMenu trigger. */
+/** The mock's "Filter" pill — icon + label — shown in the "What's your vibe
+ * today?" header. Twin of mWeb's FilterMenu trigger. */
 export function HomeFilterButton({
   count = 0,
   disabled,
   onPress,
 }: Readonly<HomeFilterButtonProps>) {
   const { primary, muted } = useThemeColors();
+  const { t } = useTranslation();
   const showBadge = count > 0 && !disabled;
   const handlePress = () => {
     if (!disabled) onPress();
@@ -32,8 +34,9 @@ export function HomeFilterButton({
       onPress={handlePress}
       alignItems="center"
       justifyContent="center"
-      width={38}
+      gap={5}
       height={38}
+      paddingHorizontal={14}
       borderRadius={999}
       borderWidth={1.5}
       borderColor="$borderColor"
@@ -41,7 +44,10 @@ export function HomeFilterButton({
       opacity={disabled ? 0.4 : 1}
       pressStyle={disabled ? undefined : { opacity: 0.8 }}
     >
-      <MaterialIcons name="tune" size={18} color={disabled ? muted : primary} />
+      <MaterialIcons name="tune" size={16} color={disabled ? muted : primary} />
+      <Text fontSize={12.5} fontWeight="600" color="$color">
+        {t('mweb.home.vibeFilter')}
+      </Text>
       {showBadge ? (
         <XStack
           testID="home-filter-badge"
@@ -56,7 +62,7 @@ export function HomeFilterButton({
           justifyContent="center"
           backgroundColor="$primary"
         >
-          <Text fontSize={9} fontWeight="900" color="$onPrimary">
+          <Text fontSize={9} fontWeight="700" color="$onPrimary">
             {count}
           </Text>
         </XStack>

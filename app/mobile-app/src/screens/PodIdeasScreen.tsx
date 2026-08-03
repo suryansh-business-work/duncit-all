@@ -87,7 +87,7 @@ export function PodIdeasScreen() {
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name="add" size={16} color={onPrimary} />
-      <Text fontSize={13} fontWeight="900" color={onPrimary}>
+      <Text fontSize={13} fontWeight="700" color={onPrimary}>
         Share
       </Text>
     </XStack>

@@ -39,7 +39,7 @@ function ChipRow<T extends string>({
             color={selected ? 'primary' : 'default'}
             variant={selected ? 'filled' : 'outlined'}
             onClick={() => onChange(itemValue)}
-            sx={{ height: 32, fontWeight: 800 }}
+            sx={{ height: 32, fontWeight: 600 }}
           />
         );
       })}
@@ -61,7 +61,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
       open={open}
       onClose={onClose}
       title={
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           Filter pods
         </Typography>
       }
@@ -78,7 +78,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
           <Button
             variant="contained"
             onClick={() => onApply(draft)}
-            sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}
+            sx={{ flex: 1, borderRadius: 999, fontWeight: 700 }}
           >
             Apply
           </Button>
@@ -87,7 +87,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
     >
       <Stack spacing={2}>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             Type
           </Typography>
           <ChipRow
@@ -97,7 +97,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
           />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             Time
           </Typography>
           <ChipRow
@@ -107,7 +107,7 @@ export default function HostPodsFilterSheet({ open, initial, onApply, onClose }:
           />
         </Stack>
         <Stack spacing={0.8}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
             Price
           </Typography>
           <ChipRow

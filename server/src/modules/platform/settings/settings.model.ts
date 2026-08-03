@@ -142,6 +142,11 @@ export interface IBranding extends Document {
   // icon) even ones with no pods yet; false (default) shows only categories that
   // currently have pods. mWeb + mobile.
   home_show_all_vibe_categories: boolean;
+  // Heading + sub-heading over the home "What's your vibe" (category) filter,
+  // admin-managed from the Category catalogue. Empty string falls back to each
+  // client's bundled copy (mWeb + mobile).
+  home_vibe_heading: string;
+  home_vibe_subheading: string;
   // Tagline shown in the home header, above the location (mWeb + mobile).
   home_header_tagline: string;
   // Latest released mobile app version (semver, e.g. "1.2.3"). Auto-synced on
@@ -279,6 +284,8 @@ const brandingSchema = new Schema<IBranding>(
     home_all_vibe_icon_url: { type: String, default: "" },
     home_all_vibe_icon_layout: { type: homeAllVibeIconLayoutSchema, default: null },
     home_show_all_vibe_categories: { type: Boolean, default: false },
+    home_vibe_heading: { type: String, default: "" },
+    home_vibe_subheading: { type: String, default: "" },
     home_header_tagline: { type: String, default: "It All Starts Here!" },
     app_latest_version: { type: String, default: "" },
     pod_shop_slider: { type: [podShopSliderMediaSchema], default: [] },

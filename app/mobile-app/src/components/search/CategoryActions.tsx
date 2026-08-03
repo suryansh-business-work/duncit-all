@@ -23,7 +23,7 @@ export function CategoryActions({ categories, onSelect }: Readonly<Props>) {
   return (
     <YStack gap={12} testID="search-category-actions">
       <YStack gap={2}>
-        <Text fontSize={17} fontWeight="900" color="$color">
+        <Text fontSize={17} fontWeight="700" color="$color">
           ✨ Discover Experiences by Interest
         </Text>
         <Text fontSize={13} color="$muted">
@@ -59,7 +59,7 @@ export function CategoryActions({ categories, onSelect }: Readonly<Props>) {
                 ) : (
                   <MaterialIcons name="interests" size={22} color={primary} />
                 )}
-                <Text fontSize={12} fontWeight="800" color="$color" numberOfLines={1}>
+                <Text fontSize={12} fontWeight="600" color="$color" numberOfLines={1}>
                   {category.name}
                 </Text>
               </YStack>

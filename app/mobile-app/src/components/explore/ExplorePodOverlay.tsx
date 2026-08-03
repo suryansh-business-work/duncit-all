@@ -21,7 +21,7 @@ function Chip({ icon, label, tint }: Readonly<{ icon?: string; label: string; ti
       backgroundColor={tint ?? 'rgba(255,255,255,0.16)'}
     >
       {icon ? <MaterialIcons name={icon as never} size={13} color="#ffffff" /> : null}
-      <Text color="#ffffff" fontSize={11.5} fontWeight="800">
+      <Text color="#ffffff" fontSize={11.5} fontWeight="600">
         {label}
       </Text>
     </XStack>
@@ -47,7 +47,7 @@ function ClubLink({
         >
           <MaterialIcons name="groups" size={14} color="#ffffff" />
         </YStack>
-        <Text color="#ffffff" fontSize={13} fontWeight="900" numberOfLines={1}>
+        <Text color="#ffffff" fontSize={13} fontWeight="700" numberOfLines={1}>
           {clubName}
         </Text>
         {isVerified ? (
@@ -84,7 +84,7 @@ function Caption({
         {description}
       </Text>
       {collapsible ? (
-        <Text testID="explore-caption-toggle" color="#ffffff" fontSize={12} fontWeight="800">
+        <Text testID="explore-caption-toggle" color="#ffffff" fontSize={12} fontWeight="600">
           {toggleLabel}
         </Text>
       ) : null}
@@ -126,7 +126,7 @@ export function ExplorePodOverlay({
         {clubName ? (
           <ClubLink clubName={clubName} isVerified={isVerified} onOpenClub={onOpenClub} />
         ) : null}
-        <Text color="#ffffff" fontSize={22} fontWeight="900" numberOfLines={2}>
+        <Text color="#ffffff" fontSize={22} fontWeight="700" numberOfLines={2}>
           {pod.pod_title}
         </Text>
         {description ? (

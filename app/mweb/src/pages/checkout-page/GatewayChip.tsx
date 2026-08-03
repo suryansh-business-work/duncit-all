@@ -11,7 +11,7 @@ export default function GatewayChip({ finance }: Readonly<{ finance: any }>) {
       <Chip
         size="small"
         label="Razorpay"
-        sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.primary.main, 0.12), color: 'text.primary', fontWeight: 800 }}
+        sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.primary.main, 0.12), color: 'text.primary', fontWeight: 600 }}
       />
     );
   }
@@ -20,7 +20,7 @@ export default function GatewayChip({ finance }: Readonly<{ finance: any }>) {
       <Chip
         size="small"
         label="Dummy"
-        sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }}
+        sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 600 }}
       />
     );
   }

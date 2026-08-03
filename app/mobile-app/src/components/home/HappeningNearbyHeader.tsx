@@ -2,6 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { useTranslation } from '@/hooks/useTranslation';
+
 interface HappeningNearbyHeaderProps {
   totalPods: number;
   /** Opens the dedicated Happening Nearby page (title or See all tap). */
@@ -15,7 +17,11 @@ export function HappeningNearbyHeader({
   totalPods,
   onPress,
 }: Readonly<HappeningNearbyHeaderProps>) {
-  const podsLabel = `${totalPods} ${totalPods === 1 ? 'pod' : 'pods'} nearby`;
+  const { t } = useTranslation();
+  const podsLabel =
+    totalPods === 1
+      ? t('mweb.home.podsNearbyOne')
+      : t('mweb.home.podsNearbyMany', { count: totalPods });
   return (
     <XStack
       testID="happening-nearby-header"
@@ -48,8 +54,8 @@ export function HappeningNearbyHeader({
           <MaterialIcons name="local-fire-department" size={18} color="#ffffff" />
         </LinearGradient>
         <YStack flex={1}>
-          <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
-            Happening nearby
+          <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
+            {t('mweb.home.happeningNearbyTitle')}
           </Text>
           <Text fontSize={11.5} fontWeight="700" color="$muted" numberOfLines={1}>
             {podsLabel}
@@ -70,8 +76,8 @@ export function HappeningNearbyHeader({
         paddingVertical={6}
         pressStyle={{ opacity: 0.8 }}
       >
-        <Text fontSize={12} fontWeight="900" color="$primary">
-          See all
+        <Text fontSize={12} fontWeight="700" color="$primary">
+          {t('mweb.home.seeAll')}
         </Text>
         <MaterialIcons name="chevron-right" size={16} color="#ff4f73" />
       </XStack>

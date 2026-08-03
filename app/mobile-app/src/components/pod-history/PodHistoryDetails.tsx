@@ -55,7 +55,7 @@ function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warn
       borderWidth={tone === 'success' ? 0 : 1}
       borderColor="$borderColor"
     >
-      <Text fontSize={11} fontWeight="800" color={tone === 'success' ? '$onPrimary' : '$color'}>
+      <Text fontSize={11} fontWeight="600" color={tone === 'success' ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
@@ -73,7 +73,7 @@ function Card({ title, children }: Readonly<{ title?: string; children: ReactNod
       gap={12}
     >
       {title ? (
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           {title}
         </Text>
       ) : null}
@@ -126,7 +126,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
               <Chip label={STATUS_CHIP[item.status].label} tone={STATUS_CHIP[item.status].tone} />
               <Chip label={`Refund: ${refundLabel(item.refund_status)}`} tone="muted" />
             </XStack>
-            <Text fontSize={16} fontWeight="900" color="$color">
+            <Text fontSize={16} fontWeight="700" color="$color">
               {pod?.pod_title ?? 'Pod details'}
             </Text>
             <Text fontSize={13} color="$muted">
@@ -169,7 +169,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           aria-label="Backout terms and conditions"
           onPress={onBackoutTerms}
           fontSize={13}
-          fontWeight="800"
+          fontWeight="600"
           color="$primary"
         >
           Backout Terms &amp; Conditions
@@ -180,7 +180,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           aria-label="General terms"
           onPress={onGeneralTerms}
           fontSize={13}
-          fontWeight="800"
+          fontWeight="600"
           color={primary}
         >
           General Terms

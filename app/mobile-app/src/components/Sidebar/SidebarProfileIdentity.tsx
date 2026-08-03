@@ -39,7 +39,7 @@ export function SidebarProfileIdentity({
     >
       <YStack flex={1} minWidth={0}>
         <XStack alignItems="center" gap={2}>
-          <Text numberOfLines={1} fontSize={15} fontWeight="800" color="$color">
+          <Text numberOfLines={1} fontSize={15} fontWeight="600" color="$color">
             {me?.full_name ?? 'User'}
           </Text>
           <MaterialIcons name="chevron-right" size={16} color={muted} />
@@ -64,7 +64,7 @@ export function SidebarProfileIdentity({
           borderRadius={22}
           backgroundColor="$primary"
         >
-          <Text fontSize={18} fontWeight="800" color="$onPrimary">
+          <Text fontSize={18} fontWeight="600" color="$onPrimary">
             {initial}
           </Text>
         </YStack>

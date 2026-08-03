@@ -59,7 +59,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
               <GroupsIcon sx={{ fontSize: 15 }} />
             </Box>
-            <Typography variant="subtitle2" fontWeight={900} noWrap>
+            <Typography variant="subtitle2" fontWeight={700} noWrap>
               {club.club_name}
             </Typography>
             {club.is_verified && (
@@ -67,7 +67,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             )}
           </Stack>
         )}
-        <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.05, textShadow: '0 2px 12px rgba(0,0,0,0.36)' }}>
+        <Typography variant="h5" fontWeight={700} sx={{ lineHeight: 1.05, textShadow: '0 2px 12px rgba(0,0,0,0.36)' }}>
           {pod.pod_title}
         </Typography>
         {description && (
@@ -87,7 +87,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
               {description}
             </Typography>
             {collapsible && (
-              <Typography component="span" variant="caption" sx={{ fontWeight: 800, opacity: 0.85 }}>
+              <Typography component="span" variant="caption" sx={{ fontWeight: 600, opacity: 0.85 }}>
                 {expanded ? 'Show less' : 'More'}
               </Typography>
             )}

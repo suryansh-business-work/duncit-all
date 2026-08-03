@@ -42,7 +42,7 @@ export function PodProductOrdersCard({
     >
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="shopping-bag" size={18} color={primary} />
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           Products &amp; tracking
         </Text>
       </XStack>

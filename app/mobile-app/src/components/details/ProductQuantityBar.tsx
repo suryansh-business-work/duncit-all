@@ -41,7 +41,7 @@ function AddToSelection({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name="add-shopping-cart" size={18} color={iconColor} />
-      <Text fontSize={14} fontWeight="900" color={textColor}>
+      <Text fontSize={14} fontWeight="700" color={textColor}>
         {label}
       </Text>
     </XStack>
@@ -70,7 +70,7 @@ function QuantityStepper({
           color={primary}
           onPress={() => onUpdate(quantity - 1)}
         />
-        <Text testID="product-detail-qty" fontSize={16} fontWeight="900" color="$color">
+        <Text testID="product-detail-qty" fontSize={16} fontWeight="700" color="$color">
           {quantity}
         </Text>
         <StepButton
@@ -94,7 +94,7 @@ function QuantityStepper({
         pressStyle={{ opacity: 0.6 }}
       >
         <MaterialIcons name="delete-outline" size={18} color={DANGER} />
-        <Text fontSize={13} fontWeight="800" color="$danger">
+        <Text fontSize={13} fontWeight="600" color="$danger">
           Remove
         </Text>
       </XStack>

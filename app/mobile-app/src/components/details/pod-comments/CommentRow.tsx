@@ -59,7 +59,7 @@ export function CommentRow({
             alignItems="center"
             justifyContent="center"
           >
-            <Text fontSize={15} fontWeight="900" color="$color">
+            <Text fontSize={15} fontWeight="700" color="$color">
               {(comment.author_name || '?').slice(0, 1).toUpperCase()}
             </Text>
           </YStack>
@@ -73,7 +73,7 @@ export function CommentRow({
             aria-label={`Open ${comment.author_name || 'profile'}`}
             onPress={onOpenProfile}
             fontSize={13.5}
-            fontWeight="800"
+            fontWeight="600"
             color="$color"
           >
             {comment.author_name || 'Anon'}

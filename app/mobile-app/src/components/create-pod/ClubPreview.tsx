@@ -51,7 +51,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
         </YStack>
       )}
       <YStack flex={1} gap={2}>
-        <Text fontSize={14.5} fontWeight="900" color="$color" numberOfLines={1}>
+        <Text fontSize={14.5} fontWeight="700" color="$color" numberOfLines={1}>
           {club.club_name}
         </Text>
         <XStack alignItems="center" gap={4}>
@@ -67,7 +67,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
           aria-label="View club details"
           onPress={() => setOpen(true)}
           fontSize={12.5}
-          fontWeight="900"
+          fontWeight="700"
           color="$primary"
         >
           View club details
@@ -98,7 +98,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
             >
               <SafeAreaView edges={[]}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={8}>
-                  <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1} flex={1}>
+                  <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1} flex={1}>
                     {club.club_name}
                   </Text>
                   <XStack

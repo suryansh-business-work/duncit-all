@@ -43,7 +43,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
           maxWidth: '78%',
           bgcolor: mine ? 'primary.main' : 'background.paper',
           color: mine ? 'primary.contrastText' : 'text.primary',
-          borderRadius: mine ? '4px 4px 1px 4px' : '4px 4px 4px 1px',
+          borderRadius: mine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
           cursor: 'pointer',
           border: mine ? 0 : 1,
           borderColor: 'divider',
@@ -53,7 +53,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: Readonly<M
         {!mine && (
           <Typography
             variant="caption"
-            sx={{ fontWeight: 900, opacity: 0.78, display: 'block' }}
+            sx={{ fontWeight: 700, opacity: 0.78, display: 'block' }}
           >
             {m.user_name || 'User'}
           </Typography>

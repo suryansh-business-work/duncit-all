@@ -14,7 +14,7 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
   const meta = STATUS_META[item.status];
   const done = item.status === 'APPROVED' || item.status === 'VERIFIED_BY_APP';
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack direction="row" alignItems="flex-start" spacing={1.5}>
           <CheckCircleIcon
@@ -22,10 +22,10 @@ export default function VerificationCardShell({ item, children }: Readonly<Props
             aria-hidden
           />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" fontWeight={900}>
+            <Typography variant="subtitle1" fontWeight={700}>
               {VERIFICATION_LABELS[item.type]}
             </Typography>
-            <Chip size="small" label={meta.label} color={meta.color} sx={{ mt: 0.5, fontWeight: 800 }} />
+            <Chip size="small" label={meta.label} color={meta.color} sx={{ mt: 0.5, fontWeight: 600 }} />
             {item.status === 'REJECTED' && item.reject_reason && (
               <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
                 {item.reject_reason}

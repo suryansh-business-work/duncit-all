@@ -154,7 +154,7 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
       <Stack direction="row" spacing={1.25} alignItems="center">
         {icon}
         <Box>
-          <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }}>
             {title}
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>

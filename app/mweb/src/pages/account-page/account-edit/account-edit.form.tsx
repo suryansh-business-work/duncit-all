@@ -116,7 +116,7 @@ export default function AccountEditForm({
         <DobDateField control={control} minAge={minAge} />
         <LocationSelect control={control} setValue={setValue} />
         <ContactFields control={control} setValue={setValue} />
-        <Typography variant="overline" color="text.secondary" fontWeight={900}>
+        <Typography variant="overline" color="text.secondary" fontWeight={700}>
           Main address
         </Typography>
         <AddressFields

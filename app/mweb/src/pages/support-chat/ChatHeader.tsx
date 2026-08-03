@@ -46,7 +46,7 @@ export default function ChatHeader({
       </IconButton>
       <SupportAgentIcon color="primary" />
       <Stack sx={{ flex: 1, minWidth: 0 }}>
-        <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
+        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
           Chat with Us
         </Typography>
         {ticketNo && (

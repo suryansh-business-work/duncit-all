@@ -103,7 +103,7 @@ export default function RegisterPage() {
         <Stack spacing={1.45}>
           <Stack alignItems="center" spacing={1.1} sx={{ pt: 0.5 }}>
             <AuthLogo />
-            <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+            <Typography variant="h4" fontWeight={700} textAlign="center" color="text.primary">
               Join the crew
             </Typography>
             <Typography variant="body2" textAlign="center" color="text.secondary">

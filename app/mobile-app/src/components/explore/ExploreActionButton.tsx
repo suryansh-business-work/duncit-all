@@ -53,7 +53,7 @@ export function ExploreActionButton({
         testID={onLabelPress ? `${testID}-count` : undefined}
         onPress={onLabelPress}
         fontSize={11}
-        fontWeight="800"
+        fontWeight="600"
         color="#ffffff"
       >
         {label}

@@ -51,7 +51,7 @@ export function SupportTicketsScreen() {
             <MaterialIcons name="support-agent" size={20} color={onPrimary} />
           </YStack>
           <YStack flex={1}>
-            <Text fontSize={14} fontWeight="900" color="$color">
+            <Text fontSize={14} fontWeight="700" color="$color">
               Help squad is ready
             </Text>
             <Text fontSize={12} color="$muted">
@@ -64,7 +64,7 @@ export function SupportTicketsScreen() {
             borderRadius={999}
             backgroundColor={success}
           >
-            <Text fontSize={11} fontWeight="900" color="#ffffff">
+            <Text fontSize={11} fontWeight="700" color="#ffffff">
               Live
             </Text>
           </XStack>
@@ -86,7 +86,7 @@ export function SupportTicketsScreen() {
         >
           <MaterialIcons name="help-outline" size={22} color={success} />
           <YStack flex={1}>
-            <Text fontSize={14} fontWeight="900" color="$color">
+            <Text fontSize={14} fontWeight="700" color="$color">
               Maybe answered already?
             </Text>
             <Text fontSize={12} color="$muted">

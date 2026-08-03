@@ -39,7 +39,7 @@ export function TicketReopenFooter({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="replay" size={18} color={ink} />
-          <Text fontSize={13} fontWeight="800" color="$primary">
+          <Text fontSize={13} fontWeight="600" color="$primary">
             Re-open ticket
           </Text>
         </XStack>

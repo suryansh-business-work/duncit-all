@@ -25,6 +25,8 @@ export const BrandingDocument = gql(`
         height
       }
       home_show_all_vibe_categories
+      home_vibe_heading
+      home_vibe_subheading
       home_header_tagline
       occasional_icons {
         slug

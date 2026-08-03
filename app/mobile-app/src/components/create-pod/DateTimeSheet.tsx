@@ -55,7 +55,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         >
           <MaterialIcons name="chevron-left" size={22} color={muted} />
         </XStack>
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           {format(view, 'MMMM yyyy')}
         </Text>
         <XStack
@@ -99,7 +99,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
           </YStack>
         ))}
       </XStack>
-      <Text fontSize={12} fontWeight="900" color="$muted">
+      <Text fontSize={12} fontWeight="700" color="$muted">
         TIME
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -115,7 +115,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
               paddingVertical={7}
               {...chip(h === hour)}
             >
-              <Text fontSize={12.5} fontWeight="800" color={h === hour ? '$onPrimary' : '$color'}>
+              <Text fontSize={12.5} fontWeight="600" color={h === hour ? '$onPrimary' : '$color'}>
                 {pad(h)}
               </Text>
             </YStack>
@@ -134,7 +134,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
             paddingVertical={7}
             {...chip(m === minute)}
           >
-            <Text fontSize={12.5} fontWeight="800" color={m === minute ? '$onPrimary' : '$color'}>
+            <Text fontSize={12.5} fontWeight="600" color={m === minute ? '$onPrimary' : '$color'}>
               :{pad(m)}
             </Text>
           </YStack>
@@ -152,7 +152,7 @@ export function CalendarSheet({ testID, initial, muted, onDone }: Readonly<Sheet
         backgroundColor="$primary"
         pressStyle={{ opacity: 0.85 }}
       >
-        <Text fontSize={14} fontWeight="900" color="$onPrimary">
+        <Text fontSize={14} fontWeight="700" color="$onPrimary">
           Done
         </Text>
       </XStack>

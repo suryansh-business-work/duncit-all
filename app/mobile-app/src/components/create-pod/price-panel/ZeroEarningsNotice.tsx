@@ -29,7 +29,7 @@ export function ZeroEarningsNotice() {
     >
       <MaterialIcons name="info-outline" size={18} color={WARN} />
       <YStack flex={1} gap={3}>
-        <Text fontSize={13} fontWeight="800" color="$color">
+        <Text fontSize={13} fontWeight="600" color="$color">
           {ZERO_EARNINGS_TITLE}
         </Text>
         <Text fontSize={12} color="$muted">

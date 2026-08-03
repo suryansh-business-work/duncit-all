@@ -55,7 +55,7 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
   return (
     <YStack gap={12} testID="host-pods-section">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Your pods
         </Text>
         <XStack
@@ -74,7 +74,7 @@ export function HostPodsSection({ onPodCompleted }: Readonly<HostPodsSectionProp
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="filter-list" size={16} color={filterActive ? onPrimary : ink} />
-          <Text fontSize={13} fontWeight="800" color={filterActive ? '$onPrimary' : '$color'}>
+          <Text fontSize={13} fontWeight="600" color={filterActive ? '$onPrimary' : '$color'}>
             {filterLabel}
           </Text>
         </XStack>

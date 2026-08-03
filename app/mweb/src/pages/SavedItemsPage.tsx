@@ -37,7 +37,7 @@ export default function SavedItemsPage() {
       <Stack direction="row" spacing={1} alignItems="center">
         <BookmarkIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>
+          <Typography variant="h5" fontWeight={600}>
             Saved Items
           </Typography>
           <Typography variant="body2" color="text.secondary">

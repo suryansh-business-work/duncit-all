@@ -59,12 +59,12 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
 
   return (
     <Stack spacing={2}>
-      <Card variant="outlined" sx={{ p: 1.5, borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }}>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <PlaceIcon color="primary" />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="caption" color="text.secondary" fontWeight={800}>Pod location</Typography>
-            <Typography variant="subtitle2" fontWeight={900} noWrap data-testid="create-pod-location-label">
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>Pod location</Typography>
+            <Typography variant="subtitle2" fontWeight={700} noWrap data-testid="create-pod-location-label">
               {location ? [location.location_name || location.city, location.state].filter(Boolean).join(', ') : 'No location selected'}
             </Typography>
             {locality && (
@@ -88,7 +88,7 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
       )}
 
       <Box>
-        <Typography variant="caption" color="text.secondary" fontWeight={800} sx={{ display: 'block', mb: 0.75 }}>Pod mode</Typography>
+        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ display: 'block', mb: 0.75 }}>Pod mode</Typography>
         <Controller
           control={control}
           name="pod_mode"
@@ -110,8 +110,8 @@ export default function LocationClubStep({ form, clubs, locations }: Readonly<Pr
                 }
               }}
             >
-              <ToggleButton value="PHYSICAL" sx={{ py: 1.25, fontWeight: 800 }}><DirectionsRunIcon fontSize="small" sx={{ mr: 1 }} /> Physical</ToggleButton>
-              <ToggleButton value="VIRTUAL" sx={{ py: 1.25, fontWeight: 800 }}><VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual</ToggleButton>
+              <ToggleButton value="PHYSICAL" sx={{ py: 1.25, fontWeight: 600 }}><DirectionsRunIcon fontSize="small" sx={{ mr: 1 }} /> Physical</ToggleButton>
+              <ToggleButton value="VIRTUAL" sx={{ py: 1.25, fontWeight: 600 }}><VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual</ToggleButton>
             </ToggleButtonGroup>
           )}
         />

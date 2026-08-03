@@ -63,7 +63,7 @@ function Field({ name, label, control }: Readonly<FieldProps>) {
       control={control}
       render={({ field, fieldState }) => (
         <YStack gap={4}>
-          <Text fontSize={11.5} fontWeight="800" color="$muted">
+          <Text fontSize={11.5} fontWeight="600" color="$muted">
             {label}
           </Text>
           <Input
@@ -131,7 +131,7 @@ export function AddressFormSheet({
               padding={16}
               gap={10}
             >
-              <Text fontSize={17} fontWeight="900" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color">
                 {title}
               </Text>
               <ScrollView>
@@ -163,7 +163,7 @@ export function AddressFormSheet({
                   borderColor="$borderColor"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Cancel
                   </Text>
                 </XStack>
@@ -182,7 +182,7 @@ export function AddressFormSheet({
                   opacity={saving ? 0.6 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     Save address
                   </Text>
                 </XStack>

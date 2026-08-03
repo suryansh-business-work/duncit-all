@@ -143,7 +143,7 @@ export function PodCommentsSheet({
                   paddingTop={16}
                   paddingBottom={8}
                 >
-                  <Text fontSize={18} fontWeight="900" color="$color">
+                  <Text fontSize={18} fontWeight="700" color="$color">
                     Comments
                   </Text>
                   <XStack
@@ -194,7 +194,7 @@ export function PodCommentsSheet({
                   borderRadius={18}
                   backgroundColor="$background"
                 >
-                  <Text fontSize={16} fontWeight="900" color="$color">
+                  <Text fontSize={16} fontWeight="700" color="$color">
                     Delete comment?
                   </Text>
                   <Text fontSize={13} color="$muted">
@@ -214,7 +214,7 @@ export function PodCommentsSheet({
                       borderWidth={1}
                       borderColor="$borderColor"
                     >
-                      <Text fontSize={14} fontWeight="800" color="$color">
+                      <Text fontSize={14} fontWeight="600" color="$color">
                         Cancel
                       </Text>
                     </XStack>
@@ -230,7 +230,7 @@ export function PodCommentsSheet({
                       justifyContent="center"
                       backgroundColor="$danger"
                     >
-                      <Text fontSize={14} fontWeight="900" color="#ffffff">
+                      <Text fontSize={14} fontWeight="700" color="#ffffff">
                         Delete
                       </Text>
                     </XStack>

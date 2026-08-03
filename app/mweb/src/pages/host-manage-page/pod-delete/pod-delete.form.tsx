@@ -144,7 +144,7 @@ export default function PodDeleteForm({
 
   return (
     <Dialog open={!!podId} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>Delete pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Delete pod</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-delete-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2">
@@ -196,7 +196,7 @@ export default function PodDeleteForm({
           color="error"
           variant="contained"
           disabled={removeState.loading || impactQ.loading}
-          sx={{ borderRadius: 999, fontWeight: 900 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {removeState.loading ? 'Deleting…' : confirmLabel}
         </Button>

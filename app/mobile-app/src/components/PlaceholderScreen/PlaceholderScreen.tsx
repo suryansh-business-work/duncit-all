@@ -45,7 +45,7 @@ export function PlaceholderScreen({
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text fontSize={18} fontWeight="800" color="$color">
+          <Text fontSize={18} fontWeight="600" color="$color">
             {title}
           </Text>
         </XStack>
@@ -58,7 +58,7 @@ export function PlaceholderScreen({
           paddingHorizontal={32}
         >
           <MaterialIcons name={icon} size={56} color={primary} />
-          <Text textAlign="center" fontSize={24} fontWeight="800" color="$color">
+          <Text textAlign="center" fontSize={24} fontWeight="600" color="$color">
             {title}
           </Text>
           <Text textAlign="center" fontSize={14} color="$muted">

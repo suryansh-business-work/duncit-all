@@ -74,7 +74,7 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
             gap={14}
           >
             <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="900" color="$color" paddingBottom={12}>
+              <Text fontSize={17} fontWeight="700" color="$color" paddingBottom={12}>
                 Switch role
               </Text>
               <XStack justifyContent="center" gap={16} paddingBottom={14}>
@@ -117,7 +117,7 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
                 backgroundColor="$primary"
               >
                 <YStack flex={1}>
-                  <Text fontSize={18} fontWeight="900" color="$onPrimary" numberOfLines={1}>
+                  <Text fontSize={18} fontWeight="700" color="$onPrimary" numberOfLines={1}>
                     {STUDIO_LABEL[pending]}
                   </Text>
                   <Text fontSize={11.5} fontWeight="700" color="$onPrimary" opacity={0.85}>

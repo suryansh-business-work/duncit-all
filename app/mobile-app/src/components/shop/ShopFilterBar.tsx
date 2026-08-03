@@ -79,7 +79,7 @@ export function ShopFilterBar({ filters, sortOptions, muted }: Readonly<Props>) 
               borderRadius={999}
               backgroundColor="$danger"
             >
-              <Text fontSize={9} fontWeight="900" color="#ffffff">
+              <Text fontSize={9} fontWeight="700" color="#ffffff">
                 {filters.activeCount}
               </Text>
             </YStack>

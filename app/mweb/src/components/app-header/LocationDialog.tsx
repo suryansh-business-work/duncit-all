@@ -103,7 +103,7 @@ export default function LocationDialog({
         sx={{
           width: 34,
           height: 34,
-          borderRadius: '4px',
+          borderRadius: '8px',
           display: 'grid',
           placeItems: 'center',
           color: 'primary.main',
@@ -116,7 +116,7 @@ export default function LocationDialog({
         <PlaceIcon fontSize="small" />
       </Box>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.15 }} noWrap>
           Choose your location
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.25 }}>
@@ -133,7 +133,7 @@ export default function LocationDialog({
       title={title}
       actions={
         <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
-          <Button color="error" onClick={onClose} sx={{ fontWeight: 800 }}>
+          <Button color="error" onClick={onClose} sx={{ fontWeight: 600 }}>
             Cancel
           </Button>
           <Box sx={{ flexGrow: 1 }} />
@@ -141,7 +141,7 @@ export default function LocationDialog({
             variant="contained"
             onClick={onApply}
             disabled={!draftLocationId}
-            sx={{ minWidth: 154, borderRadius: 999, fontWeight: 800 }}
+            sx={{ minWidth: 154, borderRadius: 999, fontWeight: 600 }}
           >
             {applyLabel}
           </Button>

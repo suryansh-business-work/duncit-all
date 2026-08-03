@@ -57,7 +57,7 @@ function TrustBar({ tint }: Readonly<{ tint: string }>) {
         <XStack key={title} alignItems="center" gap={8}>
           <MaterialIcons name={icon} size={20} color={tint} />
           <YStack>
-            <Text fontSize={11.5} fontWeight="900" color="$color">
+            <Text fontSize={11.5} fontWeight="700" color="$color">
               {title}
             </Text>
             <Text fontSize={10.5} color="$muted">
@@ -122,7 +122,7 @@ export function ShopScreen() {
         <Text
           testID="shop-featured-heading"
           fontSize={17}
-          fontWeight="900"
+          fontWeight="700"
           color="$color"
           paddingHorizontal={16}
           paddingTop={8}

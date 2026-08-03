@@ -40,10 +40,10 @@ export default function LanguageSection() {
   };
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack spacing={1.5}>
-          <Typography variant="subtitle1" fontWeight={800}>
+          <Typography variant="subtitle1" fontWeight={600}>
             {t('mweb.account.preferences')}
           </Typography>
           <LanguageSelect

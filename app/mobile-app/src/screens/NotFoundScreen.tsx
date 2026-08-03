@@ -20,10 +20,10 @@ export function NotFoundScreen() {
       <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
           <MaterialIcons name="search-off" size={56} color={primary} />
-          <Text fontSize={48} fontWeight="900" color="$color">
+          <Text fontSize={48} fontWeight="700" color="$color">
             404
           </Text>
-          <Text fontSize={18} fontWeight="900" color="$color" textAlign="center">
+          <Text fontSize={18} fontWeight="700" color="$color" textAlign="center">
             Page not found
           </Text>
           <Text fontSize={14} color="$muted" textAlign="center">
@@ -41,7 +41,7 @@ export function NotFoundScreen() {
             backgroundColor="$primary"
             pressStyle={{ opacity: 0.85 }}
           >
-            <Text fontSize={14} fontWeight="900" color={onPrimary}>
+            <Text fontSize={14} fontWeight="700" color={onPrimary}>
               Go to Home
             </Text>
           </YStack>

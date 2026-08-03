@@ -27,7 +27,7 @@ export function ActionButton({
       borderColor={danger ? '$danger' : '$primary'}
       pressStyle={{ opacity: 0.7 }}
     >
-      <Text fontSize={12.5} fontWeight="800" color={danger ? '$danger' : '$primary'}>
+      <Text fontSize={12.5} fontWeight="600" color={danger ? '$danger' : '$primary'}>
         {label}
       </Text>
     </XStack>

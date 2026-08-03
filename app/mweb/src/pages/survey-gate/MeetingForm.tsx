@@ -125,7 +125,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         <Alert
           severity="warning"
           action={
-            <Button color="inherit" size="small" onClick={() => navigate('/account')} sx={{ fontWeight: 800 }}>
+            <Button color="inherit" size="small" onClick={() => navigate('/account')} sx={{ fontWeight: 600 }}>
               Go To Profile
             </Button>
           }
@@ -134,7 +134,7 @@ export default function MeetingForm({ kind, submitting, error: submitError, onSu
         </Alert>
       )}
       {(formError || submitError) && <Alert severity="warning">{formError ?? submitError}</Alert>}
-      <Button variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 900 }}>
+      <Button variant="contained" size="large" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>
         {submitting ? 'Booking…' : 'Book this slot'}
       </Button>
     </Stack>

@@ -29,12 +29,12 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
       <Text
         flex={1}
         fontSize={bold ? 15 : 13}
-        fontWeight={bold ? '900' : '600'}
+        fontWeight={bold ? '700' : '600'}
         color={bold ? '$color' : '$muted'}
       >
         {label}
       </Text>
-      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '900' : '700'} color="$color">
+      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color="$color">
         {value}
       </Text>
     </XStack>
@@ -184,10 +184,10 @@ export function ProductOrderSummary({
       <XStack gap={8} alignItems="center">
         <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
         <YStack flex={1} minWidth={0}>
-          <Text fontSize={11} fontWeight="800" textTransform="uppercase" color="$muted">
+          <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
             Order summary
           </Text>
-          <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text fontSize={16} fontWeight="700" color="$color" numberOfLines={1}>
             Your order
           </Text>
         </YStack>

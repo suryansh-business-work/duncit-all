@@ -54,7 +54,7 @@ export function CancelDialog({
               gap={10}
             >
               <SafeAreaView edges={[]}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Cancel this meeting?
                 </Text>
                 <Text fontSize={13.5} color="$muted" paddingTop={6}>
@@ -87,7 +87,7 @@ export function CancelDialog({
                     borderColor="$borderColor"
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="800" color="$color">
+                    <Text fontSize={14} fontWeight="600" color="$color">
                       Keep meeting
                     </Text>
                   </XStack>
@@ -106,7 +106,7 @@ export function CancelDialog({
                     opacity={busy ? 0.7 : 1}
                     pressStyle={{ opacity: 0.85 }}
                   >
-                    <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                    <Text fontSize={14} fontWeight="700" color={onPrimary}>
                       {busy ? 'Cancelling…' : 'Cancel meeting'}
                     </Text>
                   </XStack>

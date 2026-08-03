@@ -28,13 +28,13 @@ export function IdeaCommentRow({ comment, canDelete, onDelete }: Readonly<Props>
         alignItems="center"
         justifyContent="center"
       >
-        <Text fontSize={14} fontWeight="900" color="$color">
+        <Text fontSize={14} fontWeight="700" color="$color">
           {initial}
         </Text>
       </YStack>
       <YStack flex={1} gap={2}>
         <XStack gap={8} alignItems="center">
-          <Text fontSize={13} fontWeight="800" color="$color">
+          <Text fontSize={13} fontWeight="600" color="$color">
             {author?.full_name ?? 'Member'}
           </Text>
           <Text fontSize={11} color="$muted">

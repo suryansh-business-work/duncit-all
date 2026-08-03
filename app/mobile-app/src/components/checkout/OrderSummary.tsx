@@ -15,12 +15,12 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
     <XStack justifyContent="space-between" alignItems="center">
       <Text
         fontSize={bold ? 15 : 13}
-        fontWeight={bold ? '900' : '600'}
+        fontWeight={bold ? '700' : '600'}
         color={bold ? '$color' : '$muted'}
       >
         {label}
       </Text>
-      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '900' : '700'} color="$color">
+      <Text fontSize={bold ? 16 : 13} fontWeight={bold ? '700' : '600'} color="$color">
         {value}
       </Text>
     </XStack>
@@ -62,10 +62,10 @@ export function OrderSummary({
         />
       ) : null}
       <YStack padding={16} gap={8}>
-        <Text fontSize={11} fontWeight="800" textTransform="uppercase" color="$muted">
+        <Text fontSize={11} fontWeight="600" textTransform="uppercase" color="$muted">
           Ticket
         </Text>
-        <Text fontSize={17} fontWeight="900" color="$color">
+        <Text fontSize={17} fontWeight="700" color="$color">
           {pod?.pod_title ?? 'Pod booking'}
         </Text>
         {pod?.pod_date_time ? (
@@ -105,7 +105,7 @@ export function OrderSummary({
                   <MaterialIcons name="info-outline" size={16} color="#9aa0a6" />
                 </XStack>
               </XStack>
-              <Text fontSize={13} fontWeight="800" color="$color">
+              <Text fontSize={13} fontWeight="600" color="$color">
                 {fmt(venueTotal)}
               </Text>
             </XStack>

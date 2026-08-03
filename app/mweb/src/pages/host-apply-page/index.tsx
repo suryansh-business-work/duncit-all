@@ -88,12 +88,12 @@ export default function HostApplyPage() {
           Back
         </Button>
       </Box>
-      <Card variant="outlined" sx={{ borderRadius: '4px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
         <CardContent>
           <AuthLogo />
           {step !== 'success' && (
             <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-              <Typography variant="h6" fontWeight={950}>{heading}</Typography>
+              <Typography variant="h6" fontWeight={700}>{heading}</Typography>
               <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
             </Stack>
           )}

@@ -73,7 +73,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
         direction="row"
         spacing={0.75}
         alignItems="center"
-        sx={{ height: 72, px: 1, maxWidth: 168, border: 1, borderColor: 'divider', borderRadius: '4px' }}
+        sx={{ height: 72, px: 1, maxWidth: 168, border: 1, borderColor: 'divider', borderRadius: '16px' }}
       >
         {info.kind === 'video' ? <MovieIcon color="action" /> : <InsertDriveFileIcon color="action" />}
         <Box sx={{ minWidth: 0 }}>

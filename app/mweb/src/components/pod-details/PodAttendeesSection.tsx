@@ -130,7 +130,7 @@ export default function PodAttendeesSection({
               </Avatar>
             ))}
           </AvatarGroup>
-          <Typography variant="caption" color="primary.main" sx={{ ml: 1, fontWeight: 800 }}>
+          <Typography variant="caption" color="primary.main" sx={{ ml: 1, fontWeight: 600 }}>
             View all
           </Typography>
         </ButtonBase>

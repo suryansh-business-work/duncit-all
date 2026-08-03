@@ -30,7 +30,7 @@ export function VerificationCard({
       <XStack alignItems="center" gap={12}>
         <MaterialIcons name="check-circle" size={22} color={verified ? '#22c55e' : '#cfd2d6'} />
         <YStack flex={1} gap={4}>
-          <Text fontSize={14.5} fontWeight="900" color="$color">
+          <Text fontSize={14.5} fontWeight="700" color="$color">
             {LABELS[item.type]}
           </Text>
           <XStack
@@ -41,7 +41,7 @@ export function VerificationCard({
             borderRadius={999}
             backgroundColor={meta.color}
           >
-            <Text fontSize={11} fontWeight="900" color="#ffffff">
+            <Text fontSize={11} fontWeight="700" color="#ffffff">
               {meta.label}
             </Text>
           </XStack>

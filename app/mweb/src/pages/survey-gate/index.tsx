@@ -163,12 +163,12 @@ export default function SurveyGatePage() {
       </Box>
       <Card
         variant="outlined"
-        sx={{ borderRadius: '4px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
+        sx={{ borderRadius: '16px', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
       >
         <CardContent>
           <AuthLogo />
           <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-            <Typography variant="h6" fontWeight={950}>{heading}</Typography>
+            <Typography variant="h6" fontWeight={700}>{heading}</Typography>
             <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
           </Stack>
           {step === 'category' && (
@@ -199,7 +199,7 @@ export default function SurveyGatePage() {
           )}
           {step === 'thanks' && (
             <Stack spacing={2}>
-              <Alert severity="success" sx={{ borderRadius: '4px' }}>
+              <Alert severity="success" sx={{ borderRadius: '16px' }}>
                 Thank you for your submission! Your onboarding meeting is booked for{' '}
                 <strong>{slotLabel}</strong>. Our onboarding team will meet you at your selected
                 slot — please join 5 minutes early.
@@ -208,7 +208,7 @@ export default function SurveyGatePage() {
                 variant="contained"
                 size="large"
                 onClick={() => navigate('/', { replace: true })}
-                sx={{ borderRadius: 999, fontWeight: 900 }}
+                sx={{ borderRadius: 999, fontWeight: 700 }}
               >
                 Back to Home
               </Button>

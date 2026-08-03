@@ -44,7 +44,7 @@ export default function PrivacyToggleCard({ visibility, onChanged }: Readonly<Pr
         <Stack direction="row" alignItems="center" spacing={1.5}>
           <LockOutlinedIcon color="action" />
           <Stack sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               Private account
             </Typography>
             <Typography variant="body2" color="text.secondary">

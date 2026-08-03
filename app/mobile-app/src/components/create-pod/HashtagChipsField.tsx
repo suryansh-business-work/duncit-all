@@ -67,7 +67,7 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
                     paddingVertical={5}
                     backgroundColor="$primary"
                   >
-                    <Text fontSize={12} fontWeight="800" color="$onPrimary">
+                    <Text fontSize={12} fontWeight="600" color="$onPrimary">
                       #{tag}
                     </Text>
                     <XStack

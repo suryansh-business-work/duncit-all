@@ -108,7 +108,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
             >
               <SafeAreaView edges={['bottom']}>
                 <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                  <Text fontSize={18} fontWeight="900" color="$color">
+                  <Text fontSize={18} fontWeight="700" color="$color">
                     Share a pod idea
                   </Text>
                   <XStack
@@ -178,7 +178,7 @@ export function IdeaComposerSheet({ open, onClose, onSubmit }: Readonly<Props>) 
                       pressStyle={{ opacity: 0.85 }}
                     >
                       {submitting ? <Spinner size="small" color={onPrimary} /> : null}
-                      <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                      <Text fontSize={14} fontWeight="700" color={onPrimary}>
                         {submitting ? 'Submitting…' : 'Submit'}
                       </Text>
                     </XStack>

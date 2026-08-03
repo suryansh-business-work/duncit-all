@@ -65,7 +65,7 @@ export default function SurveyStepper({
   };
 
   if (sections.length === 0) {
-    return <Button variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 900 }}>{submitLabel}</Button>;
+    return <Button variant="contained" size="large" onClick={() => onSubmit([])} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitLabel}</Button>;
   }
   const active = sections[step];
 
@@ -77,7 +77,7 @@ export default function SurveyStepper({
         </Stepper>
       )}
       <Stack spacing={1.75}>
-        <Typography variant="subtitle1" fontWeight={800}>{active.title}</Typography>
+        <Typography variant="subtitle1" fontWeight={600}>{active.title}</Typography>
         {active.help && <Typography variant="body2" color="text.secondary">{active.help}</Typography>}
         {active.questions.map((q) => (
           <SurveyQuestionField key={q.qid} question={q} answer={get(q.qid)} onChange={(patch) => set(q.qid, patch)} />
@@ -87,9 +87,9 @@ export default function SurveyStepper({
       <Stack direction="row" spacing={1.5} justifyContent="space-between">
         <Button disabled={step === 0 || submitting} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</Button>
         {isLast ? (
-          <Button variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 900 }}>{submitting ? 'Submitting…' : submitLabel}</Button>
+          <Button variant="contained" onClick={submit} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>{submitting ? 'Submitting…' : submitLabel}</Button>
         ) : (
-          <Button variant="contained" onClick={next} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 900 }}>Next</Button>
+          <Button variant="contained" onClick={next} disabled={submitting} sx={{ borderRadius: 999, fontWeight: 700 }}>Next</Button>
         )}
       </Stack>
     </Stack>

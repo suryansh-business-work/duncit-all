@@ -67,13 +67,13 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
           p: 1,
           px: 1.25,
           maxWidth: '80%',
-          borderRadius: '4px',
+          borderRadius: '16px',
           bgcolor: isUser ? 'primary.main' : 'background.paper',
           color: isUser ? 'primary.contrastText' : 'text.primary',
         }}
       >
         {!isUser && (
-          <Typography variant="caption" sx={{ fontWeight: 800, display: 'block' }}>
+          <Typography variant="caption" sx={{ fontWeight: 600, display: 'block' }}>
             {label}
           </Typography>
         )}

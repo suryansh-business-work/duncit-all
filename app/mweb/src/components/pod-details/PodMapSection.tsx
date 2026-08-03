@@ -58,7 +58,7 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
     <Stack spacing={1.5}>
       <Stack direction="row" spacing={0.75} alignItems="center">
         <EventIcon color="primary" sx={{ fontSize: 20 }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           Time &amp; Venue
         </Typography>
       </Stack>

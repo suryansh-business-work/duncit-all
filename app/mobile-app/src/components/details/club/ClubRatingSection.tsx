@@ -109,7 +109,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
   return (
     <YStack gap={12} testID="club-ratings">
       <XStack alignItems="center" justifyContent="space-between">
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Ratings & Reviews
         </Text>
         <TouchableOpacity onPress={() => setDialogOpen(true)} accessibilityLabel="Rate this club">
@@ -120,7 +120,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
             borderWidth={1}
             borderColor={primary}
           >
-            <Text fontSize={12} fontWeight="800" color={primary}>
+            <Text fontSize={12} fontWeight="600" color={primary}>
               Rate Club
             </Text>
           </XStack>
@@ -129,7 +129,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
 
       {currentCount > 0 ? (
         <XStack alignItems="center" gap={12}>
-          <Text fontSize={36} fontWeight="900" color="$color">
+          <Text fontSize={36} fontWeight="700" color="$color">
             {currentRating.toFixed(1)}
           </Text>
           <YStack gap={4}>
@@ -188,7 +188,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
             gap={16}
           >
             <XStack alignItems="center" justifyContent="space-between">
-              <Text fontSize={17} fontWeight="900" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color">
                 Rate this Club
               </Text>
               <TouchableOpacity testID="rating-dialog-close" onPress={() => setDialogOpen(false)}>
@@ -235,7 +235,7 @@ export function ClubRatingSection({ clubId, rating, ratingsCount }: Readonly<Pro
                 alignItems="center"
                 justifyContent="center"
               >
-                <Text fontSize={15} fontWeight="900" color="white">
+                <Text fontSize={15} fontWeight="700" color="white">
                   {submitting ? 'Submitting…' : 'Submit Rating'}
                 </Text>
               </XStack>

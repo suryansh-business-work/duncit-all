@@ -44,12 +44,12 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
       >
         <XStack alignItems="center" gap={8} flexShrink={1}>
           <MaterialIcons name="receipt-long" size={16} color={primary} />
-          <Text fontSize={13.5} fontWeight="900" color="$color">
+          <Text fontSize={13.5} fontWeight="700" color="$color">
             Govt. and other charges
           </Text>
         </XStack>
         <XStack alignItems="center" gap={4}>
-          <Text fontSize={13.5} fontWeight="900" color="$color">
+          <Text fontSize={13.5} fontWeight="700" color="$color">
             {money(statement.total_deductions)}
           </Text>
           <MaterialIcons
@@ -81,10 +81,10 @@ export function ChargesAccordion({ statement, money, venueShortfall }: Readonly<
             );
           })}
           <XStack justifyContent="space-between" paddingHorizontal={12} paddingTop={2}>
-            <Text fontSize={13} fontWeight="800" color="$color">
+            <Text fontSize={13} fontWeight="600" color="$color">
               Total deductions
             </Text>
-            <Text fontSize={13} fontWeight="900" color="$color">
+            <Text fontSize={13} fontWeight="700" color="$color">
               {money(statement.total_deductions)}
             </Text>
           </XStack>

@@ -99,7 +99,7 @@ export function SuggestedPricesModal({
               <XStack alignItems="center" justifyContent="space-between" gap={10}>
                 <XStack alignItems="center" gap={8} flexShrink={1}>
                   <MaterialIcons name="sell" size={20} color={primary} />
-                  <Text fontSize={16.5} fontWeight="900" color="$color" flexShrink={1}>
+                  <Text fontSize={16.5} fontWeight="700" color="$color" flexShrink={1}>
                     {SUGGESTED_PRICES_TITLE}
                   </Text>
                 </XStack>

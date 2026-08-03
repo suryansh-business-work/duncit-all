@@ -24,12 +24,12 @@ export function StepHeader({ step }: Readonly<Props>) {
         />
       </XStack>
       <XStack alignItems="center" justifyContent="space-between" gap={8}>
-        <Text fontSize={12} fontWeight="900" color="$primary" letterSpacing={1}>
+        <Text fontSize={12} fontWeight="700" color="$primary" letterSpacing={1}>
           Step {step + 1} of {STEP_TITLES.length}
         </Text>
         <AiMonitorChip onPress={() => setGuideOpen(true)} />
       </XStack>
-      <Text fontSize={20} fontWeight="900" color="$color">
+      <Text fontSize={20} fontWeight="700" color="$color">
         {STEP_TITLES[step]}
       </Text>
       <Text fontSize={13} color="$muted">

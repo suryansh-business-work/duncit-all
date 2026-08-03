@@ -50,7 +50,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
           opacity={disabled ? 0.5 : 1}
         >
           <MaterialIcons name="attach-file" size={16} color={ink} />
-          <Text fontSize={12} fontWeight="800" color="$color">
+          <Text fontSize={12} fontWeight="600" color="$color">
             {uploading ? 'Uploading…' : 'Add files'}
           </Text>
         </XStack>

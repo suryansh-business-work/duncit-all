@@ -92,15 +92,15 @@ export default function HealthMeter({
             pointerEvents: 'none',
           }}
         >
-          <Typography sx={{ fontWeight: 950, fontSize: size * 0.28, lineHeight: 1, color }}>
+          <Typography sx={{ fontWeight: 700, fontSize: size * 0.28, lineHeight: 1, color }}>
             {safeScore}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             / 100
           </Typography>
         </Stack>
       </Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900, mt: 1 }}>
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mt: 1 }}>
         {label}
       </Typography>
       {caption && (

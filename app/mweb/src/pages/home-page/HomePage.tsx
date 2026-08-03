@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Fab, Stack, Typography } from '@mui/material';
+import { Alert, Box, Fab, Stack } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { PriceFilter, DateFilter, SortBy } from './queries';
 import FilterMenu from './FilterMenu';
 import HomeSearch from './HomeSearch';
 import HomeSkeleton from './HomeSkeleton';
 import HomeStatusRail from './HomeStatusRail';
 import HomeFeaturedPods from './HomeFeaturedPods';
+import HomeNearbyHeader from './HomeNearbyHeader';
 import HomeVibeChips from './HomeVibeChips';
+import HostCtaBanner from './HostCtaBanner';
+import ClubRecommendationRow from './ClubRecommendationRow';
 import ClubSection from './ClubSection';
 import PreviousPodsRail from './PreviousPodsRail';
 import AdSlot from '../../components/ads/AdSlot';
+import { useSavedPodHearts } from '../../hooks/useSavedPodHearts';
 import { useHomeData } from './useHomeData';
 
 interface HomePageProps {
@@ -36,6 +38,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     error,
     branding,
     me,
+    locations,
     isHost,
     clubs,
     featuredPods,
@@ -51,6 +54,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     totalPods,
     previousPods,
     hostNameOf,
+    categoryLabelOf,
   } = useHomeData({
     superCategorySlug,
     locationId,
@@ -60,6 +64,8 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     dateFilter,
     sortBy,
   });
+
+  const saved = useSavedPodHearts();
 
   if (categoryId && !categoryChips.some((c: any) => c.id === categoryId)) {
     setCategoryId('');
@@ -73,11 +79,10 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
   // A chip/filter narrows the rails; the full-list pages are unfiltered, so
   // the See-all cards drop their count + jump-to-index while one is active.
   const railsFiltered = Boolean(categoryId) || priceFilter !== 'ALL' || dateFilter !== 'ALL';
-  const podsLabel = `${totalPods} ${totalPods === 1 ? 'pod' : 'pods'} nearby`;
 
   return (
     <Stack
-      spacing={2.25}
+      spacing={3}
       sx={{
         pt: 0.25,
         mx: { xs: -1.25, sm: -2 },
@@ -102,6 +107,8 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         onSelect={setCategoryId}
         allIcon={branding?.home_all_vibe_icon_url}
         allLayout={branding?.home_all_vibe_icon_layout}
+        heading={branding?.home_vibe_heading}
+        subheading={branding?.home_vibe_subheading}
         action={
           <Box data-tour="home-filters" component="span">
           <FilterMenu
@@ -123,57 +130,24 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         }
       />
       </Box>
-      <Stack spacing={1.75}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            onClick={() => navigate('/happening-nearby')}
-            role="button"
-            tabIndex={0}
-            aria-label="Open Happening nearby"
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') navigate('/happening-nearby');
-            }}
-            sx={{ minWidth: 0, cursor: 'pointer' }}
-          >
-            <Box
-              sx={{
-                width: 30,
-                height: 30,
-                borderRadius: '50%',
-                display: 'grid',
-                placeItems: 'center',
-                color: 'primary.contrastText',
-                background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
-                boxShadow: '0 8px 18px rgba(255,79,115,0.24)',
-                flex: '0 0 auto',
-              }}
-            >
-              <WhatshotIcon sx={{ fontSize: 17 }} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
-                Happening nearby
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                {podsLabel}
-              </Typography>
-            </Box>
-          </Stack>
-          <Button
-            size="small"
-            endIcon={<ArrowForwardIcon />}
-            onClick={() => navigate('/happening-nearby')}
-            sx={{ fontWeight: 800, flex: '0 0 auto' }}
-          >
-            See all
-          </Button>
-        </Stack>
+      <Stack spacing={2.25}>
+        <HomeNearbyHeader totalPods={totalPods} onOpen={() => navigate('/happening-nearby')} />
         <Box data-tour="home-pods">
-          <HomeFeaturedPods pods={featuredPods} totalCount={totalPods} filtered={railsFiltered} />
+          <HomeFeaturedPods
+            pods={featuredPods}
+            totalCount={totalPods}
+            filtered={railsFiltered}
+            categoryLabelOf={categoryLabelOf}
+            savedOf={saved.signedIn ? saved.isSaved : undefined}
+            onToggleSave={saved.signedIn ? saved.toggle : undefined}
+          />
         </Box>
+        <HostCtaBanner
+          isHost={isHost}
+          onCreatePod={() => navigate('/create-pod')}
+          onBecomeHost={() => navigate('/earn')}
+        />
+        <ClubRecommendationRow clubs={clubs} locations={locations} />
         <Box data-tour="home-search">
           <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
         </Box>
@@ -190,6 +164,9 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
                 club={club}
                 clubPods={podsByClub.get(club.id) ?? []}
                 hostNameOf={hostNameOf}
+                categoryLabelOf={categoryLabelOf}
+                savedOf={saved.signedIn ? saved.isSaved : undefined}
+                onToggleSave={saved.signedIn ? saved.toggle : undefined}
               />
             ))}
           </Box>

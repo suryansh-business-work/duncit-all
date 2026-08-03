@@ -26,12 +26,12 @@ export default function CategorySummaryBanner({
         gap: 1,
         p: 1.25,
         mb: 1.5,
-        borderRadius: '4px',
+        borderRadius: '16px',
         bgcolor: 'action.hover',
       }}
     >
       <Stack spacing={0} sx={{ minWidth: 0 }}>
-        <Typography variant="caption" fontWeight={800} color="text.secondary">
+        <Typography variant="caption" fontWeight={600} color="text.secondary">
           CATEGORY
         </Typography>
         <Typography variant="body2" fontWeight={700} noWrap>
@@ -45,7 +45,7 @@ export default function CategorySummaryBanner({
         size="small"
         variant="outlined"
         color="primary"
-        sx={{ fontWeight: 800, flexShrink: 0 }}
+        sx={{ fontWeight: 600, flexShrink: 0 }}
       />
     </Box>
   );

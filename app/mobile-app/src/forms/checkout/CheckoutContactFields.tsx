@@ -54,7 +54,7 @@ export function CheckoutContactFields({
 
   return (
     <YStack gap={10}>
-      <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={0.6}>
+      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={0.6}>
         CONTACT DETAILS
       </Text>
       <YStack

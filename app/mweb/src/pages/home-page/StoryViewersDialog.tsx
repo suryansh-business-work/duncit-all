@@ -60,7 +60,7 @@ export default function StoryViewersDialog({
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
         <Stack direction="row" spacing={1} alignItems="center">
           <VisibilityIcon fontSize="small" />
-          <Typography component="span" sx={{ fontWeight: 900 }}>
+          <Typography component="span" sx={{ fontWeight: 700 }}>
             {viewers.length === 0 ? 'No views yet' : `Seen by ${viewers.length}`}
           </Typography>
         </Stack>

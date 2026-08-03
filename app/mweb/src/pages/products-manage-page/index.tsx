@@ -48,10 +48,10 @@ export default function ProductsManagePage() {
           <Inventory2Icon fontSize="small" />
         </Box>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
             ecomm Studio
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
             Your Duncit product catalogue at a glance
           </Typography>
         </Box>
@@ -66,18 +66,18 @@ export default function ProductsManagePage() {
 
       <Stack direction="row" spacing={1}>
         {[{ label: 'Products', value: products.length }, { label: 'In stock', value: totalStock }, { label: 'Avg price', value: `₹${avgPrice}` }].map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '4px' }}>
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: '16px' }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
-              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }} noWrap>{item.value}</Typography>
+              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 700 }} noWrap>{item.label}</Typography>
+              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 700 }} noWrap>{item.value}</Typography>
             </CardContent>
           </Card>
         ))}
       </Stack>
 
-      <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+      <Card variant="outlined" sx={{ borderRadius: '16px' }}>
         <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
             Stock by product
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>

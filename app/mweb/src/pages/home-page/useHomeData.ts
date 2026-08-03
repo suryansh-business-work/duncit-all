@@ -295,6 +295,23 @@ export function useHomeData({
     [hostNameById]
   );
 
+  // The pod card's category chip (mock: "Sports" over the image) — the pod's
+  // club's CATEGORY name, resolved through the same catalogue the vibe chips use.
+  const clubCategoryNameById = useMemo(() => {
+    const nameById = new Map<string, string>();
+    (data?.categories ?? []).forEach((c: any) => nameById.set(c.id, c.name));
+    const m = new Map<string, string>();
+    (data?.clubs ?? []).forEach((club: any) => {
+      const name = club.category_id ? nameById.get(club.category_id) : undefined;
+      if (name) m.set(club.id, name);
+    });
+    return m;
+  }, [data]);
+  const categoryLabelOf = useCallback(
+    (p: any): string | null => clubCategoryNameById.get(p.club_id) ?? null,
+    [clubCategoryNameById]
+  );
+
   // Category ids that actually have at least one pod in the current location /
   // super-category context — used to hide vibe chips that would show nothing.
   const podCategoryIds = useMemo(() => {
@@ -440,6 +457,7 @@ export function useHomeData({
     refetch,
     branding: headerData?.branding,
     me: headerData?.me,
+    locations: headerData?.locations ?? [],
     isHost,
     clubs,
     featuredPods,
@@ -456,5 +474,6 @@ export function useHomeData({
     activePods,
     previousPods,
     hostNameOf,
+    categoryLabelOf,
   };
 }

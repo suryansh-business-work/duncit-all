@@ -22,11 +22,11 @@ interface Props {
 
 function StatBox({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
-    <Box sx={{ flex: '1 1 40%', minWidth: 0, p: 1, borderRadius: '4px', bgcolor: 'rgba(255,255,255,0.14)' }}>
-      <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.9, display: 'block' }} noWrap>
+    <Box sx={{ flex: '1 1 40%', minWidth: 0, p: 1, borderRadius: '16px', bgcolor: 'rgba(255,255,255,0.14)' }}>
+      <Typography variant="caption" sx={{ fontWeight: 600, opacity: 0.9, display: 'block' }} noWrap>
         {label}
       </Typography>
-      <Typography variant="subtitle1" sx={{ fontWeight: 950, lineHeight: 1.2 }} noWrap>
+      <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
         {value}
       </Typography>
     </Box>
@@ -44,7 +44,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
   return (
     <Card
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         color: 'common.white',
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 60%, #16121f 100%)',
         boxShadow: '0 18px 42px rgba(245,51,122,0.24)',
@@ -53,11 +53,11 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1}>
           <PaymentsIcon fontSize="small" />
-          <Typography variant="caption" sx={{ fontWeight: 900, letterSpacing: 1 }}>
+          <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: 1 }}>
             AVAILABLE BALANCE
           </Typography>
         </Stack>
-        <Typography variant="h3" sx={{ fontWeight: 950, mt: 0.5 }}>
+        <Typography variant="h3" sx={{ fontWeight: 700, mt: 0.5 }}>
           {currency}
           {balance.toFixed(2)}
         </Typography>
@@ -79,7 +79,7 @@ export default function EarningsCard({ balance, currency, nextPayoutAt, summary 
             variant="contained"
             size="small"
             startIcon={<AccountBalanceWalletIcon />}
-            sx={{ borderRadius: 999, fontWeight: 900, bgcolor: 'common.white', color: 'text.primary', '&:hover': { bgcolor: 'grey.100' } }}
+            sx={{ borderRadius: 999, fontWeight: 700, bgcolor: 'common.white', color: 'text.primary', '&:hover': { bgcolor: 'grey.100' } }}
           >
             Wallet
           </Button>

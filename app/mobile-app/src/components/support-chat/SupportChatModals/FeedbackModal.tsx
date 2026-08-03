@@ -71,7 +71,7 @@ export function SupportFeedbackModal({
   if (existing && !done) {
     return (
       <Backdrop testID="support-feedback-modal">
-        <Text fontSize={16} fontWeight="900" color="$color">
+        <Text fontSize={16} fontWeight="700" color="$color">
           Your feedback
         </Text>
         <Text testID="feedback-readonly" fontSize={15} color="$color">
@@ -104,7 +104,7 @@ export function SupportFeedbackModal({
 
   return (
     <Backdrop testID="support-feedback-modal">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         How did we do?
       </Text>
       <EmojiScale rating={picked} onPick={setPicked} />

@@ -33,7 +33,7 @@ export function AccountProfileHeader({
       <ProfileAvatar photo={me.profile_photo} initial={initial} size={96} onChanged={onChanged} />
 
       <YStack alignItems="center" gap={6}>
-        <Text fontSize={20} fontWeight="900" color="$color" textAlign="center">
+        <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
           {me.full_name || `${me.first_name} ${me.last_name}`.trim()}
         </Text>
         {me.bio ? (
@@ -51,7 +51,7 @@ export function AccountProfileHeader({
               borderWidth={1}
               borderColor="$primary"
             >
-              <Text fontSize={11} fontWeight="800" color="$primary">
+              <Text fontSize={11} fontWeight="600" color="$primary">
                 {labelFor(role)}
               </Text>
             </XStack>
@@ -76,7 +76,7 @@ export function AccountProfileHeader({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="edit" size={16} color={color} />
-          <Text fontSize={14} fontWeight="800" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             Edit
           </Text>
         </XStack>
@@ -96,7 +96,7 @@ export function AccountProfileHeader({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="share" size={16} color={color} />
-          <Text fontSize={14} fontWeight="800" color="$color">
+          <Text fontSize={14} fontWeight="600" color="$color">
             Share
           </Text>
         </XStack>
@@ -116,7 +116,7 @@ export function AccountProfileHeader({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="logout" size={16} color={semantic.error} />
-          <Text fontSize={14} fontWeight="800" color="$danger">
+          <Text fontSize={14} fontWeight="600" color="$danger">
             Logout
           </Text>
         </XStack>

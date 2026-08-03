@@ -55,7 +55,7 @@ export default function LocationAreaPicker({
   const areaItemSx = (theme: Theme) => ({
     border: 1,
     borderColor: 'divider',
-    borderRadius: '4px',
+    borderRadius: '16px',
     minHeight: 54,
     px: 1.25,
     py: 0.8,
@@ -73,7 +73,7 @@ export default function LocationAreaPicker({
 
   return (
     <>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, lineHeight: 1.4 }}>
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600, lineHeight: 1.4 }}>
         Locality / Area in {locationName}
       </Typography>
       {zones.length > 0 ? (
@@ -94,7 +94,7 @@ export default function LocationAreaPicker({
             sx={{
               '& .MuiOutlinedInput-root': {
                 minHeight: 40,
-                borderRadius: '4px',
+                borderRadius: '8px',
                 bgcolor: 'action.hover',
               },
               '& input': { fontSize: 13 },
@@ -109,7 +109,7 @@ export default function LocationAreaPicker({
                 <ListItemText
                   primary="All areas"
                   secondary={`${zones.length} localities`}
-                  primaryTypographyProps={{ variant: 'body2', fontWeight: 800, noWrap: true }}
+                  primaryTypographyProps={{ variant: 'body2', fontWeight: 600, noWrap: true }}
                   secondaryTypographyProps={{ variant: 'caption' }}
                 />
                 {!draftZone && <CheckRoundedIcon color="primary" fontSize="small" />}

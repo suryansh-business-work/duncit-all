@@ -29,7 +29,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
       borderWidth={1}
       borderColor="$borderColor"
     >
-      <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+      <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
         Call support now
       </Text>
       <Text fontSize={13} color="$muted">
@@ -53,7 +53,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
         pressStyle={{ opacity: disabled ? 0.45 : 0.85 }}
       >
         <MaterialIcons name="call" size={18} color={fg} />
-        <Text fontSize={14} fontWeight="800" color={fg}>
+        <Text fontSize={14} fontWeight="600" color={fg}>
           Call Now
         </Text>
       </XStack>
@@ -114,7 +114,7 @@ export function CallbackScreen() {
           borderWidth={1}
           borderColor="$borderColor"
         >
-          <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+          <Text fontSize={12} fontWeight="700" textTransform="uppercase" color="$muted">
             Request a callback
           </Text>
           <Text fontSize={13} color="$muted">
@@ -166,7 +166,7 @@ export function CallbackScreen() {
             pressStyle={{ opacity: 0.85 }}
           >
             <MaterialIcons name="phone-callback" size={18} color={primary} />
-            <Text fontSize={14} fontWeight="800" color="$primary">
+            <Text fontSize={14} fontWeight="600" color="$primary">
               {busy ? 'Requesting…' : 'Request callback'}
             </Text>
           </XStack>

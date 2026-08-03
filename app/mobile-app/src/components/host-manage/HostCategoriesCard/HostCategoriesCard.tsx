@@ -46,7 +46,7 @@ export function HostCategoriesCard() {
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Your hosting categories
       </Text>
       {categories.map((cat) => {

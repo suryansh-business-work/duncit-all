@@ -51,7 +51,7 @@ export default function PublicProfilePosts({ userId, canView, meId }: Readonly<P
     return (
       <Stack alignItems="center" spacing={1} sx={{ py: 5, color: 'text.secondary' }}>
         <LockIcon />
-        <Typography variant="subtitle1" fontWeight={800}>
+        <Typography variant="subtitle1" fontWeight={600}>
           This account is private
         </Typography>
         <Typography variant="body2" textAlign="center">

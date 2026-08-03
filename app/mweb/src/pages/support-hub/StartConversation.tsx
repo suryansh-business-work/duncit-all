@@ -17,7 +17,7 @@ export default function StartConversation() {
       }}
       sx={{
         p: 1.75,
-        borderRadius: '4px',
+        borderRadius: '16px',
         cursor: 'pointer',
         color: '#fff',
         background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
@@ -30,7 +30,7 @@ export default function StartConversation() {
           <ChatBubbleOutlineIcon />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontWeight: 950 }}>Start a conversation</Typography>
+          <Typography sx={{ fontWeight: 700 }}>Start a conversation</Typography>
           <Typography variant="body2" sx={{ opacity: 0.9 }}>
             Chat with our support team in real time
           </Typography>

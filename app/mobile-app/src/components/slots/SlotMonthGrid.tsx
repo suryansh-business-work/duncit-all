@@ -62,7 +62,7 @@ export default function SlotMonthGrid({
         >
           <MaterialIcons name="chevron-left" size={24} color="#8a8a8f" />
         </XStack>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {title}
         </Text>
         <XStack
@@ -126,7 +126,7 @@ export default function SlotMonthGrid({
                 >
                   <Text
                     fontSize={13}
-                    fontWeight={selected ? '900' : '600'}
+                    fontWeight={selected ? '700' : '600'}
                     color={selected ? '$onPrimary' : '$color'}
                   >
                     {Number(dayKey.slice(8, 10))}

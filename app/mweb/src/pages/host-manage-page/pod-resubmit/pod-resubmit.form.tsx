@@ -138,7 +138,7 @@ export default function PodResubmitForm({ pod, onClose, onSaved }: Readonly<PodR
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 900 }}>Edit & resubmit pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Edit & resubmit pod</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-resubmit-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Alert severity="info">
@@ -188,7 +188,7 @@ export default function PodResubmitForm({ pod, onClose, onSaved }: Readonly<PodR
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={resubmitState.loading}>Cancel</Button>
-        <Button type="submit" form="pod-resubmit-form" variant="contained" disabled={resubmitState.loading} sx={{ borderRadius: 999, fontWeight: 900 }}>
+        <Button type="submit" form="pod-resubmit-form" variant="contained" disabled={resubmitState.loading} sx={{ borderRadius: 999, fontWeight: 700 }}>
           {resubmitState.loading ? 'Resubmitting…' : 'Resubmit request'}
         </Button>
       </DialogActions>

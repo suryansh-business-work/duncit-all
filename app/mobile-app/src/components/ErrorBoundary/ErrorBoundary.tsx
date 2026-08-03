@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
         backgroundColor="$background"
       >
         <MaterialIcons name="error-outline" size={48} color="#b3261e" />
-        <Text fontSize={20} fontWeight="900" color="$color" textAlign="center">
+        <Text fontSize={20} fontWeight="700" color="$color" textAlign="center">
           Something went wrong
         </Text>
         <Text fontSize={14} color="$muted" textAlign="center">
@@ -65,7 +65,7 @@ export class ErrorBoundary extends Component<Props, State> {
           backgroundColor="$primary"
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={14} fontWeight="900" color="$onPrimary">
+          <Text fontSize={14} fontWeight="700" color="$onPrimary">
             Try again
           </Text>
         </YStack>

@@ -15,7 +15,7 @@ export function FileDetails({ media }: Readonly<Props>) {
       <Text
         testID="file-details-name"
         fontSize={13}
-        fontWeight="800"
+        fontWeight="600"
         color="$color"
         numberOfLines={1}
       >

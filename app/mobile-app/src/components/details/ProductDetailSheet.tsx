@@ -113,7 +113,7 @@ function VariantChips({
               borderColor={selected ? primary : '$borderColor'}
               backgroundColor={selected ? primary : 'transparent'}
             >
-              <Text fontSize={13} fontWeight="800" color={selected ? 'white' : '$color'}>
+              <Text fontSize={13} fontWeight="600" color={selected ? 'white' : '$color'}>
                 {[v.option_label, v.color, v.size_label].find(Boolean) ?? 'Variant'}
               </Text>
             </YStack>
@@ -176,7 +176,7 @@ function BrandRow({
       pressStyle={brandId ? { opacity: 0.6 } : undefined}
     >
       <MaterialIcons name="storefront" size={15} color="#9aa0a6" />
-      <Text fontSize={13} fontWeight="800" color={brandId ? '$primary' : '$muted'}>
+      <Text fontSize={13} fontWeight="600" color={brandId ? '$primary' : '$muted'}>
         by {brandName}
       </Text>
       {brandId ? <MaterialIcons name="chevron-right" size={16} color={primary} /> : null}
@@ -204,10 +204,10 @@ function SpecGrid({ specs }: Readonly<{ specs: ProductSpec[] }>) {
           borderTopWidth={specIndex === 0 ? 0 : 1}
           borderColor="$borderColor"
         >
-          <Text fontSize={13} color="$muted" fontWeight="700">
+          <Text fontSize={13} color="$muted" fontWeight="600">
             {spec.label}
           </Text>
-          <Text fontSize={13} color="$color" fontWeight="800">
+          <Text fontSize={13} color="$color" fontWeight="700">
             {spec.value}
           </Text>
         </XStack>
@@ -246,11 +246,11 @@ function ProductBody({
     <ScrollView paddingHorizontal={16}>
       <YStack gap={12} paddingBottom={12}>
         {images.length > 0 ? <ImageStrip images={images} onZoom={onZoom} /> : null}
-        <Text testID="product-detail-name" fontSize={18} fontWeight="900" color="$color">
+        <Text testID="product-detail-name" fontSize={18} fontWeight="700" color="$color">
           {product.product_name}
         </Text>
         <XStack alignItems="baseline" gap={8}>
-          <Text testID="product-detail-price" fontSize={20} fontWeight="900" color="$primary">
+          <Text testID="product-detail-price" fontSize={20} fontWeight="700" color="$primary">
             {formatRupees(price)}
           </Text>
           {hasMrp ? (
@@ -412,7 +412,7 @@ export function ProductDetailSheet({
           <YStack flex={1}>
             <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
               <XStack alignItems="center" justifyContent="space-between" padding={16}>
-                <Text fontSize={17} fontWeight="900" color="$color">
+                <Text fontSize={17} fontWeight="700" color="$color">
                   Product details
                 </Text>
                 <XStack

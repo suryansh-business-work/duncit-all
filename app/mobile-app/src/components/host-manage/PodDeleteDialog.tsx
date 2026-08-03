@@ -118,7 +118,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
             padding={18}
           >
             <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="900" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color">
                 Delete pod
               </Text>
               <Text fontSize={13} color="$muted" paddingTop={4} paddingBottom={8}>
@@ -127,7 +127,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
               <ScrollView showsVerticalScrollIndicator={false}>
                 <YStack gap={10} paddingBottom={6}>
                   {impact ? <ImpactSummary impact={impact} /> : <Spinner color="$primary" />}
-                  <Text fontSize={13} fontWeight="800" color="$color" paddingTop={4}>
+                  <Text fontSize={13} fontWeight="600" color="$color" paddingTop={4}>
                     Reason
                   </Text>
                   {POD_DELETE_REASON_SUBJECTS.map((item) => {
@@ -197,7 +197,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                   opacity={busy ? 0.6 : 1}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     Cancel
                   </Text>
                 </XStack>
@@ -218,7 +218,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="900" color={onPrimary} numberOfLines={1}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary} numberOfLines={1}>
                     {busy ? 'Deleting…' : confirmLabel}
                   </Text>
                 </XStack>

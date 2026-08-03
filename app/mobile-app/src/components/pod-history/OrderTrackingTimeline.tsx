@@ -42,7 +42,7 @@ export function OrderTrackingTimeline({
             <Text
               flex={1}
               fontSize={13}
-              fontWeight={step.current ? '800' : '600'}
+              fontWeight={step.current ? '700' : '600'}
               color={step.current ? '$color' : '$muted'}
               paddingBottom={last ? 0 : 6}
             >

@@ -68,7 +68,7 @@ export function ClubDetailsScreen() {
         This club is unavailable.
       </Text>
       <XStack role="button" aria-label="Go back" onPress={goBack}>
-        <Text color="$primary" fontWeight="900">
+        <Text color="$primary" fontWeight="700">
           Go back
         </Text>
       </XStack>

@@ -17,7 +17,7 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
         }}
         sx={{
           p: 1.5,
-          borderRadius: '4px',
+          borderRadius: '16px',
           cursor: 'pointer',
           transition: 'border-color 160ms ease',
           '&:hover': { borderColor: 'success.main' },
@@ -29,7 +29,7 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
             sx={{
               width: 44,
               height: 44,
-              borderRadius: '4px',
+              borderRadius: '16px',
               display: 'grid',
               placeItems: 'center',
               color: 'success.main',
@@ -40,7 +40,7 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
             <CardGiftcardIcon />
           </Box>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography fontWeight={800} noWrap>
+            <Typography fontWeight={600} noWrap>
               {REFERRAL_TILE.label}
             </Typography>
             <Typography variant="body2" color="text.secondary" noWrap>

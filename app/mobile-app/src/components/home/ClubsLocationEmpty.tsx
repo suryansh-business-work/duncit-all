@@ -38,7 +38,7 @@ export function ClubsLocationEmpty() {
         pressStyle={{ opacity: 0.85 }}
       >
         <MaterialIcons name="my-location" size={16} color={onPrimary} />
-        <Text fontSize={14} fontWeight="900" color="$onPrimary">
+        <Text fontSize={14} fontWeight="700" color="$onPrimary">
           Reset Location
         </Text>
       </XStack>

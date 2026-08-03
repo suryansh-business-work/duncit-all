@@ -32,14 +32,14 @@ export default function ChatRoomHeader({
         data-testid="chat-room-open-pod"
         onClick={onOpenPod}
         aria-label={`Open pod details for ${label}`}
-        sx={{ flex: 1, minWidth: 0, borderRadius: '4px', py: 0.5, justifyContent: 'flex-start' }}
+        sx={{ flex: 1, minWidth: 0, borderRadius: '16px', py: 0.5, justifyContent: 'flex-start' }}
       >
         <Avatar sx={{ width: 38, height: 38, bgcolor: 'primary.main', mr: 1 }}>{label.charAt(0)}</Avatar>
         <Box sx={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
+          <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.1 }} noWrap>
             {label}
           </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }} noWrap>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
             {messageCount} message{messageCount === 1 ? '' : 's'}
           </Typography>
         </Box>

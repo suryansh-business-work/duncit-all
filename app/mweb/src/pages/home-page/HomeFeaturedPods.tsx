@@ -1,8 +1,13 @@
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import { useNavigate } from 'react-router-dom';
 import SeeAllCard from './SeeAllCard';
+import PodCardMedia from './PodCardMedia';
+import { usePricing } from '../../hooks/usePricing';
+import { useTranslation } from '../../i18n/useTranslation';
 import { podUrl } from '../../utils/seoUrls';
 
 interface HomeFeaturedPodsProps {
@@ -13,10 +18,15 @@ interface HomeFeaturedPodsProps {
   /** True while a vibe chip / sheet filter narrows the rail: the full page is
    * unfiltered, so the card drops its count and its jump-to-index. */
   filtered: boolean;
+  /** The category chip over the image (mock: "Sports"). */
+  categoryLabelOf?: (pod: any) => string | null;
+  /** Heart state + toggle; omit to hide the hearts (signed-out). */
+  savedOf?: (podDocId: string) => boolean;
+  onToggleSave?: (podDocId: string) => void;
 }
 
 function formatPodDate(value?: string | null) {
-  if (!value) return 'Date pending';
+  if (!value) return '—';
   return new Date(value).toLocaleString(undefined, {
     weekday: 'short',
     day: 'numeric',
@@ -26,16 +36,17 @@ function formatPodDate(value?: string | null) {
   });
 }
 
-function mediaOf(pod: any) {
-  return pod.pod_images_and_videos?.[0] ?? null;
-}
-
 export default function HomeFeaturedPods({
   pods,
   totalCount,
   filtered,
+  categoryLabelOf,
+  savedOf,
+  onToggleSave,
 }: Readonly<HomeFeaturedPodsProps>) {
   const navigate = useNavigate();
+  const { format } = usePricing();
+  const { t } = useTranslation();
   if (pods.length === 0) return null;
 
   return (
@@ -50,63 +61,134 @@ export default function HomeFeaturedPods({
     >
       <Stack direction="row" spacing={1.4} sx={{ width: 'max-content', pb: 0.75 }}>
         {pods.map((pod) => {
-          const media = mediaOf(pod);
           const attendees = pod.pod_attendees?.length ?? 0;
-          const imageOrPlaceholder = media?.url ? (
-            <Box component="img" src={media.url} alt={pod.pod_title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <Box sx={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, #6b4b22 0%, #17110d 100%)' }}>
-              <EventIcon sx={{ fontSize: 64, opacity: 0.72 }} />
-            </Box>
-          );
+          const spotsLeft = pod.no_of_spots > 0 ? Math.max(0, pod.no_of_spots - attendees) : 0;
+          const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
+          let spotsText = `${attendees}${spotsSuffix}`;
+          if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
+          else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
+          const categoryLabel = categoryLabelOf?.(pod);
+          const saved = savedOf?.(pod.id) ?? false;
+          const isFree = pod.pod_type === 'FREE';
           return (
             <Box
               key={pod.id}
-              component="button"
-              type="button"
+              // A div with button semantics, NOT component="button": the
+              // save-heart is itself a <button>, and button-in-button is
+              // invalid HTML that React warns about.
+              role="button"
+              tabIndex={0}
+              aria-label={pod.pod_title}
               onClick={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigate(podUrl(pod.club_slug, pod.pod_id));
+                }
+              }}
               sx={{
                 width: { xs: 'min(86vw, 340px)', sm: 340 },
-                height: 248,
+                height: 252,
                 flex: '0 0 auto',
                 p: 0,
                 border: 0,
-                borderRadius: '4px',
+                borderRadius: '20px',
                 overflow: 'hidden',
                 position: 'relative',
                 textAlign: 'left',
-                color: 'common.white',
                 bgcolor: 'grey.900',
                 cursor: 'pointer',
                 scrollSnapAlign: 'start',
                 boxShadow: '0 18px 42px rgba(15,23,42,0.20)',
               }}
             >
-              {media?.type === 'VIDEO' ? (
-                <Box component="video" src={media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              ) : (
-                imageOrPlaceholder
+              <PodCardMedia media={pod.pod_images_and_videos?.[0]} title={pod.pod_title} />
+              {categoryLabel && (
+                <Chip
+                  size="small"
+                  label={categoryLabel}
+                  sx={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 12,
+                    height: 26,
+                    fontWeight: 600,
+                    color: 'common.white',
+                    bgcolor: 'rgba(9,7,18,0.62)',
+                    backdropFilter: 'blur(6px)',
+                  }}
+                />
               )}
-              <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.18) 42%, rgba(0,0,0,0.84) 100%)' }} />
-              <Stack spacing={1} sx={{ position: 'absolute', left: 16, right: 16, bottom: 16 }}>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              {onToggleSave && (
+                <IconButton
+                  aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
+                  aria-pressed={saved}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleSave(pod.id);
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    color: saved ? 'primary.main' : 'common.white',
+                    bgcolor: 'rgba(9,7,18,0.35)',
+                    backdropFilter: 'blur(6px)',
+                    '&:hover': { bgcolor: 'rgba(9,7,18,0.5)' },
+                  }}
+                >
+                  {saved ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+                </IconButton>
+              )}
+              {/* Semi-transparent info panel (mock) — the image reads through. */}
+              <Stack
+                spacing={0.4}
+                sx={{
+                  position: 'absolute',
+                  left: 12,
+                  right: 12,
+                  bottom: 12,
+                  p: 1.4,
+                  borderRadius: '14px',
+                  bgcolor: (theme) =>
+                    theme.palette.mode === 'dark' ? 'rgba(17,26,46,0.78)' : 'rgba(255,255,255,0.80)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid',
+                  borderColor: (theme) =>
+                    theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.65)',
+                }}
+              >
+                <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                    <EventIcon sx={{ fontSize: 13, color: 'text.secondary' }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+                      {formatPodDate(pod.pod_date_time)}
+                    </Typography>
+                  </Stack>
                   {attendees > 0 && (
                     <Chip
                       size="small"
-                      label={`${attendees} joining now`}
-                      sx={{ bgcolor: 'rgba(34,197,94,0.22)', color: '#7cf8ad', fontWeight: 900 }}
+                      label={t('mweb.home.joiningNow', { count: attendees })}
+                      sx={{ height: 20, bgcolor: 'rgba(34,197,94,0.18)', color: 'success.main', fontWeight: 700 }}
                     />
                   )}
-                  <Chip size="small" icon={<EventIcon />} label={formatPodDate(pod.pod_date_time)} sx={{ bgcolor: 'rgba(255,255,255,0.18)', color: '#fff', fontWeight: 800, '& .MuiChip-icon': { color: '#fff' } }} />
                 </Stack>
-                <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.05, textShadow: '0 2px 10px rgba(0,0,0,0.35)' }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.1, fontSize: '1.3rem' }} noWrap>
                   {pod.pod_title}
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
-                  <GroupIcon sx={{ fontSize: 16, flex: '0 0 auto' }} />
-                  <Typography variant="caption" sx={{ fontWeight: 800 }} noWrap>
-                    {attendees}{pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''} going
-                  </Typography>
+                <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
+                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                    <GroupIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }} noWrap>
+                      {spotsText}
+                    </Typography>
+                  </Stack>
+                  <Chip
+                    size="small"
+                    label={isFree ? t('mweb.slots.free') : format(pod.pod_amount)}
+                    color={isFree ? 'success' : 'primary'}
+                    sx={{ height: 24, fontWeight: 700, flex: '0 0 auto' }}
+                  />
                 </Stack>
               </Stack>
             </Box>

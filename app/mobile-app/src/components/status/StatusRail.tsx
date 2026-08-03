@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { ScrollView, XStack, YStack } from 'tamagui';
 
 import type { RootStackParamList } from '@/navigation/types';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -113,38 +114,69 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
 
   return (
     <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
+      {/* The mock frames the story rail in its own card, with a decorative
+       * paper-plane doodle trailing the tiles. */}
+      <YStack
+        marginHorizontal={16}
+        borderRadius={20}
+        borderWidth={1}
+        borderColor="$borderColor"
+        backgroundColor="$surface"
+        paddingVertical={12}
       >
-        <StatusTile
-          testID="status-mine"
-          label={uploading ? 'Posting…' : 'Your story'}
-          image={myCoverIsVideo ? userPhoto : (mine?.cover.imageUrl ?? userPhoto)}
-          badge
-          progress={progress}
-          onPress={() => {
-            if (uploading) return;
-            if (mine) openAt(0);
-            else fireAndForget(pickAndUpload());
-          }}
-          onBadgePress={() => {
-            if (!uploading) fireAndForget(pickAndUpload());
-          }}
-        />
-        {followed.map((item, itemIndex) => (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 12, paddingHorizontal: 14, alignItems: 'flex-start' }}
+        >
           <StatusTile
-            key={item.key}
-            testID={`status-${item.key}`}
-            label={item.name}
-            image={item.photo ?? item.cover.imageUrl}
-            seen={isGroupSeen(item, seenIds)}
-            onPress={() => openAt(mine ? itemIndex + 1 : itemIndex)}
+            testID="status-mine"
+            label={uploading ? 'Posting…' : 'Your story'}
+            image={myCoverIsVideo ? userPhoto : (mine?.cover.imageUrl ?? userPhoto)}
+            badge
+            progress={progress}
+            onPress={() => {
+              if (uploading) return;
+              if (mine) openAt(0);
+              else fireAndForget(pickAndUpload());
+            }}
+            onBadgePress={() => {
+              if (!uploading) fireAndForget(pickAndUpload());
+            }}
           />
-        ))}
-        <AdSlot position="STATUS" variant="tile" />
-      </ScrollView>
+          {/* The sponsored tile sits second, right after "Your story" (mock). */}
+          <AdSlot position="STATUS" variant="tile" />
+          {followed.map((item, itemIndex) => (
+            <StatusTile
+              key={item.key}
+              testID={`status-${item.key}`}
+              label={item.name}
+              image={item.photo ?? item.cover.imageUrl}
+              seen={isGroupSeen(item, seenIds)}
+              onPress={() => openAt(mine ? itemIndex + 1 : itemIndex)}
+            />
+          ))}
+          {/* Decorative dotted-arrow doodle from the mock. */}
+          <XStack
+            aria-hidden
+            alignItems="center"
+            gap={5}
+            paddingTop={22}
+            paddingLeft={6}
+            opacity={0.55}
+          >
+            <YStack width={4} height={4} borderRadius={2} backgroundColor="$primary" />
+            <YStack width={4} height={4} borderRadius={2} backgroundColor="$primary" />
+            <YStack width={4} height={4} borderRadius={2} backgroundColor="$primary" />
+            <MaterialIcons
+              name="near-me"
+              size={22}
+              color="#ff4f73"
+              style={{ transform: [{ rotate: '45deg' }] }}
+            />
+          </XStack>
+        </ScrollView>
+      </YStack>
       <StatusViewer
         status={active ?? null}
         onClose={() => setActiveIndex(null)}

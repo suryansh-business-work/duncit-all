@@ -20,7 +20,7 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
     <Box
       data-testid="price-panel-payout"
       sx={{
-        borderRadius: '4px',
+        borderRadius: '16px',
         p: 1.5,
         bgcolor: alpha(theme.palette.success.main, 0.08),
         border: '1px solid',
@@ -30,7 +30,7 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
       <Stack direction="row" spacing={1.25} alignItems="flex-start">
         <AccountBalanceWalletOutlinedIcon color="success" sx={{ mt: 0.25 }} />
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography variant="subtitle1" fontWeight={900}>
+          <Typography variant="subtitle1" fontWeight={700}>
             You will receive
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -42,11 +42,11 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
               color="success"
               variant="outlined"
               label={`${earnPct}% of collection`}
-              sx={{ fontWeight: 800 }}
+              sx={{ fontWeight: 600 }}
             />
           </Stack>
         </Box>
-        <Typography variant="h5" fontWeight={900} color="success.main" sx={{ whiteSpace: 'nowrap' }}>
+        <Typography variant="h5" fontWeight={700} color="success.main" sx={{ whiteSpace: 'nowrap' }}>
           {amount}
         </Typography>
       </Stack>
@@ -68,10 +68,10 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
           </Typography>
         </Stack>
         <Stack direction="row" justifyContent="space-between">
-          <Typography variant="caption" fontWeight={800}>
+          <Typography variant="caption" fontWeight={600}>
             = You will receive
           </Typography>
-          <Typography variant="caption" fontWeight={900} color="success.main">
+          <Typography variant="caption" fontWeight={700} color="success.main">
             {amount}
           </Typography>
         </Stack>
@@ -81,7 +81,7 @@ export default function PayoutCard({ amount, payingPax, earnPct, collection, tot
           mt: 1.25,
           px: 1.25,
           py: 0.75,
-          borderRadius: '4px',
+          borderRadius: '16px',
           border: '1px dashed',
           borderColor: alpha(theme.palette.success.main, 0.4),
         }}

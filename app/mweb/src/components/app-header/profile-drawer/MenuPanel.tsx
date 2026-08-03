@@ -70,7 +70,7 @@ export default function MenuPanel({
       <Box
         sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
       >
-        <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: 0.4 }}>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
           {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
         </Typography>
         <IconButton
@@ -92,7 +92,7 @@ export default function MenuPanel({
           <Box sx={{ px: 2, pb: 1.25 }}>
             <ListItemButton
               onClick={() => setSwitchOpen(true)}
-              sx={{ borderRadius: '4px', border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
+              sx={{ borderRadius: '16px', border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
             >
               <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
                 <SwapHorizIcon fontSize="small" />
@@ -100,7 +100,7 @@ export default function MenuPanel({
               <ListItemText
                 primary="Switch role"
                 secondary={STUDIO_LABEL[effectiveMode]}
-                primaryTypographyProps={{ fontSize: 14, fontWeight: 800 }}
+                primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}
               />
             </ListItemButton>
           </Box>

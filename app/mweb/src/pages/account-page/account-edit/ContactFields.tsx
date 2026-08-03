@@ -38,7 +38,7 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
 
   return (
     <Stack spacing={1}>
-      <Typography variant="overline" color="text.secondary" fontWeight={900}>
+      <Typography variant="overline" color="text.secondary" fontWeight={700}>
         Contact number
       </Typography>
       <Stack direction="row" spacing={1}>
@@ -65,7 +65,7 @@ export default function ContactFields({ control, setValue }: Readonly<Props>) {
         label="WhatsApp number same as contact number"
       />
 
-      <Typography variant="overline" color="text.secondary" fontWeight={900}>
+      <Typography variant="overline" color="text.secondary" fontWeight={700}>
         WhatsApp number
       </Typography>
       <Stack direction="row" spacing={1}>

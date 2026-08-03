@@ -38,7 +38,7 @@ export function TermsAgreement({ form }: Readonly<{ form: CreatePodForm }>) {
               <Text
                 testID="terms-link"
                 color="$primary"
-                fontWeight="800"
+                fontWeight="600"
                 onPress={() => Linking.openURL(TERMS_URL)}
               >
                 Organizer Terms of Service

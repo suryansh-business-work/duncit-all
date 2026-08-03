@@ -88,7 +88,7 @@ export function AddressBookSection() {
       <XStack alignItems="center" justifyContent="space-between">
         <XStack gap={8} alignItems="center">
           <MaterialIcons name="home-work" size={20} color={primary} />
-          <Text fontSize={15} fontWeight="900" color="$color">
+          <Text fontSize={15} fontWeight="700" color="$color">
             Address Book
           </Text>
         </XStack>
@@ -111,7 +111,7 @@ export function AddressBookSection() {
           pressStyle={{ opacity: 0.8 }}
         >
           <MaterialIcons name="add" size={16} color={muted} />
-          <Text fontSize={12.5} fontWeight="800" color="$color">
+          <Text fontSize={12.5} fontWeight="600" color="$color">
             Add
           </Text>
         </XStack>
@@ -138,11 +138,11 @@ export function AddressBookSection() {
         >
           <YStack flex={1} minWidth={0}>
             <XStack gap={6} alignItems="center">
-              <Text fontSize={13} fontWeight="800" color="$color">
+              <Text fontSize={13} fontWeight="600" color="$color">
                 {address.label}
               </Text>
               {address.is_default ? (
-                <Text fontSize={10.5} fontWeight="900" color="$primary">
+                <Text fontSize={10.5} fontWeight="700" color="$primary">
                   DEFAULT
                 </Text>
               ) : null}

@@ -56,7 +56,7 @@ export function ConfirmDialog({
             gap={10}
           >
             <SafeAreaView edges={[]}>
-              <Text fontSize={17} fontWeight="900" color="$color">
+              <Text fontSize={17} fontWeight="700" color="$color">
                 {title}
               </Text>
               {message ? (
@@ -79,7 +79,7 @@ export function ConfirmDialog({
                   borderColor="$borderColor"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="800" color="$color">
+                  <Text fontSize={14} fontWeight="600" color="$color">
                     {cancelLabel}
                   </Text>
                 </XStack>
@@ -96,7 +96,7 @@ export function ConfirmDialog({
                   backgroundColor={destructive ? '$danger' : '$primary'}
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
+                  <Text fontSize={14} fontWeight="700" color={onPrimary}>
                     {confirmLabel}
                   </Text>
                 </XStack>

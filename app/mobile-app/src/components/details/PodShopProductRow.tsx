@@ -101,7 +101,7 @@ function AddToCartButton({
       pressStyle={{ opacity: 0.85 }}
     >
       <MaterialIcons name="add-shopping-cart" size={15} color={onPrimary} />
-      <Text fontSize={12.5} fontWeight="900" color={onPrimary}>
+      <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
         Add to cart
       </Text>
     </XStack>
@@ -152,7 +152,7 @@ function QuantityStepper({
         color={primary}
         onPress={() => onUpdate(productId, quantity - 1)}
       />
-      <Text testID={`pod-shop-qty-${productId}`} fontSize={14} fontWeight="900" color="$color">
+      <Text testID={`pod-shop-qty-${productId}`} fontSize={14} fontWeight="700" color="$color">
         {quantity}
       </Text>
       <StepButton
@@ -196,7 +196,7 @@ export function PodShopProductRow({
     <ProductRowShell testID={`pod-shop-row-${product.product_id}`} selected={selected}>
       <ProductThumb image={image} />
       <YStack flex={1} gap={2}>
-        <Text fontSize={14} fontWeight="800" color="$color">
+        <Text fontSize={14} fontWeight="600" color="$color">
           {product.product_name}
         </Text>
         <Text fontSize={12} color="$muted">
@@ -233,7 +233,7 @@ export function PodShopProductRow({
       >
         <MaterialIcons name="info-outline" size={18} color={MUTED_ICON} />
       </XStack>
-      <Text fontSize={14} fontWeight="900" color="$color">
+      <Text fontSize={14} fontWeight="700" color="$color">
         {priceLabel}
       </Text>
     </ProductRowShell>

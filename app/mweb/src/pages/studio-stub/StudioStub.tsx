@@ -24,7 +24,7 @@ export default function StudioStub({ icon, title, subtitle }: Readonly<Props>) {
       >
         {icon}
       </Box>
-      <Typography variant="h6" sx={{ fontWeight: 950 }}>
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
         {title}
       </Typography>
       <Typography variant="body2" color="text.secondary">

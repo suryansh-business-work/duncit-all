@@ -54,7 +54,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
       }}
     >
       <Box>
-        <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, lineHeight: 1 }}>
           Following
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4, fontWeight: 700 }}>
@@ -66,7 +66,7 @@ export default function FollowPage({ superCategorySlug }: Readonly<{ superCatego
         value={tab}
         onChange={(_, value) => setTab(value)}
         variant="fullWidth"
-        sx={{ minHeight: 40, '& .MuiTab-root': { fontWeight: 900, minHeight: 40 } }}
+        sx={{ minHeight: 40, '& .MuiTab-root': { fontWeight: 700, minHeight: 40 } }}
       >
         <Tab value="CLUBS" label="Clubs" />
         <Tab value="PEOPLE" label="People" />

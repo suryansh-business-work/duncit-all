@@ -22,7 +22,7 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
   if (faqs.length === 0) return null;
   return (
     <Box>
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
         Frequently Asked
       </Typography>
       <Box
@@ -45,7 +45,7 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
                 width: 190,
                 minHeight: 130,
                 p: 1.75,
-                borderRadius: '4px',
+                borderRadius: '16px',
                 textAlign: 'left',
                 alignItems: 'flex-start',
                 justifyContent: 'space-between',
@@ -57,7 +57,7 @@ export default function FrequentlyAsked({ faqs, onOpen }: Readonly<FrequentlyAsk
               aria-label={faq.question}
             >
               <HelpOutlineIcon sx={{ opacity: 0.9 }} />
-              <Typography sx={{ fontWeight: 900, lineHeight: 1.25, mt: 1 }}>
+              <Typography sx={{ fontWeight: 700, lineHeight: 1.25, mt: 1 }}>
                 {faq.question}
               </Typography>
             </ButtonBase>

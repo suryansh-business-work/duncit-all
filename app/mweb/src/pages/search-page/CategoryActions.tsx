@@ -13,7 +13,7 @@ interface Props {
 export default function CategoryActions({ categories, onSelect }: Readonly<Props>) {
   return (
     <Box component="section">
-      <Typography variant="h6" fontWeight={900} sx={{ lineHeight: 1.2, mt: 2 }}>
+      <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2, mt: 2 }}>
         ✨ Discover Experiences by Interest
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -39,7 +39,7 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
                 flexDirection: 'column',
                 gap: 0.75,
                 p: 1.5,
-                borderRadius: '4px',
+                borderRadius: '16px',
                 border: 1,
                 borderColor: 'divider',
                 bgcolor: 'background.paper',
@@ -48,7 +48,7 @@ export default function CategoryActions({ categories, onSelect }: Readonly<Props
               }}
             >
               {renderSuperCategoryMark(category.icon) ?? <CategoryIcon color="primary" />}
-              <Typography variant="caption" fontWeight={800} textAlign="center" noWrap sx={{ width: '100%' }}>
+              <Typography variant="caption" fontWeight={600} textAlign="center" noWrap sx={{ width: '100%' }}>
                 {category.name}
               </Typography>
             </ButtonBase>

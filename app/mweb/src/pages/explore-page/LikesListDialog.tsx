@@ -65,7 +65,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
             <ListItemText
               primary={u.full_name || u.first_name || 'User'}
               secondary={u.username ? `@${u.username}` : undefined}
-              primaryTypographyProps={{ fontWeight: 800 }}
+              primaryTypographyProps={{ fontWeight: 600 }}
             />
           </ListItemButton>
         ))}
@@ -74,9 +74,9 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '4px' } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
-        <DialogTitle sx={{ fontWeight: 900 }}>Liked by</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Liked by</DialogTitle>
         <IconButton aria-label="Close" onClick={onClose}>
           <CloseIcon />
         </IconButton>

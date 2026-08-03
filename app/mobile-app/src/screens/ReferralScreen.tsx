@@ -37,14 +37,14 @@ function CodeCard({
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={11} fontWeight="900" color="$muted">
+      <Text fontSize={11} fontWeight="700" color="$muted">
         YOUR CODE
       </Text>
       <XStack alignItems="center" gap={12}>
         <Text
           testID="referral-code"
           fontSize={22}
-          fontWeight="900"
+          fontWeight="700"
           color="$color"
           letterSpacing={1}
         >
@@ -64,7 +64,7 @@ function CodeCard({
           pressStyle={{ opacity: 0.85 }}
         >
           <MaterialIcons name="share" size={15} color={onPrimary} />
-          <Text fontSize={12.5} fontWeight="900" color="$onPrimary">
+          <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
             Share
           </Text>
         </XStack>
@@ -108,7 +108,7 @@ function ApplyCard({
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={15} fontWeight="900" color="$color">
+      <Text fontSize={15} fontWeight="700" color="$color">
         Got a friend's code?
       </Text>
       <XStack gap={8}>
@@ -140,7 +140,7 @@ function ApplyCard({
           opacity={inert ? 0.6 : 1}
           pressStyle={{ opacity: 0.85 }}
         >
-          <Text fontSize={13.5} fontWeight="900" color="$onPrimary">
+          <Text fontSize={13.5} fontWeight="700" color="$onPrimary">
             {applyBusy ? 'Applying…' : 'Apply'}
           </Text>
         </XStack>
@@ -167,7 +167,7 @@ function ReferredRow({ entry }: Readonly<{ entry: ReferredEntry }>) {
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text flex={1} fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+      <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
         {entry.full_name || 'New member'}
       </Text>
       <Text fontSize={11.5} fontWeight="700" color="$muted">
@@ -199,7 +199,7 @@ export function ReferralScreen() {
               <ApplyCard applyBusy={applyBusy} applyError={applyError} applyCode={applyCode} />
             )}
 
-            <Text fontSize={16} fontWeight="900" color="$color">
+            <Text fontSize={16} fontWeight="700" color="$color">
               Friends you referred ({referredList.length})
             </Text>
             {referredList.length === 0 ? (

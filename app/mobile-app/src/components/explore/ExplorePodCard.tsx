@@ -163,7 +163,7 @@ export function ExplorePodCard({
           <MaterialIcons name={expired ? 'info-outline' : 'bolt'} size={20} color="#ffffff" />
         </YStack>
         <YStack flex={1}>
-          <Text color="#ffffff" fontSize={14} fontWeight="900" numberOfLines={1}>
+          <Text color="#ffffff" fontSize={14} fontWeight="700" numberOfLines={1}>
             {expired ? 'This pod is expired' : 'Join in 2 taps'}
           </Text>
           <Text color="rgba(255,255,255,0.82)" fontSize={11.5} numberOfLines={1}>
@@ -184,7 +184,7 @@ export function ExplorePodCard({
             paddingVertical={9}
             pressStyle={{ opacity: 0.85 }}
           >
-            <Text color="$onPrimary" fontSize={13} fontWeight="900">
+            <Text color="$onPrimary" fontSize={13} fontWeight="700">
               Go
             </Text>
             <MaterialIcons name="arrow-forward" size={16} color="#ffffff" />

@@ -130,6 +130,8 @@ const BRANDING_FIELDS = [
   "android_app_url",
   "ios_app_url",
   "home_all_vibe_icon_url",
+  "home_vibe_heading",
+  "home_vibe_subheading",
   "home_header_tagline",
   "app_latest_version",
 ] as const;
@@ -197,6 +199,8 @@ const brandingToPub = (doc: any) => ({
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   home_all_vibe_icon_layout: vibeIconLayoutToPub(doc.home_all_vibe_icon_layout),
   home_show_all_vibe_categories: !!doc.home_show_all_vibe_categories,
+  home_vibe_heading: doc.home_vibe_heading ?? "",
+  home_vibe_subheading: doc.home_vibe_subheading ?? "",
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   app_latest_version: doc.app_latest_version ?? "",
   pod_shop_slider: (doc.pod_shop_slider ?? []).map((m: any) => ({

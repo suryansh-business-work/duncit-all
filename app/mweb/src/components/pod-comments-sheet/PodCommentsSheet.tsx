@@ -100,8 +100,8 @@ export default function PodCommentsSheet({
       PaperProps={{
         sx: {
           height: '70vh',
-          borderTopLeftRadius: '4px',
-          borderTopRightRadius: '4px',
+          borderTopLeftRadius: '16px',
+          borderTopRightRadius: '16px',
           display: 'flex',
           flexDirection: 'column',
         },

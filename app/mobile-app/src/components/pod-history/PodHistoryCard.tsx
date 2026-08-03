@@ -50,7 +50,7 @@ export function PodHistoryCard({
         )}
       </YStack>
       <YStack flex={1} gap={2}>
-        <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+        <Text fontSize={15} fontWeight="700" color="$color" numberOfLines={1}>
           {item.pod?.pod_title ?? 'Pod'}
         </Text>
         <Text fontSize={12} color="$muted">

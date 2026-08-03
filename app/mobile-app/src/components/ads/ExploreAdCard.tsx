@@ -31,7 +31,7 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
         <SponsoredBadge testID={`ad-reel-${ad.id}-sponsored`} />
       </YStack>
       <YStack position="absolute" left={16} right={16} bottom={insets.bottom + 96} gap={12}>
-        <Text color="#ffffff" fontSize={18} fontWeight="900" numberOfLines={2}>
+        <Text color="#ffffff" fontSize={18} fontWeight="700" numberOfLines={2}>
           {ad.ad_title}
         </Text>
         {redirect ? (
@@ -49,7 +49,7 @@ export function ExploreAdCard({ ad, width, height, isActive }: Readonly<ExploreA
             paddingVertical={9}
             pressStyle={{ opacity: 0.85 }}
           >
-            <Text color="$onPrimary" fontSize={13} fontWeight="900">
+            <Text color="$onPrimary" fontSize={13} fontWeight="700">
               Learn more
             </Text>
             <MaterialIcons name="arrow-forward" size={16} color="#ffffff" />

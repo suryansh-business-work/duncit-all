@@ -70,10 +70,10 @@ export default function NotificationsScreen({
             <CloseIcon />
           </IconButton>
           <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1 }}>
               Notifications
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
               {headerSubtitle}
             </Typography>
           </Box>
@@ -83,7 +83,7 @@ export default function NotificationsScreen({
         </Stack>
 
         <Box sx={{ px: 1.5, pb: 1.5 }}>
-          <Box sx={{ p: 1.5, borderRadius: '4px', bgcolor: 'rgba(255,79,115,0.12)', border: '1px solid rgba(255,79,115,0.22)' }}>
+          <Box sx={{ p: 1.5, borderRadius: '16px', bgcolor: 'rgba(255,79,115,0.12)', border: '1px solid rgba(255,79,115,0.22)' }}>
             <Stack direction="row" alignItems="center" spacing={1.25}>
               <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
                 {[0, 1, 2].map((index) => (
@@ -93,7 +93,7 @@ export default function NotificationsScreen({
                 ))}
               </Stack>
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 950 }} noWrap>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
                   Never Miss an Update
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
@@ -101,11 +101,11 @@ export default function NotificationsScreen({
                   Account—all in one place.
                 </Typography>
               </Box>
-              <Chip color="primary" label={`${notifs.length}`} sx={{ fontWeight: 900 }} />
+              <Chip color="primary" label={`${notifs.length}`} sx={{ fontWeight: 700 }} />
             </Stack>
             {pushSupported && (
               <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.25 }}>
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   Allow notifications
                 </Typography>
                 <Switch
@@ -121,7 +121,7 @@ export default function NotificationsScreen({
 
         <Stack spacing={1} sx={{ px: 1.5, pb: 3, overflowY: 'auto' }}>
           {notifs.length === 0 && (
-            <Box sx={{ p: 3, borderRadius: '4px', bgcolor: 'background.paper', textAlign: 'center' }}>
+            <Box sx={{ p: 3, borderRadius: '16px', bgcolor: 'background.paper', textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">
                 No notifications yet.
               </Typography>
@@ -141,7 +141,7 @@ export default function NotificationsScreen({
                 onClick={() => onNotifClick(item)}
                 sx={{
                   p: 1.35,
-                  borderRadius: '4px',
+                  borderRadius: '16px',
                   cursor: 'pointer',
                   color: unread ? 'primary.contrastText' : 'text.primary',
                   background: unread ? 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' : undefined,
@@ -165,7 +165,7 @@ export default function NotificationsScreen({
                       <Typography
                         variant="subtitle2"
                         sx={{
-                          fontWeight: 950,
+                          fontWeight: 700,
                           flex: 1,
                           minWidth: 0,
                           display: '-webkit-box',
@@ -176,7 +176,7 @@ export default function NotificationsScreen({
                       >
                         {notification?.title ?? 'Notification'}
                       </Typography>
-                      <Typography variant="caption" sx={{ fontWeight: 800, opacity: unread ? 0.9 : 0.7 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, opacity: unread ? 0.9 : 0.7 }}>
                         {formatRelative(item.created_at)}
                       </Typography>
                     </Stack>
@@ -199,7 +199,7 @@ export default function NotificationsScreen({
                         <Chip
                           label="NEW"
                           size="small"
-                          sx={{ height: 20, fontSize: 10.5, fontWeight: 900, color: '#fff', bgcolor: 'rgba(255,255,255,0.26)' }}
+                          sx={{ height: 20, fontSize: 10.5, fontWeight: 700, color: '#fff', bgcolor: 'rgba(255,255,255,0.26)' }}
                         />
                       )}
                     </Stack>

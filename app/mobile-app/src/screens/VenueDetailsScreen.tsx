@@ -46,7 +46,7 @@ function ChipsGroup({ title, items }: Readonly<{ title: string; items?: string[]
   if (!items?.length) return null;
   return (
     <YStack gap={8}>
-      <Text fontSize={15} fontWeight="900" color="$color">
+      <Text fontSize={15} fontWeight="700" color="$color">
         {title}
       </Text>
       <XStack flexWrap="wrap" gap={6}>
@@ -86,7 +86,7 @@ function VenueDetailsContent({
         )}
       </YStack>
 
-      <Text fontSize={22} fontWeight="900" color="$color">
+      <Text fontSize={22} fontWeight="700" color="$color">
         {venue.venue_name}
       </Text>
       <XStack flexWrap="wrap" gap={6}>
@@ -105,7 +105,7 @@ function VenueDetailsContent({
 
       <XStack alignItems="center" gap={6}>
         <MaterialIcons name="place" size={16} color={primary} />
-        <Text fontSize={15} fontWeight="900" color="$color">
+        <Text fontSize={15} fontWeight="700" color="$color">
           Location
         </Text>
       </XStack>
@@ -121,7 +121,7 @@ function VenueDetailsContent({
 
       {gallery.length > 1 ? (
         <YStack gap={8}>
-          <Text fontSize={15} fontWeight="900" color="$color">
+          <Text fontSize={15} fontWeight="700" color="$color">
             Images
           </Text>
           <XStack flexWrap="wrap" gap={8}>

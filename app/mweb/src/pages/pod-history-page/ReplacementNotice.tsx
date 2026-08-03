@@ -17,7 +17,7 @@ export default function ReplacementNotice({ deductionPct }: Readonly<Props>) {
   return (
     <Box sx={{ mt: 1.5 }}>
       <Stack direction="row" alignItems="center" spacing={0.5}>
-        <Typography variant="body2" fontWeight={800}>
+        <Typography variant="body2" fontWeight={600}>
           We are finding your replacement
         </Typography>
         <IconButton

@@ -267,7 +267,7 @@ export default function HomeStatusViewer({
               sx={{ width: 34, height: 34, borderRadius: '50%', objectFit: 'cover', bgcolor: 'primary.main' }}
             />
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }} noWrap>
                 {item.label}
               </Typography>
               {(current?.subLabel || item.subLabel || timeLabel) && (
@@ -287,7 +287,7 @@ export default function HomeStatusViewer({
                   {liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
                 </IconButton>
                 {likeCount > 0 && (
-                  <Typography variant="caption" sx={{ fontWeight: 900, minWidth: 12 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, minWidth: 12 }}>
                     {likeCount}
                   </Typography>
                 )}
@@ -348,7 +348,7 @@ export default function HomeStatusViewer({
             variant="contained"
             endIcon={<ArrowForwardIcon />}
             onClick={openTarget}
-            sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))', borderRadius: 999, fontWeight: 900 }}
+            sx={{ position: 'absolute', left: 12, right: 12, bottom: 'calc(18px + env(safe-area-inset-bottom))', borderRadius: 999, fontWeight: 700 }}
           >
             Open details
           </Button>

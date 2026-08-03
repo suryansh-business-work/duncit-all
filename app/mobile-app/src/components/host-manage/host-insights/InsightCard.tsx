@@ -23,7 +23,7 @@ export function InsightCard({ title, subtitle, empty, action, children }: Readon
     >
       <XStack alignItems="flex-start" gap={8}>
         <YStack flex={1}>
-          <Text fontSize={15} fontWeight="900" color="$color">
+          <Text fontSize={15} fontWeight="700" color="$color">
             {title}
           </Text>
           <Text fontSize={11.5} color="$muted">

@@ -67,7 +67,7 @@ export function AvatarStoryButton({
             resizeMode="cover"
           />
         ) : (
-          <Text fontSize={size * 0.4} fontWeight="900" color={onPrimary}>
+          <Text fontSize={size * 0.4} fontWeight="700" color={onPrimary}>
             {initial}
           </Text>
         )}

@@ -107,7 +107,7 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
 
   return (
     <Dialog open={!!pod} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: 900 }}>Complete pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Complete pod</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-complete-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2" color="text.secondary">
@@ -152,7 +152,7 @@ export default function PodCompleteForm({ pod, onClose, onCompleted }: Readonly<
           form="pod-complete-form"
           variant="contained"
           disabled={completeState.loading}
-          sx={{ borderRadius: 999, fontWeight: 900 }}
+          sx={{ borderRadius: 999, fontWeight: 700 }}
         >
           {completeState.loading ? 'Completing…' : 'Complete pod'}
         </Button>

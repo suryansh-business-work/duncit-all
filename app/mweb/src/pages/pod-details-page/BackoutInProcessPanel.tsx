@@ -27,7 +27,7 @@ export default function BackoutInProcessPanel({ canCancel, busy, onKeepSpot }: R
         <b>Backout in process.</b> We are searching for a replacement — you will get the refund
         only if someone fills your spot.
       </Alert>
-      <Button variant="contained" onClick={onKeepSpot} disabled={busy} sx={{ fontWeight: 900 }}>
+      <Button variant="contained" onClick={onKeepSpot} disabled={busy} sx={{ fontWeight: 700 }}>
         Keep My Spot
       </Button>
       <Typography variant="caption" color="text.secondary">

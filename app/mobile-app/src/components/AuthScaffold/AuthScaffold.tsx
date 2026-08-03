@@ -48,7 +48,7 @@ export function AuthScaffold({
             <YStack width="100%" maxWidth={460} alignSelf="center">
               <YStack alignItems="center" gap={8}>
                 <AuthLogo />
-                <Text textAlign="center" fontSize={30} fontWeight="900" color="$color">
+                <Text textAlign="center" fontSize={30} fontWeight="700" color="$color">
                   {title}
                   {accentWord ? <Text color={auth.accent}> {accentWord}</Text> : null}
                 </Text>

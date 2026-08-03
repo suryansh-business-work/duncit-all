@@ -28,7 +28,7 @@ function StatusPill({ status }: Readonly<{ status: string }>) {
       borderRadius={999}
       backgroundColor={STATUS_BG[status as Status] ?? '#6b7280'}
     >
-      <Text fontSize={10.5} fontWeight="900" color="#ffffff">
+      <Text fontSize={10.5} fontWeight="700" color="#ffffff">
         {status}
       </Text>
     </XStack>
@@ -97,17 +97,17 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: HostPayout; symbol: s
       backgroundColor="$surface"
     >
       <XStack alignItems="center" gap={8}>
-        <Text flex={1} fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+        <Text flex={1} fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
           {payout.pod_title}
         </Text>
         <StatusPill status={payout.status} />
       </XStack>
       <BreakdownLines b={b} symbol={symbol} />
       <XStack justifyContent="space-between">
-        <Text fontSize={13} fontWeight="900" color="$color">
+        <Text fontSize={13} fontWeight="700" color="$color">
           {payableLabel(b)}
         </Text>
-        <Text fontSize={13} fontWeight="900" color="$primary">
+        <Text fontSize={13} fontWeight="700" color="$primary">
           {fmt(payable)}
         </Text>
       </XStack>
@@ -138,7 +138,7 @@ export function HostShareSection({
 
   return (
     <YStack gap={12} testID="host-share-section">
-      <Text fontSize={16} fontWeight="900" color="$color">
+      <Text fontSize={16} fontWeight="700" color="$color">
         Host Share
       </Text>
       {isLoading ? <Spinner testID="host-share-loading" color="$primary" /> : null}

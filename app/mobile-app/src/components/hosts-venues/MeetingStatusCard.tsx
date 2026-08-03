@@ -34,16 +34,16 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
     >
       <XStack alignItems="center" gap={8}>
         <MaterialIcons name="event-available" size={18} color={primary} />
-        <Text flex={1} fontSize={14} fontWeight="900" color="$color">
+        <Text flex={1} fontSize={14} fontWeight="700" color="$color">
           Your {label} onboarding meeting
         </Text>
-        <Text fontSize={11} fontWeight="800" color="$muted">
+        <Text fontSize={11} fontWeight="600" color="$muted">
           {meeting.status}
         </Text>
       </XStack>
 
       {meeting.request_no ? (
-        <Text testID={`meeting-request-no-${kind}`} fontSize={12} fontWeight="800" color="$muted">
+        <Text testID={`meeting-request-no-${kind}`} fontSize={12} fontWeight="600" color="$muted">
           Request ID: {meeting.request_no}
         </Text>
       ) : null}
@@ -68,7 +68,7 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
               backgroundColor="$primary"
               pressStyle={{ opacity: 0.85 }}
             >
-              <Text fontSize={13} fontWeight="900" color="$onPrimary">
+              <Text fontSize={13} fontWeight="700" color="$onPrimary">
                 Join meeting
               </Text>
             </XStack>

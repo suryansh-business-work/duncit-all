@@ -31,7 +31,7 @@ export function SearchResultsSection({
   return (
     <YStack gap={14} testID={testID}>
       <YStack gap={2}>
-        <Text fontSize={17} fontWeight="900" color="$color">
+        <Text fontSize={17} fontWeight="700" color="$color">
           {heading}
         </Text>
         <Text fontSize={13} color="$muted">

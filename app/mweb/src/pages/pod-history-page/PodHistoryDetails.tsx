@@ -107,7 +107,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
       <Card>
         <CardContent>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: '4px', bgcolor: 'action.hover' }}>
+            <Avatar src={imageUrl || undefined} variant="rounded" sx={{ width: { xs: '100%', sm: 96 }, height: 96, borderRadius: '16px', bgcolor: 'action.hover' }}>
               <EventIcon />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -115,7 +115,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
                 <Chip size="small" color={STATUS_CHIP[item.status].color} label={STATUS_CHIP[item.status].label} />
                 <Chip size="small" variant="outlined" label={`Refund: ${refundLabel[item.refund_status]}`} />
               </Stack>
-              <Typography variant="h6" fontWeight={950} sx={{ lineHeight: 1.1 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.1 }}>
                 {pod?.pod_title ?? 'Pod details'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -131,7 +131,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
 
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={950} gutterBottom>Actions</Typography>
+          <Typography variant="subtitle1" fontWeight={700} gutterBottom>Actions</Typography>
           {isDeleted && (
             <Alert severity="info" sx={{ mb: 1.5 }}>
               This pod was removed. Your booking record stays here — download your invoice or contact support.
@@ -155,7 +155,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
                   Refund Status: {refundLabel[item.refund_status]}
                 </Button>
                 {item.status === 'JOINED' && (
-                  <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 900 }}>
+                  <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 700 }}>
                     {ticketState.loading ? 'Downloading...' : 'Ticket'}
                   </Button>
                 )}
@@ -183,7 +183,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
 
       <Card>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={950} gutterBottom>Timeline</Typography>
+          <Typography variant="subtitle1" fontWeight={700} gutterBottom>Timeline</Typography>
           <PodHistoryTimeline item={item} />
         </CardContent>
       </Card>

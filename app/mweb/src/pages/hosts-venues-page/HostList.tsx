@@ -46,7 +46,7 @@ export default function HostList({ hosts, meId, followingIds, pendingUserId, onT
     <Grid container spacing={2}>
       {hosts.map((h) => (
         <Grid item xs={12} sm={6} key={h.id}>
-          <Card variant="outlined" sx={{ height: '100%', borderRadius: '4px', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
+          <Card variant="outlined" sx={{ height: '100%', borderRadius: '16px', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
             <CardContent>
               <Stack direction="row" spacing={2} alignItems="center">
                 <Avatar
@@ -67,7 +67,7 @@ export default function HostList({ hosts, meId, followingIds, pendingUserId, onT
                   <PersonOutlineIcon />
                 </Avatar>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 950 }} noWrap>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
                     {h.full_name}
                   </Typography>
                   {h.full_address && (

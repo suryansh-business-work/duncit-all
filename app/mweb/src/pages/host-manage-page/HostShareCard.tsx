@@ -75,9 +75,9 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
   const payableLabel = isV2 ? 'Payout' : legacyLabel;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
-    <Box sx={{ p: 1.25, borderRadius: '4px', border: 1, borderColor: 'divider' }}>
+    <Box sx={{ p: 1.25, borderRadius: '16px', border: 1, borderColor: 'divider' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
-        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 800 }} noWrap>
+        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }} noWrap>
           {payout.pod_title}
         </Typography>
         <Chip size="small" color={STATUS_COLOR[payout.status as Status] ?? 'default'} label={payout.status} />
@@ -92,10 +92,10 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
           </Stack>
         ))}
         <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.25 }}>
-          <Typography variant="body2" sx={{ fontWeight: 900 }}>
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
             {payableLabel}
           </Typography>
-          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 900 }}>
+          <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>
             {fmt(payable)}
           </Typography>
         </Stack>
@@ -132,11 +132,11 @@ export default function HostShareCard() {
   }
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: '4px' }}>
+    <Card variant="outlined" sx={{ borderRadius: '16px' }}>
       <CardContent>
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <PaidIcon color="primary" />
-          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
+          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 700 }}>
             Host Share
           </Typography>
           <Chip size="small" label={payouts.length} />

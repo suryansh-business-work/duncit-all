@@ -15,10 +15,10 @@ export function StatTile({ label, value }: Readonly<{ label: string; value: stri
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
-      <Text fontSize={11} fontWeight="900" color="$primary">
+      <Text fontSize={11} fontWeight="700" color="$primary">
         {label}
       </Text>
-      <Text fontSize={17} fontWeight="900" color="$color" numberOfLines={1}>
+      <Text fontSize={17} fontWeight="700" color="$color" numberOfLines={1}>
         {value}
       </Text>
     </YStack>
@@ -49,7 +49,7 @@ export function VenueManageScreen() {
             borderColor="$borderColor"
             backgroundColor="$surface"
           >
-            <Text fontSize={15} fontWeight="900" color="$color">
+            <Text fontSize={15} fontWeight="700" color="$color">
               Pods at your venue
             </Text>
             <Text fontSize={11.5} color="$muted">
@@ -75,7 +75,7 @@ export function VenueManageScreen() {
               backgroundColor="$surface"
             >
               <YStack flex={1}>
-                <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
+                <Text fontSize={14.5} fontWeight="600" color="$color" numberOfLines={1}>
                   {venue.venue_name}
                 </Text>
                 <Text fontSize={12} color="$muted" numberOfLines={1}>

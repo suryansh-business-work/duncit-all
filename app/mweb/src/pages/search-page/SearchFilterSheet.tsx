@@ -22,9 +22,9 @@ interface Props {
 
 export default function SearchFilterSheet({ open, categories, categoryId, onClose, onSelect }: Readonly<Props>) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '4px' } }}>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: '16px' } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
-        <DialogTitle sx={{ fontWeight: 900 }}>Filter by Category</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700 }}>Filter by Category</DialogTitle>
         <IconButton aria-label="Close filter" onClick={onClose}>
           <CloseIcon />
         </IconButton>
@@ -40,7 +40,7 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
               label="All"
               color={categoryId === '' ? 'primary' : 'default'}
               onClick={() => onSelect('')}
-              sx={{ fontWeight: 800 }}
+              sx={{ fontWeight: 600 }}
             />
             {categories.map((category) => (
               <Chip
@@ -49,14 +49,14 @@ export default function SearchFilterSheet({ open, categories, categoryId, onClos
                 label={category.name}
                 color={categoryId === category.id ? 'primary' : 'default'}
                 onClick={() => onSelect(category.id)}
-                sx={{ fontWeight: 800 }}
+                sx={{ fontWeight: 600 }}
               />
             ))}
           </Stack>
         )}
       </Box>
       <Box sx={{ px: 3, pb: 3 }}>
-        <Button fullWidth variant="contained" onClick={onClose} sx={{ fontWeight: 900, borderRadius: 999 }}>
+        <Button fullWidth variant="contained" onClick={onClose} sx={{ fontWeight: 700, borderRadius: 999 }}>
           Apply
         </Button>
       </Box>

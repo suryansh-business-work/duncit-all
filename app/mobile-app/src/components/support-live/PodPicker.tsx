@@ -62,7 +62,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
         <MaterialIcons name="event" size={18} color={muted} />
         {selected ? (
           <YStack flex={1}>
-            <Text fontSize={14} fontWeight="800" color="$color" numberOfLines={1}>
+            <Text fontSize={14} fontWeight="600" color="$color" numberOfLines={1}>
               {selected.title}
             </Text>
             <Text fontSize={11} color="$muted">
@@ -106,7 +106,7 @@ export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerP
                 <YStack flex={1}>
                   <Text
                     fontSize={14}
-                    fontWeight={isSelected ? '800' : '600'}
+                    fontWeight={isSelected ? '700' : '600'}
                     color={isSelected ? '$onPrimary' : '$color'}
                     numberOfLines={1}
                   >

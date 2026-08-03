@@ -88,7 +88,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
             >
               <MaterialIcons name="remove" size={16} color={color} />
             </XStack>
-            <Text testID={`product-qty-${idx}`} fontSize={14} fontWeight="800" color="$color">
+            <Text testID={`product-qty-${idx}`} fontSize={14} fontWeight="600" color="$color">
               {row.quantity}
             </Text>
             <XStack
@@ -127,11 +127,11 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
         pressStyle={{ opacity: 0.7 }}
       >
         <MaterialIcons name="add" size={18} color={primary} />
-        <Text fontSize={13} fontWeight="800" color="$primary">
+        <Text fontSize={13} fontWeight="600" color="$primary">
           Add product
         </Text>
       </XStack>
-      <Text testID="product-total" fontSize={13} fontWeight="800" color="$color">
+      <Text testID="product-total" fontSize={13} fontWeight="600" color="$color">
         Total: ₹{productRequestTotal(value, products)}
       </Text>
       {error ? (

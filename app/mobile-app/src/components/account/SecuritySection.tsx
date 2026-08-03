@@ -49,7 +49,7 @@ export function SecuritySection() {
       <XStack alignItems="center" gap={12}>
         <MaterialIcons name="lock-reset" size={20} color={color} />
         <YStack flex={1}>
-          <Text fontSize={14.5} fontWeight="900" color="$color">
+          <Text fontSize={14.5} fontWeight="700" color="$color">
             Password
           </Text>
           <Text fontSize={12.5} fontWeight="700" color="$muted">
@@ -62,7 +62,7 @@ export function SecuritySection() {
           aria-label="Change password"
           onPress={() => setChangeOpen(true)}
           fontSize={13}
-          fontWeight="900"
+          fontWeight="700"
           color="$primary"
         >
           Change
@@ -81,7 +81,7 @@ export function SecuritySection() {
         pressStyle={{ opacity: 0.7 }}
       >
         <MaterialIcons name="delete-forever" size={18} color={danger} />
-        <Text fontSize={13.5} fontWeight="800" color="$danger">
+        <Text fontSize={13.5} fontWeight="600" color="$danger">
           Delete account
         </Text>
       </XStack>

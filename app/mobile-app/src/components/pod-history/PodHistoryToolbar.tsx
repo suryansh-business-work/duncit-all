@@ -33,7 +33,7 @@ export function PodHistoryToolbar({ filterCount, onFilter, onSort }: Readonly<Pr
       >
         <MaterialIcons name="filter-list" size={16} color={filterActive ? onPrimary : color} />
         {filterActive ? (
-          <Text fontSize={12.5} fontWeight="900" color="$onPrimary">
+          <Text fontSize={12.5} fontWeight="700" color="$onPrimary">
             {filterCount}
           </Text>
         ) : null}

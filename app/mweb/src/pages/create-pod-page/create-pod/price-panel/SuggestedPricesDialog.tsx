@@ -89,7 +89,7 @@ export default function SuggestedPricesDialog({
     >
       <DialogTitle
         id="suggested-prices-title"
-        sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 900, pr: 7 }}
+        sx={{ display: 'flex', alignItems: 'center', gap: 1, fontWeight: 700, pr: 7 }}
       >
         <SellIcon color="primary" fontSize="small" />
         {SUGGESTED_PRICES_TITLE}
@@ -107,7 +107,7 @@ export default function SuggestedPricesDialog({
           {body}
           <Box
             data-testid="suggested-prices-note"
-            sx={{ p: 1.5, borderRadius: '4px', bgcolor: alpha(theme.palette.primary.main, 0.1) }}
+            sx={{ p: 1.5, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.1) }}
           >
             <Typography variant="body2" fontWeight={700}>
               {SUGGESTED_PRICES_NOTE}

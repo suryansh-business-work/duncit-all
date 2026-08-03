@@ -59,7 +59,7 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
 
   return (
     <YStack gap={10}>
-      <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={1}>
+      <Text fontSize={12} fontWeight="700" color="$muted" letterSpacing={1}>
         OPTIONAL SETTINGS
       </Text>
       {PANELS.map((panel) => {
@@ -96,7 +96,7 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
                 <MaterialIcons name={panel.icon} size={18} color={onPrimary} />
               </YStack>
               <YStack flex={1}>
-                <Text fontSize={14} fontWeight="900" color="$color">
+                <Text fontSize={14} fontWeight="700" color="$color">
                   {panel.title}
                 </Text>
                 <Text fontSize={12} color="$muted">
@@ -104,7 +104,7 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
                 </Text>
               </YStack>
               {filled ? (
-                <Text fontSize={12} fontWeight="800" color="$primary">
+                <Text fontSize={12} fontWeight="600" color="$primary">
                   {summary}
                 </Text>
               ) : (

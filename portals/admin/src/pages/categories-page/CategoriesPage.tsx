@@ -16,6 +16,7 @@ import CategoryFormDialog from './CategoryFormDialog';
 import CategoriesColumns from './CategoriesColumns';
 import CategoryDeleteDialog from './CategoryDeleteDialog';
 import AllVibeIconCard from './AllVibeIconCard';
+import VibeHeadingCard from './VibeHeadingCard';
 import { buildCreateInput, buildMediaFromText, buildUpdateInput } from './helpers';
 import { isImageIconValue } from '../../components/IconPickerField';
 
@@ -157,6 +158,8 @@ export default function CategoriesPage() {
       </Box>
 
       <AllVibeIconCard />
+
+      <VibeHeadingCard />
 
       <CategoriesColumns
         superSel={superSel}

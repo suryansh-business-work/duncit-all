@@ -46,7 +46,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
             >
               <SafeAreaView edges={['bottom']}>
                 <XStack alignItems="center" justifyContent="space-between" paddingBottom={12}>
-                  <Text fontSize={17} fontWeight="900" color="$color">
+                  <Text fontSize={17} fontWeight="700" color="$color">
                     Available coupons
                   </Text>
                   <XStack
@@ -83,7 +83,7 @@ export function CouponsSheet({ open, coupons, currency, onClose, onPick }: Reado
                       >
                         <MaterialIcons name="local-offer" size={20} color="#22c55e" />
                         <YStack flex={1}>
-                          <Text fontSize={14.5} fontWeight="900" color="$color">
+                          <Text fontSize={14.5} fontWeight="700" color="$color">
                             {coupon.code} · {coupon.discount_pct}% off
                           </Text>
                           <Text fontSize={12} color="$muted">

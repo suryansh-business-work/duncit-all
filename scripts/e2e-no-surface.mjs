@@ -50,6 +50,7 @@ const NO_E2E_SURFACE = new Map([
   ['@duncit/ui', 'library — rendered end-to-end by every portal'],
   ['@duncit/user-context', 'library — its LoginScreen is what every portal login spec drives'],
   ['@duncit/utils', 'zero-dep browser utils, no DOM'],
+  ['@duncit/virtual-scroll', 'pure windowing/search math, no DOM — driven end-to-end by the mWeb + native pod lists'],
 
   // --- the Astro marketing sites are static, prerendered HTML with no app
   // state, no auth and no GraphQL. They are covered by their own vitest suites

@@ -31,6 +31,7 @@ COPY packages/i18n ./packages/i18n
 COPY packages/utils ./packages/utils
 COPY packages/onboarding ./packages/onboarding
 COPY packages/tours ./packages/tours
+COPY packages/virtual-scroll ./packages/virtual-scroll
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/app/mobile-app

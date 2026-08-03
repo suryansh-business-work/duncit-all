@@ -51,6 +51,11 @@ export function HomeFeed() {
     refetch,
   } = useHomeFeed(selectedCategoryId, filters, showAllVibes);
   const filterCount = activeFilterCount(filters, selectedCategoryId);
+  // A chip/filter narrows the rails; the full-list screens are unfiltered, so
+  // the See-all cards drop their count + jump-to-index while one is active
+  // (sort is excluded — it never changes rail membership). mWeb twin: HomePage.
+  const railsFiltered =
+    Boolean(selectedCategoryId) || filters.price !== 'ALL' || filters.date !== 'ALL';
   const bottomSpace = useBottomNavSpace();
   const { data: meData } = useMe();
   const { primary, onPrimary } = useThemeColors();
@@ -117,6 +122,9 @@ export function HomeFeed() {
               <TourAnchor tour="home" anchor="home-pods">
                 <HomeFeaturedPods
                   pods={featuredPods}
+                  totalCount={totalPods}
+                  filtered={railsFiltered}
+                  onSeeAll={openHappeningNearby}
                   onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
                 />
               </TourAnchor>
@@ -156,6 +164,7 @@ export function HomeFeed() {
             <Reveal index={5}>
               <PreviousPodsRail
                 pods={previousPods}
+                filtered={railsFiltered}
                 onSeeAll={openPreviousPods}
                 onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
               />

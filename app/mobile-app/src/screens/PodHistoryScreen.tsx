@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import {
   PodHistoryCard,
@@ -11,6 +12,7 @@ import {
 } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
 import { usePodHistory, usePodHistoryCategories } from '@/hooks/usePodHistory';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   activePodHistoryFilterCount,
   applyPodHistory,
@@ -20,10 +22,12 @@ import {
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 
-/** Pod History — the pods the user has joined, with a top-right Filter (Super →
- * Category) and Sort (date / price). RN twin of mWeb's PodHistoryPage. */
+/** Pod History — the pods the user has joined, with a search box over the list
+ * and a top-right Filter (Super → Category) and Sort (date / price). RN twin of
+ * mWeb's PodHistoryPage. */
 export function PodHistoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { muted } = useThemeColors();
   const { uniqueItems, isLoading, error } = usePodHistory();
   const categories = usePodHistoryCategories();
   const [filters, setFilters] = useState<PodHistoryFilters>(DEFAULT_POD_HISTORY_FILTERS);
@@ -69,14 +73,40 @@ export function PodHistoryScreen() {
             Tap any pod you joined to view details, actions, refund status, and timeline.
           </Text>
         </YStack>
+        <XStack
+          alignItems="center"
+          gap={8}
+          marginBottom={4}
+          paddingHorizontal={12}
+          height={46}
+          borderRadius={999}
+          borderWidth={1}
+          borderColor="$borderColor"
+          backgroundColor="$background"
+        >
+          <MaterialIcons name="search" size={20} color={muted} />
+          <Input
+            testID="pod-history-search"
+            aria-label="Search joined pods"
+            flex={1}
+            unstyled
+            value={filters.search}
+            onChangeText={(search) => setFilters((f) => ({ ...f, search }))}
+            placeholder="Search joined pods…"
+            placeholderTextColor="$muted"
+            color="$color"
+            fontSize={15}
+            returnKeyType="search"
+          />
+        </XStack>
         {visible.length === 0 ? (
           <YStack testID="pod-history-no-match" gap={4} paddingVertical={24} alignItems="center">
             <Text fontSize={16} fontWeight="900" color="$color">
               No Pods Found
             </Text>
             <Text fontSize={13} color="$muted" textAlign="center">
-              We couldn't find any enrolled Pods matching your selected filters. Try changing your
-              filters to explore more of your Pod history.
+              We couldn't find any enrolled Pods matching your search or filters. Try a different
+              search or change your filters to explore more of your Pod history.
             </Text>
           </YStack>
         ) : (

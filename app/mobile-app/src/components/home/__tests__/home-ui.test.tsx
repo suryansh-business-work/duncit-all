@@ -215,7 +215,9 @@ describe('HomeFilterButton', () => {
 
 describe('PreviousPodsRail', () => {
   it('renders nothing when there are no previous pods', () => {
-    renderWithProviders(<PreviousPodsRail pods={[]} onSeeAll={jest.fn()} onOpenPod={jest.fn()} />);
+    renderWithProviders(
+      <PreviousPodsRail pods={[]} filtered={false} onSeeAll={jest.fn()} onOpenPod={jest.fn()} />,
+    );
     expect(screen.queryByTestId('previous-pods-see-all')).toBeNull();
   });
 
@@ -223,7 +225,7 @@ describe('PreviousPodsRail', () => {
     const onSeeAll = jest.fn();
     const onOpenPod = jest.fn();
     renderWithProviders(
-      <PreviousPodsRail pods={[pod]} onSeeAll={onSeeAll} onOpenPod={onOpenPod} />,
+      <PreviousPodsRail pods={[pod]} filtered={false} onSeeAll={onSeeAll} onOpenPod={onOpenPod} />,
     );
     expect(screen.getByText('Previous Pods')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('previous-pods-see-all'));

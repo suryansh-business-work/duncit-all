@@ -179,7 +179,7 @@ function deriveHome(
     .map((club) => ({ club, pods: podsByClub.get(club.id) ?? [] }))
     .filter((entry) => entry.pods.length > 0);
 
-  const featuredPods = activePods.slice().sort(byDateAsc).slice(0, 6);
+  const featuredPods = activePods.slice().sort(byDateAsc).slice(0, 10);
 
   return {
     categoryChips,

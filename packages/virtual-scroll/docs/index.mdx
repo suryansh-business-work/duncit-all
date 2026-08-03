@@ -1,0 +1,86 @@
+---
+name: '@duncit/virtual-scroll'
+summary: 'Framework-free windowing, feed-row and search math behind the virtualized infinite pod lists on mWeb and the native app.'
+category: 'platform'
+zeroDeps: true
+frameworkFree: true
+coverageGate: true
+consumers:
+  - 'app/mweb'
+  - 'app/mobile-app'
+exports:
+  - 'buildOffsets'
+  - 'computeRange'
+  - 'findRowAt'
+  - 'makeItemLayout'
+  - 'buildFeedRows'
+  - 'rowForPodIndex'
+  - 'computeColumns'
+  - 'isAdRow'
+  - 'filterByQuery'
+  - 'matchesQuery'
+  - 'VirtualRange'
+  - 'FeedRow'
+---
+
+## Why this exists
+
+The "Happening nearby" and "Previous Pods" full lists render every pod of the
+selected city. Rendering them all at once melts low-end phones, and rule 27
+demands mWeb and native behave identically — so the windowing math (which rows
+exist on screen, how tall the spacers are, where a "See all" jump lands, which
+pods a search query keeps) lives here once, framework-free. mWeb wraps it in a
+DOM scroll hook, native feeds it to `FlatList` (`getItemLayout` +
+`initialScrollIndex`). Metro, Vite and `tsc` resolve `./src/index.ts` directly:
+no build step.
+
+## Windowing
+
+```ts
+import { buildOffsets, computeRange } from '@duncit/virtual-scroll';
+
+const heights = rows.map((row) => (row.kind === 'ad' ? 120 : 230));
+const offsets = buildOffsets(heights, 12 /* gap */, 16 /* lead offset */);
+const range = computeRange({
+  offsets,
+  viewTop: 480, // scroll position in list coordinates
+  viewBottom: 480 + 800,
+  overscanLead: 400,
+  overscanTrail: 1200, // bigger below: rows mount BEFORE the user reaches them
+});
+// range = { start, end, leadPad, trailPad }
+// Render rows[start..end] between two spacers of leadPad/trailPad pixels.
+```
+
+`makeItemLayout(heights, offsets)` adapts the same numbers to React Native's
+`FlatList#getItemLayout`, which is what makes `initialScrollIndex` exact.
+
+## Feed rows (pods + interleaved ads)
+
+```ts
+import { buildFeedRows, rowForPodIndex, computeColumns } from '@duncit/virtual-scroll';
+
+const columns = computeColumns(containerWidth, 264 /* card */, 12 /* gap */);
+const rows = buildFeedRows({
+  pods,
+  ads, // pass [] while a search query is active
+  columns,
+  adEvery: 4, // a banner row after the row completing every 4th pod
+  adKeyOf: (ad, i) => `ad-${ad.id}-${i}`,
+});
+const jumpRow = rowForPodIndex(rows, 10); // "See all" continues from pod #11
+```
+
+## Search
+
+```ts
+import { filterByQuery } from '@duncit/virtual-scroll';
+
+const visible = filterByQuery(pods, query, (pod) => [
+  pod.pod_title,
+  pod.place_label,
+  pod.place_detail,
+  ...(pod.host_names ?? []),
+]);
+// Tokenized AND-match, case- and diacritic-insensitive ("cafe" finds "Café").
+```

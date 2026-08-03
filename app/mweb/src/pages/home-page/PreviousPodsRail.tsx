@@ -3,16 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import HistoryIcon from '@mui/icons-material/History';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PodCard from './PodCard';
+import SeeAllCard from './SeeAllCard';
 import { podUrl } from '../../utils/seoUrls';
+
+/** Max entries shown on the home rail before the See-all card takes over. */
+const RAIL_CAP = 10;
 
 interface Props {
   pods: any[];
   hostNameOf: (pod: any) => string | null;
+  /** True while a vibe chip / sheet filter narrows the rail: the full page is
+   * unfiltered, so the card drops its count and its jump-to-index. */
+  filtered: boolean;
 }
 
 /** Bottom-of-home rail of pods whose date has already passed, with a "See all"
  * link to the dedicated Previous Pods page (bug 8). Hidden when there are none. */
-export default function PreviousPodsRail({ pods, hostNameOf }: Readonly<Props>) {
+export default function PreviousPodsRail({ pods, hostNameOf, filtered }: Readonly<Props>) {
   const navigate = useNavigate();
   if (pods.length === 0) return null;
 
@@ -49,7 +56,7 @@ export default function PreviousPodsRail({ pods, hostNameOf }: Readonly<Props>) 
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {pods.slice(0, 10).map((pod: any) => (
+        {pods.slice(0, RAIL_CAP).map((pod: any) => (
           <PodCard
             key={pod.id}
             pod={pod}
@@ -57,6 +64,13 @@ export default function PreviousPodsRail({ pods, hostNameOf }: Readonly<Props>) 
             onOpen={() => navigate(podUrl(pod.club_slug, pod.pod_id))}
           />
         ))}
+        {pods.length > RAIL_CAP && (
+          <SeeAllCard
+            count={filtered ? undefined : pods.length - RAIL_CAP}
+            width={200}
+            onClick={() => navigate(filtered ? '/previous-pods' : `/previous-pods?from=${RAIL_CAP}`)}
+          />
+        )}
       </Box>
     </Stack>
   );

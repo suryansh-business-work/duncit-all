@@ -1,7 +1,11 @@
+import { useMemo } from 'react';
 import { Text, XStack, YStack } from 'tamagui';
+import { buildSlotLabels } from '@duncit/slots';
+import { SlotCalendar } from '@duncit/slots/native';
 
+import { useDateFormat } from '@/hooks/useDateFormat';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
-  slotOptionLabel,
   venueOptionLabel,
   type ResubmitSlotOption,
   type ResubmitVenueOption,
@@ -110,7 +114,10 @@ interface SlotPickerFieldProps {
   onChange: (slotId: string) => void;
 }
 
-/** Available-slot picker for the chosen venue (time window + space + price). */
+/**
+ * Available-slot picker for the chosen venue — the same calendar the create-pod
+ * flow uses, and the Tamagui twin of mWeb's resubmit picker.
+ */
 export function SlotPickerField({
   slots,
   loading,
@@ -119,21 +126,42 @@ export function SlotPickerField({
   error,
   onChange,
 }: Readonly<SlotPickerFieldProps>) {
-  let emptyText: string | null = null;
-  if (!hasVenue) emptyText = 'Select a venue first';
-  else if (loading) emptyText = 'Loading slots…';
-  else if (slots.length === 0) emptyText = 'No open slots at this venue — pick another venue';
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  const labels = useMemo(() => buildSlotLabels(t, 'mweb.slots'), [t]);
+
+  const calendarSlots = useMemo(
+    () =>
+      slots.map((slot) => ({
+        id: slot.id,
+        start_at: slot.start_at,
+        end_at: slot.end_at,
+        price: slot.price,
+        // A venue can publish two spaces at the same hour; without the space the
+        // two tiles would be indistinguishable.
+        caption: slot.space_label || undefined,
+      })),
+    [slots],
+  );
+
+  if (!hasVenue) {
+    return (
+      <Text fontSize={13} color="$muted">
+        {labels.pickVenueFirst}
+      </Text>
+    );
+  }
+
   return (
-    <PickerShell title="Time slot" emptyText={emptyText} error={error}>
-      {slots.map((slot) => (
-        <OptionRow
-          key={slot.id}
-          testID={`resubmit-slot-${slot.id}`}
-          label={slotOptionLabel(slot)}
-          selected={slot.id === value}
-          onPress={() => onChange(slot.id)}
-        />
-      ))}
-    </PickerShell>
+    <SlotCalendar
+      slots={calendarSlots}
+      loading={loading}
+      error={error}
+      selectedSlotId={value}
+      onPick={(slot) => onChange(slot.id)}
+      fmt={fmt}
+      labels={labels}
+      required
+    />
   );
 }

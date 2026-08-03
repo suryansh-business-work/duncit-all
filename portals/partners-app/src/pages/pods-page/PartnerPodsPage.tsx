@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { buildSlotLabels } from '@duncit/slots';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -9,6 +11,9 @@ import { CREATE_PARTNER_POD, MY_HOST_PODS_TABLE, PARTNER_POD_LOOKUPS, type Partn
 import { PARTNER_POD_CONFIG, getClubVenueIds } from './partner-pod-config';
 
 export default function PartnerPodsPage() {
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
   const { data, error } = useQuery(PARTNER_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
@@ -78,6 +83,8 @@ export default function PartnerPodsPage() {
             error={opError}
             onCancel={() => setOpen(false)}
             onSubmit={submit}
+            dateFormatter={fmt}
+            slotLabels={slotLabels}
           />
         </DialogContent>
       </Dialog>

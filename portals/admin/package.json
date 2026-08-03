@@ -32,6 +32,7 @@
     "@duncit/pod-form": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",
     "@duncit/shell": "workspace:*",
+    "@duncit/slots": "workspace:*",
     "@duncit/table": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",

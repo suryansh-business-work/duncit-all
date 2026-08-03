@@ -1,9 +1,8 @@
-import { useQuery } from '@apollo/client';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useAdminCategories } from '@duncit/category';
 import { spotsBounds, type SpotsBounds } from '@duncit/utils';
-import { VENUE_AVAILABLE_SLOTS } from './components/VenueSlotPicker';
 import { usePodFormData } from './context';
+import { useVenueSlots } from './slots/useVenueSlots';
 import type { PodFormValues } from './types';
 
 /**
@@ -28,18 +27,13 @@ export function useSpotsBounds(): SpotsBounds {
   const podMode = useWatch({ control, name: 'pod_mode' });
 
   const { categories } = useAdminCategories();
-  const { data } = useQuery(VENUE_AVAILABLE_SLOTS, {
-    variables: { venue_id: venueId },
-    skip: !venueId || podMode === 'VIRTUAL',
-    fetchPolicy: 'cache-first',
-  });
+  const { slots } = useVenueSlots(venueId, podMode === 'VIRTUAL');
 
   const club = clubs.find((item: any) => String(item?.id) === String(clubId));
   // A club stores its SUB-category in `category_id`.
   const subId = club ? String((club as any).category_id ?? '') : '';
   const minPax = categories.find((category) => category.id === subId)?.min_pax ?? 0;
 
-  const slots: { id: string; capacity?: number | null }[] = data?.venueAvailableSlots ?? [];
   const capacity = slots.find((slot) => slot.id === slotId)?.capacity ?? null;
 
   return spotsBounds({ minPax, venueCapacity: capacity });

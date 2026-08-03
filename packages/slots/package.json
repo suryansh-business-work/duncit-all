@@ -1,0 +1,69 @@
+{
+  "name": "@duncit/slots",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "One slot-selection experience for every surface: framework-free grouping/labelling logic plus the MUI and Tamagui calendars that render it. Import the root for logic, ./mui in portals and mWeb, ./native in the app.",
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "react-native": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./mui": "./src/mui/index.ts",
+    "./native": "./src/native/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/slots"
+  },
+  "peerDependencies": {
+    "@duncit/datetime": "workspace:*",
+    "@expo/vector-icons": ">=14",
+    "@mui/icons-material": ">=5",
+    "@mui/material": ">=5",
+    "@mui/x-date-pickers": ">=6",
+    "date-fns": ">=2",
+    "react": ">=18",
+    "tamagui": ">=1"
+  },
+  "peerDependenciesMeta": {
+    "@expo/vector-icons": {
+      "optional": true
+    },
+    "@mui/icons-material": {
+      "optional": true
+    },
+    "@mui/material": {
+      "optional": true
+    },
+    "@mui/x-date-pickers": {
+      "optional": true
+    },
+    "tamagui": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@duncit/datetime": "workspace:*",
+    "@mui/icons-material": "^5.15.18",
+    "@mui/material": "^5.15.18",
+    "@mui/x-date-pickers": "^6.20.2",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.4.5",
+    "@testing-library/react": "^16.0.0",
+    "@types/react": "^18.3.3",
+    "@vitest/coverage-v8": "^2.1.9",
+    "date-fns": "^2.30.0",
+    "date-fns-tz": "2.0.1",
+    "jsdom": "^25.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.4.5",
+    "vitest": "^2.1.9"
+  }
+}

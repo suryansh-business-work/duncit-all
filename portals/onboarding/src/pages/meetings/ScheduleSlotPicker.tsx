@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Box, Chip, Stack, Typography } from '@mui/material';
+import { useMemo } from 'react';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { shellMeetingLabels } from '@duncit/slots';
+import { SlotCalendar } from '@duncit/slots/mui';
 import type { MeetingSlot } from './queries';
-import { CAL } from './calendarColors';
 
 interface Props {
   slots: MeetingSlot[];
@@ -9,74 +10,45 @@ interface Props {
   onChange: (startAt: string) => void;
 }
 
-const dayKey = (iso: string) => new Date(iso).toDateString();
-const dayLabel = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' });
-const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
-
-const slotSx = (selected: boolean, available: boolean) => {
-  if (!available) return { bgcolor: CAL.blocked, color: '#fff', opacity: 0.55 };
-  if (selected) return { bgcolor: CAL.selected, color: '#fff' };
-  return { color: CAL.available, borderColor: CAL.available };
-};
-
-/** Day + time-slot grid for onboarding staff scheduling — already-booked slots
- * are disabled, mirroring the applicant-facing gate picker. */
+/**
+ * Pick a meeting date, then a time on that date — the staff-side twin of the
+ * applicant gate picker, and the same calendar every pod flow renders. Already
+ * booked slots stay visible but disabled.
+ *
+ * Reopening a scheduled meeting lands on its saved day: `resolveSlotDay` inside
+ * the calendar resolves the active day from the current selection before falling
+ * back to the first available day.
+ */
 export default function ScheduleSlotPicker({ slots, value, onChange }: Readonly<Props>) {
-  const [day, setDay] = useState('');
-  const days: string[] = [];
-  for (const s of slots) {
-    if (!days.some((d) => dayKey(d) === dayKey(s.start_at))) days.push(s.start_at);
-  }
-  // Until the staff explicitly switches days, default to the day of the already
-  // selected slot (`value`) — so reopening a scheduled meeting shows its saved
-  // day, not "today" (the first available day). Falls back to the first day.
-  const valueDay = value ? days.find((d) => dayKey(d) === dayKey(value)) : undefined;
-  const activeDay = day || valueDay || days[0] || '';
-  const daySlots = slots.filter((s) => dayKey(s.start_at) === dayKey(activeDay));
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+
+  const labels = useMemo(
+    () => shellMeetingLabels(t, false),
+    [t],
+  );
+
+  // A meeting slot has no id of its own — `start_at` is its identity.
+  const calendarSlots = useMemo(
+    () =>
+      slots.map((slot) => ({
+        id: slot.start_at,
+        start_at: slot.start_at,
+        end_at: slot.end_at,
+        disabled: !slot.available,
+      })),
+    [slots],
+  );
 
   return (
-    <Stack spacing={1.5}>
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-          Day
-        </Typography>
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-          {days.map((d) => (
-            <Chip
-              key={d}
-              label={dayLabel(d)}
-              color={dayKey(d) === dayKey(activeDay) ? 'primary' : 'default'}
-              onClick={() => {
-                setDay(d);
-                onChange('');
-              }}
-              sx={{ fontWeight: 800 }}
-            />
-          ))}
-        </Stack>
-      </Box>
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>
-          Time slot
-        </Typography>
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-          {daySlots.map((s) => (
-            <Chip
-              key={s.start_at}
-              label={timeLabel(s.start_at)}
-              disabled={!s.available}
-              variant={value === s.start_at ? 'filled' : 'outlined'}
-              onClick={() => onChange(s.start_at)}
-              sx={{ fontWeight: 800, ...slotSx(value === s.start_at, s.available) }}
-            />
-          ))}
-        </Stack>
-        <Typography variant="caption" color="text.secondary">
-          Green slots are open, blue is your pick, grey ones are already booked.
-        </Typography>
-      </Box>
-    </Stack>
+    <SlotCalendar
+      slots={calendarSlots}
+      selectedSlotId={value}
+      onPick={(slot) => onChange(slot.id)}
+      fmt={fmt}
+      labels={labels}
+      showPrice={false}
+      required
+    />
   );
 }

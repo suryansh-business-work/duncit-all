@@ -47,6 +47,7 @@ COPY packages/table/package.json ./packages/table/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/slack/package.json ./packages/slack/
 COPY packages/app-settings/package.json ./packages/app-settings/
+COPY packages/slots/package.json ./packages/slots/
 COPY packages/datetime/package.json ./packages/datetime/
 COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/fallback-icons/package.json ./packages/fallback-icons/

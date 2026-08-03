@@ -1,10 +1,11 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { PodEditorDialog, type PodFormConfig, type PodFormValues } from '@duncit/pod-form';
 import AiFillButton from '../../components/AiFillButton';
 import { applyAiFillToForm } from './podFormAi';
 import { MEETING_PLATFORMS, generateMeetingLink } from './meeting-platforms';
-import { useDateFormat } from '@duncit/app-settings';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { buildSlotLabels } from '@duncit/slots';
 
 interface Props {
   open: boolean;
@@ -46,7 +47,9 @@ export default function PodFormDialog({
   onPickVideo,
 }: Readonly<Props>) {
   const methodsRef = useRef<UseFormReturn<PodFormValues> | null>(null);
-  const { dateFormat, timeFormat } = useDateFormat();
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
 
   return (
     <PodEditorDialog
@@ -67,7 +70,9 @@ export default function PodFormDialog({
       onGenerateMeetingLink={generateMeetingLink}
       onPickImage={onPickImage}
       onPickVideo={onPickVideo}
-      dateTimeFormat={`${dateFormat} ${timeFormat}`}
+      dateTimeFormat={`${fmt.dateFormat} ${fmt.timeFormat}`}
+      dateFormatter={fmt}
+      slotLabels={slotLabels}
       onSubmit={onSubmit}
       onReady={(methods) => {
         methodsRef.current = methods;

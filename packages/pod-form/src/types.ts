@@ -1,3 +1,5 @@
+import type { SlotFormatter, SlotLabels } from '@duncit/slots';
+
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 
 export interface PodPlaceCharge {
@@ -143,6 +145,17 @@ export interface PodFormData {
   searchHosts?: SearchPodHosts;
   /** MUI X date/time display format (e.g. from the admin app settings). */
   dateTimeFormat?: string;
+  /**
+   * The admin-configured formatter, from `useDateFormat()`. Required: the slot
+   * calendar buckets days and renders times through it, so a missing formatter
+   * would silently fall back to device-local behaviour (rule 11).
+   */
+  dateFormatter: SlotFormatter & { formatPattern: (input: Date, pattern: string) => string };
+  /**
+   * Slot-picker copy. Required and never defaulted, so no English literal ships
+   * inside the shared form (rule 38). Portals pass `shell.slots.*`.
+   */
+  slotLabels: Readonly<SlotLabels>;
 }
 
 export const POD_TYPES: PodOption[] = [

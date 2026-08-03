@@ -53,6 +53,34 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       formerAttendee: 'Former attendee',
       newAttendee: 'A new attendee',
     },
+    // The slot picker's copy. @duncit/slots renders the same two steps on
+    // every surface, so `shell.slots` below must stay word-for-word identical —
+    // they are written out rather than shared through a const because the
+    // key-verification gate parses this file statically and cannot follow a
+    // spread. The server stores one row per key path, so the two namespaces
+    // cannot collapse into one.
+    slots: {
+      date: 'Date',
+      hint: "From the venue's availability calendar — the slot sets the pod's date & time.",
+      availableSlots: 'Available slots',
+      free: 'Free',
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      loading: 'Loading available slots…',
+      empty: 'No open slots right now. Try another venue or check back later.',
+      emptyDay: 'No slots on this day. Pick another date.',
+      previousMonth: 'Previous month',
+      nextMonth: 'Next month',
+      pickVenueFirst: 'Select a venue first to see its available slots.',
+      currentlyBooked: 'Currently booked for this pod',
+      wholeVenue: 'Whole venue',
+      // Onboarding meetings render the same calendar, but a booked slot stays
+      // visible-and-disabled instead of disappearing, so they get their own hint.
+      meetingHint: 'Greyed-out slots are already booked.',
+      meetingRescheduleHint:
+        'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.',
+      current: 'current',
+    },
   },
 };
 
@@ -73,6 +101,27 @@ export const SHELL_BUNDLE: NestedCatalogue = {
       // is unrepresentable, so whichever bundle merged last would silently
       // overwrite the other surface's copy.
       languageHint: 'Choose the language for this portal.',
+    },
+    /** Word-for-word identical to `mweb.slots` — see the note there. */
+    slots: {
+      date: 'Date',
+      hint: "From the venue's availability calendar — the slot sets the pod's date & time.",
+      availableSlots: 'Available slots',
+      free: 'Free',
+      today: 'Today',
+      tomorrow: 'Tomorrow',
+      loading: 'Loading available slots…',
+      empty: 'No open slots right now. Try another venue or check back later.',
+      emptyDay: 'No slots on this day. Pick another date.',
+      previousMonth: 'Previous month',
+      nextMonth: 'Next month',
+      pickVenueFirst: 'Select a venue first to see its available slots.',
+      currentlyBooked: 'Currently booked for this pod',
+      wholeVenue: 'Whole venue',
+      meetingHint: 'Greyed-out slots are already booked.',
+      meetingRescheduleHint:
+        'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.',
+      current: 'current',
     },
   },
 };

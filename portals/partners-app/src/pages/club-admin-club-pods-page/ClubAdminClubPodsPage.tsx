@@ -1,4 +1,6 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useDateFormat, useTranslation } from '@duncit/app-settings';
+import { buildSlotLabels } from '@duncit/slots';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Alert, Button, Card, CardContent, IconButton, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
@@ -17,6 +19,9 @@ import PodActivityDialog from './PodActivityDialog';
 import PodsTable, { type PodRowBase } from '../../components/PodsTable';
 
 export default function ClubAdminClubPodsPage() {
+  const fmt = useDateFormat();
+  const { t } = useTranslation();
+  const slotLabels = useMemo(() => buildSlotLabels(t, 'shell.slots'), [t]);
   const { clubId = '' } = useParams();
   const lookups = useQuery(CLUB_ADMIN_POD_LOOKUPS, { fetchPolicy: 'cache-and-network' });
   const client = useApolloClient();
@@ -148,6 +153,8 @@ export default function ClubAdminClubPodsPage() {
         onPickImage={picker.pickImage}
         onPickVideo={picker.pickVideo}
         searchHosts={editor.searchHosts}
+        dateFormatter={fmt}
+        slotLabels={slotLabels}
         onSubmit={editor.submit}
         intro={
           <Alert severity="info" sx={{ mb: 1.5 }}>

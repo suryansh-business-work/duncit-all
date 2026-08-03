@@ -1,0 +1,122 @@
+---
+name: '@duncit/slots'
+summary: 'One slot-selection experience for every surface: pick a date on a calendar, then a time on that date. Framework-free logic at the root, the MUI calendar behind /mui, the Tamagui one behind /native.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: true
+consumers:
+  - 'packages/pod-form'
+  - 'app/mweb'
+  - 'app/mobile-app'
+  - 'portals/onboarding'
+exports:
+  - 'groupSlotsByDay'
+  - 'resolveSlotDay'
+  - 'withCurrentSlot'
+  - 'slotDayKeys'
+  - 'slotDayBounds'
+  - 'slotDayLabel'
+  - 'slotTimeLabel'
+  - 'slotRangeLabel'
+  - 'slotPriceLabel'
+  - 'buildMonthGrid'
+  - 'addMonths'
+  - 'clampMonth'
+  - 'monthKeyOf'
+  - 'weekdayIndex'
+  - 'weekdayInitials'
+---
+
+## Why this exists
+
+Picking a slot happened in eleven places — pod create in three portals, mWeb and the app;
+venue-rejected resubmit in mWeb and the app; and four onboarding/meeting pickers — and every
+one of them had its own answer. The portals showed a flat `<TextField select>` dropdown of
+every slot at once. mWeb and the app showed a horizontal rail of day chips over a grid of time
+tiles. Each copy re-implemented `dayKey`, `dayLabel` and the price label, and they had already
+drifted: `₹1,500` in one, `₹1500` in another, `h:mm a` here and `hh:mm a` there.
+
+Worse, all of them bucketed slots by the **device's** calendar day while the server matches
+venue holidays in IST. A 11:30 PM IST slot lands on the previous day for a viewer in London,
+so the two sides disagreed about which day a slot belonged to.
+
+This package is the single answer: one set of helpers that group and label slots through the
+admin-configured formatter, and two thin views — MUI and Tamagui — that render the identical
+two steps from those helpers.
+
+## The three entry points
+
+| Import | Contains | Used by |
+| --- | --- | --- |
+| `@duncit/slots` | Types and pure functions. No React, no toolkit. | everything, including Node and tests |
+| `@duncit/slots/mui` | `SlotCalendar` on MUIX `DateCalendar` | the portals and mWeb |
+| `@duncit/slots/native` | `SlotCalendar` on a hand-drawn Tamagui month grid | the app |
+
+Native never resolves `/mui` and the portals never resolve `/native`, so neither build pulls in
+the other toolkit. Expo SDK 54 honours package `exports`, which is what makes the split work
+under Metro.
+
+## The one slot shape
+
+Venue availability and onboarding meeting slots normalise into `CalendarSlot`, so one calendar
+serves both:
+
+```ts
+interface CalendarSlot {
+  id: string;              // meeting slots have no id — their start_at IS the identity
+  start_at: string;
+  end_at?: string | null;  // meetings have an implied length
+  price?: number | null;   // meetings are free
+  caption?: string | null; // the venue space, or "Currently booked for this pod"
+  disabled?: boolean;      // a meeting slot the server marked unavailable
+}
+```
+
+## Worked example
+
+```tsx
+import { SlotCalendar } from '@duncit/slots/mui';
+import { useDateFormat } from '@duncit/app-settings';
+
+const fmt = useDateFormat();
+
+<SlotCalendar
+  slots={venueSlots.map((s) => ({
+    id: s.id,
+    start_at: s.start_at,
+    end_at: s.end_at,
+    price: s.price,
+    caption: s.space_label,
+  }))}
+  loading={loading}
+  selectedSlotId={value}
+  onPick={(slot) => field.onChange(slot.id)}
+  fmt={fmt}
+  labels={t.slots}
+  required
+/>;
+```
+
+`labels` is **required** and has no English default. Rule 38 forbids shipping literals in
+shared UI, so each surface passes its own translated copy — `mweb.slots.*` for mWeb and the
+app, `shell.slots.*` for the portals.
+
+## What the helpers guarantee
+
+- `groupSlotsByDay` buckets in the **admin** zone via `fmt.dayKey`, so every surface agrees
+  which day a late-night slot belongs to. Slots with an unparseable `start_at` are dropped
+  rather than collected under a `''` day.
+- `resolveSlotDay` resolves a **day**, never a slot: an explicit tap wins, then the day holding
+  the current selection, then the first day with slots. It deliberately never auto-selects a
+  "nearest" slot — doing so on hydration would silently re-route a live booking and push a
+  partner-venue pod back to `PENDING`.
+- `withCurrentSlot` re-offers the slot a pod already booked. A booked slot is no longer
+  *available*, so without it an edit form would clear a valid saved choice.
+- `slotDayBounds` derives the calendar's min/max from the data, so the arrows cannot page into
+  months that can never hold a slot — no hardcoded horizon.
+
+## Coverage
+
+100/100/100/100 on `src/**`, excluding `src/native/**`: the Tamagui views only render under
+Metro, so the app's own suite covers them.

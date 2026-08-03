@@ -64,7 +64,7 @@ export default function FaqsPage() {
   return (
     <Stack spacing={2} sx={{ width: '100%', maxWidth: 760, mx: 'auto' }}>
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <Box sx={{ width: 48, height: 48, borderRadius: '4px', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)', boxShadow: '0 14px 28px rgba(255,79,115,0.30)' }}>
+        <Box sx={{ width: 48, height: 48, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)', boxShadow: '0 14px 28px rgba(255,79,115,0.30)' }}>
           <HelpOutlineIcon />
         </Box>
         <Box>

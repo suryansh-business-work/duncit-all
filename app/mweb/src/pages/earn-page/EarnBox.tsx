@@ -53,7 +53,7 @@ export default function EarnBox({
               sx={{
                 width: 44,
                 height: 44,
-                borderRadius: '4px',
+                borderRadius: '50%',
                 display: 'grid',
                 placeItems: 'center',
                 color: 'primary.contrastText',

@@ -131,7 +131,7 @@ export default function PaymentDetailsCard({
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
             onClick={onSubmit}
             disabled={submitting || total <= 0}
-            sx={{ minHeight: 48, borderRadius: '4px', fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
+            sx={{ minHeight: 48, borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >
             {submitting ? 'Processing...' : `Pay ${formatMoney(currency, effectiveTotal)}`}
           </Button>

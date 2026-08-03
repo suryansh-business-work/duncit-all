@@ -39,7 +39,10 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
         sx={{
           width: '100%',
           p: 0,
-          borderRadius: '4px',
+          // A pill segmented control, so it keeps its round ends under the 4px
+          // corner cap — the moving thumb and the buttons match it because
+          // overflow: hidden clips them to this shape.
+          borderRadius: 999,
           bgcolor: 'action.hover',
           border: 1,
           borderColor: 'divider',
@@ -51,7 +54,7 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
             insetBlock: 0,
             left: 0,
             width: selectedWidth,
-            borderRadius: '4px',
+            borderRadius: 999,
             background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 58%, #f5337a 100%)',
             boxShadow: '0 10px 24px rgba(245,51,122,0.24)',
             transform: `translateX(${selectedIndex * 100}%)`,
@@ -66,7 +69,7 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
             fontSize: 12,
             whiteSpace: 'nowrap',
             border: 0,
-            borderRadius: '4px !important',
+            borderRadius: '999px !important',
             fontWeight: 900,
             color: 'text.secondary',
             zIndex: 1,

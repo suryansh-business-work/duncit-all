@@ -38,7 +38,7 @@ export default function SupportTopics({ groups }: Readonly<SupportTopicsProps>) 
                     width: 38,
                     height: 38,
                     mr: 1.5,
-                    borderRadius: '4px',
+                    borderRadius: '50%',
                     display: 'grid',
                     placeItems: 'center',
                     color: 'primary.main',

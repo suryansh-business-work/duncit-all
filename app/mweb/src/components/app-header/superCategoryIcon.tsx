@@ -27,7 +27,7 @@ export function renderSuperCategoryMark(icon: string | null | undefined, size = 
         component="img"
         src={next}
         alt=""
-        sx={{ width: size, height, objectFit: 'contain', borderRadius: 0.75, flex: '0 0 auto' }}
+        sx={{ width: size, height, objectFit: 'contain', borderRadius: '4px', flex: '0 0 auto' }}
       />
     );
   }

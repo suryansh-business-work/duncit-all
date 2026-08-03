@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { Alert, Autocomplete, Avatar, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { useClubFormData } from '../context';
 import { USERS_PICKER } from '../queries';
 import type { ClubFormValues } from '../types';
@@ -16,13 +16,23 @@ interface UserOption {
 
 const userLabel = (user: UserOption) => user.full_name || user.email || user.user_id;
 
+/** The role a user must hold to administer a club — granted by the onboarding
+ * Club Admin approval. The directory is filtered to holders so a club can only
+ * ever be handed to someone who can actually act on it.
+ *
+ * ACTIVE goes with it because a soft-deleted user keeps `metadata.role_keys`
+ * (only their status flips), so a role-only filter would still offer them. */
+const PICKER_FILTER = { role: 'CLUB_ADMIN', status: 'ACTIVE' } as const;
+
 /** Server-side searchable picker to assign ONE platform user as the Club Admin.
- * A club has a single admin, so this is a single-select: picking a user replaces
- * whoever was there. Seeds the labelled option from the club's pre-assigned
- * admin (initialAdmins) so it is named immediately. */
+ * A club has exactly one admin, so this is a required single-select: picking a
+ * user replaces whoever was there. Seeds the labelled option from the club's
+ * pre-assigned admin (initialAdmins) so it is named immediately. */
 export default function AdminsSection() {
   const { initialAdmins } = useClubFormData();
   const { control, setValue } = useFormContext<ClubFormValues>();
+  const { errors } = useFormState({ control });
+  const error = errors.admin_user_ids?.message;
   const adminIds = useWatch({ control, name: 'admin_user_ids' }) ?? [];
   const [input, setInput] = useState('');
   const [term, setTerm] = useState('');
@@ -45,13 +55,23 @@ export default function AdminsSection() {
     if (adminIds.length > 1) setValue('admin_user_ids', [adminIds[0]]);
   }, [adminIds, setValue]);
 
+  // The co-admins that trim is about to discard. Saving does not just unassign
+  // them: the server revokes their CLUB_ADMIN role too when they administer no
+  // other club, so the admin gets told before it happens rather than after.
+  //
+  // Matched by id, never by position: initialAdmins comes from `club_admins`,
+  // which the server resolves with an unsorted `$in` lookup, so its order says
+  // nothing about which id the trim above keeps.
+  const keptId = adminIds[0];
+  const droppedAdmins = initialAdmins.filter((admin) => admin.id !== keptId);
+
   useEffect(() => {
     const id = setTimeout(() => setTerm(input.trim()), 300);
     return () => clearTimeout(id);
   }, [input]);
 
   const { data, loading } = useQuery(USERS_PICKER, {
-    variables: { filter: { search: term || undefined } },
+    variables: { filter: { ...PICKER_FILTER, search: term || undefined } },
     fetchPolicy: 'cache-and-network',
   });
   const results = (data?.users ?? []) as UserOption[];
@@ -81,8 +101,17 @@ export default function AdminsSection() {
       </Stack>
 
       <Alert severity="info">
-        The assigned user can manage this club&apos;s pods from the Duncit app. Search by name, email or phone.
+        Every club is run by exactly one Club Admin, who manages its pods from the Duncit app. Only
+        users holding the Club Admin role are listed — search by name, email or phone.
       </Alert>
+
+      {droppedAdmins.length > 0 && (
+        <Alert severity="warning">
+          This club was set up with more than one admin. Saving keeps only the one selected below and
+          removes {droppedAdmins.map((admin) => admin.name).join(', ')} — each of them also loses the
+          Club Admin role unless they administer another club.
+        </Alert>
+      )}
 
       <Autocomplete
         options={options}
@@ -93,9 +122,14 @@ export default function AdminsSection() {
         isOptionEqualToValue={(option, val) => option.user_id === val.user_id}
         inputValue={input}
         onInputChange={(_, next) => setInput(next)}
+        loadingText="Searching…"
+        noOptionsText="No Club Admin users match. The role is granted by approving a Club Admin onboarding meeting, or from Users → Roles."
         onChange={(_, next) => {
           setChosen(next ? [next] : []);
-          setValue('admin_user_ids', next ? [next.user_id] : []);
+          // shouldValidate: nothing registers this field with RHF, so without it
+          // the required error would sit there until the next submit — every
+          // other field in this form re-validates on change after a failed save.
+          setValue('admin_user_ids', next ? [next.user_id] : [], { shouldValidate: true });
         }}
         renderOption={(optionProps, option) => (
           <li {...optionProps} key={option.user_id}>
@@ -113,9 +147,11 @@ export default function AdminsSection() {
         renderInput={(params) => (
           <TextField
             {...params}
+            required
+            error={!!error}
             label="Assign Club Admin"
-            placeholder="Search users…"
-            helperText="Optional — one user administers this club. Picking another replaces the current one."
+            placeholder="Search Club Admin users…"
+            helperText={error ?? 'One user administers this club. Picking another replaces the current one.'}
             InputProps={{
               ...params.InputProps,
               endAdornment: (

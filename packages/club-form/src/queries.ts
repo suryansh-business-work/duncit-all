@@ -1,7 +1,8 @@
 import { gql } from '@apollo/client';
 
-/** Lightweight user directory search for the Club Admins assign-picker.
- * Backed by users(filter:{ search }) — matches name/email/phone server-side. */
+/** Lightweight user directory search for the Club Admin assign-picker.
+ * Backed by users(filter:{ role, search }) — the role narrows the directory to
+ * CLUB_ADMIN holders, and search matches name/email/phone server-side. */
 export const USERS_PICKER = gql`
   query ClubAdminUserPicker($filter: UsersFilter) {
     users(filter: $filter) {

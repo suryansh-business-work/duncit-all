@@ -57,6 +57,34 @@ const pub = (doc: any, names?: Map<string, { name: string; email: string }>, cat
   };
 };
 
+/**
+ * `pub` for a SINGLE doc with its joined display fields resolved.
+ *
+ * Mutations return the same field set the tables select, and clients normalise
+ * the payload by id — so returning a bare `pub(doc)` (name/email/category all
+ * null, because those come from the caller's maps) merges nulls over the cached
+ * row and blanks the Requester and Category cells until the next fetch. Every
+ * mutation returns through here instead.
+ */
+async function pubJoined(doc: any) {
+  if (!doc) return null;
+  try {
+    const [names, catNames] = await Promise.all([userMap([String(doc.user_id)]), categoryNameMap([doc])]);
+    return pub(doc, names, catNames);
+  } catch (err) {
+    // Callers reach here AFTER their save, so these two reads must never fail
+    // the mutation — that is the very failure this helper exists to prevent.
+    // Degrading to the unjoined payload only blanks the display-only name and
+    // category until the client's next fetch.
+    logs.server.error('meeting', 'pubJoined', {
+      error: err,
+      msg: 'resolving joined meeting fields failed',
+      meetingId: String(doc._id),
+    });
+    return pub(doc);
+  }
+}
+
 /** Batch-resolve display name + email for the given user ids. */
 async function userMap(ids: string[]): Promise<Map<string, { name: string; email: string }>> {
   const unique = [...new Set(ids)];
@@ -739,7 +767,7 @@ export const meetingService = {
       `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting was cancelled. Reason: ${reason.trim()}`,
       MEETING_DEEP_LINK,
     );
-    return pub(doc);
+    return pubJoined(doc);
   },
 
   /** Onboarding staff hide a cancelled meeting from the calendar (Outlook
@@ -752,7 +780,7 @@ export const meetingService = {
     }
     doc.dismissed = true;
     await doc.save();
-    return pub(doc);
+    return pubJoined(doc);
   },
 
   /** Onboarding staff approve or deny a DONE meeting themselves — no admin
@@ -777,15 +805,30 @@ export const meetingService = {
     doc.approval_status = decision;
     await doc.save();
     if (decision === 'APPROVED') {
-      const names = await userMap([String(doc.user_id)]);
-      await draftFromMeeting(doc, names.get(String(doc.user_id)));
+      // Best-effort, exactly like the notify below: the decision is already
+      // committed, so a drafting failure must NOT fail the mutation. It used to
+      // throw straight through, which left the row decided in Mongo while the
+      // portal saw a GraphQL error, skipped its refetch and kept showing the
+      // "Approve / Deny" action — and every retry then hit the
+      // "already been decided" guard, so the row never updated without a reload.
+      try {
+        const names = await userMap([String(doc.user_id)]);
+        await draftFromMeeting(doc, names.get(String(doc.user_id)));
+      } catch (err) {
+        logs.server.error('meeting.decide', 'decide', {
+          error: err,
+          msg: 'drafting the onboarded entity failed',
+          meetingId: id,
+          kind: doc.kind,
+        });
+      }
     }
     try {
       await notifyMeetingEvent(doc, decision === 'APPROVED' ? 'approved' : 'rejected');
     } catch (err) {
       logs.server.error('meeting.decide', 'decide', { error: err, msg: 'notify failed', meetingId: id, decision });
     }
-    return pub(doc);
+    return pubJoined(doc);
   },
 
   /** The user's LATEST request for a kind (history model → newest row wins). */
@@ -852,7 +895,7 @@ export const meetingService = {
     if (doc.status === 'SCHEDULED' && touchedSchedule) {
       await notifyScheduleChange(doc, wasScheduled, prevScheduledMs);
     }
-    return pub(doc);
+    return pubJoined(doc);
   },
 };
 

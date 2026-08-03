@@ -1,18 +1,19 @@
 import { useState } from 'react';
-import { Modal, ScrollView, Switch, useWindowDimensions } from 'react-native';
+import { ScrollView, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack } from 'tamagui';
 
-import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { AppBackground } from '@/components/AppBackground';
 import { useAccount } from '@/hooks/useAccount';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useLogout } from '@/hooks/useLogout';
 import { useMe } from '@/hooks/useMe';
 import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_HOME_ROUTE, STUDIO_LABEL, availableModes, resolveMode } from '@/utils/studio-mode';
@@ -23,16 +24,17 @@ import { SidebarPolicies } from './SidebarPolicies';
 import { SidebarUserContent } from './SidebarUserContent';
 
 /**
- * Account drawer — the RN twin of mWeb's right-anchored <ProfileDrawer/>. Every
- * role shares one card-based profile layout (identity, quick grid, referral,
- * Manage Account) — the old per-studio menu list was retired. Slides in from the
- * right with the shared role switch, dark-mode toggle, policies, logout.
+ * Body of the account menu screen (/menu) — the RN twin of mWeb's <MenuPanel/>.
+ * Every role shares one card-based profile layout (identity, quick grid,
+ * referral, Manage Account) with the role switch, dark-mode toggle, policies and
+ * logout. It is a pushed screen rather than a drawer, so hardware Back and a
+ * cold deep link behave like any other route; the ✕ returns to where the user
+ * came from.
  */
-export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: () => void }>) {
+export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  // Full-width, edge-to-edge panel — mirrors mWeb's '100vw' drawer.
-  const { width: panelWidth } = useWindowDimensions();
-  const { background, color: ink, primary } = useThemeColors();
+  const { color: ink, primary } = useThemeColors();
+  const { t } = useTranslation();
 
   const { data } = useMe();
   const { me: account } = useAccount();
@@ -54,146 +56,131 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
   // overload can't accept a union arg directly, so reshape the method to a
   // single-arg signature (safe — none of these screens take required params).
   const navigate: (screen: MenuRoute) => void = navigation.navigate;
+  // Leave the menu BEFORE navigating: `navigate` rewinds to a route already in
+  // the stack rather than pushing, so a menu left underneath would swallow the
+  // destination (Switch role -> "User" targets Home, and every header avatar
+  // targets Menu itself). mWeb replaces its /menu entry for the same reason.
   const go = (route: MenuRoute) => {
     onClose();
     navigate(route);
   };
 
-  if (!open) return null;
-
   return (
-    <Modal visible={open} transparent animationType="none" onRequestClose={onClose}>
-      <ModalThemeScope>
-        <YStack
-          testID="sidebar-backdrop"
-          flex={1}
-          backgroundColor="rgba(0,0,0,0.5)"
-          onPress={onClose}
-        />
-        <YStack
-          testID="sidebar-panel"
-          position="absolute"
-          top={0}
-          bottom={0}
-          right={0}
-          width={panelWidth}
-          backgroundColor={background}
+    <YStack flex={1} testID="sidebar-panel">
+      <AppBackground />
+      <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+        <XStack
+          alignItems="center"
+          justifyContent="space-between"
+          paddingHorizontal={16}
+          paddingVertical={10}
         >
-          <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
+          <Text fontSize={12} fontWeight="800" textTransform="uppercase" color="$muted">
+            {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
+          </Text>
+          <XStack
+            testID="sidebar-close"
+            role="button"
+            aria-label={t('mweb.home.closeMenu')}
+            onPress={onClose}
+            width={36}
+            height={36}
+            alignItems="center"
+            justifyContent="center"
+            borderRadius={18}
+            backgroundColor="$surface"
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons name="close" size={18} color={ink} />
+          </XStack>
+        </XStack>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 4 }}
+        >
+          {/* One unified card layout for every role — the studio-specific
+              menu list was retired so all modes share this design. */}
+          <SidebarUserContent
+            me={me}
+            account={account}
+            roles={roles}
+            showPodPlans={showPodPlans}
+            onNavigate={go}
+          />
+
+          {canSwitch ? (
             <XStack
+              testID="sidebar-switch-role"
+              role="button"
+              aria-label="Switch role"
+              onPress={() => setSwitchOpen(true)}
+              marginHorizontal={8}
+              marginTop={4}
+              marginBottom={15}
               alignItems="center"
-              justifyContent="space-between"
-              paddingHorizontal={16}
+              gap={12}
+              borderRadius={10}
+              paddingHorizontal={12}
               paddingVertical={10}
+              backgroundColor="$surface"
+              pressStyle={{ opacity: 0.7 }}
             >
-              <Text fontSize={12} fontWeight="800" textTransform="uppercase" color="$muted">
-                {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
-              </Text>
-              <XStack
-                testID="sidebar-close"
-                role="button"
-                aria-label="Close menu"
-                onPress={onClose}
-                width={36}
-                height={36}
-                alignItems="center"
-                justifyContent="center"
-                borderRadius={18}
-                backgroundColor="$surface"
-                pressStyle={{ opacity: 0.7 }}
-              >
-                <MaterialIcons name="close" size={18} color={ink} />
-              </XStack>
+              <MaterialIcons name="swap-horiz" size={20} color={primary} />
+              <YStack flex={1}>
+                <Text fontSize={14} fontWeight="800" color="$color">
+                  Switch role
+                </Text>
+                <Text fontSize={11.5} color="$muted">
+                  {STUDIO_LABEL[effectiveMode]}
+                </Text>
+              </YStack>
             </XStack>
+          ) : null}
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingVertical: 4 }}
-            >
-              {/* One unified card layout for every role — the studio-specific
-                  menu list was retired so all modes share this design. */}
-              <SidebarUserContent
-                me={me}
-                account={account}
-                roles={roles}
-                showPodPlans={showPodPlans}
-                onNavigate={go}
+          <Separator borderColor="$borderColor" />
+          <XStack
+            alignItems="center"
+            justifyContent="space-between"
+            minHeight={44}
+            paddingHorizontal={16}
+            paddingVertical={0}
+          >
+            <XStack alignItems="center" gap={12}>
+              <MaterialIcons
+                name={scheme === 'dark' ? 'dark-mode' : 'light-mode'}
+                size={20}
+                color={ink}
               />
-
-              {canSwitch ? (
-                <XStack
-                  testID="sidebar-switch-role"
-                  role="button"
-                  aria-label="Switch role"
-                  onPress={() => setSwitchOpen(true)}
-                  marginHorizontal={8}
-                  marginTop={4}
-                  marginBottom={15}
-                  alignItems="center"
-                  gap={12}
-                  borderRadius={10}
-                  paddingHorizontal={12}
-                  paddingVertical={10}
-                  backgroundColor="$surface"
-                  pressStyle={{ opacity: 0.7 }}
-                >
-                  <MaterialIcons name="swap-horiz" size={20} color={primary} />
-                  <YStack flex={1}>
-                    <Text fontSize={14} fontWeight="800" color="$color">
-                      Switch role
-                    </Text>
-                    <Text fontSize={11.5} color="$muted">
-                      {STUDIO_LABEL[effectiveMode]}
-                    </Text>
-                  </YStack>
-                </XStack>
-              ) : null}
-
-              <Separator borderColor="$borderColor" />
-              <XStack
-                alignItems="center"
-                justifyContent="space-between"
-                minHeight={44}
-                paddingHorizontal={16}
-                paddingVertical={0}
-              >
-                <XStack alignItems="center" gap={12}>
-                  <MaterialIcons
-                    name={scheme === 'dark' ? 'dark-mode' : 'light-mode'}
-                    size={20}
-                    color={ink}
-                  />
-                  <Text fontSize={14.5} fontWeight="700" color="$color">
-                    Dark mode
-                  </Text>
-                </XStack>
-                <Switch
-                  testID="sidebar-theme-switch"
-                  aria-label="Toggle dark mode"
-                  value={scheme === 'dark'}
-                  onValueChange={toggleTheme}
-                  trackColor={{ true: primary }}
-                />
-              </XStack>
-              <Separator borderColor="$borderColor" />
-              <SidebarPolicies
-                policies={policiesData?.publicPolicies ?? []}
-                onSelect={(slug) => {
-                  onClose();
-                  navigation.navigate('Policy', { slug });
-                }}
-              />
-            </ScrollView>
-
-            <SidebarFooter
-              onLogout={() => {
-                onClose();
-                logout();
-              }}
+              <Text fontSize={14.5} fontWeight="700" color="$color">
+                Dark mode
+              </Text>
+            </XStack>
+            <Switch
+              testID="sidebar-theme-switch"
+              aria-label="Toggle dark mode"
+              value={scheme === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ true: primary }}
             />
-          </SafeAreaView>
-        </YStack>
-      </ModalThemeScope>
+          </XStack>
+          <Separator borderColor="$borderColor" />
+          <SidebarPolicies
+            policies={policiesData?.publicPolicies ?? []}
+            onSelect={(slug) => {
+              onClose();
+              navigation.navigate('Policy', { slug });
+            }}
+          />
+        </ScrollView>
+
+        <SidebarFooter
+          onLogout={() => {
+            onClose();
+            logout();
+          }}
+        />
+      </SafeAreaView>
       <StudioSwitchDialog
         open={switchOpen}
         roles={roles}
@@ -207,6 +194,6 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
           navigation.navigate(STUDIO_HOME_ROUTE[next]);
         }}
       />
-    </Modal>
+    </YStack>
   );
 }

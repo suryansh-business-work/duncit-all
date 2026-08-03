@@ -24,7 +24,8 @@ function validValues(): ClubFormValues {
     perks: ['free tea'],
     values: ['kindness'],
     faqs: [],
-    admin_user_ids: [],
+    // Required whenever the admins section renders (config.showAdmins above).
+    admin_user_ids: ['u1'],
     is_verified: false,
     is_active: true,
   };

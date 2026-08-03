@@ -76,16 +76,6 @@ vi.mock('../LocationDialog', () => ({
     ) : null,
 }));
 
-vi.mock('../ProfileDrawer', () => ({
-  default: (props: any) =>
-    props.open ? (
-      <div data-testid="profile-drawer">
-        <button type="button" onClick={props.onClose}>close-drawer</button>
-        <button type="button" onClick={props.onLogout}>drawer-logout</button>
-      </div>
-    ) : null,
-}));
-
 vi.mock('../profile-drawer/StudioSwitchDialog', () => ({
   default: (props: any) =>
     props.open ? (
@@ -268,31 +258,12 @@ describe('AppHeader', () => {
     expect(await screen.findByTestId('loc-dialog')).toBeInTheDocument();
   });
 
-  it('opens the account menu and shows the profile drawer', async () => {
+  it('opens the account menu page', async () => {
     renderHeader();
     await screen.findByTestId('greeting');
     fireEvent.click(screen.getByLabelText('Open account menu'));
-    // openMenu navigates by pushing ?menu=open
-    expect(mockNavigate).toHaveBeenCalledWith({ search: '?menu=open' });
-  });
-
-  it('shows profile drawer when URL already has menu=open and logs out from it', async () => {
-    render(
-      <MockedProvider mocks={[headerMock(), policiesMock]} addTypename={false}>
-        <MemoryRouter initialEntries={['/?menu=open']}>
-          <CartProvider>
-            <AppHeader {...baseProps} onSuperCategoryChange={vi.fn()} onLocationChange={vi.fn()} onZoneChange={vi.fn()} />
-          </CartProvider>
-        </MemoryRouter>
-      </MockedProvider>
-    );
-    const drawer = await screen.findByTestId('profile-drawer');
-    expect(drawer).toBeInTheDocument();
-    fireEvent.click(screen.getByText('drawer-logout'));
-    expect(mockLogout).toHaveBeenCalled();
-    // close drawer (idx 0 path -> navigate with replace)
-    fireEvent.click(screen.getByText('close-drawer'));
-    expect(mockNavigate).toHaveBeenCalled();
+    // The menu is its own route now, so opening it is a plain push.
+    expect(mockNavigate).toHaveBeenCalledWith('/menu');
   });
 
   it('forwards notification toasts to the toast component', async () => {

@@ -57,19 +57,19 @@ beforeEach(() => {
 describe('Sidebar branch coverage', () => {
   it('shows the Pod Plans manage row when the flag is on', () => {
     mockFlags.pod_plans_section = true;
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-item-Pod Plans'));
     expect(mockNavigate).toHaveBeenCalledWith('PodPlans');
   });
 
   it('hides the incomplete banner once the profile is 100% complete', () => {
     mockAccount.mockReturnValue({ me: FULL_ACCOUNT });
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.queryByTestId('profile-completion')).toBeNull();
   });
 
   it('jumps to the venue dashboard after switching modes, keeping the card layout', () => {
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-VENUE'));
     fireEvent.press(screen.getByTestId('studio-switch-confirm'));
@@ -82,16 +82,10 @@ describe('Sidebar branch coverage', () => {
     mockMe.mockReturnValue({ data: {} });
     mockAccount.mockReturnValue({ me: null });
     mockPolicies.mockReturnValue({ data: {} });
-    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    renderWithProviders(<Sidebar onClose={jest.fn()} />);
     expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
     expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
     expect(screen.queryByTestId('sidebar-policies')).toBeNull();
     expect(screen.queryByTestId('sidebar-switch-role')).toBeNull();
-  });
-
-  it('runs the close animation when toggled shut', () => {
-    const { rerender } = renderWithProviders(<Sidebar open onClose={jest.fn()} />);
-    expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
-    rerender(<Sidebar open={false} onClose={jest.fn()} />);
   });
 });

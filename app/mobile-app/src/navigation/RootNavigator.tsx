@@ -120,11 +120,7 @@ export function RootNavigator() {
   const signedInScreens = surveyCompleted ? (
     <>
       <Stack.Screen name="Home" component={MainTabs} />
-      <Stack.Screen
-        name="Menu"
-        component={MenuScreen}
-        options={{ presentation: 'transparentModal' }}
-      />
+      <Stack.Screen name="Menu" component={MenuScreen} />
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Account" component={AccountScreen} />

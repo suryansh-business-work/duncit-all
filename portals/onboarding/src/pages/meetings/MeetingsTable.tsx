@@ -94,7 +94,6 @@ const renderApproval = (m: OnboardingMeeting) => <ApprovalCell status={m.approva
 interface Props {
   fetchRows: TableFetch<OnboardingMeeting>;
   refetchRef: MutableRefObject<(() => void) | null>;
-  marking: boolean;
   onSelect: (m: OnboardingMeeting) => void;
   onSchedule: (m: OnboardingMeeting) => void;
   onMarkDone: (m: OnboardingMeeting) => void;
@@ -106,7 +105,6 @@ interface Props {
 export default function MeetingsTable({
   fetchRows,
   refetchRef,
-  marking,
   onSelect,
   onSchedule,
   onMarkDone,
@@ -138,7 +136,6 @@ export default function MeetingsTable({
     const renderActions = (m: OnboardingMeeting) => (
       <MeetingRowActions
         meeting={m}
-        marking={marking}
         onSchedule={onSchedule}
         onMarkDone={onMarkDone}
         onDecide={onDecide}
@@ -189,11 +186,7 @@ export default function MeetingsTable({
         sortable: false,
         width: 90,
         cellRenderer: renderJoin,
-        // Renderer-only column: give it a value that changes whenever the Join
-        // link (or the cancelled/denied gate) changes, so AG Grid's immutable
-        // diffing re-renders it after a refetch instead of freezing on the
-        // pre-save row (stale "—" until a manual refresh).
-        valueGetter: (m) => `${m.meeting_link ?? ''}|${m.status}|${m.approval_status ?? 'NONE'}`,
+        valueGetter: (m) => m.meeting_link ?? '',
       },
       {
         field: 'status',
@@ -216,19 +209,13 @@ export default function MeetingsTable({
         sortable: false,
         width: 90,
         cellRenderer: renderActions,
-        // Renderer-only column: the available actions depend on status +
-        // approval_status, and the cell's closure carries the whole row into the
-        // Schedule dialog on reopen — so key the value on every field that must
-        // re-render the cell (status/approval for the menu; scheduled_at +
-        // meeting_link so a reschedule shows its saved day/link). Without this
-        // the cell froze on the pre-mutation row: after "Mark done" the menu kept
-        // the SCHEDULED actions (no "Approve / Deny") so applicants never
-        // onboarded, and reopening after a save showed a blank link/day.
-        valueGetter: (m) =>
-          `${m.status}|${m.approval_status ?? 'NONE'}|${m.scheduled_at ?? ''}|${m.meeting_link ?? ''}`,
+        // Renderer-only: @duncit/table marks renderer columns never-equal, so the
+        // cell repaints on any change to its row. The value exists purely for the
+        // CSV export, hence the readable action-availability summary.
+        valueGetter: (m) => (m.approval_status === 'DENIED' || m.status === 'CANCELLED' ? '—' : m.status),
       },
     ];
-  }, [marking, onSchedule, onMarkDone, onDecide, onReject, onRequester]);
+  }, [onSchedule, onMarkDone, onDecide, onReject, onRequester]);
 
   return (
     <DuncitTable<OnboardingMeeting>

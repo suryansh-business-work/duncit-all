@@ -52,7 +52,7 @@ export default function PoliciesSection({
           {publicPolicies.map((p) => (
             <ListItem key={p.id} disablePadding>
               <ListItemButton
-                onClick={() => navigate(`/policies/${p.slug}`)}
+                onClick={() => navigate(`/policies/${p.slug}`, { replace: true })}
                 sx={{ pl: 6, pr: 2.5, py: 1 }}
               >
                 <ListItemIcon sx={{ minWidth: 32 }}>

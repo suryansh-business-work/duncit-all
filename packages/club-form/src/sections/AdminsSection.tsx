@@ -58,7 +58,12 @@ export default function AdminsSection() {
   // The co-admins that trim is about to discard. Saving does not just unassign
   // them: the server revokes their CLUB_ADMIN role too when they administer no
   // other club, so the admin gets told before it happens rather than after.
-  const droppedAdmins = initialAdmins.slice(1);
+  //
+  // Matched by id, never by position: initialAdmins comes from `club_admins`,
+  // which the server resolves with an unsorted `$in` lookup, so its order says
+  // nothing about which id the trim above keeps.
+  const keptId = adminIds[0];
+  const droppedAdmins = initialAdmins.filter((admin) => admin.id !== keptId);
 
   useEffect(() => {
     const id = setTimeout(() => setTerm(input.trim()), 300);
@@ -117,14 +122,14 @@ export default function AdminsSection() {
         isOptionEqualToValue={(option, val) => option.user_id === val.user_id}
         inputValue={input}
         onInputChange={(_, next) => setInput(next)}
-        noOptionsText={
-          loading
-            ? 'Searching…'
-            : 'No Club Admin users match. The role is granted by approving a Club Admin onboarding meeting, or from Users → Roles.'
-        }
+        loadingText="Searching…"
+        noOptionsText="No Club Admin users match. The role is granted by approving a Club Admin onboarding meeting, or from Users → Roles."
         onChange={(_, next) => {
           setChosen(next ? [next] : []);
-          setValue('admin_user_ids', next ? [next.user_id] : []);
+          // shouldValidate: nothing registers this field with RHF, so without it
+          // the required error would sit there until the next submit — every
+          // other field in this form re-validates on change after a failed save.
+          setValue('admin_user_ids', next ? [next.user_id] : [], { shouldValidate: true });
         }}
         renderOption={(optionProps, option) => (
           <li {...optionProps} key={option.user_id}>

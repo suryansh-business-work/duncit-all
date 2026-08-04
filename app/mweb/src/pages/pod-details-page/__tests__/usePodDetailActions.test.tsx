@@ -217,7 +217,7 @@ describe('usePodDetailActions', () => {
   it('onJoinFree sets confetti + snack and refetches', async () => {
     const mocks = [
       ...baseMocks(),
-      makeMock({ id: 'pod-doc-1', referral: null }, JOIN_FREE, {
+      makeMock({ id: 'pod-doc-1', referral: null, seats: 1 }, JOIN_FREE, {
         data: { joinFreePod: { id: 'm1', status: 'ACTIVE' } },
       }),
     ];
@@ -233,7 +233,7 @@ describe('usePodDetailActions', () => {
   it('onJoinFree snacks on error', async () => {
     const mocks = [
       ...baseMocks(),
-      makeMock({ id: 'pod-doc-1', referral: null }, JOIN_FREE, null, new Error('full')),
+      makeMock({ id: 'pod-doc-1', referral: null, seats: 1 }, JOIN_FREE, null, new Error('full')),
     ];
     const { result } = renderActions({}, mocks);
     await act(async () => {

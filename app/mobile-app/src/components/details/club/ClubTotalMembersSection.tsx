@@ -5,18 +5,26 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
   count: number;
+  /** Opens the list of the people being counted. */
+  onOpen?: () => void;
 }
 
 /** The club's follower count as a dedicated card — the single truth for
- * "Total Members". RN twin of mWeb's ClubTotalMembersSection. */
-export function ClubTotalMembersSection({ count }: Readonly<Props>) {
+ * "Total Members", and a way into the list it counts. RN twin of mWeb's
+ * ClubTotalMembersSection. */
+export function ClubTotalMembersSection({ count, onOpen }: Readonly<Props>) {
   const { primary } = useThemeColors();
+  const interactive = !!onOpen && count > 0;
   // The brand primary is a 6-digit hex (@duncit/auth-tokens), so the `29` suffix
   // is a 16% alpha channel — the same tint mWeb gets from alpha(primary, 0.16).
   const badgeTint = `${primary}29`;
   return (
     <XStack
       testID="club-total-members"
+      role={interactive ? 'button' : undefined}
+      aria-label={interactive ? 'View club members' : undefined}
+      onPress={interactive ? onOpen : undefined}
+      pressStyle={interactive ? { opacity: 0.85 } : undefined}
       alignItems="center"
       gap={12}
       padding={14}

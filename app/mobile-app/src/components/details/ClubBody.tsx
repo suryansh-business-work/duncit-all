@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -11,6 +11,7 @@ import { ClubMeetupVenuesSection } from '@/components/details/club/ClubMeetupVen
 import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
 import { ClubStoriesRail } from '@/components/details/club/ClubStoriesRail';
 import { ClubTotalMembersSection } from '@/components/details/club/ClubTotalMembersSection';
+import { ClubFollowersSheet } from '@/components/details/club/ClubFollowersSheet';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { FollowPillButton } from '@/components/FollowPillButton';
@@ -57,6 +58,7 @@ export function ClubBody({
   onOpenVenue: (venueId: string) => void;
 }>) {
   const { onPrimary } = useThemeColors();
+  const [membersOpen, setMembersOpen] = useState(false);
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const chatLinks = [
     { key: 'community', label: 'Community', href: club.club_whats_app_community_link },
@@ -105,7 +107,19 @@ export function ClubBody({
         <Stat value={moments.length} label="moments" />
         <Stat value={club.matched_venues_count} label="venues" />
       </XStack>
-      <ClubTotalMembersSection count={club.followers_count ?? 0} />
+      <ClubTotalMembersSection
+        count={club.followers_count ?? 0}
+        onOpen={() => setMembersOpen(true)}
+      />
+      <ClubFollowersSheet
+        open={membersOpen}
+        clubId={club.id}
+        onClose={() => setMembersOpen(false)}
+        onOpenProfile={(id) => {
+          setMembersOpen(false);
+          onOpenMember(id);
+        }}
+      />
       {members.length > 0 ? (
         <YStack gap={8} testID="club-members">
           <Text fontSize={16} fontWeight="700" color="$color">

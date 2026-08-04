@@ -9661,6 +9661,11 @@ export type Query = {
    */
   clubAdminPodsTable: PodTablePage;
   clubBySlug?: Maybe<Club>;
+  /**
+   * People who follow this club — the list behind followers_count, so the count
+   * on the club page can open the members it is counting.
+   */
+  clubFollowers: Array<PublicProfile>;
   clubRatings: Array<ClubRating>;
   /** Active (non-expired) stories attached to a club, newest first (Bug 6). */
   clubStories: Array<Post>;
@@ -10447,6 +10452,11 @@ export type QueryClubAdminPodsTableArgs = {
 
 export type QueryClubBySlugArgs = {
   club_slug: Scalars['String']['input'];
+};
+
+
+export type QueryClubFollowersArgs = {
+  club_doc_id: Scalars['ID']['input'];
 };
 
 

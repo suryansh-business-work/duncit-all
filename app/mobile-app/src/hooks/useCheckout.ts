@@ -102,7 +102,7 @@ export function buildCheckoutBilling(
  * invoice download. Pod checkout pays the pod membership (pod_amount) ONLY —
  * products are a separate payment via the standalone product checkout, never
  * mixed in. RN twin of mWeb's CheckoutPage data layer. */
-export function useCheckout(podId: string) {
+export function useCheckout(podId: string, seats = 1) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [pod, setPod] = useState<CheckoutPod>(null);
   const [me, setMe] = useState<CheckoutMe>(null);
@@ -143,6 +143,7 @@ export function useCheckout(podId: string) {
   ) => ({
     pod_id: podId || null,
     amount,
+    seats,
     description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
     contact_name: values.full_name.trim(),
     contact_email: values.email,

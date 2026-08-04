@@ -22,6 +22,8 @@ const baseProps = {
   onKeepSpot: vi.fn(),
   onPaidCheckout: vi.fn(),
   onCopyReferral: vi.fn(),
+  seats: 1,
+  onSeatsChange: vi.fn(),
   onGoToDashboard: vi.fn(),
 };
 

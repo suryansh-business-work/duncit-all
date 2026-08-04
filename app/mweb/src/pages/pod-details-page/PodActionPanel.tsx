@@ -9,6 +9,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { podUrl } from '../../utils/seoUrls';
 import BackoutInProcessPanel from './BackoutInProcessPanel';
 import { buildPodShareText } from './usePodDetailActions';
+import SeatPicker from './SeatPicker';
 
 interface Props {
   pod: any;
@@ -19,6 +20,9 @@ interface Props {
   joining: boolean;
   backingOut: boolean;
   restoringSpot: boolean;
+  /** Seats this booking will take (1 by default). */
+  seats: number;
+  onSeatsChange: (seats: number) => void;
   onJoinFree: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
@@ -54,6 +58,8 @@ export default function PodActionPanel({
   joining,
   backingOut,
   restoringSpot,
+  seats,
+  onSeatsChange,
   onJoinFree,
   onBackout,
   onKeepSpot,
@@ -177,33 +183,51 @@ export default function PodActionPanel({
     );
   }
 
+  const maxSeats = Number(ms?.max_seats_per_booking ?? 1);
+
   if (isFree) {
     return (
-      <Button
-        variant="contained"
-        size="large"
-        fullWidth
-        disabled={joining || ms?.can_join === false}
-        onClick={onJoinFree}
-        sx={gradientButtonSx}
-      >
-        {ms?.can_join === false ? 'Pod is full' : 'Join free pod'}
-      </Button>
+      <Stack direction="row" spacing={1} alignItems="center">
+        <SeatPicker
+          value={seats}
+          onChange={onSeatsChange}
+          maxSeats={maxSeats}
+          disabled={joining || ms?.can_join === false}
+        />
+        <Button
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={joining || ms?.can_join === false}
+          onClick={onJoinFree}
+          sx={gradientButtonSx}
+        >
+          {ms?.can_join === false ? 'Pod is full' : 'Join free pod'}
+        </Button>
+      </Stack>
     );
   }
 
   return (
-    <Button
-      variant="contained"
-      size="large"
-      fullWidth
-      disabled={ms?.can_join === false}
-      onClick={onPaidCheckout}
-      sx={gradientButtonSx}
-    >
-      {ms?.can_join === false
-        ? 'Pod is full'
-        : `Book & Pay ${priceFormat(Number(pod.pod_amount || 0))}`}
-    </Button>
+    <Stack direction="row" spacing={1} alignItems="center">
+      <SeatPicker
+        value={seats}
+        onChange={onSeatsChange}
+        maxSeats={maxSeats}
+        disabled={ms?.can_join === false}
+      />
+      <Button
+        variant="contained"
+        size="large"
+        fullWidth
+        disabled={ms?.can_join === false}
+        onClick={onPaidCheckout}
+        sx={gradientButtonSx}
+      >
+        {ms?.can_join === false
+          ? 'Pod is full'
+          : `Book & Pay ${priceFormat(Number(pod.pod_amount || 0) * seats)}`}
+      </Button>
+    </Stack>
   );
 }

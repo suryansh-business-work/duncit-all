@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 import { useMutation } from '@apollo/client';
 import { format } from 'date-fns';
 import type { NavigateFunction } from 'react-router-dom';
@@ -50,6 +52,9 @@ export function usePodDetailActions({
   const [cancelBackout, cancelBackoutState] = useMutation(CANCEL_BACKOUT);
   const [redeem] = useMutation(REDEEM);
   const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD_DETAIL);
+  // Seats the booking will take. Owned here because BOTH the free join and the
+  // paid checkout need it, and the picker that sets it lives in the CTA row.
+  const [seats, setSeats] = useState(1);
   const [snack, setSnack] = useState<string | null>(null);
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [keepSpotOpen, setKeepSpotOpen] = useState(false);
@@ -120,7 +125,7 @@ export function usePodDetailActions({
   const onJoinFree = async () => {
     if (!pod) return;
     try {
-      await joinFree({ variables: { id: pod.id, referral: referralFromUrl } });
+      await joinFree({ variables: { id: pod.id, referral: referralFromUrl, seats } });
       setConfettiOpen(true);
       setSnack('Joined!');
       await refetch();
@@ -133,16 +138,20 @@ export function usePodDetailActions({
   // separately through the standalone product checkout, never mixed in one payment.
   const onPaidCheckout = () => {
     if (!pod) return;
-    const amount = Number(pod.pod_amount) || 0;
+    // The seat count travels with the checkout; the server re-prices and
+    // re-checks capacity, so this amount is a preview, never the charge.
+    const amount = round2((Number(pod.pod_amount) || 0) * seats);
     const params = new URLSearchParams({
       title: pod.pod_title || '',
       amount: String(amount),
+      seats: String(seats),
     });
     navigate(`/checkout/${pod.id}?${params.toString()}`, {
       state: {
         pod_id: pod.id,
         pod_title: pod.pod_title,
         amount,
+        seats,
         description: `Pod booking · ${pod.pod_title}`,
       },
     });
@@ -208,6 +217,8 @@ export function usePodDetailActions({
     setSnack,
     onConfirmBackout,
     onCopyReferral,
+    seats,
+    setSeats,
     onJoinFree,
     onPaidCheckout,
     onShare,

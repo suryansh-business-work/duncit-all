@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 import { BackoutInProcessBar } from '@/components/details/BackoutInProcessBar';
+import { SeatPicker } from '@/components/details/SeatPicker';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PodDetail, PodMembershipState } from '@/hooks/useDetails';
 
@@ -12,6 +13,9 @@ interface Props {
   isFree: boolean;
   isHost: boolean;
   membershipState: PodMembershipState | null;
+  /** Seats this booking will take (1 by default). */
+  seats: number;
+  onSeatsChange: (seats: number) => void;
   onCheckout: () => void;
   onBackout: () => void;
   onKeepSpot: () => void;
@@ -31,6 +35,8 @@ export function PodBookingBar({
   isFree,
   isHost,
   membershipState,
+  seats,
+  onSeatsChange,
   onCheckout,
   onBackout,
   onKeepSpot,
@@ -73,6 +79,9 @@ export function PodBookingBar({
               isFree={isFree}
               isFull={isFull}
               podAmount={pod.pod_amount}
+              seats={seats}
+              maxSeats={Number(membershipState?.max_seats_per_booking ?? 1)}
+              onSeatsChange={onSeatsChange}
               onCheckout={onCheckout}
             />
           ) : null}
@@ -180,11 +189,23 @@ interface BookBarProps {
   isFree: boolean;
   isFull: boolean;
   podAmount: number;
+  seats: number;
+  maxSeats: number;
+  onSeatsChange: (seats: number) => void;
   onCheckout: () => void;
 }
 
-/** Not-yet-booked state: price + a Join/Book button (disabled when the pod is full). */
-function BookBar({ isFree, isFull, podAmount, onCheckout }: Readonly<BookBarProps>) {
+/** Not-yet-booked state: price + seat picker + a Join/Book button (disabled when
+ * the pod is full). The price shown is the ticket × seats. */
+function BookBar({
+  isFree,
+  isFull,
+  podAmount,
+  seats,
+  maxSeats,
+  onSeatsChange,
+  onCheckout,
+}: Readonly<BookBarProps>) {
   const { onPrimary } = useThemeColors();
   const freeOrBookAria = isFree ? 'Join pod' : 'Book pod';
   const bookAriaLabel = isFull ? 'Pod is full' : freeOrBookAria;
@@ -197,9 +218,10 @@ function BookBar({ isFree, isFull, podAmount, onCheckout }: Readonly<BookBarProp
           {isFree ? 'Entry' : 'Price'}
         </Text>
         <Text fontSize={18} fontWeight="700" color="$color">
-          {isFree ? 'Free' : `₹${podAmount}`}
+          {isFree ? 'Free' : `₹${podAmount * seats}`}
         </Text>
       </YStack>
+      <SeatPicker value={seats} onChange={onSeatsChange} maxSeats={maxSeats} disabled={isFull} />
       <XStack
         testID="pod-book"
         role="button"

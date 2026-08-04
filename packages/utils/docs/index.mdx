@@ -372,6 +372,34 @@ Three things to read off that output:
 | `nationalPhoneDigits` | `(raw, length = 10) => string` | — | Display-only local digits: "+91 9876543210" → "9876543210". |
 | `isStoryLive` | `(expiresAt, now = Date.now()) => boolean` | — | Client half of the 24h story expiry; `null` = permanent post. |
 
+### Notifications
+
+The server stores no notification "type", so the category is derived from the title.
+mWeb and native each keep only their own icon map (MUI vs MaterialIcons); the
+classification and the chip filter live here so the twins cannot drift.
+
+| Export | Signature | Meaning |
+| --- | --- | --- |
+| `notificationCategory` | `(title) => NotificationCategory` | First matching keyword rule wins; unmatched → `'general'`. |
+| `notificationChips` | `(titles) => NotificationChip[]` | `All` first, then only the categories present, each with its count. |
+| `matchesNotificationFilter` | `(title, key) => boolean` | `key === 'all'` or the title's category equals it. |
+| `NOTIFICATION_CATEGORY_ORDER` | `readonly NotificationCategory[]` | Chip order — rule order, catch-all last. |
+| `NOTIFICATION_CATEGORY_LABEL` | `Record<NotificationCategory, string>` | Chip copy per category. |
+
+```ts
+notificationCategory('Payment received')            // 'payment'
+notificationCategory('Your pod starts soon')        // 'pod'
+notificationCategory('')                            // 'general'
+
+notificationChips(['Payment received', 'Pod starts soon', 'Pod full'])
+// [{ key: 'all', label: 'All', count: 3 },
+//  { key: 'payment', label: 'Payments', count: 1 },
+//  { key: 'pod', label: 'Pods', count: 2 }]
+
+matchesNotificationFilter('Payment received', 'all')     // true
+matchesNotificationFilter('Payment received', 'pod')     // false
+```
+
 ## No live preview
 
 Framework-free by contract — there is no component to mount, so the page shows real

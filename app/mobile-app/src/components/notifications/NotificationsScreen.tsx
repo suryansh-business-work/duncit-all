@@ -1,8 +1,13 @@
-import { useState } from 'react';
-import { FlatList, Modal, Switch } from 'react-native';
+import { useMemo, useState } from 'react';
+import { FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
+import {
+  matchesNotificationFilter,
+  notificationChips,
+  type NotificationFilterKey,
+} from '@duncit/utils';
 
 import { AppBackground } from '@/components/AppBackground';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -10,7 +15,9 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
 import type { UserNotification } from '@/hooks/useNotifications';
+import { NotificationFilterChips } from './NotificationFilterChips';
 import { NotificationRow } from './NotificationRow';
+import { NotificationsHero } from './NotificationsHero';
 
 export interface NotificationsScreenProps {
   open: boolean;
@@ -19,10 +26,14 @@ export interface NotificationsScreenProps {
   unreadCount: number;
   onNotifClick: (item: UserNotification) => void;
   onMarkAll: () => void;
+  /** Id of the row whose mark-read is in flight. */
+  busyId?: string | null;
+  /** True while mark-all-read is in flight. */
+  markAllBusy?: boolean;
 }
 
 /** Full-screen notifications list — RN twin of mWeb's <NotificationsScreen/>.
- * Header with unread count + mark-all, a live banner, then the list. */
+ * Header with unread count + mark-all, a live banner, category chips, the list. */
 export function NotificationsScreen({
   open,
   onClose,
@@ -30,16 +41,33 @@ export function NotificationsScreen({
   unreadCount,
   onNotifClick,
   onMarkAll,
+  busyId = null,
+  markAllBusy = false,
 }: Readonly<NotificationsScreenProps>) {
   const { color, primary } = useThemeColors();
   const notifEnabled = useNotificationPrefsStore((s) => s.enabled);
   const setNotifEnabled = useNotificationPrefsStore((s) => s.setEnabled);
   // Confirm before flipping the master notification switch (B2-#8).
   const [pendingToggle, setPendingToggle] = useState<boolean | null>(null);
+  const [filter, setFilter] = useState<NotificationFilterKey>('all');
+
+  const chips = useMemo(
+    () => notificationChips(notifs.map((item) => item.notification.title)),
+    [notifs],
+  );
+  // A chip can disappear when its last notification is read away; falling back
+  // to "All" beats rendering an empty list under a chip that no longer exists.
+  const activeFilter = chips.some((chip) => chip.key === filter) ? filter : 'all';
+  const visible = notifs.filter((item) =>
+    matchesNotificationFilter(item.notification.title, activeFilter),
+  );
+
   // Derive unread from the loaded items so the header can't say "All caught up"
   // while unread rows are visible; fall back to the count when items lag (BUG-5).
   const liveUnread = notifs.filter((item) => !item.read_at).length || unreadCount;
   const plural = liveUnread === 1 ? '' : 's';
+  const markAllDisabled = liveUnread === 0 || markAllBusy;
+  const emptyText = notifs.length === 0 ? 'No notifications yet.' : 'Nothing in this category.';
 
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
@@ -75,86 +103,45 @@ export function NotificationsScreen({
                 testID="notifications-mark-all"
                 role="button"
                 aria-label="Mark all as read"
-                aria-disabled={liveUnread === 0}
-                onPress={liveUnread === 0 ? undefined : onMarkAll}
+                aria-disabled={markAllDisabled}
+                aria-busy={markAllBusy}
+                onPress={markAllDisabled ? undefined : onMarkAll}
                 width={40}
                 height={40}
                 alignItems="center"
                 justifyContent="center"
                 borderRadius={20}
                 backgroundColor="$surface"
-                opacity={liveUnread === 0 ? 0.5 : 1}
+                opacity={markAllDisabled ? 0.5 : 1}
                 pressStyle={{ opacity: 0.7 }}
               >
-                <MaterialIcons name="done-all" size={20} color={color} />
+                {markAllBusy ? (
+                  <Spinner testID="notifications-mark-all-busy" size="small" color={primary} />
+                ) : (
+                  <MaterialIcons name="done-all" size={20} color={color} />
+                )}
               </XStack>
             </XStack>
 
-            <XStack
-              marginHorizontal={12}
-              marginBottom={10}
-              padding={14}
-              borderRadius={16}
-              alignItems="center"
-              gap={12}
-              backgroundColor="$surface"
-              borderWidth={1}
-              borderColor="$borderColor"
-            >
-              <MaterialIcons name="notifications-active" size={26} color={primary} />
-              <YStack flex={1}>
-                <Text fontSize={14} fontWeight="700" color="$color">
-                  Never Miss an Update
-                </Text>
-                <Text fontSize={12} color="$muted">
-                  Get real-time updates about your Pods, Clubs, Host activities, Chats, and
-                  Account—all in one place.
-                </Text>
-              </YStack>
-              <XStack
-                borderRadius={999}
-                backgroundColor="$primary"
-                paddingHorizontal={10}
-                paddingVertical={3}
-              >
-                <Text fontSize={12} fontWeight="700" color="$onPrimary">
-                  {notifs.length}
-                </Text>
-              </XStack>
-            </XStack>
+            <NotificationsHero
+              total={notifs.length}
+              enabled={notifEnabled}
+              onToggle={setPendingToggle}
+            />
 
-            <XStack
-              marginHorizontal={12}
-              marginBottom={10}
-              paddingHorizontal={14}
-              paddingVertical={10}
-              borderRadius={16}
-              alignItems="center"
-              gap={12}
-              backgroundColor="$surface"
-              borderWidth={1}
-              borderColor="$borderColor"
-            >
-              <MaterialIcons name="notifications" size={20} color={color} />
-              <Text flex={1} fontSize={13.5} fontWeight="600" color="$color">
-                Allow notifications
-              </Text>
-              <Switch
-                testID="notifications-allow-switch"
-                aria-label="Allow notifications"
-                value={notifEnabled}
-                onValueChange={(next) => setPendingToggle(next)}
-                trackColor={{ true: primary }}
-              />
-            </XStack>
+            <NotificationFilterChips chips={chips} value={activeFilter} onChange={setFilter} />
 
             <FlatList
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 8 }}
-              data={notifs}
+              data={visible}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <NotificationRow item={item} onPress={() => onNotifClick(item)} />
+                <NotificationRow
+                  item={item}
+                  busy={busyId === item.id || markAllBusy}
+                  onPress={() => onNotifClick(item)}
+                />
               )}
               ListEmptyComponent={
                 <YStack
@@ -164,7 +151,7 @@ export function NotificationsScreen({
                   alignItems="center"
                 >
                   <Text fontSize={14} color="$muted">
-                    No notifications yet.
+                    {emptyText}
                   </Text>
                 </YStack>
               }

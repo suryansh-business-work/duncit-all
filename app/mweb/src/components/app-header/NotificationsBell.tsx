@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import NotificationsScreen from './NotificationsScreen';
+import NotificationsScreen from './notifications-screen';
 
 interface Props {
   notifs: any[];

@@ -47,11 +47,11 @@ export default function ClubMembersSection({ memberIds }: Readonly<Props>) {
   return (
     <Box>
       <Typography variant="h6" fontWeight={700} gutterBottom>
-        Pod Members
+        Club Members
       </Typography>
       <ButtonBase
         onClick={() => setOpen(true)}
-        aria-label="View all pod members"
+        aria-label="View all club members"
         sx={{ borderRadius: 999, p: 0.5 }}
       >
         <AvatarGroup

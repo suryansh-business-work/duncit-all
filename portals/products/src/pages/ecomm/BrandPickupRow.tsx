@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -78,16 +79,25 @@ export default function BrandPickupRow({
           </Stack>
         </Stack>
         {!location.shiprocket_registered && (
-          <Button
-            sx={{ mt: 1.5 }}
-            size="small"
-            variant="outlined"
-            startIcon={<LocalShippingIcon />}
-            disabled={busy}
-            onClick={onRegister}
-          >
-            Register with ShipRocket
-          </Button>
+          <Box sx={{ mt: 1.5 }}>
+            {/* Registration runs automatically when the brand is approved; this
+             * is the retry, and the reason says why the automatic one did not
+             * land (usually ShipRocket credentials). */}
+            {location.shiprocket_error && (
+              <Alert severity="warning" sx={{ mb: 1 }}>
+                {location.shiprocket_error}
+              </Alert>
+            )}
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<LocalShippingIcon />}
+              disabled={busy}
+              onClick={onRegister}
+            >
+              Register with ShipRocket
+            </Button>
+          </Box>
         )}
       </CardContent>
     </Card>

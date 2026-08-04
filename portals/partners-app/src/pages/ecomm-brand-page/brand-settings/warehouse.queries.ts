@@ -16,6 +16,7 @@ const WAREHOUSE_FIELDS = `
   country
   is_default
   shiprocket_registered
+  shiprocket_error
   shiprocket_pickup_id
   updated_at
 `;
@@ -62,6 +63,7 @@ export interface BrandWarehouse {
   country: string;
   is_default: boolean;
   shiprocket_registered: boolean;
+  shiprocket_error: string;
   shiprocket_pickup_id: string;
   updated_at: string;
 }

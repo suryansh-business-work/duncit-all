@@ -40,6 +40,13 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
             <Typography variant="caption" color="text.secondary">
               {warehouse.contact_name} · {warehouse.phone} · {warehouse.email}
             </Typography>
+            {/* Without this the partner only saw "pending" and had no idea the
+             * blocker was on Duncit's side (or what it was). */}
+            {!warehouse.shiprocket_registered && warehouse.shiprocket_error && (
+              <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
+                {warehouse.shiprocket_error}
+              </Typography>
+            )}
           </Box>
           <Stack direction="row" spacing={0.5} alignItems="flex-start">
             <Tooltip title={warehouse.is_default ? 'Default warehouse' : 'Make default'}>

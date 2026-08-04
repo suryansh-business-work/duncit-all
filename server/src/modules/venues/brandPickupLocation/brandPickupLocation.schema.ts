@@ -22,6 +22,8 @@ export const brandPickupLocationTypeDefs = /* GraphQL */ `
     country: String!
     is_default: Boolean!
     shiprocket_registered: Boolean!
+    "Why the last registration attempt did not land ('' once registered)."
+    shiprocket_error: String!
     shiprocket_pickup_id: String!
     created_at: String!
     updated_at: String!

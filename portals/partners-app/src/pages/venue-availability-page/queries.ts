@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import { VENUE_SETTINGS_FRAGMENT } from '../register-venue-page/queries';
 
 export const VENUE_SLOTS = gql`
   query VenueSlots($venue_id: ID!, $from: String, $to: String) {
@@ -19,6 +20,13 @@ export const VENUE_SLOTS = gql`
   }
 `;
 
+/**
+ * The venue behind the availability calendar. `capacity_items` is what makes
+ * each space (e.g. "Court 1") priceable and bookable on its own — without it
+ * the recurring dialog and the day drawer collapse to a single "Whole venue"
+ * row — and `settings` carries the operating hours, weekly-offs and holidays
+ * the calendar greys out.
+ */
 export const VENUE_LOOKUP = gql`
   query VenueLookup($venue_id: ID!) {
     myVenues {
@@ -27,6 +35,12 @@ export const VENUE_LOOKUP = gql`
       status
       city
       locality
+      capacity
+      capacity_items {
+        label
+        capacity
+      }
+      ${VENUE_SETTINGS_FRAGMENT}
     }
   }
 `;

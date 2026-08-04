@@ -243,6 +243,7 @@ export default function VenueAvailabilityPage() {
         onToggleBlock={handleToggleBlock}
         onDelete={handleDelete}
         isHoliday={Boolean(selectedDate && venueHolidays.includes(format(selectedDate, 'yyyy-MM-dd')))}
+        spaces={venue?.capacity_items ?? []}
       />
 
       <RecurringAvailabilityDialog

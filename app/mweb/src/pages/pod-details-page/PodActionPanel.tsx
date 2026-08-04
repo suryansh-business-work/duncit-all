@@ -167,13 +167,14 @@ export default function PodActionPanel({
           <Button
             variant="text"
             startIcon={<ShareIcon />}
-            onClick={() =>
-              (navigator as any).share({
+            onClick={() => {
+              const url = `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`;
+              return (navigator as any).share({
                 title: pod.pod_title,
-                text: buildPodShareText(pod),
-                url: `${globalThis.window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`,
-              })
-            }
+                text: buildPodShareText(pod, url),
+                url,
+              });
+            }}
             sx={compactButtonSx}
           >
             Share

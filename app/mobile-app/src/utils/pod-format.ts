@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { buildPodShareMessage } from '@duncit/utils';
 
 import { PodOccurrence } from '@/generated/graphql/graphql';
 import type { HomePod } from '@/hooks/useHomeFeed';
@@ -161,11 +162,13 @@ export function podShareMessage(pod: PodSharable): { message: string; url: strin
   const url = pod.club_slug
     ? `${POD_WEB_BASE}/club/${pod.club_slug}/pod/${pod.pod_id}`
     : `${POD_WEB_BASE}/pod/${pod.pod_id}`;
-  const where = [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
-  const lines = [pod.pod_title];
-  if (pod.pod_date_time)
-    lines.push(`When: ${podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time)}`);
-  if (where) lines.push(`Where: ${where}`);
-  lines.push(`Join on Duncit: ${url}`);
-  return { message: lines.join('\n'), url };
+  // Shape lives in @duncit/utils so mWeb shares the identical message (rule 27);
+  // the date string is formatted here, through this surface's own clock.
+  const message = buildPodShareMessage({
+    title: pod.pod_title,
+    whenText: pod.pod_date_time ? podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time) : null,
+    venue: pod,
+    url,
+  });
+  return { message, url };
 }

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 const round2 = (n: number) => Math.round(n * 100) / 100;
 import { useMutation } from '@apollo/client';
 import { format } from 'date-fns';
+import { buildPodShareMessage } from '@duncit/utils';
 import type { NavigateFunction } from 'react-router-dom';
 import {
   BACKOUT,
@@ -14,17 +15,27 @@ import {
 } from './queries';
 import { podUrl } from '../../utils/seoUrls';
 
-/** Date/time + venue lines for a pod share so recipients get full context. */
-export function buildPodShareText(pod: any): string {
-  if (!pod) return '';
-  const lines: string[] = [];
-  if (pod.pod_date_time) {
-    const date = new Date(pod.pod_date_time);
-    if (!Number.isNaN(date.getTime())) lines.push(`When: ${format(date, "EEE, d MMM yyyy 'at' HH:mm")}`);
-  }
-  const where = [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
-  if (where) lines.push(`Where: ${where}`);
-  return lines.join('\n');
+/** The pod's date/time as this surface renders it, for the share message. */
+function shareWhenText(pod: any): string | null {
+  if (!pod?.pod_date_time) return null;
+  const date = new Date(pod.pod_date_time);
+  if (Number.isNaN(date.getTime())) return null;
+  return format(date, "EEE, d MMM yyyy 'at' HH:mm");
+}
+
+/**
+ * The full share message: title, when, venue + map link, pod link. Shape comes
+ * from @duncit/utils so native shares the identical text (rule 27); only the
+ * date formatting is this surface's own.
+ */
+export function buildPodShareText(pod: any, url: string): string {
+  if (!pod) return url;
+  return buildPodShareMessage({
+    title: pod.pod_title,
+    whenText: shareWhenText(pod),
+    venue: pod,
+    url,
+  });
 }
 
 interface Args {
@@ -110,11 +121,14 @@ export function usePodDetailActions({
   const onShare = async () => {
     const url = globalThis.window.location.href;
     const title = pod?.pod_title ?? 'Duncit Pod';
-    const text = buildPodShareText(pod);
+    // The link is part of `text` as well as the `url` field: a target app that
+    // ignores `url` (most chat apps do) would otherwise receive the details
+    // with no way to open the pod.
+    const text = buildPodShareText(pod, url);
     try {
       if (navigator.share) await navigator.share({ title, text, url });
       else {
-        await navigator.clipboard.writeText([title, text, url].filter(Boolean).join('\n'));
+        await navigator.clipboard.writeText(text);
         setSnack('Link copied');
       }
     } catch {

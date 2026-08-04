@@ -71,7 +71,7 @@ function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
   if (impact.other_attendee_count === 0) {
     return (
       <Alert severity="info">
-        No one else has joined this pod — it will be deleted immediately.
+        No one else has joined this pod — it will be cancelled immediately.
       </Alert>
     );
   }
@@ -82,7 +82,7 @@ function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
       {impact.refundable_payment_count > 0 ? (
         <>
           {' '}
-          Deleting initiates a refund of{' '}
+          Cancelling initiates a refund of{' '}
           <b>
             {impact.currency_symbol}
             {impact.refund_total}
@@ -129,7 +129,7 @@ export default function PodDeleteForm({
 
   const impact: PodDeleteImpact | null = impactQ.data?.hostPodDeleteImpact ?? null;
   const hasRefunds = (impact?.refundable_payment_count ?? 0) > 0;
-  const confirmLabel = hasRefunds ? 'Initiate refunds & delete' : 'Delete pod';
+  const confirmLabel = hasRefunds ? 'Initiate refunds & cancel' : 'Cancel pod';
 
   const submit = handleSubmit(async (values) => {
     await remove({
@@ -144,11 +144,11 @@ export default function PodDeleteForm({
 
   return (
     <Dialog open={!!podId} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 700 }}>Delete pod</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>Cancel pod</DialogTitle>
       <DialogContent dividers>
         <Stack component="form" id="pod-delete-form" onSubmit={submit} spacing={2} sx={{ pt: 0.5 }}>
           <Typography variant="body2">
-            You're deleting <b>{podTitle}</b>. This can't be undone.
+            You're cancelling <b>{podTitle}</b>. This can't be undone.
           </Typography>
           {impactQ.loading && (
             <Stack alignItems="center" sx={{ py: 1 }}>
@@ -188,7 +188,7 @@ export default function PodDeleteForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={removeState.loading}>
-          Cancel
+          Keep pod
         </Button>
         <Button
           type="submit"
@@ -198,7 +198,7 @@ export default function PodDeleteForm({
           disabled={removeState.loading || impactQ.loading}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {removeState.loading ? 'Deleting…' : confirmLabel}
+          {removeState.loading ? 'Cancelling…' : confirmLabel}
         </Button>
       </DialogActions>
     </Dialog>

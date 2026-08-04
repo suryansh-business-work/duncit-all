@@ -338,7 +338,9 @@ function buildDeleteReason(subject: string, note?: string | null): string {
 }
 
 /** Loads a pod and asserts the viewer is one of its hosts. */
-async function findHostedPod(id: string, userId: string) {
+/** Exported so sibling modules (ticket check-in) authorise a host action against
+ * exactly the same rule as hostUpdatePod / hostDeletePod — one gate, one truth. */
+export async function findHostedPod(id: string, userId: string) {
   if (!Types.ObjectId.isValid(id)) {
     throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
   }

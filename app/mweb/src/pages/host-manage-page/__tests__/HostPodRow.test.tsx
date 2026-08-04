@@ -16,15 +16,28 @@ const basePod = (over: Record<string, unknown> = {}) => ({
 });
 
 const renderRow = (pod: Record<string, unknown>, handlers: Record<string, () => void> = {}) => {
+  const onScan = handlers.onScan ?? vi.fn();
   const onComplete = handlers.onComplete ?? vi.fn();
   const onEdit = handlers.onEdit ?? vi.fn();
-  const onDelete = handlers.onDelete ?? vi.fn();
+  const onCancel = handlers.onCancel ?? vi.fn();
   render(
     <MemoryRouter>
-      <HostPodRow pod={pod} onComplete={onComplete} onEdit={onEdit} onDelete={onDelete} />
+      <HostPodRow
+        pod={pod}
+        onScan={onScan}
+        onComplete={onComplete}
+        onEdit={onEdit}
+        onCancel={onCancel}
+      />
     </MemoryRouter>,
   );
-  return { onComplete, onEdit, onDelete };
+  return { onScan, onComplete, onEdit, onCancel };
+};
+
+/** The actions moved behind an overflow menu, so each one needs it opened. */
+const pickAction = (label: string) => {
+  fireEvent.click(screen.getByLabelText('Actions for Sunset Yoga'));
+  fireEvent.click(screen.getByText(label));
 };
 
 describe('HostPodRow', () => {
@@ -61,14 +74,16 @@ describe('HostPodRow', () => {
     expect(screen.getByText('Free')).toBeInTheDocument();
   });
 
-  it('fires the complete, edit and delete callbacks', () => {
-    const { onComplete, onEdit, onDelete } = renderRow(basePod());
-    fireEvent.click(screen.getByLabelText('Complete pod'));
-    fireEvent.click(screen.getByLabelText('Edit pod'));
-    fireEvent.click(screen.getByLabelText('Delete pod'));
+  it('fires the scan, complete, edit and cancel callbacks from the actions menu', () => {
+    const { onScan, onComplete, onEdit, onCancel } = renderRow(basePod());
+    pickAction('Scan attendee event tickets');
+    pickAction('Complete pod');
+    pickAction('Edit pod');
+    pickAction('Cancel pod');
+    expect(onScan).toHaveBeenCalledOnce();
     expect(onComplete).toHaveBeenCalledOnce();
     expect(onEdit).toHaveBeenCalledOnce();
-    expect(onDelete).toHaveBeenCalledOnce();
+    expect(onCancel).toHaveBeenCalledOnce();
   });
 
   it('shows the pending approval chip for PENDING status', () => {

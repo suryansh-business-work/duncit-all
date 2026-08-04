@@ -25,6 +25,44 @@ const venueAddress = (v: any) =>
     .filter(Boolean)
     .join(', ');
 
+/** `+91 9876543210` from the split extension/number pair, '' when unset. */
+const phoneLine = (extension: unknown, number: unknown) => {
+  const digits = String(number ?? '').trim();
+  if (!digits) return '';
+  const ext = String(extension ?? '').trim();
+  return ext ? `${ext} ${digits}` : digits;
+};
+
+/** Everything on file about the person the host just scanned. Joined here so
+ * neither app has to know the user document's shape (or repeat the join).
+ * Reads the legacy virtuals, so this needs a HYDRATED user doc, not `.lean()`. */
+const toScannedAttendee = (user: any, membership: any) => {
+  const address = user?.profile?.address ?? {};
+  return {
+    user_id: String(user._id),
+    full_name: userName(user),
+    profile_photo: user.profile_photo ?? '',
+    profile_path: `/u/${String(user._id)}`,
+    email: user.email ?? '',
+    phone: phoneLine(user.phone_extension, user.phone_number),
+    whatsapp: phoneLine(user.whatsapp_extension, user.whatsapp_number),
+    bio: user.bio ?? '',
+    address: [
+      address.line1,
+      address.line2,
+      address.landmark,
+      address.city,
+      address.state,
+      address.pincode,
+      address.country,
+    ]
+      .filter(Boolean)
+      .join(', '),
+    city: user.city ?? '',
+    joined_at: membership?.created_at?.toISOString?.() ?? null,
+  };
+};
+
 const toPub = (t: ITicket) => ({
   id: String(t._id),
   ticket_code: t.ticket_code,
@@ -267,6 +305,65 @@ export const ticketService = {
       return { ok: true, message: `Already checked in${at}`, ticket: toPub(t) };
     }
     return { ok: true, message: 'Valid ticket', ticket: toPub(t) };
+  },
+
+  /**
+   * A host scanning a ticket at the door of their own pod. Same effect as the
+   * admin check-in, but authorised by pod ownership rather than an admin role —
+   * and it answers with the attendee, because the point of the scan is to know
+   * who just walked in, not only that the code was valid.
+   *
+   * Never throws for a bad code: a scanner points at whatever is in front of it,
+   * so an unreadable/foreign/cancelled ticket is a result to show, not an error
+   * that tears down the camera screen.
+   */
+  async hostScan(podDocId: string, token: string, hostUserId: string) {
+    const { findHostedPod } = await import('@modules/pods/pod/pod.service');
+    await findHostedPod(podDocId, hostUserId);
+
+    const payload = verifyTicketToken(token);
+    if (!payload) {
+      return { ok: false, message: 'Invalid or tampered QR code', already_checked_in: false, ticket: null, attendee: null };
+    }
+    const t = await TicketModel.findOne({ ticket_code: payload.t });
+    if (!t) {
+      return { ok: false, message: 'Ticket not found', already_checked_in: false, ticket: null, attendee: null };
+    }
+    // Scanning at the wrong pod's door is the mistake this catches — the token
+    // is perfectly valid, just not for tonight.
+    if (String(t.pod_id) !== String(podDocId)) {
+      return {
+        ok: false,
+        message: `This ticket is for another pod${t.snapshot?.pod_title ? ` — ${t.snapshot.pod_title}` : ''}`,
+        already_checked_in: false,
+        ticket: toPub(t),
+        attendee: null,
+      };
+    }
+    if (t.status === 'CANCELLED') {
+      return { ok: false, message: 'Ticket cancelled', already_checked_in: false, ticket: toPub(t), attendee: null };
+    }
+
+    const alreadyCheckedIn = t.status === 'CHECKED_IN';
+    if (!alreadyCheckedIn) {
+      t.status = 'CHECKED_IN';
+      t.checked_in_at = new Date();
+      t.checked_in_by = new Types.ObjectId(hostUserId);
+      await t.save();
+    }
+
+    const [user, membership] = await Promise.all([
+      UserModel.findById(t.user_id),
+      PodMemberModel.findById(t.membership_id),
+    ]);
+    const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
+    return {
+      ok: true,
+      message: alreadyCheckedIn ? `Already marked present${at}` : 'Attendance marked',
+      already_checked_in: alreadyCheckedIn,
+      ticket: toPub(t),
+      attendee: user ? toScannedAttendee(user, membership) : null,
+    };
   },
 
   /** Mark a ticket checked-in (by scanned token or by id). Idempotent. */

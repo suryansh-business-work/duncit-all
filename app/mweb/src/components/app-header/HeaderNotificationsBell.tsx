@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { MARK_ALL, MARK_READ, MY_NOTIFS } from './queries';
-import NotificationsScreen from './NotificationsScreen';
+import NotificationsScreen from './notifications-screen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
 import { useNotificationsSse } from './useNotificationsSse';
 import { useNavigate } from 'react-router-dom';
@@ -41,13 +41,21 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
     }
   }, [toast, onToast, setToast]);
 
+  // Which row is mid-mark-read, and whether mark-all is running. Both round-trip
+  // (mutation + refetch), and without this the tap looked like it did nothing.
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [markAllBusy, setMarkAllBusy] = useState(false);
+
   const onNotifClick = async (n: any) => {
     if (!n.read_at) {
+      setBusyId(n.id);
       try {
         await markReadMut({ variables: { id: n.id } });
         await refetchNotifs();
       } catch {
         /* ignore */
+      } finally {
+        setBusyId(null);
       }
     }
     const link = n.notification?.link_url;
@@ -56,11 +64,14 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
   };
 
   const onMarkAll = async () => {
+    setMarkAllBusy(true);
     try {
       await markAllMut();
       await refetchNotifs();
     } catch {
       /* ignore */
+    } finally {
+      setMarkAllBusy(false);
     }
   };
 
@@ -97,6 +108,8 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
         onEnablePush={enablePush}
         onNotifClick={onNotifClick}
         onMarkAll={onMarkAll}
+        busyId={busyId}
+        markAllBusy={markAllBusy}
       />
     </>
   );

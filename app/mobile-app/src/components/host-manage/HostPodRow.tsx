@@ -16,13 +16,12 @@ interface Props {
   /** Rejection note shown under a Venue Rejected pod. */
   rejectedNote: string | null;
   onOpen: () => void;
-  onComplete: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
+  /** Opens the actions sheet — every per-pod action now lives behind it. */
+  onActions: () => void;
 }
 
-/** One hosted pod row — open the pod + the host's Complete/Edit/Delete actions.
- * A venue-rejected pod also shows its status chip + the resubmission note. */
+/** One hosted pod row — open the pod, or its actions sheet. A venue-rejected pod
+ * also shows its status chip + the resubmission note. */
 export function HostPodRow({
   id,
   title,
@@ -32,11 +31,9 @@ export function HostPodRow({
   approval,
   rejectedNote,
   onOpen,
-  onComplete,
-  onEdit,
-  onDelete,
+  onActions,
 }: Readonly<Props>) {
-  const { color: ink, danger, primary } = useThemeColors();
+  const { color: ink } = useThemeColors();
   return (
     <YStack
       gap={8}
@@ -75,10 +72,10 @@ export function HostPodRow({
           </Text>
         </YStack>
         <XStack
-          testID={`host-pod-complete-${id}`}
+          testID={`host-pod-actions-${id}`}
           role="button"
-          aria-label="Complete pod"
-          onPress={onComplete}
+          aria-label={`Actions for ${title}`}
+          onPress={onActions}
           width={40}
           height={40}
           alignItems="center"
@@ -88,39 +85,7 @@ export function HostPodRow({
           borderColor="$borderColor"
           pressStyle={{ opacity: 0.7 }}
         >
-          <MaterialIcons name="task-alt" size={18} color={primary} />
-        </XStack>
-        <XStack
-          testID={`host-pod-edit-${id}`}
-          role="button"
-          aria-label="Edit pod"
-          onPress={onEdit}
-          width={40}
-          height={40}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={{ opacity: 0.7 }}
-        >
-          <MaterialIcons name="edit" size={18} color={ink} />
-        </XStack>
-        <XStack
-          testID={`host-pod-delete-${id}`}
-          role="button"
-          aria-label="Delete pod"
-          onPress={onDelete}
-          width={40}
-          height={40}
-          alignItems="center"
-          justifyContent="center"
-          borderRadius={10}
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={{ opacity: 0.7 }}
-        >
-          <MaterialIcons name="delete-outline" size={18} color={danger} />
+          <MaterialIcons name="more-vert" size={18} color={ink} />
         </XStack>
       </XStack>
       {rejectedNote ? (

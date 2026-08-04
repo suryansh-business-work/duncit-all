@@ -78,18 +78,33 @@ export function useNotifications() {
     };
   }, [refetch]);
 
+  // Which row is mid-mark-read, and whether mark-all is running. Both round-trip
+  // (mutation + refetch), and without this the tap looked like it did nothing.
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [markAllBusy, setMarkAllBusy] = useState(false);
+
   const markRead = useCallback(
     async (item: UserNotification) => {
       if (item.read_at) return;
-      await graphqlRequest(MobileMarkNotificationReadDocument, { id: item.id }, { auth: true });
-      await refetch();
+      setBusyId(item.id);
+      try {
+        await graphqlRequest(MobileMarkNotificationReadDocument, { id: item.id }, { auth: true });
+        await refetch();
+      } finally {
+        setBusyId(null);
+      }
     },
     [refetch],
   );
 
   const markAll = useCallback(async () => {
-    await graphqlRequest(MobileMarkAllNotificationsReadDocument, undefined, { auth: true });
-    await refetch();
+    setMarkAllBusy(true);
+    try {
+      await graphqlRequest(MobileMarkAllNotificationsReadDocument, undefined, { auth: true });
+      await refetch();
+    } finally {
+      setMarkAllBusy(false);
+    }
   }, [refetch]);
 
   // Drop content-less notifications (legacy/junk rows whose title and body are
@@ -103,6 +118,8 @@ export function useNotifications() {
     notifs,
     unreadCount: data?.myUnreadNotificationCount ?? 0,
     isLoading,
+    busyId,
+    markAllBusy,
     refetch,
     markRead,
     markAll,

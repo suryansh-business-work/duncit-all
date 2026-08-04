@@ -16,7 +16,8 @@ import { NotificationsScreen } from './NotificationsScreen';
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
   const { color, onPrimary } = useThemeColors();
-  const { notifs, unreadCount, refetch, markRead, markAll } = useNotifications();
+  const { notifs, unreadCount, busyId, markAllBusy, refetch, markRead, markAll } =
+    useNotifications();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const onOpen = () => {
@@ -89,6 +90,8 @@ export function NotificationsBell() {
         unreadCount={unreadCount}
         onNotifClick={onNotifClick}
         onMarkAll={markAll}
+        busyId={busyId}
+        markAllBusy={markAllBusy}
       />
     </>
   );

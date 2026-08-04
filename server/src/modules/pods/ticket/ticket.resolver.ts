@@ -40,5 +40,11 @@ export const eventTicketResolvers = {
       const u = requireRole(ctx, ADMIN_RW);
       return ticketService.checkIn(args.input, u.id);
     },
+    // No role gate: the pod's own host/co-host is the authority here, and
+    // ticketService.hostScan asserts exactly that before touching the ticket.
+    hostScanPodTicket: (_p: unknown, args: { pod_doc_id: string; token: string }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      return ticketService.hostScan(args.pod_doc_id, args.token, u.id);
+    },
   },
 };

@@ -27,6 +27,7 @@ export const makeBrandPickupLocation = (
   pincode: '411001',
   country: 'India',
   is_default: false,
+  review_status: 'APPROVED',
   shiprocket_registered: false,
   shiprocket_pickup_id: '',
   created_at: '2026-01-01T00:00:00.000Z',

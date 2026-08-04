@@ -92,3 +92,34 @@ export const HostDeletePodDocument = gql(`
     )
   }
 `);
+
+/** Host scans an attendee's ticket QR at the door: marks attendance and answers
+ * with who walked in. Twin of mWeb's HostScanPodTicket (rule 27). */
+export const HostScanPodTicketDocument = gql(`
+  mutation MobileHostScanPodTicket($pod_doc_id: ID!, $token: String!) {
+    hostScanPodTicket(pod_doc_id: $pod_doc_id, token: $token) {
+      ok
+      message
+      already_checked_in
+      ticket {
+        id
+        ticket_code
+        status
+        checked_in_at
+      }
+      attendee {
+        user_id
+        full_name
+        profile_photo
+        profile_path
+        email
+        phone
+        whatsapp
+        bio
+        address
+        city
+        joined_at
+      }
+    }
+  }
+`);

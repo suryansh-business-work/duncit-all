@@ -26,13 +26,13 @@ function ImpactSummary({ impact }: Readonly<{ impact: PodDeleteImpact }>) {
   if (impact.other_attendee_count === 0) {
     return (
       <Text testID="pod-delete-impact" fontSize={12.5} color="$muted">
-        No one else has joined this pod — it will be deleted immediately.
+        No one else has joined this pod — it will be cancelled immediately.
       </Text>
     );
   }
   const refundLine =
     impact.refundable_payment_count > 0
-      ? ` Deleting initiates a refund of ${impact.currency_symbol}${impact.refund_total} across ${impact.refundable_payment_count} payment(s), logged in the Finance portal.`
+      ? ` Cancelling initiates a refund of ${impact.currency_symbol}${impact.refund_total} across ${impact.refundable_payment_count} payment(s), logged in the Finance portal.`
       : '';
   return (
     <Text testID="pod-delete-impact" fontSize={12.5} color="$danger">
@@ -84,7 +84,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
       );
       onDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not delete the pod');
+      setError(err instanceof Error ? err.message : 'Could not cancel the pod');
     } finally {
       setBusy(false);
     }
@@ -92,7 +92,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
 
   const dismiss = busy ? undefined : onClose;
   const hasRefunds = (impact?.refundable_payment_count ?? 0) > 0;
-  const confirmLabel = hasRefunds ? 'Initiate refunds & delete' : 'Delete pod';
+  const confirmLabel = hasRefunds ? 'Initiate refunds & cancel' : 'Cancel pod';
 
   return (
     <Modal visible={!!podId} transparent animationType="fade" onRequestClose={dismiss}>
@@ -119,10 +119,10 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
           >
             <SafeAreaView edges={[]}>
               <Text fontSize={17} fontWeight="700" color="$color">
-                Delete pod
+                Cancel pod
               </Text>
               <Text fontSize={13} color="$muted" paddingTop={4} paddingBottom={8}>
-                You're deleting "{podTitle}". This can't be undone.
+                You're cancelling "{podTitle}". This can't be undone.
               </Text>
               <ScrollView showsVerticalScrollIndicator={false}>
                 <YStack gap={10} paddingBottom={6}>
@@ -184,7 +184,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                 <XStack
                   testID="pod-delete-cancel"
                   role="button"
-                  aria-label="Cancel"
+                  aria-label="Keep pod"
                   aria-disabled={busy}
                   onPress={dismiss}
                   flex={1}
@@ -198,7 +198,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                   pressStyle={{ opacity: 0.85 }}
                 >
                   <Text fontSize={14} fontWeight="600" color="$color">
-                    Cancel
+                    Keep pod
                   </Text>
                 </XStack>
                 <XStack
@@ -219,7 +219,7 @@ export function PodDeleteDialog({ podId, podTitle, onClose, onDeleted }: Readonl
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
                   <Text fontSize={14} fontWeight="700" color={onPrimary} numberOfLines={1}>
-                    {busy ? 'Deleting…' : confirmLabel}
+                    {busy ? 'Cancelling…' : confirmLabel}
                   </Text>
                 </XStack>
               </XStack>

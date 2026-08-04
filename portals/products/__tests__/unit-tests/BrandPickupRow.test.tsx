@@ -7,6 +7,7 @@ const location = (over: Record<string, unknown> = {}) => ({
   id: 'l1',
   nickname: 'Main WH',
   is_default: false,
+  review_status: 'APPROVED',
   shiprocket_registered: false,
   contact_name: 'Asha',
   phone: '9999',

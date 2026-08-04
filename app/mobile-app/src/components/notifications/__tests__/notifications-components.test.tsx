@@ -34,7 +34,7 @@ const notif = (over: Record<string, unknown> = {}): UserNotification =>
 describe('NotificationRow', () => {
   it('renders unread row with title/body and fires onPress', () => {
     const onPress = jest.fn();
-    renderWithProviders(<NotificationRow item={notif()} onPress={onPress} />);
+    renderWithProviders(<NotificationRow item={notif()} busy={false} onPress={onPress} />);
     expect(screen.getByText('Pod soon')).toBeOnTheScreen();
     expect(screen.getByText('Starts in an hour')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('notification-n1'));
@@ -44,6 +44,7 @@ describe('NotificationRow', () => {
   it('renders an image + link arrow for a read item with link', () => {
     renderWithProviders(
       <NotificationRow
+        busy={false}
         item={notif({
           read_at: '2026-06-01',
           notification: {

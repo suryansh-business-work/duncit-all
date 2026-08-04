@@ -26,6 +26,16 @@ export { formatMjml } from './mjml-format';
 export { nationalPhoneDigits } from './phone';
 export { isStoryLive } from './story-live';
 export {
+  NOTIFICATION_CATEGORY_LABEL,
+  NOTIFICATION_CATEGORY_ORDER,
+  matchesNotificationFilter,
+  notificationCategory,
+  notificationChips,
+  type NotificationCategory,
+  type NotificationChip,
+  type NotificationFilterKey,
+} from './notification-category';
+export {
   clubCategoryKey,
   productMatchesClub,
   filterProductsForClub,

@@ -1,7 +1,7 @@
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserNotification } from '@/hooks/useNotifications';
@@ -13,9 +13,13 @@ import { notificationIconName } from '@/utils/notification-icon';
  * RN twin of the mWeb NotificationsScreen list item. */
 export function NotificationRow({
   item,
+  busy,
   onPress,
 }: Readonly<{
   item: UserNotification;
+  /** True while this row's mark-read is in flight — the row is the only thing
+   * that should look busy, not the whole list. */
+  busy: boolean;
   onPress: () => void;
 }>) {
   const { onPrimary, primary, muted } = useThemeColors();
@@ -30,6 +34,10 @@ export function NotificationRow({
   // Contextual icon by notification type (falls back to the bell) instead of
   // repeating a generic bell on every row.
   const fallbackIcon = notificationIconName(notification.title);
+  // Hoisted so the two return branches share one decision (rule 26g) and neither
+  // pays a nesting increment for it.
+  const press = busy ? undefined : onPress;
+  const rowOpacity = busy ? 0.6 : 1;
 
   const body = (
     <XStack flex={1} gap={12} padding={12} alignItems="center">
@@ -84,7 +92,8 @@ export function NotificationRow({
               </Text>
             </YStack>
           ) : null}
-          {notification.link_url ? (
+          {busy ? <Spinner size="small" color={ink ?? primary} /> : null}
+          {!busy && notification.link_url ? (
             <MaterialIcons name="chevron-right" size={20} color={ink ?? primary} />
           ) : null}
         </XStack>
@@ -97,7 +106,9 @@ export function NotificationRow({
       <XStack
         testID={`notification-${item.id}`}
         role="button"
-        onPress={onPress}
+        aria-busy={busy}
+        onPress={press}
+        opacity={rowOpacity}
         borderRadius={16}
         overflow="hidden"
         pressStyle={{ opacity: 0.9 }}
@@ -118,7 +129,9 @@ export function NotificationRow({
     <XStack
       testID={`notification-${item.id}`}
       role="button"
-      onPress={onPress}
+      aria-busy={busy}
+      onPress={press}
+      opacity={rowOpacity}
       borderRadius={16}
       borderWidth={1}
       borderColor="$borderColor"

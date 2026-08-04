@@ -2,7 +2,7 @@
   "expo": {
     "name": "Duncit",
     "slug": "duncit-mobile",
-    "version": "1.8.6",
+    "version": "1.8.9",
     "orientation": "portrait",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
@@ -68,6 +68,12 @@
         "expo-image-picker",
         {
           "photosPermission": "Allow Duncit to access your photos to post a status."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Duncit to use the camera to scan attendee event tickets."
         }
       ],
       "expo-document-picker",

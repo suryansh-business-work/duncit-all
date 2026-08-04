@@ -16,6 +16,14 @@ import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 
+/** The partner-facing gate, decided on the Warehouse Approval page. Distinct
+ * from ShipRocket registration below: this one is what lets them list products. */
+const REVIEW_CHIP: Record<string, { label: string; color: 'success' | 'warning' | 'error' }> = {
+  APPROVED: { label: 'Approved', color: 'success' },
+  PENDING: { label: 'Awaiting approval', color: 'warning' },
+  REJECTED: { label: 'Rejected', color: 'error' },
+};
+
 interface Props {
   location: any;
   busy: boolean;
@@ -33,6 +41,7 @@ export default function BrandPickupRow({
   onSetDefault,
   onRegister,
 }: Readonly<Props>) {
+  const review = REVIEW_CHIP[location.review_status] ?? REVIEW_CHIP.PENDING;
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -43,6 +52,7 @@ export default function BrandPickupRow({
                 {location.nickname}
               </Typography>
               {location.is_default && <Chip size="small" color="primary" label="Default" />}
+              <Chip size="small" color={review.color} label={review.label} />
               {location.shiprocket_registered ? (
                 <Chip size="small" color="success" variant="outlined" label="ShipRocket ready" />
               ) : (

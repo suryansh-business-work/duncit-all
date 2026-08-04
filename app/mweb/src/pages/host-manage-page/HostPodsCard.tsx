@@ -26,6 +26,7 @@ import { PodEditForm, type HostPodSummary } from './pod-edit';
 import { PodDeleteForm } from './pod-delete';
 import { PodCompleteForm, type HostPodForComplete } from './pod-complete';
 import { PodResubmitForm, type HostPodForResubmit } from './pod-resubmit';
+import { TicketScanDialog, type ScanTarget } from './ticket-scan';
 import { isVenueRejected } from './venueApproval';
 
 interface HostPodsCardProps {
@@ -47,6 +48,7 @@ export default function HostPodsCard({
   const [resubmitPod, setResubmitPod] = useState<HostPodForResubmit | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
   const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
+  const [scanPod, setScanPod] = useState<ScanTarget | null>(null);
   const [filters, setFilters] = useState<HostPodsFilters>(DEFAULT_HOST_PODS_FILTERS);
   const [filterOpen, setFilterOpen] = useState(false);
 
@@ -75,11 +77,12 @@ export default function HostPodsCard({
           <HostPodRow
             key={p.id}
             pod={p}
+            onScan={() => setScanPod({ id: p.id, pod_title: p.pod_title })}
             onComplete={() => setCompletePod({ id: p.id, pod_title: p.pod_title, venue_id: p.venue_id })}
             // A venue-rejected pod opens the FULL edit + resubmission flow; every
             // other pod keeps the limited title/description/media edit.
             onEdit={() => (isVenueRejected(p.venue_approval_status) ? setResubmitPod(p) : setEditPod(p))}
-            onDelete={() => setDeletePod({ id: p.id, title: p.pod_title })}
+            onCancel={() => setDeletePod({ id: p.id, title: p.pod_title })}
           />
         ))}
       </Stack>
@@ -148,6 +151,7 @@ export default function HostPodsCard({
           onChanged();
         }}
       />
+      <TicketScanDialog pod={scanPod} onClose={() => setScanPod(null)} />
     </Card>
   );
 }

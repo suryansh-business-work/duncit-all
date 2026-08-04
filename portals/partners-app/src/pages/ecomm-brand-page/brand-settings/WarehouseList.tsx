@@ -4,7 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
-import type { BrandWarehouse } from './warehouse.queries';
+import type { BrandWarehouse, WarehouseReviewStatus } from './warehouse.queries';
 
 interface WarehouseCardProps {
   warehouse: BrandWarehouse;
@@ -19,11 +19,26 @@ const addressLine = (warehouse: BrandWarehouse) =>
     .filter(Boolean)
     .join(', ');
 
-/** One warehouse card: address summary, ShipRocket status, edit/delete/default. */
+/** What the partner can act on. ShipRocket registration is Duncit-side plumbing
+ * that never gates the partner, so showing it here (as this card used to) read
+ * as "still not approved" long after the Products portal had approved it. */
+const REVIEW_CHIP: Record<WarehouseReviewStatus, { label: string; color: 'success' | 'warning' | 'error' }> = {
+  APPROVED: { label: 'Approved', color: 'success' },
+  PENDING: { label: 'Awaiting approval', color: 'warning' },
+  REJECTED: { label: 'Rejected', color: 'error' },
+};
+
+/** Says what the state means for the partner — a bare chip left them guessing
+ * whether the wait was theirs to end. */
+const REVIEW_HINT: Record<WarehouseReviewStatus, string> = {
+  APPROVED: '',
+  PENDING: 'Products cannot ship from this warehouse until the Duncit team approves it.',
+  REJECTED: 'This warehouse was rejected — edit the address and save to request another review.',
+};
+
+/** One warehouse card: address summary, approval status, edit/delete/default. */
 function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Readonly<WarehouseCardProps>) {
-  const shiprocketChip = warehouse.shiprocket_registered
-    ? <Chip size="small" color="success" label="Registered" />
-    : <Chip size="small" color="warning" label="Pending admin registration" />;
+  const review = REVIEW_CHIP[warehouse.review_status] ?? REVIEW_CHIP.PENDING;
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
@@ -32,7 +47,7 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Typography fontWeight={900}>{warehouse.nickname}</Typography>
               {warehouse.is_default && <Chip size="small" color="primary" label="Default" />}
-              {shiprocketChip}
+              <Chip size="small" color={review.color} label={review.label} />
             </Stack>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               {addressLine(warehouse)}
@@ -40,11 +55,9 @@ function WarehouseCard({ warehouse, busy, onEdit, onDelete, onSetDefault }: Read
             <Typography variant="caption" color="text.secondary">
               {warehouse.contact_name} · {warehouse.phone} · {warehouse.email}
             </Typography>
-            {/* Without this the partner only saw "pending" and had no idea the
-             * blocker was on Duncit's side (or what it was). */}
-            {!warehouse.shiprocket_registered && warehouse.shiprocket_error && (
-              <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
-                {warehouse.shiprocket_error}
+            {warehouse.review_status !== 'APPROVED' && (
+              <Typography variant="caption" color={`${review.color}.main`} sx={{ display: 'block', mt: 0.5 }}>
+                {REVIEW_HINT[warehouse.review_status] ?? REVIEW_HINT.PENDING}
               </Typography>
             )}
           </Box>

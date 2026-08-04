@@ -18,11 +18,18 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
   "feature_text": string,         // newline-separated public image URLs (3-5 lines)
   "moments_text": string,         // newline-separated public image URLs (2-4 lines)
   "community_link": string,       // https://chat.whatsapp.com/... fake but realistic
-  "announcement_link": string,    // https://chat.whatsapp.com/...
-  "group_link": string            // https://chat.whatsapp.com/...
+  "group_link": string,           // https://chat.whatsapp.com/...
+  "who_we_are": string[],         // 3-5 one-line bullets introducing the community
+  "what_we_do": string[],         // 3-5 one-line bullets on what members actually do
+  "perks": string[],              // 3-5 member perks, 1-4 words each
+  "values": string[],             // 3-5 values the club stands for, 1-3 words each
+  "faqs": [                       // 3-5 question/answer pairs shown on the club page
+    { "question": string, "answer": string }
+  ]
 }`,
     example: '',
-    notes: 'Use real-looking https://images.unsplash.com/... URLs (or https://picsum.photos/seed/...) for image lines.',
+    notes:
+      'Use real-looking https://images.unsplash.com/... URLs (or https://picsum.photos/seed/...) for image lines. Bullets are a single line each (<= 90 chars, no leading dash or bullet glyph). FAQ questions end with "?" and answers are 1-2 sentences. Return every key — the form has a section for each and a missing key leaves it empty.',
   },
   POD: {
     fields: `{
@@ -33,8 +40,12 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
   "pod_info": string,             // logistics / what to bring / additional notes (1-3 sentences)
   "no_of_spots": number,          // integer 6-40
   "pod_amount": number,           // integer 0-1999, GROSS price user pays
-  "pod_type": "FREE" | "PAID",
-  "pod_occurrence": "ONE_TIME" | "RECURRING",
+  "pod_type": "NATIVE_FREE" | "NATIVE_PAID" | "NATIVE_PAID_PREMIUM" | "NON_NATIVE_FREE" | "NON_NATIVE_PAID",
+  "pod_occurrence": "ONE_TIME" | "DAILY" | "WEEKLY" | "MONTHLY" | "ALTERNATE_DAY" | "WEEKENDS_ONLY",
+  "pod_mode": "PHYSICAL" | "VIRTUAL",
+  "meeting_platform": "GOOGLE_MEET" | "ZOOM" | "TEAMS" | "OTHER",  // VIRTUAL only, else ""
+  "meeting_url": string,          // VIRTUAL only — realistic joinable-looking link, else ""
+  "meeting_notes": string,        // VIRTUAL only — 1-2 sentences on how to join, else ""
   "zone_name": string,            // a city zone like "Indiranagar" / "Bandra West" / "Connaught Place"
   "starts_in_days": number,       // 1-21 (client converts to actual datetime)
   "duration_minutes": number,     // 60, 90, 120, 180
@@ -47,7 +58,7 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
 }`,
     example: '',
     notes:
-      'If pod_type is FREE, set pod_amount to 0 and place_charges to []. FREE is only valid for virtual pods — physical pods must be PAID. Otherwise pick a sensible price. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
+      'pod_type and pod_occurrence must be one of the listed values EXACTLY — any other string is dropped by the form. A pod_type containing FREE means pod_amount 0 and place_charges []; FREE is only valid when pod_mode is VIRTUAL, so a PHYSICAL pod must use a PAID type with a sensible price. Default pod_mode to PHYSICAL unless the prompt clearly describes an online/remote pod; when it is VIRTUAL fill meeting_platform/meeting_url/meeting_notes and leave place_charges empty, and when it is PHYSICAL return "" for all three meeting fields. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
   },
   INVENTORY_PRODUCT: {
     fields: `{
@@ -79,7 +90,13 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
 };
 
 /** The per-entity JSON shape is a machine contract with the parser, so it stays
- * in code and is injected into the library prompt as a variable. */
+ * in code and is injected into the library prompt as a variable.
+ *
+ * The enum values mirror `POD_TYPES` / `OCCURRENCES` / `POD_MODES` in
+ * `packages/pod-form` and the field list mirrors `ClubFormValues` /
+ * `PodFormValues`; the server imports no `@duncit/*` package (rule 40), so they
+ * are restated here. A value outside those lists is discarded client-side
+ * rather than blanking the field it belongs to. */
 function buildSystemPrompt(entity: Entity, userPrompt?: string | null) {
   const { fields, notes } = SCHEMAS[entity];
   return getSystemPrompt('generate.dummy_data', {

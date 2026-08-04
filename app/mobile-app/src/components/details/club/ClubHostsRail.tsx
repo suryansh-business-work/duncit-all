@@ -8,14 +8,23 @@ type ClubHost = ClubDetail['hosts'][number];
 
 interface Props {
   hosts: ClubHost[];
+  /** Section heading — the same rail renders the club hosts and the club admins. */
+  title?: string;
+  /** testID prefix, so the two rails stay distinguishable. */
+  testIdPrefix?: string;
   onOpenHost: (id: string) => void;
 }
 
 /** Hosts who run this club's events — tap an avatar to open their profile. */
-export function ClubHostsRail({ hosts, onOpenHost }: Readonly<Props>) {
+export function ClubHostsRail({
+  hosts,
+  title = 'Club Hosts',
+  testIdPrefix = 'club-host',
+  onOpenHost,
+}: Readonly<Props>) {
   if (hosts.length === 0) return null;
   return (
-    <YStack gap={8} testID="club-hosts">
+    <YStack gap={8} testID={`${testIdPrefix}s`}>
       <Text fontSize={16} fontWeight="700" color="$color">
         Club Hosts
       </Text>
@@ -27,7 +36,7 @@ export function ClubHostsRail({ hosts, onOpenHost }: Readonly<Props>) {
         {hosts.map((host) => (
           <YStack
             key={host.id}
-            testID={`club-host-${host.id}`}
+            testID={`${testIdPrefix}-${host.id}`}
             width={72}
             alignItems="center"
             gap={4}

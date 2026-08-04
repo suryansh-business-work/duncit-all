@@ -47,6 +47,11 @@ export const CLUB_BY_SLUG = gql`
         name
         avatar_url
       }
+      club_admins {
+        id
+        name
+        avatar_url
+      }
       category_id
       super_category_id
     }

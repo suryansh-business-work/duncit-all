@@ -405,6 +405,11 @@ export const ClubDetailsDocument = gql(`
         name
         avatar_url
       }
+      club_admins {
+        id
+        name
+        avatar_url
+      }
       club_whats_app_community_link
       club_whats_app_group_link
       matched_venues_count

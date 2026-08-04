@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Box, Card, CardContent, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { alpha, useTheme } from '@mui/material/styles';
+import { useTranslation } from '../../i18n/useTranslation';
 import { formatMoney } from './checkoutMath';
 import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 
@@ -9,10 +11,17 @@ interface Props {
   pod: any;
   stateTitle?: string;
   breakup: any;
+  /** Seats picked on Pod Details — the total already multiplies by this. */
+  seats?: number;
 }
 
-export default function OrderSummaryCard({ pod, stateTitle, breakup }: Readonly<Props>) {
+export default function OrderSummaryCard({ pod, stateTitle, breakup, seats = 1 }: Readonly<Props>) {
   const theme = useTheme();
+  const { t } = useTranslation();
+  // The buyer chose this on Pod Details and the ticket price is × it, so the
+  // number has to be visible here — a silent multiplier reads as a wrong price.
+  const seatsText =
+    seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
   const isDark = theme.palette.mode === 'dark';
   const title = pod?.pod_title || stateTitle || 'Pod booking';
   const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
@@ -39,6 +48,13 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup }: Readonly<
             {when && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.74)' }}>{when}</Typography>}
           </Box>
         </Box>
+        <Chip
+          size="small"
+          color="primary"
+          icon={<GroupsIcon />}
+          label={seatsText}
+          sx={{ mt: 1, fontWeight: 700 }}
+        />
         {pod?.zone_name && <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>{pod.zone_name}</Typography>}
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>

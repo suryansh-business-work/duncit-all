@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import UserModeContent from '../UserModeContent';
 import { ACTIVE_ADS } from '../../../ads/useActiveAds';
+import type { StudioMode } from '../../../../studio-mode';
 
 const mockBranding = vi.fn();
 vi.mock('../../../../hooks/useBrandingAssets', () => ({
@@ -17,6 +18,7 @@ const adsMock = {
 function renderContent(props: {
   me: any;
   roles?: string[];
+  mode?: StudioMode;
   showPodPlans: boolean;
   onNavigate: (to: string) => void;
 }) {
@@ -25,6 +27,7 @@ function renderContent(props: {
       <UserModeContent
         me={props.me}
         roles={props.roles ?? []}
+        mode={props.mode ?? 'USER'}
         showPodPlans={props.showPodPlans}
         onNavigate={props.onNavigate}
       />
@@ -90,23 +93,30 @@ describe('UserModeContent', () => {
 
     rerender(
       <MockedProvider mocks={[adsMock]}>
-        <UserModeContent me={FULL_ME} roles={[]} showPodPlans onNavigate={vi.fn()} />
+        <UserModeContent me={FULL_ME} roles={[]} mode="USER" showPodPlans onNavigate={vi.fn()} />
       </MockedProvider>,
     );
     expect(screen.getByText('Pod Plans')).toBeInTheDocument();
   });
 
-  it('shows an Earnings > Withdrawal row for partner roles (hidden for consumers)', () => {
+  it('reveals the Host Menu only once switched into Host Studio', () => {
     const onNavigate = vi.fn();
-    const { rerender } = renderContent({ me: FULL_ME, showPodPlans: false, onNavigate });
-    // Pure consumer → no Withdrawal row.
+    // A host still in User mode gets the plain consumer drawer.
+    const { rerender } = renderContent({
+      me: FULL_ME,
+      roles: ['HOST'],
+      showPodPlans: false,
+      onNavigate,
+    });
+    expect(screen.queryByText('Host Studio')).not.toBeInTheDocument();
     expect(screen.queryByText('Withdrawal')).not.toBeInTheDocument();
 
     rerender(
       <MockedProvider mocks={[adsMock]}>
-        <UserModeContent me={FULL_ME} roles={['HOST']} showPodPlans={false} onNavigate={onNavigate} />
+        <UserModeContent me={FULL_ME} roles={['HOST']} mode="HOST" showPodPlans={false} onNavigate={onNavigate} />
       </MockedProvider>,
     );
+    expect(screen.getByText('Host Menu')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Withdrawal'));
     expect(onNavigate).toHaveBeenCalledWith('/host/wallet');
   });

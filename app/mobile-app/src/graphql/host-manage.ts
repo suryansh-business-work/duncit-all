@@ -105,6 +105,7 @@ export const HostScanPodTicketDocument = gql(`
         id
         ticket_code
         status
+        seats
         checked_in_at
       }
       attendee {

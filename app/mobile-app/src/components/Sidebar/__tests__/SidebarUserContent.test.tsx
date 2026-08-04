@@ -40,6 +40,7 @@ describe('SidebarUserContent', () => {
         }}
         account={{ first_name: 'Asha' }}
         roles={[]}
+        mode="USER"
         showPodPlans={false}
         onNavigate={onNavigate}
       />,
@@ -80,21 +81,38 @@ describe('SidebarUserContent', () => {
     fireEvent.press(screen.getByTestId('sidebar-item-Cart'));
     expect(onNavigate).toHaveBeenCalledWith('Cart');
 
-    // No Earnings/Withdrawal row for a pure consumer (no partner roles).
+    // No partner menu, and so no Withdrawal row, for a pure consumer.
     expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
   });
 
-  it('shows an Earnings > Withdrawal row for partner roles and routes to the wallet', () => {
+  it('reveals the Host Menu only once switched into Host Studio', () => {
     const onNavigate = jest.fn();
-    renderWithProviders(
+    // A host still in User mode gets the plain consumer sidebar.
+    const { rerender } = renderWithProviders(
       <SidebarUserContent
         me={{ full_name: 'Host Roy' }}
         account={FULL_ACCOUNT}
         roles={['HOST']}
+        mode="USER"
         showPodPlans={false}
         onNavigate={onNavigate}
       />,
     );
+    expect(screen.queryByTestId('sidebar-item-Host Studio')).toBeNull();
+    expect(screen.queryByTestId('sidebar-item-Withdrawal')).toBeNull();
+
+    rerender(
+      <SidebarUserContent
+        me={{ full_name: 'Host Roy' }}
+        account={FULL_ACCOUNT}
+        roles={['HOST']}
+        mode="HOST"
+        showPodPlans={false}
+        onNavigate={onNavigate}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('sidebar-item-Host Studio'));
+    expect(onNavigate).toHaveBeenCalledWith('HostManage');
     fireEvent.press(screen.getByTestId('sidebar-item-Withdrawal'));
     expect(onNavigate).toHaveBeenCalledWith('Wallet');
   });
@@ -106,6 +124,7 @@ describe('SidebarUserContent', () => {
         me={{ full_name: 'Bob Roy' }}
         account={FULL_ACCOUNT}
         roles={[]}
+        mode="USER"
         showPodPlans
         onNavigate={onNavigate}
       />,
@@ -134,6 +153,7 @@ describe('SidebarUserContent', () => {
         me={null}
         account={null}
         roles={[]}
+        mode="USER"
         showPodPlans={false}
         onNavigate={jest.fn()}
       />,
@@ -148,6 +168,7 @@ describe('SidebarUserContent', () => {
         me={null}
         account={null}
         roles={[]}
+        mode="USER"
         showPodPlans={false}
         onNavigate={jest.fn()}
       />,

@@ -15,6 +15,10 @@ import HomeWorkIcon from '@mui/icons-material/HomeWork';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ExploreIcon from '@mui/icons-material/Explore';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import StoreIcon from '@mui/icons-material/Store';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
+import InsightsIcon from '@mui/icons-material/Insights';
 import type { ProfileIconKey } from './profileSections';
 
 const ICONS: Record<ProfileIconKey, JSX.Element> = {
@@ -34,6 +38,12 @@ const ICONS: Record<ProfileIconKey, JSX.Element> = {
   addresses: <HomeWorkIcon />,
   cart: <ShoppingCartIcon />,
   wallet: <AccountBalanceWalletIcon />,
+  // The partner menus reuse the Earn cards' icon vocabulary, so a role reads
+  // the same on the card that unlocked it and in its own drawer section.
+  host: <DashboardIcon />,
+  venue: <StoreIcon />,
+  ecomm: <Inventory2Icon />,
+  insights: <InsightsIcon />,
 };
 
 export function profileIcon(key: ProfileIconKey): JSX.Element {

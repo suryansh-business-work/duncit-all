@@ -94,6 +94,20 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       formerAttendee: 'Former attendee',
       newAttendee: 'A new attendee',
     },
+    // Plurals ship as explicit One/Many pairs: the key-verification gate needs
+    // every leaf rendered via a literal t('…'), which the translator's
+    // `.one/.other` siblings would fail.
+    checkout: {
+      seatsOne: '1 seat',
+      seatsMany: '{count} seats',
+    },
+    // The door scanner: one ticket can admit a group, so the host is told how
+    // many people that single QR lets in. The count itself is rendered as a
+    // badge beside this copy, which is why neither string carries it.
+    hostScan: {
+      personOnTicket: 'person on this ticket',
+      peopleOnTicket: 'people on this ticket',
+    },
     // The slot picker's copy. @duncit/slots renders the same two steps on
     // every surface, so `shell.slots` below must stay word-for-word identical —
     // they are written out rather than shared through a const because the

@@ -16,6 +16,7 @@ const ICONS: Record<StudioMode, IconName> = {
   HOST: 'dashboard',
   VENUE: 'store',
   ECOMM: 'inventory-2',
+  CLUB: 'groups',
 };
 
 const ACTIVE_CAPTION = 'Active right now';

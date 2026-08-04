@@ -105,6 +105,7 @@ export function Sidebar({ onClose }: Readonly<{ onClose: () => void }>) {
             me={me}
             account={account}
             roles={roles}
+            mode={effectiveMode}
             showPodPlans={showPodPlans}
             onNavigate={go}
           />

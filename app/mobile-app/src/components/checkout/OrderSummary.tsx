@@ -5,6 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { VenueChargesSheet } from '@/components/checkout/VenueChargesSheet';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { CheckoutPod } from '@/hooks/useCheckout';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 import { formatMoney } from '@/utils/checkout-math';
@@ -33,10 +35,19 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
 export function OrderSummary({
   pod,
   breakup,
+  seats = 1,
 }: Readonly<{
   pod: CheckoutPod;
   breakup: CheckoutBreakup;
+  /** Seats picked on Pod Details — the total already multiplies by this. */
+  seats?: number;
 }>) {
+  const { onPrimary } = useThemeColors();
+  const { t } = useTranslation();
+  // The buyer chose this on Pod Details and the ticket price is × it, so the
+  // number has to be visible here — a silent multiplier reads as a wrong price.
+  const seatsText =
+    seats === 1 ? t('mweb.checkout.seatsOne') : t('mweb.checkout.seatsMany', { count: seats });
   const image = pod?.pod_images_and_videos?.find((m) => m.url)?.url;
   const fmt = (v: number) => formatMoney(breakup.currency, v);
   // Venue charges are paid at the venue — shown for transparency, never added to
@@ -74,6 +85,22 @@ export function OrderSummary({
             {pod.zone_name ? ` · ${pod.zone_name}` : ''}
           </Text>
         ) : null}
+        <XStack
+          testID="order-summary-seats"
+          alignItems="center"
+          alignSelf="flex-start"
+          gap={6}
+          marginTop={2}
+          paddingHorizontal={10}
+          paddingVertical={4}
+          borderRadius={999}
+          backgroundColor="$primary"
+        >
+          <MaterialIcons name="groups" size={15} color={onPrimary} />
+          <Text fontSize={12.5} fontWeight="700" color={onPrimary}>
+            {seatsText}
+          </Text>
+        </XStack>
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
         <Row label="Subtotal" value={fmt(breakup.subtotal)} />
         <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />

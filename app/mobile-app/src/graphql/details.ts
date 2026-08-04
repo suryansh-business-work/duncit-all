@@ -461,3 +461,16 @@ export const ClubDetailsDocument = gql(`
     }
   }
 `);
+
+/** The people behind a club's Total Members count — mWeb's CLUB_FOLLOWERS. */
+export const MobileClubFollowersDocument = gql(`
+  query MobileClubFollowers($clubId: ID!) {
+    clubFollowers(club_doc_id: $clubId) {
+      user_id
+      username
+      full_name
+      first_name
+      profile_photo
+    }
+  }
+`);

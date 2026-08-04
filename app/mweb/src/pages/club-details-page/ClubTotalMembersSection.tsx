@@ -4,17 +4,33 @@ import { alpha } from '@mui/material/styles';
 
 interface Props {
   count: number;
+  /** Opens the list of the people being counted. */
+  onOpen?: () => void;
 }
 
-/** Total Members — the club's followers count (single source of truth). */
-export default function ClubTotalMembersSection({ count }: Readonly<Props>) {
+/** Total Members — the club's followers count (single source of truth), and a
+ * way into the list it counts. */
+export default function ClubTotalMembersSection({ count, onOpen }: Readonly<Props>) {
+  const interactive = !!onOpen && count > 0;
   return (
     <Stack
       data-testid="club-total-members"
       direction="row"
       spacing={1.5}
       alignItems="center"
+      role={interactive ? 'button' : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={interactive ? 'View club members' : undefined}
+      onClick={interactive ? onOpen : undefined}
+      onKeyDown={(event) => {
+        if (!interactive) return;
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen?.();
+        }
+      }}
       sx={{
+        cursor: interactive ? 'pointer' : 'default',
         p: 1.75,
         borderRadius: '16px',
         bgcolor: 'background.paper',

@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Stack, Typography } from '@mui/material';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { notify } from '../../components/notify';
+import ClubFollowersDialog from '../club-details-page/ClubFollowersDialog';
 import { usePricing } from '../../hooks/usePricing';
 import ClubHero from '../club-details-page/ClubHero';
 import ClubDetailsSkeleton from '../club-details-page/ClubDetailsSkeleton';
@@ -26,6 +28,7 @@ import useSavedClub from './useSavedClub';
 export default function ClubDetailsPage() {
   const { clubSlug = '' } = useParams();
   const navigate = useNavigate();
+  const [membersOpen, setMembersOpen] = useState(false);
   const { format: pricingFormat } = usePricing();
   const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
 
@@ -140,7 +143,15 @@ export default function ClubDetailsPage() {
           </Typography>
         </Box>
       )}
-      <ClubTotalMembersSection count={club.followers_count ?? 0} />
+      <ClubTotalMembersSection
+        count={club.followers_count ?? 0}
+        onOpen={() => setMembersOpen(true)}
+      />
+      <ClubFollowersDialog
+        open={membersOpen}
+        clubId={club.id}
+        onClose={() => setMembersOpen(false)}
+      />
       <ClubMembersSection memberIds={memberIds} />
       <ClubFriendsSection friendIds={friendIds} />
       <ClubRatingSection

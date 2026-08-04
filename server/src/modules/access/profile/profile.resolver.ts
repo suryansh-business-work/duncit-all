@@ -62,7 +62,7 @@ function followStatusOf(isFollowing: boolean, requested: boolean) {
 
 // Resolve a list of user ids to public profiles, tagging which ones the viewer
 // already follows (drives the Follow/Following button in the follow lists).
-async function mapPublicProfiles(ids: string[], viewerId: string | null) {
+export async function mapPublicProfiles(ids: string[], viewerId: string | null) {
   const clean = ids.filter(Boolean);
   if (clean.length === 0) return [];
   const users = await Promise.all(clean.map((id) => userService.getById(id).catch(() => null)));

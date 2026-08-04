@@ -318,6 +318,17 @@ export const clubService = {
     return ClubFollowerModel.countDocuments({ club_id: new Types.ObjectId(clubId) });
   },
 
+  /** The user ids behind followersCount, newest follower first — the list the
+   * club page's members count opens. */
+  async followerUserIds(clubId: string) {
+    if (!Types.ObjectId.isValid(clubId)) return [];
+    const rows = await ClubFollowerModel.find({ club_id: new Types.ObjectId(clubId) })
+      .select('user_id')
+      .sort({ created_at: -1 })
+      .lean();
+    return rows.map((r: any) => String(r.user_id));
+  },
+
   async getRating(clubId: string): Promise<number> {
     if (!Types.ObjectId.isValid(clubId)) return 0;
     const [row] = await ClubRatingModel.aggregate([

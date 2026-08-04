@@ -41,6 +41,14 @@ export const clubResolvers = {
       clubService.getBySlug(args.club_slug),
     clubRatings: async (_p: unknown, args: { club_doc_id: string }) =>
       clubService.listRatings(args.club_doc_id),
+    // Shaped by the same mapper the user follow lists use, so each row arrives
+    // with follow_status already resolved and its Follow button works without
+    // a second round trip.
+    clubFollowers: async (_p: unknown, args: { club_doc_id: string }, ctx: GraphQLContext) => {
+      const ids = await clubService.followerUserIds(args.club_doc_id);
+      const { mapPublicProfiles } = await import('@modules/access/profile/profile.resolver');
+      return mapPublicProfiles(ids, ctx.user?.id ?? null);
+    },
   },
   Mutation: {
     createClub: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

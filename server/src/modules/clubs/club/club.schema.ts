@@ -158,6 +158,11 @@ export const clubTypeDefs = /* GraphQL */ `
     club(club_doc_id: ID!): Club
     clubBySlug(club_slug: String!): Club
     clubRatings(club_doc_id: ID!): [ClubRating!]!
+    """
+    People who follow this club — the list behind followers_count, so the count
+    on the club page can open the members it is counting.
+    """
+    clubFollowers(club_doc_id: ID!): [PublicProfile!]!
   }
 
   extend type Mutation {

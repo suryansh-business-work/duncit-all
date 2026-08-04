@@ -7,6 +7,8 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
 import { podAuditService, snapshotPod } from '@modules/pods/podAudit/podAudit.service';
+import { venueSideOf } from '@modules/finance/finance/breakdown.math';
+import { resolveEffectiveRates } from '@modules/finance/finance/settlement.service';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -649,6 +651,45 @@ export const venueSlotService = {
       });
   },
 
+  /**
+   * Owner: one booking request with the venue's money on it, for the decision
+   * page the request email links to. Readable BEFORE and AFTER the decision —
+   * `decided_pod_id` keeps the pod reachable once a decline clears the hold —
+   * so a re-opened link shows the outcome instead of an error.
+   */
+  async decisionDetail(userId: string, slotId: string) {
+    const slot = await loadSlot(slotId);
+    if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
+    const podId = slot.booked_by_pod_id ?? slot.decided_pod_id;
+    if (!podId) fail('NOT_FOUND', 'This slot has no booking request');
+
+    const [pod, venue, rates] = await Promise.all([
+      PodModel.findById(podId).select('pod_title pod_description pod_hosts_id'),
+      VenueModel.findById(slot.venue_id).select('venue_name'),
+      resolveEffectiveRates({ venueId: String(slot.venue_id) }),
+    ]);
+    if (!pod) fail('NOT_FOUND', 'The pod for this request no longer exists');
+
+    const host: any = await UserModel.findById((pod!.pod_hosts_id ?? [])[0])
+      .select('profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension')
+      .lean();
+
+    // Same rounding rule settlement uses, in paise, then back to rupees.
+    const pricePaise = Math.round((slot.price ?? 0) * 100);
+    const side = venueSideOf(pricePaise, rates.venue_commission_percent);
+
+    return {
+      ...toRequestRow(slot, pod, host, venue?.venue_name ?? ''),
+      decision: slot.decision ?? 'NONE',
+      decided_at: slot.decided_at ? slot.decided_at.toISOString() : null,
+      decline_reason: slot.decline_reason ?? '',
+      space_label: slot.space_label ?? '',
+      venue_commission_pct: rates.venue_commission_percent,
+      venue_commission_amount: side.commission_paise / 100,
+      venue_receives: side.receives_paise / 100,
+    };
+  },
+
   /** Owner approves a pending request: slot PENDING → BOOKED, pod goes live. */
   async approveRequest(userId: string, slotId: string) {
     const slot = await loadSlot(slotId);
@@ -657,6 +698,10 @@ export const venueSlotService = {
       fail('BAD_REQUEST', 'This slot has no pending booking request');
     }
     slot.status = 'BOOKED';
+    slot.decision = 'APPROVED';
+    slot.decided_at = new Date();
+    slot.decided_pod_id = slot.booked_by_pod_id;
+    slot.decline_reason = '';
     await (slot as any).save();
     const beforePod = await PodModel.findById(slot.booked_by_pod_id);
     const before = beforePod ? snapshotPod(beforePod) : null;
@@ -689,6 +734,12 @@ export const venueSlotService = {
     const podId = slot.booked_by_pod_id;
     slot.status = 'AVAILABLE';
     slot.booked_by_pod_id = null;
+    // Keep the decision on the slot: `booked_by_pod_id` is cleared above, so
+    // without this the decision page has nothing to render after a decline.
+    slot.decision = 'DECLINED';
+    slot.decided_at = new Date();
+    slot.decided_pod_id = podId;
+    slot.decline_reason = reason?.trim() ?? '';
     await (slot as any).save();
     const beforePod = await PodModel.findById(podId);
     const before = beforePod ? snapshotPod(beforePod) : null;

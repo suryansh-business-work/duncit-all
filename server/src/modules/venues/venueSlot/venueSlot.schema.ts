@@ -23,6 +23,46 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     host_phone: String!
   }
 
+  "The owner's answer to a booking request. NONE = still waiting."
+  enum VenueSlotDecisionKind {
+    NONE
+    APPROVED
+    DECLINED
+  }
+
+  """
+  One booking request with the venue's money on it — powers the decision page
+  the request email links to. Readable before AND after the decision, so a
+  re-opened link shows the outcome instead of an error.
+  """
+  type VenueSlotDecision {
+    slot_id: ID!
+    venue_id: ID!
+    venue_name: String!
+    start_at: String!
+    end_at: String!
+    "The slot's gross price, before Duncit's venue commission."
+    price: Int!
+    "The venue space this slot is for ('' = whole venue)."
+    space_label: String!
+    requested_at: String!
+    pod_id: ID!
+    pod_title: String!
+    pod_description: String!
+    host_name: String!
+    host_email: String!
+    host_phone: String!
+    decision: VenueSlotDecisionKind!
+    decided_at: String
+    "Set only when the owner declined and gave a reason."
+    decline_reason: String!
+    "Duncit's commission on the venue's side — the venue's only deduction."
+    venue_commission_pct: Float!
+    venue_commission_amount: Float!
+    "What the venue takes home if the pod sells out; the slot price is a ceiling."
+    venue_receives: Float!
+  }
+
   type VenueSlot {
     id: ID!
     venue_id: ID!
@@ -97,6 +137,9 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     adminVenueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
     "Owner: pending booking requests across their venues (or one venue)."
     venueSlotRequests(venue_id: ID): [VenueSlotRequest!]!
+
+    "Owner: one request with its earnings, for the decision page linked from the request email."
+    venueSlotDecision(slot_id: ID!): VenueSlotDecision!
   }
 
   extend type Mutation {

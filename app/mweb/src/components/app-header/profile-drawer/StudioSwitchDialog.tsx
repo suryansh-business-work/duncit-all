@@ -4,6 +4,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import GroupsIcon from '@mui/icons-material/Groups';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '../../../studio-mode';
 
@@ -12,6 +13,7 @@ const ICONS: Record<StudioMode, JSX.Element> = {
   HOST: <DashboardIcon fontSize="small" />,
   VENUE: <StorefrontIcon fontSize="small" />,
   ECOMM: <Inventory2Icon fontSize="small" />,
+  CLUB: <GroupsIcon fontSize="small" />,
 };
 
 const ACTIVE_CAPTION = 'Active right now';

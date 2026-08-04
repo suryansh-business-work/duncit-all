@@ -16,6 +16,9 @@ export function NotificationFilterChips({ chips, value, onChange }: Readonly<Pro
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
+      // react-native-web puts flexGrow/flexShrink: 1 on every ScrollView, so a
+      // horizontal one in a flex column steals half the screen from the list.
+      style={{ flexGrow: 0, flexShrink: 0 }}
       contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 10, gap: 8 }}
     >
       {chips.map((chip) => {

@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { ScannedAttendee } from './scan.types';
 
 type IconName = keyof typeof MaterialIcons.glyphMap;
@@ -45,6 +46,8 @@ interface Props {
   attendee: ScannedAttendee;
   alreadyCheckedIn: boolean;
   ticketCode?: string;
+  /** People this one ticket admits — a group booking scans once. */
+  seats?: number;
   onOpenProfile: () => void;
 }
 
@@ -53,11 +56,17 @@ export function ScannedAttendeeCard({
   attendee,
   alreadyCheckedIn,
   ticketCode,
+  seats = 1,
   onOpenProfile,
 }: Readonly<Props>) {
-  const { muted, primary, success } = useThemeColors();
+  const { muted, onPrimary, primary, success } = useThemeColors();
+  const { t } = useTranslation();
   const joined = formatWhen(attendee.joined_at);
   const statusTint = alreadyCheckedIn ? muted : success;
+  // One QR can admit a whole group, so the head count is the first thing the
+  // host needs at the door — it decides how many people walk past them.
+  const partyText =
+    seats === 1 ? t('mweb.hostScan.personOnTicket') : t('mweb.hostScan.peopleOnTicket');
 
   return (
     <YStack gap={12} testID="scanned-attendee">
@@ -91,6 +100,33 @@ export function ScannedAttendeeCard({
             {ticketCode ? ` · ${ticketCode}` : ''}
           </Text>
         </YStack>
+      </XStack>
+
+      <XStack
+        testID="scan-party-size"
+        alignItems="center"
+        gap={12}
+        padding={12}
+        borderRadius={16}
+        borderWidth={2}
+        borderColor="$primary"
+        backgroundColor="$surface"
+      >
+        <YStack
+          width={44}
+          height={44}
+          borderRadius={22}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$primary"
+        >
+          <Text fontSize={20} fontWeight="800" color={onPrimary}>
+            {seats}
+          </Text>
+        </YStack>
+        <Text flex={1} fontSize={15} fontWeight="700" color="$color">
+          {partyText}
+        </Text>
       </XStack>
 
       {attendee.bio ? (

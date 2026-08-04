@@ -92,6 +92,7 @@ export default function TicketScanDialog({ pod, onClose }: Readonly<Props>) {
                   attendee={result.attendee}
                   alreadyCheckedIn={result.already_checked_in}
                   ticketCode={result.ticket?.ticket_code}
+                  seats={result.ticket?.seats ?? 1}
                 />
               )}
             </>

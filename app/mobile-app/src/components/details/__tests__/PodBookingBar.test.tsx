@@ -22,6 +22,8 @@ const renderBar = (props: Partial<Parameters<typeof PodBookingBar>[0]> = {}) =>
       isFree={false}
       isHost={false}
       membershipState={ms({})}
+      seats={1}
+      onSeatsChange={jest.fn()}
       onCheckout={jest.fn()}
       onBackout={jest.fn()}
       onKeepSpot={jest.fn()}

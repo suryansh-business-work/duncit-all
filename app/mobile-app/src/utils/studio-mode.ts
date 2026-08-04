@@ -1,7 +1,7 @@
 /** Studio "modes" the account drawer + header switch between. Each non-USER mode
  * maps to a role the user must hold. The active mode drives the sidebar menu and
  * the header studio badge — the RN twin of mWeb's `studio-mode.ts`. */
-export type StudioMode = 'USER' | 'HOST' | 'VENUE' | 'ECOMM';
+export type StudioMode = 'USER' | 'HOST' | 'VENUE' | 'ECOMM' | 'CLUB';
 
 export interface StudioOption {
   mode: StudioMode;
@@ -15,6 +15,7 @@ export const STUDIO_OPTIONS: readonly StudioOption[] = [
   { mode: 'HOST', label: 'Host Studio', role: 'HOST' },
   { mode: 'VENUE', label: 'Venue Studio', role: 'VENUE_OWNER' },
   { mode: 'ECOMM', label: 'ecomm', role: 'ECOMM_MANAGER' },
+  { mode: 'CLUB', label: 'Club Admin', role: 'CLUB_ADMIN' },
 ];
 
 export const STUDIO_LABEL: Record<StudioMode, string> = {
@@ -22,6 +23,7 @@ export const STUDIO_LABEL: Record<StudioMode, string> = {
   HOST: 'Host Studio',
   VENUE: 'Venue Studio',
   ECOMM: 'ecomm',
+  CLUB: 'Club Admin',
 };
 
 /** Modes a user with these roles can switch into (always includes USER). */
@@ -34,10 +36,13 @@ export function resolveMode(mode: StudioMode, roles: string[]): StudioMode {
   return availableModes(roles).some((option) => option.mode === mode) ? mode : 'USER';
 }
 
-/** Landing screen for each mode — switching roles jumps straight to its dashboard. */
+/** Landing screen for each mode — switching roles jumps straight to its dashboard.
+ * Club administration itself lives on the partner portal, so the club mode lands
+ * on the one destination it does own in-app: its payouts. */
 export const STUDIO_HOME_ROUTE = {
   USER: 'Home',
   HOST: 'HostManage',
   VENUE: 'VenueManage',
   ECOMM: 'ProductsManage',
+  CLUB: 'Wallet',
 } as const;

@@ -55,7 +55,14 @@ export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Pro
       >
         <MaterialIcons name="remove" size={18} color={seats <= 1 ? muted : ink} />
       </XStack>
-      <Text testID="pod-seat-count" fontSize={15} fontWeight="700" color="$color" minWidth={18} textAlign="center">
+      <Text
+        testID="pod-seat-count"
+        fontSize={15}
+        fontWeight="700"
+        color="$color"
+        minWidth={18}
+        textAlign="center"
+      >
         {seats}
       </Text>
       <XStack

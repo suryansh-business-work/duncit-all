@@ -3,8 +3,8 @@ import {
   PROFILE_GRID,
   REFERRAL_TILE,
   SHOP_ITEMS,
-  buildEarningsItems,
   buildManageItems,
+  buildPartnerMenus,
 } from '../profileSections';
 
 describe('profileSections', () => {
@@ -57,23 +57,57 @@ describe('profileSections', () => {
     expect(SHOP_ITEMS.map((i) => i.to)).toEqual(['/shop', '/orders', '/address-book', '/cart']);
   });
 
-  it('shows an Earnings > Withdrawal row only for partner roles (empty for consumers)', () => {
-    expect(buildEarningsItems([])).toEqual([]);
-    expect(buildEarningsItems(['USER'])).toEqual([]);
-    const host = buildEarningsItems(['HOST']);
-    expect(host.map((i) => i.label)).toEqual(['Withdrawal']);
-    expect(host[0]?.to).toBe('/host/wallet');
-    expect(buildEarningsItems(['VENUE_OWNER'])).toHaveLength(1);
-    expect(buildEarningsItems(['CLUB_ADMIN'])).toHaveLength(1);
-    expect(buildEarningsItems(['ECOMM_MANAGER'])).toHaveLength(1);
+  it('shows only the switched-into mode’s menu, each ending in Withdrawal', () => {
+    // User mode is a consumer drawer even for someone who holds every role.
+    const everyRole = ['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'];
+    expect(buildPartnerMenus(everyRole, 'USER')).toEqual([]);
+    expect(buildPartnerMenus([], 'HOST')).toEqual([]);
+    // A revoked role cannot keep a persisted mode alive.
+    expect(buildPartnerMenus(['VENUE_OWNER'], 'HOST')).toEqual([]);
+
+    const [hostMenu] = buildPartnerMenus(['HOST'], 'HOST');
+    expect(hostMenu?.title).toBe('Host Menu');
+    expect(hostMenu?.items.map((i) => i.label)).toEqual([
+      'Host Studio',
+      'Host Dashboard',
+      'Withdrawal',
+    ]);
+    expect(hostMenu?.items.map((i) => i.to)).toEqual([
+      '/host/manage',
+      '/host/dashboard',
+      '/host/wallet',
+    ]);
+
+    expect(buildPartnerMenus(['VENUE_OWNER'], 'VENUE')[0]?.items.map((i) => i.to)).toEqual([
+      '/venues/manage',
+      '/venues/earnings',
+      '/host/wallet',
+    ]);
+    expect(buildPartnerMenus(['ECOMM_MANAGER'], 'ECOMM')[0]?.items.map((i) => i.to)).toEqual([
+      '/products/manage',
+      '/host/wallet',
+    ]);
+    // Club administration has no in-app studio — Withdrawal alone.
+    expect(buildPartnerMenus(['CLUB_ADMIN'], 'CLUB')[0]?.items.map((i) => i.label)).toEqual([
+      'Withdrawal',
+    ]);
+
+    // A dual-role user sees one menu at a time — whichever they switched to.
+    expect(buildPartnerMenus(['HOST', 'VENUE_OWNER'], 'VENUE').map((m) => m.title)).toEqual([
+      'Venue Menu',
+    ]);
   });
 
   it('every route is absolute', () => {
+    const everyRole = ['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN'];
+    const partnerTiles = (['HOST', 'VENUE', 'ECOMM', 'CLUB'] as const).flatMap((mode) =>
+      buildPartnerMenus(everyRole, mode).flatMap((m) => m.items),
+    );
     const all = [
       ...PROFILE_GRID,
       REFERRAL_TILE,
       ...buildManageItems(true),
-      ...buildEarningsItems(['HOST']),
+      ...partnerTiles,
       ...SHOP_ITEMS,
     ];
     expect(all.every((t) => t.to.startsWith('/'))).toBe(true);

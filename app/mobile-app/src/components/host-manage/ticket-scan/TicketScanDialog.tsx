@@ -136,6 +136,7 @@ export function TicketScanDialog({ pod, onClose, onOpenProfile }: Readonly<Props
                       attendee={attendee}
                       alreadyCheckedIn={!!result?.already_checked_in}
                       ticketCode={result?.ticket?.ticket_code}
+                      seats={result?.ticket?.seats ?? 1}
                       onOpenProfile={() => onOpenProfile(attendee.user_id)}
                     />
                   ) : null}

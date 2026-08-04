@@ -5,22 +5,25 @@ import ReferralCard from './ReferralCard';
 import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
-import { buildEarningsItems, buildManageItems, SHOP_ITEMS } from './profileSections';
+import { buildManageItems, buildPartnerMenus, SHOP_ITEMS } from './profileSections';
+import type { StudioMode } from '../../../studio-mode';
 import { profileCompletion } from '../../../pages/account-page/account-edit/completion';
 
 interface UserModeContentProps {
   me: any;
   roles: string[];
+  /** Studio mode in effect — decides which partner menu (if any) is shown. */
+  mode: StudioMode;
   showPodPlans: boolean;
   onNavigate: (to: string) => void;
 }
 
-/** The consumer (USER mode) profile layout: identity, incomplete nudge,
- * quick-action grid, referral card, the Manage Account list and — for partner
- * roles — an Earnings (Withdrawal) row. */
-export default function UserModeContent({ me, roles, showPodPlans, onNavigate }: Readonly<UserModeContentProps>) {
+/** The profile layout every mode shares: identity, incomplete nudge,
+ * quick-action grid, referral card, the Manage Account list and — once switched
+ * into a partner mode — that role's own menu, ending in Withdrawal. */
+export default function UserModeContent({ me, roles, mode, showPodPlans, onNavigate }: Readonly<UserModeContentProps>) {
   const percent = profileCompletion(me ?? {});
-  const earningsItems = buildEarningsItems(roles);
+  const partnerMenus = buildPartnerMenus(roles, mode);
   return (
     <>
       <ProfileIdentity me={me} onClick={() => onNavigate('/profile')} />
@@ -30,9 +33,9 @@ export default function UserModeContent({ me, roles, showPodPlans, onNavigate }:
       <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.25 }} />
       <ReferralCard onNavigate={onNavigate} />
       <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
-      {earningsItems.length > 0 && (
-        <ManageAccountList title="Earnings" items={earningsItems} onNavigate={onNavigate} />
-      )}
+      {partnerMenus.map((menu) => (
+        <ManageAccountList key={menu.key} title={menu.title} items={menu.items} onNavigate={onNavigate} />
+      ))}
       <ManageAccountList title="Shop" items={SHOP_ITEMS} onNavigate={onNavigate} />
     </>
   );

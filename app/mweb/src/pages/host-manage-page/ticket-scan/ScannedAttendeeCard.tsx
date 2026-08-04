@@ -6,6 +6,8 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import HomeIcon from '@mui/icons-material/Home';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { alpha } from '@mui/material/styles';
+import { useTranslation } from '../../../i18n/useTranslation';
 import type { ScannedAttendee } from './queries';
 
 const formatWhen = (value: string | null) => {
@@ -45,16 +47,24 @@ interface Props {
   attendee: ScannedAttendee;
   alreadyCheckedIn: boolean;
   ticketCode?: string;
+  /** People this one ticket admits — a group booking scans once. */
+  seats?: number;
 }
 
-/** Who just walked in: photo, name, every contact detail on file, and a link to
- * their full profile. */
+/** Who just walked in: photo, name, how many people the ticket admits, every
+ * contact detail on file, and a link to their full profile. */
 export default function ScannedAttendeeCard({
   attendee,
   alreadyCheckedIn,
   ticketCode,
+  seats = 1,
 }: Readonly<Props>) {
+  const { t } = useTranslation();
   const joined = formatWhen(attendee.joined_at);
+  // One QR can admit a whole group, so the head count is the first thing the
+  // host needs at the door — it decides how many people walk past them.
+  const partyText =
+    seats === 1 ? t('mweb.hostScan.personOnTicket') : t('mweb.hostScan.peopleOnTicket');
   return (
     <Stack spacing={1.5}>
       <Stack direction="row" spacing={1.5} alignItems="center">
@@ -75,6 +85,42 @@ export default function ScannedAttendeeCard({
             {ticketCode && <Chip size="small" variant="outlined" label={ticketCode} />}
           </Stack>
         </Box>
+      </Stack>
+
+      <Stack
+        direction="row"
+        spacing={1.5}
+        alignItems="center"
+        data-testid="scan-party-size"
+        sx={{
+          p: 1.25,
+          borderRadius: '16px',
+          border: '2px solid',
+          borderColor: 'primary.main',
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.12),
+        }}
+      >
+        <Box
+          sx={{
+            width: 44,
+            height: 44,
+            flex: '0 0 auto',
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 800,
+            fontSize: 20,
+            lineHeight: 1,
+          }}
+        >
+          {seats}
+        </Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+          {partyText}
+        </Typography>
       </Stack>
 
       {attendee.bio && (

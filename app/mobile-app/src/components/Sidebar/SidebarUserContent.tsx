@@ -2,6 +2,7 @@ import { YStack } from 'tamagui';
 
 import { profileCompletion, type ProfileForCompletion } from '@/utils/profile-completion';
 import type { MenuRoute } from '@/navigation/types';
+import type { StudioMode } from '@/utils/studio-mode';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
 import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
@@ -9,27 +10,31 @@ import { SidebarQuickGrid } from './SidebarQuickGrid';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
-import { buildEarningsItems, buildManageItems, SHOP_ITEMS } from './profileSections';
+import { buildManageItems, buildPartnerMenus, SHOP_ITEMS } from './profileSections';
 
-/** The consumer (USER mode) profile layout — RN twin of mWeb's <UserModeContent/>:
- * identity, incomplete nudge, quick-action grid, referral card and the Manage
- * Account list. Identity comes from `me` (useMe); completion from the fuller
- * `account` record (useAccount). */
+/** The profile layout every mode shares — RN twin of mWeb's <UserModeContent/>:
+ * identity, incomplete nudge, quick-action grid, referral card, the Manage
+ * Account list and — once switched into a partner mode — that role's own menu,
+ * ending in Withdrawal. Identity comes from `me` (useMe); completion from the
+ * fuller `account` record (useAccount). */
 export function SidebarUserContent({
   me,
   account,
   roles,
+  mode,
   showPodPlans,
   onNavigate,
 }: Readonly<{
   me?: SidebarIdentityUser | null;
   account?: ProfileForCompletion | null;
   roles: readonly string[];
+  /** Studio mode in effect — decides which partner menu (if any) is shown. */
+  mode: StudioMode;
   showPodPlans: boolean;
   onNavigate: (route: MenuRoute) => void;
 }>) {
   const percent = profileCompletion(account ?? {});
-  const earningsItems = buildEarningsItems(roles);
+  const partnerMenus = buildPartnerMenus(roles, mode);
   return (
     <YStack>
       <SidebarProfileIdentity me={me} onPress={() => onNavigate('Profile')} />
@@ -45,9 +50,14 @@ export function SidebarUserContent({
         items={buildManageItems(showPodPlans)}
         onNavigate={onNavigate}
       />
-      {earningsItems.length > 0 ? (
-        <SidebarManageList title="Earnings" items={earningsItems} onNavigate={onNavigate} />
-      ) : null}
+      {partnerMenus.map((menu) => (
+        <SidebarManageList
+          key={menu.key}
+          title={menu.title}
+          items={menu.items}
+          onNavigate={onNavigate}
+        />
+      ))}
       <SidebarManageList title="Shop" items={SHOP_ITEMS} onNavigate={onNavigate} />
     </YStack>
   );

@@ -147,6 +147,16 @@ export function payingAttendees(
  *                         create-pod preview passes false so a venue-price
  *                         shortfall surfaces as negative host earnings.
  */
+/**
+ * The venue's side of the split: its fixed slot price minus Duncit's venue
+ * commission. Exported so a preview (the Partners slot-decision page) quotes
+ * exactly the number settlement will use — one rounding rule, not two.
+ */
+export function venueSideOf(venueAmountPaise: number, venueCommissionPercent: number) {
+  const commission = Math.round((venueAmountPaise * venueCommissionPercent) / 100);
+  return { commission_paise: commission, receives_paise: venueAmountPaise - commission };
+}
+
 export function computePodFinanceBreakdown(
   amountPaise: number,
   venueAmountPaise: number,
@@ -178,12 +188,13 @@ export function computePodFinanceBreakdown(
   const clampVenueToPool = options?.clampVenueToPool ?? true;
   const venueAmount = clampVenueToPool ? Math.min(venueAmountPaise, splitPool) : venueAmountPaise;
   const hostAmount = splitPool - venueAmount;
-  const venueCommission = Math.round((venueAmount * rates.venue_commission_percent) / 100);
+  const venueSide = venueSideOf(venueAmount, rates.venue_commission_percent);
+  const venueCommission = venueSide.commission_paise;
   // No commission is charged on a non-positive host side — the shortfall passes
   // through whole (and the reconciliation invariant still holds exactly).
   const hostCommission =
     hostAmount > 0 ? Math.round((hostAmount * rates.host_commission_percent) / 100) : 0;
-  const venueReceives = venueAmount - venueCommission;
+  const venueReceives = venueSide.receives_paise;
   const hostReceives = hostAmount - hostCommission;
   const duncitRevenue = fee + hostCommission + venueCommission + clubAdmin;
 

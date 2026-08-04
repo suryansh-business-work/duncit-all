@@ -22,6 +22,18 @@ export interface IVenueSlot extends Document {
   /** Integrator-supplied reference for an external (API) booking. */
   external_ref: string;
   notes: string;
+  /**
+   * The owner's last decision on a booking request, kept so the decision page
+   * can still be opened afterwards. A decline resets `status` to AVAILABLE and
+   * clears `booked_by_pod_id`, so without these the fact that the slot was ever
+   * requested — and by which pod — is gone the moment it is answered.
+   */
+  decision: 'NONE' | 'APPROVED' | 'DECLINED';
+  decided_at: Date | null;
+  /** The pod the decision was about; survives the decline clearing the hold. */
+  decided_pod_id: Types.ObjectId | null;
+  /** Owner's reason for declining (also mirrored into the pod audit note). */
+  decline_reason: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -45,6 +57,10 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     booked_by_api_key_id: { type: Schema.Types.ObjectId, ref: 'ApiKey', default: null, index: true },
     external_ref: { type: String, default: '', trim: true, maxlength: 120 },
     notes: { type: String, default: '', trim: true, maxlength: 280 },
+    decision: { type: String, enum: ['NONE', 'APPROVED', 'DECLINED'], default: 'NONE' },
+    decided_at: { type: Date, default: null },
+    decided_pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
+    decline_reason: { type: String, default: '', trim: true, maxlength: 280 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

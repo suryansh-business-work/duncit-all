@@ -569,6 +569,10 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       timeStyle: 'short',
     });
     const { partnersUrl } = await getUrlConfigs();
+    // The two CTAs open the same decision page with the intent pre-selected.
+    // The page is auth-gated, so a mail scanner following the link cannot
+    // decide anything — and the venue owner lands back on it after logging in.
+    const decisionUrl = `${partnersUrl.replace(/\/+$/, '')}/venues/requests/${String(slot._id)}`;
     await sendVenueSlotRequestEmail({
       to,
       owner_name: ownerName,
@@ -577,6 +581,8 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
       host_name: hostName,
       when,
       review_url: `${partnersUrl.replace(/\/+$/, '')}/venues/requests`,
+      approve_url: `${decisionUrl}?action=approve`,
+      decline_url: `${decisionUrl}?action=decline`,
     });
   } catch (err) {
     logs.server.error('pod', 'emailVenueSlotRequested', {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
   Box, Button, Card, Chip, Dialog, DialogActions, DialogContent, DialogTitle,
@@ -55,6 +56,11 @@ export default function SlotRequestCard({ request, busy, onApprove, onDecline }:
           />
         </Stack>
         <Stack direction="row" spacing={1} justifyContent="flex-end">
+          {/* Same page the request email's buttons open — it shows what this
+           * booking actually earns after Duncit's commission. */}
+          <Button size="small" component={RouterLink} to={`/venues/requests/${request.slot_id}`}>
+            View earnings
+          </Button>
           <Button
             size="small"
             color="error"

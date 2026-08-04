@@ -30,6 +30,10 @@ export const venueSlotResolvers = {
       const user = requireAuth(ctx);
       return venueSlotService.listRequests(user.id, args.venue_id);
     },
+    venueSlotDecision: (_p: unknown, args: { slot_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.decisionDetail(user.id, args.slot_id);
+    },
   },
   Mutation: {
     createVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

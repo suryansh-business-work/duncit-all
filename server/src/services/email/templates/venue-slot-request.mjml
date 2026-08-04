@@ -16,26 +16,42 @@
     <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
         <mj-text font-size="22px" font-weight="bold" color="#222">
-          New slot booking request, {{owner_name}}
+          {{t:email.venueSlotRequest.title}}, {{owner_name}}
         </mj-text>
         <mj-text font-size="14px" color="#555">
-          <strong>{{host_name}}</strong> wants to run their pod at <strong>{{venue_name}}</strong>. The slot is on hold and your pod host is waiting on your approval — the pod only goes live once you approve it.
+          <strong>{{host_name}}</strong> {{t:email.venueSlotRequest.intro}} <strong>{{venue_name}}</strong>. {{t:email.venueSlotRequest.hold}}
         </mj-text>
         <mj-text font-size="14px" color="#555">
-          Pod: <strong>{{pod_title}}</strong><br />
-          Requested slot: <strong>{{when}}</strong>
+          {{t:email.venueSlotRequest.pod}}: <strong>{{pod_title}}</strong><br />
+          {{t:email.venueSlotRequest.slot}}: <strong>{{when}}</strong>
         </mj-text>
-        <mj-button href="{{review_url}}" align="left" padding="14px 0 6px 0">
-          Review the request
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="0 20px 20px 20px">
+      <mj-column width="50%" padding="0 6px 0 0">
+        <mj-button href="{{approve_url}}" background-color="#16a34a" align="center" padding="0">
+          {{t:email.venueSlotRequest.approve}}
         </mj-button>
+      </mj-column>
+      <mj-column width="50%" padding="0 0 0 6px">
+        <mj-button href="{{decline_url}}" background-color="#dc2626" align="center" padding="0">
+          {{t:email.venueSlotRequest.decline}}
+        </mj-button>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="0 20px 20px 20px">
+      <mj-column>
         <mj-text font-size="13px" color="#888">
-          Or open the Partners portal and go to Slot Requests to approve or decline it.
+          {{t:email.venueSlotRequest.earningsNote}}
+        </mj-text>
+        <mj-text font-size="13px" color="#888">
+          <a href="{{review_url}}" style="color:#3b82f6;">{{t:email.venueSlotRequest.reviewAll}}</a>
         </mj-text>
       </mj-column>
     </mj-section>
     <mj-section padding="16px 0 24px 0">
       <mj-column>
-        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because a host requested one of your venue's availability slots.</mj-text>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. {{t:email.venueSlotRequest.footer}}</mj-text>
       </mj-column>
     </mj-section>
   </mj-body>

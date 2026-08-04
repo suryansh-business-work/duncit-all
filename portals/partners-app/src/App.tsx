@@ -8,6 +8,7 @@ import VenueListingsPage from './pages/venue-listings-page/VenueListingsPage';
 import VenueAvailabilityPage from './pages/venue-availability-page/VenueAvailabilityPage';
 import VenueDashboardPage from './pages/venue-dashboard-page/VenueDashboardPage';
 import SlotRequestsPage from './pages/slot-requests-page/SlotRequestsPage';
+import SlotDecisionPage from './pages/slot-decision-page/SlotDecisionPage';
 import VenuePodsPage from './pages/venue-pods-page/VenuePodsPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import EcommBrandPage from './pages/ecomm-brand-page/EcommBrandPage';
@@ -43,6 +44,8 @@ export default function App() {
       <Route path="/register-venue/:venueId" element={authed(<RegisterVenuePage />)} />
       <Route path="/venues/dashboard" element={authed(<VenueDashboardPage />)} />
       <Route path="/venues/requests" element={authed(<SlotRequestsPage />)} />
+      {/* Opened by the request email's Approve / Decline buttons (?action=…). */}
+      <Route path="/venues/requests/:slotId" element={authed(<SlotDecisionPage />)} />
       <Route path="/venues/pods" element={authed(<VenuePodsPage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />

@@ -14,6 +14,7 @@ import ProcessingBackdrop from '../checkout-page/ProcessingBackdrop';
 import SavedAddressPicker from '../checkout-page/SavedAddressPicker';
 import ProductDetailDialog from '../pod-details-page/ProductDetailDialog';
 import { useCheckoutSession } from '../checkout-page/useCheckoutSession';
+import { useCoinRedemption } from '../checkout-page/useCoinRedemption';
 import ProductOrderSummaryCard from './ProductOrderSummaryCard';
 import { mapLinesToItems, productSubtotal } from './productCheckoutInput';
 import { useProductPayment } from './useProductPayment';
@@ -47,8 +48,13 @@ export default function ProductCheckoutPage() {
   const shippingTotal = quote?.total ?? 0;
   const amount = subtotal + shippingTotal;
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
+  // The server discounts the PRODUCT SUBTOTAL only and adds shipping on top —
+  // preview against the subtotal and pay discounted subtotal + delivery. Coins
+  // then redeem against that bill.
+  const payableAfterCoupon = session.coupon?.ok ? session.coupon.final_total + shippingTotal : amount;
+  const coins = useCoinRedemption(session, payableAfterCoupon);
 
-  const onCheckout = useProductPayment({ session, items });
+  const onCheckout = useProductPayment({ session, items, coins });
   const submit = session.handleSubmit(onCheckout);
 
   if (session.success) {
@@ -64,10 +70,6 @@ export default function ProductCheckoutPage() {
 
   if (lines.length === 0) return <EmptyProductCheckout onCart={() => navigate('/cart')} />;
   if (session.financeLoading || !breakup) return <ProductCheckoutSkeleton />;
-
-  // The server discounts the PRODUCT SUBTOTAL only and adds shipping on top —
-  // preview against the subtotal and pay discounted subtotal + delivery.
-  const effectiveTotal = session.coupon?.ok ? session.coupon.final_total + shippingTotal : breakup.total;
 
   const headerBg = isDark
     ? 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)'
@@ -106,7 +108,7 @@ export default function ProductCheckoutPage() {
             error={session.error}
             submitting={session.submitting}
             total={breakup.total}
-            effectiveTotal={effectiveTotal}
+            effectiveTotal={coins.effectiveTotal}
             currency={breakup.currency}
             dummyMode={!!session.finance?.dummy_mode && !session.finance?.razorpay_enabled}
             mainAddress={session.mainAddress}
@@ -121,6 +123,7 @@ export default function ProductCheckoutPage() {
             availableCoupons={session.availableCoupons}
             onApplyCoupon={(code) => session.applyCoupon(subtotal, code)}
             onRemoveCoupon={session.removeCoupon}
+            coins={coins}
             addressRequired
           />
         </Stack>

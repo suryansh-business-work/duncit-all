@@ -158,7 +158,8 @@ describe('CheckoutScreen', () => {
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));
     // pod_amount 500 only — products are a separate product-checkout payment.
-    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 500, null));
+    // Trailing 0 = no Duncit Coins redeemed (the buyer has no balance here).
+    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 500, null, 0));
   });
 
   it('pays and shows the success view', async () => {
@@ -269,7 +270,7 @@ describe('CheckoutScreen', () => {
     expect(screen.getByTestId('coupon-total')).toBeOnTheScreen();
     fill();
     fireEvent.press(screen.getByTestId('checkout-submit'));
-    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 500, 'TEN'));
+    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 500, 'TEN', 0));
   });
 
   it('surfaces an invalid coupon', async () => {

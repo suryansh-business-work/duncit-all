@@ -5,6 +5,7 @@ import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
 import {
   CheckoutSuccess,
+  CoinRedeemField,
   CouponField,
   CouponTotal,
   OrderSummary,
@@ -21,6 +22,7 @@ import {
   type RazorpayOrder,
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
+import { useCoinRedemption } from '@/hooks/useCoinRedemption';
 import { usePodTicket } from '@/hooks/usePodHistory';
 import type { RootStackParamList } from '@/navigation/types';
 import { buildBreakup } from '@/utils/checkout-math';
@@ -67,7 +69,9 @@ export function CheckoutScreen() {
   const razorpayEnabled = !!finance?.razorpay_enabled;
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
   const appliedCode = coupon?.ok ? coupon.code : null;
-  const effectiveTotal = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
+  // The coupon discounts the whole pod bill, so coins redeem against its result.
+  const payableAfterCoupon = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
+  const coins = useCoinRedemption(payableAfterCoupon);
   const onDownloadTicket = podId ? () => downloadTicket(podId) : undefined;
   // Render the contact from the freshly-loaded profile (not just the form
   // prefill), with a spinner while it is still loading, so the card is robust.
@@ -121,14 +125,14 @@ export function CheckoutScreen() {
     setError(null);
     try {
       if (razorpayEnabled) {
-        const created = await createRazorpayOrder(values, amount, appliedCode);
+        const created = await createRazorpayOrder(values, amount, appliedCode, coins.applied);
         // 100%-off coupon → completed server-side, skip the gateway sheet.
         if (created.free && created.payment) setPayment(created.payment);
         else setOrder(created);
         return;
       }
       if (dummyMode) {
-        const result = await pay(values, amount, appliedCode);
+        const result = await pay(values, amount, appliedCode, coins.applied);
         if (result?.status === 'SUCCESS') setPayment(result);
         else setError('Payment failed. Please try again.');
         return;
@@ -174,10 +178,10 @@ export function CheckoutScreen() {
           onApply={applyCoupon}
           onRemove={removeCoupon}
         />
+        <CoinRedeemField coins={coins} />
         <CouponTotal
-          coupon={coupon}
           currency={breakup.currency}
-          effectiveTotal={effectiveTotal}
+          effectiveTotal={coins.effectiveTotal}
           originalTotal={breakup.total}
         />
         <CheckoutForm

@@ -33,6 +33,8 @@ interface BuildContext {
   mainAddress?: CheckoutMainAddress | null;
   couponCode: string | null;
   pickedContact?: PickedContact | null;
+  /** Duncit Coins the buyer asked to redeem — the server re-clamps it. */
+  redeemCoins?: number;
 }
 
 /** A saved address-book entry carries its own recipient. Returns null when the
@@ -97,6 +99,7 @@ export function buildProductCheckoutInput(
     delivery_pincode: values.pincode,
     checkout_url: CHECKOUT_URL,
     coupon_code: ctx.couponCode,
+    redeem_coins: ctx.redeemCoins ?? 0,
   };
   return { input, simulate_failure: values.simulate_failure };
 }

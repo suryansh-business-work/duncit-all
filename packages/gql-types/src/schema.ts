@@ -361,6 +361,8 @@ export type AppReleaseEmailResult = {
 
 export type AppSettings = {
   __typename?: 'AppSettings';
+  /** Percent of every successful payment granted back to the buyer as Duncit Coins, where 1 coin = 1 rupee (0 turns the reward off). */
+  coin_earn_pct: Scalars['Int']['output'];
   /** CUSTOM anchor — the instant the apps' clock should read (ISO). */
   custom_time?: Maybe<Scalars['String']['output']>;
   /** Server's real time when the CUSTOM anchor was saved (ISO). */
@@ -1456,6 +1458,34 @@ export type CoHostStatus =
   | 'ACCEPTED'
   | 'DECLINED'
   | 'PENDING';
+
+/** A user's Duncit Coin balance. 1 coin = 1 rupee of earned reward value. */
+export type CoinBalance = {
+  __typename?: 'CoinBalance';
+  balance: Scalars['Float']['output'];
+  /** Percent of a payment currently granted back as coins (Admin > Pod Settings). */
+  earn_pct: Scalars['Float']['output'];
+  /** Every coin ever earned, so the total survives future spending. */
+  lifetime_earned: Scalars['Float']['output'];
+};
+
+/** One row of the coin ledger — insert-only, newest first. */
+export type CoinTransaction = {
+  __typename?: 'CoinTransaction';
+  amount: Scalars['Float']['output'];
+  balance_after: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  /** Rate in effect when these coins were granted. */
+  earn_pct: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  /** Payment this reward was earned on. */
+  payment_id?: Maybe<Scalars['String']['output']>;
+  reason: Scalars['String']['output'];
+  source: Scalars['String']['output'];
+  /** Order total the grant was computed from. */
+  spend_amount: Scalars['Float']['output'];
+  type: Scalars['String']['output'];
+};
 
 export type CommsLogEntity =
   | 'ECOMM_LEAD'
@@ -9872,6 +9902,8 @@ export type Query = {
   myChatRooms: Array<ChatRoom>;
   /** Pods where I am a co-host. status defaults to ACCEPTED; pass PENDING for my invites. */
   myCoHostedPods: Array<Pod>;
+  myCoinBalance: CoinBalance;
+  myCoinTransactions: Array<CoinTransaction>;
   /** The signed-in partner's e-commerce brands (a partner may run several). */
   myEcommBrands: Array<EcommBrand>;
   /** Server-side table sibling of myEcommBrands — always scoped to the caller's own brands. */
@@ -13262,6 +13294,8 @@ export type UpdateAiPromptInput = {
 };
 
 export type UpdateAppSettingsInput = {
+  /** Percent of every successful payment granted back as Duncit Coins (0-100, 0 turns the reward off). */
+  coin_earn_pct?: InputMaybe<Scalars['Int']['input']>;
   /** CUSTOM anchor (ISO). Saving it stamps custom_time_set_at server-side. */
   custom_time?: InputMaybe<Scalars['String']['input']>;
   date_format?: InputMaybe<Scalars['String']['input']>;

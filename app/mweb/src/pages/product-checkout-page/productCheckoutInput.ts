@@ -20,6 +20,9 @@ interface BuildContext {
   items: ProductCartItemInput[];
   mainAddress?: PostalAddressParts | null;
   couponCode: string | null;
+  /** Duncit Coins the buyer chose to spend on this bill (already clamped to the
+   * balance and the payable). Omitted means none — the server clamps again. */
+  redeemCoins?: number;
   /** Contact saved on the picked address-book entry — the parcel goes to this
    * person, so it wins over the (possibly phone-less) profile contact. */
   pickedContact?: { name: string; phone: string; email: string } | null;
@@ -63,6 +66,7 @@ export function buildProductCheckoutInput(values: CheckoutForm, ctx: BuildContex
     delivery_pincode: values.pincode,
     checkout_url: globalThis.window.location.href,
     coupon_code: ctx.couponCode,
+    redeem_coins: ctx.redeemCoins ?? 0,
   };
   return { input, simulate_failure };
 }

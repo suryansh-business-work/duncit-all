@@ -2,6 +2,7 @@ import ProfileIdentity from './ProfileIdentity';
 import IncompleteBanner from './IncompleteBanner';
 import QuickActionGrid from './QuickActionGrid';
 import ReferralCard from './ReferralCard';
+import DuncitCoinCard from './DuncitCoinCard';
 import VenuesCard from './VenuesCard';
 import ManageAccountList from './ManageAccountList';
 import AdSlot from '../../ads/AdSlot';
@@ -31,6 +32,7 @@ export default function UserModeContent({ me, roles, mode, showPodPlans, onNavig
       <QuickActionGrid onNavigate={onNavigate} />
       <VenuesCard onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" sx={{ width: 'auto', mx: 2, mb: 1.25 }} />
+      {mode === 'USER' && <DuncitCoinCard onNavigate={onNavigate} />}
       <ReferralCard onNavigate={onNavigate} />
       <ManageAccountList title="Manage Account" items={buildManageItems(showPodPlans)} onNavigate={onNavigate} />
       {partnerMenus.map((menu) => (

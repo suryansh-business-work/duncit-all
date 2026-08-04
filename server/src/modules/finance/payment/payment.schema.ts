@@ -66,6 +66,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     currency_symbol: String!
     coupon_code: String
     coupon_discount: Float!
+    "Duncit Coins spent on this payment (1 coin = 1 rupee off the gross)."
+    coins_redeemed: Float!
     status: PaymentStatus!
     gateway: String!
     gateway_ref: String
@@ -127,6 +129,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     billing_address: String
     checkout_url: String!
     coupon_code: String
+    "Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill."
+    redeem_coins: Int
     simulate_failure: Boolean
     "How the add-on products are delivered (default PICKUP)."
     fulfilment_method: FulfilmentMethod
@@ -158,6 +162,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     billing_address: String
     checkout_url: String!
     coupon_code: String
+    "Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill."
+    redeem_coins: Int
     fulfilment_method: FulfilmentMethod
     shipping_address: OrderShippingAddressInput
   }
@@ -219,6 +225,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     shipping_address: OrderShippingAddressInput
     "Destination pincode for the ShipRocket rate; falls back to shipping_address.pincode."
     delivery_pincode: String
+    "Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill."
+    redeem_coins: Int
   }
 
   input DummyProductCheckoutInput {
@@ -236,6 +244,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     fulfilment_method: FulfilmentMethod
     shipping_address: OrderShippingAddressInput
     delivery_pincode: String
+    "Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill."
+    redeem_coins: Int
     simulate_failure: Boolean
   }
 

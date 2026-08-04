@@ -21,6 +21,7 @@ import {
   type CouponPreview,
 } from './queries';
 import { loadRazorpay, type RazorpaySignature } from './razorpayCheckout';
+import { MY_COIN_BALANCE } from '../duncit-coin-page/queries';
 import { parseApiError } from '../../utils/parseApiError';
 import type { UserAddress } from '../account-page/address-book-form';
 
@@ -56,6 +57,9 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     variables: { pod_id: couponPodId || null },
     fetchPolicy: 'cache-and-network',
   });
+  // The loyalty balance a buyer may spend on this bill. Read here so both the
+  // pod and the product checkout share one source of truth.
+  const { data: coinData } = useQuery(MY_COIN_BALANCE, { fetchPolicy: 'cache-and-network' });
   const [doVerifyRazorpay] = useMutation(VERIFY_RAZORPAY_PAYMENT);
   const [doUpdateProfile] = useMutation(UPDATE_MY_PROFILE);
   const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
@@ -67,6 +71,7 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
   const [coupon, setCoupon] = useState<CouponPreview | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [coinsApplied, setCoinsApplied] = useState(0);
   const [pickedContact, setPickedContact] = useState<PickedContact | null>(null);
 
   const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm>({
@@ -121,6 +126,8 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     setCouponCode('');
     setCouponError(null);
   };
+
+  const removeCoins = () => setCoinsApplied(0);
 
   // Fill the billing/delivery fields from a picked saved address (SavedAddressPicker).
   // The address book carries its own parcel contact (name/phone/email), which is
@@ -226,6 +233,10 @@ export function useCheckoutSession({ couponPodId, onBeforeSuccess, requireAddres
     applyingCoupon,
     applyCoupon,
     removeCoupon,
+    coinBalance: coinData?.myCoinBalance?.balance ?? 0,
+    coinsApplied,
+    setCoinsApplied,
+    removeCoins,
     pickAddress,
     pickedContact,
     availableCoupons: couponsData?.availableCouponsForPod ?? [],

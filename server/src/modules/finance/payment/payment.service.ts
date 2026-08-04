@@ -15,6 +15,7 @@ import {
   verifyRazorpaySignature,
 } from './razorpay.gateway';
 import { couponService } from '@modules/finance/coupon/coupon.service';
+import { coinService } from '@modules/finance/coin/coin.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
@@ -59,6 +60,7 @@ const toPub = (p: IPayment) => ({
   currency_symbol: p.currency_symbol,
   coupon_code: p.coupon_code ?? null,
   coupon_discount: p.coupon_discount ?? 0,
+  coins_redeemed: p.coins_redeemed ?? 0,
   status: p.status,
   gateway: p.gateway,
   gateway_ref: p.gateway_ref,
@@ -362,6 +364,45 @@ async function applyCoupon(input: any, payableAmount: number, userId: string) {
     couponDiscount: round2(originalQuote.total - quote.total),
   };
 }
+
+/** Smallest amount the gateway will accept for an order (Razorpay: ₹1). */
+const MIN_GATEWAY_CHARGE = 1;
+
+/**
+ * Spend the buyer's Duncit Coins against an already-couponed quote. Coins work
+ * exactly like the coupon discount — they cut the gross and the quote is
+ * re-priced on the reduced amount — so the invoice total always equals the
+ * amount actually charged, and GST is charged on what was really paid.
+ *
+ * The requested count is the client's ASK, never the authority: it is clamped
+ * to the live balance and to the bill, so a tampered request can neither
+ * overdraw the balance nor push the total below zero. The coins are not debited
+ * here — that happens on payment success, the same way a coupon's redemption is
+ * only recorded once the money actually lands.
+ */
+async function applyCoins(requested: unknown, userId: string, quote: QuoteBreakup) {
+  const wanted = Math.floor(Number(requested) || 0);
+  if (wanted <= 0) return { quote, coinsRedeemed: 0 };
+  const balance = await coinService.balanceOf(userId);
+  let coinsRedeemed = Math.min(wanted, Math.floor(balance), Math.floor(quote.total));
+  if (coinsRedeemed <= 0) return { quote, coinsRedeemed: 0 };
+  // Coins are whole rupees but a bill need not be, so redeeming the floor of a
+  // ₹499.50 total would leave 50 paise to charge — under Razorpay's ₹1 minimum,
+  // which rejects the order outright. Hand one coin back to lift the remainder
+  // clear. Redeeming the bill down to exactly zero is fine: that path skips the
+  // gateway altogether.
+  const remainder = round2(quote.total - coinsRedeemed);
+  if (remainder > 0 && remainder < MIN_GATEWAY_CHARGE) coinsRedeemed -= 1;
+  if (coinsRedeemed <= 0) return { quote, coinsRedeemed: 0 };
+  return { quote: await computeQuote(round2(quote.total - coinsRedeemed)), coinsRedeemed };
+}
+
+/** How a zero-charge order was settled. It skips the gateway either way, but the
+ * invoice still has to name what actually paid for it. */
+const freeSettlement = (couponCode: string | null) =>
+  couponCode
+    ? { gateway: 'COUPON', label: 'Coupon (100% off)' }
+    : { gateway: 'COINS', label: 'Duncit Coins' };
 
 /**
  * Seats this checkout may buy. The client picks a number, but the price and the
@@ -702,6 +743,29 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
   } catch (e) {
     logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Short-link attribution failed' });
   }
+  // Duncit Coins: the buyer earns a share of what they just spent back as
+  // coins. Every paid path funnels through here — dummy, 100%-off coupon,
+  // Razorpay, pod and product alike — so this is the one place it belongs.
+  // Idempotent per payment_id inside the service, and best-effort: a reward
+  // must never fail a payment that already succeeded.
+  // The redemption is settled first, then the reward is earned on `doc.total` —
+  // which is already net of the coins spent, so coins can never earn more coins.
+  try {
+    await coinService.redeemForPayment({
+      userId: String(doc.user_id),
+      paymentId: doc.payment_id,
+      coins: doc.coins_redeemed,
+      reason: doc.description || 'Purchase',
+    });
+    await coinService.creditForPayment({
+      userId: String(doc.user_id),
+      paymentId: doc.payment_id,
+      spendAmount: doc.total,
+      reason: doc.description || 'Purchase',
+    });
+  } catch (e) {
+    logs.server.warn('payment', 'finalizePaidPayment', { error: e, msg: 'Coin settlement failed' });
+  }
   try {
     const pdf = await generateInvoicePdf({
       invoice_no: doc.invoice_no!,
@@ -828,11 +892,13 @@ export const paymentService = {
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
     const { pod, payableAmount, description, products } = await resolvePayable(input);
-    const { quote, originalTotal, couponCode, couponDiscount } = await applyCoupon(
-      input,
-      payableAmount,
-      userId
-    );
+    const {
+      quote: couponedQuote,
+      originalTotal,
+      couponCode,
+      couponDiscount,
+    } = await applyCoupon(input, payableAmount, userId);
+    const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
 
     const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
     const paidAt = status === 'SUCCESS' ? new Date() : null;
@@ -856,6 +922,7 @@ export const paymentService = {
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
+      coins_redeemed: coinsRedeemed,
       status,
       gateway: 'DUMMY',
       gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
@@ -879,11 +946,13 @@ export const paymentService = {
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
     const { pod, payableAmount, description, products } = await resolvePayable(input);
-    const { quote, originalTotal, couponCode, couponDiscount } = await applyCoupon(
-      input,
-      payableAmount,
-      userId
-    );
+    const {
+      quote: couponedQuote,
+      originalTotal,
+      couponCode,
+      couponDiscount,
+    } = await applyCoupon(input, payableAmount, userId);
+    const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
     const payment_id = newPaymentId();
     const base = {
       payment_id,
@@ -902,20 +971,23 @@ export const paymentService = {
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
+      coins_redeemed: coinsRedeemed,
     };
 
-    // 100%-off coupon → nothing to charge: finalize immediately, skip the gateway.
+    // Nothing left to charge (100%-off coupon, or coins covering the whole
+    // bill) → finalize immediately and skip the gateway.
     if (quote.total <= 0) {
+      const settlement = freeSettlement(couponCode);
       const freeDoc = await PaymentModel.create({
         ...base,
         invoice_no: await nextInvoiceNumber(),
         status: 'SUCCESS',
-        gateway: 'COUPON',
-        gateway_ref: `coupon_${Date.now()}`,
+        gateway: settlement.gateway,
+        gateway_ref: `free_${Date.now()}`,
         paid_at: new Date(),
         metadata: { ...paymentMetadata(input, pod, products), original_total: originalTotal },
       });
-      await finalizePaidPayment(freeDoc, fs, 'Coupon (100% off)');
+      await finalizePaidPayment(freeDoc, fs, settlement.label);
       if (couponCode) await couponService.recordRedemption(couponCode);
       return razorpaySheet({
         paymentDocId: String(freeDoc._id),
@@ -1032,12 +1104,18 @@ export const paymentService = {
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
     const resolution = await resolveProductPayable(input);
-    const { quote, originalTotal, couponCode, couponDiscount } = await applyProductCoupon(
+    const {
+      quote: couponedQuote,
+      originalTotal,
+      couponCode,
+      couponDiscount,
+    } = await applyProductCoupon(
       input,
       resolution.productsTotal,
       resolution.shipping.total,
       userId
     );
+    const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
 
     const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
     const paidAt = status === 'SUCCESS' ? new Date() : null;
@@ -1061,6 +1139,7 @@ export const paymentService = {
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
+      coins_redeemed: coinsRedeemed,
       status,
       gateway: 'DUMMY',
       gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
@@ -1084,12 +1163,18 @@ export const paymentService = {
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
     const resolution = await resolveProductPayable(input);
-    const { quote, originalTotal, couponCode, couponDiscount } = await applyProductCoupon(
+    const {
+      quote: couponedQuote,
+      originalTotal,
+      couponCode,
+      couponDiscount,
+    } = await applyProductCoupon(
       input,
       resolution.productsTotal,
       resolution.shipping.total,
       userId
     );
+    const { quote, coinsRedeemed } = await applyCoins(input.redeem_coins, userId, couponedQuote);
     const payment_id = newPaymentId();
     const description = input.description || 'Product order';
     const base = {
@@ -1109,20 +1194,23 @@ export const paymentService = {
       currency_symbol: quote.currency_symbol,
       coupon_code: couponCode,
       coupon_discount: couponDiscount,
+      coins_redeemed: coinsRedeemed,
     };
 
-    // 100%-off coupon → nothing to charge: finalize immediately, skip the gateway.
+    // Nothing left to charge (100%-off coupon, or coins covering the whole
+    // bill) → finalize immediately and skip the gateway.
     if (quote.total <= 0) {
+      const settlement = freeSettlement(couponCode);
       const freeDoc = await PaymentModel.create({
         ...base,
         invoice_no: await nextInvoiceNumber(),
         status: 'SUCCESS',
-        gateway: 'COUPON',
-        gateway_ref: `coupon_${Date.now()}`,
+        gateway: settlement.gateway,
+        gateway_ref: `free_${Date.now()}`,
         paid_at: new Date(),
         metadata: { ...productPaymentMetadata(input, resolution), original_total: originalTotal },
       });
-      await finalizePaidPayment(freeDoc, fs, 'Coupon (100% off)');
+      await finalizePaidPayment(freeDoc, fs, settlement.label);
       if (couponCode) await couponService.recordRedemption(couponCode);
       return razorpaySheet({
         paymentDocId: String(freeDoc._id),

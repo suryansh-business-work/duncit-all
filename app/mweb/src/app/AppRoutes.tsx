@@ -37,6 +37,7 @@ const FaqsPage = lazy(() => import('../pages/FaqsPage'));
 const PolicyPage = lazy(() => import('../pages/PolicyPage'));
 const PodIdeasPage = lazy(() => import('../pages/PodIdeasPage'));
 const ReferralPage = lazy(() => import('../pages/ReferralPage'));
+const DuncitCoinPage = lazy(() => import('../pages/duncit-coin-page'));
 const PodPlansPage = lazy(() => import('../pages/PodPlansPage'));
 const PodHistoryPage = lazy(() => import('../pages/PodHistoryPage'));
 const PodHistoryDetailsPage = lazy(() => import('../pages/PodHistoryDetailsPage'));
@@ -154,6 +155,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
         <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />
         <Route path="/referral" element={withAuth(<ReferralPage />)} />
+        <Route path="/duncit-coin" element={withAuth(<DuncitCoinPage />)} />
         <Route path="/pod-plans" element={withAuth(<PodPlansPage />)} />
         <Route path="/pod-history" element={withAuth(<PodHistoryPage />)} />
         <Route path="/pod-history/:membershipId" element={withAuth(<PodHistoryDetailsPage />)} />

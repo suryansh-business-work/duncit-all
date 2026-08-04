@@ -27,6 +27,10 @@ export interface IAppSettings extends Document {
   /** Account Health points deducted from a venue when its owner cancels a pod
    * booked there (Admin > Pods > Pod Settings). 0 disables the penalty. */
   venue_cancel_health_penalty: number;
+  /** Percent of every successful payment granted back to the buyer as Duncit
+   * Coins, where 1 coin = 1 rupee (Admin > Pods > Pod Settings). 0 turns the
+   * reward off without removing anyone's existing balance. */
+  coin_earn_pct: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -51,6 +55,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     draft_retention_days: { type: Number, default: 3, min: 1 },
     max_backout_attempts: { type: Number, default: 3, min: 1 },
     venue_cancel_health_penalty: { type: Number, default: 5, min: 0, max: 100 },
+    coin_earn_pct: { type: Number, default: 10, min: 0, max: 100 },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

@@ -88,6 +88,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       TicketDetails: 'tickets/:ticketId',
       PodIdeas: 'pod-ideas',
       Referral: 'referral',
+      DuncitCoin: 'duncit-coin',
       HappeningNearby: { path: 'happening-nearby', parse: { initialIndex: Number } },
       Faqs: 'faqs',
       TourGuide: 'tour-guide',

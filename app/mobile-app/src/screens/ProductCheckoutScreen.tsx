@@ -7,6 +7,7 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import {
   CheckoutSuccess,
+  CoinRedeemField,
   CouponField,
   CouponTotal,
   ProcessingOverlay,
@@ -24,6 +25,7 @@ import {
   type RazorpayOrder,
   type RazorpaySignature,
 } from '@/hooks/useCheckout';
+import { useCoinRedemption } from '@/hooks/useCoinRedemption';
 import { useProductCheckout, type ProductPayment } from '@/hooks/useProductCheckout';
 import { useProductShippingQuote } from '@/hooks/useProductShippingQuote';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -144,13 +146,15 @@ export function ProductCheckoutScreen() {
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
   const appliedCode = coupon?.ok ? (coupon.code ?? null) : null;
   // The server discounts the PRODUCT SUBTOTAL only, then adds shipping — mirror
-  // that here so the "You pay" amount always equals the charged amount.
+  // that here so the "You pay" amount always equals the charged amount. Coins
+  // then redeem against that bill.
   const discountedPay = coupon?.ok ? round2(coupon.final_total + shippingTotal) : null;
-  const effectiveTotal = discountedPay ?? breakup?.total ?? amount;
+  const coins = useCoinRedemption(discountedPay ?? breakup?.total ?? amount);
   const payContext = {
     items,
     couponCode: appliedCode,
     pickedContact: toPickedContact(pickedAddress),
+    redeemCoins: coins.applied,
   };
 
   const finishSuccess = (result: NonNullable<ProductPayment>) => {
@@ -270,10 +274,10 @@ export function ProductCheckoutScreen() {
           onApply={applyCoupon}
           onRemove={removeCoupon}
         />
+        <CoinRedeemField coins={coins} />
         <CouponTotal
-          coupon={coupon}
           currency={breakup.currency}
-          effectiveTotal={effectiveTotal}
+          effectiveTotal={coins.effectiveTotal}
           originalTotal={breakup.total}
         />
         <CheckoutForm

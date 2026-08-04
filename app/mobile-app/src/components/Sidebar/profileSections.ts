@@ -53,6 +53,17 @@ export const PROFILE_GRID: readonly ProfileTile[] = [
   },
 ];
 
+/** The full-width featured Duncit Coin card. Shown in User mode only — the
+ * partner studios are earning surfaces, and the coin balance is a consumer
+ * reward, so it stays out of them. */
+export const COIN_TILE: ProfileTile = {
+  key: 'duncit-coin',
+  label: 'Duncit Coin',
+  caption: '',
+  icon: 'monetization-on',
+  route: 'DuncitCoin',
+};
+
 /** The full-width featured referral card. */
 export const REFERRAL_TILE: ProfileTile = {
   key: 'referral',

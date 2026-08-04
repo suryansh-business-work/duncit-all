@@ -1,4 +1,5 @@
 import { useAuthStore } from '@/stores/auth.store';
+import { useCoinBalanceStore, useCoinLedgerStore } from '@/stores/coin.store';
 import { useMeStore } from '@/stores/me.store';
 
 /**
@@ -12,5 +13,9 @@ export function useLogout() {
   return async () => {
     await signOut();
     useMeStore.getState().reset();
+    // The coin balance is per-account money, so it must not survive the session
+    // and flash in the next user's sidebar while their own balance loads.
+    useCoinBalanceStore.getState().reset();
+    useCoinLedgerStore.getState().reset();
   };
 }

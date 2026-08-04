@@ -8,3 +8,4 @@ export { ProcessingOverlay } from './ProcessingOverlay';
 export { RazorpayWebView } from './RazorpayWebView';
 export { CouponField } from './CouponField';
 export { CouponTotal } from './CouponTotal';
+export { CoinRedeemField } from './CoinRedeemField';

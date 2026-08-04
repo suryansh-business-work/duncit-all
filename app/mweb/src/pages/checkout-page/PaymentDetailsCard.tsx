@@ -13,6 +13,8 @@ import type { Control } from 'react-hook-form';
 import type { AvailableCoupon, CheckoutContact, CheckoutForm, CouponPreview } from './queries';
 import { CheckoutFields, type PostalAddressParts } from './checkout';
 import CouponField from './CouponField';
+import CoinRedeemField from './CoinRedeemField';
+import type { CoinRedemption } from './useCoinRedemption';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
@@ -36,6 +38,7 @@ interface Props {
   availableCoupons: AvailableCoupon[];
   onApplyCoupon: (code?: string) => void;
   onRemoveCoupon: () => void;
+  coins: CoinRedemption;
   /** Products are delivered, so their checkout demands an address; the pod
    * membership checkout keeps it optional and never blocks on it. */
   addressRequired?: boolean;
@@ -62,6 +65,7 @@ export default function PaymentDetailsCard({
   availableCoupons,
   onApplyCoupon,
   onRemoveCoupon,
+  coins,
   addressRequired = false,
 }: Readonly<Props>) {
   const discounted = effectiveTotal < total;
@@ -118,6 +122,7 @@ export default function PaymentDetailsCard({
             onApply={onApplyCoupon}
             onRemove={onRemoveCoupon}
           />
+          <CoinRedeemField coins={coins} />
           {error && <Alert severity="error">{error}</Alert>}
           {discounted && (
             <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>

@@ -9,6 +9,8 @@ interface Props {
   helperText: string;
   invalidText: string;
   min: number;
+  /** Optional upper bound, for settings the server itself caps (e.g. a percent). */
+  max?: number;
   loading: boolean;
   /** Saved value from the server (null until the query resolves). */
   value: number | null;
@@ -24,6 +26,7 @@ export default function NumberSettingCard({
   helperText,
   invalidText,
   min,
+  max,
   loading,
   value,
   onSave,
@@ -40,7 +43,10 @@ export default function NumberSettingCard({
   // `Number('') === 0`, so a card with min 0 would read a cleared box as a legal
   // save of 0. Cards with min 1 already rejected it via `num < min` — the blank
   // guard just makes that explicit for every min.
-  const invalid = raw.trim() === '' || !Number.isInteger(num) || num < min;
+  // The server silently clamps an out-of-range percent, so the box must refuse
+  // it here rather than save a number the admin never sees applied.
+  const overMax = max !== undefined && num > max;
+  const invalid = raw.trim() === '' || !Number.isInteger(num) || num < min || overMax;
   const dirty = value != null && num !== value;
 
   const submit = async () => {
@@ -86,7 +92,7 @@ export default function NumberSettingCard({
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           fullWidth
-          inputProps={{ min }}
+          inputProps={{ min, max }}
           helperText={helperText}
         />
         {invalid && (

@@ -40,6 +40,8 @@ export interface ProductPayContext {
   couponCode: string | null;
   /** Contact from the picked address-book entry (the parcel's recipient). */
   pickedContact?: PickedContact | null;
+  /** Duncit Coins the buyer applied at checkout (clamped again server-side). */
+  redeemCoins?: number;
 }
 
 /**
@@ -83,6 +85,7 @@ export function useProductCheckout() {
       mainAddress: me?.address ?? null,
       couponCode: ctx.couponCode,
       pickedContact: ctx.pickedContact,
+      redeemCoins: ctx.redeemCoins,
     });
 
   const payProduct = async (

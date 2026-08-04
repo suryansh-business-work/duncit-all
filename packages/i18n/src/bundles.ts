@@ -147,6 +147,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
         'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.',
       current: 'current',
     },
+    // Duncit Coins — the loyalty balance shown in User mode only. Placeholders
+    // are deliberately NOT named `count`: the translator overwrites that var
+    // with its own plural counter, so `{coins}` is what actually renders.
+    coin: {
+      title: 'Duncit Coin',
+      sidebarCaption: 'Earn {pct}% back on every payment',
+      balanceLabel: 'Coin balance',
+      lifetimeLabel: 'Lifetime earned',
+      rateNote:
+        'You earn {pct}% back as Duncit Coins on every successful payment. 1 coin = {symbol}1.',
+      historyTitle: 'Transaction history',
+      historyEmpty: 'No coin activity yet. Rewards from your payments will show up here.',
+      earned: 'Earned',
+      redeemed: 'Redeemed',
+      loadError: 'Could not load your Duncit Coins. Please try again.',
+      checkoutTitle: 'Duncit Coins',
+      checkoutAvailable: '{coins} coins available',
+      checkoutApply: 'Use coins',
+      checkoutRemove: 'Remove',
+      checkoutApplied: '{coins} coins applied',
+      checkoutNone: 'You have no Duncit Coins to redeem yet.',
+    },
   },
 };
 

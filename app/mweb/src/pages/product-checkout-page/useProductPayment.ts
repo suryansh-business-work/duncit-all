@@ -12,11 +12,13 @@ import {
 } from '../checkout-page/razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
 import type { CheckoutSession } from '../checkout-page/useCheckoutSession';
+import type { CoinRedemption } from '../checkout-page/useCoinRedemption';
 import { buildProductCheckoutInput } from './productCheckoutInput';
 
 interface Args {
   session: CheckoutSession;
   items: ProductCartItemInput[];
+  coins: CoinRedemption;
 }
 
 /**
@@ -24,7 +26,7 @@ interface Args {
  * gateway when configured (create order → hosted sheet → shared verify); the
  * dummy gateway is the local fallback. Never touches the pod-join engine.
  */
-export function useProductPayment({ session, items }: Args) {
+export function useProductPayment({ session, items, coins }: Args) {
   const [doDummy] = useMutation(DUMMY_PRODUCT_CHECKOUT);
   const [doRazorpay] = useMutation(CREATE_RAZORPAY_PRODUCT_ORDER);
 
@@ -36,6 +38,7 @@ export function useProductPayment({ session, items }: Args) {
       items,
       mainAddress: session.me?.address ?? null,
       couponCode: session.coupon?.ok ? session.coupon.code : null,
+      redeemCoins: coins.applied,
       pickedContact: session.pickedContact,
     });
     await session.persistMainAddress(values);

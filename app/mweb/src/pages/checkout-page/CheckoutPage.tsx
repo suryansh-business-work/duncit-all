@@ -22,6 +22,7 @@ import {
 import { openRazorpayCheckout, type RazorpayOrderData, type RazorpaySignature } from './razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
 import { useCheckoutSession } from './useCheckoutSession';
+import { useCoinRedemption } from './useCoinRedemption';
 
 export default function CheckoutPage() {
   const theme = useTheme();
@@ -52,6 +53,8 @@ export default function CheckoutPage() {
   const unitAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
   const amount = Math.round(unitAmount * seats * 100) / 100;
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
+  // The coupon discounts the whole pod bill, so coins redeem against its result.
+  const coins = useCoinRedemption(session, session.coupon?.ok ? session.coupon.final_total : amount);
 
   const onCheckout = async (values: CheckoutForm) => {
     session.setError(null);
@@ -69,6 +72,7 @@ export default function CheckoutPage() {
       billing,
       checkout_url: globalThis.window.location.href,
       coupon_code: session.coupon?.ok ? session.coupon.code : null,
+      redeem_coins: coins.applied,
     };
     await session.persistMainAddress(values);
     try {
@@ -146,7 +150,7 @@ export default function CheckoutPage() {
             error={session.error}
             submitting={session.submitting}
             total={breakup.total}
-            effectiveTotal={session.coupon?.ok ? session.coupon.final_total : breakup.total}
+            effectiveTotal={coins.effectiveTotal}
             currency={breakup.currency}
             dummyMode={!!session.finance?.dummy_mode && !session.finance?.razorpay_enabled}
             mainAddress={session.mainAddress}
@@ -161,6 +165,7 @@ export default function CheckoutPage() {
             availableCoupons={session.availableCoupons}
             onApplyCoupon={(code) => session.applyCoupon(amount, code)}
             onRemoveCoupon={session.removeCoupon}
+            coins={coins}
           />
         </Stack>
       </Box>

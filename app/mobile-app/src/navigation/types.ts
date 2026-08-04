@@ -51,6 +51,7 @@ export type RootStackParamList = {
   TicketDetails: { ticketId: string };
   PodIdeas: undefined;
   Referral: undefined;
+  DuncitCoin: undefined;
   Faqs: undefined;
   TourGuide: undefined;
   PodPlans: undefined;

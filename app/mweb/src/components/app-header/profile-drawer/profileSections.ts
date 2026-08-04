@@ -23,6 +23,7 @@ export type ProfileIconKey =
   | 'addresses'
   | 'cart'
   | 'wallet'
+  | 'coin'
   | 'host'
   | 'venue'
   | 'ecomm'
@@ -43,6 +44,17 @@ export const PROFILE_GRID: readonly ProfileTile[] = [
   { key: 'earn', label: 'Earn with Duncit', caption: 'Host, list or sell', icon: 'earn', to: '/earn' },
   { key: 'ideas', label: 'Pod Ideas', caption: 'Get inspired', icon: 'ideas', to: '/pod-ideas' },
 ];
+
+/** The full-width featured Duncit Coin card. Shown in User mode only — the
+ * partner studios are earning surfaces, and the coin balance is a consumer
+ * reward, so it stays out of them. */
+export const COIN_TILE: ProfileTile = {
+  key: 'duncit-coin',
+  label: 'Duncit Coin',
+  caption: '',
+  icon: 'coin',
+  to: '/duncit-coin',
+};
 
 /** The full-width featured referral card. */
 export const REFERRAL_TILE: ProfileTile = {

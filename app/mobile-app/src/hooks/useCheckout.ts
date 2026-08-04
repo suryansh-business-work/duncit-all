@@ -140,6 +140,7 @@ export function useCheckout(podId: string, seats = 1) {
     values: CheckoutFormValues,
     amount: number,
     couponCode?: string | null,
+    redeemCoins = 0,
   ) => ({
     pod_id: podId || null,
     amount,
@@ -152,19 +153,23 @@ export function useCheckout(podId: string, seats = 1) {
     billing: buildCheckoutBilling(values, me?.address ?? null),
     checkout_url: CHECKOUT_URL,
     coupon_code: couponCode || null,
+    // Duncit Coins cut the gross before GST, exactly like the coupon. The value
+    // is a request: the server re-clamps it to the live balance and the bill.
+    redeem_coins: redeemCoins,
   });
 
   const pay = async (
     values: CheckoutFormValues,
     amount: number,
     couponCode?: string | null,
+    redeemCoins = 0,
   ): Promise<CheckoutPayment> => {
     await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileDummyCheckoutDocument,
       {
         input: {
-          ...contactInput(values, amount, couponCode),
+          ...contactInput(values, amount, couponCode, redeemCoins),
           simulate_failure: values.simulate_failure,
         },
       },
@@ -177,11 +182,12 @@ export function useCheckout(podId: string, seats = 1) {
     values: CheckoutFormValues,
     amount: number,
     couponCode?: string | null,
+    redeemCoins = 0,
   ): Promise<RazorpayOrder> => {
     await maybeSaveMainAddress(values, me);
     const data = await graphqlRequest(
       MobileCreateRazorpayOrderDocument,
-      { input: contactInput(values, amount, couponCode) },
+      { input: contactInput(values, amount, couponCode, redeemCoins) },
       { auth: true },
     );
     return data.createRazorpayOrder;

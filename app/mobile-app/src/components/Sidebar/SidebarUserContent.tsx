@@ -7,6 +7,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { SidebarProfileIdentity, type SidebarIdentityUser } from './SidebarProfileIdentity';
 import { SidebarIncompleteBanner } from './SidebarIncompleteBanner';
 import { SidebarQuickGrid } from './SidebarQuickGrid';
+import { SidebarDuncitCoinCard } from './SidebarDuncitCoinCard';
 import { SidebarReferralCard } from './SidebarReferralCard';
 import { SidebarVenuesCard } from './SidebarVenuesCard';
 import { SidebarManageList } from './SidebarManageList';
@@ -44,6 +45,7 @@ export function SidebarUserContent({
       <SidebarQuickGrid onNavigate={onNavigate} />
       <SidebarVenuesCard onNavigate={onNavigate} />
       <AdSlot position="SIDEBAR" variant="card" />
+      {mode === 'USER' ? <SidebarDuncitCoinCard onNavigate={onNavigate} /> : null}
       <SidebarReferralCard onNavigate={onNavigate} />
       <SidebarManageList
         title="Manage Account"

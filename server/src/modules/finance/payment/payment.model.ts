@@ -39,6 +39,9 @@ export interface IPayment extends Document {
   currency_symbol: string;
   coupon_code: string | null;
   coupon_discount: number;
+  /** Duncit Coins the buyer spent on this payment (1 coin = 1 rupee off). Like
+   * the coupon, they cut the gross before GST, so total == amount charged. */
+  coins_redeemed: number;
   status: PaymentStatus;
   gateway: string;
   gateway_ref: string | null;
@@ -90,6 +93,7 @@ const paymentSchema = new Schema<IPayment>(
     currency_symbol: { type: String, default: '₹' },
     coupon_code: { type: String, default: null, index: true },
     coupon_discount: { type: Number, default: 0, min: 0 },
+    coins_redeemed: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'], default: 'PENDING' },
     gateway: { type: String, default: 'DUMMY' },
     gateway_ref: { type: String, default: null },

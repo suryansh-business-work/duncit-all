@@ -52,6 +52,19 @@ export function buildBreakup(
   };
 }
 
+/**
+ * Duncit Coins are 1:1 with the currency, so the most a buyer can redeem is the
+ * whole payable AFTER any coupon, capped by the balance and floored to a whole
+ * coin (redeem_coins is an Int). Never negative. The server clamps again, so
+ * this only keeps the on-screen preview honest. mWeb's maxRedeemableCoins.
+ */
+export function maxRedeemableCoins(balance: number, payableAfterCoupon: number): number {
+  return Math.max(
+    0,
+    Math.min(Math.floor(Number(balance) || 0), Math.floor(Number(payableAfterCoupon) || 0)),
+  );
+}
+
 /** "<currency><value.2dp>" money label — mWeb's formatMoney. */
 export function formatMoney(currency: string, value: number): string {
   return `${currency}${Number(value).toFixed(2)}`;

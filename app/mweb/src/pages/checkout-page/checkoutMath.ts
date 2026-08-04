@@ -22,3 +22,10 @@ export function buildBreakup(amount: number, settings: any) {
 }
 
 export const formatMoney = (currency: string, value: number) => `${currency}${Number(value).toFixed(2)}`;
+
+/** Duncit Coins are 1:1 with the currency, so the most a buyer can redeem is
+ * the whole payable AFTER any coupon, capped by the balance and floored to a
+ * whole coin (redeem_coins is an Int). Never negative. The server clamps again,
+ * so this only keeps the on-screen preview honest. */
+export const maxRedeemableCoins = (balance: number, payableAfterCoupon: number) =>
+  Math.max(0, Math.min(Math.floor(Number(balance) || 0), Math.floor(Number(payableAfterCoupon) || 0)));

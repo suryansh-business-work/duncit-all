@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@mui/material';
 import type { UseFormReturn } from 'react-hook-form';
 import { ClubForm, type ClubAdmin, type ClubFormConfig, type ClubFormValues } from '@duncit/club-form';
 import AiFillButton from '../../components/AiFillButton';
+import { applyAiFillToClubForm } from './clubFormAi';
 
 interface Props {
   open: boolean;
@@ -39,16 +40,7 @@ export default function ClubFormDialog({
           onFill={(d) => {
             const methods = methodsRef.current;
             if (!methods) return;
-            const prev = methods.getValues();
-            methods.reset({
-              ...prev,
-              club_name: d.club_name ?? prev.club_name,
-              club_description: d.club_description ?? prev.club_description,
-              feature_text: d.feature_text ?? prev.feature_text,
-              moments_text: d.moments_text ?? prev.moments_text,
-              community_link: d.community_link ?? prev.community_link,
-              group_link: d.group_link ?? prev.group_link,
-            });
+            applyAiFillToClubForm(d, methods.getValues(), (next) => methods.reset(next));
           }}
         />
       </DialogTitle>

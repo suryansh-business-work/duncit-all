@@ -18,13 +18,22 @@ import { Controller, type Control, type UseFormSetValue, type UseFormWatch } fro
 import { RhfTextField } from '@duncit/forms';
 import {
   MY_BRAND_WAREHOUSES,
+  isWarehouseUsable,
   type BrandWarehouse,
+  type WarehouseReviewStatus,
 } from '../../ecomm-brand-page/brand-settings/warehouse.queries';
 import type { ProductListingValues } from './list-products.types';
 import CategoryRows from './CategoryRows';
 import OptionsEditor from './OptionsEditor';
 import VariantTabs from './VariantTabs';
 import ListProductsPreview from './ListProductsPreview';
+
+/** Why a warehouse cannot be picked, shown inline on its disabled option. */
+const WAREHOUSE_STATE_SUFFIX: Record<WarehouseReviewStatus, string> = {
+  APPROVED: '',
+  PENDING: 'awaiting approval',
+  REJECTED: 'rejected',
+};
 
 interface StepProps {
   step: number;
@@ -94,6 +103,7 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
     skip: !brandId,
   });
   const warehouses: BrandWarehouse[] = data?.myBrandPickupLocations ?? [];
+  const approvedWarehouses = warehouses.filter((warehouse) => isWarehouseUsable(warehouse));
   return (
     <Stack spacing={2}>
       <Controller
@@ -117,17 +127,31 @@ function DeliveryField({ control, brandId }: Readonly<{ control: Control<Product
           before listing the product.
         </Alert>
       )}
+      {/* The server rejects a listing whose warehouse is not APPROVED. Saying so
+       * here — rather than letting the save fail — is the difference between a
+       * wait the partner understands and a form that just refuses. */}
+      {!loading && warehouses.length > 0 && approvedWarehouses.length === 0 && (
+        <Alert severity="warning">
+          None of this brand's warehouses is approved yet. A product can be listed once the Duncit
+          team approves one — check the status in{' '}
+          <Link component={RouterLink} to={`/ecomm-brand/${brandId}/settings`} fontWeight={800}>
+            Brand Settings
+          </Link>
+          .
+        </Alert>
+      )}
       <RhfTextField
         control={control}
         name="pickup_location_id"
         label="Ship-from warehouse"
         select
         required
-        hint="The warehouse ShipRocket picks this product up from."
+        hint="The warehouse ShipRocket picks this product up from. Only approved warehouses can be selected."
       >
         {warehouses.map((warehouse) => (
-          <MenuItem key={warehouse.id} value={warehouse.id}>
+          <MenuItem key={warehouse.id} value={warehouse.id} disabled={!isWarehouseUsable(warehouse)}>
             {warehouse.nickname} — {warehouse.city}
+            {isWarehouseUsable(warehouse) ? '' : ` (${WAREHOUSE_STATE_SUFFIX[warehouse.review_status]})`}
           </MenuItem>
         ))}
       </RhfTextField>

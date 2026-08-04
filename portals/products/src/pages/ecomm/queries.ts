@@ -217,6 +217,7 @@ export const BRAND_PICKUP_LOCATIONS = gql`
       id
       owner_kind
       brand_id
+      review_status
       nickname
       contact_name
       phone

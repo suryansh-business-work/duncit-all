@@ -124,8 +124,9 @@ export default function BrandSettingsPage() {
             <Stack spacing={2}>
               <Typography variant="h6" fontWeight={950}>Warehouses</Typography>
               <Alert severity="info">
-                New warehouses are reviewed by the Duncit team before ShipRocket pickups start — until then
-                deliveries fall back to the product's manual delivery charge.
+                Every new warehouse — and every edit to an existing one — is reviewed by the Duncit team.
+                A product can only be listed against an approved warehouse, so saving changes here sends
+                it back for review.
               </Alert>
               <WarehouseList
                 warehouses={warehouses}

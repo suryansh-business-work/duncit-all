@@ -70,7 +70,9 @@ const warehouse = (over: Record<string, unknown> = {}) => ({
   pincode: '110020',
   country: 'India',
   is_default: false,
+  review_status: 'APPROVED',
   shiprocket_registered: false,
+  shiprocket_error: '',
   shiprocket_pickup_id: '',
   updated_at: '2026-07-01T00:00:00.000Z',
   ...over,
@@ -155,31 +157,31 @@ describe('BrandSettingsPage shell', () => {
 });
 
 describe('BrandSettingsPage warehouse list', () => {
-  it('shows the empty state and the ShipRocket fallback note', async () => {
+  it('shows the empty state and the review note', async () => {
     renderSettings([brandsMock(), warehousesMock()]);
     expect(
       await screen.findByText(/No warehouses yet — add the location your products ship from/),
     ).toBeTruthy();
-    expect(screen.getByText(/deliveries fall back to the product's manual delivery charge/)).toBeTruthy();
+    expect(screen.getByText(/is reviewed by the Duncit team/)).toBeTruthy();
   });
 
-  it('renders a warehouse with its address, default and registration state', async () => {
-    renderSettings([
-      brandsMock(),
-      warehousesMock([warehouse({ is_default: true, shiprocket_registered: true })]),
-    ]);
+  it('renders a warehouse with its address, default and approval state', async () => {
+    renderSettings([brandsMock(), warehousesMock([warehouse({ is_default: true })])]);
     expect(await screen.findByText('Delhi warehouse')).toBeTruthy();
     expect(
       screen.getByText('12 Industrial Area, Phase 2, New Delhi, Delhi, 110020'),
     ).toBeTruthy();
     expect(screen.getByText('Default')).toBeTruthy();
-    expect(screen.getByText('Registered')).toBeTruthy();
-    expect(screen.queryByText('Pending admin registration')).toBeNull();
+    expect(screen.getByText('Approved')).toBeTruthy();
+    expect(screen.queryByText('Awaiting approval')).toBeNull();
   });
 
-  it('flags an unregistered warehouse as pending', async () => {
-    renderSettings([brandsMock(), warehousesMock([warehouse()])]);
-    expect(await screen.findByText('Pending admin registration')).toBeTruthy();
+  it('flags a warehouse still awaiting approval, with the reason', async () => {
+    renderSettings([brandsMock(), warehousesMock([warehouse({ review_status: 'PENDING' })])]);
+    expect(await screen.findByText('Awaiting approval')).toBeTruthy();
+    expect(
+      screen.getByText(/Products cannot ship from this warehouse until the Duncit team approves it/),
+    ).toBeTruthy();
     expect(screen.queryByText('Default')).toBeNull();
   });
 });

@@ -1,12 +1,18 @@
-import type { PodFormValues, PodPlaceCharge } from '@duncit/pod-form';
+import {
+  OCCURRENCES,
+  POD_MODES,
+  POD_TYPES,
+  type PodFormValues,
+  type PodMode,
+  type PodPlaceCharge,
+} from '@duncit/pod-form';
+import { MEETING_PLATFORMS } from './meeting-platforms';
+import { aiChips, aiOneOf, aiText } from '../../components/aiFillSanitize';
 
-const sanitizeChips = (input: unknown): string[] | undefined => {
-  if (!Array.isArray(input)) return undefined;
-  return input
-    .map((v) => (typeof v === 'string' ? v.trim() : ''))
-    .filter(Boolean)
-    .slice(0, 20);
-};
+const POD_TYPE_VALUES = POD_TYPES.map((option) => option.value);
+const OCCURRENCE_VALUES = OCCURRENCES.map((option) => option.value);
+const POD_MODE_VALUES = POD_MODES.map((option) => option.value as PodMode);
+const MEETING_PLATFORM_VALUES = MEETING_PLATFORMS.map((option) => option.value);
 
 const sanitizeCharges = (input: unknown): PodPlaceCharge[] | undefined => {
   if (!Array.isArray(input)) return undefined;
@@ -20,6 +26,17 @@ const sanitizeCharges = (input: unknown): PodPlaceCharge[] | undefined => {
     .slice(0, 10);
 };
 
+/** A VIRTUAL pod needs its meeting trio; a PHYSICAL one must not carry one
+ * (CascadeEffect clears it anyway, and a stale link fails validation). */
+function meetingFieldsFor(d: any, mode: PodMode, prev: PodFormValues) {
+  if (mode !== 'VIRTUAL') return { meeting_platform: '', meeting_url: '', meeting_notes: '' };
+  return {
+    meeting_platform: aiOneOf(d?.meeting_platform, MEETING_PLATFORM_VALUES) ?? prev.meeting_platform,
+    meeting_url: aiText(d?.meeting_url) ?? prev.meeting_url,
+    meeting_notes: aiText(d?.meeting_notes) ?? prev.meeting_notes,
+  };
+}
+
 export function applyAiFillToForm(
   d: any,
   prev: PodFormValues,
@@ -32,9 +49,10 @@ export function applyAiFillToForm(
   start.setHours(19, 0, 0, 0);
   const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
-  const offers = sanitizeChips(d?.what_this_pod_offers);
-  const perks = sanitizeChips(d?.available_perks);
+  const offers = aiChips(d?.what_this_pod_offers);
+  const perks = aiChips(d?.available_perks);
   const charges = sanitizeCharges(d?.place_charges);
+  const podMode = aiOneOf<PodMode>(d?.pod_mode, POD_MODE_VALUES) ?? prev.pod_mode;
 
   const next: PodFormValues = {
     ...prev,
@@ -45,9 +63,12 @@ export function applyAiFillToForm(
     pod_info: d?.pod_info ?? prev.pod_info,
     no_of_spots: Number(d?.no_of_spots) || prev.no_of_spots,
     pod_amount: Number(d?.pod_amount) || prev.pod_amount,
-    pod_type: typeof d?.pod_type === 'string' ? d.pod_type : prev.pod_type,
-    pod_occurrence:
-      typeof d?.pod_occurrence === 'string' ? d.pod_occurrence : prev.pod_occurrence,
+    // Anything outside POD_TYPES/OCCURRENCES has no MenuItem to match, so the
+    // Select would render blank — keep what the admin already had instead.
+    pod_type: aiOneOf(d?.pod_type, POD_TYPE_VALUES) ?? prev.pod_type,
+    pod_occurrence: aiOneOf(d?.pod_occurrence, OCCURRENCE_VALUES) ?? prev.pod_occurrence,
+    pod_mode: podMode,
+    ...meetingFieldsFor(d, podMode, prev),
     zone_name: d?.zone_name ?? prev.zone_name,
     pod_date_time: start,
     pod_end_date_time: end,

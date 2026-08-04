@@ -4,6 +4,7 @@ const WAREHOUSE_FIELDS = `
   id
   owner_kind
   brand_id
+  review_status
   nickname
   contact_name
   phone
@@ -46,11 +47,18 @@ export const SET_DEFAULT_MY_WAREHOUSE = gql`
   }
 `;
 
+/** Products-portal review state. A warehouse can only be used for shipping — and
+ * so only be picked on a product — once it is APPROVED. */
+export type WarehouseReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export const isWarehouseUsable = (warehouse: BrandWarehouse) => warehouse.review_status === 'APPROVED';
+
 /** One brand warehouse (BrandPickupLocation) as listed in Brand Settings. */
 export interface BrandWarehouse {
   id: string;
   owner_kind: 'DUNCIT' | 'BRAND';
   brand_id: string | null;
+  review_status: WarehouseReviewStatus;
   nickname: string;
   contact_name: string;
   phone: string;

@@ -101,6 +101,9 @@ export const PodDetailsDocument = gql(`
       can_backout
       spots_taken
       spots_total
+      seats_available
+      max_seats_per_booking
+      my_seats
       refund_threshold_pct
       backout_in_process
       can_cancel_backout

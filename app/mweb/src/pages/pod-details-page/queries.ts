@@ -75,6 +75,9 @@ export const POD_DETAILS = gql`
       can_join
       spots_taken
       spots_total
+      seats_available
+      max_seats_per_booking
+      my_seats
       refund_threshold_pct
       backout_in_process
       can_cancel_backout
@@ -85,6 +88,7 @@ export const POD_DETAILS = gql`
       membership {
         id
         status
+        seats
         referral_token
         refund_status
       }
@@ -264,8 +268,8 @@ export const RECORD_PRODUCT_CLICK = gql`
 `;
 
 export const JOIN_FREE = gql`
-  mutation JoinFreePod($id: ID!, $referral: String) {
-    joinFreePod(pod_doc_id: $id, referral_token: $referral) { id status }
+  mutation JoinFreePod($id: ID!, $referral: String, $seats: Int) {
+    joinFreePod(pod_doc_id: $id, referral_token: $referral, seats: $seats) { id status seats }
   }
 `;
 

@@ -114,6 +114,14 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75, flexWrap: 'wrap' }}>
                 <Chip size="small" color={STATUS_CHIP[item.status].color} label={STATUS_CHIP[item.status].label} />
                 <Chip size="small" variant="outlined" label={`Refund: ${refundLabel[item.refund_status]}`} />
+                {(item.seats ?? 1) > 1 && (
+                  <Chip
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    label={`${item.seats} seats`}
+                  />
+                )}
               </Stack>
               <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.1 }}>
                 {pod?.pod_title ?? 'Pod details'}

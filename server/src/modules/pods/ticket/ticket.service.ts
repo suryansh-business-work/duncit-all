@@ -71,6 +71,7 @@ const toPub = (t: ITicket) => ({
   user_id: String(t.user_id),
   payment_id: t.payment_id ? String(t.payment_id) : null,
   status: t.status,
+  seats: t.seats ?? 1,
   checked_in_at: t.checked_in_at ? t.checked_in_at.toISOString() : null,
   qr_token: t.qr_token,
   pod_title: t.snapshot?.pod_title ?? '',
@@ -161,6 +162,8 @@ export const ticketService = {
       user_id: user._id,
       payment_id: (membership as any).payment_id ?? null,
       status: 'VALID',
+      // One ticket per booking, admitting however many seats it holds.
+      seats: (membership as any).seats ?? 1,
       qr_token: '',
       snapshot: {
         pod_title: (pod as any).pod_title,
@@ -357,9 +360,15 @@ export const ticketService = {
       PodMemberModel.findById(t.membership_id),
     ]);
     const at = t.checked_in_at ? ` at ${t.checked_in_at.toLocaleString('en-IN')}` : '';
+    const seats = t.seats ?? 1;
+    // A multi-seat ticket admits a group, so the host is told the number —
+    // one scan, several people through the door.
+    const party = seats > 1 ? ` · admits ${seats}` : '';
     return {
       ok: true,
-      message: alreadyCheckedIn ? `Already marked present${at}` : 'Attendance marked',
+      message: alreadyCheckedIn
+        ? `Already marked present${at}${party}`
+        : `Attendance marked${party}`,
       already_checked_in: alreadyCheckedIn,
       ticket: toPub(t),
       attendee: user ? toScannedAttendee(user, membership) : null,

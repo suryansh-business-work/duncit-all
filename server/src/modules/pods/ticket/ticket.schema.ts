@@ -13,6 +13,8 @@ export const eventTicketTypeDefs = /* GraphQL */ `
     user_id: ID!
     payment_id: ID
     status: EventTicketStatus!
+    "People this ticket admits (its booking's seats). 1 for every legacy ticket."
+    seats: Int!
     checked_in_at: String
     qr_token: String!
     pod_title: String!

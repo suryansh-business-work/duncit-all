@@ -15,6 +15,12 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
 import { sendBackoutSpotFilledEmail, sendPodRefundEmail } from '@services/email/email.service';
+import {
+  maxSeatsForBooking,
+  normalizeSeats,
+  podSeatsAvailable,
+  podSeatsTaken,
+} from '@modules/pods/pod/pod.seats';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
@@ -54,6 +60,7 @@ const toPub = (m: IPodMember) => ({
   pod_id: String(m.pod_id),
   user_id: String(m.user_id),
   status: m.status,
+  seats: m.seats ?? 1,
   joined_at: m.joined_at?.toISOString?.() ?? null,
   backed_out_at: m.backed_out_at ? m.backed_out_at.toISOString() : null,
   payment_id: m.payment_id ? String(m.payment_id) : null,
@@ -67,27 +74,50 @@ const toPub = (m: IPodMember) => ({
   updated_at: m.updated_at?.toISOString?.() ?? '',
 });
 
-const isPodFull = (pod: any) =>
-  pod.no_of_spots > 0 && (pod.pod_attendees?.length ?? 0) >= pod.no_of_spots;
+const isPodFull = (pod: any) => {
+  const spots = pod.no_of_spots ?? 0;
+  return spots > 0 && podSeatsTaken(pod) >= spots;
+};
 
-async function ensureSpotAvailable(pod: any) {
-  if (isPodFull(pod)) {
-    throw new GraphQLError('Pod is full', { extensions: { code: 'POD_FULL' } });
+/**
+ * Seats a booking of `want` more would need. Throws when they do not fit, so a
+ * multi-seat booking fails BEFORE money moves rather than overselling the pod.
+ */
+async function ensureSeatsAvailable(pod: any, want = 1) {
+  const spots = pod.no_of_spots ?? 0;
+  if (spots <= 0) return;
+  const free = spots - podSeatsTaken(pod);
+  if (free < want) {
+    const message =
+      free <= 0 ? 'Pod is full' : `Only ${free} seat${free === 1 ? '' : 's'} left on this pod`;
+    throw new GraphQLError(message, { extensions: { code: 'POD_FULL' } });
   }
 }
 
-async function addAttendee(pod: any, userId: string) {
+/** Add the person once and record whatever seats they hold beyond their own. */
+async function addAttendee(pod: any, userId: string, seats = 1) {
   const uid = new Types.ObjectId(userId);
+  let changed = false;
   if (!pod.pod_attendees.some((u: any) => String(u) === userId)) {
     pod.pod_attendees.push(uid as any);
-    await pod.save();
+    changed = true;
   }
+  const extra = Math.max(seats - 1, 0);
+  if (extra > 0) {
+    pod.extra_seats = (pod.extra_seats ?? 0) + extra;
+    changed = true;
+  }
+  if (changed) await pod.save();
 }
 
-async function removeAttendee(pod: any, userId: string) {
+/** Release the person and every seat they held. */
+async function removeAttendee(pod: any, userId: string, seats = 1) {
   const before = pod.pod_attendees.length;
   pod.pod_attendees = pod.pod_attendees.filter((u: any) => String(u) !== userId);
-  if (pod.pod_attendees.length !== before) await pod.save();
+  const extra = Math.max(seats - 1, 0);
+  const hadExtra = extra > 0 && (pod.extra_seats ?? 0) > 0;
+  if (hadExtra) pod.extra_seats = Math.max((pod.extra_seats ?? 0) - extra, 0);
+  if (pod.pod_attendees.length !== before || hadExtra) await pod.save();
 }
 
 /** Callers must not join while their own backout is still in process. */
@@ -365,7 +395,7 @@ export const podMemberService = {
   async getState(podDocId: string, userId: string | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-    const spotsTaken = pod.pod_attendees?.length ?? 0;
+    const spotsTaken = podSeatsTaken(pod);
     const spotsTotal = pod.no_of_spots ?? 0;
     let membership: IPodMember | null = null;
     if (userId) {
@@ -393,6 +423,11 @@ export const podMemberService = {
       membership: membership ? toPub(membership) : null,
       spots_taken: spotsTaken,
       spots_total: spotsTotal,
+      // What the seat picker on Pod Details offers: how many are left, the most
+      // one booking may take, and how many the caller already holds.
+      seats_available: podSeatsAvailable(pod),
+      max_seats_per_booking: maxSeatsForBooking(pod),
+      my_seats: membership?.seats ?? 0,
       can_backout: isMember && attemptsUsed < maxAttempts,
       can_join: !!userId && !membership && !full,
       refund_threshold_pct: REFUND_THRESHOLD_PCT,
@@ -459,7 +494,7 @@ export const podMemberService = {
     return m ? toPub(m) : null;
   },
 
-  async joinFree(podDocId: string, userId: string, referralToken?: string | null) {
+  async joinFree(podDocId: string, userId: string, referralToken?: string | null, wantSeats = 1) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
@@ -478,7 +513,8 @@ export const podMemberService = {
     if (existing) return toPub(existing);
     await assertNoBackoutInProcess(pod._id as Types.ObjectId, uid);
 
-    await ensureSpotAvailable(pod);
+    const seats = Math.min(normalizeSeats(wantSeats), maxSeatsForBooking(pod));
+    await ensureSeatsAvailable(pod, seats);
 
     let referredBy: Types.ObjectId | null = null;
     let source: JoinSource = 'FREE';
@@ -494,13 +530,14 @@ export const podMemberService = {
       pod_id: pod._id,
       user_id: uid,
       status: 'JOINED',
+      seats,
       joined_at: new Date(),
       source,
       referred_by: referredBy,
       refund_status: 'NONE',
     });
 
-    await addAttendee(pod, userId);
+    await addAttendee(pod, userId, seats);
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     try {
@@ -576,7 +613,7 @@ export const podMemberService = {
     membership.refund_status = membership.payment_id ? 'PENDING' : 'NOT_ELIGIBLE';
     if (!membership.referral_token) membership.referral_token = newToken();
     await membership.save();
-    await removeAttendee(pod, userId);
+    await removeAttendee(pod, userId, membership.seats ?? 1);
 
     return toPub(membership);
   },
@@ -625,7 +662,7 @@ export const podMemberService = {
     membership.refund_status = 'NONE';
     membership.active_backout_id = null;
     await membership.save();
-    await addAttendee(pod, userId);
+    await addAttendee(pod, userId, membership.seats ?? 1);
 
     return toPub(membership);
   },
@@ -649,7 +686,7 @@ export const podMemberService = {
     if (existing) return toPub(existing);
     await assertNoBackoutInProcess(pod._id as Types.ObjectId, uid);
 
-    await ensureSpotAvailable(pod);
+    await ensureSeatsAvailable(pod, 1);
 
     const doc = await PodMemberModel.create({
       pod_id: pod._id,
@@ -675,7 +712,7 @@ export const podMemberService = {
    * Used by paymentService after a successful paid checkout to record the
    * membership row alongside attendee push.
    */
-  async recordPaidJoin(podDocId: string, userId: string, paymentId: string) {
+  async recordPaidJoin(podDocId: string, userId: string, paymentId: string, seats = 1) {
     const existing = await PodMemberModel.findOne({
       pod_id: new Types.ObjectId(podDocId),
       user_id: new Types.ObjectId(userId),
@@ -686,6 +723,9 @@ export const podMemberService = {
       pod_id: new Types.ObjectId(podDocId),
       user_id: new Types.ObjectId(userId),
       status: 'JOINED',
+      // Seats were priced and capacity-checked at checkout; the payment carries
+      // the count so a webhook replay books exactly what was paid for.
+      seats: normalizeSeats(seats),
       joined_at: new Date(),
       source: 'PAID',
       payment_id: new Types.ObjectId(paymentId),
@@ -752,7 +792,7 @@ export const podMemberService = {
       });
     }
 
-    await ensureSpotAvailable(pod);
+    await ensureSeatsAvailable(pod, membership.seats ?? 1);
 
     membership.status = 'JOINED';
     membership.joined_at = new Date();
@@ -760,7 +800,7 @@ export const podMemberService = {
     membership.refund_status = 'NONE';
     await membership.save();
 
-    await addAttendee(pod, userId);
+    await addAttendee(pod, userId, membership.seats ?? 1);
     await fillBackoutsAfterJoin(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
     try {

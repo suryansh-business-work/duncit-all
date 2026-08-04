@@ -8,6 +8,14 @@ export interface IPodMember extends Document {
   pod_id: Types.ObjectId;
   user_id: Types.ObjectId;
   status: MembershipStatus;
+  /**
+   * Seats this booking holds. One booking can cover several people: the buyer
+   * picks a count on Pod Details, pays once and gets ONE ticket that admits
+   * that many. `pod_attendees` still carries the buyer's id exactly once (it is
+   * an identity list — chat access, permissions, audience), so the extra seats
+   * are counted through `Pod.extra_seats` instead of duplicating the id.
+   */
+  seats: number;
   joined_at: Date;
   backed_out_at: Date | null;
   payment_id: Types.ObjectId | null;
@@ -29,6 +37,8 @@ const podMemberSchema = new Schema<IPodMember>(
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     status: { type: String, enum: ['JOINED', 'BACKOUT_IN_PROCESS', 'BACKED_OUT'], default: 'JOINED', index: true },
+    // Legacy memberships predate multi-seat booking and are all single-seat.
+    seats: { type: Number, default: 1, min: 1 },
     joined_at: { type: Date, default: () => new Date() },
     backed_out_at: { type: Date, default: null },
     payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },

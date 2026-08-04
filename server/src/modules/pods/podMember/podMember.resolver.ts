@@ -69,11 +69,11 @@ export const podMemberResolvers = {
   Mutation: {
     joinFreePod: async (
       _p: unknown,
-      args: { pod_doc_id: string; referral_token?: string | null },
+      args: { pod_doc_id: string; referral_token?: string | null; seats?: number | null },
       ctx: GraphQLContext
     ) => {
       const uid = requireUser(ctx);
-      return podMemberService.joinFree(args.pod_doc_id, uid, args.referral_token);
+      return podMemberService.joinFree(args.pod_doc_id, uid, args.referral_token, args.seats ?? 1);
     },
     backoutPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
       const uid = requireUser(ctx);

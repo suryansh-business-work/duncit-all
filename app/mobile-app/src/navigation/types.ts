@@ -70,7 +70,7 @@ export type RootStackParamList = {
   PreviousPods: { initialIndex?: number } | undefined;
   HappeningNearby: { initialIndex?: number } | undefined;
   // Pod-membership checkout (pod_amount only — never carries products).
-  Checkout: { podId: string };
+  Checkout: { podId: string; seats?: number };
   // Standalone product checkout — EVERY cart line pays in one product payment.
   ProductCheckout: undefined;
   Cart: undefined;

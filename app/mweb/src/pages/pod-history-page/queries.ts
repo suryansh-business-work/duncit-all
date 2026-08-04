@@ -5,6 +5,7 @@ export const MY_POD_MEMBERSHIPS = gql`
     myPodMemberships {
       id
       status
+      seats
       joined_at
       backed_out_at
       payment_id
@@ -54,6 +55,7 @@ export const BACKOUT_POD_HISTORY = gql`
     backoutPod(pod_doc_id: $pod_doc_id) {
       id
       status
+      seats
       backed_out_at
       refund_status
       refund_payment_id
@@ -67,6 +69,7 @@ export const REJOIN_POD = gql`
     rejoinPod(pod_doc_id: $pod_doc_id) {
       id
       status
+      seats
       backed_out_at
       refund_status
       refund_payment_id
@@ -100,6 +103,8 @@ export interface PodHistoryItem {
   id: string;
   pod_id?: string | null;
   status: 'JOINED' | 'BACKOUT_IN_PROCESS' | 'BACKED_OUT';
+  /** Seats this booking holds — one ticket admits this many. */
+  seats: number;
   joined_at: string;
   backed_out_at?: string | null;
   payment_id?: string | null;

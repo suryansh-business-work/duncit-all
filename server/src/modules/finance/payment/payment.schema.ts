@@ -96,6 +96,8 @@ export const paymentTypeDefs = /* GraphQL */ `
   input CheckoutQuoteInput {
     pod_id: ID
     amount: Float!
+    "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
+    seats: Int
   }
 
   input CheckoutProductSelectionInput {
@@ -110,6 +112,8 @@ export const paymentTypeDefs = /* GraphQL */ `
   input DummyCheckoutInput {
     pod_id: ID
     amount: Float!
+    "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
+    seats: Int
     selected_products: [CheckoutProductSelectionInput!]
     description: String
     "Buyer's full name for the invoice bill-to (falls back to the profile name)."
@@ -141,6 +145,8 @@ export const paymentTypeDefs = /* GraphQL */ `
   input RazorpayOrderInput {
     pod_id: ID
     amount: Float!
+    "Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once."
+    seats: Int
     selected_products: [CheckoutProductSelectionInput!]
     description: String
     contact_name: String

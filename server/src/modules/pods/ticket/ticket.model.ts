@@ -12,6 +12,8 @@ export interface ITicket extends Document {
   user_id: Types.ObjectId;
   payment_id: Types.ObjectId | null;
   status: TicketStatus;
+  /** People this one ticket admits — the seats its booking holds. */
+  seats: number;
   checked_in_at: Date | null;
   checked_in_by: Types.ObjectId | null;
   qr_token: string;
@@ -39,6 +41,8 @@ const ticketSchema = new Schema<ITicket>(
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     payment_id: { type: Schema.Types.ObjectId, ref: 'Payment', default: null },
     status: { type: String, enum: ['VALID', 'CHECKED_IN', 'CANCELLED'], default: 'VALID', index: true },
+    // Legacy tickets predate multi-seat booking and all admit one.
+    seats: { type: Number, default: 1, min: 1 },
     checked_in_at: { type: Date, default: null },
     checked_in_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     qr_token: { type: String, default: '' },

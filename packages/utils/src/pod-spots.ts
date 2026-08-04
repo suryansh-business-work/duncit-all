@@ -75,3 +75,19 @@ export function payingAttendees(
   const hosts = new Set(hostIds ?? []);
   return attendees.filter((id) => !hosts.has(id)).length;
 }
+
+/**
+ * How many seats one booking may take. Mirrors the server's
+ * `MAX_SEATS_PER_BOOKING` (pod.seats.ts) — the server still clamps, this just
+ * stops the picker offering a number that would be rejected.
+ */
+export const MAX_SEATS_PER_BOOKING = 10;
+
+/**
+ * The seat-picker options for a pod: 1…(seats left), capped. `seatsAvailable`
+ * of 0 on an unlimited-spots pod is not "full", so callers pass the cap there.
+ */
+export function seatOptions(seatsAvailable: number, max = MAX_SEATS_PER_BOOKING): number[] {
+  const top = Math.max(1, Math.min(Math.floor(seatsAvailable) || 0, max));
+  return Array.from({ length: top }, (_, index) => index + 1);
+}

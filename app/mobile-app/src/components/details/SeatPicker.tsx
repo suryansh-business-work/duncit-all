@@ -1,0 +1,77 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { Text, XStack } from 'tamagui';
+import { seatOptions } from '@duncit/utils';
+
+import { useThemeColors } from '@/hooks/useThemeColors';
+
+interface Props {
+  value: number;
+  onChange: (seats: number) => void;
+  /** Seats still bookable, from `podMembershipState.max_seats_per_booking`. */
+  maxSeats: number;
+  disabled?: boolean;
+}
+
+/**
+ * How many seats this booking takes, shown beside the Book/Join button — the
+ * Tamagui twin of mWeb's SeatPicker (rule 27). A stepper rather than a dropdown
+ * because the range is small and a bottom bar has no room for a menu.
+ *
+ * Hidden when only one seat is left: a picker with a single option is furniture.
+ */
+export function SeatPicker({ value, onChange, maxSeats, disabled }: Readonly<Props>) {
+  const { color: ink, muted } = useThemeColors();
+  const options = seatOptions(maxSeats);
+  if (options.length <= 1) return null;
+
+  const top = options.length;
+  const seats = Math.min(Math.max(value, 1), top);
+  const step = (next: number) => {
+    if (disabled) return;
+    onChange(Math.min(Math.max(next, 1), top));
+  };
+
+  return (
+    <XStack
+      testID="pod-seat-picker"
+      alignItems="center"
+      height={48}
+      borderRadius={999}
+      borderWidth={1}
+      borderColor="$borderColor"
+      opacity={disabled ? 0.6 : 1}
+    >
+      <XStack
+        testID="pod-seat-minus"
+        role="button"
+        aria-label="One seat fewer"
+        aria-disabled={seats <= 1}
+        onPress={() => step(seats - 1)}
+        width={38}
+        height={48}
+        alignItems="center"
+        justifyContent="center"
+        pressStyle={{ opacity: 0.7 }}
+      >
+        <MaterialIcons name="remove" size={18} color={seats <= 1 ? muted : ink} />
+      </XStack>
+      <Text testID="pod-seat-count" fontSize={15} fontWeight="700" color="$color" minWidth={18} textAlign="center">
+        {seats}
+      </Text>
+      <XStack
+        testID="pod-seat-plus"
+        role="button"
+        aria-label="One seat more"
+        aria-disabled={seats >= top}
+        onPress={() => step(seats + 1)}
+        width={38}
+        height={48}
+        alignItems="center"
+        justifyContent="center"
+        pressStyle={{ opacity: 0.7 }}
+      >
+        <MaterialIcons name="add" size={18} color={seats >= top ? muted : ink} />
+      </XStack>
+    </XStack>
+  );
+}

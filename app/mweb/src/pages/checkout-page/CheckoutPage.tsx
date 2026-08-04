@@ -46,7 +46,11 @@ export default function CheckoutPage() {
   const pod = podData?.pod;
   // Pod checkout pays the membership (pod_amount) ONLY — products are a separate
   // payment through the standalone product checkout. Never mix the two.
-  const amount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
+  // Seats ride in from Pod Details. The ticket price multiplies; the server
+  // re-prices and re-checks capacity, so this is a preview, never the charge.
+  const seats = Math.max(1, Number(state.seats ?? search.get('seats') ?? 1) || 1);
+  const unitAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
+  const amount = Math.round(unitAmount * seats * 100) / 100;
   const breakup = useMemo(() => buildBreakup(amount, session.finance), [amount, session.finance]);
 
   const onCheckout = async (values: CheckoutForm) => {
@@ -59,6 +63,7 @@ export default function CheckoutPage() {
     const input = {
       pod_id: checkoutPodId || null,
       amount,
+      seats,
       description: state.description || `Pod booking · ${title}`,
       ...contact,
       billing,

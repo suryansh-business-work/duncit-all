@@ -44,7 +44,7 @@ export function CheckoutScreen() {
     verifyRazorpay,
     previewCoupon,
     downloadInvoice,
-  } = useCheckout(podId);
+  } = useCheckout(podId, Math.max(1, Number(route.params?.seats ?? 1) || 1));
   const { download: downloadTicket } = usePodTicket();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +57,10 @@ export function CheckoutScreen() {
 
   // Pod checkout pays the membership (pod_amount) ONLY — products are a separate
   // payment through the standalone product checkout. Never mix the two.
-  const amount = Number(pod?.pod_amount ?? 0);
+  // Seats ride in from Pod Details. The ticket price multiplies; the server
+  // re-prices and re-checks capacity, so this is a preview, never the charge.
+  const seats = Math.max(1, Number(route.params?.seats ?? 1) || 1);
+  const amount = Math.round(Number(pod?.pod_amount ?? 0) * seats * 100) / 100;
   const breakup = buildBreakup(amount, finance);
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
   // gateway is only a local fallback.

@@ -33,6 +33,8 @@ export const podMemberTypeDefs = /* GraphQL */ `
     pod: Pod
     user_id: ID!
     status: MembershipStatus!
+    "Seats this booking holds — one ticket admits this many. 1 for every legacy booking."
+    seats: Int!
     joined_at: String!
     backed_out_at: String
     payment_id: ID
@@ -54,6 +56,12 @@ export const podMemberTypeDefs = /* GraphQL */ `
     membership: PodMember
     spots_taken: Int!
     spots_total: Int!
+    "Seats still bookable (0 when the pod has unlimited spots)."
+    seats_available: Int!
+    "Most seats one booking may take — caps the Pod Details seat picker."
+    max_seats_per_booking: Int!
+    "Seats the caller already holds on this pod (0 when not a member)."
+    my_seats: Int!
     can_backout: Boolean!
     can_join: Boolean!
     refund_threshold_pct: Int!
@@ -208,7 +216,8 @@ export const podMemberTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    joinFreePod(pod_doc_id: ID!, referral_token: String): PodMember!
+    "Book a free pod. Seats books several at once (default 1, capped by what is left)."
+    joinFreePod(pod_doc_id: ID!, referral_token: String, seats: Int): PodMember!
     "Confirm Backout — booking moves to 'Backout in process' and the seat is released."
     backoutPod(pod_doc_id: ID!): PodMember!
     "Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free)."

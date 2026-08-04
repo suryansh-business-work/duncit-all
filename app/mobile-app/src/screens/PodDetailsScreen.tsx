@@ -65,6 +65,9 @@ export function PodDetailsScreen() {
   const showProducts = useFeatureFlag('is_product_visible');
   const finance = usePublicFinance();
   const { openClub } = useDetailNav();
+  // Seats the booking will take — set by the picker in the bottom bar and
+  // carried into Checkout, which re-prices the ticket by it.
+  const [seats, setSeats] = useState(1);
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [keepSpotOpen, setKeepSpotOpen] = useState(false);
   const [keepSpotError, setKeepSpotError] = useState<string | null>(null);
@@ -280,7 +283,9 @@ export function PodDetailsScreen() {
           isFree={isFree}
           isHost={isPodHost}
           membershipState={membershipState}
-          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id })}
+          seats={seats}
+          onSeatsChange={setSeats}
+          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id, seats })}
           onBackout={() => setBackoutOpen(true)}
           onKeepSpot={openKeepSpot}
           onGoToDashboard={() => {

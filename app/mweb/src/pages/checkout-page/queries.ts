@@ -300,6 +300,8 @@ export interface CheckoutState {
   pod_id?: string;
   pod_title?: string;
   amount?: number;
+  /** Seats being booked (Pod Details seat picker). Ticket price × seats. */
+  seats?: number;
   selected_products?: Array<{
     product_id: string;
     quantity: number;

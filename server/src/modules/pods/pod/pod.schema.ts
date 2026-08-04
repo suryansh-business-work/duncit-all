@@ -114,6 +114,10 @@ export const podTypeDefs = /* GraphQL */ `
     reel_url: String
     pod_hits: Int!
     pod_attendees: [ID!]!
+    "Seats taken — attendees plus every extra seat a multi-seat booking holds."
+    seats_taken: Int!
+    "Seats still bookable (0 when the pod has unlimited spots)."
+    seats_available: Int!
     "Users who liked this pod — powers the 'who liked' list (explore item 8)."
     liked_user_ids: [ID!]!
     pod_description: String!

@@ -80,7 +80,19 @@ export interface IPod extends Document {
   /** Explore reel video URL (direct ImageKit upload, ≤100MB). Presence = reel enabled. */
   reel_url?: string | null;
   pod_hits: number;
+  /**
+   * WHO is in the pod — one entry per person, hosts included. Drives chat
+   * access, permissions and the audience fan-outs, so an id appears exactly
+   * once no matter how many seats they bought.
+   */
   pod_attendees: Types.ObjectId[];
+  /**
+   * HOW MANY extra seats those people hold beyond their own: the sum of
+   * `seats - 1` over every JOINED membership. Occupancy is therefore
+   * `pod_attendees.length + extra_seats`, which leaves every single-seat pod
+   * (and all historical data) reading exactly as it did before.
+   */
+  extra_seats: number;
   pod_description: string;
   pod_date_time: Date;
   pod_end_date_time?: Date | null;
@@ -185,6 +197,7 @@ const podSchema = new Schema<IPod>(
     reel_url: { type: String, default: null, trim: true, maxlength: 1000 },
     pod_hits: { type: Number, default: 0 },
     pod_attendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    extra_seats: { type: Number, default: 0, min: 0 },
     pod_description: { type: String, required: true },
     pod_date_time: { type: Date, required: true },
     pod_end_date_time: { type: Date, default: null },

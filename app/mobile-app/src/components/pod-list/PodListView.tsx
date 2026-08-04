@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { FlatList, useWindowDimensions, type ListRenderItemInfo } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import {
   buildFeedRows,
@@ -15,10 +14,10 @@ import {
 
 import { AdCard } from '@/components/ads/AdCard';
 import { PodCard } from '@/components/home/PodCard';
+import { PodListSearchRow } from '@/components/pod-list/PodListSearchRow';
 import type { ActiveAd } from '@/hooks/useActiveAds';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import type { HomePod } from '@/hooks/useHomeFeed';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const POD_HEIGHT = 230;
@@ -39,6 +38,8 @@ interface PodListViewProps {
   emptyText: string;
   /** testID prefix, e.g. "happening-nearby" -> "happening-nearby-empty". */
   testID: string;
+  /** Filter trigger rendered beside the search box (category + price + date). */
+  filterAction?: ReactNode;
 }
 
 function GapSeparator() {
@@ -65,10 +66,10 @@ export function PodListView({
   initialIndex = 0,
   emptyText,
   testID,
+  filterAction,
 }: Readonly<PodListViewProps>) {
   const { width } = useWindowDimensions();
   const { openPod } = useDetailNav();
-  const { muted } = useThemeColors();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
 
@@ -172,33 +173,12 @@ export function PodListView({
 
   return (
     <YStack flex={1}>
-      <XStack
-        marginHorizontal={16}
-        marginTop={12}
-        alignItems="center"
-        gap={8}
-        paddingHorizontal={12}
-        height={46}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$borderColor"
-        backgroundColor="$background"
-      >
-        <MaterialIcons name="search" size={20} color={muted} />
-        <Input
-          testID={`${testID}-search-input`}
-          aria-label={t('mweb.home.searchPods')}
-          flex={1}
-          unstyled
-          value={query}
-          onChangeText={setQuery}
-          placeholder={t('mweb.home.searchPods')}
-          placeholderTextColor="$muted"
-          color="$color"
-          fontSize={15}
-          returnKeyType="search"
-        />
-      </XStack>
+      <PodListSearchRow
+        testID={testID}
+        query={query}
+        onQueryChange={setQuery}
+        filterAction={filterAction}
+      />
       {listBody}
     </YStack>
   );

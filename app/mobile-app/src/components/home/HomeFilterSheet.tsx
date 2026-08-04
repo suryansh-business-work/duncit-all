@@ -25,6 +25,10 @@ interface Props {
   filters: HomeFilters;
   onChange: (next: HomeFilters) => void;
   onReset: () => void;
+  /** Off where the screen fixes the order itself — the full pod lists keep a
+   * stable order so the "See all" jump lands on the right pod, which would make
+   * a sort control here do nothing. mWeb twin: FilterBar's showSort. */
+  showSort?: boolean;
 }
 
 /** Bottom-sheet filter for the home feed — category / price / when / sort,
@@ -38,6 +42,7 @@ export function HomeFilterSheet({
   filters,
   onChange,
   onReset,
+  showSort = true,
 }: Readonly<Props>) {
   const { primary } = useThemeColors();
   const count = activeFilterCount(filters, categoryId);
@@ -122,15 +127,17 @@ export function HomeFilterSheet({
                       onSelect={(val) => onChange({ ...filters, date: val })}
                     />
                   </Section>
-                  <Section title="Sort by">
-                    <OptionChipRow
-                      layout="column"
-                      testIDPrefix="filter-sort"
-                      options={SORT_OPTIONS}
-                      value={filters.sort}
-                      onSelect={(val) => onChange({ ...filters, sort: val })}
-                    />
-                  </Section>
+                  {showSort && (
+                    <Section title="Sort by">
+                      <OptionChipRow
+                        layout="column"
+                        testIDPrefix="filter-sort"
+                        options={SORT_OPTIONS}
+                        value={filters.sort}
+                        onSelect={(val) => onChange({ ...filters, sort: val })}
+                      />
+                    </Section>
+                  )}
                 </YStack>
               </ScrollView>
               <XStack gap={12} padding={16}>

@@ -27,6 +27,8 @@ interface Props {
   onOpenChange?: (open: boolean) => void;
   /** Disabled when there are no clubs/pods to filter. */
   disabled?: boolean;
+  /** Forwarded to FilterBar — off on the full pod lists, whose order is fixed. */
+  showSort?: boolean;
 }
 
 const DEFAULT_SORT: SortBy = 'DATE_ASC';

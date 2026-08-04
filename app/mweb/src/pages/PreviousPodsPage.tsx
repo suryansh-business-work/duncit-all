@@ -1,5 +1,7 @@
 import HistoryIcon from '@mui/icons-material/History';
 import PodListPage from './pod-list';
+import { usePodListFilters } from './pod-list/usePodListFilters';
+import FilterMenu from './home-page/FilterMenu';
 import { useHomeData } from './home-page/useHomeData';
 import { useTranslation } from '../i18n/useTranslation';
 
@@ -13,14 +15,18 @@ interface Props {
  * selected city/super-category — reached from the Home "Previous Pods" section. */
 export default function PreviousPodsPage({ superCategorySlug, locationId, zoneName }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { previousPods, loading, error, hostNameOf } = useHomeData({
+  const f = usePodListFilters();
+  // useHomeData already applies category/price/date, so this page narrows
+  // through the same rules Home uses — no second implementation. Its order is
+  // fixed (newest first), which is why the sort control is hidden below.
+  const { previousPods, loading, error, hostNameOf, categoryChips } = useHomeData({
     superCategorySlug,
     locationId,
     zoneName,
-    categoryId: '',
-    priceFilter: 'ALL',
-    dateFilter: 'ALL',
-    sortBy: 'DATE_DESC',
+    categoryId: f.categoryId,
+    priceFilter: f.priceFilter,
+    dateFilter: f.dateFilter,
+    sortBy: f.sortBy,
   });
 
   return (
@@ -33,6 +39,23 @@ export default function PreviousPodsPage({ superCategorySlug, locationId, zoneNa
       error={error}
       emptyText={t('mweb.home.previousPodsEmpty')}
       hostNameOf={hostNameOf}
+      filterAction={
+        <FilterMenu
+          open={f.open}
+          onOpenChange={f.setOpen}
+          categoryChips={categoryChips}
+          categoryId={f.categoryId}
+          setCategoryId={f.setCategoryId}
+          priceFilter={f.priceFilter}
+          setPriceFilter={f.setPriceFilter}
+          dateFilter={f.dateFilter}
+          setDateFilter={f.setDateFilter}
+          sortBy={f.sortBy}
+          setSortBy={f.setSortBy}
+          locationId={locationId}
+          showSort={false}
+        />
+      }
     />
   );
 }

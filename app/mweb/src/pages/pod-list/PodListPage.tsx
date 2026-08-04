@@ -35,6 +35,8 @@ interface PodListPageProps {
   error?: { message: string } | null;
   emptyText: string;
   hostNameOf: (pod: any) => string | null;
+  /** Filter trigger rendered beside the search box (category + price + date). */
+  filterAction?: ReactNode;
 }
 
 /**
@@ -43,7 +45,7 @@ interface PodListPageProps {
  * and `?from=N` jumps to where the home rail stopped.
  */
 export default function PodListPage(props: Readonly<PodListPageProps>) {
-  const { title, subtitle, icon, pods, ads = NO_ADS, loading, error, emptyText, hostNameOf } = props;
+  const { title, subtitle, icon, pods, ads = NO_ADS, loading, error, emptyText, hostNameOf, filterAction } = props;
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
@@ -162,20 +164,23 @@ export default function PodListPage(props: Readonly<PodListPageProps>) {
           </Typography>
         </Box>
       </Stack>
-      <TextField
-        size="small"
-        fullWidth
-        placeholder={t('mweb.home.searchPods')}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-      />
+      <Stack direction="row" spacing={1} alignItems="center">
+        <TextField
+          size="small"
+          fullWidth
+          placeholder={t('mweb.home.searchPods')}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+        />
+        {filterAction}
+      </Stack>
       {body}
     </Stack>
   );

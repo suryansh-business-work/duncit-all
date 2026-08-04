@@ -324,16 +324,30 @@ export const hostRequestService = {
     appendAudit(h, 'APPROVED', reviewer, notes ?? 'Request approved');
     await h.save();
 
-    const { hostService } = await import('@modules/venues/host/host.service');
-    await hostService.addCategoryFromRequest(String(h.host_user_id), {
-      super_category_id: h.super_category_id,
-      category_id: h.category_id,
-      sub_category_id: h.sub_category_id,
-      super_category_name: h.super_category_name,
-      category_name: h.category_name,
-      sub_category_name: h.sub_category_name,
-      request_no: h.request_no,
-    });
+    // Best-effort, exactly like the notify below: the approval is already
+    // committed, so a category-grant failure must NOT fail the mutation. It used
+    // to throw straight through, which left the row APPROVED in Mongo while the
+    // portal saw a GraphQL error, skipped its refetch and kept showing the old
+    // status — and every retry then hit the "already been decided" guard above,
+    // so the row never updated without a manual page reload.
+    try {
+      const { hostService } = await import('@modules/venues/host/host.service');
+      await hostService.addCategoryFromRequest(String(h.host_user_id), {
+        super_category_id: h.super_category_id,
+        category_id: h.category_id,
+        sub_category_id: h.sub_category_id,
+        super_category_name: h.super_category_name,
+        category_name: h.category_name,
+        sub_category_name: h.sub_category_name,
+        request_no: h.request_no,
+      });
+    } catch (err) {
+      logs.server.error('hostRequest', 'approve', {
+        error: err,
+        msg: 'approved but the category grant failed — host needs it added manually',
+        request_no: h.request_no,
+      });
+    }
 
     await notifyHost(
       String(h.host_user_id),

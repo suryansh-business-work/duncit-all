@@ -37,11 +37,17 @@ export default function HostRequestsPage() {
     setActionError(null);
     try {
       await work;
-      refetchRef.current?.();
       return true;
     } catch (e) {
       setActionError(e instanceof Error ? e.message : fallback);
       return false;
+    } finally {
+      // Refetch on FAILURE too. A mutation that throws after its own write —
+      // any side effect running past the save — leaves the row already changed
+      // in Mongo; refetching only on success would show the stale status until
+      // the admin reloaded the page by hand. The table's job is the server's
+      // current truth, and after any attempt that truth may have moved.
+      refetchRef.current?.();
     }
   };
 

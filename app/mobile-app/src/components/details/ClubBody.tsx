@@ -109,7 +109,7 @@ export function ClubBody({
       {members.length > 0 ? (
         <YStack gap={8} testID="club-members">
           <Text fontSize={16} fontWeight="700" color="$color">
-            Pod Members
+            Club Members
           </Text>
           <AttendeesSection
             people={buildAttendeePeople(
@@ -118,6 +118,7 @@ export function ClubBody({
               [],
             )}
             spots={0}
+            showCount={false}
             onOpenProfile={onOpenMember}
           />
         </YStack>

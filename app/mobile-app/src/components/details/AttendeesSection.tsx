@@ -102,6 +102,7 @@ export function AttendeesSection({
   spots,
   expired,
   spotFills = [],
+  showCount = true,
   onOpenProfile,
 }: Readonly<{
   people: AttendeePerson[];
@@ -110,6 +111,9 @@ export function AttendeesSection({
   expired?: boolean;
   /** Filled Backout seats — old attendee struck through, filler named. */
   spotFills?: PodSpotFill[];
+  /** The "N going" line belongs to a pod, which people attend. A club's members
+   * are not going anywhere, so its section renders the avatars alone. */
+  showCount?: boolean;
   onOpenProfile: (userId: string) => void;
 }>) {
   const [open, setOpen] = useState(false);
@@ -122,10 +126,12 @@ export function AttendeesSection({
 
   return (
     <YStack gap={8}>
-      <Text fontSize={13.5} fontWeight="700" color="$color">
-        {going}
-        {spots > 0 ? ` / ${spots}` : ''} {expired ? 'attended' : 'going'}
-      </Text>
+      {showCount ? (
+        <Text fontSize={13.5} fontWeight="700" color="$color">
+          {going}
+          {spots > 0 ? ` / ${spots}` : ''} {expired ? 'attended' : 'going'}
+        </Text>
+      ) : null}
       {spots > 0 ? (
         <YStack height={8} borderRadius={4} backgroundColor="$background" overflow="hidden">
           <YStack height={8} width={`${pct}%`} backgroundColor="$primary" />

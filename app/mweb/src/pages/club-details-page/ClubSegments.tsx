@@ -6,7 +6,7 @@ import ClubBulletsSection from './ClubBulletsSection';
 import ClubFaqsSection from './ClubFaqsSection';
 import ClubHostsSection from './ClubHostsSection';
 
-type SegmentKey = 'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS';
+type SegmentKey = 'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS' | 'ADMINS';
 
 interface Props {
   club: any;
@@ -33,6 +33,14 @@ function renderSegment(active: SegmentKey, ctx: RenderCtx) {
   if (active === 'VALUES') return <ClubBulletsSection title="Values" items={ctx.club.values ?? []} />;
   if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs ?? []} />;
   if (active === 'HOSTS') return <ClubHostsSection hosts={ctx.club.hosts ?? []} />;
+  if (active === 'ADMINS')
+    return (
+      <ClubHostsSection
+        hosts={ctx.club.club_admins ?? []}
+        title="Club Admins"
+        fallbackInitial="A"
+      />
+    );
   return <ClubPodsScheduleSection pods={ctx.pods} priceFormat={ctx.priceFormat} onOpen={ctx.onOpenPod} />;
 }
 
@@ -49,6 +57,7 @@ export default function ClubSegments({ club, pods, priceFormat, onOpenPod }: Rea
       ['VALUES', 'Values', (club.values ?? []).length > 0],
       ['FAQS', 'FAQs', (club.faqs ?? []).length > 0],
       ['HOSTS', 'Club Hosts', (club.hosts ?? []).length > 0],
+      ['ADMINS', 'Club Admins', (club.club_admins ?? []).length > 0],
     ];
     return all.filter(([, , available]) => available);
   }, [club, moments.length]);

@@ -9,17 +9,25 @@ interface Host {
 
 interface Props {
   hosts: Host[];
+  /** Section heading — the same rail renders the club's hosts and its admins. */
+  title?: string;
+  /** Initial shown when a person has no avatar. */
+  fallbackInitial?: string;
 }
 
-/** Hosts linked to the club (admin-linked, or the hosts of the club's pods). */
-export default function ClubHostsSection({ hosts }: Readonly<Props>) {
+/** A rail of people linked to the club: its hosts, or its assigned admins. */
+export default function ClubHostsSection({
+  hosts,
+  title = 'Hosts',
+  fallbackInitial = 'H',
+}: Readonly<Props>) {
   const navigate = useNavigate();
   if (hosts.length === 0) return null;
 
   return (
     <Box>
       <Typography variant="h6" fontWeight={700} gutterBottom>
-        Hosts
+        {title}
       </Typography>
       <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 1, '&::-webkit-scrollbar': { display: 'none' } }}>
         {hosts.map((host) => (
@@ -33,7 +41,7 @@ export default function ClubHostsSection({ hosts }: Readonly<Props>) {
             sx={{ cursor: 'pointer', width: 72, flex: '0 0 auto' }}
           >
             <Avatar src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
-              {host.name?.[0]?.toUpperCase() || 'H'}
+              {host.name?.[0]?.toUpperCase() || fallbackInitial}
             </Avatar>
             <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center' }} noWrap>
               {host.name}

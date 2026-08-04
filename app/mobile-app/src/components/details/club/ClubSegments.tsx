@@ -9,7 +9,16 @@ import { ClubHostsRail } from './ClubHostsRail';
 import { ClubMomentsRail } from './ClubMomentsRail';
 import { ClubPodsSchedule } from './ClubPodsSchedule';
 
-type SegmentKey = 'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS';
+type SegmentKey =
+  | 'PODS'
+  | 'MOMENTS'
+  | 'WHO'
+  | 'WHAT'
+  | 'PERKS'
+  | 'VALUES'
+  | 'FAQS'
+  | 'HOSTS'
+  | 'ADMINS';
 
 interface Props {
   club: ClubDetail;
@@ -47,6 +56,7 @@ export function ClubSegments(props: Readonly<Props>) {
       ['VALUES', 'Values', club.values.length > 0],
       ['FAQS', 'FAQs', club.faqs.length > 0],
       ['HOSTS', 'Club Hosts', club.hosts.length > 0],
+      ['ADMINS', 'Club Admins', club.club_admins.length > 0],
     ];
     return all.filter(([, , available]) => available);
   }, [club, moments.length]);

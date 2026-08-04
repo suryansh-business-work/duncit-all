@@ -21,7 +21,7 @@ export default function NotificationsHero({
   onToggle,
 }: Readonly<Props>) {
   return (
-    <Box sx={{ px: 1.5, pb: 1.5 }}>
+    <Box sx={{ px: 1.5, pb: 1.5, flexShrink: 0 }}>
       <Box
         sx={{
           p: 1.5,

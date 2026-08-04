@@ -30,6 +30,8 @@ export interface NotificationsScreenProps {
   busyId?: string | null;
   /** True while mark-all-read is in flight. */
   markAllBusy?: boolean;
+  /** Re-read the inbox after an inline action (accept/reject a follow request). */
+  onRefresh?: () => void;
 }
 
 /** Full-screen notifications list — RN twin of mWeb's <NotificationsScreen/>.
@@ -43,6 +45,7 @@ export function NotificationsScreen({
   onMarkAll,
   busyId = null,
   markAllBusy = false,
+  onRefresh,
 }: Readonly<NotificationsScreenProps>) {
   const { color, primary } = useThemeColors();
   const notifEnabled = useNotificationPrefsStore((s) => s.enabled);
@@ -141,6 +144,7 @@ export function NotificationsScreen({
                   item={item}
                   busy={busyId === item.id || markAllBusy}
                   onPress={() => onNotifClick(item)}
+                  onAnswered={onRefresh}
                 />
               )}
               ListEmptyComponent={

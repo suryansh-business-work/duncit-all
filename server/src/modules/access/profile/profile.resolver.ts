@@ -21,11 +21,19 @@ function deriveUsername(u: any): string {
 // Shape a public profile and apply privacy. A PRIVATE profile hides its
 // bio/city/zone (and, via can_view_content, its posts/stories) from anyone who
 // is not the owner or a follower. Name + avatar always stay visible.
-function toPublicProfile(u: any, viewerId: string | null = null, isFollowing = false) {
+function toPublicProfile(
+  u: any,
+  viewerId: string | null = null,
+  isFollowing = false,
+  hasRequested = false
+) {
   if (!u) return null;
   const isPrivate = (u.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
   const isOwner = !!viewerId && viewerId === u.user_id;
   const canView = isOwner || !isPrivate || isFollowing;
+  // A pending request grants nothing — it only changes the button. Following
+  // still wins outright so an accepted follow can never read as REQUESTED.
+  const requested = !isFollowing && hasRequested;
   return {
     user_id: u.user_id,
     username: deriveUsername(u),
@@ -40,8 +48,16 @@ function toPublicProfile(u: any, viewerId: string | null = null, isFollowing = f
     following_count: u.following_count ?? 0,
     is_private: isPrivate,
     is_following: isFollowing,
+    follow_status: followStatusOf(isFollowing, requested),
     can_view_content: canView,
   };
+}
+
+/** The button's three states from the two facts that decide it. Extracted so
+ * the ordering (following beats requested) lives in exactly one place. */
+function followStatusOf(isFollowing: boolean, requested: boolean) {
+  if (isFollowing) return 'FOLLOWING';
+  return requested ? 'REQUESTED' : 'NONE';
 }
 
 // Resolve a list of user ids to public profiles, tagging which ones the viewer
@@ -50,12 +66,24 @@ async function mapPublicProfiles(ids: string[], viewerId: string | null) {
   const clean = ids.filter(Boolean);
   if (clean.length === 0) return [];
   const users = await Promise.all(clean.map((id) => userService.getById(id).catch(() => null)));
-  const following = viewerId
-    ? new Set(await userService.listFollowingUserIds(viewerId))
-    : new Set<string>();
+  // Both sets are fetched once for the whole list — a per-row lookup would make
+  // a 200-follower list 400 queries.
+  const [following, requested] = viewerId
+    ? await Promise.all([
+        userService.listFollowingUserIds(viewerId).then((r) => new Set(r)),
+        userService.listRequestedUserIds(viewerId).then((r) => new Set(r)),
+      ])
+    : [new Set<string>(), new Set<string>()];
   return users
     .filter(Boolean)
-    .map((u) => toPublicProfile(u, viewerId, following.has((u as any).user_id)));
+    .map((u) =>
+      toPublicProfile(
+        u,
+        viewerId,
+        following.has((u as any).user_id),
+        requested.has((u as any).user_id)
+      )
+    );
 }
 
 export const profileResolvers = {
@@ -87,8 +115,8 @@ export const profileResolvers = {
       const u = await userService.getById(args.user_id).catch(() => null);
       if (!u) return null;
       const viewerId = ctx.user?.id ?? null;
-      const isFollowing = viewerId ? await userService.isFollowing(viewerId, u.user_id) : false;
-      return toPublicProfile(u, viewerId, isFollowing);
+      const status = await userService.followStatus(viewerId, u.user_id);
+      return toPublicProfile(u, viewerId, status === 'FOLLOWING', status === 'REQUESTED');
     },
     followersOf: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       const ids = await userService.listFollowerUserIds(args.user_id);
@@ -97,6 +125,25 @@ export const profileResolvers = {
     followingOf: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       const ids = await userService.listFollowingUserIds(args.user_id);
       return mapPublicProfiles(ids, ctx.user?.id ?? null);
+    },
+    myFollowRequests: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      if (!ctx.user) return [];
+      const rows = await userService.listPendingFollowRequests(ctx.user.id);
+      const profiles = await mapPublicProfiles(
+        rows.map((r) => r.requester_id),
+        ctx.user.id
+      );
+      const byId = new Map(profiles.map((p: any) => [p.user_id, p]));
+      // A requester whose account has since gone is dropped rather than rendered
+      // as an un-answerable row.
+      return rows
+        .filter((r) => byId.has(r.requester_id))
+        .map((r) => ({
+          id: r.id,
+          requester: byId.get(r.requester_id),
+          status: r.status,
+          created_at: r.created_at,
+        }));
     },
   },
   Mutation: {
@@ -251,6 +298,33 @@ export const profileResolvers = {
         });
       }
       return userService.unfollowUser(ctx.user.id, args.user_id);
+    },
+    acceptFollowRequest: async (_p: unknown, args: { request_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.acceptFollowRequest(ctx.user.id, args.request_id);
+    },
+    rejectFollowRequest: async (_p: unknown, args: { request_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.rejectFollowRequest(ctx.user.id, args.request_id);
+    },
+    cancelFollowRequest: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.cancelFollowRequest(ctx.user.id, args.user_id);
     },
   },
 };

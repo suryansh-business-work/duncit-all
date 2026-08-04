@@ -4,3 +4,4 @@ export { PodFollowerModel, type PodFollowerDoc } from './podFollower.model';
 export { ClubFollowerModel, type ClubFollowerDoc } from './clubFollower.model';
 export { UserSavedPodModel, type UserSavedPodDoc } from './userSavedPod.model';
 export { UserInterestModel, type UserInterestDoc } from './userInterest.model';
+export { FollowRequestModel, type FollowRequestDoc } from './followRequest.model';

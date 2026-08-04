@@ -270,6 +270,10 @@ export const notificationService = {
       body: input.body.trim(),
       image_url: input.image_url || null,
       link_url: input.link_url || null,
+      // Server-raised only: CreateNotificationInput does not expose these, so an
+      // admin broadcast can never mint Accept/Reject buttons over a document.
+      action_type: input.action_type || null,
+      action_ref_id: input.action_ref_id || null,
       scope: input.scope,
       silent: !!input.silent,
       location_id: input.scope === 'LOCATION' || input.scope === 'ZONE' ? input.location_id : null,

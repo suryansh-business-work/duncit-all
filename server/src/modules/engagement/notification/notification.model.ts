@@ -2,11 +2,19 @@ import { Schema, model, type Document, Types } from 'mongoose';
 
 export type NotificationScope = 'GLOBAL' | 'LOCATION' | 'ZONE' | 'USER' | 'AUDIENCE_LIST';
 
+/** Notifications the recipient can ACT on from the inbox, rather than only read.
+ * The client renders the matching buttons; the server owns what they do. */
+export type NotificationAction = 'FOLLOW_REQUEST';
+
 export interface INotification extends Document {
   title: string;
   body: string;
   image_url?: string | null;
   link_url?: string | null;
+  /** Set when this row carries inline actions (e.g. Accept / Reject). */
+  action_type?: NotificationAction | null;
+  /** Document the action operates on — a FollowRequest id for FOLLOW_REQUEST. */
+  action_ref_id?: Types.ObjectId | null;
   scope: NotificationScope;
   silent: boolean;
   location_id?: Types.ObjectId | null;
@@ -26,6 +34,8 @@ const notificationSchema = new Schema<INotification>(
     body: { type: String, required: true, trim: true },
     image_url: { type: String, default: null },
     link_url: { type: String, default: null },
+    action_type: { type: String, enum: ['FOLLOW_REQUEST'], default: null },
+    action_ref_id: { type: Schema.Types.ObjectId, default: null },
     scope: {
       type: String,
       enum: ['GLOBAL', 'LOCATION', 'ZONE', 'USER', 'AUDIENCE_LIST'],

@@ -4,15 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
   Box,
-  Button,
   CircularProgress,
   Stack,
   Tab,
   Tabs,
   Typography,
 } from '@mui/material';
+import { followActionFor, readFollowStatus } from '@duncit/utils';
+import FollowButton from './FollowButton';
 import ResponsiveDialog from './ResponsiveDialog';
-import { FOLLOW_USER, UNFOLLOW_USER } from '../pages/hosts-venues-page/queries';
+import { CANCEL_FOLLOW_REQUEST, FOLLOW_USER, UNFOLLOW_USER } from '../pages/hosts-venues-page/queries';
 
 export const FOLLOW_LISTS = gql`
   query FollowLists($userId: ID!) {
@@ -23,6 +24,7 @@ export const FOLLOW_LISTS = gql`
       first_name
       profile_photo
       is_following
+      follow_status
     }
     followingOf(user_id: $userId) {
       user_id
@@ -31,6 +33,7 @@ export const FOLLOW_LISTS = gql`
       first_name
       profile_photo
       is_following
+      follow_status
     }
   }
 `;
@@ -43,6 +46,7 @@ type Person = {
   first_name?: string | null;
   profile_photo?: string | null;
   is_following: boolean;
+  follow_status?: string | null;
 };
 
 interface RowProps {
@@ -75,14 +79,7 @@ function FollowRow({ person, isSelf, onToggle, onOpen }: Readonly<RowProps>) {
         </Typography>
       </Box>
       {isSelf ? null : (
-        <Button
-          size="small"
-          variant={person.is_following ? 'outlined' : 'contained'}
-          onClick={() => onToggle(person)}
-          sx={{ fontWeight: 600, borderRadius: 999 }}
-        >
-          {person.is_following ? 'Following' : 'Follow'}
-        </Button>
+        <FollowButton status={readFollowStatus(person)} onToggle={() => onToggle(person)} />
       )}
     </Stack>
   );
@@ -112,10 +109,17 @@ export default function FollowListDialog({ open, onClose, userId, initialTab, vi
   });
   const [followUser] = useMutation(FOLLOW_USER);
   const [unfollowUser] = useMutation(UNFOLLOW_USER);
+  const [cancelRequest] = useMutation(CANCEL_FOLLOW_REQUEST);
 
   const toggle = async (person: Person) => {
-    const mutation = person.is_following ? unfollowUser : followUser;
-    await mutation({ variables: { user_id: person.user_id } });
+    const mutations = {
+      FOLLOW: followUser,
+      UNFOLLOW: unfollowUser,
+      CANCEL_REQUEST: cancelRequest,
+    };
+    await mutations[followActionFor(readFollowStatus(person))]({
+      variables: { user_id: person.user_id },
+    });
     await refetch();
   };
 

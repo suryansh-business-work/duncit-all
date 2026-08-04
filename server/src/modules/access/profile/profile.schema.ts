@@ -26,6 +26,17 @@ export const profileTypeDefs = gql`
     saved_pod_ids: [ID!]!
   }
 
+  """
+  What the viewer's Follow button must render for this profile.
+  REQUESTED only ever happens on a PRIVATE profile — a public one goes
+  straight from NONE to FOLLOWING.
+  """
+  enum FollowStatus {
+    NONE
+    REQUESTED
+    FOLLOWING
+  }
+
   type PublicProfile {
     user_id: ID!
     "Derived @handle (no real username field exists yet) for the follow lists."
@@ -43,6 +54,8 @@ export const profileTypeDefs = gql`
     is_private: Boolean!
     "Whether the signed-in viewer follows this user."
     is_following: Boolean!
+    "The three-state Follow button. is_following stays as the FOLLOWING shorthand."
+    follow_status: FollowStatus!
     "True when the viewer may see this user's posts/stories (owner, public, or follower)."
     can_view_content: Boolean!
   }
@@ -70,6 +83,16 @@ export const profileTypeDefs = gql`
     followersOf(user_id: ID!): [PublicProfile!]!
     "People the given user follows (their public profiles)."
     followingOf(user_id: ID!): [PublicProfile!]!
+    "Open follow requests waiting on the signed-in user, newest first."
+    myFollowRequests: [FollowRequest!]!
+  }
+
+  "A pending ask to follow a PRIVATE profile. Answering it is what creates the follow."
+  type FollowRequest {
+    id: ID!
+    requester: PublicProfile!
+    status: String!
+    created_at: String!
   }
 
   extend type Mutation {
@@ -88,7 +111,17 @@ export const profileTypeDefs = gql`
     unfollowPod(pod_id: ID!): User!
     followClub(club_id: ID!): User!
     unfollowClub(club_id: ID!): User!
+    """
+    Follow a user. A PUBLIC profile is followed immediately; a PRIVATE one
+    only opens a PENDING follow request and notifies its owner.
+    """
     followUser(user_id: ID!): User!
     unfollowUser(user_id: ID!): User!
+    "The private profile's owner accepts — this is what creates the follow."
+    acceptFollowRequest(request_id: ID!): User!
+    "The private profile's owner rejects. No follow is created."
+    rejectFollowRequest(request_id: ID!): User!
+    "The requester withdraws their own pending ask (tapping Requested)."
+    cancelFollowRequest(user_id: ID!): User!
   }
 `;

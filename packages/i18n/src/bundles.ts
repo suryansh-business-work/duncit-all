@@ -101,6 +101,17 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       seatsOne: '1 seat',
       seatsMany: '{count} seats',
     },
+    // The Follow button's three states. REQUESTED only ever appears on a
+    // private profile, whose owner must accept before a follow exists.
+    follow: {
+      follow: 'Follow',
+      requested: 'Requested',
+      following: 'Following',
+      accept: 'Accept',
+      reject: 'Reject',
+      accepted: 'Accepted',
+      rejected: 'Rejected',
+    },
     // The door scanner: one ticket can admit a group, so the host is told how
     // many people that single QR lets in. The count itself is rendered as a
     // badge beside this copy, which is why neither string carries it.

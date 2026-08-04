@@ -5,6 +5,23 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
 
 export const notificationResolvers = {
+  /**
+   * An actionable row's buttons must disappear once the request behind it is
+   * answered — including when it was answered from another device, or by the
+   * requester withdrawing it. Reading the status live off the referenced
+   * document is what keeps the inbox honest; the notification row itself is
+   * never rewritten.
+   */
+  Notification: {
+    action_status: async (parent: any) => {
+      if (parent?.action_type !== 'FOLLOW_REQUEST' || !parent?.action_ref_id) return null;
+      const { FollowRequestModel } = await import(
+        '@modules/access/user/relations/followRequest.model'
+      );
+      const request = await FollowRequestModel.findById(parent.action_ref_id).select('status').lean();
+      return (request as any)?.status ?? null;
+    },
+  },
   Query: {
     notifications: async (_p: unknown, args: { limit?: number }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);

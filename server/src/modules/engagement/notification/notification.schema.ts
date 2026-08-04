@@ -8,12 +8,26 @@ export const notificationTypeDefs = /* GraphQL */ `
     AUDIENCE_LIST
   }
 
+  """
+  Notifications the recipient can act on inline. FOLLOW_REQUEST renders
+  Accept / Reject against the FollowRequest in action_ref_id.
+  """
+  enum NotificationAction {
+    FOLLOW_REQUEST
+  }
+
   type Notification {
     id: ID!
     title: String!
     body: String!
     image_url: String
     link_url: String
+    "Set when this row carries inline actions instead of only being readable."
+    action_type: NotificationAction
+    "The document the actions operate on — a FollowRequest id for FOLLOW_REQUEST."
+    action_ref_id: ID
+    "Live status of action_ref_id, so an answered request stops offering buttons."
+    action_status: String
     scope: NotificationScope!
     silent: Boolean!
     location_id: ID

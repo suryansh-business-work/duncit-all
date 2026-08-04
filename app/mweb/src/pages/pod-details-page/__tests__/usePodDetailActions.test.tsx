@@ -62,23 +62,35 @@ function renderActions(overrides: Partial<Parameters<typeof usePodDetailActions>
 }
 
 describe('buildPodShareText', () => {
-  it('returns empty string for null pod', () => {
-    expect(buildPodShareText(null)).toBe('');
+  const URL = 'https://duncit.com/club/c/pod/p';
+
+  it('falls back to the bare link with no pod', () => {
+    expect(buildPodShareText(null, URL)).toBe(URL);
   });
 
-  it('includes when + where lines', () => {
-    const text = buildPodShareText(POD);
+  it('shares title, when, where, a map link and the pod link', () => {
+    const text = buildPodShareText(POD, URL);
     expect(text).toContain('When:');
     expect(text).toContain('Where: Central Park · Gate 4');
+    // The venue has no coordinates on the Pod, so the map link is a Maps search
+    // over the venue text.
+    expect(text).toContain(
+      'Location: https://www.google.com/maps/search/?api=1&query=Central%20Park%2C%20Gate%204',
+    );
+    expect(text).toContain(`Join on Duncit: ${URL}`);
   });
 
-  it('skips invalid date and missing place', () => {
-    const text = buildPodShareText({ pod_date_time: 'not-a-date', place_label: '' });
-    expect(text).toBe('');
+  it('drops the when and location lines rather than leaving empty labels', () => {
+    const text = buildPodShareText({ pod_date_time: 'not-a-date', place_label: '' }, URL);
+    expect(text).not.toContain('When:');
+    expect(text).not.toContain('Location:');
+    expect(text).toBe(`Join on Duncit: ${URL}`);
   });
 
   it('handles only a place_label', () => {
-    expect(buildPodShareText({ place_label: 'Beach' })).toBe('Where: Beach');
+    const text = buildPodShareText({ place_label: 'Beach' }, URL);
+    expect(text).toContain('Where: Beach');
+    expect(text).toContain('Location: https://www.google.com/maps/search/?api=1&query=Beach');
   });
 });
 

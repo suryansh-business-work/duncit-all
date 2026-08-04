@@ -93,11 +93,14 @@ export default function MeetingSchedulePage() {
       setActionError(null);
       try {
         await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
-        refresh();
       } catch (e) {
         setActionError(e instanceof Error ? e.message : 'Could not mark the meeting as done');
       } finally {
         markingRef.current = false;
+        // Refetch on FAILURE too — a mutation that throws after its own write
+        // leaves the row already changed in Mongo, and refetching only on
+        // success would show the stale status until a manual page reload.
+        refresh();
       }
     },
     [updateMeeting, refresh],

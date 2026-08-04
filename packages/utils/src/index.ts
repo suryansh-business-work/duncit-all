@@ -60,6 +60,15 @@ export {
   type CartEntry,
 } from './cart-entry';
 export {
+  FOLLOW_LABEL_KEY,
+  followActionFor,
+  followStatusFrom,
+  nextFollowStatus,
+  readFollowStatus,
+  type FollowAction,
+  type FollowStatus,
+} from './follow-status';
+export {
   buildEarningsStatement,
   formatStatementMoney,
   type EarningsStatement,

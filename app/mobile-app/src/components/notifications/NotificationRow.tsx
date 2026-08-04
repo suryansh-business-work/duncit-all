@@ -7,6 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserNotification } from '@/hooks/useNotifications';
 import { formatRelative } from '@/utils/date-format';
 import { notificationIconName } from '@/utils/notification-icon';
+import { FollowRequestActions } from './FollowRequestActions';
 
 /** A single notification card — chat-style row (avatar · title + preview ·
  * time), with unread cards highlighted by the primary gradient (B3-4).
@@ -15,12 +16,15 @@ export function NotificationRow({
   item,
   busy,
   onPress,
+  onAnswered,
 }: Readonly<{
   item: UserNotification;
   /** True while this row's mark-read is in flight — the row is the only thing
    * that should look busy, not the whole list. */
   busy: boolean;
   onPress: () => void;
+  /** Re-read the inbox once an inline action changes something. */
+  onAnswered?: () => void;
 }>) {
   const { onPrimary, primary, muted } = useThemeColors();
   const unread = !item.read_at;
@@ -38,6 +42,10 @@ export function NotificationRow({
   // pays a nesting increment for it.
   const press = busy ? undefined : onPress;
   const rowOpacity = busy ? 0.6 : 1;
+  // Hoisted to nesting 0 (rule 26g): an actionable row ends in its buttons, so
+  // the "open me" chevron would be a second, competing affordance.
+  const showChevron =
+    !busy && !!notification.link_url && notification.action_type !== 'FOLLOW_REQUEST';
 
   const body = (
     <XStack flex={1} gap={12} padding={12} alignItems="center">
@@ -93,10 +101,16 @@ export function NotificationRow({
             </YStack>
           ) : null}
           {busy ? <Spinner size="small" color={ink ?? primary} /> : null}
-          {!busy && notification.link_url ? (
+          {showChevron ? (
             <MaterialIcons name="chevron-right" size={20} color={ink ?? primary} />
           ) : null}
         </XStack>
+        <FollowRequestActions
+          actionType={notification.action_type}
+          requestId={notification.action_ref_id}
+          status={notification.action_status}
+          onAnswered={() => onAnswered?.()}
+        />
       </YStack>
     </XStack>
   );

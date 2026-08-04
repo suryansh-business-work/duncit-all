@@ -1,3 +1,4 @@
+import type { FollowStatus } from '@duncit/utils';
 import {
   Avatar,
   Box,
@@ -24,12 +25,12 @@ interface Host {
 interface Props {
   hosts: Host[];
   meId?: string;
-  followingIds: Set<string>;
+  statusFor: (userId: string) => FollowStatus;
   pendingUserId: string | null;
   onToggleFollow: (userId: string) => void;
 }
 
-export default function HostList({ hosts, meId, followingIds, pendingUserId, onToggleFollow }: Readonly<Props>) {
+export default function HostList({ hosts, meId, statusFor, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!hosts.length) {
     return (
       <Card variant="outlined">
@@ -82,7 +83,7 @@ export default function HostList({ hosts, meId, followingIds, pendingUserId, onT
                   )}
                 </Box>
                 <FollowButton
-                  following={followingIds.has(h.user_id)}
+                  status={statusFor(h.user_id)}
                   disabled={h.user_id === meId}
                   loading={pendingUserId === h.user_id}
                   onToggle={() => onToggleFollow(h.user_id)}

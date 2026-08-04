@@ -11,9 +11,11 @@ import {
   Typography,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import { followActionFor, followStatusFrom } from '@duncit/utils';
 import HostList from './hosts-venues-page/HostList';
 import VenueList from './hosts-venues-page/VenueList';
 import {
+  CANCEL_FOLLOW_REQUEST,
   FOLLOW_USER,
   PUBLIC_HOSTS,
   PUBLIC_VENUES,
@@ -28,19 +30,30 @@ export default function HostsVenuesPage() {
   const venuesQ = useQuery(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
   const [followUser] = useMutation(FOLLOW_USER);
   const [unfollowUser] = useMutation(UNFOLLOW_USER);
+  const [cancelRequest] = useMutation(CANCEL_FOLLOW_REQUEST);
   const [pendingFollow, setPendingFollow] = useState<string | null>(null);
 
   const hosts: any[] = hostsQ.data?.publicHosts ?? [];
   const venues: any[] = venuesQ.data?.publicVenues ?? [];
   const me = hostsQ.data?.me;
   const followingIds = new Set<string>((me?.following_user_ids ?? []) as string[]);
+  // A host with a private profile sits in neither set until they answer — the
+  // button must say Requested there, not fall back to Follow.
+  const requestedIds = new Set<string>((me?.requested_user_ids ?? []) as string[]);
+  const statusFor = (id: string) => followStatusFrom(followingIds, requestedIds, id);
 
   const toggleFollow = async (targetUserId: string) => {
     if (!targetUserId || targetUserId === me?.user_id) return;
     setPendingFollow(targetUserId);
     try {
-      const mutation = followingIds.has(targetUserId) ? unfollowUser : followUser;
-      await mutation({ variables: { user_id: targetUserId } });
+      const mutations = {
+        FOLLOW: followUser,
+        UNFOLLOW: unfollowUser,
+        CANCEL_REQUEST: cancelRequest,
+      };
+      await mutations[followActionFor(statusFor(targetUserId))]({
+        variables: { user_id: targetUserId },
+      });
       await hostsQ.refetch();
     } finally {
       setPendingFollow(null);
@@ -62,7 +75,7 @@ export default function HostsVenuesPage() {
         <HostList
           hosts={hosts}
           meId={me?.user_id}
-          followingIds={followingIds}
+          statusFor={statusFor}
           pendingUserId={pendingFollow}
           onToggleFollow={toggleFollow}
         />
@@ -81,7 +94,7 @@ export default function HostsVenuesPage() {
       <VenueList
         venues={venues}
         meId={me?.user_id}
-        followingIds={followingIds}
+        statusFor={statusFor}
         pendingUserId={pendingFollow}
         onToggleFollow={toggleFollow}
       />

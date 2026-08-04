@@ -870,6 +870,8 @@ export type BrandPickupLocation = {
   pincode: Scalars['String']['output'];
   /** Partner-warehouse approval gate: PENDING | APPROVED | REJECTED (Duncit-owned + legacy are APPROVED). */
   review_status: Scalars['String']['output'];
+  /** Why the last registration attempt did not land ('' once registered). */
+  shiprocket_error: Scalars['String']['output'];
   shiprocket_pickup_id: Scalars['String']['output'];
   shiprocket_registered: Scalars['Boolean']['output'];
   state: Scalars['String']['output'];
@@ -1214,6 +1216,8 @@ export type CheckoutQuote = {
 export type CheckoutQuoteInput = {
   amount: Scalars['Float']['input'];
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
+  seats?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type Club = {
@@ -2574,6 +2578,8 @@ export type DummyCheckoutInput = {
   /** How the add-on products are delivered (default PICKUP). */
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
+  seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
   /** Delivery address, required when any product ships. */
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
@@ -2959,6 +2965,8 @@ export type EventTicket = {
   pod_mode: Scalars['String']['output'];
   pod_title: Scalars['String']['output'];
   qr_token: Scalars['String']['output'];
+  /** People this ticket admits (its booking's seats). 1 for every legacy ticket. */
+  seats: Scalars['Int']['output'];
   status: EventTicketStatus;
   ticket_code: Scalars['String']['output'];
   updated_at: Scalars['String']['output'];
@@ -3203,6 +3211,25 @@ export type FinanceStat = {
   this_month: Scalars['Float']['output'];
   total: Scalars['Float']['output'];
 };
+
+/** A pending ask to follow a PRIVATE profile. Answering it is what creates the follow. */
+export type FollowRequest = {
+  __typename?: 'FollowRequest';
+  created_at: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  requester: PublicProfile;
+  status: Scalars['String']['output'];
+};
+
+/**
+ * What the viewer's Follow button must render for this profile.
+ * REQUESTED only ever happens on a PRIVATE profile — a public one goes
+ * straight from NONE to FOLLOWING.
+ */
+export type FollowStatus =
+  | 'FOLLOWING'
+  | 'NONE'
+  | 'REQUESTED';
 
 export type FollowingFeedSource =
   | 'CLUBS'
@@ -3698,6 +3725,16 @@ export type HostTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<Host>;
   total: Scalars['Int']['output'];
+};
+
+export type HostTicketScanResult = {
+  __typename?: 'HostTicketScanResult';
+  /** True when the ticket had already been checked in before this scan. */
+  already_checked_in: Scalars['Boolean']['output'];
+  attendee?: Maybe<ScannedAttendee>;
+  message: Scalars['String']['output'];
+  ok: Scalars['Boolean']['output'];
+  ticket?: Maybe<EventTicket>;
 };
 
 /** The only fields a host may edit on their own pod. */
@@ -4568,6 +4605,8 @@ export type ModerationViolation = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  /** The private profile's owner accepts — this is what creates the follow. */
+  acceptFollowRequest: User;
   acknowledgeBouncerSos: BouncerSosAlert;
   acknowledgeHostRequest: HostRequest;
   /** Submit or update a star rating (1-5) on a club. Requires authentication. */
@@ -4653,6 +4692,8 @@ export type Mutation = {
   callVenueLeadContact: LeadContactActionResult;
   /** Keep My Spot — cancel an in-process backout and restore the booking (seat must still be free). */
   cancelBackoutPod: PodMember;
+  /** The requester withdraws their own pending ask (tapping Requested). */
+  cancelFollowRequest: User;
   /** Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again. */
   cancelMeeting: OnboardingMeeting;
   /** Cancel the caller's own pending meeting (with a reason). */
@@ -4840,6 +4881,10 @@ export type Mutation = {
   emailVenueLeadContact: LeadContactActionResult;
   followClub: User;
   followPod: User;
+  /**
+   * Follow a user. A PUBLIC profile is followed immediately; a PRIVATE one
+   * only opens a PENDING follow request and notifies its owner.
+   */
   followUser: User;
   generateInventorySku: Scalars['String']['output'];
   generateLeadSurveyLink: LeadSurveyEntry;
@@ -4854,6 +4899,13 @@ export type Mutation = {
   hostDeletePod: Scalars['Boolean']['output'];
   /** Host fully edits a venue-rejected pod and resubmits the booking request (no new pod). */
   hostResubmitPod: Pod;
+  /**
+   * Host scans an attendee's ticket QR for one of their OWN pods: verifies the
+   * code belongs to that pod, marks attendance and returns the attendee.
+   * Authorised by the same host/co-host rule as hostUpdatePod — a host never
+   * holds an admin role, so the admin check-in mutations are closed to them.
+   */
+  hostScanPodTicket: HostTicketScanResult;
   hostUpdatePod: Pod;
   /**
    * Server-side import of a remote image (e.g. a Pexels stock photo) into our
@@ -4874,6 +4926,7 @@ export type Mutation = {
   incrementPodHits: Pod;
   /** Primary host invites a co-host. Enforces the sub-category's allow_co_hosts + max_co_hosts. */
   inviteCoHost: Pod;
+  /** Book a free pod. Seats books several at once (default 1, capped by what is left). */
   joinFreePod: PodMember;
   login: AuthPayload;
   loginWithGoogle: AuthPayload;
@@ -4921,6 +4974,8 @@ export type Mutation = {
   registerBrandPickupWithShiprocket: BrandPickupLocation;
   /** Onboarding/admin: reject a brand with notes. */
   rejectEcommBrand: EcommBrand;
+  /** The private profile's owner rejects. No follow is created. */
+  rejectFollowRequest: User;
   rejectHost: Host;
   rejectHostRequest: HostRequest;
   rejectVenue: Venue;
@@ -5234,6 +5289,11 @@ export type Mutation = {
 };
 
 
+export type MutationAcceptFollowRequestArgs = {
+  request_id: Scalars['ID']['input'];
+};
+
+
 export type MutationAcknowledgeBouncerSosArgs = {
   id: Scalars['ID']['input'];
 };
@@ -5530,6 +5590,11 @@ export type MutationCallVenueLeadContactArgs = {
 
 export type MutationCancelBackoutPodArgs = {
   pod_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationCancelFollowRequestArgs = {
+  user_id: Scalars['ID']['input'];
 };
 
 
@@ -6375,6 +6440,12 @@ export type MutationHostResubmitPodArgs = {
 };
 
 
+export type MutationHostScanPodTicketArgs = {
+  pod_doc_id: Scalars['ID']['input'];
+  token: Scalars['String']['input'];
+};
+
+
 export type MutationHostUpdatePodArgs = {
   input: HostUpdatePodInput;
   pod_doc_id: Scalars['ID']['input'];
@@ -6415,6 +6486,7 @@ export type MutationInviteCoHostArgs = {
 export type MutationJoinFreePodArgs = {
   pod_doc_id: Scalars['ID']['input'];
   referral_token?: InputMaybe<Scalars['String']['input']>;
+  seats?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -6564,6 +6636,11 @@ export type MutationRegisterBrandPickupWithShiprocketArgs = {
 export type MutationRejectEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   notes: Scalars['String']['input'];
+};
+
+
+export type MutationRejectFollowRequestArgs = {
+  request_id: Scalars['ID']['input'];
 };
 
 
@@ -7816,6 +7893,12 @@ export type NewsletterSubscriberTablePage = {
 
 export type Notification = {
   __typename?: 'Notification';
+  /** The document the actions operate on — a FollowRequest id for FOLLOW_REQUEST. */
+  action_ref_id?: Maybe<Scalars['ID']['output']>;
+  /** Live status of action_ref_id, so an answered request stops offering buttons. */
+  action_status?: Maybe<Scalars['String']['output']>;
+  /** Set when this row carries inline actions instead of only being readable. */
+  action_type?: Maybe<NotificationAction>;
   /** AUDIENCE_LIST scope only — members are recomputed at send time. */
   audience_list_id?: Maybe<Scalars['ID']['output']>;
   body: Scalars['String']['output'];
@@ -7834,6 +7917,13 @@ export type Notification = {
   updated_at: Scalars['String']['output'];
   zone_name?: Maybe<Scalars['String']['output']>;
 };
+
+/**
+ * Notifications the recipient can act on inline. FOLLOW_REQUEST renders
+ * Accept / Reject against the FollowRequest in action_ref_id.
+ */
+export type NotificationAction =
+  | 'FOLLOW_REQUEST';
 
 export type NotificationScope =
   /** Everybody currently matching a saved marketing audience list. */
@@ -8352,6 +8442,10 @@ export type Pod = {
   products_enabled: Scalars['Boolean']['output'];
   /** Explore reel video URL. Set = reel enabled; live pods with a reel appear in Explore. */
   reel_url?: Maybe<Scalars['String']['output']>;
+  /** Seats still bookable (0 when the pod has unlimited spots). */
+  seats_available: Scalars['Int']['output'];
+  /** Seats taken — attendees plus every extra seat a multi-seat booking holds. */
+  seats_taken: Scalars['Int']['output'];
   updated_at: Scalars['String']['output'];
   venue_approval_status: PodVenueApproval;
   venue_id?: Maybe<Scalars['ID']['output']>;
@@ -8658,6 +8752,8 @@ export type PodMember = {
   referred_by?: Maybe<Scalars['ID']['output']>;
   refund_payment_id?: Maybe<Scalars['ID']['output']>;
   refund_status: RefundStatus;
+  /** Seats this booking holds — one ticket admits this many. 1 for every legacy booking. */
+  seats: Scalars['Int']['output'];
   source: JoinSource;
   status: MembershipStatus;
   updated_at: Scalars['String']['output'];
@@ -8681,9 +8777,15 @@ export type PodMembershipState = {
   can_cancel_backout: Scalars['Boolean']['output'];
   can_join: Scalars['Boolean']['output'];
   is_member: Scalars['Boolean']['output'];
+  /** Most seats one booking may take — caps the Pod Details seat picker. */
+  max_seats_per_booking: Scalars['Int']['output'];
   membership?: Maybe<PodMember>;
+  /** Seats the caller already holds on this pod (0 when not a member). */
+  my_seats: Scalars['Int']['output'];
   pod_id: Scalars['ID']['output'];
   refund_threshold_pct: Scalars['Int']['output'];
+  /** Seats still bookable (0 when the pod has unlimited spots). */
+  seats_available: Scalars['Int']['output'];
   spots_taken: Scalars['Int']['output'];
   spots_total: Scalars['Int']['output'];
   status?: Maybe<MembershipStatus>;
@@ -9419,6 +9521,8 @@ export type PublicProfile = {
   can_view_content: Scalars['Boolean']['output'];
   city?: Maybe<Scalars['String']['output']>;
   first_name?: Maybe<Scalars['String']['output']>;
+  /** The three-state Follow button. is_following stays as the FOLLOWING shorthand. */
+  follow_status: FollowStatus;
   followers_count: Scalars['Int']['output'];
   following_count: Scalars['Int']['output'];
   full_name?: Maybe<Scalars['String']['output']>;
@@ -9771,6 +9875,8 @@ export type Query = {
   myEcommChangeRequests: Array<ApprovalRequest>;
   myEventTicketForPod?: Maybe<EventTicket>;
   myEventTickets: Array<EventTicket>;
+  /** Open follow requests waiting on the signed-in user, newest first. */
+  myFollowRequests: Array<FollowRequest>;
   myHost?: Maybe<Host>;
   myHostEarningsSummary: EarningsSummary;
   myHostPayouts: Array<PaymentReleaseRequest>;
@@ -10049,6 +10155,8 @@ export type Query = {
   /** Pods at the caller's venues, all states incl. cancelled. venue_id narrows to one owned venue. */
   venuePods: Array<VenuePod>;
   venueRegistrationConfig: VenueRegistrationConfig;
+  /** Owner: one request with its earnings, for the decision page linked from the request email. */
+  venueSlotDecision: VenueSlotDecision;
   /** Owner: pending booking requests across their venues (or one venue). */
   venueSlotRequests: Array<VenueSlotRequest>;
   venueSlots: Array<VenueSlot>;
@@ -11724,6 +11832,11 @@ export type QueryVenuePodsArgs = {
 };
 
 
+export type QueryVenueSlotDecisionArgs = {
+  slot_id: Scalars['ID']['input'];
+};
+
+
 export type QueryVenueSlotRequestsArgs = {
   venue_id?: InputMaybe<Scalars['ID']['input']>;
 };
@@ -11863,6 +11976,8 @@ export type RazorpayOrderInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
+  seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
@@ -12007,6 +12122,29 @@ export type SavedPodState = {
   pod_id: Scalars['ID']['output'];
   saved: Scalars['Boolean']['output'];
   saved_pod_ids: Array<Scalars['ID']['output']>;
+};
+
+/**
+ * Who the host just scanned in. Everything the attendee has on file that helps a
+ * host recognise and reach them at the door — blank strings where they have not
+ * filled a field, so the client renders only what exists.
+ */
+export type ScannedAttendee = {
+  __typename?: 'ScannedAttendee';
+  /** Single-line postal address, already joined server-side. */
+  address: Scalars['String']['output'];
+  bio: Scalars['String']['output'];
+  city: Scalars['String']['output'];
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  /** When they joined this pod (ISO), from their membership. */
+  joined_at?: Maybe<Scalars['String']['output']>;
+  phone: Scalars['String']['output'];
+  /** App path to their public profile (/u/<id>), so each surface builds its own link. */
+  profile_path: Scalars['String']['output'];
+  profile_photo: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  whatsapp: Scalars['String']['output'];
 };
 
 /** A club surfaced by search, with its next-7-day pods and the viewer's follow state. */
@@ -13701,6 +13839,8 @@ export type User = {
   profile_links: Array<ProfileLink>;
   profile_photo?: Maybe<Scalars['String']['output']>;
   profile_visibility?: Maybe<ProfileVisibility>;
+  /** Private profiles this user has asked to follow and is still waiting on. */
+  requested_user_ids: Array<Scalars['ID']['output']>;
   roles: Array<Scalars['String']['output']>;
   saved_pod_ids: Array<Scalars['ID']['output']>;
   /** The location the user last selected in the header (persisted choice). */
@@ -14213,6 +14353,46 @@ export type VenueSlot = {
   venue_id: Scalars['ID']['output'];
   venue_name?: Maybe<Scalars['String']['output']>;
 };
+
+/**
+ * One booking request with the venue's money on it — powers the decision page
+ * the request email links to. Readable before AND after the decision, so a
+ * re-opened link shows the outcome instead of an error.
+ */
+export type VenueSlotDecision = {
+  __typename?: 'VenueSlotDecision';
+  decided_at?: Maybe<Scalars['String']['output']>;
+  decision: VenueSlotDecisionKind;
+  /** Set only when the owner declined and gave a reason. */
+  decline_reason: Scalars['String']['output'];
+  end_at: Scalars['String']['output'];
+  host_email: Scalars['String']['output'];
+  host_name: Scalars['String']['output'];
+  host_phone: Scalars['String']['output'];
+  pod_description: Scalars['String']['output'];
+  pod_id: Scalars['ID']['output'];
+  pod_title: Scalars['String']['output'];
+  /** The slot's gross price, before Duncit's venue commission. */
+  price: Scalars['Int']['output'];
+  requested_at: Scalars['String']['output'];
+  slot_id: Scalars['ID']['output'];
+  /** The venue space this slot is for ('' = whole venue). */
+  space_label: Scalars['String']['output'];
+  start_at: Scalars['String']['output'];
+  venue_commission_amount: Scalars['Float']['output'];
+  /** Duncit's commission on the venue's side — the venue's only deduction. */
+  venue_commission_pct: Scalars['Float']['output'];
+  venue_id: Scalars['ID']['output'];
+  venue_name: Scalars['String']['output'];
+  /** What the venue takes home if the pod sells out; the slot price is a ceiling. */
+  venue_receives: Scalars['Float']['output'];
+};
+
+/** The owner's answer to a booking request. NONE = still waiting. */
+export type VenueSlotDecisionKind =
+  | 'APPROVED'
+  | 'DECLINED'
+  | 'NONE';
 
 /** A PENDING slot hold awaiting the venue owner's decision, with pod + host contact. */
 export type VenueSlotRequest = {

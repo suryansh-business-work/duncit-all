@@ -1,3 +1,4 @@
+import type { FollowStatus } from '@duncit/utils';
 import {
   Box,
   Button,
@@ -35,12 +36,12 @@ interface Venue {
 interface Props {
   venues: Venue[];
   meId?: string;
-  followingIds: Set<string>;
+  statusFor: (userId: string) => FollowStatus;
   pendingUserId: string | null;
   onToggleFollow: (userId: string) => void;
 }
 
-export default function VenueList({ venues, meId, followingIds, pendingUserId, onToggleFollow }: Readonly<Props>) {
+export default function VenueList({ venues, meId, statusFor, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!venues.length) {
     return (
       <Card variant="outlined">
@@ -88,7 +89,7 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
                   </Typography>
                 </Box>
                 <FollowButton
-                  following={followingIds.has(v.owner_user_id)}
+                  status={statusFor(v.owner_user_id)}
                   disabled={v.owner_user_id === meId}
                   loading={pendingUserId === v.owner_user_id}
                   onToggle={() => onToggleFollow(v.owner_user_id)}

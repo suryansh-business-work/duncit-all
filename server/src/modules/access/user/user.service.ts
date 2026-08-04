@@ -11,6 +11,7 @@ import {
   ClubFollowerModel,
   UserSavedPodModel,
   UserInterestModel,
+  FollowRequestModel,
 } from './relations';
 import type { CreateUserDTO, UpdateUserDTO, StartRecordedUserCallDTO } from './user.validator';
 import type {
@@ -87,12 +88,15 @@ const cleanProfileLinks = (links: UpdateMyProfileDTO['profile_links'] = []) =>
 // backward-compat window.
 async function loadRelationIds(userId: string) {
   const oid = new Types.ObjectId(userId);
-  const [savedPods, followingPods, followingClubs, followingUsers, interests, roles] =
+  const [savedPods, followingPods, followingClubs, followingUsers, requestedUsers, interests, roles] =
     await Promise.all([
       UserSavedPodModel.find({ user_id: oid }).select('pod_id').lean(),
       PodFollowerModel.find({ user_id: oid }).select('pod_id').lean(),
       ClubFollowerModel.find({ user_id: oid }).select('club_id').lean(),
       UserRelationshipModel.find({ follower_id: oid }).select('following_id').lean(),
+      // Sent-but-unanswered asks, so every list that renders a Follow button
+      // from `me` can show Requested without a per-row query.
+      FollowRequestModel.find({ requester_id: oid, status: 'PENDING' }).select('target_id').lean(),
       UserInterestModel.find({ user_id: oid }).select('interest_category_id').lean(),
       UserRoleModel.find({ user_id: oid }).select('role scope').lean(),
     ]);
@@ -101,6 +105,7 @@ async function loadRelationIds(userId: string) {
     following_pod_ids: followingPods.map((d: any) => String(d.pod_id)),
     following_club_ids: followingClubs.map((d: any) => String(d.club_id)),
     following_user_ids: followingUsers.map((d: any) => String(d.following_id)),
+    requested_user_ids: requestedUsers.map((d: any) => String(d.target_id)),
     interest_category_ids: interests.map((d: any) => String(d.interest_category_id)),
     role_keys: Array.from(new Set(roles.map((d: any) => d.role))),
   };
@@ -601,6 +606,7 @@ async function toPublic(u: any) {
     following_pod_ids: relations.following_pod_ids,
     following_club_ids: relations.following_club_ids,
     following_user_ids: relations.following_user_ids,
+    requested_user_ids: relations.requested_user_ids,
     followers_count: counters.followers_count ?? 0,
     following_count: counters.following_count ?? 0,
     interest_category_ids: relations.interest_category_ids,
@@ -1545,10 +1551,28 @@ export const userService = {
     if (!Types.ObjectId.isValid(targetUserId)) {
       throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const target = await UserModel.findById(targetUserId).select('_id metadata.status');
+    const target = await UserModel.findById(targetUserId).select(
+      '_id metadata.status metadata.profile_visibility'
+    );
     if (!target || (target as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     }
+    // A PRIVATE profile is asked, not taken: the edge is only written when the
+    // owner accepts, so following must never be a side effect of this call.
+    // Already-following short-circuits so a stale client cannot downgrade an
+    // accepted follow back into a pending request.
+    const isPrivate = (target as any).metadata?.profile_visibility === 'PRIVATE';
+    if (isPrivate && !(await this.isFollowing(user_id, targetUserId))) {
+      await this.requestFollow(user_id, targetUserId);
+      return toPublic(await UserModel.findById(user_id));
+    }
+    return this.createFollowEdge(user_id, targetUserId);
+  },
+
+  /** Write the follow edge and move both counters. The single place an edge is
+   * born — direct follows of a public profile and accepted requests share it, so
+   * the two paths cannot drift on counters or the follower notification. */
+  async createFollowEdge(user_id: string, targetUserId: string) {
     const followerOid = new Types.ObjectId(user_id);
     const followingOid = new Types.ObjectId(targetUserId);
     let created = false;
@@ -1569,6 +1593,175 @@ export const userService = {
     const follower = await toPublic(updated);
     if (created) await this.notifyNewFollower(targetUserId, follower);
     return follower;
+  },
+
+  /** Open (or re-use) a PENDING ask to follow a private profile, and tell the
+   * owner about it. Re-asking while one is open is a no-op rather than an error:
+   * a double tap must not surface a failure for something already true. */
+  async requestFollow(user_id: string, targetUserId: string) {
+    const requesterOid = new Types.ObjectId(user_id);
+    const targetOid = new Types.ObjectId(targetUserId);
+    const open = await FollowRequestModel.findOne({
+      requester_id: requesterOid,
+      target_id: targetOid,
+      status: 'PENDING',
+    });
+    if (open) return open;
+    let request;
+    try {
+      request = await FollowRequestModel.create({
+        requester_id: requesterOid,
+        target_id: targetOid,
+        status: 'PENDING',
+      });
+    } catch (e: any) {
+      // Lost a race against a concurrent identical ask — the partial unique
+      // index did its job, so adopt the winner instead of failing the caller.
+      if (e?.code !== 11000) throw e;
+      return FollowRequestModel.findOne({
+        requester_id: requesterOid,
+        target_id: targetOid,
+        status: 'PENDING',
+      });
+    }
+    await this.notifyFollowRequest(targetUserId, user_id, String(request._id));
+    return request;
+  },
+
+  /** Best-effort actionable notification to the private profile's owner. A
+   * failure here must never break the request itself — the row is what counts,
+   * and the owner can still answer it from their requests list. */
+  async notifyFollowRequest(targetUserId: string, requesterId: string, requestId: string) {
+    try {
+      const { notificationService } = await import(
+        '@modules/engagement/notification/notification.service'
+      );
+      const requester = await toPublic(await UserModel.findById(requesterId));
+      const name = requester?.full_name?.trim() || 'Someone';
+      await notificationService.create({
+        title: 'Follow request',
+        body: `${name} wants to follow you`,
+        image_url: requester?.profile_photo ?? null,
+        link_url: `/u/${requesterId}`,
+        action_type: 'FOLLOW_REQUEST',
+        action_ref_id: requestId,
+        scope: 'USER',
+        target_user_ids: [targetUserId],
+      });
+    } catch (err) {
+      logs.server.error('user.service', 'notifyFollowRequest', {
+        error: err,
+        msg: 'notifyFollowRequest failed',
+        targetUserId,
+      });
+    }
+  },
+
+  /** The owner accepts: the edge is written here and nowhere else in this flow.
+   * Only the target may accept, and only a PENDING row — replaying an accept
+   * must not double-count a follower. */
+  async acceptFollowRequest(user_id: string, requestId: string) {
+    const request = await this.resolveOwnedRequest(user_id, requestId);
+    await FollowRequestModel.updateOne(
+      { _id: request._id, status: 'PENDING' },
+      { $set: { status: 'ACCEPTED', resolved_at: new Date() } }
+    );
+    await this.createFollowEdge(String(request.requester_id), user_id);
+    return toPublic(await UserModel.findById(user_id));
+  },
+
+  /** The owner rejects: no edge, and the requester's button falls back to
+   * Follow. Deliberately silent — a rejection notification would tell the
+   * requester something the owner chose not to say. */
+  async rejectFollowRequest(user_id: string, requestId: string) {
+    const request = await this.resolveOwnedRequest(user_id, requestId);
+    await FollowRequestModel.updateOne(
+      { _id: request._id, status: 'PENDING' },
+      { $set: { status: 'REJECTED', resolved_at: new Date() } }
+    );
+    return toPublic(await UserModel.findById(user_id));
+  },
+
+  /** Load a PENDING request the signed-in user is the TARGET of. Anything else
+   * — missing, already answered, or someone else's — is refused. */
+  async resolveOwnedRequest(user_id: string, requestId: string) {
+    if (!Types.ObjectId.isValid(requestId)) {
+      throw new GraphQLError('Invalid follow request', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const request = await FollowRequestModel.findById(requestId);
+    if (!request || String(request.target_id) !== user_id) {
+      throw new GraphQLError('Follow request not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    if (request.status !== 'PENDING') {
+      throw new GraphQLError('This follow request has already been answered', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    return request;
+  },
+
+  /** The REQUESTER withdraws their own pending ask — what tapping "Requested"
+   * does. Idempotent: nothing open simply means nothing to withdraw. */
+  async cancelFollowRequest(user_id: string, targetUserId: string) {
+    if (!Types.ObjectId.isValid(targetUserId)) {
+      throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    await FollowRequestModel.updateOne(
+      {
+        requester_id: new Types.ObjectId(user_id),
+        target_id: new Types.ObjectId(targetUserId),
+        status: 'PENDING',
+      },
+      { $set: { status: 'CANCELLED', resolved_at: new Date() } }
+    );
+    return toPublic(await UserModel.findById(user_id));
+  },
+
+  /** What the Follow button must render: FOLLOWING beats REQUESTED beats NONE.
+   * One definition so the profile page, the follow lists and search cannot
+   * disagree about the same pair. */
+  async followStatus(viewerId: string | null, targetId: string) {
+    if (!viewerId || !Types.ObjectId.isValid(viewerId) || !Types.ObjectId.isValid(targetId)) {
+      return 'NONE';
+    }
+    if (await this.isFollowing(viewerId, targetId)) return 'FOLLOWING';
+    const pending = await FollowRequestModel.exists({
+      requester_id: new Types.ObjectId(viewerId),
+      target_id: new Types.ObjectId(targetId),
+      status: 'PENDING',
+    });
+    return pending ? 'REQUESTED' : 'NONE';
+  },
+
+  /** Open requests waiting on `targetId`, newest first — the owner's inbox of
+   * asks, independent of whether they still have the notification. */
+  async listPendingFollowRequests(targetId: string) {
+    if (!Types.ObjectId.isValid(targetId)) return [];
+    const rows = await FollowRequestModel.find({
+      target_id: new Types.ObjectId(targetId),
+      status: 'PENDING',
+    })
+      .sort({ created_at: -1 })
+      .lean();
+    return rows.map((r: any) => ({
+      id: String(r._id),
+      requester_id: String(r.requester_id),
+      status: String(r.status),
+      created_at: new Date(r.created_at).toISOString(),
+    }));
+  },
+
+  /** Target ids the viewer has an OPEN request against — the batch form of
+   * followStatus, so a list of N profiles costs one query, not N. */
+  async listRequestedUserIds(viewerId: string) {
+    if (!Types.ObjectId.isValid(viewerId)) return [];
+    const rows = await FollowRequestModel.find({
+      requester_id: new Types.ObjectId(viewerId),
+      status: 'PENDING',
+    })
+      .select('target_id')
+      .lean();
+    return rows.map((r: any) => String(r.target_id));
   },
 
   // Best-effort "started following you" notification to the followed user.

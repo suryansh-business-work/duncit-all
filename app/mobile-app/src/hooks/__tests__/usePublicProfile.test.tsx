@@ -95,7 +95,7 @@ describe('usePublicProfile', () => {
     await act(async () => {
       await result.current.toggleFollow();
     });
-    expect(result.current.following).toBe(true);
+    expect(result.current.followStatus).toBe('FOLLOWING');
     expect(result.current.canView).toBe(true);
   });
 
@@ -174,17 +174,17 @@ describe('usePublicProfile → follow (B4-12)', () => {
     mockRequest.mockImplementation((doc: unknown, vars: never) => route(doc, vars));
     const { result } = renderHook(() => usePublicProfile('u9'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.following).toBe(false);
+    expect(result.current.followStatus).toBe('NONE');
 
     await act(async () => {
       await result.current.toggleFollow();
     });
-    expect(result.current.following).toBe(true);
+    expect(result.current.followStatus).toBe('FOLLOWING');
 
     await act(async () => {
       await result.current.toggleFollow();
     });
-    expect(result.current.following).toBe(false);
+    expect(result.current.followStatus).toBe('NONE');
 
     // Null id arrays from the server fall back safely.
     mockRequest.mockImplementation((doc: unknown, vars: never) => {
@@ -199,7 +199,7 @@ describe('usePublicProfile → follow (B4-12)', () => {
     await act(async () => {
       await result.current.toggleFollow(); // follow with null ids → not following
     });
-    expect(result.current.following).toBe(false);
+    expect(result.current.followStatus).toBe('NONE');
     // Force an unfollow path with null ids too.
     act(() => {
       /* state already false; flip via internal optimistic to exercise unfollow */
@@ -213,7 +213,17 @@ describe('usePublicProfile → follow (B4-12)', () => {
       }
       if (doc === MobilePublicProfileDocument) {
         return Promise.resolve({
-          publicUserProfile: { user_id: 'u9', full_name: 'Riya', city: 'P', zone: 'K' },
+          // The PROFILE's own follow_status is the source of the button state
+          // now — one field the server derives from the edge, rather than the
+          // viewer's id list, which could disagree with it.
+          publicUserProfile: {
+            user_id: 'u9',
+            full_name: 'Riya',
+            city: 'P',
+            zone: 'K',
+            follow_status: 'FOLLOWING',
+            is_following: true,
+          },
           me: { user_id: 'me', following_user_ids: ['u9'] },
         });
       }
@@ -221,11 +231,11 @@ describe('usePublicProfile → follow (B4-12)', () => {
     });
     const { result } = renderHook(() => usePublicProfile('u9'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.following).toBe(true);
+    expect(result.current.followStatus).toBe('FOLLOWING');
     await act(async () => {
       await result.current.toggleFollow();
     });
-    expect(result.current.following).toBe(false);
+    expect(result.current.followStatus).toBe('NONE');
   });
 
   it('reverts the optimistic flip when the mutation fails and guards re-entry', async () => {
@@ -238,7 +248,7 @@ describe('usePublicProfile → follow (B4-12)', () => {
     await act(async () => {
       await result.current.toggleFollow();
     });
-    expect(result.current.following).toBe(false);
+    expect(result.current.followStatus).toBe('NONE');
   });
 
   it('ignores toggles while one is in flight', async () => {
@@ -262,6 +272,6 @@ describe('usePublicProfile → follow (B4-12)', () => {
       resolveFollow({ followUser: { user_id: 'me', following_user_ids: ['u9'] } });
       await first;
     });
-    expect(result.current.following).toBe(true);
+    expect(result.current.followStatus).toBe('FOLLOWING');
   });
 });

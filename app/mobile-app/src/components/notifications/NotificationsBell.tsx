@@ -92,6 +92,9 @@ export function NotificationsBell() {
         onMarkAll={markAll}
         busyId={busyId}
         markAllBusy={markAllBusy}
+        onRefresh={() => {
+          refetch().catch(() => undefined);
+        }}
       />
     </>
   );

@@ -4,7 +4,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { FOLLOW_LABEL_KEY, type FollowStatus } from '@duncit/utils';
+
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import {
   PublicProfileBadges,
@@ -30,8 +33,15 @@ type FollowView = Readonly<{
   label: string;
 }>;
 
-function followView(following: boolean, onPrimary: string, ink: string): FollowView {
-  if (following) {
+/** Follow / Requested / Following. REQUESTED is tappable — it withdraws the
+ * pending ask — so it reads as an outlined button, not a disabled one. */
+function followView(
+  status: FollowStatus,
+  label: string,
+  onPrimary: string,
+  ink: string,
+): FollowView {
+  if (status === 'FOLLOWING') {
     return {
       aria: 'Unfollow user',
       border: '$primary',
@@ -39,7 +49,18 @@ function followView(following: boolean, onPrimary: string, ink: string): FollowV
       icon: 'how-to-reg',
       iconColor: onPrimary,
       labelColor: '$onPrimary',
-      label: 'Following',
+      label,
+    };
+  }
+  if (status === 'REQUESTED') {
+    return {
+      aria: 'Withdraw follow request',
+      border: '$primary',
+      background: 'transparent',
+      icon: 'hourglass-top',
+      iconColor: ink,
+      labelColor: '$color',
+      label,
     };
   }
   return {
@@ -49,25 +70,27 @@ function followView(following: boolean, onPrimary: string, ink: string): FollowV
     icon: 'person-add-alt',
     iconColor: ink,
     labelColor: '$color',
-    label: 'Follow',
+    label,
   };
 }
 
 /** Follow/unfollow pill shown on someone else's profile (B4-12) — inert while busy. */
 function FollowButton({
-  following,
+  status,
+  label,
   followBusy,
   onPrimary,
   ink,
   onToggle,
 }: Readonly<{
-  following: boolean;
+  status: FollowStatus;
+  label: string;
   followBusy: boolean;
   onPrimary: string;
   ink: string;
   onToggle: () => Promise<void>;
 }>) {
-  const view = followView(following, onPrimary, ink);
+  const view = followView(status, label, onPrimary, ink);
   return (
     <XStack
       testID="public-profile-follow"
@@ -133,13 +156,14 @@ export function PublicProfileScreen() {
     posts,
     stories,
     canView,
-    following,
+    followStatus,
     followBusy,
     toggleFollow,
     isLoading,
     error,
   } = usePublicProfile(userId);
   const { onPrimary, color: ink } = useThemeColors();
+  const { t } = useTranslation();
 
   let body;
   if (isLoading && !user) {
@@ -160,7 +184,8 @@ export function PublicProfileScreen() {
         <PublicProfileHeader user={user} />
         {isOwner ? null : (
           <FollowButton
-            following={following}
+            status={followStatus}
+            label={t(FOLLOW_LABEL_KEY[followStatus])}
             followBusy={followBusy}
             onPrimary={onPrimary}
             ink={ink}

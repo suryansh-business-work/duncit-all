@@ -27,6 +27,8 @@ interface NotificationsScreenProps {
   busyId?: string | null;
   /** True while mark-all-read is in flight. */
   markAllBusy?: boolean;
+  /** Re-read the inbox after an inline action (accept/reject a follow request). */
+  onRefresh?: () => void;
 }
 
 export default function NotificationsScreen({
@@ -41,6 +43,7 @@ export default function NotificationsScreen({
   onMarkAll,
   busyId = null,
   markAllBusy = false,
+  onRefresh,
 }: Readonly<NotificationsScreenProps>) {
   const pushSupported = isPushSupported() && perm !== 'unsupported';
   // Pending allow/deny choice — confirmed before we touch the push subscription.
@@ -135,6 +138,7 @@ export default function NotificationsScreen({
               item={item}
               busy={busyId === item.id || markAllBusy}
               onClick={() => onNotifClick(item)}
+              onAnswered={onRefresh}
             />
           ))}
         </Stack>

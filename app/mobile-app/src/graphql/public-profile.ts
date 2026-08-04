@@ -17,11 +17,13 @@ export const MobilePublicProfileDocument = gql(`
       following_count
       is_private
       is_following
+      follow_status
       can_view_content
     }
     me {
       user_id
       following_user_ids
+      requested_user_ids
     }
   }
 `);

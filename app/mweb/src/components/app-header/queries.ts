@@ -78,6 +78,9 @@ export const MY_NOTIFS = gql`
         body
         image_url
         link_url
+        action_type
+        action_ref_id
+        action_status
         created_at
       }
     }

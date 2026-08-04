@@ -2,6 +2,7 @@ import { Avatar, Box, Chip, CircularProgress, Stack, Typography } from '@mui/mat
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { formatRelative } from '../queries';
 import { notificationIcon } from '../notificationIcon';
+import FollowRequestActions from './FollowRequestActions';
 
 interface Props {
   item: any;
@@ -9,6 +10,8 @@ interface Props {
    * that should look busy, not the whole list. */
   busy: boolean;
   onClick: () => void;
+  /** Re-read the inbox once an inline action changes something. */
+  onAnswered?: () => void;
 }
 
 const CLAMP_2 = {
@@ -20,9 +23,18 @@ const CLAMP_2 = {
 
 /** One notification card — chat-style row (avatar · title + preview · time),
  * unread highlighted by the primary gradient. */
-export default function NotificationRow({ item, busy, onClick }: Readonly<Props>) {
+export default function NotificationRow({
+  item,
+  busy,
+  onClick,
+  onAnswered,
+}: Readonly<Props>) {
   const unread = !item.read_at;
   const notification = item.notification;
+  // An actionable row ends in its buttons, so the "open me" chevron would be a
+  // second, competing affordance.
+  const showChevron =
+    !busy && !!notification?.link_url && notification?.action_type !== 'FOLLOW_REQUEST';
   // Contextual icon by notification type (falls back to the bell) instead of
   // repeating a generic bell on every row.
   const RowIcon = notificationIcon(notification?.title);
@@ -97,10 +109,14 @@ export default function NotificationRow({ item, busy, onClick }: Readonly<Props>
           </Stack>
         </Box>
         {busy && <CircularProgress size={18} color="inherit" />}
-        {!busy && notification?.link_url && (
-          <ArrowForwardIcon sx={{ color: unread ? '#fff' : 'primary.main' }} />
-        )}
+        {showChevron && <ArrowForwardIcon sx={{ color: unread ? '#fff' : 'primary.main' }} />}
       </Stack>
+      <FollowRequestActions
+        actionType={notification?.action_type}
+        requestId={notification?.action_ref_id}
+        status={notification?.action_status}
+        onAnswered={() => onAnswered?.()}
+      />
     </Box>
   );
 }

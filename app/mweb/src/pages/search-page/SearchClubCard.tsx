@@ -80,7 +80,7 @@ export default function SearchClubCard({
           />
         ) : (
           <FollowButton
-            following={false}
+            status="NONE"
             loading={followBusy}
             onToggle={() => onToggleFollow(club.id)}
           />

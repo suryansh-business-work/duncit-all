@@ -99,6 +99,8 @@ export const userTypeDefs = gql`
     following_pod_ids: [ID!]!
     following_club_ids: [ID!]!
     following_user_ids: [ID!]!
+    "Private profiles this user has asked to follow and is still waiting on."
+    requested_user_ids: [ID!]!
     followers_count: Int!
     following_count: Int!
     interest_category_ids: [ID!]!

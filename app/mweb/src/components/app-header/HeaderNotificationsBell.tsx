@@ -110,6 +110,9 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
         onMarkAll={onMarkAll}
         busyId={busyId}
         markAllBusy={markAllBusy}
+        onRefresh={() => {
+          refetchNotifs().catch(() => undefined);
+        }}
       />
     </>
   );

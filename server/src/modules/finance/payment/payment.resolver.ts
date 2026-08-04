@@ -50,9 +50,13 @@ export const paymentResolvers = {
       const u = requireAuth(ctx);
       return paymentService.listForUser(u.id);
     },
-    checkoutQuote: async (_p: unknown, args: { input: { amount: number; pod_id?: string } }, ctx: GraphQLContext) => {
+    checkoutQuote: async (
+      _p: unknown,
+      args: { input: { amount: number; pod_id?: string; seats?: number | null } },
+      ctx: GraphQLContext
+    ) => {
       requireAuth(ctx);
-      return computeQuote(args.input.amount);
+      return paymentService.quoteCheckout(args.input);
     },
     paymentInvoicePdfBase64: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
       // The buyer can download their own invoice; admins (support/finance) any.

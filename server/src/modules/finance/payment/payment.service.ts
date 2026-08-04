@@ -16,6 +16,7 @@ import {
 } from './razorpay.gateway';
 import { couponService } from '@modules/finance/coupon/coupon.service';
 import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
+import { maxSeatsForBooking, normalizeSeats } from '@modules/pods/pod/pod.seats';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { logs } from '@observability/log';
 
@@ -322,6 +323,9 @@ const paymentMetadata = (input: any, pod: any, products: ProductResolution) => (
   checkout_url: input.checkout_url,
   pod_id: input.pod_id || null,
   ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
+  // Read back at capture time — a webhook replay must book the seats that were
+  // actually paid for, never the client's word at that later moment.
+  seats: pod ? clampSeatsForPod(pod, input.seats) : null,
   product_cost_total: pod ? products.total : null,
   selected_products: input.selected_products ?? [],
   // Invoice-ready product lines (name/qty/unit/gross + chosen variant).
@@ -359,6 +363,25 @@ async function applyCoupon(input: any, payableAmount: number, userId: string) {
   };
 }
 
+/**
+ * Seats this checkout may buy. The client picks a number, but the price and the
+ * capacity are the server's to decide — a client asking for 50 seats on a pod
+ * with 3 left must not be quoted (or charged) for 50.
+ */
+function clampSeatsForPod(pod: any, requested: unknown): number {
+  const seats = normalizeSeats(requested);
+  const room = maxSeatsForBooking(pod);
+  if (room <= 0) {
+    throw new GraphQLError('Pod is full', { extensions: { code: 'POD_FULL' } });
+  }
+  if (seats > room) {
+    throw new GraphQLError(`Only ${room} seat${room === 1 ? '' : 's'} left on this pod`, {
+      extensions: { code: 'POD_FULL' },
+    });
+  }
+  return seats;
+}
+
 /** Resolve what the user actually pays (pod ticket + selected products, or a raw
  * amount) plus the human description. Shared by the dummy + Razorpay flows. */
 async function resolvePayable(input: any) {
@@ -366,6 +389,7 @@ async function resolvePayable(input: any) {
   let payableAmount = Number(input.amount) || 0;
   let description = input.description || 'Booking';
   let products: ProductResolution = EMPTY_PRODUCT_RESOLUTION;
+  let seats = 1;
   if (input.pod_id) {
     pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
@@ -374,7 +398,11 @@ async function resolvePayable(input: any) {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    description = `Pod booking · ${pod.pod_title}`;
+    seats = clampSeatsForPod(pod, input.seats);
+    description =
+      seats > 1
+        ? `Pod booking · ${pod.pod_title} · ${seats} seats`
+        : `Pod booking · ${pod.pod_title}`;
     products = await resolveProductLines(pod, input.selected_products ?? []);
     // A ShipRocket-delivered product cannot be ordered without somewhere to
     // ship it — reject up-front instead of creating a doomed SHIP order.
@@ -383,13 +411,14 @@ async function resolvePayable(input: any) {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    payableAmount = round2(Number(pod.pod_amount || 0) + products.total);
+    // The ticket price is per seat; add-on products are charged once.
+    payableAmount = round2(Number(pod.pod_amount || 0) * seats + products.total);
   }
   if (!payableAmount || payableAmount <= 0)
     throw new GraphQLError('Amount must be greater than 0', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
-  return { pod, payableAmount, description, products };
+  return { pod, payableAmount, description, products, seats };
 }
 
 /** Group cart selections by their pod so each pod's own product_requests
@@ -525,20 +554,39 @@ function razorpaySheet(a: RazorpaySheetArgs) {
 
 /** Books the slot + records the PodMember row + evaluates badges for a paid pod.
  * Returns the booking (PodMember) id so the receipt email can deep-link to it. */
-async function bookPodForPayment(pod: any, userId: any, paymentDocId: string): Promise<string | null> {
+async function bookPodForPayment(
+  pod: any,
+  userId: any,
+  paymentDocId: string,
+  seats = 1
+): Promise<string | null> {
   if (!pod) return null;
   let bookingId: string | null = null;
   try {
+    // The buyer appears once (identity); the seats beyond their own are the
+    // pod-level counter, so occupancy stays right without duplicating an id.
+    let touched = false;
     if (!pod.pod_attendees.some((u: any) => String(u) === String(userId))) {
       pod.pod_attendees.push(userId);
-      await pod.save();
+      touched = true;
     }
+    const extra = Math.max(normalizeSeats(seats) - 1, 0);
+    if (extra > 0) {
+      pod.extra_seats = (pod.extra_seats ?? 0) + extra;
+      touched = true;
+    }
+    if (touched) await pod.save();
   } catch (e) {
     logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'Pod attendee update failed' });
   }
   try {
     const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
-    const member = await podMemberService.recordPaidJoin(String(pod._id), String(userId), paymentDocId);
+    const member = await podMemberService.recordPaidJoin(
+      String(pod._id),
+      String(userId),
+      paymentDocId,
+      seats
+    );
     bookingId = member?._id ? String(member._id) : null;
   } catch (e) {
     logs.server.warn('payment', 'bookPodForPayment', { error: e, msg: 'PodMember record failed' });
@@ -627,7 +675,9 @@ function invoiceBillTo(doc: IPayment) {
  * an invoice number + paid_at set. Best-effort — failures here never fail payment. */
 async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) {
   const pod = doc.pod_id ? await PodModel.findById(doc.pod_id) : null;
-  const bookingId = await bookPodForPayment(pod, doc.user_id, String(doc._id));
+  // Seats come off the payment's own metadata, frozen when the order was priced.
+  const paidSeats = normalizeSeats((doc.metadata as any)?.seats ?? 1);
+  const bookingId = await bookPodForPayment(pod, doc.user_id, String(doc._id), paidSeats);
   // Fulfilment: create the product order(s) for any add-on products bought.
   // Best-effort + idempotent — never fail a paid checkout on a fulfilment hiccup.
   try {
@@ -710,6 +760,27 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
 }
 
 export const paymentService = {
+  /**
+   * The checkout preview. For a pod it prices the ticket × seats server-side
+   * rather than trusting the amount the client typed — the preview and the
+   * charge must never be able to disagree about what a seat costs.
+   */
+  async quoteCheckout(input: { amount: number; pod_id?: string | null; seats?: number | null }) {
+    const seats = normalizeSeats(input.seats);
+    // Single-seat quotes keep their exact previous behaviour (the caller's
+    // amount already carries any add-on products); only the multi-seat case
+    // needs the server to re-price, and only the ticket multiplies.
+    if (!input.pod_id || seats <= 1) return computeQuote(input.amount);
+    const pod = await PodModel.findById(input.pod_id).select(
+      'pod_amount no_of_spots pod_attendees extra_seats'
+    );
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    clampSeatsForPod(pod, seats);
+    const ticket = Number(pod.pod_amount || 0);
+    const extras = Math.max(round2(Number(input.amount) || 0) - ticket, 0);
+    return computeQuote(round2(ticket * seats + extras));
+  },
+
   async list(filter?: { status?: string; user_id?: string; pod_id?: string; search?: string }, limit = 200) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;

@@ -1,6 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
+import { podSeatsAvailable, podSeatsTaken } from './pod.seats';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { UserRoleModel } from '@modules/access/user/relations';
@@ -88,6 +89,8 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     reel_url: d.reel_url ?? null,
     pod_hits: d.pod_hits ?? 0,
     pod_attendees: (d.pod_attendees ?? []).map(String),
+    seats_taken: podSeatsTaken(d),
+    seats_available: podSeatsAvailable(d),
     pod_description: d.pod_description ?? '',
     pod_date_time: d.pod_date_time?.toISOString?.() ?? null,
     pod_end_date_time: d.pod_end_date_time?.toISOString?.() ?? null,

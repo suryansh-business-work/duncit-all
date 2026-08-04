@@ -12,6 +12,10 @@ interface Props {
   setDateFilter: (v: DateFilter) => void;
   sortBy: SortBy;
   setSortBy: (v: SortBy) => void;
+  /** Off where the page fixes the order itself — the full pod lists keep a
+   * stable order so the "See all" `?from=N` jump lands on the right pod, which
+   * would make a sort control here do nothing. */
+  showSort?: boolean;
 }
 
 const scrollRow = {
@@ -32,6 +36,7 @@ export default function FilterBar({
   setDateFilter,
   sortBy,
   setSortBy,
+  showSort = true,
 }: Readonly<Props>) {
   return (
     <Stack spacing={1.25}>
@@ -125,6 +130,7 @@ export default function FilterBar({
       </Stack>
 
       {/* ── Sort row ── */}
+      {showSort && (
         <Box sx={{ pt: 1.25, width: '100%' }}>
           <TextField
             select
@@ -145,6 +151,7 @@ export default function FilterBar({
             <MenuItem value="PRICE_DESC">Price · High to Low</MenuItem>
           </TextField>
         </Box>
+      )}
     </Stack>
   );
 }

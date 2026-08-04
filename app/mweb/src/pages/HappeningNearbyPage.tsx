@@ -1,5 +1,7 @@
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import PodListPage from './pod-list';
+import { usePodListFilters } from './pod-list/usePodListFilters';
+import FilterMenu from './home-page/FilterMenu';
 import { useHomeData } from './home-page/useHomeData';
 import { useActiveAds } from '../components/ads/useActiveAds';
 import { useTranslation } from '../i18n/useTranslation';
@@ -18,14 +20,17 @@ export default function HappeningNearbyPage({
   zoneName,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { activePods, loading, error, hostNameOf } = useHomeData({
+  const f = usePodListFilters();
+  // useHomeData already applies category/price/date/sort, so this page narrows
+  // through the same rules Home uses — no second implementation.
+  const { activePods, loading, error, hostNameOf, categoryChips } = useHomeData({
     superCategorySlug,
     locationId,
     zoneName,
-    categoryId: '',
-    priceFilter: 'ALL',
-    dateFilter: 'ALL',
-    sortBy: 'DATE_ASC',
+    categoryId: f.categoryId,
+    priceFilter: f.priceFilter,
+    dateFilter: f.dateFilter,
+    sortBy: f.sortBy,
   });
   const { ads } = useActiveAds('POD_LIST');
 
@@ -40,6 +45,23 @@ export default function HappeningNearbyPage({
       error={error}
       emptyText={t('mweb.home.happeningNearbyEmpty')}
       hostNameOf={hostNameOf}
+      filterAction={
+        <FilterMenu
+          open={f.open}
+          onOpenChange={f.setOpen}
+          categoryChips={categoryChips}
+          categoryId={f.categoryId}
+          setCategoryId={f.setCategoryId}
+          priceFilter={f.priceFilter}
+          setPriceFilter={f.setPriceFilter}
+          dateFilter={f.dateFilter}
+          setDateFilter={f.setDateFilter}
+          sortBy={f.sortBy}
+          setSortBy={f.setSortBy}
+          locationId={locationId}
+          showSort={false}
+        />
+      }
     />
   );
 }

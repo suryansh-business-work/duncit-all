@@ -115,7 +115,23 @@ export default function SlotCalendar({
           views={['day']}
           slots={{ day: SlotDayCell }}
           slotProps={{ day: { hasSlots } as never }}
-          sx={{ width: '100%', mx: 0, '& .MuiDayCalendar-header': { justifyContent: 'space-around' } }}
+          sx={{
+            width: '100%',
+            maxWidth: 360,
+            mx: 'auto',
+            // MUIX lays the weekday labels and the day cells out as two
+            // independent flex rows, sized from their own content. Stretching
+            // only the header (which this used to do) therefore slid the labels
+            // out of line with the dates under them. Both rows share one
+            // 7-equal-column grid instead, so alignment holds at any width and
+            // whatever a day cell renders inside.
+            '& .MuiDayCalendar-header, & .MuiDayCalendar-weekContainer': {
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              justifyItems: 'center',
+            },
+            '& .MuiDayCalendar-weekDayLabel, & .MuiPickersDay-root': { margin: 0 },
+          }}
         />
       </LocalizationProvider>
 

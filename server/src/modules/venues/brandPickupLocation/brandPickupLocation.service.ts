@@ -1,11 +1,16 @@
 import { Types } from 'mongoose';
 import { GraphQLError } from 'graphql';
+import { logs } from '@observability/log';
 import { BrandPickupLocationModel, type IBrandPickupLocation } from './brandPickupLocation.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 
 const notFound = () =>
   new GraphQLError('Pickup location not found', { extensions: { code: 'NOT_FOUND' } });
+
+/** Shown verbatim in both portals, so it names the fix rather than the symptom. */
+const SHIPROCKET_UNCONFIGURED =
+  'ShipRocket is not configured — add the account email and password in Tech portal > Env > SHIPROCKET.';
 
 /** Load a brand owned by the signed-in partner (404 otherwise) — the ownership
  * gate for every myBrandPickupLocation* op. */
@@ -56,6 +61,7 @@ const toPub = (d: IBrandPickupLocation) => ({
   is_default: d.is_default,
   shiprocket_registered: d.shiprocket_registered,
   shiprocket_pickup_id: d.shiprocket_pickup_id,
+  shiprocket_error: d.shiprocket_error ?? '',
   created_at: d.created_at?.toISOString?.() ?? '',
   updated_at: d.updated_at?.toISOString?.() ?? '',
 });
@@ -193,6 +199,60 @@ export const brandPickupLocationService = {
     return this.setDefault(id);
   },
 
+  /**
+   * Register every not-yet-registered warehouse of a brand. Called when the
+   * brand is approved, so the partner does not have to wait on a second, manual
+   * per-warehouse step they cannot see.
+   *
+   * Best-effort by contract: this talks to ShipRocket, and approving a brand
+   * must never fail because that account is unconfigured or the API is down.
+   * Each failure is recorded on the warehouse instead, so both portals can say
+   * WHY it is still pending rather than showing a bare "pending".
+   */
+  async registerBrandWarehouses(brandDocId: string) {
+    if (!Types.ObjectId.isValid(brandDocId)) return { attempted: 0, registered: 0 };
+    const docs = await BrandPickupLocationModel.find({
+      owner_kind: 'BRAND',
+      brand_id: new Types.ObjectId(brandDocId),
+      shiprocket_registered: false,
+    });
+    if (docs.length === 0) return { attempted: 0, registered: 0 };
+
+    const { isShiprocketConfigured } = await import('@modules/commerce/shiprocket/shiprocket.gateway');
+    if (!(await isShiprocketConfigured())) {
+      await BrandPickupLocationModel.updateMany(
+        { _id: { $in: docs.map((d) => d._id) } },
+        { $set: { shiprocket_error: SHIPROCKET_UNCONFIGURED } }
+      );
+      logs.server.warn('brandPickupLocation', 'registerBrandWarehouses', {
+        msg: 'ShipRocket is not configured — warehouses stay unregistered',
+        brandDocId,
+        count: docs.length,
+      });
+      return { attempted: docs.length, registered: 0 };
+    }
+
+    let registered = 0;
+    for (const doc of docs) {
+      try {
+        await this.registerWithShiprocket(String(doc._id));
+        registered += 1;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Registration failed';
+        await BrandPickupLocationModel.updateOne(
+          { _id: doc._id },
+          { $set: { shiprocket_error: message.slice(0, 500) } }
+        );
+        logs.server.warn('brandPickupLocation', 'registerBrandWarehouses', {
+          error: err,
+          msg: 'warehouse registration failed',
+          locationId: String(doc._id),
+        });
+      }
+    }
+    return { attempted: docs.length, registered };
+  },
+
   async registerWithShiprocket(id: string) {
     const doc = await BrandPickupLocationModel.findById(id);
     if (!doc) throw notFound();
@@ -211,6 +271,11 @@ export const brandPickupLocationService = {
     });
     doc.shiprocket_registered = result.registered;
     doc.shiprocket_pickup_id = result.pickup_id;
+    // A 200 that still says "not registered" used to look identical to never
+    // having tried — leave a reason so the portals can show one.
+    doc.shiprocket_error = result.registered
+      ? ''
+      : 'ShipRocket accepted the request but did not return a pickup id';
     await doc.save();
     return toPub(doc);
   },

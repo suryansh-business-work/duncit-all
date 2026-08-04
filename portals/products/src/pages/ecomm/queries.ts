@@ -229,6 +229,7 @@ export const BRAND_PICKUP_LOCATIONS = gql`
       country
       is_default
       shiprocket_registered
+      shiprocket_error
       shiprocket_pickup_id
     }
   }
@@ -262,6 +263,7 @@ export const REGISTER_BRAND_PICKUP_WITH_SHIPROCKET = gql`
     registerBrandPickupWithShiprocket(id: $id) {
       id
       shiprocket_registered
+      shiprocket_error
       shiprocket_pickup_id
     }
   }

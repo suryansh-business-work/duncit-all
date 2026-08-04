@@ -23,6 +23,13 @@ export interface IBrandPickupLocation extends Document {
   is_default: boolean;
   shiprocket_registered: boolean;
   shiprocket_pickup_id: string;
+  /**
+   * Why the last registration attempt did not land ('' once it succeeds). The
+   * partner only ever saw "pending", which reads as "an admin must press a
+   * button" — but the real blocker is usually ShipRocket being unconfigured or
+   * rejecting the address, and that was invisible on both sides.
+   */
+  shiprocket_error: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -51,6 +58,7 @@ const brandPickupLocationSchema = new Schema<IBrandPickupLocation>(
     is_default: { type: Boolean, default: false },
     shiprocket_registered: { type: Boolean, default: false },
     shiprocket_pickup_id: { type: String, default: '' },
+    shiprocket_error: { type: String, default: '', trim: true, maxlength: 500 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

@@ -288,6 +288,14 @@ export const ecommBrandService = {
     if (tags) brand.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await brand.save();
     await assignEcommRole(brand.owner_user_id);
+    // Approving the brand is what the partner is waiting on, so its warehouses
+    // register here rather than in a second manual step they never see. It
+    // talks to ShipRocket, so it is best-effort — a failure is recorded on the
+    // warehouse (and shown in both portals) instead of failing the approval.
+    const { brandPickupLocationService } = await import(
+      '@modules/venues/brandPickupLocation/brandPickupLocation.service'
+    );
+    await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
     return toPub(brand);
   },
 
@@ -391,7 +399,15 @@ export const ecommBrandService = {
       if (status !== 'REJECTED') brand.rejected_at = null;
     }
     await brand.save();
-    if (status === 'APPROVED') await assignEcommRole(brand.owner_user_id);
+    if (status === 'APPROVED') {
+      await assignEcommRole(brand.owner_user_id);
+      // The other approval path — same best-effort warehouse registration, so
+      // it does not matter which screen approved the brand.
+      const { brandPickupLocationService } = await import(
+        '@modules/venues/brandPickupLocation/brandPickupLocation.service'
+      );
+      await brandPickupLocationService.registerBrandWarehouses(String(brand._id));
+    }
     return toPub(brand);
   },
 

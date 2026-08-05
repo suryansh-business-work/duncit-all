@@ -1,0 +1,92 @@
+---
+// The rest of Duncit. Three sites sit alongside this one and nothing on the
+// home page said so — a host looking to earn, a brand looking to advertise and
+// a venue looking to list all had to already know the subdomain.
+//
+// Every URL comes from url-configs, so a local run links to localhost and a
+// deploy links to the real host; SmartLink marks them as leaving the site.
+import { urlConfigs } from '../config/url-configs';
+import SmartLink from './SmartLink.astro';
+
+const destinations = [
+  {
+    icon: 'fa-coins',
+    eyebrow: 'For hosts, venues and clubs',
+    title: 'Earn with Duncit',
+    text: 'Host pods, list your space or run a club — and get paid for the gatherings you make happen.',
+    cta: 'See how much you could earn',
+    href: urlConfigs.earnwithUrl,
+    tone: 'text-primary',
+    tint: 'bg-primary/10',
+  },
+  {
+    icon: 'fa-bullhorn',
+    eyebrow: 'For brands',
+    title: 'Duncit Ads',
+    text: 'Put your brand in front of people who came out to do something. Nine placements, priced by the day.',
+    cta: 'Price a campaign',
+    href: urlConfigs.adsSiteUrl,
+    tone: 'text-secondary',
+    tint: 'bg-secondary/10',
+  },
+  {
+    icon: 'fa-handshake',
+    eyebrow: 'For partners',
+    title: 'Duncit Partners',
+    text: 'Venues, e-commerce brands and clubs run their side of Duncit from the partner console.',
+    cta: 'Become a partner',
+    href: urlConfigs.partnersSiteUrl,
+    tone: 'text-tertiary-dark',
+    tint: 'bg-tertiary/25',
+  },
+];
+---
+
+<section id="network" class="bg-surface scroll-mt-20 py-20 px-6">
+  <div class="mx-auto max-w-6xl">
+    <div class="max-w-2xl">
+      <span
+        class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
+      >
+        <i class="fa-solid fa-circle-nodes" aria-hidden="true"></i> The Duncit network
+      </span>
+      <h2 class="mt-5 text-4xl text-ink sm:text-5xl">There is more than the app</h2>
+      <p class="mt-3 text-lg text-ink-soft">
+        Duncit is where people meet. These are the three ways to be on the other side of that.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-5 md:grid-cols-3">
+      {
+        destinations.map((place) => (
+          <SmartLink
+            href={place.href}
+            label={place.title}
+            glyph={false}
+            class="group flex h-full flex-col rounded-3xl border border-line bg-cream p-7 transition hover:-translate-y-1 hover:border-primary/40"
+          >
+            <span
+              class={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${place.tint} ${place.tone}`}
+            >
+              <i class={`fa-solid ${place.icon} text-2xl`} aria-hidden="true" />
+            </span>
+            <span class="mt-6 block text-xs font-bold uppercase tracking-wider text-ink-soft">
+              {place.eyebrow}
+            </span>
+            <h3 class="mt-1 font-head text-2xl font-extrabold text-ink">{place.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-soft">{place.text}</p>
+            {/* Pushed to the bottom so three cards of different lengths still
+                end on the same line. */}
+            <span class="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-bold text-primary">
+              {place.cta}
+              <i
+                class="fa-solid fa-arrow-right text-xs transition group-hover:translate-x-1"
+                aria-hidden="true"
+              />
+            </span>
+          </SmartLink>
+        ))
+      }
+    </div>
+  </div>
+</section>

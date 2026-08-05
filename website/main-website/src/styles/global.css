@@ -29,6 +29,11 @@
      coloured stickers. Those stay yellow in the dark, so writing on them in
      `ink` would turn near-white and vanish. This one never moves. */
   --color-on-accent: #16131a;
+  /* The matte the rounded panels sit in. It is the site's frame, not a
+     surface, and it reads as one in both themes — inverting it turned the
+     page's border white, which looked like a rendering fault rather than a
+     theme. So it never moves either. */
+  --color-frame: #100e14;
 
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
@@ -57,9 +62,10 @@
     color-scheme: dark;
   }
   body {
-    /* The frame around the rounded panels, which is why it is ink and not
-       cream — and why it inverts with everything else. */
-    background: var(--color-ink);
+    /* The matte behind the rounded panels — the same one the page wrappers
+       paint, so an overscroll bounce shows the frame rather than a flash of
+       some other colour. */
+    background: var(--color-frame);
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;

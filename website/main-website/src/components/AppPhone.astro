@@ -1,0 +1,103 @@
+---
+/**
+ * The Duncit app, in a phone.
+ *
+ * `src` takes a real screenshot the moment there is one to point at — put it in
+ * `public/media/` or hand it in from Admin branding and it fills the frame.
+ * Until then the frame draws the app's own layout rather than a stock photo of
+ * someone else's phone: the header, a pod card, a chat row and the tab bar, in
+ * Duncit's own colours. Nothing here claims to be a photograph.
+ */
+interface Props {
+  src?: string | null;
+  alt?: string;
+}
+const { src = null, alt = 'The Duncit app' } = Astro.props;
+---
+
+<div class="phone-frame relative mx-auto w-[248px] shrink-0">
+  <div class="relative rounded-[2.4rem] border-[11px] border-[#0f0d13] bg-[#0f0d13] shadow-2xl">
+    <span class="absolute left-1/2 top-0 z-20 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-[#0f0d13]"></span>
+
+    {
+      src ? (
+        <img src={src} alt={alt} class="h-[500px] w-full rounded-[1.7rem] object-cover" loading="lazy" />
+      ) : (
+        <div class="flex h-[500px] flex-col gap-2.5 overflow-hidden rounded-[1.7rem] bg-cream p-3 pt-7">
+          <!-- Header -->
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-head text-[13px] font-extrabold text-ink">Tonight</p>
+              <p class="text-[9px] text-ink-soft">3 pods near you</p>
+            </div>
+            <span class="h-7 w-7 rounded-full bg-primary/15"></span>
+          </div>
+
+          <!-- The pod people came for -->
+          <div class="overflow-hidden rounded-2xl bg-surface shadow-sm">
+            <div class="h-24 bg-linear-to-br from-primary/70 to-secondary/60"></div>
+            <div class="p-2.5">
+              <p class="font-head text-[11px] font-extrabold text-ink">Sunset football, 6pm</p>
+              <p class="mt-0.5 text-[9px] text-ink-soft">Turf 9 · 4 spots left</p>
+              <div class="mt-2 flex items-center justify-between">
+                <div class="flex -space-x-1.5">
+                  <span class="h-5 w-5 rounded-full border-2 border-surface bg-tertiary"></span>
+                  <span class="h-5 w-5 rounded-full border-2 border-surface bg-secondary"></span>
+                  <span class="h-5 w-5 rounded-full border-2 border-surface bg-primary"></span>
+                </div>
+                <span class="rounded-full bg-primary px-2.5 py-1 text-[9px] font-bold text-white">
+                  Join
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- A chat, because the point is the people -->
+          <div class="flex items-center gap-2 rounded-2xl bg-surface p-2.5 shadow-sm">
+            <span class="h-8 w-8 shrink-0 rounded-full bg-secondary/25"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-head text-[10px] font-extrabold text-ink">Weekend crew</p>
+              <p class="truncate text-[9px] text-ink-soft">See you at 6! 🔥</p>
+            </div>
+            <span class="h-4 w-4 rounded-full bg-primary text-center text-[8px] font-bold leading-4 text-white">
+              2
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2 rounded-2xl bg-surface p-2.5 shadow-sm">
+            <span class="h-8 w-8 shrink-0 rounded-full bg-tertiary/40"></span>
+            <div class="min-w-0 flex-1">
+              <p class="font-head text-[10px] font-extrabold text-ink">Board game night</p>
+              <p class="truncate text-[9px] text-ink-soft">Anyone bringing snacks?</p>
+            </div>
+          </div>
+
+          <!-- Tab bar -->
+          <div class="mt-auto flex items-center justify-around rounded-2xl bg-surface py-2 shadow-sm">
+            <i class="fa-solid fa-house text-[11px] text-primary" aria-hidden="true"></i>
+            <i class="fa-solid fa-compass text-[11px] text-ink-soft" aria-hidden="true"></i>
+            <i class="fa-solid fa-comments text-[11px] text-ink-soft" aria-hidden="true"></i>
+            <i class="fa-solid fa-user text-[11px] text-ink-soft" aria-hidden="true"></i>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</div>
+
+<style>
+  /* A slow float, so the phone reads as a product shot rather than a sticker
+     pasted on the section. Stopped for anyone who asked for less motion. */
+  .phone-frame {
+    animation: phone-float 6s ease-in-out infinite;
+  }
+  @keyframes phone-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+</style>

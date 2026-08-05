@@ -1,0 +1,114 @@
+---
+/**
+ * The Duncit app, in a phone.
+ *
+ * `src` takes a real screenshot the moment there is one to point at — put it in
+ * `public/media/` or hand it in from Admin branding and it fills the frame.
+ * Until then the frame draws the app's own layout rather than a stock photo of
+ * someone else's phone: the header, a pod card, a chat row and the tab bar, in
+ * Duncit's own colours. Nothing here claims to be a photograph.
+ */
+interface Props {
+  src?: string | null;
+  alt?: string;
+}
+const { src = null, alt = 'The Duncit app' } = Astro.props;
+---
+
+<div class="app-phone">
+  <div class="app-phone-shell">
+    <span class="app-phone-notch"></span>
+    {src ? (
+      <img class="app-phone-shot" src={src} alt={alt} loading="lazy" />
+    ) : (
+      <div class="app-phone-screen">
+        <div class="app-phone-head">
+          <div>
+            <p class="app-phone-title">Tonight</p>
+            <p class="app-phone-sub">3 pods near you</p>
+          </div>
+          <span class="app-phone-avatar"></span>
+        </div>
+
+        <div class="app-phone-card">
+          <div class="app-phone-cover"></div>
+          <div class="app-phone-card-body">
+            <p class="app-phone-card-title">Sunset football, 6pm</p>
+            <p class="app-phone-sub">Turf 9 · 4 spots left</p>
+            <div class="app-phone-card-foot">
+              <div class="app-phone-faces">
+                <span></span><span></span><span></span>
+              </div>
+              <span class="app-phone-join">Join</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="app-phone-row">
+          <span class="app-phone-thumb is-blue"></span>
+          <div class="app-phone-row-body">
+            <p class="app-phone-row-title">Weekend crew</p>
+            <p class="app-phone-sub">See you at 6! 🔥</p>
+          </div>
+          <span class="app-phone-badge">2</span>
+        </div>
+
+        <div class="app-phone-row">
+          <span class="app-phone-thumb is-gold"></span>
+          <div class="app-phone-row-body">
+            <p class="app-phone-row-title">Board game night</p>
+            <p class="app-phone-sub">Anyone bringing snacks?</p>
+          </div>
+        </div>
+
+        <div class="app-phone-tabs">
+          <i class="fa-solid fa-house is-on" aria-hidden="true"></i>
+          <i class="fa-solid fa-compass" aria-hidden="true"></i>
+          <i class="fa-solid fa-comments" aria-hidden="true"></i>
+          <i class="fa-solid fa-user" aria-hidden="true"></i>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  /* Plain CSS: this package is outside every site's Tailwind scan. */
+  .app-phone { width: 248px; max-width: 100%; margin-inline: auto; flex-shrink: 0; animation: app-phone-float 6s ease-in-out infinite; }
+  @keyframes app-phone-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  @media (prefers-reduced-motion: reduce) { .app-phone { animation: none; } }
+
+  .app-phone-shell { position: relative; border: 11px solid #0f0d13; border-radius: 2.4rem; background: #0f0d13; box-shadow: 0 25px 50px -12px rgba(0,0,0,.45); }
+  .app-phone-notch { position: absolute; left: 50%; top: 0; z-index: 2; width: 6rem; height: 1.25rem; transform: translateX(-50%); border-radius: 0 0 1rem 1rem; background: #0f0d13; }
+  .app-phone-shot { height: 500px; width: 100%; object-fit: cover; border-radius: 1.7rem; display: block; }
+
+  .app-phone-screen { display: flex; flex-direction: column; gap: .625rem; height: 500px; overflow: hidden; padding: 1.75rem .75rem .75rem; border-radius: 1.7rem; background: var(--color-cream, #faf6f0); }
+  .app-phone-head { display: flex; align-items: center; justify-content: space-between; }
+  .app-phone-title { margin: 0; font-family: var(--font-head, system-ui, sans-serif); font-size: 13px; font-weight: 800; color: var(--color-ink, #16131a); }
+  .app-phone-sub { margin: .1rem 0 0; font-size: 9px; color: var(--color-ink-soft, #4b4651); }
+  .app-phone-avatar { width: 1.75rem; height: 1.75rem; border-radius: 999px; background: color-mix(in srgb, var(--color-primary, #ff5757) 15%, transparent); }
+
+  .app-phone-card { overflow: hidden; border-radius: 1rem; background: var(--color-surface, #fff); box-shadow: 0 1px 3px rgba(22,19,26,.08); }
+  .app-phone-cover { height: 6rem; background: linear-gradient(135deg, color-mix(in srgb, var(--color-primary, #ff5757) 70%, transparent), color-mix(in srgb, var(--color-secondary, #5865f2) 60%, transparent)); }
+  .app-phone-card-body { padding: .625rem; }
+  .app-phone-card-title { margin: 0; font-family: var(--font-head, system-ui, sans-serif); font-size: 11px; font-weight: 800; color: var(--color-ink, #16131a); }
+  .app-phone-card-foot { display: flex; align-items: center; justify-content: space-between; margin-top: .5rem; }
+  .app-phone-faces { display: flex; }
+  .app-phone-faces span { width: 1.25rem; height: 1.25rem; border: 2px solid var(--color-surface, #fff); border-radius: 999px; margin-right: -.375rem; }
+  .app-phone-faces span:nth-child(1) { background: var(--color-tertiary, #ffd166); }
+  .app-phone-faces span:nth-child(2) { background: var(--color-secondary, #5865f2); }
+  .app-phone-faces span:nth-child(3) { background: var(--color-primary, #ff5757); }
+  .app-phone-join { padding: .25rem .625rem; border-radius: 999px; background: var(--color-primary, #ff5757); font-size: 9px; font-weight: 700; color: #fff; }
+
+  .app-phone-row { display: flex; align-items: center; gap: .5rem; padding: .625rem; border-radius: 1rem; background: var(--color-surface, #fff); box-shadow: 0 1px 3px rgba(22,19,26,.08); }
+  .app-phone-thumb { width: 2rem; height: 2rem; flex-shrink: 0; border-radius: 999px; }
+  .app-phone-thumb.is-blue { background: color-mix(in srgb, var(--color-secondary, #5865f2) 25%, transparent); }
+  .app-phone-thumb.is-gold { background: color-mix(in srgb, var(--color-tertiary, #ffd166) 40%, transparent); }
+  .app-phone-row-body { min-width: 0; flex: 1; }
+  .app-phone-row-title { margin: 0; font-family: var(--font-head, system-ui, sans-serif); font-size: 10px; font-weight: 800; color: var(--color-ink, #16131a); }
+  .app-phone-badge { width: 1rem; height: 1rem; border-radius: 999px; background: var(--color-primary, #ff5757); font-size: 8px; font-weight: 700; line-height: 1rem; text-align: center; color: #fff; }
+
+  .app-phone-tabs { display: flex; align-items: center; justify-content: space-around; margin-top: auto; padding: .5rem 0; border-radius: 1rem; background: var(--color-surface, #fff); box-shadow: 0 1px 3px rgba(22,19,26,.08); }
+  .app-phone-tabs i { font-size: 11px; color: var(--color-ink-soft, #4b4651); }
+  .app-phone-tabs i.is-on { color: var(--color-primary, #ff5757); }
+</style>

@@ -42,12 +42,12 @@ const fontSize = Math.round(height * 0.5);
 
 {
   href ? (
-    <a href={href} class:list={['inline-flex items-center', className]} aria-label={`${name} — home`}>
+    <a href={href} class:list={['duncit-mark', className]} aria-label={`${name} — home`}>
       {src ? (
         <img src={src} alt={name} style={`height:${height}px; width:auto`} loading={loading} />
       ) : (
         <span
-          class="duncit-wordmark inline-flex items-center justify-center"
+          class="duncit-wordmark"
           style={`height:${height}px; padding-inline:${padding}px`}
         >
           <span class="duncit-wordmark-text" style={`font-size:${fontSize}px`}>
@@ -57,12 +57,12 @@ const fontSize = Math.round(height * 0.5);
       )}
     </a>
   ) : (
-    <span class:list={['inline-flex items-center', className]}>
+    <span class:list={['duncit-mark', className]}>
       {src ? (
         <img src={src} alt={name} style={`height:${height}px; width:auto`} loading={loading} />
       ) : (
         <span
-          class="duncit-wordmark inline-flex items-center justify-center"
+          class="duncit-wordmark"
           style={`height:${height}px; padding-inline:${padding}px`}
         >
           <span class="duncit-wordmark-text" style={`font-size:${fontSize}px`}>
@@ -75,10 +75,18 @@ const fontSize = Math.round(height * 0.5);
 }
 
 <style>
+  .duncit-mark {
+    display: inline-flex;
+    align-items: center;
+  }
+
   /* The stand-in mark. Written in plain CSS with the brand red hard-coded
      rather than a Tailwind token: this component is shared by five sites and
      cannot assume any of them declared the same token names. */
   .duncit-wordmark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 0.75rem;
     background: #ff5757;
   }

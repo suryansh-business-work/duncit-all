@@ -13,6 +13,10 @@ consumers:
 exports:
   - 'BrandLogo.astro'
   - 'FooterLogo.astro'
+  - 'NewsletterSignup.astro'
+  - 'PolicyStrip.astro'
+  - 'SocialLinks.astro'
+  - 'SiteMenu.astro'
 ---
 
 ## Why this exists
@@ -42,6 +46,55 @@ const branding = await fetchBranding();
   name={branding.app_name}
 />
 ```
+
+### The footer blocks
+
+```astro
+---
+import NewsletterSignup from '@duncit/brand/NewsletterSignup.astro';
+import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
+import SocialLinks from '@duncit/brand/SocialLinks.astro';
+---
+
+<NewsletterSignup graphqlUrl={graphqlUrl} source="ADS_WEBSITE_FOOTER" variant="card" />
+<SocialLinks class="mt-5" />
+<PolicyStrip policies={policies} baseUrl={mainSiteUrl} />
+```
+
+`NewsletterSignup` renders as a bordered card by default and as a footer row with
+`variant="inline"`. Pass `consent` to require a ticked box before the address is sent.
+`PolicyStrip` renders every policy on one wrapping row separated by pipes, and nothing at
+all when the list is empty — a build that could not reach the API shows no empty heading.
+`SocialLinks` defaults to Duncit's own accounts, so no site has to carry the handles.
+
+### The mobile menu
+
+```astro
+---
+import SiteMenu from '@duncit/brand/SiteMenu.astro';
+---
+
+<SiteMenu links={nav.links} actions={[nav.signup, nav.login]} onDark={overlay} />
+```
+
+The satellite sites hid their navigation below `lg` and put nothing in its place, so on a
+phone the header was a logo and one button and every other link was unreachable. This is
+the hamburger and the drawer it opens; it hides itself at `1024px`, which is the width the
+headers reveal their inline links at. `onDark` matches a header sitting over a banner.
+
+## Everything here is plain CSS, not Tailwind
+
+This package sits OUTSIDE every site's Tailwind source scan. A `flex gap-x-6` written in
+here compiles to nothing, and the first version of `PolicyStrip` shipped exactly that: the
+policy links rendered with no spacing at all, running into each other. The components style
+themselves and borrow only the palette tokens, which every site declares:
+
+```css
+var(--color-line)   var(--color-ink)     var(--color-ink-soft)
+var(--color-primary) var(--color-surface) var(--font-head)
+```
+
+Each has a literal fallback, so a site that has not declared one still renders.
 
 ## There is no fetch in here
 

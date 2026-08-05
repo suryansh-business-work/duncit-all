@@ -1,0 +1,273 @@
+---
+/**
+ * "Get Duncit updates" — the subscribe form, once.
+ *
+ * Three sites had written it three times: two as a card with a consent
+ * checkbox, one as a footer row with an inline button, each with its own copy
+ * of the mutation, its own status handling and its own idea of what happens
+ * when the API says no. This is that form, with the differences kept as props.
+ *
+ * There is no API config baked in: the caller passes the `graphqlUrl` it
+ * already resolved for its environment, so a local run posts to localhost and a
+ * deploy posts to the real server without this component knowing either.
+ */
+interface Props {
+  /** Where to POST. The site already has this resolved per environment. */
+  graphqlUrl: string;
+  /** Recorded on the subscription so the CRM knows which surface it came from. */
+  source: string;
+  heading?: string;
+  text?: string;
+  placeholder?: string;
+  button?: string;
+  /** `card` for a bordered panel, `inline` for a footer row. */
+  variant?: 'card' | 'inline';
+  /** Consent copy. Omit it and no checkbox is asked for. */
+  consent?: string | null;
+  consentLinkLabel?: string;
+  consentLinkHref?: string;
+  /** Status copy. The site passes its own translations; these are the fallback. */
+  busyText?: string;
+  okText?: string;
+  errorText?: string;
+  class?: string;
+}
+
+const {
+  graphqlUrl,
+  source,
+  heading = 'Get Duncit updates',
+  text = '',
+  placeholder = 'you@example.com',
+  button = 'Subscribe',
+  variant = 'card',
+  consent = null,
+  consentLinkLabel = 'privacy policy',
+  consentLinkHref = '',
+  busyText = 'Subscribing…',
+  okText = 'You are on the list.',
+  errorText = 'That did not go through — check your connection and try again.',
+  class: className = '',
+} = Astro.props;
+
+const card = variant === 'card';
+// One id per instance, so two forms on a page cannot capture each other's
+// status element or label.
+const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<div
+  class:list={['newsletter', card ? 'newsletter-card' : '', className]}
+  data-newsletter-root
+  data-graphql={graphqlUrl}
+  data-source={source}
+  data-busy={busyText}
+  data-ok={okText}
+  data-error={errorText}
+>
+  <h3 class="newsletter-heading">{heading}</h3>
+  {text && <p class="newsletter-text">{text}</p>}
+
+  <form class="newsletter-form" data-newsletter novalidate>
+    <label class="newsletter-sr" for={id}>Email address</label>
+    <input
+      id={id}
+      name="email"
+      type="email"
+      required
+      autocomplete="email"
+      placeholder={placeholder}
+      class="newsletter-input"
+    />
+    <button type="submit" class="newsletter-button">{button}</button>
+
+    {
+      consent && (
+        <label class="newsletter-consent">
+          <input type="checkbox" name="consent" required />
+          <span>
+            {consent}{' '}
+            <a href={consentLinkHref} target="_blank" rel="noopener noreferrer">
+              {consentLinkLabel}
+            </a>
+            .
+          </span>
+        </label>
+      )
+    }
+  </form>
+  <p class="newsletter-status" data-newsletter-status role="status" aria-live="polite"></p>
+</div>
+
+<script>
+  // Every instance on the page wires itself from its own data attributes, so
+  // one script serves a footer form and a section form without either knowing
+  // about the other.
+  for (const root of document.querySelectorAll<HTMLElement>('[data-newsletter-root]')) {
+    const form = root.querySelector<HTMLFormElement>('[data-newsletter]');
+    const status = root.querySelector<HTMLElement>('[data-newsletter-status]');
+    const button = form?.querySelector('button');
+    const graphqlUrl = root.dataset.graphql ?? '';
+    const source = root.dataset.source ?? 'WEBSITE';
+    const copy = {
+      busy: root.dataset.busy ?? '',
+      ok: root.dataset.ok ?? '',
+      error: root.dataset.error ?? '',
+    };
+    if (!form || !status || !button) continue;
+
+    const say = (message: string, ok: boolean) => {
+      status.textContent = message;
+      status.classList.toggle('is-ok', ok);
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      // The browser's own checks first — a malformed address, or an unticked
+      // consent box, never becomes a round trip, and the message is the one
+      // the field already knows how to say.
+      if (!form.reportValidity()) return;
+      const email = new FormData(form).get('email');
+      button.disabled = true;
+      say(copy.busy, false);
+      try {
+        const res = await fetch(graphqlUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `mutation Subscribe($input: SubscribeNewsletterInput!) {
+              subscribeNewsletter(input: $input) { ok message }
+            }`,
+            variables: { input: { email, source } },
+          }),
+        });
+        const json = await res.json();
+        const result = json?.data?.subscribeNewsletter;
+        if (result?.ok) {
+          form.reset();
+          say(result.message || copy.ok, true);
+        } else {
+          say(result?.message || json?.errors?.[0]?.message || copy.error, false);
+        }
+      } catch {
+        say(copy.error, false);
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  /* Plain CSS on purpose: this package sits outside every site's Tailwind
+     source scan, so utilities written here compile to nothing. Only the tokens
+     are borrowed, and every site declares those. */
+  .newsletter-card {
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 1rem;
+    background: var(--color-surface, #fff);
+    padding: 1.5rem;
+    box-shadow: 0 1px 2px rgba(22, 19, 26, 0.05);
+  }
+
+  .newsletter-heading {
+    margin: 0;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 1.125rem;
+    font-weight: 800;
+    color: var(--color-ink, #16131a);
+  }
+  .newsletter-text {
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+    color: var(--color-ink-soft, #4b4651);
+  }
+
+  .newsletter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .newsletter-input {
+    flex: 1 1 12rem;
+    min-width: 0;
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 999px;
+    background: var(--color-surface, #fff);
+    padding: 0.625rem 1rem;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--color-ink, #16131a);
+    outline: none;
+    transition: border-color 150ms ease;
+  }
+  .newsletter-input:focus {
+    border-color: var(--color-primary, #ff5757);
+  }
+
+  .newsletter-button {
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-primary, #ff5757);
+    padding: 0.625rem 1.5rem;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 150ms ease, opacity 150ms ease;
+  }
+  .newsletter-button:hover {
+    background: var(--color-primary-dark, #d92d2d);
+  }
+  .newsletter-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .newsletter-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+    font-size: 0.75rem;
+    color: var(--color-ink-soft, #4b4651);
+  }
+  .newsletter-consent input {
+    margin-top: 0.15rem;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    accent-color: var(--color-primary, #ff5757);
+  }
+  .newsletter-consent a {
+    font-weight: 600;
+    color: var(--color-primary, #ff5757);
+  }
+
+  /* Reserved height, so a message appearing does not shift the page. */
+  .newsletter-status {
+    margin: 0.5rem 0 0;
+    min-height: 1.25rem;
+    font-size: 0.75rem;
+    color: var(--color-ink-soft, #4b4651);
+  }
+  .newsletter-status.is-ok {
+    font-weight: 600;
+    color: var(--color-primary-dark, #d92d2d);
+  }
+
+  .newsletter-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

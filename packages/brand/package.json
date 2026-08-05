@@ -3,10 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "The Duncit mark, as Astro components. Every website's header and footer logo comes from here so the admin's uploaded logo — and the wordmark that stands in when there is none — is drawn one way, in one place.",
+  "description": "Shared Astro chrome for the Duncit websites: the brand mark and the newsletter signup, so the admin's logo and the subscribe form are drawn one way in one place.",
   "exports": {
     "./BrandLogo.astro": "./src/BrandLogo.astro",
-    "./FooterLogo.astro": "./src/FooterLogo.astro"
+    "./FooterLogo.astro": "./src/FooterLogo.astro",
+    "./NewsletterSignup.astro": "./src/NewsletterSignup.astro",
+    "./PolicyStrip.astro": "./src/PolicyStrip.astro",
+    "./SocialLinks.astro": "./src/SocialLinks.astro",
+    "./SiteMenu.astro": "./src/SiteMenu.astro",
+    "./AppDownload.astro": "./src/AppDownload.astro",
+    "./AppPhone.astro": "./src/AppPhone.astro"
   },
   "files": [
     "src"

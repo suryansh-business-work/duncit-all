@@ -1,0 +1,103 @@
+---
+/**
+ * Where to find Duncit. One row of brand marks, the same on every site.
+ *
+ * The accounts are the company's, not any one site's, so the list lives here
+ * rather than in four site-configs that could drift apart the day a handle
+ * changes. A site can still override it — pass `accounts` — but nothing has to.
+ *
+ * Every one of these leaves the site, so each opens in a new tab and says so to
+ * a screen reader. No external-link glyph: beside a brand mark it reads as
+ * clutter, and the new tab is already announced.
+ *
+ * Plain CSS, not Tailwind utilities: this package is outside every site's
+ * Tailwind source scan, so utilities written here compile to nothing.
+ */
+interface Account {
+  /** Font Awesome brand class, e.g. `fa-instagram`. */
+  icon: string;
+  label: string;
+  href: string;
+}
+
+interface Props {
+  accounts?: Account[];
+  heading?: string | null;
+  class?: string;
+}
+
+export const DUNCIT_SOCIAL: Account[] = [
+  { icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },
+  { icon: 'fa-linkedin-in', label: 'LinkedIn', href: 'https://linkedin.com/company/duncit' },
+  { icon: 'fa-facebook-f', label: 'Facebook', href: 'https://facebook.com/duncitapp' },
+];
+
+const { accounts = DUNCIT_SOCIAL, heading = null, class: className = '' } = Astro.props;
+---
+
+<div class:list={['social-links', className]}>
+  {heading && <h3 class="social-links-heading">{heading}</h3>}
+  <ul class="social-links-list">
+    {
+      accounts.map((account) => (
+        <li>
+          <a href={account.href} target="_blank" rel="noopener noreferrer">
+            <i class={`fa-brands ${account.icon}`} aria-hidden="true" />
+            <span class="social-links-sr">{account.label} — opens in a new tab</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .social-links-heading {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink, #16131a);
+  }
+
+  .social-links-list {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .social-links-list a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 999px;
+    color: var(--color-ink-soft, #4b4651);
+    text-decoration: none;
+    transition: color 150ms ease, border-color 150ms ease;
+  }
+  .social-links-list a:hover {
+    color: var(--color-primary, #ff5757);
+    border-color: var(--color-primary, #ff5757);
+  }
+
+  /* The accessible name, kept out of the layout. */
+  .social-links-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

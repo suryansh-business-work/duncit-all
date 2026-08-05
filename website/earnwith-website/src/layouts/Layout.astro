@@ -22,12 +22,14 @@ const favicon = branding.website_favicon_url || '/favicon.svg';
     <link rel="icon" href={favicon} />
     <title>{title}</title>
     <script is:inline>
-      // Before the first paint, so a dark-mode visitor never sees a white
-      // flash: the saved choice wins, otherwise the operating system's.
+      // Runs before the first paint so the page never flashes one theme and
+      // settles on another.
       (() => {
         const saved = localStorage.getItem('duncit-theme');
-        const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.dataset.theme = saved || system;
+        // Light is the default: the sites are built light-first, and a visitor
+        // whose OS is dark should still meet the design as drawn until they
+        // choose otherwise. The toggle remembers whatever they pick.
+        document.documentElement.dataset.theme = saved || 'light';
       })();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

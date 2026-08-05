@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import DownloadApps from '../components/DownloadApps.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { partnerLanding } from '../config/landing';
 import { urlConfigs } from '../config/url-configs';
@@ -19,26 +20,14 @@ const hostUrl = `${urlConfigs.partnersAppUrl}/become-host`;
         <div class="absolute inset-0 bg-gradient-to-br from-ink/92 via-ink/48 to-primary/45"></div>
       </div>
 
-      <nav class="relative z-20 flex items-center justify-between gap-4">
-        <a href={urlConfigs.mainSiteUrl} class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
-          {branding.website_header_logo_url ? (
-            <img src={branding.website_header_logo_url} alt="Duncit" class="h-8 w-auto" />
-          ) : (
-            <>
-              <span class="w-8 h-8 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head">D</span>
-              <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
-            </>
-          )}
-        </a>
-        <a href={urlConfigs.partnersAppUrl} class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker hover:scale-[1.03] transition">
-          <i class="fa-solid fa-right-to-bracket"></i> Partner login
-        </a>
-      </nav>
+      <SiteHeader />
+
+
 
       <div class="relative z-10 max-w-6xl mx-auto min-h-[560px] grid lg:grid-cols-[1.08fr_0.92fr] gap-10 items-center">
         <div data-hero-copy>
           <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker mb-6">
-            <i class="fa-solid fa-handshake-angle"></i> Duncit Partners
+            <i class="fa-solid fa-handshake-angle"></i> For venues & hosts
           </span>
           <h1 class="font-head font-black text-white text-5xl sm:text-7xl lg:text-[5.8rem] max-w-4xl">
             Fill the room. Host the moment.
@@ -75,7 +64,7 @@ const hostUrl = `${urlConfigs.partnersAppUrl}/become-host`;
       </div>
     </section>
 
-    <section class="bg-cream rounded-3xl mt-3 px-5 sm:px-8 py-16">
+    <section id="ways" class="bg-cream rounded-3xl mt-3 scroll-mt-24 px-5 sm:px-8 py-16">
       <div class="max-w-6xl mx-auto grid lg:grid-cols-[0.85fr_1.15fr] gap-10 items-start">
         <div>
           <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-black text-xs uppercase mb-4">

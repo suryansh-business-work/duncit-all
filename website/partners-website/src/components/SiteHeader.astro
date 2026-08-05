@@ -1,0 +1,110 @@
+---
+// The partner site's header. It had none: the landing page drew a logo pill and
+// a login button inline, with no navigation at all — nothing linked to the
+// sections below it, and on a phone there was nothing to open.
+import BrandLogo from '@duncit/brand/BrandLogo.astro';
+import SiteMenu from '@duncit/brand/SiteMenu.astro';
+import { fetchBranding } from '../lib/site-data';
+import { urlConfigs } from '../config/url-configs';
+
+const branding = await fetchBranding();
+
+// Every one of these goes somewhere that exists. The page has two sections and
+// a download band, so the nav names those and the two real destinations in the
+// partner app — not four anchors to headings nobody wrote.
+const links = [
+  { label: 'How it works', href: '#ways' },
+  { label: 'List your venue', href: `${urlConfigs.partnersAppUrl}/register-venue` },
+  { label: 'Become a host', href: `${urlConfigs.partnersAppUrl}/become-host` },
+  { label: 'Get the app', href: '#download' },
+];
+const login = { label: 'Partner login', href: urlConfigs.partnersAppUrl };
+const join = { label: 'Become a partner', href: `${urlConfigs.partnersAppUrl}/register-venue` };
+---
+
+<!-- Rendered INSIDE the hero card, not absolutely over the page. The page is a
+     dark frame around rounded panels, so a header pinned to the viewport hangs
+     over the frame and the card's corner at once — which is exactly what it
+     did: it landed on top of the hero's own badge. -->
+<header class="partner-header relative z-20">
+  <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 py-1">
+    <!-- No white pill behind the mark. It was there to keep a logo legible on
+         the photograph, and it read as a sticker stuck on the banner; the
+         scrim under the header does that job without boxing the brand in. -->
+    <a href={urlConfigs.mainSiteUrl} class="partner-brand" aria-label="Duncit">
+      <BrandLogo
+        src={branding.website_header_logo_url}
+        name={branding.app_name}
+        height={56}
+        href={null}
+      />
+      <span class="partner-brand-word">Partners</span>
+    </a>
+
+    <div class="hidden items-center gap-7 lg:flex">
+      {links.map((link) => <a class="partner-link" href={link.href}>{link.label}</a>)}
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <a class="partner-login" href={login.href}>
+        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+        <span class="hidden sm:inline">{login.label}</span>
+      </a>
+      <SiteMenu links={links} actions={[join, login]} onDark />
+    </div>
+  </nav>
+</header>
+
+<style>
+  /* No scrim of its own: the hero already lays a gradient over the photograph,
+     and a second one stacked on top just darkened a band across the top of the
+     card. */
+
+  .partner-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+  .partner-brand-word {
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  }
+  .partner-brand :global(img) {
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
+  }
+
+  .partner-link {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    transition: color 150ms ease;
+  }
+  .partner-link:hover {
+    color: #fff;
+  }
+
+  .partner-login {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    backdrop-filter: blur(6px);
+    transition: background-color 150ms ease;
+  }
+  .partner-login:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+</style>

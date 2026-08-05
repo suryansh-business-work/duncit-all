@@ -1,108 +1,21 @@
 ---
-// The shared "Download the app" section used across every Duncit website —
-// Android + iOS only. Store links come from Admin → Branding → Website Logos;
-// while a listing is unpublished the button renders a real "coming soon"
-// state instead of a dead link. No mWeb promos here by design.
+// This site's words on the shared download band. The band, the store buttons,
+// the "coming soon" state and the phone live in @duncit/brand — four sites had
+// four versions of the same two store listings.
+import AppDownload from '@duncit/brand/AppDownload.astro';
 import { fetchBranding } from '../lib/site-data';
-import AppPhone from './AppPhone.astro';
 
 const branding = await fetchBranding();
 const stores = [
-  {
-    icon: 'fa-google-play',
-    eyebrow: 'Get it on',
-    name: 'Google Play',
-    url: branding.android_app_url,
-  },
-  {
-    icon: 'fa-apple',
-    eyebrow: 'Download on the',
-    name: 'App Store',
-    url: branding.ios_app_url,
-  },
+  { icon: 'fa-google-play', eyebrow: 'Get it on', name: 'Google Play', url: branding.android_app_url },
+  { icon: 'fa-apple', eyebrow: 'Download on the', name: 'App Store', url: branding.ios_app_url },
 ];
-// Three claims, one line each. This section already had a headline, a
-// paragraph and two buttons; three more cards of prose under them was the
-// reason it read as busy rather than as an invitation.
-const perks = ['Match by energy, in seconds', 'Real chats, no pressure', 'Verified profiles'];
 ---
 
-<!-- A page panel like every other one: it follows the theme rather than being
-     a black slab in the middle of a light page. (It used to be painted with
-     `ink`, which inverted the wrong way and left white text on near-white.) -->
-<section id="download" class="relative overflow-hidden bg-cream py-20 px-6">
-  <div class="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-primary/15 blur-3xl" aria-hidden="true"></div>
-  <div class="absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-secondary/15 blur-3xl" aria-hidden="true"></div>
-
-  <div class="relative z-10 mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-[1.1fr_auto]">
-    <div class="text-center lg:text-left">
-      <span
-        class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
-      >
-        <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> The Duncit app
-      </span>
-
-      <h2 class="mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
-        One app,<br /><span class="text-primary">many communities</span>
-      </h2>
-
-      <p class="mx-auto mt-4 max-w-md text-lg text-ink-soft lg:mx-0">
-        Match with people by energy, then go and do the thing — real plans, real places, real
-        people.
-      </p>
-
-      <ul class="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 lg:justify-start">
-        {
-          perks.map((perk) => (
-            <li class="flex items-center gap-2 text-sm font-semibold text-ink">
-              <i class="fa-solid fa-check text-xs text-primary" aria-hidden="true" />
-              {perk}
-            </li>
-          ))
-        }
-      </ul>
-
-      <div class="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
-        {
-          stores.map((store) =>
-            store.url ? (
-              <a
-                href={store.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="group inline-flex items-center gap-3 rounded-2xl bg-ink px-5 py-3 text-left text-cream transition hover:scale-[1.03]"
-              >
-                <i class={`fa-brands ${store.icon} text-3xl`} aria-hidden="true" />
-                <span>
-                  <span class="block text-[10px] uppercase tracking-wide opacity-70">
-                    {store.eyebrow}
-                  </span>
-                  <span class="block font-head text-lg font-extrabold leading-tight">
-                    {store.name}
-                  </span>
-                </span>
-              </a>
-            ) : (
-              <span class="inline-flex items-center gap-3 rounded-2xl border-2 border-line px-5 py-3 text-left text-ink-soft">
-                <i class={`fa-brands ${store.icon} text-3xl`} aria-hidden="true" />
-                <span>
-                  <span class="block text-[10px] uppercase tracking-wide opacity-70">
-                    {store.eyebrow}
-                  </span>
-                  <span class="block font-head text-lg font-extrabold leading-tight">
-                    {store.name}
-                  </span>
-                </span>
-                <span class="ml-1 rounded-full bg-tertiary px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-on-accent">
-                  Soon
-                </span>
-              </span>
-            )
-          )
-        }
-      </div>
-    </div>
-
-    <AppPhone />
-  </div>
-</section>
+<AppDownload
+  heading="One app,"
+  headingAccent="many communities"
+  text="Match with people by energy, then go and do the thing — real plans, real places, real people."
+  perks={['Match by energy, in seconds', 'Real chats, no pressure', 'Verified profiles']}
+  stores={stores}
+/>

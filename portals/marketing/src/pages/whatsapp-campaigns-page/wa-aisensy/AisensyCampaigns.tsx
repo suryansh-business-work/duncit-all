@@ -1,7 +1,7 @@
-import { useQuery } from '@apollo/client';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { AISENSY_CAMPAIGNS, type AisensyCampaign } from '../queries';
+import type { AisensyCampaign } from '../queries';
 import AisensySection from './AisensySection';
+import { useAisensyCatalogue } from './useAisensyCatalogue';
 
 /** A campaign AiSensy will actually accept a send for is Live — anything else
  * is shown as-is so the reason a send fails is visible before sending. */
@@ -34,11 +34,7 @@ function CampaignRow({ campaign }: Readonly<{ campaign: AisensyCampaign }>) {
 
 /** The API campaigns AiSensy has for this project, read live. */
 export default function AisensyCampaigns() {
-  const { data, loading, error } = useQuery<{
-    aisensyProjectConfigured: boolean;
-    aisensyCampaigns: AisensyCampaign[];
-  }>(AISENSY_CAMPAIGNS, { fetchPolicy: 'cache-and-network', errorPolicy: 'all' });
-  const campaigns = data?.aisensyCampaigns ?? [];
+  const { configured, campaigns, loading, error } = useAisensyCatalogue();
 
   return (
     <Stack spacing={1.5}>
@@ -47,7 +43,7 @@ export default function AisensyCampaigns() {
         Live.
       </Typography>
       <AisensySection
-        configured={data?.aisensyProjectConfigured !== false}
+        configured={configured}
         loading={loading}
         error={error}
         count={campaigns.length}

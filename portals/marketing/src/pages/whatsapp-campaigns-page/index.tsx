@@ -2,15 +2,17 @@ import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ScienceIcon from '@mui/icons-material/Science';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import WaCampaignTable from './WaCampaignTable';
 import CampaignNamesDialog from './CampaignNamesDialog';
 import WaCampaignDetailDialog from './wa-campaign-detail';
+import { WaTestForm } from './wa-test-form';
 import AisensyCampaigns from './wa-aisensy/AisensyCampaigns';
 import AisensyTemplates from './wa-aisensy/AisensyTemplates';
-import { WaCampaignForm } from './wa-campaign-form';
+import { WaCampaignForm, valuesFromCampaign, type WaCampaignValues } from './wa-campaign-form';
 import { useWaCampaignActions } from './useWaCampaignActions';
 import {
   WA_CAMPAIGNS_TABLE,
@@ -38,8 +40,10 @@ export default function WhatsappCampaignsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [tab, setTab] = useState<'sends' | 'campaigns' | 'templates'>('sends');
   const [formOpen, setFormOpen] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
+  const [prefill, setPrefill] = useState<WaCampaignValues | null>(null);
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
 
   const { data, refetch } = useQuery<SetupData>(WA_CAMPAIGN_SETUP, {
@@ -63,6 +67,14 @@ export default function WhatsappCampaignsPage() {
   const submit = async (input: Parameters<typeof actions.send>[0]) => {
     const ok = await actions.send(input);
     if (ok) setFormOpen(false);
+  };
+
+  /** Repeat a past send: the form opens carrying it, and the original is left
+   * exactly as it was. */
+  const duplicate = (campaign: WaCampaignRow) => {
+    setPrefill(valuesFromCampaign(campaign));
+    setViewing(null);
+    setFormOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -90,10 +102,20 @@ export default function WhatsappCampaignsPage() {
               Manage names
             </Button>
             <Button
+              startIcon={<ScienceIcon />}
+              disabled={!configured}
+              onClick={() => setTestOpen(true)}
+            >
+              Send test
+            </Button>
+            <Button
               variant="contained"
               startIcon={<AddIcon />}
               disabled={!configured}
-              onClick={() => setFormOpen(true)}
+              onClick={() => {
+                setPrefill(null);
+                setFormOpen(true);
+              }}
             >
               New campaign
             </Button>
@@ -120,7 +142,9 @@ export default function WhatsappCampaignsPage() {
         <WaCampaignTable
           fetchRows={fetchRows}
           refetchRef={refetchRef}
+          busy={actions.cancelling}
           onOpen={(row) => setViewing(row.campaign_id)}
+          onCancel={actions.cancel}
           onDelete={setTarget}
         />
       )}
@@ -130,18 +154,30 @@ export default function WhatsappCampaignsPage() {
       <WaCampaignDetailDialog
         campaignId={viewing}
         audienceLists={data?.audienceLists ?? []}
+        retrying={actions.retrying}
+        onRetry={actions.retry}
+        onDuplicate={duplicate}
         onClose={() => setViewing(null)}
       />
 
       <WaCampaignForm
         open={formOpen}
         busy={actions.sending}
+        initial={prefill}
         names={data?.waCampaignNames ?? []}
         audienceLists={data?.audienceLists ?? []}
         variables={data?.waCampaignVariables ?? []}
         onClose={() => setFormOpen(false)}
         onManageNames={() => setNamesOpen(true)}
         onSubmit={submit}
+      />
+
+      <WaTestForm
+        open={testOpen}
+        busy={actions.testing}
+        names={data?.waCampaignNames ?? []}
+        onClose={() => setTestOpen(false)}
+        onSubmit={actions.testMessage}
       />
 
       <CampaignNamesDialog

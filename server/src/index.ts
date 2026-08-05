@@ -105,6 +105,10 @@ async function bootstrap() {
     await websiteNavService.seedDefaults();
   });
   await safeSeed('marketing', () => marketingService.resumeSchedules());
+  await safeSeed('waCampaigns', async () => {
+    const { waCampaignService } = await import('@modules/crm/marketing/waCampaign.service');
+    await waCampaignService.resumeSchedules();
+  });
   await safeSeed('venueAutoExtend', async () => {
     const { autoExtendService } = await import('@modules/venues/autoExtend/autoExtend.service');
     await autoExtendService.resumeSchedules();

@@ -23,6 +23,7 @@ import {
   fillParams,
   recipientUsers,
   userNameFor,
+  usersByIds,
   WA_VARIABLES,
 } from './waCampaign.recipients';
 
@@ -37,6 +38,11 @@ const PROGRESS_EVERY = 20;
 const str = (v: unknown) => String(v ?? '').trim();
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
 
+/** setTimeout tops out here; a schedule further out re-arms in hops. */
+const MAX_TIMER_DELAY = 2_147_483_647;
+/** Live timers for SCHEDULED campaigns in THIS process, by campaign id. */
+const timers = new Map<string, NodeJS.Timeout>();
+
 const toPub = (doc: any) => ({
   campaign_id: doc.campaign_id,
   name: doc.name,
@@ -45,6 +51,7 @@ const toPub = (doc: any) => ({
   audience_list_id: doc.audience_list_id ? String(doc.audience_list_id) : null,
   template_params: doc.template_params ?? [],
   status: doc.status,
+  scheduled_at: iso(doc.scheduled_at),
   recipient_count: doc.recipient_count,
   sent_count: doc.sent_count,
   failed_count: doc.failed_count,
@@ -106,8 +113,25 @@ const toRecipient = (doc: any) => ({
   reason: doc.reason ?? '',
   submitted_message_id: doc.submitted_message_id ?? '',
   template_params: doc.template_params ?? [],
+  attempts: doc.attempts ?? 1,
   created_at: iso(doc.created_at),
+  updated_at: iso(doc.updated_at),
 });
+
+/** RFC 4180: quote every field and double the quotes inside it. A reason like
+ * `AiSensy error: "Unauthorized", retry` must not split a row. */
+const csvCell = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+
+const CSV_HEADER = [
+  'Name',
+  'Destination',
+  'Status',
+  'Reason',
+  'Template params',
+  'AiSensy message id',
+  'Attempts',
+  'At',
+];
 
 interface SendInput {
   name?: string | null;
@@ -115,6 +139,18 @@ interface SendInput {
   audience?: WaCampaignAudience | null;
   audience_list_id?: string | null;
   template_params?: (string | null)[] | null;
+  /** ISO time to send at. Absent, or already past, means send now. */
+  scheduled_at?: string | null;
+}
+
+/** The send time, or null for "now". A time that has already passed is not an
+ * error — it just means now, the same as leaving it out. */
+function parseSchedule(raw?: string | null): Date | null {
+  const value = str(raw);
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw badInput('That schedule date is not a real date');
+  return date.getTime() > Date.now() ? date : null;
 }
 
 /** Validate what the portal sent, resolving the campaign name against the saved
@@ -141,6 +177,7 @@ async function validateSendInput(input: SendInput) {
     audience: audience as WaCampaignAudience,
     audience_list_id: audience === 'AUDIENCE_LIST' ? audienceListId : null,
     template_params: templateParams,
+    scheduled_at: parseSchedule(input.scheduled_at),
   };
 }
 
@@ -213,6 +250,10 @@ const COUNTER_OF: Record<WaRecipientStatus, 'sent_count' | 'skipped_count' | 'fa
 async function runSend(campaignId: string) {
   const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
   if (!doc) return;
+  // Cancelled between the timer being armed and it firing — the hour passing
+  // does not resurrect a send somebody called off.
+  if (doc.status === 'CANCELLED') return;
+  doc.status = 'SENDING';
   try {
     const users = await recipientUsers(doc.audience as WaCampaignAudience, doc.audience_list_id);
     doc.recipient_count = users.length;
@@ -247,6 +288,112 @@ async function runSend(campaignId: string) {
     failed: doc.failed_count,
     skipped: doc.skipped_count,
   });
+}
+
+/** The statuses a retry re-attempts: nobody was reached in either case. */
+const UNREACHED = ['FAILED', 'SKIPPED'];
+
+/**
+ * Recount from the rows rather than incrementing. After a retry the rows are
+ * the truth — a row that flips FAILED → SENT has to move both counters, and
+ * two increments that must agree are two chances to drift.
+ */
+async function refreshCounters(doc: any) {
+  const [sent, failed, skipped] = await Promise.all([
+    WaCampaignRecipientModel.countDocuments({ campaign_id: doc.campaign_id, status: 'SENT' }),
+    WaCampaignRecipientModel.countDocuments({ campaign_id: doc.campaign_id, status: 'FAILED' }),
+    WaCampaignRecipientModel.countDocuments({ campaign_id: doc.campaign_id, status: 'SKIPPED' }),
+  ]);
+  doc.sent_count = sent;
+  doc.failed_count = failed;
+  doc.skipped_count = skipped;
+  await doc.save();
+}
+
+/**
+ * Re-attempt the people a send did not reach, reading them from the campaign's
+ * own rows. Each row is UPDATED rather than duplicated, so a campaign keeps one
+ * row per person however many attempts it took — `attempts` is where the second
+ * try shows up. People are re-read from the database first: a retry exists
+ * because the data may have changed (a number added since), not to repeat the
+ * same call with the same inputs.
+ */
+async function runRetry(campaignId: string) {
+  const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+  if (!doc) return;
+  try {
+    const rows = await WaCampaignRecipientModel.find({
+      campaign_id: campaignId,
+      status: { $in: UNREACHED },
+    }).exec();
+    const users = await usersByIds(rows.map((row) => row.user_id).filter(Boolean));
+    const byId = new Map(users.map((user: any) => [String(user._id), user]));
+    for (const [index, row] of rows.entries()) {
+      const user = byId.get(String(row.user_id ?? ''));
+      // The account is gone — there is nobody left to retry against, and the
+      // row keeps saying why it was never reached.
+      if (user) {
+        const outcome = await deliver(doc, user);
+        row.name = outcome.name;
+        row.destination = outcome.destination;
+        row.status = outcome.status;
+        row.reason = outcome.reason;
+        row.submitted_message_id = outcome.submitted_message_id;
+        row.template_params = outcome.template_params;
+        row.attempts += 1;
+        await row.save();
+      }
+      if (index % PROGRESS_EVERY === PROGRESS_EVERY - 1) await refreshCounters(doc);
+    }
+    await refreshCounters(doc);
+    doc.status = doc.sent_count > 0 ? 'SENT' : 'FAILED';
+    doc.error = doc.sent_count > 0 ? null : 'No message could be delivered';
+  } catch (e: any) {
+    doc.status = 'FAILED';
+    doc.error = str(e?.message) || 'WhatsApp campaign retry failed';
+  }
+  await doc.save();
+  logs.server.info('waCampaign', 'runRetry', {
+    campaign_id: campaignId,
+    status: doc.status,
+    sent: doc.sent_count,
+    failed: doc.failed_count,
+    skipped: doc.skipped_count,
+  });
+}
+
+/**
+ * Arm the in-process timer for a scheduled campaign. setTimeout cannot hold
+ * more than ~24.8 days, so a schedule further out re-arms itself in hops; every
+ * SCHEDULED row is re-armed on boot by resumeSchedules, so a restart does not
+ * lose one.
+ */
+function scheduleDoc(doc: any) {
+  if (doc.status !== 'SCHEDULED' || !doc.scheduled_at) return;
+  const existing = timers.get(doc.campaign_id);
+  if (existing) clearTimeout(existing);
+  const delay = doc.scheduled_at.getTime() - Date.now();
+  const timer = setTimeout(
+    () => {
+      timers.delete(doc.campaign_id);
+      if (delay > MAX_TIMER_DELAY) scheduleDoc(doc);
+      else {
+        runSend(doc.campaign_id).catch((e) =>
+          logs.server.error('waCampaign', 'scheduleDoc', { error: e, campaign_id: doc.campaign_id })
+        );
+      }
+    },
+    Math.max(0, Math.min(delay, MAX_TIMER_DELAY))
+  );
+  timers.set(doc.campaign_id, timer);
+}
+
+function clearTimer(campaignId: string) {
+  const timer = timers.get(campaignId);
+  if (timer) {
+    clearTimeout(timer);
+    timers.delete(campaignId);
+  }
 }
 
 export const waCampaignService = {
@@ -305,6 +452,34 @@ export const waCampaignService = {
     return toPub(doc);
   },
 
+  /**
+   * The whole recipient list as CSV — every row, not the page the table is
+   * showing. Built here rather than in the browser because the table engine
+   * caps a page at 100 and a send is not: paging a 20,000-person campaign
+   * through the client to make a spreadsheet is 200 round trips for one file.
+   */
+  async recipientsCsv(campaignId: string) {
+    const rows = await WaCampaignRecipientModel.find({ campaign_id: campaignId })
+      .sort({ created_at: 1 })
+      .lean()
+      .exec();
+    const lines = rows.map((row: any) =>
+      [
+        row.name,
+        row.destination,
+        row.status,
+        row.reason,
+        (row.template_params ?? []).join(' | '),
+        row.submitted_message_id,
+        row.attempts ?? 1,
+        iso(row.created_at),
+      ]
+        .map(csvCell)
+        .join(',')
+    );
+    return [CSV_HEADER.map(csvCell).join(','), ...lines].join('\n');
+  },
+
   /** Who the send reached and who it did not, one row per person. */
   async recipients(campaignId: string, input?: TableQueryInput | null) {
     const { docs, total, page, page_size } = await runTableQuery<any>(
@@ -329,13 +504,77 @@ export const waCampaignService = {
     const doc = await WaCampaignModel.create({
       ...payload,
       campaign_id: crypto.randomUUID(),
-      status: 'SENDING',
+      status: payload.scheduled_at ? 'SCHEDULED' : 'SENDING',
       created_by: userId ?? null,
     });
-    runSend(doc.campaign_id).catch((e) =>
-      logs.server.error('waCampaign', 'send', { error: e, campaign_id: doc.campaign_id })
+    if (payload.scheduled_at) scheduleDoc(doc);
+    else {
+      runSend(doc.campaign_id).catch((e) =>
+        logs.server.error('waCampaign', 'send', { error: e, campaign_id: doc.campaign_id })
+      );
+    }
+    return toPub(doc);
+  },
+
+  /**
+   * Re-attempt only the people this campaign did not reach. Not a new campaign:
+   * the audience is not re-resolved, so a retry can only ever touch people the
+   * original send already walked over.
+   */
+  async retry(campaignId: string) {
+    if (!(await isAisensyConfigured())) {
+      throw badInput('Add the AiSensy API key in the Tech portal before sending');
+    }
+    const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw notFound();
+    if (doc.status === 'SENDING') {
+      throw badInput('That campaign is sending right now — wait for it to finish');
+    }
+    if (doc.status === 'SCHEDULED') throw badInput('That campaign has not run yet');
+    const pending = await WaCampaignRecipientModel.countDocuments({
+      campaign_id: campaignId,
+      status: { $in: UNREACHED },
+    });
+    if (pending === 0) throw badInput('Nothing to retry — this campaign reached everyone it walked over');
+    doc.status = 'SENDING';
+    await doc.save();
+    runRetry(campaignId).catch((e) =>
+      logs.server.error('waCampaign', 'retry', { error: e, campaign_id: campaignId })
     );
     return toPub(doc);
+  },
+
+  /**
+   * One message to one number — the check a marketer makes before pointing a
+   * template at an audience. Goes through the same send path as a campaign, so
+   * a template that passes here is the template a campaign will send.
+   */
+  testSend(input: any) {
+    return aisensyService.send({
+      campaign_name: input.wa_campaign_name,
+      destination: input.destination,
+      user_name: input.user_name,
+      template_params: (input.template_params ?? []).map(str),
+    });
+  },
+
+  /** Call off a send that has not started. Only SCHEDULED can be cancelled —
+   * once messages are going out there is nothing to call off. */
+  async cancel(campaignId: string) {
+    const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw notFound();
+    if (doc.status !== 'SCHEDULED') throw badInput('Only a scheduled campaign can be cancelled');
+    clearTimer(campaignId);
+    doc.status = 'CANCELLED';
+    await doc.save();
+    return toPub(doc);
+  },
+
+  /** Re-arm every scheduled campaign after a restart — the timers live in this
+   * process, the schedule lives in the database. */
+  async resumeSchedules() {
+    const docs = await WaCampaignModel.find({ status: 'SCHEDULED' }).exec();
+    docs.forEach(scheduleDoc);
   },
 
   async remove(campaignId: string) {
@@ -344,6 +583,9 @@ export const waCampaignService = {
     if (doc.status === 'SENDING') {
       throw badInput('That campaign is sending right now — wait for it to finish');
     }
+    // A scheduled campaign owns a live timer; dropping the row without clearing
+    // it leaves a timer that fires for a campaign that no longer exists.
+    clearTimer(campaignId);
     await doc.deleteOne();
     // The per-recipient rows exist only for this campaign — they go with it.
     await WaCampaignRecipientModel.deleteMany({ campaign_id: campaignId });

@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import {
   Alert,
   Button,
@@ -11,10 +11,20 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import DownloadIcon from '@mui/icons-material/Download';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { useDateFormat } from '@duncit/app-settings';
+import { notifyError } from '@duncit/dialogs';
 import { StatusChip } from '@duncit/ui';
+import { downloadTextFile, parseApiError } from '@duncit/utils';
 import { WA_AUDIENCE_LABELS, WA_STATUS_COLORS, labelFor } from '../helpers';
-import { WA_CAMPAIGN, type WaAudienceList, type WaCampaignRow } from '../queries';
+import {
+  WA_CAMPAIGN,
+  WA_CAMPAIGN_RECIPIENTS_CSV,
+  type WaAudienceList,
+  type WaCampaignRow,
+} from '../queries';
 import RecipientTable from './RecipientTable';
 import SummaryTiles from './SummaryTiles';
 
@@ -35,6 +45,11 @@ interface Props {
   campaignId: string | null;
   /** Saved lists, so an AUDIENCE_LIST campaign shows the list's name. */
   audienceLists: WaAudienceList[];
+  retrying: boolean;
+  /** Re-attempt only the people this campaign did not reach. */
+  onRetry: (campaign: WaCampaignRow) => void;
+  /** Start a new send prefilled from this one. */
+  onDuplicate: (campaign: WaCampaignRow) => void;
   onClose: () => void;
 }
 
@@ -49,6 +64,9 @@ interface Props {
 export default function WaCampaignDetailDialog({
   campaignId,
   audienceLists,
+  retrying,
+  onRetry,
+  onDuplicate,
   onClose,
 }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
@@ -59,6 +77,26 @@ export default function WaCampaignDetailDialog({
   });
   const campaign = data?.waCampaign;
   const listName = audienceLists.find((list) => list.id === campaign?.audience_list_id)?.name;
+  const [fetchCsv, { loading: exporting }] = useLazyQuery(WA_CAMPAIGN_RECIPIENTS_CSV, {
+    fetchPolicy: 'network-only',
+  });
+
+  /** The list as a spreadsheet — every row, built by the server. */
+  const exportCsv = async () => {
+    if (!campaign) return;
+    try {
+      const result = await fetchCsv({ variables: { campaign_id: campaign.campaign_id } });
+      const csv = result.data?.waCampaignRecipientsCsv;
+      if (csv) downloadTextFile(csv, `${campaign.name}-recipients.csv`, 'text/csv');
+    } catch (e) {
+      notifyError(parseApiError(e, 'Could not build the recipient list'));
+    }
+  };
+
+  const unreached = (campaign?.failed_count ?? 0) + (campaign?.skipped_count ?? 0);
+  let retryLabel = 'Everyone was reached';
+  if (unreached > 0) retryLabel = `Retry ${unreached.toLocaleString()} not reached`;
+  if (retrying) retryLabel = 'Retrying…';
   const audienceText = [
     campaign ? labelFor(WA_AUDIENCE_LABELS, campaign.audience) : '',
     listName,
@@ -108,7 +146,12 @@ export default function WaCampaignDetailDialog({
                   <Typography variant="body2">None</Typography>
                 )}
               </MetaRow>
-              <MetaRow label="Started">
+              {campaign.scheduled_at && (
+                <MetaRow label="Scheduled for">
+                  <Typography variant="body2">{formatDateTime(campaign.scheduled_at)}</Typography>
+                </MetaRow>
+              )}
+              <MetaRow label="Created">
                 <Typography variant="body2">{formatDateTime(campaign.created_at)}</Typography>
               </MetaRow>
               <MetaRow label="Finished">
@@ -131,7 +174,32 @@ export default function WaCampaignDetailDialog({
           </Stack>
         )}
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ justifyContent: 'space-between' }}>
+        <Stack direction="row" spacing={1}>
+          {/* Only the people it did not reach — the audience is not re-resolved,
+              so a retry can never widen who the campaign touched. */}
+          <Button
+            startIcon={<ReplayIcon />}
+            disabled={!unreached || retrying}
+            onClick={() => campaign && onRetry(campaign)}
+          >
+            {retryLabel}
+          </Button>
+          <Button
+            startIcon={<DownloadIcon />}
+            disabled={!campaign || exporting}
+            onClick={exportCsv}
+          >
+            {exporting ? 'Building…' : 'Download CSV'}
+          </Button>
+          <Button
+            startIcon={<ContentCopyIcon />}
+            disabled={!campaign}
+            onClick={() => campaign && onDuplicate(campaign)}
+          >
+            Duplicate
+          </Button>
+        </Stack>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>

@@ -1,34 +1,46 @@
 ---
 import { siteConfig } from '../config/site-config';
+import SmartLink from './SmartLink.astro';
 const { paths } = siteConfig;
 ---
 
-<section id="paths" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
-  <div class="mx-auto max-w-2xl text-center">
-    <h2 class="text-3xl text-ink sm:text-4xl">Pick a way to start earning</h2>
-    <p class="mt-4 text-ink-soft">Choose a path and we’ll take you into Duncit to get set up.</p>
-  </div>
-  <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-    {
-      paths.map((path) => (
-        <article class="flex flex-col rounded-3xl border border-black/5 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-          <span
-            class="flex h-14 w-14 items-center justify-center rounded-2xl text-white"
-            style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)"
-          >
-            <i class={`fa-solid ${path.icon} text-xl`} aria-hidden="true" />
-          </span>
-          <h3 class="mt-5 text-xl text-ink">{path.title}</h3>
-          <p class="mt-2 grow text-sm leading-relaxed text-ink-soft">{path.text}</p>
-          <a
-            href={path.href}
-            class="mt-6 inline-flex items-center gap-2 self-start rounded-full bg-primary-light px-5 py-2 text-sm font-bold text-primary-dark transition hover:bg-primary hover:text-white"
-          >
-            {path.cta}
-            <i class="fa-solid fa-arrow-right" aria-hidden="true" />
-          </a>
-        </article>
-      ))
-    }
+<section id="paths" class="scroll-mt-20 bg-surface/70 py-16">
+  <div class="mx-auto max-w-6xl px-5">
+    <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">Earn with Duncit</p>
+    <h2 class="mt-2 text-center text-3xl text-ink sm:text-4xl">
+      Four Ways To <span class="text-primary">Earn</span>
+    </h2>
+
+    <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        paths.map((path) => (
+          <article class="flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <img
+              src={path.image}
+              alt={path.imageAlt}
+              width="800"
+              height="600"
+              class="aspect-4/3 w-full object-cover"
+              loading="lazy"
+            />
+            <div class="relative flex grow flex-col p-6">
+              {/* The icon badge straddles the image edge, as in the mock. */}
+              <span class="absolute -top-6 left-6 flex h-11 w-11 items-center justify-center rounded-full border border-primary/20 bg-primary-light text-primary-dark">
+                <i class={`fa-solid ${path.icon}`} aria-hidden="true" />
+              </span>
+              <h3 class="text-lg text-ink">{path.title}</h3>
+              <p class="mt-2 grow text-sm leading-relaxed text-ink-soft">{path.text}</p>
+              <SmartLink
+                href={path.href}
+                label={path.cta}
+                class="mt-5 inline-flex items-center justify-center gap-1 rounded-full border border-primary/40 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
+              >
+                {path.cta}
+              </SmartLink>
+            </div>
+          </article>
+        ))
+      }
+    </div>
   </div>
 </section>

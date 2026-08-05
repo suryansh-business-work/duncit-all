@@ -3,7 +3,9 @@ import { Schema, model, InferSchemaType, type Types } from 'mongoose';
 /** Newsletter subscribers are deliberately absent: a WhatsApp send needs a
  * phone number, and a subscriber row only ever carries an email address. */
 export type WaCampaignAudience = 'ALL_USERS' | 'AUDIENCE_LIST';
-export type WaCampaignStatus = 'SENDING' | 'SENT' | 'FAILED';
+/** SCHEDULED is waiting for its hour and can still be cancelled; CANCELLED is
+ * one that never ran, which is a different fact from one that ran and failed. */
+export type WaCampaignStatus = 'SCHEDULED' | 'SENDING' | 'SENT' | 'FAILED' | 'CANCELLED';
 
 /**
  * One WhatsApp send to a Target Audience, through AiSensy.
@@ -25,7 +27,14 @@ const waCampaignSchema = new Schema(
     /** Ordered template variables. Each is literal text or carries {{tokens}}
      * resolved per recipient (see waCampaign.service). */
     template_params: { type: [String], default: [] },
-    status: { type: String, enum: ['SENDING', 'SENT', 'FAILED'], default: 'SENDING', index: true },
+    status: {
+      type: String,
+      enum: ['SCHEDULED', 'SENDING', 'SENT', 'FAILED', 'CANCELLED'],
+      default: 'SENDING',
+      index: true,
+    },
+    /** When a scheduled send is due. Null for one that went out immediately. */
+    scheduled_at: { type: Date, default: null, index: true },
     recipient_count: { type: Number, default: 0, min: 0 },
     sent_count: { type: Number, default: 0, min: 0 },
     failed_count: { type: Number, default: 0, min: 0 },

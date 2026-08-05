@@ -8,9 +8,13 @@ export const waCampaignTypeDefs = gql`
   }
 
   enum WaCampaignStatus {
+    "Waiting for its hour — still cancellable."
+    SCHEDULED
     SENDING
     SENT
     FAILED
+    "Called off before it ran — never the same fact as one that ran and failed."
+    CANCELLED
   }
 
   "An AiSensy campaign name marketing may pick. AiSensy cannot list these, so the list is maintained here."
@@ -46,7 +50,10 @@ export const waCampaignTypeDefs = gql`
     submitted_message_id: String!
     "The template variables as they were filled for this person."
     template_params: [String!]!
+    "How many times the send has been attempted for this person (a retry updates the row)."
+    attempts: Int!
     created_at: String
+    updated_at: String
   }
 
   type WaCampaignRecipientPage {
@@ -65,6 +72,8 @@ export const waCampaignTypeDefs = gql`
     audience_list_id: ID
     template_params: [String!]!
     status: WaCampaignStatus!
+    "When a scheduled send is due. Null for one that went out immediately."
+    scheduled_at: String
     "How many people the audience resolved to at send time."
     recipient_count: Int!
     sent_count: Int!
@@ -105,6 +114,22 @@ export const waCampaignTypeDefs = gql`
     param_count: Int!
   }
 
+  type WaTestSendResult {
+    ok: Boolean!
+    "AiSensy's own id for the queued message."
+    submitted_message_id: String!
+    message: String!
+  }
+
+  "One test message to one number — the check before pointing a template at an audience."
+  input SendWaTestInput {
+    wa_campaign_name: String!
+    "Country code + number, digits only (e.g. 919582998897)."
+    destination: String!
+    user_name: String!
+    template_params: [String!]!
+  }
+
   input WaCampaignNameInput {
     name: String!
     description: String
@@ -120,6 +145,8 @@ export const waCampaignTypeDefs = gql`
     audience_list_id: ID
     "Ordered template variables — literal text, or {{first_name}} style tokens."
     template_params: [String!]!
+    "ISO time to send at. Absent, or already past, sends immediately."
+    scheduled_at: String
   }
 
   extend type Query {
@@ -136,6 +163,8 @@ export const waCampaignTypeDefs = gql`
     waCampaign(campaign_id: ID!): WaCampaign!
     "Everyone that campaign walked over, with what happened to each."
     waCampaignRecipients(campaign_id: ID!, query: TableQueryInput): WaCampaignRecipientPage!
+    "The whole recipient list as CSV — every row, not one page."
+    waCampaignRecipientsCsv(campaign_id: ID!): String!
     "Whether the Tech portal holds the AiSensy Project credentials that read campaigns and templates."
     aisensyProjectConfigured: Boolean!
     "The API campaigns AiSensy has for this project."
@@ -147,8 +176,14 @@ export const waCampaignTypeDefs = gql`
   extend type Mutation {
     createWaCampaignName(input: WaCampaignNameInput!): WaCampaignNameOption!
     deleteWaCampaignName(id: ID!): Boolean!
-    "Start a WhatsApp send. Returns immediately; the walk continues in the background."
+    "Start or schedule a WhatsApp send. Returns immediately; the walk continues in the background."
     sendWaCampaign(input: SendWaCampaignInput!): WaCampaign!
+    "Call off a scheduled send before it runs."
+    cancelWaCampaign(campaign_id: ID!): WaCampaign!
+    "Re-attempt only the people this campaign did not reach. Returns immediately."
+    retryWaCampaign(campaign_id: ID!): WaCampaign!
+    "Send one test message to one number, through the same path a campaign uses."
+    sendWaTestMessage(input: SendWaTestInput!): WaTestSendResult!
     deleteWaCampaign(campaign_id: ID!): Boolean!
   }
 `;

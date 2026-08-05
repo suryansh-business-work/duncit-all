@@ -1,0 +1,565 @@
+---
+import { siteConfig } from '../config/site-config';
+import { fetchBranding } from '../lib/site-data';
+
+const { calculator, graphqlUrl } = siteConfig;
+// The printed sheet carries the admin's own logo, like every other surface.
+const branding = await fetchBranding();
+const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
+---
+
+<!-- The interactive piece: move the three inputs, watch what a pod actually
+     pays — as a host, or as the club admin whose club it runs under. Every
+     figure comes from the server's own settlement waterfall, so this page
+     cannot drift from what either of them is really paid. -->
+<section id="calculator" class="mx-auto max-w-6xl scroll-mt-24 px-5 py-14">
+  <div class="rounded-3xl border border-line bg-surface p-6 shadow-sm sm:p-10">
+    <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{calculator.eyebrow}</p>
+    <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{calculator.heading}</h2>
+    <p class="mt-3 max-w-2xl text-ink-soft">{calculator.text}</p>
+
+    <div class="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Whose earnings">
+      {
+        calculator.roles.map((role, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`earn-tab-${role.key}`}
+            data-role-tab={role.key}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-controls="earn-result"
+            class="rounded-full border border-ink/15 px-5 py-2 text-sm font-bold text-ink-soft transition aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white"
+          >
+            {role.label}
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="mt-6 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
+      <form class="grid gap-6" data-earn-form novalidate>
+        {
+          calculator.fields.map((field) => (
+            <label class="block" data-field={field.name} data-field-roles={(field.roles ?? []).join(',')}>
+              <span class="flex items-baseline justify-between gap-3">
+                <span class="text-sm font-bold text-ink">{field.label}</span>
+                <output class="font-head text-lg font-extrabold text-primary" data-out={field.name} for={field.name} />
+              </span>
+              <input
+                class="mt-3 w-full accent-[var(--color-primary)]"
+                type="range"
+                id={field.name}
+                name={field.name}
+                min={field.min}
+                max={field.max}
+                step={field.step}
+                value={field.value}
+                data-prefix={field.prefix}
+              />
+              <span class="mt-1 block text-xs text-ink-soft">{field.hint}</span>
+            </label>
+          ))
+        }
+      </form>
+
+      <div class="grid gap-4">
+        <div id="earn-result" role="tabpanel" class="rounded-2xl bg-cream p-6" aria-live="polite">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-sm font-bold text-ink-soft" data-earn-label>
+              {calculator.roles[0].takeHomeLabel}
+            </span>
+            <span class="font-head text-4xl font-extrabold text-ink" data-earn-takehome>—</span>
+          </div>
+          <dl class="mt-5 space-y-2 text-sm" data-earn-rows></dl>
+          <p class="mt-5 text-xs text-ink-soft" data-earn-note>{calculator.note}</p>
+        </div>
+
+        <!-- Beside the money, the job: what that role is actually signing up
+             for. The two move together, so neither is read on its own. -->
+        <div class="rounded-2xl border border-line p-6">
+          <h3 class="font-head text-base font-extrabold text-ink" data-duties-title>
+            {calculator.roles[0].dutiesTitle}
+          </h3>
+          <ul class="mt-3 space-y-2" data-duties></ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+      <p class="max-w-3xl text-xs text-ink-soft">{calculator.disclaimer}</p>
+      <button
+        type="button"
+        data-print-estimate
+        class="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary/40 px-5 py-2 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
+      >
+        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+        {calculator.pdf.button}
+      </button>
+    </div>
+  </div>
+
+</section>
+
+<script
+  is:inline
+  define:vars={{
+    graphqlUrl,
+    roles: calculator.roles,
+    rowLabels: calculator.rowLabels,
+    currency: calculator.currency,
+    standardNote: calculator.note,
+    shortfallNote: calculator.shortfallNote,
+    noShareNote: calculator.noShareNote,
+    fields: calculator.fields,
+    disclaimer: calculator.disclaimer,
+    printLogo,
+    pdfTitle: calculator.pdf.title,
+    pdfInputsTitle: calculator.pdf.inputsTitle,
+    pdfBreakdownTitle: calculator.pdf.breakdownTitle,
+    pdfFooter: calculator.pdf.footer,
+    pdfPreparing: calculator.pdf.preparing,
+    pdfError: calculator.pdf.error,
+    pdfFileName: calculator.pdf.fileName,
+  }}
+>
+  (() => {
+    const form = document.querySelector('[data-earn-form]');
+    if (!form) return;
+    const rows = document.querySelector('[data-earn-rows]');
+    const takeHome = document.querySelector('[data-earn-takehome]');
+    const label = document.querySelector('[data-earn-label]');
+    const dutiesTitle = document.querySelector('[data-duties-title]');
+    const duties = document.querySelector('[data-duties]');
+    const note = document.querySelector('[data-earn-note]');
+    const tabs = [...document.querySelectorAll('[data-role-tab]')];
+
+    let role = roles[0];
+    let latest = null;
+    const money = (value) => `${currency}${Math.round(value).toLocaleString('en-IN')}`;
+
+    const QUERY = `query PublicPodEarnings($amount: Float!, $spots: Int!, $venue: Float) {
+      publicPodEarningsEstimate(pod_amount: $amount, no_of_spots: $spots, venue_amount: $venue) {
+        payable_spots
+        waterfall {
+          amount
+          gst_amount
+          platform_fee_amount
+          venue_amount
+          club_admin_pct
+          club_admin_amount
+          host_commission_amount
+          host_receives
+        }
+      }
+    }`;
+
+    // Which waterfall line each row shows. One map, so a row can never be
+    // labelled as one thing and filled from another.
+    const ROW_FIELD = {
+      gross: 'amount',
+      gst: 'gst_amount',
+      platform: 'platform_fee_amount',
+      venue: 'venue_amount',
+      clubAdmin: 'club_admin_amount',
+      hostCommission: 'host_commission_amount',
+    };
+
+    const sliderValue = (name) => Number(new FormData(form).get(name)) || 0;
+    /** How many pods this role's earnings run across — one, unless the role
+     * says otherwise (a club admin earns from every pod under the club). */
+    const multiplier = () => (role.multiplier ? sliderValue(role.multiplier) : 1);
+
+    // Only a club admin's sliders include the pod count; a host is looking at
+    // the one pod in front of them.
+    const syncFields = () => {
+      for (const field of form.querySelectorAll('[data-field]')) {
+        const only = field.dataset.fieldRoles;
+        field.hidden = Boolean(only) && !only.split(',').includes(role.key);
+      }
+    };
+
+    const paintDuties = () => {
+      dutiesTitle.textContent = role.dutiesTitle;
+      duties.innerHTML = role.duties
+        .map(
+          (duty) =>
+            `<li class="flex gap-2 text-sm text-ink-soft"><i class="fa-solid fa-check mt-1 text-xs text-primary" aria-hidden="true"></i><span>${duty}</span></li>`
+        )
+        .join('');
+    };
+
+    /**
+     * What one row shows. The money lines are for the MONTH, like the take-home
+     * above them — a venue billed per pod is billed once per pod all month, and
+     * a column that mixed one pod's costs with a month's earnings would not add
+     * up. The per-pod share stays per pod, which is what its label says.
+     */
+    const rowValue = (key, w) => {
+      if (key === 'perPod') return { text: money(w[role.field]), deduction: false };
+      if (key === 'pods') return { text: `× ${multiplier()}`, deduction: false };
+      const value = w[ROW_FIELD[key]] * multiplier();
+      const deduction = key !== 'gross';
+      return {
+        text: deduction && value > 0 ? `− ${money(value)}` : money(value),
+        deduction,
+      };
+    };
+
+    /** The panel's own message: the standard note, or the reason this pod
+     * cannot pay this role. Warnings are red because they change the answer. */
+    const setNote = (text, warning) => {
+      note.textContent = text;
+      note.className = `mt-5 text-xs ${warning ? 'font-semibold text-primary-dark' : 'text-ink-soft'}`;
+    };
+
+    const paint = () => {
+      if (!latest) return;
+      const w = latest.waterfall;
+      label.textContent = role.takeHomeLabel;
+      rows.innerHTML = role.rows
+        .map((key) => {
+          const { text, deduction } = rowValue(key, w);
+          const tone = deduction ? 'text-ink-soft' : 'font-bold text-ink';
+          return `<div class="flex items-baseline justify-between gap-3"><dt class="${tone}">${rowLabels[key]}</dt><dd class="${tone}">${text}</dd></div>`;
+        })
+        .join('');
+
+      // The rate this role is paid on is zero — there is no estimate to make,
+      // and a confident ₹0 would read as "this pays nothing" rather than "this
+      // is not set up yet".
+      if (role.rateField && !w[role.rateField]) {
+        takeHome.textContent = '—';
+        takeHome.className = 'font-head text-4xl font-extrabold text-ink-soft';
+        setNote(noShareNote, true);
+        return;
+      }
+
+      const total = w[role.field] * multiplier();
+      takeHome.textContent = money(total);
+      // Nothing left, or a shortfall: the server reports the real gap rather
+      // than clamping it, so the page says what to do about it.
+      const short = total <= 0;
+      takeHome.className = `font-head text-4xl font-extrabold ${short ? 'text-primary-dark' : 'text-ink'}`;
+      setNote(short ? shortfallNote : standardNote, short);
+    };
+
+    // A blip after the numbers are up leaves them alone; a failure before any
+    // numbers exist has to SAY so — an em dash and an empty list read as a
+    // broken page, which is exactly what it looks like from the outside.
+    const failed = () => {
+      if (latest) return;
+      takeHome.textContent = '—';
+      setNote(
+        'The estimate could not be loaded right now. The figures come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.',
+        true
+      );
+    };
+
+    let timer;
+    const request = async () => {
+      const values = new FormData(form);
+      const variables = {
+        amount: Number(values.get('ticket')),
+        spots: Number(values.get('spots')),
+        venue: Number(values.get('venue')),
+      };
+      try {
+        const res = await fetch(graphqlUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: QUERY, variables }),
+        });
+        const json = await res.json();
+        const data = json?.data?.publicPodEarningsEstimate;
+        if (data) {
+          latest = data;
+          paint();
+        } else {
+          failed();
+        }
+      } catch {
+        failed();
+      }
+    };
+
+    const syncLabels = () => {
+      for (const input of form.querySelectorAll('input[type="range"]')) {
+        const out = document.querySelector(`[data-out="${input.name}"]`);
+        if (out) {
+          const prefix = input.dataset.prefix ?? '';
+          out.textContent = `${prefix}${Number(input.value).toLocaleString('en-IN')}`;
+        }
+      }
+    };
+
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        role = roles.find((r) => r.key === tab.dataset.roleTab) ?? roles[0];
+        for (const other of tabs) other.setAttribute('aria-selected', String(other === tab));
+        paintDuties();
+        syncFields();
+        // Same figures, different line of them — switching roles asks the
+        // server nothing.
+        paint();
+      });
+    }
+
+    form.addEventListener('input', (event) => {
+      syncLabels();
+      // The pod count is not part of the pod's own maths — it multiplies the
+      // answer, so it repaints without asking the server again.
+      if (event.target?.name === role.multiplier) {
+        paint();
+        return;
+      }
+      // The server does the maths; dragging a slider must not fire a request
+      // per pixel.
+      clearTimeout(timer);
+      timer = setTimeout(request, 180);
+    });
+
+    // ---- The PDF ----------------------------------------------------------
+    // A real file, drawn rather than screenshotted: vector text stays sharp and
+    // selectable, and the layout is designed for a page instead of squeezed
+    // from one. jsPDF loads on the FIRST click, so a visitor who never asks for
+    // a PDF never downloads the library.
+    const JSPDF_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js';
+    const JSPDF_SRI =
+      'sha512-plOdviVmws4Y3JAvbnpfKb2hVxKM1lCwsi3vmElYRj+tiDLffZ4FVUj5a8vyKJ9pIgl8JCAHEJ4D1iUKBecswg==';
+
+    const loadJsPdf = () =>
+      new Promise((resolve, reject) => {
+        if (globalThis.jspdf) return resolve(globalThis.jspdf.jsPDF);
+        const script = document.createElement('script');
+        script.src = JSPDF_SRC;
+        script.integrity = JSPDF_SRI;
+        script.crossOrigin = 'anonymous';
+        script.referrerPolicy = 'no-referrer';
+        script.onload = () => resolve(globalThis.jspdf.jsPDF);
+        script.onerror = () => reject(new Error('pdf library unavailable'));
+        document.head.appendChild(script);
+      });
+
+    /** The logo as a data URL. jsPDF draws JPEG and PNG only, so an SVG mark is
+     * skipped and the page keeps its wordmark instead of failing to save. */
+    const loadLogo = async () => {
+      try {
+        const res = await fetch(printLogo, { mode: 'cors' });
+        const blob = await res.blob();
+        if (!['image/jpeg', 'image/png'].includes(blob.type)) return null;
+        const dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        const size = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+          img.onerror = () => resolve(null);
+          img.src = dataUrl;
+        });
+        return size ? { dataUrl, ...size, format: blob.type === 'image/png' ? 'PNG' : 'JPEG' } : null;
+      } catch {
+        return null;
+      }
+    };
+
+    // jsPDF's built-in fonts are WinAnsi. A character outside it — the rupee
+    // sign, a true minus, a curly apostrophe — makes jsPDF fall back to a
+    // two-byte encoding for the WHOLE string, which is why an unsanitised line
+    // printed as `" R s .  6 , 6 9 8`. So every string is rewritten into
+    // characters the font actually has before it is drawn.
+    const PDF_GLYPHS = {
+      '\u2212': '-', // minus
+      '\u2013': '-', // en dash
+      '\u2014': '-', // em dash
+      '\u2018': "'", // curly quotes
+      '\u2019': "'",
+      '\u201c': '"',
+      '\u201d': '"',
+      '\u2026': '...', // ellipsis
+      '\u2022': '-', // bullet
+      '\u20b9': 'Rs. ', // rupee
+    };
+    const pdfText = (value) =>
+      String(value)
+        .replaceAll(/[\u2212\u2013\u2014\u2018\u2019\u201c\u201d\u2026\u2022\u20b9]/g, (glyph) => PDF_GLYPHS[glyph])
+        // Anything still beyond Latin-1 would trigger that same fallback. The
+        // range is written as escapes on purpose: a raw character inside a
+        // class is one bad byte away from an invalid regex, and this script is
+        // never parsed at build time, so that would only show in the browser.
+        .replaceAll(/[^\u0020-\u00ff]/g, ' ');
+
+    /** The tab reads "As a host"; the sheet is about a host. */
+    const roleName = () => role.label.replace(/^As /, '');
+
+    // A4 in millimetres, and the palette the site uses on screen.
+    const PAGE = { width: 210, height: 297, margin: 16 };
+    const RIGHT = PAGE.width - PAGE.margin;
+    const INK = [22, 19, 26];
+    const SOFT = [110, 104, 118];
+    const BRAND = [255, 79, 115];
+
+    /** The drawing cursor plus the two things every section needs from it: a
+     * page break before it runs off the sheet, and the line it is writing on. */
+    const makePen = (doc) => {
+      let y = PAGE.margin;
+      return {
+        at: () => y,
+        down: (mm) => {
+          y += mm;
+        },
+        room: (mm) => {
+          if (y + mm <= PAGE.height - PAGE.margin) return;
+          doc.addPage();
+          y = PAGE.margin;
+        },
+      };
+    };
+
+    const drawHeading = (doc, pen, text) => {
+      doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(...SOFT);
+      doc.text(pdfText(text).toUpperCase(), PAGE.margin, pen.at());
+      pen.down(6);
+    };
+
+    const drawMasthead = (doc, pen, logo) => {
+      if (logo) {
+        const height = 14;
+        doc.addImage(logo.dataUrl, logo.format, PAGE.margin, pen.at(), (logo.w / logo.h) * height, height);
+        pen.down(height + 8);
+      } else {
+        // The mark could not be fetched — the wordmark still signs the page.
+        doc.setFont('helvetica', 'bold').setFontSize(20).setTextColor(...BRAND);
+        doc.text('duncit', PAGE.margin, pen.at() + 7);
+        pen.down(16);
+      }
+      doc.setFont('helvetica', 'bold').setFontSize(22).setTextColor(...INK);
+      doc.text(pdfText(pdfTitle), PAGE.margin, pen.at() + 6);
+      pen.down(12);
+      doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(...BRAND);
+      doc.text(pdfText(roleName()).toUpperCase(), PAGE.margin, pen.at());
+      pen.down(4);
+      doc.setDrawColor(...BRAND);
+      doc.setLineWidth(0.8);
+      doc.line(PAGE.margin, pen.at(), RIGHT, pen.at());
+      pen.down(10);
+    };
+
+    /** A titled block of term/value lines, each closed by a hairline. */
+    const drawBlock = (doc, pen, title, lines) => {
+      pen.room(12 + lines.length * 9);
+      drawHeading(doc, pen, title);
+      doc.setFontSize(11);
+      for (const [term, value] of lines) {
+        doc.setFont('helvetica', 'normal').setTextColor(...INK);
+        doc.text(pdfText(term), PAGE.margin, pen.at());
+        doc.setFont('helvetica', 'bold');
+        doc.text(pdfText(value), RIGHT, pen.at(), { align: 'right' });
+        pen.down(3);
+        doc.setDrawColor(228, 226, 232);
+        doc.setLineWidth(0.2);
+        doc.line(PAGE.margin, pen.at(), RIGHT, pen.at());
+        pen.down(6);
+      }
+      pen.down(4);
+    };
+
+    /** The answer, in the one box the eye lands on. */
+    const drawTakeHome = (doc, pen) => {
+      pen.room(26);
+      doc.setFillColor(255, 236, 241);
+      doc.roundedRect(PAGE.margin, pen.at(), RIGHT - PAGE.margin, 20, 3, 3, 'F');
+      doc.setFont('helvetica', 'normal').setFontSize(11).setTextColor(...SOFT);
+      doc.text(pdfText(role.takeHomeLabel), PAGE.margin + 6, pen.at() + 8);
+      doc.setFont('helvetica', 'bold').setFontSize(18).setTextColor(...INK);
+      doc.text(pdfText(takeHome.textContent), RIGHT - 6, pen.at() + 14, { align: 'right' });
+      pen.down(30);
+    };
+
+    const drawDuties = (doc, pen) => {
+      pen.room(20);
+      drawHeading(doc, pen, role.dutiesTitle);
+      doc.setFont('helvetica', 'normal').setFontSize(11).setTextColor(...INK);
+      for (const duty of role.duties) {
+        const wrapped = doc.splitTextToSize(pdfText(duty), RIGHT - PAGE.margin - 6);
+        pen.room(wrapped.length * 5 + 2);
+        doc.setFillColor(...BRAND);
+        doc.circle(PAGE.margin + 1.2, pen.at() - 1.2, 0.9, 'F');
+        doc.text(wrapped, PAGE.margin + 6, pen.at());
+        pen.down(wrapped.length * 5 + 1);
+      }
+      pen.down(6);
+    };
+
+    const drawSmallPrint = (doc, pen) => {
+      const wrapped = doc.splitTextToSize(pdfText(disclaimer), RIGHT - PAGE.margin);
+      pen.room(wrapped.length * 4.5 + 8);
+      doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...SOFT);
+      doc.text(wrapped, PAGE.margin, pen.at());
+      pen.down(wrapped.length * 4.5 + 3);
+      const printed = new Date().toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      doc.text(pdfText(`${pdfFooter} ${printed}`), PAGE.margin, pen.at());
+    };
+
+    const buildPdf = (JsPDF, logo) => {
+      const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+      doc.setProperties({ title: `${pdfTitle}: ${roleName()}`, author: 'Duncit' });
+      const pen = makePen(doc);
+      const w = latest.waterfall;
+
+      drawMasthead(doc, pen, logo);
+      drawBlock(
+        doc,
+        pen,
+        pdfInputsTitle,
+        fields
+          .filter((field) => !field.roles || field.roles.includes(role.key))
+          .map((field) => [
+            field.label,
+            `${field.prefix ?? ''}${sliderValue(field.name).toLocaleString('en-IN')}`,
+          ])
+      );
+      drawBlock(
+        doc,
+        pen,
+        pdfBreakdownTitle,
+        role.rows.map((key) => [rowLabels[key], rowValue(key, w).text])
+      );
+      drawTakeHome(doc, pen);
+      drawDuties(doc, pen);
+      drawSmallPrint(doc, pen);
+      return doc;
+    };
+
+    const pdfButton = document.querySelector('[data-print-estimate]');
+    if (pdfButton) {
+      const idleLabel = pdfButton.innerHTML;
+      pdfButton.addEventListener('click', async () => {
+        // Nothing to put in it yet — the figures are the server's, not a guess.
+        if (!latest) return;
+        pdfButton.disabled = true;
+        pdfButton.textContent = pdfPreparing;
+        try {
+          const [JsPDF, logo] = await Promise.all([loadJsPdf(), loadLogo()]);
+          buildPdf(JsPDF, logo).save(pdfFileName);
+        } catch {
+          // Saying nothing would look like a dead button.
+          setNote(pdfError, true);
+        } finally {
+          pdfButton.disabled = false;
+          pdfButton.innerHTML = idleLabel;
+        }
+      });
+    }
+
+    syncLabels();
+    paintDuties();
+    syncFields();
+    request();
+  })();
+</script>

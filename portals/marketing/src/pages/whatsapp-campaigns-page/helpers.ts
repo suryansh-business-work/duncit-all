@@ -4,12 +4,15 @@ export const WA_STATUS_COLORS: StatusColorMap = {
   SENT: 'success',
   FAILED: 'error',
   SENDING: 'warning',
+  SCHEDULED: 'info',
 };
 
-export const WA_STATUS_OPTIONS = ['SENDING', 'SENT', 'FAILED'].map((value) => ({
-  value,
-  label: value,
-}));
+export const WA_STATUS_OPTIONS = ['SCHEDULED', 'SENDING', 'SENT', 'FAILED', 'CANCELLED'].map(
+  (value) => ({ value, label: value })
+);
+
+/** Only a send that has not started can be called off. */
+export const canCancel = (status: string) => status === 'SCHEDULED';
 
 export const WA_AUDIENCE_LABELS: Record<string, string> = {
   ALL_USERS: 'All users',

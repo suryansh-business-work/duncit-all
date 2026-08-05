@@ -1,5 +1,6 @@
 import { useMemo, type MutableRefObject } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
 import {
   DuncitTable,
   actionsColumn,
@@ -13,6 +14,7 @@ import {
   WA_AUDIENCE_OPTIONS,
   WA_STATUS_COLORS,
   WA_STATUS_OPTIONS,
+  canCancel,
   canDelete,
   labelFor,
 } from './helpers';
@@ -23,7 +25,10 @@ interface Props {
   refetchRef: MutableRefObject<(() => void) | null>;
   /** Opens the campaign's detail view — who it reached and who it did not. */
   onOpen: (row: WaCampaignRow) => void;
+  /** Calls off a scheduled send before its hour. */
+  onCancel: (row: WaCampaignRow) => void;
   onDelete: (row: WaCampaignRow) => void;
+  busy: boolean;
 }
 
 const getRowId = (row: WaCampaignRow) => row.campaign_id;
@@ -54,7 +59,9 @@ export default function WaCampaignTable({
   fetchRows,
   refetchRef,
   onOpen,
+  onCancel,
   onDelete,
+  busy,
 }: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<WaCampaignRow>[]>(
     () => [
@@ -86,6 +93,13 @@ export default function WaCampaignTable({
       { field: 'failed_count', headerName: 'Failed', width: 100 },
       { field: 'skipped_count', headerName: 'Skipped', width: 110 },
       dateColumn<WaCampaignRow>({
+        field: 'scheduled_at',
+        headerName: 'Scheduled for',
+        hide: false,
+        width: 160,
+        format: DATE_TIME_FORMAT,
+      }),
+      dateColumn<WaCampaignRow>({
         field: 'sent_at',
         headerName: 'Sent at',
         hide: false,
@@ -94,16 +108,36 @@ export default function WaCampaignTable({
       }),
       dateColumn<WaCampaignRow>({ width: 160, format: DATE_TIME_FORMAT }),
       actionsColumn<WaCampaignRow>({
-        width: 90,
+        width: 130,
         onDelete,
         delete: {
           title: 'Delete campaign',
           disabled: (row) => !canDelete(row.status),
           disabledTitle: 'Sending right now — wait for it to finish',
         },
+        // Disabled rather than hidden: somebody looking for Cancel on a sent
+        // campaign should be told why it is unavailable, not left hunting.
+        renderExtra: (row) => {
+          const cancellable = canCancel(row.status);
+          const label = cancellable ? 'Cancel this send' : 'Only a scheduled send can be cancelled';
+          return (
+            <Tooltip title={label}>
+              <span>
+                <IconButton
+                  size="small"
+                  aria-label={label}
+                  disabled={busy || !cancellable}
+                  onClick={() => onCancel(row)}
+                >
+                  <EventBusyIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          );
+        },
       }),
     ],
-    [onDelete]
+    [busy, onCancel, onDelete]
   );
 
 

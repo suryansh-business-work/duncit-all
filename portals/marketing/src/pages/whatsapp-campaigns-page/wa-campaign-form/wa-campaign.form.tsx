@@ -8,12 +8,17 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   Stack,
+  Switch,
   TextField,
+  Typography,
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { RhfTextField } from '@duncit/forms';
+import DateTimeField from '../../../components/DateTimeField';
+import { templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
 import { WA_AUDIENCE_OPTIONS } from '../helpers';
 import type { WaAudienceList, WaCampaignNameOption, WaCampaignVariable } from '../queries';
 import ParamsField from './ParamsField';
@@ -29,6 +34,8 @@ import {
 interface Props {
   open: boolean;
   busy: boolean;
+  /** Prefilled values when repeating a past send; null starts empty. */
+  initial?: WaCampaignValues | null;
   names: WaCampaignNameOption[];
   audienceLists: WaAudienceList[];
   variables: WaCampaignVariable[];
@@ -37,14 +44,20 @@ interface Props {
   onSubmit: (input: SendWaCampaignInput) => void;
 }
 
-const reachText = (reach: number) =>
-  reach > 0
-    ? `This sends ${reach.toLocaleString()} WhatsApp ${reach === 1 ? 'message' : 'messages'}.`
-    : 'Nobody in this audience has a usable WhatsApp number.';
+const reachText = (reach: number) => {
+  if (reach === 0) return 'Nobody in this audience has a usable WhatsApp number.';
+  const noun = reach === 1 ? 'message' : 'messages';
+  return `This sends ${reach.toLocaleString()} WhatsApp ${noun}.`;
+};
+
+/** Switching the schedule on lands an hour from now — a sane, editable start
+ * rather than an empty picker. */
+const defaultScheduleIso = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
 export default function WaCampaignForm({
   open,
   busy,
+  initial,
   names,
   audienceLists,
   variables,
@@ -66,11 +79,41 @@ export default function WaCampaignForm({
   });
 
   useEffect(() => {
-    if (open) reset(emptyValues());
-  }, [open, reset]);
+    if (open) reset(initial ?? emptyValues());
+  }, [open, initial, reset]);
 
   const audience = watch('audience');
   const reach = useWaReach(audience, watch('audience_list_id'));
+  const { options: campaignOptions, live, campaigns, templates } = useCampaignOptions(names);
+  const waCampaignName = watch('wa_campaign_name');
+  const template = templateFor(waCampaignName, campaigns, templates);
+
+  // The template decides how many params a send must carry, so the rows follow
+  // it rather than the marketer counting {{n}} by hand. Only when AiSensy told
+  // us — otherwise the rows stay the marketer's to add.
+  const paramCount = template?.param_count;
+  const rowCount = watch('template_params').length;
+  useEffect(() => {
+    // Already the right shape — a duplicated send arrives with its params
+    // filled, and re-laying them out would wipe what it came with.
+    if (paramCount === undefined || rowCount === paramCount) return;
+    setValue(
+      'template_params',
+      Array.from({ length: paramCount }, () => ({ value: '' })),
+      { shouldValidate: true }
+    );
+  }, [paramCount, rowCount, setValue]);
+  // The button says what pressing it does — schedule, or send right now.
+  const scheduled = !!watch('scheduled_at');
+  let submitLabel = scheduled ? 'Schedule' : 'Send now';
+  if (busy) submitLabel = scheduled ? 'Scheduling…' : 'Sending…';
+  // The variable list is whatever the server supports — no copy of it here.
+  const variableList = variables.map((variable) => `{{${variable.name}}}`).join(', ');
+  const paramsHint = `Literal text, or a variable filled per recipient: ${variableList}. Somebody whose variable is empty is skipped rather than sent a blank.`;
+
+  const campaignHint = live
+    ? 'Live from AiSensy — only a campaign whose status is Live will send'
+    : 'The approved AiSensy campaign this send uses';
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -91,19 +134,30 @@ export default function WaCampaignForm({
               label="WhatsApp campaign"
               select
               required
-              hint="The approved AiSensy campaign this send uses"
+              hint={campaignHint}
             >
-              {names.length === 0 && (
+              {campaignOptions.length === 0 && (
                 <MenuItem disabled value="">
                   No campaign names yet — add one with Manage names
                 </MenuItem>
               )}
-              {names.map((option) => (
-                <MenuItem key={option.id} value={option.name}>
-                  {option.description ? `${option.name} · ${option.description}` : option.name}
+              {campaignOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
                 </MenuItem>
               ))}
             </RhfTextField>
+
+            {template && (
+              <Alert severity="success" icon={false}>
+                <Typography variant="caption" fontWeight={800} display="block">
+                  {template.name} · {template.language} · {template.status}
+                </Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {template.body}
+                </Typography>
+              </Alert>
+            )}
 
             <Controller
               control={control}
@@ -156,7 +210,37 @@ export default function WaCampaignForm({
               </Alert>
             )}
 
-            <ParamsField control={control} variables={variables} />
+            <ParamsField control={control} hint={paramsHint} />
+
+            <Controller
+              control={control}
+              name="scheduled_at"
+              render={({ field, fieldState }) => (
+                <Stack spacing={1}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={!!field.value}
+                        // Turning it off clears the time — a hidden schedule is
+                        // how a send goes out at the wrong hour.
+                        onChange={(_, on) => field.onChange(on ? defaultScheduleIso() : '')}
+                      />
+                    }
+                    label="Schedule for later"
+                  />
+                  {field.value ? (
+                    <DateTimeField
+                      label="Send at"
+                      value={field.value}
+                      onChange={field.onChange}
+                      minDateTime={new Date()}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message ?? ' '}
+                    />
+                  ) : null}
+                </Stack>
+              )}
+            />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between' }}>
@@ -168,7 +252,7 @@ export default function WaCampaignForm({
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
-              {busy ? 'Sending…' : 'Send now'}
+              {submitLabel}
             </Button>
           </Stack>
         </DialogActions>

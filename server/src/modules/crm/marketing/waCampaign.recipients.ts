@@ -121,10 +121,25 @@ export async function countReachable(audience: WaCampaignAudience, audienceListI
   return UserModel.countDocuments(await recipientFilter(audience, audienceListId));
 }
 
+/** Only the fields a send reads — a campaign has no business loading whole
+ * user documents for an audience of thousands. */
+const SEND_FIELDS =
+  'profile.first_name profile.last_name profile.city profile.state communication.whatsapp auth.phone';
+
 /** The recipients themselves, with only the fields a send needs. */
 export async function recipientUsers(audience: WaCampaignAudience, audienceListId?: unknown) {
   return UserModel.find(await recipientFilter(audience, audienceListId))
-    .select('profile.first_name profile.last_name profile.city profile.state communication.whatsapp auth.phone')
+    .select(SEND_FIELDS)
+    .lean()
+    .exec();
+}
+
+/** The same slim rows for a known set of people. A retry works from the
+ * campaign's own recipient rows, not from the audience — re-resolving the
+ * audience could pull in people the original send never touched. */
+export async function usersByIds(ids: readonly unknown[]) {
+  return UserModel.find({ _id: { $in: ids } })
+    .select(SEND_FIELDS)
     .lean()
     .exec();
 }

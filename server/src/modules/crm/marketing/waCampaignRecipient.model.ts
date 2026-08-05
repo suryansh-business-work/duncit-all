@@ -27,6 +27,10 @@ const waCampaignRecipientSchema = new Schema(
     submitted_message_id: { type: String, default: '', trim: true },
     /** The template variables as they were filled for THIS person. */
     template_params: { type: [String], default: [] },
+    /** How many times the send has been attempted for this person — a retry
+     * updates the row rather than adding a second one, so this is the only
+     * place the second attempt is visible. */
+    attempts: { type: Number, default: 1, min: 1 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

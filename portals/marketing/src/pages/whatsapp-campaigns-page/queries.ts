@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 const WA_CAMPAIGN_FIELDS = `
   campaign_id name wa_campaign_name audience audience_list_id template_params
-  status recipient_count sent_count failed_count skipped_count
+  status scheduled_at recipient_count sent_count failed_count skipped_count
   error sent_at created_at updated_at
 `;
 
@@ -29,9 +29,14 @@ export const WA_CAMPAIGN_SETUP = gql`
   }
 `;
 
-/** The AiSensy side, read live through its Project API. */
-export const AISENSY_CAMPAIGNS = gql`
-  query AisensyCampaigns {
+/**
+ * The AiSensy side, read live through its Project API — campaigns and their
+ * templates in one round trip. One query rather than one per section, because
+ * the campaign form needs both together: a campaign names its template, and the
+ * template says how many params a send must fill.
+ */
+export const AISENSY_CATALOGUE = gql`
+  query AisensyCatalogue {
     aisensyProjectConfigured
     aisensyCampaigns {
       name
@@ -39,12 +44,6 @@ export const AISENSY_CAMPAIGNS = gql`
       template_name
       type
     }
-  }
-`;
-
-export const AISENSY_TEMPLATES = gql`
-  query AisensyTemplates {
-    aisensyProjectConfigured
     aisensyTemplates {
       name
       status
@@ -90,7 +89,9 @@ export const WA_CAMPAIGN_RECIPIENTS = gql`
         reason
         submitted_message_id
         template_params
+        attempts
         created_at
+        updated_at
       }
     }
   }
@@ -99,6 +100,34 @@ export const WA_CAMPAIGN_RECIPIENTS = gql`
 export const SEND_WA_CAMPAIGN = gql`
   mutation SendWaCampaign($input: SendWaCampaignInput!) {
     sendWaCampaign(input: $input) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+export const CANCEL_WA_CAMPAIGN = gql`
+  mutation CancelWaCampaign($campaign_id: ID!) {
+    cancelWaCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+export const WA_CAMPAIGN_RECIPIENTS_CSV = gql`
+  query WaCampaignRecipientsCsv($campaign_id: ID!) {
+    waCampaignRecipientsCsv(campaign_id: $campaign_id)
+  }
+`;
+
+export const RETRY_WA_CAMPAIGN = gql`
+  mutation RetryWaCampaign($campaign_id: ID!) {
+    retryWaCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+export const SEND_WA_TEST_MESSAGE = gql`
+  mutation SendWaTestMessage($input: SendWaTestInput!) {
+    sendWaTestMessage(input: $input) {
+      ok
+      submitted_message_id
+      message
+    }
   }
 `;
 
@@ -165,7 +194,9 @@ export interface WaCampaignRecipientRow {
   reason: string;
   submitted_message_id: string;
   template_params: string[];
+  attempts: number;
   created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface WaCampaignRow {
@@ -176,6 +207,7 @@ export interface WaCampaignRow {
   audience_list_id: string | null;
   template_params: string[];
   status: string;
+  scheduled_at: string | null;
   recipient_count: number;
   sent_count: number;
   failed_count: number;

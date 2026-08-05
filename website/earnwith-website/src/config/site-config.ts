@@ -182,9 +182,13 @@ export const siteConfig = {
         key: 'host',
         label: 'As a host',
         field: 'host_receives',
-        takeHomeLabel: 'A host takes home',
-        // Deductions shown above the take-home, in the order money leaves.
-        rows: ['gross', 'gst', 'platform', 'venue', 'clubAdmin'],
+        takeHomeLabel: 'A host takes home a month',
+        // A host earns per pod too, so the month is the pod's payout times how
+        // many they run.
+        multiplier: 'pods',
+        // Deductions shown above the take-home, in the order money leaves,
+        // then the per-pod payout and the count it multiplies by.
+        rows: ['gross', 'gst', 'platform', 'venue', 'clubAdmin', 'perPod', 'pods'],
         dutiesTitle: 'What a host does',
         duties: [
           'Bring the people together and fill the pod',
@@ -238,24 +242,21 @@ export const siteConfig = {
         name: 'venue',
         label: 'Venue charge',
         prefix: '₹',
-        min: 0,
+        min: 500,
         max: 30000,
         step: 500,
         value: 3000,
-        hint: 'What the venue bills for the slot. Zero if you host somewhere free.',
+        hint: 'What the venue bills for the slot.',
       },
       {
         name: 'pods',
-        label: 'Pods you manage a month',
+        label: 'Pods a month',
         prefix: '',
         min: 1,
         max: 60,
         step: 1,
         value: 8,
-        hint: 'A club admin earns from every pod running under the club, not one.',
-        // Only the club admin's earnings scale with how many pods run; a host
-        // is looking at the one pod in front of them.
-        roles: ['club_admin'],
+        hint: 'Both sides earn per pod, so the month is that many times over.',
       },
     ],
   },

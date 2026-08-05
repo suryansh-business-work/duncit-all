@@ -169,6 +169,8 @@ export const siteConfig = {
       platform: 'Platform fee',
       venue: 'Venue charge',
       clubAdmin: 'Club admin share',
+      perPod: 'Your share, per pod',
+      pods: 'Pods a month',
     },
     /**
      * The two people a pod pays. Both read the SAME waterfall the server
@@ -195,8 +197,11 @@ export const siteConfig = {
         key: 'club_admin',
         label: 'As a club admin',
         field: 'club_admin_amount',
-        takeHomeLabel: 'A club admin takes home',
-        rows: ['gross', 'gst', 'platform'],
+        takeHomeLabel: 'A club admin takes home a month',
+        // The club admin's money is per pod and then multiplied by how many
+        // pods the club runs — the rows show that sum being made.
+        multiplier: 'pods',
+        rows: ['gross', 'gst', 'platform', 'perPod', 'pods'],
         dutiesTitle: 'What a club admin does',
         duties: [
           'Manage the club and grow its members',
@@ -238,6 +243,19 @@ export const siteConfig = {
         step: 500,
         value: 3000,
         hint: 'What the venue bills for the slot. Zero if you host somewhere free.',
+      },
+      {
+        name: 'pods',
+        label: 'Pods you manage a month',
+        prefix: '',
+        min: 1,
+        max: 60,
+        step: 1,
+        value: 8,
+        hint: 'A club admin earns from every pod running under the club, not one.',
+        // Only the club admin's earnings scale with how many pods run; a host
+        // is looking at the one pod in front of them.
+        roles: ['club_admin'],
       },
     ],
   },

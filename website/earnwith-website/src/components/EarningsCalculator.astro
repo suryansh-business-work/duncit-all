@@ -35,7 +35,7 @@ const { calculator, graphqlUrl } = siteConfig;
       <form class="grid gap-6" data-earn-form novalidate>
         {
           calculator.fields.map((field) => (
-            <label class="block">
+            <label class="block" data-field={field.name} data-field-roles={(field.roles ?? []).join(',')}>
               <span class="flex items-baseline justify-between gap-3">
                 <span class="text-sm font-bold text-ink">{field.label}</span>
                 <output class="font-head text-lg font-extrabold text-primary" data-out={field.name} for={field.name} />
@@ -133,6 +133,20 @@ const { calculator, graphqlUrl } = siteConfig;
       clubAdmin: 'club_admin_amount',
     };
 
+    const sliderValue = (name) => Number(new FormData(form).get(name)) || 0;
+    /** How many pods this role's earnings run across — one, unless the role
+     * says otherwise (a club admin earns from every pod under the club). */
+    const multiplier = () => (role.multiplier ? sliderValue(role.multiplier) : 1);
+
+    // Only a club admin's sliders include the pod count; a host is looking at
+    // the one pod in front of them.
+    const syncFields = () => {
+      for (const field of form.querySelectorAll('[data-field]')) {
+        const only = field.dataset.fieldRoles;
+        field.hidden = Boolean(only) && !only.split(',').includes(role.key);
+      }
+    };
+
     const paintDuties = () => {
       dutiesTitle.textContent = role.dutiesTitle;
       duties.innerHTML = role.duties
@@ -143,18 +157,29 @@ const { calculator, graphqlUrl } = siteConfig;
         .join('');
     };
 
+    /** What one row shows: a money line off the waterfall, this role's own
+     * per-pod share, or the plain count it is multiplied by. */
+    const rowValue = (key, w) => {
+      if (key === 'perPod') return { text: money(w[role.field]), deduction: false };
+      if (key === 'pods') return { text: `× ${multiplier()}`, deduction: false };
+      const value = w[ROW_FIELD[key]];
+      const deduction = key !== 'gross';
+      return {
+        text: deduction && value > 0 ? `− ${money(value)}` : money(value),
+        deduction,
+      };
+    };
+
     const paint = () => {
       if (!latest) return;
       const w = latest.waterfall;
       label.textContent = role.takeHomeLabel;
-      takeHome.textContent = money(w[role.field]);
+      takeHome.textContent = money(w[role.field] * multiplier());
       rows.innerHTML = role.rows
         .map((key) => {
-          const value = w[ROW_FIELD[key]];
-          const deduction = key !== 'gross';
-          const shown = deduction && value > 0 ? `− ${money(value)}` : money(value);
+          const { text, deduction } = rowValue(key, w);
           const tone = deduction ? 'text-ink-soft' : 'font-bold text-ink';
-          return `<div class="flex items-baseline justify-between gap-3"><dt class="${tone}">${rowLabels[key]}</dt><dd class="${tone}">${shown}</dd></div>`;
+          return `<div class="flex items-baseline justify-between gap-3"><dt class="${tone}">${rowLabels[key]}</dt><dd class="${tone}">${text}</dd></div>`;
         })
         .join('');
       note.textContent = standardNote;
@@ -212,14 +237,21 @@ const { calculator, graphqlUrl } = siteConfig;
         role = roles.find((r) => r.key === tab.dataset.roleTab) ?? roles[0];
         for (const other of tabs) other.setAttribute('aria-selected', String(other === tab));
         paintDuties();
+        syncFields();
         // Same figures, different line of them — switching roles asks the
         // server nothing.
         paint();
       });
     }
 
-    form.addEventListener('input', () => {
+    form.addEventListener('input', (event) => {
       syncLabels();
+      // The pod count is not part of the pod's own maths — it multiplies the
+      // answer, so it repaints without asking the server again.
+      if (event.target?.name === role.multiplier) {
+        paint();
+        return;
+      }
       // The server does the maths; dragging a slider must not fire a request
       // per pixel.
       clearTimeout(timer);
@@ -228,6 +260,7 @@ const { calculator, graphqlUrl } = siteConfig;
 
     syncLabels();
     paintDuties();
+    syncFields();
     request();
   })();
 </script>

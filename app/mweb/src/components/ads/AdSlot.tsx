@@ -1,9 +1,8 @@
 import type { SxProps, Theme } from '@mui/material';
 import AdCard from './AdCard';
-import AdTile from './AdTile';
 import { useActiveAds, type AdPosition, type PublicAd } from './useActiveAds';
 
-export type AdSlotVariant = 'banner' | 'card' | 'tile';
+export type AdSlotVariant = 'banner' | 'card';
 
 interface AdSlotProps {
   position: AdPosition;
@@ -13,12 +12,12 @@ interface AdSlotProps {
 
 /** Drop-in single-ad slot: fetches the placement's live ads and renders the
  * first one in the requested shape. No inventory → renders nothing (no layout
- * gap, no skeleton). */
+ * gap, no skeleton). The story rail's tile is not served from here: it opens the
+ * ad as a story, so the rail owns both the ad and what opening it does. */
 export default function AdSlot({ position, variant = 'banner', sx }: Readonly<AdSlotProps>) {
   const { ads } = useActiveAds(position);
   const ad = ads[0];
   if (!ad) return null;
-  if (variant === 'tile') return <AdTile ad={ad} />;
   return <AdCard ad={ad} variant={variant} sx={sx} />;
 }
 

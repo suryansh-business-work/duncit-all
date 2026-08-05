@@ -21,6 +21,17 @@ export const WA_AUDIENCE_OPTIONS = Object.entries(WA_AUDIENCE_LABELS).map(([valu
   label,
 }));
 
+export const WA_RECIPIENT_STATUS_COLORS: StatusColorMap = {
+  SENT: 'success',
+  SKIPPED: 'warning',
+  FAILED: 'error',
+};
+
+export const WA_RECIPIENT_STATUS_OPTIONS = ['SENT', 'SKIPPED', 'FAILED'].map((value) => ({
+  value,
+  label: value,
+}));
+
 export const labelFor = (labels: Record<string, string>, value: string) => labels[value] ?? value;
 
 /** Deleting mid-send would pull the document out from under the send itself,

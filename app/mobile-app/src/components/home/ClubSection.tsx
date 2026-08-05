@@ -12,8 +12,10 @@ interface ClubSectionProps extends ClubWithPods {
   onOpenPod: (pod: HomePod) => void;
   /** The category chip over each card's image (mock: "Sports"). */
   categoryLabelOf?: (pod: HomePod) => string | null;
-  /** Heart state + toggle; omit to hide the hearts (signed-out). */
+  /** Save state + toggle; omit to hide the save buttons (signed-out). */
   savedOf?: (podDocId: string) => boolean;
+  /** True while THAT pod's toggle is in flight — its icon becomes a spinner. */
+  savingOf?: (podDocId: string) => boolean;
   onToggleSave?: (podDocId: string) => void;
   onOpenClub: (club: HomeClub) => void;
 }
@@ -27,6 +29,7 @@ export function ClubSection({
   onOpenClub,
   categoryLabelOf,
   savedOf,
+  savingOf,
   onToggleSave,
 }: Readonly<ClubSectionProps>) {
   const { onPrimary } = useThemeColors();
@@ -88,6 +91,7 @@ export function ClubSection({
               onPress={() => onOpenPod(pod)}
               categoryLabel={categoryLabelOf?.(pod)}
               saved={savedOf?.(pod.id) ?? false}
+              saving={savingOf?.(pod.id) ?? false}
               onToggleSave={onToggleSave ? () => onToggleSave(pod.id) : undefined}
             />
           </Reveal>

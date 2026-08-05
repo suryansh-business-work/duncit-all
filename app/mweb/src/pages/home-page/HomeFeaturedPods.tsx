@@ -1,7 +1,7 @@
-import { Box, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import { useNavigate } from 'react-router-dom';
 import SeeAllCard from './SeeAllCard';
@@ -20,8 +20,10 @@ interface HomeFeaturedPodsProps {
   filtered: boolean;
   /** The category chip over the image (mock: "Sports"). */
   categoryLabelOf?: (pod: any) => string | null;
-  /** Heart state + toggle; omit to hide the hearts (signed-out). */
+  /** Save state + toggle; omit to hide the save buttons (signed-out). */
   savedOf?: (podDocId: string) => boolean;
+  /** True while THAT pod's toggle is in flight — its icon becomes a spinner. */
+  savingOf?: (podDocId: string) => boolean;
   onToggleSave?: (podDocId: string) => void;
 }
 
@@ -42,6 +44,7 @@ export default function HomeFeaturedPods({
   filtered,
   categoryLabelOf,
   savedOf,
+  savingOf,
   onToggleSave,
 }: Readonly<HomeFeaturedPodsProps>) {
   const navigate = useNavigate();
@@ -69,6 +72,10 @@ export default function HomeFeaturedPods({
           else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
           const categoryLabel = categoryLabelOf?.(pod);
           const saved = savedOf?.(pod.id) ?? false;
+          const saving = savingOf?.(pod.id) ?? false;
+          // Hoisted: a spinner-or-icon choice inline would nest ternaries (S3358).
+          const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
+          const saveButtonContent = saving ? <CircularProgress size={18} color="inherit" /> : savedIcon;
           const isFree = pod.pod_type === 'FREE';
           return (
             <Box
@@ -123,6 +130,7 @@ export default function HomeFeaturedPods({
                 <IconButton
                   aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
                   aria-pressed={saved}
+                  disabled={saving}
                   onClick={(event) => {
                     event.stopPropagation();
                     onToggleSave(pod.id);
@@ -135,9 +143,12 @@ export default function HomeFeaturedPods({
                     bgcolor: 'rgba(9,7,18,0.35)',
                     backdropFilter: 'blur(6px)',
                     '&:hover': { bgcolor: 'rgba(9,7,18,0.5)' },
+                    // Disabled only while the toggle is in flight — keep it
+                    // legible on the image instead of MUI's grey-on-dark.
+                    '&.Mui-disabled': { color: 'common.white', bgcolor: 'rgba(9,7,18,0.35)' },
                   }}
                 >
-                  {saved ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+                  {saveButtonContent}
                 </IconButton>
               )}
               {/* Semi-transparent info panel (mock) — the image reads through. */}

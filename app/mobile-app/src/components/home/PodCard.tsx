@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import type { HomePod } from '@/hooks/useHomeFeed';
@@ -18,9 +18,55 @@ interface PodCardProps {
   showPlace?: boolean;
   /** The category chip over the image (mock: "Sports"). */
   categoryLabel?: string | null;
-  /** Heart state + toggle; omit to hide the heart. */
+  /** Save state + toggle; omit to hide the save button. */
   saved?: boolean;
+  /** The toggle is in flight for THIS pod — the icon becomes a spinner. */
+  saving?: boolean;
   onToggleSave?: () => void;
+}
+
+interface PodSaveButtonProps {
+  podId: string;
+  saved: boolean;
+  saving: boolean;
+  label: string;
+  onPress: () => void;
+}
+
+/** The save button over the image — the bookmark the pod details screen uses,
+ * and a spinner in its place while the toggle is in flight. Module scope
+ * (S6478), which also keeps PodCard's complexity in bounds. */
+function PodSaveButton({ podId, saved, saving, label, onPress }: Readonly<PodSaveButtonProps>) {
+  const icon = (
+    <MaterialIcons
+      name={saved ? 'bookmark' : 'bookmark-border'}
+      size={17}
+      color={saved ? '#ff4f73' : '#ffffff'}
+    />
+  );
+  return (
+    <XStack
+      testID={`pod-card-save-${podId}`}
+      role="button"
+      aria-label={label}
+      aria-pressed={saved}
+      // Ignored while in flight so a double tap cannot un-save what the first
+      // tap is still saving.
+      onPress={saving ? undefined : onPress}
+      position="absolute"
+      top={8}
+      right={8}
+      width={32}
+      height={32}
+      borderRadius={16}
+      alignItems="center"
+      justifyContent="center"
+      backgroundColor="rgba(9,7,18,0.35)"
+      pressStyle={{ opacity: 0.7 }}
+    >
+      {saving ? <Spinner size="small" color="#ffffff" /> : icon}
+    </XStack>
+  );
 }
 
 interface PodInfoPanelProps {
@@ -105,8 +151,8 @@ function PodInfoPanel({ pod, dark, spotsText, place, joiningText }: Readonly<Pod
 }
 
 /**
- * Image-first pod card (mock): full-bleed media, the category chip and heart
- * overlaid on top, and a translucent info panel — date, big title, spots left
+ * Image-first pod card (mock): full-bleed media, the category chip and the save
+ * button overlaid on top, and a translucent info panel — date, big title, spots left
  * and the price pill — floating over the bottom. Tamagui twin of mWeb's
  * PodCard; no backdrop blur natively, so the panel runs a higher alpha.
  */
@@ -117,6 +163,7 @@ export function PodCard({
   showPlace = true,
   categoryLabel,
   saved = false,
+  saving = false,
   onToggleSave,
 }: Readonly<PodCardProps>) {
   const image = podImageUrl(pod);
@@ -172,29 +219,13 @@ export function PodCard({
         ) : null}
 
         {onToggleSave ? (
-          <XStack
-            testID={`pod-card-save-${pod.pod_id}`}
-            role="button"
-            aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
-            aria-pressed={saved}
+          <PodSaveButton
+            podId={pod.pod_id}
+            saved={saved}
+            saving={saving}
+            label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
             onPress={onToggleSave}
-            position="absolute"
-            top={8}
-            right={8}
-            width={32}
-            height={32}
-            borderRadius={16}
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor="rgba(9,7,18,0.35)"
-            pressStyle={{ opacity: 0.7 }}
-          >
-            <MaterialIcons
-              name={saved ? 'favorite' : 'favorite-border'}
-              size={17}
-              color={saved ? '#ff4f73' : '#ffffff'}
-            />
-          </XStack>
+          />
         ) : null}
 
         <PodInfoPanel

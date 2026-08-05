@@ -182,6 +182,33 @@ export function buildHomeStatusEntries(
   return [...shuffle(unseen), ...seen];
 }
 
+/** The ad fields a sponsored story is built from (the public ad projection). */
+export interface AdStorySource {
+  ad_title?: string | null;
+  ad_type?: string | null;
+  media_url: string;
+  redirect_url?: string | null;
+}
+
+/**
+ * A sponsored tile opens as a story like every other tile in the rail — the ad's
+ * media fills the slide and the advertiser's page is never opened behind the
+ * user's back. When the ad carries a link it becomes the story's "Open details"
+ * button; `internal: false` sends it to a new tab, since it leaves the app.
+ */
+export function buildAdViewer(ad: AdStorySource): HomeStatusViewerItem {
+  return {
+    kind: 'ad',
+    label: ad.ad_title || 'Sponsored',
+    subLabel: 'Sponsored',
+    avatarUrl: ad.media_url,
+    mediaUrl: ad.media_url,
+    mediaType: ad.ad_type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+    targetUrl: ad.redirect_url ?? undefined,
+    internal: false,
+  };
+}
+
 /** Build the "my status" viewer payload from the signed-in user's stories. */
 export function buildMyStatusViewer(me: any): HomeStatusViewerItem | null {
   const stories = ((me?.my_stories ?? []) as any[]).filter((story) => isStoryLive(story.expires_at));

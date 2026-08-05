@@ -31,12 +31,17 @@ export default function HealthMeter({
   caption,
 }: Readonly<Props>) {
   const radius = (size - thickness) / 2;
-  const cx = size / 2;
   const cy = size / 2;
   const circumference = Math.PI * radius;
   const safeScore = Math.max(0, Math.min(100, Math.round(score)));
   const filled = (safeScore / 100) * circumference;
   const color = BAND_COLOR[band];
+  const height = size / 2 + thickness;
+  // The half circle is drawn where it is shown — left end, over the top, right
+  // end — rather than drawing a full circle, rotating the <svg> 180° and
+  // clipping the bottom half. Keeps this identical to the native twin, whose
+  // rotation is dropped when the app renders as web.
+  const arc = `M ${thickness / 2} ${cy} A ${radius} ${radius} 0 0 1 ${size - thickness / 2} ${cy}`;
 
   return (
     <Box
@@ -58,26 +63,21 @@ export default function HealthMeter({
         transition: 'transform 120ms ease',
       }}
     >
-      <Box sx={{ position: 'relative', width: size, height: size / 2 + thickness, overflow: 'hidden' }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(180deg)' }}>
-          <circle
-            cx={cx}
-            cy={cy}
-            r={radius}
+      <Box sx={{ position: 'relative', width: size, height }}>
+        <svg width={size} height={height}>
+          <path
+            d={arc}
             fill="none"
             stroke="rgba(0,0,0,0.08)"
             strokeWidth={thickness}
-            strokeDasharray={`${circumference} ${circumference * 2}`}
             strokeLinecap="round"
           />
-          <circle
-            cx={cx}
-            cy={cy}
-            r={radius}
+          <path
+            d={arc}
             fill="none"
             stroke={color}
             strokeWidth={thickness}
-            strokeDasharray={`${filled} ${circumference * 2}`}
+            strokeDasharray={`${filled} ${circumference}`}
             strokeLinecap="round"
             style={{ transition: 'stroke-dasharray 420ms ease' }}
           />

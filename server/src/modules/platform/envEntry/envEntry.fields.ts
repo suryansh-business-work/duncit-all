@@ -92,14 +92,34 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'default_channel', label: 'Default Channel (optional)', hint: 'Channel ID (e.g. C0123ABCD) messages default to' },
     { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
   ],
+  // Two different AiSensy credentials, on purpose. The campaign API key SENDS
+  // (backend.aisensy.com/campaign/t1/api/v2) and can do nothing else — it
+  // cannot read a campaign or a template back. Reading needs the Project API,
+  // which is a separate key scoped to a project id.
   AISENSY: [
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'AiSensy → Manage → API Key (a long eyJ… token)' },
+    { name: 'api_key', label: 'Campaign API Key', secret: true, hint: 'AiSensy → Manage → API Key (a long eyJ… token) — sends messages' },
     {
       name: 'campaign_name',
       label: 'Default Campaign Name (optional)',
       hint: 'API campaign name sends default to, e.g. duncit_camp_1',
     },
     { name: 'base_url', label: 'Base URL (optional)', hint: 'https://backend.aisensy.com' },
+    {
+      name: 'project_id',
+      label: 'Project ID (optional)',
+      hint: 'AiSensy project id — the id in your Project API URL. Needed to read campaigns/templates',
+    },
+    {
+      name: 'project_api_key',
+      label: 'Project API Key (optional)',
+      secret: true,
+      hint: 'Project API key / App Access Code — reads campaign + template details, never sends',
+    },
+    {
+      name: 'project_api_base_url',
+      label: 'Project API Base URL (optional)',
+      hint: 'https://apis.aisensy.com',
+    },
   ],
 };
 
@@ -172,6 +192,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   AISENSY_API_KEY: { category: 'AISENSY', field: 'api_key' },
   AISENSY_CAMPAIGN_NAME: { category: 'AISENSY', field: 'campaign_name' },
   AISENSY_BASE_URL: { category: 'AISENSY', field: 'base_url' },
+  AISENSY_PROJECT_ID: { category: 'AISENSY', field: 'project_id' },
+  AISENSY_PROJECT_API_KEY: { category: 'AISENSY', field: 'project_api_key' },
+  AISENSY_PROJECT_API_BASE_URL: { category: 'AISENSY', field: 'project_api_base_url' },
 };
 
 export function maskSecret(value: string) {

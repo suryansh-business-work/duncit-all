@@ -50,8 +50,9 @@ export interface HomeStatusViewerItem {
   slides?: HomeStatusViewerSlide[];
   targetUrl?: string;
   internal?: boolean;
-  /** Origin of the story — gates like (user) vs viewers/delete (mine) (Bugs 4,5,7). */
-  kind?: 'mine' | 'user' | 'club' | 'pod';
+  /** Origin of the story — gates like (user) vs viewers/delete (mine) (Bugs 4,5,7).
+   * An `ad` story carries none of those: it is sponsored media, not somebody's post. */
+  kind?: 'mine' | 'user' | 'club' | 'pod' | 'ad';
 }
 
 interface HomeStatusViewerProps {

@@ -10,7 +10,9 @@ type ClubStoryPost = StatusPost;
  * their URL slug (clubSlug) so the deep link matches mWeb's /club/:clubSlug. */
 export type StoryTarget =
   | { kind: 'club'; id: string; clubSlug: string; title: string }
-  | { kind: 'user'; id: string };
+  | { kind: 'user'; id: string }
+  /** A sponsored story's landing page — the only target that leaves the app. */
+  | { kind: 'link'; url: string };
 
 export interface StoryRailItem extends StatusGroup {
   key: string;

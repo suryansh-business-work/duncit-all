@@ -222,12 +222,18 @@ function jwtExpiryMs(token: string): number | null {
  * call and it actually sends a WhatsApp message. So verify what can be checked
  * offline (key present, not expired) and leave delivery to the test send. */
 async function probeAisensy(str: ConfigStr): Promise<TestResult> {
-  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  if (!str('api_key')) return { ok: false, message: 'Campaign API key is required' };
   const expiry = jwtExpiryMs(str('api_key'));
   if (expiry && expiry < Date.now()) {
-    return { ok: false, message: `API key expired on ${new Date(expiry).toDateString()} — issue a new one in AiSensy` };
+    return { ok: false, message: `Campaign API key expired on ${new Date(expiry).toDateString()} — issue a new one in AiSensy` };
   }
-  return { ok: true, message: 'API key is set — run a test campaign to verify delivery' };
+  // The Project API is a second, optional credential: it reads campaigns and
+  // templates back, which the campaign key cannot do. Say which half is set.
+  const hasProject = !!str('project_id') && !!str('project_api_key');
+  const projectNote = hasProject
+    ? 'Project API configured for reading campaign + template details.'
+    : 'Project API not configured — campaign and template details cannot be read back.';
+  return { ok: true, message: `Campaign API key is set — run a test campaign to verify delivery. ${projectNote}` };
 }
 
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {

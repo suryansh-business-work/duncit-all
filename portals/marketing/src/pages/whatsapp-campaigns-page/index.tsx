@@ -1,12 +1,15 @@
 import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
-import { Alert, Box, Button, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import WaCampaignTable from './WaCampaignTable';
 import CampaignNamesDialog from './CampaignNamesDialog';
+import WaCampaignDetailDialog from './wa-campaign-detail';
+import AisensyCampaigns from './wa-aisensy/AisensyCampaigns';
+import AisensyTemplates from './wa-aisensy/AisensyTemplates';
 import { WaCampaignForm } from './wa-campaign-form';
 import { useWaCampaignActions } from './useWaCampaignActions';
 import {
@@ -33,8 +36,10 @@ interface SetupData {
 export default function WhatsappCampaignsPage() {
   const client = useApolloClient();
   const refetchRef = useRef<(() => void) | null>(null);
+  const [tab, setTab] = useState<'sends' | 'campaigns' | 'templates'>('sends');
   const [formOpen, setFormOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
 
   const { data, refetch } = useQuery<SetupData>(WA_CAMPAIGN_SETUP, {
@@ -61,7 +66,10 @@ export default function WhatsappCampaignsPage() {
   };
 
   const confirmDelete = async () => {
-    if (target && (await actions.remove(target))) setTarget(null);
+    if (!target || !(await actions.remove(target))) return;
+    // The detail view of a campaign that no longer exists has nothing to show.
+    setViewing((id) => (id === target.campaign_id ? null : id));
+    setTarget(null);
   };
 
   return (
@@ -76,27 +84,54 @@ export default function WhatsappCampaignsPage() {
             come from the audience; the AiSensy API key comes from the Tech portal.
           </Typography>
         </Stack>
-        <Button startIcon={<TuneIcon />} onClick={() => setNamesOpen(true)}>
-          Manage names
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          disabled={!configured}
-          onClick={() => setFormOpen(true)}
-        >
-          New campaign
-        </Button>
+        {tab === 'sends' && (
+          <>
+            <Button startIcon={<TuneIcon />} onClick={() => setNamesOpen(true)}>
+              Manage names
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              disabled={!configured}
+              onClick={() => setFormOpen(true)}
+            >
+              New campaign
+            </Button>
+          </>
+        )}
       </Stack>
 
-      {!configured && (
+      {/* Three sections, three questions: what have we sent, what can we send
+          against, and what do those templates actually say. */}
+      <Tabs value={tab} onChange={(_, next) => setTab(next)} sx={{ mb: 2 }}>
+        <Tab value="sends" label="Sends" />
+        <Tab value="campaigns" label="Campaigns" />
+        <Tab value="templates" label="Templates" />
+      </Tabs>
+
+      {tab === 'sends' && !configured && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           No AiSensy API key yet — add one in the Tech portal under Environment Variables → AiSensy
           before sending.
         </Alert>
       )}
 
-      <WaCampaignTable fetchRows={fetchRows} refetchRef={refetchRef} onDelete={setTarget} />
+      {tab === 'sends' && (
+        <WaCampaignTable
+          fetchRows={fetchRows}
+          refetchRef={refetchRef}
+          onOpen={(row) => setViewing(row.campaign_id)}
+          onDelete={setTarget}
+        />
+      )}
+      {tab === 'campaigns' && <AisensyCampaigns />}
+      {tab === 'templates' && <AisensyTemplates />}
+
+      <WaCampaignDetailDialog
+        campaignId={viewing}
+        audienceLists={data?.audienceLists ?? []}
+        onClose={() => setViewing(null)}
+      />
 
       <WaCampaignForm
         open={formOpen}

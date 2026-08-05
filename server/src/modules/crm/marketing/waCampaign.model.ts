@@ -5,16 +5,6 @@ import { Schema, model, InferSchemaType, type Types } from 'mongoose';
 export type WaCampaignAudience = 'ALL_USERS' | 'AUDIENCE_LIST';
 export type WaCampaignStatus = 'SENDING' | 'SENT' | 'FAILED';
 
-/** Why one recipient did not get the message — capped, so a bad send cannot
- * grow the document without bound. */
-const waFailureSchema = new Schema(
-  {
-    destination: { type: String, required: true },
-    reason: { type: String, required: true },
-  },
-  { _id: false }
-);
-
 /**
  * One WhatsApp send to a Target Audience, through AiSensy.
  *
@@ -41,7 +31,6 @@ const waCampaignSchema = new Schema(
     failed_count: { type: Number, default: 0, min: 0 },
     /** Matched the audience but had no usable number or an empty variable. */
     skipped_count: { type: Number, default: 0, min: 0 },
-    failures: { type: [waFailureSchema], default: [] },
     error: { type: String, default: null },
     sent_at: { type: Date, default: null },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },

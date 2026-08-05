@@ -27,8 +27,30 @@ vi.mock('../StoryViewersDialog', () => ({
     ) : null,
 }));
 
-vi.mock('../../../components/ads/AdSlot', () => ({
-  default: () => <div data-testid="ad-slot" />,
+// The rail owns the STATUS ad now (it opens it as a story rather than handing
+// it to a self-fetching slot), so the double stands in for the tile itself.
+vi.mock('../../../components/ads/useActiveAds', () => ({
+  useActiveAds: () => ({
+    ads: [
+      {
+        id: 'ad-1',
+        ad_type: 'IMAGE',
+        media_url: 'https://cdn.example/ad-1.jpg',
+        redirect_url: 'https://brand.example',
+        ad_title: 'Fresh brews nearby',
+        position: 'STATUS',
+      },
+    ],
+    loading: false,
+  }),
+}));
+
+vi.mock('../../../components/ads/AdTile', () => ({
+  default: ({ onOpen }: any) => (
+    <button type="button" data-testid="ad-slot" onClick={onOpen}>
+      sponsored
+    </button>
+  ),
 }));
 
 vi.mock('../HomeStatusViewer', () => ({

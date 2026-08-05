@@ -3,7 +3,6 @@ import { gql } from '@apollo/client';
 const WA_CAMPAIGN_FIELDS = `
   campaign_id name wa_campaign_name audience audience_list_id template_params
   status recipient_count sent_count failed_count skipped_count
-  failures { destination reason }
   error sent_at created_at updated_at
 `;
 
@@ -30,6 +29,33 @@ export const WA_CAMPAIGN_SETUP = gql`
   }
 `;
 
+/** The AiSensy side, read live through its Project API. */
+export const AISENSY_CAMPAIGNS = gql`
+  query AisensyCampaigns {
+    aisensyProjectConfigured
+    aisensyCampaigns {
+      name
+      status
+      template_name
+      type
+    }
+  }
+`;
+
+export const AISENSY_TEMPLATES = gql`
+  query AisensyTemplates {
+    aisensyProjectConfigured
+    aisensyTemplates {
+      name
+      status
+      category
+      language
+      body
+      param_count
+    }
+  }
+`;
+
 export const WA_CAMPAIGN_REACH = gql`
   query WaCampaignReach($audience: WaCampaignAudience!, $audience_list_id: ID) {
     waCampaignReach(audience: $audience, audience_list_id: $audience_list_id)
@@ -41,6 +67,31 @@ export const WA_CAMPAIGNS_TABLE = gql`
     waCampaignsTable(query: $query) {
       total
       rows { ${WA_CAMPAIGN_FIELDS} }
+    }
+  }
+`;
+
+export const WA_CAMPAIGN = gql`
+  query WaCampaign($campaign_id: ID!) {
+    waCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+/** Who the send reached and who it did not — the detail view's table. */
+export const WA_CAMPAIGN_RECIPIENTS = gql`
+  query WaCampaignRecipients($campaign_id: ID!, $query: TableQueryInput) {
+    waCampaignRecipients(campaign_id: $campaign_id, query: $query) {
+      total
+      rows {
+        id
+        name
+        destination
+        status
+        reason
+        submitted_message_id
+        template_params
+        created_at
+      }
     }
   }
 `;
@@ -90,6 +141,33 @@ export interface WaAudienceList {
   member_count: number;
 }
 
+export interface AisensyCampaign {
+  name: string;
+  status: string;
+  template_name: string;
+  type: string;
+}
+
+export interface AisensyTemplate {
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  body: string;
+  param_count: number;
+}
+
+export interface WaCampaignRecipientRow {
+  id: string;
+  name: string;
+  destination: string;
+  status: string;
+  reason: string;
+  submitted_message_id: string;
+  template_params: string[];
+  created_at: string | null;
+}
+
 export interface WaCampaignRow {
   campaign_id: string;
   name: string;
@@ -102,7 +180,6 @@ export interface WaCampaignRow {
   sent_count: number;
   failed_count: number;
   skipped_count: number;
-  failures: { destination: string; reason: string }[];
   error: string | null;
   sent_at: string | null;
   created_at: string | null;

@@ -71,15 +71,20 @@ function AdTile({
  * advertiser link when one is set. `banner` is a flush full-width rectangle,
  * `card` self-pads to sit in the sidebar rail (SidebarVenuesCard metrics) and
  * `tile` matches the StatusTile footprint for the story rail.
+ *
+ * `onPress` replaces the link entirely — the story rail passes it so its tile
+ * opens the ad as a story instead of leaving for the advertiser's page.
  */
 export function AdCard({
   ad,
   variant,
   testID,
-}: Readonly<{ ad: ActiveAd; variant: AdVariant; testID?: string }>) {
+  onPress: onPressOverride,
+}: Readonly<{ ad: ActiveAd; variant: AdVariant; testID?: string; onPress?: () => void }>) {
   const id = testID ?? `ad-card-${ad.id}`;
   const redirect = ad.redirect_url;
-  const onPress = redirect ? () => fireAndForget(Linking.openURL(redirect)) : undefined;
+  const openLink = redirect ? () => fireAndForget(Linking.openURL(redirect)) : undefined;
+  const onPress = onPressOverride ?? openLink;
   if (variant === 'tile') {
     return <AdTile ad={ad} testID={id} onPress={onPress} />;
   }

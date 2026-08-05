@@ -3,12 +3,13 @@ import { Box, Stack } from '@mui/material';
 import NearMeIcon from '@mui/icons-material/NearMe';
 import { useMutation } from '@apollo/client';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import AdSlot from '../../components/ads/AdSlot';
+import AdTile from '../../components/ads/AdTile';
+import { useActiveAds } from '../../components/ads/useActiveAds';
 import HomeStatusTile from './HomeStatusTile';
 import HomeStatusViewer from './HomeStatusViewer';
 import MyStatusUploadTile from './MyStatusUploadTile';
 import StoryViewersDialog from './StoryViewersDialog';
-import { buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
+import { buildAdViewer, buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
 import { DELETE_STORY_POST, RECORD_STORY_VIEW, TOGGLE_STORY_LIKE } from './queries';
 
 interface HomeStatusRailProps {
@@ -32,8 +33,15 @@ export default function HomeStatusRail({
 }: Readonly<HomeStatusRailProps>) {
   // Index into the ordered viewer sequence ([my status, …entries]); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  // The sponsored story opens on its own rather than joining the sequence: it is
+  // not somebody's story to walk to, and keeping it out leaves the tile indexes
+  // (and everything that reads them) exactly as they were.
+  const [adOpen, setAdOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
+  const { ads } = useActiveAds('STATUS');
+  const ad = ads[0];
+  const adViewer = useMemo(() => (ad ? buildAdViewer(ad) : null), [ad]);
 
   const [recordView] = useMutation(RECORD_STORY_VIEW);
   const [toggleLike] = useMutation(TOGGLE_STORY_LIKE);
@@ -58,8 +66,13 @@ export default function HomeStatusRail({
     [myViewer, entries],
   );
   const offset = myViewer ? 1 : 0;
-  const activeItem = activeIndex == null ? null : viewerItems[activeIndex] ?? null;
+  const openedItem = activeIndex == null ? null : viewerItems[activeIndex] ?? null;
+  const activeItem = adOpen ? adViewer : openedItem;
   const activeKind = activeItem?.kind;
+  const closeViewer = () => {
+    setAdOpen(false);
+    setActiveIndex(null);
+  };
 
   // Walk to the next/previous follower's story (bug 2); past the end, close.
   const goNext = () =>
@@ -108,7 +121,7 @@ export default function HomeStatusRail({
         <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content', px: 1.5 }}>
           <MyStatusUploadTile me={me} onView={() => setActiveIndex(0)} />
           {/* The sponsored tile sits second, right after "Your story" (mock). */}
-          <AdSlot position="STATUS" variant="tile" />
+          {ad && <AdTile ad={ad} onOpen={() => setAdOpen(true)} />}
           {entries.map((entry, entryIndex) => (
             <HomeStatusTile
               key={entry.key}
@@ -135,11 +148,13 @@ export default function HomeStatusRail({
           </Stack>
         </Stack>
       </Box>
+      {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
+          running past its end closes the viewer (which falls back to onClose). */}
       <HomeStatusViewer
         item={activeItem}
-        onClose={() => setActiveIndex(null)}
-        onNext={goNext}
-        onPrev={goPrev}
+        onClose={closeViewer}
+        onNext={adOpen ? undefined : goNext}
+        onPrev={adOpen ? undefined : goPrev}
         onDelete={activeKind === 'mine' ? setPendingDelete : undefined}
         onViewers={activeKind === 'mine' ? setViewersStoryId : undefined}
         onToggleLike={activeKind === 'user' ? handleLike : undefined}

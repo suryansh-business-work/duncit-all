@@ -21,6 +21,8 @@ import type { WaCampaignRow } from './queries';
 interface Props {
   fetchRows: TableFetch<WaCampaignRow>;
   refetchRef: MutableRefObject<(() => void) | null>;
+  /** Opens the campaign's detail view — who it reached and who it did not. */
+  onOpen: (row: WaCampaignRow) => void;
   onDelete: (row: WaCampaignRow) => void;
 }
 
@@ -48,11 +50,12 @@ const renderStatus = (row: WaCampaignRow) => (
   <StatusChip status={row.status} colorMap={WA_STATUS_COLORS} />
 );
 
-/** The first failure reason, so a partly-failed send explains itself in the
- * row rather than only in the server logs. */
-const firstFailure = (row: WaCampaignRow) => row.failures[0]?.reason ?? '—';
-
-export default function WaCampaignTable({ fetchRows, refetchRef, onDelete }: Readonly<Props>) {
+export default function WaCampaignTable({
+  fetchRows,
+  refetchRef,
+  onOpen,
+  onDelete,
+}: Readonly<Props>) {
   const columns = useMemo<DuncitColumn<WaCampaignRow>[]>(
     () => [
       {
@@ -82,14 +85,6 @@ export default function WaCampaignTable({ fetchRows, refetchRef, onDelete }: Rea
       { field: 'sent_count', headerName: 'Sent', width: 100 },
       { field: 'failed_count', headerName: 'Failed', width: 100 },
       { field: 'skipped_count', headerName: 'Skipped', width: 110 },
-      {
-        field: 'failures',
-        headerName: 'First failure',
-        sortable: false,
-        hide: true,
-        minWidth: 220,
-        valueGetter: firstFailure,
-      },
       dateColumn<WaCampaignRow>({
         field: 'sent_at',
         headerName: 'Sent at',
@@ -111,12 +106,14 @@ export default function WaCampaignTable({ fetchRows, refetchRef, onDelete }: Rea
     [onDelete]
   );
 
+
   return (
     <DuncitTable<WaCampaignRow>
       tableId="wa-campaigns"
       columns={columns}
       fetchRows={fetchRows}
       getRowId={getRowId}
+      onRowClick={onOpen}
       emptyText="No WhatsApp campaigns yet."
       defaultSort={{ field: 'created_at', dir: 'desc' }}
       searchPlaceholder="Search name or WhatsApp campaign"

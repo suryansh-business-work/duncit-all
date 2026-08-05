@@ -11,7 +11,18 @@ import {
   type TableEntityConfig,
   type TableQueryInput,
 } from '@utils/table-query';
+import { contactNumber, userContactNumber } from '@utils/contact';
 import { logs } from '@observability/log';
+
+/** Projection for a ClubActor; admins additionally carry their contact details. */
+const ACTOR_FIELDS = 'profile.first_name profile.last_name profile.profile_photo';
+const ADMIN_FIELDS = `${ACTOR_FIELDS} auth.email auth.phone communication.whatsapp`;
+
+const toClubActor = (u: any, fallbackName: string) => ({
+  id: String(u._id),
+  name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || fallbackName,
+  avatar_url: u.profile?.profile_photo ?? null,
+});
 
 const slugify = (s: string) =>
   s
@@ -242,27 +253,25 @@ export const clubService = {
       );
     }
     if (ids.length === 0) return [];
-    const users = await UserModel.find({ _id: { $in: ids } }).select(
-      'profile.first_name profile.last_name profile.profile_photo'
-    );
-    return users.map((u: any) => ({
-      id: String(u._id),
-      name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Host',
-      avatar_url: u.profile?.profile_photo ?? null,
-    }));
+    const users = await UserModel.find({ _id: { $in: ids } }).select(ACTOR_FIELDS);
+    return users.map((u: any) => toClubActor(u, 'Host'));
   },
 
-  /** Resolved profiles of a club's assigned admins (explicit only — no fallback). */
+  /** Resolved profiles of a club's assigned admins (explicit only — no fallback).
+   * Admins are the club's point of contact, so their profile contact details
+   * ride along; hosts stay name + avatar. */
   async getClubAdmins(adminIds: string[]) {
     const ids = (adminIds ?? []).filter((x) => Types.ObjectId.isValid(x));
     if (ids.length === 0) return [];
-    const users = await UserModel.find({ _id: { $in: ids } }).select(
-      'profile.first_name profile.last_name profile.profile_photo'
-    );
+    const users = await UserModel.find({ _id: { $in: ids } }).select(ADMIN_FIELDS);
     return users.map((u: any) => ({
-      id: String(u._id),
-      name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Member',
-      avatar_url: u.profile?.profile_photo ?? null,
+      ...toClubActor(u, 'Member'),
+      email: u.auth?.email ?? null,
+      phone: userContactNumber(u),
+      whatsapp: contactNumber(
+        u.communication?.whatsapp?.extension,
+        u.communication?.whatsapp?.number
+      ),
     }));
   },
 

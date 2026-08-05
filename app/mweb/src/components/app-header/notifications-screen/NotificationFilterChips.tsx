@@ -20,6 +20,10 @@ export default function NotificationFilterChips({ chips, value, onChange }: Read
         pb: 1.25,
         overflowX: 'auto',
         flexWrap: 'nowrap',
+        // The screen is a column flex container, so this row would otherwise
+        // shrink (default flex-shrink: 1) once the list below outgrows the
+        // viewport — squashing the chips to half height under the list.
+        flexShrink: 0,
         // The chip row scrolls; the page never does.
         '&::-webkit-scrollbar': { display: 'none' },
         scrollbarWidth: 'none',

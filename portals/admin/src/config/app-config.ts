@@ -81,6 +81,14 @@ export const appConfig = {
     },
     { label: 'Approvals', to: '/approvals', icon: 'survey' },
     {
+      label: 'Duncit Coin',
+      icon: 'wallet',
+      children: [
+        { label: 'Dashboard', to: '/duncit-coin/dashboard', icon: 'insights' },
+        { label: 'Transactions', to: '/duncit-coin/transactions', icon: 'receipt' },
+      ],
+    },
+    {
       label: 'Upload Settings',
       icon: 'upload',
       children: [
@@ -132,6 +140,18 @@ export const appConfig = {
     { label: 'Partner FAQs', to: '/partners/faqs', section: 'Engagement', keywords: ['partner', 'help'] },
     { label: 'Badges', to: '/badges', section: 'Engagement', keywords: ['achievement', 'reward'] },
     { label: 'Approvals', to: '/approvals', section: 'Approvals', keywords: ['approve', 'deny', 'requests'] },
+    {
+      label: 'Coin Dashboard',
+      to: '/duncit-coin/dashboard',
+      section: 'Duncit Coin',
+      keywords: ['coin', 'duncit coin', 'loyalty', 'reward', 'circulated', 'redeemed', 'outstanding'],
+    },
+    {
+      label: 'Coin Transactions',
+      to: '/duncit-coin/transactions',
+      section: 'Duncit Coin',
+      keywords: ['coin', 'ledger', 'transactions', 'earn', 'redeem', 'pod', 'logs'],
+    },
     {
       label: 'Portals Upload Setting',
       to: '/upload-settings/portals',

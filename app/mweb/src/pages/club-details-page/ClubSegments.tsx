@@ -5,6 +5,7 @@ import ClubMomentsSection from './ClubMomentsSection';
 import ClubBulletsSection from './ClubBulletsSection';
 import ClubFaqsSection from './ClubFaqsSection';
 import ClubHostsSection from './ClubHostsSection';
+import ClubAdminsSection from './ClubAdminsSection';
 
 type SegmentKey = 'PODS' | 'MOMENTS' | 'WHO' | 'WHAT' | 'PERKS' | 'VALUES' | 'FAQS' | 'HOSTS' | 'ADMINS';
 
@@ -33,14 +34,7 @@ function renderSegment(active: SegmentKey, ctx: RenderCtx) {
   if (active === 'VALUES') return <ClubBulletsSection title="Values" items={ctx.club.values ?? []} />;
   if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs ?? []} />;
   if (active === 'HOSTS') return <ClubHostsSection hosts={ctx.club.hosts ?? []} />;
-  if (active === 'ADMINS')
-    return (
-      <ClubHostsSection
-        hosts={ctx.club.club_admins ?? []}
-        title="Club Admins"
-        fallbackInitial="A"
-      />
-    );
+  if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins ?? []} />;
   return <ClubPodsScheduleSection pods={ctx.pods} priceFormat={ctx.priceFormat} onOpen={ctx.onOpenPod} />;
 }
 

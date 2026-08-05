@@ -9,18 +9,12 @@ interface Host {
 
 interface Props {
   hosts: Host[];
-  /** Section heading — the same rail renders the club's hosts and its admins. */
+  /** Section heading. */
   title?: string;
-  /** Initial shown when a person has no avatar. */
-  fallbackInitial?: string;
 }
 
-/** A rail of people linked to the club: its hosts, or its assigned admins. */
-export default function ClubHostsSection({
-  hosts,
-  title = 'Hosts',
-  fallbackInitial = 'H',
-}: Readonly<Props>) {
+/** A rail of the hosts linked to the club. */
+export default function ClubHostsSection({ hosts, title = 'Hosts' }: Readonly<Props>) {
   const navigate = useNavigate();
   if (hosts.length === 0) return null;
 
@@ -41,7 +35,7 @@ export default function ClubHostsSection({
             sx={{ cursor: 'pointer', width: 72, flex: '0 0 auto' }}
           >
             <Avatar src={host.avatar_url || undefined} sx={{ width: 56, height: 56, bgcolor: 'primary.main' }}>
-              {host.name?.[0]?.toUpperCase() || fallbackInitial}
+              {host.name?.[0]?.toUpperCase() || 'H'}
             </Avatar>
             <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center' }} noWrap>
               {host.name}

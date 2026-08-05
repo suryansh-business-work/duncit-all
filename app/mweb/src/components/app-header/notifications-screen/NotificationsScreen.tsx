@@ -86,8 +86,17 @@ export default function NotificationsScreen({
         },
       }}
     >
-      <Stack sx={{ minHeight: '100dvh', color: 'text.primary' }}>
-        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ px: 1.5, py: 1.25 }}>
+      {/* A definite height (not min-height) makes this the scroll frame: the
+          header, hero and chips stay their natural size and the list alone
+          scrolls. With min-height the rows pushed the container past the
+          viewport and every sibling was compressed to fit. */}
+      <Stack sx={{ height: '100dvh', color: 'text.primary' }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1.25}
+          sx={{ px: 1.5, py: 1.25, flexShrink: 0 }}
+        >
           <IconButton
             onClick={onClose}
             aria-label="Close notifications"
@@ -124,7 +133,9 @@ export default function NotificationsScreen({
 
         <NotificationFilterChips chips={chips} value={activeFilter} onChange={setFilter} />
 
-        <Stack spacing={1} sx={{ px: 1.5, pb: 3, overflowY: 'auto' }}>
+        {/* minHeight: 0 lets a flex child actually scroll — without it the
+            item's automatic minimum size keeps it as tall as its content. */}
+        <Stack spacing={1} sx={{ px: 1.5, pb: 3, flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {visible.length === 0 && (
             <Box sx={{ p: 3, borderRadius: '16px', bgcolor: 'background.paper', textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary">

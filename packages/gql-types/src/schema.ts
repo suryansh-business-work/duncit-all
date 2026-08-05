@@ -1275,8 +1275,21 @@ export type Club = {
 export type ClubActor = {
   __typename?: 'ClubActor';
   avatar_url?: Maybe<Scalars['String']['output']>;
+  /**
+   * Contact details lifted from the person's profile. Only a club's assigned
+   * admins carry these — they are the club's point of contact. Null on hosts,
+   * and null for any field the profile leaves empty.
+   */
+  email?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
+  /** Dialable number with its extension when stored (e.g. "+91 9876543210"). */
+  phone?: Maybe<Scalars['String']['output']>;
+  /**
+   * WhatsApp number with its extension — the client strips non-digits to build
+   * the wa.me link. Null when the admin has no WhatsApp number on file.
+   */
+  whatsapp?: Maybe<Scalars['String']['output']>;
 };
 
 /** Max-info per-club row for the Club Admin 'Your Clubs' table (myAdminClubsTable). */
@@ -1459,6 +1472,82 @@ export type CoHostStatus =
   | 'DECLINED'
   | 'PENDING';
 
+/** A pod a coin row is attributable to, named for the admin ledger. */
+export type CoinAdminPod = {
+  __typename?: 'CoinAdminPod';
+  id: Scalars['ID']['output'];
+  /** Per-club pod slug, so two pods sharing a title stay distinguishable. */
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+/** Platform-wide Duncit Coin position for Admin > Duncit Coin > Dashboard. */
+export type CoinAdminStats = {
+  __typename?: 'CoinAdminStats';
+  /** Currency the coin value is quoted in — 1 coin = 1 unit of it. */
+  currency_symbol: Scalars['String']['output'];
+  /** Percent of a payment currently granted back as coins (Admin > Pod Settings). */
+  earn_pct: Scalars['Float']['output'];
+  /** Accounts holding a non-zero balance. */
+  holders_count: Scalars['Int']['output'];
+  /** Oldest first, one entry per calendar month, empty months filled with zeroes. */
+  monthly: Array<CoinMonthBucket>;
+  /** Every coin ever granted — the sum of all CREDIT rows. */
+  total_circulated: Scalars['Float']['output'];
+  /** Circulated minus redeemed: the coins still sitting with users. */
+  total_outstanding: Scalars['Float']['output'];
+  /** Every coin ever spent at checkout — the sum of all DEBIT rows. */
+  total_redeemed: Scalars['Float']['output'];
+  /** Ledger rows written so far. */
+  transaction_count: Scalars['Int']['output'];
+  /**
+   * The same outstanding figure read from CoinBalance instead of the ledger.
+   * Exposed as a cross-check: it should equal total_outstanding, and a drift is
+   * worth seeing rather than hiding.
+   */
+  wallet_balance_total: Scalars['Float']['output'];
+};
+
+/** One coin ledger row joined to its payment and the pods that payment bought. */
+export type CoinAdminTransaction = {
+  __typename?: 'CoinAdminTransaction';
+  amount: Scalars['Float']['output'];
+  balance_after: Scalars['Float']['output'];
+  created_at: Scalars['String']['output'];
+  /** Rate in effect when these coins were granted. */
+  earn_pct: Scalars['Float']['output'];
+  id: Scalars['ID']['output'];
+  payment_id?: Maybe<Scalars['String']['output']>;
+  /** What the payment charged, so the row audits on its own. */
+  payment_total: Scalars['Float']['output'];
+  /**
+   * Every pod the payment touched. A pod ticket resolves to exactly one; a shop
+   * cart can span several, because a unified cart groups its lines by pod. Empty
+   * when the payment bought nothing pod-linked.
+   */
+  pods: Array<CoinAdminPod>;
+  reason: Scalars['String']['output'];
+  /** PAYMENT_EARN or PAYMENT_REDEEM. */
+  source: Scalars['String']['output'];
+  /** Order total the grant was computed from. */
+  spend_amount: Scalars['Float']['output'];
+  /** CREDIT or DEBIT. */
+  type: Scalars['String']['output'];
+  user_email: Scalars['String']['output'];
+  user_id: Scalars['ID']['output'];
+  /** Buyer name frozen on the payment. Empty when the row has no payment. */
+  user_name: Scalars['String']['output'];
+};
+
+/** Server-side table page for the shared table engine (coinTransactionsTable). */
+export type CoinAdminTransactionTablePage = {
+  __typename?: 'CoinAdminTransactionTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<CoinAdminTransaction>;
+  total: Scalars['Int']['output'];
+};
+
 /** A user's Duncit Coin balance. 1 coin = 1 rupee of earned reward value. */
 export type CoinBalance = {
   __typename?: 'CoinBalance';
@@ -1467,6 +1556,15 @@ export type CoinBalance = {
   earn_pct: Scalars['Float']['output'];
   /** Every coin ever earned, so the total survives future spending. */
   lifetime_earned: Scalars['Float']['output'];
+};
+
+/** One calendar month of coin flow. The client formats the label from the key. */
+export type CoinMonthBucket = {
+  __typename?: 'CoinMonthBucket';
+  earned: Scalars['Float']['output'];
+  /** Calendar month as a 'YYYY-MM' key, in UTC. */
+  month: Scalars['String']['output'];
+  redeemed: Scalars['Float']['output'];
 };
 
 /** One row of the coin ledger — insert-only, newest first. */
@@ -2608,6 +2706,8 @@ export type DummyCheckoutInput = {
   /** How the add-on products are delivered (default PICKUP). */
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill. */
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;
@@ -2630,6 +2730,8 @@ export type DummyProductCheckoutInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   items: Array<ProductCartItemInput>;
+  /** Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill. */
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
   simulate_failure?: InputMaybe<Scalars['Boolean']['input']>;
 };
@@ -8193,6 +8295,8 @@ export type Payment = {
   /** Legacy one-line billing address, composed from the structured billing block. */
   billing_address: Scalars['String']['output'];
   checkout_url: Scalars['String']['output'];
+  /** Duncit Coins spent on this payment (1 coin = 1 rupee off the gross). */
+  coins_redeemed: Scalars['Float']['output'];
   coupon_code?: Maybe<Scalars['String']['output']>;
   coupon_discount: Scalars['Float']['output'];
   created_at: Scalars['String']['output'];
@@ -9234,6 +9338,8 @@ export type ProductCheckoutInput = {
   /** Cart-level default fulfilment method (default PICKUP). */
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   items: Array<ProductCartItemInput>;
+  /** Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill. */
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
   /** Delivery address, required when any product ships. */
   shipping_address?: InputMaybe<OrderShippingAddressInput>;
 };
@@ -9703,6 +9809,10 @@ export type Query = {
   clubsTable: ClubTablePage;
   /** Approved hosts in the same sub-category who can be invited as co-hosts. Excludes the caller and anyone already invited. */
   coHostCandidates: Array<CoHostCandidate>;
+  /** Admin > Duncit Coin > Dashboard. 'months' bounds the distribution series (default 12, max 36). */
+  coinAdminStats: CoinAdminStats;
+  /** Admin > Duncit Coin > Transactions. 'pod_doc_id' scopes the page to coins settled by that pod's payments. */
+  coinTransactionsTable: CoinAdminTransactionTablePage;
   commsProvider?: Maybe<CommsProvider>;
   /**
    * Lightweight selector for portals that need to pick a provider when
@@ -10516,6 +10626,17 @@ export type QueryCoHostCandidatesArgs = {
   pod_doc_id?: InputMaybe<Scalars['ID']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   sub_category_id: Scalars['ID']['input'];
+};
+
+
+export type QueryCoinAdminStatsArgs = {
+  months?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCoinTransactionsTableArgs = {
+  pod_doc_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
 };
 
 
@@ -12018,6 +12139,8 @@ export type RazorpayOrderInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   fulfilment_method?: InputMaybe<FulfilmentMethod>;
   pod_id?: InputMaybe<Scalars['ID']['input']>;
+  /** Duncit Coins to spend (1 coin = 1 rupee off). Clamped server-side to the live balance and to the bill. */
+  redeem_coins?: InputMaybe<Scalars['Int']['input']>;
   /** Seats being booked (default 1). The ticket price is charged per seat; add-on products are charged once. */
   seats?: InputMaybe<Scalars['Int']['input']>;
   selected_products?: InputMaybe<Array<CheckoutProductSelectionInput>>;

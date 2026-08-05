@@ -51,6 +51,9 @@ export const CLUB_BY_SLUG = gql`
         id
         name
         avatar_url
+        email
+        phone
+        whatsapp
       }
       category_id
       super_category_id

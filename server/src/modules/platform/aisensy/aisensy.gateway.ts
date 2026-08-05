@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
 
 /**
  * AiSensy gateway — thin wrapper over the WhatsApp campaign API. The API key is
@@ -41,6 +42,20 @@ function errorReason(body: any, status: number): string {
   return String(body?.message ?? body?.errorMessage ?? body?.error ?? `HTTP ${status}`);
 }
 
+/**
+ * The failure message. A rejected key is reported with the NAME of the entry it
+ * came from: a category can hold several entries and only the active default is
+ * used, so "the key I just pasted is wrong" and "I pasted it into an entry that
+ * isn't the default one" look identical from AiSensy's side.
+ */
+async function failureMessage(body: any, status: number): Promise<string> {
+  const reason = errorReason(body, status);
+  if (status !== 401 && status !== 403) return `AiSensy error: ${reason} (HTTP ${status})`;
+  const entry = await envEntryService.resolveRuntime('AISENSY');
+  const source = entry ? `entry "${entry.name}"` : 'no active default entry';
+  return `AiSensy rejected the API key from ${source} (HTTP ${status}: ${reason})`;
+}
+
 /** Send one campaign message; resolves to AiSensy's submitted_message_id. */
 export async function sendCampaign(message: CampaignMessage): Promise<string> {
   const key = await apiKey();
@@ -58,7 +73,7 @@ export async function sendCampaign(message: CampaignMessage): Promise<string> {
   });
   const data: any = await res.json().catch(() => ({}));
   if (!res.ok || String(data.success) !== 'true') {
-    throw new GraphQLError(`AiSensy error: ${errorReason(data, res.status)}`, {
+    throw new GraphQLError(await failureMessage(data, res.status), {
       extensions: { code: 'BAD_GATEWAY' },
     });
   }

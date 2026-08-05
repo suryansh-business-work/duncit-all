@@ -92,6 +92,8 @@ const { calculator, graphqlUrl } = siteConfig;
     rowLabels: calculator.rowLabels,
     currency: calculator.currency,
     standardNote: calculator.note,
+    shortfallNote: calculator.shortfallNote,
+    noShareNote: calculator.noShareNote,
   }}
 >
   (() => {
@@ -117,6 +119,7 @@ const { calculator, graphqlUrl } = siteConfig;
           gst_amount
           platform_fee_amount
           venue_amount
+          club_admin_pct
           club_admin_amount
           host_receives
         }
@@ -170,11 +173,17 @@ const { calculator, graphqlUrl } = siteConfig;
       };
     };
 
+    /** The panel's own message: the standard note, or the reason this pod
+     * cannot pay this role. Warnings are red because they change the answer. */
+    const setNote = (text, warning) => {
+      note.textContent = text;
+      note.className = `mt-5 text-xs ${warning ? 'font-semibold text-primary-dark' : 'text-ink-soft'}`;
+    };
+
     const paint = () => {
       if (!latest) return;
       const w = latest.waterfall;
       label.textContent = role.takeHomeLabel;
-      takeHome.textContent = money(w[role.field] * multiplier());
       rows.innerHTML = role.rows
         .map((key) => {
           const { text, deduction } = rowValue(key, w);
@@ -182,7 +191,24 @@ const { calculator, graphqlUrl } = siteConfig;
           return `<div class="flex items-baseline justify-between gap-3"><dt class="${tone}">${rowLabels[key]}</dt><dd class="${tone}">${text}</dd></div>`;
         })
         .join('');
-      note.textContent = standardNote;
+
+      // The rate this role is paid on is zero — there is no estimate to make,
+      // and a confident ₹0 would read as "this pays nothing" rather than "this
+      // is not set up yet".
+      if (role.rateField && !w[role.rateField]) {
+        takeHome.textContent = '—';
+        takeHome.className = 'font-head text-4xl font-extrabold text-ink-soft';
+        setNote(noShareNote, true);
+        return;
+      }
+
+      const total = w[role.field] * multiplier();
+      takeHome.textContent = money(total);
+      // Nothing left, or a shortfall: the server reports the real gap rather
+      // than clamping it, so the page says what to do about it.
+      const short = total <= 0;
+      takeHome.className = `font-head text-4xl font-extrabold ${short ? 'text-primary-dark' : 'text-ink'}`;
+      setNote(short ? shortfallNote : standardNote, short);
     };
 
     // A blip after the numbers are up leaves them alone; a failure before any
@@ -191,8 +217,10 @@ const { calculator, graphqlUrl } = siteConfig;
     const failed = () => {
       if (latest) return;
       takeHome.textContent = '—';
-      note.textContent =
-        'The estimate could not be loaded right now. The figures come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.';
+      setNote(
+        'The estimate could not be loaded right now. The figures come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.',
+        true
+      );
     };
 
     let timer;

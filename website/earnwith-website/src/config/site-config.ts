@@ -202,6 +202,9 @@ export const siteConfig = {
         label: 'As a club admin',
         field: 'club_admin_amount',
         takeHomeLabel: 'A club admin takes home a month',
+        /** The share this role is paid on. Zero means the platform has not set
+         * one — the panel says that instead of showing ₹0 as if it were news. */
+        rateField: 'club_admin_pct',
         // The club admin's money is per pod and then multiplied by how many
         // pods the club runs — the rows show that sum being made.
         multiplier: 'pods',
@@ -215,6 +218,13 @@ export const siteConfig = {
       },
     ],
     note: 'An estimate at standard rates. Your own rate, and a venue’s own price, are set when you create the pod.',
+    /** Shown instead of a confident figure when the pod cannot pay this role. */
+    shortfallNote:
+      'At this ticket price the pod does not cover its costs — raise the price, add spots, or find a cheaper slot.',
+    /** A club admin is paid a share Duncit sets; at 0% there is nothing to
+     * estimate, and a cheerful ₹0 would be worse than saying so. */
+    noShareNote:
+      'Duncit has not published a standard club-admin share yet, so there is nothing to estimate here. Your club’s share is agreed with Duncit when the club is set up.',
     disclaimer:
       'This calculation is an estimate. The real number can vary with the rate agreed for your account, the venue’s own price, how many spots actually sell, refunds and taxes.',
     fields: [
@@ -245,7 +255,7 @@ export const siteConfig = {
         min: 500,
         max: 30000,
         step: 500,
-        value: 3000,
+        value: 500,
         hint: 'What the venue bills for the slot.',
       },
       {

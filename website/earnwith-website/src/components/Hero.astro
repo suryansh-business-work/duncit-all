@@ -1,14 +1,9 @@
 ---
 import { siteConfig } from '../config/site-config';
 import SmartLink from './SmartLink.astro';
+import RibbonMarquee from './RibbonMarquee.astro';
 const { hero } = siteConfig;
 
-// The marquee runs forever by scrolling exactly half the track and resetting —
-// the copies land where the previous ones were, so the reset is invisible.
-// FOUR copies, not two: half a two-copy track is barely a desktop width, and a
-// track narrower than the band would run out and show the gap it resets across.
-const ribbonRun = `${hero.ribbon.join('  •  ')}  •  `;
-const ribbonCopies = [ribbonRun, ribbonRun, ribbonRun, ribbonRun];
 ---
 
 <section class="relative isolate flex min-h-[86svh] items-center overflow-hidden">
@@ -53,14 +48,10 @@ const ribbonCopies = [ribbonRun, ribbonRun, ribbonRun, ribbonRun];
     </div>
   </div>
 
-  <!-- Decorative: the words are already in the copy above, and a screen reader
-       reading a loop of slogans helps nobody. -->
-  <div class="ribbon-stage" aria-hidden="true">
-    <div class="ribbon-band">
-      <div class="ribbon-track">
-        {ribbonCopies.map((copy) => <span class="ribbon-run">{copy}</span>)}
-      </div>
-    </div>
+  <!-- The band straddles the banner's lower edge; the component owns the band
+       and its motion, this owns where it sits. -->
+  <div class="absolute right-[-4%] bottom-14 left-[-4%]">
+    <RibbonMarquee />
   </div>
 </section>
 
@@ -74,78 +65,4 @@ const ribbonCopies = [ribbonRun, ribbonRun, ribbonRun, ribbonRun];
     );
   }
 
-  /* A physical band tilted away from the reader: perspective on the stage, the
-     tilt on the band, so the text inside inherits the same plane and the whole
-     thing reads as one ribbon rather than skewed lettering. */
-  .ribbon-stage {
-    position: absolute;
-    right: -4%;
-    bottom: 3.5rem;
-    left: -4%;
-    perspective: 700px;
-    pointer-events: none;
-  }
-
-  .ribbon-band {
-    overflow: hidden;
-    padding: 0.85rem 0;
-    background: linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--color-primary) 82%, white) 0%,
-      var(--color-primary) 45%,
-      var(--color-primary-dark) 100%
-    );
-    /* The lift: tilted back, turned a degree off level, and shadowed under the
-       lower edge so it sits above the photograph instead of on it. */
-    transform: rotateX(16deg) rotate(-1.6deg);
-    transform-style: preserve-3d;
-    box-shadow:
-      0 18px 30px -12px rgba(0, 0, 0, 0.55),
-      inset 0 1px 0 rgba(255, 255, 255, 0.45),
-      inset 0 -2px 6px rgba(0, 0, 0, 0.22);
-  }
-
-  .ribbon-track {
-    display: flex;
-    width: max-content;
-    animation: ribbon-marquee 26s linear infinite;
-  }
-
-  .ribbon-run {
-    padding-right: 1.5rem;
-    font-family: var(--font-head);
-    font-size: 0.95rem;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    color: #fff;
-    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
-  }
-
-  /* Exactly half the track — the second copy has arrived where the first
-     started, so the reset is invisible. */
-  @keyframes ribbon-marquee {
-    from {
-      transform: translate3d(0, 0, 0);
-    }
-    to {
-      transform: translate3d(-50%, 0, 0);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ribbon-track {
-      animation: none;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .ribbon-band {
-      transform: rotateX(12deg) rotate(-2.2deg);
-    }
-    .ribbon-run {
-      font-size: 0.8rem;
-    }
-  }
 </style>

@@ -12,9 +12,13 @@ interface Props {
   href: string;
   class?: string;
   label?: string;
+  /** Hide the glyph on links whose content is already a mark of its own (a
+   * brand icon). The new tab and the spoken warning stay — only the arrow
+   * beside an icon, which reads as clutter, goes. */
+  glyph?: boolean;
 }
 
-const { href, class: className = '', label } = Astro.props;
+const { href, class: className = '', label, glyph = true } = Astro.props;
 
 // An absolute http(s) URL is off this site; '#anchor' and '/path' are not.
 const isExternal = /^https?:\/\//i.test(href);
@@ -24,7 +28,9 @@ const isExternal = /^https?:\/\//i.test(href);
   isExternal ? (
     <a href={href} class={className} target="_blank" rel="noopener noreferrer">
       <slot />
-      <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[0.7em] opacity-70" aria-hidden="true" />
+      {glyph && (
+        <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[0.7em] opacity-70" aria-hidden="true" />
+      )}
       <span class="sr-only">{label ? `${label} — opens in a new tab` : '(opens in a new tab)'}</span>
     </a>
   ) : (

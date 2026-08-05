@@ -5,6 +5,7 @@
 import { siteConfig } from '../config/site-config';
 import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
 import NewsletterSignup from './NewsletterSignup.astro';
+import RibbonMarquee from './RibbonMarquee.astro';
 import SmartLink from './SmartLink.astro';
 
 const { footer, mainSiteUrl } = siteConfig;
@@ -45,7 +46,12 @@ const footerLogo =
   branding.website_footer_logo_url || branding.website_header_logo_url || '/duncit-logo.svg';
 ---
 
-<footer class="mt-8 border-t border-line bg-surface/60">
+<footer class="mt-8 bg-surface/60">
+  <!-- The same band that closes the banner opens the footer, so the page ends
+       on the note it started with. It replaces the footer's top hairline. -->
+  <div class="mx-[-4%] overflow-hidden pt-2 pb-6">
+    <RibbonMarquee tilt={8} seconds={32} />
+  </div>
   <!-- Brand and the one thing we ask for, side by side: the address field is
        the footer's job, not a strip bolted above it. -->
   <div class="mx-auto grid max-w-6xl items-start gap-10 px-5 py-12 lg:grid-cols-[1fr_1.1fr]">
@@ -67,6 +73,7 @@ const footerLogo =
               <SmartLink
                 href={account.href}
                 label={account.label}
+                glyph={false}
                 class="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink-soft transition hover:border-primary hover:text-primary"
               >
                 <i class={`fa-brands ${account.icon}`} aria-hidden="true" />

@@ -23,7 +23,7 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
      of the page by script. The other way round, a failed script would leave
      white nav text on the cream background — invisible. -->
 <header
-  class={`site-header ${position} z-30 border-b border-black/5 bg-cream/80 backdrop-blur`}
+  class={`site-header ${position} z-30 bg-cream/85 backdrop-blur`}
   data-overlay={overlay ? 'true' : undefined}
 >
   <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
@@ -46,6 +46,15 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
     </div>
 
     <div class="flex items-center gap-2 sm:gap-3">
+      <button
+        type="button"
+        class="theme-toggle flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink transition hover:border-ink/30"
+        data-theme-toggle
+        aria-label="Switch between light and dark"
+        aria-pressed="false"
+      >
+        <i class="fa-solid fa-moon text-sm" data-theme-icon aria-hidden="true"></i>
+      </button>
       <SmartLink
         href={nav.login.href}
         label={nav.login.label}
@@ -65,6 +74,15 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 </header>
 
 <style>
+  /* No hairline under the bar. Once the page scrolls, a soft shadow does the
+     separating instead — the bar still ends somewhere, without a drawn line. */
+  .site-header {
+    transition: box-shadow 200ms ease, background-color 200ms ease;
+  }
+  .site-header:not(.at-top) {
+    box-shadow: 0 6px 24px -12px rgba(9, 7, 18, 0.35);
+  }
+
   /* Only a header declared as an overlay ever goes transparent, and only while
      the page is still at the top. */
   .site-header[data-overlay].at-top {
@@ -80,9 +98,13 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
      `.nav-link[data-astro-cid-header]`, matches nothing, and the nav stays
      dark-on-photograph: exactly the bug this fixes. */
   .site-header[data-overlay].at-top :global(.nav-link),
-  .site-header[data-overlay].at-top :global(.login-link) {
+  .site-header[data-overlay].at-top :global(.login-link),
+  .site-header[data-overlay].at-top .theme-toggle {
     color: #fff;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  }
+  .site-header[data-overlay].at-top .theme-toggle {
+    border-color: rgba(255, 255, 255, 0.45);
   }
   .site-header[data-overlay].at-top :global(.login-link) {
     border-color: rgba(255, 255, 255, 0.55);
@@ -100,10 +122,32 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 
 <script>
   // Transparent while the banner is behind it, solid once the page scrolls.
-  const header = document.querySelector<HTMLElement>('.site-header[data-overlay]');
+  // The class is on every header so the scrolled shadow works on pages with
+  // no banner too; only an overlay header reads it for transparency.
+  const header = document.querySelector<HTMLElement>('.site-header');
   if (header) {
     const sync = () => header.classList.toggle('at-top', window.scrollY <= 24);
     sync();
     window.addEventListener('scroll', sync, { passive: true });
+  }
+
+  // The theme itself is applied before first paint by the layout; this button
+  // only changes and remembers it.
+  const toggle = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');
+  const icon = document.querySelector<HTMLElement>('[data-theme-icon]');
+  if (toggle && icon) {
+    const paint = () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      toggle.setAttribute('aria-pressed', String(dark));
+      // The icon shows what a press GIVES you, not where you are.
+      icon.className = `fa-solid ${dark ? 'fa-sun' : 'fa-moon'} text-sm`;
+    };
+    paint();
+    toggle.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem('duncit-theme', next);
+      paint();
+    });
   }
 </script>

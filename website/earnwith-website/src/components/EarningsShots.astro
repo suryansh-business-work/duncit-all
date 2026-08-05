@@ -17,7 +17,7 @@ const { screenshots } = siteConfig;
 
       <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {screenshots.items.map((shot) => (
-          <figure class="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm">
+          <figure class="overflow-hidden rounded-3xl border border-line bg-surface shadow-sm">
             <img
               src={shot.image}
               alt={shot.alt}
@@ -26,7 +26,7 @@ const { screenshots } = siteConfig;
               class="w-full object-cover"
               loading="lazy"
             />
-            <figcaption class="border-t border-black/5 px-5 py-4">
+            <figcaption class="border-t border-line px-5 py-4">
               <span class="block font-head text-base font-extrabold text-ink">{shot.title}</span>
               <span class="mt-1 block text-sm text-ink-soft">{shot.text}</span>
             </figcaption>

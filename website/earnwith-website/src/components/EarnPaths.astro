@@ -4,7 +4,7 @@ import SmartLink from './SmartLink.astro';
 const { paths } = siteConfig;
 ---
 
-<section id="paths" class="scroll-mt-20 bg-white/70 py-16">
+<section id="paths" class="scroll-mt-20 bg-surface/70 py-16">
   <div class="mx-auto max-w-6xl px-5">
     <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">Earn with Duncit</p>
     <h2 class="mt-2 text-center text-3xl text-ink sm:text-4xl">
@@ -14,7 +14,7 @@ const { paths } = siteConfig;
     <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {
         paths.map((path) => (
-          <article class="flex flex-col overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <article class="flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-sm transition hover:-translate-y-1 hover:shadow-md">
             <img
               src={path.image}
               alt={path.imageAlt}

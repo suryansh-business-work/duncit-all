@@ -273,10 +273,14 @@ export const siteConfig = {
     items: [] as { image: string; alt: string; title: string; text: string }[],
   },
   newsletter: {
-    heading: 'Earning tips, once a month',
-    text: 'What is working for hosts, venues and clubs on Duncit — no more than one email a month.',
+    heading: 'Earning tips',
+    text: 'What is working for hosts, venues and clubs on Duncit.',
     placeholder: 'you@example.com',
     button: 'Subscribe',
+    /** Consent is taken before the address is sent, not assumed from typing
+     * one in — and it names what is being agreed to. */
+    consent: 'I agree to receive emails from Duncit and accept the',
+    consentLinkLabel: 'privacy policy',
     /** Where the subscription came from, for the CRM's own reporting. */
     source: 'WEBSITE_FOOTER',
   },

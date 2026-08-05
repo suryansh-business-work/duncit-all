@@ -1,11 +1,12 @@
 ---
 import { siteConfig } from '../config/site-config';
-const { newsletter, graphqlUrl } = siteConfig;
+import SmartLink from './SmartLink.astro';
+const { newsletter, graphqlUrl, mainSiteUrl } = siteConfig;
 ---
 
 <!-- Subscribes through the same CRM the campaigns read, tagged with where it
      came from — not a mailing list living only on this site. -->
-<div class="rounded-2xl border border-black/5 bg-white p-6 shadow-sm">
+<div class="rounded-2xl border border-line bg-surface p-6 shadow-sm">
   <h3 class="font-head text-lg font-extrabold text-ink">{newsletter.heading}</h3>
   <p class="mt-1 text-sm text-ink-soft">{newsletter.text}</p>
   <form class="mt-4 flex flex-wrap gap-2" data-newsletter novalidate>
@@ -17,7 +18,7 @@ const { newsletter, graphqlUrl } = siteConfig;
       required
       autocomplete="email"
       placeholder={newsletter.placeholder}
-      class="min-w-0 grow rounded-full border border-ink/15 bg-white px-4 py-2.5 text-sm text-ink outline-none transition focus:border-primary"
+      class="min-w-0 grow rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none transition focus:border-primary"
     />
     <button
       type="submit"
@@ -25,6 +26,25 @@ const { newsletter, graphqlUrl } = siteConfig;
     >
       {newsletter.button}
     </button>
+
+    <label class="flex w-full items-start gap-2 text-xs text-ink-soft">
+      <input
+        type="checkbox"
+        name="consent"
+        required
+        class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
+      />
+      <span>
+        {newsletter.consent}{' '}
+        <SmartLink
+          href={`${mainSiteUrl}/policies`}
+          label={newsletter.consentLinkLabel}
+          class="font-semibold text-primary hover:underline"
+        >
+          {newsletter.consentLinkLabel}
+        </SmartLink>.
+      </span>
+    </label>
   </form>
   <p class="mt-2 min-h-[1.25rem] text-xs" data-newsletter-status role="status" aria-live="polite"></p>
 </div>
@@ -44,8 +64,9 @@ const { newsletter, graphqlUrl } = siteConfig;
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const email = new FormData(form).get('email');
-      // The browser's own check first — a malformed address never becomes a
-      // round trip, and the message is the one the field already knows.
+      // The browser's own checks first — a malformed address, or an unticked
+      // consent box, never becomes a round trip, and the message is the one
+      // the field already knows how to say.
       if (!form.reportValidity()) return;
       button.disabled = true;
       say('Subscribing…', false);

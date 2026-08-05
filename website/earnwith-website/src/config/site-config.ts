@@ -163,14 +163,51 @@ export const siteConfig = {
     text:
       'Move the sliders and see what reaches you after GST, the platform fee and what the venue charges. Your own seat is free, so a pod bills every spot but yours.',
     currency: '₹',
-    takeHomeLabel: 'You take home',
     rowLabels: {
       gross: 'Tickets collected',
       gst: 'GST',
       platform: 'Platform fee',
       venue: 'Venue charge',
+      clubAdmin: 'Club admin share',
     },
+    /**
+     * The two people a pod pays. Both read the SAME waterfall the server
+     * returns — `field` picks which line of it is that role's money, so the two
+     * tabs can never disagree about the same pod.
+     */
+    roles: [
+      {
+        key: 'host',
+        label: 'As a host',
+        field: 'host_receives',
+        takeHomeLabel: 'A host takes home',
+        // Deductions shown above the take-home, in the order money leaves.
+        rows: ['gross', 'gst', 'platform', 'venue', 'clubAdmin'],
+        dutiesTitle: 'What a host does',
+        duties: [
+          'Bring the people together and fill the pod',
+          'Plan the pod and keep the experience good',
+          'Be there on the day and host it properly',
+          'Settle the venue and keep the details honest',
+        ],
+      },
+      {
+        key: 'club_admin',
+        label: 'As a club admin',
+        field: 'club_admin_amount',
+        takeHomeLabel: 'A club admin takes home',
+        rows: ['gross', 'gst', 'platform'],
+        dutiesTitle: 'What a club admin does',
+        duties: [
+          'Manage the club and grow its members',
+          'Manage the hosts and the pods they run',
+          'Be the one point of support for the club',
+        ],
+      },
+    ],
     note: 'An estimate at standard rates. Your own rate, and a venue’s own price, are set when you create the pod.',
+    disclaimer:
+      'This calculation is an estimate. The real number can vary with the rate agreed for your account, the venue’s own price, how many spots actually sell, refunds and taxes.',
     fields: [
       {
         name: 'ticket',

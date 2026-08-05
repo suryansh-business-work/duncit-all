@@ -4,26 +4,41 @@ const { calculator, graphqlUrl } = siteConfig;
 ---
 
 <!-- The interactive piece: move the three inputs, watch what a pod actually
-     pays. Every number below the inputs comes from the server's own settlement
-     waterfall, so this page cannot drift from what a host is really paid. -->
+     pays — as a host, or as the club admin whose club it runs under. Every
+     figure comes from the server's own settlement waterfall, so this page
+     cannot drift from what either of them is really paid. -->
 <section id="calculator" class="mx-auto max-w-6xl scroll-mt-24 px-5 py-14">
   <div class="rounded-3xl border border-black/5 bg-white p-6 shadow-sm sm:p-10">
     <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{calculator.eyebrow}</p>
     <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{calculator.heading}</h2>
     <p class="mt-3 max-w-2xl text-ink-soft">{calculator.text}</p>
 
-    <div class="mt-8 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
+    <div class="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Whose earnings">
+      {
+        calculator.roles.map((role, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`earn-tab-${role.key}`}
+            data-role-tab={role.key}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            aria-controls="earn-result"
+            class="rounded-full border border-ink/15 px-5 py-2 text-sm font-bold text-ink-soft transition aria-selected:border-primary aria-selected:bg-primary aria-selected:text-white"
+          >
+            {role.label}
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="mt-6 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
       <form class="grid gap-6" data-earn-form novalidate>
         {
           calculator.fields.map((field) => (
             <label class="block">
               <span class="flex items-baseline justify-between gap-3">
                 <span class="text-sm font-bold text-ink">{field.label}</span>
-                <output
-                  class="font-head text-lg font-extrabold text-primary"
-                  data-out={field.name}
-                  for={field.name}
-                />
+                <output class="font-head text-lg font-extrabold text-primary" data-out={field.name} for={field.name} />
               </span>
               <input
                 class="mt-3 w-full accent-[var(--color-primary)]"
@@ -42,26 +57,57 @@ const { calculator, graphqlUrl } = siteConfig;
         }
       </form>
 
-      <div class="rounded-2xl bg-cream p-6" aria-live="polite" data-earn-result>
-        <div class="flex items-baseline justify-between gap-3">
-          <span class="text-sm font-bold text-ink-soft">{calculator.takeHomeLabel}</span>
-          <span class="font-head text-4xl font-extrabold text-ink" data-earn-takehome>—</span>
+      <div class="grid gap-4">
+        <div id="earn-result" role="tabpanel" class="rounded-2xl bg-cream p-6" aria-live="polite">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-sm font-bold text-ink-soft" data-earn-label>
+              {calculator.roles[0].takeHomeLabel}
+            </span>
+            <span class="font-head text-4xl font-extrabold text-ink" data-earn-takehome>—</span>
+          </div>
+          <dl class="mt-5 space-y-2 text-sm" data-earn-rows></dl>
+          <p class="mt-5 text-xs text-ink-soft" data-earn-note>{calculator.note}</p>
         </div>
-        <dl class="mt-5 space-y-2 text-sm" data-earn-rows></dl>
-        <p class="mt-5 text-xs text-ink-soft" data-earn-note>{calculator.note}</p>
+
+        <!-- Beside the money, the job: what that role is actually signing up
+             for. The two move together, so neither is read on its own. -->
+        <div class="rounded-2xl border border-black/5 p-6">
+          <h3 class="font-head text-base font-extrabold text-ink" data-duties-title>
+            {calculator.roles[0].dutiesTitle}
+          </h3>
+          <ul class="mt-3 space-y-2" data-duties></ul>
+        </div>
       </div>
     </div>
+
+    <p class="mt-6 text-xs text-ink-soft">{calculator.disclaimer}</p>
   </div>
 </section>
 
-<script is:inline define:vars={{ graphqlUrl, rowLabels: calculator.rowLabels, currency: calculator.currency }}>
+<script
+  is:inline
+  define:vars={{
+    graphqlUrl,
+    roles: calculator.roles,
+    rowLabels: calculator.rowLabels,
+    currency: calculator.currency,
+    standardNote: calculator.note,
+  }}
+>
   (() => {
     const form = document.querySelector('[data-earn-form]');
     if (!form) return;
     const rows = document.querySelector('[data-earn-rows]');
     const takeHome = document.querySelector('[data-earn-takehome]');
-    const money = (value) =>
-      `${currency}${Math.round(value).toLocaleString('en-IN')}`;
+    const label = document.querySelector('[data-earn-label]');
+    const dutiesTitle = document.querySelector('[data-duties-title]');
+    const duties = document.querySelector('[data-duties]');
+    const note = document.querySelector('[data-earn-note]');
+    const tabs = [...document.querySelectorAll('[data-role-tab]')];
+
+    let role = roles[0];
+    let latest = null;
+    const money = (value) => `${currency}${Math.round(value).toLocaleString('en-IN')}`;
 
     const QUERY = `query PublicPodEarnings($amount: Float!, $spots: Int!, $venue: Float) {
       publicPodEarningsEstimate(pod_amount: $amount, no_of_spots: $spots, venue_amount: $venue) {
@@ -71,39 +117,54 @@ const { calculator, graphqlUrl } = siteConfig;
           gst_amount
           platform_fee_amount
           venue_amount
+          club_admin_amount
           host_receives
         }
       }
     }`;
 
-    const paint = (data) => {
-      const w = data.waterfall;
-      takeHome.textContent = money(w.host_receives);
-      // Gross first, then what comes off it, in the order the money leaves.
-      const lines = [
-        [rowLabels.gross, w.amount, false],
-        [rowLabels.gst, w.gst_amount, true],
-        [rowLabels.platform, w.platform_fee_amount, true],
-        [rowLabels.venue, w.venue_amount, true],
-      ];
-      rows.innerHTML = lines
-        .map(([label, value, deduction]) => {
-          const shown = deduction && value > 0 ? `− ${money(value)}` : money(value);
-          const tone = deduction ? 'text-ink-soft' : 'font-bold text-ink';
-          return `<div class="flex items-baseline justify-between gap-3"><dt class="${tone}">${label}</dt><dd class="${tone}">${shown}</dd></div>`;
-        })
+    // Which waterfall line each row shows. One map, so a row can never be
+    // labelled as one thing and filled from another.
+    const ROW_FIELD = {
+      gross: 'amount',
+      gst: 'gst_amount',
+      platform: 'platform_fee_amount',
+      venue: 'venue_amount',
+      clubAdmin: 'club_admin_amount',
+    };
+
+    const paintDuties = () => {
+      dutiesTitle.textContent = role.dutiesTitle;
+      duties.innerHTML = role.duties
+        .map(
+          (duty) =>
+            `<li class="flex gap-2 text-sm text-ink-soft"><i class="fa-solid fa-check mt-1 text-xs text-primary" aria-hidden="true"></i><span>${duty}</span></li>`
+        )
         .join('');
     };
 
-    const note = document.querySelector('[data-earn-note]');
-    const standardNote = note.textContent;
-    let painted = false;
+    const paint = () => {
+      if (!latest) return;
+      const w = latest.waterfall;
+      label.textContent = role.takeHomeLabel;
+      takeHome.textContent = money(w[role.field]);
+      rows.innerHTML = role.rows
+        .map((key) => {
+          const value = w[ROW_FIELD[key]];
+          const deduction = key !== 'gross';
+          const shown = deduction && value > 0 ? `− ${money(value)}` : money(value);
+          const tone = deduction ? 'text-ink-soft' : 'font-bold text-ink';
+          return `<div class="flex items-baseline justify-between gap-3"><dt class="${tone}">${rowLabels[key]}</dt><dd class="${tone}">${shown}</dd></div>`;
+        })
+        .join('');
+      note.textContent = standardNote;
+    };
 
     // A blip after the numbers are up leaves them alone; a failure before any
     // numbers exist has to SAY so — an em dash and an empty list read as a
     // broken page, which is exactly what it looks like from the outside.
     const failed = () => {
-      if (painted) return;
+      if (latest) return;
       takeHome.textContent = '—';
       note.textContent =
         'The estimate could not be loaded right now. The figures come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.';
@@ -126,9 +187,8 @@ const { calculator, graphqlUrl } = siteConfig;
         const json = await res.json();
         const data = json?.data?.publicPodEarningsEstimate;
         if (data) {
-          paint(data);
-          painted = true;
-          note.textContent = standardNote;
+          latest = data;
+          paint();
         } else {
           failed();
         }
@@ -147,6 +207,17 @@ const { calculator, graphqlUrl } = siteConfig;
       }
     };
 
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        role = roles.find((r) => r.key === tab.dataset.roleTab) ?? roles[0];
+        for (const other of tabs) other.setAttribute('aria-selected', String(other === tab));
+        paintDuties();
+        // Same figures, different line of them — switching roles asks the
+        // server nothing.
+        paint();
+      });
+    }
+
     form.addEventListener('input', () => {
       syncLabels();
       // The server does the maths; dragging a slider must not fire a request
@@ -156,6 +227,7 @@ const { calculator, graphqlUrl } = siteConfig;
     });
 
     syncLabels();
+    paintDuties();
     request();
   })();
 </script>

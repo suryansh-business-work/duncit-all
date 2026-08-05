@@ -68,20 +68,28 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
   /* Only a header declared as an overlay ever goes transparent, and only while
      the page is still at the top. */
   .site-header[data-overlay].at-top {
-    background: transparent;
+    /* Not flat transparent: the banner behind it can be bright, and white nav
+       on a bright photograph is the same unreadable as dark nav was. A top-down
+       scrim keeps the picture visible and the words legible. */
+    background: linear-gradient(180deg, rgba(9, 7, 18, 0.55) 0%, rgba(9, 7, 18, 0) 100%);
     backdrop-filter: none;
     border-color: transparent;
   }
-  .site-header[data-overlay].at-top .nav-link,
-  .site-header[data-overlay].at-top .login-link {
+  /* :global on purpose — these anchors are rendered by SmartLink, so they carry
+     ITS scope id, not this component's. A plain scoped selector compiles to
+     `.nav-link[data-astro-cid-header]`, matches nothing, and the nav stays
+     dark-on-photograph: exactly the bug this fixes. */
+  .site-header[data-overlay].at-top :global(.nav-link),
+  .site-header[data-overlay].at-top :global(.login-link) {
     color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
   }
-  .site-header[data-overlay].at-top .login-link {
-    border-color: rgba(255, 255, 255, 0.45);
+  .site-header[data-overlay].at-top :global(.login-link) {
+    border-color: rgba(255, 255, 255, 0.55);
+    background: rgba(255, 255, 255, 0.12);
   }
-  .site-header[data-overlay].at-top .nav-link:hover {
-    color: #fff;
-    opacity: 0.8;
+  .site-header[data-overlay].at-top :global(.nav-link:hover) {
+    opacity: 0.75;
   }
   /* The logo is a coloured mark on a photograph — a soft shadow keeps its
      edges off a bright frame without recolouring it. */

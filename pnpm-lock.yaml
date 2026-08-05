@@ -467,6 +467,12 @@ importers:
         specifier: 1.6.1
         version: 1.6.1(@types/node@25.9.4)(jsdom@25.0.1)(lightningcss@1.32.0)(terser@5.49.0)
 
+  packages/brand:
+    dependencies:
+      astro:
+        specifier: ^5.7.10
+        version: 5.18.1(@types/node@25.9.4)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(terser@5.49.0)(typescript@5.9.3)(yaml@2.9.0)
+
   packages/breadcrumb:
     devDependencies:
       '@mui/icons-material':
@@ -4020,6 +4026,9 @@ importers:
 
   website/ads-website:
     dependencies:
+      '@duncit/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -4045,6 +4054,9 @@ importers:
 
   website/earnwith-website:
     dependencies:
+      '@duncit/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
@@ -4070,6 +4082,9 @@ importers:
 
   website/main-website:
     dependencies:
+      '@duncit/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@duncit/i18n':
         specifier: workspace:*
         version: link:../../packages/i18n
@@ -4104,6 +4119,9 @@ importers:
 
   website/partners-website:
     dependencies:
+      '@duncit/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

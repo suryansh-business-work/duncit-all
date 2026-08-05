@@ -4,6 +4,7 @@
 // portal's active policies — both baked in at build time with safe fallbacks.
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import FooterLogo from '@duncit/brand/FooterLogo.astro';
 import SmartLink from './SmartLink.astro';
 
 // Chrome copy comes from Admin > Localization, baked in at build time with the
@@ -11,7 +12,6 @@ import SmartLink from './SmartLink.astro';
 // they are content from the Navigation manager, fetched below.
 const { t } = await getTranslator();
 const branding = await fetchBranding();
-const footerLogo = branding.website_footer_logo_url || '/duncit-logo.svg';
 
 const FALLBACK_COLUMNS = [
   {
@@ -58,9 +58,12 @@ const year = new Date().getFullYear();
 <footer class="bg-cream rounded-3xl mt-3 pt-16 pb-8 px-6">
   <div class="max-w-6xl mx-auto">
     <div class="grid md:grid-cols-2 gap-8 items-center">
-      <a href="/" class="inline-block">
-        <img src={footerLogo} alt={branding.app_name} class="h-16 sm:h-24 w-auto" />
-      </a>
+      <FooterLogo
+        footerSrc={branding.website_footer_logo_url}
+        headerSrc={branding.website_header_logo_url}
+        name={branding.app_name}
+        height={112}
+      />
       <div class="md:text-right">
         <p class="font-head font-bold text-ink mb-3">{t('website.footer.newsletterTitle')}</p>
         <form
@@ -111,7 +114,7 @@ const year = new Date().getFullYear();
           {
             policies.map((policy) => (
               <li>
-                <a href={`/policy?slug=${policy.slug}`} class="hover:text-primary">
+                <a href={`/policy/${policy.slug}`} class="hover:text-primary">
                   {policy.title}
                 </a>
               </li>

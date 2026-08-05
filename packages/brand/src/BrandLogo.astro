@@ -1,0 +1,93 @@
+---
+/**
+ * The Duncit mark.
+ *
+ * Five websites drew this five ways: one had a component, three inlined an
+ * `<img>` with their own fallback, and each picked its own height — so the same
+ * logo was a different size on every domain and the "no logo uploaded yet"
+ * state existed in only one of them.
+ *
+ * The admin's uploaded logo (Branding → Website Logos) is what renders. There
+ * is deliberately NO network call here: every site already fetches branding for
+ * its favicon and footer, and a component that fetched again would double every
+ * page's build-time requests. The caller passes the URL it already has.
+ */
+interface Props {
+  /** The admin's logo URL. Empty or missing renders the wordmark instead. */
+  src?: string | null;
+  /** Alt text / wordmark label. */
+  name?: string;
+  /** Rendered height in px. */
+  height?: number;
+  /** Where the mark links to. `null` renders it as a plain image. */
+  href?: string | null;
+  class?: string;
+  /** `eager` on the mark in the header — it is above the fold on every page. */
+  loading?: 'eager' | 'lazy';
+}
+
+const {
+  src = null,
+  name = 'Duncit',
+  height = 56,
+  href = '/',
+  class: className = '',
+  loading = 'eager',
+} = Astro.props;
+
+// The wordmark scales off the height so one number controls the whole mark.
+const padding = Math.round(height * 0.3);
+const fontSize = Math.round(height * 0.5);
+---
+
+{
+  href ? (
+    <a href={href} class:list={['inline-flex items-center', className]} aria-label={`${name} — home`}>
+      {src ? (
+        <img src={src} alt={name} style={`height:${height}px; width:auto`} loading={loading} />
+      ) : (
+        <span
+          class="duncit-wordmark inline-flex items-center justify-center"
+          style={`height:${height}px; padding-inline:${padding}px`}
+        >
+          <span class="duncit-wordmark-text" style={`font-size:${fontSize}px`}>
+            duncit
+          </span>
+        </span>
+      )}
+    </a>
+  ) : (
+    <span class:list={['inline-flex items-center', className]}>
+      {src ? (
+        <img src={src} alt={name} style={`height:${height}px; width:auto`} loading={loading} />
+      ) : (
+        <span
+          class="duncit-wordmark inline-flex items-center justify-center"
+          style={`height:${height}px; padding-inline:${padding}px`}
+        >
+          <span class="duncit-wordmark-text" style={`font-size:${fontSize}px`}>
+            duncit
+          </span>
+        </span>
+      )}
+    </span>
+  )
+}
+
+<style>
+  /* The stand-in mark. Written in plain CSS with the brand red hard-coded
+     rather than a Tailwind token: this component is shared by five sites and
+     cannot assume any of them declared the same token names. */
+  .duncit-wordmark {
+    border-radius: 0.75rem;
+    background: #ff5757;
+  }
+  .duncit-wordmark-text {
+    font-family: 'Baloo 2', 'Quicksand', system-ui, sans-serif;
+    font-weight: 900;
+    color: #fff;
+    text-transform: lowercase;
+    letter-spacing: -0.045em;
+    line-height: 1;
+  }
+</style>

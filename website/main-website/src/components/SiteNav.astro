@@ -67,7 +67,7 @@ const sections = [
     title: 'Policy Hub',
     icon: 'fa-lock',
     links: [
-      ...policies.map((policy) => ({ href: `/policy?slug=${policy.slug}`, label: policy.title })),
+      ...policies.map((policy) => ({ href: `/policy/${policy.slug}`, label: policy.title })),
       { href: '/policies', label: 'All policies' },
     ],
   },
@@ -87,7 +87,7 @@ const sections = [
   aria-hidden="true"
 >
   <div class="flex items-center justify-between p-5 border-b border-ink/10">
-    <BrandLogo height={38} />
+    <BrandLogo height={48} />
     <div class="flex items-center gap-2">
       <!-- The theme lives with the menu rather than in the page chrome: every
            page here opens on a photograph, and a toggle on top of one is a

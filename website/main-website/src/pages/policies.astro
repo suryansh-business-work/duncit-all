@@ -48,7 +48,7 @@ import PageLayout from '../layouts/PageLayout.astro';
       target.innerHTML = policies
         .map(
           (policy) => `
-            <a href="/policy?slug=${encodeURIComponent(policy.slug)}"
+            <a href="/policy/${encodeURIComponent(policy.slug)}"
                class="glass rounded-2xl p-5 flex items-center justify-between gap-3 hover:-translate-y-0.5 transition">
               <span>
                 <span class="block font-head font-extrabold text-lg text-ink">${esc(policy.title)}</span>

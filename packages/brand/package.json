@@ -1,0 +1,20 @@
+{
+  "name": "@duncit/brand",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Duncit mark, as Astro components. Every website's header and footer logo comes from here so the admin's uploaded logo — and the wordmark that stands in when there is none — is drawn one way, in one place.",
+  "exports": {
+    "./BrandLogo.astro": "./src/BrandLogo.astro",
+    "./FooterLogo.astro": "./src/FooterLogo.astro"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "e2e": "node ../../scripts/e2e-no-surface.mjs @duncit/brand"
+  },
+  "peerDependencies": {
+    "astro": "^5.7.10"
+  }
+}

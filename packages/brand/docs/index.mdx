@@ -1,0 +1,77 @@
+---
+title: '@duncit/brand'
+description: The Duncit mark, as Astro components — one header logo and one footer logo for every website.
+package: '@duncit/brand'
+---
+
+## Why this exists
+
+Five websites drew the same logo five ways. `main-website` had a component with a
+wordmark fallback; `ads-website`, `earnwith-website` and `partners-website` each inlined
+an `<img>` with `|| '/duncit-logo.svg'` behind it; every one of them picked its own
+height. So the same admin-uploaded logo rendered at a different size on every domain, and
+the "no logo uploaded yet" state existed on exactly one of them.
+
+## Use it
+
+```astro
+---
+import BrandLogo from '@duncit/brand/BrandLogo.astro';
+import FooterLogo from '@duncit/brand/FooterLogo.astro';
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+---
+
+<BrandLogo src={branding.website_header_logo_url} name={branding.app_name} height={56} />
+
+<FooterLogo
+  footerSrc={branding.website_footer_logo_url}
+  headerSrc={branding.website_header_logo_url}
+  name={branding.app_name}
+/>
+```
+
+## There is no fetch in here
+
+Every site already fetches branding at build time for its favicon and its footer. A
+component that fetched again would double each page's build-time requests for a value the
+caller is already holding. So the caller passes the URL, and this package owns only how
+the mark is DRAWN.
+
+## API
+
+### `BrandLogo.astro`
+
+| Prop | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `src` | `string \| null` | `null` | The admin's logo. Empty renders the wordmark. |
+| `name` | `string` | `'Duncit'` | Alt text and the accessible name. |
+| `height` | `number` | `56` | Rendered height in px; the wordmark scales off it. |
+| `href` | `string \| null` | `'/'` | `null` renders a plain image instead of a link. |
+| `loading` | `'eager' \| 'lazy'` | `'eager'` | The header mark is above the fold. |
+
+### `FooterLogo.astro`
+
+Takes `footerSrc` and `headerSrc` and applies the footer's own rule: the footer logo, then
+the header logo, then the wordmark. Defaults to `height={96}` and `lazy`.
+
+| Prop | Type | Default |
+| --- | --- | --- |
+| `footerSrc` | `string \| null` | `null` |
+| `headerSrc` | `string \| null` | `null` |
+| `name` | `string` | `'Duncit'` |
+| `height` | `number` | `96` |
+| `href` | `string \| null` | `'/'` |
+
+## The wordmark is plain CSS on purpose
+
+Its red is written as a literal rather than a Tailwind token. Five sites consume this and
+none of them can be assumed to have declared the same token names — a `bg-primary` here
+would render as nothing on a site whose theme calls it something else.
+
+## Adding it to a site
+
+It is an Astro component package, so the consuming site needs the dependency AND — for
+anything built in Docker — the `COPY packages/brand …` lines in that site's Dockerfile.
+Without them the build passes locally and fails only in deploy.

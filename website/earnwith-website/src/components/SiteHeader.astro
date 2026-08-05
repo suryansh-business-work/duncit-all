@@ -2,6 +2,7 @@
 import { siteConfig } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 import SmartLink from './SmartLink.astro';
+import BrandLogo from '@duncit/brand/BrandLogo.astro';
 
 interface Props {
   /** Sit over a full-bleed banner instead of on the page background. */
@@ -11,7 +12,6 @@ interface Props {
 const { overlay = false } = Astro.props;
 const { nav } = siteConfig;
 const branding = await fetchBranding();
-const headerLogo = branding.website_header_logo_url || '/duncit-logo.svg';
 
 // An overlay header takes no layout space, which is what lets the banner start
 // at the very top of the page and run underneath it; a page without a banner
@@ -30,7 +30,7 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
        from the logo rather than adding to it. -->
   <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
     <a href="/" class="flex items-center gap-2" aria-label="Duncit">
-      <img src={headerLogo} alt="Duncit" class="h-14 w-auto sm:h-16" />
+      <BrandLogo src={branding.website_header_logo_url} name={branding.app_name} height={64} href={null} />
     </a>
 
     <div class="hidden items-center gap-7 lg:flex">

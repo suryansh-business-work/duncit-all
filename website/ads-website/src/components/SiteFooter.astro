@@ -6,6 +6,7 @@ import { siteConfig } from '../config/site-config';
 import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
 import NewsletterSignup from './NewsletterSignup.astro';
 import SmartLink from './SmartLink.astro';
+import FooterLogo from '@duncit/brand/FooterLogo.astro';
 
 const { brand, footer, mainSiteUrl } = siteConfig;
 
@@ -40,14 +41,18 @@ const year = new Date().getFullYear();
 // Admin's footer logo, then the header one it also manages, and only then the
 // bundled file: a brand that set ONE logo should not see the local default
 // down here while its own mark sits at the top of the page.
-const footerLogo =
-  branding.website_footer_logo_url || branding.website_header_logo_url || '/duncit-logo.svg';
+
 ---
 
 <footer class="mt-8 border-t border-line bg-surface/60">
   <div class="mx-auto grid max-w-6xl items-start gap-10 px-5 py-12 lg:grid-cols-[1fr_1.1fr]">
     <div>
-      <img src={footerLogo} alt="Duncit" class="h-24 w-auto max-w-full" />
+      <FooterLogo
+        footerSrc={branding.website_footer_logo_url}
+        headerSrc={branding.website_header_logo_url}
+        name={branding.app_name}
+        height={112}
+      />
       <p class="mt-3 font-head text-lg font-extrabold text-ink">{brand.name}</p>
       <p class="mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">{footer.tagline}</p>
       <a
@@ -112,7 +117,7 @@ const footerLogo =
               {policies.slice(0, 4).map((policy) => (
                 <li>
                   <SmartLink
-                    href={`${mainSiteUrl}/policy?slug=${encodeURIComponent(policy.slug)}`}
+                    href={`${mainSiteUrl}/policy/${encodeURIComponent(policy.slug)}`}
                     label={policy.title}
                     class="text-sm text-ink-soft transition hover:text-ink"
                   >

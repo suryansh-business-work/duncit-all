@@ -1,7 +1,18 @@
 ---
-title: '@duncit/brand'
-description: The Duncit mark, as Astro components — one header logo and one footer logo for every website.
-package: '@duncit/brand'
+name: '@duncit/brand'
+summary: 'The Duncit mark as Astro components — one header logo and one footer logo, so the admin''s uploaded logo renders the same size on every website.'
+category: 'ui'
+zeroDeps: true
+frameworkFree: false
+coverageGate: false
+consumers:
+  - 'website/main-website'
+  - 'website/ads-website'
+  - 'website/earnwith-website'
+  - 'website/partners-website'
+exports:
+  - 'BrandLogo.astro'
+  - 'FooterLogo.astro'
 ---
 
 ## Why this exists

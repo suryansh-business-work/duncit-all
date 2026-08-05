@@ -29,6 +29,33 @@ export const WA_CAMPAIGN_SETUP = gql`
   }
 `;
 
+/** The AiSensy side, read live through its Project API. */
+export const AISENSY_CAMPAIGNS = gql`
+  query AisensyCampaigns {
+    aisensyProjectConfigured
+    aisensyCampaigns {
+      name
+      status
+      template_name
+      type
+    }
+  }
+`;
+
+export const AISENSY_TEMPLATES = gql`
+  query AisensyTemplates {
+    aisensyProjectConfigured
+    aisensyTemplates {
+      name
+      status
+      category
+      language
+      body
+      param_count
+    }
+  }
+`;
+
 export const WA_CAMPAIGN_REACH = gql`
   query WaCampaignReach($audience: WaCampaignAudience!, $audience_list_id: ID) {
     waCampaignReach(audience: $audience, audience_list_id: $audience_list_id)
@@ -112,6 +139,22 @@ export interface WaAudienceList {
   id: string;
   name: string;
   member_count: number;
+}
+
+export interface AisensyCampaign {
+  name: string;
+  status: string;
+  template_name: string;
+  type: string;
+}
+
+export interface AisensyTemplate {
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  body: string;
+  param_count: number;
 }
 
 export interface WaCampaignRecipientRow {

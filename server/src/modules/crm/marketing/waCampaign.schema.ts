@@ -84,6 +84,27 @@ export const waCampaignTypeDefs = gql`
     page_size: Int!
   }
 
+  "An API campaign as AiSensy has it — read through the Project API, not stored here."
+  type AisensyCampaign {
+    name: String!
+    status: String!
+    "The WhatsApp template this campaign sends."
+    template_name: String!
+    type: String!
+  }
+
+  "A WhatsApp message template as AiSensy has it."
+  type AisensyTemplate {
+    name: String!
+    status: String!
+    category: String!
+    language: String!
+    "The template's BODY text, with its {{1}} placeholders intact."
+    body: String!
+    "How many variables the body expects — the number of params a send must fill."
+    param_count: Int!
+  }
+
   input WaCampaignNameInput {
     name: String!
     description: String
@@ -115,6 +136,12 @@ export const waCampaignTypeDefs = gql`
     waCampaign(campaign_id: ID!): WaCampaign!
     "Everyone that campaign walked over, with what happened to each."
     waCampaignRecipients(campaign_id: ID!, query: TableQueryInput): WaCampaignRecipientPage!
+    "Whether the Tech portal holds the AiSensy Project credentials that read campaigns and templates."
+    aisensyProjectConfigured: Boolean!
+    "The API campaigns AiSensy has for this project."
+    aisensyCampaigns: [AisensyCampaign!]!
+    "The WhatsApp message templates AiSensy has for this project."
+    aisensyTemplates: [AisensyTemplate!]!
   }
 
   extend type Mutation {

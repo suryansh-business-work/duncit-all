@@ -4,6 +4,11 @@ import { Types } from 'mongoose';
 import { logs } from '@observability/log';
 import { aisensyService } from '@modules/platform/aisensy/aisensy.service';
 import { isAisensyConfigured } from '@modules/platform/aisensy/aisensy.gateway';
+import {
+  isProjectApiConfigured,
+  listCampaigns,
+  listTemplates,
+} from '@modules/platform/aisensy/aisensy.project';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import { WaCampaignModel, type WaCampaignAudience } from './waCampaign.model';
 import { WaCampaignNameModel } from './waCampaignName.model';
@@ -250,6 +255,12 @@ export const waCampaignService = {
   configured: () => isAisensyConfigured(),
 
   variables: () => WA_VARIABLES.map(({ name, description }) => ({ name, description })),
+
+  /** The AiSensy side, read live through the Project API — never stored here,
+   * so what the console shows is what AiSensy has right now. */
+  projectConfigured: () => isProjectApiConfigured(),
+  aisensyCampaigns: () => listCampaigns(),
+  aisensyTemplates: () => listTemplates(),
 
   async names() {
     const docs = await WaCampaignNameModel.find().sort({ name: 1 }).exec();

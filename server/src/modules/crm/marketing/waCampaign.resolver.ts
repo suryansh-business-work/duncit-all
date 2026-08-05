@@ -44,6 +44,18 @@ export const waCampaignResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.recipients(args.campaign_id, args.query);
     },
+    aisensyProjectConfigured: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.projectConfigured();
+    },
+    aisensyCampaigns: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.aisensyCampaigns();
+    },
+    aisensyTemplates: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.aisensyTemplates();
+    },
   },
 
   Mutation: {

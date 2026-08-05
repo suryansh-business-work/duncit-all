@@ -7,6 +7,7 @@ import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import WaCampaignTable from './WaCampaignTable';
 import CampaignNamesDialog from './CampaignNamesDialog';
+import WaCampaignDetailDialog from './wa-campaign-detail';
 import { WaCampaignForm } from './wa-campaign-form';
 import { useWaCampaignActions } from './useWaCampaignActions';
 import {
@@ -35,6 +36,7 @@ export default function WhatsappCampaignsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
 
   const { data, refetch } = useQuery<SetupData>(WA_CAMPAIGN_SETUP, {
@@ -61,7 +63,10 @@ export default function WhatsappCampaignsPage() {
   };
 
   const confirmDelete = async () => {
-    if (target && (await actions.remove(target))) setTarget(null);
+    if (!target || !(await actions.remove(target))) return;
+    // The detail view of a campaign that no longer exists has nothing to show.
+    setViewing((id) => (id === target.campaign_id ? null : id));
+    setTarget(null);
   };
 
   return (
@@ -96,7 +101,18 @@ export default function WhatsappCampaignsPage() {
         </Alert>
       )}
 
-      <WaCampaignTable fetchRows={fetchRows} refetchRef={refetchRef} onDelete={setTarget} />
+      <WaCampaignTable
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onOpen={(row) => setViewing(row.campaign_id)}
+        onDelete={setTarget}
+      />
+
+      <WaCampaignDetailDialog
+        campaignId={viewing}
+        audienceLists={data?.audienceLists ?? []}
+        onClose={() => setViewing(null)}
+      />
 
       <WaCampaignForm
         open={formOpen}

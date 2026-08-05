@@ -8,10 +8,14 @@ import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@ut
 import { WaCampaignModel, type WaCampaignAudience } from './waCampaign.model';
 import { WaCampaignNameModel } from './waCampaignName.model';
 import {
+  WaCampaignRecipientModel,
+  type WaRecipientStatus,
+} from './waCampaignRecipient.model';
+import {
   assertKnownTokens,
   countReachable,
   destinationFor,
-  fillParam,
+  fillParams,
   recipientUsers,
   userNameFor,
   WA_VARIABLES,
@@ -20,11 +24,10 @@ import {
 const badInput = (msg: string) => new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
 const notFound = () => new GraphQLError('Campaign not found', { extensions: { code: 'NOT_FOUND' } });
 
-/** Progress is written every this many recipients so a long send shows movement
- * in the table instead of jumping from 0 to done. */
+/** Progress (counters + the recipient rows collected so far) is written every
+ * this many recipients, so a long send shows movement in the table and its
+ * detail view instead of jumping from nothing to done. */
 const PROGRESS_EVERY = 20;
-/** A send that fails for everybody must not grow the document unbounded. */
-const MAX_FAILURES_KEPT = 20;
 
 const str = (v: unknown) => String(v ?? '').trim();
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
@@ -41,7 +44,6 @@ const toPub = (doc: any) => ({
   sent_count: doc.sent_count,
   failed_count: doc.failed_count,
   skipped_count: doc.skipped_count,
-  failures: doc.failures ?? [],
   error: doc.error ?? null,
   sent_at: iso(doc.sent_at),
   created_at: iso(doc.created_at),
@@ -76,6 +78,31 @@ const WA_TABLE_CONFIG: TableEntityConfig = {
   },
   defaultSort: { created_at: -1 },
 };
+
+/** Allowlists for the recipient table inside a campaign's detail view. */
+const RECIPIENT_TABLE_CONFIG: TableEntityConfig = {
+  searchFields: ['name', 'destination', 'reason', 'submitted_message_id'],
+  sortFields: {
+    name: 'name',
+    destination: 'destination',
+    status: 'status',
+    created_at: 'created_at',
+  },
+  filterFields: { status: { type: 'enum' } },
+  // Send order — the run reads top to bottom the way it happened.
+  defaultSort: { created_at: 1 },
+};
+
+const toRecipient = (doc: any) => ({
+  id: String(doc._id),
+  name: doc.name ?? '',
+  destination: doc.destination ?? '',
+  status: doc.status,
+  reason: doc.reason ?? '',
+  submitted_message_id: doc.submitted_message_id ?? '',
+  template_params: doc.template_params ?? [],
+  created_at: iso(doc.created_at),
+});
 
 interface SendInput {
   name?: string | null;
@@ -112,36 +139,65 @@ async function validateSendInput(input: SendInput) {
   };
 }
 
-type Outcome = 'sent' | 'skipped' | 'failed';
+interface RecipientRow {
+  campaign_id: string;
+  user_id: unknown;
+  name: string;
+  destination: string;
+  status: WaRecipientStatus;
+  reason: string;
+  submitted_message_id: string;
+  template_params: string[];
+}
 
-/** Send to one recipient. A missing number or an empty variable is a skip, not
- * a failure: nothing was attempted and nothing was billed. */
-async function deliver(doc: any, user: Record<string, any>): Promise<Outcome> {
-  const destination = destinationFor(user);
-  const userName = userNameFor(user);
-  if (!destination || !userName) return 'skipped';
-  const params = doc.template_params.map((param: string) => fillParam(param, user));
-  if (params.some((param: string | null) => param === null)) return 'skipped';
+/**
+ * Send to one recipient and describe what happened to them. A missing number or
+ * an empty variable is a SKIP, not a failure: nothing was attempted, nothing was
+ * billed, and the reason says which of the two it was.
+ */
+async function deliver(doc: any, user: Record<string, any>): Promise<RecipientRow> {
+  const base = {
+    campaign_id: doc.campaign_id,
+    user_id: user._id ?? null,
+    name: userNameFor(user),
+    destination: destinationFor(user),
+    submitted_message_id: '',
+    template_params: [] as string[],
+  };
+  if (!base.destination) {
+    return { ...base, status: 'SKIPPED', reason: 'No WhatsApp number with a country code' };
+  }
+  if (!base.name) return { ...base, status: 'SKIPPED', reason: 'No name on the account' };
+  const { params, missingReason } = fillParams(doc.template_params ?? [], user);
+  if (missingReason) return { ...base, status: 'SKIPPED', reason: missingReason };
   try {
-    await aisensyService.send({
+    const result = await aisensyService.send({
       campaign_name: doc.wa_campaign_name,
-      destination,
-      user_name: userName,
+      destination: base.destination,
+      user_name: base.name,
       template_params: params,
     });
-    return 'sent';
+    return {
+      ...base,
+      template_params: params,
+      status: 'SENT',
+      reason: '',
+      submitted_message_id: result.submitted_message_id,
+    };
   } catch (e: any) {
-    if (doc.failures.length < MAX_FAILURES_KEPT) {
-      doc.failures.push({ destination, reason: str(e?.message) || 'Send failed' });
-    }
-    return 'failed';
+    return {
+      ...base,
+      template_params: params,
+      status: 'FAILED',
+      reason: str(e?.message) || 'Send failed',
+    };
   }
 }
 
-const COUNTER_OF: Record<Outcome, 'sent_count' | 'skipped_count' | 'failed_count'> = {
-  sent: 'sent_count',
-  skipped: 'skipped_count',
-  failed: 'failed_count',
+const COUNTER_OF: Record<WaRecipientStatus, 'sent_count' | 'skipped_count' | 'failed_count'> = {
+  SENT: 'sent_count',
+  SKIPPED: 'skipped_count',
+  FAILED: 'failed_count',
 };
 
 /**
@@ -156,11 +212,21 @@ async function runSend(campaignId: string) {
     const users = await recipientUsers(doc.audience as WaCampaignAudience, doc.audience_list_id);
     doc.recipient_count = users.length;
     await doc.save();
+    let pending: RecipientRow[] = [];
+    // Rows land in batches rather than one insert per message: the send is
+    // already one HTTP call per recipient without adding a write to each.
+    const flush = async () => {
+      if (pending.length > 0) await WaCampaignRecipientModel.insertMany(pending);
+      pending = [];
+      await doc.save();
+    };
     for (const [index, user] of users.entries()) {
-      const outcome = await deliver(doc, user);
-      doc[COUNTER_OF[outcome]] += 1;
-      if (index % PROGRESS_EVERY === PROGRESS_EVERY - 1) await doc.save();
+      const row = await deliver(doc, user);
+      doc[COUNTER_OF[row.status]] += 1;
+      pending.push(row);
+      if (index % PROGRESS_EVERY === PROGRESS_EVERY - 1) await flush();
     }
+    await flush();
     doc.status = doc.sent_count > 0 ? 'SENT' : 'FAILED';
     if (doc.sent_count === 0) doc.error = 'No message could be delivered';
     doc.sent_at = new Date();
@@ -222,6 +288,23 @@ export const waCampaignService = {
     return { rows: docs.map(toPub), total, page, page_size };
   },
 
+  async byId(campaignId: string) {
+    const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw notFound();
+    return toPub(doc);
+  },
+
+  /** Who the send reached and who it did not, one row per person. */
+  async recipients(campaignId: string, input?: TableQueryInput | null) {
+    const { docs, total, page, page_size } = await runTableQuery<any>(
+      WaCampaignRecipientModel,
+      { campaign_id: campaignId },
+      input,
+      RECIPIENT_TABLE_CONFIG
+    );
+    return { rows: docs.map(toRecipient), total, page, page_size };
+  },
+
   /**
    * Start a send. The document is returned as soon as it exists and the walk
    * continues in the background: a WhatsApp campaign is one HTTP call per
@@ -251,6 +334,8 @@ export const waCampaignService = {
       throw badInput('That campaign is sending right now — wait for it to finish');
     }
     await doc.deleteOne();
+    // The per-recipient rows exist only for this campaign — they go with it.
+    await WaCampaignRecipientModel.deleteMany({ campaign_id: campaignId });
     return true;
   },
 };

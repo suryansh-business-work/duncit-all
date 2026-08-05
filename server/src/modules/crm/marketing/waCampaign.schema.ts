@@ -27,9 +27,33 @@ export const waCampaignTypeDefs = gql`
     description: String!
   }
 
-  type WaCampaignFailure {
+  "What happened to one person in a send. SKIPPED means nothing was attempted for them."
+  enum WaRecipientStatus {
+    SENT
+    SKIPPED
+    FAILED
+  }
+
+  "One person the send walked over — the answer to who it reached and who it did not."
+  type WaCampaignRecipient {
+    id: ID!
+    name: String!
     destination: String!
+    status: WaRecipientStatus!
+    "Why they were skipped, or the reason AiSensy refused. Empty when sent."
     reason: String!
+    "AiSensy's own id for the queued message — the trace back to their side."
+    submitted_message_id: String!
+    "The template variables as they were filled for this person."
+    template_params: [String!]!
+    created_at: String
+  }
+
+  type WaCampaignRecipientPage {
+    rows: [WaCampaignRecipient!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
   }
 
   type WaCampaign {
@@ -47,8 +71,6 @@ export const waCampaignTypeDefs = gql`
     failed_count: Int!
     "Matched the audience but had no usable number or an empty variable."
     skipped_count: Int!
-    "The first few failures, with the reason AiSensy gave."
-    failures: [WaCampaignFailure!]!
     error: String
     sent_at: String
     created_at: String
@@ -89,6 +111,10 @@ export const waCampaignTypeDefs = gql`
     "How many people this audience reaches on WhatsApp right now."
     waCampaignReach(audience: WaCampaignAudience!, audience_list_id: ID): Int!
     waCampaignsTable(query: TableQueryInput): WaCampaignTablePage!
+    "One campaign in full — the detail view behind a table row."
+    waCampaign(campaign_id: ID!): WaCampaign!
+    "Everyone that campaign walked over, with what happened to each."
+    waCampaignRecipients(campaign_id: ID!, query: TableQueryInput): WaCampaignRecipientPage!
   }
 
   extend type Mutation {

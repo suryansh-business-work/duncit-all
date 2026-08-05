@@ -48,21 +48,32 @@ export function assertKnownTokens(params: string[]) {
   }
 }
 
+export interface FilledParams {
+  params: string[];
+  /** Set when the message could not be completed for this person — it is shown
+   * against them as the reason they were skipped. */
+  missingReason?: string;
+}
+
 /**
- * Fill one parameter for one recipient. Returns null when a variable it uses is
- * empty for that person: a WhatsApp template renders a blank there, so the
- * recipient is skipped instead of being sent a half-written message.
+ * Fill the template parameters for one recipient. A variable that is empty for
+ * that person stops the send for them: a WhatsApp template renders a blank
+ * there, and a half-written message is worse than no message.
  */
-export function fillParam(raw: string, user: UserLike): string | null {
-  let missing = false;
-  const filled = raw.replaceAll(TOKEN_RE, (_match, token: string) => {
-    const value = VALUE_OF.get(token)?.(user) ?? '';
-    if (!value) missing = true;
-    return value;
+export function fillParams(raw: string[], user: UserLike): FilledParams {
+  let missingReason: string | undefined;
+  const params = raw.map((param) => {
+    const filled = param.replaceAll(TOKEN_RE, (_match, token: string) => {
+      const value = VALUE_OF.get(token)?.(user) ?? '';
+      if (!value && !missingReason) missingReason = `No value for {{${token}}}`;
+      return value;
+    });
+    return filled.trim();
   });
-  const out = filled.trim();
-  if (missing || !out) return null;
-  return out;
+  if (!missingReason && params.some((param) => !param)) {
+    missingReason = 'A template parameter came out empty';
+  }
+  return { params, missingReason };
 }
 
 /**

@@ -32,6 +32,18 @@ export const waCampaignResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.table(args.query);
     },
+    waCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.byId(args.campaign_id);
+    },
+    waCampaignRecipients: (
+      _p: unknown,
+      args: { campaign_id: string; query?: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.recipients(args.campaign_id, args.query);
+    },
   },
 
   Mutation: {

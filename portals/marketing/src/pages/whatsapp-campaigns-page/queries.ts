@@ -90,7 +90,9 @@ export const WA_CAMPAIGN_RECIPIENTS = gql`
         reason
         submitted_message_id
         template_params
+        attempts
         created_at
+        updated_at
       }
     }
   }
@@ -105,6 +107,22 @@ export const SEND_WA_CAMPAIGN = gql`
 export const CANCEL_WA_CAMPAIGN = gql`
   mutation CancelWaCampaign($campaign_id: ID!) {
     cancelWaCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+export const RETRY_WA_CAMPAIGN = gql`
+  mutation RetryWaCampaign($campaign_id: ID!) {
+    retryWaCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+export const SEND_WA_TEST_MESSAGE = gql`
+  mutation SendWaTestMessage($input: SendWaTestInput!) {
+    sendWaTestMessage(input: $input) {
+      ok
+      submitted_message_id
+      message
+    }
   }
 `;
 
@@ -171,7 +189,9 @@ export interface WaCampaignRecipientRow {
   reason: string;
   submitted_message_id: string;
   template_params: string[];
+  attempts: number;
   created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface WaCampaignRow {

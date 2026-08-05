@@ -82,6 +82,13 @@ export default function RecipientTable({ campaignId }: Readonly<{ campaignId: st
         minWidth: 260,
         valueGetter: (row) => row.submitted_message_id || '—',
       },
+      {
+        field: 'attempts',
+        headerName: 'Tries',
+        sortable: false,
+        hide: true,
+        width: 90,
+      },
       dateColumn<WaCampaignRecipientRow>({
         field: 'created_at',
         headerName: 'At',

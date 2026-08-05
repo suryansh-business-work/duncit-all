@@ -23,6 +23,7 @@ import {
   fillParams,
   recipientUsers,
   userNameFor,
+  usersByIds,
   WA_VARIABLES,
 } from './waCampaign.recipients';
 
@@ -112,7 +113,9 @@ const toRecipient = (doc: any) => ({
   reason: doc.reason ?? '',
   submitted_message_id: doc.submitted_message_id ?? '',
   template_params: doc.template_params ?? [],
+  attempts: doc.attempts ?? 1,
   created_at: iso(doc.created_at),
+  updated_at: iso(doc.updated_at),
 });
 
 interface SendInput {
@@ -272,6 +275,78 @@ async function runSend(campaignId: string) {
   });
 }
 
+/** The statuses a retry re-attempts: nobody was reached in either case. */
+const UNREACHED = ['FAILED', 'SKIPPED'];
+
+/**
+ * Recount from the rows rather than incrementing. After a retry the rows are
+ * the truth — a row that flips FAILED → SENT has to move both counters, and
+ * two increments that must agree are two chances to drift.
+ */
+async function refreshCounters(doc: any) {
+  const [sent, failed, skipped] = await Promise.all([
+    WaCampaignRecipientModel.countDocuments({ campaign_id: doc.campaign_id, status: 'SENT' }),
+    WaCampaignRecipientModel.countDocuments({ campaign_id: doc.campaign_id, status: 'FAILED' }),
+    WaCampaignRecipientModel.countDocuments({ campaign_id: doc.campaign_id, status: 'SKIPPED' }),
+  ]);
+  doc.sent_count = sent;
+  doc.failed_count = failed;
+  doc.skipped_count = skipped;
+  await doc.save();
+}
+
+/**
+ * Re-attempt the people a send did not reach, reading them from the campaign's
+ * own rows. Each row is UPDATED rather than duplicated, so a campaign keeps one
+ * row per person however many attempts it took — `attempts` is where the second
+ * try shows up. People are re-read from the database first: a retry exists
+ * because the data may have changed (a number added since), not to repeat the
+ * same call with the same inputs.
+ */
+async function runRetry(campaignId: string) {
+  const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+  if (!doc) return;
+  try {
+    const rows = await WaCampaignRecipientModel.find({
+      campaign_id: campaignId,
+      status: { $in: UNREACHED },
+    }).exec();
+    const users = await usersByIds(rows.map((row) => row.user_id).filter(Boolean));
+    const byId = new Map(users.map((user: any) => [String(user._id), user]));
+    for (const [index, row] of rows.entries()) {
+      const user = byId.get(String(row.user_id ?? ''));
+      // The account is gone — there is nobody left to retry against, and the
+      // row keeps saying why it was never reached.
+      if (user) {
+        const outcome = await deliver(doc, user);
+        row.name = outcome.name;
+        row.destination = outcome.destination;
+        row.status = outcome.status;
+        row.reason = outcome.reason;
+        row.submitted_message_id = outcome.submitted_message_id;
+        row.template_params = outcome.template_params;
+        row.attempts += 1;
+        await row.save();
+      }
+      if (index % PROGRESS_EVERY === PROGRESS_EVERY - 1) await refreshCounters(doc);
+    }
+    await refreshCounters(doc);
+    doc.status = doc.sent_count > 0 ? 'SENT' : 'FAILED';
+    doc.error = doc.sent_count > 0 ? null : 'No message could be delivered';
+  } catch (e: any) {
+    doc.status = 'FAILED';
+    doc.error = str(e?.message) || 'WhatsApp campaign retry failed';
+  }
+  await doc.save();
+  logs.server.info('waCampaign', 'runRetry', {
+    campaign_id: campaignId,
+    status: doc.status,
+    sent: doc.sent_count,
+    failed: doc.failed_count,
+    skipped: doc.skipped_count,
+  });
+}
+
 /**
  * Arm the in-process timer for a scheduled campaign. setTimeout cannot hold
  * more than ~24.8 days, so a schedule further out re-arms itself in hops; every
@@ -396,6 +471,48 @@ export const waCampaignService = {
       );
     }
     return toPub(doc);
+  },
+
+  /**
+   * Re-attempt only the people this campaign did not reach. Not a new campaign:
+   * the audience is not re-resolved, so a retry can only ever touch people the
+   * original send already walked over.
+   */
+  async retry(campaignId: string) {
+    if (!(await isAisensyConfigured())) {
+      throw badInput('Add the AiSensy API key in the Tech portal before sending');
+    }
+    const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw notFound();
+    if (doc.status === 'SENDING') {
+      throw badInput('That campaign is sending right now — wait for it to finish');
+    }
+    if (doc.status === 'SCHEDULED') throw badInput('That campaign has not run yet');
+    const pending = await WaCampaignRecipientModel.countDocuments({
+      campaign_id: campaignId,
+      status: { $in: UNREACHED },
+    });
+    if (pending === 0) throw badInput('Nothing to retry — this campaign reached everyone it walked over');
+    doc.status = 'SENDING';
+    await doc.save();
+    runRetry(campaignId).catch((e) =>
+      logs.server.error('waCampaign', 'retry', { error: e, campaign_id: campaignId })
+    );
+    return toPub(doc);
+  },
+
+  /**
+   * One message to one number — the check a marketer makes before pointing a
+   * template at an audience. Goes through the same send path as a campaign, so
+   * a template that passes here is the template a campaign will send.
+   */
+  testSend(input: any) {
+    return aisensyService.send({
+      campaign_name: input.wa_campaign_name,
+      destination: input.destination,
+      user_name: input.user_name,
+      template_params: (input.template_params ?? []).map(str),
+    });
   },
 
   /** Call off a send that has not started. Only SCHEDULED can be cancelled —

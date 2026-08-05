@@ -50,7 +50,10 @@ export const waCampaignTypeDefs = gql`
     submitted_message_id: String!
     "The template variables as they were filled for this person."
     template_params: [String!]!
+    "How many times the send has been attempted for this person (a retry updates the row)."
+    attempts: Int!
     created_at: String
+    updated_at: String
   }
 
   type WaCampaignRecipientPage {
@@ -111,6 +114,22 @@ export const waCampaignTypeDefs = gql`
     param_count: Int!
   }
 
+  type WaTestSendResult {
+    ok: Boolean!
+    "AiSensy's own id for the queued message."
+    submitted_message_id: String!
+    message: String!
+  }
+
+  "One test message to one number — the check before pointing a template at an audience."
+  input SendWaTestInput {
+    wa_campaign_name: String!
+    "Country code + number, digits only (e.g. 919582998897)."
+    destination: String!
+    user_name: String!
+    template_params: [String!]!
+  }
+
   input WaCampaignNameInput {
     name: String!
     description: String
@@ -159,6 +178,10 @@ export const waCampaignTypeDefs = gql`
     sendWaCampaign(input: SendWaCampaignInput!): WaCampaign!
     "Call off a scheduled send before it runs."
     cancelWaCampaign(campaign_id: ID!): WaCampaign!
+    "Re-attempt only the people this campaign did not reach. Returns immediately."
+    retryWaCampaign(campaign_id: ID!): WaCampaign!
+    "Send one test message to one number, through the same path a campaign uses."
+    sendWaTestMessage(input: SendWaTestInput!): WaTestSendResult!
     deleteWaCampaign(campaign_id: ID!): Boolean!
   }
 `;

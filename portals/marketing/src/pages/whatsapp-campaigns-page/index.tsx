@@ -2,12 +2,14 @@ import { useCallback, useRef, useState } from 'react';
 import { useApolloClient, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ScienceIcon from '@mui/icons-material/Science';
 import TuneIcon from '@mui/icons-material/Tune';
 import { useApolloTableFetch } from '@duncit/table';
 import { ConfirmDialog } from '@duncit/dialogs';
 import WaCampaignTable from './WaCampaignTable';
 import CampaignNamesDialog from './CampaignNamesDialog';
 import WaCampaignDetailDialog from './wa-campaign-detail';
+import { WaTestForm } from './wa-test-form';
 import AisensyCampaigns from './wa-aisensy/AisensyCampaigns';
 import AisensyTemplates from './wa-aisensy/AisensyTemplates';
 import { WaCampaignForm } from './wa-campaign-form';
@@ -38,6 +40,7 @@ export default function WhatsappCampaignsPage() {
   const refetchRef = useRef<(() => void) | null>(null);
   const [tab, setTab] = useState<'sends' | 'campaigns' | 'templates'>('sends');
   const [formOpen, setFormOpen] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
@@ -90,6 +93,13 @@ export default function WhatsappCampaignsPage() {
               Manage names
             </Button>
             <Button
+              startIcon={<ScienceIcon />}
+              disabled={!configured}
+              onClick={() => setTestOpen(true)}
+            >
+              Send test
+            </Button>
+            <Button
               variant="contained"
               startIcon={<AddIcon />}
               disabled={!configured}
@@ -132,6 +142,8 @@ export default function WhatsappCampaignsPage() {
       <WaCampaignDetailDialog
         campaignId={viewing}
         audienceLists={data?.audienceLists ?? []}
+        retrying={actions.retrying}
+        onRetry={actions.retry}
         onClose={() => setViewing(null)}
       />
 
@@ -144,6 +156,14 @@ export default function WhatsappCampaignsPage() {
         onClose={() => setFormOpen(false)}
         onManageNames={() => setNamesOpen(true)}
         onSubmit={submit}
+      />
+
+      <WaTestForm
+        open={testOpen}
+        busy={actions.testing}
+        names={data?.waCampaignNames ?? []}
+        onClose={() => setTestOpen(false)}
+        onSubmit={actions.testMessage}
       />
 
       <CampaignNamesDialog

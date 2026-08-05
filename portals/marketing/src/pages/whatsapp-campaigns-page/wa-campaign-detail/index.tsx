@@ -11,6 +11,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { useDateFormat } from '@duncit/app-settings';
 import { StatusChip } from '@duncit/ui';
 import { WA_AUDIENCE_LABELS, WA_STATUS_COLORS, labelFor } from '../helpers';
@@ -35,6 +36,9 @@ interface Props {
   campaignId: string | null;
   /** Saved lists, so an AUDIENCE_LIST campaign shows the list's name. */
   audienceLists: WaAudienceList[];
+  retrying: boolean;
+  /** Re-attempt only the people this campaign did not reach. */
+  onRetry: (campaign: WaCampaignRow) => void;
   onClose: () => void;
 }
 
@@ -49,6 +53,8 @@ interface Props {
 export default function WaCampaignDetailDialog({
   campaignId,
   audienceLists,
+  retrying,
+  onRetry,
   onClose,
 }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
@@ -59,6 +65,10 @@ export default function WaCampaignDetailDialog({
   });
   const campaign = data?.waCampaign;
   const listName = audienceLists.find((list) => list.id === campaign?.audience_list_id)?.name;
+  const unreached = (campaign?.failed_count ?? 0) + (campaign?.skipped_count ?? 0);
+  let retryLabel = 'Everyone was reached';
+  if (unreached > 0) retryLabel = `Retry ${unreached.toLocaleString()} not reached`;
+  if (retrying) retryLabel = 'Retrying…';
   const audienceText = [
     campaign ? labelFor(WA_AUDIENCE_LABELS, campaign.audience) : '',
     listName,
@@ -136,7 +146,16 @@ export default function WaCampaignDetailDialog({
           </Stack>
         )}
       </DialogContent>
-      <DialogActions>
+      <DialogActions sx={{ justifyContent: 'space-between' }}>
+        {/* Only the people it did not reach — the audience is not re-resolved,
+            so a retry can never widen who the campaign touched. */}
+        <Button
+          startIcon={<ReplayIcon />}
+          disabled={!unreached || retrying}
+          onClick={() => campaign && onRetry(campaign)}
+        >
+          {retryLabel}
+        </Button>
         <Button onClick={onClose}>Close</Button>
       </DialogActions>
     </Dialog>

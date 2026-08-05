@@ -3,12 +3,15 @@ import { notifyError, notifySuccess } from '@duncit/dialogs';
 import { parseApiError } from '@duncit/utils';
 import type { CampaignNameValues } from './campaign-name-form';
 import type { SendWaCampaignInput } from './wa-campaign-form';
+import type { WaTestInput } from './wa-test-form';
 import {
   CANCEL_WA_CAMPAIGN,
   CREATE_WA_CAMPAIGN_NAME,
   DELETE_WA_CAMPAIGN,
   DELETE_WA_CAMPAIGN_NAME,
+  RETRY_WA_CAMPAIGN,
   SEND_WA_CAMPAIGN,
+  SEND_WA_TEST_MESSAGE,
   type WaCampaignNameOption,
   type WaCampaignRow,
 } from './queries';
@@ -21,6 +24,8 @@ import {
 export function useWaCampaignActions(onChanged: () => void) {
   const [sendCampaign, { loading: sending }] = useMutation(SEND_WA_CAMPAIGN);
   const [cancelCampaign, { loading: cancelling }] = useMutation(CANCEL_WA_CAMPAIGN);
+  const [retryCampaign, { loading: retrying }] = useMutation(RETRY_WA_CAMPAIGN);
+  const [sendTest, { loading: testing }] = useMutation(SEND_WA_TEST_MESSAGE);
   const [deleteCampaign, { loading: deleting }] = useMutation(DELETE_WA_CAMPAIGN);
   const [createName, { loading: adding }] = useMutation(CREATE_WA_CAMPAIGN_NAME);
   const [deleteName, { loading: removingName }] = useMutation(DELETE_WA_CAMPAIGN_NAME);
@@ -46,6 +51,30 @@ export function useWaCampaignActions(onChanged: () => void) {
     }
     notifySuccess(`“${row.name}” cancelled — it will not go out`);
     onChanged();
+  };
+
+  const retry = async (row: WaCampaignRow) => {
+    try {
+      await retryCampaign({ variables: { campaign_id: row.campaign_id } });
+    } catch (e) {
+      notifyError(parseApiError(e, 'Could not retry that campaign'));
+      return;
+    }
+    notifySuccess('Retrying the people it did not reach — the table updates as it goes');
+    onChanged();
+  };
+
+  /** Returns AiSensy's own message id so the dialog can show what to trace. */
+  const testMessage = async (input: WaTestInput) => {
+    try {
+      const result = await sendTest({ variables: { input } });
+      const sent = result.data?.sendWaTestMessage;
+      notifySuccess(`Test sent — message id ${sent?.submitted_message_id ?? ''}`);
+      return true;
+    } catch (e) {
+      notifyError(parseApiError(e, 'The test message did not go out'));
+      return false;
+    }
   };
 
   const remove = async (row: WaCampaignRow) => {
@@ -83,11 +112,15 @@ export function useWaCampaignActions(onChanged: () => void) {
   return {
     send,
     cancel,
+    retry,
+    testMessage,
     remove,
     addName,
     removeName,
     sending,
     cancelling,
+    retrying,
+    testing,
     deleting,
     namesBusy: adding || removingName,
   };

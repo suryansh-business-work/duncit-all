@@ -75,6 +75,14 @@ export const waCampaignResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.cancel(args.campaign_id);
     },
+    retryWaCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.retry(args.campaign_id);
+    },
+    sendWaTestMessage: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.testSend(args.input);
+    },
     deleteWaCampaign: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.remove(args.campaign_id);

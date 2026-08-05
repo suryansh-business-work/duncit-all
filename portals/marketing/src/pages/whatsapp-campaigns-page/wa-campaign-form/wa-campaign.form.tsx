@@ -83,6 +83,9 @@ export default function WaCampaignForm({
   const scheduled = !!watch('scheduled_at');
   let submitLabel = scheduled ? 'Schedule' : 'Send now';
   if (busy) submitLabel = scheduled ? 'Scheduling…' : 'Sending…';
+  // The variable list is whatever the server supports — no copy of it here.
+  const variableList = variables.map((variable) => `{{${variable.name}}}`).join(', ');
+  const paramsHint = `Literal text, or a variable filled per recipient: ${variableList}. Somebody whose variable is empty is skipped rather than sent a blank.`;
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -168,7 +171,7 @@ export default function WaCampaignForm({
               </Alert>
             )}
 
-            <ParamsField control={control} variables={variables} />
+            <ParamsField control={control} hint={paramsHint} />
 
             <Controller
               control={control}

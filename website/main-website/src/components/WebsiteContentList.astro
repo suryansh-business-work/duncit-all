@@ -49,19 +49,19 @@ const graphqlUrl = urlConfigs.graphqlUrl;
       <button
         type="button"
         data-apply-close
-        class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition"
+        class="w-9 h-9 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:bg-primary transition"
         aria-label="Close"
       >
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
     <div class="space-y-3">
-      <input name="name" required minlength="2" maxlength="120" placeholder="Full name *" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="email" type="email" required maxlength="254" placeholder="Email *" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="phone" pattern="\+?\d{6,15}" placeholder="Phone (digits, optional +)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="resume_url" type="url" placeholder="Resume / CV link (Drive, LinkedIn…)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <input name="portfolio_url" type="url" placeholder="Portfolio link (optional)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
-      <textarea name="cover_note" rows="3" maxlength="4000" placeholder="Why you? (optional)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm"></textarea>
+      <input name="name" required minlength="2" maxlength="120" placeholder="Full name *" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="email" type="email" required maxlength="254" placeholder="Email *" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="phone" pattern="\+?\d{6,15}" placeholder="Phone (digits, optional +)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="resume_url" type="url" placeholder="Resume / CV link (Drive, LinkedIn…)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="portfolio_url" type="url" placeholder="Portfolio link (optional)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <textarea name="cover_note" rows="3" maxlength="4000" placeholder="Why you? (optional)" class="w-full px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm"></textarea>
       <p id="applyFeedback" class="text-sm font-semibold hidden"></p>
       <button type="submit" class="w-full px-4 py-3 rounded-xl bg-primary text-white font-bold inline-flex items-center justify-center gap-2 sticker hover:scale-[1.01] transition">
         <i class="fa-solid fa-paper-plane"></i> Submit application
@@ -129,7 +129,7 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   const renderJobs = (items: any[]) => `
     <div class="space-y-3">
       ${items.map((item) => `
-        <div class="p-5 rounded-2xl bg-white sticker">
+        <div class="p-5 rounded-2xl bg-surface sticker">
           <div class="flex items-center justify-between gap-4">
             <div>
               <div class="font-head font-bold text-ink text-lg">${escapeHtml(item.title)}</div>
@@ -148,7 +148,7 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   const renderNews = (items: any[]) => `
     <div class="space-y-4">
       ${items.map((item) => `
-        <a href="${safeUrl(item.cta_url)}" class="flex items-center gap-4 p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
+        <a href="${safeUrl(item.cta_url)}" class="flex items-center gap-4 p-5 rounded-2xl bg-surface sticker hover:-translate-y-0.5 transition">
           <div class="w-12 h-12 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
             <i class="fa-solid fa-newspaper text-lg"></i>
           </div>
@@ -170,7 +170,7 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   const renderCards = (items: any[]) => `
     <div class="grid sm:grid-cols-2 gap-5">
       ${items.map((item) => `
-        <a href="/blog/post?slug=${encodeURIComponent(item.slug)}" class="block bg-white rounded-2xl overflow-hidden sticker hover:-translate-y-1 transition">
+        <a href="/blog/post?slug=${encodeURIComponent(item.slug)}" class="block bg-surface rounded-2xl overflow-hidden sticker hover:-translate-y-1 transition">
           ${item.image_url ? `<img src="${safeUrl(item.image_url)}" alt="" class="w-full aspect-video object-cover" />` : ''}
           <div class="p-5">
             <div class="flex items-center gap-2 text-xs text-ink-soft mb-2">
@@ -202,13 +202,13 @@ const graphqlUrl = urlConfigs.graphqlUrl;
       if (payload.errors?.length) throw new Error(payload.errors[0].message);
       const items = payload.data?.publicWebsiteContent || [];
       if (!items.length) {
-        root.innerHTML = '<div class="p-5 rounded-2xl bg-white sticker text-ink-soft">No published items yet.</div>';
+        root.innerHTML = '<div class="p-5 rounded-2xl bg-surface sticker text-ink-soft">No published items yet.</div>';
         return;
       }
       const render = RENDERERS[root.dataset.variant ?? 'cards'] ?? renderCards;
       root.innerHTML = render(items);
     } catch (error) {
-      root.innerHTML = '<div class="p-5 rounded-2xl bg-white sticker text-ink-soft">Content is temporarily unavailable.</div>';
+      root.innerHTML = '<div class="p-5 rounded-2xl bg-surface sticker text-ink-soft">Content is temporarily unavailable.</div>';
     }
   });
 

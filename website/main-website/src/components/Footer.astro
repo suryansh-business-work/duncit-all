@@ -4,6 +4,7 @@
 // portal's active policies — both baked in at build time with safe fallbacks.
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import SmartLink from './SmartLink.astro';
 
 // Chrome copy comes from Admin > Localization, baked in at build time with the
 // bundled fallback behind it (rule 38). Link labels are NOT translated here —
@@ -73,9 +74,9 @@ const year = new Date().getFullYear();
             type="email"
             required
             placeholder={t('website.footer.emailPlaceholder')}
-            class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm"
+            class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm"
           />
-          <button class="px-4 py-2.5 rounded-lg bg-ink text-white font-bold text-sm inline-flex items-center gap-2">
+          <button class="px-4 py-2.5 rounded-lg bg-ink text-cream font-bold text-sm inline-flex items-center gap-2">
             <i class="fa-solid fa-paper-plane"></i> {t('website.footer.notify')}
           </button>
         </form>
@@ -92,9 +93,12 @@ const year = new Date().getFullYear();
             <ul class="space-y-2 text-sm text-ink-soft">
               {column.links.map((link) => (
                 <li>
-                  <a href={link.url} class="hover:text-primary">
+                  {/* The Navigation manager can point a column at another
+                      Duncit surface, so whether this leaves the site is not
+                      knowable here — SmartLink decides from the URL. */}
+                  <SmartLink href={link.url} label={link.label} class="hover:text-primary">
                     {link.label}
-                  </a>
+                  </SmartLink>
                 </li>
               ))}
             </ul>

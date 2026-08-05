@@ -257,6 +257,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
     },
     nav: {
       closeMenu: 'Close menu',
+      theme: 'Switch between light and dark',
     },
   },
 };

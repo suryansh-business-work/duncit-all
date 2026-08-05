@@ -4,6 +4,7 @@ import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
 import BrandLogo from '../components/BrandLogo.astro';
 import DownloadApps from '../components/DownloadApps.astro';
+import SmartLink from '../components/SmartLink.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Real group photos from Unsplash (free to use)
@@ -75,7 +76,7 @@ const earningPaths = [
       <!-- Nav -->
       <nav class="relative z-20 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
           <BrandLogo height={40} />
@@ -127,16 +128,23 @@ const earningPaths = [
             Hosts, venues and sellers all earn from real local demand. Every path lives on
             Earn with Duncit — pick yours and start.
           </p>
-          <a
+          <SmartLink
             href={urlConfigs.earnwithUrl}
+            label="Explore Earn with Duncit"
+            glyph={false}
             class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-white font-bold sticker hover:scale-[1.03] transition"
           >
             Explore Earn with Duncit <i class="fa-solid fa-arrow-right"></i>
-          </a>
+          </SmartLink>
         </div>
         <div class="grid sm:grid-cols-3 gap-4">
           {earningPaths.map((path) => (
-            <a href={urlConfigs.earnwithUrl} class="group glass rounded-3xl p-6 hover:-translate-y-1 transition block">
+            <SmartLink
+              href={urlConfigs.earnwithUrl}
+              label={path.title}
+              glyph={false}
+              class="group glass rounded-3xl p-6 hover:-translate-y-1 transition block"
+            >
               <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary inline-flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition">
                 <i class={`fa-solid ${path.icon} text-2xl`}></i>
               </div>
@@ -145,7 +153,7 @@ const earningPaths = [
               <span class="inline-flex items-center gap-2 mt-5 font-bold text-primary text-sm">
                 Start now <i class="fa-solid fa-arrow-right"></i>
               </span>
-            </a>
+            </SmartLink>
           ))}
         </div>
       </div>
@@ -175,7 +183,7 @@ const earningPaths = [
         </div>
         <div class="relative">
           <img src={vibesImg} alt="Friends chatting" class="w-full aspect-[4/5] object-cover rounded-3xl sticker" />
-          <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker -rotate-6">
+          <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-on-accent font-bold sticker -rotate-6">
             <i class="fa-solid fa-heart text-primary"></i> Authentic
           </span>
         </div>
@@ -183,13 +191,13 @@ const earningPaths = [
     </section>
 
     <!-- ============== FLOW ============== -->
-    <section class="bg-tertiary py-20 px-6">
+    <section class="bg-tertiary text-on-accent py-20 px-6">
       <div class="max-w-6xl mx-auto">
         <div class="grid md:grid-cols-2 gap-10 items-start">
           <h2 class="text-4xl sm:text-5xl md:text-6xl">
             Flow with the<br />moment
           </h2>
-          <p class="text-ink font-medium text-lg max-w-md">
+          <p class="text-on-accent font-medium text-lg max-w-md">
             Discover new friends without the pressure—see what you have in
             common, start fun or meaningful conversations, and connect naturally.
           </p>
@@ -198,11 +206,11 @@ const earningPaths = [
         <div data-reveal-group class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div data-reveal class="relative -translate-y-4 md:-translate-y-8">
             <img src={flow1} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-2 -left-2 px-3 py-1 rounded-full bg-tertiary text-ink font-bold text-xs sticker -rotate-12">NEON</span>
+            <span class="absolute -top-2 -left-2 px-3 py-1 rounded-full bg-tertiary text-on-accent font-bold text-xs sticker -rotate-12">NEON</span>
           </div>
           <div data-reveal class="relative">
             <img src={flow2} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-purple-300 text-ink font-bold text-xs sticker rotate-12">YUM</span>
+            <span class="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-purple-300 text-on-accent font-bold text-xs sticker rotate-12">YUM</span>
           </div>
           <div data-reveal class="relative -translate-y-2 md:-translate-y-6">
             <img src={flow3} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />

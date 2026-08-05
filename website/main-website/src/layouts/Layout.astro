@@ -56,6 +56,15 @@ const favicon = branding.website_favicon_url || '/duncit-logo.svg';
     <meta name="description" content={description} />
     <link rel="icon" href={favicon} />
     <title>{title}</title>
+    <script is:inline>
+      // Before the first paint, so a dark-mode visitor never sees a white
+      // flash: the saved choice wins, otherwise the operating system's.
+      (() => {
+        const saved = localStorage.getItem('duncit-theme');
+        const system = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = saved || system;
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

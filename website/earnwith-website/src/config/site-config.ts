@@ -223,11 +223,15 @@ export const siteConfig = {
       },
     ],
     note: 'An estimate at standard rates. Your own rate, and a venue’s own price, are set when you create the pod.',
-    /** The printable copy of an estimate. No PDF library: the browser's own
-     * print-to-PDF renders a sheet built for paper, which costs the page
-     * nothing to load and works everywhere. */
+    /** The downloadable copy of an estimate — a real PDF the visitor keeps, drawn
+     * page-first rather than handed to the browser's print dialog. The library
+     * that draws it is fetched on the first click, so the page costs nothing to
+     * load for everyone who never asks for one. */
     pdf: {
       button: 'Download PDF',
+      preparing: 'Preparing…',
+      error: 'The PDF could not be prepared right now — please try again.',
+      fileName: 'duncit-earnings-estimate.pdf',
       title: 'Earnings estimate',
       inputsTitle: 'What this assumes',
       breakdownTitle: 'Where the money goes',

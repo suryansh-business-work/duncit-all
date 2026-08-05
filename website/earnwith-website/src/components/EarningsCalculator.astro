@@ -98,28 +98,6 @@ const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
     </div>
   </div>
 
-  <!-- The sheet the printer sees. It is built for paper, not squeezed from the
-       page: the logo, what was assumed, where the money goes, and the same
-       disclaimer — filled from the live numbers the moment it is asked for. -->
-  <div class="print-sheet" hidden data-print-sheet>
-    <img src={printLogo} alt="Duncit" class="print-logo" />
-    <h1>{calculator.pdf.title}</h1>
-    <p class="print-role" data-print-role></p>
-
-    <h2>{calculator.pdf.inputsTitle}</h2>
-    <dl data-print-inputs></dl>
-
-    <h2>{calculator.pdf.breakdownTitle}</h2>
-    <dl data-print-rows></dl>
-
-    <p class="print-total"><span data-print-label></span><strong data-print-total></strong></p>
-
-    <h2 data-print-duties-title></h2>
-    <ul data-print-duties></ul>
-
-    <p class="print-note">{calculator.disclaimer}</p>
-    <p class="print-note" data-print-footer></p>
-  </div>
 </section>
 
 <script
@@ -133,7 +111,15 @@ const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
     shortfallNote: calculator.shortfallNote,
     noShareNote: calculator.noShareNote,
     fields: calculator.fields,
+    disclaimer: calculator.disclaimer,
+    printLogo,
+    pdfTitle: calculator.pdf.title,
+    pdfInputsTitle: calculator.pdf.inputsTitle,
+    pdfBreakdownTitle: calculator.pdf.breakdownTitle,
     pdfFooter: calculator.pdf.footer,
+    pdfPreparing: calculator.pdf.preparing,
+    pdfError: calculator.pdf.error,
+    pdfFileName: calculator.pdf.fileName,
   }}
 >
   (() => {
@@ -332,34 +318,242 @@ const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
       timer = setTimeout(request, 180);
     });
 
-    // The printed sheet is filled at the moment it is asked for, from the same
-    // numbers on screen — never a second calculation that could disagree.
-    const printButton = document.querySelector('[data-print-estimate]');
-    if (printButton) {
-      const line = (term, value) => `<div><dt>${term}</dt><dd>${value}</dd></div>`;
-      printButton.addEventListener('click', () => {
-        if (!latest) return;
-        const w = latest.waterfall;
-        document.querySelector('[data-print-role]').textContent = role.label.replace(/^As /, '');
-        document.querySelector('[data-print-inputs]').innerHTML = fields
+    // ---- The PDF ----------------------------------------------------------
+    // A real file, drawn rather than screenshotted: vector text stays sharp and
+    // selectable, and the layout is designed for a page instead of squeezed
+    // from one. jsPDF loads on the FIRST click, so a visitor who never asks for
+    // a PDF never downloads the library.
+    const JSPDF_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js';
+    const JSPDF_SRI =
+      'sha512-plOdviVmws4Y3JAvbnpfKb2hVxKM1lCwsi3vmElYRj+tiDLffZ4FVUj5a8vyKJ9pIgl8JCAHEJ4D1iUKBecswg==';
+
+    const loadJsPdf = () =>
+      new Promise((resolve, reject) => {
+        if (globalThis.jspdf) return resolve(globalThis.jspdf.jsPDF);
+        const script = document.createElement('script');
+        script.src = JSPDF_SRC;
+        script.integrity = JSPDF_SRI;
+        script.crossOrigin = 'anonymous';
+        script.referrerPolicy = 'no-referrer';
+        script.onload = () => resolve(globalThis.jspdf.jsPDF);
+        script.onerror = () => reject(new Error('pdf library unavailable'));
+        document.head.appendChild(script);
+      });
+
+    /** The logo as a data URL. jsPDF draws JPEG and PNG only, so an SVG mark is
+     * skipped and the page keeps its wordmark instead of failing to save. */
+    const loadLogo = async () => {
+      try {
+        const res = await fetch(printLogo, { mode: 'cors' });
+        const blob = await res.blob();
+        if (!['image/jpeg', 'image/png'].includes(blob.type)) return null;
+        const dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        const size = await new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+          img.onerror = () => resolve(null);
+          img.src = dataUrl;
+        });
+        return size ? { dataUrl, ...size, format: blob.type === 'image/png' ? 'PNG' : 'JPEG' } : null;
+      } catch {
+        return null;
+      }
+    };
+
+    // jsPDF's built-in fonts are WinAnsi. A character outside it — the rupee
+    // sign, a true minus, a curly apostrophe — makes jsPDF fall back to a
+    // two-byte encoding for the WHOLE string, which is why an unsanitised line
+    // printed as `" R s .  6 , 6 9 8`. So every string is rewritten into
+    // characters the font actually has before it is drawn.
+    const PDF_GLYPHS = {
+      '\u2212': '-', // minus
+      '\u2013': '-', // en dash
+      '\u2014': '-', // em dash
+      '\u2018': "'", // curly quotes
+      '\u2019': "'",
+      '\u201c': '"',
+      '\u201d': '"',
+      '\u2026': '...', // ellipsis
+      '\u2022': '-', // bullet
+      '\u20b9': 'Rs. ', // rupee
+    };
+    const pdfText = (value) =>
+      String(value)
+        .replaceAll(/[\u2212\u2013\u2014\u2018\u2019\u201c\u201d\u2026\u2022\u20b9]/g, (glyph) => PDF_GLYPHS[glyph])
+        // Anything still beyond Latin-1 would trigger that same fallback. The
+        // range is written as escapes on purpose: a raw character inside a
+        // class is one bad byte away from an invalid regex, and this script is
+        // never parsed at build time, so that would only show in the browser.
+        .replaceAll(/[^\u0020-\u00ff]/g, ' ');
+
+    /** The tab reads "As a host"; the sheet is about a host. */
+    const roleName = () => role.label.replace(/^As /, '');
+
+    // A4 in millimetres, and the palette the site uses on screen.
+    const PAGE = { width: 210, height: 297, margin: 16 };
+    const RIGHT = PAGE.width - PAGE.margin;
+    const INK = [22, 19, 26];
+    const SOFT = [110, 104, 118];
+    const BRAND = [255, 79, 115];
+
+    /** The drawing cursor plus the two things every section needs from it: a
+     * page break before it runs off the sheet, and the line it is writing on. */
+    const makePen = (doc) => {
+      let y = PAGE.margin;
+      return {
+        at: () => y,
+        down: (mm) => {
+          y += mm;
+        },
+        room: (mm) => {
+          if (y + mm <= PAGE.height - PAGE.margin) return;
+          doc.addPage();
+          y = PAGE.margin;
+        },
+      };
+    };
+
+    const drawHeading = (doc, pen, text) => {
+      doc.setFont('helvetica', 'bold').setFontSize(10).setTextColor(...SOFT);
+      doc.text(pdfText(text).toUpperCase(), PAGE.margin, pen.at());
+      pen.down(6);
+    };
+
+    const drawMasthead = (doc, pen, logo) => {
+      if (logo) {
+        const height = 14;
+        doc.addImage(logo.dataUrl, logo.format, PAGE.margin, pen.at(), (logo.w / logo.h) * height, height);
+        pen.down(height + 8);
+      } else {
+        // The mark could not be fetched — the wordmark still signs the page.
+        doc.setFont('helvetica', 'bold').setFontSize(20).setTextColor(...BRAND);
+        doc.text('duncit', PAGE.margin, pen.at() + 7);
+        pen.down(16);
+      }
+      doc.setFont('helvetica', 'bold').setFontSize(22).setTextColor(...INK);
+      doc.text(pdfText(pdfTitle), PAGE.margin, pen.at() + 6);
+      pen.down(12);
+      doc.setFont('helvetica', 'bold').setFontSize(9).setTextColor(...BRAND);
+      doc.text(pdfText(roleName()).toUpperCase(), PAGE.margin, pen.at());
+      pen.down(4);
+      doc.setDrawColor(...BRAND);
+      doc.setLineWidth(0.8);
+      doc.line(PAGE.margin, pen.at(), RIGHT, pen.at());
+      pen.down(10);
+    };
+
+    /** A titled block of term/value lines, each closed by a hairline. */
+    const drawBlock = (doc, pen, title, lines) => {
+      pen.room(12 + lines.length * 9);
+      drawHeading(doc, pen, title);
+      doc.setFontSize(11);
+      for (const [term, value] of lines) {
+        doc.setFont('helvetica', 'normal').setTextColor(...INK);
+        doc.text(pdfText(term), PAGE.margin, pen.at());
+        doc.setFont('helvetica', 'bold');
+        doc.text(pdfText(value), RIGHT, pen.at(), { align: 'right' });
+        pen.down(3);
+        doc.setDrawColor(228, 226, 232);
+        doc.setLineWidth(0.2);
+        doc.line(PAGE.margin, pen.at(), RIGHT, pen.at());
+        pen.down(6);
+      }
+      pen.down(4);
+    };
+
+    /** The answer, in the one box the eye lands on. */
+    const drawTakeHome = (doc, pen) => {
+      pen.room(26);
+      doc.setFillColor(255, 236, 241);
+      doc.roundedRect(PAGE.margin, pen.at(), RIGHT - PAGE.margin, 20, 3, 3, 'F');
+      doc.setFont('helvetica', 'normal').setFontSize(11).setTextColor(...SOFT);
+      doc.text(pdfText(role.takeHomeLabel), PAGE.margin + 6, pen.at() + 8);
+      doc.setFont('helvetica', 'bold').setFontSize(18).setTextColor(...INK);
+      doc.text(pdfText(takeHome.textContent), RIGHT - 6, pen.at() + 14, { align: 'right' });
+      pen.down(30);
+    };
+
+    const drawDuties = (doc, pen) => {
+      pen.room(20);
+      drawHeading(doc, pen, role.dutiesTitle);
+      doc.setFont('helvetica', 'normal').setFontSize(11).setTextColor(...INK);
+      for (const duty of role.duties) {
+        const wrapped = doc.splitTextToSize(pdfText(duty), RIGHT - PAGE.margin - 6);
+        pen.room(wrapped.length * 5 + 2);
+        doc.setFillColor(...BRAND);
+        doc.circle(PAGE.margin + 1.2, pen.at() - 1.2, 0.9, 'F');
+        doc.text(wrapped, PAGE.margin + 6, pen.at());
+        pen.down(wrapped.length * 5 + 1);
+      }
+      pen.down(6);
+    };
+
+    const drawSmallPrint = (doc, pen) => {
+      const wrapped = doc.splitTextToSize(pdfText(disclaimer), RIGHT - PAGE.margin);
+      pen.room(wrapped.length * 4.5 + 8);
+      doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(...SOFT);
+      doc.text(wrapped, PAGE.margin, pen.at());
+      pen.down(wrapped.length * 4.5 + 3);
+      const printed = new Date().toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      doc.text(pdfText(`${pdfFooter} ${printed}`), PAGE.margin, pen.at());
+    };
+
+    const buildPdf = (JsPDF, logo) => {
+      const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+      doc.setProperties({ title: `${pdfTitle}: ${roleName()}`, author: 'Duncit' });
+      const pen = makePen(doc);
+      const w = latest.waterfall;
+
+      drawMasthead(doc, pen, logo);
+      drawBlock(
+        doc,
+        pen,
+        pdfInputsTitle,
+        fields
           .filter((field) => !field.roles || field.roles.includes(role.key))
-          .map((field) => {
-            const raw = sliderValue(field.name);
-            return line(field.label, `${field.prefix ?? ''}${raw.toLocaleString('en-IN')}`);
-          })
-          .join('');
-        document.querySelector('[data-print-rows]').innerHTML = role.rows
-          .map((key) => line(rowLabels[key], rowValue(key, w).text))
-          .join('');
-        document.querySelector('[data-print-label]').textContent = role.takeHomeLabel;
-        document.querySelector('[data-print-total]').textContent = takeHome.textContent;
-        document.querySelector('[data-print-duties-title]').textContent = role.dutiesTitle;
-        document.querySelector('[data-print-duties]').innerHTML = role.duties
-          .map((duty) => `<li>${duty}</li>`)
-          .join('');
-        document.querySelector('[data-print-footer]').textContent =
-          `${pdfFooter} ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-        window.print();
+          .map((field) => [
+            field.label,
+            `${field.prefix ?? ''}${sliderValue(field.name).toLocaleString('en-IN')}`,
+          ])
+      );
+      drawBlock(
+        doc,
+        pen,
+        pdfBreakdownTitle,
+        role.rows.map((key) => [rowLabels[key], rowValue(key, w).text])
+      );
+      drawTakeHome(doc, pen);
+      drawDuties(doc, pen);
+      drawSmallPrint(doc, pen);
+      return doc;
+    };
+
+    const pdfButton = document.querySelector('[data-print-estimate]');
+    if (pdfButton) {
+      const idleLabel = pdfButton.innerHTML;
+      pdfButton.addEventListener('click', async () => {
+        // Nothing to put in it yet — the figures are the server's, not a guess.
+        if (!latest) return;
+        pdfButton.disabled = true;
+        pdfButton.textContent = pdfPreparing;
+        try {
+          const [JsPDF, logo] = await Promise.all([loadJsPdf(), loadLogo()]);
+          buildPdf(JsPDF, logo).save(pdfFileName);
+        } catch {
+          // Saying nothing would look like a dead button.
+          setNote(pdfError, true);
+        } finally {
+          pdfButton.disabled = false;
+          pdfButton.innerHTML = idleLabel;
+        }
       });
     }
 

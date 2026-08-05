@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 
 const WA_CAMPAIGN_FIELDS = `
   campaign_id name wa_campaign_name audience audience_list_id template_params
-  status recipient_count sent_count failed_count skipped_count
+  status scheduled_at recipient_count sent_count failed_count skipped_count
   error sent_at created_at updated_at
 `;
 
@@ -102,6 +102,12 @@ export const SEND_WA_CAMPAIGN = gql`
   }
 `;
 
+export const CANCEL_WA_CAMPAIGN = gql`
+  mutation CancelWaCampaign($campaign_id: ID!) {
+    cancelWaCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
 export const DELETE_WA_CAMPAIGN = gql`
   mutation DeleteWaCampaign($campaign_id: ID!) {
     deleteWaCampaign(campaign_id: $campaign_id)
@@ -176,6 +182,7 @@ export interface WaCampaignRow {
   audience_list_id: string | null;
   template_params: string[];
   status: string;
+  scheduled_at: string | null;
   recipient_count: number;
   sent_count: number;
   failed_count: number;

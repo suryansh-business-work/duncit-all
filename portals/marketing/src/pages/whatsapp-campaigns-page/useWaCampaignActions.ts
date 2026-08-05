@@ -4,6 +4,7 @@ import { parseApiError } from '@duncit/utils';
 import type { CampaignNameValues } from './campaign-name-form';
 import type { SendWaCampaignInput } from './wa-campaign-form';
 import {
+  CANCEL_WA_CAMPAIGN,
   CREATE_WA_CAMPAIGN_NAME,
   DELETE_WA_CAMPAIGN,
   DELETE_WA_CAMPAIGN_NAME,
@@ -19,6 +20,7 @@ import {
  */
 export function useWaCampaignActions(onChanged: () => void) {
   const [sendCampaign, { loading: sending }] = useMutation(SEND_WA_CAMPAIGN);
+  const [cancelCampaign, { loading: cancelling }] = useMutation(CANCEL_WA_CAMPAIGN);
   const [deleteCampaign, { loading: deleting }] = useMutation(DELETE_WA_CAMPAIGN);
   const [createName, { loading: adding }] = useMutation(CREATE_WA_CAMPAIGN_NAME);
   const [deleteName, { loading: removingName }] = useMutation(DELETE_WA_CAMPAIGN_NAME);
@@ -33,6 +35,17 @@ export function useWaCampaignActions(onChanged: () => void) {
     notifySuccess('Campaign started — the table updates as it sends');
     onChanged();
     return true;
+  };
+
+  const cancel = async (row: WaCampaignRow) => {
+    try {
+      await cancelCampaign({ variables: { campaign_id: row.campaign_id } });
+    } catch (e) {
+      notifyError(parseApiError(e, 'Could not cancel that campaign'));
+      return;
+    }
+    notifySuccess(`“${row.name}” cancelled — it will not go out`);
+    onChanged();
   };
 
   const remove = async (row: WaCampaignRow) => {
@@ -69,10 +82,12 @@ export function useWaCampaignActions(onChanged: () => void) {
 
   return {
     send,
+    cancel,
     remove,
     addName,
     removeName,
     sending,
+    cancelling,
     deleting,
     namesBusy: adding || removingName,
   };

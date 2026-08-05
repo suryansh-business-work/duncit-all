@@ -8,9 +8,13 @@ export const waCampaignTypeDefs = gql`
   }
 
   enum WaCampaignStatus {
+    "Waiting for its hour — still cancellable."
+    SCHEDULED
     SENDING
     SENT
     FAILED
+    "Called off before it ran — never the same fact as one that ran and failed."
+    CANCELLED
   }
 
   "An AiSensy campaign name marketing may pick. AiSensy cannot list these, so the list is maintained here."
@@ -65,6 +69,8 @@ export const waCampaignTypeDefs = gql`
     audience_list_id: ID
     template_params: [String!]!
     status: WaCampaignStatus!
+    "When a scheduled send is due. Null for one that went out immediately."
+    scheduled_at: String
     "How many people the audience resolved to at send time."
     recipient_count: Int!
     sent_count: Int!
@@ -120,6 +126,8 @@ export const waCampaignTypeDefs = gql`
     audience_list_id: ID
     "Ordered template variables — literal text, or {{first_name}} style tokens."
     template_params: [String!]!
+    "ISO time to send at. Absent, or already past, sends immediately."
+    scheduled_at: String
   }
 
   extend type Query {
@@ -147,8 +155,10 @@ export const waCampaignTypeDefs = gql`
   extend type Mutation {
     createWaCampaignName(input: WaCampaignNameInput!): WaCampaignNameOption!
     deleteWaCampaignName(id: ID!): Boolean!
-    "Start a WhatsApp send. Returns immediately; the walk continues in the background."
+    "Start or schedule a WhatsApp send. Returns immediately; the walk continues in the background."
     sendWaCampaign(input: SendWaCampaignInput!): WaCampaign!
+    "Call off a scheduled send before it runs."
+    cancelWaCampaign(campaign_id: ID!): WaCampaign!
     deleteWaCampaign(campaign_id: ID!): Boolean!
   }
 `;

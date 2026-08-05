@@ -18,6 +18,8 @@ export const waCampaignSchema = z
     template_params: z.array(
       z.object({ value: z.string().trim().min(1, 'Fill this parameter or remove it') })
     ),
+    /** ISO time to send at; empty sends as soon as it is submitted. */
+    scheduled_at: z.string(),
   })
   .superRefine((values, ctx) => {
     if (values.audience === 'AUDIENCE_LIST' && !values.audience_list_id) {
@@ -25,6 +27,15 @@ export const waCampaignSchema = z
         code: z.ZodIssueCode.custom,
         path: ['audience_list_id'],
         message: 'Pick the audience list to send to',
+      });
+    }
+    // A time already gone would send immediately, which is not what picking a
+    // time means — say so rather than sending.
+    if (values.scheduled_at && new Date(values.scheduled_at).getTime() <= Date.now()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['scheduled_at'],
+        message: 'Pick a time in the future',
       });
     }
   });
@@ -37,6 +48,7 @@ export interface SendWaCampaignInput {
   audience: string;
   audience_list_id: string | null;
   template_params: string[];
+  scheduled_at: string | null;
 }
 
 /** No parameter rows to start with: how many a send needs is decided by the
@@ -47,6 +59,7 @@ export const emptyValues = (): WaCampaignValues => ({
   audience: 'ALL_USERS',
   audience_list_id: '',
   template_params: [],
+  scheduled_at: '',
 });
 
 export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
@@ -55,4 +68,5 @@ export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
   audience: values.audience,
   audience_list_id: values.audience === 'AUDIENCE_LIST' ? values.audience_list_id : null,
   template_params: values.template_params.map((param) => param.value.trim()),
+  scheduled_at: values.scheduled_at || null,
 });

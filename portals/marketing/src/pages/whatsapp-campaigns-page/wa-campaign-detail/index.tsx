@@ -108,7 +108,12 @@ export default function WaCampaignDetailDialog({
                   <Typography variant="body2">None</Typography>
                 )}
               </MetaRow>
-              <MetaRow label="Started">
+              {campaign.scheduled_at && (
+                <MetaRow label="Scheduled for">
+                  <Typography variant="body2">{formatDateTime(campaign.scheduled_at)}</Typography>
+                </MetaRow>
+              )}
+              <MetaRow label="Created">
                 <Typography variant="body2">{formatDateTime(campaign.created_at)}</Typography>
               </MetaRow>
               <MetaRow label="Finished">

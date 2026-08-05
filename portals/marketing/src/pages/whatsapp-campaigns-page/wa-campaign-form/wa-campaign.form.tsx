@@ -8,12 +8,15 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   Stack,
+  Switch,
   TextField,
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { RhfTextField } from '@duncit/forms';
+import DateTimeField from '../../../components/DateTimeField';
 import { WA_AUDIENCE_OPTIONS } from '../helpers';
 import type { WaAudienceList, WaCampaignNameOption, WaCampaignVariable } from '../queries';
 import ParamsField from './ParamsField';
@@ -37,10 +40,15 @@ interface Props {
   onSubmit: (input: SendWaCampaignInput) => void;
 }
 
-const reachText = (reach: number) =>
-  reach > 0
-    ? `This sends ${reach.toLocaleString()} WhatsApp ${reach === 1 ? 'message' : 'messages'}.`
-    : 'Nobody in this audience has a usable WhatsApp number.';
+const reachText = (reach: number) => {
+  if (reach === 0) return 'Nobody in this audience has a usable WhatsApp number.';
+  const noun = reach === 1 ? 'message' : 'messages';
+  return `This sends ${reach.toLocaleString()} WhatsApp ${noun}.`;
+};
+
+/** Switching the schedule on lands an hour from now — a sane, editable start
+ * rather than an empty picker. */
+const defaultScheduleIso = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
 
 export default function WaCampaignForm({
   open,
@@ -71,6 +79,10 @@ export default function WaCampaignForm({
 
   const audience = watch('audience');
   const reach = useWaReach(audience, watch('audience_list_id'));
+  // The button says what pressing it does — schedule, or send right now.
+  const scheduled = !!watch('scheduled_at');
+  let submitLabel = scheduled ? 'Schedule' : 'Send now';
+  if (busy) submitLabel = scheduled ? 'Scheduling…' : 'Sending…';
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -157,6 +169,36 @@ export default function WaCampaignForm({
             )}
 
             <ParamsField control={control} variables={variables} />
+
+            <Controller
+              control={control}
+              name="scheduled_at"
+              render={({ field, fieldState }) => (
+                <Stack spacing={1}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={!!field.value}
+                        // Turning it off clears the time — a hidden schedule is
+                        // how a send goes out at the wrong hour.
+                        onChange={(_, on) => field.onChange(on ? defaultScheduleIso() : '')}
+                      />
+                    }
+                    label="Schedule for later"
+                  />
+                  {field.value ? (
+                    <DateTimeField
+                      label="Send at"
+                      value={field.value}
+                      onChange={field.onChange}
+                      minDateTime={new Date()}
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message ?? ' '}
+                    />
+                  ) : null}
+                </Stack>
+              )}
+            />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between' }}>
@@ -168,7 +210,7 @@ export default function WaCampaignForm({
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={busy || !isValid || reach === 0}>
-              {busy ? 'Sending…' : 'Send now'}
+              {submitLabel}
             </Button>
           </Stack>
         </DialogActions>

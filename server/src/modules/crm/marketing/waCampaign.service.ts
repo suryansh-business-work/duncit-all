@@ -37,6 +37,11 @@ const PROGRESS_EVERY = 20;
 const str = (v: unknown) => String(v ?? '').trim();
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
 
+/** setTimeout tops out here; a schedule further out re-arms in hops. */
+const MAX_TIMER_DELAY = 2_147_483_647;
+/** Live timers for SCHEDULED campaigns in THIS process, by campaign id. */
+const timers = new Map<string, NodeJS.Timeout>();
+
 const toPub = (doc: any) => ({
   campaign_id: doc.campaign_id,
   name: doc.name,
@@ -45,6 +50,7 @@ const toPub = (doc: any) => ({
   audience_list_id: doc.audience_list_id ? String(doc.audience_list_id) : null,
   template_params: doc.template_params ?? [],
   status: doc.status,
+  scheduled_at: iso(doc.scheduled_at),
   recipient_count: doc.recipient_count,
   sent_count: doc.sent_count,
   failed_count: doc.failed_count,
@@ -115,6 +121,18 @@ interface SendInput {
   audience?: WaCampaignAudience | null;
   audience_list_id?: string | null;
   template_params?: (string | null)[] | null;
+  /** ISO time to send at. Absent, or already past, means send now. */
+  scheduled_at?: string | null;
+}
+
+/** The send time, or null for "now". A time that has already passed is not an
+ * error — it just means now, the same as leaving it out. */
+function parseSchedule(raw?: string | null): Date | null {
+  const value = str(raw);
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw badInput('That schedule date is not a real date');
+  return date.getTime() > Date.now() ? date : null;
 }
 
 /** Validate what the portal sent, resolving the campaign name against the saved
@@ -141,6 +159,7 @@ async function validateSendInput(input: SendInput) {
     audience: audience as WaCampaignAudience,
     audience_list_id: audience === 'AUDIENCE_LIST' ? audienceListId : null,
     template_params: templateParams,
+    scheduled_at: parseSchedule(input.scheduled_at),
   };
 }
 
@@ -213,6 +232,10 @@ const COUNTER_OF: Record<WaRecipientStatus, 'sent_count' | 'skipped_count' | 'fa
 async function runSend(campaignId: string) {
   const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
   if (!doc) return;
+  // Cancelled between the timer being armed and it firing — the hour passing
+  // does not resurrect a send somebody called off.
+  if (doc.status === 'CANCELLED') return;
+  doc.status = 'SENDING';
   try {
     const users = await recipientUsers(doc.audience as WaCampaignAudience, doc.audience_list_id);
     doc.recipient_count = users.length;
@@ -247,6 +270,40 @@ async function runSend(campaignId: string) {
     failed: doc.failed_count,
     skipped: doc.skipped_count,
   });
+}
+
+/**
+ * Arm the in-process timer for a scheduled campaign. setTimeout cannot hold
+ * more than ~24.8 days, so a schedule further out re-arms itself in hops; every
+ * SCHEDULED row is re-armed on boot by resumeSchedules, so a restart does not
+ * lose one.
+ */
+function scheduleDoc(doc: any) {
+  if (doc.status !== 'SCHEDULED' || !doc.scheduled_at) return;
+  const existing = timers.get(doc.campaign_id);
+  if (existing) clearTimeout(existing);
+  const delay = doc.scheduled_at.getTime() - Date.now();
+  const timer = setTimeout(
+    () => {
+      timers.delete(doc.campaign_id);
+      if (delay > MAX_TIMER_DELAY) scheduleDoc(doc);
+      else {
+        runSend(doc.campaign_id).catch((e) =>
+          logs.server.error('waCampaign', 'scheduleDoc', { error: e, campaign_id: doc.campaign_id })
+        );
+      }
+    },
+    Math.max(0, Math.min(delay, MAX_TIMER_DELAY))
+  );
+  timers.set(doc.campaign_id, timer);
+}
+
+function clearTimer(campaignId: string) {
+  const timer = timers.get(campaignId);
+  if (timer) {
+    clearTimeout(timer);
+    timers.delete(campaignId);
+  }
 }
 
 export const waCampaignService = {
@@ -329,13 +386,35 @@ export const waCampaignService = {
     const doc = await WaCampaignModel.create({
       ...payload,
       campaign_id: crypto.randomUUID(),
-      status: 'SENDING',
+      status: payload.scheduled_at ? 'SCHEDULED' : 'SENDING',
       created_by: userId ?? null,
     });
-    runSend(doc.campaign_id).catch((e) =>
-      logs.server.error('waCampaign', 'send', { error: e, campaign_id: doc.campaign_id })
-    );
+    if (payload.scheduled_at) scheduleDoc(doc);
+    else {
+      runSend(doc.campaign_id).catch((e) =>
+        logs.server.error('waCampaign', 'send', { error: e, campaign_id: doc.campaign_id })
+      );
+    }
     return toPub(doc);
+  },
+
+  /** Call off a send that has not started. Only SCHEDULED can be cancelled —
+   * once messages are going out there is nothing to call off. */
+  async cancel(campaignId: string) {
+    const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
+    if (!doc) throw notFound();
+    if (doc.status !== 'SCHEDULED') throw badInput('Only a scheduled campaign can be cancelled');
+    clearTimer(campaignId);
+    doc.status = 'CANCELLED';
+    await doc.save();
+    return toPub(doc);
+  },
+
+  /** Re-arm every scheduled campaign after a restart — the timers live in this
+   * process, the schedule lives in the database. */
+  async resumeSchedules() {
+    const docs = await WaCampaignModel.find({ status: 'SCHEDULED' }).exec();
+    docs.forEach(scheduleDoc);
   },
 
   async remove(campaignId: string) {
@@ -344,6 +423,9 @@ export const waCampaignService = {
     if (doc.status === 'SENDING') {
       throw badInput('That campaign is sending right now — wait for it to finish');
     }
+    // A scheduled campaign owns a live timer; dropping the row without clearing
+    // it leaves a timer that fires for a campaign that no longer exists.
+    clearTimer(campaignId);
     await doc.deleteOne();
     // The per-recipient rows exist only for this campaign — they go with it.
     await WaCampaignRecipientModel.deleteMany({ campaign_id: campaignId });

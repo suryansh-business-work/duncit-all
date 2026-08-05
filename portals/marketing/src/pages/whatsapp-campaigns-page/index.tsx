@@ -120,7 +120,9 @@ export default function WhatsappCampaignsPage() {
         <WaCampaignTable
           fetchRows={fetchRows}
           refetchRef={refetchRef}
+          busy={actions.cancelling}
           onOpen={(row) => setViewing(row.campaign_id)}
+          onCancel={actions.cancel}
           onDelete={setTarget}
         />
       )}

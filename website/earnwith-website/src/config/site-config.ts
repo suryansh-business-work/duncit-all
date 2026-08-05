@@ -223,6 +223,16 @@ export const siteConfig = {
       },
     ],
     note: 'An estimate at standard rates. Your own rate, and a venue’s own price, are set when you create the pod.',
+    /** The printable copy of an estimate. No PDF library: the browser's own
+     * print-to-PDF renders a sheet built for paper, which costs the page
+     * nothing to load and works everywhere. */
+    pdf: {
+      button: 'Download PDF',
+      title: 'Earnings estimate',
+      inputsTitle: 'What this assumes',
+      breakdownTitle: 'Where the money goes',
+      footer: 'Estimated on duncit.com — figures come from Duncit at standard rates.',
+    },
     /** Shown instead of a confident figure when the pod cannot pay this role. */
     shortfallNote:
       'At this ticket price the pod does not cover its costs — raise the price, add spots, or find a cheaper slot.',

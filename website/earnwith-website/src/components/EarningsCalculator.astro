@@ -1,6 +1,11 @@
 ---
 import { siteConfig } from '../config/site-config';
+import { fetchBranding } from '../lib/site-data';
+
 const { calculator, graphqlUrl } = siteConfig;
+// The printed sheet carries the admin's own logo, like every other surface.
+const branding = await fetchBranding();
+const printLogo = branding.website_header_logo_url || '/duncit-logo.svg';
 ---
 
 <!-- The interactive piece: move the three inputs, watch what a pod actually
@@ -80,7 +85,40 @@ const { calculator, graphqlUrl } = siteConfig;
       </div>
     </div>
 
-    <p class="mt-6 text-xs text-ink-soft">{calculator.disclaimer}</p>
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+      <p class="max-w-3xl text-xs text-ink-soft">{calculator.disclaimer}</p>
+      <button
+        type="button"
+        data-print-estimate
+        class="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary/40 px-5 py-2 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
+      >
+        <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+        {calculator.pdf.button}
+      </button>
+    </div>
+  </div>
+
+  <!-- The sheet the printer sees. It is built for paper, not squeezed from the
+       page: the logo, what was assumed, where the money goes, and the same
+       disclaimer — filled from the live numbers the moment it is asked for. -->
+  <div class="print-sheet" hidden data-print-sheet>
+    <img src={printLogo} alt="Duncit" class="print-logo" />
+    <h1>{calculator.pdf.title}</h1>
+    <p class="print-role" data-print-role></p>
+
+    <h2>{calculator.pdf.inputsTitle}</h2>
+    <dl data-print-inputs></dl>
+
+    <h2>{calculator.pdf.breakdownTitle}</h2>
+    <dl data-print-rows></dl>
+
+    <p class="print-total"><span data-print-label></span><strong data-print-total></strong></p>
+
+    <h2 data-print-duties-title></h2>
+    <ul data-print-duties></ul>
+
+    <p class="print-note">{calculator.disclaimer}</p>
+    <p class="print-note" data-print-footer></p>
   </div>
 </section>
 
@@ -94,6 +132,8 @@ const { calculator, graphqlUrl } = siteConfig;
     standardNote: calculator.note,
     shortfallNote: calculator.shortfallNote,
     noShareNote: calculator.noShareNote,
+    fields: calculator.fields,
+    pdfFooter: calculator.pdf.footer,
   }}
 >
   (() => {
@@ -291,6 +331,37 @@ const { calculator, graphqlUrl } = siteConfig;
       clearTimeout(timer);
       timer = setTimeout(request, 180);
     });
+
+    // The printed sheet is filled at the moment it is asked for, from the same
+    // numbers on screen — never a second calculation that could disagree.
+    const printButton = document.querySelector('[data-print-estimate]');
+    if (printButton) {
+      const line = (term, value) => `<div><dt>${term}</dt><dd>${value}</dd></div>`;
+      printButton.addEventListener('click', () => {
+        if (!latest) return;
+        const w = latest.waterfall;
+        document.querySelector('[data-print-role]').textContent = role.label.replace(/^As /, '');
+        document.querySelector('[data-print-inputs]').innerHTML = fields
+          .filter((field) => !field.roles || field.roles.includes(role.key))
+          .map((field) => {
+            const raw = sliderValue(field.name);
+            return line(field.label, `${field.prefix ?? ''}${raw.toLocaleString('en-IN')}`);
+          })
+          .join('');
+        document.querySelector('[data-print-rows]').innerHTML = role.rows
+          .map((key) => line(rowLabels[key], rowValue(key, w).text))
+          .join('');
+        document.querySelector('[data-print-label]').textContent = role.takeHomeLabel;
+        document.querySelector('[data-print-total]').textContent = takeHome.textContent;
+        document.querySelector('[data-print-duties-title]').textContent = role.dutiesTitle;
+        document.querySelector('[data-print-duties]').innerHTML = role.duties
+          .map((duty) => `<li>${duty}</li>`)
+          .join('');
+        document.querySelector('[data-print-footer]').textContent =
+          `${pdfFooter} ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+        window.print();
+      });
+    }
 
     syncLabels();
     paintDuties();

@@ -1,0 +1,110 @@
+import { gql } from '@apollo/client';
+
+const WA_CAMPAIGN_FIELDS = `
+  campaign_id name wa_campaign_name audience audience_list_id template_params
+  status recipient_count sent_count failed_count skipped_count
+  failures { destination reason }
+  error sent_at created_at updated_at
+`;
+
+/** Everything the page needs before the first render: whether the Tech portal's
+ * AiSensy key is in place, the campaign names to pick from, the variables a
+ * parameter may use, and the saved audience lists. */
+export const WA_CAMPAIGN_SETUP = gql`
+  query WaCampaignSetup {
+    waCampaignConfigured
+    waCampaignNames {
+      id
+      name
+      description
+    }
+    waCampaignVariables {
+      name
+      description
+    }
+    audienceLists {
+      id
+      name
+      member_count
+    }
+  }
+`;
+
+export const WA_CAMPAIGN_REACH = gql`
+  query WaCampaignReach($audience: WaCampaignAudience!, $audience_list_id: ID) {
+    waCampaignReach(audience: $audience, audience_list_id: $audience_list_id)
+  }
+`;
+
+export const WA_CAMPAIGNS_TABLE = gql`
+  query WaCampaignsTable($query: TableQueryInput) {
+    waCampaignsTable(query: $query) {
+      total
+      rows { ${WA_CAMPAIGN_FIELDS} }
+    }
+  }
+`;
+
+export const SEND_WA_CAMPAIGN = gql`
+  mutation SendWaCampaign($input: SendWaCampaignInput!) {
+    sendWaCampaign(input: $input) { ${WA_CAMPAIGN_FIELDS} }
+  }
+`;
+
+export const DELETE_WA_CAMPAIGN = gql`
+  mutation DeleteWaCampaign($campaign_id: ID!) {
+    deleteWaCampaign(campaign_id: $campaign_id)
+  }
+`;
+
+export const CREATE_WA_CAMPAIGN_NAME = gql`
+  mutation CreateWaCampaignName($input: WaCampaignNameInput!) {
+    createWaCampaignName(input: $input) {
+      id
+      name
+      description
+    }
+  }
+`;
+
+export const DELETE_WA_CAMPAIGN_NAME = gql`
+  mutation DeleteWaCampaignName($id: ID!) {
+    deleteWaCampaignName(id: $id)
+  }
+`;
+
+export interface WaCampaignNameOption {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface WaCampaignVariable {
+  name: string;
+  description: string;
+}
+
+export interface WaAudienceList {
+  id: string;
+  name: string;
+  member_count: number;
+}
+
+export interface WaCampaignRow {
+  campaign_id: string;
+  name: string;
+  wa_campaign_name: string;
+  audience: string;
+  audience_list_id: string | null;
+  template_params: string[];
+  status: string;
+  recipient_count: number;
+  sent_count: number;
+  failed_count: number;
+  skipped_count: number;
+  failures: { destination: string; reason: string }[];
+  error: string | null;
+  sent_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}

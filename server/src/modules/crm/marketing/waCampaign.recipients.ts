@@ -1,0 +1,119 @@
+import { GraphQLError } from 'graphql';
+import { UserModel } from '@modules/access/user/user.model';
+import type { WaCampaignAudience } from './waCampaign.model';
+
+/**
+ * Who a WhatsApp campaign reaches, and what fills its template variables.
+ *
+ * Kept apart from the send loop because "who does this reach" is a question the
+ * portal asks BEFORE sending — WhatsApp template messages are billed per
+ * message, so nobody should have to send one to find out how many go out.
+ */
+const str = (v: unknown) => String(v ?? '').trim();
+const digits = (v: unknown) => str(v).replaceAll(/\D/g, '');
+
+type UserLike = Record<string, any>;
+
+const fullNameOf = (u: UserLike) =>
+  [str(u.profile?.first_name), str(u.profile?.last_name)].filter(Boolean).join(' ');
+
+/** The variables a template parameter may carry, resolved per recipient. The
+ * portal renders this list, so a new variable needs no client change. */
+export const WA_VARIABLES: {
+  name: string;
+  description: string;
+  value: (u: UserLike) => string;
+}[] = [
+  { name: 'first_name', description: "The recipient's first name.", value: (u) => str(u.profile?.first_name) },
+  { name: 'last_name', description: "The recipient's last name.", value: (u) => str(u.profile?.last_name) },
+  { name: 'full_name', description: 'First and last name together.', value: fullNameOf },
+  { name: 'city', description: "The recipient's city.", value: (u) => str(u.profile?.city) },
+  { name: 'state', description: "The recipient's state.", value: (u) => str(u.profile?.state) },
+];
+
+const VALUE_OF = new Map(WA_VARIABLES.map((v) => [v.name, v.value]));
+const TOKEN_RE = /\{\{(\w+)\}\}/g;
+
+/** Reject unknown {{tokens}} when the campaign is created rather than letting
+ * every recipient silently receive the literal text `{{frist_name}}`. */
+export function assertKnownTokens(params: string[]) {
+  for (const param of params) {
+    for (const [, token] of param.matchAll(TOKEN_RE)) {
+      if (!VALUE_OF.has(token)) {
+        throw new GraphQLError(`Unknown variable {{${token}}} in a template parameter`, {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Fill one parameter for one recipient. Returns null when a variable it uses is
+ * empty for that person: a WhatsApp template renders a blank there, so the
+ * recipient is skipped instead of being sent a half-written message.
+ */
+export function fillParam(raw: string, user: UserLike): string | null {
+  let missing = false;
+  const filled = raw.replaceAll(TOKEN_RE, (_match, token: string) => {
+    const value = VALUE_OF.get(token)?.(user) ?? '';
+    if (!value) missing = true;
+    return value;
+  });
+  const out = filled.trim();
+  if (missing || !out) return null;
+  return out;
+}
+
+/**
+ * The number AiSensy is given: country code + number, digits only. The saved
+ * WhatsApp number wins over the login phone. A number long enough to already
+ * carry its country code is used as-is — prefixing the extension again would
+ * produce 9191…; a short number with no extension has no country code to send
+ * with, so that recipient is not reachable.
+ */
+export function destinationFor(user: UserLike): string {
+  const whatsapp = user.communication?.whatsapp;
+  const source = digits(whatsapp?.number) ? whatsapp : user.auth?.phone;
+  const number = digits(source?.number);
+  const extension = digits(source?.extension);
+  if (!number) return '';
+  if (number.length > 10 && number.startsWith(extension)) return number;
+  if (!extension) return '';
+  const full = `${extension}${number}`;
+  return full.length >= 10 && full.length <= 15 ? full : '';
+}
+
+/** The name AiSensy records for the contact. */
+export const userNameFor = (user: UserLike) => fullNameOf(user) || str(user.profile?.first_name);
+
+/** Live accounts that carry some phone number at all. Whether that number is
+ * actually sendable is decided per recipient by {@link destinationFor}. */
+const HAS_A_NUMBER = {
+  'metadata.status': 'ACTIVE',
+  'metadata.deleted_at': null,
+  $or: [
+    { 'communication.whatsapp.number': { $nin: ['', null] } },
+    { 'auth.phone.number': { $nin: ['', null] } },
+  ],
+};
+
+async function recipientFilter(audience: WaCampaignAudience, audienceListId?: unknown) {
+  if (audience !== 'AUDIENCE_LIST') return HAS_A_NUMBER;
+  const { audienceListService } = await import('./audienceList.service');
+  const ids = await audienceListService.memberIds(String(audienceListId ?? ''));
+  return { ...HAS_A_NUMBER, _id: { $in: ids } };
+}
+
+/** How many people this audience reaches right now. */
+export async function countReachable(audience: WaCampaignAudience, audienceListId?: unknown) {
+  return UserModel.countDocuments(await recipientFilter(audience, audienceListId));
+}
+
+/** The recipients themselves, with only the fields a send needs. */
+export async function recipientUsers(audience: WaCampaignAudience, audienceListId?: unknown) {
+  return UserModel.find(await recipientFilter(audience, audienceListId))
+    .select('profile.first_name profile.last_name profile.city profile.state communication.whatsapp auth.phone')
+    .lean()
+    .exec();
+}

@@ -30,6 +30,7 @@ export const appConfig = {
       icon: 'contactMail',
       children: [
         { label: 'Email', to: '/campaigns/email', icon: 'email' },
+        { label: 'WhatsApp', to: '/campaigns/whatsapp', icon: 'whatsapp' },
         { label: 'Notifications', to: '/notifications', icon: 'notifications' },
       ],
     },

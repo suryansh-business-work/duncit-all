@@ -1,19 +1,15 @@
 import gql from 'graphql-tag';
+import { ENV_CATEGORIES } from './envEntry.model';
 
+/**
+ * The enum values are interpolated from ENV_CATEGORIES, not repeated here. A
+ * category added to the model but forgotten in this list failed `envCategories`
+ * at request time with "Enum EnvCategory cannot represent value" — and no
+ * typecheck can catch it, because the SDL is just a string.
+ */
 export const envEntryTypeDefs = gql`
   enum EnvCategory {
-    EMAIL
-    IMAGEKIT
-    PEXELS
-    GOOGLE_OAUTH
-    GOOGLE_MAPS
-    TWILIO
-    OPENAI
-    GEMINI
-    SERVAM
-    RAZORPAY
-    SHIPROCKET
-    SLACK
+    ${ENV_CATEGORIES.join('\n    ')}
   }
 
   type EnvConfigPair {

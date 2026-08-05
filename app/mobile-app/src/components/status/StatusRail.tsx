@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -13,7 +14,9 @@ import { useStatusStore } from '@/stores/status.store';
 import { graphqlRequest } from '@/services/graphql.client';
 import { TogglePostLikeDocument } from '@/graphql/posts';
 import type { StatusGroup } from '@/hooks/useStatus';
-import { AdSlot } from '@/components/ads/AdSlot';
+import { AdCard } from '@/components/ads/AdCard';
+import { useActiveAds } from '@/hooks/useActiveAds';
+import { buildAdStory } from '@/components/status/adStory';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusVideoPreviewSheet } from '@/components/status/StatusVideoPreviewSheet';
 import { StatusViewer } from '@/components/status/StatusViewer';
@@ -59,8 +62,15 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const seenIds = useStatusStore((s) => s.seenIds);
   // Index into the ordered list (mine first, then followed content); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  // The sponsored story opens on its own rather than joining the ordered list:
+  // it is not somebody's story to walk to, and keeping it out leaves the tile
+  // indexes (and everything that reads them) exactly as they were.
+  const [adOpen, setAdOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
+  const { ads } = useActiveAds('STATUS');
+  const ad = ads[0];
+  const adStory = useMemo(() => (ad ? buildAdStory(ad) : null), [ad]);
   const myCoverIsVideo = mine?.cover.mediaType === 'VIDEO';
 
   // Stable-per-load shuffle: re-shuffles only when `items` changes (refetch /
@@ -94,9 +104,15 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   // (rendered separately as the upload tile).
   const followed = (mine ? groups.slice(1) : groups) as StoryRailItem[];
 
-  const openTarget = (target: StoryTarget) => {
+  const closeViewer = () => {
+    setAdOpen(false);
     setActiveIndex(null);
+  };
+
+  const openTarget = (target: StoryTarget) => {
+    closeViewer();
     if (target.kind === 'club') openClub(target.clubSlug);
+    else if (target.kind === 'link') fireAndForget(Linking.openURL(target.url));
     else navigation.navigate('PublicProfile', { userId: target.id });
   };
 
@@ -144,8 +160,16 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
               if (!uploading) fireAndForget(pickAndUpload());
             }}
           />
-          {/* The sponsored tile sits second, right after "Your story" (mock). */}
-          <AdSlot position="STATUS" variant="tile" />
+          {/* The sponsored tile sits second, right after "Your story" (mock).
+              Tapping it opens the ad as a story, never the advertiser's page. */}
+          {ad ? (
+            <AdCard
+              ad={ad}
+              variant="tile"
+              testID="ad-slot-STATUS"
+              onPress={() => setAdOpen(true)}
+            />
+          ) : null}
           {followed.map((item, itemIndex) => (
             <StatusTile
               key={item.key}
@@ -177,11 +201,13 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
           </XStack>
         </ScrollView>
       </YStack>
+      {/* A sponsored story has no siblings to walk to, so it gets no next/prev:
+          running past its end closes the viewer (which falls back to onClose). */}
       <StatusViewer
-        status={active ?? null}
-        onClose={() => setActiveIndex(null)}
-        onNext={goNext}
-        onPrev={goPrev}
+        status={adOpen ? adStory : (active ?? null)}
+        onClose={closeViewer}
+        onNext={adOpen ? undefined : goNext}
+        onPrev={adOpen ? undefined : goPrev}
         onOpenTarget={openTarget}
         onDelete={activeIsMine ? setPendingDelete : undefined}
         onViewers={activeIsMine ? setViewersStoryId : undefined}

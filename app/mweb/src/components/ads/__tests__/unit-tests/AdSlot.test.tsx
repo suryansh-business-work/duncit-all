@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import AdSlot from '../../AdSlot';
+import AdTile from '../../AdTile';
 import { ACTIVE_ADS, type PublicAd } from '../../useActiveAds';
 
 const ad = (overrides: Partial<PublicAd> = {}): PublicAd & { __typename: string } => ({
@@ -64,12 +65,19 @@ describe('AdSlot', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('renders the status-rail tile shape for variant="tile"', async () => {
-    setup(
-      [mock('STATUS', [ad({ position: 'STATUS', ad_type: 'VIDEO' })])],
-      <AdSlot position="STATUS" variant="tile" />,
-    );
-    expect(await screen.findByTestId('ad-tile')).toBeInTheDocument();
-    expect(screen.getByText('Sponsored')).toBeInTheDocument();
+});
+
+describe('AdTile', () => {
+  // The story rail's tile opens the ad as a story — it never leaves for the
+  // advertiser's page, whether or not the ad carries a link.
+  it('opens the story on click and keyboard, never the redirect', () => {
+    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+    const onOpen = vi.fn();
+    render(<AdTile ad={ad({ position: 'STATUS', redirect_url: 'https://brand.example' })} onOpen={onOpen} />);
+    const tile = screen.getByRole('button', { name: 'Sponsored: Fresh brews nearby' });
+    fireEvent.click(tile);
+    fireEvent.keyDown(tile, { key: 'Enter' });
+    expect(onOpen).toHaveBeenCalledTimes(2);
+    expect(open).not.toHaveBeenCalled();
   });
 });

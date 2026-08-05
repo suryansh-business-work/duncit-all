@@ -10,7 +10,8 @@ export interface StatusSlide {
   imageUrl?: string | null;
   mediaType: string;
   caption?: string | null;
-  createdAt: string;
+  /** Absent on a sponsored slide, which is an ad rather than a posted story. */
+  createdAt?: string;
   /** When the status auto-expires (drives the "X remaining" countdown). */
   expiresAt?: string | null;
   /** Has the viewer already opened this slide — greys the ring (Bug 2). */

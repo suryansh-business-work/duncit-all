@@ -1,24 +1,35 @@
+import type { KeyboardEvent } from 'react';
 import { Box, Stack, Typography } from '@mui/material';
 import AdMedia from './AdMedia';
-import { adClickProps } from './adClick';
 import type { PublicAd } from './useActiveAds';
 
-/** A sponsored tile shaped exactly like HomeStatusTile (70×90 with a 62px
- * circle in a 96px rail) so it blends into the status rail, plus a tiny
- * "Sponsored" badge over the circle. */
-export default function AdTile({ ad }: Readonly<{ ad: PublicAd }>) {
-  const clickable = Boolean(ad.redirect_url);
+/**
+ * A sponsored tile shaped exactly like HomeStatusTile (70×90 with a 62px circle
+ * in a 96px rail) so it blends into the status rail, plus a tiny "Sponsored"
+ * badge over the circle.
+ *
+ * Tapping it opens the ad AS A STORY — it never leaves for the advertiser's
+ * page. A tile in a story rail promises a story; the landing page, when the ad
+ * has one, is offered as "Open details" at the bottom of that story.
+ */
+export default function AdTile({ ad, onOpen }: Readonly<{ ad: PublicAd; onOpen: () => void }>) {
   return (
     <Stack
       data-testid="ad-tile"
-      {...adClickProps(ad)}
+      role="button"
+      tabIndex={0}
+      aria-label={ad.ad_title ? `Sponsored: ${ad.ad_title}` : 'Sponsored ad'}
+      onClick={onOpen}
+      onKeyDown={(event: KeyboardEvent) => {
+        if (event.key === 'Enter' || event.key === ' ') onOpen();
+      }}
       spacing={0.6}
       alignItems="center"
       sx={{
         width: 70,
         minHeight: 90,
         flex: '0 0 auto',
-        cursor: clickable ? 'pointer' : 'default',
+        cursor: 'pointer',
         overflow: 'visible',
       }}
     >

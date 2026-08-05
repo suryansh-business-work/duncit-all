@@ -2,21 +2,38 @@
 import { siteConfig } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 
+interface Props {
+  /** Sit over a full-bleed banner instead of on the page background. */
+  overlay?: boolean;
+}
+
+const { overlay = false } = Astro.props;
 const { nav } = siteConfig;
 const branding = await fetchBranding();
 const headerLogo = branding.website_header_logo_url || '/duncit-logo.svg';
+
+// An overlay header takes no layout space, which is what lets the banner start
+// at the very top of the page and run underneath it; a page without a banner
+// keeps the ordinary sticky bar that pushes content down.
+const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
 ---
 
-<header class="sticky top-0 z-30 border-b border-black/5 bg-cream/80 backdrop-blur">
+<!-- The solid bar is the DEFAULT, and the transparent state is added at the top
+     of the page by script. The other way round, a failed script would leave
+     white nav text on the cream background — invisible. -->
+<header
+  class={`site-header ${position} z-30 border-b border-black/5 bg-cream/80 backdrop-blur`}
+  data-overlay={overlay ? 'true' : undefined}
+>
   <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
     <a href="/" class="flex items-center gap-2" aria-label="Duncit">
-      <img src={headerLogo} alt="Duncit" class="h-7 w-auto" />
+      <img src={headerLogo} alt="Duncit" class="h-10 w-auto sm:h-12" />
     </a>
 
     <div class="hidden items-center gap-7 lg:flex">
       {
         nav.links.map((link) => (
-          <a href={link.href} class="text-sm font-semibold text-ink-soft transition hover:text-ink">
+          <a href={link.href} class="nav-link text-sm font-semibold text-ink-soft transition hover:text-ink">
             {link.label}
           </a>
         ))
@@ -26,7 +43,7 @@ const headerLogo = branding.website_header_logo_url || '/duncit-logo.svg';
     <div class="flex items-center gap-2 sm:gap-3">
       <a
         href={nav.login.href}
-        class="rounded-full border border-ink/15 px-5 py-2 text-sm font-bold text-ink transition hover:border-ink/30"
+        class="login-link rounded-full border border-ink/15 px-5 py-2 text-sm font-bold text-ink transition hover:border-ink/30"
       >
         {nav.login.label}
       </a>
@@ -39,3 +56,39 @@ const headerLogo = branding.website_header_logo_url || '/duncit-logo.svg';
     </div>
   </nav>
 </header>
+
+<style>
+  /* Only a header declared as an overlay ever goes transparent, and only while
+     the page is still at the top. */
+  .site-header[data-overlay].at-top {
+    background: transparent;
+    backdrop-filter: none;
+    border-color: transparent;
+  }
+  .site-header[data-overlay].at-top .nav-link,
+  .site-header[data-overlay].at-top .login-link {
+    color: #fff;
+  }
+  .site-header[data-overlay].at-top .login-link {
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+  .site-header[data-overlay].at-top .nav-link:hover {
+    color: #fff;
+    opacity: 0.8;
+  }
+  /* The logo is a coloured mark on a photograph — a soft shadow keeps its
+     edges off a bright frame without recolouring it. */
+  .site-header[data-overlay].at-top img {
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.45));
+  }
+</style>
+
+<script>
+  // Transparent while the banner is behind it, solid once the page scrolls.
+  const header = document.querySelector<HTMLElement>('.site-header[data-overlay]');
+  if (header) {
+    const sync = () => header.classList.toggle('at-top', window.scrollY <= 24);
+    sync();
+    window.addEventListener('scroll', sync, { passive: true });
+  }
+</script>

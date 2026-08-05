@@ -2,71 +2,141 @@
 import { siteConfig } from '../config/site-config';
 const { hero } = siteConfig;
 
-// The ribbon reads the same however far round it wraps, so the words repeat
-// rather than stretch.
-const ribbonText = `${hero.ribbon.join(' • ')} • `.repeat(2);
+// The marquee runs forever by scrolling exactly half the track and resetting —
+// the copies land where the previous ones were, so the reset is invisible.
+// FOUR copies, not two: half a two-copy track is barely a desktop width, and a
+// track narrower than the band would run out and show the gap it resets across.
+const ribbonRun = `${hero.ribbon.join('  •  ')}  •  `;
+const ribbonCopies = [ribbonRun, ribbonRun, ribbonRun, ribbonRun];
 ---
 
-<section class="relative overflow-hidden">
+<section class="relative isolate flex min-h-[86svh] items-center overflow-hidden">
+  <!-- The banner runs edge to edge, from under the transparent header down to
+       the ribbon. It is the page's first paint, so it loads eagerly. -->
+  <img
+    src={hero.image}
+    alt={hero.imageAlt}
+    class="absolute inset-0 -z-20 h-full w-full object-cover"
+    loading="eager"
+    fetchpriority="high"
+  />
+  <!-- Copy sits on the left, so the scrim is heaviest there and clears to the
+       right: the photograph keeps its subject, the words keep their contrast. -->
   <div
-    class="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-primary-light blur-3xl"
+    class="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/70 to-ink/25"
     aria-hidden="true"
   >
   </div>
-  <div class="mx-auto grid max-w-6xl items-center gap-10 px-5 py-14 lg:grid-cols-[1fr_1.15fr] lg:py-20">
-    <div>
-      <span
-        class="inline-block rounded-full border border-primary/30 bg-primary-light/60 px-4 py-1 text-sm font-bold text-primary-dark"
-      >
-        {hero.eyebrow}
-      </span>
-      <h1 class="mt-6 text-5xl text-ink sm:text-6xl">{hero.heading}</h1>
-      {hero.paragraphs.map((paragraph) => <p class="mt-5 max-w-md text-lg text-ink-soft">{paragraph}</p>)}
-      <div class="mt-8 flex flex-wrap items-center gap-3">
-        <a
-          href={hero.primaryCta.href}
-          class="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
-        >
-          {hero.primaryCta.label}
-          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-        </a>
-        <a
-          href={hero.secondaryCta.href}
-          class="rounded-full border border-ink/15 bg-white px-7 py-3 text-base font-bold text-ink transition hover:border-ink/30"
-        >
-          {hero.secondaryCta.label}
-        </a>
-      </div>
-    </div>
 
-    <div class="relative">
-      <img
-        src={hero.image}
-        alt={hero.imageAlt}
-        width="1200"
-        height="800"
-        class="aspect-3/2 w-full rounded-3xl object-cover shadow-xl"
-        loading="eager"
-      />
-      <!-- The curved ribbon from the mock: one path, the words riding it via
-           textPath so the curve stays a curve at every width. -->
-      <svg
-        class="pointer-events-none absolute -left-[8%] bottom-[4%] hidden h-[72%] w-[116%] sm:block"
-        viewBox="0 0 600 300"
-        fill="none"
-        aria-hidden="true"
+  <div class="mx-auto w-full max-w-6xl px-5 pt-32 pb-36 sm:pt-36 sm:pb-40">
+    <span
+      class="inline-block rounded-full border border-white/30 bg-white/15 px-4 py-1 text-sm font-bold text-white backdrop-blur"
+    >
+      {hero.eyebrow}
+    </span>
+    <h1 class="mt-6 max-w-2xl text-5xl text-white sm:text-6xl lg:text-7xl">{hero.heading}</h1>
+    {hero.paragraphs.map((paragraph) => <p class="mt-5 max-w-lg text-lg text-white/85">{paragraph}</p>)}
+    <div class="mt-9 flex flex-wrap items-center gap-3">
+      <a
+        href={hero.primaryCta.href}
+        class="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/40 transition hover:bg-primary-dark"
       >
-        <path id="ribbon-curve" d="M 10 250 C 150 60, 450 60, 590 250" stroke="none" fill="none"></path>
-        <path
-          d="M 10 250 C 150 60, 450 60, 590 250"
-          stroke="var(--color-primary)"
-          stroke-width="34"
-          stroke-linecap="round"
-          fill="none"></path>
-        <text class="font-head" font-size="13" font-weight="800" fill="#ffffff" letter-spacing="1.5">
-          <textPath href="#ribbon-curve" startOffset="2%" dominant-baseline="middle">{ribbonText}</textPath>
-        </text>
-      </svg>
+        {hero.primaryCta.label}
+        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </a>
+      <a
+        href={hero.secondaryCta.href}
+        class="rounded-full border border-white/40 bg-white/10 px-7 py-3 text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
+      >
+        {hero.secondaryCta.label}
+      </a>
+    </div>
+  </div>
+
+  <!-- Decorative: the words are already in the copy above, and a screen reader
+       reading a loop of slogans helps nobody. -->
+  <div class="ribbon-stage" aria-hidden="true">
+    <div class="ribbon-band">
+      <div class="ribbon-track">
+        {ribbonCopies.map((copy) => <span class="ribbon-run">{copy}</span>)}
+      </div>
     </div>
   </div>
 </section>
+
+<style>
+  /* A physical band tilted away from the reader: perspective on the stage, the
+     tilt on the band, so the text inside inherits the same plane and the whole
+     thing reads as one ribbon rather than skewed lettering. */
+  .ribbon-stage {
+    position: absolute;
+    right: -4%;
+    bottom: 3.5rem;
+    left: -4%;
+    perspective: 700px;
+    pointer-events: none;
+  }
+
+  .ribbon-band {
+    overflow: hidden;
+    padding: 0.85rem 0;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-primary) 82%, white) 0%,
+      var(--color-primary) 45%,
+      var(--color-primary-dark) 100%
+    );
+    /* The lift: tilted back, turned a degree off level, and shadowed under the
+       lower edge so it sits above the photograph instead of on it. */
+    transform: rotateX(16deg) rotate(-1.6deg);
+    transform-style: preserve-3d;
+    box-shadow:
+      0 18px 30px -12px rgba(0, 0, 0, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -2px 6px rgba(0, 0, 0, 0.22);
+  }
+
+  .ribbon-track {
+    display: flex;
+    width: max-content;
+    animation: ribbon-marquee 26s linear infinite;
+  }
+
+  .ribbon-run {
+    padding-right: 1.5rem;
+    font-family: var(--font-head);
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: #fff;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* Exactly half the track — the second copy has arrived where the first
+     started, so the reset is invisible. */
+  @keyframes ribbon-marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ribbon-track {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ribbon-band {
+      transform: rotateX(12deg) rotate(-2.2deg);
+    }
+    .ribbon-run {
+      font-size: 0.8rem;
+    }
+  }
+</style>

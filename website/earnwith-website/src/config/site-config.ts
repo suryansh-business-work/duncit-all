@@ -76,9 +76,11 @@ export const siteConfig = {
     ],
     primaryCta: { label: 'Start Earning', href: `${mwebUrl}/earn` },
     secondaryCta: { label: 'Explore Opportunities', href: '#paths' },
-    image: photo('34766307', 1200),
+    // Full-bleed banner behind the header, so it is requested at a width that
+    // survives a desktop viewport.
+    image: photo('34766307', 1920),
     imageAlt: 'People meeting over drinks at a Duncit pod',
-    /** Runs around the hero image on a curve, repeating as it goes. */
+    /** Rides the 3D band under the banner, scrolling past on a loop. */
     ribbon: [
       'Build Communities',
       'Create Experiences',

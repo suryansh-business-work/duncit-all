@@ -6,6 +6,10 @@ import { bouncerService } from './bouncer.service';
 // queries/mutations are gated to support roles instead of city admins.
 const ADMIN_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
 
+// A pod's ratings are read from the Admin panel's pod pages, which support
+// agents never open — so that one read answers to the pod-side roles too.
+const POD_READ_ROLES = [...ADMIN_ROLES, 'CITY_ADMIN', 'ZONAL_ADMIN'];
+
 export const bouncerResolvers = {
   Query: {
     bouncerSupportTarget: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
@@ -67,6 +71,14 @@ export const bouncerResolvers = {
     bouncerFeedback: (_p: unknown, args: { limit?: number }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return bouncerService.listFeedback(args.limit ?? 100);
+    },
+    podFeedbackSummary: (
+      _p: unknown,
+      args: { pod_id: string; limit?: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, POD_READ_ROLES);
+      return bouncerService.podFeedback(args.pod_id, args.limit ?? 20);
     },
     myActiveBouncerSos: (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

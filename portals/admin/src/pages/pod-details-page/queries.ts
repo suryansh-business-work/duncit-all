@@ -177,6 +177,53 @@ export interface PodAuditEntry {
   created_at: string;
 }
 
+/** What guests scored this pod on, part by part, plus the ratings themselves. */
+export const POD_FEEDBACK_SUMMARY = gql`
+  query AdminPodFeedbackSummary($pod_id: ID!) {
+    podFeedbackSummary(pod_id: $pod_id) {
+      pod_id
+      total
+      overall_average
+      aspects {
+        aspect
+        average
+        count
+      }
+      recent {
+        id
+        rating
+        message
+        created_at
+        category
+        user {
+          id
+          name
+        }
+        ratings {
+          aspect
+          rating
+        }
+      }
+    }
+  }
+`;
+
+export interface PodAspectRating {
+  aspect: string;
+  average: number;
+  count: number;
+}
+
+export interface PodFeedbackRow {
+  id: string;
+  rating: number;
+  message: string;
+  created_at: string;
+  category: string;
+  user: { id: string; name: string };
+  ratings: Array<{ aspect: string; rating: number }>;
+}
+
 export const POD_FINANCE_BREAKDOWN = gql`
   query AdminPodFinanceBreakdown($pod_id: ID!) {
     podFinanceBreakdown(pod_id: $pod_id) {

@@ -87,6 +87,29 @@ export const adsTypeDefs = gql`
     currency_symbol: String!
   }
 
+  "One placement on the public rate card: what it is, and what a day of it costs."
+  type AdRateCardEntry {
+    position: AdPosition!
+    label: String!
+    price_per_day: Float!
+  }
+
+  """
+  The advertising rate card, readable WITHOUT signing in — it is what the
+  marketing site quotes, so a price on that page can never be a stale copy of
+  one Marketing has since changed.
+  """
+  type AdRateCard {
+    currency_symbol: String!
+    entries: [AdRateCardEntry!]!
+    "The booking window a campaign must fall inside, in days."
+    min_days: Int!
+    max_days: Int!
+    "The cheapest and dearest placement — lets a page headline a starting price."
+    from_per_day: Float!
+    to_per_day: Float!
+  }
+
   input UpdateAdPricingInput {
     auto_per_day: Float
     home_bottom_per_day: Float
@@ -152,6 +175,8 @@ export const adsTypeDefs = gql`
   extend type Query {
     "Current per-day prices — powers the cost estimate in the Ads portal and Marketing settings."
     adPricing: AdPricing!
+    "The same prices, public, for the advertising site's cost calculator."
+    publicAdRateCard: AdRateCard!
     "The signed-in advertiser's own requests (Ads portal)."
     myAdRequestsTable(query: TableQueryInput): AdRequestTablePage!
     "The signed-in advertiser's dashboard KPIs (Ads portal home)."

@@ -2,7 +2,12 @@
 import Layout from '../layouts/Layout.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Hero from '../components/Hero.astro';
+import Placements from '../components/Placements.astro';
+import CampaignCalculator from '../components/CampaignCalculator.astro';
+import AdDesignService from '../components/AdDesignService.astro';
 import Features from '../components/Features.astro';
+import Steps from '../components/Steps.astro';
+import WhyChoose from '../components/WhyChoose.astro';
 import DownloadApps from '../components/DownloadApps.astro';
 import CtaBand from '../components/CtaBand.astro';
 import SiteFooter from '../components/SiteFooter.astro';
@@ -10,10 +15,19 @@ import { siteConfig } from '../config/site-config';
 ---
 
 <Layout title={siteConfig.brand.title}>
-  <SiteHeader />
+  <!-- The header sits ON the banner, so it takes no layout space and the
+       photograph starts at the very top of the page. -->
+  <SiteHeader overlay />
   <main>
     <Hero />
+    <!-- Where, then what it costs — an advertiser's two questions, in that
+         order, before anything about the console. -->
+    <Placements />
+    <CampaignCalculator />
+    <AdDesignService />
     <Features />
+    <Steps />
+    <WhyChoose />
     <DownloadApps />
     <CtaBand />
   </main>

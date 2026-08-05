@@ -367,4 +367,70 @@ export const podTypeDefs = /* GraphQL */ `
     message: String
     requires_oauth: Boolean
   }
+
+  "How many pods there are and what state they are in, right now."
+  type PodDashboardTotals {
+    total: Int!
+    upcoming: Int!
+    completed: Int!
+    cancelled: Int!
+    awaiting_venue: Int!
+    live_today: Int!
+  }
+
+  "Seats sold against seats offered."
+  type PodDashboardSeats {
+    spots_total: Int!
+    seats_filled: Int!
+    occupancy_pct: Float!
+  }
+
+  type PodDashboardMoney {
+    revenue_total: Float!
+    payments_count: Int!
+    refunded_total: Float!
+    average_ticket: Float!
+  }
+
+  "What guests scored pods on in the window — reuses the rating aspects."
+  type PodDashboardRatings {
+    total: Int!
+    overall_average: Float!
+    aspects: [PodAspectRating!]!
+  }
+
+  type PodDashboardPod {
+    id: ID!
+    pod_id: String!
+    title: String!
+    starts_at: String
+    spots: Int!
+    filled: Int!
+    rating_average: Float
+    rating_count: Int!
+  }
+
+  type PodDashboardDay {
+    date: String!
+    count: Int!
+  }
+
+  type PodDashboard {
+    "The window the money, ratings and trend cover. Counts are always live."
+    days: Int!
+    totals: PodDashboardTotals!
+    seats: PodDashboardSeats!
+    money: PodDashboardMoney!
+    ratings: PodDashboardRatings!
+    top_rated: [PodDashboardPod!]!
+    "Rated pods that scored below four — what to look at first."
+    needs_attention: [PodDashboardPod!]!
+    upcoming: [PodDashboardPod!]!
+    created_trend: [PodDashboardDay!]!
+  }
+
+  extend type Query {
+    "The Admin panel's Pods dashboard, in one read."
+    podDashboard(days: Int): PodDashboard!
+  }
 `;

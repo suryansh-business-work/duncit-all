@@ -1,0 +1,41 @@
+---
+/**
+ * The mark where a page signs off.
+ *
+ * The same component as the header's, with the footer's own rules baked in so
+ * five sites cannot each pick a different answer:
+ *  - the admin's FOOTER logo, then the header one it also manages, and only
+ *    then the wordmark — a brand that uploaded one logo should not see a
+ *    stand-in down here while its own mark sits at the top of the page;
+ *  - larger, because this is where the brand signs off;
+ *  - capped to its column so a wide logo cannot push the layout on a phone.
+ */
+import BrandLogo from './BrandLogo.astro';
+
+interface Props {
+  footerSrc?: string | null;
+  headerSrc?: string | null;
+  name?: string;
+  height?: number;
+  href?: string | null;
+  class?: string;
+}
+
+const {
+  footerSrc = null,
+  headerSrc = null,
+  name = 'Duncit',
+  height = 96,
+  href = '/',
+  class: className = '',
+} = Astro.props;
+---
+
+<BrandLogo
+  src={footerSrc || headerSrc}
+  name={name}
+  height={height}
+  href={href}
+  loading="lazy"
+  class:list={['max-w-full', className]}
+/>

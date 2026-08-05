@@ -1,37 +1,118 @@
 ---
 import { siteConfig } from '../config/site-config';
-const { hero } = siteConfig;
+import SmartLink from './SmartLink.astro';
+const { hero, proof } = siteConfig;
 ---
 
-<section class="relative overflow-hidden">
-  <div
-    class="pointer-events-none absolute -top-24 right-0 h-96 w-96 rounded-full bg-primary-light blur-3xl"
-    aria-hidden="true"
-  >
-  </div>
-  <div class="mx-auto max-w-6xl px-5 py-20 text-center sm:py-28">
-    <span class="inline-block rounded-full bg-primary-light px-4 py-1 text-sm font-bold text-primary-dark">
-      {hero.eyebrow}
-    </span>
-    <h1 class="mx-auto mt-6 max-w-3xl text-4xl text-ink sm:text-6xl">
-      {hero.heading}
-    </h1>
-    <p class="mx-auto mt-6 max-w-2xl text-lg text-ink-soft">
-      {hero.subheading}
-    </p>
-    <div class="mt-9 flex flex-wrap items-center justify-center gap-4">
-      <a
-        href={hero.primaryCta.href}
-        class="rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
+<!-- An ads page should show an ad. The banner carries the copy on the left and
+     a real slot on the right — the thing being sold, not a slogan about it. -->
+<section class="relative isolate overflow-hidden bg-[#0d0b12]">
+  <img
+    src={hero.image}
+    alt={hero.imageAlt}
+    class="absolute inset-0 -z-20 h-full w-full object-cover opacity-45"
+    loading="eager"
+    fetchpriority="high"
+  />
+  <div class="hero-wash absolute inset-0 -z-10" aria-hidden="true"></div>
+
+  <div class="mx-auto grid max-w-6xl items-center gap-14 px-5 pt-32 pb-20 lg:grid-cols-[1.15fr_1fr] lg:pt-36 lg:pb-24">
+    <div>
+      <span
+        class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1 text-sm font-bold text-white backdrop-blur"
       >
-        {hero.primaryCta.label}
-      </a>
-      <a
-        href={hero.secondaryCta.href}
-        class="rounded-full border border-ink/15 px-7 py-3 text-base font-bold text-ink transition hover:border-ink/30"
-      >
-        {hero.secondaryCta.label}
-      </a>
+        <span class="h-2 w-2 rounded-full bg-primary"></span>
+        {hero.eyebrow}
+      </span>
+      <h1 class="mt-6 max-w-2xl text-5xl text-white sm:text-6xl">{hero.heading}</h1>
+      <p class="mt-5 max-w-lg text-lg text-white/75">{hero.subheading}</p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <SmartLink
+          href={hero.primaryCta.href}
+          label={hero.primaryCta.label}
+          class="inline-flex items-center gap-1 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/40 transition hover:bg-primary-dark"
+        >
+          {hero.primaryCta.label}
+        </SmartLink>
+        <a
+          href={hero.secondaryCta.href}
+          class="rounded-full border border-white/30 px-7 py-3 text-base font-bold text-white transition hover:bg-white/10"
+        >
+          {hero.secondaryCta.label}
+        </a>
+      </div>
+
+      <!-- Three facts about the network, not about any one campaign. -->
+      <dl class="mt-12 flex flex-wrap gap-x-10 gap-y-5 border-t border-white/15 pt-8">
+        {
+          proof.map((item) => (
+            <div class="max-w-[14rem]">
+              <dt class="font-head text-3xl font-extrabold text-white">
+                {item.value} <span class="text-base font-bold text-white/60">{item.label}</span>
+              </dt>
+              <dd class="mt-1 text-sm text-white/60">{item.hint}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+
+    <!-- The slot itself: an empty ad frame with the space measured out, the way
+         a media kit shows one. It is decoration, so it is hidden from readers. -->
+    <div class="relative hidden lg:block" aria-hidden="true">
+      <div class="ad-frame rounded-3xl border-2 border-dashed border-primary/70 p-4">
+        <div class="rounded-2xl bg-white/5 p-6 backdrop-blur">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-lg bg-primary/80"></div>
+            <div class="flex-1">
+              <div class="h-2.5 w-24 rounded-full bg-white/70"></div>
+              <div class="mt-2 h-2 w-16 rounded-full bg-white/35"></div>
+            </div>
+            <span class="rounded-full bg-white/15 px-2 py-0.5 text-[0.65rem] font-bold text-white/80">
+              Ad
+            </span>
+          </div>
+          <div class="mt-5 space-y-2.5">
+            <div class="h-2.5 w-full rounded-full bg-white/35"></div>
+            <div class="h-2.5 w-4/5 rounded-full bg-white/25"></div>
+          </div>
+          <div class="mt-6 h-9 w-32 rounded-full bg-primary"></div>
+        </div>
+      </div>
+      <p class="mt-4 text-center font-head text-sm font-extrabold uppercase tracking-[0.2em] text-primary">
+        Your ad here
+      </p>
     </div>
   </div>
 </section>
+
+<style>
+  /* A LITERAL dark, not the ink token: ink inverts with the theme, and the
+     words on this are always white, so what darkens them must always be dark. */
+  .hero-wash {
+    background:
+      radial-gradient(120% 90% at 15% 20%, rgba(255, 87, 87, 0.28) 0%, rgba(13, 11, 18, 0) 60%),
+      linear-gradient(90deg, rgba(13, 11, 18, 0.95) 0%, rgba(13, 11, 18, 0.75) 55%, rgba(13, 11, 18, 0.6) 100%);
+  }
+
+  /* The dashed slot breathes, the way an empty placement waiting to be bought
+     should. Stopped for anyone who asked for less motion. */
+  .ad-frame {
+    animation: slot-pulse 3.6s ease-in-out infinite;
+  }
+  @keyframes slot-pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(255, 87, 87, 0.35);
+    }
+    50% {
+      box-shadow: 0 0 0 14px rgba(255, 87, 87, 0);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ad-frame {
+      animation: none;
+    }
+  }
+</style>

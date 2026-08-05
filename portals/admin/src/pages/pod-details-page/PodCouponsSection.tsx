@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
 import { useApolloClient, useMutation } from '@apollo/client';
-import { Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Button } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import AddIcon from '@mui/icons-material/Add';
 import { useApolloTableFetch } from '@duncit/table';
+import SectionCard from './SectionCard';
 import CouponsTable from '../coupons-page/CouponsTable';
 import CouponFormDialog from '../coupons-page/CouponFormDialog';
 import { COUPONS_FOR_POD_TABLE, DELETE_COUPON, type CouponRow } from '../coupons-page/queries';
@@ -45,38 +46,34 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
   };
 
   return (
-    <Card>
-      <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-          <LocalOfferIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
-            Offer codes
-          </Typography>
-        </Stack>
-        <CouponsTable
-          tableId="admin-pod-coupons"
-          fetchRows={fetchRows}
-          refetchRef={refetchRef}
-          toolbarActions={
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setEditing(null);
-                setOpen(true);
-              }}
-            >
-              New offer code
-            </Button>
-          }
-          onEdit={(c) => {
-            setEditing(c);
+    <SectionCard
+      icon={<LocalOfferIcon fontSize="small" />}
+      title="Offer codes"
+      tone="info"
+      action={
+        <Button
+          size="small"
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setEditing(null);
             setOpen(true);
           }}
-          onDelete={onDelete}
-        />
-      </CardContent>
+        >
+          New offer code
+        </Button>
+      }
+    >
+      <CouponsTable
+        tableId="admin-pod-coupons"
+        fetchRows={fetchRows}
+        refetchRef={refetchRef}
+        onEdit={(c) => {
+          setEditing(c);
+          setOpen(true);
+        }}
+        onDelete={onDelete}
+      />
       <CouponFormDialog
         open={open}
         onClose={() => setOpen(false)}
@@ -88,6 +85,6 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
         lockedPod={editing?.scope === 'GLOBAL' ? null : { id: podId, title: podTitle }}
         pods={[]}
       />
-    </Card>
+    </SectionCard>
   );
 }

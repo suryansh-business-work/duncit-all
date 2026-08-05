@@ -5,6 +5,7 @@
 import BrandLogo from './BrandLogo.astro';
 import { fetchNavGroups, fetchPolicies } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import SmartLink from './SmartLink.astro';
 
 // Chrome copy from Admin > Localization; link labels stay Navigation-manager
 // content (rule 38).
@@ -66,7 +67,7 @@ const sections = [
     title: 'Policy Hub',
     icon: 'fa-lock',
     links: [
-      ...policies.map((policy) => ({ href: `/policy?slug=${policy.slug}`, label: policy.title })),
+      ...policies.map((policy) => ({ href: `/policy/${policy.slug}`, label: policy.title })),
       { href: '/policies', label: 'All policies' },
     ],
   },
@@ -76,7 +77,7 @@ const sections = [
 <!-- Backdrop -->
 <div
   id="navBackdrop"
-  class="fixed inset-0 z-40 bg-ink/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
+  class="fixed inset-0 z-40 bg-frame/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
 ></div>
 
 <!-- Drawer -->
@@ -86,14 +87,28 @@ const sections = [
   aria-hidden="true"
 >
   <div class="flex items-center justify-between p-5 border-b border-ink/10">
-    <BrandLogo height={38} />
-    <button
-      data-nav-close
-      class="w-10 h-10 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition"
-      aria-label={t('website.nav.closeMenu')}
-    >
-      <i class="fa-solid fa-xmark text-lg"></i>
-    </button>
+    <BrandLogo height={48} />
+    <div class="flex items-center gap-2">
+      <!-- The theme lives with the menu rather than in the page chrome: every
+           page here opens on a photograph, and a toggle on top of one is a
+           control nobody can see. -->
+      <button
+        type="button"
+        data-theme-toggle
+        class="w-10 h-10 rounded-full border-2 border-ink/15 text-ink inline-flex items-center justify-center transition hover:border-primary hover:text-primary"
+        aria-label={t('website.nav.theme')}
+        aria-pressed="false"
+      >
+        <i class="fa-solid fa-moon text-sm" data-theme-icon aria-hidden="true"></i>
+      </button>
+      <button
+        data-nav-close
+        class="w-10 h-10 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:bg-primary transition"
+        aria-label={t('website.nav.closeMenu')}
+      >
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
   </div>
 
   <nav class="flex-1 overflow-y-auto p-5 space-y-6">
@@ -106,13 +121,18 @@ const sections = [
         <ul class="space-y-1">
           {section.links.map((link) => (
             <li>
-              <a
+              {/* The Navigation manager can point an entry at another Duncit
+                  surface, so whether this leaves the site is not knowable
+                  here — SmartLink decides from the URL. */}
+              <SmartLink
                 href={link.href}
+                label={link.label}
+                glyph={false}
                 class="flex items-center justify-between px-3 py-2.5 rounded-lg text-ink hover:bg-primary/10 hover:text-primary font-semibold transition group"
               >
                 <span>{link.label}</span>
                 <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition"></i>
-              </a>
+              </SmartLink>
             </li>
           ))}
         </ul>
@@ -120,10 +140,10 @@ const sections = [
     ))}
   </nav>
 
-  <div class="p-5 border-t border-ink/10 bg-white">
+  <div class="p-5 border-t border-ink/10 bg-surface">
     <a
       href="/#download"
-      class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-ink text-white font-bold text-sm hover:bg-primary transition"
+      class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-ink text-cream font-bold text-sm hover:bg-primary transition"
     >
       <i class="fa-solid fa-download"></i> Get the Duncit app
     </a>
@@ -171,5 +191,25 @@ const sections = [
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') close();
     });
+
+    // The theme itself is applied before first paint by the layout; this button
+    // only changes and remembers it.
+    var toggle = document.querySelector('[data-theme-toggle]');
+    var icon = document.querySelector('[data-theme-icon]');
+    if (toggle && icon) {
+      var paint = function () {
+        var dark = document.documentElement.dataset.theme === 'dark';
+        toggle.setAttribute('aria-pressed', String(dark));
+        // The icon shows what a press GIVES you, not where you are.
+        icon.className = 'fa-solid ' + (dark ? 'fa-sun' : 'fa-moon') + ' text-sm';
+      };
+      paint();
+      toggle.addEventListener('click', function () {
+        var next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('duncit-theme', next);
+        paint();
+      });
+    }
   })();
 </script>

@@ -9,6 +9,7 @@
     "dev:staging": "cross-env MONGO_DB_NAME=duncit-staging ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/index.ts",
     "build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json && node scripts/copy-email-templates.js",
     "start": "node -r ./dist/tracing.js dist/index.js",
+    "check:schema": "ts-node -r tsconfig-paths/register --transpile-only scripts/check-schema.ts",
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "test": "jest",

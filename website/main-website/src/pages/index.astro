@@ -4,6 +4,8 @@ import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
 import BrandLogo from '../components/BrandLogo.astro';
 import DownloadApps from '../components/DownloadApps.astro';
+import DuncitNetwork from '../components/DuncitNetwork.astro';
+import SmartLink from '../components/SmartLink.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Real group photos from Unsplash (free to use)
@@ -36,24 +38,32 @@ const earningPaths = [
 
 <Layout title="Duncit — Friends who match your energy">
   <SiteNav />
-  <div class="bg-ink p-3 sm:p-4">
+  <div class="bg-frame p-3 sm:p-4">
     <!-- ============== HERO ============== -->
     <section class="relative overflow-hidden rounded-3xl min-h-[640px] px-6 pt-5 pb-8">
-      <!-- Background reel (muted, looping, autoplay) with overlay -->
+      <!-- Background reel (muted, looping, autoplay) with overlay.
+           `preload="auto"`, not metadata: with metadata the browser fetches the
+           header and stops, and a 20MB reel behind a poster is exactly what
+           "the video is not playing" looks like. The script below also asks it
+           to play and, if the browser refuses, asks again on the first tap —
+           an autoplay block is silent otherwise. -->
       <div class="absolute inset-0 z-0">
         <video
+          id="heroReel"
           class="w-full h-full object-cover"
           poster="/media/duncit-reel-poster.jpg"
           autoplay
           muted
           loop
           playsinline
-          preload="metadata"
+          preload="auto"
           aria-hidden="true"
         >
           <source src="/media/duncit-reel.mp4" type="video/mp4" />
         </video>
-        <div class="absolute inset-0 bg-gradient-to-b from-sky-300/40 via-transparent to-ink/30"></div>
+        <!-- The scrim is a LITERAL dark in both themes: the words on it are
+             always white, so what darkens them must never invert. -->
+        <div class="absolute inset-0 hero-scrim"></div>
       </div>
 
       <!-- Marquee ribbon running around the banner border (transparent, 12px bold) -->
@@ -75,10 +85,10 @@ const earningPaths = [
       <!-- Nav -->
       <nav class="relative z-20 flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-cream inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
-          <BrandLogo height={40} />
+          <BrandLogo height={56} />
         </div>
         <div class="flex items-center gap-2">
           <a href="#download" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full glass-chip text-ink text-xs font-bold hover:scale-105 transition">
@@ -87,33 +97,63 @@ const earningPaths = [
         </div>
       </nav>
 
-      <!-- Stage: the banner statement + calls to action over the looping reel. -->
-      <div class="relative z-10 h-[480px] flex flex-col items-center justify-end pb-6 gap-6">
-        <div class="glass-dark rounded-3xl px-6 py-5 max-w-2xl text-center">
-          <h1 class="text-2xl sm:text-3xl md:text-4xl text-white">
-            The friendship platform that matches people by
-            <span class="text-tertiary">energy</span>, not algorithms.
-          </h1>
-        </div>
+      <!-- Stage: the statement over the reel. The words carry themselves now —
+           a frosted slab around a headline is a box asking to be read, and the
+           reel behind it was the thing worth looking at. -->
+      <div class="relative z-10 flex min-h-[480px] flex-col items-center justify-center gap-7 py-10 text-center">
+        <span
+          class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-white backdrop-blur"
+        >
+          <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+          Friendship, not algorithms
+        </span>
+
+        <h1 class="max-w-4xl text-4xl leading-[1.02] text-white sm:text-6xl md:text-7xl">
+          Find your people.<br />Match your <span class="text-primary">energy</span>.
+        </h1>
+
+        <p class="max-w-xl text-base text-white/80 sm:text-lg">
+          Duncit is the friendship platform for real-life connections — built around what you
+          actually love doing.
+        </p>
+
         <div class="flex flex-col items-center gap-3 sm:flex-row">
           <a
             href={mwebRegisterUrl}
-            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
+            class="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-primary/40 transition hover:scale-[1.03]"
           >
-            <i class="fa-solid fa-bolt"></i> Join the energy
+            <i class="fa-solid fa-bolt"></i> Join Duncit
           </a>
           <a
             href={mwebLoginUrl}
-            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/90 backdrop-blur text-ink font-bold text-base sticker hover:scale-[1.03] transition"
+            class="inline-flex items-center gap-2 rounded-full border border-white/45 px-8 py-3.5 text-base font-bold text-white backdrop-blur transition hover:bg-white/15"
           >
             <i class="fa-solid fa-right-to-bracket"></i> Sign in
           </a>
         </div>
+
+        <!-- Where the page goes next. Decorative: the section below says the
+             same thing to a screen reader in words. -->
+        <a
+          href="#download"
+          class="mt-2 inline-flex flex-col items-center gap-2 text-xs font-semibold text-white/70 transition hover:text-white"
+        >
+          Scroll to explore
+          <span
+            class="scroll-cue flex h-9 w-9 items-center justify-center rounded-full border border-white/40"
+            aria-hidden="true"
+          >
+            <i class="fa-solid fa-arrow-down text-xs"></i>
+          </span>
+        </a>
       </div>
     </section>
 
     <!-- ============== DOWNLOAD THE APP ============== -->
     <DownloadApps />
+
+    <!-- ============== THE DUNCIT NETWORK ============== -->
+    <DuncitNetwork />
 
     <!-- ============== EARN WITH DUNCIT ============== -->
     <section class="bg-cream py-20 px-6">
@@ -127,16 +167,23 @@ const earningPaths = [
             Hosts, venues and sellers all earn from real local demand. Every path lives on
             Earn with Duncit — pick yours and start.
           </p>
-          <a
+          <SmartLink
             href={urlConfigs.earnwithUrl}
+            label="Explore Earn with Duncit"
+            glyph={false}
             class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-white font-bold sticker hover:scale-[1.03] transition"
           >
             Explore Earn with Duncit <i class="fa-solid fa-arrow-right"></i>
-          </a>
+          </SmartLink>
         </div>
         <div class="grid sm:grid-cols-3 gap-4">
           {earningPaths.map((path) => (
-            <a href={urlConfigs.earnwithUrl} class="group glass rounded-3xl p-6 hover:-translate-y-1 transition block">
+            <SmartLink
+              href={urlConfigs.earnwithUrl}
+              label={path.title}
+              glyph={false}
+              class="group glass rounded-3xl p-6 hover:-translate-y-1 transition block"
+            >
               <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary inline-flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition">
                 <i class={`fa-solid ${path.icon} text-2xl`}></i>
               </div>
@@ -145,7 +192,7 @@ const earningPaths = [
               <span class="inline-flex items-center gap-2 mt-5 font-bold text-primary text-sm">
                 Start now <i class="fa-solid fa-arrow-right"></i>
               </span>
-            </a>
+            </SmartLink>
           ))}
         </div>
       </div>
@@ -175,7 +222,7 @@ const earningPaths = [
         </div>
         <div class="relative">
           <img src={vibesImg} alt="Friends chatting" class="w-full aspect-[4/5] object-cover rounded-3xl sticker" />
-          <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker -rotate-6">
+          <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-on-accent font-bold sticker -rotate-6">
             <i class="fa-solid fa-heart text-primary"></i> Authentic
           </span>
         </div>
@@ -183,13 +230,13 @@ const earningPaths = [
     </section>
 
     <!-- ============== FLOW ============== -->
-    <section class="bg-tertiary py-20 px-6">
+    <section class="bg-tertiary text-on-accent py-20 px-6">
       <div class="max-w-6xl mx-auto">
         <div class="grid md:grid-cols-2 gap-10 items-start">
           <h2 class="text-4xl sm:text-5xl md:text-6xl">
             Flow with the<br />moment
           </h2>
-          <p class="text-ink font-medium text-lg max-w-md">
+          <p class="text-on-accent font-medium text-lg max-w-md">
             Discover new friends without the pressure—see what you have in
             common, start fun or meaningful conversations, and connect naturally.
           </p>
@@ -198,11 +245,11 @@ const earningPaths = [
         <div data-reveal-group class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div data-reveal class="relative -translate-y-4 md:-translate-y-8">
             <img src={flow1} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-2 -left-2 px-3 py-1 rounded-full bg-tertiary text-ink font-bold text-xs sticker -rotate-12">NEON</span>
+            <span class="absolute -top-2 -left-2 px-3 py-1 rounded-full bg-tertiary text-on-accent font-bold text-xs sticker -rotate-12">NEON</span>
           </div>
           <div data-reveal class="relative">
             <img src={flow2} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
-            <span class="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-purple-300 text-ink font-bold text-xs sticker rotate-12">YUM</span>
+            <span class="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-purple-300 text-on-accent font-bold text-xs sticker rotate-12">YUM</span>
           </div>
           <div data-reveal class="relative -translate-y-2 md:-translate-y-6">
             <img src={flow3} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
@@ -367,5 +414,70 @@ const earningPaths = [
       window.addEventListener('resize', rebuild);
       window.addEventListener('load', rebuild);
     } catch (e) {}
+  })();
+</script>
+
+<style>
+  /* A LITERAL dark, in both themes. The words on the reel are always white, so
+     what darkens the reel under them must never invert with the palette. */
+  .hero-scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(9, 7, 18, 0.55) 0%,
+      rgba(9, 7, 18, 0.3) 45%,
+      rgba(9, 7, 18, 0.75) 100%
+    );
+  }
+
+  .scroll-cue {
+    animation: scroll-bob 2.2s ease-in-out infinite;
+  }
+  @keyframes scroll-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(5px);
+    }
+  }
+</style>
+
+<script is:inline>
+  // The reel. `autoplay` is a request, not a guarantee: a browser can refuse it
+  // on a metered connection or a saved data setting, and it refuses SILENTLY —
+  // which looks exactly like a broken video. So ask, and if refused, ask again
+  // on the first thing the visitor touches.
+  (function () {
+    var video = document.getElementById('heroReel');
+    if (!video) return;
+
+    // Someone who asked their system for less motion gets the poster frame,
+    // which is what the poster is for.
+    var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (still.matches) {
+      video.removeAttribute('autoplay');
+      video.pause();
+      return;
+    }
+
+    function play() {
+      var attempt = video.play();
+      if (attempt && attempt.catch) attempt.catch(function () {});
+    }
+
+    play();
+    video.addEventListener('canplay', play, { once: true });
+
+    var events = ['pointerdown', 'touchstart', 'keydown'];
+    function onFirstInteraction() {
+      play();
+      events.forEach(function (name) {
+        document.removeEventListener(name, onFirstInteraction);
+      });
+    }
+    events.forEach(function (name) {
+      document.addEventListener(name, onFirstInteraction, { passive: true });
+    });
   })();
 </script>

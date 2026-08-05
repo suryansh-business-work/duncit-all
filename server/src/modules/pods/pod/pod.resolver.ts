@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { podService, mapPodToPublic, loadPodClubSlugMap } from './pod.service';
+import { podDashboardService } from './pod.dashboard';
 import { coHostService } from './coHost.service';
 import { clubService } from '@modules/clubs/club/club.service';
 import type { GraphQLContext } from '@context';
@@ -214,6 +215,10 @@ export const podResolvers = {
     },
   },
   Query: {
+    podDashboard: (_p: unknown, args: { days?: number | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return podDashboardService.load(args.days ?? 30);
+    },
     pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
       podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
     podsTable: async (

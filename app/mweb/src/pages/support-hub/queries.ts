@@ -82,6 +82,7 @@ export const MY_PENDING_POD_FEEDBACK = gql`
     myPendingPodFeedback {
       id
       title
+      feedback_aspects
     }
   }
 `;

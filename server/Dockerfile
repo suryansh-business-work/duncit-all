@@ -29,6 +29,11 @@ COPY portals/challenge-portal/package.json ./portals/challenge-portal/
 COPY portals/developers/package.json ./portals/developers/
 COPY website/earnwith-website/package.json ./website/earnwith-website/
 
+# @duncit/brand has no server consumer — server/src imports zero @duncit
+# packages by design. The install is frozen-lockfile across the WHOLE
+# workspace though, so its manifest still has to exist here.
+COPY packages/brand/package.json ./packages/brand/
+
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 

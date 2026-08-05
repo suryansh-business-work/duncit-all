@@ -1,17 +1,9 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Avatar,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Link,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Avatar, Chip, Link, Stack, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import { StatusChip } from '@duncit/ui';
+import SectionCard from './SectionCard';
 import { POD_HOST_PROFILE, type AdminPodAttendeeRow } from './queries';
 
 interface HostRowProps {
@@ -34,7 +26,7 @@ function HostRow({ userId, name, primary, contact }: Readonly<HostRowProps>) {
         {(name[0] ?? '?').toUpperCase()}
       </Avatar>
       <Stack sx={{ minWidth: 0, flex: 1 }}>
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Link
             component="button"
             underline="hover"
@@ -68,34 +60,25 @@ export default function PodHostsCard({ pod, attendees }: Readonly<Props>) {
   const contactByUser = new Map(attendees.map((row) => [row.user_id, row]));
 
   return (
-    <Card>
-      <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-          <StarIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
-            Hosts
-          </Typography>
-        </Stack>
-        <Divider sx={{ mb: 1.5 }} />
-        {hostIds.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
-            No hosts on this pod.
-          </Typography>
-        )}
-        <Stack spacing={1.5}>
-          {hostIds.map((id, index) => (
-            <HostRow
-              key={id}
-              userId={id}
-              // host_names drops unknown users, so it can misalign — prefer the
-              // attendee row's name, which is keyed by user id.
-              name={contactByUser.get(id)?.full_name ?? hostNames[index] ?? 'Host'}
-              primary={index === 0}
-              contact={contactByUser.get(id)}
-            />
-          ))}
-        </Stack>
-      </CardContent>
-    </Card>
+    <SectionCard
+      icon={<StarIcon fontSize="small" />}
+      title="Hosts"
+      badge={hostIds.length > 0 ? hostIds.length : undefined}
+      empty={hostIds.length === 0 ? 'No hosts on this pod.' : null}
+    >
+      <Stack spacing={2}>
+        {hostIds.map((id, index) => (
+          <HostRow
+            key={id}
+            userId={id}
+            // host_names drops unknown users, so it can misalign — prefer the
+            // attendee row's name, which is keyed by user id.
+            name={contactByUser.get(id)?.full_name ?? hostNames[index] ?? 'Host'}
+            primary={index === 0}
+            contact={contactByUser.get(id)}
+          />
+        ))}
+      </Stack>
+    </SectionCard>
   );
 }

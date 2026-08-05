@@ -4,6 +4,7 @@
 // while a listing is unpublished the button renders a real "coming soon"
 // state instead of a dead link. No mWeb promos here by design.
 import { fetchBranding } from '../lib/site-data';
+import AppPhone from './AppPhone.astro';
 
 const branding = await fetchBranding();
 const stores = [
@@ -20,74 +21,88 @@ const stores = [
     url: branding.ios_app_url,
   },
 ];
-const perks = [
-  { icon: 'fa-bolt', tone: 'text-primary bg-primary/15', title: 'Instant matches', text: 'Slide into vibe-based friend circles in seconds.' },
-  { icon: 'fa-comments', tone: 'text-secondary bg-secondary/15', title: 'Real chats', text: 'No pressure, just real talk and laughs.' },
-  { icon: 'fa-shield-heart', tone: 'text-tertiary-dark bg-tertiary/30', title: 'Safe space', text: 'Verified profiles and built-in safety tools.' },
-];
+// Three claims, one line each. This section already had a headline, a
+// paragraph and two buttons; three more cards of prose under them was the
+// reason it read as busy rather than as an invitation.
+const perks = ['Match by energy, in seconds', 'Real chats, no pressure', 'Verified profiles'];
 ---
 
-<section id="download" class="relative overflow-hidden bg-ink py-20 px-6">
-  <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/30 blur-3xl" aria-hidden="true"></div>
-  <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-secondary/30 blur-3xl" aria-hidden="true"></div>
+<!-- A page panel like every other one: it follows the theme rather than being
+     a black slab in the middle of a light page. (It used to be painted with
+     `ink`, which inverted the wrong way and left white text on near-white.) -->
+<section id="download" class="relative overflow-hidden bg-cream py-20 px-6">
+  <div class="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-primary/15 blur-3xl" aria-hidden="true"></div>
+  <div class="absolute -bottom-32 -right-24 h-96 w-96 rounded-full bg-secondary/15 blur-3xl" aria-hidden="true"></div>
 
-  <div class="relative z-10 max-w-5xl mx-auto text-center">
-    <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-dark text-white font-bold text-xs uppercase tracking-wider mb-6">
-      <i class="fa-solid fa-mobile-screen"></i> The Duncit app
-    </span>
-    <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4 text-white">
-      One app, <span class="text-tertiary">Many Communities</span>
-    </h2>
-    <p class="text-white/80 text-lg max-w-xl mx-auto mb-10">
-      Download the app for Android or iOS and match with friends by energy — real plans, real
-      places, real people.
-    </p>
+  <div class="relative z-10 mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-[1.1fr_auto]">
+    <div class="text-center lg:text-left">
+      <span
+        class="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-primary"
+      >
+        <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> The Duncit app
+      </span>
 
-    <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-12">
-      {
-        stores.map((store) =>
-          store.url ? (
-            <a
-              href={store.url}
-              target="_blank"
-              rel="noreferrer"
-              class="group glass-dark text-white rounded-2xl p-6 flex items-center gap-4 hover:scale-[1.02] transition"
-            >
-              <i class={`fa-brands ${store.icon} text-5xl`} aria-hidden="true"></i>
-              <span class="text-left">
-                <span class="block text-xs opacity-70 uppercase tracking-wide">{store.eyebrow}</span>
-                <span class="block text-xl font-bold font-head">{store.name}</span>
+      <h2 class="mt-6 text-4xl text-ink sm:text-5xl md:text-6xl">
+        One app,<br /><span class="text-primary">many communities</span>
+      </h2>
+
+      <p class="mx-auto mt-4 max-w-md text-lg text-ink-soft lg:mx-0">
+        Match with people by energy, then go and do the thing — real plans, real places, real
+        people.
+      </p>
+
+      <ul class="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 lg:justify-start">
+        {
+          perks.map((perk) => (
+            <li class="flex items-center gap-2 text-sm font-semibold text-ink">
+              <i class="fa-solid fa-check text-xs text-primary" aria-hidden="true" />
+              {perk}
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
+        {
+          stores.map((store) =>
+            store.url ? (
+              <a
+                href={store.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group inline-flex items-center gap-3 rounded-2xl bg-ink px-5 py-3 text-left text-cream transition hover:scale-[1.03]"
+              >
+                <i class={`fa-brands ${store.icon} text-3xl`} aria-hidden="true" />
+                <span>
+                  <span class="block text-[10px] uppercase tracking-wide opacity-70">
+                    {store.eyebrow}
+                  </span>
+                  <span class="block font-head text-lg font-extrabold leading-tight">
+                    {store.name}
+                  </span>
+                </span>
+              </a>
+            ) : (
+              <span class="inline-flex items-center gap-3 rounded-2xl border-2 border-line px-5 py-3 text-left text-ink-soft">
+                <i class={`fa-brands ${store.icon} text-3xl`} aria-hidden="true" />
+                <span>
+                  <span class="block text-[10px] uppercase tracking-wide opacity-70">
+                    {store.eyebrow}
+                  </span>
+                  <span class="block font-head text-lg font-extrabold leading-tight">
+                    {store.name}
+                  </span>
+                </span>
+                <span class="ml-1 rounded-full bg-tertiary px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-on-accent">
+                  Soon
+                </span>
               </span>
-              <i class="fa-solid fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 transition" aria-hidden="true"></i>
-            </a>
-          ) : (
-            <div class="glass-dark text-white rounded-2xl p-6 flex items-center gap-4 relative overflow-hidden">
-              <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">
-                Coming soon
-              </span>
-              <i class={`fa-brands ${store.icon} text-5xl opacity-80`} aria-hidden="true"></i>
-              <span class="text-left">
-                <span class="block text-xs opacity-70 uppercase tracking-wide">{store.eyebrow}</span>
-                <span class="block text-xl font-bold font-head">{store.name}</span>
-              </span>
-            </div>
+            )
           )
-        )
-      }
+        }
+      </div>
     </div>
 
-    <div class="grid sm:grid-cols-3 gap-5 max-w-3xl mx-auto text-left">
-      {
-        perks.map((perk) => (
-          <div class="glass rounded-2xl p-5">
-            <div class={`w-10 h-10 rounded-full ${perk.tone} inline-flex items-center justify-center mb-3`}>
-              <i class={`fa-solid ${perk.icon}`} aria-hidden="true"></i>
-            </div>
-            <h3 class="text-lg mb-1">{perk.title}</h3>
-            <p class="text-sm text-ink-soft">{perk.text}</p>
-          </div>
-        ))
-      }
-    </div>
+    <AppPhone />
   </div>
 </section>

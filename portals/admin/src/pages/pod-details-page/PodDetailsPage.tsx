@@ -1,9 +1,11 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Chip, Stack, Typography } from '@mui/material';
+import { Button, Grid, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import { BackButton, QueryGuard } from '@duncit/ui';
+import { useFeatureFlag } from '@duncit/app-settings';
 import { POD_ATTENDEES_ADMIN, POD_DETAIL, type AdminPodAttendeeRow } from './queries';
+import PodStatusChips from './PodStatusChips';
 import PodOverviewCard from './PodOverviewCard';
 import PodTimelineSection from './PodTimelineSection';
 import PodAttendeesSection from './PodAttendeesSection';
@@ -12,7 +14,10 @@ import PodHostsCard from './PodHostsCard';
 import PodClubCard from './PodClubCard';
 import PodCouponsSection from './PodCouponsSection';
 import PodFinanceSection from './PodFinanceSection';
-import { useFeatureFlag } from '@duncit/app-settings';
+import PodFeedbackSection from './PodFeedbackSection';
+
+/** One gap for the whole page, so nothing is 2 here and 3 there. */
+const GAP = 2.5;
 
 export default function PodDetailsPage() {
   const { id = '' } = useParams();
@@ -40,66 +45,71 @@ export default function PodDetailsPage() {
       notFoundText="Pod not found."
       notFoundSeverity="warning"
     >
-      {() => {
-        const isVirtual = pod.pod_mode === 'VIRTUAL';
-        const isFree = (pod.pod_type ?? '').includes('FREE');
-
-        return (
-          <Stack spacing={3}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+      {() => (
+        <Stack spacing={GAP}>
+          {/* Title, state and the one action, as a single block — the chips
+              belong to the heading, not to a separate band under it. */}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ xs: 'stretch', sm: 'flex-start' }}
+            justifyContent="space-between"
+            spacing={2}
+          >
+            <Stack spacing={1.25} sx={{ minWidth: 0 }}>
               <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
                 <BackButton onClick={() => navigate('/pods')}>Pods</BackButton>
                 <Typography variant="h5" fontWeight={900} noWrap>
                   {pod.pod_title}
                 </Typography>
               </Stack>
-              {/* Editable at every stage — a cancelled pod included, so an
-                  admin can correct it (or re-route its venue slot) after the
-                  fact rather than rebuilding it. */}
-              <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/pods?edit=${pod.id}`)}>
-                Edit pod
-              </Button>
+              <PodStatusChips pod={pod} />
             </Stack>
+            {/* Editable at every stage — a cancelled pod included, so an admin
+                can correct it (or re-route its venue slot) after the fact
+                rather than rebuilding it. */}
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={() => navigate(`/pods?edit=${pod.id}`)}
+              sx={{ flexShrink: 0 }}
+            >
+              Edit pod
+            </Button>
+          </Stack>
 
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip label={isFree ? 'Free' : `₹${pod.pod_amount}`} color="primary" />
-              <Chip label={isVirtual ? 'Virtual' : 'Physical'} variant="outlined" />
-              <Chip label={(pod.pod_occurrence ?? '').replaceAll('_', ' ') || 'ONE TIME'} variant="outlined" />
-              {pod.is_deleted && <Chip label="Cancelled" color="error" />}
-              {!pod.is_deleted && pod.completed_at && <Chip label="Completed" color="success" />}
-              {!pod.is_deleted && !pod.completed_at && (
-                <Chip label={pod.is_active ? 'Active' : 'Inactive'} color={pod.is_active ? 'success' : 'default'} />
-              )}
-              {pod.venue_approval_status !== 'NONE' && (
-                <Chip label={`Venue: ${pod.venue_approval_status}`} variant="outlined" />
-              )}
-            </Stack>
-
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
-              <PodOverviewCard pod={pod} showProducts={showProducts} />
-              <PodTimelineSection pod={pod} />
-            </Stack>
-
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
-              <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+          {/* Two columns that end at roughly the same line. The old layout
+              paired each tall card with a short one, which is what left the
+              half-page void beside the club card: the narrative on the left
+              (what it is, what happened to it) against the people-and-money
+              sidebar on the right (who ran it, what it took, how it scored). */}
+          <Grid container spacing={GAP} alignItems="flex-start">
+            <Grid item xs={12} lg={7}>
+              <Stack spacing={GAP}>
+                <PodOverviewCard pod={pod} showProducts={showProducts} />
+                <PodTimelineSection pod={pod} />
+              </Stack>
+            </Grid>
+            <Grid item xs={12} lg={5}>
+              <Stack spacing={GAP}>
                 <PodHostsCard pod={pod} attendees={attendeeRows} />
                 <PodClubCard clubId={pod.club_id ?? null} />
-              </Stack>
-              <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                 <PodFinanceSection podId={pod.id} />
+                <PodFeedbackSection podId={pod.id} />
               </Stack>
-            </Stack>
+            </Grid>
+          </Grid>
 
-            <PodAttendeesSection
-              rows={attendeeRows}
-              loading={attendeesQuery.loading}
-              errorText={attendeesQuery.error?.message}
-            />
-            <PodPaymentsSection podId={pod.id} />
-            <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
-          </Stack>
-        );
-      }}
+          {/* The tables want every pixel of width, so they sit below both
+              columns rather than inside one. */}
+          <PodAttendeesSection
+            rows={attendeeRows}
+            loading={attendeesQuery.loading}
+            errorText={attendeesQuery.error?.message}
+          />
+          <PodPaymentsSection podId={pod.id} />
+          <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
+        </Stack>
+      )}
     </QueryGuard>
   );
 }

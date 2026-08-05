@@ -31,17 +31,17 @@ const supportEmail = branding.support_email || 'support@duncit.com';
       required
       rows="3"
       placeholder="Type your question…"
-      class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none resize-y"
+      class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none resize-y"
     ></textarea>
     <input
       name="email"
       type="email"
       required
       placeholder="Email for a reply"
-      class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none"
+      class="px-4 py-3 rounded-xl bg-surface border-2 border-ink/10 focus:border-primary outline-none"
     />
     <p id="askFaqErr" class="text-sm text-red-600 hidden"></p>
-    <button class="px-6 py-3 rounded-xl bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
+    <button class="px-6 py-3 rounded-xl bg-ink text-cream font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
       Ask <i class="fa-solid fa-paper-plane"></i>
     </button>
   </form>
@@ -61,7 +61,7 @@ const supportEmail = branding.support_email || 'support@duncit.com';
   };
 
   const faqCard = (faq: any, open: boolean) => `
-    <details class="group bg-white rounded-2xl p-5 sticker"${open ? ' open' : ''}>
+    <details class="group bg-surface rounded-2xl p-5 sticker"${open ? ' open' : ''}>
       <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
         <span class="font-head font-bold text-ink">${esc(faq.question)}</span>
         <i class="fa-solid fa-plus text-primary transition group-open:rotate-45" aria-hidden="true"></i>

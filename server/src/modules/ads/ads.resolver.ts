@@ -17,6 +17,8 @@ export const adsResolvers = {
       requireAuth(ctx);
       return adsService.pricing();
     },
+    // No auth: the advertising site quotes these before anyone has an account.
+    publicAdRateCard: () => adsService.publicRateCard(),
     myAdRequestsTable: (_p: unknown, args: { query?: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ADS_SUBMIT);
       return adsService.myTable(user.id, args.query);

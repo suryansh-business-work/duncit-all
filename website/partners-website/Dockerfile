@@ -33,6 +33,7 @@ COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/table/package.json ./packages/table/
 COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/brand/package.json ./packages/brand/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
@@ -53,6 +54,9 @@ COPY website/partners-website ./website/partners-website
 COPY packages/logs ./packages/logs
 # @duncit/utils source — the layout imports the short-link capture from it.
 COPY packages/utils ./packages/utils
+# @duncit/brand — the header/footer logo components. SOURCE, not just the
+# manifest: Astro resolves the .astro files during the build.
+COPY packages/brand ./packages/brand
 RUN pnpm --filter partners-website build
 
 # --- runner ---

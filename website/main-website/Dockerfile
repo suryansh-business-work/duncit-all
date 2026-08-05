@@ -33,6 +33,7 @@ COPY packages/utils/package.json ./packages/utils/
 COPY packages/media-picker/package.json ./packages/media-picker/
 COPY packages/table/package.json ./packages/table/
 COPY packages/i18n/package.json ./packages/i18n/
+COPY packages/brand/package.json ./packages/brand/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
@@ -62,6 +63,9 @@ COPY packages/utils ./packages/utils
 # The i18n SOURCE, not just its package.json: the site imports @duncit/i18n from
 # an .astro page now, so Vite has to resolve the module during the build.
 COPY packages/i18n ./packages/i18n
+# @duncit/brand — the header/footer logo components. SOURCE, not just the
+# manifest: Astro resolves the .astro files during the build.
+COPY packages/brand ./packages/brand
 RUN pnpm --filter duncit.com build
 
 # --- runner ---

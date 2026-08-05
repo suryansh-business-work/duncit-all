@@ -1,35 +1,22 @@
 ---
-// The Duncit brand logo. When the admin has uploaded a website header logo
-// (Branding → Website Logos) it renders that image; otherwise it falls back
-// to the inline red badge with the "duncit" wordmark so the site never ships
-// a broken header. Used site-wide so every page shows the same logo.
+// The site's header mark. The DRAWING lives in @duncit/brand so all five
+// websites render the admin's logo — and the wordmark that stands in when
+// there is none — the same way and at the same size; this wrapper only knows
+// where this site's branding comes from.
+import SharedBrandLogo from '@duncit/brand/BrandLogo.astro';
 import { fetchBranding } from '../lib/site-data';
 
 interface Props {
   class?: string;
   height?: number;
 }
-const { class: className = '', height = 40 } = Astro.props;
+const { class: className = '', height = 56 } = Astro.props;
 const branding = await fetchBranding();
-const logoUrl = branding.website_header_logo_url;
 ---
 
-<a href="/" class:list={['inline-flex items-center', className]} aria-label="Duncit — home">
-  {
-    logoUrl ? (
-      <img src={logoUrl} alt={branding.app_name} style={`height:${height}px; width:auto`} />
-    ) : (
-      <span
-        class="inline-flex items-center justify-center rounded-xl bg-primary"
-        style={`height:${height}px; padding-inline:${Math.round(height * 0.32)}px`}
-      >
-        <span
-          class="font-black text-white lowercase"
-          style={`font-family:'Baloo 2','Quicksand',system-ui,sans-serif; font-size:${Math.round(height * 0.52)}px; letter-spacing:-0.045em; line-height:1`}
-        >
-          duncit
-        </span>
-      </span>
-    )
-  }
-</a>
+<SharedBrandLogo
+  src={branding.website_header_logo_url}
+  name={branding.app_name}
+  height={height}
+  class={className}
+/>

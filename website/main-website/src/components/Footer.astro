@@ -4,13 +4,14 @@
 // portal's active policies — both baked in at build time with safe fallbacks.
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
+import FooterLogo from '@duncit/brand/FooterLogo.astro';
+import SmartLink from './SmartLink.astro';
 
 // Chrome copy comes from Admin > Localization, baked in at build time with the
 // bundled fallback behind it (rule 38). Link labels are NOT translated here —
 // they are content from the Navigation manager, fetched below.
 const { t } = await getTranslator();
 const branding = await fetchBranding();
-const footerLogo = branding.website_footer_logo_url || '/duncit-logo.svg';
 
 const FALLBACK_COLUMNS = [
   {
@@ -57,9 +58,12 @@ const year = new Date().getFullYear();
 <footer class="bg-cream rounded-3xl mt-3 pt-16 pb-8 px-6">
   <div class="max-w-6xl mx-auto">
     <div class="grid md:grid-cols-2 gap-8 items-center">
-      <a href="/" class="inline-block">
-        <img src={footerLogo} alt={branding.app_name} class="h-16 sm:h-24 w-auto" />
-      </a>
+      <FooterLogo
+        footerSrc={branding.website_footer_logo_url}
+        headerSrc={branding.website_header_logo_url}
+        name={branding.app_name}
+        height={112}
+      />
       <div class="md:text-right">
         <p class="font-head font-bold text-ink mb-3">{t('website.footer.newsletterTitle')}</p>
         <form
@@ -73,9 +77,9 @@ const year = new Date().getFullYear();
             type="email"
             required
             placeholder={t('website.footer.emailPlaceholder')}
-            class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm"
+            class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm"
           />
-          <button class="px-4 py-2.5 rounded-lg bg-ink text-white font-bold text-sm inline-flex items-center gap-2">
+          <button class="px-4 py-2.5 rounded-lg bg-ink text-cream font-bold text-sm inline-flex items-center gap-2">
             <i class="fa-solid fa-paper-plane"></i> {t('website.footer.notify')}
           </button>
         </form>
@@ -92,9 +96,12 @@ const year = new Date().getFullYear();
             <ul class="space-y-2 text-sm text-ink-soft">
               {column.links.map((link) => (
                 <li>
-                  <a href={link.url} class="hover:text-primary">
+                  {/* The Navigation manager can point a column at another
+                      Duncit surface, so whether this leaves the site is not
+                      knowable here — SmartLink decides from the URL. */}
+                  <SmartLink href={link.url} label={link.label} class="hover:text-primary">
                     {link.label}
-                  </a>
+                  </SmartLink>
                 </li>
               ))}
             </ul>
@@ -107,7 +114,7 @@ const year = new Date().getFullYear();
           {
             policies.map((policy) => (
               <li>
-                <a href={`/policy?slug=${policy.slug}`} class="hover:text-primary">
+                <a href={`/policy/${policy.slug}`} class="hover:text-primary">
                   {policy.title}
                 </a>
               </li>

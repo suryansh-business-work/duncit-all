@@ -21,6 +21,7 @@ import PortalsUploadSettingPage from './pages/upload-settings/PortalsUploadSetti
 import MobileUploadSettingPage from './pages/upload-settings/MobileUploadSettingPage';
 import MwebUploadSettingPage from './pages/upload-settings/MwebUploadSettingPage';
 import PodMonitoringPage from './pages/pod-monitoring/PodMonitoringPage';
+import PodsDashboardPage from './pages/pods-dashboard/PodsDashboardPage';
 import CouponsPage from './pages/CouponsPage';
 import ReferralsPage from './pages/referrals-page/ReferralsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
@@ -58,6 +59,10 @@ export default function App() {
                 <Route path="/partners" element={<PartnersPage />} />
                 <Route path="/clubs/:id" element={<ClubDetailsPage />} />
                 <Route path="/pods" element={<PodsPage />} />
+                {/* Static before dynamic so /pods/dashboard is never read as a
+                    pod id — React Router ranks it first either way, and the
+                    order says so out loud. */}
+                <Route path="/pods/dashboard" element={<PodsDashboardPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
                 <Route path="/pod-settings" element={<PodSettingsPage />} />
                 <Route path="/pod-monitoring" element={<PodMonitoringPage />} />

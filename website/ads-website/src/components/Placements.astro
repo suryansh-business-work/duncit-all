@@ -1,0 +1,95 @@
+---
+import { siteConfig } from '../config/site-config';
+import { fetchAdRateCard } from '../lib/site-data';
+
+const { placements } = siteConfig;
+const rateCard = await fetchAdRateCard();
+const entries = rateCard?.entries ?? [];
+const symbol = rateCard?.currency_symbol ?? '₹';
+const price = (value: number) => `${symbol}${Math.round(value).toLocaleString('en-IN')}`;
+---
+
+<!-- The rate card, as a rate card. An advertiser reads this the way they read a
+     media kit: one row per placement, the price on the right, nothing else in
+     the way. It renders from the card at BUILD time, so the prices are in the
+     HTML for a reader with no JavaScript and for a search engine. -->
+<section id="placements" class="mx-auto max-w-5xl scroll-mt-24 px-5 py-20">
+  <div class="flex flex-wrap items-end justify-between gap-6">
+    <div class="max-w-xl">
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{placements.eyebrow}</p>
+      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{placements.heading}</h2>
+      <p class="mt-3 text-ink-soft">{placements.text}</p>
+    </div>
+    {
+      rateCard && (
+        <p class="font-head text-2xl font-extrabold text-ink">
+          From {price(rateCard.from_per_day)}
+          <span class="text-sm font-bold text-ink-soft"> / day</span>
+        </p>
+      )
+    }
+  </div>
+
+  <!-- The table shell is ALWAYS rendered. When this build could not reach the
+       API the body ships one placeholder row, and the calculator's live fetch
+       fills it in — one request serves both, which is why the contract is a
+       data attribute rather than a second query here. -->
+  <div class="mt-10 overflow-hidden rounded-2xl border border-line">
+    <table class="w-full border-collapse text-left">
+      <caption class="sr-only">Duncit advertising rate card, per placement per day</caption>
+      <thead>
+        <tr class="bg-surface">
+          <th scope="col" class="px-5 py-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft">
+            Placement
+          </th>
+          <th
+            scope="col"
+            class="hidden px-5 py-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft sm:table-cell"
+          >
+            Where it shows
+          </th>
+          <th
+            scope="col"
+            class="px-5 py-3 text-right font-head text-xs font-extrabold uppercase tracking-wider text-ink-soft"
+          >
+            Per day
+          </th>
+        </tr>
+      </thead>
+      <tbody data-rate-rows data-rate-empty={entries.length === 0 ? 'true' : undefined}>
+        {
+          entries.map((entry) => (
+            <tr class="border-t border-line">
+              <th scope="row" class="px-5 py-4 font-head text-sm font-extrabold text-ink">
+                {entry.label}
+              </th>
+              <td class="hidden px-5 py-4 text-sm text-ink-soft sm:table-cell">
+                {placements.notes[entry.position] ?? ''}
+              </td>
+              <td class="px-5 py-4 text-right font-head text-sm font-extrabold text-primary">
+                {price(entry.price_per_day)}
+              </td>
+            </tr>
+          ))
+        }
+        {
+          entries.length === 0 && (
+            <tr class="border-t border-line">
+              <td colspan="3" class="px-5 py-6 text-sm text-ink-soft">
+                Loading today’s rates…
+                <noscript>
+                  Rates are shown with JavaScript enabled, or in the Ads console.
+                </noscript>
+              </td>
+            </tr>
+          )
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- The notes the live filler needs, since the server sends labels but not
+       this site's own copy about each placement. -->
+  <script type="application/json" data-placement-notes set:html={JSON.stringify(placements.notes)}
+  ></script>
+</section>

@@ -1,0 +1,41 @@
+---
+/**
+ * A link that tells you where it goes. Anything leaving this site — the main
+ * site, a subdomain, the web app — opens in a new tab, is marked with the
+ * external-link glyph, and says so to a screen reader. On-page anchors and
+ * same-site paths stay ordinary links.
+ *
+ * The rule lives here rather than at each call site so no link can be added
+ * later that quietly leaves the site with no sign of it.
+ */
+interface Props {
+  href: string;
+  class?: string;
+  label?: string;
+  /** Hide the glyph on links whose content is already a mark of its own (a
+   * brand icon). The new tab and the spoken warning stay — only the arrow
+   * beside an icon, which reads as clutter, goes. */
+  glyph?: boolean;
+}
+
+const { href, class: className = '', label, glyph = true } = Astro.props;
+
+// An absolute http(s) URL is off this site; '#anchor' and '/path' are not.
+const isExternal = /^https?:\/\//i.test(href);
+---
+
+{
+  isExternal ? (
+    <a href={href} class={className} target="_blank" rel="noopener noreferrer">
+      <slot />
+      {glyph && (
+        <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-[0.7em] opacity-70" aria-hidden="true" />
+      )}
+      <span class="sr-only">{label ? `${label} — opens in a new tab` : '(opens in a new tab)'}</span>
+    </a>
+  ) : (
+    <a href={href} class={className}>
+      <slot />
+    </a>
+  )
+}

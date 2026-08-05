@@ -1,0 +1,67 @@
+---
+import { siteConfig } from '../config/site-config';
+import SmartLink from './SmartLink.astro';
+const { design } = siteConfig;
+---
+
+<!-- The most common reason a small brand never books an ad is that it has
+     nothing to run. This answers that before the price does. -->
+<section id="design" class="scroll-mt-24 py-20">
+  <div class="mx-auto grid max-w-6xl items-center gap-12 px-5 lg:grid-cols-[1fr_1.1fr]">
+    <div class="relative">
+      <img
+        src={design.image}
+        alt={design.imageAlt}
+        loading="lazy"
+        class="w-full rounded-3xl object-cover shadow-lg"
+      />
+      <!-- A designer's frame over the photograph: the thing being offered,
+           sitting on the desk it comes from. Decorative. -->
+      <div
+        class="absolute -bottom-6 -right-4 hidden w-44 rounded-2xl border border-line bg-surface p-4 shadow-xl sm:block"
+        aria-hidden="true"
+      >
+        <div class="flex items-center gap-2">
+          <span class="h-7 w-7 rounded-lg bg-primary"></span>
+          <div class="flex-1">
+            <div class="h-2 w-16 rounded-full bg-ink/25"></div>
+            <div class="mt-1.5 h-1.5 w-10 rounded-full bg-ink/15"></div>
+          </div>
+        </div>
+        <div class="mt-3 h-16 rounded-lg bg-primary-light"></div>
+        <div class="mt-3 h-6 w-20 rounded-full bg-primary"></div>
+      </div>
+    </div>
+
+    <div>
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{design.eyebrow}</p>
+      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{design.heading}</h2>
+      <p class="mt-4 max-w-xl text-ink-soft">{design.text}</p>
+
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2">
+        {
+          design.items.map((item) => (
+            <li class="rounded-2xl border border-line bg-surface p-5 shadow-sm">
+              <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-light text-primary-dark">
+                <i class={`fa-solid ${item.icon}`} aria-hidden="true" />
+              </span>
+              <h3 class="mt-4 font-head text-base font-extrabold text-ink">{item.title}</h3>
+              <p class="mt-1.5 text-sm leading-relaxed text-ink-soft">{item.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="mt-8 flex flex-wrap items-center gap-4">
+        <SmartLink
+          href={design.cta.href}
+          label={design.cta.label}
+          class="rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-sm transition hover:bg-primary-dark"
+        >
+          {design.cta.label}
+        </SmartLink>
+        <p class="max-w-xs text-xs text-ink-soft">{design.note}</p>
+      </div>
+    </div>
+  </div>
+</section>

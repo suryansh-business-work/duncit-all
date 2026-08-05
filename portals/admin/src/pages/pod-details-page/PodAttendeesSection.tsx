@@ -1,11 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import {
-  Alert,
   Avatar,
-  Card,
-  CardContent,
-  CircularProgress,
-  Divider,
   Link,
   Stack,
   Table,
@@ -18,6 +13,7 @@ import {
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import SectionCard from './SectionCard';
 import type { AdminPodAttendeeRow } from './queries';
 import { fmtDateTime } from './format';
 
@@ -48,24 +44,18 @@ export default function PodAttendeesSection({ rows, loading, errorText }: Readon
   const navigate = useNavigate();
 
   return (
-    <Card>
-      <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-          <PeopleAltIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
-            Attendees ({rows.length})
-          </Typography>
-        </Stack>
-        <Divider sx={{ mb: 1 }} />
-        {errorText && <Alert severity="error">{errorText}</Alert>}
-        {!errorText && loading && rows.length === 0 && <CircularProgress size={20} sx={{ my: 2 }} />}
-        {!errorText && !loading && rows.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ my: 2 }}>
-            No attendees yet.
-          </Typography>
-        )}
-        {rows.length > 0 && (
-          <Table size="small" sx={{ '& td, & th': { whiteSpace: 'nowrap' } }}>
+    <SectionCard
+      icon={<PeopleAltIcon fontSize="small" />}
+      title="Attendees"
+      badge={rows.length > 0 ? rows.length : undefined}
+      loading={loading && rows.length === 0}
+      error={errorText}
+      empty={!errorText && !loading && rows.length === 0 ? 'Nobody has joined this pod yet.' : null}
+      // The table scrolls inside the card rather than the page.
+      contentSx={{ p: 0, '&:last-child': { pb: 0 }, overflowX: 'auto' }}
+    >
+      {rows.length > 0 && (
+        <Table size="small" sx={{ '& td, & th': { whiteSpace: 'nowrap' } }}>
             <TableHead>
               <TableRow>
                 <TableCell>Attendee</TableCell>
@@ -136,8 +126,7 @@ export default function PodAttendeesSection({ rows, loading, errorText }: Readon
               })}
             </TableBody>
           </Table>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </SectionCard>
   );
 }

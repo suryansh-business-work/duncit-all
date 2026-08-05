@@ -6,6 +6,8 @@ import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { runTableQuery, type TableEntityConfig, type TableQueryInput } from '@utils/table-query';
 import {
   AD_KINDS,
+  AD_MAX_DAYS,
+  AD_MIN_DAYS,
   AD_POSITIONS,
   AdRequestModel,
   getAdPricing,
@@ -36,6 +38,51 @@ const POSITION_PRICE_FIELD: Record<AdPosition, keyof IAdPricing> = {
 
 export function pricePerDayFor(pricing: IAdPricing, position: AdPosition): number {
   return Number(pricing[POSITION_PRICE_FIELD[position]] ?? 0);
+}
+
+/**
+ * Placement names for the PUBLIC rate card.
+ *
+ * Deliberately not the portal's labels (`@duncit/ad-request-form`), and not
+ * importable from them either — `server/src` depends on no `@duncit/*` package
+ * by design. The portal names a field an advertiser is filling in; this names a
+ * thing someone is deciding whether to buy, so it says where the ad appears.
+ */
+const POSITION_LABEL: Record<AdPosition, string> = {
+  AUTO: 'Everywhere (all placements)',
+  HOME_BOTTOM: 'Home feed',
+  SIDEBAR: 'Sidebar',
+  EXPLORE_SCROLL: 'Explore scroll',
+  STATUS: 'Stories',
+  VENUE_LIST: 'Venue listings',
+  CLUB_LIST: 'Club listings',
+  POD_LIST: 'Pod listings',
+  POD_DETAILS: 'Pod detail pages',
+};
+
+/**
+ * The rate card as the marketing site reads it: every placement, what a day
+ * costs, and the booking window. Public on purpose — a price quoted on a public
+ * page has to come from the same row Marketing edits, or the page will one day
+ * be advertising a price nobody honours.
+ */
+export async function buildPublicRateCard() {
+  const pricing = await getAdPricing();
+  const entries = AD_POSITIONS.map((position) => ({
+    position,
+    label: POSITION_LABEL[position],
+    price_per_day: pricePerDayFor(pricing, position),
+  }));
+  const prices = entries.map((entry) => entry.price_per_day);
+
+  return {
+    currency_symbol: pricing.currency_symbol || '₹',
+    entries,
+    min_days: AD_MIN_DAYS,
+    max_days: AD_MAX_DAYS,
+    from_per_day: Math.min(...prices),
+    to_per_day: Math.max(...prices),
+  };
 }
 
 /** LIVE/EXPIRED are windows of an APPROVED ad, never stored. */
@@ -180,6 +227,8 @@ export const adsService = {
   async pricing() {
     return pricingToPub(await getAdPricing());
   },
+
+  publicRateCard: buildPublicRateCard,
 
   async updatePricing(input: Record<string, unknown>) {
     const pricing = await getAdPricing();

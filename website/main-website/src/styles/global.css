@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* The palette is declared as tokens and REDEFINED for dark mode below, so a
+   theme switch recolours every utility built from them (bg-surface, text-ink,
+   border-line …) instead of asking each component to know about themes.
+
+   `ink` and `cream` are an inverting PAIR: ink is the page frame and the text,
+   cream is the panel it sits on, and they swap together. Anything painted
+   `bg-ink` must therefore write in `text-cream`, never `text-white` — white on
+   a light frame is invisible, and that is the one way this can go wrong. */
 @theme {
   --color-primary: #ff5757;
   --color-primary-dark: #c4262a;
@@ -13,21 +21,55 @@
   --color-ink-soft: #4b4651;
   --color-cream: #faf6f0;
   --color-lilac: #eef0fb;
+  /* Cards and panels sitting ON a background: white on light, lifted slate on
+     dark. Hairlines get a token too, because black/5 cannot invert. */
+  --color-surface: #ffffff;
+  --color-line: rgba(22, 19, 26, 0.08);
+  /* Text on a block whose colour does NOT invert — the yellow bands, the
+     coloured stickers. Those stay yellow in the dark, so writing on them in
+     `ink` would turn near-white and vanish. This one never moves. */
+  --color-on-accent: #16131a;
+  /* The matte the rounded panels sit in. It is the site's frame, not a
+     surface, and it reads as one in both themes — inverting it turned the
+     page's border white, which looked like a rendering fault rather than a
+     theme. So it never moves either. */
+  --color-frame: #100e14;
 
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
+}
+
+/* Dark theme. Set by the no-flash script in the layout from the saved choice,
+   falling back to the operating system's. */
+:root[data-theme='dark'] {
+  --color-primary-light: rgba(255, 87, 87, 0.18);
+  --color-secondary-light: rgba(88, 101, 242, 0.2);
+  --color-ink: #f5f2f7;
+  --color-ink-soft: #a9a2b3;
+  --color-cream: #15131a;
+  --color-lilac: #191a26;
+  --color-surface: #1e1b24;
+  --color-line: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
   html {
     font-family: var(--font-body);
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
   }
   body {
-    background: var(--color-ink);
+    /* The matte behind the rounded panels — the same one the page wrappers
+       paint, so an overscroll bounce shows the frame rather than a flash of
+       some other colour. */
+    background: var(--color-frame);
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-head);
@@ -37,6 +79,27 @@
   }
   a, button, [role="button"], input[type="submit"], summary, label[for], select, [data-nav-toggle], [data-nav-close] {
     cursor: pointer;
+  }
+  /* Keyboard users get a visible ring everywhere; mouse users get none. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    /* The site animates a lot — entrances, marquees, hovers. Someone who asked
+       for less motion gets the end state, not the journey. */
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -56,10 +119,12 @@
 /* Frosted-glass surfaces — the shared Gen-Z glassmorphism language used for
  * headers, chips and feature cards across every Duncit website. */
 @utility glass {
-  background: rgba(255, 255, 255, 0.55);
+  /* Built from the surface token, so frosted glass over a dark page is dark
+     glass rather than a white pane nobody can read through. */
+  background: color-mix(in srgb, var(--color-surface) 55%, transparent);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  border: 1px solid color-mix(in srgb, var(--color-surface) 55%, transparent);
   box-shadow: 0 8px 32px rgba(22, 19, 26, 0.12);
 }
 @utility glass-dark {
@@ -70,17 +135,17 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 @utility glass-chip {
-  background: rgba(255, 255, 255, 0.7);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid color-mix(in srgb, var(--color-surface) 65%, transparent);
 }
 
 /* Skeleton shimmer for client-fetched content (blog, careers, policies…). */
 @utility skeleton {
   position: relative;
   overflow: hidden;
-  background: rgba(22, 19, 26, 0.08);
+  background: var(--color-line);
   border-radius: 0.75rem;
 }
 @layer utilities {

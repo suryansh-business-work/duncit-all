@@ -94,6 +94,28 @@ export const MWEB_BUNDLE: NestedCatalogue = {
       formerAttendee: 'Former attendee',
       newAttendee: 'A new attendee',
     },
+    // Rating a pod after it happens. Each part is asked separately because a
+    // guest can love the evening and still have been let down by the room —
+    // the aspect labels are keyed from @duncit/utils' POD_FEEDBACK_ASPECT_KEY,
+    // so the two apps ask word-for-word the same questions.
+    podFeedback: {
+      title: 'How was “{title}”?',
+      subtitle: 'Rate whichever parts you have an opinion on. Only the first is needed.',
+      aspectOverall: 'Overall pod experience',
+      aspectHost: 'Host',
+      aspectVenue: 'Venue',
+      aspectClubAdmin: 'Club admin',
+      aspectSafety: 'Safety',
+      aspectFood: 'Food',
+      aspectOther: 'Anything else',
+      comments: 'Comments',
+      commentsPlaceholder: 'Tell us more (optional)',
+      skip: 'Not now',
+      submit: 'Submit',
+      submitting: 'Sending…',
+      rateAspect: 'Rate {aspect} {stars} out of 5',
+      failed: 'That could not be sent. Please try again.',
+    },
     // Plurals ship as explicit One/Many pairs: the key-verification gate needs
     // every leaf rendered via a literal t('…'), which the translator's
     // `.one/.other` siblings would fail.
@@ -235,6 +257,7 @@ export const WEBSITE_BUNDLE: NestedCatalogue = {
     },
     nav: {
       closeMenu: 'Close menu',
+      theme: 'Switch between light and dark',
     },
   },
 };

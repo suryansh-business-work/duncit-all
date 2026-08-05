@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import * as Location from 'expo-location';
 import type { ResultOf } from '@graphql-typed-document-node/core';
+import type { PodFeedbackInput } from '@duncit/utils';
 
 import {
   MobileActiveSosDocument,
@@ -86,23 +87,12 @@ export function useBouncer() {
     [],
   );
 
-  const submitPodFeedback = useCallback(
-    async (podId: string, rating: number, category: string, message: string) => {
-      await graphqlRequest(
-        MobileSubmitFeedbackDocument,
-        {
-          input: {
-            pod_id: podId,
-            rating,
-            category: category as never,
-            message: message.trim() || null,
-          },
-        },
-        { auth: true },
-      );
-    },
-    [],
-  );
+  // The input is built by @duncit/utils so mWeb and native send the same shape;
+  // the category is left out on purpose — the server reads it from the weakest
+  // score rather than asking the guest to triage their own feedback.
+  const submitPodFeedback = useCallback(async (input: PodFeedbackInput) => {
+    await graphqlRequest(MobileSubmitFeedbackDocument, { input: input as never }, { auth: true });
+  }, []);
 
   return {
     loadSupportTarget,

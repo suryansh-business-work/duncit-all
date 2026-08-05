@@ -9,7 +9,8 @@
     "./FooterLogo.astro": "./src/FooterLogo.astro",
     "./NewsletterSignup.astro": "./src/NewsletterSignup.astro",
     "./PolicyStrip.astro": "./src/PolicyStrip.astro",
-    "./SocialLinks.astro": "./src/SocialLinks.astro"
+    "./SocialLinks.astro": "./src/SocialLinks.astro",
+    "./SiteMenu.astro": "./src/SiteMenu.astro"
   },
   "files": [
     "src"

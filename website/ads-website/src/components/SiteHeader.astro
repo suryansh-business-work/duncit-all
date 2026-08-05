@@ -3,6 +3,7 @@ import { siteConfig } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 import SmartLink from './SmartLink.astro';
 import BrandLogo from '@duncit/brand/BrandLogo.astro';
+import SiteMenu from '@duncit/brand/SiteMenu.astro';
 
 interface Props {
   /** Sit over a full-bleed banner instead of on the page background. */
@@ -70,6 +71,11 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
       >
         {nav.signup.label}
       </SmartLink>
+      <SiteMenu
+        links={nav.links}
+        actions={[nav.signup, nav.login]}
+        onDark={overlay}
+      />
     </div>
   </nav>
 </header>

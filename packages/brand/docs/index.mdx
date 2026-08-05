@@ -16,6 +16,7 @@ exports:
   - 'NewsletterSignup.astro'
   - 'PolicyStrip.astro'
   - 'SocialLinks.astro'
+  - 'SiteMenu.astro'
 ---
 
 ## Why this exists
@@ -65,6 +66,21 @@ import SocialLinks from '@duncit/brand/SocialLinks.astro';
 `PolicyStrip` renders every policy on one wrapping row separated by pipes, and nothing at
 all when the list is empty — a build that could not reach the API shows no empty heading.
 `SocialLinks` defaults to Duncit's own accounts, so no site has to carry the handles.
+
+### The mobile menu
+
+```astro
+---
+import SiteMenu from '@duncit/brand/SiteMenu.astro';
+---
+
+<SiteMenu links={nav.links} actions={[nav.signup, nav.login]} onDark={overlay} />
+```
+
+The satellite sites hid their navigation below `lg` and put nothing in its place, so on a
+phone the header was a logo and one button and every other link was unreachable. This is
+the hamburger and the drawer it opens; it hides itself at `1024px`, which is the width the
+headers reveal their inline links at. `onDark` matches a header sitting over a banner.
 
 ## Everything here is plain CSS, not Tailwind
 

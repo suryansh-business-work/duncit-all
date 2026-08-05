@@ -1,0 +1,259 @@
+---
+/**
+ * The mobile menu: a hamburger, and the drawer it opens.
+ *
+ * The satellite sites hid their navigation below `lg` and put nothing in its
+ * place, so on a phone the header was a logo and a sign-up button — every other
+ * link on the site was unreachable from the top of the page.
+ *
+ * Self-contained on purpose. The styling is plain CSS because this package is
+ * outside every site's Tailwind scan, and the script is inline and
+ * dependency-free so the menu still opens if another bundle on the page throws.
+ */
+interface Link {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  links: Link[];
+  /** Buttons at the foot of the drawer — sign in, sign up, whatever the site calls them. */
+  actions?: Link[];
+  label?: string;
+  /** Match the header's own text colour when it sits over a banner. */
+  onDark?: boolean;
+  class?: string;
+}
+
+const { links, actions = [], label = 'Menu', onDark = false, class: className = '' } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['site-menu-button', onDark && 'on-dark', className]}
+  data-site-menu-open
+  aria-label={label}
+  aria-expanded="false"
+  aria-controls="siteMenuDrawer"
+>
+  <i class="fa-solid fa-bars" aria-hidden="true"></i>
+</button>
+
+<div class="site-menu-backdrop" data-site-menu-close hidden></div>
+
+<aside id="siteMenuDrawer" class="site-menu-drawer" aria-hidden="true" aria-label={label}>
+  <div class="site-menu-head">
+    <span class="site-menu-title">{label}</span>
+    <button type="button" class="site-menu-close" data-site-menu-close aria-label="Close menu">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <nav class="site-menu-nav">
+    {
+      links.map((link) => (
+        <a href={link.href}>
+          <span>{link.label}</span>
+          <i class="fa-solid fa-arrow-right" aria-hidden="true" />
+        </a>
+      ))
+    }
+  </nav>
+
+  {
+    actions.length > 0 && (
+      <div class="site-menu-actions">
+        {actions.map((action, index) => (
+          <a href={action.href} class={index === 0 ? 'is-primary' : ''}>
+            {action.label}
+          </a>
+        ))}
+      </div>
+    )
+  }
+</aside>
+
+<style>
+  /* The button only exists on the widths where the inline navigation does not.
+     `lg` here matches the `lg:flex` the headers use to reveal their links. */
+  .site-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-ink, #16131a);
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease;
+  }
+  .site-menu-button:hover {
+    border-color: var(--color-primary, #ff5757);
+    color: var(--color-primary, #ff5757);
+  }
+  .site-menu-button.on-dark {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+  }
+  @media (min-width: 1024px) {
+    .site-menu-button {
+      display: none;
+    }
+  }
+
+  .site-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(9, 7, 18, 0.6);
+    backdrop-filter: blur(2px);
+  }
+  .site-menu-backdrop[hidden] {
+    display: none;
+  }
+
+  .site-menu-drawer {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    width: 86%;
+    max-width: 22rem;
+    background: var(--color-surface, #fff);
+    box-shadow: -12px 0 40px rgba(9, 7, 18, 0.35);
+    transform: translateX(100%);
+    transition: transform 260ms ease;
+  }
+  .site-menu-drawer.is-open {
+    transform: translateX(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-menu-drawer {
+      transition: none;
+    }
+  }
+
+  .site-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+  }
+  .site-menu-title {
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-ink-soft, #4b4651);
+  }
+  .site-menu-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-ink, #16131a);
+    color: var(--color-surface, #fff);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .site-menu-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.75rem;
+  }
+  .site-menu-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0.75rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    color: var(--color-ink, #16131a);
+    text-decoration: none;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+  .site-menu-nav a:hover {
+    background: color-mix(in srgb, var(--color-primary, #ff5757) 10%, transparent);
+    color: var(--color-primary, #ff5757);
+  }
+  .site-menu-nav i {
+    font-size: 0.75rem;
+    opacity: 0.5;
+  }
+
+  .site-menu-actions {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem 1.5rem;
+    border-top: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+  }
+  .site-menu-actions a {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 999px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-ink, #16131a);
+    text-decoration: none;
+  }
+  .site-menu-actions a.is-primary {
+    border-color: transparent;
+    background: var(--color-primary, #ff5757);
+    color: #fff;
+  }
+</style>
+
+<script is:inline>
+  // Inline and dependency-free: the menu must still open if another bundle on
+  // the page throws.
+  (function () {
+    var drawer = document.getElementById('siteMenuDrawer');
+    var backdrop = document.querySelector('.site-menu-backdrop');
+    var opener = document.querySelector('[data-site-menu-open]');
+    if (!drawer || !backdrop || !opener) return;
+
+    function open() {
+      backdrop.hidden = false;
+      // The next frame, so the drawer transitions in rather than appearing.
+      requestAnimationFrame(function () {
+        drawer.classList.add('is-open');
+      });
+      drawer.setAttribute('aria-hidden', 'false');
+      opener.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      opener.setAttribute('aria-expanded', 'false');
+      backdrop.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    opener.addEventListener('click', open);
+    document.addEventListener('click', function (event) {
+      if (!event.target || !event.target.closest) return;
+      // A link inside the drawer closes it too — most of them are anchors on
+      // the same page, and a drawer left open over the target is a dead end.
+      if (event.target.closest('[data-site-menu-close]') || event.target.closest('.site-menu-nav a')) {
+        close();
+      }
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') close();
+    });
+  })();
+</script>

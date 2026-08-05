@@ -20,6 +20,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   RAZORPAY: 'Razorpay',
   SHIPROCKET: 'ShipRocket',
   SLACK: 'Slack',
+  AISENSY: 'AiSensy (WhatsApp)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

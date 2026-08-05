@@ -1,99 +1,21 @@
 ---
+// This site's copy, on the shared form. The markup, the mutation and the
+// status handling live in @duncit/brand — three sites had written them three
+// times, each with its own idea of what happens when the API says no.
+import SharedNewsletter from '@duncit/brand/NewsletterSignup.astro';
 import { siteConfig } from '../config/site-config';
-import SmartLink from './SmartLink.astro';
+
 const { newsletter, graphqlUrl, mainSiteUrl } = siteConfig;
 ---
 
-<!-- Subscribes through the same CRM the campaigns read, tagged with where it
-     came from — not a mailing list living only on this site. -->
-<div class="rounded-2xl border border-line bg-surface p-6 shadow-sm">
-  <h3 class="font-head text-lg font-extrabold text-ink">{newsletter.heading}</h3>
-  <p class="mt-1 text-sm text-ink-soft">{newsletter.text}</p>
-  <form class="mt-4 flex flex-wrap gap-2" data-newsletter novalidate>
-    <label class="sr-only" for="newsletter-email">Email address</label>
-    <input
-      id="newsletter-email"
-      name="email"
-      type="email"
-      required
-      autocomplete="email"
-      placeholder={newsletter.placeholder}
-      class="min-w-0 grow rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink outline-none transition focus:border-primary"
-    />
-    <button
-      type="submit"
-      class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-dark disabled:opacity-60"
-    >
-      {newsletter.button}
-    </button>
-
-    <label class="flex w-full items-start gap-2 text-xs text-ink-soft">
-      <input
-        type="checkbox"
-        name="consent"
-        required
-        class="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-primary)]"
-      />
-      <span>
-        {newsletter.consent}{' '}
-        <SmartLink
-          href={`${mainSiteUrl}/policies`}
-          label={newsletter.consentLinkLabel}
-          class="font-semibold text-primary hover:underline"
-        >
-          {newsletter.consentLinkLabel}
-        </SmartLink>.
-      </span>
-    </label>
-  </form>
-  <p class="mt-2 min-h-[1.25rem] text-xs" data-newsletter-status role="status" aria-live="polite"></p>
-</div>
-
-<script is:inline define:vars={{ graphqlUrl, source: newsletter.source }}>
-  (() => {
-    const form = document.querySelector('[data-newsletter]');
-    if (!form) return;
-    const status = document.querySelector('[data-newsletter-status]');
-    const button = form.querySelector('button');
-
-    const say = (message, ok) => {
-      status.textContent = message;
-      status.className = `mt-2 min-h-[1.25rem] text-xs ${ok ? 'text-primary-dark' : 'text-ink-soft'}`;
-    };
-
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const email = new FormData(form).get('email');
-      // The browser's own checks first — a malformed address, or an unticked
-      // consent box, never becomes a round trip, and the message is the one
-      // the field already knows how to say.
-      if (!form.reportValidity()) return;
-      button.disabled = true;
-      say('Subscribing…', false);
-      try {
-        const res = await fetch(graphqlUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `mutation Subscribe($input: SubscribeNewsletterInput!) {
-              subscribeNewsletter(input: $input) { ok message }
-            }`,
-            variables: { input: { email, source } },
-          }),
-        });
-        const json = await res.json();
-        const result = json?.data?.subscribeNewsletter;
-        if (result?.ok) {
-          form.reset();
-          say(result.message || 'You are on the list.', true);
-        } else {
-          say(result?.message || json?.errors?.[0]?.message || 'That did not go through.', false);
-        }
-      } catch {
-        say('That did not go through — check your connection and try again.', false);
-      } finally {
-        button.disabled = false;
-      }
-    });
-  })();
-</script>
+<SharedNewsletter
+  graphqlUrl={graphqlUrl}
+  source={newsletter.source}
+  heading={newsletter.heading}
+  text={newsletter.text}
+  placeholder={newsletter.placeholder}
+  button={newsletter.button}
+  consent={newsletter.consent}
+  consentLinkLabel={newsletter.consentLinkLabel}
+  consentLinkHref={`${mainSiteUrl}/policies`}
+/>

@@ -6,6 +6,8 @@ import { siteConfig } from '../config/site-config';
 import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
 import NewsletterSignup from './NewsletterSignup.astro';
 import SmartLink from './SmartLink.astro';
+import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
+import SocialLinks from '@duncit/brand/SocialLinks.astro';
 import FooterLogo from '@duncit/brand/FooterLogo.astro';
 
 const { brand, footer, mainSiteUrl } = siteConfig;
@@ -63,22 +65,7 @@ const year = new Date().getFullYear();
         {supportEmail}
       </a>
 
-      <ul class="mt-5 flex items-center gap-3">
-        {
-          footer.social.map((account) => (
-            <li>
-              <SmartLink
-                href={account.href}
-                label={account.label}
-                glyph={false}
-                class="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink-soft transition hover:border-primary hover:text-primary"
-              >
-                <i class={`fa-brands ${account.icon}`} aria-hidden="true" />
-              </SmartLink>
-            </li>
-          ))
-        }
-      </ul>
+      <SocialLinks class="mt-5" />
     </div>
     <NewsletterSignup />
   </div>
@@ -107,38 +94,9 @@ const year = new Date().getFullYear();
           </nav>
         ))
       }
-      {
-        policies.length > 0 && (
-          <nav aria-label="Legal">
-            <h3 class="mb-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink">
-              Legal
-            </h3>
-            <ul class="space-y-2">
-              {policies.slice(0, 4).map((policy) => (
-                <li>
-                  <SmartLink
-                    href={`${mainSiteUrl}/policy/${encodeURIComponent(policy.slug)}`}
-                    label={policy.title}
-                    class="text-sm text-ink-soft transition hover:text-ink"
-                  >
-                    {policy.title}
-                  </SmartLink>
-                </li>
-              ))}
-              <li>
-                <SmartLink
-                  href={`${mainSiteUrl}/policies`}
-                  label="All policies"
-                  class="text-sm font-semibold text-primary hover:underline"
-                >
-                  All policies
-                </SmartLink>
-              </li>
-            </ul>
-          </nav>
-        )
-      }
     </div>
+
+    <PolicyStrip policies={policies} baseUrl={mainSiteUrl} class="mt-10" />
   </div>
 
   <div class="border-t border-line">

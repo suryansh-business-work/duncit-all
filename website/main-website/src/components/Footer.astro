@@ -5,7 +5,11 @@
 import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
 import { getTranslator } from '../lib/i18n';
 import FooterLogo from '@duncit/brand/FooterLogo.astro';
+import SharedNewsletter from '@duncit/brand/NewsletterSignup.astro';
+import PolicyStrip from '@duncit/brand/PolicyStrip.astro';
+import SocialLinks from '@duncit/brand/SocialLinks.astro';
 import SmartLink from './SmartLink.astro';
+import { urlConfigs } from '../config/url-configs';
 
 // Chrome copy comes from Admin > Localization, baked in at build time with the
 // bundled fallback behind it (rule 38). Link labels are NOT translated here —
@@ -64,26 +68,17 @@ const year = new Date().getFullYear();
         name={branding.app_name}
         height={112}
       />
-      <div class="md:text-right">
-        <p class="font-head font-bold text-ink mb-3">{t('website.footer.newsletterTitle')}</p>
-        <form
-          class="flex gap-2 md:justify-end"
-          id="footerForm"
-          data-sending={t('website.footer.sending')}
-          data-subscribed={t('website.footer.subscribed')}
-          data-try-again={t('website.footer.tryAgain')}
-        >
-          <input
-            type="email"
-            required
-            placeholder={t('website.footer.emailPlaceholder')}
-            class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-surface border-2 border-ink/10 focus:border-primary outline-none text-sm"
-          />
-          <button class="px-4 py-2.5 rounded-lg bg-ink text-cream font-bold text-sm inline-flex items-center gap-2">
-            <i class="fa-solid fa-paper-plane"></i> {t('website.footer.notify')}
-          </button>
-        </form>
-      </div>
+      <!-- The same form the other Duncit sites use. It used to be written out
+           here with its own mutation and its own status handling; the copy is
+           still this site's (Admin > Localization), the mechanism is not. -->
+      <SharedNewsletter
+        graphqlUrl={urlConfigs.graphqlUrl}
+        source="WEBSITE_FOOTER"
+        variant="inline"
+        heading={t('website.footer.newsletterTitle')}
+        placeholder={t('website.footer.emailPlaceholder')}
+        button={t('website.footer.notify')}
+      />
     </div>
 
     <hr class="my-10 border-ink/10" />
@@ -109,77 +104,22 @@ const year = new Date().getFullYear();
         ))
       }
       <div>
-        <h4 class="font-head font-extrabold mb-3">{t('website.footer.policyHub')}</h4>
-        <ul class="space-y-2 text-sm text-ink-soft">
-          {
-            policies.map((policy) => (
-              <li>
-                <a href={`/policy/${policy.slug}`} class="hover:text-primary">
-                  {policy.title}
-                </a>
-              </li>
-            ))
-          }
-          <li><a href="/policies" class="hover:text-primary font-bold">{t('website.footer.allPolicies')}</a></li>
-        </ul>
+        <h4 class="font-head font-extrabold mb-3">Follow Duncit</h4>
+        <SocialLinks />
       </div>
     </div>
+
+    <!-- Policies get the full width. As a narrow column they were a scroll of
+         thirteen one-word-per-line links; across the footer they are a list. -->
+    <PolicyStrip
+      policies={policies}
+      heading={t('website.footer.policyHub')}
+      allLabel={t('website.footer.allPolicies')}
+      class="mt-10"
+    />
 
     <div class="mt-10 pt-6 border-t border-ink/10 flex justify-center items-center text-sm text-ink-soft">
       <span>© {branding.app_name} {year} | {t('website.footer.rights')}</span>
     </div>
   </div>
 </footer>
-
-<script>
-  import { urlConfigs } from '../config/url-configs';
-
-  const GQL_URL = urlConfigs.graphqlUrl;
-  const ff = document.getElementById('footerForm') as HTMLFormElement | null;
-  // Copy is resolved at build time in the frontmatter and handed over on the
-  // element — a client script cannot reach the translator itself.
-  const copy = {
-    sending: ff?.dataset.sending ?? '',
-    subscribed: ff?.dataset.subscribed ?? '',
-    tryAgain: ff?.dataset.tryAgain ?? '',
-  };
-  ff?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const input = ff.querySelector('input[type="email"]') as HTMLInputElement;
-    const email = input?.value?.trim();
-    if (!email) return;
-    const btn = ff.querySelector('button') as HTMLButtonElement | null;
-    const orig = btn?.innerHTML;
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${copy.sending}`;
-    }
-    try {
-      const res = await fetch(GQL_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: 'mutation Sub($input: SubscribeNewsletterInput!) { subscribeNewsletter(input: $input) { ok message } }',
-          variables: { input: { email, source: 'WEBSITE_FOOTER' } },
-        }),
-      });
-      const json = await res.json();
-      const ok = !!json?.data?.subscribeNewsletter?.ok;
-      if (btn) {
-        btn.innerHTML = ok
-          ? `<i class="fa-solid fa-check"></i> ${copy.subscribed}`
-          : `<i class="fa-solid fa-xmark"></i> ${copy.tryAgain}`;
-      }
-      if (ok) input.value = '';
-    } catch {
-      if (btn) btn.innerHTML = `<i class="fa-solid fa-xmark"></i> ${copy.tryAgain}`;
-    } finally {
-      window.setTimeout(() => {
-        if (btn) {
-          btn.innerHTML = orig ?? '';
-          btn.disabled = false;
-        }
-      }, 2500);
-    }
-  });
-</script>

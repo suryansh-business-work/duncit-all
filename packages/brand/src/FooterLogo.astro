@@ -37,5 +37,16 @@ const {
   height={height}
   href={href}
   loading="lazy"
-  class:list={['max-w-full', className]}
+  class={className}
 />
+
+<style>
+  /* The cap this wrapper exists for, in CSS the package owns — a wide logo
+     must not push the footer layout on a phone. */
+  :global(.duncit-mark) {
+    max-width: 100%;
+  }
+  :global(.duncit-mark img) {
+    max-width: 100%;
+  }
+</style>

@@ -32,14 +32,29 @@ const copies = [run, run, run, run];
 <style>
   /* A physical band tilted away from the reader: perspective on the stage, the
      tilt on the band, so the text inside inherits the same plane and the whole
-     thing reads as one ribbon rather than skewed lettering. */
+     thing reads as one ribbon rather than skewed lettering.
+
+     The stage OWNS the clip and the widening. Call sites used to do it with
+     `mx-[-4%]`, which made the element wider than the page — the body's
+     `overflow-x: hidden` stopped it scrolling but the band still ran off the
+     right edge and left a strip of dead space beside it. Widening the band
+     INSIDE a full-width clip gets the same look with nothing sticking out.
+
+     The vertical padding is the tilt's own room: a band rotated 1.6° lifts one
+     end and drops the other by half its width times sin(1.6°), and without
+     space for that the ends get sliced off. */
   .ribbon-stage {
     perspective: 700px;
     pointer-events: none;
+    overflow: hidden;
+    padding-block: 1.25rem;
   }
 
   .ribbon-band {
-    overflow: hidden;
+    /* Wider than the stage so both ends run past the clip rather than stopping
+       in view — the reason the negative margin existed. */
+    width: 112%;
+    margin-inline-start: -6%;
     padding: 0.85rem 0;
     background: linear-gradient(
       180deg,

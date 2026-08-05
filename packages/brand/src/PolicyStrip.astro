@@ -1,0 +1,125 @@
+---
+/**
+ * Every policy, across the full width of the footer.
+ *
+ * It used to be a narrow column showing the first four and then "All policies"
+ * — fine for a nav group, wrong for the thing a reader came to the footer to
+ * find. Legal links are scanned, not browsed: all of them visible, on one
+ * wrapping row, separated by pipes.
+ *
+ * The styling is PLAIN CSS, not Tailwind utilities. This package lives outside
+ * every site's Tailwind source scan, so a `flex gap-x-6` written here compiles
+ * to nothing and the links run into each other — which is exactly what
+ * happened. Only the tokens are borrowed, and every site declares those.
+ */
+interface Policy {
+  slug: string;
+  title: string;
+}
+
+interface Props {
+  policies: Policy[];
+  /** Where policy pages live. Empty on the main site, its origin elsewhere. */
+  baseUrl?: string;
+  heading?: string;
+  allLabel?: string;
+  class?: string;
+}
+
+const {
+  policies = [],
+  baseUrl = '',
+  heading = 'Policies',
+  allLabel = 'All policies',
+  class: className = '',
+} = Astro.props;
+
+const root = baseUrl.replace(/\/+$/, '');
+// A link that leaves this site says so; on the main site these are local.
+const away = Boolean(root);
+const outward = away ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+{
+  policies.length > 0 && (
+    <div class:list={['policy-strip', className]}>
+      <h3 class="policy-strip-heading">{heading}</h3>
+      <ul class="policy-strip-list">
+        {policies.map((policy) => (
+          <li>
+            <a href={`${root}/policy/${encodeURIComponent(policy.slug)}`} {...outward}>
+              {policy.title}
+            </a>
+          </li>
+        ))}
+        <li>
+          <a class="policy-strip-all" href={`${root}/policies`} {...outward}>
+            {allLabel}
+          </a>
+        </li>
+      </ul>
+    </div>
+  )
+}
+
+<style>
+  .policy-strip {
+    border-top: 1px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    padding-top: 2rem;
+  }
+
+  .policy-strip-heading {
+    margin: 0 0 1rem;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink, #16131a);
+  }
+
+  .policy-strip-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    /* The gap is the separator's breathing room; the pipe sits in the middle
+       of it, so the two are tuned together. */
+    gap: 0.4rem 0.9rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A pipe after every entry but the last. Drawn rather than typed so it is
+     never read out, and never selected when someone copies the list. */
+  .policy-strip-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .policy-strip-list li:not(:last-child)::after {
+    content: '';
+    width: 1px;
+    height: 0.85em;
+    background: var(--color-line, rgba(22, 19, 26, 0.18));
+    /* The hairline token is faint by design; at 1px it needs the help. */
+    opacity: 2;
+  }
+
+  .policy-strip-list a {
+    font-size: 0.875rem;
+    color: var(--color-ink-soft, #4b4651);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+  .policy-strip-list a:hover {
+    color: var(--color-primary, #ff5757);
+  }
+  .policy-strip-all {
+    font-weight: 700;
+    color: var(--color-primary, #ff5757) !important;
+  }
+  .policy-strip-all:hover {
+    text-decoration: underline;
+  }
+</style>

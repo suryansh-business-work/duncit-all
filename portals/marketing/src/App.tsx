@@ -8,6 +8,7 @@ import CreateAudienceListPage from './pages/target-audience-page/CreateAudienceL
 import AudienceListDetailPage from './pages/target-audience-page/AudienceListDetailPage';
 import MarketingCampaignsPage from './pages/marketing-campaigns-page/MarketingCampaignsPage';
 import CreateCampaignPage from './pages/marketing-campaigns-page/CreateCampaignPage';
+import WhatsappCampaignsPage from './pages/whatsapp-campaigns-page';
 import ShortLinksPage from './pages/short-links-page/ShortLinksPage';
 import ShortLinkDetailPage from './pages/short-links-page/ShortLinkDetailPage';
 import NotificationsPage from './pages/notifications-page/NotificationsPage';
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/audience/:listId" element={authed(<AudienceListDetailPage />)} />
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage />)} />
         <Route path="/campaigns/email/new" element={authed(<CreateCampaignPage />)} />
+        <Route path="/campaigns/whatsapp" element={authed(<WhatsappCampaignsPage />)} />
         <Route path="/short-links" element={authed(<ShortLinksPage />)} />
         <Route path="/short-links/:linkId" element={authed(<ShortLinkDetailPage />)} />
         <Route path="/notifications" element={authed(<NotificationsPage />)} />

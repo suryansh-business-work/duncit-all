@@ -22,12 +22,11 @@ const ribbonCopies = [ribbonRun, ribbonRun, ribbonRun, ribbonRun];
     fetchpriority="high"
   />
   <!-- Copy sits on the left, so the scrim is heaviest there and clears to the
-       right: the photograph keeps its subject, the words keep their contrast. -->
-  <div
-    class="absolute inset-0 -z-10 bg-gradient-to-r from-ink/90 via-ink/70 to-ink/25"
-    aria-hidden="true"
-  >
-  </div>
+       right: the photograph keeps its subject, the words keep their contrast.
+       A LITERAL dark, not the ink token: ink inverts with the theme, so in dark
+       mode the scrim turned near-white and washed the photograph out. The words
+       on it are always white, so what darkens them must always be dark. -->
+  <div class="hero-scrim absolute inset-0 -z-10" aria-hidden="true"></div>
 
   <div class="mx-auto w-full max-w-6xl px-5 pt-32 pb-36 sm:pt-36 sm:pb-40">
     <span
@@ -66,6 +65,15 @@ const ribbonCopies = [ribbonRun, ribbonRun, ribbonRun, ribbonRun];
 </section>
 
 <style>
+  .hero-scrim {
+    background: linear-gradient(
+      90deg,
+      rgba(9, 7, 18, 0.9) 0%,
+      rgba(9, 7, 18, 0.7) 45%,
+      rgba(9, 7, 18, 0.25) 100%
+    );
+  }
+
   /* A physical band tilted away from the reader: perspective on the stage, the
      tilt on the band, so the text inside inherits the same plane and the whole
      thing reads as one ribbon rather than skewed lettering. */

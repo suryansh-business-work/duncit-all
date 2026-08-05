@@ -293,6 +293,13 @@ export const siteConfig = {
   },
   footer: {
     tagline: 'Building communities. Creating opportunities. Earning together.',
+    /** Font Awesome brand marks; every one leaves the site, so SmartLink gives
+     * them the new tab and the accessible name. */
+    social: [
+      { icon: 'fa-instagram', label: 'Instagram', href: 'https://www.instagram.com/duncit_app/' },
+      { icon: 'fa-linkedin-in', label: 'LinkedIn', href: 'https://linkedin.com/company/duncit' },
+      { icon: 'fa-facebook-f', label: 'Facebook', href: 'https://facebook.com/duncitapp' },
+    ],
     /** Rendered when the Website portal has no FOOTER navigation for this site;
      * the portal's groups win whenever they exist. */
     groups: [
@@ -301,6 +308,7 @@ export const siteConfig = {
         links: [
           { label: 'Earn With Us', href: '#paths' },
           { label: 'How It Works', href: '#how' },
+          { label: 'Earnings estimator', href: '#calculator' },
           { label: 'Resources', href: `${mainSiteUrl}/safety/resources` },
           { label: 'Blog', href: `${mainSiteUrl}/blog` },
         ],
@@ -312,6 +320,7 @@ export const siteConfig = {
           { label: 'For Venues', href: `${mwebUrl}/survey/venue` },
           { label: 'For Clubs', href: `${mwebUrl}/survey/club_admin` },
           { label: 'For Brands', href: `${mwebUrl}/survey/ecomm` },
+          { label: 'Community', href: `${mainSiteUrl}/community` },
         ],
       },
       {
@@ -319,6 +328,7 @@ export const siteConfig = {
         links: [
           { label: 'Help Center', href: `${mainSiteUrl}/help` },
           { label: 'Contact Us', href: `${mainSiteUrl}/contact` },
+          { label: 'FAQ', href: `${mainSiteUrl}/faq` },
           { label: 'Safety', href: `${mainSiteUrl}/safety/approach` },
           { label: 'Guidelines', href: `${mainSiteUrl}/guidelines` },
         ],
@@ -328,7 +338,9 @@ export const siteConfig = {
         links: [
           { label: 'About Us', href: `${mainSiteUrl}/about` },
           { label: 'Careers', href: `${mainSiteUrl}/careers` },
-          { label: 'Press Kit', href: `${mainSiteUrl}/newsroom` },
+          { label: 'Newsroom', href: `${mainSiteUrl}/newsroom` },
+          { label: 'Log In', href: `${mwebUrl}/login` },
+          { label: 'Sign Up', href: `${mwebUrl}/register` },
         ],
       },
     ],

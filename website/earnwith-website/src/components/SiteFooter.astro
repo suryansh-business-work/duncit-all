@@ -21,13 +21,28 @@ const FALLBACK_GROUPS: SiteNavGroup[] = footer.groups.map((group) => ({
   })),
 }));
 
-const [branding, navGroups, policies] = await Promise.all([
+const [branding, portalGroups, policies] = await Promise.all([
   fetchBranding(),
-  fetchNavGroups('FOOTER', FALLBACK_GROUPS),
+  fetchNavGroups('FOOTER', []),
   fetchPolicies(),
 ]);
+
+// The portal wins per GROUP, not all-or-nothing. It carries two groups today,
+// and an all-or-nothing fallback meant the site's own five collapsed to those
+// two — a thinner footer than either source describes. Anything the portal
+// names is its own; the rest come from here.
+const portalLabels = new Set(portalGroups.map((group) => group.label.toLowerCase()));
+const navGroups = [
+  ...portalGroups,
+  ...FALLBACK_GROUPS.filter((group) => !portalLabels.has(group.label.toLowerCase())),
+];
 const supportEmail = branding.support_email || 'support@duncit.com';
 const year = new Date().getFullYear();
+// Admin's footer logo, then the header one it also manages, and only then the
+// bundled file: a brand that set ONE logo should not see the local default
+// down here while its own mark sits at the top of the page.
+const footerLogo =
+  branding.website_footer_logo_url || branding.website_header_logo_url || '/duncit-logo.svg';
 ---
 
 <footer class="mt-8 border-t border-line bg-surface/60">
@@ -35,11 +50,7 @@ const year = new Date().getFullYear();
        the footer's job, not a strip bolted above it. -->
   <div class="mx-auto grid max-w-6xl items-start gap-10 px-5 py-12 lg:grid-cols-[1fr_1.1fr]">
     <div>
-      <img
-        src={branding.website_footer_logo_url || '/duncit-logo.svg'}
-        alt="Duncit"
-        class="h-9 w-auto"
-      />
+      <img src={footerLogo} alt="Duncit" class="h-9 w-auto" />
       <p class="mt-4 max-w-sm text-sm leading-relaxed text-ink-soft">{footer.tagline}</p>
       <a
         href={`mailto:${supportEmail}`}
@@ -48,6 +59,22 @@ const year = new Date().getFullYear();
         <i class="fa-solid fa-envelope text-xs" aria-hidden="true"></i>
         {supportEmail}
       </a>
+
+      <ul class="mt-5 flex items-center gap-3">
+        {
+          footer.social.map((account) => (
+            <li>
+              <SmartLink
+                href={account.href}
+                label={account.label}
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-line text-ink-soft transition hover:border-primary hover:text-primary"
+              >
+                <i class={`fa-brands ${account.icon}`} aria-hidden="true" />
+              </SmartLink>
+            </li>
+          ))
+        }
+      </ul>
     </div>
     <NewsletterSignup />
   </div>

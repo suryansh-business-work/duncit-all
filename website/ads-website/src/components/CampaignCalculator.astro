@@ -1,0 +1,270 @@
+---
+import { siteConfig } from '../config/site-config';
+import { fetchAdRateCard } from '../lib/site-data';
+import PlacementPreview from './PlacementPreview.astro';
+import SmartLink from './SmartLink.astro';
+
+const { calculator, graphqlUrl } = siteConfig;
+// The card as it was at build time: the chips and the slider render with real
+// placements and real prices before a single byte of JavaScript runs. The
+// script below refreshes it, so a price Marketing changed after this deploy is
+// still the one quoted — and if this build could not reach the API at all, the
+// refresh builds the chips itself.
+const rateCard = await fetchAdRateCard();
+const initial = rateCard ?? {
+  currency_symbol: '₹',
+  entries: [],
+  min_days: 1,
+  max_days: 30,
+  from_per_day: 0,
+  to_per_day: 0,
+};
+const defaultDays = Math.min(7, initial.max_days);
+const defaultPick = 'HOME_BOTTOM';
+---
+
+<!-- Tick the placements, choose the days, watch the phone light up and the
+     price add itself. Every figure comes from the platform's own rate card, so
+     this page cannot quote a number the Ads console would not honour. -->
+<section id="calculator" class="scroll-mt-24 bg-surface/60 py-20">
+  <div class="mx-auto max-w-6xl px-5">
+    <div class="max-w-2xl">
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">{calculator.eyebrow}</p>
+      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">{calculator.heading}</h2>
+      <p class="mt-3 text-ink-soft">{calculator.text}</p>
+    </div>
+
+    <div class="mt-10 grid gap-10 lg:grid-cols-[1fr_auto_20rem] lg:items-start">
+      <form class="grid gap-8" data-ads-form novalidate>
+        <fieldset class="border-0 p-0">
+          <legend class="text-sm font-bold text-ink">{calculator.placementsLabel}</legend>
+          <p class="mt-1 text-xs text-ink-soft">{calculator.placementsHint}</p>
+          <div class="mt-3 flex flex-wrap gap-2" data-placements>
+            {
+              initial.entries.map((entry) => (
+                <label class="placement-chip cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="placement"
+                    value={entry.position}
+                    checked={entry.position === defaultPick}
+                    class="sr-only"
+                  />
+                  <span class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink-soft transition">
+                    {entry.label}
+                    <span class="text-xs font-bold opacity-70" data-chip-price={entry.position}>
+                      {initial.currency_symbol}
+                      {Math.round(entry.price_per_day).toLocaleString('en-IN')}
+                      {calculator.perDaySuffix}
+                    </span>
+                  </span>
+                </label>
+              ))
+            }
+          </div>
+        </fieldset>
+
+        <label class="block">
+          <span class="flex items-baseline justify-between gap-3">
+            <span class="text-sm font-bold text-ink">{calculator.daysLabel}</span>
+            <output class="font-head text-lg font-extrabold text-primary" data-days-out for="days"></output>
+          </span>
+          <input
+            class="mt-3 w-full accent-[var(--color-primary)]"
+            type="range"
+            id="days"
+            name="days"
+            min={initial.min_days}
+            max={initial.max_days}
+            step="1"
+            value={defaultDays}
+          />
+          <span class="mt-1 block text-xs text-ink-soft">{calculator.daysHint}</span>
+        </label>
+
+        <div class="rounded-2xl border border-line bg-cream p-6" aria-live="polite">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-sm font-bold text-ink-soft">{calculator.totalLabel}</span>
+            <span class="font-head text-4xl font-extrabold text-ink" data-total>—</span>
+          </div>
+          <dl class="mt-5 space-y-2 text-sm" data-rows></dl>
+          <p class="mt-5 text-xs text-ink-soft" data-note>{calculator.note}</p>
+          <SmartLink
+            href={calculator.cta.href}
+            label={calculator.cta.label}
+            class="mt-5 inline-block rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-white transition hover:bg-primary-dark"
+          >
+            {calculator.cta.label}
+          </SmartLink>
+        </div>
+      </form>
+
+      <div class="hidden w-px self-stretch bg-line lg:block"></div>
+
+      <PlacementPreview />
+    </div>
+
+    <p class="mt-8 max-w-3xl text-xs text-ink-soft">{calculator.disclaimer}</p>
+  </div>
+</section>
+
+<style>
+  /* The checkbox itself is off-screen; the chip beside it carries the state,
+     so the control stays keyboard-operable and still looks like a chip. */
+  .placement-chip input:checked + span {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: #fff;
+  }
+  .placement-chip input:focus-visible + span {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+</style>
+
+<script
+  is:inline
+  define:vars={{
+    graphqlUrl,
+    initial,
+    defaultPick,
+    perDaySuffix: calculator.perDaySuffix,
+    standardNote: calculator.note,
+    emptyNote: calculator.emptyNote,
+    failedNote: calculator.failedNote,
+  }}
+>
+  (() => {
+    const form = document.querySelector('[data-ads-form]');
+    if (!form) return;
+    const chipBox = form.querySelector('[data-placements]');
+    const rows = document.querySelector('[data-rows]');
+    const total = document.querySelector('[data-total]');
+    const note = document.querySelector('[data-note]');
+    const daysOut = document.querySelector('[data-days-out]');
+    const daysInput = form.querySelector('#days');
+
+    let card = initial;
+
+    const money = (value) => `${card.currency_symbol}${Math.round(value).toLocaleString('en-IN')}`;
+
+    const setNote = (text, warning) => {
+      note.textContent = text;
+      note.className = `mt-5 text-xs ${warning ? 'font-semibold text-primary-dark' : 'text-ink-soft'}`;
+    };
+
+    const chosen = () =>
+      new Set(
+        [...form.querySelectorAll('input[name="placement"]:checked')].map((input) => input.value)
+      );
+
+    /** The phone: a ticked placement stops looking like an empty slot. AUTO
+     * means every one of them, which is exactly what it buys. */
+    const paintPreview = (picked) => {
+      const all = picked.has('AUTO');
+      for (const zone of document.querySelectorAll('[data-zone]')) {
+        zone.classList.toggle('is-live', all || picked.has(zone.dataset.zone));
+      }
+    };
+
+    const paint = () => {
+      const days = Number(daysInput.value) || card.min_days;
+      daysOut.textContent = days === 1 ? '1 day' : `${days} days`;
+
+      const picked = chosen();
+      paintPreview(picked);
+      const lines = card.entries.filter((entry) => picked.has(entry.position));
+
+      // Nothing ticked is not zero rupees — it is no campaign, and a confident
+      // ₹0 would read as "this is free".
+      if (lines.length === 0) {
+        rows.innerHTML = '';
+        total.textContent = '—';
+        setNote(card.entries.length === 0 ? failedNote : emptyNote, true);
+        return;
+      }
+
+      rows.innerHTML = lines
+        .map((entry) => {
+          const subtotal = entry.price_per_day * days;
+          return `<div class="flex items-baseline justify-between gap-3"><dt class="text-ink-soft">${entry.label} · ${money(entry.price_per_day)}${perDaySuffix}</dt><dd class="font-semibold text-ink">${money(subtotal)}</dd></div>`;
+        })
+        .join('');
+      total.textContent = money(lines.reduce((sum, entry) => sum + entry.price_per_day * days, 0));
+      setNote(standardNote, false);
+    };
+
+    /** Fill the rate table above when this build shipped it empty. One fetch
+     * serves both sections — the contract is the `data-rate-empty` marker the
+     * Placements component sets. */
+    const fillRateTable = () => {
+      const body = document.querySelector('[data-rate-rows][data-rate-empty]');
+      if (!body) return;
+      const notesTag = document.querySelector('[data-placement-notes]');
+      let notes = {};
+      try {
+        notes = JSON.parse(notesTag?.textContent ?? '{}');
+      } catch {
+        // A malformed note blob costs a description, never the price.
+      }
+      body.innerHTML = card.entries
+        .map(
+          (entry) =>
+            `<tr class="border-t border-line"><th scope="row" class="px-5 py-4 font-head text-sm font-extrabold text-ink">${entry.label}</th><td class="hidden px-5 py-4 text-sm text-ink-soft sm:table-cell">${notes[entry.position] ?? ''}</td><td class="px-5 py-4 text-right font-head text-sm font-extrabold text-primary">${money(entry.price_per_day)}</td></tr>`
+        )
+        .join('');
+      body.removeAttribute('data-rate-empty');
+    };
+
+    /** Rebuild the chips from the live card, keeping whatever was ticked. A
+     * build that could not reach the API ships none, so this is also the only
+     * thing that can put them on the page at all. */
+    const renderChips = () => {
+      const keep = chosen();
+      chipBox.innerHTML = card.entries
+        .map((entry) => {
+          const on = keep.size > 0 ? keep.has(entry.position) : entry.position === defaultPick;
+          return `<label class="placement-chip cursor-pointer"><input type="checkbox" name="placement" value="${entry.position}"${on ? ' checked' : ''} class="sr-only"><span class="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink-soft transition">${entry.label}<span class="text-xs font-bold opacity-70">${money(entry.price_per_day)}${perDaySuffix}</span></span></label>`;
+        })
+        .join('');
+    };
+
+    const refresh = async () => {
+      try {
+        const res = await fetch(graphqlUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `query PublicAdRateCard {
+              publicAdRateCard {
+                currency_symbol
+                min_days
+                max_days
+                entries { position label price_per_day }
+              }
+            }`,
+          }),
+        });
+        const json = await res.json();
+        const live = json?.data?.publicAdRateCard;
+        if (!live?.entries?.length) throw new Error('no rate card');
+        card = live;
+        daysInput.min = String(live.min_days);
+        daysInput.max = String(live.max_days);
+        renderChips();
+        fillRateTable();
+        paint();
+      } catch {
+        // Whatever the build baked in is still on screen and still real — it is
+        // only as old as the last deploy. Only a page with nothing at all to
+        // show has to say so.
+        if (card.entries.length === 0) paint();
+      }
+    };
+
+    form.addEventListener('input', paint);
+    form.addEventListener('change', paint);
+    paint();
+    refresh();
+  })();
+</script>

@@ -1,0 +1,29 @@
+---
+import { siteConfig } from '../config/site-config';
+const { steps } = siteConfig;
+---
+
+<section id="how" class="scroll-mt-24 bg-surface/60 py-16">
+  <div class="mx-auto max-w-6xl px-5">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="text-xs font-black uppercase tracking-[0.2em] text-primary">How it works</p>
+      <h2 class="mt-2 text-3xl text-ink sm:text-4xl">Four steps to live</h2>
+    </div>
+    <ol class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        steps.map((step, index) => (
+          <li class="relative rounded-2xl border border-line bg-surface p-6 shadow-sm">
+            <span class="absolute -top-3 left-6 rounded-full bg-primary px-2.5 py-0.5 font-head text-xs font-extrabold text-white">
+              {index + 1}
+            </span>
+            <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-light text-primary-dark">
+              <i class={`fa-solid ${step.icon} text-xl`} aria-hidden="true" />
+            </span>
+            <h3 class="mt-5 font-head text-lg font-extrabold text-ink">{step.title}</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-soft">{step.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

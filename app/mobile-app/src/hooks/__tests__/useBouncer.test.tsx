@@ -139,6 +139,10 @@ describe('useBouncer', () => {
     await act(async () => {
       await result.current.submitPodFeedback(input);
     });
-    expect(mockRequest).toHaveBeenCalledWith(MobileSubmitFeedbackDocument, { input }, { auth: true });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileSubmitFeedbackDocument,
+      { input },
+      { auth: true },
+    );
   });
 });

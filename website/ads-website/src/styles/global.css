@@ -1,27 +1,52 @@
 @import "tailwindcss";
 
+/* The palette is declared as tokens and REDEFINED for dark mode below, so a
+   theme switch recolours every utility built from them (bg-surface, text-ink,
+   border-line …) instead of asking each component to know about themes. */
 @theme {
   --color-primary: #ff5757;
   --color-primary-dark: #d92d2d;
   --color-primary-light: #ffe5e5;
+  --color-accent: #ff9f45;
   --color-ink: #16131a;
   --color-ink-soft: #4b4651;
   --color-cream: #faf6f0;
+  /* Cards and panels: white on the light theme, a lifted slate on the dark. */
+  --color-surface: #ffffff;
+  /* Hairlines — a token rather than black/5, which cannot invert. */
+  --color-line: rgba(22, 19, 26, 0.08);
 
   --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-body: "Manrope", system-ui, sans-serif;
+}
+
+/* Dark theme. Set by the no-flash script in the layout from the saved choice,
+   falling back to the operating system's. */
+:root[data-theme='dark'] {
+  --color-primary-light: rgba(255, 87, 87, 0.18);
+  --color-ink: #f5f2f7;
+  --color-ink-soft: #a9a2b3;
+  --color-cream: #100e13;
+  --color-surface: #1a171f;
+  --color-line: rgba(255, 255, 255, 0.1);
 }
 
 @layer base {
   html {
     font-family: var(--font-body);
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
   }
   body {
     background: var(--color-cream);
     color: var(--color-ink);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    /* Theme changes fade rather than snap — the whole page is repainting. */
+    transition: background-color 200ms ease, color 200ms ease;
   }
   h1, h2, h3, h4 {
     font-family: var(--font-head);
@@ -31,6 +56,17 @@
   }
   a, button, [role="button"] {
     cursor: pointer;
+  }
+  /* Keyboard users get a visible ring everywhere; mouse users get none. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 

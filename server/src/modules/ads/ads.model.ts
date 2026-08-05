@@ -17,6 +17,11 @@ export type AdPosition =
   | 'POD_LIST'
   | 'POD_DETAILS';
 
+/** The booking window a campaign must fall inside. One place, because the
+ * schema validates against it and the public rate card advertises it. */
+export const AD_MIN_DAYS = 1;
+export const AD_MAX_DAYS = 30;
+
 export const AD_POSITIONS: AdPosition[] = [
   'AUTO',
   'HOME_BOTTOM',
@@ -77,7 +82,7 @@ const adRequestSchema = new Schema<IAdRequest>(
     media_url: { type: String, required: true, trim: true, maxlength: 1000 },
     position: { type: String, enum: AD_POSITIONS, required: true },
     start_at: { type: Date, required: true },
-    duration_days: { type: Number, required: true, min: 1, max: 30 },
+    duration_days: { type: Number, required: true, min: AD_MIN_DAYS, max: AD_MAX_DAYS },
     end_at: { type: Date, required: true },
     redirect_url: { type: String, default: null, trim: true, maxlength: 1000 },
     target_audience: { type: String, default: null, trim: true, maxlength: 500 },

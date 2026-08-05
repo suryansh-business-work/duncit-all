@@ -61,6 +61,50 @@ export async function fetchBranding(): Promise<SiteBranding> {
   return { ...BRANDING_FALLBACK, ...data?.branding };
 }
 
+export interface AdRateCardEntry {
+  position: string;
+  label: string;
+  price_per_day: number;
+}
+
+export interface AdRateCard {
+  currency_symbol: string;
+  entries: AdRateCardEntry[];
+  min_days: number;
+  max_days: number;
+  from_per_day: number;
+  to_per_day: number;
+}
+
+/**
+ * The advertising rate card — the same prices Marketing edits and the Ads
+ * console quotes.
+ *
+ * Baked in at build time so the placements and their prices are in the HTML
+ * for a reader with no JavaScript and for a search engine; the calculator
+ * re-reads it in the browser, so a price changed after the last deploy still
+ * wins on the page.
+ */
+export async function fetchAdRateCard(): Promise<AdRateCard | null> {
+  const data = await gqlFetch<{ publicAdRateCard: AdRateCard }>(`
+    query PublicAdRateCard {
+      publicAdRateCard {
+        currency_symbol
+        min_days
+        max_days
+        from_per_day
+        to_per_day
+        entries {
+          position
+          label
+          price_per_day
+        }
+      }
+    }
+  `);
+  return data?.publicAdRateCard ?? null;
+}
+
 export interface SitePolicy {
   id: string;
   slug: string;

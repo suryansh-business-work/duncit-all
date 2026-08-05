@@ -29,9 +29,14 @@ export const WA_CAMPAIGN_SETUP = gql`
   }
 `;
 
-/** The AiSensy side, read live through its Project API. */
-export const AISENSY_CAMPAIGNS = gql`
-  query AisensyCampaigns {
+/**
+ * The AiSensy side, read live through its Project API — campaigns and their
+ * templates in one round trip. One query rather than one per section, because
+ * the campaign form needs both together: a campaign names its template, and the
+ * template says how many params a send must fill.
+ */
+export const AISENSY_CATALOGUE = gql`
+  query AisensyCatalogue {
     aisensyProjectConfigured
     aisensyCampaigns {
       name
@@ -39,12 +44,6 @@ export const AISENSY_CAMPAIGNS = gql`
       template_name
       type
     }
-  }
-`;
-
-export const AISENSY_TEMPLATES = gql`
-  query AisensyTemplates {
-    aisensyProjectConfigured
     aisensyTemplates {
       name
       status

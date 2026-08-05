@@ -13,10 +13,12 @@ import {
   Stack,
   Switch,
   TextField,
+  Typography,
 } from '@mui/material';
 import GroupIcon from '@mui/icons-material/Group';
 import { RhfTextField } from '@duncit/forms';
 import DateTimeField from '../../../components/DateTimeField';
+import { templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
 import { WA_AUDIENCE_OPTIONS } from '../helpers';
 import type { WaAudienceList, WaCampaignNameOption, WaCampaignVariable } from '../queries';
 import ParamsField from './ParamsField';
@@ -79,6 +81,22 @@ export default function WaCampaignForm({
 
   const audience = watch('audience');
   const reach = useWaReach(audience, watch('audience_list_id'));
+  const { options: campaignOptions, live, campaigns, templates } = useCampaignOptions(names);
+  const waCampaignName = watch('wa_campaign_name');
+  const template = templateFor(waCampaignName, campaigns, templates);
+
+  // The template decides how many params a send must carry, so the rows follow
+  // it rather than the marketer counting {{n}} by hand. Only when AiSensy told
+  // us — otherwise the rows stay the marketer's to add.
+  const paramCount = template?.param_count;
+  useEffect(() => {
+    if (paramCount === undefined) return;
+    setValue(
+      'template_params',
+      Array.from({ length: paramCount }, () => ({ value: '' })),
+      { shouldValidate: true }
+    );
+  }, [paramCount, waCampaignName, setValue]);
   // The button says what pressing it does — schedule, or send right now.
   const scheduled = !!watch('scheduled_at');
   let submitLabel = scheduled ? 'Schedule' : 'Send now';
@@ -86,6 +104,10 @@ export default function WaCampaignForm({
   // The variable list is whatever the server supports — no copy of it here.
   const variableList = variables.map((variable) => `{{${variable.name}}}`).join(', ');
   const paramsHint = `Literal text, or a variable filled per recipient: ${variableList}. Somebody whose variable is empty is skipped rather than sent a blank.`;
+
+  const campaignHint = live
+    ? 'Live from AiSensy — only a campaign whose status is Live will send'
+    : 'The approved AiSensy campaign this send uses';
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
@@ -106,19 +128,30 @@ export default function WaCampaignForm({
               label="WhatsApp campaign"
               select
               required
-              hint="The approved AiSensy campaign this send uses"
+              hint={campaignHint}
             >
-              {names.length === 0 && (
+              {campaignOptions.length === 0 && (
                 <MenuItem disabled value="">
                   No campaign names yet — add one with Manage names
                 </MenuItem>
               )}
-              {names.map((option) => (
-                <MenuItem key={option.id} value={option.name}>
-                  {option.description ? `${option.name} · ${option.description}` : option.name}
+              {campaignOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
                 </MenuItem>
               ))}
             </RhfTextField>
+
+            {template && (
+              <Alert severity="success" icon={false}>
+                <Typography variant="caption" fontWeight={800} display="block">
+                  {template.name} · {template.language} · {template.status}
+                </Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {template.body}
+                </Typography>
+              </Alert>
+            )}
 
             <Controller
               control={control}

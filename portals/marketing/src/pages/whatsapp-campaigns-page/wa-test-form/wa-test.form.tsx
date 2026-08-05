@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { RhfTextField } from '@duncit/forms';
 import ParamsField from '../wa-campaign-form/ParamsField';
+import { templateFor, useCampaignOptions } from '../wa-aisensy/useAisensyCatalogue';
 import type { WaCampaignNameOption } from '../queries';
 import { emptyValues, toTestInput, waTestSchema, type WaTestInput, type WaTestValues } from './wa-test.types';
 
@@ -32,20 +33,38 @@ const PARAMS_HINT =
  * Same server path as a campaign, so a template that works here works there.
  */
 export default function WaTestForm({ open, busy, names, onClose, onSubmit }: Readonly<Props>) {
+  const { options, campaigns, templates } = useCampaignOptions(names);
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { isValid },
   } = useForm<WaTestValues>({
-    defaultValues: emptyValues(names[0]?.name ?? ''),
+    defaultValues: emptyValues(options[0]?.value ?? ''),
     resolver: zodResolver(waTestSchema),
     mode: 'onChange',
   });
 
   useEffect(() => {
-    if (open) reset(emptyValues(names[0]?.name ?? ''));
-  }, [open, names, reset]);
+    if (open) reset(emptyValues(options[0]?.value ?? ''));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only the first
+    // option matters, and re-running on every options identity would wipe typing
+  }, [open, options[0]?.value, reset]);
+
+  // A test proves the template, so it carries exactly the params the template
+  // expects — the same rule the campaign form follows.
+  const template = templateFor(watch('wa_campaign_name'), campaigns, templates);
+  const paramCount = template?.param_count;
+  useEffect(() => {
+    if (paramCount === undefined) return;
+    setValue(
+      'template_params',
+      Array.from({ length: paramCount }, () => ({ value: '' })),
+      { shouldValidate: true }
+    );
+  }, [paramCount, setValue]);
 
   const submit = handleSubmit(async (values) => {
     const ok = await onSubmit(toTestInput(values));
@@ -69,17 +88,23 @@ export default function WaTestForm({ open, busy, names, onClose, onSubmit }: Rea
               required
               hint="The approved AiSensy campaign to test"
             >
-              {names.length === 0 && (
+              {options.length === 0 && (
                 <MenuItem disabled value="">
                   No campaign names yet — add one with Manage names
                 </MenuItem>
               )}
-              {names.map((option) => (
-                <MenuItem key={option.id} value={option.name}>
-                  {option.name}
+              {options.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
                 </MenuItem>
               ))}
             </RhfTextField>
+
+            {template && (
+              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+                {template.body}
+              </Typography>
+            )}
             <RhfTextField
               control={control}
               name="destination"

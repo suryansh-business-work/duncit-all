@@ -1,7 +1,7 @@
-import { useQuery } from '@apollo/client';
 import { Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import { AISENSY_TEMPLATES, type AisensyTemplate } from '../queries';
+import type { AisensyTemplate } from '../queries';
 import AisensySection from './AisensySection';
+import { useAisensyCatalogue } from './useAisensyCatalogue';
 
 const statusColor = (status: string) =>
   status.toUpperCase() === 'APPROVED' ? 'success' : 'default';
@@ -42,11 +42,7 @@ function TemplateRow({ template }: Readonly<{ template: AisensyTemplate }>) {
 
 /** The WhatsApp templates AiSensy has for this project, read live. */
 export default function AisensyTemplates() {
-  const { data, loading, error } = useQuery<{
-    aisensyProjectConfigured: boolean;
-    aisensyTemplates: AisensyTemplate[];
-  }>(AISENSY_TEMPLATES, { fetchPolicy: 'cache-and-network', errorPolicy: 'all' });
-  const templates = data?.aisensyTemplates ?? [];
+  const { configured, templates, loading, error } = useAisensyCatalogue();
 
   return (
     <Stack spacing={1.5}>
@@ -55,7 +51,7 @@ export default function AisensyTemplates() {
         each one expects.
       </Typography>
       <AisensySection
-        configured={data?.aisensyProjectConfigured !== false}
+        configured={configured}
         loading={loading}
         error={error}
         count={templates.length}

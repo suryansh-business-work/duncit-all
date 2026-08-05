@@ -6,7 +6,16 @@ import PersonIcon from '@mui/icons-material/Person';
 import PhoneIcon from '@mui/icons-material/Phone';
 import InfoRow, { type InfoRowProps } from './InfoRow';
 import { mailtoUrl, telUrl, whatsappUrl } from './podPending';
-import type { PodPendingClubAdmin } from './queries';
+
+/** The contact details a club admin is rendered from — satisfied both by the
+ * pod-pending view's `club_admin` and by a club's `club_admins` entry. */
+export interface ClubAdminContact {
+  name: string;
+  profile_photo?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+}
 
 const ICON = { fontSize: 18 } as const;
 
@@ -14,7 +23,10 @@ const ICON = { fontSize: 18 } as const;
  * Call / Message (WhatsApp) / Email actions. Support availability is not
  * tracked anywhere in the system, so no such row is rendered (native twin,
  * rule 27). */
-export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClubAdmin }>) {
+export default function ClubAdminCard({
+  admin,
+  caption = 'Need Help? Contact the Club Admin',
+}: Readonly<{ admin: ClubAdminContact; caption?: string }>) {
   const waUrl = whatsappUrl(admin.whatsapp ?? '');
 
   // TODO(i18n) — row labels ship as literals until this feature is localized.
@@ -48,7 +60,7 @@ export default function ClubAdminCard({ admin }: Readonly<{ admin: PodPendingClu
     <Card variant="outlined" sx={{ p: 1.5, borderRadius: '16px' }} data-testid="club-admin-card">
       <Stack spacing={1.25}>
         <Typography variant="caption" fontWeight={600} color="text.secondary">
-          Need Help? Contact the Club Admin
+          {caption}
         </Typography>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <Avatar

@@ -3,6 +3,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import type { ClubDetail, ClubPod } from '@/hooks/useDetails';
 import type { ClubMoment } from '@/utils/club-detail';
+import { ClubAdminsSection } from './ClubAdminsSection';
 import { ClubBulletsSection } from './ClubBulletsSection';
 import { ClubFaqsSection } from './ClubFaqsSection';
 import { ClubHostsRail } from './ClubHostsRail';
@@ -39,6 +40,7 @@ function segmentContent(active: SegmentKey, ctx: Props) {
   if (active === 'FAQS') return <ClubFaqsSection faqs={ctx.club.faqs} />;
   if (active === 'HOSTS')
     return <ClubHostsRail hosts={ctx.club.hosts} onOpenHost={ctx.onOpenHost} />;
+  if (active === 'ADMINS') return <ClubAdminsSection admins={ctx.club.club_admins} />;
   return <ClubPodsSchedule pods={ctx.pods} onOpenPod={ctx.onOpenPod} />;
 }
 

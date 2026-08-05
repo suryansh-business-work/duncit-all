@@ -409,6 +409,9 @@ export const ClubDetailsDocument = gql(`
         id
         name
         avatar_url
+        email
+        phone
+        whatsapp
       }
       club_whats_app_community_link
       club_whats_app_group_link

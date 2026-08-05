@@ -160,7 +160,6 @@ describe('ClubAdminCard', () => {
     renderWithProviders(
       <ClubAdminCard
         admin={{
-          user_id: 'u2',
           name: 'Meera',
           profile_photo: null,
           phone: null,

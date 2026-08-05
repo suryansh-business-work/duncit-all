@@ -13,6 +13,21 @@ export const clubTypeDefs = /* GraphQL */ `
     id: ID!
     name: String!
     avatar_url: String
+    """
+    Contact details lifted from the person's profile. Only a club's assigned
+    admins carry these — they are the club's point of contact. Null on hosts,
+    and null for any field the profile leaves empty.
+    """
+    email: String
+    """
+    Dialable number with its extension when stored (e.g. "+91 9876543210").
+    """
+    phone: String
+    """
+    WhatsApp number with its extension — the client strips non-digits to build
+    the wa.me link. Null when the admin has no WhatsApp number on file.
+    """
+    whatsapp: String
   }
 
   type ClubFaq {

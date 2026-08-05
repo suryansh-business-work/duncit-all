@@ -3,17 +3,27 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppImage } from '@/components/AppImage';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { PodPendingView } from '@/hooks/usePodPendingView';
 import { mailtoUrl, telUrl, whatsappUrl } from '@/utils/pod-pending';
 import { ActionLink } from './ActionLink';
 import { InfoRow, type InfoRowProps } from './InfoRow';
 
-type PendingClubAdmin = NonNullable<PodPendingView['club_admin']>;
+/** The contact details a club admin is rendered from — satisfied both by the
+ * pod-pending view's `club_admin` and by a club's `club_admins` entry. */
+export interface ClubAdminContact {
+  name: string;
+  profile_photo?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+}
 
 /** "Need Help? Contact the Club Admin" card — profile, contact rows and
  * Call / Message (WhatsApp) / Email actions. Support availability is not
  * tracked anywhere in the system, so no such row is rendered. */
-export function ClubAdminCard({ admin }: Readonly<{ admin: PendingClubAdmin }>) {
+export function ClubAdminCard({
+  admin,
+  caption = 'Need Help? Contact the Club Admin',
+}: Readonly<{ admin: ClubAdminContact; caption?: string }>) {
   const { muted } = useThemeColors();
   const waUrl = whatsappUrl(admin.whatsapp ?? '');
   // TODO(i18n) — row labels ship as literals until this feature is localized.
@@ -44,7 +54,7 @@ export function ClubAdminCard({ admin }: Readonly<{ admin: PendingClubAdmin }>) 
       backgroundColor="$surface"
     >
       <Text fontSize={12} fontWeight="600" color="$muted">
-        Need Help? Contact the Club Admin
+        {caption}
       </Text>
       <XStack alignItems="center" gap={10}>
         {admin.profile_photo ? (

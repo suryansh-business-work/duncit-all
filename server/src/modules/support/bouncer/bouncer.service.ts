@@ -11,6 +11,12 @@ import {
   type IBouncerSosAlert,
   type IBouncerCallbackRequest,
 } from './bouncer.model';
+import {
+  aspectsForPod,
+  deriveCategory,
+  normalizeRatings,
+  summarizeForPod,
+} from './bouncer.feedback';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
@@ -95,12 +101,13 @@ async function buildActor(userId: Types.ObjectId | null | undefined) {
 async function buildPodInfo(podId: Types.ObjectId | null | undefined) {
   if (!podId) return null;
   const pod = await PodModel.findById(podId).select(
-    'pod_title venue_id club_id pod_date_time'
+    'pod_title venue_id club_id pod_date_time pod_mode pod_hosts_id'
   );
   if (!pod) return null;
-  const [venue, club] = await Promise.all([
+  const [venue, club, feedbackAspects] = await Promise.all([
     pod.venue_id ? VenueModel.findById(pod.venue_id).select('venue_name') : null,
     pod.club_id ? ClubModel.findById(pod.club_id).select('club_name') : null,
+    aspectsForPod(pod as any),
   ]);
   return {
     id: String(pod._id),
@@ -110,8 +117,23 @@ async function buildPodInfo(podId: Types.ObjectId | null | undefined) {
     club_id: pod.club_id ? String(pod.club_id) : null,
     club_name: (club as any)?.club_name ?? null,
     starts_at: pod.pod_date_time?.toISOString() ?? null,
+    // What this pod can be rated on — the client asks exactly these, so the
+    // rule lives on the server and neither app carries its own copy.
+    feedback_aspects: feedbackAspects,
   };
 }
+
+/** A pod that has since been deleted, so an alert or a rating still renders. */
+const missingPod = (podId: unknown) => ({
+  id: String(podId),
+  title: '(pod removed)',
+  venue_id: null,
+  venue_name: null,
+  club_id: null,
+  club_name: null,
+  starts_at: null,
+  feedback_aspects: [],
+});
 
 async function toSosPub(doc: any) {
   return {
@@ -119,7 +141,7 @@ async function toSosPub(doc: any) {
     ticket_no: doc.ticket_no || ticketNo('SOS', doc._id),
     user: (await buildActor(doc.user_id)) ?? { id: String(doc.user_id), name: 'User', phone: doc.contact_phone, avatar_url: null },
     host: await buildActor(doc.host_id),
-    pod: (await buildPodInfo(doc.pod_id)) ?? { id: String(doc.pod_id), title: '(pod removed)', venue_id: null, venue_name: null, club_id: null, club_name: null, starts_at: null },
+    pod: (await buildPodInfo(doc.pod_id)) ?? missingPod(doc.pod_id),
     location: doc.location ?? null,
     message: doc.message ?? '',
     contact_phone: doc.contact_phone ?? '',
@@ -152,8 +174,9 @@ async function toFeedbackPub(doc: any) {
     id: String(doc._id),
     user: (await buildActor(doc.user_id)) ?? { id: String(doc.user_id), name: 'User', phone: null, avatar_url: null },
     host: await buildActor(doc.host_id),
-    pod: (await buildPodInfo(doc.pod_id)) ?? { id: String(doc.pod_id), title: '(pod removed)', venue_id: null, venue_name: null, club_id: null, club_name: null, starts_at: null },
+    pod: (await buildPodInfo(doc.pod_id)) ?? missingPod(doc.pod_id),
     rating: doc.rating,
+    ratings: (doc.ratings ?? []).map((r: any) => ({ aspect: r.aspect, rating: r.rating })),
     category: doc.category,
     message: doc.message ?? '',
     created_at: doc.created_at?.toISOString?.() ?? '',
@@ -411,18 +434,31 @@ export const bouncerService = {
 
   async submitFeedback(
     userId: string,
-    input: { pod_id: string; rating: number; category: BouncerFeedbackCategory; message?: string }
+    input: {
+      pod_id: string;
+      rating: number;
+      category?: BouncerFeedbackCategory | null;
+      message?: string;
+      ratings?: Array<{ aspect: string; rating: number }> | null;
+    }
   ) {
     if (input.rating < 1 || input.rating > 5) fail('BAD_USER_INPUT', 'Rating must be 1-5');
     const pod = await loadPodOrFail(input.pod_id);
     const hostId = (pod.pod_hosts_id?.[0] as any) ?? null;
+
+    // Only the parts this pod actually has are kept — a rating for a venue a
+    // virtual pod never had would be a number nobody could act on.
+    const ratings = normalizeRatings(input.ratings, await aspectsForPod(pod as any));
 
     const doc = await BouncerFeedbackModel.create({
       user_id: new Types.ObjectId(userId),
       pod_id: pod._id,
       host_id: hostId,
       rating: input.rating,
-      category: input.category,
+      ratings,
+      // Asking "what is this about?" separately is asking the guest to do the
+      // triage: the weakest score already says it.
+      category: input.category ?? deriveCategory(ratings),
       message: (input.message ?? '').trim(),
     });
 
@@ -432,9 +468,10 @@ export const bouncerService = {
     notifyHost({
       hostId: hostId ? String(hostId) : null,
       title: `New ${input.rating}★ feedback on "${pub.pod.title}"`,
+      // The stored category, not the sent one — it is usually derived.
       body: pub.message
-        ? `${input.category}: ${pub.message.slice(0, 120)}`
-        : `Category: ${input.category}`,
+        ? `${pub.category}: ${pub.message.slice(0, 120)}`
+        : `Category: ${pub.category}`,
       link: `/bouncers?feedback=${pub.id}`,
     }).catch((e) =>
       logs.server.error('bouncer', 'submitFeedback', {
@@ -450,6 +487,27 @@ export const bouncerService = {
   async listFeedback(limit = 100) {
     const docs = await BouncerFeedbackModel.find().sort({ created_at: -1 }).limit(limit);
     return Promise.all(docs.map(toFeedbackPub));
+  },
+
+  /**
+   * Everything guests said about ONE pod — the averages per part plus the most
+   * recent ratings themselves, which is what the admin pod page shows.
+   */
+  async podFeedback(podId: string, limit = 20) {
+    if (!Types.ObjectId.isValid(podId)) fail('BAD_USER_INPUT', 'Invalid pod_id');
+    const [summary, docs] = await Promise.all([
+      summarizeForPod(podId),
+      BouncerFeedbackModel.find({ pod_id: new Types.ObjectId(podId) })
+        .sort({ created_at: -1 })
+        .limit(Math.min(100, Math.max(1, limit))),
+    ]);
+    return {
+      pod_id: podId,
+      total: summary.total,
+      overall_average: summary.overall_average,
+      aspects: summary.aspects,
+      recent: await Promise.all(docs.map(toFeedbackPub)),
+    };
   },
 
   /**

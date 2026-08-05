@@ -128,15 +128,17 @@ describe('useBouncer', () => {
     });
   });
 
-  it('submits pod feedback, nulling a blank message', async () => {
+  it('submits the per-aspect feedback input as given', async () => {
+    const input = {
+      pod_id: 'p9',
+      rating: 5,
+      message: null,
+      ratings: [{ aspect: 'HOST' as const, rating: 4 }],
+    };
     const { result } = renderHook(() => useBouncer());
     await act(async () => {
-      await result.current.submitPodFeedback('p9', 5, 'HOST', '   ');
+      await result.current.submitPodFeedback(input);
     });
-    expect(mockRequest).toHaveBeenCalledWith(
-      MobileSubmitFeedbackDocument,
-      { input: { pod_id: 'p9', rating: 5, category: 'HOST', message: null } },
-      { auth: true },
-    );
+    expect(mockRequest).toHaveBeenCalledWith(MobileSubmitFeedbackDocument, { input }, { auth: true });
   });
 });

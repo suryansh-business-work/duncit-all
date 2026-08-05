@@ -2,7 +2,36 @@ import { Schema, model, Types, type Document } from 'mongoose';
 
 export type BouncerSosStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
 export type BouncerCallbackStatus = 'PENDING' | 'CONTACTED' | 'CLOSED';
-export type BouncerFeedbackCategory = 'VENUE' | 'HOST' | 'SAFETY' | 'FOOD' | 'OTHER';
+export type BouncerFeedbackCategory = 'VENUE' | 'HOST' | 'SAFETY' | 'FOOD' | 'CLUB_ADMIN' | 'OTHER';
+
+/**
+ * The parts of a pod a guest is asked to rate. OVERALL is the headline score
+ * and is stored on `rating`; the rest live in `ratings`, so there is exactly
+ * one place each number comes from.
+ */
+export const FEEDBACK_ASPECTS = [
+  'OVERALL',
+  'HOST',
+  'VENUE',
+  'CLUB_ADMIN',
+  'SAFETY',
+  'FOOD',
+  'OTHER',
+] as const;
+export type BouncerFeedbackAspect = (typeof FEEDBACK_ASPECTS)[number];
+
+export interface IBouncerAspectRating {
+  aspect: BouncerFeedbackAspect;
+  rating: number;
+}
+
+const aspectRatingSchema = new Schema<IBouncerAspectRating>(
+  {
+    aspect: { type: String, enum: FEEDBACK_ASPECTS, required: true },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+  },
+  { _id: false }
+);
 
 interface IBouncerGeo {
   lat: number;
@@ -113,7 +142,10 @@ export interface IBouncerFeedback extends Document {
   user_id: Types.ObjectId;
   pod_id: Types.ObjectId;
   host_id: Types.ObjectId | null;
+  /** The OVERALL score. Kept on its own field because every older row has one. */
   rating: number;
+  /** Everything else the guest scored — host, venue, club admin, safety, food. */
+  ratings: IBouncerAspectRating[];
   category: BouncerFeedbackCategory;
   message: string;
   created_at: Date;
@@ -126,9 +158,10 @@ const feedbackSchema = new Schema<IBouncerFeedback>(
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true, index: true },
     host_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
+    ratings: { type: [aspectRatingSchema], default: [] },
     category: {
       type: String,
-      enum: ['VENUE', 'HOST', 'SAFETY', 'FOOD', 'OTHER'],
+      enum: ['VENUE', 'HOST', 'SAFETY', 'FOOD', 'CLUB_ADMIN', 'OTHER'],
       default: 'OTHER',
       index: true,
     },

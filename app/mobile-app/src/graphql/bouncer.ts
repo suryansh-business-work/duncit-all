@@ -84,6 +84,7 @@ export const MobilePendingPodFeedbackDocument = gql(`
     myPendingPodFeedback {
       id
       title
+      feedback_aspects
     }
   }
 `);

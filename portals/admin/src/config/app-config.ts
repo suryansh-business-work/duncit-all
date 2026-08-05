@@ -46,6 +46,7 @@ export const appConfig = {
       label: 'Pods',
       icon: 'calendar',
       children: [
+        { label: 'Dashboard', to: '/pods/dashboard', icon: 'insights' },
         { label: 'All Pods', to: '/pods', icon: 'calendar' },
         { label: 'Pod Ideas', to: '/pod-ideas', icon: 'insights' },
         { label: 'Pod Plans', to: '/pod-plans', icon: 'description' },
@@ -126,6 +127,12 @@ export const appConfig = {
     { label: 'Clubs', to: '/clubs', section: 'Clubs', keywords: ['community', 'communities'] },
     { label: 'Venues', to: '/venues', section: 'Venues', keywords: ['spaces', 'places', 'turf'] },
     { label: 'Partners', to: '/partners', section: 'Partners', keywords: ['host', 'venue partner', 'seller', 'club admin'] },
+    {
+      label: 'Pods Dashboard',
+      to: '/pods/dashboard',
+      section: 'Pods',
+      keywords: ['stats', 'overview', 'ratings', 'occupancy', 'revenue'],
+    },
     { label: 'All Pods', to: '/pods', section: 'Pods', keywords: ['events', 'sessions'] },
     { label: 'Pod Ideas', to: '/pod-ideas', section: 'Pods' },
     { label: 'Pod Plans', to: '/pod-plans', section: 'Pods' },

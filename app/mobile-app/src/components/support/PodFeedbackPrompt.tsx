@@ -1,25 +1,36 @@
-import { useEffect, useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Text, TextArea, XStack, YStack } from 'tamagui';
+import { useEffect, useMemo, useState } from 'react';
+import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
+import {
+  POD_FEEDBACK_ASPECT_KEY,
+  buildPodFeedbackInput,
+  canSubmitPodFeedback,
+  orderedAspects,
+  type PodFeedbackScores,
+} from '@duncit/utils';
 
 import { Field } from '@/components/Field';
+import { AspectRatingRow } from '@/components/support/AspectRatingRow';
 import { useBouncer, type PendingPodFeedback } from '@/hooks/useBouncer';
-
-const CATEGORIES = ['VENUE', 'HOST', 'SAFETY', 'FOOD', 'OTHER'] as const;
-type Category = (typeof CATEGORIES)[number];
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
- * After a user attends a pod and reopens the app, ask how it went (Bug 6) —
- * replaces the old in-support "Live Feedback" with a one-time prompt.
+ * After a guest attends a pod and reopens the app, ask how it went — part by
+ * part: the evening itself, the host, the room, the club admin behind it,
+ * safety, food.
+ *
+ * The twin of mWeb's prompt (rule 27): same questions in the same order, from
+ * @duncit/utils, and the same words from the shared translation bundle. Which
+ * parts a pod HAS is the server's answer, not a rule copied into two apps.
  */
 export function PodFeedbackPrompt() {
+  const { t } = useTranslation();
   const { getPendingPodFeedback, submitPodFeedback } = useBouncer();
   const [pod, setPod] = useState<PendingPodFeedback>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [category, setCategory] = useState<Category>('OTHER');
+  const [scores, setScores] = useState<PodFeedbackScores>({});
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let on = true;
@@ -31,14 +42,20 @@ export function PodFeedbackPrompt() {
     };
   }, [getPendingPodFeedback]);
 
+  const aspects = useMemo(() => orderedAspects(pod?.feedback_aspects), [pod?.feedback_aspects]);
+  const ready = canSubmitPodFeedback(scores);
+
   if (!pod || dismissed) return null;
 
-  // Only reachable via the Submit button, which is disabled until a rating is set.
   const submit = async () => {
     setBusy(true);
+    setFailed(false);
     try {
-      await submitPodFeedback(pod.id, rating, category, message);
+      await submitPodFeedback(buildPodFeedbackInput({ podId: pod.id, scores, message, aspects }));
       setDismissed(true);
+    } catch {
+      // Closing on a failure would throw the guest's answers away silently.
+      setFailed(true);
     } finally {
       setBusy(false);
     }
@@ -61,74 +78,65 @@ export function PodFeedbackPrompt() {
       <YStack
         width="100%"
         maxWidth={360}
+        maxHeight="90%"
         gap={12}
         padding={20}
         borderRadius={16}
         backgroundColor="$background"
       >
         <Text fontSize={16} fontWeight="700" color="$color">
-          How was “{pod.title}”?
+          {t('mweb.podFeedback.title', { vars: { title: pod.title } })}
         </Text>
-        <XStack gap={6} justifyContent="center">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <XStack
-              key={n}
-              testID={`pod-feedback-star-${n}`}
-              role="button"
-              aria-label={`Rate ${n}`}
-              onPress={() => setRating(n)}
-              pressStyle={{ opacity: 0.7 }}
-            >
-              <MaterialIcons
-                name={n <= rating ? 'star' : 'star-border'}
-                size={30}
-                color="#f5a623"
-              />
-            </XStack>
-          ))}
-        </XStack>
-        <XStack gap={6} flexWrap="wrap" justifyContent="center">
-          {CATEGORIES.map((c) => {
-            const active = c === category;
-            return (
-              <XStack
-                key={c}
-                testID={`pod-feedback-cat-${c}`}
-                role="button"
-                aria-label={c}
-                onPress={() => setCategory(c)}
-                paddingHorizontal={10}
-                paddingVertical={5}
-                borderRadius={999}
-                borderWidth={1}
-                borderColor={active ? '$primary' : '$borderColor'}
-                backgroundColor={active ? '$primary' : 'transparent'}
-              >
-                <Text fontSize={11} fontWeight="600" color={active ? '$onPrimary' : '$muted'}>
-                  {c.charAt(0) + c.slice(1).toLowerCase()}
-                </Text>
-              </XStack>
-            );
-          })}
-        </XStack>
-        <Field label="Comments">
+        <Text fontSize={12} color="$muted">
+          {t('mweb.podFeedback.subtitle')}
+        </Text>
+
+        {/* Seven rows plus a keyboard on a small phone: the sheet scrolls
+            rather than pushing its buttons off the screen. */}
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <YStack gap={2}>
+            {aspects.map((aspect) => {
+              const label = t(POD_FEEDBACK_ASPECT_KEY[aspect]);
+              return (
+                <AspectRatingRow
+                  key={aspect}
+                  aspect={aspect}
+                  label={label}
+                  value={scores[aspect] ?? 0}
+                  onChange={(value) => setScores((prev) => ({ ...prev, [aspect]: value }))}
+                  starLabel={(stars) =>
+                    t('mweb.podFeedback.rateAspect', { vars: { aspect: label, stars } })
+                  }
+                />
+              );
+            })}
+          </YStack>
+        </ScrollView>
+
+        <Field label={t('mweb.podFeedback.comments')}>
           <TextArea
             testID="pod-feedback-comment"
-            aria-label="Comments"
+            aria-label={t('mweb.podFeedback.comments')}
             value={message}
             onChangeText={setMessage}
-            placeholder="Tell us more (optional)"
+            placeholder={t('mweb.podFeedback.commentsPlaceholder')}
             placeholderTextColor="$muted"
             maxLength={1000}
             backgroundColor="$surface"
             borderColor="$borderColor"
           />
         </Field>
+        {failed && (
+          <Text testID="pod-feedback-error" fontSize={12} color="$red10">
+            {t('mweb.podFeedback.failed')}
+          </Text>
+        )}
+
         <XStack gap={8} justifyContent="flex-end">
           <XStack
             testID="pod-feedback-skip"
             role="button"
-            aria-label="Not now"
+            aria-label={t('mweb.podFeedback.skip')}
             onPress={() => setDismissed(true)}
             height={42}
             paddingHorizontal={18}
@@ -139,25 +147,25 @@ export function PodFeedbackPrompt() {
             borderColor="$borderColor"
           >
             <Text fontSize={14} fontWeight="600" color="$color">
-              Not now
+              {t('mweb.podFeedback.skip')}
             </Text>
           </XStack>
           <XStack
             testID="pod-feedback-submit"
             role="button"
-            aria-label="Submit feedback"
-            aria-disabled={!rating || busy}
-            onPress={!rating || busy ? undefined : () => void submit()}
+            aria-label={t('mweb.podFeedback.submit')}
+            aria-disabled={!ready || busy}
+            onPress={!ready || busy ? undefined : () => void submit()}
             height={42}
             paddingHorizontal={18}
             alignItems="center"
             justifyContent="center"
             borderRadius={999}
             backgroundColor="$primary"
-            opacity={!rating || busy ? 0.5 : 1}
+            opacity={!ready || busy ? 0.5 : 1}
           >
             <Text fontSize={14} fontWeight="600" color="$onPrimary">
-              {busy ? 'Sending…' : 'Submit'}
+              {busy ? t('mweb.podFeedback.submitting') : t('mweb.podFeedback.submit')}
             </Text>
           </XStack>
         </XStack>

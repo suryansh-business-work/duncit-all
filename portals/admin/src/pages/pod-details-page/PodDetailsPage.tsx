@@ -12,6 +12,7 @@ import PodHostsCard from './PodHostsCard';
 import PodClubCard from './PodClubCard';
 import PodCouponsSection from './PodCouponsSection';
 import PodFinanceSection from './PodFinanceSection';
+import PodFeedbackSection from './PodFeedbackSection';
 import { useFeatureFlag } from '@duncit/app-settings';
 
 export default function PodDetailsPage() {
@@ -87,6 +88,7 @@ export default function PodDetailsPage() {
               </Stack>
               <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
                 <PodFinanceSection podId={pod.id} />
+                <PodFeedbackSection podId={pod.id} />
               </Stack>
             </Stack>
 

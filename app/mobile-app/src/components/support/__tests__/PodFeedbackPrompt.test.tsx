@@ -53,8 +53,12 @@ describe('PodFeedbackPrompt', () => {
     expect(screen.queryByTestId('pod-feedback-prompt')).toBeNull();
   });
 
-  it('requires a rating before submit, then submits the chosen rating + category', async () => {
-    getPendingPodFeedback.mockResolvedValue({ id: 'p1', title: 'Past Pod' });
+  it('requires the overall rating before submit, then sends every scored aspect', async () => {
+    getPendingPodFeedback.mockResolvedValue({
+      id: 'p1',
+      title: 'Past Pod',
+      feedback_aspects: ['OVERALL', 'HOST', 'SAFETY', 'OTHER'],
+    });
     let resolveSubmit: () => void = () => undefined;
     submitPodFeedback.mockImplementation(
       () =>
@@ -69,12 +73,19 @@ describe('PodFeedbackPrompt', () => {
     fireEvent.press(screen.getByTestId('pod-feedback-submit'));
     expect(submitPodFeedback).not.toHaveBeenCalled();
 
-    fireEvent.press(screen.getByTestId('pod-feedback-star-3'));
-    fireEvent.press(screen.getByTestId('pod-feedback-cat-HOST'));
+    fireEvent.press(screen.getByTestId('pod-feedback-OVERALL-star-3'));
+    fireEvent.press(screen.getByTestId('pod-feedback-HOST-star-5'));
     fireEvent.changeText(screen.getByTestId('pod-feedback-comment'), 'Great vibe');
     fireEvent.press(screen.getByTestId('pod-feedback-submit'));
     expect(screen.getByTestId('pod-feedback-submit')).toHaveTextContent('Sending…');
-    expect(submitPodFeedback).toHaveBeenCalledWith('p1', 3, 'HOST', 'Great vibe');
+    // The overall score travels on `rating`; an aspect nobody scored is absent
+    // rather than sent as a zero.
+    expect(submitPodFeedback).toHaveBeenCalledWith({
+      pod_id: 'p1',
+      rating: 3,
+      message: 'Great vibe',
+      ratings: [{ aspect: 'HOST', rating: 5 }],
+    });
 
     await act(async () => {
       resolveSubmit();

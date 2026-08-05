@@ -16,7 +16,32 @@ export const bouncerTypeDefs = /* GraphQL */ `
     HOST
     SAFETY
     FOOD
+    CLUB_ADMIN
     OTHER
+  }
+
+  """
+  The parts of a pod a guest is asked to score. OVERALL is the headline; the
+  rest are asked only when the pod has them (no venue, no venue rating).
+  """
+  enum BouncerFeedbackAspect {
+    OVERALL
+    HOST
+    VENUE
+    CLUB_ADMIN
+    SAFETY
+    FOOD
+    OTHER
+  }
+
+  type BouncerAspectRating {
+    aspect: BouncerFeedbackAspect!
+    rating: Int!
+  }
+
+  input BouncerAspectRatingInput {
+    aspect: BouncerFeedbackAspect!
+    rating: Int!
   }
 
   type BouncerGeo {
@@ -46,6 +71,11 @@ export const bouncerTypeDefs = /* GraphQL */ `
     club_id: ID
     club_name: String
     starts_at: String
+    """
+    Which parts of THIS pod can be rated, in the order to ask them. The server
+    decides, so the app, mWeb and the admin panel cannot disagree.
+    """
+    feedback_aspects: [BouncerFeedbackAspect!]!
   }
 
   type BouncerSosAlert {
@@ -87,10 +117,28 @@ export const bouncerTypeDefs = /* GraphQL */ `
     user: BouncerActor!
     host: BouncerActor
     pod: BouncerPodInfo!
+    "The OVERALL score. Every rating has one, including the oldest."
     rating: Int!
+    "Host, venue, club admin, safety, food — whichever the guest scored."
+    ratings: [BouncerAspectRating!]!
     category: BouncerFeedbackCategory!
     message: String!
     created_at: String!
+  }
+
+  type PodAspectRating {
+    aspect: BouncerFeedbackAspect!
+    average: Float!
+    count: Int!
+  }
+
+  "Everything guests said about one pod — averages, plus the ratings themselves."
+  type PodFeedbackSummary {
+    pod_id: ID!
+    total: Int!
+    overall_average: Float!
+    aspects: [PodAspectRating!]!
+    recent: [BouncerFeedback!]!
   }
 
   input RaiseSosInput {
@@ -106,9 +154,16 @@ export const bouncerTypeDefs = /* GraphQL */ `
 
   input SubmitBouncerFeedbackInput {
     pod_id: ID!
+    "The OVERALL score, 1-5. The only one that is required."
     rating: Int!
-    category: BouncerFeedbackCategory!
+    """
+    Left out by the apps: the server reads it from the weakest score, so the
+    guest is not asked to triage their own feedback.
+    """
+    category: BouncerFeedbackCategory
     message: String
+    "Per-part scores. Anything the pod does not have is ignored."
+    ratings: [BouncerAspectRatingInput!]
   }
 
   type BouncerSupportTarget {
@@ -155,6 +210,8 @@ export const bouncerTypeDefs = /* GraphQL */ `
     "A single callback request by id — backs the agent callback detail page (deep-linkable)."
     bouncerCallbackRequest(id: ID!): BouncerCallbackRequest
     bouncerFeedback(limit: Int): [BouncerFeedback!]!
+    "Ratings for one pod, rolled up — backs the admin pod page."
+    podFeedbackSummary(pod_id: ID!, limit: Int): PodFeedbackSummary!
     myActiveBouncerSos(pod_id: ID!): BouncerSosAlert
     "The signed-in user's own callback request history, newest first."
     myCallbackRequests(limit: Int): [BouncerCallbackRequest!]!

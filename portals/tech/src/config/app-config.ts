@@ -40,6 +40,7 @@ export const appConfig = {
       ],
     },
     { label: 'Slack', to: '/slack', icon: 'chat' },
+    { label: 'AiSensy', to: '/aisensy', icon: 'whatsapp' },
   ],
   modules: [],
 } satisfies AppConfig;

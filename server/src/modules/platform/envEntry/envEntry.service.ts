@@ -205,6 +205,31 @@ async function probeSlack(str: ConfigStr): Promise<TestResult> {
     : { ok: false, message: `Slack rejected the token${reason}` };
 }
 
+/** Expiry (ms) claimed by a JWT, 0 when it carries none, null when it isn't a
+ * decodable JWT. Used to catch an expired AiSensy key before it fails a send. */
+function jwtExpiryMs(token: string): number | null {
+  const payload = token.split('.')[1];
+  if (!payload) return null;
+  try {
+    const claims = JSON.parse(Buffer.from(payload, 'base64').toString('utf8'));
+    return typeof claims?.exp === 'number' ? claims.exp * 1000 : 0;
+  } catch {
+    return null;
+  }
+}
+
+/** AiSensy exposes no cheap auth-check endpoint — the campaign API is the only
+ * call and it actually sends a WhatsApp message. So verify what can be checked
+ * offline (key present, not expired) and leave delivery to the test send. */
+async function probeAisensy(str: ConfigStr): Promise<TestResult> {
+  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  const expiry = jwtExpiryMs(str('api_key'));
+  if (expiry && expiry < Date.now()) {
+    return { ok: false, message: `API key expired on ${new Date(expiry).toDateString()} — issue a new one in AiSensy` };
+  }
+  return { ok: true, message: 'API key is set — run a test campaign to verify delivery' };
+}
+
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
   IMAGEKIT: probeImagekit,
   PEXELS: probePexels,
@@ -217,6 +242,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   RAZORPAY: probeRazorpay,
   SHIPROCKET: probeShiprocket,
   SLACK: probeSlack,
+  AISENSY: probeAisensy,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

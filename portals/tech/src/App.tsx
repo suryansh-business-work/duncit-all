@@ -14,6 +14,7 @@ import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import TerminalPage from './pages/server/TerminalPage';
 import SlackSettingsPage from './pages/slack/SlackSettingsPage';
+import AisensyPage from './pages/aisensy';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/server/docker" element={authed(<DockerPage />)} />
         <Route path="/server/terminal" element={authed(<TerminalPage />)} />
         <Route path="/slack" element={authed(<SlackSettingsPage />)} />
+        <Route path="/aisensy" element={authed(<AisensyPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <NotifyHost />

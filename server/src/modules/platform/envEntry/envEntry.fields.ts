@@ -92,6 +92,15 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'default_channel', label: 'Default Channel (optional)', hint: 'Channel ID (e.g. C0123ABCD) messages default to' },
     { name: 'feedback_channel', label: 'Feedback Channel (optional)', hint: 'Channel ID in-app feedback posts to (falls back to Default Channel)' },
   ],
+  AISENSY: [
+    { name: 'api_key', label: 'API Key', secret: true, hint: 'AiSensy → Manage → API Key (a long eyJ… token)' },
+    {
+      name: 'campaign_name',
+      label: 'Default Campaign Name (optional)',
+      hint: 'API campaign name sends default to, e.g. duncit_camp_1',
+    },
+    { name: 'base_url', label: 'Base URL (optional)', hint: 'https://backend.aisensy.com' },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -108,6 +117,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   RAZORPAY: 'https://dashboard.razorpay.com/app/keys',
   SHIPROCKET: 'https://app.shiprocket.in/api-user',
   SLACK: 'https://api.slack.com/apps',
+  AISENSY: 'https://app.aisensy.com/',
 };
 
 const secretSet = new Set<string>();
@@ -159,6 +169,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SLACK_SIGNING_SECRET: { category: 'SLACK', field: 'signing_secret' },
   SLACK_DEFAULT_CHANNEL: { category: 'SLACK', field: 'default_channel' },
   SLACK_FEEDBACK_CHANNEL: { category: 'SLACK', field: 'feedback_channel' },
+  AISENSY_API_KEY: { category: 'AISENSY', field: 'api_key' },
+  AISENSY_CAMPAIGN_NAME: { category: 'AISENSY', field: 'campaign_name' },
+  AISENSY_BASE_URL: { category: 'AISENSY', field: 'base_url' },
 };
 
 export function maskSecret(value: string) {

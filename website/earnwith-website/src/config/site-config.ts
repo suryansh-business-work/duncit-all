@@ -163,12 +163,15 @@ export const siteConfig = {
     text:
       'Move the sliders and see what reaches you after GST, the platform fee and what the venue charges. Your own seat is free, so a pod bills every spot but yours.',
     currency: '₹',
+    // Every money line is a month's worth, like the take-home — only the row
+    // that says "per pod" is not.
     rowLabels: {
-      gross: 'Tickets collected',
+      gross: 'Tickets collected a month',
       gst: 'GST',
       platform: 'Platform fee',
-      venue: 'Venue charge',
+      venue: 'Venue charges',
       clubAdmin: 'Club admin share',
+      hostCommission: 'Duncit host commission',
       perPod: 'Your share, per pod',
       pods: 'Pods a month',
     },
@@ -188,7 +191,9 @@ export const siteConfig = {
         multiplier: 'pods',
         // Deductions shown above the take-home, in the order money leaves,
         // then the per-pod payout and the count it multiplies by.
-        rows: ['gross', 'gst', 'platform', 'venue', 'clubAdmin', 'perPod', 'pods'],
+        // Every deduction the pod's money passes through, so the column
+        // actually adds up to the take-home rather than nearly.
+        rows: ['gross', 'gst', 'platform', 'venue', 'clubAdmin', 'hostCommission', 'perPod', 'pods'],
         dutiesTitle: 'What a host does',
         duties: [
           'Bring the people together and fill the pod',
@@ -230,7 +235,7 @@ export const siteConfig = {
     fields: [
       {
         name: 'ticket',
-        label: 'Ticket price per spot',
+        label: 'Average ticket price per spot',
         prefix: '₹',
         min: 99,
         max: 4999,
@@ -240,7 +245,7 @@ export const siteConfig = {
       },
       {
         name: 'spots',
-        label: 'Total spots',
+        label: 'Average total spots',
         prefix: '',
         min: 2,
         max: 60,
@@ -250,7 +255,7 @@ export const siteConfig = {
       },
       {
         name: 'venue',
-        label: 'Venue charge',
+        label: 'Average venue charge',
         prefix: '₹',
         min: 500,
         max: 30000,

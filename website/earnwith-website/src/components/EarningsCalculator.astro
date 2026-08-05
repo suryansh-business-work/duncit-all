@@ -121,6 +121,7 @@ const { calculator, graphqlUrl } = siteConfig;
           venue_amount
           club_admin_pct
           club_admin_amount
+          host_commission_amount
           host_receives
         }
       }
@@ -134,6 +135,7 @@ const { calculator, graphqlUrl } = siteConfig;
       platform: 'platform_fee_amount',
       venue: 'venue_amount',
       clubAdmin: 'club_admin_amount',
+      hostCommission: 'host_commission_amount',
     };
 
     const sliderValue = (name) => Number(new FormData(form).get(name)) || 0;
@@ -160,12 +162,16 @@ const { calculator, graphqlUrl } = siteConfig;
         .join('');
     };
 
-    /** What one row shows: a money line off the waterfall, this role's own
-     * per-pod share, or the plain count it is multiplied by. */
+    /**
+     * What one row shows. The money lines are for the MONTH, like the take-home
+     * above them — a venue billed per pod is billed once per pod all month, and
+     * a column that mixed one pod's costs with a month's earnings would not add
+     * up. The per-pod share stays per pod, which is what its label says.
+     */
     const rowValue = (key, w) => {
       if (key === 'perPod') return { text: money(w[role.field]), deduction: false };
       if (key === 'pods') return { text: `× ${multiplier()}`, deduction: false };
-      const value = w[ROW_FIELD[key]];
+      const value = w[ROW_FIELD[key]] * multiplier();
       const deduction = key !== 'gross';
       return {
         text: deduction && value > 0 ? `− ${money(value)}` : money(value),

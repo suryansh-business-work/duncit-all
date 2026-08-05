@@ -142,6 +142,7 @@ export function HomeFeed() {
                   onOpenPod={(pod) => openPod(pod.club_slug, pod.pod_id)}
                   categoryLabelOf={categoryLabelOf}
                   savedOf={saved.signedIn ? saved.isSaved : undefined}
+                  savingOf={saved.signedIn ? saved.isSaving : undefined}
                   onToggleSave={saved.signedIn ? saved.toggle : undefined}
                 />
               </TourAnchor>
@@ -172,6 +173,7 @@ export function HomeFeed() {
                         onOpenClub={(c) => openClub(c.club_id)}
                         categoryLabelOf={categoryLabelOf}
                         savedOf={saved.signedIn ? saved.isSaved : undefined}
+                        savingOf={saved.signedIn ? saved.isSaving : undefined}
                         onToggleSave={saved.signedIn ? saved.toggle : undefined}
                       />
                     </Reveal>

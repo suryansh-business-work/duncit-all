@@ -1,7 +1,7 @@
-import { Card, Chip, IconButton, Stack, Typography } from '@mui/material';
+import { Card, Chip, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
 import PersonIcon from '@mui/icons-material/PersonOutline';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
@@ -10,9 +10,10 @@ import { useTranslation } from '../../i18n/useTranslation';
 import PodCardMedia from './PodCardMedia';
 
 /**
- * Image-first pod card (mock): full-bleed media, the category chip and heart
- * overlaid on top, and a translucent info panel — date, big title, spots left
- * and the price pill — floating over the bottom. The whole card opens the pod.
+ * Image-first pod card (mock): full-bleed media, the category chip and the save
+ * button overlaid on top, and a translucent info panel — date, big title, spots
+ * left and the price pill — floating over the bottom. The whole card opens the
+ * pod.
  */
 export default function PodCard({
   pod,
@@ -20,6 +21,7 @@ export default function PodCard({
   hostName,
   categoryLabel,
   saved,
+  saving,
   onToggleSave,
   showPlace = true,
 }: Readonly<{
@@ -28,8 +30,10 @@ export default function PodCard({
   hostName?: string | null;
   /** The pod's club's category name — the chip over the image. */
   categoryLabel?: string | null;
-  /** Heart state; omit both to hide the heart (e.g. signed-out rails). */
+  /** Save state; omit both to hide the button (e.g. signed-out rails). */
   saved?: boolean;
+  /** The toggle is in flight for THIS pod — the icon becomes a spinner. */
+  saving?: boolean;
   onToggleSave?: () => void;
   showPlace?: boolean;
 }>) {
@@ -43,6 +47,10 @@ export default function PodCard({
   let spotsText = `${spotsTaken}${spotsSuffix}`;
   if (spotsLeft === 1) spotsText = t('mweb.home.spotsLeftOne');
   else if (spotsLeft > 1) spotsText = t('mweb.home.spotsLeftMany', { count: spotsLeft });
+  // Hoisted out of the JSX: a spinner-or-icon choice inline would nest ternaries
+  // in a prop (S3358).
+  const savedIcon = saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />;
+  const saveButtonContent = saving ? <CircularProgress size={18} color="inherit" /> : savedIcon;
   const dateText = pod.pod_date_time
     ? new Date(pod.pod_date_time).toLocaleString(undefined, {
         weekday: 'short',
@@ -109,6 +117,7 @@ export default function PodCard({
         <IconButton
           aria-label={saved ? t('mweb.home.savedPod') : t('mweb.home.savePod')}
           aria-pressed={saved}
+          disabled={saving}
           onClick={(event) => {
             event.stopPropagation();
             onToggleSave();
@@ -121,9 +130,12 @@ export default function PodCard({
             bgcolor: 'rgba(9,7,18,0.35)',
             backdropFilter: 'blur(6px)',
             '&:hover': { bgcolor: 'rgba(9,7,18,0.5)' },
+            // Disabled only while the toggle is in flight — keep it legible on
+            // the image instead of MUI's grey-on-dark.
+            '&.Mui-disabled': { color: 'common.white', bgcolor: 'rgba(9,7,18,0.35)' },
           }}
         >
-          {saved ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+          {saveButtonContent}
         </IconButton>
       )}
 

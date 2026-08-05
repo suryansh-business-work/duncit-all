@@ -139,6 +139,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             filtered={railsFiltered}
             categoryLabelOf={categoryLabelOf}
             savedOf={saved.signedIn ? saved.isSaved : undefined}
+            savingOf={saved.signedIn ? saved.isSaving : undefined}
             onToggleSave={saved.signedIn ? saved.toggle : undefined}
           />
         </Box>
@@ -166,6 +167,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
                 hostNameOf={hostNameOf}
                 categoryLabelOf={categoryLabelOf}
                 savedOf={saved.signedIn ? saved.isSaved : undefined}
+                savingOf={saved.signedIn ? saved.isSaving : undefined}
                 onToggleSave={saved.signedIn ? saved.toggle : undefined}
               />
             ))}

@@ -1,4 +1,4 @@
-import Svg, { Circle } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 import { Text, YStack } from 'tamagui';
 
 import { clampScore, healthBandColor } from '@/utils/health';
@@ -28,29 +28,32 @@ export function HealthMeter({
   const safeScore = clampScore(score);
   const filled = (safeScore / 100) * circumference;
   const color = healthBandColor(band);
+  const height = size / 2 + thickness;
+  /* The half circle is drawn where it is shown — left end, over the top, right
+   * end — instead of drawing a full circle, rotating the <Svg> 180° and
+   * clipping the bottom half. That rotation is a React Native style transform:
+   * it applies on device but is dropped when the app renders as web, leaving
+   * the unrotated arc in the clipped half, where only its two round end caps
+   * showed. This geometry needs no transform, so every target draws it alike. */
+  const arc = `M ${thickness / 2} ${center} A ${radius} ${radius} 0 0 1 ${size - thickness / 2} ${center}`;
 
   return (
     <YStack alignItems="center" testID="health-meter">
-      <YStack width={size} height={size / 2 + thickness} overflow="hidden">
-        <Svg width={size} height={size} style={{ transform: [{ rotate: '180deg' }] }}>
-          <Circle
-            cx={center}
-            cy={center}
-            r={radius}
+      <YStack width={size} height={height}>
+        <Svg width={size} height={height}>
+          <Path
+            d={arc}
             fill="none"
             stroke="rgba(0,0,0,0.08)"
             strokeWidth={thickness}
-            strokeDasharray={`${circumference} ${circumference * 2}`}
             strokeLinecap="round"
           />
-          <Circle
-            cx={center}
-            cy={center}
-            r={radius}
+          <Path
+            d={arc}
             fill="none"
             stroke={color}
             strokeWidth={thickness}
-            strokeDasharray={`${filled} ${circumference * 2}`}
+            strokeDasharray={`${filled} ${circumference}`}
             strokeLinecap="round"
           />
         </Svg>

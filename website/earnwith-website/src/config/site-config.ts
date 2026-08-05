@@ -2,7 +2,11 @@
 // lives here as reusable configuration (not business data). Cross-site URLs
 // are resolved from the environment so localhost links stay local in dev and
 // production links stay on the real domains.
-const isDevelopment = import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
+// `astro dev` is local by definition, so a dev server targets the local API
+// without anyone remembering a flag — running the site locally against the
+// production server is how a missing local change looks like a broken page.
+// PUBLIC_IS_DEVELOPMENT still forces the dev targets for a built preview.
+const isDevelopment = import.meta.env.DEV || import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 
 const mwebUrl =
   import.meta.env.PUBLIC_MWEB_URL ||

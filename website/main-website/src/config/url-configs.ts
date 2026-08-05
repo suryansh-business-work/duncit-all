@@ -1,4 +1,7 @@
-const isDevelopment = import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
+// `astro dev` is local by definition — a dev server targets the local API
+// without anyone remembering a flag. PUBLIC_IS_DEVELOPMENT still forces the
+// dev targets for a built preview.
+const isDevelopment = import.meta.env.DEV || import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 
 // Localhost targets in dev, production hosts otherwise — every cross-site
 // link goes through this map so environments never leak into each other.

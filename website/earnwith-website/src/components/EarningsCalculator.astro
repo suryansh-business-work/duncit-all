@@ -95,6 +95,20 @@ const { calculator, graphqlUrl } = siteConfig;
         .join('');
     };
 
+    const note = document.querySelector('[data-earn-note]');
+    const standardNote = note.textContent;
+    let painted = false;
+
+    // A blip after the numbers are up leaves them alone; a failure before any
+    // numbers exist has to SAY so — an em dash and an empty list read as a
+    // broken page, which is exactly what it looks like from the outside.
+    const failed = () => {
+      if (painted) return;
+      takeHome.textContent = '—';
+      note.textContent =
+        'The estimate could not be loaded right now. The figures come from Duncit itself, so nothing is shown rather than a guess — please try again shortly.';
+    };
+
     let timer;
     const request = async () => {
       const values = new FormData(form);
@@ -111,11 +125,15 @@ const { calculator, graphqlUrl } = siteConfig;
         });
         const json = await res.json();
         const data = json?.data?.publicPodEarningsEstimate;
-        // An unreachable API leaves the last good numbers on screen rather
-        // than replacing them with invented ones.
-        if (data) paint(data);
+        if (data) {
+          paint(data);
+          painted = true;
+          note.textContent = standardNote;
+        } else {
+          failed();
+        }
       } catch {
-        /* keep the last good numbers */
+        failed();
       }
     };
 

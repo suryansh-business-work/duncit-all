@@ -61,6 +61,11 @@ const coinTxnSchema = new Schema<ICoinTransaction>(
 );
 coinTxnSchema.index({ user_id: 1, created_at: -1 });
 
+// The admin ledger table and the month-distribution aggregate both read the
+// whole collection ordered by time. The compound index above is prefixed on
+// user_id, so it cannot serve a query that has no user to pin.
+coinTxnSchema.index({ created_at: -1 });
+
 // A retried checkout must neither pay the reward twice nor spend the coins
 // twice. The sibling wallet ledger guards its payout with a read-then-write
 // `exists()` check (wallet.service.ts), which two concurrent calls both pass —

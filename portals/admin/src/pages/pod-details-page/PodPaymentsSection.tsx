@@ -1,9 +1,10 @@
 import { useMemo, useRef } from 'react';
 import { useApolloClient } from '@apollo/client';
-import { Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { DuncitTable, useApolloTableFetch, type DuncitColumn } from '@duncit/table';
 import { StatusChip, type StatusColorMap } from '@duncit/ui';
+import SectionCard from './SectionCard';
 import { POD_PAYMENTS_TABLE, type PodPaymentRow } from './queries';
 import { fmtDateTime, money } from './format';
 
@@ -111,26 +112,21 @@ export default function PodPaymentsSection({ podId }: Readonly<Props>) {
   );
 
   return (
-    <Card>
-      <CardContent>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-          <ReceiptLongIcon color="primary" />
-          <Typography variant="subtitle1" fontWeight={900}>
-            Payments & transactions
-          </Typography>
-        </Stack>
-        <Divider sx={{ mb: 2 }} />
-        <DuncitTable<PodPaymentRow>
-          tableId="admin-pod-payments"
-          columns={columns}
-          fetchRows={fetchRows}
-          getRowId={getRowId}
-          emptyText="No payments recorded for this pod."
-          searchPlaceholder="Search payment ID, invoice or payer"
-          defaultSort={{ field: 'created_at', dir: 'desc' }}
-          refetchRef={refetchRef}
-        />
-      </CardContent>
-    </Card>
+    <SectionCard
+      icon={<ReceiptLongIcon fontSize="small" />}
+      title="Payments & transactions"
+      tone="success"
+    >
+      <DuncitTable<PodPaymentRow>
+        tableId="admin-pod-payments"
+        columns={columns}
+        fetchRows={fetchRows}
+        getRowId={getRowId}
+        emptyText="No payments recorded for this pod."
+        searchPlaceholder="Search payment ID, invoice or payer"
+        defaultSort={{ field: 'created_at', dir: 'desc' }}
+        refetchRef={refetchRef}
+      />
+    </SectionCard>
   );
 }

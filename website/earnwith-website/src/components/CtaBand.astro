@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from '../config/site-config';
+import SmartLink from './SmartLink.astro';
 const { platform } = siteConfig;
 ---
 
@@ -19,13 +20,13 @@ const { platform } = siteConfig;
         India's <span class="text-primary">Community</span><br />Earning Platform
       </h2>
       <p class="mt-4 max-w-md text-ink-soft">{platform.text}</p>
-      <a
+      <SmartLink
         href={platform.button.href}
-        class="mt-7 inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
+        label={platform.button.label}
+        class="mt-7 inline-flex items-center gap-1 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
       >
         {platform.button.label}
-        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-      </a>
+      </SmartLink>
     </div>
   </div>
 </section>

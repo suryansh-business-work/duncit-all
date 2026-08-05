@@ -474,6 +474,18 @@ export const financeTypeDefs = /* GraphQL */ `
       venue_amount: Float
     ): PodEarningsProjection!
     """
+    The same projection for a signed-OUT visitor — the marketing site's earnings
+    estimator. Runs at the platform's DEFAULT rates (there is no host to
+    personalise for) and takes the venue's cost as a plain amount, so it is an
+    estimate at standard rates rather than a quote. Public on purpose: it
+    exposes the same percentages the pricing page states, and no user data.
+    """
+    publicPodEarningsEstimate(
+      pod_amount: Float!
+      no_of_spots: Int!
+      venue_amount: Float
+    ): PodEarningsProjection!
+    """
     Suggested ₹x99 ticket prices for Create-a-Pod Step 4 — the same input
     surface as potentialPodEarnings minus the ticket price. Walks 99, 199, 299…
     and returns the first candidates whose projected host payout is strictly

@@ -1,6 +1,7 @@
 ---
 import { siteConfig } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
+import SmartLink from './SmartLink.astro';
 
 interface Props {
   /** Sit over a full-bleed banner instead of on the page background. */
@@ -33,26 +34,32 @@ const position = overlay ? 'fixed inset-x-0 top-0' : 'sticky top-0';
     <div class="hidden items-center gap-7 lg:flex">
       {
         nav.links.map((link) => (
-          <a href={link.href} class="nav-link text-sm font-semibold text-ink-soft transition hover:text-ink">
+          <SmartLink
+            href={link.href}
+            label={link.label}
+            class="nav-link text-sm font-semibold text-ink-soft transition hover:text-ink"
+          >
             {link.label}
-          </a>
+          </SmartLink>
         ))
       }
     </div>
 
     <div class="flex items-center gap-2 sm:gap-3">
-      <a
+      <SmartLink
         href={nav.login.href}
+        label={nav.login.label}
         class="login-link rounded-full border border-ink/15 px-5 py-2 text-sm font-bold text-ink transition hover:border-ink/30"
       >
         {nav.login.label}
-      </a>
-      <a
+      </SmartLink>
+      <SmartLink
         href={nav.signup.href}
+        label={nav.signup.label}
         class="rounded-full bg-primary px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-primary-dark"
       >
         {nav.signup.label}
-      </a>
+      </SmartLink>
     </div>
   </nav>
 </header>

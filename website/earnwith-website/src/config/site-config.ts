@@ -150,6 +150,76 @@ export const siteConfig = {
       { icon: 'fa-wallet', title: 'Earn', text: 'Provide great experiences and earn every month.' },
     ] as Step[],
   },
+  // The estimator's inputs. The RATES are not here on purpose — GST, the
+  // platform fee and the rest come from the server's settlement waterfall, so
+  // this page cannot state a percentage the platform no longer charges.
+  calculator: {
+    eyebrow: 'Estimate your earnings',
+    heading: 'What would a pod pay you?',
+    text:
+      'Move the sliders and see what reaches you after GST, the platform fee and what the venue charges. Your own seat is free, so a pod bills every spot but yours.',
+    currency: '₹',
+    takeHomeLabel: 'You take home',
+    rowLabels: {
+      gross: 'Tickets collected',
+      gst: 'GST',
+      platform: 'Platform fee',
+      venue: 'Venue charge',
+    },
+    note: 'An estimate at standard rates. Your own rate, and a venue’s own price, are set when you create the pod.',
+    fields: [
+      {
+        name: 'ticket',
+        label: 'Ticket price per spot',
+        prefix: '₹',
+        min: 99,
+        max: 4999,
+        step: 50,
+        value: 499,
+        hint: 'What each guest pays.',
+      },
+      {
+        name: 'spots',
+        label: 'Total spots',
+        prefix: '',
+        min: 2,
+        max: 60,
+        step: 1,
+        value: 12,
+        hint: 'Including your own seat, which is free.',
+      },
+      {
+        name: 'venue',
+        label: 'Venue charge',
+        prefix: '₹',
+        min: 0,
+        max: 30000,
+        step: 500,
+        value: 3000,
+        hint: 'What the venue bills for the slot. Zero if you host somewhere free.',
+      },
+    ],
+  },
+  /**
+   * Product screens showing what earning looks like inside Duncit. EMPTY until
+   * real screenshots exist: this section renders nothing rather than dressing
+   * stock photography up as the product. Paste the image URLs (ImageKit or the
+   * app's store listing shots) as { image, alt, title, text } and it appears.
+   */
+  screenshots: {
+    eyebrow: 'Inside Duncit',
+    heading: 'What earning looks like',
+    text: 'Your bookings, your payouts and what each pod made — the screens you will actually live in.',
+    items: [] as { image: string; alt: string; title: string; text: string }[],
+  },
+  newsletter: {
+    heading: 'Earning tips, once a month',
+    text: 'What is working for hosts, venues and clubs on Duncit — no more than one email a month.',
+    placeholder: 'you@example.com',
+    button: 'Subscribe',
+    /** Where the subscription came from, for the CRM's own reporting. */
+    source: 'WEBSITE_FOOTER',
+  },
   platform: {
     heading: "India's Community Earning Platform",
     text: 'Duncit helps people, venues, clubs and brands come together and grow together.',

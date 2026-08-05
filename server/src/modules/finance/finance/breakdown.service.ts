@@ -277,6 +277,47 @@ export const breakdownService = {
     };
   },
 
+  /**
+   * The same projection for a signed-OUT visitor — the marketing site's
+   * earnings estimator.
+   *
+   * Identical maths to potentialPodEarnings, run at the platform's DEFAULT
+   * rates because there is no host to personalise for: no host commission
+   * override, no venue's negotiated commission. The venue's cost is taken as a
+   * plain rupee amount the visitor types, since a public page has no venue to
+   * resolve a slot price from. That makes this an ESTIMATE at standard rates,
+   * which is what the page says it is — and it is still the platform's own
+   * waterfall, never a percentage copied into a website.
+   */
+  async publicPodEarningsEstimate(
+    podAmount: number,
+    noOfSpots: number,
+    venueAmount?: number | null
+  ): Promise<PodEarningsProjection> {
+    if (!Number.isFinite(podAmount) || podAmount < 0) {
+      throw new GraphQLError('Amount must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const venuePrice = venueAmount ?? 0;
+    if (!Number.isFinite(venuePrice) || venuePrice < 0) {
+      throw new GraphQLError('Venue amount must be 0 or more', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    if (!Number.isFinite(noOfSpots) || noOfSpots < 0) {
+      throw new GraphQLError('Spots must be 0 or more', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const rates = await resolveEffectiveRates({ hostUserId: null, venueId: null });
+    const billable = payableSpots(noOfSpots);
+    const amount = round2(podAmount * billable);
+    return {
+      total_spots: Math.max(0, Math.floor(noOfSpots) || 0),
+      payable_spots: billable,
+      // Same preview rule as the app: a venue that costs more than the pool
+      // shows as a negative host payout rather than being quietly clamped.
+      waterfall: waterfallForAmount(amount, venuePrice, rates, { clampVenueToPool: false }),
+    };
+  },
+
   /** Step-4 "Suggested Ticket Prices": walks the ₹x99 ladder (99, 199, 299, …)
    * at the caller's effective rates and returns the first candidates whose
    * projected host payout is STRICTLY positive (an exactly-₹0 payout is never

@@ -1,5 +1,6 @@
 ---
 import { siteConfig } from '../config/site-config';
+import SmartLink from './SmartLink.astro';
 const { paths } = siteConfig;
 ---
 
@@ -29,13 +30,13 @@ const { paths } = siteConfig;
               </span>
               <h3 class="text-lg text-ink">{path.title}</h3>
               <p class="mt-2 grow text-sm leading-relaxed text-ink-soft">{path.text}</p>
-              <a
+              <SmartLink
                 href={path.href}
-                class="mt-5 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
+                label={path.cta}
+                class="mt-5 inline-flex items-center justify-center gap-1 rounded-full border border-primary/40 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary hover:text-white"
               >
                 {path.cta}
-                <i class="fa-solid fa-arrow-right text-xs" aria-hidden="true" />
-              </a>
+              </SmartLink>
             </div>
           </article>
         ))

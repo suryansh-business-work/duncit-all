@@ -181,6 +181,17 @@ export const financeResolvers = {
         args.venue_amount ?? null
       );
     },
+    // No requireAuth: this is the marketing site's estimator. It reads the
+    // platform's public rates and nothing about anybody.
+    publicPodEarningsEstimate: (
+      _p: unknown,
+      args: { pod_amount: number; no_of_spots: number; venue_amount?: number | null }
+    ) =>
+      breakdownService.publicPodEarningsEstimate(
+        args.pod_amount,
+        args.no_of_spots,
+        args.venue_amount ?? null
+      ),
     suggestedTicketPrices: async (
       _p: unknown,
       args: { no_of_spots: number; venue_id?: string | null; venue_amount?: number | null },

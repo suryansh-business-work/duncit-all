@@ -1,0 +1,38 @@
+---
+import { siteConfig } from '../config/site-config';
+const { screenshots } = siteConfig;
+---
+
+{
+  /* Renders only once real screens are configured. A marketing page showing
+     stock photography where it promises product screenshots is worse than
+     showing nothing. */
+  screenshots.items.length > 0 && (
+    <section class="mx-auto max-w-6xl px-5 py-14">
+      <p class="text-center text-xs font-black uppercase tracking-[0.2em] text-primary">
+        {screenshots.eyebrow}
+      </p>
+      <h2 class="mt-2 text-center text-3xl text-ink sm:text-4xl">{screenshots.heading}</h2>
+      <p class="mx-auto mt-3 max-w-2xl text-center text-ink-soft">{screenshots.text}</p>
+
+      <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {screenshots.items.map((shot) => (
+          <figure class="overflow-hidden rounded-3xl border border-black/5 bg-white shadow-sm">
+            <img
+              src={shot.image}
+              alt={shot.alt}
+              width="600"
+              height="1200"
+              class="w-full object-cover"
+              loading="lazy"
+            />
+            <figcaption class="border-t border-black/5 px-5 py-4">
+              <span class="block font-head text-base font-extrabold text-ink">{shot.title}</span>
+              <span class="mt-1 block text-sm text-ink-soft">{shot.text}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  )
+}

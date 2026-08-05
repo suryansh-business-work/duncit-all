@@ -1,0 +1,283 @@
+---
+/**
+ * "Get the Duncit app" — one band, on every site.
+ *
+ * Four sites had four of these: main-website's was light with a phone beside
+ * it, partners' was a black slab, ads' and earn's were something else again.
+ * They advertise the same two store listings, so they are the same band now,
+ * and each site only says who it is talking to.
+ *
+ * Light by default, like every other page panel — the black version was the
+ * one section on a light page that inverted the wrong way in dark mode.
+ */
+import AppPhone from './AppPhone.astro';
+
+interface Store {
+  /** Font Awesome brand class. */
+  icon: string;
+  eyebrow: string;
+  name: string;
+  /** Empty renders a real "coming soon" state rather than a dead link. */
+  url?: string | null;
+}
+
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  /** Rendered in the accent colour, after the heading. */
+  headingAccent?: string;
+  text?: string;
+  /** One line each. Prose blocks under a headline made this section busy. */
+  perks?: string[];
+  stores: Store[];
+  soonLabel?: string;
+  /** A real screenshot when there is one; the drawn app screen until then. */
+  screenshot?: string | null;
+  id?: string;
+  class?: string;
+}
+
+const {
+  eyebrow = 'The Duncit app',
+  heading,
+  headingAccent = '',
+  text = '',
+  perks = [],
+  stores,
+  soonLabel = 'Soon',
+  screenshot = null,
+  id = 'download',
+  class: className = '',
+} = Astro.props;
+---
+
+<section id={id} class:list={['app-download', className]}>
+  <div class="app-download-glow is-one" aria-hidden="true"></div>
+  <div class="app-download-glow is-two" aria-hidden="true"></div>
+
+  <div class="app-download-inner">
+    <div class="app-download-copy">
+      <span class="app-download-eyebrow">
+        <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> {eyebrow}
+      </span>
+
+      <h2 class="app-download-heading">
+        {heading}{headingAccent && <><br /><span>{headingAccent}</span></>}
+      </h2>
+
+      {text && <p class="app-download-text">{text}</p>}
+
+      {
+        perks.length > 0 && (
+          <ul class="app-download-perks">
+            {perks.map((perk) => (
+              <li>
+                <i class="fa-solid fa-check" aria-hidden="true" />
+                {perk}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      <div class="app-download-stores">
+        {
+          stores.map((store) =>
+            store.url ? (
+              <a href={store.url} target="_blank" rel="noopener noreferrer" class="app-store is-live">
+                <i class={`fa-brands ${store.icon}`} aria-hidden="true" />
+                <span>
+                  <span class="app-store-eyebrow">{store.eyebrow}</span>
+                  <span class="app-store-name">{store.name}</span>
+                </span>
+              </a>
+            ) : (
+              <span class="app-store">
+                <i class={`fa-brands ${store.icon}`} aria-hidden="true" />
+                <span>
+                  <span class="app-store-eyebrow">{store.eyebrow}</span>
+                  <span class="app-store-name">{store.name}</span>
+                </span>
+                <span class="app-store-soon">{soonLabel}</span>
+              </span>
+            )
+          )
+        }
+      </div>
+    </div>
+
+    <AppPhone src={screenshot} />
+  </div>
+</section>
+
+<style>
+  .app-download {
+    position: relative;
+    overflow: hidden;
+    padding: 5rem 1.5rem;
+    background: var(--color-cream, #faf6f0);
+  }
+  .app-download-glow {
+    position: absolute;
+    width: 24rem;
+    height: 24rem;
+    border-radius: 999px;
+    filter: blur(64px);
+  }
+  .app-download-glow.is-one {
+    top: -8rem;
+    left: -6rem;
+    background: color-mix(in srgb, var(--color-primary, #ff5757) 15%, transparent);
+  }
+  .app-download-glow.is-two {
+    bottom: -8rem;
+    right: -6rem;
+    background: color-mix(in srgb, var(--color-secondary, #5865f2) 15%, transparent);
+  }
+
+  .app-download-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+    max-width: 64rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+  @media (min-width: 1024px) {
+    .app-download-inner {
+      grid-template-columns: 1.1fr auto;
+      text-align: start;
+    }
+  }
+
+  .app-download-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary, #ff5757) 10%, transparent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-primary, #ff5757);
+  }
+
+  .app-download-heading {
+    margin: 1.5rem 0 0;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: clamp(2.25rem, 5vw, 3.75rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--color-ink, #16131a);
+  }
+  .app-download-heading span {
+    color: var(--color-primary, #ff5757);
+  }
+
+  .app-download-text {
+    margin: 1rem auto 0;
+    max-width: 28rem;
+    font-size: 1.125rem;
+    color: var(--color-ink-soft, #4b4651);
+  }
+  @media (min-width: 1024px) {
+    .app-download-text {
+      margin-inline: 0;
+    }
+  }
+
+  .app-download-perks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.25rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  @media (min-width: 1024px) {
+    .app-download-perks {
+      justify-content: flex-start;
+    }
+  }
+  .app-download-perks li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-ink, #16131a);
+  }
+  .app-download-perks i {
+    font-size: 0.75rem;
+    color: var(--color-primary, #ff5757);
+  }
+
+  .app-download-stores {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  @media (min-width: 1024px) {
+    .app-download-stores {
+      justify-content: flex-start;
+    }
+  }
+
+  .app-store {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--color-line, rgba(22, 19, 26, 0.08));
+    border-radius: 1rem;
+    text-align: start;
+    text-decoration: none;
+    color: var(--color-ink-soft, #4b4651);
+  }
+  .app-store.is-live {
+    border-color: transparent;
+    background: var(--color-ink, #16131a);
+    color: var(--color-cream, #faf6f0);
+    transition: transform 150ms ease;
+  }
+  .app-store.is-live:hover {
+    transform: scale(1.03);
+  }
+  .app-store i {
+    font-size: 1.875rem;
+  }
+  .app-store-eyebrow {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.7;
+  }
+  .app-store-name {
+    display: block;
+    font-family: var(--font-head, system-ui, sans-serif);
+    font-size: 1.125rem;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+  .app-store-soon {
+    margin-left: 0.25rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 999px;
+    background: var(--color-tertiary, #ffd166);
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    /* The yellow does not invert, so what is written on it must not either. */
+    color: #16131a;
+  }
+</style>

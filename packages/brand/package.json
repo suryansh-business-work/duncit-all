@@ -10,7 +10,9 @@
     "./NewsletterSignup.astro": "./src/NewsletterSignup.astro",
     "./PolicyStrip.astro": "./src/PolicyStrip.astro",
     "./SocialLinks.astro": "./src/SocialLinks.astro",
-    "./SiteMenu.astro": "./src/SiteMenu.astro"
+    "./SiteMenu.astro": "./src/SiteMenu.astro",
+    "./AppDownload.astro": "./src/AppDownload.astro",
+    "./AppPhone.astro": "./src/AppPhone.astro"
   },
   "files": [
     "src"

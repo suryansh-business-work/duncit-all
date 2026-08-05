@@ -1,0 +1,21 @@
+---
+// This site's words on the shared download band. The earn site had no download
+// section at all — the one place a host actually runs their pods from was never
+// offered on the page that recruits them.
+import AppDownload from '@duncit/brand/AppDownload.astro';
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const stores = [
+  { icon: 'fa-google-play', eyebrow: 'Get it on', name: 'Google Play', url: branding.android_app_url },
+  { icon: 'fa-apple', eyebrow: 'Download on the', name: 'App Store', url: branding.ios_app_url },
+];
+---
+
+<AppDownload
+  heading="Run your pods"
+  headingAccent="from your pocket"
+  text="Create a pod, fill it, check people in and watch the money land — all from the app."
+  perks={['Create and fill pods', 'Check guests in', 'Track your earnings']}
+  stores={stores}
+/>

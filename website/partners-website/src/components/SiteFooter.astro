@@ -27,7 +27,11 @@ const year = new Date().getFullYear();
 ---
 
 <footer class="rounded-3xl mt-3 bg-cream px-5 sm:px-8 py-12">
-  <div class="max-w-6xl mx-auto grid gap-10 md:grid-cols-[1.2fr_2fr]">
+  <!-- Brand on the left, the one thing we ask for on the right — the same
+       shape as every other Duncit footer. It used to put the newsletter under
+       the brand in a narrow column and give a single two-link nav group twice
+       that width, so most of the footer was empty. -->
+  <div class="max-w-6xl mx-auto grid gap-10 items-start lg:grid-cols-[1fr_1.1fr]">
     <div>
       <FooterLogo
         footerSrc={branding.website_footer_logo_url}
@@ -43,31 +47,31 @@ const year = new Date().getFullYear();
         {branding.support_email || 'support@duncit.com'}
       </a>
       <SocialLinks class="mt-5" />
-      <!-- This site had no way to keep in touch at all. Same form as the
-           others, same CRM, tagged with where it came from. -->
-      <SharedNewsletter
-        class="mt-6"
-        graphqlUrl={urlConfigs.graphqlUrl}
-        source="PARTNERS_WEBSITE_FOOTER"
-        heading="Partner updates"
-        text="New venue tools, payout changes and what is working for hosts."
-      />
     </div>
 
-    <div class="grid grid-cols-2 sm:grid-cols-3 gap-8">
-      {navGroups.map((group) => (
-        <nav aria-label={group.label}>
-          <h3 class="font-head font-extrabold text-sm text-ink uppercase tracking-wider mb-3">{group.label}</h3>
-          <ul class="space-y-2">
-            {group.links.map((link) => (
-              <li>
-                <a href={link.url} class="text-sm text-ink-soft hover:text-ink transition">{link.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ))}
-    </div>
+    <!-- This site had no way to keep in touch at all. Same form as the others,
+         same CRM, tagged with where it came from. -->
+    <SharedNewsletter
+      graphqlUrl={urlConfigs.graphqlUrl}
+      source="PARTNERS_WEBSITE_FOOTER"
+      heading="Partner updates"
+      text="New venue tools, payout changes and what is working for hosts."
+    />
+  </div>
+
+  <div class="max-w-6xl mx-auto mt-10 grid grid-cols-2 gap-8 border-t border-line pt-10 sm:grid-cols-3">
+    {navGroups.map((group) => (
+      <nav aria-label={group.label}>
+        <h3 class="font-head font-extrabold text-sm text-ink uppercase tracking-wider mb-3">{group.label}</h3>
+        <ul class="space-y-2">
+          {group.links.map((link) => (
+            <li>
+              <a href={link.url} class="text-sm text-ink-soft hover:text-ink transition">{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ))}
   </div>
 
   <!-- Policies get the full width. Six of thirteen in a narrow column was a

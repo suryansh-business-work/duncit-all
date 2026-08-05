@@ -26,6 +26,10 @@ interface Props {
   consent?: string | null;
   consentLinkLabel?: string;
   consentLinkHref?: string;
+  /** Status copy. The site passes its own translations; these are the fallback. */
+  busyText?: string;
+  okText?: string;
+  errorText?: string;
   class?: string;
 }
 
@@ -40,6 +44,9 @@ const {
   consent = null,
   consentLinkLabel = 'privacy policy',
   consentLinkHref = '',
+  busyText = 'Subscribing…',
+  okText = 'You are on the list.',
+  errorText = 'That did not go through — check your connection and try again.',
   class: className = '',
 } = Astro.props;
 
@@ -54,6 +61,9 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
   data-newsletter-root
   data-graphql={graphqlUrl}
   data-source={source}
+  data-busy={busyText}
+  data-ok={okText}
+  data-error={errorText}
 >
   <h3 class="newsletter-heading">{heading}</h3>
   {text && <p class="newsletter-text">{text}</p>}
@@ -99,6 +109,11 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
     const button = form?.querySelector('button');
     const graphqlUrl = root.dataset.graphql ?? '';
     const source = root.dataset.source ?? 'WEBSITE';
+    const copy = {
+      busy: root.dataset.busy ?? '',
+      ok: root.dataset.ok ?? '',
+      error: root.dataset.error ?? '',
+    };
     if (!form || !status || !button) continue;
 
     const say = (message: string, ok: boolean) => {
@@ -114,7 +129,7 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
       if (!form.reportValidity()) return;
       const email = new FormData(form).get('email');
       button.disabled = true;
-      say('Subscribing…', false);
+      say(copy.busy, false);
       try {
         const res = await fetch(graphqlUrl, {
           method: 'POST',
@@ -130,12 +145,12 @@ const id = `newsletter-${Math.random().toString(36).slice(2, 9)}`;
         const result = json?.data?.subscribeNewsletter;
         if (result?.ok) {
           form.reset();
-          say(result.message || 'You are on the list.', true);
+          say(result.message || copy.ok, true);
         } else {
-          say(result?.message || json?.errors?.[0]?.message || 'That did not go through.', false);
+          say(result?.message || json?.errors?.[0]?.message || copy.error, false);
         }
       } catch {
-        say('That did not go through — check your connection and try again.', false);
+        say(copy.error, false);
       } finally {
         button.disabled = false;
       }

@@ -1,24 +1,23 @@
 ---
 // Footer — links managed from the Website portal (Navigation → EARNWITH) and
-// the Policy Hub from the Legal portal; branding assets from Admin.
+// the Policy Hub from the Legal portal; branding assets from Admin. The
+// configured groups are the fallback the portal overrides.
 import { siteConfig } from '../config/site-config';
 import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
 
-const { brand, footer, mainSiteUrl } = siteConfig;
+const { footer, mainSiteUrl } = siteConfig;
 
-const FALLBACK_GROUPS: SiteNavGroup[] = [
-  {
-    label: 'Duncit',
-    links: footer.links.map((link, index) => ({
-      id: `fallback-${index}`,
-      area: 'FOOTER' as const,
-      group_label: 'Duncit',
-      label: link.label,
-      url: link.href,
-      sort_order: index,
-    })),
-  },
-];
+const FALLBACK_GROUPS: SiteNavGroup[] = footer.groups.map((group) => ({
+  label: group.label,
+  links: group.links.map((link, index) => ({
+    id: `fallback-${group.label}-${index}`,
+    area: 'FOOTER' as const,
+    group_label: group.label,
+    label: link.label,
+    url: link.href,
+    sort_order: index,
+  })),
+}));
 
 const [branding, navGroups, policies] = await Promise.all([
   fetchBranding(),
@@ -29,53 +28,71 @@ const supportEmail = branding.support_email || 'support@duncit.com';
 const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-black/5">
-  <div class="mx-auto max-w-6xl px-5 py-10 grid gap-8 sm:grid-cols-[1.2fr_2fr]">
+<footer class="border-t border-black/5 bg-white/60">
+  <div class="mx-auto grid max-w-6xl gap-10 px-5 py-12 lg:grid-cols-[1.1fr_3fr]">
     <div>
-      <div class="flex items-center gap-2 font-head text-base font-extrabold text-ink">
-        <img src={branding.website_footer_logo_url || '/duncit-logo.svg'} alt="Duncit" class="h-6 w-auto" />
-        {brand.name}
-      </div>
-      <p class="mt-2 text-sm text-ink-soft">{footer.tagline}</p>
-      <a href={`mailto:${supportEmail}`} class="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
+      <img
+        src={branding.website_footer_logo_url || '/duncit-logo.svg'}
+        alt="Duncit"
+        class="h-7 w-auto"
+      />
+      <p class="mt-3 max-w-xs text-sm text-ink-soft">{footer.tagline}</p>
+      <a
+        href={`mailto:${supportEmail}`}
+        class="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
+      >
         {supportEmail}
       </a>
     </div>
-    <div class="grid grid-cols-2 gap-8">
-      {navGroups.map((group) => (
-        <nav aria-label={group.label}>
-          <h3 class="font-head font-extrabold text-xs text-ink uppercase tracking-wider mb-3">{group.label}</h3>
-          <ul class="space-y-2">
-            {group.links.map((link) => (
-              <li>
-                <a href={link.url} class="text-sm text-ink-soft hover:text-ink transition">{link.label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      ))}
-      {policies.length > 0 && (
-        <nav aria-label="Policy Hub">
-          <h3 class="font-head font-extrabold text-xs text-ink uppercase tracking-wider mb-3">Policy Hub</h3>
-          <ul class="space-y-2">
-            {policies.slice(0, 5).map((policy) => (
+
+    <div class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+      {
+        navGroups.map((group) => (
+          <nav aria-label={group.label}>
+            <h3 class="mb-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink">
+              {group.label}
+            </h3>
+            <ul class="space-y-2">
+              {group.links.map((link) => (
+                <li>
+                  <a href={link.url} class="text-sm text-ink-soft transition hover:text-ink">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+      {
+        policies.length > 0 && (
+          <nav aria-label="Legal">
+            <h3 class="mb-3 font-head text-xs font-extrabold uppercase tracking-wider text-ink">
+              Legal
+            </h3>
+            <ul class="space-y-2">
+              {policies.slice(0, 4).map((policy) => (
+                <li>
+                  <a
+                    href={`${mainSiteUrl}/policy?slug=${encodeURIComponent(policy.slug)}`}
+                    class="text-sm text-ink-soft transition hover:text-ink"
+                  >
+                    {policy.title}
+                  </a>
+                </li>
+              ))}
               <li>
                 <a
-                  href={`${mainSiteUrl}/policy?slug=${encodeURIComponent(policy.slug)}`}
-                  class="text-sm text-ink-soft hover:text-ink transition"
+                  href={`${mainSiteUrl}/policies`}
+                  class="text-sm font-semibold text-primary hover:underline"
                 >
-                  {policy.title}
+                  All policies
                 </a>
               </li>
-            ))}
-            <li>
-              <a href={`${mainSiteUrl}/policies`} class="text-sm font-semibold text-primary hover:underline">
-                All policies
-              </a>
-            </li>
-          </ul>
-        </nav>
-      )}
+            </ul>
+          </nav>
+        )
+      }
     </div>
   </div>
   <div class="border-t border-black/5 py-5 text-center text-xs text-ink-soft">

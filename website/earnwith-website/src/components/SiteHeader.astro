@@ -2,26 +2,39 @@
 import { siteConfig } from '../config/site-config';
 import { fetchBranding } from '../lib/site-data';
 
-const { mwebUrl } = siteConfig;
+const { nav } = siteConfig;
 const branding = await fetchBranding();
 const headerLogo = branding.website_header_logo_url || '/duncit-logo.svg';
 ---
 
 <header class="sticky top-0 z-30 border-b border-black/5 bg-cream/80 backdrop-blur">
-  <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-    <a href="/" class="flex items-center gap-2 font-head text-lg font-extrabold text-ink">
+  <nav class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
+    <a href="/" class="flex items-center gap-2" aria-label="Duncit">
       <img src={headerLogo} alt="Duncit" class="h-7 w-auto" />
-      Earn with <span class="text-primary">Duncit</span>
     </a>
-    <div class="flex items-center gap-6">
-      <a href="#paths" class="hidden text-sm font-semibold text-ink-soft hover:text-ink sm:block">
-        Ways to earn
+
+    <div class="hidden items-center gap-7 lg:flex">
+      {
+        nav.links.map((link) => (
+          <a href={link.href} class="text-sm font-semibold text-ink-soft transition hover:text-ink">
+            {link.label}
+          </a>
+        ))
+      }
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <a
+        href={nav.login.href}
+        class="rounded-full border border-ink/15 px-5 py-2 text-sm font-bold text-ink transition hover:border-ink/30"
+      >
+        {nav.login.label}
       </a>
       <a
-        href={`${mwebUrl}/earn`}
+        href={nav.signup.href}
         class="rounded-full bg-primary px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-primary-dark"
       >
-        Start earning
+        {nav.signup.label}
       </a>
     </div>
   </nav>

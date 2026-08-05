@@ -1,6 +1,10 @@
 ---
 import { siteConfig } from '../config/site-config';
 const { hero } = siteConfig;
+
+// The ribbon reads the same however far round it wraps, so the words repeat
+// rather than stretch.
+const ribbonText = `${hero.ribbon.join(' • ')} • `.repeat(2);
 ---
 
 <section class="relative overflow-hidden">
@@ -9,35 +13,60 @@ const { hero } = siteConfig;
     aria-hidden="true"
   >
   </div>
-  <div
-    class="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full blur-3xl"
-    style="background: color-mix(in srgb, var(--color-accent) 30%, transparent)"
-    aria-hidden="true"
-  >
-  </div>
-  <div class="mx-auto max-w-6xl px-5 py-20 text-center sm:py-28">
-    <span class="inline-block rounded-full bg-primary-light px-4 py-1 text-sm font-bold text-primary-dark">
-      {hero.eyebrow}
-    </span>
-    <h1 class="mx-auto mt-6 max-w-3xl text-4xl text-ink sm:text-6xl">
-      {hero.heading}
-    </h1>
-    <p class="mx-auto mt-6 max-w-2xl text-lg text-ink-soft">
-      {hero.subheading}
-    </p>
-    <div class="mt-9 flex flex-wrap items-center justify-center gap-4">
-      <a
-        href={hero.primaryCta.href}
-        class="rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
+  <div class="mx-auto grid max-w-6xl items-center gap-10 px-5 py-14 lg:grid-cols-[1fr_1.15fr] lg:py-20">
+    <div>
+      <span
+        class="inline-block rounded-full border border-primary/30 bg-primary-light/60 px-4 py-1 text-sm font-bold text-primary-dark"
       >
-        {hero.primaryCta.label}
-      </a>
-      <a
-        href={hero.secondaryCta.href}
-        class="rounded-full border border-ink/15 px-7 py-3 text-base font-bold text-ink transition hover:border-ink/30"
+        {hero.eyebrow}
+      </span>
+      <h1 class="mt-6 text-5xl text-ink sm:text-6xl">{hero.heading}</h1>
+      {hero.paragraphs.map((paragraph) => <p class="mt-5 max-w-md text-lg text-ink-soft">{paragraph}</p>)}
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href={hero.primaryCta.href}
+          class="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-bold text-white shadow-lg shadow-primary/30 transition hover:bg-primary-dark"
+        >
+          {hero.primaryCta.label}
+          <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </a>
+        <a
+          href={hero.secondaryCta.href}
+          class="rounded-full border border-ink/15 bg-white px-7 py-3 text-base font-bold text-ink transition hover:border-ink/30"
+        >
+          {hero.secondaryCta.label}
+        </a>
+      </div>
+    </div>
+
+    <div class="relative">
+      <img
+        src={hero.image}
+        alt={hero.imageAlt}
+        width="1200"
+        height="800"
+        class="aspect-3/2 w-full rounded-3xl object-cover shadow-xl"
+        loading="eager"
+      />
+      <!-- The curved ribbon from the mock: one path, the words riding it via
+           textPath so the curve stays a curve at every width. -->
+      <svg
+        class="pointer-events-none absolute -left-[8%] bottom-[4%] hidden h-[72%] w-[116%] sm:block"
+        viewBox="0 0 600 300"
+        fill="none"
+        aria-hidden="true"
       >
-        {hero.secondaryCta.label}
-      </a>
+        <path id="ribbon-curve" d="M 10 250 C 150 60, 450 60, 590 250" stroke="none" fill="none"></path>
+        <path
+          d="M 10 250 C 150 60, 450 60, 590 250"
+          stroke="var(--color-primary)"
+          stroke-width="34"
+          stroke-linecap="round"
+          fill="none"></path>
+        <text class="font-head" font-size="13" font-weight="800" fill="#ffffff" letter-spacing="1.5">
+          <textPath href="#ribbon-curve" startOffset="2%" dominant-baseline="middle">{ribbonText}</textPath>
+        </text>
+      </svg>
     </div>
   </div>
 </section>

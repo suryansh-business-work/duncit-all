@@ -163,6 +163,8 @@ export const waCampaignTypeDefs = gql`
     waCampaign(campaign_id: ID!): WaCampaign!
     "Everyone that campaign walked over, with what happened to each."
     waCampaignRecipients(campaign_id: ID!, query: TableQueryInput): WaCampaignRecipientPage!
+    "The whole recipient list as CSV — every row, not one page."
+    waCampaignRecipientsCsv(campaign_id: ID!): String!
     "Whether the Tech portal holds the AiSensy Project credentials that read campaigns and templates."
     aisensyProjectConfigured: Boolean!
     "The API campaigns AiSensy has for this project."

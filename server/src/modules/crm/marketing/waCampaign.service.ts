@@ -118,6 +118,21 @@ const toRecipient = (doc: any) => ({
   updated_at: iso(doc.updated_at),
 });
 
+/** RFC 4180: quote every field and double the quotes inside it. A reason like
+ * `AiSensy error: "Unauthorized", retry` must not split a row. */
+const csvCell = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
+
+const CSV_HEADER = [
+  'Name',
+  'Destination',
+  'Status',
+  'Reason',
+  'Template params',
+  'AiSensy message id',
+  'Attempts',
+  'At',
+];
+
 interface SendInput {
   name?: string | null;
   wa_campaign_name?: string | null;
@@ -435,6 +450,34 @@ export const waCampaignService = {
     const doc = await WaCampaignModel.findOne({ campaign_id: campaignId }).exec();
     if (!doc) throw notFound();
     return toPub(doc);
+  },
+
+  /**
+   * The whole recipient list as CSV — every row, not the page the table is
+   * showing. Built here rather than in the browser because the table engine
+   * caps a page at 100 and a send is not: paging a 20,000-person campaign
+   * through the client to make a spreadsheet is 200 round trips for one file.
+   */
+  async recipientsCsv(campaignId: string) {
+    const rows = await WaCampaignRecipientModel.find({ campaign_id: campaignId })
+      .sort({ created_at: 1 })
+      .lean()
+      .exec();
+    const lines = rows.map((row: any) =>
+      [
+        row.name,
+        row.destination,
+        row.status,
+        row.reason,
+        (row.template_params ?? []).join(' | '),
+        row.submitted_message_id,
+        row.attempts ?? 1,
+        iso(row.created_at),
+      ]
+        .map(csvCell)
+        .join(',')
+    );
+    return [CSV_HEADER.map(csvCell).join(','), ...lines].join('\n');
   },
 
   /** Who the send reached and who it did not, one row per person. */

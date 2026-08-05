@@ -34,6 +34,8 @@ import {
 interface Props {
   open: boolean;
   busy: boolean;
+  /** Prefilled values when repeating a past send; null starts empty. */
+  initial?: WaCampaignValues | null;
   names: WaCampaignNameOption[];
   audienceLists: WaAudienceList[];
   variables: WaCampaignVariable[];
@@ -55,6 +57,7 @@ const defaultScheduleIso = () => new Date(Date.now() + 60 * 60 * 1000).toISOStri
 export default function WaCampaignForm({
   open,
   busy,
+  initial,
   names,
   audienceLists,
   variables,
@@ -76,8 +79,8 @@ export default function WaCampaignForm({
   });
 
   useEffect(() => {
-    if (open) reset(emptyValues());
-  }, [open, reset]);
+    if (open) reset(initial ?? emptyValues());
+  }, [open, initial, reset]);
 
   const audience = watch('audience');
   const reach = useWaReach(audience, watch('audience_list_id'));
@@ -89,14 +92,17 @@ export default function WaCampaignForm({
   // it rather than the marketer counting {{n}} by hand. Only when AiSensy told
   // us — otherwise the rows stay the marketer's to add.
   const paramCount = template?.param_count;
+  const rowCount = watch('template_params').length;
   useEffect(() => {
-    if (paramCount === undefined) return;
+    // Already the right shape — a duplicated send arrives with its params
+    // filled, and re-laying them out would wipe what it came with.
+    if (paramCount === undefined || rowCount === paramCount) return;
     setValue(
       'template_params',
       Array.from({ length: paramCount }, () => ({ value: '' })),
       { shouldValidate: true }
     );
-  }, [paramCount, waCampaignName, setValue]);
+  }, [paramCount, rowCount, setValue]);
   // The button says what pressing it does — schedule, or send right now.
   const scheduled = !!watch('scheduled_at');
   let submitLabel = scheduled ? 'Schedule' : 'Send now';

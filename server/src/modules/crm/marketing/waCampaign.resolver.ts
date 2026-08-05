@@ -44,6 +44,10 @@ export const waCampaignResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.recipients(args.campaign_id, args.query);
     },
+    waCampaignRecipientsCsv: (_p: unknown, args: { campaign_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return waCampaignService.recipientsCsv(args.campaign_id);
+    },
     aisensyProjectConfigured: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return waCampaignService.projectConfigured();

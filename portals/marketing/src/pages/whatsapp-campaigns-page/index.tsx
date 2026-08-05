@@ -12,7 +12,7 @@ import WaCampaignDetailDialog from './wa-campaign-detail';
 import { WaTestForm } from './wa-test-form';
 import AisensyCampaigns from './wa-aisensy/AisensyCampaigns';
 import AisensyTemplates from './wa-aisensy/AisensyTemplates';
-import { WaCampaignForm } from './wa-campaign-form';
+import { WaCampaignForm, valuesFromCampaign, type WaCampaignValues } from './wa-campaign-form';
 import { useWaCampaignActions } from './useWaCampaignActions';
 import {
   WA_CAMPAIGNS_TABLE,
@@ -43,6 +43,7 @@ export default function WhatsappCampaignsPage() {
   const [testOpen, setTestOpen] = useState(false);
   const [namesOpen, setNamesOpen] = useState(false);
   const [viewing, setViewing] = useState<string | null>(null);
+  const [prefill, setPrefill] = useState<WaCampaignValues | null>(null);
   const [target, setTarget] = useState<WaCampaignRow | null>(null);
 
   const { data, refetch } = useQuery<SetupData>(WA_CAMPAIGN_SETUP, {
@@ -66,6 +67,14 @@ export default function WhatsappCampaignsPage() {
   const submit = async (input: Parameters<typeof actions.send>[0]) => {
     const ok = await actions.send(input);
     if (ok) setFormOpen(false);
+  };
+
+  /** Repeat a past send: the form opens carrying it, and the original is left
+   * exactly as it was. */
+  const duplicate = (campaign: WaCampaignRow) => {
+    setPrefill(valuesFromCampaign(campaign));
+    setViewing(null);
+    setFormOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -103,7 +112,10 @@ export default function WhatsappCampaignsPage() {
               variant="contained"
               startIcon={<AddIcon />}
               disabled={!configured}
-              onClick={() => setFormOpen(true)}
+              onClick={() => {
+                setPrefill(null);
+                setFormOpen(true);
+              }}
             >
               New campaign
             </Button>
@@ -144,12 +156,14 @@ export default function WhatsappCampaignsPage() {
         audienceLists={data?.audienceLists ?? []}
         retrying={actions.retrying}
         onRetry={actions.retry}
+        onDuplicate={duplicate}
         onClose={() => setViewing(null)}
       />
 
       <WaCampaignForm
         open={formOpen}
         busy={actions.sending}
+        initial={prefill}
         names={data?.waCampaignNames ?? []}
         audienceLists={data?.audienceLists ?? []}
         variables={data?.waCampaignVariables ?? []}

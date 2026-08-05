@@ -109,6 +109,12 @@ export const CANCEL_WA_CAMPAIGN = gql`
   }
 `;
 
+export const WA_CAMPAIGN_RECIPIENTS_CSV = gql`
+  query WaCampaignRecipientsCsv($campaign_id: ID!) {
+    waCampaignRecipientsCsv(campaign_id: $campaign_id)
+  }
+`;
+
 export const RETRY_WA_CAMPAIGN = gql`
   mutation RetryWaCampaign($campaign_id: ID!) {
     retryWaCampaign(campaign_id: $campaign_id) { ${WA_CAMPAIGN_FIELDS} }

@@ -62,6 +62,23 @@ export const emptyValues = (): WaCampaignValues => ({
   scheduled_at: '',
 });
 
+/** The form values that repeat a past send: same template, same audience, same
+ * params — never its schedule, which belonged to that run. */
+export const valuesFromCampaign = (campaign: {
+  name: string;
+  wa_campaign_name: string;
+  audience: string;
+  audience_list_id: string | null;
+  template_params: string[];
+}): WaCampaignValues => ({
+  name: `${campaign.name} (copy)`,
+  wa_campaign_name: campaign.wa_campaign_name,
+  audience: campaign.audience === 'AUDIENCE_LIST' ? 'AUDIENCE_LIST' : 'ALL_USERS',
+  audience_list_id: campaign.audience_list_id ?? '',
+  template_params: campaign.template_params.map((value) => ({ value })),
+  scheduled_at: '',
+});
+
 export const toSendInput = (values: WaCampaignValues): SendWaCampaignInput => ({
   name: values.name.trim(),
   wa_campaign_name: values.wa_campaign_name,

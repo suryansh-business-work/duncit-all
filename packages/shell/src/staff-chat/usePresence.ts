@@ -78,9 +78,9 @@ export function usePresence(socket: Socket | null, meId?: string | null) {
 
   useEffect(() => {
     if (!socket) return undefined;
-    let timer = 0;
+    let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
     const arm = () => {
-      globalThis.clearTimeout(timer);
+      if (timer) globalThis.clearTimeout(timer);
       timer = globalThis.setTimeout(() => {
         // Only an ONLINE person drifts to AWAY. BUSY and OFFLINE were asked for.
         if (mineRef.current === 'ONLINE') {
@@ -100,7 +100,7 @@ export function usePresence(socket: Socket | null, meId?: string | null) {
     for (const event of ACTIVITY) globalThis.addEventListener(event, onActivity, { passive: true });
     arm();
     return () => {
-      globalThis.clearTimeout(timer);
+      if (timer) globalThis.clearTimeout(timer);
       for (const event of ACTIVITY) globalThis.removeEventListener(event, onActivity);
     };
   }, [socket, publish]);

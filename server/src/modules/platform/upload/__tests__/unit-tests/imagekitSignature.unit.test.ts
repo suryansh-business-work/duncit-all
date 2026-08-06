@@ -2,7 +2,12 @@ import crypto from 'node:crypto';
 
 jest.mock('@modules/platform/envEntry/envEntry.model', () => ({
   ...jest.requireActual('@modules/platform/envEntry/envEntry.model'),
-  EnvEntryModel: { find: () => ({ lean: async () => entries }) },
+  EnvEntryModel: {
+    find: () => ({ lean: async () => entries }),
+    // getUrlConfigs reads SERVER_URL through the same model; null lets it fall
+    // back to the built-in default rather than blowing up here.
+    findOne: () => ({ lean: async () => null }),
+  },
 }));
 
 let entries: { name: string; config: Record<string, string> }[] = [];
@@ -12,11 +17,11 @@ import { getImagekitAuth, signImagekitUpload } from '../../upload.service';
 /**
  * The ImageKit client-upload contract, pinned.
  *
- * "Your requests contains invalid signature parameter" is the only thing
- * ImageKit says when ANY part of this is wrong — the token shape, the digest,
- * the expiry, or a key pair from two different accounts. That single message
- * for four different causes is why this has been guessed at twice, so the three
- * parts we control are asserted here rather than reasoned about again.
+ * Browser uploads no longer sign anything — they go through the server on the
+ * private key. This signer remains for the Tech portal ImageKit test, which
+ * still exercises the signed path so an operator can tell a broken key pair
+ * from a broken account. Its contract stays pinned because "invalid signature
+ * parameter" is all ImageKit ever says about any part of it being wrong.
  */
 describe('ImageKit credentials come from one entry', () => {
   it('refuses to sign when two entries are both active and default', async () => {
@@ -31,15 +36,13 @@ describe('ImageKit credentials come from one entry', () => {
     await expect(getImagekitAuth()).rejects.toThrow(/ImageKit A, ImageKit B/);
   });
 
-  it('signs with the pair from the single default entry', async () => {
+  it('hands out a pass from the single default entry', async () => {
     entries = [
       { name: 'ImageKit', config: { public_key: 'public_one', private_key: 'private_one', url_endpoint: 'https://ik.imagekit.io/one' } },
     ];
-    const auth = await getImagekitAuth();
-    expect(auth.publicKey).toBe('public_one');
-    expect(auth.signature).toBe(
-      crypto.createHmac('sha1', 'private_one').update(`${auth.token}${auth.expire}`).digest('hex')
-    );
+    const auth = await getImagekitAuth('u1', '/avatars');
+    expect(auth.urlEndpoint).toBe('https://ik.imagekit.io/one');
+    expect(auth.ticket).toBeTruthy();
   });
 });
 

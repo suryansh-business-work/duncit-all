@@ -1,41 +1,39 @@
 import { useCallback, useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 
-/** Short-lived signed auth so the browser can upload a file DIRECTLY to ImageKit,
- * bypassing the API request-body size limit. The private key never leaves the server. */
+/**
+ * Where to send a file, and the one-shot pass that lets you.
+ *
+ * Uploads go to ImageKit THROUGH the server, on the private key. A browser
+ * cannot sign an ImageKit upload, and the signed-from-the-browser scheme only
+ * works while the account's public and private keys are a matched pair — a
+ * mismatched pair rejects every upload and names no cause.
+ */
 export const GET_IMAGEKIT_AUTH = gql`
-  mutation GetImagekitAuth {
-    getImagekitAuth {
-      token
-      expire
-      signature
-      publicKey
+  mutation GetImagekitAuth($folder: String) {
+    getImagekitAuth(folder: $folder) {
+      uploadUrl
+      ticket
       urlEndpoint
     }
   }
 `;
 
-const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
-
-interface ImagekitAuth {
-  token: string;
-  expire: number;
-  signature: string;
-  publicKey: string;
+interface UploadTicket {
+  uploadUrl: string;
+  ticket: string;
   urlEndpoint: string;
 }
 
-async function postToImagekit(file: File, auth: ImagekitAuth, folder: string): Promise<string> {
+/** The raw file goes to our server, which passes it on. */
+async function postToServer(file: File, ticket: UploadTicket): Promise<string> {
+  const name = file.name || `upload-${Date.now()}`;
+  const url =
+    `${ticket.uploadUrl}?ticket=${encodeURIComponent(ticket.ticket)}` +
+    `&fileName=${encodeURIComponent(name)}`;
   const form = new FormData();
-  form.append('file', file);
-  form.append('fileName', file.name || `upload-${Date.now()}`);
-  form.append('useUniqueFileName', 'true');
-  form.append('folder', folder);
-  form.append('publicKey', auth.publicKey);
-  form.append('signature', auth.signature);
-  form.append('expire', String(auth.expire));
-  form.append('token', auth.token);
-  const res = await fetch(IMAGEKIT_UPLOAD_URL, { method: 'POST', body: form });
+  form.append('file', file, name);
+  const res = await fetch(url, { method: 'POST', body: form });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(json?.message || 'Upload failed');
@@ -44,9 +42,9 @@ async function postToImagekit(file: File, auth: ImagekitAuth, folder: string): P
 }
 
 /**
- * Direct-to-ImageKit upload hook for support attachments. Fetches short-lived
- * signed auth from the server, then uploads the file straight to ImageKit —
- * bypassing the API request-body size limit that blocked large attachments.
+ * Upload hook for support attachments and review photos. Streams the bytes
+ * rather than base64-ing them through a mutation, which is what let large
+ * attachments past the API body limit.
  */
 export function useImagekitUpload() {
   const [getAuth] = useMutation(GET_IMAGEKIT_AUTH);
@@ -55,10 +53,11 @@ export function useImagekitUpload() {
     async (file: File, folder: string): Promise<string> => {
       setUploading(true);
       try {
-        const { data } = await getAuth();
-        const auth = data?.getImagekitAuth as ImagekitAuth | undefined;
-        if (!auth) throw new Error('Upload is not available right now');
-        return await postToImagekit(file, auth, folder);
+        // The pass is single use, so it is fetched per upload.
+        const { data } = await getAuth({ variables: { folder } });
+        const ticket = data?.getImagekitAuth as UploadTicket | undefined;
+        if (!ticket) throw new Error('Upload is not available right now');
+        return await postToServer(file, ticket);
       } finally {
         setUploading(false);
       }

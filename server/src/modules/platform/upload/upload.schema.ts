@@ -1,9 +1,18 @@
 export const uploadTypeDefs = /* GraphQL */ `
+  """
+  Where to send a file, and the one-shot pass that lets you.
+
+  Files go to ImageKit THROUGH the server, on the private key alone. A browser
+  cannot sign an ImageKit upload, and the signed-from-the-browser scheme only
+  works while the public and private keys are a matched pair — a mismatched pair
+  rejects every upload and names no cause.
+  """
   type ImagekitAuth {
-    token: String!
-    expire: Int!
-    signature: String!
-    publicKey: String!
+    "POST the raw file here, with the ticket and fileName on the query string."
+    uploadUrl: String!
+    "Single use, ten minutes. It also fixes which folder the file lands in."
+    ticket: String!
+    "The CDN base callers render from."
     urlEndpoint: String!
   }
 
@@ -137,11 +146,10 @@ export const uploadTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     """
-    Returns short-lived auth params so the browser can upload directly to
-    ImageKit using the official upload widget. The private key never leaves
-    the server.
+    Ask for somewhere to put a file. The folder is fixed on the pass, so one
+    issued for avatars cannot be spent writing somewhere else.
     """
-    getImagekitAuth: ImagekitAuth!
+    getImagekitAuth(folder: String): ImagekitAuth!
 
     "Delete files by id. Returns how many ImageKit actually removed."
     deleteMediaFiles(fileIds: [ID!]!): Int!

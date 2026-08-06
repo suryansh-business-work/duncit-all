@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { logs } from '@observability/log';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
+import { getUrlConfigs } from '../../../config/url-configs';
+import { issueUploadTicket } from './uploadTicket';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { mediaScanService } from '@modules/platform/uploadSetting/uploadSetting.service';
 import {
@@ -61,46 +63,6 @@ export async function getImagekitConfig() {
 }
 
 /**
- * Fail fast with a precise message when the ImageKit keys are missing OR
- * malformed. A swapped key pair (public value in the private field, or a key
- * from a different ImageKit account) is the usual cause of ImageKit's opaque
- * "invalid signature parameter" upload rejection — validating the well-known
- * `private_` / `public_` / URL prefixes surfaces it at the source.
- */
-function assertImagekitConfig(config: {
-  publicKey: string;
-  privateKey: string;
-  urlEndpoint: string;
-}): void {
-  const problems: string[] = [];
-  if (!config.privateKey) {
-    problems.push('IMAGEKIT_PRIVATE_KEY is missing');
-  } else if (!config.privateKey.startsWith('private_')) {
-    problems.push(
-      'IMAGEKIT_PRIVATE_KEY is malformed (it must start with "private_") — the public and private keys may be swapped',
-    );
-  }
-  if (!config.publicKey) {
-    problems.push('IMAGEKIT_PUBLIC_KEY is missing');
-  } else if (!config.publicKey.startsWith('public_')) {
-    problems.push('IMAGEKIT_PUBLIC_KEY is malformed (it must start with "public_")');
-  }
-  if (!config.urlEndpoint) {
-    problems.push('IMAGEKIT_URL_ENDPOINT is missing');
-  } else if (!config.urlEndpoint.startsWith('http')) {
-    problems.push('IMAGEKIT_URL_ENDPOINT must be a URL');
-  }
-  if (problems.length > 0) {
-    const detail = problems.join('; ');
-    logs.server.error('upload', 'getImagekitAuth', { error: `ImageKit misconfigured: ${detail}` });
-    throw new GraphQLError(
-      `ImageKit is misconfigured: ${detail}. Fix it in Tech portal → Environment Variables → ImageKit.`,
-      { extensions: { code: 'CONFIG_ERROR' } },
-    );
-  }
-}
-
-/**
  * The signature a browser upload carries.
  *
  * Per ImageKit: HMAC-SHA1(privateKey, token + expire), hex digest, where expire
@@ -135,16 +97,29 @@ export function signImagekitUpload(privateKey: string, expireSeconds = 30 * 60) 
 }
 
 /**
- * Generate the auth params required by the ImageKit browser-side upload SDK.
- * The browser uses this to upload directly to ImageKit without ever seeing
- * the private key.
+ * Where the browser should send a file, and the one-shot pass that lets it.
+ *
+ * This used to return an ImageKit signature so the browser could upload straight
+ * to ImageKit. That only works while the public and private keys are a matched
+ * pair — and a mismatched pair fails every upload with a message that names no
+ * cause, which is exactly what happened. Uploads now come through the server on
+ * the private key alone, so there is no signature to get wrong and no public key
+ * in play at all.
+ *
+ * `urlEndpoint` still comes back: callers render from it.
  */
-export async function getImagekitAuth(expireSeconds = 30 * 60) {
+export async function getImagekitAuth(userId: string, folder = '/uploads') {
   const config = await getImagekitConfig();
-  assertImagekitConfig(config);
+  if (!config.privateKey) {
+    throw new GraphQLError(
+      'ImageKit is not configured. Add it in Tech portal → Environment Variables → ImageKit.',
+      { extensions: { code: 'CONFIG_ERROR' } }
+    );
+  }
+  const { serverUrl } = await getUrlConfigs();
   return {
-    ...signImagekitUpload(config.privateKey, expireSeconds),
-    publicKey: config.publicKey,
+    uploadUrl: `${serverUrl.replace(/\/$/, '')}/upload`,
+    ticket: issueUploadTicket(userId, folder),
     urlEndpoint: config.urlEndpoint,
   };
 }

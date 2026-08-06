@@ -73,9 +73,11 @@ export const uploadResolvers = {
     },
   },
   Mutation: {
-    getImagekitAuth: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireAuth(ctx);
-      return getImagekitAuth();
+    getImagekitAuth: (_p: unknown, args: { folder?: string | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      // The folder is fixed on the pass rather than trusted from the upload, so
+      // one issued for /avatars cannot be spent writing into /legal.
+      return getImagekitAuth(user.id, args.folder?.trim() || '/uploads');
     },
     deleteMediaFiles: (_p: unknown, args: { fileIds: string[] }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, MEDIA_WRITE_ROLES);

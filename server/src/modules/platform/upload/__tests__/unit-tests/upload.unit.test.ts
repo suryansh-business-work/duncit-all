@@ -235,30 +235,29 @@ describe('upload unit', () => {
     });
   });
 
-  describe('getImagekitAuth config validation', () => {
-    afterEach(() => mockEnv.mockImplementation(async () => 'test-value'));
-
-    it('returns signed auth params for a valid key pair', async () => {
+  describe('getImagekitAuth', () => {
+    it('hands back a pass to our own upload route, not an ImageKit signature', async () => {
       setImagekitKeys('public_abc', 'private_xyz', 'https://ik.imagekit.io/duncit');
-      const auth = await getImagekitAuth();
-      expect(auth.publicKey).toBe('public_abc');
+      const auth = await getImagekitAuth('u1', '/avatars');
+      expect(auth.uploadUrl).toMatch(/\/upload$/);
+      expect(auth.ticket).toMatch(/^[0-9a-f-]{36}$/);
       expect(auth.urlEndpoint).toBe('https://ik.imagekit.io/duncit');
-      // A UUID, like ImageKit's own SDK sends — see imagekitSignature.unit.test.ts.
-      expect(auth.token).toMatch(/^[0-9a-f-]{36}$/);
-      expect(auth.signature).toMatch(/^[0-9a-f]{40}$/);
-      expect(auth.expire).toBeGreaterThan(Math.floor(Date.now() / 1000));
+      // No signature and no public key: a browser cannot sign an ImageKit
+      // upload, and a mismatched key pair is what broke every upload before.
+      expect(auth).not.toHaveProperty('signature');
+      expect(auth).not.toHaveProperty('publicKey');
     });
 
-    it.each([
-      ['', 'private_xyz', 'https://x', /IMAGEKIT_PUBLIC_KEY is missing/],
-      ['bad', 'private_xyz', 'https://x', /IMAGEKIT_PUBLIC_KEY is malformed/],
-      ['public_abc', '', 'https://x', /IMAGEKIT_PRIVATE_KEY is missing/],
-      ['public_abc', 'bad', 'https://x', /swapped/],
-      ['public_abc', 'private_xyz', '', /IMAGEKIT_URL_ENDPOINT is missing/],
-      ['public_abc', 'private_xyz', 'ftp://x', /IMAGEKIT_URL_ENDPOINT must be a URL/],
-    ])('rejects a misconfigured key pair (%s / %s / %s)', async (pub, priv, url, expected) => {
-      setImagekitKeys(pub, priv, url);
-      await expect(getImagekitAuth()).rejects.toThrow(expected);
+    it('gives every upload its own pass, because a pass is spent once', async () => {
+      setImagekitKeys('public_abc', 'private_xyz', 'https://ik.imagekit.io/duncit');
+      const a = await getImagekitAuth('u1', '/avatars');
+      const b = await getImagekitAuth('u1', '/avatars');
+      expect(a.ticket).not.toBe(b.ticket);
+    });
+
+    it('refuses when ImageKit is not configured at all', async () => {
+      setImagekitKeys('public_abc', '', 'https://x');
+      await expect(getImagekitAuth('u1')).rejects.toThrow(/not configured/);
     });
   });
 

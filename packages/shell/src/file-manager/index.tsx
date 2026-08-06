@@ -63,6 +63,10 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
 
   const canWrite = (roles ?? []).some((role) => WRITE_ROLES.has(role));
 
+  // In grid order, not selection order: the stepper should walk the files the
+  // way they are laid out, or "next" jumps around the screen.
+  const selectedFiles = manager.files.filter((file) => manager.selected.includes(file.fileId));
+
   const say = (text: string, kind: 'success' | 'error' = 'success') => setToast({ text, kind });
 
   const copy = (url: string) => {
@@ -213,6 +217,8 @@ export function FileManagerDialog({ open, onClose, roles }: Readonly<Props>) {
                 say('Saved');
               }}
               onError={(message) => say(message, 'error')}
+              siblings={selectedFiles}
+              onNavigate={setActive}
             />
           </Box>
         )}

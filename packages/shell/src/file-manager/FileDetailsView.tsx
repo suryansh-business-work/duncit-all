@@ -11,6 +11,8 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -29,6 +31,15 @@ interface Props {
   /** A rename or a tag edit returns the new record; the grid takes it. */
   onChanged: (file: MediaItem) => void;
   onError: (message: string) => void;
+  /**
+   * The ticked files, in grid order, when this one is among them.
+   *
+   * Ticking five images and stepping through them is the reason this panel is
+   * beside the grid rather than over it — going back to find the next one each
+   * time is the part that made copying five links tedious.
+   */
+  siblings?: MediaItem[];
+  onNavigate?: (file: MediaItem) => void;
 }
 
 type TabKey = 'info' | 'customize' | 'edit';
@@ -53,6 +64,8 @@ export default function FileDetailsView({
   onDelete,
   onChanged,
   onError,
+  siblings,
+  onNavigate,
 }: Readonly<Props>) {
   const [tab, setTab] = useState<TabKey>('info');
   const [transform, setTransform] = useState<Transform>(EMPTY_TRANSFORM);
@@ -71,6 +84,13 @@ export default function FileDetailsView({
   }, [file]);
 
   const busy = renameState.loading || updateState.loading;
+
+  // Only when this file is actually one of the ticked ones — a stepper that
+  // cannot say where you are in the set is worse than none.
+  const list = siblings ?? [];
+  const at = list.findIndex((item) => item.fileId === file.fileId);
+  const stepping = at !== -1 && list.length > 1 && Boolean(onNavigate);
+  const step = (delta: number) => onNavigate?.(list[at + delta]);
 
   const saveName = async () => {
     if (!name.trim() || name === file.name) return;
@@ -96,6 +116,35 @@ export default function FileDetailsView({
 
   return (
     <Box>
+      {stepping && (
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 0.5 }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => step(-1)}
+            disabled={at === 0}
+            aria-label="Previous selected file"
+          >
+            <ChevronLeftIcon fontSize="small" />
+          </IconButton>
+          <Typography variant="caption" color="text.secondary">
+            {at + 1} of {list.length} selected
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => step(1)}
+            disabled={at === list.length - 1}
+            aria-label="Next selected file"
+          >
+            <ChevronRightIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      )}
+
       <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1 }}>
         <Typography variant="subtitle2" noWrap sx={{ flex: 1, minWidth: 0 }} title={file.name}>
           {file.name}

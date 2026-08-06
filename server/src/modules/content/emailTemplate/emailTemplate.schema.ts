@@ -73,8 +73,10 @@ export const emailTemplateTypeDefs = /* GraphQL */ `
     renderEmailTemplate(
       mjml: String!
       vars: String
-      "Preview the body wrapped in this category's header and footer."
+      "Preview the body wrapped in this fragment's header and footer."
       fragment_key: String
+      "The template's own footer sentence, so the preview shows it filled in."
+      footer_note: String
     ): EmailTemplateRender!
   }
 

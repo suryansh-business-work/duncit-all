@@ -1,11 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import mjml2html from 'mjml';
 import { emailTranslationVars, recipientLocale } from './email-i18n';
-import { emailTemplateService } from '@modules/content/emailTemplate/emailTemplate.service';
+import {
+  emailTemplateService,
+  renderTemplateBody,
+} from '@modules/content/emailTemplate/emailTemplate.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { logs } from '@observability/log';
+import { emailLogService } from '@modules/content/emailLog/emailLog.service';
+import type { EmailLogSource } from '@modules/content/emailLog/emailLog.model';
 import { getMailConfigs, getUrlConfigs } from '../../config/url-configs';
+import { TEMPLATE_CATEGORIES, TEMPLATE_FOOTER_NOTES } from './template-categories';
 import {
   SmtpProvider,
   resolveEmailProvider,
@@ -118,21 +123,36 @@ export async function emailPreviewVars(): Promise<Record<string, string>> {
  * over the API — and `email.provider.ts` owns both. This file only knows what
  * the message says.
  */
-async function deliver(email: {
-  category: EmailCategory;
-  to: string | string[];
-  bcc?: string[];
-  subject: string;
-  html: string;
-  attachments?: EmailAttachment[];
-}): Promise<EmailDelivery> {
+async function deliver(
+  email: {
+    category: EmailCategory;
+    to: string | string[];
+    bcc?: string[];
+    replyTo?: string;
+    subject: string;
+    html: string;
+    attachments?: EmailAttachment[];
+  },
+  /**
+   * A specific Tech-portal entry to send through. The CRM lets a user pick
+   * which mailbox they are writing from; everything else takes the active
+   * default. This argument is why there does not need to be a second send
+   * function that talks to the provider directly.
+   */
+  providerId?: string | null
+): Promise<EmailDelivery & { entryId: string | null; entryName: string }> {
   const { from } = await getMailConfigs();
-  const resolved = await resolveEmailProvider();
+  const resolved = await resolveEmailProvider(providerId);
   // No entry configured at all is a local machine with no mailbox. The SMTP
   // provider's json transport accepts and discards, so a signup still works
   // rather than failing because nobody set email up.
   const provider = resolved?.provider ?? new SmtpProvider(EMPTY_SMTP);
-  return provider.send({ ...email, from: resolved?.config.from || from });
+  const info = await provider.send({
+    ...email,
+    from: resolved?.config.from || from,
+    replyTo: email.replyTo ?? resolved?.config.replyTo ?? undefined,
+  });
+  return { ...info, entryId: resolved?.entryId ?? null, entryName: resolved?.entryName ?? '' };
 }
 
 /**
@@ -147,31 +167,68 @@ async function renderTemplate(
   try {
     const r = await emailTemplateService.render(name, vars);
     return { subject: r.subject, html: r.html };
-  } catch {
-    // Fallback: render straight from disk.
+  } catch (error) {
+    // Fallback: the database could not answer, so read the file.
+    //
+    // It goes through the SAME renderer as the normal path. It used to call
+    // mjml2html directly, which quietly dropped the header/footer wrap and the
+    // footer sentence — and since the on-disk templates became bodies with no
+    // chrome of their own, that fallback started producing emails with no logo
+    // and no footer at all. It also swallowed the reason, so nobody could see
+    // it was happening.
     const filePath = path.join(__dirname, 'templates', `${name}.mjml`);
-    let raw = fs.readFileSync(filePath, 'utf8');
-    for (const [k, v] of Object.entries(vars)) {
-      // Escaped for the same reason as applyVars: a translation key is a
-      // dot-path, and an unescaped `.` would match any character.
-      const name = k.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
-      raw = raw.replace(new RegExp(String.raw`{{\s*${name}\s*}}`, 'g'), v);
-    }
-    const { html, errors } = mjml2html(raw, { validationLevel: 'soft' }) as unknown as {
-      html: string;
-      errors: any[];
-    };
-    if (errors?.length) console.warn('MJML warnings:', errors);
+    if (!fs.existsSync(filePath)) throw error;
+
+    logs.server.warn('email', 'template-disk-fallback', {
+      template: name,
+      error,
+      msg: `Rendering "${name}" from disk — the database copy could not be read`,
+    });
+
+    const { html, errors } = await renderTemplateBody({
+      mjml: fs.readFileSync(filePath, 'utf8'),
+      fragment_key: TEMPLATE_CATEGORIES[name] ?? null,
+      footer_note: TEMPLATE_FOOTER_NOTES[name] ?? '',
+      vars,
+    });
+    if (errors.length) logs.server.warn('email', 'mjml', { template: name, errors });
     return { html };
   }
 }
 
+/**
+ * A file on the message: inline bytes, or a URL the provider fetches.
+ *
+ * Both, because one send method serves both callers — a ticket transcript
+ * arrives as bytes, and the CRM attaches an ImageKit link it never downloads.
+ * The provider layer already understood both shapes; only this type did not.
+ */
 export interface EmailAttachment {
   filename: string;
-  content: Buffer | string;
+  content?: Buffer | string;
+  /** A URL instead of bytes. */
+  path?: string;
   contentType?: string;
 }
 
+export interface SendResult extends EmailDelivery {
+  /** Which Tech-portal entry carried it, for the CRM to record against a lead. */
+  entryId?: string | null;
+  entryName?: string;
+}
+
+/**
+ * Send a templated email. THE method for anything with a template.
+ *
+ * Every outcome is recorded in the email log — sent, deliberately skipped, or
+ * failed — because the expensive question is always "why did this person not
+ * get their email?", and the answer is most often an attempt that never reached
+ * a mail server at all and so appears in no provider's dashboard.
+ *
+ * It does not throw. A disabled template or a provider outage must not take a
+ * checkout or a signup down with it; the caller gets a result saying what
+ * happened, and the log carries the reason.
+ */
 export async function sendEmail(opts: {
   to: string;
   subject: string;
@@ -181,87 +238,174 @@ export async function sendEmail(opts: {
   /**
    * Why this is being sent. Metadata, not routing — it is what makes "how many
    * marketing emails went out" answerable, and what a suppression rule reads.
-   * Defaults to transactional, which is what most of this file sends.
    */
   category?: EmailCategory;
   /** Overrides the recipient's saved language, for the rare address that is
    * not a user account. Omitted = looked up from `to`, then the default. */
   locale?: string | null;
-}) {
-  // A switched-off template stops the send here, before anything is rendered
-  // or any provider is reached. Deliberately NOT an exception: a disabled
-  // receipt template must not take a checkout down with it. The warning is what
-  // makes it visible — it lands in Telemetry > Logs, so "the customer never got
-  // the email" has an answer instead of a silence.
-  const template = await emailTemplateService.bySlug(opts.template);
-  if (template?.is_active === false) {
-    logs.server.warn('email', 'template-inactive', {
+}): Promise<SendResult> {
+  const startedAt = Date.now();
+  const category = opts.category ?? 'transactional';
+
+  const notSent = (reason: string, status: 'SKIPPED' | 'FAILED'): SendResult => {
+    logs.server.warn('email', 'not-sent', { to: opts.to, template: opts.template, reason });
+    void emailLogService.record({
       to: opts.to,
+      subject: opts.subject,
       template: opts.template,
-      category: opts.category ?? 'transactional',
-      msg: `Mail not sent: template "${opts.template}" is not active`,
+      category,
+      status,
+      reason,
+      duration_ms: Date.now() - startedAt,
     });
     return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true };
+  };
+
+  // The cheapest failures first, so a message with nobody to send to never
+  // reaches a renderer or a provider — and is still on the record.
+  if (!opts.to?.trim()) return notSent('No recipient address', 'FAILED');
+
+  const template = await emailTemplateService.bySlug(opts.template);
+  if (!template) return notSent(`Template "${opts.template}" does not exist`, 'FAILED');
+  if (template.is_active === false) {
+    return notSent(`Template "${opts.template}" is not active`, 'SKIPPED');
   }
 
-  const brandLogoUrl = await getBrandLogoUrl();
-  // Localized copy arrives as `t:<key>` vars, so templates pick it up through
-  // the SAME {{ }} substitution as every other variable (rule 38). Caller vars
-  // stay last so an explicit value always wins.
-  const locale = opts.locale ?? (await recipientLocale(opts.to));
-  const translations = await emailTranslationVars(locale);
-  const vars = {
-    brand_logo_url: brandLogoUrl,
-    // Supplied on every send so a header/footer fragment never has to be told
-    // them, and no call site has to remember to pass them.
-    ...(await chromeVars()),
-    ...translations,
-    ...opts.vars,
-  };
-  const rendered = await renderTemplate(opts.template, vars);
-  const html = swapLegacyLogo(rendered.html, brandLogoUrl);
-  const info = await deliver({
-    category: opts.category ?? 'transactional',
-    to: opts.to,
-    subject: rendered.subject || opts.subject,
-    html,
-    attachments: opts.attachments,
-  });
-  logs.server.info('email', 'send', {
-    to: opts.to,
-    template: opts.template,
-    category: opts.category ?? 'transactional',
-    provider: info.provider,
-    messageId: info.messageId,
-  });
-  return info;
+  try {
+    const brandLogoUrl = await getBrandLogoUrl();
+    // Localized copy arrives as `t:<key>` vars, so templates pick it up through
+    // the SAME {{ }} substitution as every other variable (rule 38). Caller vars
+    // stay last so an explicit value always wins.
+    const locale = opts.locale ?? (await recipientLocale(opts.to));
+    const translations = await emailTranslationVars(locale);
+    const vars = {
+      brand_logo_url: brandLogoUrl,
+      // Supplied on every send so a header/footer fragment never has to be told
+      // them, and no call site has to remember to pass them.
+      ...(await chromeVars()),
+      ...translations,
+      ...opts.vars,
+    };
+    const rendered = await renderTemplate(opts.template, vars);
+    const html = swapLegacyLogo(rendered.html, brandLogoUrl);
+    const info = await deliver({
+      category,
+      to: opts.to,
+      subject: rendered.subject || opts.subject,
+      html,
+      attachments: opts.attachments,
+    });
+
+    void emailLogService.record({
+      to: opts.to,
+      subject: rendered.subject || opts.subject,
+      template: opts.template,
+      fragment_key: template.fragment_key ?? null,
+      category,
+      status: 'SENT',
+      provider: info.provider,
+      message_id: info.messageId,
+      duration_ms: Date.now() - startedAt,
+    });
+    logs.server.info('email', 'send', {
+      to: opts.to,
+      template: opts.template,
+      category,
+      provider: info.provider,
+      messageId: info.messageId,
+    });
+    return info;
+  } catch (error: any) {
+    return notSent(error?.message || 'Send failed', 'FAILED');
+  }
 }
 
+/**
+ * Send ready-made HTML. THE method for anything without a template — campaigns,
+ * support transcripts, release notices, CRM lead mail.
+ *
+ * `provider_id` is why there is no second send function: the CRM lets a user
+ * pick which mailbox they are writing from, and that used to be reason enough
+ * to call the provider directly and skip the logo swap, the from-address
+ * fallback and the audit line along with it.
+ *
+ * Logged and non-throwing for the same reasons as {@link sendEmail}.
+ */
 export async function sendHtmlEmail(opts: {
   to: string | string[];
   bcc?: string[];
+  replyTo?: string;
   subject: string;
   html: string;
   attachments?: EmailAttachment[];
   /** Defaults to marketing: this is the campaign/bulk path. */
   category?: EmailCategory;
-}) {
-  const brandLogoUrl = await getBrandLogoUrl();
-  const html = swapLegacyLogo(opts.html, brandLogoUrl);
-  const info = await deliver({
-    category: opts.category ?? 'marketing',
-    to: opts.to,
-    bcc: opts.bcc,
-    subject: opts.subject,
-    html,
-    attachments: opts.attachments,
-  });
-  logs.server.info('email', 'send-html', {
-    category: opts.category ?? 'marketing',
-    provider: info.provider,
-    messageId: info.messageId,
-  });
-  return info;
+  /** A specific Tech-portal mailbox, for the CRM's "send as" picker. */
+  provider_id?: string | null;
+  /** Overrides the request's surface in the log (e.g. CRM, TEST). */
+  source?: EmailLogSource;
+  source_detail?: string;
+}): Promise<SendResult> {
+  const startedAt = Date.now();
+  const category = opts.category ?? 'marketing';
+  const recipients = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter((r) => r?.trim());
+
+  const failed = (reason: string): SendResult => {
+    logs.server.warn('email', 'not-sent', { to: recipients.join(', '), reason });
+    void emailLogService.record({
+      to: recipients,
+      bcc: opts.bcc,
+      subject: opts.subject,
+      category,
+      status: 'FAILED',
+      reason,
+      source: opts.source,
+      source_detail: opts.source_detail,
+      duration_ms: Date.now() - startedAt,
+    });
+    return { messageId: '', provider: 'none', accepted: [], rejected: [], skipped: true };
+  };
+
+  if (recipients.length === 0 && !opts.bcc?.length) return failed('No recipient address');
+  if (!opts.html?.trim()) return failed('No message body');
+
+  try {
+    const brandLogoUrl = await getBrandLogoUrl();
+    const html = swapLegacyLogo(opts.html, brandLogoUrl);
+    const info = await deliver(
+      {
+        category,
+        to: opts.to,
+        bcc: opts.bcc,
+        replyTo: opts.replyTo,
+        subject: opts.subject,
+        html,
+        attachments: opts.attachments,
+      },
+      opts.provider_id
+    );
+
+    void emailLogService.record({
+      to: recipients,
+      bcc: opts.bcc,
+      subject: opts.subject,
+      category,
+      status: 'SENT',
+      provider: info.provider,
+      message_id: info.messageId,
+      source: opts.source,
+      source_detail: opts.source_detail,
+      duration_ms: Date.now() - startedAt,
+    });
+    logs.server.info('email', 'send-html', {
+      category,
+      provider: info.provider,
+      messageId: info.messageId,
+    });
+    return info;
+  } catch (error: any) {
+    return failed(error?.message || 'Send failed');
+  }
 }
 
 export function sendWelcomeEmail(to: string, name: string) {

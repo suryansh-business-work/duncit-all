@@ -17,6 +17,10 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { connectDB } from './config/db';
 import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
+import {
+  surfaceFromOrigin,
+  withEmailSource,
+} from '@modules/content/emailLog/emailLog.service';
 import { rbacService } from '@modules/access/role/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { telemetryService } from '@modules/platform/telemetry/telemetry.service';
@@ -195,6 +199,15 @@ async function bootstrap() {
   app.use(
     '/graphql',
     express.json({ limit: '70mb' }),
+    // Every email sent while handling this request is attributed to the surface
+    // that made it — native, mWeb, a website, a portal — read from the Origin
+    // the browser already sends. Threading a `source` argument through forty
+    // send sites would be forty chances to forget it, and a background job has
+    // no request to thread it from; anything outside a request is SERVER, which
+    // is exactly what it is.
+    (req, _res, next) => {
+      withEmailSource(surfaceFromOrigin(req.headers.origin), next);
+    },
     expressMiddleware(apollo, { context: buildContext })
   );
 

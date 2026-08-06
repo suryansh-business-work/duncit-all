@@ -1,7 +1,10 @@
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
-import { emailTemplateService, renderMjml, detectVariables } from './emailTemplate.service';
-import { emailFragmentService } from '@modules/content/emailFragment/emailFragment.service';
+import {
+  emailTemplateService,
+  detectVariables,
+  renderTemplateBody,
+} from './emailTemplate.service';
 import { emailPreviewVars, sendHtmlEmail } from '@services/email/email.service';
 import { GraphQLError } from 'graphql';
 
@@ -35,17 +38,29 @@ export const emailTemplateResolvers = {
     },
     renderEmailTemplate: async (
       _p: unknown,
-      args: { mjml: string; vars?: string | null; fragment_key?: string | null },
+      args: {
+        mjml: string;
+        vars?: string | null;
+        fragment_key?: string | null;
+        footer_note?: string | null;
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
       // A send's own variables underneath the caller's, so the preview shows
       // the real logo and real localized copy rather than raw {{t:…}} keys.
       const vars = { ...(await emailPreviewVars()), ...parseVars(args.vars) };
-      // The preview shows what will actually be sent, wrap included — an editor
-      // that previews only the body is how a broken footer reaches production.
-      const source = await emailFragmentService.wrap(args.mjml, args.fragment_key);
-      const { html, errors } = renderMjml(source, vars);
+      // The preview shows what will actually be sent — the SAME renderer the
+      // send uses, wrap and footer sentence included. Preview and send used to
+      // each do this themselves, and drifted: the preview omitted the footer
+      // sentence, so every previewed email carried a literal {{footer_note}}
+      // where the real one carries a line of copy.
+      const { html, errors } = await renderTemplateBody({
+        mjml: args.mjml,
+        fragment_key: args.fragment_key,
+        footer_note: args.footer_note ?? undefined,
+        vars,
+      });
       return {
         subject: '',
         html,
@@ -116,10 +131,14 @@ export const emailTemplateResolvers = {
       if (!tpl) return { ok: false, message: 'Template not found' };
       // Same variables a real send has, so the test email is the real email.
       const vars = { ...(await emailPreviewVars()), ...parseVars(args.vars) };
-      // Wrapped, like a real send. A test that skips the header and footer is
-      // exactly the test that lets a broken footer reach production.
-      const source = await emailFragmentService.wrap(tpl.mjml, tpl.fragment_key);
-      const rendered = renderMjml(source, vars);
+      // Wrapped, like a real send, through the same renderer — a test email
+      // that renders differently from the send is a test of the wrong thing.
+      const rendered = await renderTemplateBody({
+        mjml: tpl.mjml,
+        fragment_key: tpl.fragment_key,
+        footer_note: tpl.footer_note,
+        vars,
+      });
       if (rendered.errors.length) return { ok: false, message: rendered.errors.join('; ') };
       try {
         // Through the shared provider layer, so a test goes out the same way a

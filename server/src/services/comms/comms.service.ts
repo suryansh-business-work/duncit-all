@@ -1,6 +1,7 @@
 import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
 import type { EnvCategory } from '@modules/platform/envEntry/envEntry.model';
 import { resolveEmailProvider } from '@services/email/email.provider';
+import { sendHtmlEmail } from '@services/email/email.service';
 
 /**
  * Outbound lead communications. Email goes through the same provider layer as
@@ -48,50 +49,55 @@ export const commsService = {
     /** Optional file attachments addressed by URL (e.g. ImageKit links). */
     attachments?: { url: string; name?: string | null }[] | null;
   }): Promise<CommsResult> {
+    // Through the ONE send method, with the mailbox the user picked. This used
+    // to call `provider.send()` directly, which skipped the shared logo swap,
+    // the from-address fallback, the audit log line and — once it existed — the
+    // email log. `provider_id` is what made that shortcut look necessary.
     const resolved = await resolveEmailProvider(input.provider_id);
     if (!resolved) return notConfigured('email', 'email');
-    const { provider, config, entryId, entryName } = resolved;
-    // A caller's lead email is not a signup receipt: with nothing configured
-    // the send would go nowhere silently, so it is reported as not configured.
-    if (!config.from) {
+    if (!resolved.config.from) {
       return {
         ok: false,
-        provider: provider.name,
-        provider_id: entryId,
-        message: `${entryName} has no From address configured`,
+        provider: resolved.provider.name,
+        provider_id: resolved.entryId,
+        message: `${resolved.entryName} has no From address configured`,
       };
     }
-    try {
-      const attachments = (input.attachments ?? [])
-        .filter((a) => a?.url)
-        .map((a) => ({ filename: a.name || a.url.split('/').pop() || 'attachment', path: a.url }));
-      const info = await provider.send({
-        // A lead email is a person writing to a person, not a system notice.
-        category: 'service',
-        from: config.from,
-        to: input.to,
-        replyTo: config.replyTo || undefined,
-        subject: input.subject,
-        html: input.body,
-        attachments: attachments.length ? attachments : undefined,
-      });
-      return {
-        ok: true,
-        provider: info.provider,
-        provider_id: entryId,
-        external_id: info.messageId || null,
-        message: `Email sent to ${input.to} via ${entryName}`,
-      };
-    } catch (err: any) {
-      return {
-        ok: false,
-        provider: provider.name,
-        provider_id: entryId,
-        message: err?.message || `${entryName} email failed`,
-      };
-    }
-  },
 
+    const attachments = (input.attachments ?? [])
+      .filter((a) => a?.url)
+      .map((a) => ({ filename: a.name || a.url.split('/').pop() || 'attachment', path: a.url }));
+
+    const info = await sendHtmlEmail({
+      to: input.to,
+      subject: input.subject,
+      html: input.body,
+      // A lead email is a person writing to a person, not a system notice.
+      category: 'service',
+      provider_id: input.provider_id,
+      attachments: attachments.length ? attachments : undefined,
+      source: 'CRM',
+      source_detail: resolved.entryName,
+    });
+
+    // sendHtmlEmail never throws; it reports. Mirror that into CommsResult so
+    // a lead row records the failure rather than a green tick.
+    if (info.skipped) {
+      return {
+        ok: false,
+        provider: resolved.provider.name,
+        provider_id: resolved.entryId,
+        message: `${resolved.entryName} email failed`,
+      };
+    }
+    return {
+      ok: true,
+      provider: info.provider,
+      provider_id: resolved.entryId,
+      external_id: info.messageId || null,
+      message: `Email sent to ${input.to} via ${resolved.entryName}`,
+    };
+  },
   /** Place a call via the selected/default TWILIO env entry. */
   async call(input: { to: string; provider_id?: string | null }): Promise<CommsResult> {
     const entry = await resolve('TWILIO', input.provider_id);

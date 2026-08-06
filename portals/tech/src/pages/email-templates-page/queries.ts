@@ -91,7 +91,7 @@ export interface Tpl {
 export const FRAGMENT_OPTIONS = gql`
   query FragmentOptions {
     emailFragments {
-      category
+      key
       name
       is_active
     }

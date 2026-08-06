@@ -12,7 +12,8 @@ import {
 
 const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 
-async function getImagekitConfig() {
+/** The one place the ImageKit credentials are read. Also the media library's. */
+export async function getImagekitConfig() {
   const [publicKey, privateKey, urlEndpoint] = await Promise.all([
     getRuntimeEnvValue('IMAGEKIT_PUBLIC_KEY'),
     getRuntimeEnvValue('IMAGEKIT_PRIVATE_KEY'),

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { io as ioClient, type Socket } from 'socket.io-client';
+import { playNotificationBeep } from '@duncit/utils';
 import { urlConfigs } from '../config/url-configs';
 import { appConfig } from '../config/app-config';
 
@@ -33,33 +34,6 @@ function socketOrigin(): string {
   }
 }
 
-// Short two-tone beep generated with the Web Audio API so we don't need an
-// audio asset on disk. Falls back silently if the browser blocks audio.
-function playBeep() {
-  try {
-    const Ctx = (globalThis as any).AudioContext || (globalThis as any).webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const beep = (when: number, freq: number, dur: number) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = freq;
-      osc.type = 'sine';
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime + when);
-      gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + when + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + when + dur);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(ctx.currentTime + when);
-      osc.stop(ctx.currentTime + when + dur + 0.02);
-    };
-    beep(0, 880, 0.18);
-    beep(0.22, 660, 0.22);
-    globalThis.setTimeout(() => ctx.close().catch(() => {}), 800);
-  } catch {
-    // ignore — audio is best-effort
-  }
-}
-
 /**
  * Connects to the realtime server using the Support portal token and wires the
  * given handlers. The agent auto-joins `support:agents` (server-side), so
@@ -83,7 +57,7 @@ export function useSupportSocket(events: SupportSocketEvents) {
     socketRef.current = socket;
 
     socket.on('bouncer:sos_new', (p) => {
-      playBeep();
+      playNotificationBeep();
       eventsRef.current.onSos?.(p);
     });
     socket.on('bouncer:sos_update', (p) => eventsRef.current.onSosUpdate?.(p));

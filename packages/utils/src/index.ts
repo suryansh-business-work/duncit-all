@@ -1,5 +1,6 @@
 export { getOrCreateDuid } from './duid';
 export { copyToClipboard } from './clipboard';
+export { playNotificationBeep } from './notification-beep';
 export {
   SHORT_LINK_CLICK_KEY,
   SHORT_LINK_UTM_KEY,

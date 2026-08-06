@@ -14,11 +14,13 @@
     "@duncit/fallback-icons": "workspace:*",
     "@duncit/i18n": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/media-picker": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/ui": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@duncit/utils": "workspace:*",
-    "@fontsource/nunito": "^5.1.1"
+    "@fontsource/nunito": "^5.1.1",
+    "socket.io-client": "^4.8.3"
   },
   "peerDependencies": {
     "@apollo/client": ">=3",

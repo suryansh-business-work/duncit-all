@@ -5,6 +5,9 @@ import { tokens } from '@duncit/theme';
 import { AppBreadcrumbs, BreadcrumbProvider } from '@duncit/breadcrumb';
 import type { AppNavItem, SearchItem } from '../types';
 import { AppHeader } from './AppHeader';
+import type { ShellTool } from './AppsDrawer/tools';
+import { StaffChatPanel } from '../staff-chat';
+import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
 import { AppSidebar } from './AppSidebar';
 import type { ShellUser } from './user-display';
 
@@ -35,6 +38,8 @@ export interface AppShellProps {
   onDenied?: () => void;
   /** Route-segment → label overrides for the breadcrumbs. */
   breadcrumbLabelMap?: Record<string, string>;
+  /** Extra entries for the header's apps drawer, beside the platform's own. */
+  tools?: ShellTool[];
   children: ReactNode;
 }
 
@@ -50,10 +55,16 @@ export function AppShell({
   loading,
   onDenied,
   breadcrumbLabelMap,
+  tools,
   children,
 }: Readonly<AppShellProps>) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  // The chat is DOCKED, so its open state belongs to the layout rather than to
+  // the button: the panel is a sibling of the main content, and opening it
+  // narrows that content instead of covering it.
+  const [chatOpen, setChatOpen] = useState(false);
+  const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
 
   useEffect(() => {
     if (user && hasAccess === false) {
@@ -124,13 +135,28 @@ export function AppShell({
           profileTo={profileTo}
           onLogout={onLogout}
           onOpenMobileNav={() => setMobileOpen(true)}
+          tools={tools}
+          chatOpen={chatOpen}
+          onToggleChat={() => setChatOpen((current) => !current)}
         />
-        <BreadcrumbProvider>
-          <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
-          <Box component="main" id={MAIN_ID} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 } }}>
-            {children}
+        <Box sx={{ flex: 1, minHeight: 0, display: 'flex' }}>
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <BreadcrumbProvider>
+              <AppBreadcrumbs nav={nav} appName={config.name} labelMap={breadcrumbLabelMap} />
+              <Box component="main" id={MAIN_ID} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 } }}>
+                {children}
+              </Box>
+            </BreadcrumbProvider>
           </Box>
-        </BreadcrumbProvider>
+          {isStaff && chatOpen && (
+            <StaffChatPanel
+              open
+              meId={user?.id ?? ''}
+              meName={user?.full_name ?? user?.first_name ?? undefined}
+              onClose={() => setChatOpen(false)}
+            />
+          )}
+        </Box>
       </Box>
     </Box>
   );

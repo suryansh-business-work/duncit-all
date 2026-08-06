@@ -109,6 +109,15 @@ export function useTableQuery<T>(options: UseTableQueryOptions<T>): UseTableQuer
       .current(fetchQuery)
       .then((result) => {
         if (seq !== seqRef.current) return; // stale response — drop it
+        // An empty page that is not an empty table means the rows under us went
+        // away — a bulk delete on the last page, or someone else's. Go back to
+        // page one and let the effect run again rather than committing a view
+        // that reads "No rows" over a pager saying "26–25 of 25".
+        if (result.rows.length === 0 && result.total > 0 && fetchQuery.page > 1) {
+          setTotal(result.total);
+          setPageState(1);
+          return;
+        }
         setRows(result.rows);
         setTotal(result.total);
         setLoading(false);

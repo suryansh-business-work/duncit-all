@@ -8,9 +8,18 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import { useTheme } from '@mui/material/styles';
-import type { GetRowIdParams, RowClassParams, RowClickedEvent, RowStyle, SortChangedEvent } from 'ag-grid-community';
+import type {
+  GetRowIdParams,
+  RowClassParams,
+  RowClickedEvent,
+  RowSelectionOptions,
+  RowStyle,
+  SelectionChangedEvent,
+  SortChangedEvent,
+} from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
+import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
 import type { DuncitColumn, TableFetch, TableFilterValue, TableSortDir } from './types';
@@ -19,7 +28,54 @@ import { useTableQuery } from './useTableQuery';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const HEADER_HEIGHT = { compact: 36, standard: 48 } as const;
+
+/** The id of the checkbox column this table adds — never a data field. */
+export const SELECT_COL_ID = 'duncit-select';
+
+/**
+ * What a row click must NOT fire from: a cell's own button or link, and the
+ * entire selection column — its checkbox is 16px inside a 50px cell, so the
+ * cell around it has to be dead to the row handler too.
+ */
+const ROW_CLICK_IGNORE = `button, a, [col-id="${SELECT_COL_ID}"]`;
 const LOADING_DIM_OPACITY = 0.55;
+
+// AG Grid 34 took `rowSelection="multiple"`, `colDef.checkboxSelection` and
+// `headerCheckboxSelection` away; selection is this one object now.
+//
+// Its own checkboxes are OFF. The portals are MUI everywhere else, AG Grid's
+// checkbox sat at the top of a two-line row rather than beside it, and a
+// renderer on the column it generates draws BESIDE that checkbox instead of
+// replacing it — two ticks per row, one of them not ours.
+//
+// Hoisted so the reference is stable: a fresh object each render makes the grid
+// reconfigure selection mid-interaction. enableClickSelection stays at its
+// default false, so a row click only opens whatever drawer the page wires to
+// onRowClick; ROW_CLICK_IGNORE keeps the checkbox cell out of that handler.
+const MULTI_ROW_SELECTION: RowSelectionOptions = {
+  mode: 'multiRow',
+  checkboxes: false,
+  headerCheckbox: false,
+};
+
+// Our own column, prepended when selection is on. AG Grid still owns the STATE —
+// the renderer reads node.isSelected() and calls setSelected() — so there is no
+// second source of truth to drift, which is what a checkbox held in React state
+// would have been.
+const SELECT_COLUMN = {
+  colId: SELECT_COL_ID,
+  headerName: '',
+  width: 52,
+  minWidth: 52,
+  maxWidth: 52,
+  resizable: false,
+  sortable: false,
+  suppressMovable: true,
+  lockPosition: true as const,
+  cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  headerComponent: SelectionHeaderCheckbox,
+  cellRenderer: SelectionCheckbox,
+};
 
 // Rows auto-size to their content, so multi-line cells never clip. Density is the
 // per-cell vertical padding (auto-height measures it): compact = tight, standard =
@@ -53,6 +109,18 @@ function escapeHtml(text: string): string {
     .replaceAll("'", '&#39;');
 }
 
+/**
+ * Opt-in checkbox multi-select. Selection is PER PAGE and what you get is a MIRROR of
+ * the grid, never a running total — see the note on handleSelectionChanged for why an
+ * accumulator across pages is a bug rather than a feature.
+ */
+interface DuncitTableSelection<T> {
+  /** The rows ticked right now. Fires with `[]` when a page change wipes them. */
+  onChange: (rows: T[]) => void;
+  /** Filled with a "clear the ticks" fn, like refetchRef — call it after a bulk action. */
+  clearRef?: MutableRefObject<(() => void) | null>;
+}
+
 interface DuncitTableProps<T> {
   tableId: string; // REQUIRED unique key; persistence namespace
   columns: ReadonlyArray<DuncitColumn<T>>;
@@ -70,6 +138,9 @@ interface DuncitTableProps<T> {
   // Page-level filters from controls outside the table (tabs/selects/URL params).
   // Compared by value; a change resets to page 1 and refetches. Not shown as chips.
   externalFilters?: ReadonlyArray<TableFilterValue>;
+  // Opt in to a checkbox column. Absent means no selection config reaches the grid at
+  // all, which is what every table that never asked for it keeps getting.
+  selection?: DuncitTableSelection<T>;
 }
 
 /** Server-driven table: MUI chrome (toolbar/progress/error/pagination), AG Grid rows only. */
@@ -88,6 +159,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     searchPlaceholder,
     refetchRef,
     externalFilters,
+    selection,
   } = props;
   const table = useTableQuery({ fetchRows, defaultSort, defaultPageSize, externalFilters });
   const prefs = useTablePrefs(tableId);
@@ -113,10 +185,10 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       },
     };
   }, [prefs.density]);
-  const columnDefs = useMemo(
-    () => buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir),
-    [columns, prefs.hiddenOverrides, sortBy, sortDir],
-  );
+  const columnDefs = useMemo(() => {
+    const defs = buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir);
+    return selection ? [SELECT_COLUMN, ...defs] : defs;
+  }, [columns, prefs.hiddenOverrides, sortBy, sortDir, selection]);
 
   useEffect(() => {
     if (!refetchRef) return undefined;
@@ -125,6 +197,50 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       refetchRef.current = null;
     };
   }, [refetchRef, refetch]);
+
+  const selectionOnChange = selection?.onChange;
+  const selectionClearRef = selection?.clearRef;
+
+  /**
+   * Selection is per page, and the parent gets a mirror of the grid.
+   *
+   * `getRowId` is always set here, so AG Grid runs its immutable update path, and
+   * retention is BY ID: on new row data it deletes the nodes whose ids are gone and
+   * deselects those, dispatching selectionChanged with source 'rowDataChanged'. A
+   * page turn drops the ticks and calls this again — with an empty array when nothing
+   * survived. A refetch that returns the same ids keeps them ticked and fires nothing
+   * at all, so the objects the parent is holding are the PRE-refetch ones: act on
+   * their ids, not on the rest of their fields.
+   *
+   * The parent must store what it is handed and nothing else. A Set of ids accumulated
+   * across pages would claim "47 selected" while the grid holds 25 rows, and would act
+   * on rows nobody saw.
+   *
+   * The header checkbox is not "select all" either. AG Grid's client-side row model
+   * only ever holds the rows the server returned for this page, so every SelectAllMode
+   * ticks this page. Say so on screen; do not imply otherwise.
+   */
+  const handleSelectionChanged = useMemo(() => {
+    if (!selectionOnChange) return undefined;
+    return (event: SelectionChangedEvent<T>) => {
+      selectionOnChange(event.api.getSelectedRows());
+    };
+  }, [selectionOnChange]);
+
+  // Clearing has to happen in the GRID: resetting only the parent's state leaves the
+  // checkboxes ticked. deselectAll fires selectionChanged, so the parent's own mirror
+  // empties through the handler above rather than needing a second reset.
+  const clearSelection = useCallback(() => {
+    gridRef.current?.api?.deselectAll();
+  }, []);
+
+  useEffect(() => {
+    if (!selectionClearRef) return undefined;
+    selectionClearRef.current = clearSelection;
+    return () => {
+      selectionClearRef.current = null;
+    };
+  }, [selectionClearRef, clearSelection]);
 
   // Defs carry the controlled sort, so the grid echoes our own updates back — only
   // forward header-click changes that actually differ from the current query state.
@@ -139,12 +255,19 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
     [setSort, sortBy, sortDir],
   );
 
-  // Ignore clicks bubbling from buttons/links inside cells so row actions don't double-fire.
+  /**
+   * Ignore clicks bubbling from buttons/links inside cells so row actions don't
+   * double-fire — and from the whole selection cell, not just its checkbox.
+   *
+   * AG Grid's checkbox stops propagation itself, but it is a 16px input inside a
+   * 50px cell. Every other pixel of that cell bubbles, so aiming at the tick box
+   * and missing used to open the row's drawer with nothing selected.
+   */
   const handleRowClicked = useCallback(
     (event: RowClickedEvent<T>) => {
       if (!onRowClick || !event.data) return;
       const target = event.event?.target;
-      if (target instanceof Element && target.closest('button, a')) return;
+      if (target instanceof Element && target.closest(ROW_CLICK_IGNORE)) return;
       onRowClick(event.data);
     },
     [onRowClick],
@@ -212,6 +335,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             rowData={table.rows}
             getRowId={agGetRowId}
             getRowStyle={agGetRowStyle}
+            rowSelection={selection ? MULTI_ROW_SELECTION : undefined}
             domLayout="autoHeight"
             headerHeight={HEADER_HEIGHT[prefs.density]}
             suppressCellFocus
@@ -219,6 +343,7 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
             overlayNoRowsTemplate={noRowsTemplate}
             onSortChanged={handleSortChanged}
             onRowClicked={handleRowClicked}
+            onSelectionChanged={handleSelectionChanged}
           />
         </Box>
       )}

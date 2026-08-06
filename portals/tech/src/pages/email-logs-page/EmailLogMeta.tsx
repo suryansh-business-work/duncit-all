@@ -1,6 +1,7 @@
 import { Box, Chip, Divider, Link, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Link as RouterLink } from 'react-router-dom';
+import { formatDateTime } from '../server/format';
 import { STATUS_COLOR, type EmailLogDetail } from './queries';
 
 interface Props {
@@ -21,8 +22,6 @@ function Field({ label, value }: Readonly<{ label: string; value?: string | null
   );
 }
 
-const when = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '');
-
 export default function EmailLogMeta({ row }: Readonly<Props>) {
   const recipients = [row.to, ...(row.cc ?? []), ...(row.bcc ?? [])].filter(Boolean).join(', ');
 
@@ -33,7 +32,7 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
         <Chip size="small" variant="outlined" label={row.category} />
         <Chip size="small" variant="outlined" label={row.source_detail || row.source} />
         <Typography variant="caption" color="text.secondary">
-          {when(row.created_at)} · {row.duration_ms} ms
+          {formatDateTime(row.created_at)} · {row.duration_ms} ms
         </Typography>
       </Stack>
 
@@ -53,8 +52,9 @@ export default function EmailLogMeta({ row }: Readonly<Props>) {
           gap: 1.5,
         }}
       >
+        {/* No Subject field — the drawer's own title is the subject, and
+            printing it twice reads as two different things. */}
         <Field label="To" value={row.to} />
-        <Field label="Subject" value={row.subject} />
         {row.cc?.length > 0 && <Field label="CC" value={row.cc.join(', ')} />}
         {row.bcc?.length > 0 && <Field label="BCC" value={row.bcc.join(', ')} />}
         <Field label="Provider" value={row.provider} />

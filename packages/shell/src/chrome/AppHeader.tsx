@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { AppBar, Box, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
+import AppsIcon from '@mui/icons-material/Apps';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -8,6 +9,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import { tokens, useColorMode } from '@duncit/theme';
 import type { AppNavItem, SearchItem } from '../types';
+import { StaffChatButton } from '../staff-chat/StaffChatButton';
+import { STAFF_CHAT_ROLES } from '../staff-chat/roles';
+import { AppsDrawer } from './AppsDrawer';
+import type { ShellTool } from './AppsDrawer/tools';
 import { HeaderSearch } from './HeaderSearch';
 import { UserMenu } from './UserMenu';
 import type { ShellUser } from './user-display';
@@ -24,6 +29,11 @@ export interface AppHeaderProps {
   onLogout: () => void;
   /** Opens the temporary drawer below the md breakpoint. */
   onOpenMobileNav: () => void;
+  /** Portal-specific entries for the apps drawer, alongside the platform's own. */
+  tools?: ShellTool[];
+  /** The docked chat panel state, owned by the layout it narrows. */
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
 }
 
 /** The unified console AppBar: hamburger, brand, global search, mode toggle, account. */
@@ -36,9 +46,16 @@ export function AppHeader({
   profileTo,
   onLogout,
   onOpenMobileNav,
+  tools,
+  chatOpen = false,
+  onToggleChat,
 }: Readonly<AppHeaderProps>) {
   const colorMode = useColorMode();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [appsOpen, setAppsOpen] = useState(false);
+  // Only people who can sign into a staff console have coworkers to chat with,
+  // and the server refuses the query to anyone else — so it is not asked.
+  const isStaff = (user?.roles ?? []).some((role) => STAFF_CHAT_ROLES.has(role));
 
   return (
     <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -86,6 +103,14 @@ export function AppHeader({
             >
               <SearchIcon fontSize="small" />
             </IconButton>
+            {isStaff && onToggleChat && (
+              <StaffChatButton meId={user?.id} open={chatOpen} onToggle={onToggleChat} />
+            )}
+            <Tooltip title="Apps">
+              <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">
+                <AppsIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
               <IconButton size="small" onClick={colorMode.toggle} aria-label="toggle color mode">
                 {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
@@ -95,6 +120,13 @@ export function AppHeader({
           </>
         )}
       </Toolbar>
+      <AppsDrawer
+        open={appsOpen}
+        onClose={() => setAppsOpen(false)}
+        extraTools={tools}
+        roles={user?.roles}
+        onOpenChat={onToggleChat}
+      />
     </AppBar>
   );
 }

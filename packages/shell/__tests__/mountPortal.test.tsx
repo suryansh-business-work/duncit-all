@@ -77,8 +77,16 @@ describe('mountPortal', () => {
     expect(createRootSpy).toHaveBeenCalledWith(root);
 
     // The `isAuthed` closure handed to UserProvider reads the token key.
-    const tree = renderSpy.mock.calls[0][0] as { props: { children: { props: { children: { props: { isAuthed: () => boolean } } } } } };
-    const isAuthed = tree.props.children.props.children.props.isAuthed;
+    //
+    // Found by walking down for the prop rather than by counting providers: the
+    // old fixed path broke the moment another provider was added between
+    // ApolloProvider and UserProvider, which says nothing about isAuthed.
+    const findIsAuthed = (node: any): (() => boolean) | undefined => {
+      if (!node?.props) return undefined;
+      if (typeof node.props.isAuthed === 'function') return node.props.isAuthed;
+      return findIsAuthed(node.props.children);
+    };
+    const isAuthed = findIsAuthed(renderSpy.mock.calls[0][0])!;
     expect(isAuthed()).toBe(false);
     localStorage.setItem('tok_key', '1');
     expect(isAuthed()).toBe(true);

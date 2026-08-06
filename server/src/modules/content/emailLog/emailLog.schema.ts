@@ -56,6 +56,74 @@ export const emailLogTypeDefs = /* GraphQL */ `
     skipped: Int!
     failed: Int!
     total: Int!
+    """
+    Every row ever kept, not just the window above.
+
+    Approximate by design — it comes from collection metadata, and its only job
+    is to tell an operator the scale of what "delete everything" would remove.
+    """
+    all_time_total: Int!
+  }
+
+  "One bar: a grouping key and how many rows fell into it."
+  type EmailLogCountBucket {
+    key: String!
+    count: Int!
+  }
+
+  """
+  An address that failed more than once in the window.
+
+  Nothing in this product receives bounce notifications, so an address that
+  keeps failing is the closest thing to a hard-bounce list that exists.
+  """
+  type EmailLogFailingAddress {
+    address: String!
+    failures: Int!
+    last_reason: String!
+    last_failed_at: String
+  }
+
+  """
+  What the log says about deliverability over a window.
+
+  Built to answer the question a provider's dashboard cannot: not "how many
+  did we send", but "who did not get theirs, and why".
+  """
+  type EmailLogDashboard {
+    range_days: Int!
+    "Rows in the window — one per send attempt."
+    attempts: Int!
+    """
+    People addressed in the window, which is not the same as attempts.
+
+    A campaign goes out as one row per batch with its audience in bcc, so one
+    attempt can be fifty recipients; the sending mailbox the row is addressed
+    to is not one of them.
+    """
+    recipients: Int!
+    sent: Int!
+    skipped: Int!
+    failed: Int!
+    """
+    Accepted by the mail server with part of the batch refused.
+
+    The row reads SENT and somebody in it still did not get the email.
+    """
+    partially_refused: Int!
+    """
+    Sends that were accepted by nothing.
+
+    With no provider entry configured the server falls back to a transport that
+    accepts every message and discards it, so the row reads SENT with an empty
+    rejection list. A sub-5ms handover is the only signature that leaves.
+    """
+    silently_discarded: Int!
+    "Why the ones that did not go out did not go out, in fixed buckets."
+    not_delivered_reasons: [EmailLogCountBucket!]!
+    "Which templates they belonged to. The empty key is a raw-HTML send."
+    not_delivered_templates: [EmailLogCountBucket!]!
+    repeat_failures: [EmailLogFailingAddress!]!
   }
 
   extend type Query {
@@ -64,5 +132,21 @@ export const emailLogTypeDefs = /* GraphQL */ `
     "One attempt with its rendered body and variables — what the drawer opens."
     emailLog(id: ID!): EmailLog
     emailLogStats(days: Int): EmailLogStats!
+    "Deliverability over the last N days. Defaults to 7, capped at 90."
+    emailLogDashboard(range_days: Int): EmailLogDashboard!
+  }
+
+  extend type Mutation {
+    "Delete the ticked rows. Returns how many actually went."
+    deleteEmailLogs(ids: [ID!]!): Int!
+    """
+    Empty the log entirely. Returns how many rows went.
+
+    Deliberately unscoped rather than filter-scoped: the table's filters are
+    debounced and its total came from an earlier fetch, so a scoped delete
+    would state one number in the confirmation and remove a different one.
+    Deleting a filtered set is what deleteEmailLogs is for.
+    """
+    deleteAllEmailLogs: Int!
   }
 `;

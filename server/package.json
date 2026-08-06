@@ -30,6 +30,8 @@
     "migrate:host-categories": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-host-categories.ts",
     "migrate:host-categories:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-host-categories.ts --dry-run",
     "migrate:product-ownership": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-product-ownership.ts",
+    "reconcile:pod-seats": "ts-node -r tsconfig-paths/register --transpile-only scripts/reconcile-pod-seats.ts",
+    "reconcile:pod-seats:fix": "ts-node -r tsconfig-paths/register --transpile-only scripts/reconcile-pod-seats.ts --fix",
     "migrate:product-ownership:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-product-ownership.ts --dry-run",
     "migrate:email-logo": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-logo.ts",
     "migrate:email-logo:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-logo.ts --dry-run",

@@ -6,6 +6,7 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { getFinanceSettings } from './finance.model';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 
 /**
  * Finance → Cancel & Refunds. A "cancellation" is one of two real flows:
@@ -186,7 +187,7 @@ async function buildRows(): Promise<PodCancellationRow[]> {
       cancelled_at: cancelledAt(pod, deleted, audit),
       pod_date_time: iso(pod.pod_date_time),
       pod_amount: pod.pod_amount ?? 0,
-      attendee_count: pod.pod_attendees?.length ?? 0,
+      attendee_count: podSeatsTaken(pod),
       ...(tallies.get(key) ?? EMPTY_TALLY),
       venue_id: pod.venue_id ? String(pod.venue_id) : null,
       venue_name: pod.venue_id ? venueNameById.get(String(pod.venue_id)) ?? null : null,

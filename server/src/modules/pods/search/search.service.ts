@@ -5,6 +5,7 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 import { mapClubToPublic } from '@modules/clubs/club/club.service';
 import { mapPodToPublic, loadPodClubSlugMap } from '@modules/pods/pod/pod.service';
+import { podSeatsTaken } from '@modules/pods/pod/pod.seats';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const SUGGESTION_CAP = 20;
@@ -141,7 +142,7 @@ async function followedClubIds(viewerId: string | null): Promise<Set<string>> {
 }
 
 const sumAttendees = (pods: any[]) =>
-  pods.reduce((sum, pod) => sum + (pod.pod_attendees?.length ?? 0), 0);
+  pods.reduce((sum, pod) => sum + podSeatsTaken(pod), 0);
 
 const compareHappening = (a: ClubResult, b: ClubResult) =>
   b.followers - a.followers ||

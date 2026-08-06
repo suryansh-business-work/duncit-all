@@ -349,9 +349,9 @@ export const financeTypeDefs = /* GraphQL */ `
     has_venue: Boolean!
     waterfall: PodFinanceWaterfall!
     """
-    Guests who actually attended and paid — the host's own free seat excluded.
-    A completed pod settles on what it COLLECTED, so this is the head count
-    behind every figure above.
+    SEATS that attended and paid — the host's own free seat excluded. Seats, not
+    people: one booking can cover several, and a completed pod settles on what it
+    COLLECTED, which is priced per seat.
     """
     paying_attendees: Int!
   }

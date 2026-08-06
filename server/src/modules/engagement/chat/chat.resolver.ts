@@ -54,6 +54,9 @@ export const chatResolvers = {
           pod_end_date_time: p.pod_end_date_time
             ? new Date(p.pod_end_date_time).toISOString()
             : null,
+          // Identity, deliberately: this drives who is IN the chat, and a
+          // multi-seat buyer is still one person in it. Do not seat-adjust this
+          // the way pod occupancy was — the guests they brought have no account.
           pod_attendees: (p.pod_attendees || []).map(String),
           no_of_spots: p.no_of_spots,
           club_id: clubId,

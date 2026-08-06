@@ -1773,7 +1773,9 @@ export const podService = {
       .lean();
     const settings = payments.length === 0 ? await getFinanceSettings() : null;
     return {
-      other_attendee_count: others.length,
+      // Seats, not buyers — this number is printed next to the refund total, and
+      // one person cancelling a four-seat booking takes four people with them.
+      other_attendee_count: others.length + (doc.extra_seats ?? 0),
       refundable_payment_count: payments.length,
       refund_total: payments.reduce((sum: number, p: any) => sum + (p.total ?? 0), 0),
       currency_symbol: payments[0]?.currency_symbol ?? settings?.currency_symbol ?? '₹',

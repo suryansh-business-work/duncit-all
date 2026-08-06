@@ -6,13 +6,13 @@ import Conversation from '../src/staff-chat/Conversation';
 import type { Coworker, StaffMessage, StaffThread } from '../src/staff-chat/queries';
 import { useStaffSocket } from '../src/staff-chat/useStaffSocket';
 
-const beep = vi.hoisted(() => vi.fn());
+const ping = vi.hoisted(() => vi.fn());
 const socketOn = vi.hoisted(() => ({ handlers: {} as Record<string, (p: unknown) => void> }));
 
-vi.mock('@duncit/utils', async (io) => {
-  const actual = await io<typeof import('@duncit/utils')>();
-  return { ...actual, playNotificationBeep: beep };
-});
+vi.mock('../src/staff-chat/sounds', () => ({
+  playMessagePing: ping,
+  startRinging: () => () => undefined,
+}));
 
 vi.mock('socket.io-client', () => ({
   io: () => ({
@@ -39,6 +39,7 @@ describe('CoworkerList', () => {
     onSearch: vi.fn(),
     role: '',
     onRole: vi.fn(),
+    statusOf: () => 'ONLINE' as const,
     onOpen: vi.fn(),
   };
 
@@ -89,11 +90,18 @@ describe('Conversation', () => {
       <Conversation
         peer={person('u1', 'Asha Rao')}
         meId="me"
+        status="ONLINE"
         messages={[]}
         sending={false}
+        uploading={false}
         onBack={vi.fn()}
         onSend={onSend}
+        onAttach={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
         onTyping={vi.fn()}
+        onCall={vi.fn()}
+        onExport={vi.fn()}
       />
     );
     const box = screen.getByPlaceholderText('Write a message');
@@ -112,11 +120,18 @@ describe('Conversation', () => {
       <Conversation
         peer={person('u1', 'Asha Rao')}
         meId="me"
+        status="ONLINE"
         messages={[]}
         sending={false}
+        uploading={false}
         onBack={vi.fn()}
         onSend={onSend}
+        onAttach={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
         onTyping={vi.fn()}
+        onCall={vi.fn()}
+        onExport={vi.fn()}
       />
     );
     fireEvent.change(screen.getByPlaceholderText('Write a message'), { target: { value: '   ' } });
@@ -129,11 +144,18 @@ describe('Conversation', () => {
       <Conversation
         peer={person('u1', 'Asha Rao')}
         meId="me"
+        status="ONLINE"
         messages={[message('m1', 'u1', 'did you see it'), message('m2', 'me', 'just now')]}
         sending={false}
+        uploading={false}
         onBack={vi.fn()}
         onSend={vi.fn()}
+        onAttach={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
         onTyping={vi.fn()}
+        onCall={vi.fn()}
+        onExport={vi.fn()}
       />
     );
     expect(screen.getByText('did you see it')).toBeInTheDocument();
@@ -141,9 +163,9 @@ describe('Conversation', () => {
   });
 });
 
-describe('useStaffSocket beep', () => {
+describe('useStaffSocket ping', () => {
   beforeEach(() => {
-    beep.mockClear();
+    ping.mockClear();
     socketOn.handlers = {};
   });
 
@@ -162,14 +184,14 @@ describe('useStaffSocket beep', () => {
   const arrive = (from: string) =>
     socketOn.handlers.staff_message?.({ id: 'm', from_user_id: from, to_user_id: 'me', text: 'hi' });
 
-  it('beeps for a message from someone else', async () => {
+  it('pings for a message from someone else', async () => {
     render(
       <MockedProvider mocks={[]}>
         <Host meId="me" openPeerId={null} />
       </MockedProvider>
     );
     arrive('u1');
-    await waitFor(() => expect(beep).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(ping).toHaveBeenCalledTimes(1));
   });
 
   it('stays silent for your own message from another tab', async () => {
@@ -179,7 +201,7 @@ describe('useStaffSocket beep', () => {
       </MockedProvider>
     );
     arrive('me');
-    await waitFor(() => expect(beep).not.toHaveBeenCalled());
+    await waitFor(() => expect(ping).not.toHaveBeenCalled());
   });
 
   it('stays silent for the conversation already on screen', async () => {
@@ -189,6 +211,6 @@ describe('useStaffSocket beep', () => {
       </MockedProvider>
     );
     arrive('u1');
-    await waitFor(() => expect(beep).not.toHaveBeenCalled());
+    await waitFor(() => expect(ping).not.toHaveBeenCalled());
   });
 });

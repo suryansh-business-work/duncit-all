@@ -15,7 +15,6 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { FileManagerDialog } from '../../file-manager';
-import { StaffChatDrawer } from '../../staff-chat';
 import { matchesTool, SHELL_TOOLS, type ShellTool } from './tools';
 
 interface Props {
@@ -25,8 +24,8 @@ interface Props {
   extraTools?: ShellTool[];
   /** The signed-in user's roles, for tools that gate on them. */
   roles?: readonly string[] | null;
-  /** Your own id, for the chat tool. */
-  meId?: string | null;
+  /** Opens the docked chat panel — the layout owns it, not this drawer. */
+  onOpenChat?: () => void;
 }
 
 /**
@@ -36,7 +35,7 @@ interface Props {
  * in, so reaching for the file manager mid-form does not cost you the form.
  * The sidebar stays the place for this portal's own pages.
  */
-export function AppsDrawer({ open, onClose, extraTools, roles, meId }: Readonly<Props>) {
+export function AppsDrawer({ open, onClose, extraTools, roles, onOpenChat }: Readonly<Props>) {
   const [search, setSearch] = useState('');
   const [openTool, setOpenTool] = useState<string | null>(null);
 
@@ -88,7 +87,10 @@ export function AppsDrawer({ open, onClose, extraTools, roles, meId }: Readonly<
             <ListItemButton
               key={tool.key}
               onClick={() => {
-                setOpenTool(tool.key);
+                // Chat is docked into the layout rather than opened here, so
+                // that one is handed up; everything else opens over the page.
+                if (tool.key === 'staff-chat') onOpenChat?.();
+                else setOpenTool(tool.key);
                 close();
               }}
             >
@@ -108,9 +110,7 @@ export function AppsDrawer({ open, onClose, extraTools, roles, meId }: Readonly<
         <FileManagerDialog open roles={roles} onClose={() => setOpenTool(null)} />
       )}
 
-      {openTool === 'staff-chat' && (
-        <StaffChatDrawer open meId={meId ?? ''} onClose={() => setOpenTool(null)} />
-      )}
+
     </>
   );
 }

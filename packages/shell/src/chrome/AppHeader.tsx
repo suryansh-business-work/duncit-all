@@ -31,6 +31,9 @@ export interface AppHeaderProps {
   onOpenMobileNav: () => void;
   /** Portal-specific entries for the apps drawer, alongside the platform's own. */
   tools?: ShellTool[];
+  /** The docked chat panel state, owned by the layout it narrows. */
+  chatOpen?: boolean;
+  onToggleChat?: () => void;
 }
 
 /** The unified console AppBar: hamburger, brand, global search, mode toggle, account. */
@@ -44,6 +47,8 @@ export function AppHeader({
   onLogout,
   onOpenMobileNav,
   tools,
+  chatOpen = false,
+  onToggleChat,
 }: Readonly<AppHeaderProps>) {
   const colorMode = useColorMode();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -98,7 +103,9 @@ export function AppHeader({
             >
               <SearchIcon fontSize="small" />
             </IconButton>
-            {isStaff && <StaffChatButton meId={user?.id} />}
+            {isStaff && onToggleChat && (
+              <StaffChatButton meId={user?.id} open={chatOpen} onToggle={onToggleChat} />
+            )}
             <Tooltip title="Apps">
               <IconButton size="small" onClick={() => setAppsOpen(true)} aria-label="open apps">
                 <AppsIcon fontSize="small" />
@@ -118,7 +125,7 @@ export function AppHeader({
         onClose={() => setAppsOpen(false)}
         extraTools={tools}
         roles={user?.roles}
-        meId={user?.id}
+        onOpenChat={onToggleChat}
       />
     </AppBar>
   );

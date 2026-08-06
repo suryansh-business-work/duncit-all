@@ -3,71 +3,65 @@ import {
   Avatar,
   Box,
   IconButton,
-  Paper,
+  LinearProgress,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
+import CallIcon from '@mui/icons-material/Call';
+import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import MessageBubble from './MessageBubble';
+import PresenceDot from './PresenceDot';
 import type { Coworker, StaffMessage } from './queries';
+import type { PresenceStatus } from './usePresence';
 
 interface Props {
   peer: Coworker;
   meId: string;
+  status: PresenceStatus;
   messages: StaffMessage[];
   sending: boolean;
+  uploading: boolean;
   onBack: () => void;
   onSend: (text: string) => void;
+  onAttach: (file: File) => void;
+  onEdit: (id: string, text: string) => void;
+  onDelete: (id: string) => void;
   onTyping: () => void;
-}
-
-const time = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-/** One line of the conversation. Hoisted, so it is not rebuilt every render. */
-function Bubble({ message, mine }: Readonly<{ message: StaffMessage; mine: boolean }>) {
-  return (
-    <Box sx={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start' }}>
-      <Paper
-        variant="outlined"
-        sx={{
-          px: 1.25,
-          py: 0.75,
-          maxWidth: '80%',
-          bgcolor: mine ? 'primary.main' : 'background.paper',
-          color: mine ? 'primary.contrastText' : 'text.primary',
-          borderColor: mine ? 'primary.main' : 'divider',
-        }}
-      >
-        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {message.text}
-        </Typography>
-        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', textAlign: 'right' }}>
-          {time(message.created_at)}
-        </Typography>
-      </Paper>
-    </Box>
-  );
+  onCall: (kind: 'AUDIO' | 'VIDEO') => void;
+  onExport: () => void;
 }
 
 export default function Conversation({
   peer,
   meId,
+  status,
   messages,
   sending,
+  uploading,
   onBack,
   onSend,
+  onAttach,
+  onEdit,
+  onDelete,
   onTyping,
+  onCall,
+  onExport,
 }: Readonly<Props>) {
   const [draft, setDraft] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   // A chat that opens at the top of a hundred messages is a chat you have to
   // scroll before you can read the one that arrived.
   useEffect(() => {
     // Optional call: jsdom has the element but not the method, and a chat that
-    // throws while scrolling would take the whole drawer down with it.
+    // throws while scrolling would take the whole panel down with it.
     endRef.current?.scrollIntoView?.({ block: 'end' });
   }, [messages]);
 
@@ -80,20 +74,44 @@ export default function Conversation({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
+      >
         <IconButton size="small" onClick={onBack} aria-label="Back to coworkers">
           <ArrowBackIcon fontSize="small" />
         </IconButton>
-        <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
-        <Box sx={{ minWidth: 0 }}>
+        <PresenceDot status={status}>
+          <Avatar src={peer.photo || undefined} sx={{ width: 30, height: 30 }} />
+        </PresenceDot>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="subtitle2" noWrap>
             {peer.name}
           </Typography>
           <Typography variant="caption" color="text.secondary" noWrap>
-            {peer.email}
+            {status.toLowerCase()}
           </Typography>
         </Box>
+        <Tooltip title="Audio call">
+          <IconButton size="small" onClick={() => onCall('AUDIO')} aria-label="Start audio call">
+            <CallIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Video call">
+          <IconButton size="small" onClick={() => onCall('VIDEO')} aria-label="Start video call">
+            <VideocamIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Export this conversation">
+          <IconButton size="small" onClick={onExport} aria-label="Export conversation">
+            <DownloadIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Stack>
+
+      {uploading && <LinearProgress />}
 
       <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 1.5 }}>
         {messages.length === 0 && (
@@ -102,12 +120,35 @@ export default function Conversation({
           </Typography>
         )}
         {messages.map((message) => (
-          <Bubble key={message.id} message={message} mine={message.from_user_id === meId} />
+          <MessageBubble
+            key={message.id}
+            message={message}
+            mine={message.from_user_id === meId}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
         <div ref={endRef} />
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+      <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}>
+        <Tooltip title="Attach a file">
+          <IconButton size="small" onClick={() => fileRef.current?.click()} disabled={uploading} aria-label="Attach a file">
+            <AttachFileIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        {/* Any file, not only images — a chat where you cannot send a PDF is a
+            chat people leave to send the PDF. */}
+        <input
+          ref={fileRef}
+          type="file"
+          hidden
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) onAttach(file);
+            event.target.value = '';
+          }}
+        />
         <TextField
           fullWidth
           size="small"

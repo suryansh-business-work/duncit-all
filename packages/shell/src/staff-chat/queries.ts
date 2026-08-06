@@ -13,8 +13,24 @@ export interface StaffMessage {
   from_user_id: string;
   to_user_id: string;
   text: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
   read_at?: string | null;
+  edited_at?: string | null;
+  deleted_at?: string | null;
   created_at?: string | null;
+}
+
+export interface StaffCall {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  kind: 'AUDIO' | 'VIDEO';
+  outcome: 'ANSWERED' | 'MISSED' | 'DECLINED' | 'CANCELLED';
+  duration_seconds: number;
+  started_at?: string | null;
+  ended_at?: string | null;
 }
 
 export interface StaffThread {
@@ -38,7 +54,12 @@ const MESSAGE = `
   from_user_id
   to_user_id
   text
+  attachment_url
+  attachment_name
+  attachment_type
   read_at
+  edited_at
+  deleted_at
   created_at
 `;
 
@@ -79,9 +100,62 @@ export const STAFF_UNREAD = gql`
 `;
 
 export const SEND_STAFF_MESSAGE = gql`
-  mutation SendStaffMessage($toUserId: ID!, $text: String!) {
-    sendStaffMessage(to_user_id: $toUserId, text: $text) {
+  mutation SendStaffMessage(
+    $toUserId: ID!
+    $text: String!
+    $attachmentUrl: String
+    $attachmentName: String
+    $attachmentType: String
+  ) {
+    sendStaffMessage(
+      to_user_id: $toUserId
+      text: $text
+      attachment_url: $attachmentUrl
+      attachment_name: $attachmentName
+      attachment_type: $attachmentType
+    ) {
       ${MESSAGE}
+    }
+  }
+`;
+
+export const EDIT_STAFF_MESSAGE = gql`
+  mutation EditStaffMessage($id: ID!, $text: String!) {
+    editStaffMessage(id: $id, text: $text) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const DELETE_STAFF_MESSAGE = gql`
+  mutation DeleteStaffMessage($id: ID!) {
+    deleteStaffMessage(id: $id) {
+      ${MESSAGE}
+    }
+  }
+`;
+
+export const STAFF_CALLS = gql`
+  query StaffCalls($peerId: ID!, $limit: Int) {
+    staffCalls(peer_id: $peerId, limit: $limit) {
+      id
+      from_user_id
+      to_user_id
+      kind
+      outcome
+      duration_seconds
+      started_at
+      ended_at
+    }
+  }
+`;
+
+export const STAFF_PRESENCE = gql`
+  query StaffPresence {
+    staffPresence {
+      user_id
+      status
+      since
     }
   }
 `;

@@ -1,21 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
-import { Box, Drawer, IconButton, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useImagekitDirectUpload } from '@duncit/media-picker';
 import { readToken, useShellRuntime } from '../lib/runtime';
+import CallPanel from './CallPanel';
 import Conversation from './Conversation';
 import CoworkerList from './CoworkerList';
+import StatusMenu from './StatusMenu';
+import { buildChatExport, downloadChatExport } from './export-chat';
 import {
   COWORKERS,
+  DELETE_STAFF_MESSAGE,
+  EDIT_STAFF_MESSAGE,
   MARK_THREAD_READ,
   SEND_STAFF_MESSAGE,
+  STAFF_CALLS,
   STAFF_MESSAGES,
+  STAFF_PRESENCE,
   STAFF_THREADS,
   STAFF_UNREAD,
   type Coworker,
+  type StaffCall,
   type StaffMessage,
   type StaffThread,
 } from './queries';
+import { useCall } from './useCall';
+import { usePresence, type PresenceStatus } from './usePresence';
 import { useStaffSocket } from './useStaffSocket';
 
 interface Props {
@@ -23,18 +34,25 @@ interface Props {
   onClose: () => void;
   /** Your own id, so the conversation can tell your lines from theirs. */
   meId: string;
+  /** Your own name, for the export's header. */
+  meName?: string;
 }
+
+/** Where chat files land, so they are findable in the file manager later. */
+const UPLOAD_FOLDER = '/staff-chat';
 
 /**
  * Chat with a coworker.
  *
- * A drawer rather than a page: the reason to message someone is almost always
- * something on the screen you are already looking at, and a chat that costs you
- * that screen is one you leave the tab for instead.
+ * A docked panel, not a drawer: no backdrop, and the page beside it is pushed
+ * rather than covered. The reason to message someone is almost always something
+ * on the screen you are already looking at, so a chat that greys that screen out
+ * is a chat you close before you can quote it.
  */
-export function StaffChatDrawer({ open, onClose, meId }: Readonly<Props>) {
+export function StaffChatPanel({ open, onClose, meId, meName }: Readonly<Props>) {
   const runtime = useShellRuntime();
   const client = useApolloClient();
+  const { upload, uploading } = useImagekitDirectUpload();
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const [role, setRole] = useState('');
@@ -59,8 +77,14 @@ export function StaffChatDrawer({ open, onClose, meId }: Readonly<Props>) {
     skip: !peer,
     fetchPolicy: 'cache-and-network',
   });
+  const presenceQuery = useQuery<{ staffPresence: { user_id: string; status: PresenceStatus }[] }>(
+    STAFF_PRESENCE,
+    { skip: !open, fetchPolicy: 'network-only' }
+  );
 
   const [sendMessage, sendState] = useMutation(SEND_STAFF_MESSAGE);
+  const [editMessage] = useMutation(EDIT_STAFF_MESSAGE);
+  const [deleteMessage] = useMutation(DELETE_STAFF_MESSAGE);
   const [markRead] = useMutation(MARK_THREAD_READ);
 
   const refreshAll = useCallback(() => {
@@ -85,17 +109,73 @@ export function StaffChatDrawer({ open, onClose, meId }: Readonly<Props>) {
     [peer, messagesQuery, refreshAll]
   );
 
-  const socket = useStaffSocket({
+  const { socket, typing } = useStaffSocket({
     graphqlUrl: runtime?.graphqlUrl ?? '',
     token: readToken(runtime),
     onMessage,
+    onMessageChanged: onMessage,
     meId,
     openPeerId: open ? peer?.id ?? null : null,
   });
 
-  const send = (text: string) => {
+  const presence = usePresence(socket, meId);
+  const call = useCall(socket, meId);
+
+  // The socket only reports CHANGES; the first paint needs the snapshot.
+  const statusOf = useCallback(
+    (id: string): PresenceStatus => {
+      const live = presence.others[id];
+      if (live) return live;
+      const seeded = presenceQuery.data?.staffPresence.find((row) => row.user_id === id);
+      return seeded?.status ?? 'OFFLINE';
+    },
+    [presence.others, presenceQuery.data]
+  );
+
+  const send = (text: string, attachment?: { url: string; name: string; type: string }) => {
     if (!peer) return;
-    sendMessage({ variables: { toUserId: peer.id, text } })
+    sendMessage({
+      variables: {
+        toUserId: peer.id,
+        text,
+        attachmentUrl: attachment?.url ?? null,
+        attachmentName: attachment?.name ?? null,
+        attachmentType: attachment?.type ?? null,
+      },
+    })
+      .then(() => {
+        void messagesQuery.refetch();
+        refreshAll();
+      })
+      .catch(() => undefined);
+  };
+
+  const attach = (file: File) => {
+    // Straight to ImageKit, like every other upload in the product — the file
+    // is then in the file manager too, rather than somewhere only chat knows.
+    upload(file, UPLOAD_FOLDER)
+      .then((url) => send('', { url, name: file.name, type: file.type }))
+      .catch(() => undefined);
+  };
+
+  const exportChat = async () => {
+    if (!peer) return;
+    const calls = await client.query<{ staffCalls: StaffCall[] }>({
+      query: STAFF_CALLS,
+      variables: { peerId: peer.id, limit: 200 },
+      fetchPolicy: 'network-only',
+    });
+    const text = buildChatExport({
+      me: { id: meId, name: meName || 'You' },
+      peer,
+      messages: messagesQuery.data?.staffMessages ?? [],
+      calls: calls.data?.staffCalls ?? [],
+    });
+    downloadChatExport(text, peer.name);
+  };
+
+  const change = (mutate: typeof editMessage, variables: Record<string, unknown>) => {
+    mutate({ variables })
       .then(() => {
         void messagesQuery.refetch();
         refreshAll();
@@ -104,31 +184,58 @@ export function StaffChatDrawer({ open, onClose, meId }: Readonly<Props>) {
   };
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{ sx: { width: { xs: '100%', sm: 400 } } }}
+    <Box
+      sx={{
+        width: { xs: '100%', sm: 380 },
+        flexShrink: 0,
+        borderLeft: 1,
+        borderColor: 'divider',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+        bgcolor: 'background.paper',
+      }}
     >
-      <Stack direction="row" alignItems="center" sx={{ px: 2, pt: 2, pb: 1 }}>
-        <Typography variant="h6" sx={{ flex: 1 }}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
+        <Typography variant="subtitle1" sx={{ flex: 1 }}>
           Coworkers
         </Typography>
-        <IconButton onClick={onClose} aria-label="Close chat">
-          <CloseIcon />
+        <StatusMenu status={presence.mine} onChange={presence.choose} />
+        <IconButton size="small" onClick={onClose} aria-label="Close chat">
+          <CloseIcon fontSize="small" />
         </IconButton>
       </Stack>
+
+      <CallPanel
+        phase={call.phase}
+        kind={call.kind}
+        peer={peer}
+        error={call.error}
+        localStream={call.localStream}
+        remoteStream={call.remoteStream}
+        onAnswer={() => void call.answer()}
+        onDecline={call.decline}
+        onHangUp={call.hangUp}
+      />
 
       <Box sx={{ flex: 1, minHeight: 0 }}>
         {peer ? (
           <Conversation
             peer={peer}
             meId={meId}
+            status={statusOf(peer.id)}
             messages={messagesQuery.data?.staffMessages ?? []}
             sending={sendState.loading}
+            uploading={uploading}
             onBack={() => setPeer(null)}
             onSend={send}
-            onTyping={() => socket.typing(peer.id)}
+            onAttach={attach}
+            onEdit={(id, text) => change(editMessage, { id, text })}
+            onDelete={(id) => change(deleteMessage, { id })}
+            onTyping={() => typing(peer.id)}
+            onCall={(kind) => void call.call(peer.id, kind)}
+            onExport={() => void exportChat()}
           />
         ) : (
           <CoworkerList
@@ -138,10 +245,11 @@ export function StaffChatDrawer({ open, onClose, meId }: Readonly<Props>) {
             onRole={setRole}
             threads={threadsQuery.data?.staffThreads ?? []}
             coworkers={coworkersQuery.data?.coworkers ?? []}
+            statusOf={statusOf}
             onOpen={setPeer}
           />
         )}
       </Box>
-    </Drawer>
+    </Box>
   );
 }

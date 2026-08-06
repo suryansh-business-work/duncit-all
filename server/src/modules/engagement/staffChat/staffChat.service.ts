@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { UserModel } from '@modules/access/user/user.model';
 import { escapedSearchRegex } from '@utils/table-query';
+import { StaffCallModel, type CallKind, type CallOutcome } from './staffCall.model';
 import { STAFF_ROLES, StaffMessageModel, threadKey } from './staffChat.model';
 
 /**
@@ -30,6 +31,22 @@ const toCoworker = (user: any): Coworker => ({
   email: user?.auth?.email ?? '',
   photo: user?.profile?.photo ?? '',
   roles: (user?.metadata?.role_keys ?? []).filter((role: string) => STAFF_ROLES.includes(role as never)),
+});
+
+
+const pubMessage = (doc: any) => ({
+  id: String(doc._id),
+  from_user_id: doc.from_user_id,
+  to_user_id: doc.to_user_id,
+  // A deleted message keeps its place in the thread but not its words.
+  text: doc.deleted_at ? '' : doc.text,
+  attachment_url: doc.deleted_at ? '' : (doc.attachment_url ?? ''),
+  attachment_name: doc.deleted_at ? '' : (doc.attachment_name ?? ''),
+  attachment_type: doc.deleted_at ? '' : (doc.attachment_type ?? ''),
+  read_at: doc.read_at?.toISOString() ?? null,
+  edited_at: doc.edited_at?.toISOString() ?? null,
+  deleted_at: doc.deleted_at?.toISOString() ?? null,
+  created_at: doc.created_at?.toISOString() ?? null,
 });
 
 const SELECT = 'profile.first_name profile.last_name profile.photo auth.email metadata.role_keys';
@@ -121,14 +138,7 @@ export const staffChatService = {
       .sort({ created_at: -1 })
       .limit(Math.min(200, Math.max(1, limit)))
       .lean();
-    return docs.reverse().map((doc: any) => ({
-      id: String(doc._id),
-      from_user_id: doc.from_user_id,
-      to_user_id: doc.to_user_id,
-      text: doc.text,
-      read_at: doc.read_at?.toISOString() ?? null,
-      created_at: doc.created_at?.toISOString() ?? null,
-    }));
+    return docs.reverse().map(pubMessage);
   },
 
   /**
@@ -137,9 +147,18 @@ export const staffChatService = {
    * The recipient is checked against the same role list the directory uses, so
    * this cannot become a way to message a customer by knowing their id.
    */
-  async send(meId: string, toUserId: string, text: string) {
+  async send(
+    meId: string,
+    toUserId: string,
+    text: string,
+    attachment?: { url?: string | null; name?: string | null; type?: string | null } | null
+  ) {
     const body = text.trim();
-    if (!body) throw new GraphQLError('Write something first', { extensions: { code: 'BAD_USER_INPUT' } });
+    const url = attachment?.url?.trim() ?? '';
+    // A file with no caption is a message; nothing at all is not.
+    if (!body && !url) {
+      throw new GraphQLError('Write something, or attach a file', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
     if (toUserId === meId) {
       throw new GraphQLError('You cannot message yourself', { extensions: { code: 'BAD_USER_INPUT' } });
     }
@@ -158,16 +177,89 @@ export const staffChatService = {
       from_user_id: meId,
       to_user_id: toUserId,
       text: body,
+      attachment_url: url,
+      attachment_name: attachment?.name?.trim() ?? '',
+      attachment_type: attachment?.type?.trim() ?? '',
     });
+    return pubMessage(doc);
+  },
 
-    return {
+  /**
+   * Change what you said.
+   *
+   * Only your own, and only the words — an edit that could rewrite the
+   * attachment would let a link be swapped under someone who already clicked it.
+   */
+  async edit(meId: string, messageId: string, text: string) {
+    const body = text.trim();
+    if (!body) throw new GraphQLError('An edit cannot be empty', { extensions: { code: 'BAD_USER_INPUT' } });
+    const doc = await StaffMessageModel.findOne({ _id: messageId, from_user_id: meId });
+    if (!doc) throw new GraphQLError('That is not your message', { extensions: { code: 'FORBIDDEN' } });
+    if (doc.deleted_at) {
+      throw new GraphQLError('That message was deleted', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    doc.text = body;
+    doc.edited_at = new Date();
+    await doc.save();
+    return pubMessage(doc);
+  },
+
+  /** Take back your own message. The row stays; the words go. */
+  async remove(meId: string, messageId: string) {
+    const doc = await StaffMessageModel.findOne({ _id: messageId, from_user_id: meId });
+    if (!doc) throw new GraphQLError('That is not your message', { extensions: { code: 'FORBIDDEN' } });
+    doc.deleted_at = doc.deleted_at ?? new Date();
+    doc.text = '';
+    doc.attachment_url = '';
+    doc.attachment_name = '';
+    doc.attachment_type = '';
+    await doc.save();
+    return pubMessage(doc);
+  },
+
+  /**
+   * Every call on this line, newest first.
+   *
+   * The media went browser to browser, so this row is the only record that the
+   * call happened at all.
+   */
+  async calls(meId: string, peerId: string, limit = 50) {
+    const docs = await StaffCallModel.find({ thread_key: threadKey(meId, peerId) })
+      .sort({ started_at: -1 })
+      .limit(Math.min(200, Math.max(1, limit)))
+      .lean();
+    return docs.map((doc: any) => ({
       id: String(doc._id),
       from_user_id: doc.from_user_id,
       to_user_id: doc.to_user_id,
-      text: doc.text,
-      read_at: null,
-      created_at: doc.created_at.toISOString(),
-    };
+      kind: doc.kind,
+      outcome: doc.outcome,
+      duration_seconds: doc.duration_seconds,
+      started_at: doc.started_at?.toISOString() ?? null,
+      ended_at: doc.ended_at?.toISOString() ?? null,
+    }));
+  },
+
+  /** Write the call down once it is over. */
+  async recordCall(input: {
+    meId: string;
+    peerId: string;
+    kind: CallKind;
+    outcome: CallOutcome;
+    durationSeconds: number;
+    startedAt: Date;
+  }) {
+    const doc = await StaffCallModel.create({
+      thread_key: threadKey(input.meId, input.peerId),
+      from_user_id: input.meId,
+      to_user_id: input.peerId,
+      kind: input.kind,
+      outcome: input.outcome,
+      duration_seconds: Math.max(0, Math.round(input.durationSeconds)),
+      started_at: input.startedAt,
+      ended_at: new Date(),
+    });
+    return String(doc._id);
   },
 
   /** Mark everything they sent you as read. Returns how many that was. */

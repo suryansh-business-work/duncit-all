@@ -14,7 +14,9 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import PresenceDot from './PresenceDot';
 import { ROLE_FILTERS, ROLE_LABEL, type Coworker, type StaffThread } from './queries';
+import type { PresenceStatus } from './usePresence';
 
 interface Props {
   search: string;
@@ -23,6 +25,8 @@ interface Props {
   onRole: (value: string) => void;
   threads: StaffThread[];
   coworkers: Coworker[];
+  /** Live where the socket has said so, seeded from the snapshot otherwise. */
+  statusOf: (userId: string) => PresenceStatus;
   onOpen: (peer: Coworker) => void;
 }
 
@@ -59,6 +63,7 @@ export default function CoworkerList({
   onRole,
   threads,
   coworkers,
+  statusOf,
   onOpen,
 }: Readonly<Props>) {
   // Nobody appears twice: a thread already says everything the directory row
@@ -99,9 +104,11 @@ export default function CoworkerList({
             <ListItemButton key={thread.peer.id} onClick={() => onOpen(thread.peer)}>
               <ListItemAvatar>
                 <Badge color="error" badgeContent={thread.unread} overlap="circular">
-                  <Avatar src={thread.peer.photo || undefined} sx={{ width: 34, height: 34 }}>
-                    {initials(thread.peer.name)}
-                  </Avatar>
+                  <PresenceDot status={statusOf(thread.peer.id)}>
+                    <Avatar src={thread.peer.photo || undefined} sx={{ width: 34, height: 34 }}>
+                      {initials(thread.peer.name)}
+                    </Avatar>
+                  </PresenceDot>
                 </Badge>
               </ListItemAvatar>
               <ListItemText
@@ -121,9 +128,11 @@ export default function CoworkerList({
         {others.map((person) => (
           <ListItemButton key={person.id} onClick={() => onOpen(person)}>
             <ListItemAvatar>
-              <Avatar src={person.photo || undefined} sx={{ width: 34, height: 34 }}>
-                {initials(person.name)}
-              </Avatar>
+              <PresenceDot status={statusOf(person.id)}>
+                <Avatar src={person.photo || undefined} sx={{ width: 34, height: 34 }}>
+                  {initials(person.name)}
+                </Avatar>
+              </PresenceDot>
             </ListItemAvatar>
             <ListItemText
               primary={person.name}

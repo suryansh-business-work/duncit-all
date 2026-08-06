@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { playNotificationBeep } from '@duncit/utils';
+import { playMessagePing } from './sounds';
 import type { StaffMessage } from './queries';
 
 /**
@@ -18,9 +18,11 @@ interface Options {
   token: string | null;
   /** Fires for every message either way, including your own from another tab. */
   onMessage: (message: StaffMessage) => void;
-  /** Who you are, so the beep only fires for messages you did not write. */
+  /** An edit or a delete: same message, different words. */
+  onMessageChanged?: (message: StaffMessage) => void;
+  /** Who you are, so the ping only fires for messages you did not write. */
   meId?: string | null;
-  /** The conversation on screen; no beep for the one you are looking at. */
+  /** The conversation on screen; no ping for the one you are looking at. */
   openPeerId?: string | null;
 }
 
@@ -33,45 +35,62 @@ function socketOrigin(graphqlUrl: string): string {
   }
 }
 
-export function useStaffSocket({ graphqlUrl, token, onMessage, meId, openPeerId }: Options) {
-  const socketRef = useRef<Socket | null>(null);
-  // Read through refs so a new handler identity does not tear the socket down
-  // and reconnect it on every render.
+export function useStaffSocket({
+  graphqlUrl,
+  token,
+  onMessage,
+  onMessageChanged,
+  meId,
+  openPeerId,
+}: Options) {
+  // Exposed as state, not just a ref: presence and calls are hooks that need to
+  // re-run the moment a socket exists, and a ref does not re-render.
+  const [socket, setSocket] = useState<Socket | null>(null);
+  // Handlers are read through refs so a new identity does not tear the socket
+  // down and reconnect it on every render.
   const handler = useRef(onMessage);
+  const changed = useRef(onMessageChanged);
   const context = useRef({ meId, openPeerId });
   handler.current = onMessage;
+  changed.current = onMessageChanged;
   context.current = { meId, openPeerId };
 
   useEffect(() => {
     const origin = socketOrigin(graphqlUrl);
     if (!token || !origin) return undefined;
 
-    const socket = io(origin, {
+    const connection = io(origin, {
       path: '/socket.io',
       transports: ['websocket'],
       auth: { token },
     });
-    socketRef.current = socket;
+    setSocket(connection);
 
-    socket.on('staff_message', (message: StaffMessage) => {
+    connection.on('staff_message', (message: StaffMessage) => {
       handler.current(message);
       const { meId: me, openPeerId: open } = context.current;
       // Silent for your own writing, and for the conversation already in front
-      // of you — a beep for a message you are watching arrive is just noise.
+      // of you — a ping for a message you are watching arrive is just noise.
       const mine = me && message.from_user_id === me;
       const watching = open && message.from_user_id === open;
-      if (!mine && !watching) playNotificationBeep();
+      if (!mine && !watching) playMessagePing();
+    });
+
+    connection.on('staff_message_changed', (message: StaffMessage) => {
+      changed.current?.(message);
     });
 
     return () => {
-      socket.off('staff_message');
-      socket.disconnect();
-      socketRef.current = null;
+      connection.off('staff_message');
+      connection.off('staff_message_changed');
+      connection.disconnect();
+      setSocket(null);
     };
   }, [graphqlUrl, token]);
 
   return {
+    socket,
     /** Tell the other end you are typing. Best-effort; nothing waits on it. */
-    typing: (peerId: string) => socketRef.current?.emit('staff_typing', peerId),
+    typing: (peerId: string) => socket?.emit('staff_typing', peerId),
   };
 }

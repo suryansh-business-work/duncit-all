@@ -20,8 +20,23 @@ export interface IStaffMessage extends Document {
   from_user_id: string;
   to_user_id: string;
   text: string;
+  /** An ImageKit URL when a file came with it. Empty for a plain message. */
+  attachment_url: string;
+  attachment_name: string;
+  /** ImageKit's own classification: image, or the mime type for anything else. */
+  attachment_type: string;
   /** When the recipient read it. Null until they do. */
   read_at: Date | null;
+  /** Set when the author changed the text, so the reader can be told. */
+  edited_at: Date | null;
+  /**
+   * Deleted messages are kept, not removed.
+   *
+   * The other person already read it, and a line that vanishes from the middle
+   * of a conversation reads as a bug. The text is cleared and the row stays, so
+   * the thread still says something was there and is gone.
+   */
+  deleted_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -34,8 +49,14 @@ const staffMessageSchema = new Schema<IStaffMessage>(
     thread_key: { type: String, required: true, index: true },
     from_user_id: { type: String, required: true, index: true },
     to_user_id: { type: String, required: true, index: true },
-    text: { type: String, required: true, trim: true, maxlength: 4000 },
+    // Not required: a file with no caption is a message.
+    text: { type: String, default: '', trim: true, maxlength: 4000 },
+    attachment_url: { type: String, default: '' },
+    attachment_name: { type: String, default: '' },
+    attachment_type: { type: String, default: '' },
     read_at: { type: Date, default: null },
+    edited_at: { type: Date, default: null },
+    deleted_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

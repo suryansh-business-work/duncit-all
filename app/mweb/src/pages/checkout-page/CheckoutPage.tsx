@@ -157,7 +157,7 @@ export default function CheckoutPage() {
         {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
         <SavedAddressPicker onPick={session.pickAddress} />
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} seats={seats} />
+          <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} seats={seats} unitAmount={unitAmount} />
           <PaymentDetailsCard
             control={session.control}
             onSubmit={submit}

@@ -173,7 +173,12 @@ export function CheckoutScreen() {
       </ScrollView>
     ) : (
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-        <OrderSummary pod={pod} breakup={breakup} seats={seats} />
+        <OrderSummary
+          pod={pod}
+          breakup={breakup}
+          seats={seats}
+          unitAmount={Number(pod?.pod_amount) || 0}
+        />
         <CouponField
           code={couponCode}
           setCode={setCouponCode}

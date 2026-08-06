@@ -13,9 +13,17 @@ interface Props {
   breakup: any;
   /** Seats picked on Pod Details — the total already multiplies by this. */
   seats?: number;
+  /** Price of ONE seat, so the multiplied total below can be reconciled. */
+  unitAmount?: number;
 }
 
-export default function OrderSummaryCard({ pod, stateTitle, breakup, seats = 1 }: Readonly<Props>) {
+export default function OrderSummaryCard({
+  pod,
+  stateTitle,
+  breakup,
+  seats = 1,
+  unitAmount = 0,
+}: Readonly<Props>) {
   const theme = useTheme();
   const { t } = useTranslation();
   // The buyer chose this on Pod Details and the ticket price is × it, so the
@@ -58,6 +66,9 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, seats = 1 }
         {pod?.zone_name && <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>{pod.zone_name}</Typography>}
         <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
+          {seats > 1 && unitAmount > 0 && (
+            <Row label={`Ticket ${fmt(unitAmount)} x ${seats} seats`} value={fmt(unitAmount * seats)} />
+          )}
           <Row label="Ticket price" value={fmt(ticketTotal)} />
           <Divider sx={{ my: 1 }} />
           <Typography variant="caption" color="text.secondary">Inclusive of:</Typography>

@@ -1389,6 +1389,20 @@ export type ClubActor = {
   whatsapp?: Maybe<Scalars['String']['output']>;
 };
 
+/** A club this Club Admin runs. */
+export type ClubAdminAssignedClub = {
+  __typename?: 'ClubAdminAssignedClub';
+  club_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+};
+
+/** What a backfill run did, so an operator can see it worked. */
+export type ClubAdminBackfillResult = {
+  __typename?: 'ClubAdminBackfillResult';
+  created: Scalars['Int']['output'];
+  skipped: Scalars['Int']['output'];
+};
+
 /** Max-info per-club row for the Club Admin 'Your Clubs' table (myAdminClubsTable). */
 export type ClubAdminClubInfoRow = {
   __typename?: 'ClubAdminClubInfoRow';
@@ -1420,6 +1434,15 @@ export type ClubAdminClubInfoTablePage = {
   page_size: Scalars['Int']['output'];
   rows: Array<ClubAdminClubInfoRow>;
   total: Scalars['Int']['output'];
+};
+
+/** A club that matches the Club Admin's taxonomy, for the Assign Clubs picker. */
+export type ClubAdminClubOption = {
+  __typename?: 'ClubAdminClubOption';
+  /** Whether this admin already runs it. */
+  assigned: Scalars['Boolean']['output'];
+  club_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
 };
 
 /** Per-club breakdown row on the Club Admin dashboard. */
@@ -1491,6 +1514,50 @@ export type ClubAdminKpis = {
   total_revenue: Scalars['Float']['output'];
   total_spots: Scalars['Int']['output'];
   upcoming_pods: Scalars['Int']['output'];
+};
+
+/**
+ * The onboarded Club Admin record — the Club Admin counterpart of Host, Venue
+ * and E-Commerce Brand. Created when their onboarding meeting is approved.
+ */
+export type ClubAdminProfile = {
+  __typename?: 'ClubAdminProfile';
+  /** Every club this admin runs. Empty until clubs are assigned in Review. */
+  assigned_clubs: Array<ClubAdminAssignedClub>;
+  category?: Maybe<Scalars['String']['output']>;
+  category_id?: Maybe<Scalars['ID']['output']>;
+  /** Immutable public id, e.g. CADM-000001. */
+  club_admin_no?: Maybe<Scalars['String']['output']>;
+  /** Null or 0 inherits the platform default. */
+  commission_pct?: Maybe<Scalars['Float']['output']>;
+  created_at?: Maybe<Scalars['String']['output']>;
+  email: Scalars['String']['output'];
+  full_name: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  /** Separate from status: a switch onboarding can flip back. */
+  is_active: Scalars['Boolean']['output'];
+  /** When onboarding completed. */
+  joined_at?: Maybe<Scalars['String']['output']>;
+  phone: Scalars['String']['output'];
+  /** The onboarding meeting request this came from. */
+  request_no?: Maybe<Scalars['String']['output']>;
+  reviewer_notes?: Maybe<Scalars['String']['output']>;
+  /** DRAFT until reviewed, then APPROVED or REJECTED. */
+  status: Scalars['String']['output'];
+  sub_category?: Maybe<Scalars['String']['output']>;
+  sub_category_id?: Maybe<Scalars['ID']['output']>;
+  /** Names of the taxonomy chosen in the onboarding gate. */
+  super_category?: Maybe<Scalars['String']['output']>;
+  super_category_id?: Maybe<Scalars['ID']['output']>;
+  user_id: Scalars['ID']['output'];
+};
+
+export type ClubAdminProfileTablePage = {
+  __typename?: 'ClubAdminProfileTablePage';
+  page: Scalars['Int']['output'];
+  page_size: Scalars['Int']['output'];
+  rows: Array<ClubAdminProfile>;
+  total: Scalars['Int']['output'];
 };
 
 /** One month of the dashboard trend chart. */
@@ -4937,6 +5004,8 @@ export type Mutation = {
   aiParseCrmLeads: Scalars['String']['output'];
   /** Redeem someone's referral code (once per account, not your own). */
   applyReferralCode: MyReferral;
+  /** Approve the Club Admin — the table reads Active from here on. */
+  approveClubAdminProfile: ClubAdminProfile;
   /** Onboarding/admin: approve a brand (grants the owner the E-commerce Manager role). */
   approveEcommBrand: EcommBrand;
   approveHost: Host;
@@ -4949,9 +5018,13 @@ export type Mutation = {
   /** Products portal: approve a partner warehouse so it goes live (usable for shipping). */
   approveWarehouseRequest: ApprovalRequest;
   archiveInventoryProduct: InventoryProduct;
+  /** Replace the set of clubs this admin runs. Other admins of those clubs are untouched. */
+  assignClubAdminClubs: ClubAdminProfile;
   assignTicket: Ticket;
   assignUserRoles: User;
   awardBadgeManually: UserBadge;
+  /** Give every existing Club Admin a record and an id. Idempotent. */
+  backfillClubAdminProfiles: ClubAdminBackfillResult;
   /** Confirm Backout — booking moves to 'Backout in process' and the seat is released. */
   backoutPod: PodMember;
   /** Bulk-manage a venue's upcoming non-booked slots (owner-scoped). */
@@ -5065,6 +5138,12 @@ export type Mutation = {
   deleteCategory: Scalars['Boolean']['output'];
   deleteChallenge: Scalars['Boolean']['output'];
   deleteClub: Scalars['Boolean']['output'];
+  /**
+   * Delete the onboarding record and unassign every club. The user account and
+   * its role stay — deleting an onboarding record must not delete a login.
+   * Re-confirmed with the caller's own credentials; it cannot be undone.
+   */
+  deleteClubAdminProfile: Scalars['Boolean']['output'];
   deleteCommsProvider: Scalars['Boolean']['output'];
   deleteCoupon: Scalars['Boolean']['output'];
   deleteCrmCallPrompt: Scalars['Boolean']['output'];
@@ -5247,6 +5326,8 @@ export type Mutation = {
   register: AuthPayload;
   /** Register the location with ShipRocket so SHIP orders can pick up from it. */
   registerBrandPickupWithShiprocket: BrandPickupLocation;
+  /** Reject the Club Admin. A reason is required. */
+  rejectClubAdminProfile: ClubAdminProfile;
   /** Onboarding/admin: reject a brand with notes. */
   rejectEcommBrand: EcommBrand;
   /** The private profile's owner rejects. No follow is created. */
@@ -5350,6 +5431,9 @@ export type Mutation = {
   sendWaTestMessage: WaTestSendResult;
   /** Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit). */
   setBrandCommission: EcommBrand;
+  /** Set the pay commission. Null or 0 inherits the platform default. */
+  setClubAdminCommission: ClubAdminProfile;
+  setClubAdminProfileActive: ClubAdminProfile;
   setDefaultBrandPickupLocation: BrandPickupLocation;
   setDefaultCommsProvider: CommsProvider;
   setDefaultEnvEntry: EnvEntry;
@@ -5471,6 +5555,7 @@ export type Mutation = {
   updateCategory: Category;
   updateChallenge: Challenge;
   updateClub: Club;
+  updateClubAdminProfile: ClubAdminProfile;
   updateCommsProvider: CommsProvider;
   updateContactStatus: ContactSubmission;
   updateCoupon: Coupon;
@@ -5770,6 +5855,12 @@ export type MutationApplyReferralCodeArgs = {
 };
 
 
+export type MutationApproveClubAdminProfileArgs = {
+  id: Scalars['ID']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationApproveEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   notes?: InputMaybe<Scalars['String']['input']>;
@@ -5816,6 +5907,12 @@ export type MutationApproveWarehouseRequestArgs = {
 
 export type MutationArchiveInventoryProductArgs = {
   product_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationAssignClubAdminClubsArgs = {
+  club_ids: Array<Scalars['ID']['input']>;
+  id: Scalars['ID']['input'];
 };
 
 
@@ -6302,6 +6399,13 @@ export type MutationDeleteChallengeArgs = {
 
 export type MutationDeleteClubArgs = {
   club_doc_id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteClubAdminProfileArgs = {
+  email: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  password: Scalars['String']['input'];
 };
 
 
@@ -6939,6 +7043,12 @@ export type MutationRegisterBrandPickupWithShiprocketArgs = {
 };
 
 
+export type MutationRejectClubAdminProfileArgs = {
+  id: Scalars['ID']['input'];
+  notes: Scalars['String']['input'];
+};
+
+
 export type MutationRejectEcommBrandArgs = {
   brand_doc_id: Scalars['ID']['input'];
   notes: Scalars['String']['input'];
@@ -7296,6 +7406,18 @@ export type MutationSendWaTestMessageArgs = {
 export type MutationSetBrandCommissionArgs = {
   brand_doc_id: Scalars['ID']['input'];
   product_commission_pct: Scalars['Float']['input'];
+};
+
+
+export type MutationSetClubAdminCommissionArgs = {
+  commission_pct?: InputMaybe<Scalars['Float']['input']>;
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationSetClubAdminProfileActiveArgs = {
+  id: Scalars['ID']['input'];
+  is_active: Scalars['Boolean']['input'];
 };
 
 
@@ -7764,6 +7886,12 @@ export type MutationUpdateChallengeArgs = {
 export type MutationUpdateClubArgs = {
   club_doc_id: Scalars['ID']['input'];
   input: UpdateClubInput;
+};
+
+
+export type MutationUpdateClubAdminProfileArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateClubAdminProfileInput;
 };
 
 
@@ -10083,6 +10211,8 @@ export type Query = {
   clubAdminDashboardTable: ClubAdminClubRowTablePage;
   /** Approved hosts matching the search, for the assign-host picker. Club-admin scoped. */
   clubAdminHostSearch: Array<ClubAdminHostOption>;
+  /** Clubs matching this Club Admin's Super > Category > Sub, for Assign Clubs. */
+  clubAdminMatchingClubs: Array<ClubAdminClubOption>;
   /** Full action trail of one pod in the caller's clubs, newest first. */
   clubAdminPodAuditLogs: Array<PodAuditLog>;
   /** Club admin: the same trail scoped to the clubs the caller administers. */
@@ -10094,6 +10224,9 @@ export type Query = {
    * in the booking cycle. Pass club_id to narrow to one of their clubs.
    */
   clubAdminPodsTable: PodTablePage;
+  clubAdminProfile?: Maybe<ClubAdminProfile>;
+  /** Onboarded Club Admins, for the Onboarding portal's table. */
+  clubAdminProfilesTable: ClubAdminProfileTablePage;
   clubBySlug?: Maybe<Club>;
   /**
    * People who follow this club — the list behind followers_count, so the count
@@ -10906,6 +11039,12 @@ export type QueryClubAdminHostSearchArgs = {
 };
 
 
+export type QueryClubAdminMatchingClubsArgs = {
+  id: Scalars['ID']['input'];
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryClubAdminPodAuditLogsArgs = {
   pod_doc_id: Scalars['ID']['input'];
 };
@@ -10918,6 +11057,16 @@ export type QueryClubAdminPodAuditLogsTableArgs = {
 
 export type QueryClubAdminPodsTableArgs = {
   club_id?: InputMaybe<Scalars['ID']['input']>;
+  query?: InputMaybe<TableQueryInput>;
+};
+
+
+export type QueryClubAdminProfileArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryClubAdminProfilesTableArgs = {
   query?: InputMaybe<TableQueryInput>;
 };
 
@@ -13941,6 +14090,16 @@ export type UpdateChallengeInput = {
   description?: InputMaybe<Scalars['String']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
+  sub_category_id?: InputMaybe<Scalars['ID']['input']>;
+  super_category_id?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export type UpdateClubAdminProfileInput = {
+  category_id?: InputMaybe<Scalars['ID']['input']>;
+  commission_pct?: InputMaybe<Scalars['Float']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
+  full_name?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
   sub_category_id?: InputMaybe<Scalars['ID']['input']>;
   super_category_id?: InputMaybe<Scalars['ID']['input']>;
 };

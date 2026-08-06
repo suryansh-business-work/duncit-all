@@ -470,10 +470,17 @@ async function draftFromMeeting(doc: any, who?: { name: string; email: string })
     // product listing itself stays gated on the brand's own approval.
     await ecommBrandService.grantEcommRole(userId);
   } else if (doc.kind === 'CLUB_ADMIN') {
-    // Club Admin has no drafted entity — approval grants the CLUB_ADMIN role so
-    // the user gets the club-admin dashboard in the Partners portal.
+    // Approval grants the CLUB_ADMIN role so the user gets the club-admin
+    // dashboard in the Partners portal...
     const { userService } = await import('@modules/access/user/user.service');
     await userService.addRole(userId, 'CLUB_ADMIN');
+    // ...and drafts the onboarding record the portal's table lists. It lands
+    // DRAFT, so the table reads Inactive until the Onboarding Admin reviews
+    // them — this kind used to be the one with no record at all.
+    const { clubAdminProfileService } = await import(
+      '@modules/clubs/clubAdminProfile/clubAdminProfile.service'
+    );
+    await clubAdminProfileService.createDraftFromApproval(prefill);
   }
 }
 

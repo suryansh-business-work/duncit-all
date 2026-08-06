@@ -15,6 +15,7 @@ export const EXPLORE_PODS = gql`
       pod_type
       pod_amount
       pod_attendees
+      seats_taken
       no_of_spots
       zone_name
       reel_url

@@ -37,6 +37,7 @@ export const HostDashboardPodsDocument = gql(`
       pod_type
       pod_hosts_id
       pod_attendees
+      seats_taken
     }
   }
 `);

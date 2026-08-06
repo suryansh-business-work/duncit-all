@@ -9,6 +9,7 @@ import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 import { ReelBackdrop } from '@/components/explore/ReelVideo';
+import { podSeatsTaken } from '@duncit/utils';
 
 interface ExplorePodCardProps {
   pod: ExplorePod;
@@ -55,7 +56,7 @@ export function ExplorePodCard({
   // Space the action rail can occupy before it would overlap the header/overlay;
   // the rail collapses extra actions into a "More" menu on short screens.
   const railAvailable = height - contentBottom - (insets.top + 56);
-  const attendees = pod.pod_attendees.length;
+  const attendees = podSeatsTaken(pod);
   const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
   const joinLabel = `${attendees}${spotsSuffix}`;
   // Expired pods can't be joined — the join rail + CTA become an "expired" notice.

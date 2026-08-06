@@ -9,6 +9,7 @@ import type { HomePod } from '@/hooks/useHomeFeed';
 import { useThemeStore } from '@/stores/theme.store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
+import { podSeatsTaken } from '@duncit/utils';
 
 interface PodCardProps {
   pod: HomePod;
@@ -171,7 +172,7 @@ export function PodCard({
   const dark = useThemeStore((s) => s.scheme) === 'dark';
   const { t } = useTranslation();
 
-  const taken = (pod as { pod_attendees?: string[] }).pod_attendees?.length ?? 0;
+  const taken = podSeatsTaken(pod);
   const spotsLeft = pod.no_of_spots > 0 ? Math.max(0, pod.no_of_spots - taken) : 0;
   // Fallback matches the mWeb twin exactly (rule 27): "3/8", or just "3" when
   // the pod has no spot limit.

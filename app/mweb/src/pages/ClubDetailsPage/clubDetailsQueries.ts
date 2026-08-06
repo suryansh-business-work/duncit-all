@@ -76,6 +76,7 @@ export const CLUB_DETAILS_RELATED = gql`
       pod_type
       pod_amount
       pod_attendees
+      seats_taken
       no_of_spots
       place_label
       place_detail

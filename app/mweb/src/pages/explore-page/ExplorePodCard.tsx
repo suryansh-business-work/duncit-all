@@ -21,6 +21,7 @@ import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
 import { isPodExpired } from '../../utils/podStatus';
+import { podSeatsTaken } from '@duncit/utils';
 
 interface Props {
   pod: any;
@@ -133,7 +134,7 @@ export default function ExplorePodCard({
           {
             key: 'join',
             icon: expired ? <InfoOutlinedIcon /> : <HowToRegIcon />,
-            label: expired ? 'Expired' : `${pod.pod_attendees?.length ?? 0}${spotsSuffix}`,
+            label: expired ? 'Expired' : `${podSeatsTaken(pod)}${spotsSuffix}`,
             onClick: openPod,
             tooltip: expired ? 'This pod is expired.' : 'Join',
           },

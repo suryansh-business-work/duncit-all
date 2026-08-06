@@ -41,6 +41,7 @@ export const SEARCH_DISCOVERY = gql`
       pod_type
       no_of_spots
       pod_attendees
+      seats_taken
       host_names
       place_label
       place_detail

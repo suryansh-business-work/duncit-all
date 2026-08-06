@@ -36,6 +36,7 @@ export const HOST_DASHBOARD_PODS = gql`
       pod_type
       pod_hosts_id
       pod_attendees
+      seats_taken
     }
   }
 `;

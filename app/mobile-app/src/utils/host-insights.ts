@@ -2,6 +2,8 @@
 // framework-free so the mobile (gifted-charts) and mWeb (@mui/x-charts) charts
 // render identical numbers. Mirrors app/mweb/src/pages/host-dashboard-page/insights.ts.
 
+import { podSeatsTaken } from '@duncit/utils';
+
 export type HostChartRange =
   | 'ALL'
   | 'LAST_YEAR'
@@ -146,7 +148,9 @@ export function buildParticipantTrend(pods: readonly ParticipantPod[]): ChartDat
       month: 'short',
       day: 'numeric',
     }),
-    value: Math.max(0, (p.pod_attendees?.length ?? 0) - (p.pod_hosts_id?.length ?? 0)),
+    // Seats, not people — this sits beside money the host is shown, and the
+    // settlement it has to agree with is priced per seat.
+    value: Math.max(0, podSeatsTaken(p) - (p.pod_hosts_id?.length ?? 0)),
   }));
 }
 

@@ -179,6 +179,9 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                       <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
                         <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
                         <Typography variant="caption" color="text.secondary">
+                          {/* Identity, deliberately: this counts who is IN the
+                              chat, and a multi-seat buyer is one person in it.
+                              Do not seat-adjust it the way occupancy was. */}
                           {p.pod_attendees?.length || 0}{p.no_of_spots ? `/${p.no_of_spots}` : ''} members
                         </Typography>
                       </Stack>

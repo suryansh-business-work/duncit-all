@@ -9,6 +9,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PodQuickStats from './PodQuickStats';
 import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 import { podOccurrenceLabel } from '../../utils/podOccurrence';
+import { podSeatsTaken } from '@duncit/utils';
 
 interface Props {
   pod: any;
@@ -40,7 +41,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');
-  const spotsTaken = pod.pod_attendees?.length ?? 0;
+  const spotsTaken = podSeatsTaken(pod);
   const spotsTotal = pod.no_of_spots ?? 0;
   const textColor = isDark ? '#fff' : 'text.primary';
   const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : 'text.secondary';

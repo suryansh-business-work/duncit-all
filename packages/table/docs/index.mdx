@@ -412,20 +412,29 @@ resetting the parent's array on its own leaves them checked. The deselect fires
 reset. Like `refetchRef` it is nulled on unmount.
 
 The header checkbox is **not** "select all". AG Grid's client-side row model only holds the
-rows the server returned for the current page, so every `SelectAllMode` ticks that page.
-Label it accordingly on screen.
+rows the server returned for the current page, so it ticks that page. Label it accordingly
+on screen.
+
+The checkbox is **MUI's**, in a column this package prepends (`col-id="duncit-select"`), and
+AG Grid's own checkboxes are switched off (`checkboxes: false, headerCheckbox: false`). Two
+reasons: every portal is MUI everywhere else, and a `cellRenderer` on AG Grid's *generated*
+selection column draws BESIDE its checkbox rather than replacing it — two ticks per row, one
+of them not yours.
+
+AG Grid still owns the selection STATE. The renderer reads `node.isSelected()`, calls
+`node.setSelected()` and re-renders off the row node's `rowSelected` event, so there is no
+second source of truth; a tick held in React state would lose to the grid on every page
+change. This is also why you must not hand-roll a checkbox as a `DuncitColumn.cellRenderer`
+of your own — `buildColDefs` marks renderer columns never-equal to force repaints, and a
+checkbox driven by parent state renders stale ticks.
 
 Row clicks and ticks coexist: `enableClickSelection` stays at AG Grid's default `false`, and
-`onRowClick` ignores anything inside the selection column. The checkbox stops propagation on
-its own, but it is a 16px input in a 50px cell — without the column-level guard, aiming at
-the tick box and missing would open your drawer with nothing selected.
+`onRowClick` ignores anything inside the checkbox column — not just the input. It is a 16px
+control in a 52px cell, so without the column-level guard, aiming at the tick box and missing
+would open your drawer with nothing selected.
 
-Do not hand-roll a checkbox as a `DuncitColumn.cellRenderer`. `buildColDefs` marks renderer
-columns never-equal to force repaints, so a checkbox driven by parent React state renders
-stale ticks; AG Grid's generated selection column (`ag-Grid-SelectionColumn`) repaints off the
-row node's own `rowSelected` event and is immune. Note also that AG Grid 34 removed
-`rowSelection="multiple"`, `colDef.checkboxSelection` and `headerCheckboxSelection` — the
-object form is the only API left.
+Note also that AG Grid 34 removed `rowSelection="multiple"`, `colDef.checkboxSelection` and
+`headerCheckboxSelection` — the object form is the only API left.
 
 ## `makeApolloTableFetch` vs `useApolloTableFetch`
 

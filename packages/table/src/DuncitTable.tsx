@@ -19,6 +19,7 @@ import type {
 } from 'ag-grid-community';
 import { AgGridReact } from 'ag-grid-react';
 import { buildColDefs, TRUNCATE_CELL_CLASS } from './columnDefs';
+import { SelectionCheckbox, SelectionHeaderCheckbox } from './SelectionCheckbox';
 import { buildAgTheme } from './theme';
 import { DuncitTableToolbar } from './toolbar/DuncitTableToolbar';
 import type { DuncitColumn, TableFetch, TableFilterValue, TableSortDir } from './types';
@@ -28,27 +29,53 @@ import { useTableQuery } from './useTableQuery';
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 const HEADER_HEIGHT = { compact: 36, standard: 48 } as const;
 
+/** The id of the checkbox column this table adds — never a data field. */
+export const SELECT_COL_ID = 'duncit-select';
+
 /**
  * What a row click must NOT fire from: a cell's own button or link, and the
  * entire selection column — its checkbox is 16px inside a 50px cell, so the
  * cell around it has to be dead to the row handler too.
  */
-const ROW_CLICK_IGNORE = 'button, a, [col-id="ag-Grid-SelectionColumn"]';
+const ROW_CLICK_IGNORE = `button, a, [col-id="${SELECT_COL_ID}"]`;
 const LOADING_DIM_OPACITY = 0.55;
 
 // AG Grid 34 took `rowSelection="multiple"`, `colDef.checkboxSelection` and
-// `headerCheckboxSelection` away; selection is this one object now, and the checkbox
-// column it generates is AG Grid's own (colId 'ag-Grid-SelectionColumn'), not one of
-// ours. That matters: buildColDefs marks renderer columns never-equal to force a
-// repaint, so a checkbox hand-rolled as a DuncitColumn.cellRenderer would draw from
-// parent React state and show stale ticks. AG Grid's column repaints off the row
-// node's own rowSelected event instead.
+// `headerCheckboxSelection` away; selection is this one object now.
 //
-// Hoisted so the reference is stable — a fresh object each render makes the grid
-// reconfigure selection mid-interaction. enableClickSelection stays at its default
-// false, so a row click only opens whatever drawer the page wires to onRowClick;
-// ROW_CLICK_IGNORE keeps the selection cell out of that handler entirely.
-const MULTI_ROW_SELECTION: RowSelectionOptions = { mode: 'multiRow' };
+// Its own checkboxes are OFF. The portals are MUI everywhere else, AG Grid's
+// checkbox sat at the top of a two-line row rather than beside it, and a
+// renderer on the column it generates draws BESIDE that checkbox instead of
+// replacing it — two ticks per row, one of them not ours.
+//
+// Hoisted so the reference is stable: a fresh object each render makes the grid
+// reconfigure selection mid-interaction. enableClickSelection stays at its
+// default false, so a row click only opens whatever drawer the page wires to
+// onRowClick; ROW_CLICK_IGNORE keeps the checkbox cell out of that handler.
+const MULTI_ROW_SELECTION: RowSelectionOptions = {
+  mode: 'multiRow',
+  checkboxes: false,
+  headerCheckbox: false,
+};
+
+// Our own column, prepended when selection is on. AG Grid still owns the STATE —
+// the renderer reads node.isSelected() and calls setSelected() — so there is no
+// second source of truth to drift, which is what a checkbox held in React state
+// would have been.
+const SELECT_COLUMN = {
+  colId: SELECT_COL_ID,
+  headerName: '',
+  width: 52,
+  minWidth: 52,
+  maxWidth: 52,
+  resizable: false,
+  sortable: false,
+  suppressMovable: true,
+  lockPosition: true as const,
+  cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  headerComponent: SelectionHeaderCheckbox,
+  cellRenderer: SelectionCheckbox,
+};
 
 // Rows auto-size to their content, so multi-line cells never clip. Density is the
 // per-cell vertical padding (auto-height measures it): compact = tight, standard =
@@ -158,10 +185,10 @@ export function DuncitTable<T>(props: Readonly<DuncitTableProps<T>>): JSX.Elemen
       },
     };
   }, [prefs.density]);
-  const columnDefs = useMemo(
-    () => buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir),
-    [columns, prefs.hiddenOverrides, sortBy, sortDir],
-  );
+  const columnDefs = useMemo(() => {
+    const defs = buildColDefs(columns, prefs.hiddenOverrides, sortBy, sortDir);
+    return selection ? [SELECT_COLUMN, ...defs] : defs;
+  }, [columns, prefs.hiddenOverrides, sortBy, sortDir, selection]);
 
   useEffect(() => {
     if (!refetchRef) return undefined;

@@ -24,7 +24,7 @@ function makeFetch() {
 }
 
 function rowCheckboxes(): HTMLElement[] {
-  return screen.getAllByRole('checkbox', { name: /toggle row selection/i });
+  return screen.getAllByRole('checkbox', { name: 'Select row' });
 }
 
 beforeEach(() => {
@@ -71,7 +71,7 @@ describe('DuncitTable checkbox selection', () => {
     act(() => clearRef.current?.());
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith([]));
     for (const box of rowCheckboxes()) {
-      expect(box).toHaveAttribute('aria-label', expect.stringContaining('(unchecked)'));
+      expect(box).not.toBeChecked();
     }
   });
 
@@ -114,7 +114,7 @@ describe('DuncitTable checkbox selection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));
     await screen.findByText('Person 26');
     await waitFor(() => expect(onChange).toHaveBeenLastCalledWith([]));
-    expect(rowCheckboxes()[0]).toHaveAttribute('aria-label', expect.stringContaining('(unchecked)'));
+    expect(rowCheckboxes()[0]).not.toBeChecked();
   });
 });
 
@@ -137,7 +137,7 @@ describe('DuncitTable selection column vs row clicks', () => {
     );
     await screen.findByText('Person 1');
 
-    const cell = container.querySelector('[col-id="ag-Grid-SelectionColumn"].ag-cell');
+    const cell = container.querySelector('[col-id="duncit-select"].ag-cell');
     expect(cell).not.toBeNull();
     fireEvent.click(cell as Element);
     expect(onRowClick).not.toHaveBeenCalled();

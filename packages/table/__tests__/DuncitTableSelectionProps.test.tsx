@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // a fresh object each time makes AG Grid reconfigure selection and drop the ticks.
 type SelectionChanged = (event: { api: { getSelectedRows: () => unknown[] } }) => void;
 type GridProps = {
-  rowSelection?: { mode: string };
+  rowSelection?: { mode: string; checkboxes?: boolean; headerCheckbox?: boolean };
   onSelectionChanged?: SelectionChanged;
   headerHeight?: number;
 };
@@ -84,7 +84,9 @@ describe('DuncitTable selection opt-in', () => {
       />,
     );
     await screen.findByTestId('ag-grid-stub');
-    expect(captured.rowSelection).toEqual({ mode: 'multiRow' });
+    // AG Grid's own checkboxes are off: this table draws the column itself in MUI,
+    // and leaving them on renders two ticks per row.
+    expect(captured.rowSelection).toEqual({ mode: 'multiRow', checkboxes: false, headerCheckbox: false });
 
     act(() => captured.onSelectionChanged?.(selectionEvent([ROW])));
     expect(onChange).toHaveBeenLastCalledWith([ROW]);

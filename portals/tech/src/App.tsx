@@ -10,6 +10,7 @@ import EmailTemplatesPage from './pages/email-templates-page/EmailTemplatesPage'
 import EmailFragmentsPage from './pages/email-fragments-page';
 import EmailLogsPage from './pages/email-logs-page';
 import EmailsDashboardPage from './pages/emails-dashboard';
+import PackagesDocsPage from './pages/packages-docs';
 import TelemetryDashboardPage from './pages/telemetry-dashboard';
 import BugsPage from './pages/bugs-page';
 import TelemetryLogsSettingsPage from './pages/telemetry-logs-settings';
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/emails/templates" element={authed(<EmailTemplatesPage />)} />
         <Route path="/emails/fragments" element={authed(<EmailFragmentsPage />)} />
         <Route path="/emails/logs" element={authed(<EmailLogsPage />)} />
+        <Route path="/emails/docs" element={authed(<PackagesDocsPage />)} />
         {/* The old path, kept working for bookmarks. */}
         <Route path="/email-templates" element={<Navigate to="/emails/templates" replace />} />
         <Route path="/telemetry" element={<Navigate to="/telemetry/dashboard" replace />} />

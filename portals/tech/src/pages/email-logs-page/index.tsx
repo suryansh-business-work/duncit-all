@@ -5,6 +5,11 @@ import { useUserData } from '@duncit/user-context';
 import { useApolloTableFetch } from '@duncit/table';
 import { SUPER_ROLE } from '../../lib/session';
 import EmailLogBulkBar, { EmailLogDeleteAllButton } from './EmailLogBulkBar';
+import EmailLogQuickFilters, {
+  EMPTY_QUICK_FILTERS,
+  quickFiltersToTable,
+  type QuickFilterState,
+} from './EmailLogQuickFilters';
 import EmailLogDrawer from './EmailLogDrawer';
 import EmailLogsTable from './EmailLogsTable';
 import { EMAIL_LOGS_TABLE, EMAIL_LOG_STATS, type EmailLogRow } from './queries';
@@ -33,6 +38,9 @@ export default function EmailLogsPage() {
   const fetchRows = useApolloTableFetch<EmailLogRow>(client, EMAIL_LOGS_TABLE, 'emailLogsTable');
   const [openId, setOpenId] = useState<string | null>(null);
   const [selected, setSelected] = useState<EmailLogRow[]>([]);
+  const [quick, setQuick] = useState<QuickFilterState>(EMPTY_QUICK_FILTERS);
+  // Compared by value by the table, so it must not be a fresh array each render.
+  const externalFilters = useMemo(() => quickFiltersToTable(quick), [quick]);
   // Stable, so the table does not re-register its row handler on every render.
   const openRow = useCallback((row: EmailLogRow) => setOpenId(row.id), []);
   const closeRow = useCallback(() => setOpenId(null), []);
@@ -92,10 +100,12 @@ export default function EmailLogsPage() {
       </Stack>
 
       <EmailLogBulkBar selected={selected} onClear={clearSelection} onDeleted={afterDelete} />
+      <EmailLogQuickFilters value={quick} onChange={setQuick} />
       <EmailLogsTable
         fetchRows={fetchRows}
         refetchRef={refetchRef}
         onRowClick={openRow}
+        externalFilters={externalFilters}
         selection={selection}
         toolbarActions={deleteAllAction}
       />
